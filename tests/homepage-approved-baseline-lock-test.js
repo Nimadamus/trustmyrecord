@@ -22,12 +22,17 @@ const page = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8'
 
 const REQUIRED = [
   'APPROVED HOMEPAGE BASELINE',
-  // 113px = measured nav(70) + live-scores ticker(43) height, the real stack
+  // 165px = measured nav(70) + live-scores ticker(95) height, the real stack
   // rendered above .hero (there is no static <nav> in this document -- see
   // the runtime measurement script below). This is a no-JS/first-paint
-  // fallback only; the inline script overrides it with the actual rendered
-  // value once tmr-ds-nav.js has run.
-  '--header-height:113px;',
+  // fallback only; the inline script keeps it in sync with the actual
+  // rendered value once tmr-ds-nav.js has run.
+  // WAS 113px, from a 43px ticker that only ever held one line of "Loading
+  // today's MLB slate...". The lane now reserves a real matchup card's height
+  // from the first frame, so the honest fallback is 95px of ticker. Shipping
+  // the old number laid the hero out 52px too tall until JS corrected it,
+  // which dropped the stats stripe and everything under it into place.
+  '--header-height:165px;',
   // hero shell is a flex column filling the viewport below the injected nav,
   // so .bridge (margin-top:auto below) always lands flush on the hero's
   // bottom edge regardless of viewport height or content height
@@ -39,7 +44,7 @@ const REQUIRED = [
   // runtime correction: nav is injected by tmr-ds-nav.js at runtime, so the
   // static 113px fallback above must be replaced with the actual measured
   // value once nav+ticker have rendered
-  "var top = hero.getBoundingClientRect().top + window.scrollY;",
+  "var top = Math.round(hero.getBoundingClientRect().top + window.scrollY);",
   "document.documentElement.style.setProperty('--header-height', top + 'px');",
   '.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}',
   ".hero h1.hh{color:#fff;font-family:'Barlow Condensed',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}",

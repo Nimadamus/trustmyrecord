@@ -40,9 +40,18 @@ const TIMEOUT_MS = 120000;
 // the odds provider reissues ids for the same matchup. It is rendered live from
 // /api/nav/mlb-slate instead, and tmr-home-live.js drops any baked markup whose
 // data-slate-date is not today. Do not re-add it.
+// NOTE: homeStats and homeCapper are deliberately NOT prerendered either, as of
+// 2026-08-03. Baking them was the source of the numbers visitors watched change
+// after first paint: this job runs every 30 minutes, so between two runs the
+// document served a pick count that was simply wrong (2,710 baked against 2,707
+// live), and the regions it rewrites do not even cover the whole figure set —
+// the hero eyebrow (#tmrEyebrowPicks) and the capper footer sit OUTSIDE the
+// markers and were therefore frozen at 2,348 and 353 for weeks, disagreeing
+// with the very card they sit on. Those values are now injected at REQUEST time
+// by workers/home-ssr, which cannot go stale by construction, and the document
+// ships skeletons. tests/homepage-no-baked-stats-lock-test.js enforces it.
+// Do not re-add them.
 const REGIONS = [
-  { key: 'homeStats', sel: '.bridge-in', need: '.s b' },
-  { key: 'homeCapper', sel: '.spot .bd', need: '.g3 b' },
   { key: 'homeLivePicks', sel: '.board .card:nth-of-type(1) .body', need: '*' },
   { key: 'homeLeaderboard', sel: '.board .card:nth-of-type(2) .body', need: '*' },
   { key: 'homeSportsTalk', sel: '.board .card:nth-of-type(3) .body', need: '*' },

@@ -19,7 +19,15 @@
   --r:10px; --r-sm:7px;
   --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
   --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
-  --header-height:113px;
+  /* First-paint fallback for the chrome above .hero, which .hero subtracts from
+     the viewport. 113px was nav(70) + a 43px ticker — the height the strip had
+     when it showed a single line of "Loading today's MLB slate…". A real
+     matchup card makes that strip 95px, and the lane now reserves 95px from the
+     first frame, so the true stack is 70 + 95 = 165. Shipping 113 meant the
+     hero was laid out 52px too tall until the runtime measurement corrected it,
+     which moved the stats stripe and everything below it. The inline script at
+     the foot of index.html keeps this in sync afterwards. */
+  --header-height:165px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -140,6 +148,62 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   .ticker-page{justify-content:center}
   .ticker-page>.gm{max-width:100%}
   .ticker-page>.gm .gm-sp,.ticker-page>.gm .gm-tr{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+}
+
+/* ---------- LOADING SKELETONS ----------------------------------------------
+   Every figure on this page is fetched (or injected at the edge by the
+   tmr-home-ssr worker) at request time. None of them is baked into the
+   document any more, because a baked number is a number that can be WRONG:
+   the hero eyebrow sat on "2,348" and the capper footer on "353" for weeks
+   while the live values were 2,707 and 196, and every visitor watched them
+   swap seconds after first paint.
+
+   So each value ships as a skeleton that occupies EXACTLY the box its real
+   value will occupy — the line box is set by the parent's own line-height,
+   which the placeholder never exceeds — and the swap therefore moves nothing.
+   Rule: a skeleton, never a stale number. -------------------------------- */
+@keyframes tmr-sk{0%{background-position:150% 0}100%{background-position:-50% 0}}
+.sk{display:inline-block;vertical-align:baseline;height:.72em;min-width:14px;border-radius:4px;
+  background:linear-gradient(90deg,rgba(190,215,235,.10) 0%,rgba(190,215,235,.24) 50%,rgba(190,215,235,.10) 100%);
+  background-size:250% 100%;animation:tmr-sk 1.3s linear infinite}
+/* The stats stripe is the one light surface inside the dark hero. */
+.bridge .sk{background:linear-gradient(90deg,rgba(20,45,70,.09) 0%,rgba(20,45,70,.20) 50%,rgba(20,45,70,.09) 100%);background-size:250% 100%}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Ticker: the lane keeps a real matchup card's height (76px = 6px padding +
+   status row + pitchers row + trend row) from the first frame, so a slate that
+   lands late — or never — cannot push the hero down. Skeleton cards carry the
+   same box as the cards that replace them. */
+.ticker-games,.ticker-track,.ticker-page{min-height:76px}
+.gm.is-skel{width:230px;height:76px;justify-content:center;gap:7px;pointer-events:none;cursor:default}
+.gm.is-skel .sk{display:block;height:12px}
+.gm.is-skel .sk.a{width:150px;height:16px}
+.gm.is-skel .sk.b{width:112px}
+.gm.is-skel .sk.c{width:134px}
+/* The empty/unavailable message keeps the same reserved lane height. */
+.gm.is-msg{min-height:64px;justify-content:center}
+
+/* The sub-line wraps to two lines for a real capper's sports list. Reserve both
+   from the start, so a shorter capper — or a dash on the failure path — cannot
+   pull the card up under the hero. */
+.spot .sub2{min-height:3em}
+/* Fixed slot for the eyebrow figure: the skeleton and the number it becomes
+   then occupy the same width, and the pill around them never re-flows. */
+#tmrEyebrowPicks{display:inline-block;min-width:44px}
+
+/* Capper card: identity, splits, footer count and sparkline all arrive with
+   the same payload, so the whole card is one skeleton until it does. */
+.spot .bd.is-skel .avbox .sk{height:16px}
+.spot .sub2 .sk{height:11px;margin-top:5px}
+.spark .sk{display:block;flex:1;height:auto;min-width:0;border-radius:2px 2px 0 0;
+  background:linear-gradient(90deg,rgba(190,215,235,.10) 0%,rgba(190,215,235,.24) 50%,rgba(190,215,235,.10) 100%);
+  background-size:250% 100%}
+
+@media (max-width:640px){
+  /* One full-width skeleton card: five 230px cards would be clipped mid-card. */
+  .gm.is-skel{width:100%}
+  .gm.is-skel~.gm.is-skel{display:none}
 }
 
 /* ---------- HERO ---------- */

@@ -35,8 +35,15 @@ const js = fs.readFileSync(jsPath, 'utf8');
 const HTML_REQUIRED = [
   '<div class="ticker">',
   'class="ticker-games" data-slate-date=""',
-  'Loading today&rsquo;s MLB slate&hellip;',
-  'class="gm is-msg"',
+  // UPDATED 2026-08-03: the lane no longer ships a one-line loading message.
+  // That message was 36px tall where a real matchup card is 76px, so every
+  // slate that landed grew the strip by 40px and shoved the entire hero down.
+  // It ships dimensionally identical skeleton cards instead, and the lane
+  // reserves a card's full height from the first frame.
+  'class="gm is-skel"',
+  '.ticker-games,.ticker-track,.ticker-page{min-height:76px}',
+  '.gm.is-skel{width:230px;height:76px',
+  'role="status">Loading today&rsquo;s MLB slate&hellip;</span>',
 ];
 for (const needle of HTML_REQUIRED) {
   assert.ok(html.includes(needle), 'index.html missing ticker markup: ' + needle);
@@ -61,18 +68,29 @@ const JS_REQUIRED = [
   'laneMsg(lane, UNAVAILABLE_TEXT',
   "laneMsg(lane, 'No MLB games scheduled today'",
   // the sweep reports state instead of hiding
-  'laneMsg(lane, tickerSettled ? UNAVAILABLE_TEXT : LOADING_TEXT',
+  'if (tickerSettled) laneMsg(lane, UNAVAILABLE_TEXT',
+  // a height-reserving skeleton lane, never an empty or collapsed one
+  'function laneSkeleton(lane)',
 ];
 for (const needle of JS_REQUIRED) {
   assert.ok(js.includes(needle), 'tmr-home-live.js missing ticker state handling: ' + needle);
 }
 
 /* ---------- 4. an empty baked date is "nothing baked", not "stale" ---------- */
-assert.ok(js.includes("if (baked && baked !== today) laneMsg(lane, LOADING_TEXT, '');"),
+assert.ok(js.includes('if (baked && baked !== today) laneSkeleton(lane);'),
   'the baked-slate check must treat an empty data-slate-date as "nothing baked" and ' +
-  'must leave a visible loading card, never an empty lane');
+  'must leave a height-reserving skeleton lane, never an empty one');
 assert.ok(!js.includes("if (baked !== null && baked !== today) lane.innerHTML = '';"),
   'the lane-emptying baked-date check that started the 2026-08-02 outage is back');
+
+/* ---------- 4b. the sweep must not read skeletons as a populated lane ------- */
+assert.ok(js.includes(".querySelectorAll('.gm:not(.is-skel)')"),
+  'integritySweep counts skeleton cards as real games — a slate that never ' +
+  'arrives would then shimmer forever instead of reporting the honest state');
+/* ---------- 4c. nothing may collapse the lane to zero height ---------------- */
+assert.ok(!/lane\.innerHTML\s*=\s*''/.test(js),
+  'emptying the ticker lane collapses the strip and drags the hero up with it — ' +
+  'use laneSkeleton(lane) or laneMsg(lane, …) instead');
 
 /* ---------- 5. every game is uniquely identified (doubleheaders) ---------- */
 assert.ok(js.includes('data-game-pk="'),

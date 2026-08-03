@@ -21,9 +21,16 @@
  */
 
 const API_BOOTSTRAP = 'https://trustmyrecord-api.onrender.com/api/users/home-bootstrap';
+const API_SLATE = 'https://trustmyrecord-api.onrender.com/api/nav/mlb-slate';
 const BOOTSTRAP_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/home-bootstrap-v1';
+const SLATE_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/mlb-slate-v1';
 const EDGE_TTL_SECONDS = 25;
 const API_TIMEOUT_MS = 1200;
+const SLATE_TZ = 'America/Los_Angeles';
+
+/* The homepage document, and nothing else. The route patterns are narrow, but a
+   pattern is configuration and this is the invariant the code depends on. */
+const HOME_PATHS = new Set(['/', '/index.html']);
 
 const num = (v) => { const n = parseFloat(v); return Number.isNaN(n) ? 0 : n; };
 const sign = (n) => (n > 0 ? '+' : '') + n.toFixed(2);
@@ -46,6 +53,34 @@ async function getBootstrap(ctx) {
   const body = await resp.text();
   const data = JSON.parse(body);
   if (!data || !data.counts) return null;
+  ctx.waitUntil(cache.put(cacheKey, new Response(body, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${EDGE_TTL_SECONDS}`,
+    },
+  })));
+  return data;
+}
+
+/* Today's MLB slate, injected for the same reason the stats are: the client
+   fetch used to leave a loading strip above the hero for seconds. Cached at the
+   edge for EDGE_TTL_SECONDS, on a short timeout, and entirely optional — if it
+   is not here in time the document keeps its skeleton lane and the page JS
+   fills it exactly as before. */
+async function getSlate(ctx) {
+  const cache = caches.default;
+  const cacheKey = new Request(SLATE_CACHE_KEY);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit.json();
+
+  const resp = await fetch(API_SLATE, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(API_TIMEOUT_MS),
+  });
+  if (!resp.ok) return null;
+  const body = await resp.text();
+  const data = JSON.parse(body);
+  if (!data || data.ok === false || !Array.isArray(data.games)) return null;
   ctx.waitUntil(cache.put(cacheKey, new Response(body, {
     headers: {
       'Content-Type': 'application/json',
@@ -81,6 +116,22 @@ class HrefCell {
   element(el) { if (this.href) el.setAttribute('href', this.href); }
 }
 
+/* Clears a skeleton container: drops the `is-skel` class and flips aria-busy,
+   so a region the worker has just filled does not keep shimmering. */
+class SettleCell {
+  element(el) {
+    const cls = (el.getAttribute('class') || '')
+      .split(/\s+/).filter((c) => c && c !== 'is-skel').join(' ');
+    el.setAttribute('class', cls);
+    el.setAttribute('aria-busy', 'false');
+  }
+}
+
+class AttrCell {
+  constructor(attrs) { this.attrs = attrs; }
+  element(el) { for (const [k, v] of Object.entries(this.attrs)) el.setAttribute(k, v); }
+}
+
 class HtmlCell {
   constructor(html) { this.html = html; }
   element(el) { if (this.html != null) el.setInnerContent(this.html, { html: true }); }
@@ -91,8 +142,88 @@ class NthHtmlCell {
   element(el) { if (this.i++ === this.index && this.html != null) el.setInnerContent(this.html, { html: true }); }
 }
 
-function buildRewriter(data) {
+/* ---- ticker markup ---------------------------------------------------------
+   A byte-for-byte port of renderTicker() in static/js/tmr-home-live.js. The two
+   MUST produce identical markup: the page JS re-renders the same slate 90s later
+   and any difference between them would show up as a flicker on a value that
+   did not actually change. Keep them in lockstep. -------------------------- */
+const logoImg = (url) => (url ? `<img src="${esc(url)}" alt="" loading="lazy" onerror="this.remove()">` : '');
+
+function statusChip(g) {
+  const s = String(g.status || 'scheduled');
+  if (s === 'scheduled') {
+    return `<span class="st">${esc(g.start_time_tbd ? 'TBD' : (g.start_time_pt || ''))}</span>`;
+  }
+  const score = (typeof g.away_score === 'number' && typeof g.home_score === 'number')
+    ? ` ${g.away_score}-${g.home_score}` : '';
+  const text = s === 'live' ? (g.inning || 'Live') + score
+    : s === 'final' ? 'Final' + score
+    : s === 'postponed' ? 'PPD'
+    : s === 'cancelled' ? 'Canceled'
+    : s === 'suspended' ? 'Susp'
+    : s === 'delayed' ? 'Delayed'
+    : (g.start_time_pt || '');
+  return `<span class="st is-${esc(s)}">${esc(text)}</span>`;
+}
+
+function pitcherLine(g) {
+  if (!g.away_pitcher || !g.home_pitcher) return '';
+  const short = (n) => {
+    const p = String(n).trim().split(/\s+/);
+    return p.length < 2 ? n : `${p[0].charAt(0)}. ${p.slice(1).join(' ')}`;
+  };
+  return `<span class="gm-sp">${esc(short(g.away_pitcher))} vs ${esc(short(g.home_pitcher))}</span>`;
+}
+
+function tickerHtml(games) {
+  return games.map((g) => {
+    const dh = g.game_label ? `<em class="gm-dh">${esc(g.game_label)}</em>` : '';
+    const off = g.status === 'postponed' || g.status === 'cancelled';
+    let html = `<a class="gm${off ? ' is-off' : ''}"` +
+      ` data-game-pk="${esc(String(g.game_pk == null ? '' : g.game_pk))}"` +
+      ` href="${esc(g.href || '/handicapping/mlb/')}">` +
+      '<span class="gm-top">' +
+        `<span class="t">${logoImg(g.away_logo)}${esc(g.away)}</span>` +
+        `<span class="t">${logoImg(g.home_logo)}${esc(g.home)}</span>` +
+        statusChip(g) + dh +
+      '</span>' +
+      pitcherLine(g);
+    if (g.trend && g.trend.text) {
+      html += `<span class="gm-tr" data-href="${esc(g.trend.href || '')}" title="` +
+        `${esc(`Sample ${g.trend.sample} games · ${g.trend.period}`)}">` +
+        `<span class="ts" aria-hidden="true"></span>${esc(g.trend.text)}</span>`;
+    }
+    return html + '</a>';
+  }).join('');
+}
+
+/* The slate is Pacific-dated. A payload that raced across the rollover — or one
+   the edge cached just before it — must not be baked into the document. */
+function slateIsToday(slate) {
+  if (!slate || !slate.slate_date) return false;
+  try {
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: SLATE_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date());
+    return slate.slate_date === today;
+  } catch (e) { return false; }
+}
+
+function buildRewriter(data, slate) {
   const rw = new HTMLRewriter();
+
+  /* Today's games, rendered into the reserved lane. Only a same-day slate WITH
+     games is injected: an empty or stale one leaves the skeleton in place and
+     lets the page JS report the honest state, which it already knows how to do. */
+  if (slate && slateIsToday(slate) && slate.games && slate.games.length) {
+    rw.on('.ticker .ticker-games', new AttrCell({
+      'data-slate-date': slate.slate_date,
+      'aria-busy': 'false',
+    }));
+    rw.on('.ticker .ticker-games', new HtmlCell(
+      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games)}</div></div>`
+    ));
+  }
 
   const counts = data.counts || {};
   const metrics = data.metrics || {};
@@ -114,6 +245,7 @@ function buildRewriter(data) {
     const username = card.username;
     const profileHref = `/u/${encodeURIComponent(username)}/`;
 
+    rw.on('.spot .bd', new SettleCell());
     rw.on('.spot .avbox', new TextCell(initials(username)));
     rw.on('.spot .nmrow b', new TextCell(username));
     rw.on('.spot .nmrow a', new HrefCell(`/profile/?user=${encodeURIComponent(username)}`));
@@ -164,19 +296,25 @@ function buildRewriter(data) {
 export default {
   async fetch(req, env, ctx) {
     try {
-      const [origin, data] = await Promise.all([
+      if (!HOME_PATHS.has(new URL(req.url).pathname)) return fetch(req);
+
+      /* Origin document and both data sources in parallel — the injection costs
+         whichever of them is slowest, not the sum. */
+      const [origin, data, slate] = await Promise.all([
         fetch(req),
         getBootstrap(ctx).catch((e) => { console.log('bootstrap fail:', e && e.message); return null; }),
+        getSlate(ctx).catch((e) => { console.log('slate fail:', e && e.message); return null; }),
       ]);
       const contentType = origin.headers.get('content-type') || '';
-      if (!data || !contentType.includes('text/html')) {
-        console.log('passthrough: data=', !!data, 'ct=', contentType.slice(0, 40));
+      if ((!data && !slate) || !contentType.includes('text/html')) {
+        console.log('passthrough: data=', !!data, 'slate=', !!slate, 'ct=', contentType.slice(0, 40));
         const passthrough = new Response(origin.body, origin);
         passthrough.headers.set('x-tmr-ssr', 'passthrough');
         return passthrough;
       }
-      const out = buildRewriter(data).transform(origin);
+      const out = buildRewriter(data || {}, slate).transform(origin);
       out.headers.set('x-tmr-ssr', 'injected');
+      out.headers.set('x-tmr-ssr-parts', `${data ? 'stats' : '-'},${slate ? 'slate' : '-'}`);
       return out;
     } catch (e) {
       console.log('worker fail:', e && e.message);

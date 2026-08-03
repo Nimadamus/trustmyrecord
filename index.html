@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="a36013e6df77">
+<html lang="en" data-tmr-build="4bb69dd7269a">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,7 +45,15 @@
   --r:10px; --r-sm:7px;
   --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
   --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
-  --header-height:113px;
+  /* First-paint fallback for the chrome above .hero, which .hero subtracts from
+     the viewport. 113px was nav(70) + a 43px ticker — the height the strip had
+     when it showed a single line of "Loading today's MLB slate…". A real
+     matchup card makes that strip 95px, and the lane now reserves 95px from the
+     first frame, so the true stack is 70 + 95 = 165. Shipping 113 meant the
+     hero was laid out 52px too tall until the runtime measurement corrected it,
+     which moved the stats stripe and everything below it. The inline script at
+     the foot of index.html keeps this in sync afterwards. */
+  --header-height:165px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -166,6 +174,62 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   .ticker-page{justify-content:center}
   .ticker-page>.gm{max-width:100%}
   .ticker-page>.gm .gm-sp,.ticker-page>.gm .gm-tr{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+}
+
+/* ---------- LOADING SKELETONS ----------------------------------------------
+   Every figure on this page is fetched (or injected at the edge by the
+   tmr-home-ssr worker) at request time. None of them is baked into the
+   document any more, because a baked number is a number that can be WRONG:
+   the hero eyebrow sat on "2,348" and the capper footer on "353" for weeks
+   while the live values were 2,707 and 196, and every visitor watched them
+   swap seconds after first paint.
+
+   So each value ships as a skeleton that occupies EXACTLY the box its real
+   value will occupy — the line box is set by the parent's own line-height,
+   which the placeholder never exceeds — and the swap therefore moves nothing.
+   Rule: a skeleton, never a stale number. -------------------------------- */
+@keyframes tmr-sk{0%{background-position:150% 0}100%{background-position:-50% 0}}
+.sk{display:inline-block;vertical-align:baseline;height:.72em;min-width:14px;border-radius:4px;
+  background:linear-gradient(90deg,rgba(190,215,235,.10) 0%,rgba(190,215,235,.24) 50%,rgba(190,215,235,.10) 100%);
+  background-size:250% 100%;animation:tmr-sk 1.3s linear infinite}
+/* The stats stripe is the one light surface inside the dark hero. */
+.bridge .sk{background:linear-gradient(90deg,rgba(20,45,70,.09) 0%,rgba(20,45,70,.20) 50%,rgba(20,45,70,.09) 100%);background-size:250% 100%}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Ticker: the lane keeps a real matchup card's height (76px = 6px padding +
+   status row + pitchers row + trend row) from the first frame, so a slate that
+   lands late — or never — cannot push the hero down. Skeleton cards carry the
+   same box as the cards that replace them. */
+.ticker-games,.ticker-track,.ticker-page{min-height:76px}
+.gm.is-skel{width:230px;height:76px;justify-content:center;gap:7px;pointer-events:none;cursor:default}
+.gm.is-skel .sk{display:block;height:12px}
+.gm.is-skel .sk.a{width:150px;height:16px}
+.gm.is-skel .sk.b{width:112px}
+.gm.is-skel .sk.c{width:134px}
+/* The empty/unavailable message keeps the same reserved lane height. */
+.gm.is-msg{min-height:64px;justify-content:center}
+
+/* The sub-line wraps to two lines for a real capper's sports list. Reserve both
+   from the start, so a shorter capper — or a dash on the failure path — cannot
+   pull the card up under the hero. */
+.spot .sub2{min-height:3em}
+/* Fixed slot for the eyebrow figure: the skeleton and the number it becomes
+   then occupy the same width, and the pill around them never re-flows. */
+#tmrEyebrowPicks{display:inline-block;min-width:44px}
+
+/* Capper card: identity, splits, footer count and sparkline all arrive with
+   the same payload, so the whole card is one skeleton until it does. */
+.spot .bd.is-skel .avbox .sk{height:16px}
+.spot .sub2 .sk{height:11px;margin-top:5px}
+.spark .sk{display:block;flex:1;height:auto;min-width:0;border-radius:2px 2px 0 0;
+  background:linear-gradient(90deg,rgba(190,215,235,.10) 0%,rgba(190,215,235,.24) 50%,rgba(190,215,235,.10) 100%);
+  background-size:250% 100%}
+
+@media (max-width:640px){
+  /* One full-width skeleton card: five 230px cards would be clipped mid-card. */
+  .gm.is-skel{width:100%}
+  .gm.is-skel~.gm.is-skel{display:none}
 }
 
 /* ---------- HERO ---------- */
@@ -498,20 +562,59 @@ footer a:hover{color:#fff}
   html.tmr-lw-b1 .board .card:nth-of-type(1) .body,
   html.tmr-lw-b2 .board .card:nth-of-type(2) .body,
   html.tmr-lw-b3 .board .card:nth-of-type(3) .body { visibility: hidden !important; }
+
+  /* TMR Coin balance pill (shared nav, tmr-ds-nav.js). The balance is
+     PERSONALISED, so it can never be part of this shared, edge-cached document —
+     it has to arrive from /coins/balance after the page has loaded. What it must
+     not do is arrive by appearing: the pill ships `hidden`, and un-hiding it a
+     second in widened the nav's right-hand cluster and shifted everything in it.
+     Reserve the pill's box from the moment the nav renders and let the value
+     fade into a slot that is already the right size. Nothing is shown before the
+     real balance lands — the reserved box is empty, not a placeholder figure.
+     Scoped here rather than in tmr-ds.css because that stylesheet is referenced
+     by content hash on 97 other pages; this is the homepage's fix. */
+  body.tmr-ds .v2nav-coins[hidden] { display: inline-flex; visibility: hidden; }
+  body.tmr-ds .v2nav-coins #navCoinBalance { min-width: 34px; text-align: right; }
 </style>
 <script>document.documentElement.className += ' tmr-lw-b1 tmr-lw-b2 tmr-lw-b3';</script>
 </head>
 <body class="tmr-ds">
+<!-- Nav height reservation. There is no static <nav> in this document —
+     tmr-ds-nav.js builds one and inserts it as body.firstChild a few hundred
+     milliseconds in. Until then the page painted with nothing above the ticker
+     and then dropped 70px when the nav arrived, taking the ticker, the hero,
+     the CTA buttons and the capper card with it. This holds that exact space
+     from the first frame and gets out of the way the instant the real nav
+     exists, so the header never moves. -->
+<div id="tmrNavReserve" style="height:var(--nav-h,70px)" aria-hidden="true"></div>
+<script>
+(function(){
+  var slot = document.getElementById('tmrNavReserve');
+  if (!slot) return;
+  function drop(){ if (slot && slot.parentNode) { slot.parentNode.removeChild(slot); slot = null; } }
+  if (document.querySelector('.ds-nav')) return drop();
+  if ('MutationObserver' in window) {
+    var mo = new MutationObserver(function(){
+      if (document.querySelector('.ds-nav')) { mo.disconnect(); drop(); }
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+  }
+  // No nav ever arrived (script blocked, error): do not leave a dead gap.
+  window.addEventListener('load', function(){
+    setTimeout(function(){ if (!document.querySelector('.ds-nav')) drop(); }, 0);
+  });
+})();
+</script>
 
 
 
-<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date=""><div class="ticker-track"><div class="ticker-page"><span class="gm is-msg"><span class="st">Loading today&rsquo;s MLB slate&hellip;</span></span></div></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
+<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
 <section class="hero"><div class="hero-bg" aria-hidden="true"></div>
   <div class="grain"></div>
   <div class="wrap hero-in"><div class="hero-grid">
     <div>
-      <span class="eyebrow"><span class="bl"></span><span id="tmrEyebrowPicks">2,348</span> picks tracked &middot; nothing deleted</span>
+      <span class="eyebrow"><span class="bl"></span><span id="tmrEyebrowPicks"><i class="sk" style="width:40px"></i></span> picks tracked &middot; nothing deleted</span>
       <h1 class="hh">Track your picks.<br><em>Build a record nobody can fake.</em></h1>
       <p class="sub">Lock your pick before game time. TrustMyRecord grades it automatically and publishes the units, ROI, and streaks on a public profile that can't be edited or cherry-picked.</p>
       <div class="cta">
@@ -523,28 +626,28 @@ footer a:hover{color:#fff}
     <aside class="spot">
       <div class="rail"></div>
       <div class="hd"><b>&#9733; Capper of the week</b><a class="tlink" style="font-size:14px" href="/handicappers/">Full profile &rarr;</a></div>
-      <!--MK:homeCapper--><div class="bd">
-        <div class="who"><span class="avbox">MI</span>
-          <span><span class="nmrow" data-linked="1"><a href="/profile/?user=MoneyMakers"><b>MIA55</b></a><span class="vchip">Verified</span></span><span class="sub2">NFL, MLB, NCAAF, NCAAB · 196 tracked picks · 49.5% win rate · -111 avg odds · W1</span></span></div>
+      <!--MK:homeCapper--><div class="bd is-skel" aria-busy="true">
+        <div class="who"><span class="avbox"><i class="sk" style="width:34px"></i></span>
+          <span><span class="nmrow" data-linked="1"><a href="/handicappers/"><b><i class="sk" style="width:132px"></i></b></a><span class="vchip">Verified</span></span><span class="sub2"><i class="sk" style="width:100%"></i><i class="sk" style="width:62%"></i></span></span></div>
         <div class="g3">
-          <div><b class="num">97-99</b><span>Record</span></div>
-          <div><b class="num neg">-3.78</b><span>Units</span></div>
-          <div><b class="num neg">-1.3%</b><span>ROI</span></div>
+          <div><b class="num"><i class="sk" style="width:92px"></i></b><span>Record</span></div>
+          <div><b class="num"><i class="sk" style="width:78px"></i></b><span>Units</span></div>
+          <div><b class="num"><i class="sk" style="width:64px"></i></b><span>ROI</span></div>
         </div>
         <div class="sparkwrap">
-          <div class="lb"><span>Last 12 graded picks</span><span>3W · 9L</span></div>
-          <div class="spark"><i class="" style="height:100%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i><i class="" style="height:45%"></i><i class="" style="height:68%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i><i class="dn" style="height:75%"></i></div>
+          <div class="lb"><span><i class="sk" style="width:128px"></i></span><span><i class="sk" style="width:58px"></i></span></div>
+          <div class="spark"><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i></div>
         </div>
       </div><!--/MK:homeCapper-->
-      <div class="ft"><span>353 picks, every one locked pre-game</span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:14px" id="tmrCapperBuy" href="/marketplace/seller/?u=MoneyMakers">Buy picks &rarr;</a><a class="tlink" style="font-size:14px" href="/handicappers/">View ledger &rarr;</a></span></div>
+      <div class="ft"><span><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:14px" id="tmrCapperBuy" href="/marketplace/">Buy picks &rarr;</a><a class="tlink" style="font-size:14px" href="/handicappers/">View ledger &rarr;</a></span></div>
     </aside>
   </div></div>
 
   <!-- BRIDGE (stats strip - lives INSIDE the dark hero) -->
   <div class="bridge"><!--MK:homeStats--><div class="bridge-in">
-    <div class="s"><b class="num t" id="tmrStatPicks">2,710</b><span>Picks Tracked</span></div>
-    <div class="s"><b class="num" id="tmrStatCappers">36</b><span>Verified Cappers</span></div>
-    <div class="s"><b class="num" id="tmrStatMembers">70</b><span>Members</span></div>
+    <div class="s"><b class="num t" id="tmrStatPicks"><i class="sk" style="width:86px"></i></b><span>Picks Tracked</span></div>
+    <div class="s"><b class="num" id="tmrStatCappers"><i class="sk" style="width:42px"></i></b><span>Verified Cappers</span></div>
+    <div class="s"><b class="num" id="tmrStatMembers"><i class="sk" style="width:42px"></i></b><span>Members</span></div>
     <div class="s"><b class="num">$2,500</b><span>Free Prize Pool</span></div>
     <div class="cta-cell"><p>Every figure is auto-graded from final scores.</p><a class="tlink" href="/rules/">Grading rules →</a></div>
   </div><!--/MK:homeStats--></div>
@@ -670,26 +773,52 @@ footer a:hover{color:#fff}
 <script>
 (function(){
   // tmr-ds-nav.js (just above) injects the real nav at runtime -- there is no
-  // static <nav> in this document -- and the live-scores ticker above .hero
-  // grows once tmr-home-live.js replaces its loading placeholder with real
-  // game cards. --header-height defaults to a measured nav+ticker fallback
-  // (113px, see tmr-home-v2.css) for no-JS/first paint, but the actual space
-  // above .hero can change size after that, so keep it in sync with a
-  // ResizeObserver instead of measuring once and drifting stale.
+  // static <nav> in this document -- so the space above .hero is not final at
+  // the moment this script runs. --header-height ships as the true measured
+  // stack (nav 70px + ticker 95px = 165px, see tmr-home-v2.css) so the FIRST
+  // paint is already correct, and is kept in sync from there.
+  //
+  // The sync used to attach a ResizeObserver to whatever siblings happened to
+  // precede .hero at this instant. The nav is not one of them yet -- it is
+  // inserted as body.firstChild a moment later -- so nothing ever re-measured
+  // when it appeared, and the single early measurement (95px against a real
+  // 165px stack) stuck. Observe the BODY's child list as well, so any chrome
+  // inserted above the hero is picked up, and re-measure on load and resize.
   var hero = document.querySelector('.hero');
   if (!hero) return;
+  var last = null;
   function measure(){
-    var top = hero.getBoundingClientRect().top + window.scrollY;
-    if (top > 0) document.documentElement.style.setProperty('--header-height', top + 'px');
+    // Do not measure a stack that is not built yet. This script runs before
+    // tmr-ds-nav.js has inserted the nav, so an unguarded first measurement
+    // read 95px against a real 165px header, shrank --header-height, stretched
+    // the hero by 70px and dropped the stats stripe — then put it all back a
+    // tenth of a second later when the nav appeared. The CSS fallback is
+    // already the correct value; only overwrite it once the nav is really there.
+    if (!document.querySelector('.ds-nav')) return;
+    var top = Math.round(hero.getBoundingClientRect().top + window.scrollY);
+    if (top > 0 && top !== last) {
+      last = top;
+      document.documentElement.style.setProperty('--header-height', top + 'px');
+    }
   }
   measure();
   if ('ResizeObserver' in window) {
     var ro = new ResizeObserver(measure);
-    for (var el = hero.previousElementSibling; el; el = el.previousElementSibling) ro.observe(el);
+    var observeAbove = function(){
+      for (var el = hero.previousElementSibling; el; el = el.previousElementSibling) ro.observe(el);
+    };
+    observeAbove();
+    if ('MutationObserver' in window) {
+      new MutationObserver(function(){ observeAbove(); measure(); })
+        .observe(document.body, { childList: true });
+    }
   }
+  window.addEventListener('load', measure);
+  window.addEventListener('resize', measure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.a36013e6df77.js"></script>
+<script src="/static/js/tmr-home-live.4bb69dd7269a.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page

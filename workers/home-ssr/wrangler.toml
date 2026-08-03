@@ -3,10 +3,27 @@ main = "worker.mjs"
 compatibility_date = "2026-07-01"
 workers_dev = false
 
-# Homepage only. The worker injects CURRENT site stats + the Capper of the
-# Week card into the baked HTML at request time (fail-open on any error), so
-# the first meaningful paint is accurate with zero client-side swap.
+# Homepage only. The worker injects CURRENT site stats, the Capper of the Week
+# card and today's MLB slate into the document at request time (fail-open on any
+# error), so the first meaningful paint is accurate with zero client-side swap.
+#
+# A Cloudflare route pattern is matched against the FULL URL, query string
+# included, so a bare `trustmyrecord.com/` route does NOT match
+# `trustmyrecord.com/?utm_source=…` (verified live: that URL returns no
+# x-tmr-ssr header). `/index.html` did not match either. Both are added here.
+#
+# The query-string shapes CANNOT be routed: Cloudflare rejects any pattern
+# containing "?" with `Route pattern should not have query parameters
+# [code: 10022]`, and the only pattern that would cover them is
+# `trustmyrecord.com/*`, which puts this worker in front of every asset on the
+# site. That is not worth it, because the document no longer depends on the
+# injection to be CORRECT — it ships skeletons, never stale numbers. An ad click
+# carrying a utm_source gets placeholders that fill from the API a moment later,
+# which is the same honest sequence as a slow first visit. What it must never do
+# again is show 2,348 and then 2,707.
 routes = [
   { pattern = "trustmyrecord.com/", zone_name = "trustmyrecord.com" },
+  { pattern = "trustmyrecord.com/index.html", zone_name = "trustmyrecord.com" },
   { pattern = "www.trustmyrecord.com/", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/index.html", zone_name = "trustmyrecord.com" },
 ]
