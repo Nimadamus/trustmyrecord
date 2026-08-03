@@ -250,6 +250,85 @@ function assertBoxScore(result) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Pitcher decisions.
+//
+// A pitcher's decision renders inside the name cell as
+//   <span class="bx-dec bx-dec-W">W</span>
+// and a blown save is INDEPENDENT of the W/L/SV/HLD decision, so the same cell
+// legitimately reads "L, BS" or "W, BS" (BLOWN_SAVE_20260727 - a pitcher can
+// blow the save and still take the win if his team retakes the lead).
+//
+// Parsing that cell with /([A-Z]+)/ silently discards every combined label,
+// which is what made this suite look like the engine was dropping decisions.
+// Split the cell on commas instead, then assert the real baseball rules.
+// ---------------------------------------------------------------------------
+const DECISION_LABELS = ['W', 'L', 'SV', 'HLD', 'BS'];
+
+function parsePitchingTables(html) {
+  return [...html.matchAll(/<p class="team-box-label">([^<]*?) Pitching<\/p>[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/g)]
+    .map(([, team, body]) => ({
+      team: team.trim(),
+      rows: [...body.matchAll(/<tr><th scope="row">([\s\S]*?)<\/th>/g)]
+        .map((match) => match[1])
+        .filter((cell) => cell.trim() !== 'Totals')
+        .map((cell) => {
+          const decisionCell = cell.match(/<span class="bx-dec[^"]*">([^<]+)<\/span>/);
+          return {
+            name: cell.replace(/<span[\s\S]*$/, '').trim(),
+            decisions: decisionCell ? decisionCell[1].split(',').map((part) => part.trim()) : [],
+          };
+        }),
+    }));
+}
+
+function assertPitcherDecisions(html, box, label) {
+  const tables = parsePitchingTables(html);
+  assert.strictEqual(tables.length, 2, label + ' renders a pitching table for both clubs');
+  const all = tables.flatMap((table) => table.rows.flatMap((row) => row.decisions));
+  const show = ' | decisions: ' + JSON.stringify(tables.map((t) => t.rows.map((r) => ({ [r.name]: r.decisions }))));
+
+  all.forEach((decision) => {
+    assert(DECISION_LABELS.includes(decision),
+      label + ' pitching table uses only real decision labels, got ' + JSON.stringify(decision) + show);
+  });
+
+  // MLB awards no decision until a suspended game is resumed and completed.
+  if (box.gameStatus === 'suspended') {
+    assert.strictEqual(all.length, 0, label + ' suspended game awards no decisions' + show);
+    return;
+  }
+
+  const count = (decision) => all.filter((entry) => entry === decision).length;
+  assert.strictEqual(count('W'), 1, label + ' credits exactly one winning pitcher' + show);
+  assert.strictEqual(count('L'), 1, label + ' charges exactly one losing pitcher' + show);
+  assert(count('SV') <= 1, label + ' credits zero or one save' + show);
+
+  const winnerTable = tables.find((table) => table.rows.some((row) => row.decisions.includes('W')));
+  const loserTable = tables.find((table) => table.rows.some((row) => row.decisions.includes('L')));
+  assert(winnerTable && loserTable, label + ' places both decisions in a rendered table' + show);
+  assert.notStrictEqual(winnerTable.team, loserTable.team,
+    label + ' puts the win and the loss on opposite clubs' + show);
+
+  // The save always belongs to the winning club, never the losing one.
+  const saveTable = tables.find((table) => table.rows.some((row) => row.decisions.includes('SV')));
+  if (saveTable) {
+    assert.strictEqual(saveTable.team, winnerTable.team, label + ' credits the save to the winning club' + show);
+  }
+
+  tables.forEach((table) => table.rows.forEach((row) => {
+    assert.strictEqual(new Set(row.decisions).size, row.decisions.length,
+      label + ' does not repeat a decision on one pitcher' + show);
+    if (row.decisions.length) {
+      // Requirement: never label a pitcher who did not appear in the game.
+      assert(row.name, label + ' never labels an unnamed pitcher row' + show);
+    }
+    // A pitcher cannot both win the game and save it.
+    assert(!(row.decisions.includes('W') && row.decisions.includes('SV')),
+      label + ' never gives one pitcher both the win and the save' + show);
+  }));
+}
+
 function assertCleanProjectedLineups(html, label) {
   // Batter rows render as
   //   <th scope="row"><span class="bx-slot">N</span> Name <span class="bx-pos">POS</span></th>
@@ -275,8 +354,152 @@ function assertCleanProjectedLineups(html, label) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Deterministic pitcher-decision rules.
+//
+// The rendered-box-score checks above prove the invariants hold on whatever the
+// dice produce; these drive pitcherDecisions() directly (already exposed on the
+// test-only _engine hook) so every special case is covered on EVERY run instead
+// of only when the simulation happens to produce one: extra innings, walk-offs,
+// pitcher-of-record changes, blown saves, holds, and no-save situations.
+// ---------------------------------------------------------------------------
+function pitcherRow(name, outs, runs, enterMargin) {
+  const row = { name, outs, r: runs, h: 0, er: runs, bb: 0, so: 0, hr: 0 };
+  if (enterMargin !== undefined) row.enterMargin = enterMargin;
+  return row;
+}
+
+function labelsOf(result) {
+  return result.labels.map((label, index) => [label || '', result.blownSaves[index] ? 'BS' : '']
+    .filter(Boolean).join(','));
+}
+
+function assertDecisionRules(simulator) {
+  const decide = simulator._engine.pitcherDecisions;
+  assert.strictEqual(typeof decide, 'function', 'pitcherDecisions is exposed for testing');
+  const one = (labels, decision) => labels.filter((entry) => entry.split(',').includes(decision)).length;
+  let rows;
+  let out;
+
+  // 1. Regulation win: a starter past 5 innings keeps the win; the closer who
+  //    protected a 2-run lead gets the save.
+  rows = [pitcherRow('Starter', 18, 2), pitcherRow('Setup', 3, 0, 3), pitcherRow('Closer', 3, 0, 2)];
+  out = labelsOf(decide(rows, true, 2, { isHome: true }));
+  assert.strictEqual(out[0], 'W', 'regulation win goes to a starter with 6 IP: ' + JSON.stringify(out));
+  assert.strictEqual(out[2], 'SV', 'closer protecting a 2-run lead earns the save: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'W'), 1, 'exactly one win: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'SV'), 1, 'exactly one save: ' + JSON.stringify(out));
+
+  // 2. Pitcher of record changes: a starter who fails to complete 5 innings is
+  //    NOT win-eligible, so the win moves to the first reliever.
+  rows = [pitcherRow('ShortStarter', 12, 4), pitcherRow('LongMan', 9, 0), pitcherRow('Closer', 3, 0, 2)];
+  out = labelsOf(decide(rows, true, 2, { isHome: true }));
+  assert.strictEqual(out[0], '', 'a starter with 4 IP is not win-eligible: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'W'), 1, 'the win moves to a reliever: ' + JSON.stringify(out));
+
+  // 3. An ineligible DERIVED winner is still refused the win.
+  rows = [pitcherRow('ShortStarter', 12, 4), pitcherRow('LongMan', 9, 0), pitcherRow('Closer', 3, 0, 2)];
+  out = labelsOf(decide(rows, true, 2, { isHome: true, derivedWinPitcherName: 'ShortStarter' }));
+  assert.strictEqual(out[0], '', 'a derived winner who is an ineligible starter is refused: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'W'), 1, 'the game still has exactly one winner: ' + JSON.stringify(out));
+
+  // 4. An eligible derived winner IS honoured.
+  rows = [pitcherRow('Starter', 21, 1), pitcherRow('Closer', 3, 0, 2)];
+  out = labelsOf(decide(rows, true, 2, { isHome: true, derivedWinPitcherName: 'Starter' }));
+  assert.strictEqual(out[0], 'W', 'an eligible derived winner keeps the win: ' + JSON.stringify(out));
+
+  // 5. Extra innings: the starter never takes the decision.
+  rows = [pitcherRow('Starter', 21, 3), pitcherRow('Middle', 3, 0), pitcherRow('Extras', 3, 0), pitcherRow('Final', 3, 0)];
+  out = labelsOf(decide(rows, true, 1, { isHome: true, extra: true }));
+  assert.strictEqual(out[0], '', 'an extra-inning win does not go to the starter: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'W'), 1, 'extra-inning win is awarded exactly once: ' + JSON.stringify(out));
+
+  // 6. Walk-off: the home pitcher on the mound when the run scores takes the win.
+  rows = [pitcherRow('Starter', 18, 3), pitcherRow('Reliever', 3, 0), pitcherRow('OnMound', 3, 0)];
+  out = labelsOf(decide(rows, true, 1, { isHome: true, walkOff: true }));
+  assert.strictEqual(out[2], 'W', 'a walk-off win goes to the pitcher on the mound: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'SV'), 0, 'a walk-off win has no save: ' + JSON.stringify(out));
+
+  // 7. Walk-off: the visiting pitcher who gave up the run takes the loss.
+  rows = [pitcherRow('Starter', 18, 2), pitcherRow('Setup', 3, 0), pitcherRow('GaveItUp', 0, 1)];
+  out = labelsOf(decide(rows, false, 1, { isHome: false, walkOff: true }));
+  assert.strictEqual(out[2], 'L', 'a walk-off loss goes to the pitcher who allowed it: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'L'), 1, 'exactly one loss: ' + JSON.stringify(out));
+
+  // 8. Regulation loss defaults to the starter.
+  rows = [pitcherRow('Starter', 18, 5), pitcherRow('Mop', 6, 1)];
+  out = labelsOf(decide(rows, false, 3, { isHome: false }));
+  assert.strictEqual(out[0], 'L', 'a regulation loss is charged to the starter: ' + JSON.stringify(out));
+
+  // 9. Extra-inning loss goes to the reliever who gave up the deciding run.
+  rows = [pitcherRow('Starter', 21, 2), pitcherRow('Bullpen', 6, 0), pitcherRow('LostIt', 3, 2)];
+  out = labelsOf(decide(rows, false, 2, { isHome: false, extra: true }));
+  assert.strictEqual(out[2], 'L', 'an extra-inning loss is not pinned on the starter: ' + JSON.stringify(out));
+
+  // 10. No-save situation: a closer mopping up a blowout gets nothing.
+  rows = [pitcherRow('Starter', 18, 0), pitcherRow('MopUp', 3, 1, 9)];
+  out = labelsOf(decide(rows, true, 9, { isHome: true }));
+  assert.strictEqual(one(out, 'SV'), 0, 'a 9-run lead is not a save situation: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'W'), 1, 'the win is still awarded: ' + JSON.stringify(out));
+
+  // 11. Long-finish save: a multi-inning relief finish earns a save regardless of
+  //     margin - but only when the starter was win-eligible, otherwise the win
+  //     itself moves to that reliever and a pitcher cannot win and save one game.
+  rows = [pitcherRow('Starter', 15, 1), pitcherRow('LongRelief', 12, 0, 8)];
+  out = labelsOf(decide(rows, true, 8, { isHome: true }));
+  assert.strictEqual(out[0], 'W', 'the 5-inning starter keeps the win: ' + JSON.stringify(out));
+  assert.strictEqual(out[1], 'SV', 'a 4-inning relief finish earns the save: ' + JSON.stringify(out));
+  // ... and when the starter is NOT win-eligible the long man takes the win instead,
+  //     never both the win and the save.
+  rows = [pitcherRow('ShortStarter', 12, 1), pitcherRow('LongRelief', 15, 0, 8)];
+  out = labelsOf(decide(rows, true, 8, { isHome: true }));
+  assert.strictEqual(out[1], 'W', 'the long man takes the win when the starter is short: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'SV'), 0, 'the winning pitcher is never also credited a save: ' + JSON.stringify(out));
+
+  // 12. Blown save: a reliever who surrenders the lead he entered protecting.
+  rows = [pitcherRow('Starter', 18, 1), pitcherRow('Blew', 3, 3, 2), pitcherRow('Closer', 3, 0, 1)];
+  out = labelsOf(decide(rows, true, 1, { isHome: true }));
+  assert(out[1].split(',').includes('BS'), 'a reliever who gives up the lead is charged a blown save: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'W'), 1, 'a blown save does not remove the win: ' + JSON.stringify(out));
+
+  // 13. Hold: a reliever who protects a 1-3 run lead and hands it off cleanly.
+  rows = [pitcherRow('Starter', 18, 1), pitcherRow('Held', 3, 0, 2), pitcherRow('Closer', 3, 0, 2)];
+  out = labelsOf(decide(rows, true, 2, { isHome: true }));
+  assert.strictEqual(out[1], 'HLD', 'a clean set-up appearance earns a hold: ' + JSON.stringify(out));
+  assert.strictEqual(out[2], 'SV', 'the closer still earns the save: ' + JSON.stringify(out));
+  assert.strictEqual(out[0], 'W', 'the starter still earns the win: ' + JSON.stringify(out));
+
+  // 14. A starter is never credited a hold.
+  rows = [pitcherRow('Starter', 6, 0, 2), pitcherRow('Closer', 21, 0, 2)];
+  out = labelsOf(decide(rows, true, 2, { isHome: true }));
+  assert(!out[0].split(',').includes('HLD'), 'a starter is never credited a hold: ' + JSON.stringify(out));
+
+  // 15. Complete game: the only pitcher takes the decision and no save exists.
+  out = labelsOf(decide([pitcherRow('CompleteGame', 27, 1)], true, 3, { isHome: true }));
+  assert.strictEqual(out[0], 'W', 'a complete-game winner takes the win: ' + JSON.stringify(out));
+  assert.strictEqual(one(out, 'SV'), 0, 'a complete game has no save: ' + JSON.stringify(out));
+  out = labelsOf(decide([pitcherRow('CompleteGameLoss', 24, 4)], false, 3, { isHome: false }));
+  assert.strictEqual(out[0], 'L', 'a complete-game loser takes the loss: ' + JSON.stringify(out));
+
+  // 16. No pitcher rows at all: no decisions, and no crash.
+  assert.deepStrictEqual(decide([], true, 2, { isHome: true }).labels, [], 'an empty staff produces no labels');
+
+  // 17. A single pitcher never carries a duplicate label.
+  [
+    [[pitcherRow('A', 18, 1), pitcherRow('B', 3, 0, 2)], true, 2, { isHome: true }],
+    [[pitcherRow('A', 18, 4), pitcherRow('B', 3, 1, 2)], false, 2, { isHome: false }],
+    [[pitcherRow('A', 21, 2), pitcherRow('B', 3, 0), pitcherRow('C', 3, 0)], true, 1, { isHome: true, extra: true }],
+  ].forEach(([staff, isWinner, margin, ctx]) => {
+    labelsOf(decide(staff, isWinner, margin, ctx)).forEach((entry) => {
+      const parts = entry.split(',').filter(Boolean);
+      assert.strictEqual(new Set(parts).size, parts.length, 'no duplicate label on one pitcher: ' + entry);
+    });
+  });
+}
+
 (async () => {
   const { simulator, elements } = simulatorContext();
+  assertDecisionRules(simulator);
   const modes = ['current', 'historical', 'mixed'];
   for (let index = 0; index < modes.length; index += 1) {
     const mode = modes[index];
@@ -321,26 +544,7 @@ function assertCleanProjectedLineups(html, label) {
     assert(/<th[^>]*>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
     assert(/<th[^>]*>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');
     assertCleanProjectedLineups(elements.playerBoxScoreContent.innerHTML, mode);
-    // Decisions render as <span class="bx-dec bx-dec-W">W</span>, not "(W)", and
-    // holds/blown saves ARE modelled now (HOLD_20260725 / BLOWN_SAVE_20260727),
-    // so the old "(H) is never present" rule would reject correct output.
-    // Assert the baseball rules that hold every run instead.
-    const decisions = [...elements.playerBoxScoreContent.innerHTML.matchAll(/<span class="bx-dec[^"]*">([A-Z]+)<\/span>/g)]
-      .map((match) => match[1]);
-    decisions.forEach((decision) => {
-      assert(['W', 'L', 'SV', 'HLD', 'BS'].includes(decision),
-        mode + ' pitching table uses only real decision labels, got ' + decision);
-    });
-    assert(decisions.filter((d) => d === 'W').length <= 1,
-      mode + ' credits at most one winning pitcher, got ' + JSON.stringify(decisions));
-    assert(decisions.filter((d) => d === 'L').length <= 1,
-      mode + ' charges at most one losing pitcher, got ' + JSON.stringify(decisions));
-    assert(decisions.filter((d) => d === 'SV').length <= 1,
-      mode + ' credits at most one save, got ' + JSON.stringify(decisions));
-    // NOTE: deliberately NOT asserting that a completed game always shows a W and
-    // an L. It should - but the engine does not currently guarantee it (see the
-    // pre-existing-finding note at the bottom of this file), and a test that
-    // fails on the dice is worse than one that states what actually holds.
+    assertPitcherDecisions(elements.playerBoxScoreContent.innerHTML, simulator.state.simulation.boxScore, mode);
     assert(/Totals/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders table totals rows');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
     assert(/Team summary:/.test(simulator.boxScoreText(result)), mode + ' export includes team summary stats');
@@ -364,13 +568,3 @@ function assertCleanProjectedLineups(html, label) {
   process.exit(1);
 });
 
-// PRE-EXISTING FINDING (2026-08-03, surfaced by repairing this harness, not
-// caused by it): on a COMPLETED game the rendered pitching tables intermittently
-// carry an incomplete set of decisions - e.g. ["W"] with no matching "L",
-// ["L","SV"] with no "W", or even ["HLD"] with neither. Seen in all three modes.
-// pitcherDecisions() assigns a label on both the winner and the loser branch, so
-// the decision is being lost between that pass and the rendered table.
-// Deliberately not changed here: altering engine behaviour is out of scope for a
-// test repair, and it needs a product decision. The assertions above therefore
-// check only what holds on every run - the labels are always valid, and no
-// decision is ever duplicated.
