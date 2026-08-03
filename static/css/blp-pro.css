@@ -1379,3 +1379,49 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 @media (prefers-reduced-motion: reduce) {
     #panel-matchup * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* ---------------------------------------------------- daily allowance
+   The one-free-inquiry-per-day line sits under the run button, and the
+   subscription prompt appears beneath it only once that inquiry is spent.
+   Neither ever overlays the report: a user who just spent their free
+   inquiry must be able to read what they spent it on. */
+#panel-matchup .hx-allowance {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--hx-ink-3) !important;
+}
+#panel-matchup .hx-paywall {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--hx-line);
+    border-radius: 10px;
+    background: var(--hx-surface-2);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+}
+#panel-matchup .hx-paywall-copy {
+    margin: 0;
+    flex: 1 1 16rem;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--hx-ink-2) !important;
+}
+#panel-matchup .hx-paywall-btn {
+    flex: 0 0 auto;
+    min-height: 40px;          /* the shell's 38px floor is below the 40px touch target */
+    padding: 0 18px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--hx-accent);
+    color: #fff !important;
+    font: 700 14px/1 var(--hx-font, inherit);
+    cursor: pointer;
+}
+#panel-matchup .hx-paywall-btn:hover { filter: brightness(1.06); }
+#panel-matchup .hx-paywall-btn:focus-visible {
+    outline: 2px solid var(--hx-accent);
+    outline-offset: 2px;
+}
