@@ -29,6 +29,12 @@
 
     var LS_ACTIVATED = 'tmr_has_posted_pick';   // '1' once the user has any pick
     var SS_SESSION_FLAGS = 'tmr_fp_session';    // per-tab: viewed/started/collapsed
+    /* '1' while the server has told us this browser's user is NOT activated, so
+       the reminder strip is due. It exists purely so a RETURNING eligible user
+       gets the strip in the first frame instead of watching it drop in after
+       /users/me answers and shove the nav, ticker, hero and capper card down
+       82px. Only ever written from a real server answer — see start(). */
+    var LS_REMINDER_DUE = 'tmr_fp_reminder_due';
 
     var state = {
         userId: null,
@@ -403,6 +409,12 @@
         if (main) return { parent: main, before: main.firstChild };
         var nav = document.querySelector('nav.tmr-global-nav') || document.querySelector('body > nav, body > header');
         if (nav && nav.parentNode) return { parent: nav.parentNode, before: nav.nextSibling };
+        /* The design-system nav is injected at runtime, so on an early call it
+           is not in the document yet. The homepage holds its place with
+           #tmrNavReserve; anchoring to that puts the strip below the nav from
+           the first frame instead of above it. */
+        var reserve = document.getElementById('tmrNavReserve');
+        if (reserve && reserve.parentNode) return { parent: reserve.parentNode, before: reserve.nextSibling };
         return { parent: document.body, before: document.body.firstChild };
     }
 
@@ -636,17 +648,41 @@
         var user = getStoredUser();
         state.userId = user ? (user.id || user.username) : null;
 
+        /* Paint the reminder strip NOW if the last server answer said it was
+           due. Waiting for /users/me meant it dropped into the top of the
+           document about a second in and pushed the nav, the ticker, the hero
+           copy, the CTA buttons and the capper card down by its own height —
+           a 0.33 CLS on the homepage for every eligible signed-in visitor.
+           This is not a guess about the user: it only fires on a cached, real
+           server answer, and the fetch below still corrects it either way. The
+           first load in a new browser has no cached answer and still waits. */
+        var preRendered = false;
+        try { preRendered = localStorage.getItem(LS_REMINDER_DUE) === '1'; } catch (e) {}
+        if (preRendered && !isSportsbook() && !sessionFlags().reminderClosed) {
+            injectStyles();
+            renderReminder();
+        }
+
         fetchActivationStatus().then(function (status) {
-            if (!status) return;               // unknown / 401 -> show nothing
+            if (!status) {                     // unknown / 401 -> show nothing
+                if (preRendered) removeReminder();
+                return;
+            }
             state.userId = status.userId || state.userId;
             if (status.hasPicks) {             // existing / activated user -> never show
-                try { localStorage.setItem(LS_ACTIVATED, '1'); } catch (e) {}
+                try {
+                    localStorage.setItem(LS_ACTIVATED, '1');
+                    localStorage.removeItem(LS_REMINDER_DUE);
+                } catch (e) {}
                 removePanel();
                 removeReminder();
                 log('user already has ' + status.pickCount + ' pick(s) — onboarding suppressed');
                 return;
             }
-            try { localStorage.removeItem(LS_ACTIVATED); } catch (e) {}
+            try {
+                localStorage.removeItem(LS_ACTIVATED);
+                localStorage.setItem(LS_REMINDER_DUE, '1');
+            } catch (e) {}
             state.eligible = true;
             var flags = sessionFlags();
             state.viewed = !!flags.viewed;
