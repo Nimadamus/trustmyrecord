@@ -1042,6 +1042,11 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
     padding: 0; margin: -1px; overflow: hidden;
     clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
+/* The mirror <select> that keeps mSport.value working is never shown and never
+   focused, so it is removed from layout entirely. As a 1px-clipped element it
+   still lost to the shell's own select sizing and rendered 1372px wide, which
+   pushed the page 200px past the viewport. */
+#panel-matchup select.hx-sr-only { display: none; }
 
 #panel-matchup {
     --hx-ink: #1b1f23;
