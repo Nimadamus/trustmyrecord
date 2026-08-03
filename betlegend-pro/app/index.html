@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=99de84e02eac">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=e22936f62df2">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
 </head>
@@ -826,11 +826,18 @@
         }
         var box = $('hxChosen');
         if (!count) { box.hidden = true; box.innerHTML = ''; return; }
-        box.innerHTML = '<span class="hx-chosen-label">Applied:</span>'
+        var html = '<span class="hx-chosen-label">Applied:</span>'
             + picked.map(function (p) {
                 return '<button type="button" class="hx-tag hx-tag--x" data-remove="' + esc(p.id) + '">'
                     + esc(p.label) + '<span aria-hidden="true"> ×</span></button>';
             }).join('');
+        // Only rewrite when the chips actually changed. Clicking a chip blurs
+        // whatever input was focused, which fires `change` BEFORE the click
+        // lands -- and an unconditional rewrite there replaced the very button
+        // being clicked, so the click arrived on a detached node and the chip
+        // could not be removed. Reproduced with two filters set; with one it
+        // happened to work, because nothing had focus to blur.
+        if (box.innerHTML !== html) box.innerHTML = html;
         box.hidden = false;
     }
 
