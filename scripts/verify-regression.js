@@ -9,6 +9,7 @@ const startedAt = new Date();
 
 const allChecks = [
   ['unit/static: line formatting', 'node', ['tests/line-formatting-regression-test.js'], 'static'],
+  ['unit/static: poll leaderboard lock', 'node', ['tests/polls-leaderboard-regression-test.js'], 'static'],
   ['unit/static: pick line single source', 'node', ['tests/pick-line-single-source-test.js'], 'static'],
   ['unit/static: sportsbook visual marker lock', 'node', ['tests/sportsbook-approved-visual-lock.test.js'], 'static'],
   ['unit/static: sportsbook reliability guard', 'node', ['tests/sportsbook-reliability-guard-test.js'], 'static'],

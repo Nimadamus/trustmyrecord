@@ -808,6 +808,122 @@
             .pl-opts { grid-template-columns: 1fr; }
             .pl-mu-name { font-size: 0.78rem; }
         }
+
+        /* ============================================================
+           POLL LEADERBOARD
+           Same token ramp as the board above; denser, table-first.
+           Desktop = one scannable grid. Mobile = one card per player,
+           because a 11-column table cannot be read on a phone.
+           ============================================================ */
+        .pl-lb .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+        .pl-lb { margin-top: 34px; padding-top: 26px; border-top: 1px solid var(--border); scroll-margin-top: calc(var(--nav-h, 0px) + 76px); }
+        .pl-lb-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+        .pl-lb-head h2 { margin: 0; font-size: 1.18rem; letter-spacing: -0.01em; }
+        .pl-lb-head .sub { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
+        .pl-lb-updated { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.72rem; font-weight: 650; white-space: nowrap; }
+        .pl-lb-updated b { color: var(--text-2); font-weight: 700; }
+
+        /* ---- filters ---- */
+        .pl-lb-filters { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-bottom: 14px; }
+        .pl-lb-fgroup { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .pl-lb-flabel { color: var(--muted); font-size: 0.66rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; margin-right: 2px; }
+        .pl-lb-chip { appearance: none; cursor: pointer; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); font-size: 0.735rem; font-weight: 700; line-height: 1.2; transition: background .15s, color .15s, border-color .15s; }
+        .pl-lb-chip:hover { border-color: var(--border-strong); color: var(--text); }
+        .pl-lb-chip.is-active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+
+        /* ---- summary cards ---- */
+        .pl-lb-cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+        .pl-lb-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
+        .pl-lb-card .k { display: block; color: var(--muted); font-size: 0.645rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+        .pl-lb-card .v { display: block; color: var(--text); font-size: 1.02rem; font-weight: 800; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pl-lb-card .n { display: block; color: var(--muted); font-size: 0.685rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pl-lb-card.is-leader .v { color: var(--gold); }
+
+        /* ---- your stats ---- */
+        .pl-lb-you { background: linear-gradient(180deg, rgba(34,211,238,0.07), rgba(34,211,238,0.02)); border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px; }
+        .pl-lb-you h3 { margin: 0 0 9px; font-size: 0.86rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 7px; }
+        .pl-lb-you h3 .pl-lb-rankbig { color: var(--accent); font-variant-numeric: tabular-nums; }
+        .pl-lb-youstats { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+        .pl-lb-youstats div { min-width: 0; }
+        .pl-lb-youstats .k { display: block; color: var(--muted); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+        .pl-lb-youstats .v { display: block; color: var(--text); font-size: 0.9rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+        /* ---- table ---- */
+        .pl-lb-tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); -webkit-overflow-scrolling: touch; }
+        .pl-lb-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 880px; }
+        .pl-lb-table th, .pl-lb-table td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+        .pl-lb-table th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); color: var(--muted); font-size: 0.63rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+        .pl-lb-table th:first-child, .pl-lb-table td:first-child { text-align: center; width: 52px; }
+        .pl-lb-table th:nth-child(2), .pl-lb-table td:nth-child(2) { text-align: left; }
+        .pl-lb-table tbody tr:last-child td { border-bottom: 0; }
+        .pl-lb-table tbody tr:hover td { background: rgba(146,176,214,0.05); }
+        .pl-lb-table tr.is-you td { background: rgba(34,211,238,0.085); }
+        .pl-lb-table tr.is-you:hover td { background: rgba(34,211,238,0.12); }
+        .pl-lb-table tr.is-you td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+        .pl-lb-num { font-variant-numeric: tabular-nums; color: var(--text-2); font-weight: 650; }
+        .pl-lb-num.good { color: var(--green); }
+        .pl-lb-num.bad { color: var(--red); }
+        .pl-lb-num.pend { color: var(--muted); }
+        .pl-lb-pts { color: var(--text); font-weight: 800; font-variant-numeric: tabular-nums; }
+        .pl-lb-rank { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-2); }
+        .pl-lb-rank.m1 { background: var(--gold-dim); color: var(--gold); }
+        .pl-lb-rank.m2 { background: rgba(190,205,222,0.14); color: #C9D6E5; }
+        .pl-lb-rank.m3 { background: rgba(205,127,80,0.15); color: #E0A277; }
+        .pl-lb-user { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: var(--text); font-weight: 700; text-decoration: none; }
+        .pl-lb-user:hover { color: var(--accent); }
+        .pl-lb-user:hover .pl-lb-name { text-decoration: underline; }
+        .pl-lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px; }
+        .pl-lb-av { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--surface-3); flex: 0 0 auto; border: 1px solid var(--border); }
+        .pl-lb-av-f { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2); font-size: 0.72rem; font-weight: 800; flex: 0 0 auto; }
+        .pl-lb-streak { display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .pl-lb-streak.hot { color: var(--green); }
+        .pl-lb-acc { font-variant-numeric: tabular-nums; font-weight: 750; color: var(--text); }
+        .pl-lb-acc.dim { color: var(--muted); font-weight: 600; }
+        .pl-lb-youtag { margin-left: 6px; padding: 1px 5px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: 0.575rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+
+        /* ---- footer / empty / scoring ---- */
+        .pl-lb-foot { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+        .pl-lb-count { color: var(--muted); font-size: 0.735rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+        .pl-lb-empty { padding: 26px 18px; text-align: center; color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
+        .pl-lb-empty i { display: block; font-size: 1.5rem; color: var(--border-strong); margin-bottom: 9px; }
+        .pl-lb-empty b { display: block; color: var(--text-2); font-size: 0.9rem; margin-bottom: 4px; }
+        .pl-lb-how { margin-top: 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); }
+        .pl-lb-how > summary { cursor: pointer; list-style: none; padding: 9px 13px; color: var(--text-2); font-size: 0.775rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .pl-lb-how > summary::-webkit-details-marker { display: none; }
+        .pl-lb-how > summary::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; margin-left: auto; font-size: 0.62rem; color: var(--muted); transition: transform .18s; }
+        .pl-lb-how[open] > summary::after { transform: rotate(180deg); }
+        .pl-lb-how .body { padding: 0 13px 13px; color: var(--muted); font-size: 0.765rem; line-height: 1.62; border-top: 1px solid var(--border); padding-top: 11px; }
+        .pl-lb-how .body b { color: var(--text-2); }
+        .pl-lb-how .body ul { margin: 7px 0 0; padding-left: 18px; }
+        .pl-lb-how .body li { margin-bottom: 4px; }
+        .pl-lb-skel { height: 13px; border-radius: 4px; background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2)); background-size: 200% 100%; animation: plLbShim 1.15s linear infinite; }
+        @keyframes plLbShim { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        @media (prefers-reduced-motion: reduce) { .pl-lb-skel { animation: none; } }
+
+        /* ---- mobile: the table becomes one card per player ---- */
+        .pl-lb-cardlist { display: none; }
+        @media (max-width: 860px) {
+            .pl-lb-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pl-lb-youstats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (max-width: 720px) {
+            .pl-lb { margin-top: 26px; padding-top: 20px; }
+            .pl-lb-tablewrap { display: none; }
+            .pl-lb-cardlist { display: grid; gap: 8px; }
+            .pl-lb-mc { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; }
+            .pl-lb-mc.is-you { border-color: var(--accent-border); background: rgba(34,211,238,0.06); }
+            .pl-lb-mc-top { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+            .pl-lb-mc-top .pl-lb-name { max-width: none; flex: 1 1 auto; }
+            .pl-lb-mc-pts { margin-left: auto; color: var(--text); font-weight: 800; font-size: 0.95rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+            .pl-lb-mc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px 6px; }
+            .pl-lb-mc-grid .k { display: block; color: var(--muted); font-size: 0.585rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+            .pl-lb-mc-grid .v { display: block; color: var(--text-2); font-size: 0.8rem; font-weight: 750; font-variant-numeric: tabular-nums; margin-top: 1px; }
+        }
+        @media (max-width: 420px) {
+            .pl-lb-cards { grid-template-columns: 1fr 1fr; }
+            .pl-lb-youstats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .pl-lb-mc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
 </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Polls", "item": "https://trustmyrecord.com/polls/"}]}
@@ -863,6 +979,7 @@
                 <button type="button" class="pl-chip" data-view="most_voted" aria-pressed="false" onclick="setView('most_voted')"><i class="fas fa-fire" aria-hidden="true"></i> Most Voted</button>
                 <button type="button" class="pl-chip" data-view="voted" aria-pressed="false" onclick="setView('voted')"><i class="fas fa-user-check" aria-hidden="true"></i> My Votes</button>
                 <button type="button" class="pl-chip" data-view="closed" aria-pressed="false" onclick="setView('closed')"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Closed</button>
+                <button type="button" class="pl-chip" id="lbJumpChip" onclick="jumpToLeaderboard()" aria-controls="pollLeaderboard"><i class="fas fa-ranking-star" aria-hidden="true"></i> Leaderboard</button>
             </div>
             <div class="pl-toolspacer"></div>
             <div class="pl-search" id="pollSearchWrap">
@@ -890,6 +1007,72 @@
                 </div>
             </div>
             <div class="pl-quizgrid" id="quizGrid"></div>
+        </section>
+
+
+        <!-- ========== POLL LEADERBOARD ==========
+             Ranked from real graded poll responses (GET /api/polls/leaderboard).
+             Pending picks are shown as pending and never scored. -->
+        <section class="pl-band pl-lb" id="pollLeaderboard" aria-labelledby="pollLbHeading">
+            <div class="pl-lb-head">
+                <div>
+                    <span class="pl-eyebrow"><i class="fas fa-ranking-star" aria-hidden="true"></i> Standings</span>
+                    <h2 id="pollLbHeading"><i class="fas fa-trophy" aria-hidden="true"></i> Poll Leaderboard</h2>
+                    <div class="sub">Ranked by points banked from graded picks. Games that are not final stay pending.</div>
+                </div>
+                <div class="pl-lb-updated" id="pollLbUpdated" aria-live="polite"></div>
+            </div>
+
+            <div class="pl-lb-filters">
+                <div class="pl-lb-fgroup" id="pollLbPeriodChips" role="group" aria-label="Filter leaderboard by time period">
+                    <span class="pl-lb-flabel">Period</span>
+                    <button type="button" class="pl-lb-chip" data-period="today" aria-pressed="false" onclick="setLbPeriod('today')">Today</button>
+                    <button type="button" class="pl-lb-chip" data-period="week" aria-pressed="false" onclick="setLbPeriod('week')">This Week</button>
+                    <button type="button" class="pl-lb-chip" data-period="month" aria-pressed="false" onclick="setLbPeriod('month')">This Month</button>
+                    <button type="button" class="pl-lb-chip is-active" data-period="all" aria-pressed="true" onclick="setLbPeriod('all')">All Time</button>
+                </div>
+                <div class="pl-lb-fgroup" id="pollLbLeagueChips" role="group" aria-label="Filter leaderboard by sport">
+                    <span class="pl-lb-flabel">Sport</span>
+                    <button type="button" class="pl-lb-chip" data-lbleague="MLB" aria-pressed="false" onclick="setLbLeague('MLB')">MLB</button>
+                    <button type="button" class="pl-lb-chip" data-lbleague="NFL" aria-pressed="false" onclick="setLbLeague('NFL')">NFL</button>
+                    <button type="button" class="pl-lb-chip" data-lbleague="NBA" aria-pressed="false" onclick="setLbLeague('NBA')">NBA</button>
+                    <button type="button" class="pl-lb-chip" data-lbleague="WNBA" aria-pressed="false" onclick="setLbLeague('WNBA')">WNBA</button>
+                    <button type="button" class="pl-lb-chip" data-lbleague="NHL" aria-pressed="false" onclick="setLbLeague('NHL')">NHL</button>
+                    <button type="button" class="pl-lb-chip is-active" data-lbleague="all" aria-pressed="true" onclick="setLbLeague('all')">All Sports</button>
+                </div>
+            </div>
+
+            <div class="pl-lb-cards" id="pollLbCards"></div>
+            <div id="pollLbYou"></div>
+
+            <div class="pl-lb-tablewrap">
+                <table class="pl-lb-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Player</th>
+                            <th scope="col" title="Polls entered">Polls</th>
+                            <th scope="col" title="Correct picks">Correct</th>
+                            <th scope="col" title="Incorrect picks">Wrong</th>
+                            <th scope="col" title="Picks still awaiting a final result">Pending</th>
+                            <th scope="col" title="Correct / graded picks">Win %</th>
+                            <th scope="col" title="Current correct streak">Streak</th>
+                            <th scope="col" title="Best correct streak">Best</th>
+                            <th scope="col">Points</th>
+                            <th scope="col" class="pl-lb-tmrcol" title="TMR Coin earned from polls">TMR</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pollLbBody"></tbody>
+                </table>
+            </div>
+            <div class="pl-lb-cardlist" id="pollLbCardList"></div>
+
+            <div class="pl-lb-foot" id="pollLbFoot"></div>
+
+            <details class="pl-lb-how" id="pollLbHow">
+                <summary><i class="fas fa-circle-info" aria-hidden="true"></i> How scoring works</summary>
+                <div class="body" id="pollLbHowBody"></div>
+            </details>
         </section>
 
         <!-- Poll detail / discussion -->
@@ -3558,6 +3741,395 @@
         if (anyExpired && !state.currentPollId) loadSection({ force: true });
     }, 30000);
 
+
+    // ============================================================
+    //  POLL LEADERBOARD
+    //  Everything here renders GET /api/polls/leaderboard, which derives its
+    //  numbers from real graded poll_votes at read time. There is no local
+    //  scoring, no placeholder rows, and no client-side ranking: `rank` is
+    //  computed server-side over the FULL field, so "Your Rank" and the row in
+    //  the table can never disagree.
+    //
+    //  The four pick states stay separate on screen for the same reason they
+    //  stay separate in the database: pending is not a loss, and a voided
+    //  (postponed) game is nobody's miss.
+    // ============================================================
+    var LB_PAGE = 25;
+    var LB_MIN_SCORED = 5;   // overwritten from the API's min_scored_for_ranking
+    state.lb = {
+        period: 'all',
+        league: 'all',
+        rows: [],
+        you: null,
+        summary: null,
+        scoring: null,
+        lastGraded: null,
+        total: 0,
+        hasMore: false,
+        loading: false,
+        loaded: false,
+        error: null,
+        seq: 0
+    };
+
+    function lbAvatarUrl(row) {
+        var p = row && (row.avatar_path || row.avatar_url);
+        if (!p) return null;
+        if (/^(https?:|data:)/i.test(p)) return p;
+        var base = (window.api && api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || '';
+        return base.replace(/\/$/, '') + p;
+    }
+    function lbAvatarHtml(row) {
+        var url = lbAvatarUrl(row);
+        if (url) {
+            // A broken/absent avatar must not leave a torn image icon in a
+            // table row — swap in the initial fallback instead.
+            return '<img class="pl-lb-av" src="' + escHtml(url) + '" alt="" loading="lazy" ' +
+                   'onerror="this.outerHTML=&quot;<span class=\'pl-lb-av-f\'>' + initialOf(row.username) + '</span>&quot;">';
+        }
+        return '<span class="pl-lb-av-f" aria-hidden="true">' + initialOf(row.username) + '</span>';
+    }
+    function lbProfileHref(username) {
+        return '/profile/?user=' + encodeURIComponent(username || '');
+    }
+    function lbMedalClass(rank) {
+        return rank === 1 ? ' m1' : rank === 2 ? ' m2' : rank === 3 ? ' m3' : '';
+    }
+    function lbMedalIcon(rank) {
+        if (rank === 1) return '<i class="fas fa-medal" aria-hidden="true"></i> ';
+        if (rank === 2 || rank === 3) return '<i class="fas fa-medal" aria-hidden="true"></i> ';
+        return '';
+    }
+    function lbRankHtml(rank) {
+        var label = rank <= 3 ? ' (medal position ' + rank + ')' : '';
+        return '<span class="pl-lb-rank' + lbMedalClass(rank) + '">' + lbMedalIcon(rank) + rank + '</span>' +
+               (label ? '<span class="sr-only">' + label + '</span>' : '');
+    }
+    function lbAccHtml(row) {
+        // No graded picks yet => no percentage. Never a fabricated 0% or 100%.
+        if (row.prediction_accuracy === null || row.prediction_accuracy === undefined) {
+            return '<span class="pl-lb-acc dim" title="No graded picks yet">&mdash;</span>';
+        }
+        return '<span class="pl-lb-acc">' + row.prediction_accuracy.toFixed(1) + '%</span>';
+    }
+    function lbStreakHtml(n, hot) {
+        if (!n) return '<span class="pl-lb-num pend">&mdash;</span>';
+        return '<span class="pl-lb-streak' + (hot && n >= 3 ? ' hot' : '') + '">' +
+               (hot && n >= 3 ? '<i class="fas fa-fire" aria-hidden="true"></i>' : '') + n + '</span>';
+    }
+    function lbIsYou(row) {
+        var me = currentUsername();
+        return !!(me && row && row.username && String(row.username).toLowerCase() === String(me).toLowerCase());
+    }
+    function lbShowTmr() {
+        // "TMR earned, if applicable" — the column only appears once poll coin
+        // rewards have actually paid somebody, so it is never a column of zeros.
+        var rows = state.lb.rows || [];
+        if (state.lb.you && state.lb.you.tmr_earned > 0) return true;
+        for (var i = 0; i < rows.length; i++) if (rows[i].tmr_earned > 0) return true;
+        return false;
+    }
+    function lbNum(v) { return Number(v || 0).toLocaleString(); }
+
+    function setLbPeriod(period) {
+        if (state.lb.period === period) return;
+        state.lb.period = period;
+        syncLbChips();
+        loadLeaderboard({ reset: true });
+    }
+    function setLbLeague(league) {
+        if (state.lb.league === league) return;
+        state.lb.league = league;
+        syncLbChips();
+        loadLeaderboard({ reset: true });
+    }
+    function syncLbChips() {
+        document.querySelectorAll('#pollLbPeriodChips .pl-lb-chip').forEach(function(b) {
+            var on = b.getAttribute('data-period') === state.lb.period;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('#pollLbLeagueChips .pl-lb-chip').forEach(function(b) {
+            var on = b.getAttribute('data-lbleague') === state.lb.league;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+    }
+    // The chip in the main view row is a jump link, not a board filter — it
+    // must not disturb which polls are showing above.
+    function jumpToLeaderboard() {
+        var el = document.getElementById('pollLeaderboard');
+        if (!el) return;
+        if (!state.lb.loaded && !state.lb.loading) loadLeaderboard({ reset: true });
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.setAttribute('tabindex', '-1');
+        try { el.focus({ preventScroll: true }); } catch (e) {}
+    }
+
+    async function loadLeaderboard(opts) {
+        opts = opts || {};
+        var lb = state.lb;
+        // A filter click must never be swallowed because an earlier fetch is
+        // still open: only pagination is guarded here, and the `seq` check
+        // below discards whichever response is no longer the current filter.
+        if (lb.loading && !opts.reset) return;
+        var offset = opts.reset ? 0 : lb.rows.length;
+        lb.loading = true;
+        lb.error = null;
+        var seq = ++lb.seq;
+        if (opts.reset) renderLbSkeleton();
+        else renderLbFoot();
+
+        try {
+            var qs = [
+                'period=' + encodeURIComponent(lb.period),
+                'league=' + encodeURIComponent(lb.league),
+                'limit=' + LB_PAGE,
+                'offset=' + offset,
+                'avatars=path'
+            ];
+            var data = await api.request('/polls/leaderboard?' + qs.join('&'));
+            if (seq !== lb.seq) return;   // a newer filter click already won
+            var rows = (data && data.leaderboard) || [];
+            lb.rows = opts.reset ? rows : lb.rows.concat(rows);
+            lb.you = (data && data.you) || null;
+            lb.summary = (data && data.summary) || null;
+            lb.scoring = (data && data.scoring) || lb.scoring;
+            lb.lastGraded = (data && data.last_graded_at) || null;
+            lb.total = (data && data.pagination && data.pagination.total) || lb.rows.length;
+            if (data && data.min_scored_for_ranking) LB_MIN_SCORED = data.min_scored_for_ranking;
+            lb.hasMore = !!(data && data.pagination && data.pagination.has_more);
+            lb.loaded = true;
+        } catch (err) {
+            if (seq !== lb.seq) return;
+            console.error('loadLeaderboard', err);
+            lb.error = 'Leaderboard is unavailable right now.';
+            if (opts.reset) { lb.rows = []; lb.you = null; lb.summary = null; lb.total = 0; lb.hasMore = false; }
+        } finally {
+            if (seq === lb.seq) { lb.loading = false; renderLeaderboard(); }
+        }
+    }
+    async function loadMoreLeaderboard(btn) {
+        if (!state.lb.hasMore || state.lb.loading) return;
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Loading&hellip;'; }
+        await loadLeaderboard({ reset: false });
+    }
+
+    function renderLbSkeleton() {
+        var body = document.getElementById('pollLbBody');
+        var list = document.getElementById('pollLbCardList');
+        var cells = '';
+        for (var c = 0; c < 11; c++) cells += '<td><div class="pl-lb-skel"></div></td>';
+        var html = '';
+        for (var i = 0; i < 6; i++) html += '<tr>' + cells + '</tr>';
+        if (body) body.innerHTML = html;
+        if (list) {
+            var cards = '';
+            for (var j = 0; j < 4; j++) cards += '<div class="pl-lb-mc"><div class="pl-lb-skel" style="height:20px"></div></div>';
+            list.innerHTML = cards;
+        }
+    }
+
+    function renderLbCards() {
+        var el = document.getElementById('pollLbCards');
+        if (!el) return;
+        var s = state.lb.summary;
+        if (!s || !s.total_participants) { el.innerHTML = ''; return; }
+        var acc = (s.best_accuracy === null || s.best_accuracy === undefined) ? null : s.best_accuracy;
+        var card = function(k, v, n, cls) {
+            return '<div class="pl-lb-card' + (cls ? ' ' + cls : '') + '">' +
+                   '<span class="k">' + k + '</span>' +
+                   '<span class="v">' + v + '</span>' +
+                   (n ? '<span class="n">' + n + '</span>' : '') + '</div>';
+        };
+        el.innerHTML =
+            card('Participants', lbNum(s.total_participants), 'with a graded entry') +
+            card('Poll entries', lbNum(s.total_entries), lbNum(s.total_correct) + ' correct picks') +
+            card('Highest score', lbNum(s.highest_score), 'points') +
+            card('Best accuracy', acc === null ? '&mdash;' : acc.toFixed(1) + '%',
+                 acc === null ? 'needs ' + LB_MIN_SCORED + '+ graded picks' : escHtml(s.best_accuracy_username || '')) +
+            card('Current leader', s.leader_username ? escHtml(s.leader_username) : '&mdash;',
+                 s.leader_username ? lbNum(s.leader_points) + ' pts' : '', 'is-leader');
+    }
+
+    function renderLbYou() {
+        var el = document.getElementById('pollLbYou');
+        if (!el) return;
+        if (!isLoggedIn()) { el.innerHTML = ''; return; }
+        var y = state.lb.you;
+        if (!y) {
+            el.innerHTML = '<div class="pl-lb-you"><h3><i class="fas fa-user" aria-hidden="true"></i> Your poll stats</h3>' +
+                '<div style="color:var(--muted);font-size:0.78rem;line-height:1.55">No graded picks in this filter yet. ' +
+                'Enter a prediction quiz above — your row appears here as soon as one of your picks is graded.</div></div>';
+            return;
+        }
+        var stat = function(k, v) { return '<div><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; };
+        var acc = (y.prediction_accuracy === null || y.prediction_accuracy === undefined)
+            ? '&mdash;' : y.prediction_accuracy.toFixed(1) + '%';
+        el.innerHTML =
+            '<div class="pl-lb-you">' +
+              '<h3><i class="fas fa-user" aria-hidden="true"></i> Your poll stats' +
+                '<span class="pl-lb-rankbig">&nbsp;&mdash; Rank #' + y.rank + ' of ' + lbNum(state.lb.total) + '</span></h3>' +
+              '<div class="pl-lb-youstats">' +
+                stat('Points', lbNum(y.total_points)) +
+                stat('Polls', lbNum(y.polls_entered)) +
+                stat('Correct', lbNum(y.correct_predictions)) +
+                stat('Wrong', lbNum(y.incorrect_predictions)) +
+                stat('Pending', lbNum(y.pending_predictions)) +
+                stat('Accuracy', acc) +
+                stat('Streak', y.current_streak || '&mdash;') +
+                stat(lbShowTmr() ? 'TMR' : 'Best streak', lbShowTmr() ? lbNum(y.tmr_earned) : (y.best_streak || '&mdash;')) +
+              '</div>' +
+            '</div>';
+    }
+
+    function renderLbRows() {
+        var body = document.getElementById('pollLbBody');
+        var list = document.getElementById('pollLbCardList');
+        var rows = state.lb.rows || [];
+        var showTmr = lbShowTmr();
+
+        // The TMR column is dropped entirely when nothing has paid out, so the
+        // table never carries a dead column of zeros.
+        document.querySelectorAll('.pl-lb-tmrcol').forEach(function(th) { th.hidden = !showTmr; });
+
+        if (!rows.length) {
+            var empty = state.lb.error
+                ? '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i><b>' + escHtml(state.lb.error) + '</b>Try again in a moment.'
+                : '<i class="fas fa-ranking-star" aria-hidden="true"></i><b>No graded entries yet</b>' +
+                  'Nobody has a graded pick in this filter. Polls are scored only after the games are final &mdash; ' +
+                  'enter a prediction quiz above and check back once the slate settles.';
+            if (body) body.innerHTML = '<tr><td colspan="11"><div class="pl-lb-empty">' + empty + '</div></td></tr>';
+            if (list) list.innerHTML = '<div class="pl-lb-empty">' + empty + '</div>';
+            return;
+        }
+
+        var trs = '', cards = '';
+        rows.forEach(function(r) {
+            var you = lbIsYou(r);
+            var name = escHtml(r.username);
+            var userCell = '<a class="pl-lb-user" href="' + lbProfileHref(r.username) + '">' +
+                           lbAvatarHtml(r) + '<span class="pl-lb-name">' + name + '</span></a>' +
+                           (you ? '<span class="pl-lb-youtag">You</span>' : '');
+
+            trs += '<tr class="' + (you ? 'is-you' : '') + '">' +
+                '<td>' + lbRankHtml(r.rank) + '</td>' +
+                '<td>' + userCell + '</td>' +
+                '<td class="pl-lb-num">' + lbNum(r.polls_entered) + '</td>' +
+                '<td class="pl-lb-num good">' + lbNum(r.correct_predictions) + '</td>' +
+                '<td class="pl-lb-num bad">' + lbNum(r.incorrect_predictions) + '</td>' +
+                '<td class="pl-lb-num pend">' + lbNum(r.pending_predictions) + '</td>' +
+                '<td>' + lbAccHtml(r) + '</td>' +
+                '<td>' + lbStreakHtml(r.current_streak, true) + '</td>' +
+                '<td class="pl-lb-num">' + (r.best_streak || '&mdash;') + '</td>' +
+                '<td class="pl-lb-pts">' + lbNum(r.total_points) + '</td>' +
+                '<td class="pl-lb-num pl-lb-tmrcol"' + (showTmr ? '' : ' hidden') + '>' + lbNum(r.tmr_earned) + '</td>' +
+                '</tr>';
+
+            var mstat = function(k, v) { return '<div><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; };
+            cards += '<div class="pl-lb-mc' + (you ? ' is-you' : '') + '">' +
+                '<div class="pl-lb-mc-top">' + lbRankHtml(r.rank) + userCell +
+                    '<span class="pl-lb-mc-pts">' + lbNum(r.total_points) + ' pts</span></div>' +
+                '<div class="pl-lb-mc-grid">' +
+                    mstat('Polls', lbNum(r.polls_entered)) +
+                    mstat('Correct', lbNum(r.correct_predictions)) +
+                    mstat('Wrong', lbNum(r.incorrect_predictions)) +
+                    mstat('Pending', lbNum(r.pending_predictions)) +
+                    mstat('Win %', lbAccHtml(r)) +
+                    mstat('Streak', lbStreakHtml(r.current_streak, true)) +
+                    mstat('Best', r.best_streak || '&mdash;') +
+                    (showTmr ? mstat('TMR', lbNum(r.tmr_earned)) : '') +
+                '</div></div>';
+        });
+        if (body) body.innerHTML = trs;
+        if (list) list.innerHTML = cards;
+    }
+
+    // "Your Rank" as its own card, only when the player is NOT already on the
+    // page they can see — otherwise the pinned row above is the answer.
+    function renderLbYourRankCard() {
+        var foot = state.lb.you;
+        if (!foot) return '';
+        var onPage = (state.lb.rows || []).some(function(r) { return r.user_id === foot.user_id; });
+        if (onPage) return '';
+        var acc = (foot.prediction_accuracy === null || foot.prediction_accuracy === undefined)
+            ? '&mdash;' : foot.prediction_accuracy.toFixed(1) + '%';
+        return '<div class="pl-lb-mc is-you" style="width:100%">' +
+            '<div class="pl-lb-mc-top">' + lbRankHtml(foot.rank) +
+                '<a class="pl-lb-user" href="' + lbProfileHref(foot.username) + '">' + lbAvatarHtml(foot) +
+                '<span class="pl-lb-name">' + escHtml(foot.username) + '</span></a>' +
+                '<span class="pl-lb-youtag">Your rank</span>' +
+                '<span class="pl-lb-mc-pts">' + lbNum(foot.total_points) + ' pts</span></div>' +
+            '<div class="pl-lb-mc-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px 6px">' +
+                '<div><span class="k">Polls</span><span class="v">' + lbNum(foot.polls_entered) + '</span></div>' +
+                '<div><span class="k">Correct</span><span class="v">' + lbNum(foot.correct_predictions) + '</span></div>' +
+                '<div><span class="k">Win %</span><span class="v">' + acc + '</span></div>' +
+                '<div><span class="k">Streak</span><span class="v">' + (foot.current_streak || '&mdash;') + '</span></div>' +
+            '</div></div>';
+    }
+
+    function renderLbFoot() {
+        var el = document.getElementById('pollLbFoot');
+        if (!el) return;
+        var lb = state.lb;
+        var shown = (lb.rows || []).length;
+        var bits = '';
+        var yourRank = renderLbYourRankCard();
+        if (yourRank) bits += '<div style="width:100%;margin-bottom:10px">' + yourRank + '</div>';
+        if (shown) {
+            bits += '<span class="pl-lb-count">Showing <b>' + shown + '</b> of <b>' + lbNum(lb.total) + '</b> ranked players</span>';
+        }
+        if (lb.hasMore) {
+            bits += '<button type="button" class="tmr-hbtn" id="lbLoadMore" onclick="loadMoreLeaderboard(this)"' +
+                    (lb.loading ? ' disabled' : '') + '>' +
+                    (lb.loading ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Loading&hellip;'
+                                : 'Load more (' + Math.min(LB_PAGE, lb.total - shown) + ')') + '</button>';
+        }
+        el.innerHTML = bits;
+    }
+
+    function renderLbUpdated() {
+        var el = document.getElementById('pollLbUpdated');
+        if (!el) return;
+        var t = state.lb.lastGraded;
+        if (!t) { el.innerHTML = ''; return; }
+        el.innerHTML = '<i class="fas fa-rotate" aria-hidden="true"></i> Updated <b>' + escHtml(timeAgo(t)) + '</b>' +
+                       '<span class="sr-only"> (last poll graded ' + escHtml(fmtDate(t)) + ')</span>';
+        el.setAttribute('title', 'Last poll graded ' + fmtDate(t));
+    }
+
+    function renderLbHow() {
+        var el = document.getElementById('pollLbHowBody');
+        if (!el) return;
+        var s = state.lb.scoring || {};
+        var base = Number(s.points_correct || 0);
+        var bonus = Number(s.bonus_points || 0);
+        var perfect = Number(s.perfect_game_bonus_pct || 0);
+        var minScored = Number(s.min_scored_for_ranking || LB_MIN_SCORED);
+        el.innerHTML =
+            '<b>Points.</b> A correct pick pays its question&rsquo;s base value (default <b>' + lbNum(base) + '</b>), ' +
+            'multiplied by how rare that call was &mdash; the fewer people who got it right, the more it pays. ' +
+            'An incorrect pick pays <b>0</b>. Exact-score and special bonus questions add <b>' + lbNum(bonus) + '</b>. ' +
+            'Sweep every live question in a quiz and you add <b>' + perfect + '%</b> on top, plus a placement bonus for finishing near the top.' +
+            '<ul>' +
+              '<li><b>Pending</b> picks do not count as wins or losses. A poll is graded only once the game is final &mdash; upcoming and live games stay pending.</li>' +
+              '<li><b>Voided</b> questions (postponed games, a player who never took the field) score for nobody and are removed from your record entirely &mdash; not a win, not a loss, not an entry.</li>' +
+              '<li><b>Win %</b> is correct &divide; graded picks. It shows a dash until something has actually been graded, and needs <b>' + minScored + '</b> graded picks before it headlines the Best Accuracy card.</li>' +
+              '<li><b>Streaks</b> count consecutive correct picks in the order they were graded. A void neither breaks nor extends a streak.</li>' +
+              '<li><b>Ties</b> break on, in order: most points, then higher accuracy, then more correct picks, then more polls entered, then whoever got there first.</li>' +
+              '<li>Each poll counts once per player. Regrades and corrections recalculate every figure above automatically.</li>' +
+            '</ul>';
+    }
+
+    function renderLeaderboard() {
+        renderLbCards();
+        renderLbYou();
+        renderLbRows();
+        renderLbFoot();
+        renderLbUpdated();
+        renderLbHow();
+    }
+
     // ============== INIT ==============
     document.addEventListener('DOMContentLoaded', function() {
         syncNavHeight();
@@ -3581,6 +4153,8 @@
             initModalSportSelect();
             loadStats();
             loadCategories();
+            syncLbChips();
+            loadLeaderboard({ reset: true });
             var hash = window.location.hash || '';
             var pid = hash.indexOf('#poll-') === 0 ? parseInt(hash.substring(6)) : 0;
             await loadSection();
