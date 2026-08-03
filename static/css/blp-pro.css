@@ -1066,6 +1066,34 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 #panel-matchup .hx-card-head h3 { color: var(--hx-ink) !important; }
 #panel-matchup .hx-group > legend,
 #panel-matchup .hx-kpi span { color: var(--hx-ink-3); }
+
+/* Report body text. Measured on the live page before this rule: table cells
+   rendered rgb(233,241,251) on white (~1.1:1) and headers rgb(220,231,245) on
+   the sunken surface -- dates, scores, opponents and venues were effectively
+   invisible. It was never opacity (computed opacity was 1 throughout); the
+   shell's own table/prose colours simply won the cascade on a light panel it
+   was never written for. Pinned at the same weight the shell uses, scoped to
+   this panel only. Win/loss keep their own colours below. */
+#panel-matchup .hx-table td,
+#panel-matchup .hx-table td.hx-td-strong,
+#panel-matchup .hx-detail-value,
+#panel-matchup .hx-reason-list li { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-table th { color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-table td.hx-td-strong { color: var(--hx-ink) !important; font-weight: 600; }
+#panel-matchup .hx-why { color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-note,
+#panel-matchup .hx-method,
+#panel-matchup .hx-step-sub,
+#panel-matchup .hx-run-note { color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-range { color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-declined,
+#panel-matchup .hx-declined li { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-tag { color: #0b5c56 !important; }
+#panel-matchup .hx-warn { color: #7a5308 !important; }
+/* Result letters stay distinct without fading the row they sit in. */
+#panel-matchup .hx-res--w { color: var(--hx-win) !important; }
+#panel-matchup .hx-res--l { color: var(--hx-loss) !important; }
+#panel-matchup .hx-res--t { color: var(--hx-push) !important; }
 #panel-matchup .hx-kpi strong { color: var(--hx-ink); }
 #panel-matchup .hx-label { color: var(--hx-ink-2); }
 
@@ -1281,4 +1309,46 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 
 @media (prefers-reduced-motion: reduce) {
     #panel-matchup * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Applied-filters section and the qualifying-games sub-count. */
+#panel-matchup .hx-applied-block { margin-top: 4px; }
+#panel-matchup .hx-applied-title {
+    margin: 0 0 8px; font-size: 11px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--hx-ink-3) !important;
+}
+#panel-matchup .hx-kpi-sub {
+    display: block; margin-top: 2px; font-style: normal;
+    font-size: 11px; font-weight: 600; color: var(--hx-ink-3) !important;
+}
+
+/* Allowance line + subscription prompt. The prompt sits BELOW the run action
+   and never covers the report above it -- a user who just spent their free
+   inquiry keeps the thing they spent it on. */
+#panel-matchup .hx-allowance {
+    margin: 8px 0 0; text-align: center; font-size: 13px; font-weight: 600;
+    color: var(--hx-ink-2) !important;
+}
+#panel-matchup .hx-paywall {
+    margin-top: 14px; padding: 16px 18px; border-radius: 10px;
+    background: var(--hx-accent-soft); border: 1px solid var(--hx-accent-line);
+}
+#panel-matchup .hx-paywall-title {
+    margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--hx-ink) !important;
+}
+#panel-matchup .hx-paywall-body {
+    margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--hx-ink-2) !important;
+}
+#panel-matchup .hx-paywall-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+#panel-matchup .hx-paywall-cta {
+    min-height: 44px; padding: 0 22px; cursor: pointer;
+    border: 1px solid var(--hx-accent); border-radius: 10px;
+    background: var(--hx-accent); color: #fff !important;
+    font: inherit; font-size: 14px; font-weight: 700;
+}
+#panel-matchup .hx-paywall-cta:hover:not(:disabled) { background: #0b5c56; border-color: #0b5c56; }
+#panel-matchup .hx-paywall-cta:disabled { opacity: .7; cursor: progress; }
+#panel-matchup .hx-paywall-alt {
+    min-height: 44px; display: inline-flex; align-items: center;
+    font-size: 13px; font-weight: 600; color: var(--hx-accent) !important;
 }

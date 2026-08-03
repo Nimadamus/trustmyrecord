@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=3a9bb921c3ad">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=d6193c14555e">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=7e2882746866"></script>
 </head>
@@ -162,6 +162,8 @@
                             Generate Matchup Report <span class="cost" data-cost></span>
                         </button>
                         <p class="hx-run-note" id="mSubmitHint">Choose a sport and two different teams to continue.</p>
+                        <p class="hx-allowance" id="mAllowance" hidden></p>
+                        <div class="hx-paywall" id="mPaywall" hidden></div>
                     </section>
                 </form>
 
@@ -438,6 +440,55 @@
         return '<div class="blp-receipt">' + bits.join('') + '</div>';
     }
 
+    // Allowance + paywall copy. Reads ONLY the server's flags -- freeAvailable
+    // is decided inside the wallet row lock, so anything computed here could
+    // disagree with what the charge path actually does.
+    function renderAllowance() {
+        var box = $('mAllowance'), wall = $('mPaywall');
+        if (!box || !wall) return;
+
+        if (ACCESS.entitled) {
+            box.textContent = 'Unlimited Matchup Reports included with BetLegend Pro';
+            box.hidden = false;
+            wall.hidden = true; wall.innerHTML = '';
+            return;
+        }
+
+        box.textContent = '1 free inquiry per day — '
+            + (COST.freeAvailable ? 'free inquiry available today' : "today's free inquiry used");
+        box.hidden = false;
+
+        // The prompt appears only once the free inquiry is actually spent, and
+        // never replaces a report already on screen.
+        if (COST.freeAvailable) {
+            wall.hidden = true; wall.innerHTML = '';
+            return;
+        }
+        wall.innerHTML = '<p class="hx-paywall-title">Today&rsquo;s free inquiry is used</p>'
+            + '<p class="hx-paywall-body">BetLegend Pro includes unlimited Matchup Reports, '
+            + 'plus Ask BetLegend, Team Trends and the Bankroll Simulator. Your allowance resets '
+            + 'tomorrow.</p>'
+            + '<div class="hx-paywall-actions">'
+            + '<button type="button" class="hx-paywall-cta" id="mSubscribe">Subscribe</button>'
+            + '<a class="hx-paywall-alt" href="/betlegend-pro/#pricing">See plans</a>'
+            + '</div>';
+        wall.hidden = false;
+        var sub = $('mSubscribe');
+        if (sub) {
+            sub.addEventListener('click', function () {
+                sub.disabled = true;
+                // The real checkout, not a marketing link.
+                window.api.startBetLegendProCheckout('monthly').then(function (r) {
+                    if (r && r.url) window.location.href = r.url;
+                    else { sub.disabled = false; window.location.href = '/betlegend-pro/#pricing'; }
+                }).catch(function () {
+                    sub.disabled = false;
+                    window.location.href = '/betlegend-pro/#pricing';
+                });
+            });
+        }
+    }
+
     async function refreshStatus() {
         try {
             var s = await window.api.getBetLegendProStatus();
@@ -468,6 +519,7 @@
                 $('upgradeBtn').hidden = false;
             }
             $('topbarRight').hidden = false;
+            renderAllowance();
 
             // Wallet problems only matter on the coin path.
             var notice = $('accountNotice');
@@ -786,7 +838,11 @@
             + '<div class="hx-kpi"><span>Avg ' + esc(noun) + ' for</span><strong>' + num(r.avg_scored) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg ' + esc(noun) + ' against</span><strong>' + num(r.avg_allowed) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg margin</span><strong>' + signed(r.avg_margin) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Qualifying games</span><strong>' + esc(total) + '</strong></div>'
+            + '<div class="hx-kpi"><span>Games before filtering</span><strong>'
+            + (r.games_in_dataset != null ? esc(r.games_in_dataset) : DASH) + '</strong></div>'
+            + '<div class="hx-kpi"><span>Qualifying games</span><strong>' + esc(total)
+            + '</strong>' + (r.games_in_dataset ? '<em class="hx-kpi-sub">of ' + esc(r.games_in_dataset) + '</em>' : '')
+            + '</div>'
             + '</div>' + warn + table + '</section>';
     }
 
@@ -799,11 +855,13 @@
         var head = '<section class="hx-card hx-card--head">'
             + '<div class="hx-card-head"><h2>' + esc(d.team_1) + ' vs ' + esc(d.team_2) + '</h2>'
             + '<span class="hx-range">' + esc(d.sport) + '</span></div>'
+            + '<div class="hx-applied-block">'
+            + '<h3 class="hx-applied-title">Applied Situational Filters</h3>'
             + '<div class="hx-applied">'
             + (applied.length
                 ? applied.map(function (a) { return '<span class="hx-tag">' + esc(a) + '</span>'; }).join('')
-                : '<span class="hx-tag">No conditions &mdash; every completed game</span>')
-            + '</div>'
+                : '<span class="hx-tag">No conditions &mdash; every completed game counts</span>')
+            + '</div></div>'
             + (declined.length
                 ? '<div class="hx-declined"><strong>Conditions not applied</strong><ul>'
                     + declined.map(function (n) {
