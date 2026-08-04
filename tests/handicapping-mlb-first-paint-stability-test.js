@@ -77,7 +77,7 @@ function matchupPayload(gid) {
 }
 
 /* ---------- harness ---------- */
-function bootPage({ order, dropCard } = {}) {
+function bootPage({ games = GAMES } = {}) {
   const vc = new VirtualConsole();
   const dom = new JSDOM(rawHtml, {
     runScripts: 'outside-only',
@@ -95,12 +95,12 @@ function bootPage({ order, dropCard } = {}) {
     calls.push(String(url));
     const u = String(url);
     const json = (body) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
-    if (u.includes('/games/board/')) return json({ games: GAMES });
+    if (u.includes('/games/board/')) return json({ games });
     if (u.includes('/trendspotter/verified')) return json({ trends: [] });
     if (u.includes('/external-picks/consensus')) return json({ groups: [] });
     if (u.includes('/handicapping/mlb/matchup')) {
       const away = decodeURIComponent((u.match(/away=([^&]*)/) || [])[1] || '');
-      const g = GAMES.find((x) => x.away_team === away);
+      const g = games.find((x) => x.away_team === away);
       const gid = g ? g.id : 'unknown';
       return new Promise((resolve, reject) => { pending.set(gid, { resolve, reject, json }); });
     }
@@ -243,6 +243,59 @@ function readCards(window) {
     const unguarded = paintCalls.filter((l) => !/isConnected/.test(l) && !/cached/.test(l));
     assert.deepStrictEqual(unguarded, [],
       `paintTop called without an isConnected guard:\n${unguarded.join('\n')}`);
+  });
+
+  await test('a superseded render stops issuing fetches for the old slate', async () => {
+    // render() is called again on a date switch or a search. Painting is
+    // already safe (detached nodes fail isConnected), but before STATE.renderSeq
+    // was actually used the superseded queue kept firing the rest of the old
+    // slate's matchup fetches — each a multi-provider fan-out — for cards
+    // nobody can see. Concurrency is 4, so with 3 games the queue is drained
+    // immediately; drive the search box to force a fresh render and assert the
+    // old queue does not add more requests for the same games.
+    // A slate LARGER than the concurrency limit (4), so work is still queued
+    // when the re-render happens — with only 3 games the queue drains instantly
+    // and the gate is never reached.
+    const BIG = Array.from({ length: 10 }, (_, i) => ({
+      id: `b${i + 1}`,
+      away_team: `Away Team ${i + 1}`,
+      home_team: `Home Team ${i + 1}`,
+      commence_time: iso(14 + (i % 8)),
+    }));
+    const h = bootPage({ games: BIG });
+    await h.flush();
+    const count = () => h.calls.filter((u) => u.includes('/handicapping/mlb/matchup')).length;
+
+    const inFlight = count();
+    assert.strictEqual(inFlight, 4, `bounded concurrency should hold this at 4 in flight, got ${inFlight}`);
+    assert.ok(BIG.length > 4, 'sanity: the slate must exceed the concurrency limit');
+
+    // Supersede the render by filtering the slate down to one card.
+    const find = h.window.document.getElementById('hh-find');
+    assert.ok(find, 'expected the find box');
+    find.value = BIG[0].away_team;
+    find.dispatchEvent(new h.window.Event('input', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 250)); // the page debounces 180ms
+    await h.flush();
+
+    // Now let the four in-flight requests finish. That advances the OLD queue,
+    // which is exactly when it would otherwise start requests 5..8 for cards
+    // that no longer exist.
+    for (const gid of ['b1', 'b2', 'b3', 'b4']) {
+      const p = h.pending.get(gid);
+      if (!p) continue;
+      p.resolve({ ok: true, status: 200, json: () => Promise.resolve({ overview: { available: false }, trends: [] }) });
+      h.pending.delete(gid);
+    }
+    await h.flush();
+
+    const after = count();
+    assert.strictEqual(after, inFlight,
+      `the superseded queue issued ${after - inFlight} further matchup fetches for cards ` +
+      'that are no longer on screen; STATE.renderSeq must stop it');
+
+    assert.ok(/STATE\.renderSeq\+\+/.test(js) && /mySeq !== STATE\.renderSeq/.test(js),
+      'STATE.renderSeq must actually gate the queue, not sit unused implying protection that does not exist');
   });
 
   await test('a failed matchup fetch is not cached as a resolved value', async () => {

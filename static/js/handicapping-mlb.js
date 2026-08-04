@@ -1586,8 +1586,20 @@
                     });
             });
         }
+        /* Switching date or typing in the find box calls render() again, which
+           replaces every card. Painting was already safe — a detached node
+           fails the isConnected check below — but the SUPERSEDED queue kept
+           running, so a date switch on a 15-game slate still fired the rest of
+           the old slate's matchup fetches (each a multi-provider fan-out on the
+           backend) for cards nobody can see. STATE.renderSeq marks the current
+           render; a queue whose seq is stale stops starting new work. Results
+           already cached in STATE.matchup are kept — they are still valid for
+           that game, whatever is on screen. */
+        STATE.renderSeq++;
+        var mySeq = STATE.renderSeq;
         runQueue(pending.map(function (node) {
             return function () {
+                if (mySeq !== STATE.renderSeq) return Promise.resolve();
                 return getMatchup(node._game)
                     .then(function (d) { if (node.isConnected) paintTop(node._game, node, d); })
                     .catch(function (e) {
