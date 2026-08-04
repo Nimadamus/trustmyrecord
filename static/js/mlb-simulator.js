@@ -94,7 +94,7 @@
         STL: [['mcgreevy', "Michael McGreevy", 109, 3.59], ['liberatore', "Matthew Liberatore", 92, 4.97], ['pallante', "Andre Pallante", 107, 3.72], ['leahy', "Kyle Leahy", 110, 3.44], ['dobbins', "Hunter Dobbins", 107, 3.74]],
         TB: [['peralta', "Freddy Peralta", 92, 4.99], ['martinez', "Nick Martinez", 118, 2.77], ['rasmussen', "Drew Rasmussen", 117, 2.91], ['jax', "Griffin Jax", 108, 3.63], ['matz', "Steven Matz", 80, 5.97]],
         TEX: [['gore', "MacKenzie Gore", 94, 4.77], ['eovaldi', "Nathan Eovaldi", 100, 4.31], ['degrom', "Jacob deGrom", 104, 3.96], ['rocker', "Kumar Rocker", 103, 4.08], ['quantrill', "Cal Quantrill", 108, 3.62]],
-        TOR: [['cease', "Dylan Cease", 123, 2.41], ['yesavage', "Trey Yesavage", 107, 3.73], ['taillon', "Jameson Taillon", 81, 5.92], ['bieber', "Shane Bieber", 90, 5.11], ['scherzer', "Max Scherzer", 78, 7.92]],
+        TOR: [['soriano', "José Soriano", 112, 3.29], ['cease', "Dylan Cease", 123, 2.41], ['yesavage', "Trey Yesavage", 107, 3.73], ['taillon', "Jameson Taillon", 81, 5.92], ['bieber', "Shane Bieber", 90, 5.11]],
         WSH: [['cavalli', "Cade Cavalli", 109, 3.52], ['littell', "Zack Littell", 92, 4.94], ['irvin', "Jake Irvin", 85, 5.56], ['mikolas', "Miles Mikolas", 84, 5.67], ['alvarez', "Andrew Alvarez", 104, 3.94]]
     };
 
