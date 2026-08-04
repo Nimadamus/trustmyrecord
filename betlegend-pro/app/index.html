@@ -1275,36 +1275,15 @@
         return bits.length ? '<div class="thin"><span>' + bits.join(' ') + '</span></div>' : '';
     }
 
-    function teamBlock(r, noun) {
+    /** The comparison half: the figures a handicapper reads side by side.
+     *  Split from the game log because a nine-column table cannot fit in half
+     *  a screen -- it was being clipped, and the game log IS the evidence the
+     *  report exists to show. */
+    function teamSummary(r, noun) {
         if (!r) return '';
         var range = r.date_range
             ? '<span class="range">' + esc(r.date_range.from) + ' → ' + esc(r.date_range.to) + '</span>' : '';
         var games = r.games || [];
-        // Every returned game is listed, not the first 25. "Why it qualified"
-        // is the whole point of this table.
-        var rows = games.map(function (g) {
-            var where = g.venue_name ? esc(g.venue || '') + ' · ' + esc(g.venue_name) : esc(g.venue || '');
-            var why = (g.qualified_because || []);
-            return '<tr><td>' + esc(g.date || '') + '</td><td>' + esc(g.opponent || '') + '</td>'
-                + '<td>' + (where || DASH) + '</td><td class="n">' + esc(g.score || '') + '</td>'
-                + '<td><span class="res res-' + esc(String(g.result || '').toLowerCase()) + '">'
-                + esc(g.result || '') + '</span></td>'
-                + '<td>' + (g.role ? esc(g.role) + (g.closing_line != null ? ' ' + signed(g.closing_line) : '') : DASH) + '</td>'
-                // A dash is "no closing total on file", which is not a total of
-                // zero. Both are real rows here, so they must not render alike.
-                + '<td class="n">' + (g.closing_total != null ? esc(g.closing_total) : DASH) + '</td>'
-                + '<td class="n">' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
-                + '<td class="why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
-        }).join('');
-        var table = rows
-            ? '<div class="tablewrap"><table class="games">'
-                + '<caption class="sr">Qualifying games for ' + esc(r.team) + ', with the conditions each one satisfied</caption>'
-                + '<thead><tr><th>Date</th><th>Opponent</th><th>Location</th><th>Final score</th>'
-                + '<th>Result</th><th>Closing line</th><th>Closing total</th><th>Rest</th>'
-                + '<th>Why it qualified</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-            : '<p class="note-s">No qualifying games found for these conditions. Widen the timeframe or remove a '
-                + 'condition — nothing here is broken, the dataset simply holds no game that met all of them.</p>';
-
         var total = (r.total_qualifying_games != null) ? r.total_qualifying_games : r.qualifying_games;
         return '<section class="rcard">'
             + '<div class="rcard-head"><h3>' + esc(r.team) + '</h3>' + range + '</div>'
@@ -1323,9 +1302,46 @@
             + (r.conditions_applied === false
                 ? '<p class="note-s">Your conditions were <strong>not</strong> applied to this team — the scope you chose targets the other side only.</p>'
                 : '')
-            + thinNote(r) + table
-            + '<p class="note-s">Avg total is the mean combined final score of the games listed above, not the average closing number.</p>'
+            + thinNote(r)
+            + '<p class="note-s">Avg total is the mean combined final score of the qualifying games listed '
+            + 'further down, not the average closing number.</p>'
             + '</section>';
+    }
+
+    /** The evidence half: every qualifying game, at full width so all nine
+     *  columns are readable without side-scrolling. */
+    function teamGames(r) {
+        if (!r) return '';
+        var range = r.date_range
+            ? '<span class="range">' + esc(r.date_range.from) + ' \u2192 ' + esc(r.date_range.to) + '</span>' : '';
+        var games = r.games || [];
+        // Every returned game is listed, not the first 25. "Why it qualified"
+        // is the whole point of this table.
+        var rows = games.map(function (g) {
+            var where = g.venue_name ? esc(g.venue || '') + ' \u00b7 ' + esc(g.venue_name) : esc(g.venue || '');
+            var why = (g.qualified_because || []);
+            return '<tr><td>' + esc(g.date || '') + '</td><td>' + esc(g.opponent || '') + '</td>'
+                + '<td>' + (where || DASH) + '</td><td class="n">' + esc(g.score || '') + '</td>'
+                + '<td><span class="res res-' + esc(String(g.result || '').toLowerCase()) + '">'
+                + esc(g.result || '') + '</span></td>'
+                + '<td>' + (g.role ? esc(g.role) + (g.closing_line != null ? ' ' + signed(g.closing_line) : '') : DASH) + '</td>'
+                // A dash is "no closing total on file", which is not a total of
+                // zero. Both are real rows here, so they must not render alike.
+                + '<td class="n">' + (g.closing_total != null ? esc(g.closing_total) : DASH) + '</td>'
+                + '<td class="n">' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
+                + '<td class="why">' + (why.length ? esc(why.join(' \u00b7 ')) : DASH) + '</td></tr>';
+        }).join('');
+        var body = rows
+            ? '<div class="tablewrap"><table class="games">'
+                + '<caption class="sr">Qualifying games for ' + esc(r.team) + ', with the conditions each one satisfied</caption>'
+                + '<thead><tr><th>Date</th><th>Opponent</th><th>Location</th><th>Final score</th>'
+                + '<th>Result</th><th>Closing line</th><th>Closing total</th><th>Rest</th>'
+                + '<th>Why it qualified</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+            : '<p class="note-s">No qualifying games found for these conditions. Widen the timeframe or remove a '
+                + 'condition \u2014 nothing here is broken, the dataset simply holds no game that met all of them.</p>';
+        return '<section class="rcard">'
+            + '<div class="rcard-head"><h3>' + esc(r.team) + ' \u2014 qualifying games</h3>' + range + '</div>'
+            + body + '</section>';
     }
 
     function renderReport(res) {
@@ -1448,8 +1464,9 @@
                 + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
                 + '</div>' + thinNote(h2h) + '</section>' : '';
 
-        return head + '<div class="two">' + teamBlock(d.team_1_report, noun) + teamBlock(d.team_2_report, noun) + '</div>'
+        return head + '<div class="two">' + teamSummary(d.team_1_report, noun) + teamSummary(d.team_2_report, noun) + '</div>'
             + h2hBlock
+            + teamGames(d.team_1_report) + teamGames(d.team_2_report)
             + '<p class="method">Every record, average and percentage above is the plain arithmetic of the games '
             + 'listed, computed from BetLegend Pro’s graded-game database. Games with no final score are '
             + 'excluded; a game with no closing line on file shows a dash for role rather than an inferred value.</p>';
