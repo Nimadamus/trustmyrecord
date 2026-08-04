@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=92bdbdff01fd">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=b59888ce9501">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
 </head>
@@ -1409,6 +1409,11 @@
             // condition removed the other 488.
             + (trail.length
                 ? '<div class="hx-trail"><strong>How the sample narrowed</strong>'
+                    // Its own scroller. At 390px the four columns need ~690px,
+                    // and without this the table was clipped by the page's
+                    // overflow-x:hidden -- so "Removed", the column the whole
+                    // table exists for, simply was not there on a phone.
+                    + '<div class="hx-trailwrap">'
                     + '<table class="hx-trail-table"><thead><tr><th>Condition</th>'
                     + '<th>Before</th><th>After</th><th>Removed</th></tr></thead><tbody>'
                     + trail.map(function (t) {
@@ -1417,7 +1422,7 @@
                             + '<td class="hx-num">' + fmtInt(t.games_after) + '</td>'
                             + '<td class="hx-num">' + (t.removed ? '&minus;' + fmtInt(t.removed) : '0') + '</td></tr>';
                     }).join('')
-                    + '</tbody></table>'
+                    + '</tbody></table></div>'
                     + '<p class="hx-note">Applied in this order, each to what the one above it '
                     + 'left. The first row opens at every game on file for this team, so the '
                     + 'column accounts for all of them.</p>'

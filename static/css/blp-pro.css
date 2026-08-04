@@ -1653,3 +1653,11 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
        two-character column. */
     #panel-matchup .hx-fwhy { display: block; margin: 0 0 3px; width: fit-content; }
 }
+
+/* The narrowing table gets its own scroller. Four columns need ~690px and the
+   page clips rather than scrolls (body has overflow-x:hidden), so at 390px the
+   "Removed" column -- the reason the table exists -- was simply absent. */
+#panel-matchup .hx-trailwrap, #libDetail .hx-trailwrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%;
+}
+#panel-matchup .hx-trail-table, #libDetail .hx-trail-table { min-width: 420px; }
