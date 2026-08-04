@@ -298,6 +298,94 @@ function readCards(window) {
       'STATE.renderSeq must actually gate the queue, not sit unused implying protection that does not exist');
   });
 
+  await test('the deep dive does not paint into a body its card lost', async () => {
+    // "View Full Analysis" is async like the comparison card, and its card can
+    // be replaced underneath it by a date switch or a search. Before the guard,
+    // paint() wrote into the detached body and setError() wired retry listeners
+    // onto nodes nobody can reach.
+    const h = bootPage();
+    await h.flush();
+    const card = h.window.document.getElementById(`game-${GAMES[0].id}`);
+    card.querySelector('[data-toggle]').dispatchEvent(new h.window.Event('click', { bubbles: true }));
+    await h.flush();
+    const body = card.querySelector('[data-body]');
+    assert.ok(body, 'expected the deep-dive body');
+    assert.ok(/Loading|hh-load|—/.test(body.innerHTML) || body.innerHTML.length > 0,
+      'sanity: the deep dive should show a loading state first');
+
+    // Replace the slate underneath it, then let the response land.
+    h.window.document.getElementById('hh-games').innerHTML = '';
+    assert.strictEqual(body.isConnected, false, 'sanity: the body must now be detached');
+    const beforeHtml = body.innerHTML;
+    await h.settle(GAMES[0].id);
+    assert.strictEqual(body.innerHTML, beforeHtml,
+      'a stale deep-dive response painted into a body that had left the document');
+  });
+
+  await test('a superseded slate load cannot overwrite a newer one', async () => {
+    // Retry can be clicked while an earlier boot is in flight. Both resolve,
+    // and without a boot sequence the OLDER board response lands last and
+    // overwrites STATE.games / gamesByDate with staler data, then re-renders
+    // from it. Assert the source carries the guard and that the older payload
+    // does not win.
+    assert.ok(/\+\+STATE\.bootSeq/.test(js) && /myBoot !== STATE\.bootSeq/.test(js),
+      'boot() must stamp and check a sequence; renderSeq alone cannot catch this ' +
+      'because boot resolves BEFORE it calls renderSlate()');
+    const bootThen = js.slice(js.indexOf('function boot()'));
+    assert.ok(/\}\)\.then\(function \(res\) \{\s*if \(bootStale\(\)\) return;/.test(bootThen),
+      'the boot success path must bail when superseded, before it writes STATE');
+    assert.ok(/\}\)\.catch\(function \(\) \{\s*if \(bootStale\(\)\) return;/.test(bootThen),
+      'the boot failure path must bail too, or a stale error wipes a good slate');
+  });
+
+  await test('every ASYNC paint site is guarded', async () => {
+    // Only paints reached from a network continuation can be stale. The
+    // synchronous ones — marketsHtml/consensusFor from board data already in
+    // memory, paintTop's own body, the user-initiated retry reset — cannot be,
+    // and flagging them would just train someone to ignore this test.
+    const lines = js.split('\n');
+
+    // 1. Every paintTop CALL SITE (its callers are the async ones).
+    const callSites = [];
+    lines.forEach((l, i) => {
+      if (/paintTop\(/.test(l) && !/function paintTop/.test(l)) callSites.push({ n: i + 1, l: l.trim() });
+    });
+    assert.ok(callSites.length >= 3, `expected at least 3 paintTop call sites, found ${callSites.length}`);
+    const unguarded = callSites.filter(({ n }) => {
+      const ctx = lines.slice(Math.max(0, n - 3), n + 1).join('\n');
+      return !/isConnected|cached/.test(ctx);
+    });
+    assert.deepStrictEqual(unguarded.map((u) => `${u.n}: ${u.l}`), [],
+      'a paintTop call site can run after its card was replaced and must check isConnected');
+
+    // 2. The deep dive's two async continuations must bail when detached.
+    const body = js.slice(js.indexOf('function renderBody('), js.indexOf('function paintTop('));
+    for (const fn of ['setError', 'paint']) {
+      const start = body.indexOf(`function ${fn}(`);
+      assert.ok(start >= 0, `renderBody should define ${fn}`);
+      const head = body.slice(start, start + 200);
+      assert.ok(/if \(!live\(\)\) return;/.test(head),
+        `renderBody's ${fn}() must bail when its body has left the document; ` +
+        'it is reached from a network continuation and its card can be replaced under it');
+    }
+
+    // 3. Nothing may reach getMatchup().then without one of the guards.
+    const thenSites = [];
+    lines.forEach((l, i) => {
+      if (/getMatchup\(/.test(l)) thenSites.push({ n: i + 1, l: l.trim() });
+    });
+    assert.ok(thenSites.length >= 3, `expected several getMatchup call sites, found ${thenSites.length}`);
+    const ungatedThen = thenSites.filter(({ n, l }) => {
+      // `.then(paint)` hands off to a NAMED continuation whose own guard check 2
+      // above already proved. Accept that; do not demand a redundant inline one.
+      if (/\.then\(paint\)/.test(l)) return false;
+      const ctx = lines.slice(Math.max(0, n - 4), n + 4).join('\n');
+      return !/isConnected|live\(\)|mySeq !== STATE\.renderSeq|function getMatchup/.test(ctx);
+    });
+    assert.deepStrictEqual(ungatedThen.map((u) => `${u.n}: ${u.l}`), [],
+      'a getMatchup continuation with no staleness guard');
+  });
+
   await test('a failed matchup fetch is not cached as a resolved value', async () => {
     assert.ok(/p\.catch\(function \(\) \{ if \(STATE\.matchupPromise\[game\.id\] === p\) delete STATE\.matchupPromise\[game\.id\]/.test(js),
       'a rejected matchup promise must be evicted so Retry re-requests instead of replaying the rejection');

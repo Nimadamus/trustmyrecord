@@ -112,7 +112,11 @@
         return Math.round((toN(iso) - toN(base)) / 86400000);
     }
 
-    var STATE = { games: [], gamesByDate: {}, dates: [], selDate: null, trendsByMatchup: {}, consensus: [], matchup: {}, matchupPromise: {}, renderSeq: 0 };
+    /* renderSeq guards per-render card work; bootSeq guards whole slate loads.
+       They are separate on purpose: boot() resolves BEFORE it calls
+       renderSlate(), so a stale boot would still be holding the older seq at
+       the moment it overwrites STATE, and renderSeq alone could not catch it. */
+    var STATE = { games: [], gamesByDate: {}, dates: [], selDate: null, trendsByMatchup: {}, consensus: [], matchup: {}, matchupPromise: {}, renderSeq: 0, bootSeq: 0 };
 
     /** Every card's matchup fetch is a single shared promise, so the always-
         visible comparison grid and the "View Full Analysis" deep dive never
@@ -1395,7 +1399,14 @@
         function setLoading() {
             API_TABS.forEach(function (id) { P[id].innerHTML = loadingHtml(); });
         }
+        /* The deep dive is async like the comparison card, and its card can be
+           replaced underneath it by a date switch or a search. Painting a
+           detached body is wasted work and, worse, setError would wire retry
+           listeners onto nodes nobody can reach. Same guard the card queue
+           uses: if this body has left the document, this response is stale. */
+        function live() { return bodyEl.isConnected; }
         function setError(msg) {
+            if (!live()) return;
             API_TABS.forEach(function (id) {
                 P[id].innerHTML = errorHtml(msg);
                 var btn = P[id].querySelector("[data-retry]");
@@ -1403,6 +1414,7 @@
             });
         }
         function paint(d) {
+            if (!live()) return;
             P.overview.innerHTML = overviewHtml(d, game) + overviewTrendsHtml(d, game);
             var goTrends = P.overview.querySelector("[data-gototrends]");
             if (goTrends) goTrends.addEventListener("click", function () {
@@ -1632,6 +1644,13 @@
     }
 
     function boot() {
+        /* Retry can be clicked while an earlier boot is still in flight. Both
+           resolve, and without this the OLDER board response lands last and
+           overwrites STATE.games / gamesByDate / trendsByMatchup / consensus
+           with staler data, then re-renders from it. Stamp each attempt and let
+           only the newest one commit. */
+        var myBoot = ++STATE.bootSeq;
+        function bootStale() { return myBoot !== STATE.bootSeq; }
         statusEl.style.display = "";
         statusEl.className = "hh-status hh-status--sr";
         statusEl.textContent = "Loading today’s MLB slate";
@@ -1645,6 +1664,7 @@
                 getJSON(API + "/external-picks/consensus?days=3").catch(function () { return { groups: [] }; })
             ]);
         }).then(function (res) {
+            if (bootStale()) return;
             var board = res[0] || {}, tr = res[1] || {}, cons = res[2] || {};
             var games = (board.games || []).slice().sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); });
             STATE.gamesByDate = {};
@@ -1675,6 +1695,7 @@
             updateDatebar();
             renderSlate();
         }).catch(function () {
+            if (bootStale()) return;
             gamesEl.innerHTML = "";
             dateSub.textContent = "—";
             statusEl.style.display = "";
