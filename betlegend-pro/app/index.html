@@ -15,355 +15,396 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=b59888ce9501">
-    <!-- The console skin. Loaded last and scoped to this route only: it relights
-         the dashboard as a light analytics surface without touching the sales
-         page, which shares blp-pro.css. Hand-versioned — bump on edit. -->
-    <link rel="stylesheet" href="/static/css/blp-console.css?v=e34e87854939">
+    <style>
+        /* The page canvas only. Everything the tool needs lives inside its
+           shadow root and is styled by betlegend-pro/app/console.css.
+
+           The tool is mounted in a shadow root on purpose. tmr-sitewide.css
+           styles every bare input, select, button, p and h2 on the site with
+           `!important` — dark control fills, a 14px pill radius, a cyan
+           gradient on submit buttons, a muted grey on paragraphs. Anything
+           sitting in the same tree has to out-shout all of that and loses
+           somewhere new after every edit; that is what kept putting dark
+           panels and unreadable text back on this screen. A shadow boundary
+           ends it: site CSS cannot reach in and this tool cannot leak out.
+           The global nav and footer are outside the boundary, unchanged. */
+        html { background: #eef2f7; }
+        body.tmr-site-shell[data-blp-console] {
+            background: #eef2f7 !important;
+            color-scheme: light;
+        }
+        #blpConsole { display: block; visibility: hidden; }
+        #blpConsole.is-ready { visibility: visible; }
+        #blpFallback {
+            width: min(680px, calc(100% - 32px));
+            margin: 48px auto; padding: 22px 24px;
+            border: 1px solid #dde4ed; border-radius: 13px; background: #fff;
+            font: 15px/1.55 "Segoe UI", system-ui, sans-serif; color: #3f4d5e;
+        }
+        #blpFallback h1 { margin: 0 0 8px; font-size: 20px; color: #0d1520; }
+        #blpFallback a { color: #0d6e66; }
+    </style>
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
 </head>
-<!-- `blp-console` is the styling hook, NOT data-tmr-route: tmr-sitewide.js
-     overwrites that attribute with the last path segment on every load, so this
-     page reports itself as `app` and any rule written against
-     `betlegend-pro-app` matches nothing. The class survives, because the script
-     only ever ADDS `tmr-site-shell`. The attribute is kept for anything else
-     that reads it. -->
-<body class="tmr-site-shell blp-console" data-tmr-route="betlegend-pro-app">
-<main class="blp blp-shell">
+<!-- `data-blp-console` is the styling hook rather than `data-tmr-route`:
+     tmr-sitewide.js overwrites that attribute with the last path segment on
+     every load, so this page reports itself as `app` and anything scoped to
+     `betlegend-pro-app` silently matches nothing. A data attribute the script
+     never touches survives. -->
+<body class="tmr-site-shell" data-blp-console data-tmr-route="betlegend-pro-app">
 
-    <!-- ================================================== product header -->
-    <header class="blp-topbar">
-        <div class="blp-brand">
-            <div class="blp-mark" aria-hidden="true">BL</div>
-            <div class="blp-brand-text">
-                <div class="blp-brand-name">BetLegend Pro</div>
-                <p class="blp-brand-sub">Situational analysis on graded games</p>
+<noscript>
+    <div id="blpFallback">
+        <h1>BetLegend Pro needs JavaScript</h1>
+        <p>This dashboard runs in your browser against your TrustMyRecord account.
+        Turn JavaScript on for trustmyrecord.com and reload, or read
+        <a href="/betlegend-pro/">what BetLegend Pro does</a>.</p>
+    </div>
+</noscript>
+
+<main id="blpConsole"></main>
+
+<!-- ==================================================== the tool's markup ==
+     Cloned into the shadow root at boot. Kept declarative here rather than
+     built from strings in JS so the structure stays readable and diffable. -->
+<template id="blpMarkup">
+
+    <div class="shell">
+
+        <header class="bar">
+            <div class="brand">
+                <div class="mark" aria-hidden="true">BL</div>
+                <div>
+                    <div class="brand-name">BetLegend Pro</div>
+                    <p class="brand-sub">Situational analysis on graded games</p>
+                </div>
             </div>
-        </div>
-        <div class="blp-topbar-right" id="topbarRight" hidden>
-            <span class="blp-chip blp-chip--data" id="dataChip" hidden></span>
-            <span class="blp-chip" id="planChip" hidden></span>
-            <span class="blp-chip" id="balanceChip" hidden>
-                <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true" style="width:1em;height:1em">
-                <strong id="balanceValue">&mdash;</strong> TMR Coin
-            </span>
-            <a class="blp-btn blp-btn--sm" id="manageBtn" href="/betlegend-pro/" hidden>Manage plan</a>
-            <a class="blp-btn blp-btn--sm blp-btn--primary" id="upgradeBtn" href="/betlegend-pro/#pricing" hidden>Get unlimited</a>
-        </div>
-    </header>
-
-    <!-- ============================================== logged-out gate -->
-    <section class="blp-card" id="authGate" hidden>
-        <div class="blp-empty">
-            <div class="blp-empty-ico" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <div class="bar-right" id="topbarRight" hidden>
+                <span class="chip" id="planChip" hidden></span>
+                <span class="chip" id="balanceChip" hidden>
+                    <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">
+                    <strong id="balanceValue">&mdash;</strong>&nbsp;TMR Coin
+                </span>
+                <a class="btn" id="manageBtn" href="/betlegend-pro/" hidden>Manage plan</a>
+                <a class="btn is-primary" id="upgradeBtn" href="/betlegend-pro/#pricing" hidden>Get unlimited</a>
             </div>
-            <h3>Sign in to open BetLegend Pro</h3>
-            <p>Your reports, simulations and library are private to your TrustMyRecord account.</p>
-            <div class="blp-hero-cta">
-                <a class="blp-btn blp-btn--primary" href="/login/?next=/betlegend-pro/app/">Log in</a>
-                <a class="blp-btn" href="/betlegend-pro/">What is BetLegend Pro?</a>
+        </header>
+
+        <section class="card" id="authGate" hidden>
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-ico" aria-hidden="true">
+                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <h3>Sign in to open BetLegend Pro</h3>
+                    <p>Your reports, simulations and library are private to your TrustMyRecord account.</p>
+                    <div class="row">
+                        <a class="btn is-primary" href="/login/?next=/betlegend-pro/app/">Log in</a>
+                        <a class="btn" href="/betlegend-pro/">What is BetLegend Pro?</a>
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- ============================================== the product -->
-    <div class="blp-layout" id="app" hidden>
+        <div class="layout" id="app" hidden>
 
-        <nav class="blp-rail" role="tablist" aria-label="BetLegend Pro tools">
-            <div class="blp-rail-label">Tools</div>
-            <button class="blp-navbtn" role="tab" data-tool="matchup" aria-selected="true" type="button">
-                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg>
-                <span><span class="nb-title">Matchup Report</span><span class="nb-desc">Two teams, one market, a verdict</span></span>
-            </button>
-            <button class="blp-navbtn" role="tab" data-tool="ask" aria-selected="false" type="button">
-                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg>
-                <span><span class="nb-title">Ask BetLegend</span><span class="nb-desc">Any question, in plain English</span></span>
-            </button>
-            <button class="blp-navbtn" role="tab" data-tool="sim" aria-selected="false" type="button">
-                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17c3-8 6 4 9-2s6 1 9-5"/><path d="M3 21h18"/></svg>
-                <span><span class="nb-title">Bankroll Simulator</span><span class="nb-desc">Model risk before you stake</span></span>
-            </button>
-            <button class="blp-navbtn" role="tab" data-tool="trends" aria-selected="false" type="button">
-                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                <span><span class="nb-title">Team Trends</span><span class="nb-desc">One team, one situation</span></span>
-            </button>
-            <button class="blp-navbtn" role="tab" data-tool="library" aria-selected="false" type="button">
-                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/><path d="M18 6.5 20.4 18"/></svg>
-                <span><span class="nb-title">Library</span><span class="nb-desc">Everything you've run</span></span>
-            </button>
-        </nav>
+            <nav class="rail" role="tablist" aria-label="BetLegend Pro tools">
+                <div class="rail-label">Tools</div>
+                <button class="navbtn" role="tab" data-tool="matchup" aria-selected="true" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg>
+                    <span>Matchup Report</span>
+                </button>
+                <button class="navbtn" role="tab" data-tool="ask" aria-selected="false" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg>
+                    <span>Ask BetLegend</span>
+                </button>
+                <button class="navbtn" role="tab" data-tool="sim" aria-selected="false" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17c3-8 6 4 9-2s6 1 9-5"/><path d="M3 21h18"/></svg>
+                    <span>Bankroll Simulator</span>
+                </button>
+                <button class="navbtn" role="tab" data-tool="trends" aria-selected="false" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <span>Team Trends</span>
+                </button>
+                <button class="navbtn" role="tab" data-tool="library" aria-selected="false" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/><path d="M18 6.5 20.4 18"/></svg>
+                    <span>Library</span>
+                </button>
+            </nav>
 
-        <div>
-            <div id="accountNotice"></div>
-            <!-- Daily free-report allowance. One bar for the whole product:
-                 the grant is per account per day across every tool on the rail,
-                 not per tool, so it does not belong inside any one panel. -->
-            <div id="allowanceNotice"></div>
+            <div class="work">
+                <div id="accountNotice"></div>
+                <!-- One allowance bar for the whole product: the daily grant is
+                     per account across every tool on the rail, not per tool. -->
+                <div id="allowanceNotice"></div>
 
-            <!-- ======================================== MATCHUP REPORT -->
-            <section class="blp-panel is-active" id="panel-matchup" role="tabpanel" aria-label="Matchup Report">
+                <!-- ==================================== MATCHUP REPORT -->
+                <section class="panel is-active" id="panel-matchup" role="tabpanel" aria-label="Matchup Report">
 
-                <!-- Matchup -> Filters -> Results. The whole workflow on one
-                     line, so the user always knows where they are and what is
-                     left. Painted from state; never hand-toggled. -->
-                <nav class="hxc-progress" id="hxcProgress" aria-label="Report progress">
-                    <span class="hxc-progress-step is-on" data-step="matchup"><b>1</b>Matchup</span>
-                    <span class="hxc-progress-sep" aria-hidden="true"></span>
-                    <span class="hxc-progress-step" data-step="filters"><b>2</b>Filters</span>
-                    <span class="hxc-progress-sep" aria-hidden="true"></span>
-                    <span class="hxc-progress-step" data-step="results"><b>3</b>Results</span>
-                    <span class="hxc-progress-spacer"></span>
-                    <p class="hxc-progress-note" id="hxcProgressNote">Pick a sport and two teams to begin</p>
-                </nav>
+                    <nav class="prog" aria-label="Report progress">
+                        <span class="prog-step is-on" data-step="matchup"><b>1</b>Matchup</span>
+                        <span class="prog-sep" aria-hidden="true"></span>
+                        <span class="prog-step" data-step="filters"><b>2</b>Filters</span>
+                        <span class="prog-sep" aria-hidden="true"></span>
+                        <span class="prog-step" data-step="results"><b>3</b>Results</span>
+                        <span class="prog-spacer"></span>
+                        <p class="prog-note" id="progNote">Pick a sport and two teams to begin</p>
+                    </nav>
 
-                <!-- ------------------------------------------- setup view -->
-                <form id="matchupForm" novalidate>
-                    <section class="hxc-card">
-                        <div class="hxc-card-head">
-                            <h2>Matchup</h2>
-                            <span class="hxc-head-spacer"></span>
-                            <span class="hxc-count">Graded games only</span>
+                    <form id="matchupForm" novalidate>
+                        <section class="card">
+                            <div class="card-head">
+                                <h2>Matchup</h2>
+                                <span class="spacer"></span>
+                                <span class="meta">Graded games only</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="setup">
+                                    <div class="field">
+                                        <label class="lbl" for="mSport">Sport</label>
+                                        <select class="sel" id="mSport">
+                                            <option value="MLB">MLB</option>
+                                            <option value="NHL">NHL</option>
+                                            <option value="NBA">NBA</option>
+                                            <option value="NFL">NFL</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="lbl" for="mAway">Away team</label>
+                                        <select class="sel" id="mAway" disabled><option value="">Loading&hellip;</option></select>
+                                    </div>
+                                    <div class="swapcol">
+                                        <button class="swap" id="mSwap" type="button" aria-label="Swap away and home teams" title="Swap teams">&#8646;</button>
+                                    </div>
+                                    <div class="field">
+                                        <label class="lbl" for="mHome">Home team</label>
+                                        <select class="sel" id="mHome" disabled><option value="">Loading&hellip;</option></select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="lbl" for="mTimeframe">Timeframe</label>
+                                        <select class="sel" id="mTimeframe">
+                                            <option value="5">Last 5 qualifying games</option>
+                                            <option value="10">Last 10 qualifying games</option>
+                                            <option value="20" selected>Last 20 qualifying games</option>
+                                            <option value="50">Last 50 qualifying games</option>
+                                            <option value="100">Last 100 qualifying games</option>
+                                            <option value="all">All qualifying games</option>
+                                            <option value="custom">Custom date range&hellip;</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="dates" id="dateRow" hidden>
+                                    <div class="field">
+                                        <label class="lbl" for="mDateFrom">From date</label>
+                                        <input class="inp" id="mDateFrom" type="date">
+                                    </div>
+                                    <div class="field">
+                                        <label class="lbl" for="mDateTo">To date</label>
+                                        <input class="inp" id="mDateTo" type="date">
+                                    </div>
+                                </div>
+                                <p class="err-line" id="setupErr" hidden></p>
+                                <div class="note is-err" id="teamsErr" hidden>
+                                    <span>Couldn't load the team list.</span>
+                                    <button class="btn" id="teamsRetry" type="button">Retry</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="card">
+                            <div class="card-head">
+                                <div class="ftools">
+                                    <h2>Filters</h2>
+                                    <span class="meta" id="filterCount">None</span>
+                                    <span class="spacer"></span>
+                                    <label class="sr" for="filterSearch">Search filters</label>
+                                    <input class="search" id="filterSearch" type="search" placeholder="Search conditions&hellip;" autocomplete="off">
+                                    <button class="linkbtn" id="collapseAll" type="button">Collapse all</button>
+                                    <button class="linkbtn" id="clearAll" type="button" hidden>Clear all</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="cats" id="cats"></div>
+                                <div class="chosen" id="chosen" hidden></div>
+                            </div>
+                        </section>
+
+                        <div class="runbar">
+                            <p class="runsum" id="runSummary">Choose a sport and two different teams to continue.</p>
+                            <button class="run" id="mSubmit" type="submit">
+                                Run Matchup Report <span class="cost" data-cost></span>
+                            </button>
                         </div>
-                        <div class="hxc-card-body">
-                            <div class="hxc-setup">
-                                <div class="hxc-field">
-                                    <label class="hxc-label" for="mSport">Sport</label>
-                                    <select class="hxc-select" id="mSport">
+                        <p class="review" id="review" hidden></p>
+                    </form>
+
+                    <div id="resultsView" hidden>
+                        <div class="resultbar">
+                            <h2 class="resulttitle" id="resultTitle">Matchup report</h2>
+                            <button class="btn" id="editSearch" type="button">&larr; Edit search</button>
+                            <button class="btn is-primary" id="runAgain" type="button">Run again</button>
+                        </div>
+                        <div id="mResult"></div>
+                    </div>
+
+                    <div id="mLoading" hidden></div>
+                    <div class="note is-err" id="mError" hidden></div>
+                </section>
+
+                <!-- ===================================== ASK BETLEGEND -->
+                <section class="panel" id="panel-ask" role="tabpanel" aria-label="Ask BetLegend">
+                    <form class="card" id="askForm" novalidate>
+                        <div class="card-head">
+                            <h2>Ask BetLegend</h2>
+                            <p class="sub">One question, plain English. You get a structured report: form, situational splits with real sample sizes, market read, and a bet-or-pass call. Anything the dataset doesn't hold is labeled as unavailable rather than guessed.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="field" id="askField">
+                                <label class="lbl" for="askQuery">Your question</label>
+                                <textarea class="ta" id="askQuery" maxlength="500" placeholder="Dodgers vs Padres tonight&#10;Are the Celtics profitable as home favorites?&#10;Best MLB bet today"></textarea>
+                                <span class="errmsg">Type a question first.</span>
+                            </div>
+                            <div class="chips">
+                                <button class="chipbtn" data-example="Dodgers vs Padres tonight" type="button">Try: a matchup</button>
+                                <button class="chipbtn" data-example="Are the Celtics profitable as home favorites?" type="button">Try: a team situation</button>
+                                <button class="chipbtn" data-example="Best MLB bet today" type="button">Try: today's board</button>
+                            </div>
+                            <div class="note is-warn" id="askClarify" hidden style="margin-top:12px"></div>
+                            <div class="note is-err" id="askError" hidden style="margin-top:12px"></div>
+                            <div class="submitrow">
+                                <button class="run" id="askSubmit" type="submit">
+                                    Generate report <span class="cost" data-cost></span>
+                                </button>
+                                <p class="submitnote">A clarification, a timeout or a failure always costs 0.</p>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="askLoading" hidden></div>
+                    <div id="askResult" hidden></div>
+                </section>
+
+                <!-- ================================ BANKROLL SIMULATOR -->
+                <section class="panel" id="panel-sim" role="tabpanel" aria-label="Bankroll Simulator">
+                    <form class="card" id="simForm" novalidate>
+                        <div class="card-head">
+                            <h2>Bankroll Simulator</h2>
+                            <p class="sub">Scenario analysis, not a prediction. You supply the win probability you believe in and the price you're getting; BetLegend Pro runs thousands of bet sequences and reports the spread of outcomes. It does not check whether your probability is right.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="grid2">
+                                <div class="field" id="simProbField">
+                                    <label class="lbl" for="simProb">Win probability (%)</label>
+                                    <input class="inp" id="simProb" type="number" min="1" max="99" step="1" value="55">
+                                    <span class="errmsg">Enter a whole number between 1 and 99.</span>
+                                </div>
+                                <div class="field" id="simOddsField">
+                                    <label class="lbl" for="simOdds">American odds</label>
+                                    <input class="inp" id="simOdds" type="number" step="1" value="-110">
+                                    <span class="errmsg">American odds, like -110 or +150.</span>
+                                </div>
+                            </div>
+                            <div class="grid2" style="margin-top:11px">
+                                <div class="field">
+                                    <label class="lbl" for="simBank">Starting bankroll <span class="opt">(optional)</span></label>
+                                    <input class="inp" id="simBank" type="number" min="1" step="1" value="10000">
+                                </div>
+                                <div class="field">
+                                    <label class="lbl" for="simStrategy">Staking strategy</label>
+                                    <select class="sel" id="simStrategy">
+                                        <option value="flat">Flat &mdash; 2% per bet</option>
+                                        <option value="half_kelly">Half Kelly</option>
+                                        <option value="kelly">Full Kelly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="note" id="simEdgeNote" style="margin-top:12px"></p>
+                            <div class="note is-err" id="simError" hidden></div>
+                            <div class="submitrow">
+                                <button class="run" id="simSubmit" type="submit">
+                                    Run simulation <span class="cost" data-cost></span>
+                                </button>
+                                <p class="submitnote">Invalid inputs are rejected before anything is charged.</p>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="simLoading" hidden></div>
+                    <div id="simResult" hidden></div>
+                </section>
+
+                <!-- ======================================== TEAM TRENDS -->
+                <section class="panel" id="panel-trends" role="tabpanel" aria-label="Team Trends">
+                    <form class="card" id="trendForm" novalidate>
+                        <div class="card-head">
+                            <h2>Team Trends</h2>
+                            <p class="sub">One team, one situation, the raw split &mdash; straight up, against the spread and over/under. No narrative, no synthesis.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="grid2">
+                                <div class="field">
+                                    <label class="lbl" for="tSport">Sport</label>
+                                    <select class="sel" id="tSport">
                                         <option value="MLB">MLB</option>
-                                        <option value="NHL">NHL</option>
                                         <option value="NBA">NBA</option>
                                         <option value="NFL">NFL</option>
+                                        <option value="NHL">NHL</option>
                                     </select>
                                 </div>
-                                <div class="hxc-field">
-                                    <label class="hxc-label" for="mAway">Away team</label>
-                                    <select class="hxc-select" id="mAway" disabled><option value="">Loading&hellip;</option></select>
-                                </div>
-                                <div class="hxc-swapcol">
-                                    <button class="hxc-swap" id="mSwap" type="button" aria-label="Swap away and home teams" title="Swap teams">&#8646;</button>
-                                </div>
-                                <div class="hxc-field">
-                                    <label class="hxc-label" for="mHome">Home team</label>
-                                    <select class="hxc-select" id="mHome" disabled><option value="">Loading&hellip;</option></select>
-                                </div>
-                                <div class="hxc-field">
-                                    <label class="hxc-label" for="mTimeframe">Timeframe</label>
-                                    <select class="hxc-select" id="mTimeframe">
-                                        <option value="5">Last 5 qualifying games</option>
-                                        <option value="10">Last 10 qualifying games</option>
-                                        <option value="20" selected>Last 20 qualifying games</option>
-                                        <option value="50">Last 50 qualifying games</option>
-                                        <option value="100">Last 100 qualifying games</option>
-                                        <option value="all">All qualifying games</option>
-                                        <option value="custom">Custom date range&hellip;</option>
-                                    </select>
+                                <div class="field">
+                                    <label class="lbl" for="tTeam">Team</label>
+                                    <select class="sel" id="tTeam" disabled><option value="">Loading teams&hellip;</option></select>
                                 </div>
                             </div>
-                            <div class="hxc-dates" id="hxcDates" hidden>
-                                <div class="hxc-field">
-                                    <label class="hxc-label" for="mDateFrom">From date</label>
-                                    <input class="hxc-input" id="mDateFrom" type="date">
-                                </div>
-                                <div class="hxc-field">
-                                    <label class="hxc-label" for="mDateTo">To date</label>
-                                    <input class="hxc-input" id="mDateTo" type="date">
-                                </div>
+                            <div class="field" style="margin-top:11px">
+                                <label class="lbl" for="tSituation">Situation</label>
+                                <select class="sel" id="tSituation">
+                                    <option value="home_favorite">Home favorites</option>
+                                    <option value="road_underdog">Road underdogs</option>
+                                    <option value="after_loss">After a loss</option>
+                                    <option value="after_win">After a win</option>
+                                    <option value="three_game_win_streak">On a 3+ game win streak</option>
+                                    <option value="three_game_losing_streak">On a 3+ game losing streak</option>
+                                    <option value="division_rival">vs division rivals</option>
+                                    <option value="rest_advantage">With a rest advantage (2+ days)</option>
+                                    <option value="large_spread">Large spread (7+)</option>
+                                    <option value="close_spread">Close spread (within 3)</option>
+                                    <option value="home">Home games</option>
+                                    <option value="away">Away games</option>
+                                    <option value="as_favorite">As favorite</option>
+                                    <option value="as_underdog">As underdog</option>
+                                    <option value="conference">Conference games</option>
+                                    <option value="day_game">Day games</option>
+                                    <option value="night_game">Night games</option>
+                                </select>
                             </div>
-                            <p class="hxc-inline-err" id="mSetupErr" hidden></p>
-                            <div class="blp-note blp-note--err" id="mTeamsErr" hidden style="margin-top:10px">
-                                <span>Couldn't load the team list.</span>
-                                <button class="blp-btn blp-btn--sm" id="mTeamsRetry" type="button">Retry</button>
+                            <div class="note is-err" id="tError" hidden style="margin-top:12px"></div>
+                            <div class="submitrow">
+                                <button class="run" id="tSubmit" type="submit" disabled>
+                                    Search trends <span class="cost" data-cost></span>
+                                </button>
+                                <p class="submitnote">An empty or failed result always costs 0.</p>
                             </div>
                         </div>
-                    </section>
+                    </form>
+                    <div id="tLoading" hidden></div>
+                    <div id="tResult" hidden></div>
+                </section>
 
-                    <section class="hxc-card">
-                        <div class="hxc-card-head">
-                            <h2>Filters</h2>
-                            <span class="hxc-count" id="hxcFilterCount">None</span>
-                            <span class="hxc-head-spacer"></span>
-                            <label class="hx-sr-only" for="hxcSearch">Search filters</label>
-                            <input class="hxc-search" id="hxcSearch" type="search" placeholder="Search filters&hellip;" autocomplete="off">
-                            <button class="hxc-clear" id="hxcClear" type="button" hidden>Clear all</button>
+                <!-- ============================================ LIBRARY -->
+                <section class="panel" id="panel-library" role="tabpanel" aria-label="Library">
+                    <div class="card">
+                        <div class="card-head">
+                            <h2>Library</h2>
+                            <p class="sub">Every report and simulation you've run. Reopening one shows exactly what you got &mdash; it never calls BetLegend Pro again and never charges again.</p>
                         </div>
-                        <div class="hxc-card-body">
-                            <div class="hxc-cats" id="hxcCats"></div>
-                            <div class="hxc-chosen" id="hxcChosen" hidden></div>
-                        </div>
-                    </section>
-
-                    <div class="hxc-runbar">
-                        <p class="hxc-runsummary" id="hxcSummary">Choose a sport and two different teams to continue.</p>
-                        <button class="hxc-run" id="mSubmit" type="submit">
-                            Run Matchup Report <span class="cost" data-cost></span>
-                        </button>
+                        <div class="card-body"><div id="libList"></div></div>
                     </div>
-                    <p class="hxc-review" id="hxcReview" hidden></p>
-                </form>
-
-                <!-- ----------------------------------------- results view -->
-                <div id="mResultsView" hidden>
-                    <div class="hxc-resultbar">
-                        <h2 class="hxc-resulttitle" id="hxcResultTitle">Matchup report</h2>
-                        <button class="hxc-btn" id="hxcEdit" type="button">&larr; Edit search</button>
-                        <button class="hxc-btn hxc-btn--primary" id="hxcRerun" type="button">Run again</button>
-                    </div>
-                    <div id="mResult"></div>
-                </div>
-
-                <div id="mLoading" hidden></div>
-                <div class="blp-note blp-note--err" id="mError" hidden></div>
-            </section>
-
-            <!-- ========================================= ASK BETLEGEND -->
-            <section class="blp-panel" id="panel-ask" role="tabpanel" aria-label="Ask BetLegend">
-                <form class="blp-card" id="askForm" novalidate>
-                    <div class="blp-card-head">
-                        <h2>Ask BetLegend</h2>
-                        <p class="sub">One question, plain English. You get a structured report: form, situational splits with real sample sizes, market read, and a bet-or-pass call. Anything the dataset doesn't hold is labeled as unavailable rather than guessed.</p>
-                    </div>
-                    <div class="blp-field">
-                        <label for="askQuery">Your question</label>
-                        <textarea class="blp-textarea" id="askQuery" maxlength="500" placeholder="Dodgers vs Padres tonight&#10;Are the Celtics profitable as home favorites?&#10;Best MLB bet today"></textarea>
-                        <span class="blp-err-msg" id="askErr">Type a question first.</span>
-                    </div>
-                    <div class="blp-chips" style="margin-top:12px">
-                        <button class="blp-chipbtn blp-chipbtn--ghost" data-example="Dodgers vs Padres tonight" type="button">Try: a matchup</button>
-                        <button class="blp-chipbtn blp-chipbtn--ghost" data-example="Are the Celtics profitable as home favorites?" type="button">Try: a team situation</button>
-                        <button class="blp-chipbtn blp-chipbtn--ghost" data-example="Best MLB bet today" type="button">Try: today's board</button>
-                    </div>
-                    <div class="blp-note blp-note--warn" id="askClarify" hidden style="margin-top:14px"></div>
-                    <div class="blp-note blp-note--err" id="askError" hidden style="margin-top:14px"></div>
-                    <div class="blp-submitrow" style="margin-top:16px">
-                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="askSubmit" type="submit">
-                            Generate report <span class="cost" data-cost></span>
-                        </button>
-                        <p class="blp-submitnote">A clarification, a timeout or a failure always costs 0.</p>
-                    </div>
-                </form>
-                <div id="askLoading" hidden></div>
-                <div class="blp-result" id="askResult" hidden></div>
-            </section>
-
-            <!-- ====================================== BANKROLL SIMULATOR -->
-            <section class="blp-panel" id="panel-sim" role="tabpanel" aria-label="Bankroll Simulator">
-                <form class="blp-card" id="simForm" novalidate>
-                    <div class="blp-card-head">
-                        <h2>Bankroll Simulator</h2>
-                        <p class="sub">Scenario analysis, not a prediction. You supply the win probability you believe in and the price you're getting; BetLegend Pro runs thousands of bet sequences and reports the spread of outcomes. It does not check whether your probability is right.</p>
-                    </div>
-                    <div class="blp-grid blp-grid--2">
-                        <div class="blp-field">
-                            <label for="simProb">Win probability</label>
-                            <input class="blp-input" id="simProb" type="number" min="1" max="99" step="1" value="55">
-                            <span class="blp-err-msg" id="simProbErr">Enter a whole number between 1 and 99.</span>
-                        </div>
-                        <div class="blp-field">
-                            <label for="simOdds">American odds</label>
-                            <input class="blp-input" id="simOdds" type="number" step="1" value="-110">
-                            <span class="blp-err-msg" id="simOddsErr">American odds, like -110 or +150.</span>
-                        </div>
-                    </div>
-                    <div class="blp-grid blp-grid--2" style="margin-top:12px">
-                        <div class="blp-field">
-                            <label for="simBank">Starting bankroll <span class="opt">(optional)</span></label>
-                            <input class="blp-input" id="simBank" type="number" min="1" step="1" value="10000">
-                        </div>
-                        <div class="blp-field">
-                            <label for="simStrategy">Staking strategy</label>
-                            <select class="blp-select" id="simStrategy">
-                                <option value="flat">Flat — 2% per bet</option>
-                                <option value="half_kelly">Half Kelly</option>
-                                <option value="kelly">Full Kelly</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="blp-note" id="simEdgeNote" style="margin-top:14px"></p>
-                    <div class="blp-note blp-note--err" id="simError" hidden style="margin-top:14px"></div>
-                    <div class="blp-submitrow" style="margin-top:16px">
-                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="simSubmit" type="submit">
-                            Run simulation <span class="cost" data-cost></span>
-                        </button>
-                        <p class="blp-submitnote">Invalid inputs are rejected before anything is charged.</p>
-                    </div>
-                </form>
-                <div id="simLoading" hidden></div>
-                <div class="blp-result" id="simResult" hidden></div>
-            </section>
-
-            <!-- ============================================ TEAM TRENDS -->
-            <section class="blp-panel" id="panel-trends" role="tabpanel" aria-label="Team Trends">
-                <form class="blp-card" id="trendForm" novalidate>
-                    <div class="blp-card-head">
-                        <h2>Team Trends</h2>
-                        <p class="sub">One team, one situation, the raw split — straight up, against the spread and over/under. No narrative, no synthesis. This tool supports streak and rest filters that the Matchup Report can't evaluate.</p>
-                    </div>
-                    <div class="blp-grid blp-grid--2">
-                        <div class="blp-field">
-                            <label for="tSport">Sport</label>
-                            <select class="blp-select" id="tSport">
-                                <option value="MLB">MLB</option>
-                                <option value="NBA">NBA</option>
-                                <option value="NFL">NFL</option>
-                                <option value="NHL">NHL</option>
-                            </select>
-                        </div>
-                        <div class="blp-field">
-                            <label for="tTeam">Team</label>
-                            <select class="blp-select" id="tTeam" disabled><option value="">Loading teams…</option></select>
-                        </div>
-                    </div>
-                    <div class="blp-field" style="margin-top:12px">
-                        <label for="tSituation">Situation</label>
-                        <select class="blp-select" id="tSituation">
-                            <option value="home_favorite">Home favorites</option>
-                            <option value="road_underdog">Road underdogs</option>
-                            <option value="after_loss">After a loss</option>
-                            <option value="after_win">After a win</option>
-                            <option value="three_game_win_streak">On a 3+ game win streak</option>
-                            <option value="three_game_losing_streak">On a 3+ game losing streak</option>
-                            <option value="division_rival">vs division rivals</option>
-                            <option value="rest_advantage">With a rest advantage (2+ days)</option>
-                            <option value="large_spread">Large spread (7+)</option>
-                            <option value="close_spread">Close spread (within 3)</option>
-                            <option value="home">Home games</option>
-                            <option value="away">Away games</option>
-                            <option value="as_favorite">As favorite</option>
-                            <option value="as_underdog">As underdog</option>
-                            <option value="conference">Conference games</option>
-                            <option value="day_game">Day games</option>
-                            <option value="night_game">Night games</option>
-                        </select>
-                    </div>
-                    <div class="blp-note blp-note--err" id="tError" hidden style="margin-top:14px"></div>
-                    <div class="blp-submitrow" style="margin-top:16px">
-                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="tSubmit" type="submit" disabled>
-                            Search trends <span class="cost" data-cost></span>
-                        </button>
-                        <p class="blp-submitnote">An empty or failed result always costs 0.</p>
-                    </div>
-                </form>
-                <div id="tLoading" hidden></div>
-                <div class="blp-result" id="tResult" hidden></div>
-            </section>
-
-            <!-- ================================================= LIBRARY -->
-            <section class="blp-panel" id="panel-library" role="tabpanel" aria-label="Library">
-                <div class="blp-card">
-                    <div class="blp-card-head">
-                        <h2>Library</h2>
-                        <p class="sub">Every report and simulation you've run. Reopening one shows exactly what you got — it never calls BetLegend Pro again and never charges again.</p>
-                    </div>
-                    <div id="libList"></div>
-                </div>
-                <div class="blp-result" id="libDetail" hidden></div>
-            </section>
+                    <div id="libDetail" hidden></div>
+                </section>
+            </div>
         </div>
-
     </div>
-</main>
+</template>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
 <script src="/static/js/backend-api.js?v=c736c27862c5"></script>
@@ -371,9 +412,34 @@
 (function () {
     'use strict';
 
-    // ================================================================ utils
+    // ============================================================ mounting
+    //
+    // The whole tool lives in a shadow root. Site CSS cannot cross that
+    // boundary, which is the only reliable way to keep this screen looking
+    // like itself — see the note in <head>. Everything below therefore scopes
+    // its lookups to `root`, never to `document`.
 
-    var $ = function (id) { return document.getElementById(id); };
+    var host = document.getElementById('blpConsole');
+    var root = host.attachShadow({ mode: 'open' });
+
+    var sheet = document.createElement('link');
+    sheet.rel = 'stylesheet';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260804d';
+    root.appendChild(sheet);
+    root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
+
+    // Reveal only once the sheet has resolved, so the tool never flashes
+    // unstyled. `error` counts as resolved: an unstyled tool that works beats
+    // a blank rectangle, and the timeout is the backstop for both.
+    var reveal = function () { host.classList.add('is-ready'); };
+    if (sheet.sheet) reveal();
+    else { sheet.addEventListener('load', reveal); sheet.addEventListener('error', reveal); }
+    setTimeout(reveal, 3000);
+
+    var $ = function (id) { return root.getElementById(id); };
+    var $$ = function (sel) { return [].slice.call(root.querySelectorAll(sel)); };
+
+    // ================================================================ utils
 
     function esc(v) {
         return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
@@ -392,7 +458,6 @@
     var fmtInt = function (n) { return typeof n === 'number' ? n.toLocaleString('en-US') : '—'; };
     var pct = function (n, d) { return (n * 100).toFixed(d == null ? 1 : d) + '%'; };
 
-    /** Break-even win rate implied by an American price. */
     function breakEven(odds) {
         if (typeof odds !== 'number' || !isFinite(odds)) return null;
         return odds < 0 ? (-odds) / (-odds + 100) : 100 / (odds + 100);
@@ -407,44 +472,36 @@
     function setFieldError(fieldEl, on) {
         if (!fieldEl) return;
         fieldEl.classList.toggle('is-invalid', !!on);
-        var control = fieldEl.querySelector('input, select, textarea');
-        if (control) control.setAttribute('aria-invalid', on ? 'true' : 'false');
+        var c = fieldEl.querySelector('input, select, textarea');
+        if (c) c.setAttribute('aria-invalid', on ? 'true' : 'false');
     }
 
     function showNote(el, html) { el.innerHTML = html; el.hidden = false; }
     function hide(el) { if (el) el.hidden = true; }
 
-    // Loading skeleton shaped like the result it is standing in for, so the
-    // page does not jump when the real content lands.
     function skeleton(kind, message) {
         var body = kind === 'kpis'
-            ? '<div class="blp-kpis">' + new Array(6).fill('<div class="blp-skel-box"></div>').join('') + '</div>'
-            : '<div class="blp-skel" style="padding:22px;border:1px solid #e2e8ef;border-radius:14px;background:#fff">'
-                + '<div class="blp-skel-line w-40" style="height:26px"></div>'
-                + '<div class="blp-skel-line w-60"></div>'
-                + '<div class="blp-skel-box" style="height:64px"></div>'
-                + '<div class="blp-skel-line w-80"></div>'
-                + '<div class="blp-skel-line w-60"></div>'
-                + '<div class="blp-skel-line w-80"></div></div>';
-        return '<div class="blp-skel-status"><span class="blp-spin"></span>' + esc(message) + '</div>' + body;
+            ? '<div class="kpis-lg">' + new Array(6).fill('<div class="skel-box" style="margin:0"></div>').join('') + '</div>'
+            : '<div class="skel"><div class="skel-line w40" style="height:22px"></div>'
+                + '<div class="skel-line w60"></div><div class="skel-box"></div>'
+                + '<div class="skel-line w80"></div><div class="skel-line w60"></div>'
+                + '<div class="skel-line w80"></div></div>';
+        return '<div class="skel-status"><span class="spin"></span>' + esc(message) + '</div>' + body;
     }
 
     function emptyState(title, body, actionHtml) {
-        return '<div class="blp-empty"><div class="blp-empty-ico" aria-hidden="true">'
-            + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+        return '<div class="empty"><div class="empty-ico" aria-hidden="true">'
+            + '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
             + '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/></svg>'
-            + '</div><h3>' + esc(title) + '</h3><p>' + esc(body) + '</p>' + (actionHtml || '') + '</div>';
+            + '</div><h3>' + esc(title) + '</h3><p>' + esc(body) + '</p>'
+            + (actionHtml ? '<div class="row">' + actionHtml + '</div>' : '') + '</div>';
     }
 
     // ============================================================== state
 
     var ACCESS = { entitled: false, plan: null };
-    var COST = { cost: 5, freeAvailable: false, resetsAt: null, balance: 0, perDay: 1 };
-    var costEls = [].slice.call(document.querySelectorAll('[data-cost]'));
+    var COST = { cost: 5, freeAvailable: false, resetsAt: null, balance: 0 };
     var submitButtons = [];
-    // Account-level gate, set by refreshStatus. Every per-form validator and
-    // every submit `finally` has to honour it, or a tool re-enables its own
-    // button moments after the allowance that blocked it was consumed.
     var SUBMIT_BLOCKED = false;
 
     function costLabel() {
@@ -453,12 +510,9 @@
         return '· ' + COST.cost + ' TMR Coin';
     }
     function paintCosts() {
-        costEls.forEach(function (el) { el.textContent = costLabel(); });
+        $$('[data-cost]').forEach(function (el) { el.textContent = costLabel(); });
     }
 
-    /** When the free allowance next resets, in the viewer's own clock. The
-     *  boundary itself is decided server-side and sent as an absolute instant,
-     *  so this only formats it — it never computes it. */
     function resetText() {
         if (!COST.resetsAt) return '';
         var d = new Date(COST.resetsAt);
@@ -468,39 +522,28 @@
         }) + ' your time.';
     }
 
-    /** The three allowance states the product promises, plus the subscriber
-     *  case. The subscribe prompt appears in exactly one of them — after
-     *  today's free report has been consumed — never before. */
     function paintAllowance() {
         var box = $('allowanceNotice');
         if (!box) return;
         if (ACCESS.entitled) {
-            box.innerHTML = '<div class="blp-note blp-note--ok" style="margin-bottom:12px">'
-                + '<span><strong>Unlimited reports.</strong> Your plan covers every tool here — '
-                + 'no TMR Coin is deducted and the daily free allowance does not apply to you.</span></div>';
+            box.innerHTML = '<div class="note is-ok"><span><strong>Unlimited reports.</strong> '
+                + 'Your plan covers every tool here — no TMR Coin is deducted and the daily '
+                + 'free allowance does not apply to you.</span></div>';
             return;
         }
         if (COST.freeAvailable) {
-            box.innerHTML = '<div class="blp-note blp-note--ok" style="margin-bottom:12px">'
-                + '<span><strong>Free report available today.</strong> '
+            box.innerHTML = '<div class="note is-ok"><span><strong>Free report available today.</strong> '
                 + '1 free report per day, shared across every BetLegend Pro tool. '
                 + 'Use it on whichever one you want.</span></div>';
             return;
         }
-        // Consumed. Keep whatever is already on screen; state the position and
-        // offer the plan. Coin remains a valid way through for anyone holding a
-        // balance — this prompt is an offer, not a wall.
         var canCoin = COST.balance >= COST.cost;
-        box.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:12px">'
-            + '<span><strong>Today’s free report used.</strong> '
+        box.innerHTML = '<div class="note is-warn"><span><strong>Today’s free report used.</strong> '
             + '1 free report per day, shared across every BetLegend Pro tool.' + esc(resetText()) + ' '
             + (canCoin
                 ? 'Until then each report costs ' + esc(COST.cost) + ' TMR Coin, or go unlimited with a plan.'
                 : 'You need an active plan (or ' + esc(COST.cost) + ' TMR Coin) to run another one today.')
-            + '</span>'
-            + '<button type="button" class="blp-btn blp-btn--sm blp-btn--primary" id="allowanceSubscribe">Subscribe</button></div>';
-        // The real checkout, not a link to the pricing page -- that is only the
-        // fallback for when the call cannot be made.
+            + '</span><button type="button" class="btn is-primary" id="allowanceSubscribe">Subscribe</button></div>';
         var btn = $('allowanceSubscribe');
         if (btn) btn.addEventListener('click', function () {
             try {
@@ -515,12 +558,11 @@
         });
     }
 
-    /** Billing pill for a completed result — three genuinely different cases. */
     function billingPill(res) {
-        if (res.included_in_plan) return '<span class="blp-pill blp-pill--plan">Included in your plan</span>';
-        if (res.was_free_inquiry) return '<span class="blp-pill blp-pill--free">Free report</span>';
-        if (res.billed) return '<span class="blp-pill blp-pill--charged">Charged ' + esc(res.amount_charged) + ' TMR Coin</span>';
-        return '<span class="blp-pill">Not charged</span>';
+        if (res.included_in_plan) return '<span class="pill is-plan">Included in your plan</span>';
+        if (res.was_free_inquiry) return '<span class="pill is-free">Free report</span>';
+        if (res.billed) return '<span class="pill is-charged">Charged ' + esc(res.amount_charged) + ' TMR Coin</span>';
+        return '<span class="pill">Not charged</span>';
     }
 
     function receiptRow(res) {
@@ -533,36 +575,33 @@
                 + (res.was_replay ? ' · duplicate submission, not re-charged' : '')
                 + ' · <a href="/wallet/">View in wallet</a></span>');
         }
-        return '<div class="blp-receipt">' + bits.join('') + '</div>';
+        return '<div class="receipt">' + bits.join('') + '</div>';
     }
 
     async function refreshStatus() {
         try {
             var s = await window.api.getBetLegendProStatus();
             COST.cost = typeof s.cost === 'number' ? s.cost : 5;
-            // Server-decided, never computed here: the same value the charge
-            // path enforces inside its row lock.
             COST.freeAvailable = !!s.freeAvailable;
             COST.resetsAt = s.freeResetsAt || null;
             COST.balance = typeof s.balance === 'number' ? s.balance : 0;
-            COST.perDay = typeof s.freeInquiriesPerDay === 'number' ? s.freeInquiriesPerDay : 1;
             ACCESS = (s.access && typeof s.access === 'object') ? s.access : { entitled: false, plan: null };
 
             var planChip = $('planChip'), balanceChip = $('balanceChip');
             if (ACCESS.entitled) {
-                // 'comp' is an owner/complimentary grant, not a purchase — label
-                // it honestly rather than showing it as a bought Lifetime plan.
+                // 'comp' is an owner grant, not a purchase — label it honestly
+                // rather than showing it as a bought Lifetime plan.
                 var planName = ACCESS.plan === 'comp' ? 'Owner'
                     : ACCESS.is_lifetime ? 'Lifetime'
                     : ACCESS.plan === 'annual' ? 'Annual' : ACCESS.plan === 'monthly' ? 'Monthly' : 'Pro';
-                planChip.className = 'blp-chip blp-chip--plan';
-                planChip.innerHTML = '<strong>' + esc(planName) + '</strong> · unlimited';
+                planChip.className = 'chip is-plan';
+                planChip.innerHTML = '<strong>' + esc(planName) + '</strong>&nbsp;· unlimited';
                 planChip.hidden = false;
                 balanceChip.hidden = true;
                 $('manageBtn').hidden = !ACCESS.manageable;
                 $('upgradeBtn').hidden = true;
             } else {
-                planChip.className = 'blp-chip blp-chip--free';
+                planChip.className = 'chip';
                 planChip.textContent = COST.freeAvailable
                     ? 'Free report available today'
                     : "Today's free report used";
@@ -574,25 +613,23 @@
             }
             $('topbarRight').hidden = false;
 
-            // Wallet problems only matter on the coin path.
             var notice = $('accountNotice');
             notice.innerHTML = '';
             if (!ACCESS.entitled && s.isFrozen) {
-                notice.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:12px"><span><strong>Your TMR Coin wallet is frozen.</strong> Contact support before running a paid report — or get unlimited access and skip coin entirely.</span><a class="blp-btn blp-btn--sm" href="/betlegend-pro/#pricing">See plans</a></div>';
+                notice.innerHTML = '<div class="note is-warn"><span><strong>Your TMR Coin wallet is frozen.</strong> '
+                    + 'Contact support before running a paid report — or get unlimited access and skip coin '
+                    + 'entirely.</span><a class="btn" href="/betlegend-pro/#pricing">See plans</a></div>';
             } else if (!ACCESS.entitled && !s.eligible) {
-                notice.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:12px"><span>This account isn\'t eligible to run a coin-billed report.</span></div>';
+                notice.innerHTML = '<div class="note is-warn"><span>This account isn’t eligible to run a '
+                    + 'coin-billed report.</span></div>';
             }
-            // The only legitimate reasons to disable a submit button: the
-            // account cannot be billed at all, or today's free report is spent
-            // and there is no entitlement and no coin to fall back on. Never
-            // for an unfilled field -- and even here the reason is on the
-            // button, not just in a banner.
+
             var allowanceSpent = !ACCESS.entitled && !COST.freeAvailable && s.balance < COST.cost;
             var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible || allowanceSpent);
             SUBMIT_BLOCKED = blocked;
             submitButtons.forEach(function (b) {
-                // Account state may only ever ADD a reason to disable. A button
-                // its own form has already gated as incomplete stays disabled.
+                // Account state may only ever ADD a reason to disable; a form
+                // that has already gated its own button keeps it disabled.
                 b.disabled = blocked || b.hasAttribute('data-incomplete');
                 if (blocked) {
                     b.setAttribute('title', s.isFrozen
@@ -617,33 +654,21 @@
     // ========================================================= navigation
 
     var TOOL_PANEL = { matchup: 'panel-matchup', ask: 'panel-ask', sim: 'panel-sim', trends: 'panel-trends', library: 'panel-library' };
-    var navBtns = [].slice.call(document.querySelectorAll('.blp-navbtn'));
 
     function selectTool(tool, push) {
         if (!TOOL_PANEL[tool]) tool = 'matchup';
-        navBtns.forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tool === tool)); });
+        $$('.navbtn').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tool === tool)); });
         Object.keys(TOOL_PANEL).forEach(function (k) {
             $(TOOL_PANEL[k]).classList.toggle('is-active', k === tool);
         });
-        if (push && window.history && history.replaceState) {
-            history.replaceState(null, '', '#' + tool);
-        }
+        if (push && window.history && history.replaceState) history.replaceState(null, '', '#' + tool);
         if (tool === 'library') loadLibrary();
     }
-    navBtns.forEach(function (b) {
+    $$('.navbtn').forEach(function (b) {
         b.addEventListener('click', function () { selectTool(b.dataset.tool, true); });
     });
 
     // ================================================== MATCHUP RESEARCH
-    //
-    // Sport -> away -> home -> timeframe -> filters -> one run button ->
-    // results. The whole setup is two cards and a sticky action bar, and the
-    // report replaces them rather than appearing a screen further down.
-    //
-    // Every figure rendered here is computed server-side from the same game
-    // rows the response returns, so the tables can be added up by hand. The
-    // one exception is the average total, which is the plain mean of the final
-    // scores in the very table beneath it and is labelled as such.
 
     var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome');
     var mTimeframe = $('mTimeframe'), mDateFrom = $('mDateFrom'), mDateTo = $('mDateTo');
@@ -651,42 +676,34 @@
     submitButtons.push(mSubmit);
 
     // Six ids exist both as a top-level request field (the original API) and as
-    // an id in the filter library. They must travel top-level.
+    // an id in the filter library. Those must travel top-level.
     var LEGACY_IDS = {
         venue: 1, role: 1, opponent_type: 1, season_type: 1,
         head_to_head_only: 1, min_rest_days: 1
     };
 
-    // ------------------------------------------------------------ categories
-    //
-    // The server's library groups its filters by the dataset field behind them
-    // (matchup / market / form / schedule / performance / player / venue /
-    // h2h). Those are engine concepts. The categories below are the ones a
-    // handicapper thinks in, so the mapping is done here by filter id — the
-    // server stays the single source of truth for which conditions exist and
-    // which are honest for a given sport.
-    //
-    // Anything the server adds that is not named here lands in Advanced
-    // Filters rather than disappearing, so a new engine filter is visible on
-    // this page the day it ships.
+    // The server groups its filters by the dataset field behind them; those are
+    // engine concepts. These are the headings a handicapper thinks in. The
+    // server stays the source of truth for what exists and what is honest for a
+    // sport — an id it adds that is not named here lands in Advanced Filters
+    // rather than disappearing.
     var CATEGORIES = [
-        { id: 'matchup',     label: 'Matchup',            ids: ['venue', 'season_type'] },
+        { id: 'matchup',     label: 'Matchup',            ids: ['venue', 'opponent_type', 'season_type'] },
         { id: 'market',      label: 'Betting Market',     ids: ['spread_range', 'moneyline_range', 'su_result', 'ats_result'] },
         { id: 'form',        label: 'Recent Form',        ids: ['prev_result', 'prev_margin', 'last10_win_pct'] },
         { id: 'schedule',    label: 'Schedule & Rest',    ids: ['min_rest_days', 'back_to_back', 'long_rest', 'nfl_week'] },
         { id: 'venue',       label: 'Venue & Travel',     ids: ['day_night', 'start_time', 'roof', 'surface', 'temperature', 'wind', 'attendance'] },
         { id: 'streaks',     label: 'Streaks',            ids: ['su_streak', 'ats_streak', 'ou_streak'] },
         { id: 'scoring',     label: 'Scoring',            ids: ['total_range', 'ou_result'] },
-        { id: 'opponent',    label: 'Opponent Strength',  ids: ['role', 'opponent_type'] },
+        { id: 'opponent',    label: 'Opponent Strength',  ids: ['role'] },
         { id: 'situational', label: 'Situational Trends', ids: ['day_of_week', 'month'] },
         { id: 'h2h',         label: 'Head-to-Head',       ids: ['head_to_head_only'] },
         { id: 'advanced',    label: 'Advanced Filters',   ids: [] }
     ];
 
-    var library = null;        // { groups: [...], notes: [...] }
-    var libraryFor = null;     // which sport `library` describes
-    var filters = {};          // filter id -> value
-    var openCats = {};         // category id -> true when expanded
+    var library = null, libraryFor = null, libraryCache = {};
+    var filters = {};
+    var closedCats = {};       // open by default; this records what was shut
     var filterSearch = '';
 
     function isSet(v) {
@@ -694,14 +711,10 @@
         if (typeof v === 'object' && v.min == null && v.max == null) return false;
         return true;
     }
-
     function activeFilterCount() {
         return Object.keys(filters).filter(function (k) { return isSet(filters[k]); }).length;
     }
 
-    /** Flatten the server library and redistribute it into the categories
-     *  above. Unavailable conditions are kept separately: they are stated as a
-     *  count on the category, never rendered as dead controls. */
     function categorised() {
         if (!library) return [];
         var byId = {};
@@ -709,9 +722,7 @@
             (g.filters || []).forEach(function (f) { byId[f.id] = f; });
         });
         var claimed = {};
-        CATEGORIES.forEach(function (c) {
-            c.ids.forEach(function (id) { claimed[id] = 1; });
-        });
+        CATEGORIES.forEach(function (c) { c.ids.forEach(function (id) { claimed[id] = 1; }); });
         var q = filterSearch.toLowerCase();
         var matches = function (spec) {
             if (!q) return true;
@@ -730,115 +741,96 @@
             });
             return { id: c.id, label: c.label, live: live.filter(matches), off: off, liveAll: live };
         }).filter(function (c) {
-            // A category with nothing runnable for this sport is not shown at
-            // all. A screen of greyed-out controls reads as a broken product;
-            // an absent category reads as "this league doesn't carry that",
-            // which is what the count on its neighbours says out loud.
-            //
-            // While a search is active the test is what MATCHED, not what
-            // exists -- gating on liveAll left all eleven categories on screen
-            // and the search only decided which ones opened.
+            // While searching, what matters is what MATCHED. Otherwise a
+            // category shows whenever this sport can actually run something in
+            // it — a heading with nothing behind it reads as broken.
             return q ? c.live.length > 0 : c.liveAll.length > 0;
         });
     }
 
-    /** One control. Shape follows the spec's `kind`, which the server sets. */
     function renderControl(spec) {
         var v = filters[spec.id];
-
         if (spec.kind === 'enum') {
-            return '<select class="hxc-fsel" data-fid="' + esc(spec.id) + '">'
-                + '<option value="">Any</option>'
+            return '<select class="fsel" data-fid="' + esc(spec.id) + '"><option value="">Any</option>'
                 + spec.options.map(function (o) {
-                    return '<option value="' + esc(o.value) + '"'
-                        + (v === o.value ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+                    return '<option value="' + esc(o.value) + '"' + (v === o.value ? ' selected' : '')
+                        + '>' + esc(o.label) + '</option>';
                 }).join('') + '</select>';
         }
         if (spec.kind === 'bool') {
-            var id = 'hxf-' + spec.id;
-            return '<label class="hxc-check' + (v === true ? ' is-on' : '') + '" for="' + id + '">'
+            var id = 'f-' + spec.id;
+            return '<label class="fcheck' + (v === true ? ' is-on' : '') + '" for="' + id + '">'
                 + '<input type="checkbox" id="' + id + '" data-fid="' + esc(spec.id) + '"'
                 + (v === true ? ' checked' : '') + '><span>Yes</span></label>';
         }
         if (spec.kind === 'int') {
-            return '<input class="hxc-fnum" type="number" data-fid="' + esc(spec.id) + '"'
-                + ' data-bound="value" placeholder="Any"'
+            return '<input class="fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="value" placeholder="Any"'
                 + (spec.min != null ? ' min="' + spec.min + '"' : '')
                 + (spec.max != null ? ' max="' + spec.max + '"' : '')
                 + (v != null && v !== '' ? ' value="' + esc(v) + '"' : '') + '>';
         }
         if (spec.kind === 'text') {
-            return '<input class="hxc-ftext" type="text" data-fid="' + esc(spec.id) + '"'
-                + ' data-bound="value" placeholder="Any"'
+            return '<input class="ftext" type="text" data-fid="' + esc(spec.id) + '" data-bound="value" placeholder="Any"'
                 + (v ? ' value="' + esc(v) + '"' : '') + '>';
         }
-        // range
         var r = (v && typeof v === 'object') ? v : {};
         var attrs = (spec.min != null ? ' min="' + spec.min + '"' : '')
             + (spec.max != null ? ' max="' + spec.max + '"' : '')
             + (spec.step != null ? ' step="' + spec.step + '"' : '');
-        return '<span class="hxc-frange">'
-            + '<input class="hxc-fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="min"'
-            + ' placeholder="Min"' + attrs + (r.min != null ? ' value="' + esc(r.min) + '"' : '') + '>'
-            + '<span class="hxc-frange-to">to</span>'
-            + '<input class="hxc-fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="max"'
-            + ' placeholder="Max"' + attrs + (r.max != null ? ' value="' + esc(r.max) + '"' : '') + '>'
-            + (spec.unit ? '<span class="hxc-funit">' + esc(spec.unit) + '</span>' : '')
+        return '<span class="frange">'
+            + '<input class="fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="min" placeholder="Min"'
+            + attrs + (r.min != null ? ' value="' + esc(r.min) + '"' : '') + '>'
+            + '<span class="fto">to</span>'
+            + '<input class="fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="max" placeholder="Max"'
+            + attrs + (r.max != null ? ' value="' + esc(r.max) + '"' : '') + '>'
+            + (spec.unit ? '<span class="funit">' + esc(spec.unit) + '</span>' : '')
             + '</span>';
     }
 
     function renderCategories() {
-        var host = $('hxcCats');
-        if (!library) {
-            host.innerHTML = '<p class="hxc-empty-note">Loading the filter library&hellip;</p>';
-            return;
-        }
+        var box = $('cats');
+        if (!library) { box.innerHTML = '<p class="empty-note">Loading the condition library…</p>'; return; }
         var cats = categorised();
         if (!cats.length) {
-            host.innerHTML = '<p class="hxc-empty-note">No filter matches that search.</p>';
+            box.innerHTML = '<p class="empty-note">No condition matches that search.</p>';
             renderChosen();
             return;
         }
-
-        host.innerHTML = cats.map(function (c) {
-            // A search is an explicit request to see what matched, so every
-            // category holding a match opens.
-            var open = filterSearch ? c.live.length > 0 : !!openCats[c.id];
-            var setCount = c.liveAll.filter(function (s) { return isSet(filters[s.id]); }).length;
-            var offNote = c.off.length
-                ? '<span class="hxc-cat-off" title="' + esc(c.off.map(function (s) {
-                        return s.label + ' — ' + (s.unavailable_reason || 'not carried for this sport');
-                    }).join('\n')) + '">' + c.off.length + ' unavailable for ' + esc(mSport.value) + '</span>'
-                : '';
-
+        box.innerHTML = cats.map(function (c) {
+            var open = filterSearch ? true : !closedCats[c.id];
+            var n = c.liveAll.filter(function (s) { return isSet(filters[s.id]); }).length;
             var body = open
-                ? '<div class="hxc-cat-body">' + (c.live.length
-                    ? c.live.map(function (spec) {
-                        return '<div class="hxc-f">'
-                            + '<label class="hxc-f-label"'
+                ? '<div class="cat-body">'
+                    + c.live.map(function (spec) {
+                        return '<div class="f">'
+                            + '<label class="f-lbl"'
                             + (spec.help ? ' title="' + esc(spec.help + (spec.era_note ? ' ' + spec.era_note : '')) + '"' : '')
                             + '>' + esc(spec.label) + '</label>'
                             + renderControl(spec)
-                            + (spec.era_note ? '<p class="hxc-era">' + esc(spec.era_note) + '</p>' : '')
+                            + (spec.era_note ? '<p class="f-era">' + esc(spec.era_note) + '</p>' : '')
                             + '</div>';
                     }).join('')
-                    : '<p class="hxc-empty-note">Nothing in this category matches that search.</p>')
+                    // Named, never drawn as a dead control, never a paragraph of
+                    // yellow. The reason for each is on its tooltip.
+                    + (c.off.length && !filterSearch
+                        ? '<p class="cat-off"><b>Not in ' + esc(mSport.value) + ' data</b>'
+                            + c.off.map(function (s) {
+                                return '<i title="' + esc(s.unavailable_reason || 'not carried for this sport')
+                                    + '">' + esc(s.label) + '</i>';
+                            }).join(', ') + '</p>'
+                        : '')
                     + '</div>'
                 : '';
-
-            return '<section class="hxc-cat' + (open ? ' is-open' : '') + '" data-cat="' + esc(c.id) + '">'
-                + '<button type="button" class="hxc-cat-head" aria-expanded="' + (open ? 'true' : 'false') + '">'
-                + '<span class="hxc-cat-caret" aria-hidden="true">&#9656;</span>'
-                + '<span class="hxc-cat-title">' + esc(c.label) + '</span>'
-                + offNote
-                + (setCount ? '<span class="hxc-cat-badge">' + setCount + '</span>' : '')
-                + '</button>' + body
-                + '</section>';
+            return '<section class="cat' + (open ? ' is-open' : '') + '" data-cat="' + esc(c.id) + '">'
+                + '<button type="button" class="cat-head" aria-expanded="' + (open ? 'true' : 'false') + '">'
+                + '<span class="caret" aria-hidden="true">▸</span>'
+                + '<span class="cat-title">' + esc(c.label) + '</span>'
+                + (n ? '<span class="cat-count">' + n + '</span>' : '')
+                + '</button>' + body + '</section>';
         }).join('');
         renderChosen();
     }
 
-    /** Plain-English label for one set value, used by the chips. */
     function chipFor(spec, v) {
         if (spec.kind === 'bool') return spec.label;
         if (spec.kind === 'enum') {
@@ -864,137 +856,97 @@
         return found;
     }
 
-    function chosenChips() {
-        var out = [];
+    function renderChosen() {
+        var picked = [];
         Object.keys(filters).forEach(function (id) {
             if (!isSet(filters[id])) return;
             var spec = specById(id);
-            if (!spec) return;
-            out.push({ id: id, label: chipFor(spec, filters[id]) });
+            if (spec) picked.push({ id: id, label: chipFor(spec, filters[id]) });
         });
-        return out;
-    }
-
-    function renderChosen() {
-        var picked = chosenChips();
-        var count = picked.length;
-        $('hxcClear').hidden = count === 0;
-        $('hxcFilterCount').textContent = count ? count + (count === 1 ? ' filter' : ' filters') : 'None';
-        var box = $('hxcChosen');
-        if (!count) {
-            box.hidden = true;
-            box.innerHTML = '';
-            syncSetup();
-            scheduleReview();
+        $('clearAll').hidden = picked.length === 0;
+        $('filterCount').textContent = picked.length
+            ? picked.length + (picked.length === 1 ? ' condition' : ' conditions') : 'None';
+        var box = $('chosen');
+        if (!picked.length) {
+            box.hidden = true; box.innerHTML = '';
+            syncSetup(); scheduleReview();
             return;
         }
-        var html = '<span class="hxc-chosen-label">Applied</span>'
-            + picked.map(function (p) {
-                return '<button type="button" class="hxc-chip" data-remove="' + esc(p.id) + '">'
-                    + esc(p.label) + '<i aria-hidden="true">&times;</i>'
-                    + '<span class="hx-sr-only"> — remove</span></button>';
-            }).join('');
-        // Only rewrite when the chips actually changed. Clicking a chip blurs
-        // whatever input was focused, which fires `change` BEFORE the click
-        // lands -- and an unconditional rewrite there replaced the very button
-        // being clicked, so the click arrived on a detached node.
+        var html = '<span class="chosen-lbl">Applied</span>' + picked.map(function (p) {
+            return '<button type="button" class="tagx" data-remove="' + esc(p.id) + '">'
+                + esc(p.label) + '<i aria-hidden="true">×</i><span class="sr"> — remove</span></button>';
+        }).join('');
+        // Only rewrite when the chips changed: clicking one blurs whatever
+        // input had focus, which fires `change` BEFORE the click lands, and an
+        // unconditional rewrite there replaces the very button being clicked.
         if (box.innerHTML !== html) box.innerHTML = html;
         box.hidden = false;
-        syncSetup();
-        scheduleReview();
+        syncSetup(); scheduleReview();
     }
 
-    // ---------------------------------------------------- pre-flight review
-    // A check of the chosen conditions against the same registry the report
-    // uses. It is a catalogue call: no engine scan, no charge, no allowance.
-    // That is the point -- a contradiction should be caught here rather than
-    // after it has spent the user's one free report for the day.
+    // A catalogue call against the same registry the report uses: no engine
+    // scan, no charge, no allowance. A contradiction should surface here rather
+    // than after it has spent the user's one free report for the day.
     var reviewTimer = null, reviewSig = null;
-
-    function scheduleReview() {
-        clearTimeout(reviewTimer);
-        reviewTimer = setTimeout(runReview, 300);
-    }
-
-    function selectedValues() {
-        var out = {};
-        Object.keys(filters).forEach(function (k) {
-            if (isSet(filters[k])) out[k] = filters[k];
-        });
-        return out;
-    }
+    function scheduleReview() { clearTimeout(reviewTimer); reviewTimer = setTimeout(runReview, 300); }
 
     async function runReview() {
-        var host = $('hxcReview');
-        if (!host) return;
-        var chosen = selectedValues();
+        var hostEl = $('review');
+        if (!hostEl) return;
+        var chosen = {};
+        Object.keys(filters).forEach(function (k) { if (isSet(filters[k])) chosen[k] = filters[k]; });
         var sig = mSport.value + '|' + JSON.stringify(chosen);
         if (sig === reviewSig) return;
         reviewSig = sig;
-
-        if (!Object.keys(chosen).length) { host.hidden = true; host.innerHTML = ''; return; }
+        if (!Object.keys(chosen).length) { hostEl.hidden = true; hostEl.innerHTML = ''; return; }
         try {
-            // Called through the generic client rather than a new method on
-            // backend-api.js: that file is loaded by most pages on the site,
-            // and changing it would force a cache-buster bump on all of them.
             var lib = await window.api.request(
                 '/betlegend-pro/matchup-filters?sport=' + encodeURIComponent(mSport.value)
                 + '&selected=' + encodeURIComponent(JSON.stringify(chosen)));
-            if (sig !== reviewSig) return;          // a newer edit already won
+            if (sig !== reviewSig) return;
             paintReview(lib && lib.selection);
         } catch (err) {
-            // The review is an assist, never a gate. If it cannot run, stay
-            // quiet and leave the submit button alone.
             if (sig !== reviewSig) return;
-            host.hidden = true;
+            hostEl.hidden = true;      // an assist, never a gate
         }
     }
 
     function paintReview(sel) {
-        var host = $('hxcReview');
-        if (!sel) { host.hidden = true; host.innerHTML = ''; return; }
+        var hostEl = $('review');
+        if (!sel) { hostEl.hidden = true; hostEl.innerHTML = ''; return; }
         var flags = [];
         (sel.unavailable || []).forEach(function (u) {
             flags.push(esc(u.filter) + ' will not be applied for ' + esc(mSport.value) + ': ' + esc(u.reason));
         });
-        (sel.conflicts || []).forEach(function (c) {
-            flags.push(esc(c.filter) + ': ' + esc(c.reason));
-        });
-        if (!flags.length) { host.hidden = true; host.innerHTML = ''; return; }
-        host.innerHTML = '<span class="hxc-review-flag">' + flags.join('<br>') + '</span>';
-        host.hidden = false;
+        (sel.conflicts || []).forEach(function (c) { flags.push(esc(c.filter) + ': ' + esc(c.reason)); });
+        if (!flags.length) { hostEl.hidden = true; hostEl.innerHTML = ''; return; }
+        hostEl.innerHTML = '<span class="review-flag">' + flags.join('<br>') + '</span>';
+        hostEl.hidden = false;
     }
-
-    // One library per sport, kept for the session. Without this, going
-    // MLB -> NFL -> MLB refetched a catalogue that cannot have changed and
-    // dropped the panel back to "Loading the filter library…" every time.
-    var libraryCache = {};
 
     async function loadFilterLibrary(sport) {
         if (libraryFor === sport && library) { renderCategories(); return; }
         libraryFor = sport;
-        if (libraryCache[sport]) {
-            library = libraryCache[sport];
-            renderCategories();
-            return;
-        }
+        // One library per sport for the session: MLB -> NFL -> MLB refetched a
+        // catalogue that cannot have changed and dropped the panel back to
+        // "Loading…" each time.
+        if (libraryCache[sport]) { library = libraryCache[sport]; renderCategories(); return; }
         library = null;
         renderCategories();
         try {
             var lib = await window.api.getBetLegendProMatchupFilters(sport);
-            if (libraryFor !== sport) return;      // sport changed mid-flight
+            if (libraryFor !== sport) return;     // sport changed mid-flight
             libraryCache[sport] = lib;
             library = lib;
         } catch (err) {
             library = null;
-            $('hxcCats').innerHTML = '<p class="hxc-empty-note">The filter library could not be loaded, '
-                + 'so only the unfiltered report is available right now.</p>';
+            $('cats').innerHTML = '<p class="empty-note">The condition library could not be loaded, so only '
+                + 'the unfiltered report is available right now.</p>';
             return;
         }
         renderCategories();
     }
 
-    // --- input wiring -------------------------------------------------------
     function setFilter(fid, bound, raw) {
         if (bound === 'min' || bound === 'max') {
             var cur = (filters[fid] && typeof filters[fid] === 'object') ? filters[fid] : {};
@@ -1008,85 +960,80 @@
         else filters[fid] = raw;
     }
 
-    /** Repaint just the per-category counters. A full re-render on every
-     *  keystroke would blow away the input being typed into. */
-    function paintCatBadges() {
+    /** Repaint only the per-category counters. A full re-render on every
+     *  keystroke would tear out the input being typed into. */
+    function paintCatCounts() {
         categorised().forEach(function (c) {
-            var head = $('hxcCats').querySelector('[data-cat="' + c.id + '"] .hxc-cat-head');
+            var head = $('cats').querySelector('[data-cat="' + c.id + '"] .cat-head');
             if (!head) return;
             var n = c.liveAll.filter(function (s) { return isSet(filters[s.id]); }).length;
-            var badge = head.querySelector('.hxc-cat-badge');
-            if (n && !badge) {
-                head.insertAdjacentHTML('beforeend', '<span class="hxc-cat-badge">' + n + '</span>');
-            } else if (n && badge) {
-                badge.textContent = n;
-            } else if (!n && badge) {
-                badge.remove();
-            }
+            var badge = head.querySelector('.cat-count');
+            if (n && !badge) head.insertAdjacentHTML('beforeend', '<span class="cat-count">' + n + '</span>');
+            else if (n && badge) badge.textContent = n;
+            else if (!n && badge) badge.remove();
         });
     }
 
-    $('hxcCats').addEventListener('change', function (ev) {
+    $('cats').addEventListener('change', function (ev) {
         var el = ev.target;
         if (!el || !el.getAttribute) return;
         var fid = el.getAttribute('data-fid');
         if (!fid) return;
         if (el.type === 'checkbox') {
             setFilter(fid, null, el.checked);
-            var wrap = el.closest('.hxc-check');
+            var wrap = el.closest('.fcheck');
             if (wrap) wrap.classList.toggle('is-on', el.checked);
         } else {
             setFilter(fid, el.getAttribute('data-bound'), el.value);
         }
-        renderChosen();
-        paintCatBadges();
+        renderChosen(); paintCatCounts();
     });
 
-    // Number and text inputs update the chips as they are typed, so the count
-    // never lags what is on screen.
-    $('hxcCats').addEventListener('input', function (ev) {
+    $('cats').addEventListener('input', function (ev) {
         var el = ev.target;
         if (!el || !el.getAttribute) return;
         var fid = el.getAttribute('data-fid');
         if (!fid || el.type === 'checkbox' || el.tagName === 'SELECT') return;
         setFilter(fid, el.getAttribute('data-bound'), el.value);
-        renderChosen();
-        paintCatBadges();
+        renderChosen(); paintCatCounts();
     });
 
-    $('hxcCats').addEventListener('click', function (ev) {
-        var head = ev.target.closest && ev.target.closest('.hxc-cat-head');
+    $('cats').addEventListener('click', function (ev) {
+        var head = ev.target.closest && ev.target.closest('.cat-head');
         if (!head) return;
         var cid = head.parentNode.getAttribute('data-cat');
-        openCats[cid] = !openCats[cid];
+        closedCats[cid] = !closedCats[cid];
         renderCategories();
     });
 
-    $('hxcChosen').addEventListener('click', function (ev) {
+    $('chosen').addEventListener('click', function (ev) {
         var btn = ev.target.closest && ev.target.closest('[data-remove]');
         if (!btn) return;
         delete filters[btn.getAttribute('data-remove')];
         renderCategories();
     });
 
-    $('hxcSearch').addEventListener('input', function () {
-        filterSearch = $('hxcSearch').value.trim();
+    $('filterSearch').addEventListener('input', function () {
+        filterSearch = $('filterSearch').value.trim();
         renderCategories();
     });
 
-    $('hxcClear').addEventListener('click', function () {
+    $('collapseAll').addEventListener('click', function () {
+        var anyOpen = categorised().some(function (c) { return !closedCats[c.id]; });
+        categorised().forEach(function (c) { closedCats[c.id] = anyOpen; });
+        $('collapseAll').textContent = anyOpen ? 'Expand all' : 'Collapse all';
+        renderCategories();
+    });
+
+    $('clearAll').addEventListener('click', function () {
         filters = {};
         filterSearch = '';
-        $('hxcSearch').value = '';
+        $('filterSearch').value = '';
         renderCategories();
     });
 
-    /** Split the flat filter state into the request shape: the conditions this
-     *  endpoint has always taken as top-level fields stay there, everything
-     *  from the expanded library goes in `filters`. */
     function filterPayload() {
-        var body = {};
-        var extra = {};
+        var body = {}, extra = {};
         Object.keys(filters).forEach(function (k) {
             if (!isSet(filters[k])) return;
             if (LEGACY_IDS[k]) { body[k] = filters[k]; return; }
@@ -1096,24 +1043,22 @@
         return body;
     }
 
-    // --------------------------------------------------------------- sport
     mSport.addEventListener('change', function () {
         // A condition that exists for one sport may not for the next, so the
         // selection resets rather than carrying across silently.
         filters = {};
         filterSearch = '';
-        $('hxcSearch').value = '';
+        $('filterSearch').value = '';
         reviewSig = null;
-        $('hxcReview').hidden = true;
+        $('review').hidden = true;
         loadFilterLibrary(mSport.value);
         loadMatchupTeams(mSport.value);
         syncSetup();
     });
 
-    // ----------------------------------------------------------- timeframe
     mTimeframe.addEventListener('change', function () {
         var custom = mTimeframe.value === 'custom';
-        $('hxcDates').hidden = !custom;
+        $('dateRow').hidden = !custom;
         if (!custom) { mDateFrom.value = ''; mDateTo.value = ''; }
         syncSetup();
     });
@@ -1122,7 +1067,6 @@
         el.addEventListener('input', syncSetup);
     });
 
-    /** Human sentence for whatever the timeframe control currently says. */
     function timeframeLabel() {
         var v = mTimeframe.value;
         if (v === 'custom') {
@@ -1164,28 +1108,26 @@
     async function loadMatchupTeams(sport) {
         [mAway, mHome].forEach(function (s) {
             s.disabled = true;
-            s.innerHTML = '<option value="">Loading&hellip;</option>';
+            s.innerHTML = '<option value="">Loading…</option>';
         });
-        hide($('mTeamsErr'));
+        hide($('teamsErr'));
         try {
             var teams = await fetchTeams(sport);
             if (mSport.value !== sport) return;
-            var opts = '<option value="">Select team&hellip;</option>' + teams.map(function (t) {
+            var opts = '<option value="">Select team…</option>' + teams.map(function (t) {
                 return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
             }).join('');
             mAway.innerHTML = opts; mHome.innerHTML = opts;
             mAway.disabled = false; mHome.disabled = false;
         } catch (err) {
             if (mSport.value !== sport) return;
-            [mAway, mHome].forEach(function (s) {
-                s.innerHTML = '<option value="">Teams unavailable</option>';
-            });
-            $('mTeamsErr').hidden = false;
+            [mAway, mHome].forEach(function (s) { s.innerHTML = '<option value="">Teams unavailable</option>'; });
+            $('teamsErr').hidden = false;
         }
         syncSetup();
     }
 
-    $('mTeamsRetry').addEventListener('click', function () {
+    $('teamsRetry').addEventListener('click', function () {
         delete teamCache[mSport.value];
         loadMatchupTeams(mSport.value);
     });
@@ -1196,35 +1138,31 @@
         mHome.value = a;
         syncSetup();
     });
-
     [mAway, mHome].forEach(function (s) { s.addEventListener('change', syncSetup); });
 
-    // ------------------------------------------------------------- progress
     function setProgress(step) {
         var order = ['matchup', 'filters', 'results'];
         var at = order.indexOf(step);
-        [].slice.call(document.querySelectorAll('.hxc-progress-step')).forEach(function (el) {
+        $$('.prog-step').forEach(function (el) {
             var i = order.indexOf(el.getAttribute('data-step'));
             el.classList.toggle('is-on', i === at);
             el.classList.toggle('is-done', i < at);
         });
     }
 
-    /** One validator for the whole setup: it owns the error line, the run
-     *  button, the summary sentence and the progress rail, so those four can
-     *  never disagree about whether the form is ready. */
+    /** One validator owns the error line, the run button, the summary and the
+     *  progress rail, so those four can never disagree. */
     function syncSetup() {
         var away = mAway.value, home = mHome.value;
         var err = '';
         if (away && home && away === home) err = 'Away and home must be two different teams.';
         if (!err && mTimeframe.value === 'custom') {
-            if (!mDateFrom.value && !mDateTo.value) {
-                err = 'Enter a from date, a to date, or both.';
-            } else if (mDateFrom.value && mDateTo.value && mDateFrom.value > mDateTo.value) {
+            if (!mDateFrom.value && !mDateTo.value) err = 'Enter a from date, a to date, or both.';
+            else if (mDateFrom.value && mDateTo.value && mDateFrom.value > mDateTo.value) {
                 err = 'The from date must be on or before the to date.';
             }
         }
-        var errEl = $('mSetupErr');
+        var errEl = $('setupErr');
         errEl.textContent = err;
         errEl.hidden = !err;
 
@@ -1236,28 +1174,25 @@
         mSubmit.disabled = !ready || SUBMIT_BLOCKED;
 
         var n = activeFilterCount();
-        var summary = $('hxcSummary');
+        var summary = $('runSummary');
         if (!ready) {
             summary.innerHTML = err ? esc(err) : 'Choose a sport and two different teams to continue.';
         } else if (SUBMIT_BLOCKED) {
-            summary.innerHTML = 'Today’s free report is used. A plan (or TMR Coin) is needed to run another one today.';
+            summary.textContent = 'Today’s free report is used. A plan (or TMR Coin) is needed to run another one today.';
         } else {
-            summary.innerHTML = '<strong>' + esc(mSport.value) + '</strong> · '
-                + esc(away) + ' at ' + esc(home) + ' · ' + esc(timeframeLabel())
-                + ' · <strong>' + n + '</strong> ' + (n === 1 ? 'filter' : 'filters')
-                + (n ? ', combined with AND' : '');
+            summary.innerHTML = '<strong>' + esc(mSport.value) + '</strong> · ' + esc(away) + ' at '
+                + esc(home) + ' · ' + esc(timeframeLabel()) + ' · <strong>' + n + '</strong> '
+                + (n === 1 ? 'condition' : 'conditions') + (n ? ', combined with AND' : '');
         }
 
-        var note = $('hxcProgressNote');
-        if ($('mResultsView') && $('mResultsView').hidden === false) {
-            setProgress('results');
-            note.textContent = 'Report ready';
+        var note = $('progNote');
+        if ($('resultsView') && $('resultsView').hidden === false) {
+            setProgress('results'); note.textContent = 'Report ready';
         } else if (ready) {
             setProgress('filters');
-            note.textContent = n ? n + (n === 1 ? ' filter set' : ' filters set') : 'Filters are optional';
+            note.textContent = n ? n + (n === 1 ? ' condition set' : ' conditions set') : 'Conditions are optional';
         } else {
-            setProgress('matchup');
-            note.textContent = 'Pick a sport and two teams to begin';
+            setProgress('matchup'); note.textContent = 'Pick a sport and two teams to begin';
         }
         return ready && !SUBMIT_BLOCKED;
     }
@@ -1265,8 +1200,6 @@
     // ------------------------------------------------------------- results
     var SCORE_NOUN = { MLB: 'runs', NHL: 'goals', NBA: 'points', NFL: 'points' };
     var DASH = '&mdash;';
-    // Below this many games a percentage is arithmetic, not a read. The engine
-    // uses the same threshold for its own sample notes.
     var THIN_SAMPLE = 8;
 
     function hxPct(v) { return (v === null || v === undefined) ? DASH : esc(v) + '%'; }
@@ -1277,67 +1210,56 @@
     }
 
     /** Mean combined final score of the games listed beneath it. Not a server
-     *  figure: it is the plain average of team_score + opponent_score over the
-     *  same rows in the table, and is labelled as the final-score total so it
-     *  is never mistaken for the average closing number. */
+     *  figure: the plain average of team_score + opponent_score over the same
+     *  rows in the table, labelled as the final-score total so it is never
+     *  mistaken for the average closing number. */
     function avgTotal(games) {
         var vals = (games || []).filter(function (g) {
             return typeof g.team_score === 'number' && typeof g.opponent_score === 'number';
         }).map(function (g) { return g.team_score + g.opponent_score; });
         if (!vals.length) return null;
-        var sum = vals.reduce(function (a, b) { return a + b; }, 0);
-        return Math.round((sum / vals.length) * 10) / 10;
+        return Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 10) / 10;
     }
 
-    /** "1,842 on file -> 214 matched your conditions -> 20 listed below." */
     function funnelLine(r) {
         var inDataset = r.games_in_dataset;
         var qualified = (r.total_qualifying_games != null) ? r.total_qualifying_games : r.qualifying_games;
         var shown = (r.games || []).length;
         if (inDataset == null && qualified == null) return '';
         var bits = [];
-        if (inDataset != null) {
-            bits.push('<span><strong>' + fmtInt(inDataset) + '</strong> games in the dataset before filtering</span>');
-        }
+        if (inDataset != null) bits.push('<span><strong>' + fmtInt(inDataset) + '</strong> games on file before filtering</span>');
         if (qualified != null) {
-            bits.push('<span class="hx-funnel-arrow" aria-hidden="true">&rarr;</span>'
-                + '<span><strong>' + fmtInt(qualified) + '</strong> matched '
+            bits.push('<span class="funnel-arrow" aria-hidden="true">→</span><span><strong>'
+                + fmtInt(qualified) + '</strong> matched '
                 + (r.conditions_applied === false ? 'no conditions (unfiltered side)' : 'your conditions') + '</span>');
         }
-        bits.push('<span class="hx-funnel-arrow" aria-hidden="true">&rarr;</span>'
-            + '<span><strong>' + fmtInt(shown) + '</strong> listed below and used for every figure here</span>');
-        return '<div class="hx-funnel">' + bits.join('') + '</div>';
+        bits.push('<span class="funnel-arrow" aria-hidden="true">→</span><span><strong>'
+            + fmtInt(shown) + '</strong> listed below and used for every figure here</span>');
+        return '<div class="funnel">' + bits.join('') + '</div>';
     }
 
-    /** ATS, over/under and the recent qualifying-games trend. Each states its
-     *  own eligible-game count, because ATS/OU are graded only on games with a
-     *  real closing number on file. */
     function splitsLine(r) {
-        var out = [];
-        var ats = r.ats, ou = r.ou, trend = r.recent_trend;
+        var out = [], ats = r.ats, ou = r.ou, trend = r.recent_trend;
         if (ats && ats.eligible_games) {
-            out.push('<span><span class="hx-split-label">ATS</span> <span class="hx-split-val">' + esc(ats.record)
+            out.push('<span><span class="split-l">ATS</span> <span class="split-v">' + esc(ats.record)
                 + (ats.cover_pct != null ? ' (' + esc(ats.cover_pct) + '%)' : '') + '</span> · '
                 + esc(ats.eligible_games) + ' graded</span>');
         }
         if (ou && ou.eligible_games) {
-            out.push('<span><span class="hx-split-label">O/U</span> <span class="hx-split-val">' + esc(ou.record)
+            out.push('<span><span class="split-l">O/U</span> <span class="split-v">' + esc(ou.record)
                 + (ou.over_pct != null ? ' (' + esc(ou.over_pct) + '% over)' : '') + '</span> · '
                 + esc(ou.eligible_games) + ' graded</span>');
         }
         if (trend && trend.label) {
-            out.push('<span><span class="hx-split-label">Recent</span> <span class="hx-split-val">'
-                + esc(trend.label) + '</span></span>');
+            out.push('<span><span class="split-l">Recent</span> <span class="split-v">' + esc(trend.label) + '</span></span>');
         }
         if (r.home_games != null && r.away_games != null && (r.home_games || r.away_games)) {
-            out.push('<span><span class="hx-split-label">Split</span> <span class="hx-split-val">'
-                + esc(r.home_games) + ' home / ' + esc(r.away_games) + ' away</span></span>');
+            out.push('<span><span class="split-l">Split</span> <span class="split-v">' + esc(r.home_games)
+                + ' home / ' + esc(r.away_games) + ' away</span></span>');
         }
-        return out.length ? '<div class="hx-splits">' + out.join('') + '</div>' : '';
+        return out.length ? '<div class="splits">' + out.join('') + '</div>' : '';
     }
 
-    /** Says, in words, what a small sample does and does not support. The
-     *  server's own sample_note is folded in when it sent one. */
     function thinNote(r) {
         var games = (r.games || []).length;
         if (!games) return '';
@@ -1349,76 +1271,59 @@
                 + 'rather than the rate — or widen the timeframe or drop a condition to build a bigger sample.');
         }
         if (r.sample_note) bits.push(esc(r.sample_note));
-        if (!bits.length) return '';
-        return '<div class="hxc-thin"><span>' + bits.join(' ') + '</span></div>';
+        return bits.length ? '<div class="thin"><span>' + bits.join(' ') + '</span></div>' : '';
     }
 
     function teamBlock(r, noun) {
         if (!r) return '';
         var range = r.date_range
-            ? '<span class="hx-range">' + esc(r.date_range.from) + ' &rarr; ' + esc(r.date_range.to) + '</span>'
-            : '';
+            ? '<span class="range">' + esc(r.date_range.from) + ' → ' + esc(r.date_range.to) + '</span>' : '';
         var games = r.games || [];
         // Every returned game is listed, not the first 25. "Why it qualified"
-        // is the whole point of this table, so truncating it hid exactly the
-        // evidence the report exists to show. The wrapper scrolls.
+        // is the whole point of this table.
         var rows = games.map(function (g) {
-            var where = g.venue_name
-                ? esc(g.venue || '') + ' · ' + esc(g.venue_name)
-                : esc(g.venue || '');
+            var where = g.venue_name ? esc(g.venue || '') + ' · ' + esc(g.venue_name) : esc(g.venue || '');
             var why = (g.qualified_because || []);
             return '<tr><td>' + esc(g.date || '') + '</td><td>' + esc(g.opponent || '') + '</td>'
-                + '<td>' + (where || DASH) + '</td><td>' + esc(g.score || '') + '</td>'
-                + '<td><span class="hx-res hx-res--' + esc(String(g.result || '').toLowerCase()) + '">'
+                + '<td>' + (where || DASH) + '</td><td class="n">' + esc(g.score || '') + '</td>'
+                + '<td><span class="res res-' + esc(String(g.result || '').toLowerCase()) + '">'
                 + esc(g.result || '') + '</span></td>'
                 + '<td>' + (g.role ? esc(g.role) + (g.closing_line != null ? ' ' + signed(g.closing_line) : '') : DASH) + '</td>'
-                // A dash here is "no closing total on file for that game",
-                // which is not the same as a total of zero. Both are real rows
-                // in this dataset, so they must not render alike.
-                + '<td>' + (g.closing_total != null ? esc(g.closing_total) : DASH) + '</td>'
-                + '<td>' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
-                + '<td class="hx-why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
+                // A dash is "no closing total on file", which is not a total of
+                // zero. Both are real rows here, so they must not render alike.
+                + '<td class="n">' + (g.closing_total != null ? esc(g.closing_total) : DASH) + '</td>'
+                + '<td class="n">' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
+                + '<td class="why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
         }).join('');
         var table = rows
-            ? '<div class="hx-tablewrap"><table class="hx-table">'
-                + '<caption class="hx-sr-only">Qualifying games for ' + esc(r.team)
-                + ', with the conditions each one satisfied</caption>'
+            ? '<div class="tablewrap"><table class="games">'
+                + '<caption class="sr">Qualifying games for ' + esc(r.team) + ', with the conditions each one satisfied</caption>'
                 + '<thead><tr><th>Date</th><th>Opponent</th><th>Location</th><th>Final score</th>'
                 + '<th>Result</th><th>Closing line</th><th>Closing total</th><th>Rest</th>'
-                + '<th>Why it qualified</th></tr></thead>'
-                + '<tbody>' + rows + '</tbody></table>'
-                + '</div>'
-            : '<p class="hx-note">No qualifying games found for these conditions. Widen the timeframe or '
-                + 'remove a condition — nothing here is broken, the dataset simply holds no game that met '
-                + 'all of them.</p>';
+                + '<th>Why it qualified</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+            : '<p class="note-s">No qualifying games found for these conditions. Widen the timeframe or remove a '
+                + 'condition — nothing here is broken, the dataset simply holds no game that met all of them.</p>';
 
         var total = (r.total_qualifying_games != null) ? r.total_qualifying_games : r.qualifying_games;
-        var at = avgTotal(games);
-        return '<section class="hx-card">'
-            + '<div class="hx-card-head"><h3>' + esc(r.team) + '</h3>' + range + '</div>'
-            + '<div class="hx-kpis">'
-            + '<div class="hx-kpi"><span>Record</span><strong>' + (r.record ? esc(r.record) : DASH) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Win %</span><strong>' + hxPct(r.win_pct) + '</strong></div>'
-            + '<div class="hx-kpi"><span>ATS</span><strong>' + ((r.ats && r.ats.record) ? esc(r.ats.record) : DASH) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Over / under</span><strong>' + ((r.ou && r.ou.record) ? esc(r.ou.record) : DASH) + '</strong></div>'
-            // Scored and allowed in one tile, read as a scoreline. Two tiles
-            // made nine, and nine tiles in a four-wide row leaves a single
-            // orphan stretched across the whole last row.
-            + '<div class="hx-kpi"><span>Avg score (' + esc(noun) + ')</span><strong>'
-            + num(r.avg_scored) + ' &ndash; ' + num(r.avg_allowed) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Avg margin</span><strong>' + signed(r.avg_margin) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Avg total</span><strong>' + num(at) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Qualifying games</span><strong>' + esc(total) + '</strong></div>'
+        return '<section class="rcard">'
+            + '<div class="rcard-head"><h3>' + esc(r.team) + '</h3>' + range + '</div>'
+            + '<div class="kpis">'
+            + '<div class="kpi"><span>Record</span><strong>' + (r.record ? esc(r.record) : DASH) + '</strong></div>'
+            + '<div class="kpi"><span>Win %</span><strong>' + hxPct(r.win_pct) + '</strong></div>'
+            + '<div class="kpi"><span>ATS</span><strong>' + ((r.ats && r.ats.record) ? esc(r.ats.record) : DASH) + '</strong></div>'
+            + '<div class="kpi"><span>Over / under</span><strong>' + ((r.ou && r.ou.record) ? esc(r.ou.record) : DASH) + '</strong></div>'
+            + '<div class="kpi"><span>Avg score (' + esc(noun) + ')</span><strong>'
+                + num(r.avg_scored) + ' – ' + num(r.avg_allowed) + '</strong></div>'
+            + '<div class="kpi"><span>Avg margin</span><strong>' + signed(r.avg_margin) + '</strong></div>'
+            + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(games)) + '</strong></div>'
+            + '<div class="kpi"><span>Qualifying games</span><strong>' + esc(total) + '</strong></div>'
             + '</div>'
-            + splitsLine(r)
-            + funnelLine(r)
+            + splitsLine(r) + funnelLine(r)
             + (r.conditions_applied === false
-                ? '<p class="hx-note">Your conditions were <strong>not</strong> applied to this team — the scope you chose targets the other side only.</p>'
+                ? '<p class="note-s">Your conditions were <strong>not</strong> applied to this team — the scope you chose targets the other side only.</p>'
                 : '')
-            + thinNote(r)
-            + table
-            + '<p class="hx-note">Avg total is the mean combined final score of the games listed above, '
-            + 'not the average closing number.</p>'
+            + thinNote(r) + table
+            + '<p class="note-s">Avg total is the mean combined final score of the games listed above, not the average closing number.</p>'
             + '</section>';
     }
 
@@ -1431,7 +1336,6 @@
         var warnings = d.filter_warnings || [];
         var trail = (d.games_after_each_filter && d.games_after_each_filter.team_1) || [];
 
-        // Scope, sample size and date range are conditions too.
         var SCOPE_TEXT = {
             both: 'Conditions applied to both teams',
             team_1: 'Conditions applied to ' + (d.team_1 || 'team 1') + ' only',
@@ -1444,174 +1348,131 @@
             : 'Sample: the ' + d.sample_size_requested + ' most recent qualifying games');
         var reqf = d.filters || {};
         if (reqf.date_from || reqf.date_to) {
-            context.push('Date range: ' + (reqf.date_from || 'earliest on file')
-                + ' to ' + (reqf.date_to || 'latest on file'));
+            context.push('Date range: ' + (reqf.date_from || 'earliest on file') + ' to ' + (reqf.date_to || 'latest on file'));
         }
         if (d.data_through) context.push('Latest completed game in this sample: ' + d.data_through);
 
-        // What you typed vs what was analysed. A shorthand landing on the wrong
-        // franchise must never be silent.
+        // A shorthand landing on the wrong franchise must never be silent.
         var tr = d.team_resolution || {};
         var renamed = ['team_1', 'team_2'].filter(function (k) {
             return tr[k] && tr[k].requested && tr[k].resolved
                 && String(tr[k].requested).trim() !== String(tr[k].resolved).trim();
         });
         var resolutionNote = renamed.length
-            ? '<p class="hx-note">Read as: ' + renamed.map(function (k) {
-                return esc(tr[k].requested) + ' &rarr; <strong>' + esc(tr[k].resolved) + '</strong>';
-            }).join(' · ') + '.</p>'
-            : '';
+            ? '<p class="note-s">Read as: ' + renamed.map(function (k) {
+                return esc(tr[k].requested) + ' → <strong>' + esc(tr[k].resolved) + '</strong>';
+            }).join(' · ') + '.</p>' : '';
 
-        // The disclaimer and the AND rule also arrive in notes[]. Both are
-        // given their own place below, so printing them here too would be the
-        // same sentence three times.
         var STANDING = [d.disclaimer, 'Conditions combine with AND'];
         var notes = (d.notes || []).filter(function (n) {
-            return !STANDING.some(function (s) {
-                return s && String(n).indexOf(String(s).slice(0, 40)) === 0;
-            });
+            return !STANDING.some(function (s) { return s && String(n).indexOf(String(s).slice(0, 40)) === 0; });
         });
 
         var dc = d.data_completeness || null;
         var thin = (dc && dc.thin_readings) || [];
         var completeness = dc
-            ? '<div class="hx-trail"><strong>Data behind this report</strong>'
-                + '<ul class="hx-cover">'
-                + '<li>' + fmtInt(dc.games_in_dataset.team_1) + ' games on file for '
-                    + esc(d.team_1) + ', ' + fmtInt(dc.games_in_dataset.team_2) + ' for '
-                    + esc(d.team_2) + ', ' + fmtInt(dc.games_in_dataset.head_to_head)
-                    + ' meetings between them.</li>'
+            ? '<div class="block-note"><strong>Data behind this report</strong><ul class="cover">'
+                + '<li>' + fmtInt(dc.games_in_dataset.team_1) + ' games on file for ' + esc(d.team_1) + ', '
+                + fmtInt(dc.games_in_dataset.team_2) + ' for ' + esc(d.team_2) + ', '
+                + fmtInt(dc.games_in_dataset.head_to_head) + ' meetings between them.</li>'
                 + (dc.dataset_range && dc.dataset_range.from
-                    ? '<li>Covering ' + esc(dc.dataset_range.from) + ' to '
-                        + esc(dc.dataset_range.to)
-                        + (dc.coverage_from ? '. Conditions are backed by ' + esc(d.sport)
-                            + ' data from ' + esc(dc.coverage_from) + ' onward.' : '.')
-                        + '</li>'
-                    : '')
+                    ? '<li>Covering ' + esc(dc.dataset_range.from) + ' to ' + esc(dc.dataset_range.to)
+                        + (dc.coverage_from ? '. Conditions are backed by ' + esc(d.sport) + ' data from '
+                            + esc(dc.coverage_from) + ' onward.' : '.') + '</li>' : '')
                 + ((dc.readings || []).length
                     ? '<li>' + dc.readings.map(function (r) {
                         return esc(r.filter) + ' on file for ' + hxPct(r.coverage_pct);
-                    }).join(', ') + ' of those games.</li>'
-                    : '')
+                    }).join(', ') + ' of those games.</li>' : '')
                 + '</ul>'
-                + (thin.length
-                    ? '<p class="hx-note hx-note--caveat">' + thin.map(function (r) {
-                        return esc(r.note);
-                    }).join(' ') + '</p>'
-                    : '')
-                + '</div>'
-            : '';
+                + (thin.length ? '<p class="note-s">' + thin.map(function (r) { return esc(r.note); }).join(' ') + '</p>' : '')
+                + '</div>' : '';
 
-        var head = '<section class="hx-card hx-card--head">'
-            + '<div class="hx-card-head"><h2>' + esc(d.team_1) + ' at ' + esc(d.team_2) + '</h2>'
-            + '<span class="hx-range">' + esc(d.sport) + '</span></div>'
-            + '<div class="hx-applied">'
+        var head = '<section class="rcard is-head">'
+            + '<div class="rcard-head"><h2>' + esc(d.team_1) + ' at ' + esc(d.team_2) + '</h2>'
+            + '<span class="range">' + esc(d.sport) + '</span></div>'
+            + '<div class="tags">'
             + (applied.length
-                ? applied.map(function (a) { return '<span class="hx-tag">' + esc(a) + '</span>'; }).join('')
-                : '<span class="hx-tag">No conditions &mdash; every completed game</span>')
+                ? applied.map(function (a) { return '<span class="tag">' + esc(a) + '</span>'; }).join('')
+                : '<span class="tag">No conditions — every completed game</span>')
             + '</div>'
             + (declined.length
-                ? '<div class="hx-declined"><strong>Conditions requested but not applied</strong><ul>'
-                    + declined.map(function (n) {
-                        return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>';
-                    }).join('')
-                    + '</ul></div>'
-                : '')
-            // What each condition actually cost. A qualifying count on its own
-            // is unreadable: 412 of 900 means nothing until you know which
-            // condition removed the other 488.
+                ? '<div class="block-note is-warn"><strong>Conditions requested but not applied</strong><ul>'
+                    + declined.map(function (n) { return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>'; }).join('')
+                    + '</ul></div>' : '')
+            // A qualifying count on its own is unreadable: 412 of 900 means
+            // nothing until you know which condition removed the other 488.
             + (trail.length
-                ? '<div class="hx-trail"><strong>How the sample narrowed</strong>'
-                    + '<div class="hx-trailwrap">'
-                    + '<table class="hx-trail-table"><thead><tr><th>Condition</th>'
-                    + '<th>Before</th><th>After</th><th>Removed</th></tr></thead><tbody>'
+                ? '<div class="block-note"><strong>How the sample narrowed</strong><div class="trailwrap">'
+                    + '<table class="trail"><thead><tr><th>Condition</th><th class="n">Before</th>'
+                    + '<th class="n">After</th><th class="n">Removed</th></tr></thead><tbody>'
                     + trail.map(function (t) {
-                        return '<tr><td>' + esc(t.filter) + '</td>'
-                            + '<td class="hx-num">' + fmtInt(t.games_before) + '</td>'
-                            + '<td class="hx-num">' + fmtInt(t.games_after) + '</td>'
-                            + '<td class="hx-num">' + (t.removed ? '&minus;' + fmtInt(t.removed) : '0') + '</td></tr>';
+                        return '<tr><td>' + esc(t.filter) + '</td><td class="n">' + fmtInt(t.games_before)
+                            + '</td><td class="n">' + fmtInt(t.games_after) + '</td><td class="n">'
+                            + (t.removed ? '−' + fmtInt(t.removed) : '0') + '</td></tr>';
                     }).join('')
-                    + '</tbody></table></div>'
-                    + '<p class="hx-note">Applied in this order, each to what the one above it '
-                    + 'left. The first row opens at every game on file for this team, so the '
-                    + 'column accounts for all of them.</p>'
-                    + '</div>'
-                : '')
-            // Requested, understood, and deliberately not run because the data
-            // behind it does not exist for this sport. Distinct from
-            // "not applied", which means nothing in this sample to apply it to.
+                    + '</tbody></table></div><p class="note-s">Applied in this order, each to what the one above '
+                    + 'it left. The first row opens at every game on file for this team, so the column accounts '
+                    + 'for all of them.</p></div>' : '')
             + (unavailable.length
-                ? '<div class="hx-declined"><strong>Not available for ' + esc(d.sport) + '</strong><ul>'
-                    + unavailable.map(function (n) {
-                        return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>';
-                    }).join('')
-                    + '</ul></div>'
-                : '')
+                ? '<div class="block-note is-warn"><strong>Not available for ' + esc(d.sport) + '</strong><ul>'
+                    + unavailable.map(function (n) { return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>'; }).join('')
+                    + '</ul></div>' : '')
             + (warnings.length
-                ? '<div class="hx-declined"><strong>Check these conditions</strong><ul>'
-                    + warnings.map(function (w) {
-                        return '<li>' + esc(w.filter) + ': ' + esc(w.reason) + '</li>';
-                    }).join('')
-                    + '</ul></div>'
-                : '')
+                ? '<div class="block-note is-warn"><strong>Check these conditions</strong><ul>'
+                    + warnings.map(function (w) { return '<li>' + esc(w.filter) + ': ' + esc(w.reason) + '</li>'; }).join('')
+                    + '</ul></div>' : '')
             + (notes.length
-                ? '<div class="hx-declined"><strong>About this sample</strong><ul>'
-                    + notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('')
-                    + '</ul></div>'
-                : '')
+                ? '<div class="block-note"><strong>About this sample</strong><ul>'
+                    + notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul></div>' : '')
             + completeness
-            + '<p class="hx-note">' + context.map(esc).join(' · ') + '.</p>'
+            + '<p class="note-s">' + context.map(esc).join(' · ') + '.</p>'
             + resolutionNote
-            + '<p class="hx-note hx-note--caveat">'
-            + esc(d.disclaimer || 'Historical patterns do not guarantee future results.')
-            + ' These are completed games that already met these conditions; a condition appearing '
-            + 'alongside a result is not evidence it caused one.</p>'
-            + '<div class="hx-receipt">' + receiptRow(res) + '</div>'
+            + '<p class="note-s">' + esc(d.disclaimer || 'Historical patterns do not guarantee future results.')
+            + ' These are completed games that already met these conditions; a condition appearing alongside a '
+            + 'result is not evidence it caused one.</p>'
+            + receiptRow(res)
             + '</section>';
 
         var h2h = d.head_to_head;
         var h2hBlock = h2h
-            ? '<section class="hx-card"><div class="hx-card-head"><h3>Head-to-head</h3>'
-                + '<span class="hx-range">Conditions above are not applied here</span></div>'
-                + '<div class="hx-kpis">'
-                + '<div class="hx-kpi"><span>Meetings</span><strong>' + esc(h2h.games_in_dataset) + '</strong></div>'
-                + '<div class="hx-kpi"><span>' + esc(d.team_1) + ' record</span><strong>'
-                + (h2h.record ? esc(h2h.record) : DASH) + '</strong></div>'
-                + '<div class="hx-kpi"><span>Win %</span><strong>' + hxPct(h2h.win_pct) + '</strong></div>'
-                + '<div class="hx-kpi"><span>ATS</span><strong>' + ((h2h.ats && h2h.ats.record) ? esc(h2h.ats.record) : DASH) + '</strong></div>'
-                + '<div class="hx-kpi"><span>Over / under</span><strong>' + ((h2h.ou && h2h.ou.record) ? esc(h2h.ou.record) : DASH) + '</strong></div>'
-                + '<div class="hx-kpi"><span>Avg margin</span><strong>' + signed(h2h.avg_margin) + '</strong></div>'
-                + '<div class="hx-kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
-                + '</div>' + thinNote(h2h) + '</section>'
-            : '';
+            ? '<section class="rcard"><div class="rcard-head"><h3>Head-to-head</h3>'
+                + '<span class="range">Conditions above are not applied here</span></div><div class="kpis">'
+                + '<div class="kpi"><span>Meetings</span><strong>' + esc(h2h.games_in_dataset) + '</strong></div>'
+                + '<div class="kpi"><span>' + esc(d.team_1) + ' record</span><strong>'
+                    + (h2h.record ? esc(h2h.record) : DASH) + '</strong></div>'
+                + '<div class="kpi"><span>Win %</span><strong>' + hxPct(h2h.win_pct) + '</strong></div>'
+                + '<div class="kpi"><span>ATS</span><strong>' + ((h2h.ats && h2h.ats.record) ? esc(h2h.ats.record) : DASH) + '</strong></div>'
+                + '<div class="kpi"><span>Over / under</span><strong>' + ((h2h.ou && h2h.ou.record) ? esc(h2h.ou.record) : DASH) + '</strong></div>'
+                + '<div class="kpi"><span>Avg margin</span><strong>' + signed(h2h.avg_margin) + '</strong></div>'
+                + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
+                + '</div>' + thinNote(h2h) + '</section>' : '';
 
-        return head
-            + '<div class="hx-two">' + teamBlock(d.team_1_report, noun) + teamBlock(d.team_2_report, noun) + '</div>'
+        return head + '<div class="two">' + teamBlock(d.team_1_report, noun) + teamBlock(d.team_2_report, noun) + '</div>'
             + h2hBlock
-            + '<p class="hx-method">Every record, average and percentage above is the plain arithmetic of the games '
-            + 'listed, computed from BetLegend Pro’s graded-game database. Games with no final score are excluded; '
-            + 'a game with no closing line on file shows a dash for role rather than an inferred value.</p>';
+            + '<p class="method">Every record, average and percentage above is the plain arithmetic of the games '
+            + 'listed, computed from BetLegend Pro’s graded-game database. Games with no final score are '
+            + 'excluded; a game with no closing line on file shows a dash for role rather than an inferred value.</p>';
     }
 
     // ------------------------------------------------------ view switching
     function showSetup() {
         $('matchupForm').hidden = false;
-        $('mResultsView').hidden = true;
+        $('resultsView').hidden = true;
         syncSetup();
-        $('panel-matchup').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        host.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     function showResults(title, sub) {
         $('matchupForm').hidden = true;
-        $('mResultsView').hidden = false;
-        $('hxcResultTitle').innerHTML = esc(title) + '<span>' + esc(sub) + '</span>';
+        $('resultsView').hidden = false;
+        $('resultTitle').innerHTML = esc(title) + '<span>' + esc(sub) + '</span>';
         setProgress('results');
-        $('hxcProgressNote').textContent = 'Report ready';
+        $('progNote').textContent = 'Report ready';
     }
-    $('hxcEdit').addEventListener('click', showSetup);
-    $('hxcRerun').addEventListener('click', function () {
+    $('editSearch').addEventListener('click', showSetup);
+    $('runAgain').addEventListener('click', function () {
         showSetup();
-        // Re-submitting an identical payload reuses the stored idempotency key,
-        // so "Run again" with nothing changed is never charged twice.
+        // An identical payload reuses the stored idempotency key, so "Run
+        // again" with nothing changed is never charged twice.
         if (syncSetup()) $('matchupForm').requestSubmit();
     });
 
@@ -1621,11 +1482,9 @@
     function currentPayload() {
         var tf = mTimeframe.value;
         var body = {
-            sport: mSport.value,
-            team_1: mAway.value,
-            team_2: mHome.value,
-            // null is meaningful to this endpoint: "every qualifying game",
-            // still bounded by the engine's own cap, which the report states.
+            sport: mSport.value, team_1: mAway.value, team_2: mHome.value,
+            // null is meaningful to this endpoint: every qualifying game, still
+            // bounded by the engine's own cap, which the report states.
             sample_size: (tf === 'all' || tf === 'custom') ? null : Number(tf)
         };
         if (tf === 'custom') {
@@ -1656,7 +1515,7 @@
 
         var label = mAway.value + ' at ' + mHome.value;
         var sub = mSport.value + ' · ' + timeframeLabel() + ' · '
-            + activeFilterCount() + ' filter' + (activeFilterCount() === 1 ? '' : 's');
+            + activeFilterCount() + ' condition' + (activeFilterCount() === 1 ? '' : 's');
 
         hide($('mError'));
         mSubmit.disabled = true;
@@ -1679,14 +1538,12 @@
         }
     });
 
-    // Shared failure path for every billed tool.
     async function handleInquiryError(err, target, balanceBefore, what) {
         var data = err && err.data;
         if (err && err.status === 402) {
-            showNote(target, '<span><strong>Not enough TMR Coin.</strong> This costs '
-                + esc(data && data.cost) + ' and you have ' + esc(data && data.balance) + '. '
-                + 'Get unlimited access and skip coin entirely, or earn more.</span>'
-                + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/#pricing">See plans</a>');
+            showNote(target, '<span><strong>Not enough TMR Coin.</strong> This costs ' + esc(data && data.cost)
+                + ' and you have ' + esc(data && data.balance) + '. Get unlimited access and skip coin entirely, '
+                + 'or earn more.</span><a class="btn is-primary" href="/betlegend-pro/#pricing">See plans</a>');
             await refreshStatus();
             return;
         }
@@ -1697,8 +1554,9 @@
         }
         var after = await refreshStatus();
         if (balanceBefore != null && after != null && after < balanceBefore) {
-            showNote(target, '<span><strong>The connection dropped while this was completing, and it looks like it went through</strong> — your balance fell by '
-                + esc(balanceBefore - after) + ' TMR Coin. Check your Library before running it again so you are not charged twice.</span>');
+            showNote(target, '<span><strong>The connection dropped while this was completing, and it looks like '
+                + 'it went through</strong> — your balance fell by ' + esc(balanceBefore - after)
+                + ' TMR Coin. Check your Library before running it again so you are not charged twice.</span>');
             loadLibrary();
         } else {
             showNote(target, '<span>BetLegend Pro could not complete this ' + esc(what) + ' ('
@@ -1707,45 +1565,35 @@
     }
 
     // ---------------------------------------------- shared render helpers
-    function verdictSlug(label) {
-        return String(label || '').toLowerCase().trim().replace(/\s+/g, '-');
-    }
-
     var UNAVAILABLE_RE = /^(not available|unavailable|no data|not carried|not in this dataset)/i;
     var CONF_PCT = { high: 80, medium: 55, low: 30 };
 
-    function narrativeHtml(n, labels, keyOrder, keySection) {
+    function narrativeHtml(n, labels, keyOrder) {
         if (!n) return '';
         var html = '', missing = [];
         keyOrder.forEach(function (key) {
             var text = n[key];
             if (!text) return;
             if (UNAVAILABLE_RE.test(text)) { missing.push(labels[key]); return; }
-            var isKey = key === keySection;
-            html += '<details class="blp-sec' + (isKey ? ' blp-sec--key' : '') + '"' + (isKey ? ' open' : '') + '>'
-                + '<summary>' + esc(labels[key]) + '</summary>'
-                + '<div class="blp-sec-body"><p>' + esc(text) + '</p></div></details>';
+            html += '<details class="sec"><summary>' + esc(labels[key]) + '</summary>'
+                + '<div class="sec-body"><p>' + esc(text) + '</p></div></details>';
         });
-        var lists = [
-            ['key_supporting_factors', 'Supporting factors', ''],
-            ['risk_factors', 'Risk factors', ' blp-list--risk'],
-            ['key_risk_factors', 'Risk factors', ' blp-list--risk']
-        ];
-        lists.forEach(function (l) {
+        [['key_supporting_factors', 'Supporting factors'],
+         ['risk_factors', 'Risk factors'],
+         ['key_risk_factors', 'Risk factors']].forEach(function (l) {
             var arr = n[l[0]];
             if (!Array.isArray(arr) || !arr.length) return;
-            html += '<details class="blp-sec" open><summary>' + esc(l[1]) + '</summary><div class="blp-sec-body">'
-                + '<ul class="blp-list' + l[2] + '">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div></details>';
+            html += '<details class="sec" open><summary>' + esc(l[1]) + '</summary><div class="sec-body"><ul>'
+                + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div></details>';
         });
         if (missing.length) {
-            html += '<div class="blp-unavail"><strong>Not carried in this dataset:</strong> ' + esc(missing.join(', '))
+            html += '<div class="unavail"><strong>Not carried in this dataset:</strong> ' + esc(missing.join(', '))
                 + '. These are left blank rather than estimated.</div>';
         }
-        return '<div class="blp-sections">' + html + '</div>';
+        return html;
     }
 
     // ======================================================= ASK BETLEGEND
-
     var REPORT_SECTIONS = {
         matchup_overview: 'Matchup overview',
         odds_and_line_movement: 'Odds & line movement',
@@ -1763,10 +1611,10 @@
 
     var askSubmit = $('askSubmit');
     submitButtons.push(askSubmit);
-    document.querySelectorAll('[data-example]').forEach(function (b) {
+    $$('[data-example]').forEach(function (b) {
         b.addEventListener('click', function () {
             $('askQuery').value = b.dataset.example;
-            setFieldError($('askQuery').closest('.blp-field'), false);
+            setFieldError($('askField'), false);
             $('askQuery').focus();
         });
     });
@@ -1776,40 +1624,35 @@
         var cr = rep.confidence_rating || {};
         var confPct = typeof cr.score === 'number' ? Math.max(0, Math.min(100, cr.score)) : (CONF_PCT[cr.level] || 30);
         var reco = rep.best_bet_or_pass || '';
-
-        var html = '<section class="blp-verdict" data-verdict="' + esc(verdictSlug(/pass/i.test(reco) ? 'pass' : 'lean')) + '">'
-            + '<div class="blp-verdict-top"><div class="blp-verdict-main">'
-            + '<div class="blp-verdict-k">Recommendation</div>'
-            + '<h2 class="blp-verdict-label" style="font-size:clamp(20px,2.6vw,27px);line-height:1.2">' + esc(reco || 'No call') + '</h2>'
-            + '<p class="blp-verdict-sel">' + esc(r.interpreted_as || r.query || '')
-            + '<span>' + (r.sport ? ' · ' + esc(r.sport) : '') + ((r.teams && r.teams.length) ? ' · ' + esc(r.teams.join(' vs ')) : '') + '</span></p>'
-            + '</div><div class="blp-conf">'
-            + '<div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">'
-            + esc(cr.level || '—') + (typeof cr.score === 'number' ? ' · ' + cr.score : '') + '</span></div>'
-            + '<div class="blp-meter"><i style="width:' + confPct + '%"></i></div>'
-            + (cr.basis ? '<p class="blp-conf-note">' + esc(cr.basis) + '</p>' : '')
-            + '</div></div>'
-            + (rep.recommended_line_and_max_price ? '<p class="blp-verdict-basis">' + esc(rep.recommended_line_and_max_price) + '</p>' : '')
+        var html = '<section class="verdict">'
+            + '<div class="verdict-k">Recommendation</div>'
+            + '<h2 class="verdict-label">' + esc(reco || 'No call') + '</h2>'
+            + '<p class="verdict-sel">' + esc(r.interpreted_as || r.query || '')
+            + (r.sport ? ' · ' + esc(r.sport) : '')
+            + ((r.teams && r.teams.length) ? ' · ' + esc(r.teams.join(' vs ')) : '') + '</p>'
+            + '<div class="verdict-k" style="margin-top:11px">Confidence · ' + esc(cr.level || '—')
+            + (typeof cr.score === 'number' ? ' · ' + cr.score : '') + '</div>'
+            + '<div class="meter"><i style="width:' + confPct + '%"></i></div>'
+            + (cr.basis ? '<p class="verdict-sel">' + esc(cr.basis) + '</p>' : '')
+            + (rep.recommended_line_and_max_price ? '<p class="verdict-sel">' + esc(rep.recommended_line_and_max_price) + '</p>' : '')
             + '</section>';
-
         var order = Object.keys(REPORT_SECTIONS).filter(function (k) {
             return k !== 'best_bet_or_pass' && k !== 'recommended_line_and_max_price';
         });
-        html += narrativeHtml(Object.assign({}, rep), REPORT_SECTIONS, order, null);
-
+        html += narrativeHtml(Object.assign({}, rep), REPORT_SECTIONS, order);
         var sources = Array.isArray(rep.sources) ? rep.sources : [];
-        var t = r.timing || {};
-        var footBits = [];
+        var t = r.timing || {}, foot = [];
         if (sources.length) {
-            footBits.push('Sources: ' + sources.map(function (s) { return esc(s.label) + (s.timestamp ? ' (' + esc(s.timestamp) + ')' : ''); }).join(' · '));
+            foot.push('Sources: ' + sources.map(function (s) {
+                return esc(s.label) + (s.timestamp ? ' (' + esc(s.timestamp) + ')' : '');
+            }).join(' · '));
         }
         if (t.intent_seconds != null) {
             var total = [t.intent_seconds, t.gather_seconds, t.synthesis_seconds]
-                .filter(function (v) { return v != null; })
-                .reduce(function (x, y) { return x + y; }, 0);
-            footBits.push('Generated in ' + total.toFixed(1) + 's');
+                .filter(function (v) { return v != null; }).reduce(function (x, y) { return x + y; }, 0);
+            foot.push('Generated in ' + total.toFixed(1) + 's');
         }
-        if (footBits.length) html += '<p class="blp-unavail" style="border-style:solid">' + footBits.join(' · ') + '</p>';
+        if (foot.length) html += '<p class="unavail">' + foot.join(' · ') + '</p>';
         return html + receiptRow(res);
     }
 
@@ -1817,17 +1660,13 @@
     $('askForm').addEventListener('submit', async function (ev) {
         ev.preventDefault();
         var query = $('askQuery').value.trim();
-        var field = $('askQuery').closest('.blp-field');
-        if (!query) { setFieldError(field, true); $('askQuery').focus(); return; }
-        setFieldError(field, false);
+        if (!query) { setFieldError($('askField'), true); $('askQuery').focus(); return; }
+        setFieldError($('askField'), false);
         hide($('askError')); hide($('askClarify')); hide($('askResult'));
-
         var key = (query === askLastSig && askLastKey) ? askLastKey : uuid();
         askLastSig = query; askLastKey = key;
-
         var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
         if (!isFinite(balanceBefore)) balanceBefore = null;
-
         askSubmit.disabled = true;
         $('askLoading').innerHTML = skeleton('report', 'Reading your question, gathering the data and writing the report — 20 to 40 seconds…');
         $('askLoading').hidden = false;
@@ -1836,7 +1675,8 @@
             askLastSig = null; askLastKey = null;
             var r = res.result || {};
             if (r.needs_clarification) {
-                showNote($('askClarify'), '<span>' + esc(r.interpreted_as || 'That question could not be resolved to a report. Try naming a team or a specific matchup.') + '</span>');
+                showNote($('askClarify'), '<span>' + esc(r.interpreted_as
+                    || 'That question could not be resolved to a report. Try naming a team or a specific matchup.') + '</span>');
             } else {
                 $('askResult').innerHTML = renderAsk(res);
                 $('askResult').hidden = false;
@@ -1852,24 +1692,23 @@
     });
 
     // ==================================================== BANKROLL SIM
-
     var simSubmit = $('simSubmit');
     submitButtons.push(simSubmit);
 
     /** Live edge read-out: whether the user's own inputs even carry a positive
-     *  expectation. Pure arithmetic on their two numbers — no dataset involved. */
+     *  expectation. Pure arithmetic on their two numbers — no dataset. */
     function updateEdgeNote() {
         var p = Number($('simProb').value) / 100;
         var odds = Number($('simOdds').value);
         var be = breakEven(odds);
         var note = $('simEdgeNote');
         if (!isFinite(p) || p <= 0 || p >= 1 || be == null) {
-            note.className = 'blp-note';
+            note.className = 'note';
             note.textContent = 'Enter a win probability and a price to see the implied edge.';
             return;
         }
         var edge = p - be;
-        note.className = 'blp-note ' + (edge > 0 ? 'blp-note--ok' : 'blp-note--warn');
+        note.className = 'note ' + (edge > 0 ? 'is-ok' : 'is-warn');
         note.innerHTML = '<span>At ' + esc(odds > 0 ? '+' + odds : odds) + ' you need to win <strong>' + pct(be)
             + '</strong> to break even. You entered <strong>' + pct(p) + '</strong> — '
             + (edge > 0
@@ -1883,8 +1722,8 @@
         var p = Number($('simProb').value), odds = $('simOdds').value;
         var pOk = Number.isInteger(p) && p >= 1 && p <= 99;
         var oOk = isValidAmericanOdds(odds);
-        setFieldError($('simProb').closest('.blp-field'), !pOk);
-        setFieldError($('simOdds').closest('.blp-field'), !oOk);
+        setFieldError($('simProbField'), !pOk);
+        setFieldError($('simOddsField'), !oOk);
         return pOk && oOk;
     }
 
@@ -1893,7 +1732,6 @@
         ev.preventDefault();
         if (!validateSim()) return;
         hide($('simError')); hide($('simResult'));
-
         var winProb = Number($('simProb').value) / 100;
         var odds = Number($('simOdds').value);
         var bankroll = Number($('simBank').value) || undefined;
@@ -1901,10 +1739,8 @@
         var sig = winProb + '|' + odds + '|' + bankroll + '|' + strategy;
         var key = (sig === simLastSig && simLastKey) ? simLastKey : uuid();
         simLastSig = sig; simLastKey = key;
-
         var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
         if (!isFinite(balanceBefore)) balanceBefore = null;
-
         simSubmit.disabled = true;
         $('simLoading').innerHTML = skeleton('kpis', 'Running simulated bet sequences…');
         $('simLoading').hidden = false;
@@ -1922,17 +1758,17 @@
                 { v: (out.expected_roi > 0 ? '+' : '') + out.expected_roi.toFixed(1) + '%', l: 'Expected ROI', h: 'Return on total amount staked.', tone: out.expected_roi > 0 ? 'pos' : 'neg' },
                 { v: pct(out.avg_max_drawdown), l: 'Avg max drawdown', h: 'Typical worst peak-to-trough fall along the way.', tone: out.avg_max_drawdown > 0.3 ? 'neg' : '' }
             ];
-            var html = '<section class="blp-card"><div class="blp-card-head"><h2>Simulation results</h2>'
-                + '<p class="sub">' + esc((params.strategy || strategy).replace('_', ' ')) + ' staking · '
-                + fmtInt(params.num_simulations) + ' simulated runs · '
-                + esc(pct(winProb)) + ' assumed win rate at ' + esc(odds > 0 ? '+' + odds : odds) + '</p></div>'
-                + '<div class="blp-kpis">' + kpis.map(function (k) {
-                    return '<div class="blp-kpi"><div class="blp-kpi-v' + (k.tone ? ' is-' + k.tone : '') + '">' + esc(k.v) + '</div>'
-                        + '<div class="blp-kpi-l">' + esc(k.l) + '</div><div class="blp-kpi-h">' + esc(k.h) + '</div></div>';
+            $('simResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>Simulation results</h2></div>'
+                + '<p class="note-s" style="margin-top:0">' + esc((params.strategy || strategy).replace('_', ' '))
+                + ' staking · ' + fmtInt(params.num_simulations) + ' simulated runs · '
+                + esc(pct(winProb)) + ' assumed win rate at ' + esc(odds > 0 ? '+' + odds : odds) + '</p>'
+                + '<div class="kpis-lg" style="margin-top:11px">' + kpis.map(function (k) {
+                    return '<div class="kpi-lg"><div class="kpi-v' + (k.tone ? ' is-' + k.tone : '') + '">' + esc(k.v)
+                        + '</div><div class="kpi-l">' + esc(k.l) + '</div><div class="kpi-h">' + esc(k.h) + '</div></div>';
                 }).join('') + '</div>'
-                + '<div class="blp-unavail" style="border-style:solid">These outcomes follow entirely from the win probability you supplied. BetLegend Pro does not verify that assumption — if it is wrong, so is everything above.</div>'
-                + receiptRow(res) + '</section>';
-            $('simResult').innerHTML = html;
+                + '<div class="unavail" style="margin-top:11px">These outcomes follow entirely from the win '
+                + 'probability you supplied. BetLegend Pro does not verify that assumption — if it is wrong, '
+                + 'so is everything above.</div>' + receiptRow(res) + '</section>';
             $('simResult').hidden = false;
             await refreshStatus();
             loadLibrary();
@@ -1945,7 +1781,6 @@
     });
 
     // ====================================================== TEAM TRENDS
-
     var tSubmit = $('tSubmit'), tTeam = $('tTeam'), tSport = $('tSport');
     submitButtons.push(tSubmit);
     var trendCache = {};
@@ -1975,6 +1810,7 @@
     function syncTrendSubmit() {
         var missing = !tTeam.value;
         tSubmit.disabled = missing || SUBMIT_BLOCKED;
+        // Never a greyed button without a stated reason.
         if (SUBMIT_BLOCKED) {
             tSubmit.setAttribute('title', "Today's free report is used. A plan (or TMR Coin) is needed to run another one today.");
         } else if (missing) {
@@ -1991,15 +1827,12 @@
         ev.preventDefault();
         if (!tTeam.value) return;
         hide($('tError')); hide($('tResult'));
-
         var sport = tSport.value, team = tTeam.value, situation = $('tSituation').value;
         var sig = sport + '|' + team + '|' + situation;
         var key = (sig === tLastSig && tLastKey) ? tLastKey : uuid();
         tLastSig = sig; tLastKey = key;
-
         var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
         if (!isFinite(balanceBefore)) balanceBefore = null;
-
         tSubmit.disabled = true;
         $('tLoading').innerHTML = skeleton('kpis', 'Searching the graded-game dataset…');
         $('tLoading').hidden = false;
@@ -2008,31 +1841,24 @@
             tLastSig = null; tLastKey = null;
             var r = res.result || {}, s = r.summary || {};
             var games = typeof r.total_games === 'number' ? r.total_games : 0;
-
             if (!games) {
-                $('tResult').innerHTML = '<section class="blp-card">'
-                    + emptyState('No games match that situation',
-                        'The dataset holds no ' + sport + ' games for ' + team + ' in this situation, so there is nothing to report. You were not charged.',
-                        '') + '</section>';
-                $('tResult').hidden = false;
+                $('tResult').innerHTML = '<section class="rcard">' + emptyState('No games match that situation',
+                    'The dataset holds no ' + sport + ' games for ' + team + ' in this situation, so there is nothing to report. You were not charged.') + '</section>';
             } else {
                 var tiles = [];
                 if (s.su_record) tiles.push({ v: s.su_record, l: 'Straight up', h: typeof s.su_win_pct === 'number' ? pct(s.su_win_pct) + ' win rate' : '' });
                 if (s.ats_record) tiles.push({ v: s.ats_record, l: 'Against the spread', h: typeof s.ats_win_pct === 'number' ? pct(s.ats_win_pct) + ' cover rate' : '' });
                 if (s.ou_record) tiles.push({ v: s.ou_record, l: 'Over / under', h: typeof s.over_pct === 'number' ? pct(s.over_pct) + ' went over' : '' });
-                var html = '<section class="blp-card"><div class="blp-card-head">'
-                    + '<h2>' + esc(team) + ' — ' + esc(r.situation || situation) + '</h2>'
-                    + '<p class="sub">' + esc(r.sport || sport) + ' · ' + fmtInt(games) + ' games matched'
-                    + (res.note ? ' · ' + esc(res.note) : '') + '</p></div>'
-                    + '<div class="blp-kpis">' + tiles.map(function (t) {
-                        return '<div class="blp-kpi"><div class="blp-kpi-v" style="font-size:22px">' + esc(t.v) + '</div>'
-                            + '<div class="blp-kpi-l">' + esc(t.l) + '</div>'
-                            + (t.h ? '<div class="blp-kpi-h">' + esc(t.h) + '</div>' : '') + '</div>';
-                    }).join('') + '</div>'
-                    + receiptRow(res) + '</section>';
-                $('tResult').innerHTML = html;
-                $('tResult').hidden = false;
+                $('tResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>' + esc(team) + ' — '
+                    + esc(r.situation || situation) + '</h2></div>'
+                    + '<p class="note-s" style="margin-top:0">' + esc(r.sport || sport) + ' · ' + fmtInt(games)
+                    + ' games matched' + (res.note ? ' · ' + esc(res.note) : '') + '</p>'
+                    + '<div class="kpis-lg" style="margin-top:11px">' + tiles.map(function (t) {
+                        return '<div class="kpi-lg"><div class="kpi-v">' + esc(t.v) + '</div><div class="kpi-l">'
+                            + esc(t.l) + '</div>' + (t.h ? '<div class="kpi-h">' + esc(t.h) + '</div>' : '') + '</div>';
+                    }).join('') + '</div>' + receiptRow(res) + '</section>';
             }
+            $('tResult').hidden = false;
             await refreshStatus();
             loadLibrary();
         } catch (err) {
@@ -2044,7 +1870,6 @@
     });
 
     // ========================================================== LIBRARY
-
     var KIND = {
         report: 'AI report', simulation: 'Simulation', inquiry: 'Team trends',
         matchup_report: 'Matchup', matchup_historical: 'Matchup'
@@ -2056,7 +1881,7 @@
         libLoading = true;
         var list = $('libList');
         if (!list.dataset.loadedOnce) {
-            list.innerHTML = '<div class="blp-skel">' + new Array(3).fill('<div class="blp-skel-box" style="height:52px"></div>').join('') + '</div>';
+            list.innerHTML = '<div class="skel">' + new Array(3).fill('<div class="skel-box" style="height:44px"></div>').join('') + '</div>';
         }
         try {
             var res = await window.api.getBetLegendProHistory(25);
@@ -2065,26 +1890,26 @@
             if (!items.length) {
                 list.innerHTML = emptyState('Nothing saved yet',
                     'Run a matchup report, a question or a simulation and it will be kept here — reopening one is always free.',
-                    '<button class="blp-btn blp-btn--primary" type="button" data-goto="matchup">Run your first report</button>');
+                    '<button class="btn is-primary" type="button" data-goto="matchup">Run your first report</button>');
                 list.querySelectorAll('[data-goto]').forEach(function (b) {
                     b.addEventListener('click', function () { selectTool(b.dataset.goto, true); });
                 });
                 return;
             }
-            list.innerHTML = '<div class="blp-lib">' + items.map(function (it) {
+            list.innerHTML = '<div class="lib">' + items.map(function (it) {
                 var when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
-                return '<div class="blp-lib-item">'
-                    + '<span class="blp-lib-kind">' + esc(KIND[it.kind] || it.kind) + '</span>'
-                    + '<div class="blp-lib-main"><div class="blp-lib-title" title="' + esc(it.title || '') + '">' + esc(it.title || 'Untitled') + '</div>'
-                    + '<div class="blp-lib-meta">' + esc(when) + (it.ledger_entry_id ? ' · receipt #' + esc(it.ledger_entry_id) : ' · included in plan') + '</div></div>'
-                    + '<button class="blp-btn blp-btn--sm" data-lib-id="' + esc(it.id) + '" type="button">Open</button></div>';
+                return '<div class="lib-item"><span class="lib-kind">' + esc(KIND[it.kind] || it.kind) + '</span>'
+                    + '<div class="lib-main"><div class="lib-title" title="' + esc(it.title || '') + '">'
+                    + esc(it.title || 'Untitled') + '</div><div class="lib-meta">' + esc(when)
+                    + (it.ledger_entry_id ? ' · receipt #' + esc(it.ledger_entry_id) : ' · included in plan')
+                    + '</div></div><button class="btn" data-lib-id="' + esc(it.id) + '" type="button">Open</button></div>';
             }).join('') + '</div>';
             list.querySelectorAll('[data-lib-id]').forEach(function (b) {
                 b.addEventListener('click', function () { openLibraryItem(b.dataset.libId); });
             });
         } catch (err) {
-            list.innerHTML = '<div class="blp-note blp-note--err"><span>Could not load your library.</span>'
-                + '<button class="blp-btn blp-btn--sm" type="button" id="libRetry">Retry</button></div>';
+            list.innerHTML = '<div class="note is-err"><span>Could not load your library.</span>'
+                + '<button class="btn" type="button" id="libRetry">Retry</button></div>';
             var retry = $('libRetry');
             if (retry) retry.addEventListener('click', function () { delete list.dataset.loadedOnce; loadLibrary(); });
         } finally {
@@ -2098,43 +1923,40 @@
         box.hidden = false;
         try {
             var d = await window.api.getBetLegendProHistoryDetail(id);
-            // A stored item is replayed through the exact renderer that produced
-            // it, so a reopened report looks identical to the original.
+            // Replayed through the exact renderer that produced it, so a
+            // reopened report looks identical to the original.
             var fake = { result: d.result, included_in_plan: false, billed: false, was_free_inquiry: false, ledger_entry_id: null };
             var body;
             if (d.kind === 'matchup_historical') body = renderReport(fake);
             else if (d.kind === 'matchup_report') body = emptyState('Archived report',
-                'This was produced by the previous bet-entry Matchup Analyzer, which has been replaced. '
-                + 'Its stored figures are kept for your records but are not re-rendered here.');
+                'This was produced by the previous bet-entry Matchup Analyzer, which has been replaced. Its stored figures are kept for your records but are not re-rendered here.');
             else if (d.kind === 'report') body = renderAsk(fake);
             else if (d.kind === 'simulation') {
                 var out = (d.result && d.result.results) || {};
-                body = '<section class="blp-card"><div class="blp-card-head"><h2>' + esc(d.title || 'Simulation') + '</h2></div><div class="blp-kpis">'
-                    + [['$' + fmtInt(Math.round(out.median_final_bankroll)), 'Median finish'],
-                       ['$' + fmtInt(Math.round(out.mean_final_bankroll)), 'Mean finish'],
-                       [pct(out.profit_probability), 'Finished ahead'],
-                       [pct(out.bust_rate), 'Bust rate'],
-                       [(out.expected_roi > 0 ? '+' : '') + Number(out.expected_roi).toFixed(1) + '%', 'Expected ROI'],
-                       [pct(out.avg_max_drawdown), 'Avg max drawdown']]
-                        .map(function (k) { return '<div class="blp-kpi"><div class="blp-kpi-v">' + esc(k[0]) + '</div><div class="blp-kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
+                body = '<section class="rcard"><div class="rcard-head"><h2>' + esc(d.title || 'Simulation') + '</h2></div>'
+                    + '<div class="kpis-lg">' + [['$' + fmtInt(Math.round(out.median_final_bankroll)), 'Median finish'],
+                        ['$' + fmtInt(Math.round(out.mean_final_bankroll)), 'Mean finish'],
+                        [pct(out.profit_probability), 'Finished ahead'],
+                        [pct(out.bust_rate), 'Bust rate'],
+                        [(out.expected_roi > 0 ? '+' : '') + Number(out.expected_roi).toFixed(1) + '%', 'Expected ROI'],
+                        [pct(out.avg_max_drawdown), 'Avg max drawdown']]
+                        .map(function (k) { return '<div class="kpi-lg"><div class="kpi-v">' + esc(k[0]) + '</div><div class="kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
                     + '</div></section>';
             } else {
                 var s = (d.result && d.result.summary) || {};
-                body = '<section class="blp-card"><div class="blp-card-head"><h2>' + esc(d.title || 'Saved item') + '</h2></div><div class="blp-kpis">'
-                    + [[s.su_record, 'Straight up'], [s.ats_record, 'Against the spread'], [s.ou_record, 'Over / under']]
+                body = '<section class="rcard"><div class="rcard-head"><h2>' + esc(d.title || 'Saved item') + '</h2></div>'
+                    + '<div class="kpis-lg">' + [[s.su_record, 'Straight up'], [s.ats_record, 'Against the spread'], [s.ou_record, 'Over / under']]
                         .filter(function (k) { return k[0]; })
-                        .map(function (k) { return '<div class="blp-kpi"><div class="blp-kpi-v" style="font-size:22px">' + esc(k[0]) + '</div><div class="blp-kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
+                        .map(function (k) { return '<div class="kpi-lg"><div class="kpi-v">' + esc(k[0]) + '</div><div class="kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
                     + '</div></section>';
             }
-            box.innerHTML = '<div class="blp-note blp-note--ok" style="margin-bottom:14px"><span>Reopened from your library — not charged.</span></div>' + body;
-            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            box.innerHTML = '<div class="note is-ok"><span>Reopened from your library — not charged.</span></div>' + body;
         } catch (err) {
-            box.innerHTML = '<div class="blp-note blp-note--err"><span>Could not open that saved item.</span></div>';
+            box.innerHTML = '<div class="note is-err"><span>Could not open that saved item.</span></div>';
         }
     }
 
     // ============================================================= boot
-
     async function boot() {
         if (!(window.api && window.api.isLoggedIn())) {
             $('authGate').hidden = false;
@@ -2142,7 +1964,6 @@
             return;
         }
         $('app').hidden = false;
-
         selectTool((location.hash || '').replace('#', '') || 'matchup', false);
         renderCategories();
         syncSetup();
@@ -2152,7 +1973,9 @@
         loadTrendTeams(tSport.value);
         await refreshStatus();
     }
-    boot();
+
+    if (window.api) boot();
+    else window.addEventListener('DOMContentLoaded', boot);
 })();
 </script>
 </body>
