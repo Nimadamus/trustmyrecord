@@ -264,27 +264,19 @@ async function run(browser, scenario, opts) {
      it holds on desktop, at every viewport, with no exemption. If a font or a
      string changes and the headline starts re-wrapping again, this fails —
      which is the point. */
-  if (opts.firstEver) {
-    // Documented exception, and the only one: on a browser that has never
-    // asked, whether the first-pick reminder applies is not knowable before
-    // /users/me answers. Every subsequent load is covered by the `warmup`
-    // scenarios above, which assert zero movement.
-    check(scenario, 'first-ever signed-in load: only the reminder strip moves things',
-      moved.every((m) => /\.top /.test(m)) || !moved.length,
-      moved.join('; ') || 'nothing moved');
-  } else {
-    check(scenario, 'no anchor moves after the data lands', !moved.length, moved.join('; '));
-  }
-  /* KNOWN RESIDUAL, tracked not hidden: on a phone, a signed-in visitor who has
-     not yet made a pick gets the "Your record is waiting" strip inserted under
-     the nav after first paint, which drops the ticker and hero by its 131px.
-     Measured 0.145. It is rendered from a cached server answer already, but the
-     script sits at the foot of <body> and Chrome paints before reaching it — the
-     fix is a reservation in the document itself, which is a separate change.
-     The budget here still catches any REGRESSION beyond what is on record. */
-  const KNOWN_REMINDER_STRIP_CLS = 0.16;
-  const clsBudget = (opts.loggedIn && opts.viewport.width < 500) ? KNOWN_REMINDER_STRIP_CLS : 0.1;
-  check(scenario, `CLS under ${clsBudget}`, opts.firstEver || cls < clsBudget, `CLS ${cls.toFixed(4)}`);
+  /* The first-ever signed-in load used to get an exemption here, because
+     whether the first-pick reminder applies is a server answer and it landed
+     after first paint. It no longer does: the early block in index.html either
+     paints the strip during parse (cached answer, or a live answer that beat
+     first paint) or holds it back until the next view. A first-ever load has
+     nothing left to move, so it is held to the same zero as every other
+     scenario. See tests/homepage-reminder-strip-lock-test.js. */
+  check(scenario, 'no anchor moves after the data lands', !moved.length, moved.join('; '));
+  /* One budget, every scenario. The signed-in phone allowance that used to sit
+     here (0.16, for the strip's 131px insertion) is gone with the shift itself
+     — production now measures 0.0000 at 320/360/390/430 signed in. */
+  const clsBudget = 0.1;
+  check(scenario, `CLS under ${clsBudget}`, cls < clsBudget, `CLS ${cls.toFixed(4)}`);
 
   /* 7. console clean */
   // A fetch aborted while the context is being torn down is the harness, not the page.
