@@ -113,16 +113,6 @@
      the foot of index.html keeps this in sync afterwards. */
   --header-height:165px;
 }
-/* Reserve the classic scrollbar's gutter from the first frame. First paint
-   happens while the document is still parsing, so the page is briefly short
-   enough not to need a scrollbar; when the rest of the markup lands it does,
-   the viewport narrows by ~7px and EVERY centred block slides sideways.
-   Measured 2026-08-04 at 1366px: hero-in x 37->44 (width 1329->1322),
-   nav-right, ticker cards and the eyebrow all with it, at 710ms -- the whole
-   remaining budget once the strip and the arrows were fixed. The homepage is
-   always taller than the viewport, so the gutter is always needed in the end
-   and reserving it changes no settled pixel. */
-html{scrollbar-gutter:stable}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}

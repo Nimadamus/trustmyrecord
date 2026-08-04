@@ -91,6 +91,8 @@ const INSTRUMENT = `(() => {
         if (e.name !== 'first-contentful-paint') continue;
         P.fcp = Math.round(e.startTime);
         P.atPaint = snap();
+        P.viewAtPaint = [window.innerWidth, window.innerHeight,
+                         document.documentElement.clientWidth];
         obs.disconnect();
       }
     }).observe({ type: 'paint', buffered: true });
@@ -183,6 +185,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       settled: window.__snap(),
       docW: document.documentElement.scrollWidth,
       viewW: window.innerWidth,
+      viewAtPaint: window.__cls.viewAtPaint || null,
+      clientW: document.documentElement.clientWidth,
       early: (() => { const e = window.TMRFirstPickEarly; return e ? {
         source: e.source, deferred: e.deferred, decidedAt: e.decidedAt,
         paintedAtDecision: e.paintedAtDecision,
