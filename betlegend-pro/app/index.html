@@ -945,8 +945,8 @@
                 + (sel.chosen_count === 1 ? ' condition' : ' conditions')
                 + '</strong> will be applied, combined with AND: '
                 + sel.chosen.map(function (c) { return esc(c.filter); }).join(', ') + '.'
-                + (sel.coverage_from ? ' ' + esc(mSport.value) + ' data starts at '
-                    + esc(sel.coverage_from) + '.' : '')
+                + (sel.coverage_from ? ' Conditions are backed by ' + esc(mSport.value)
+                    + ' data from ' + esc(sel.coverage_from) + ' onward.' : '')
                 + '</p>';
         }
         if ((sel.unavailable || []).length) {
@@ -1368,8 +1368,8 @@
                 + (dc.dataset_range && dc.dataset_range.from
                     ? '<li>Covering ' + esc(dc.dataset_range.from) + ' to '
                         + esc(dc.dataset_range.to)
-                        + (dc.coverage_from ? ' (' + esc(d.sport) + ' data starts at '
-                            + esc(dc.coverage_from) + ').' : '.')
+                        + (dc.coverage_from ? '. Conditions are backed by ' + esc(d.sport)
+                            + ' data from ' + esc(dc.coverage_from) + ' onward.' : '.')
                         + '</li>'
                     : '')
                 + ((dc.readings || []).length
@@ -1418,7 +1418,9 @@
                             + '<td class="hx-num">' + (t.removed ? '&minus;' + fmtInt(t.removed) : '0') + '</td></tr>';
                     }).join('')
                     + '</tbody></table>'
-                    + '<p class="hx-note">Applied in this order, each to what the one above it left.</p>'
+                    + '<p class="hx-note">Applied in this order, each to what the one above it '
+                    + 'left. The first row opens at every game on file for this team, so the '
+                    + 'column accounts for all of them.</p>'
                     + '</div>'
                 : '')
             // Requested, understood, and deliberately not run because the data
