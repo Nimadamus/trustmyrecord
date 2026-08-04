@@ -38,6 +38,7 @@ const allChecks = [
   ['unit/static: trend spotter UI contract', 'node', ['tests/trendspotter-accuracy-test.js'], 'static'],
   ['unit/static: trend spotter matchup loading', 'node', ['tests/trendspotter-matchup-loading-test.js'], 'static'],
   ['unit/static: trend spotter source integrity', 'node', ['tests/trendspotter-source-regression-test.js'], 'static'],
+  ['unit/static: MLB hub first-paint stability', 'node', ['tests/handicapping-mlb-first-paint-stability-test.js'], 'static'],
   ['unit/static: logged-out session (no failing auth calls)', 'node', ['tests/logged-out-session-regression-test.js'], 'static'],
   ['unit/static: recursion/retry-pattern guard', 'node', ['tests/recursion-retry-guard-test.js'], 'static'],
   ['live static: sportsbook public loading', 'node', ['tests/sportsbook-public-loading-regression-test.js'], 'static'],
