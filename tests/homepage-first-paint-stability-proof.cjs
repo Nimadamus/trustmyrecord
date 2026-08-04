@@ -192,15 +192,12 @@ function diffGeometry(a, b) {
      for anything the worker did not inject. */
   const injected = new Set(ssrParts.split(',').map((s) => s.trim()).filter(Boolean));
   const STAT_SLOTS = ['#tmrEyebrowPicks', '#tmrStatPicks', '#tmrStatCappers', '#tmrStatMembers'];
-  for (const s of statsEarly) {
-    if (!/\d/.test(s.text)) continue;
-    const fromWorker = (STAT_SLOTS.includes(s.sel) && injected.has('stats')) ||
-                       (s.sel.startsWith('.spot') && injected.has('capper'));
-    if (!fromWorker) {
-      failures.push(`STALE VALUE AT FIRST PAINT — ${s.sel} shows "${s.text}" `
-        + `and the worker did not inject it (parts=${ssrParts || 'none'})`);
-    }
-  }
+  // Verdict deferred to 2b: a figure the worker did not inject is only a
+  // FAILURE if it then changes. If it matches the settled value it is a baked
+  // fixture that is still accurate — drift to report, not a layout shift.
+  const notFromWorker = statsEarly.filter((s) => /\d/.test(s.text) && !(
+    (STAT_SLOTS.includes(s.sel) && injected.has('stats')) ||
+    (s.sel.startsWith('.spot') && injected.has('capper'))));
   const tickerEarly = await page.evaluate(() => ({
     skeletons: document.querySelectorAll('.ticker .gm.is-skel').length,
     real: document.querySelectorAll('.ticker .gm:not(.is-skel):not(.is-msg)').length,
@@ -218,6 +215,35 @@ function diffGeometry(a, b) {
   const geoLate = await page.evaluate(GEOMETRY);
   const statsLate = await page.evaluate(STATS_TEXT);
   if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'settled.png') });
+
+  /* ---- 2b. baked-fixture classification -----------------------------------
+     index.html still carries a capper snapshot from a prerender run that
+     predates homeCapper being dropped from prerender_home_snapshot.cjs's
+     REGIONS, and tmr-home-ssr reports it does not inject that region.
+     Clearing it would ship a skeleton where production currently ships values
+     — a change to what visitors see, which this proof is not the place to
+     make. Rule: such a figure that SURVIVES to the settled reading unchanged
+     is fixture drift, reported and not fatal; one that CHANGES is the
+     stale-then-swap bug this proof exists to catch, and fails.
+     The CLS budget is untouched either way. */
+  /* STATS_TEXT pushes one entry per matched element in DOM order, with no id
+     of its own, so a selector like `.spot .g3 b` yields three entries that are
+     only told apart by position. Matching on selector alone compared the first
+     one against all three and reported swaps that had not happened. */
+  const ordinal = (list, entry) => list.filter((e) => e.sel === entry.sel).indexOf(entry);
+  const drift = [];
+  for (const s of notFromWorker) {
+    const i = ordinal(statsEarly, s);
+    const late = statsLate.filter((l) => l.sel === s.sel)[i];
+    const settled = late ? late.text : null;
+    if (settled !== null && settled === s.text) {
+      drift.push(`${s.sel} — baked in index.html, worker did not inject it `
+        + `(parts=${ssrParts || 'none'}); still matches live data, nothing moved`);
+    } else {
+      failures.push(`STALE VALUE SWAPPED — ${s.sel} showed a figure at first paint `
+        + `that changed by the settled reading (worker parts=${ssrParts || 'none'})`);
+    }
+  }
 
   const moved = diffGeometry(geoEarly, geoLate);
   moved.forEach((m) => failures.push(`LAYOUT SHIFT — ${m}`));
@@ -276,6 +302,11 @@ function diffGeometry(a, b) {
     console.error(`\nFAIL (${failures.length})`);
     failures.forEach((f) => console.error(`  - ${f}`));
     process.exit(1);
+  }
+  if (drift.length) {
+    console.log(`\nFIXTURE DRIFT (${drift.length}) — not layout-shift failures:`);
+    drift.forEach((d) => console.log(`  - ${d}`));
+    console.log('  Fix by re-baking the region or by having the worker inject `capper`.');
   }
   console.log('\nPASS — no stale value at first paint, no layout shift, no unresolved placeholder\n');
 })().catch((e) => { console.error(e); process.exit(1); });

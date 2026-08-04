@@ -30,8 +30,10 @@ function check(name, cond, detail){ results.push({ name, pass: !!cond, detail })
 */
 const CREDS = { login: process.env.TMR_SMOKE_LOGIN, password: process.env.TMR_SMOKE_PASSWORD };
 if (!CREDS.login || !CREDS.password) {
-  console.log('SKIP sportsbook smoke: set TMR_SMOKE_LOGIN and TMR_SMOKE_PASSWORD');
-  process.exit(0);
+  // Fail CLOSED. Exiting 0 here would let a credential-less run report
+  // success, which is how a smoke test quietly stops testing anything.
+  console.error('FAIL sportsbook smoke: TMR_SMOKE_LOGIN and TMR_SMOKE_PASSWORD are required.');
+  process.exit(1);
 }
 
 async function login(page){ const j = await page.evaluate(async (API)=>{ const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:CREDS.login,password:CREDS.password})}); return r.json(); }, API); await page.evaluate(j=>{['accessToken','tmr_access_token'].forEach(k=>localStorage.setItem(k,j.accessToken));localStorage.setItem('refreshToken',j.refreshToken||'');localStorage.setItem('tmr_refresh_token',j.refreshToken||'');localStorage.setItem('tmr_is_logged_in','true');localStorage.setItem('tmr_current_user',JSON.stringify(j.user));localStorage.setItem('trustmyrecord_session',JSON.stringify({user:j.user,accessToken:j.accessToken,refreshToken:j.refreshToken}));}, j); return j.accessToken; }
