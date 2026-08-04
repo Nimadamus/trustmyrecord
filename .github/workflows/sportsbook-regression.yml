@@ -178,7 +178,11 @@ jobs:
         run: node tests/mlb-simulator-realism-test.js
 
       - name: MLB simulator live roster regression
-        continue-on-error: true  # stale-quarantine: see DEVELOPMENT_RULES.md
+        # soft-warn because it hits the LIVE MLB Stats API and a feed hiccup must not red a
+        # deploy - NOT stale. The three stale assertions (cross-realm array compare,
+        # pinch-hitter box-score rows, position-player/emergency-arm name suffixes) were
+        # fixed 2026-08-04 and it passes against the live slate.
+        continue-on-error: true
         run: node tests/mlb-simulator-live-roster-validation-test.js
 
   predeploy-guard:
