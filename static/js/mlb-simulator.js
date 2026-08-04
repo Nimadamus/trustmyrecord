@@ -82,7 +82,7 @@
         LAA: [['detmers', "Reid Detmers", 103, 4.03], ['urena', "Walbert Ureña", 121, 2.54], ['rodriguez', "Grayson Rodriguez", 78, 7.98], ['johnson', "Ryan Johnson", 78, 7.63], ['bachman', "Sam Bachman", 102, 4.14]],
         LAD: [['yamamoto', "Yoshinobu Yamamoto", 118, 2.76], ['sasaki', "Roki Sasaki", 96, 4.64], ['wrobleski', "Justin Wrobleski", 112, 3.31], ['skubal', "Tarik Skubal", 118, 2.79], ['lauer', "Eric Lauer", 98, 4.5]],
         MIA: [['alcantara', "Sandy Alcantara", 107, 3.68], ['perez', "Eury Pérez", 110, 3.44], ['junk', "Janson Junk", 97, 4.58], ['phillips', "Tyler Phillips", 109, 3.53], ['gusto', "Ryan Gusto", 88, 5.31]],
-        MIL: [['misiorowski', "Jacob Misiorowski", 130, 1.63], ['sproat', "Brandon Sproat", 88, 5.27], ['drohan', "Shane Drohan", 110, 3.48], ['gasser', "Robert Gasser", 98, 4.48], ['henderson', "Logan Henderson", 120, 2.66]],
+        MIL: [['misiorowski', "Jacob Misiorowski", 130, 1.63], ['may', "Dustin May", 99, 4.38], ['drohan', "Shane Drohan", 110, 3.48], ['gasser', "Robert Gasser", 98, 4.48], ['henderson', "Logan Henderson", 120, 2.66]],
         MIN: [['bradley', "Taj Bradley", 107, 3.69], ['ryan', "Joe Ryan", 109, 3.52], ['ober', "Bailey Ober", 98, 4.45], ['prielipp', "Connor Prielipp", 95, 4.75], ['kremer', "Dean Kremer", 78, 6.5]],
         NYM: [['mclean', "Nolan McLean", 112, 3.29], ['scott', "Christian Scott", 116, 2.99], ['manaea', "Sean Manaea", 99, 4.42], ['senga', "Kodai Senga", 78, 8.66], ['thornton', "Zac Thornton", 117, 2.88]],
         NYY: [['schlittler', "Cam Schlittler", 124, 2.26], ['weathers', "Ryan Weathers", 104, 3.99], ['warren', "Will Warren", 102, 4.14], ['fried', "Max Fried", 114, 3.12], ['cole', "Gerrit Cole", 111, 3.42]],

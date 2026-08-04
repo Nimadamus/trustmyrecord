@@ -1,0 +1,68 @@
+name: MLB Simulator Rotation Weekly Refresh
+
+# Player rosters and batting orders in the MLB Simulator are already live - every
+# visitor fetches the MLB Stats API directly, so trades appear on their own. The one
+# piece baked into static/js/mlb-simulator.js is CURRENT_PITCHERS (five rotation rows
+# per team), and it does NOT self-update. This job rebuilds it from the live active
+# rosters once a week and commits only when something actually moved.
+
+on:
+  schedule:
+    # Mondays 15:10 UTC = 8:10am PT, after the overnight transaction wire settles.
+    - cron: '10 15 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mlb-rotation-weekly-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-rotations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # Refuses to write unless all 30 teams resolved, so a throttled or partial
+      # MLB Stats API response fails the run instead of half-updating the table.
+      - name: Rebuild CURRENT_PITCHERS from live MLB active rosters
+        run: node scripts/regen-current-pitchers.cjs
+
+      - name: Detect drift
+        id: drift
+        run: |
+          if git diff --quiet -- static/js/mlb-simulator.js; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Rotations already current - nothing to commit."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git --no-pager diff --stat -- static/js/mlb-simulator.js
+          fi
+
+      # Blocking. Nothing reaches main unless the simulator still renders real
+      # rostered players in a complete, non-duplicated 1-9 batting order.
+      # (mlb-simulator-page-test.js is deliberately NOT run here: it pins the
+      # ?v= content hash, which the Static Asset Versions job re-pins AFTER this
+      # push, so it would always fail at this point in the sequence.)
+      - name: Roster integrity guard
+        if: steps.drift.outputs.changed == 'true'
+        run: node tests/mlb-simulator-roster-integrity-guard-test.js
+
+      - name: Roster source guard (no stale fixtures)
+        if: steps.drift.outputs.changed == 'true'
+        run: node tests/mlb-simulator-roster-source-test.js
+
+      - name: Commit refreshed rotations
+        if: steps.drift.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add static/js/mlb-simulator.js
+          git commit -m "chore(mlb-simulator): weekly rotation refresh from live MLB active rosters"
+          git push
