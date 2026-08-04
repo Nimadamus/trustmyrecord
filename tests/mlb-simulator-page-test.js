@@ -543,7 +543,7 @@ async function flushAsync() {
     assert(pitchers.every((pitcher) => /^[A-Z][A-Za-z'. -]+$/.test(pitcher.name)), team.name + ' historical starter options are actual names');
     assert(!/baseline ace|baseline starter|depth starter|era-average starter|staff game|Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(pitchers.map((pitcher) => pitcher.name).join('|')), team.name + ' has no fallback starter labels');
   });
-  assert(/Zac Gallen|Chris Sale/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current dropdowns show baseline starter profiles before verified rosters load');
+  assert(/Eduardo Rodriguez|Merrill Kelly|Brandon Pfaadt|Chris Sale/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current dropdowns show baseline starter profiles before verified rosters load');
   assert(/Starter list is for simulation selection/.test(elements.homePitcherMeta.textContent), 'current starter area labels baseline starter profiles as simulation selections');
   assert(!/Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current mode does not render generic starter profiles');
   assert(!/Team rotation option/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current selector does not use vague team-rotation wording');
@@ -605,7 +605,7 @@ async function flushAsync() {
   assert(/Michael Harris II|Ronald Acuna Jr\.|Matt Olson|Ozzie Albies/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Atlanta hitter names');
   assert(/Ketel Marte[\s\S]*Corbin Carroll[\s\S]*Josh Naylor/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup uses official recent Arizona batting order instead of generic position sorting');
   assert(/Ronald Acuna Jr\.[\s\S]*Ozzie Albies[\s\S]*Austin Riley/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup uses official recent Atlanta batting order instead of generic position sorting');
-  assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
+  assert(/Eduardo Rodriguez|Brandon Pfaadt|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
   assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
   // The single literal this used to pin was replaced by a four-way label set
   // (LINEUP_LABELS: confirmed / posted / recent / roster) when today's lineups
@@ -661,9 +661,9 @@ async function flushAsync() {
   elements.mixedModeButton.listeners.click();
   assert.strictEqual(elements.awayPoolSelect.value, 'current', 'mixed mode keeps Team A current');
   assert.strictEqual(elements.homePoolSelect.value, 'historical', 'mixed mode sets Team B historical');
-  assert(/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'mixed mode current pitcher options fall back to baseline starter profiles');
+  assert(/Eduardo Rodriguez|Merrill Kelly|Brandon Pfaadt/.test(elements.awayPitcherSelect.innerHTML), 'mixed mode current pitcher options fall back to baseline starter profiles');
   assert(/Red Ruffing/.test(elements.homePitcherSelect.innerHTML), 'mixed mode historical pitcher options render');
-  assert(/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'mixed Team A dropdown shows current starter profiles when roster feed is unavailable');
+  assert(/Eduardo Rodriguez|Merrill Kelly|Brandon Pfaadt/.test(elements.awayPitcherSelect.innerHTML), 'mixed Team A dropdown shows current starter profiles when roster feed is unavailable');
   assert.strictEqual((elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'mixed Team B dropdown shows five pitcher options');
   await simulator.runSimulation();
   assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
