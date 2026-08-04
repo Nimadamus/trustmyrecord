@@ -48,7 +48,36 @@ function skip(msg) { console.log('SKIP: ' + msg); process.exit(0); }
     );
     (els[els.length - 1] || document.body).click();
   });
-  await page.waitForTimeout(15000);
+  // The pitcher line is enriched ASYNCHRONOUSLY from ESPN after the board paints,
+  // and the page gives that fetch a 6s guard before painting TBD and not retrying
+  // for five minutes. A flat 15s wait therefore reported the all-TBD OUTAGE
+  // SIGNATURE on any run where the runner was slow or ESPN was briefly throttled
+  // (2026-08-04: red in CI while the live board was showing 57/60 named). Poll
+  // instead, and only conclude anything once the names stop arriving.
+  const ENRICH_TIMEOUT_MS = 60000;
+  const enrichStart = Date.now();
+  for (;;) {
+    const named = await page.evaluate(() => [...document.querySelectorAll('.sb-team-pitcher[data-sb-pitcher-gi]')]
+      .filter((el) => !/^TBD$/i.test((el.textContent || '').trim())).length);
+    if (named > 0) break;
+    if (Date.now() - enrichStart > ENRICH_TIMEOUT_MS) break;
+    await page.waitForTimeout(2500);
+  }
+  await page.waitForTimeout(3000);
+
+  // If nothing landed, find out WHY before crying outage: ask the page itself
+  // whether it can reach ESPN. A runner that cannot is an environment problem,
+  // not a TrustMyRecord defect, and this monitor must not red a deploy for it.
+  // The self-test deliberately blanks every line to prove the detector fires, so
+  // it must not be let off the hook by the reachability escape below.
+  const pageCanReachEspn = (process.env.TMR_PITCHER_MONITOR_SELFTEST === 'all-tbd') || await page.evaluate(async () => {
+    try {
+      const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?limit=1', { cache: 'no-store' });
+      if (!r.ok) return false;
+      const j = await r.json();
+      return Array.isArray(j.events);
+    } catch (e) { return false; }
+  });
 
   // Self-test hook: proves the detector actually fires. Not used in normal runs.
   //   TMR_PITCHER_MONITOR_SELFTEST=all-tbd   -> blank every line (outage signature)
@@ -96,8 +125,13 @@ function skip(msg) { console.log('SKIP: ' + msg); process.exit(0); }
     tbd.length + ' TBD');
 
   if (slots.length >= 8 && tbd.length === slots.length) {
+    if (!pageCanReachEspn) {
+      skip('every slot is TBD but this environment cannot reach the ESPN scoreboard at all, ' +
+        'so the board had nothing to enrich from - not a TrustMyRecord defect');
+    }
     fail('EVERY MLB pitcher slot on the live board is TBD (' + slots.length + '/' + slots.length +
-      '). This is the Jul 23 2026 all-TBD outage signature.');
+      ') after waiting ' + Math.round(ENRICH_TIMEOUT_MS / 1000) + 's, and ESPN IS reachable from here. ' +
+      'This is the Jul 23 2026 all-TBD outage signature.');
     return;
   }
 
