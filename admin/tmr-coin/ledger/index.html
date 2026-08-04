@@ -33,6 +33,7 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
         .reverse-btn { border-color: rgba(248,113,113,0.4); }
+        .hint { color: var(--muted); font-size: 11.5px; margin: 0 0 10px; line-height: 1.5; }
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
         .catalog-row { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -96,10 +97,59 @@
                 <button id="loadMoreBtn" type="button">Load more</button>
             </div>
         </section>
+
+        <section class="panel">
+            <h2>Ledger Integrity</h2>
+            <p class="hint">Fourteen invariants over the whole ledger. Read-only &mdash; running a check never changes a balance.</p>
+            <div class="toolbar">
+                <select id="integrityScope">
+                    <option value="real">Real accounts</option>
+                    <option value="all">Everything, including test fixtures</option>
+                </select>
+                <button id="runIntegrityBtn" type="button">Run check now</button>
+                <span id="integrityStatus" class="hint"></span>
+            </div>
+            <div id="integrityBody">Loading…</div>
+        </section>
+
+        <section class="panel">
+            <h2>Reconciliation</h2>
+            <p class="hint">Every wallet balance must equal the sum of its ledger entries. Where it does not, the adjustment that would close the gap is shown &mdash; it is never applied automatically.</p>
+            <div id="reconcileBody">Loading…</div>
+        </section>
+
+        <section class="panel">
+            <h2>Supply &amp; Issuance</h2>
+            <div class="toolbar">
+                <select id="supplyDays">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                </select>
+            </div>
+            <div id="supplyBody">Loading…</div>
+        </section>
+
+        <section class="panel">
+            <h2>Abuse Review Queue</h2>
+            <p class="hint">Detection only. Nothing here freezes a wallet or reverses a reward &mdash; those stay manual actions on the member's wallet page.</p>
+            <div class="toolbar">
+                <select id="flagStatus">
+                    <option value="open">Open</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="dismissed">Dismissed</option>
+                    <option value="actioned">Actioned</option>
+                    <option value="all">All</option>
+                </select>
+                <button id="scanAbuseBtn" type="button">Scan last 24h</button>
+                <span id="abuseStatus" class="hint"></span>
+            </div>
+            <div id="abuseBody">Loading…</div>
+        </section>
     </main>
 
     <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-    <script src="/static/js/backend-api.js?v=c736c27862c5"></script>
+    <script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
     <script>
     (function () {
         var topMsg = document.getElementById('topMsg');
@@ -258,12 +308,211 @@
             }
         }
 
+        // ---- Ledger integrity -------------------------------------------
+        // Two scopes on purpose. "Real accounts" excludes disposable test/QA
+        // fixtures, which are written by direct SQL that bypasses the service
+        // layer and so break invariants the service layer guarantees. Showing
+        // only the full-table view would leave this panel permanently red and
+        // therefore permanently ignored; showing only the filtered view would
+        // hide real fixture debris. Both are available.
+        function renderIntegrity(run, checks) {
+            var el = document.getElementById('integrityBody');
+            if (!run) { el.innerHTML = '<p class="hint">No check has been recorded yet. Run one above.</p>'; return; }
+            var passed = (run.checks_run || 0) - (run.checks_failed || 0);
+            var good = (run.status === 'pass');
+            el.innerHTML =
+                '<div class="stat-grid">' +
+                '<div class="stat-cell"><div class="n" style="color:' + (good ? '#4ade80' : 'var(--red)') + '">' + esc(String(run.status).toUpperCase()) + '</div><div class="l">Last result</div></div>' +
+                '<div class="stat-cell"><div class="n">' + passed + '/' + esc(run.checks_run) + '</div><div class="l">Checks passed</div></div>' +
+                '<div class="stat-cell"><div class="n">' + esc(run.wallets_checked) + '</div><div class="l">Wallets checked</div></div>' +
+                '<div class="stat-cell"><div class="n">' + Number(run.circulating || 0).toLocaleString('en-US') + '</div><div class="l">Circulating</div></div>' +
+                '</div>' +
+                '<p class="hint" style="margin-top:10px;">Recorded ' + esc(run.created_at) + ' &middot; ' + esc(run.duration_ms) + 'ms &middot; run #' + esc(run.id) + '</p>' +
+                (checks && checks.length
+                    ? '<table style="margin-top:12px;"><thead><tr><th>Check</th><th>Result</th><th>Rows</th></tr></thead><tbody>' +
+                      checks.map(function (c) {
+                          return '<tr><td>' + esc(c.title || c.key) + '</td><td>' +
+                              (c.ok ? '<span class="amt-pos">pass</span>' : '<span class="amt-neg">FAIL</span>') +
+                              '</td><td>' + esc(c.failed || 0) + '</td></tr>';
+                      }).join('') + '</tbody></table>'
+                    : '');
+        }
+
+        async function loadIntegrity() {
+            try {
+                var data = await window.api.request('/admin/coins/integrity?limit=1');
+                var latest = data.latest;
+                var checks = latest && latest.details && latest.details.checks ? latest.details.checks : null;
+                renderIntegrity(latest, checks);
+            } catch (err) {
+                document.getElementById('integrityBody').textContent = 'Failed to load: ' + err.message;
+            }
+        }
+
+        async function runIntegrity() {
+            var btn = document.getElementById('runIntegrityBtn');
+            var status = document.getElementById('integrityStatus');
+            btn.disabled = true; status.textContent = 'Running…';
+            try {
+                var scope = document.getElementById('integrityScope').value;
+                var result = await window.api.request('/admin/coins/integrity/run', {
+                    method: 'POST', body: { scope: scope }
+                });
+                status.textContent = result.status === 'pass'
+                    ? 'All ' + result.checksRun + ' checks passed.'
+                    : result.checksFailed + ' of ' + result.checksRun + ' checks failed.';
+                status.style.color = result.status === 'pass' ? '#4ade80' : 'var(--red)';
+                renderIntegrity({
+                    id: result.runId, status: result.status, checks_run: result.checksRun,
+                    checks_failed: result.checksFailed, duration_ms: result.durationMs,
+                    created_at: result.ranAt,
+                    wallets_checked: result.supply ? result.supply.wallets : 0,
+                    circulating: result.supply ? result.supply.circulating : 0
+                }, result.checks);
+                loadReconcile();
+            } catch (err) {
+                status.textContent = 'Failed: ' + err.message;
+                status.style.color = 'var(--red)';
+            } finally { btn.disabled = false; }
+        }
+
+        // ---- Reconciliation ---------------------------------------------
+        async function loadReconcile() {
+            var el = document.getElementById('reconcileBody');
+            try {
+                var d = await window.api.request('/admin/coins/reconcile');
+                var s = d.supply || {};
+                el.innerHTML =
+                    '<div class="stat-grid">' +
+                    '<div class="stat-cell"><div class="n" style="color:' + (d.balanced ? '#4ade80' : 'var(--red)') + '">' + (d.balanced ? 'BALANCED' : String(d.walletsOutOfBalance)) + '</div><div class="l">' + (d.balanced ? 'All wallets' : 'Wallets out of balance') + '</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + esc(d.walletsChecked) + '</div><div class="l">Wallets checked</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + Number(s.total_issued || 0).toLocaleString('en-US') + '</div><div class="l">Issued (lifetime)</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + Number(s.total_spent || 0).toLocaleString('en-US') + '</div><div class="l">Spent (lifetime)</div></div>' +
+                    '</div>' +
+                    (d.balanced
+                        ? '<p class="hint" style="margin-top:10px;">Every wallet balance equals the sum of its ledger entries.</p>'
+                        : '<table style="margin-top:12px;"><thead><tr><th>User</th><th>Wallet</th><th>Ledger</th><th>Drift</th><th>Adjustment needed</th></tr></thead><tbody>' +
+                          (d.drifts || []).map(function (r) {
+                              return '<tr><td>#' + esc(r.user_id) + '</td><td>' + esc(r.wallet_balance) + '</td><td>' + esc(r.ledger_total) + '</td><td>' + fmtAmt(r.drift) + '</td><td>' + fmtAmt(-r.drift) + '</td></tr>';
+                          }).join('') + '</tbody></table>' +
+                          '<p class="hint" style="margin-top:8px;">No balance was changed. Applying an adjustment is a separate, deliberate action on the member\'s wallet page, and records who did it and why.</p>');
+            } catch (err) {
+                el.textContent = 'Failed to load: ' + err.message;
+            }
+        }
+
+        // ---- Supply & issuance ------------------------------------------
+        async function loadSupply() {
+            var el = document.getElementById('supplyBody');
+            try {
+                var days = document.getElementById('supplyDays').value;
+                var d = await window.api.request('/admin/coins/supply?days=' + encodeURIComponent(days));
+                var s = d.supply || {};
+                el.innerHTML =
+                    '<div class="stat-grid">' +
+                    '<div class="stat-cell"><div class="n">' + Number(s.circulating || 0).toLocaleString('en-US') + '</div><div class="l">Circulating</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + esc(s.funded_wallets) + '</div><div class="l">Funded wallets</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + esc(s.frozen_wallets) + '</div><div class="l">Frozen</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + Number(s.ledger_rows || 0).toLocaleString('en-US') + '</div><div class="l">Ledger entries</div></div>' +
+                    '</div>' +
+                    '<h3 style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 6px;">By source</h3>' +
+                    ((d.by_source || []).length
+                        ? '<table><thead><tr><th>Source action</th><th>Type</th><th>Actor</th><th>Entries</th><th>Members</th><th>Net</th></tr></thead><tbody>' +
+                          d.by_source.map(function (r) {
+                              return '<tr><td>' + esc(r.source_action) + '</td><td>' + esc(r.entry_type) + '</td><td>' + esc(r.actor_type) + '</td><td>' + esc(r.entries) + '</td><td>' + esc(r.members) + '</td><td>' + fmtAmt(r.net_coins) + '</td></tr>';
+                          }).join('') + '</tbody></table>'
+                        : '<p class="hint">No activity in this window.</p>') +
+                    '<h3 style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 6px;">Daily</h3>' +
+                    ((d.daily || []).length
+                        ? '<table><thead><tr><th>Day</th><th>Issued</th><th>Spent</th><th>Entries</th><th>Members</th></tr></thead><tbody>' +
+                          d.daily.map(function (r) {
+                              return '<tr><td>' + esc(String(r.day).slice(0, 10)) + '</td><td class="amt-pos">' + Number(r.issued).toLocaleString('en-US') + '</td><td class="amt-neg">' + Number(r.spent).toLocaleString('en-US') + '</td><td>' + esc(r.entries) + '</td><td>' + esc(r.members) + '</td></tr>';
+                          }).join('') + '</tbody></table>'
+                        : '<p class="hint">No activity in this window.</p>');
+            } catch (err) {
+                el.textContent = 'Failed to load: ' + err.message;
+            }
+        }
+
+        // ---- Abuse review queue -----------------------------------------
+        async function loadFlags() {
+            var el = document.getElementById('abuseBody');
+            try {
+                var status = document.getElementById('flagStatus').value;
+                var d = await window.api.request('/admin/coins/abuse/flags?status=' + encodeURIComponent(status) + '&limit=100');
+                if (!d.flags || !d.flags.length) {
+                    el.innerHTML = '<p class="hint">Nothing in this queue.</p>';
+                    return;
+                }
+                el.innerHTML = '<table><thead><tr><th>Severity</th><th>Rule</th><th>Member</th><th>Counterparty</th><th>Observed</th><th>Detail</th><th></th></tr></thead><tbody>' +
+                    d.flags.map(function (f) {
+                        var sevColor = f.severity === 'high' ? 'var(--red)' : (f.severity === 'medium' ? 'var(--gold)' : 'var(--muted)');
+                        return '<tr>' +
+                            '<td style="color:' + sevColor + ';font-weight:700;text-transform:uppercase;font-size:10.5px;">' + esc(f.severity) + '</td>' +
+                            '<td>' + esc(f.rule_key) + '</td>' +
+                            '<td>' + esc(f.username || ('#' + f.user_id)) + '</td>' +
+                            '<td>' + esc(f.counterparty_username || (f.counterparty_user_id ? '#' + f.counterparty_user_id : '—')) + '</td>' +
+                            '<td>' + esc(f.observed) + ' / ' + esc(f.threshold) + '</td>' +
+                            '<td style="max-width:320px;">' + esc(f.detail) + '</td>' +
+                            '<td>' + (f.status === 'open'
+                                ? '<button type="button" data-review="' + esc(f.id) + '" data-status="dismissed">Dismiss</button> ' +
+                                  '<button type="button" data-review="' + esc(f.id) + '" data-status="actioned">Actioned</button>'
+                                : esc(f.status)) + '</td>' +
+                            '</tr>';
+                    }).join('') + '</tbody></table>';
+
+                el.querySelectorAll('[data-review]').forEach(function (btn) {
+                    btn.addEventListener('click', function () { reviewFlag(btn.getAttribute('data-review'), btn.getAttribute('data-status')); });
+                });
+            } catch (err) {
+                el.textContent = 'Failed to load: ' + err.message;
+            }
+        }
+
+        async function reviewFlag(id, status) {
+            var note = window.prompt('Note for this review (optional):') || '';
+            try {
+                await window.api.request('/admin/coins/abuse/flags/' + encodeURIComponent(id) + '/review', {
+                    method: 'POST', body: { status: status, note: note }
+                });
+                msg('ok', 'Flag #' + id + ' marked ' + status + '.');
+                loadFlags();
+            } catch (err) {
+                msg('err', 'Review failed: ' + err.message);
+            }
+        }
+
+        async function scanAbuse() {
+            var btn = document.getElementById('scanAbuseBtn');
+            var status = document.getElementById('abuseStatus');
+            btn.disabled = true; status.textContent = 'Scanning…';
+            try {
+                var r = await window.api.request('/admin/coins/abuse/scan', {
+                    method: 'POST', body: { windowHours: 24 }
+                });
+                status.textContent = r.flagCount + ' flag(s) in the last 24h. No wallet was frozen and no balance changed.';
+                status.style.color = 'var(--muted)';
+                loadFlags();
+            } catch (err) {
+                status.textContent = 'Failed: ' + err.message;
+                status.style.color = 'var(--red)';
+            } finally { btn.disabled = false; }
+        }
+
         document.getElementById('typeFilter').addEventListener('change', function () { loadActivity(true); });
         document.getElementById('loadMoreBtn').addEventListener('click', function () { loadActivity(false); });
+        document.getElementById('runIntegrityBtn').addEventListener('click', runIntegrity);
+        document.getElementById('supplyDays').addEventListener('change', loadSupply);
+        document.getElementById('flagStatus').addEventListener('change', loadFlags);
+        document.getElementById('scanAbuseBtn').addEventListener('click', scanAbuse);
 
         loadSummary();
         loadCatalogAdmin();
         loadActivity(true);
+        loadIntegrity();
+        loadReconcile();
+        loadSupply();
+        loadFlags();
     })();
     </script>
 </body>
