@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=ecdf489fce1e"></script>
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=37caa790256d">
     <script defer src="/static/js/tmr-linkhub.js?v=f34371a91b66"></script>
     <style>
@@ -151,12 +151,9 @@
                 if (a && a.username) return a.username;
             }
         } catch (e) {}
-        try {
-            if (window.api && typeof api.getCurrentUser === 'function') {
-                var u = api.getCurrentUser();
-                if (u && u.username) return u.username;
-            }
-        } catch (e) {}
+        // api.getCurrentUser() is async (it hits /auth/me), so it can never resolve a
+        // username synchronously here. Calling it left an unhandled "Access token required"
+        // rejection on every logged-out load, so we rely on the stored session below instead.
         var keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
         for (var i = 0; i < keys.length; i++) {
             try {

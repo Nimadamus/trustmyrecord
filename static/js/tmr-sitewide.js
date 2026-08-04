@@ -242,8 +242,19 @@
     }
 
     let authHydrationStarted = false;
+    // Bounded retries. A token the backend rejects left this in an infinite
+    // hydrate -> renderActions -> hydrate cycle that hammered /auth/me ~10x a
+    // second for as long as the page stayed open (measured: 102 calls in 6s).
+    // A 401 never clears the session (see backend-api.js handleResponse), so
+    // hasAuthTokens() stayed true and nothing ever broke the cycle. Retry a few
+    // times — spaced out, so a Render cold start still resolves — then stop.
+    const AUTH_HYDRATION_MAX_ATTEMPTS = 3;
+    const AUTH_HYDRATION_RETRY_MS = 2000;
+    let authHydrationAttempts = 0;
     function hydrateAuthThenRerender() {
         if (authHydrationStarted) return;
+        if (authHydrationAttempts >= AUTH_HYDRATION_MAX_ATTEMPTS) return;
+        authHydrationAttempts += 1;
         authHydrationStarted = true;
         // auth-persistent.js normally restores the backend session and fires
         // tmr-auth-changed. This is a self-contained safety net for pages where
@@ -255,12 +266,16 @@
                         const user = data && (data.user || data);
                         if (user && (user.username || user.email)) {
                             try { localStorage.setItem("tmr_current_user", JSON.stringify(user)); } catch (error) {}
+                            // Resolved — the re-render below picks the user up from
+                            // storage, so no further hydration attempts are needed.
+                            authHydrationAttempts = AUTH_HYDRATION_MAX_ATTEMPTS;
                         }
                     })
                     .catch(() => {})
                     .finally(() => {
                         authHydrationStarted = false;
-                        renderActions();
+                        if (authHydrationAttempts >= AUTH_HYDRATION_MAX_ATTEMPTS) renderActions();
+                        else setTimeout(renderActions, AUTH_HYDRATION_RETRY_MS);
                     });
                 return;
             }

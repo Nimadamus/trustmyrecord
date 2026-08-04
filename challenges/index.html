@@ -35,7 +35,7 @@
     </script>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=ecdf489fce1e"></script>
     <script defer src="/static/js/config.js?v=7e4b853bbb3d"></script>
     <script defer src="/static/js/backend-api.js?v=c736c27862c5"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -438,6 +438,12 @@
 
             async function loadCurrentUser() {
                 try {
+                    // Only ask /auth/me when we hold credentials; a credential-less call can
+                    // only ever 401 and logs a console error the page cannot suppress.
+                    if (apiReady() && typeof window.api.isLoggedIn === "function" && !window.api.isLoggedIn()) {
+                        state.currentUser = null;
+                        return;
+                    }
                     const data = apiReady() && typeof window.api.getCurrentUser === "function"
                         ? await window.api.getCurrentUser()
                         : await request("/auth/me");

@@ -56,6 +56,21 @@ function resolveCommand(command) {
   return command;
 }
 
+// Windows cannot spawn npx.cmd with shell:false — Node >= 20 rejects it with
+// EINVAL, which made both Playwright checks report "failed" (and the report say
+// "Deployment allowed: NO") on every Windows run even when the suites passed.
+// Every npx check here is the locally installed Playwright CLI, so invoke that
+// file with node and skip the shim entirely.
+function resolveInvocation(command, args) {
+  if (command === 'npx' && args[0] === 'playwright') {
+    // Resolved by path, not require.resolve: playwright's package "exports" map
+    // does not expose ./cli.js.
+    const cli = path.join(root, 'node_modules', 'playwright', 'cli.js');
+    if (fs.existsSync(cli)) return { file: process.execPath, argv: [cli, ...args.slice(1)] };
+  }
+  return { file: resolveCommand(command), argv: args };
+}
+
 async function runInlineNodeCheck(name, args) {
   const started = Date.now();
   const scriptPath = path.join(root, args[0]);
@@ -103,7 +118,8 @@ async function runInlineNodeCheck(name, args) {
 
 function runCheck(name, command, args) {
   const started = Date.now();
-  const result = spawnSync(resolveCommand(command), args, {
+  const invocation = resolveInvocation(command, args);
+  const result = spawnSync(invocation.file, invocation.argv, {
     cwd: root,
     shell: false,
     encoding: 'utf8',

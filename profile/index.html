@@ -52,7 +52,7 @@
     </script>
     <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-<script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=ecdf489fce1e"></script>
 <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=1765835da36e">
 <script defer src="/static/js/tmr-share.js?v=eb28abdc3050"></script>
@@ -14413,7 +14413,7 @@
     init();
     </script>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=64ea668a0dec -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=ecdf489fce1e -->
 
 
     <script src="/static/js/platform-production-fix.js?v=2b02d2261abd"></script>
@@ -17069,12 +17069,9 @@
         if (a && a.username) return a.username;
       }
     } catch (e) {}
-    try {
-      if (window.api && typeof api.getCurrentUser === 'function') {
-        var u = api.getCurrentUser();
-        if (u && u.username) return u.username;
-      }
-    } catch (e) {}
+    // api.getCurrentUser() is async (it hits /auth/me), so it can never resolve a
+    // username synchronously here. Calling it left an unhandled "Access token required"
+    // rejection on every logged-out load, so we rely on the stored session below instead.
     var keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
     for (var i = 0; i < keys.length; i++) {
       try {

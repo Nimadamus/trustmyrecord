@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-<script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=ecdf489fce1e"></script>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -623,7 +623,10 @@
 
     async function initChat() {
         try {
-            const me = await api.getCurrentUser();
+            // Only ask /auth/me when we hold credentials; a credential-less call can
+            // only ever 401 and logs a console error the page cannot suppress.
+            const hasCredentials = typeof api.isLoggedIn !== 'function' || api.isLoggedIn();
+            const me = hasCredentials ? await api.getCurrentUser() : null;
             currentUser = (me && me.user) ? me.user : me;
         } catch (e) {
             currentUser = null;
