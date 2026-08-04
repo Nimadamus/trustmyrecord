@@ -148,6 +148,7 @@ try {
         "tests/mlb-simulator-boxscore-test.js",
         "tests/mlb-simulator-realism-test.js",
         "tests/mlb-simulator-roster-source-test.js",
+        "tests/mlb-simulator-roster-integrity-guard-test.js",
         "tests/mlb-simulator-live-roster-validation-test.js",
         "tests/sportsbook-header-regression-test.js",
         "tests/sportsbook-no-game-drop-regression-test.js",
@@ -195,6 +196,7 @@ try {
     Invoke-StaleQuarantineCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js") "jsdom render-harness drift; AVG/OPS/ERA columns exist in mlb-simulator.js (verified); re-validate"
     Invoke-StaleQuarantineCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js") "simulator snapshot drift (same class as boxscore/page); re-validate"
     Invoke-GuardCommand "MLB simulator roster source (no stale fixtures) test" @("node", "tests/mlb-simulator-roster-source-test.js")
+    Invoke-GuardCommand "MLB simulator roster integrity guard (wrong team / fake player / duplicate starter / broken 1-9 order)" @("node", "tests/mlb-simulator-roster-integrity-guard-test.js")
     Invoke-StaleQuarantineCommand "MLB simulator live roster regression test" @("node", "tests/mlb-simulator-live-roster-validation-test.js") "network-dependent integration test; passes against current honest labels but kept soft-warn to avoid live-data flakiness"
     Invoke-GuardCommand "sportsbook header regression test" @("node", "tests/sportsbook-header-regression-test.js")
     Invoke-GuardCommand "sportsbook no-game-drop regression test" @("node", "tests/sportsbook-no-game-drop-regression-test.js")

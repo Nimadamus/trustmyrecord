@@ -177,6 +177,11 @@ jobs:
         continue-on-error: true  # stale-quarantine: drifted snapshot (not a product regression). see DEVELOPMENT_RULES.md
         run: node tests/mlb-simulator-realism-test.js
 
+      # BLOCKING. Network-free: every MLB feed is a fixture, so this fails only when the
+      # RENDERING is wrong - wrong team, fake player, duplicate starter, broken 1-9 order.
+      - name: MLB simulator roster integrity guard
+        run: node tests/mlb-simulator-roster-integrity-guard-test.js
+
       - name: MLB simulator live roster regression
         # soft-warn because it hits the LIVE MLB Stats API and a feed hiccup must not red a
         # deploy - NOT stale. The three stale assertions (cross-realm array compare,
