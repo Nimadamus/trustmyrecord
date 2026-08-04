@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=6745a4bbe31a">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=92bdbdff01fd">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
 </head>
@@ -170,10 +170,19 @@
                         <div class="hx-chosen" id="hxChosen" hidden></div>
                     </section>
 
-                    <!-- ---------------------------------------- step 4: submit -->
-                    <section class="hx-step hx-step--run">
+                    <!-- ---------------------------------------- step 4: review -->
+                    <section class="hx-step" aria-labelledby="hxStep4">
                         <div class="hx-step-head">
                             <span class="hx-step-num" aria-hidden="true">4</span>
+                            <h2 id="hxStep4">Review what will run</h2>
+                        </div>
+                        <div class="hx-review" id="hxReview" hidden></div>
+                    </section>
+
+                    <!-- ---------------------------------------- step 5: submit -->
+                    <section class="hx-step hx-step--run">
+                        <div class="hx-step-head">
+                            <span class="hx-step-num" aria-hidden="true">5</span>
                             <h2>Generate report</h2>
                         </div>
                         <button class="hx-run" id="mSubmit" type="submit">
@@ -734,6 +743,15 @@
             + '</span>';
     }
 
+    // Three different answers to "why is this off", and they must not read
+    // alike: the first will never change for this sport, the last is a gap in
+    // the data loaded on this deployment and could.
+    var UNAVAILABLE_KIND = {
+        not_applicable: 'Not applicable to this sport',
+        no_variation: 'Cannot separate games here',
+        not_in_dataset: 'Not in the data on file'
+    };
+
     function renderFilters() {
         var host = $('hxFilters');
         if (!library) {
@@ -746,7 +764,12 @@
             if (!specs.length) return '';
             // A search narrows to matches, so forcing every matching group open
             // is what the user just asked for.
-            var open = filterSearch ? true : !!openGroups[g.id];
+            // A group with nothing usable for this sport stays collapsed unless
+            // it is searched for or opened by hand: the reasons are worth
+            // keeping, but a whole category of controls that can never be
+            // switched on should not greet the user.
+            var open = filterSearch ? true
+                : (g.all_unavailable ? openGroups[g.id] === true : !!openGroups[g.id]);
             var setInGroup = specs.filter(function (s) {
                 var v = filters[s.id];
                 if (v === undefined || v === null || v === false || v === '' || v === 'any') return false;
@@ -766,7 +789,10 @@
                     + '<div class="hx-fctl">' + renderControl(spec) + '</div>'
                     + (spec.available
                         ? (spec.era_note ? '<p class="hx-fnote">' + esc(spec.era_note) + '</p>' : '')
-                        : '<p class="hx-fnote hx-fnote--off">' + esc(spec.unavailable_reason) + '</p>')
+                        : '<p class="hx-fnote hx-fnote--off">'
+                            + '<span class="hx-fwhy">' + esc(UNAVAILABLE_KIND[spec.unavailable_kind]
+                                || 'Unavailable') + '</span> '
+                            + esc(spec.unavailable_reason) + '</p>')
                     + '</div>';
             }).join('');
 
@@ -847,6 +873,98 @@
         // happened to work, because nothing had focus to blur.
         if (box.innerHTML !== html) box.innerHTML = html;
         box.hidden = false;
+        scheduleReview();
+    }
+
+    // ---------------------------------------------- step 4: review
+    // A pre-flight check of the chosen conditions against the same registry the
+    // report uses. It is a catalogue call: no engine scan, no charge, no
+    // allowance. That is the point -- a contradiction should be caught here
+    // rather than after it has spent the user's one free inquiry for the day.
+    var reviewTimer = null, reviewSig = null;
+
+    function scheduleReview() {
+        clearTimeout(reviewTimer);
+        reviewTimer = setTimeout(runReview, 250);
+    }
+
+    function selectedValues() {
+        var out = {};
+        Object.keys(filters).forEach(function (k) {
+            var v = filters[k];
+            if (k === 'sample_size') return;
+            if (v === undefined || v === null || v === false || v === '' || v === 'any') return;
+            if (typeof v === 'object' && v.min == null && v.max == null) return;
+            out[k] = v;
+        });
+        return out;
+    }
+
+    async function runReview() {
+        var host = $('hxReview');
+        if (!host) return;
+        var chosen = selectedValues();
+        var sig = mSport.value + '|' + JSON.stringify(chosen);
+        if (sig === reviewSig) return;
+        reviewSig = sig;
+
+        if (!Object.keys(chosen).length) {
+            host.hidden = false;
+            host.innerHTML = '<p class="hx-note">No conditions set \u2014 the report will cover '
+                + 'every completed game for each team.</p>';
+            return;
+        }
+        host.hidden = false;
+        host.innerHTML = '<p class="hx-note">Checking these conditions\u2026</p>';
+        try {
+            // Called through the generic client rather than a new method on
+            // backend-api.js: that file is loaded by most pages on the site, and
+            // changing it would force a cache-buster bump on all of them to
+            // avoid stranding them on a version string that no longer matches
+            // the file. This request is BetLegend Pro's alone, so it lives here.
+            var lib = await window.api.request(
+                '/betlegend-pro/matchup-filters?sport=' + encodeURIComponent(mSport.value)
+                + '&selected=' + encodeURIComponent(JSON.stringify(chosen)));
+            if (sig !== reviewSig) return;          // a newer edit already won
+            paintReview(lib && lib.selection);
+        } catch (err) {
+            // The review is an assist, never a gate. If it cannot run, say so
+            // plainly and leave the submit button alone.
+            if (sig !== reviewSig) return;
+            host.innerHTML = '<p class="hx-note">Could not check these conditions right now. '
+                + 'You can still run the report.</p>';
+        }
+    }
+
+    function paintReview(sel) {
+        var host = $('hxReview');
+        if (!sel) { host.hidden = true; host.innerHTML = ''; return; }
+        var html = '';
+        if (sel.chosen_count) {
+            html += '<p class="hx-note"><strong>' + sel.chosen_count
+                + (sel.chosen_count === 1 ? ' condition' : ' conditions')
+                + '</strong> will be applied, combined with AND: '
+                + sel.chosen.map(function (c) { return esc(c.filter); }).join(', ') + '.'
+                + (sel.coverage_from ? ' ' + esc(mSport.value) + ' data starts at '
+                    + esc(sel.coverage_from) + '.' : '')
+                + '</p>';
+        }
+        if ((sel.unavailable || []).length) {
+            html += '<div class="hx-declined"><strong>Will not be applied for '
+                + esc(mSport.value) + '</strong><ul>'
+                + sel.unavailable.map(function (u) {
+                    return '<li>' + esc(u.filter) + ': ' + esc(u.reason) + '</li>';
+                }).join('') + '</ul></div>';
+        }
+        if ((sel.conflicts || []).length) {
+            html += '<div class="hx-declined"><strong>Check these before running</strong><ul>'
+                + sel.conflicts.map(function (c) {
+                    return '<li>' + esc(c.filter) + ': ' + esc(c.reason) + '</li>';
+                }).join('') + '</ul></div>';
+        }
+        if (sel.note) html += '<p class="hx-note">' + esc(sel.note) + '</p>';
+        host.innerHTML = html;
+        host.hidden = !html;
     }
 
     async function loadFilterLibrary(sport) {
@@ -1151,6 +1269,10 @@
                 + '<td><span class="hx-res hx-res--' + esc(String(g.result || '').toLowerCase()) + '">'
                 + esc(g.result || '') + '</span></td>'
                 + '<td>' + (g.role ? esc(g.role) + (g.closing_line != null ? ' ' + signed(g.closing_line) : '') : DASH) + '</td>'
+                // A dash here is "no closing total on file for that game",
+                // which is not the same as a total of zero. Both are real rows
+                // in this dataset, so they must not render alike.
+                + '<td>' + (g.closing_total != null ? esc(g.closing_total) : DASH) + '</td>'
                 + '<td>' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
                 + '<td class="hx-why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
         }).join('');
@@ -1159,7 +1281,8 @@
                 + '<caption class="hx-sr-only">Qualifying games for ' + esc(r.team)
                 + ', with the conditions each one satisfied</caption>'
                 + '<thead><tr><th>Date</th><th>Opponent</th><th>Venue</th><th>Score</th>'
-                + '<th>Result</th><th>Role &amp; line</th><th>Rest</th><th>Why it qualified</th></tr></thead>'
+                + '<th>Result</th><th>Role &amp; line</th><th>Total</th><th>Rest</th>'
+                + '<th>Why it qualified</th></tr></thead>'
                 + '<tbody>' + rows + '</tbody></table>'
                 + '</div>'
             : '<p class="hx-note">No qualifying games found for these conditions.</p>';
@@ -1204,6 +1327,64 @@
             ? 'Sample: all qualifying games'
             : 'Sample: the ' + d.sample_size_requested + ' most recent qualifying games');
         if (d.data_through) context.push('Latest completed game in this sample: ' + d.data_through);
+
+        // What you typed vs what was analysed. "Yankees" resolving to "New York
+        // Yankees" is obvious; a shorthand landing on the wrong franchise is
+        // not, and silently analysing a team the user did not ask for is the
+        // worst way for that to surface.
+        var tr = d.team_resolution || {};
+        var renamed = ['team_1', 'team_2'].filter(function (k) {
+            return tr[k] && tr[k].requested && tr[k].resolved
+                && String(tr[k].requested).trim() !== String(tr[k].resolved).trim();
+        });
+        var resolutionNote = renamed.length
+            ? '<p class="hx-note">Read as: ' + renamed.map(function (k) {
+                return esc(tr[k].requested) + ' &rarr; <strong>' + esc(tr[k].resolved) + '</strong>';
+            }).join(' \u00b7 ') + '.</p>'
+            : '';
+
+        // The disclaimer and the AND rule also arrive in notes[]. Both are given
+        // their own place below, so printing them here too would be the same
+        // sentence three times.
+        var STANDING = [d.disclaimer, 'Conditions combine with AND'];
+        var notes = (d.notes || []).filter(function (n) {
+            return !STANDING.some(function (s) {
+                return s && String(n).indexOf(String(s).slice(0, 40)) === 0;
+            });
+        });
+
+        // A report that never says what it is missing reads as complete. This
+        // says it: how much data backed the query, how far it reaches, and
+        // which readings behind the applied conditions are thin.
+        var dc = d.data_completeness || null;
+        var thin = (dc && dc.thin_readings) || [];
+        var completeness = dc
+            ? '<div class="hx-trail"><strong>Data behind this report</strong>'
+                + '<ul class="hx-cover">'
+                + '<li>' + fmtInt(dc.games_in_dataset.team_1) + ' games on file for '
+                    + esc(d.team_1) + ', ' + fmtInt(dc.games_in_dataset.team_2) + ' for '
+                    + esc(d.team_2) + ', ' + fmtInt(dc.games_in_dataset.head_to_head)
+                    + ' meetings between them.</li>'
+                + (dc.dataset_range && dc.dataset_range.from
+                    ? '<li>Covering ' + esc(dc.dataset_range.from) + ' to '
+                        + esc(dc.dataset_range.to)
+                        + (dc.coverage_from ? ' (' + esc(d.sport) + ' data starts at '
+                            + esc(dc.coverage_from) + ').' : '.')
+                        + '</li>'
+                    : '')
+                + ((dc.readings || []).length
+                    ? '<li>' + dc.readings.map(function (r) {
+                        return esc(r.filter) + ' on file for ' + hxPct(r.coverage_pct);
+                    }).join(', ') + ' of those games.</li>'
+                    : '')
+                + '</ul>'
+                + (thin.length
+                    ? '<p class="hx-note hx-note--caveat">' + thin.map(function (r) {
+                        return esc(r.note);
+                    }).join(' ') + '</p>'
+                    : '')
+                + '</div>'
+            : '';
 
         var head = '<section class="hx-card hx-card--head">'
             + '<div class="hx-card-head"><h2>' + esc(d.team_1) + ' vs ' + esc(d.team_2) + '</h2>'
@@ -1257,15 +1438,18 @@
                     }).join('')
                     + '</ul></div>'
                 : '')
-            + ((d.notes || []).length
+            + (notes.length
                 ? '<div class="hx-declined"><strong>About this sample</strong><ul>'
-                    + d.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('')
+                    + notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('')
                     + '</ul></div>'
                 : '')
+            + completeness
             + '<p class="hx-note">' + context.map(esc).join(' · ') + '.</p>'
-            + '<p class="hx-note hx-note--caveat">These are completed games that already met these '
-            + 'conditions. The figures describe that sample and nothing else &mdash; they are not a '
-            + 'forecast, and a condition appearing alongside a result is not evidence it caused one.</p>'
+            + resolutionNote
+            + '<p class="hx-note hx-note--caveat">'
+            + esc(d.disclaimer || 'Historical patterns do not guarantee future results.')
+            + ' These are completed games that already met these conditions; a condition appearing '
+            + 'alongside a result is not evidence it caused one.</p>'
             + '<div class="hx-receipt">' + receiptRow(res) + '</div>'
             + '</section>';
 

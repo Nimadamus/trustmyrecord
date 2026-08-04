@@ -1611,3 +1611,45 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 #panel-matchup .hx-flib-notes li { color: var(--hx-ink-3) !important; margin: 0 0 4px; }
 #panel-matchup .hx-flib-notes li:last-child { margin-bottom: 0; }
 #panel-matchup .hx-note--caveat { margin-top: 6px; color: var(--hx-ink-3) !important; }
+
+/* ---------------------------------------------------------------------------
+   Step 4 review, dataset coverage, and the reason a filter is switched off.
+
+   All three are panel-scoped with !important for the same reason the rest of
+   this file is: tmr-sitewide.css caps h2/h3 and re-inks paragraphs sitewide
+   with !important, and only !important answers !important.
+   --------------------------------------------------------------------------- */
+#panel-matchup .hx-review {
+    margin-top: 4px; padding: 12px 14px;
+    border: 1px solid var(--hx-line); border-radius: 10px;
+    background: var(--hx-surface-2);
+}
+#panel-matchup .hx-review > :first-child { margin-top: 0; }
+#panel-matchup .hx-review .hx-note { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-review strong { color: var(--hx-ink) !important; }
+#panel-matchup .hx-review .hx-declined strong { color: #7a5308 !important; }
+
+/* Dataset coverage inside the report header. */
+#panel-matchup .hx-cover, #libDetail .hx-cover {
+    margin: 0; padding-left: 18px; line-height: 1.55; font-size: 12.5px;
+}
+#panel-matchup .hx-cover li, #libDetail .hx-cover li {
+    color: var(--hx-ink-2) !important; margin: 0 0 4px;
+}
+#panel-matchup .hx-cover li:last-child, #libDetail .hx-cover li:last-child { margin-bottom: 0; }
+
+/* Why a condition is unavailable. "Will never work here" and "not loaded on
+   this deployment" are different answers and must not read alike, so the kind
+   is a badge and the sentence follows it. */
+#panel-matchup .hx-fwhy {
+    display: inline-block; margin-right: 6px; padding: 1px 6px;
+    border-radius: 999px; background: #f4e6c4; border: 1px solid #ecd9ac;
+    font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; color: #7a5308 !important; vertical-align: 1px;
+}
+
+@media (max-width: 700px) {
+    /* The badge and its sentence stack rather than squeezing the reason into a
+       two-character column. */
+    #panel-matchup .hx-fwhy { display: block; margin: 0 0 3px; width: fit-content; }
+}
