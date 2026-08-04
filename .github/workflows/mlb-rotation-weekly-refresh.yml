@@ -58,11 +58,23 @@ jobs:
         if: steps.drift.outputs.changed == 'true'
         run: node tests/mlb-simulator-roster-source-test.js
 
+      # MUST happen in this same commit. A push made with GITHUB_TOKEN does not
+      # trigger `on: push`, so the Static Asset Versions job never sees this one -
+      # the first real run (2026-08-04) left mlb-simulator/index.html pointing at
+      # the previous ?v= hash. The edge caches /static/ for 4h keyed on the full
+      # URL including the query, so a stale tag means returning visitors keep the
+      # OLD rotations while a cold cache looks perfectly fine.
+      - name: Re-pin static asset refs to content hashes
+        if: steps.drift.outputs.changed == 'true'
+        run: python scripts/version_static_refs.py
+
       - name: Commit refreshed rotations
         if: steps.drift.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add static/js/mlb-simulator.js
+          # -u: tracked files only, so a re-pin that also corrected another page's
+          # tag ships with it rather than being stranded until the next human push.
+          git add -u
           git commit -m "chore(mlb-simulator): weekly rotation refresh from live MLB active rosters"
           git push
