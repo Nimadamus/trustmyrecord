@@ -200,7 +200,17 @@ img{display:block;max-width:100%}
   border-radius:6px;color:#9FBCD6;font-size:15px;line-height:1;cursor:pointer;
   transition:background .15s ease,border-color .15s ease,color .15s ease}
 .tk-nav:hover{background:rgba(34,210,192,.12);border-color:rgba(34,210,192,.34);color:#fff}
-.tk-nav:disabled,.tk-nav[hidden]{display:none}
+/* The arrows keep their 26px box even while hidden. tmr-home-live.js sets
+   .hidden once it has measured how many pages the slate needs, which is
+   after the games land -- and `display:none` meant the lane was 72px wider
+   until that moment, so every card slid 36px sideways when the arrows
+   appeared. Measured 2026-08-04 at 1440px: ticker-games 1280->1208 in 30 of
+   30 cold loads, ~0.0025 CLS, the entire remaining desktop budget.
+   `visibility` reserves the box without showing anything, and the settled
+   rendering is unchanged: both arrows end up visible on every real slate
+   measured (30/30 production, 30/30 local). display must be restated
+   because the UA sheet gives [hidden] display:none. */
+.tk-nav:disabled,.tk-nav[hidden]{display:flex;visibility:hidden}
 .tk-prev{margin-right:10px}
 .tk-next{margin-left:10px}
 .tlbl{align-self:center;display:flex;align-items:center;gap:9px;color:var(--brand-lt);font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;height:24px;flex:0 0 auto;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.14)}
@@ -810,7 +820,26 @@ box-shadow:none !important;color:#7f8ea6 !important}
   }
   // Authoritative "has the browser already painted?" test. Synchronous, so it
   // cannot be beaten by an observer callback that has not been dispatched yet.
+  /* Has the browser put a frame on screen yet?
+
+     The paint TIMING ENTRY alone is not a usable answer. It is queued when the
+     browser processes presentation feedback, which lags the frame itself by an
+     unbounded amount -- measured on desktop 2026-08-04: first-contentful-paint
+     reported startTime 652ms, but getEntriesByName still returned empty at
+     811ms, so this returned false, the strip rendered, and the ticker dropped
+     82px. That was 23 of 30 cold logged-in loads at 1440px, CLS ~0.053.
+
+     A double requestAnimationFrame does not lag: the inner callback cannot run
+     until the frame scheduled by the outer one has been handed to the
+     compositor. Whichever signal fires first wins, so this can only ever be
+     more cautious than before, never less. Being early costs nothing -- the
+     strip is simply shown from the next view -- while being late is the bug. */
+  var framePresented = false;
+  try {
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ framePresented = true; }); });
+  } catch(e) { framePresented = true; }
   function painted(){
+    if (framePresented) return true;
     try { return performance.getEntriesByName('first-contentful-paint').length > 0; }
     catch(e){ return true; }              // unknown -> assume painted, never risk a shift
   }
@@ -852,11 +881,45 @@ box-shadow:none !important;color:#7f8ea6 !important}
       '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/?first_pick=1">Go to Sportsbook</a>' +
       '<button type="button" class="tmr-fp-reminder__close" aria-label="Dismiss reminder">&times;</button>';
     parent.insertBefore(bar, before || null);
+    growHeader(bar);
+  }
+
+  /* .hero is sized as calc(100vh - var(--header-height)), and that variable
+     ships as the nav (70px) plus the ticker (95px). Adding the strip makes the
+     real stack 82px taller on desktop, and the inline corrector at the foot of
+     the document cannot fix it until tmr-ds-nav.js has injected the nav --
+     which is after first paint. So the hero was laid out 82px too tall, then
+     snapped back: 0.0051-0.0290 CLS on every returning signed-in load, the
+     whole remaining desktop budget once the insertion itself was fixed.
+     Measuring here, during parse, means the first frame is already right and
+     the later measurement agrees with it instead of correcting it. */
+  function growHeader(bar){
+    try {
+      var cs = getComputedStyle(bar);
+      var outer = bar.getBoundingClientRect().height +
+                  (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+      if (!(outer > 0)) return;
+      var root = document.documentElement;
+      var base = parseFloat(getComputedStyle(root).getPropertyValue('--header-height'));
+      if (!(base > 0)) return;
+      root.style.setProperty('--header-height', Math.round(base + outer) + 'px');
+    } catch(e){}
   }
 
   function remove(){
     var b = document.getElementById('tmr-fp-reminder');
-    if (b && b.parentNode) b.parentNode.removeChild(b);
+    if (!b || !b.parentNode) return;
+    // Hand the height back too, or the hero stays short after a wrong cached
+    // flag is corrected.
+    try {
+      var cs = getComputedStyle(b);
+      var outer = b.getBoundingClientRect().height +
+                  (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+      var root = document.documentElement;
+      var cur = parseFloat(getComputedStyle(root).getPropertyValue('--header-height'));
+      if (outer > 0 && cur > outer) root.style.setProperty('--header-height', Math.round(cur - outer) + 'px');
+    } catch(e){}
+    b.parentNode.removeChild(b);
   }
 
   var t = token();

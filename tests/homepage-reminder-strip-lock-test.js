@@ -121,6 +121,31 @@ const renderCalls = (html.match(/(?<!function )\brender\(\)/g) || []).length;
 ok('early block has exactly two render() call sites (cache path + live path)',
   renderCalls === 2, `found ${renderCalls}`);
 
+/* The paint gate must not rely on the timing entry alone. That entry is queued
+   when the browser processes presentation feedback, which lagged the frame by
+   159ms on desktop (FCP startTime 652ms, getEntriesByName still empty at
+   811ms) -- so the gate said "not painted", the strip rendered, and the ticker
+   dropped 82px on 23 of 30 cold logged-in loads at 1440px. */
+ok('paint gate has a double-rAF signal that cannot lag the frame',
+  /requestAnimationFrame\(function\(\)\{\s*requestAnimationFrame\(function\(\)\{\s*framePresented = true/.test(html));
+ok('paint gate prefers the rAF signal over the timing entry',
+  /function painted\(\)\{\s*if \(framePresented\) return true;/.test(html));
+
+/* .hero is calc(100vh - var(--header-height)); adding the strip without adding
+   its height left the hero 82px too tall until the foot-of-document corrector
+   ran, which is after first paint. */
+ok('rendering the strip also grows --header-height', html.includes('growHeader(bar);'));
+ok('growHeader adds the strip\'s margin box, not just its height',
+  /growHeader\(bar\)\{[\s\S]{0,600}marginTop[\s\S]{0,120}marginBottom/.test(html));
+ok('removing the strip gives the header height back',
+  /function remove\(\)\{[\s\S]{0,700}cur - outer/.test(html));
+
+/* The ticker arrows are revealed once the slate has been measured. With
+   display:none that reveal narrowed the lane by 72px and slid every card
+   sideways -- the whole remaining desktop budget after the strip was fixed. */
+ok('hidden ticker arrows keep their box instead of collapsing the lane',
+  css.includes('.tk-nav:disabled,.tk-nav[hidden]{display:flex;visibility:hidden}'));
+
 // ------------------------------------------------- 4. late renderer behaviour
 ok('renderReminder adopts a strip the early block already painted',
   js.includes('if (bar.__tmrFpWired) return;') && js.includes('bar.__tmrFpWired = true;'));
@@ -144,7 +169,7 @@ ok('early block runs before the ticker and hero markup',
 ok('early block runs after the nav reservation it anchors to',
   html.indexOf('id="tmrNavReserve"') < html.indexOf('TMRFirstPickEarly'));
 
-const total = 35;
+const total = 41;
 if (failures) {
   console.log(`\nhomepage reminder-strip lock FAILED (${failures} problem${failures === 1 ? '' : 's'})\n`);
   process.exit(1);

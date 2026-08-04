@@ -170,7 +170,17 @@ img{display:block;max-width:100%}
   border-radius:6px;color:#9FBCD6;font-size:15px;line-height:1;cursor:pointer;
   transition:background .15s ease,border-color .15s ease,color .15s ease}
 .tk-nav:hover{background:rgba(34,210,192,.12);border-color:rgba(34,210,192,.34);color:#fff}
-.tk-nav:disabled,.tk-nav[hidden]{display:none}
+/* The arrows keep their 26px box even while hidden. tmr-home-live.js sets
+   .hidden once it has measured how many pages the slate needs, which is
+   after the games land -- and `display:none` meant the lane was 72px wider
+   until that moment, so every card slid 36px sideways when the arrows
+   appeared. Measured 2026-08-04 at 1440px: ticker-games 1280->1208 in 30 of
+   30 cold loads, ~0.0025 CLS, the entire remaining desktop budget.
+   `visibility` reserves the box without showing anything, and the settled
+   rendering is unchanged: both arrows end up visible on every real slate
+   measured (30/30 production, 30/30 local). display must be restated
+   because the UA sheet gives [hidden] display:none. */
+.tk-nav:disabled,.tk-nav[hidden]{display:flex;visibility:hidden}
 .tk-prev{margin-right:10px}
 .tk-next{margin-left:10px}
 .tlbl{align-self:center;display:flex;align-items:center;gap:9px;color:var(--brand-lt);font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;height:24px;flex:0 0 auto;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.14)}
