@@ -386,6 +386,61 @@ function readCards(window) {
       'a getMatchup continuation with no staleness guard');
   });
 
+  await test('a timed-out matchup shows a retryable error, never a false empty card', async () => {
+    // A slow research API is the normal cold-start case here. The card must not
+    // settle into a silent blank or a "no data" state that reads as fact — it
+    // has to stay honest and offer a retry.
+    const h = bootPage();
+    await h.flush();
+    const gid = GAMES[0].id;
+    const p = h.pending.get(gid);
+    assert.ok(p, 'expected an in-flight matchup request');
+    const abort = new Error('The operation was aborted');
+    abort.name = 'AbortError';
+    p.reject(abort);
+    h.pending.delete(gid);
+    await h.flush();
+
+    const card = h.window.document.getElementById(`game-${gid}`);
+    const top = card.querySelector('[data-hhctop]');
+    const txt = (top.textContent || '').toLowerCase();
+    assert.ok(top.innerHTML.trim().length > 0, 'the card went blank on a timeout');
+    assert.ok(/did not respond|error|timed out|retry/.test(txt),
+      `expected an honest error state, got: ${txt.slice(0, 120)}`);
+    assert.ok(top.querySelector('[data-retry]'), 'the error state must offer a retry control');
+    assert.ok(!/no (trend|data|games)/.test(txt),
+      'a transport failure must never render as an authoritative "no data" claim');
+
+    // And the failure must not poison the cache: retry has to re-request.
+    const before = h.calls.filter((u) => u.includes('/handicapping/mlb/matchup')).length;
+    top.querySelector('[data-retry]').dispatchEvent(new h.window.Event('click', { bubbles: true }));
+    await h.flush();
+    const after = h.calls.filter((u) => u.includes('/handicapping/mlb/matchup')).length;
+    assert.strictEqual(after, before + 1,
+      'Retry must issue a new request, not replay the rejected promise');
+  });
+
+  await test('a delayed response still paints the right card once it lands', async () => {
+    // The slow path must not just avoid errors — it must still deliver. Settle
+    // one card very late, after the others, and confirm it paints its OWN data.
+    const h = bootPage();
+    await h.flush();
+    await h.settle('g2');
+    await h.settle('g3');
+    let cards = readCards(h.window);
+    assert.deepStrictEqual(cards[`${GAMES[0].away_team}@${GAMES[0].home_team}`], [],
+      'the un-settled card should still be showing its value-free skeleton');
+    await h.settle('g1');
+    cards = readCards(h.window);
+    const late = (cards[`${GAMES[0].away_team}@${GAMES[0].home_team}`] || []).join(' ');
+    assert.ok(late.includes(MATCHUP.g1.wins),
+      `the late card should paint its own record ${MATCHUP.g1.wins}, got ${late}`);
+    for (const other of ['g2', 'g3']) {
+      assert.ok(!late.includes(MATCHUP[other].wins),
+        `the late card showed ${other}'s data — a delayed response must not cross cards`);
+    }
+  });
+
   await test('a failed matchup fetch is not cached as a resolved value', async () => {
     assert.ok(/p\.catch\(function \(\) \{ if \(STATE\.matchupPromise\[game\.id\] === p\) delete STATE\.matchupPromise\[game\.id\]/.test(js),
       'a rejected matchup promise must be evicted so Retry re-requests instead of replaying the rejection');
