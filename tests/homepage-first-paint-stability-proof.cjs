@@ -31,7 +31,15 @@ const arg = (flag, dflt) => {
   const i = argv.indexOf(flag);
   return i === -1 ? dflt : argv[i + 1];
 };
-const URL_ = arg('--url', 'http://127.0.0.1:8899/index.html');
+/* Production by default, because the homepage's first paint is produced at
+   the EDGE: the tmr-home-ssr Cloudflare Worker injects the stats, the
+   capper card and the slate into the HTML before it reaches the browser.
+   A plain file server has no worker, so it ships skeletons and this proof
+   was measuring a client-fill path that no visitor ever gets -- it failed
+   at 0.0525 that way while production measured 0.0009. Pass --url to point
+   at a local server deliberately; the worker assertion below will tell you
+   that is what you are doing. */
+const URL_ = arg('--url', 'https://trustmyrecord.com/');
 const DELAY_MS = Number(arg('--delay', 4000));
 const WIDTH = Number(arg('--width', 1440));
 const HEIGHT = Number(arg('--height', 900));
@@ -154,7 +162,14 @@ function diffGeometry(a, b) {
     if (/hydrat/i.test(t)) failures.push(`console hydration warning: ${t}`);
   });
 
-  await page.goto(URL_, { waitUntil: 'domcontentloaded' });
+  const navResp = await page.goto(URL_, { waitUntil: 'domcontentloaded' });
+  /* Prove we measured the real first paint. If the worker did not run, the
+     document shipped skeletons and everything below is a client-fill
+     measurement -- a different page from the one visitors get. Say so
+     loudly rather than reporting a number for the wrong environment. */
+  const ssr = navResp && navResp.headers()['x-tmr-ssr'];
+  const ssrParts = (navResp && navResp.headers()['x-tmr-ssr-parts']) || '';
+  console.log(`  edge worker: x-tmr-ssr=${ssr || '(absent)'} parts=${ssrParts || '(none)'}`);
   await page.waitForTimeout(300);            // let first paint settle
 
   const geoEarly = await page.evaluate(GEOMETRY);
@@ -164,18 +179,38 @@ function diffGeometry(a, b) {
     await page.screenshot({ path: path.join(SHOTS, 'first-paint.png') });
   }
 
-  /* ---- 1. no statistic may be a number before its data arrives ---- */
+  /* ---- 1. a figure at first paint must be the LIVE one, not a baked one ----
+     This used to require every stat slot to be empty at first paint, which was
+     right when the document shipped skeletons and anything else was a stale
+     build-time snapshot. The tmr-home-ssr worker now injects the real values
+     at the edge, so they are legitimately present in the first frame -- that
+     is the whole point of the edge render, and demanding emptiness would fail
+     the correct behaviour. What still must never happen is a figure that
+     DISAGREES with the data and then swaps. So: empty is fine, and a value is
+     fine only if it survives to the settled reading unchanged. The swap check
+     in step 3 is what enforces that, and this keeps the stale-snapshot guard
+     for anything the worker did not inject. */
+  const injected = new Set(ssrParts.split(',').map((s) => s.trim()).filter(Boolean));
+  const STAT_SLOTS = ['#tmrEyebrowPicks', '#tmrStatPicks', '#tmrStatCappers', '#tmrStatMembers'];
   for (const s of statsEarly) {
-    if (/\d/.test(s.text)) {
-      failures.push(`STALE VALUE AT FIRST PAINT — ${s.sel} shows "${s.text}"`);
+    if (!/\d/.test(s.text)) continue;
+    const fromWorker = (STAT_SLOTS.includes(s.sel) && injected.has('stats')) ||
+                       (s.sel.startsWith('.spot') && injected.has('capper'));
+    if (!fromWorker) {
+      failures.push(`STALE VALUE AT FIRST PAINT — ${s.sel} shows "${s.text}" `
+        + `and the worker did not inject it (parts=${ssrParts || 'none'})`);
     }
   }
   const tickerEarly = await page.evaluate(() => ({
     skeletons: document.querySelectorAll('.ticker .gm.is-skel').length,
     real: document.querySelectorAll('.ticker .gm:not(.is-skel):not(.is-msg)').length,
   }));
-  if (!OFFLINE && tickerEarly.skeletons < 1) {
-    failures.push('ticker showed no skeleton cards while the slate was loading');
+  /* Real cards at first paint mean the worker injected the slate, which is
+     better than a skeleton, not worse. Skeletons are only REQUIRED when it
+     did not -- an empty lane with neither is the actual failure. */
+  if (!OFFLINE && tickerEarly.skeletons < 1 && tickerEarly.real < 1) {
+    failures.push('ticker showed neither real cards nor skeletons at first paint '
+      + `(worker parts=${ssrParts || 'none'}) — the lane reserved nothing`);
   }
 
   /* ---- 2. wait everything out, then re-measure ---- */
@@ -193,6 +228,11 @@ function diffGeometry(a, b) {
   // skeleton cards being a few pixels wider than the matchups that replace them
   // (~0.002). Both are inherent to `font-display: swap` and to variable-width
   // content; neither is a stale value being repainted.
+  if (!ssr) {
+    failures.push('the document did not come from the tmr-home-ssr worker '
+      + '(no x-tmr-ssr header) -- this run measured the client-fill path, not '
+      + 'what visitors see. Point --url at production, or expect skeletons.');
+  }
   const CLS_BUDGET = WIDTH < 1100 ? 0.09 : 0.02;   // see lineAllowance above
   const cls = await page.evaluate(() => ({ cls: window.__cls, shifts: window.__shifts }));
   if (cls.cls > CLS_BUDGET) {

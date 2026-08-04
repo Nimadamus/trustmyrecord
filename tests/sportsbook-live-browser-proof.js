@@ -45,7 +45,10 @@ async function main() {
     data: {
       username: unique,
       email: unique + '@test.com',
-      password: 'CodexF5LiveProof!2026',
+      // Generated per run. A literal here is a plaintext credential in a
+      // PUBLIC repository, and this account is created fresh every time
+      // anyway, so nothing needs to know it afterwards.
+      password: 'Qa!' + Math.random().toString(36).slice(2, 10) + '#' + Date.now(),
       displayName: 'test_internal_f5_live_proof'
     }
   });

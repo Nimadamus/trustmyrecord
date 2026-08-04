@@ -22,7 +22,19 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const results = [];
 function check(name, cond, detail){ results.push({ name, pass: !!cond, detail }); console.log((cond?'PASS':'FAIL')+' - '+name+(detail?(' :: '+detail):'')); }
 
-async function login(page){ const j = await page.evaluate(async (API)=>{ const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:'BetLegend',password:'BetLegend2026!'})}); return r.json(); }, API); await page.evaluate(j=>{['accessToken','tmr_access_token'].forEach(k=>localStorage.setItem(k,j.accessToken));localStorage.setItem('refreshToken',j.refreshToken||'');localStorage.setItem('tmr_refresh_token',j.refreshToken||'');localStorage.setItem('tmr_is_logged_in','true');localStorage.setItem('tmr_current_user',JSON.stringify(j.user));localStorage.setItem('trustmyrecord_session',JSON.stringify({user:j.user,accessToken:j.accessToken,refreshToken:j.refreshToken}));}, j); return j.accessToken; }
+/* Credentials come from the environment, never from this file. A real
+   account's password was committed here in plaintext in a PUBLIC
+   repository; it is removed from the working tree, but anything that was
+   ever committed has to be treated as disclosed and rotated.
+   Run with:  TMR_SMOKE_LOGIN=<user> TMR_SMOKE_PASSWORD=<pass> node ...
+*/
+const CREDS = { login: process.env.TMR_SMOKE_LOGIN, password: process.env.TMR_SMOKE_PASSWORD };
+if (!CREDS.login || !CREDS.password) {
+  console.log('SKIP sportsbook smoke: set TMR_SMOKE_LOGIN and TMR_SMOKE_PASSWORD');
+  process.exit(0);
+}
+
+async function login(page){ const j = await page.evaluate(async (API)=>{ const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:CREDS.login,password:CREDS.password})}); return r.json(); }, API); await page.evaluate(j=>{['accessToken','tmr_access_token'].forEach(k=>localStorage.setItem(k,j.accessToken));localStorage.setItem('refreshToken',j.refreshToken||'');localStorage.setItem('tmr_refresh_token',j.refreshToken||'');localStorage.setItem('tmr_is_logged_in','true');localStorage.setItem('tmr_current_user',JSON.stringify(j.user));localStorage.setItem('trustmyrecord_session',JSON.stringify({user:j.user,accessToken:j.accessToken,refreshToken:j.refreshToken}));}, j); return j.accessToken; }
 async function setSport(page,s,ms){ await page.evaluate(x=>window.TMR.setSport(x), s); await sleep(ms||8000); }
 async function clickFirst(page, re){ return page.evaluate((reSrc)=>{ const rx=new RegExp(reSrc,'i'); const cards=Array.from(document.querySelectorAll('.sportsbook-game-card,.game-card')); for(const c of cards){ const b=Array.from(c.querySelectorAll('button.sb-odds,button.odds-btn')).find(x=>rx.test((x.textContent||'').trim())&&!x.disabled); if(b){b.scrollIntoView({block:'center'});b.click();return (b.textContent||'').trim();} } return null; }, re); }
 async function lockAndCapture(page){ let status=null,id=null; const h=async r=>{ if(/\/api\/picks(?:\?|$)/.test(r.url())&&r.request().method()==='POST'){status=r.status();try{const j=JSON.parse(await r.text());id=j.pick&&j.pick.id;}catch(_){}}}; page.on('response',h); await page.evaluate(()=>window.lockInPick&&window.lockInPick()); for(let w=0;w<15&&await page.evaluate(()=>!!window.__tmrLockInFlight);w++) await sleep(700); await sleep(1500); page.off('response',h); const ui=await page.evaluate(()=>{const c=document.getElementById('confirmPickDetail');const e=document.getElementById('pickSlipError');return {confirm:c?(c.textContent||'').trim():null, err:e&&e.style.display!=='none'?(e.textContent||'').trim():null};}); return {status,id,ui}; }
