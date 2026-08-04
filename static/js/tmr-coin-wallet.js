@@ -1,3 +1,19 @@
+// =========================================================================
+// ARCHIVED - DISABLED - NOT PART OF THE ACTIVE PRODUCT
+// =========================================================================
+// Retained as reference code only. No page loads this file: the wallet-connect
+// card it drove (Connect Wallet button, BaseScan contract link, BASE MAINNET
+// badge, "Claim (Coming Soon)") was removed from /wallet/ on 2026-08-04 and the
+// <script> tag that included it was removed with it.
+//
+// It must not be reinstated. On-chain integration, token distribution and any
+// language promising a future claim are on the must-stay-disabled list in
+// trustmyrecord-backend/docs/compliance/README.md, pending the legal questions
+// in that folder's OPEN_LEGAL_QUESTIONS.md (Q1, Q2).
+//
+// Kept rather than deleted so the history of what was built stays readable.
+// =========================================================================
+
 // TMR Coin (Base mainnet) wallet-connect widget. Entirely separate
 // from the in-platform TMR Coin currency (backend-api.js's getCoinBalance/etc.) -- this
 // only reads a real on-chain balance via /api/tmr-coin/*. No purchase, claim,
