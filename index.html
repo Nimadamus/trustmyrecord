@@ -494,6 +494,14 @@ footer a:hover{color:#fff}
   .hero-grid{grid-template-columns:1fr;gap:40px}
   .hero h1.hh{font-size:50px}
 }
+/* Very narrow phones: .final's 44px side padding leaves a 176px content box at
+   320px, but .btn.lg is white-space:nowrap with 0 32px padding, so its
+   min-content width (~250px) can't shrink to fit and the button spilled past
+   both the navy panel and the viewport (2px horizontal page overflow). */
+@media(max-width:340px){
+  .final{padding:36px 22px}
+  .final .btn.lg{width:100%;padding:0 14px}
+}
 
 
 

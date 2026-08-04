@@ -12,7 +12,7 @@
     "test:unit": "node scripts/verify-regression.js --static-only",
     "test:security": "node tests/recursion-retry-guard-test.js && node ../trustmyrecord-backend/tests/cors-origin-guard-test.js && node ../trustmyrecord-backend/tests/auth-bruteforce-guard-test.js && node ../trustmyrecord-backend/tests/profile-self-view-gate-test.js && node ../trustmyrecord-backend/tests/arena-challenge-detail-privacy-test.js && node ../trustmyrecord-backend/tests/official-pick-isolation-regression-test.js && node ../trustmyrecord-backend/tests/disputed-pick-soft-delete-test.js && node ../trustmyrecord-backend/tests/gaming-favorite-teams-selfheal-test.js",
     "test:e2e": "playwright test --config=playwright.regression.config.cjs",
-    "test:homepage": "node tests/homepage-approved-baseline-lock-test.js && node tests/homepage-ticker-visibility-lock-test.js && node tests/homepage-no-baked-stats-lock-test.js",
+    "test:homepage": "node tests/homepage-approved-baseline-lock-test.js && node tests/homepage-ticker-visibility-lock-test.js && node tests/homepage-no-baked-stats-lock-test.js && node tests/homepage-narrow-viewport-overflow-lock-test.js",
     "test:ci": "npm run test:unit && npm run test:security && npm run test:homepage",
     "test": "npm run test:ci"
   },
