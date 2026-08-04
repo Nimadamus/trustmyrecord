@@ -71,6 +71,18 @@ def build(html):
         # (stale HTTP cache, restored session) and self-heal with one reload.
         # The digest is computed with the stamp masked so it stays stable.
         raw = src.read_bytes()
+        # The digest is over BYTES, so line endings are part of it. This repo has
+        # no .gitattributes, so a file stored with LF gets smudged to CRLF when
+        # Git for Windows checks it out (autocrlf) and hashes to something else
+        # there than it does here -- the reference baked into index.html then
+        # looks stale on CI and the predeploy guard blocks the deploy, while
+        # every local check passes. Store these files with CRLF and the smudge
+        # is a no-op everywhere. Caught the hard way on first-pick-onboarding.js:
+        # dd77f7c3c2b7 locally, ff27bfd01a57 on the runner.
+        if b"\r\n" not in raw and b"\n" in raw:
+            sys.exit("%s is stored with LF endings. A content-hashed file must be "
+                     "CRLF or its hash changes on a Windows checkout. Convert it, "
+                     "then re-run this script." % rel)
         masked = BUILD_STAMP_RE.sub(b"var BUILD = ''", raw)
         h = hashlib.sha256(masked).hexdigest()[:12]
         stamped = BUILD_STAMP_RE.sub(("var BUILD = '%s'" % h).encode(), raw)
