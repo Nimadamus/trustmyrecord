@@ -502,6 +502,34 @@ footer a:hover{color:#fff}
   .final{padding:36px 22px}
   .final .btn.lg{width:100%;padding:0 14px}
 }
+/* Bridge stat labels: reserve two lines up front on phones.
+   In the 2-column bridge the label cell is about (100vw/2 - 72)px, while the
+   longest label ("Verified Cappers") needs 127px on one line — so below ~399px
+   a label wraps. The metric-compatible fallback face is narrower than Inter,
+   so labels that fit on one line during first paint re-wrapped to two when the
+   webfont loaded, growing the stripe and pushing everything below it down
+   (+17px bridge, +18px hero at 390px).
+   Reserving 2lh makes the tallest state the ONLY state, so first paint and
+   final paint are identical. line-height is pinned here so 2lh is exact
+   (2 x 1.5 x 11.5px = 34.5px) and so the em fallback below matches it for
+   engines without lh units. Held to <=410px because the longest label needs
+   127px and a cell is about (100vw/2 - 72)px, so no label can wrap above
+   ~399px — reserving beyond that would add a blank line to cells that were
+   already stable. Desktop keeps its current single-line height. */
+@media(max-width:410px){
+  .bridge .s span{line-height:1.5;min-height:3em;min-height:2lh}
+}
+/* Capper-card meta line, same failure as the bridge labels one level down.
+   ".spot .sub2" already reserves 3em (2 lines), but at 390-411px the meta line
+   needs 4 lines in the fallback face and only 3 once Inter loads, so the card
+   — and the hero around it — collapsed by one line (-21.7px) on font load.
+   At <=360px both faces need 4 lines and at >=412px both need 3, so this band
+   is the only one that straddles the wrap boundary. Reserving 4 lines there
+   keeps the first-paint height, which is the taller of the two, and min-height
+   can only reserve, never clip. */
+@media(max-width:410px){
+  .spot .sub2{line-height:1.5;min-height:6em;min-height:4lh}
+}
 
 
 
