@@ -23,9 +23,13 @@
    browser, with the webfont loaded (see tests/homepage-font-swap-cls-probe.cjs
    and the numbers in the commit message). One face per platform's default UI
    sans, chained so each platform matches its own:
-       Segoe UI  -> Windows        69.9%
-       Roboto    -> Android/Linux  69.3%
-       Arial     -> macOS/iOS      62.7%   (Helvetica measures identically)
+       Segoe UI  -> Windows        78.8%
+       Roboto    -> Android/Linux  77.8%   (inferred; Roboto not installable here)
+       Arial     -> macOS/iOS      70.8%   (Helvetica measures identically)
+   These are the SWEPT values, not the OS/2-average-width formula's: that
+   formula gave 69.9% for Segoe and was ~10% low, because the fallback is a
+   400-weight face rendered at 900 and synthetic bolding does not scale with
+   size-adjust. Measure the rendered line count, do not derive it.
    A platform without a given local() font simply skips that face and falls to
    the next, which is the whole mechanism.
 
@@ -501,4 +505,83 @@ footer a:hover{color:#fff}
     radial-gradient(circle at 16% 42%, rgba(255,255,255,.12), transparent 9rem),
     radial-gradient(circle at 44% 32%, rgba(255,255,255,.09), transparent 11rem),
     url("/static/media/steph-curry-hero.webp") center / cover no-repeat;
+}
+
+/* ---- first-pick reminder strip -------------------------------------------
+   PORTED from static/js/first-pick-onboarding.js injectStyles(). It lives here
+   as well as there because the homepage has to be able to paint the strip in
+   its FIRST frame: injectStyles() runs from a script at the foot of <body>, so
+   an eligible signed-in visitor watched the strip drop in ~1.1s after paint and
+   shove the ticker, hero, CTA and capper card down 131px (CLS 0.1421).
+   The early block at the top of <body> renders the strip during parse; these
+   rules are already inlined in <head> by build_home_critical.py, so the box is
+   correct on the first frame with no second pass.
+   Metrics are kept in step with the JS copy by
+   tests/homepage-reminder-strip-lock-test.js - change both or neither.
+   The one deliberate difference: font-family is var(--font), i.e. the
+   metric-compatible Inter stack, so the strip does not re-wrap when the real
+   Inter arrives. Barlow is not loaded on this page, so the button's original
+   `Barlow,Inter` resolved to Inter anyway and looks the same. ---- */
+.tmr-fp-reminder{position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+max-width:1180px;margin:12px auto;padding:11px 44px 11px 15px;border-radius:12px;
+background:linear-gradient(90deg,rgba(0,110,124,0.30),rgba(10,17,24,0.97));
+border:1px solid rgba(0,255,255,0.26);color:#dbe6f3;font:600 0.92rem/1.4 var(--font,Inter,sans-serif)}
+.tmr-fp-reminder__icon{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:flex;
+align-items:center;justify-content:center;background:rgba(0,255,255,0.14);color:#67e8f9;font-size:14px}
+.tmr-fp-reminder__text{flex:1 1 200px}
+.tmr-fp-reminder__text strong{color:#f8fafc;font-weight:800}
+.tmr-fp-reminder .tmr-fp-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
+padding:9px 16px;border-radius:11px;font:800 0.85rem/1 var(--font,Inter,sans-serif);letter-spacing:.02em;cursor:pointer;
+border:1px solid transparent;text-decoration:none;transition:transform .14s ease,box-shadow .14s ease}
+#tmr-fp-reminder .tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#67e8f9) !important;
+color:#04111a !important;box-shadow:0 12px 30px rgba(0,255,255,0.24) !important;text-decoration:none !important}
+.tmr-fp-reminder__close{position:absolute;top:8px;right:10px;background:transparent;border:0;
+color:#7f8ea6;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px}
+#tmr-fp-reminder .tmr-fp-reminder__close{background:transparent !important;border:0 !important;
+box-shadow:none !important;color:#7f8ea6 !important}
+.tmr-fp-reminder__close:hover{color:#e2e8f0 !important}
+@media(max-width:640px){.tmr-fp-reminder{margin:10px 12px}.tmr-fp-reminder .tmr-fp-btn{flex:1 1 100%}}
+
+
+/* Very narrow phones: .final's 44px side padding leaves a 176px content box at
+   320px, but .btn.lg is white-space:nowrap with 0 32px padding, so its
+   min-content width (~250px) can't shrink to fit and the button spilled past
+   both the navy panel and the viewport (2px horizontal page overflow).
+   Originally landed in commit f013ded8 as a hand-edit of the generated <style>
+   block in index.html, where the next build_home_critical.py run deleted it.
+   It lives here now because this file is the source that block is built from. */
+@media(max-width:340px){
+  .final{padding:36px 22px}
+  .final .btn.lg{width:100%;padding:0 14px}
+}
+
+/* Bridge stat labels: reserve two lines up front on phones.
+   In the 2-column bridge the label cell is about (100vw/2 - 72)px, while the
+   longest label ("Verified Cappers") needs 127px on one line - so below ~399px
+   a label wraps. The metric-compatible fallback face is narrower than Inter,
+   so labels that fit on one line during first paint re-wrapped to two when the
+   webfont loaded, growing the stripe and pushing everything below it down
+   (+17px bridge, +18px hero at 390px).
+   Reserving 2lh makes the tallest state the ONLY state, so first paint and
+   final paint are identical. line-height is pinned here so 2lh is exact
+   (2 x 1.5 x 11.5px = 34.5px) and so the em fallback below matches it for
+   engines without lh units. Held to <=410px because the longest label needs
+   127px and a cell is about (100vw/2 - 72)px, so no label can wrap above
+   ~399px - reserving beyond that would add a blank line to cells that were
+   already stable. Desktop keeps its current single-line height.
+   Landed in commit 51e97fda as a hand-edit of index.html's generated <style>
+   block; it lives here because that block is built from this file. */
+@media(max-width:410px){
+  .bridge .s span{line-height:1.5;min-height:3em;min-height:2lh}
+}
+/* Capper-card meta line, same failure as the bridge labels one level down.
+   ".spot .sub2" already reserves 3em (2 lines), but at 390-411px the meta line
+   needs 4 lines in the fallback face and only 3 once Inter loads, so the card
+   - and the hero around it - collapsed by one line (-21.7px) on font load.
+   At <=360px both faces need 4 lines and at >=412px both need 3, so this band
+   is the only one that straddles the wrap boundary. Reserving 4 lines there
+   keeps the first-paint height, which is the taller of the two, and min-height
+   can only reserve, never clip. */
+@media(max-width:410px){
+  .spot .sub2{line-height:1.5;min-height:6em;min-height:4lh}
 }

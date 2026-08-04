@@ -1,0 +1,152 @@
+#!/usr/bin/env node
+/**
+ * Lock: the first-pick reminder strip cannot go back to shifting the homepage.
+ * ---------------------------------------------------------------------------
+ * The strip used to be inserted at the top of the document by
+ * static/js/first-pick-onboarding.js, which is the LAST script in <body>. On an
+ * eligible signed-in mobile visit that landed ~1.1s after first paint and
+ * pushed the ticker, hero, CTA, capper card and everything below down 131px --
+ * measured on production 2026-08-03 at 390px: CLS 0.1421, one shift at 1775ms
+ * attributed to DIV.ticker 70->201 and SECTION.hero 163->294.
+ *
+ * The fix moved the DECISION into an early block at the top of <body> that
+ * paints the strip during parse, and only ever from a real server answer. This
+ * test guards the four properties that make that work, because every one of
+ * them is easy to undo by accident:
+ *
+ *   1. The strip's markup exists in three places (early block, JS renderer,
+ *      critical CSS). They must not drift.
+ *   2. The early block must never render optimistically -- an activated user
+ *      seeing a new-user prompt, even for one frame, is the bug this replaced.
+ *   3. The late renderer must honour the `deferred` decision, or it puts the
+ *      1.1s insertion straight back.
+ *   4. A failed status call must NOT tear a cached strip back out, or every
+ *      flaky request becomes a layout shift.
+ */
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
+
+const html = read('index.html');
+const js = read('static/js/first-pick-onboarding.js');
+const css = read('static/css/tmr-home-v2.css');
+
+let failures = 0;
+const ok = (name, cond, detail) => {
+  if (!cond) { failures++; console.log(`  FAIL  ${name}${detail ? ` — ${detail}` : ''}`); }
+};
+
+// ---------------------------------------------------------------- 1. markup
+// The user-visible strings and the CTA target have to be identical in the
+// early block and the JS renderer, or a signed-in visitor gets one strip on
+// the homepage and a different one everywhere else.
+const SHARED = [
+  '<span class="tmr-fp-reminder__icon" aria-hidden="true">&#9673;</span>',
+  '<span class="tmr-fp-reminder__text"><strong>Your record is waiting.</strong> Submit your first pick.</span>',
+  '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/?first_pick=1">Go to Sportsbook</a>',
+  '<button type="button" class="tmr-fp-reminder__close" aria-label="Dismiss reminder">&times;</button>',
+];
+SHARED.forEach((frag) => {
+  ok(`early block ships the shared markup: ${frag.slice(0, 46)}…`, html.includes(frag));
+  ok(`JS renderer ships the shared markup: ${frag.slice(0, 46)}…`, js.includes(frag));
+});
+ok('early block gives the strip its id', html.includes("bar.id = 'tmr-fp-reminder'"));
+ok('early block gives the strip role=status', html.includes("bar.setAttribute('role','status')"));
+
+// ------------------------------------------------------------------ 2. CSS
+// The box has to be correct in the FIRST frame, so the rules must be in the
+// critical stylesheet (inlined into <head> by build_home_critical.py), not
+// only in the runtime-injected copy.
+[
+  '.tmr-fp-reminder{',
+  '.tmr-fp-reminder__icon{',
+  '.tmr-fp-reminder__text{',
+  '.tmr-fp-reminder__close{',
+  '@media(max-width:640px){.tmr-fp-reminder{margin:10px 12px}',
+].forEach((sel) => ok(`critical CSS carries ${sel}`, css.includes(sel)));
+ok('critical CSS is inlined into the document head',
+  html.includes('.tmr-fp-reminder{'), 'run scripts/build_home_critical.py');
+
+// Both copies must use the metric-compatible token, or the strip re-wraps when
+// the real Inter arrives and reintroduces a shift of its own.
+const FONT = 'var(--font,Inter,sans-serif)';
+ok('critical CSS uses the metric-compatible font token', css.includes(`font:600 0.92rem/1.4 ${FONT}`));
+ok('JS copy uses the metric-compatible font token', js.includes(`font:600 0.92rem/1.4 ${FONT}`));
+ok('reminder button uses the metric-compatible font token in both copies',
+  css.includes(`font:800 0.85rem/1 ${FONT}`) && js.includes(`font:800 0.85rem/1 ${FONT}`));
+
+/* The generated <style> block must be a verbatim copy of the stylesheet.
+   This guards more than the strip. Twice in one day a fix was hand-edited
+   straight into that block in index.html -- the max-width:340px closing-CTA fix
+   in f013ded8 and the max-width:410px font-swap reservations in 51e97fda -- and
+   the next `python scripts/build_home_critical.py` silently deleted both,
+   because the block is REGENERATED from static/css/tmr-home-v2.css every time.
+   The Python build has a --check for exactly this, but CI runs Node, so the
+   same assertion lives here where it will actually run.
+   If this fails: your CSS belongs in static/css/tmr-home-v2.css, then rebuild. */
+const BEGIN = '<!-- BEGIN HOME CRITICAL CSS - generated by scripts/build_home_critical.py, do not edit by hand -->';
+const END = '<!-- END HOME CRITICAL CSS -->';
+const bi = html.indexOf(BEGIN);
+const ei = html.indexOf(END);
+ok('index.html carries the generated critical-CSS block', bi !== -1 && ei > bi);
+if (bi !== -1 && ei > bi) {
+  const inlined = html.slice(bi + BEGIN.length, ei).replace(/^\s*<style>\r?\n?/, '').replace(/\r?\n?<\/style>\s*$/, '');
+  const norm = (s) => s.replace(/\r\n/g, '\n').trim();
+  ok('the inlined block is byte-identical to static/css/tmr-home-v2.css',
+    norm(inlined) === norm(css),
+    'hand-edited CSS in index.html is deleted by the next build — put it in the stylesheet and re-run scripts/build_home_critical.py');
+}
+
+// ------------------------------------------------- 3. never render on a guess
+ok('early block only pre-paints from a cached SERVER answer',
+  html.includes("if (ls(LS_DUE) === '1') { render(); early.source = 'cache'; }"));
+ok('early block bails out entirely when there is no token',
+  /if \(!t\) return;\s*\/\/ logged out/.test(html));
+ok('early block checks first paint before rendering a late answer',
+  html.includes('early.paintedAtDecision = painted();') &&
+  html.includes('if (early.paintedAtDecision) { early.deferred = true; return status; }'));
+ok('first-paint check is the synchronous performance entry, not a timer',
+  html.includes("performance.getEntriesByName('first-contentful-paint').length > 0"));
+ok('early block removes the strip when the server says the user has picks',
+  /if \(status\.hasPicks\) \{[\s\S]{0,200}remove\(\);/.test(html));
+
+// A speculative "signed in, so probably eligible" render is exactly the flash
+// of wrong state the requirements forbid. There must be no render() that is
+// not behind either the cache check or the resolved-status check.
+const renderCalls = (html.match(/(?<!function )\brender\(\)/g) || []).length;
+ok('early block has exactly two render() call sites (cache path + live path)',
+  renderCalls === 2, `found ${renderCalls}`);
+
+// ------------------------------------------------- 4. late renderer behaviour
+ok('renderReminder adopts a strip the early block already painted',
+  js.includes('if (bar.__tmrFpWired) return;') && js.includes('bar.__tmrFpWired = true;'));
+ok('renderReminder honours the deferred decision',
+  js.includes('if (early && early.deferred)') && js.includes('reminder deferred to next view'));
+ok('boot reuses the early block\'s request instead of firing a second one',
+  js.includes('var statusPromise = (early && early.promise) ? early.promise : fetchActivationStatus();'));
+ok('boot does not re-run the pre-render the early block already did',
+  js.includes('if (!(early && early.ran) && preRendered'));
+
+// The regression that made every flaky request a layout shift.
+ok('a failed status call no longer removes a cached strip',
+  !/if \(!status\) \{[\s\S]{0,400}removeReminder\(\)/.test(js));
+
+// ------------------------------------------------------------ 5. supporting
+ok('API preconnect is present so the answer can beat first paint',
+  html.includes('<link rel="preconnect" href="https://trustmyrecord-api.onrender.com" crossorigin>'));
+ok('early block runs before the ticker and hero markup',
+  html.indexOf('TMRFirstPickEarly') < html.indexOf('<div class="ticker">'),
+  'the early block must be above the content it would otherwise push down');
+ok('early block runs after the nav reservation it anchors to',
+  html.indexOf('id="tmrNavReserve"') < html.indexOf('TMRFirstPickEarly'));
+
+const total = 35;
+if (failures) {
+  console.log(`\nhomepage reminder-strip lock FAILED (${failures} problem${failures === 1 ? '' : 's'})\n`);
+  process.exit(1);
+}
+console.log(`homepage reminder-strip lock passed (${total} assertions, incl. generated-CSS sync)`);
