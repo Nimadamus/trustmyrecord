@@ -1,0 +1,73 @@
+name: Static Asset Versions
+
+# Keeps every /static/ JS+CSS reference pinned to its content hash, on EVERY
+# push, as a job that does nothing else.
+#
+# scripts/version_static_refs.py has existed for a while and already does this
+# repo-wide -- but the only thing that ran it was the 30-minute prerender bake,
+# which is fail-closed by design: a failure in the homepage-highlights check or
+# the forum-thread build stops that job before its commit step, so a stale ?v=
+# tag survives until the next successful run. Between 2026-08-03 and 08-04 the
+# blp-pro.css tag drifted three separate times, twice leaving the two BetLegend
+# Pro pages pointing at different versions of the same file.
+#
+# The edge caches /static/ for 4h keyed on the FULL URL including the query, so
+# a stale tag means returning visitors keep getting hours-old CSS/JS while a
+# cold cache looks perfectly fine -- the failure is invisible to whoever
+# deployed it.
+#
+# This job is deliberately minimal: checkout, run the script, commit if it
+# changed anything. Nothing it depends on can fail for an unrelated reason.
+# Commits made with GITHUB_TOKEN do not trigger `on: push`, so it cannot loop.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: static-asset-versions
+  cancel-in-progress: false
+
+jobs:
+  repin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Report drift before fixing it
+        # Non-fatal on purpose: the point is to REPAIR, not to block a deploy
+        # that has already reached main. The output names every file that was
+        # pointing at the wrong bytes, so drift is visible in the run log even
+        # though the next step silently corrects it.
+        run: python scripts/version_static_refs.py --check || true
+
+      - name: Re-pin every reference to its content hash
+        run: python scripts/version_static_refs.py
+
+      - name: Commit only if a tag actually changed
+        run: |
+          git add -u
+          if git diff --cached --quiet; then
+            echo "All static refs already match their content hashes."
+          else
+            git config user.name "tmr-asset-version-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(assets): re-pin static refs to content hashes [skip ci]"
+            git push origin HEAD:main
+            echo "Corrected stale ?v= tags:"
+            git show --stat --oneline HEAD
+          fi
+
+      - name: Prove the tree is now self-consistent
+        # Fail closed here: if a rewrite could not reach a fixpoint, the tags on
+        # main are still wrong and that must not pass silently.
+        run: python scripts/version_static_refs.py --check
