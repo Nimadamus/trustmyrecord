@@ -55,7 +55,11 @@ function renderedNames(group) {
     .concat((group && group.pitchers) || [])
     .map((row) => row.name)
     .filter(Boolean)
-    .map((name) => String(name).replace(/\s+\([A-Z0-9]+\)$/, ''));
+    // Rendered rows annotate the name in parentheses. That used to be only a position
+    // code, but the engine also prints roles like '(SS, position player)' for the
+    // emergency position-player arm, which this narrow [A-Z0-9]+ strip left attached
+    // and then could not find on the roster. Strip any trailing parenthetical.
+    .map((name) => String(name).replace(/\s+\([^)]*\)$/, ''));
 }
 
 (async () => {
@@ -104,11 +108,26 @@ function renderedNames(group) {
     // Active-roster fallback rosters legitimately have no batting-order slots.
     if (roster.lineupSource) {
       assert.strictEqual(lineup.length, 9, abbr + ' lineup-backed roster includes nine batting-order slots');
-      assert.deepStrictEqual(lineup.map((player) => Number(player.battingOrder)), [100, 200, 300, 400, 500, 600, 700, 800, 900], abbr + ' batting order is sorted 1 through 9');
+      // roster.players comes out of the vm realm the engine is evaluated in, so
+      // lineup.map() returns a vm-realm Array and deepStrictEqual compares prototypes,
+      // so this never matched a host-realm literal no matter how right the lineup was
+      // (every team failed; the run just died on the first one). Array.from rebuilds
+      // the array in this realm - the values were always correct.
+      assert.deepStrictEqual(Array.from(lineup, (player) => Number(player.battingOrder)), [100, 200, 300, 400, 500, 600, 700, 800, 900], abbr + ' batting order is sorted 1 through 9');
     } else {
       assert.strictEqual(lineup.length, 0, abbr + ' active-roster fallback exposes no fake batting order');
     }
   });
+
+  function assertBattingRows(rows, label) {
+    const starters = Array.from(rows).filter((row) => !row.sub);
+    assert.strictEqual(starters.length, 9, label + ' renders exactly nine verified starting batting-order rows');
+    assert.deepStrictEqual(Array.from(starters, (row) => Number(row.slot)), [0, 1, 2, 3, 4, 5, 6, 7, 8], label + ' starting batting order fills slots 1 through 9 exactly once');
+    Array.from(rows).filter((row) => row.sub).forEach((row) => {
+      const slot = Number(row.slot);
+      assert(Number.isInteger(slot) && slot >= 0 && slot <= 8, label + ' substitute row sits in a real batting-order slot: ' + row.name);
+    });
+  }
 
   teams.forEach((team, index) => {
     const opponent = teams[(index + 1) % teams.length];
@@ -120,20 +139,32 @@ function renderedNames(group) {
     assert(HONEST_SOURCE_LABELS.includes(result.boxScore.players.away.rosterSource), team.name + ' rendered away player rows from an honest verified lineup source: ' + result.boxScore.players.away.rosterSource);
     assert(HONEST_SOURCE_LABELS.includes(result.boxScore.players.home.rosterSource), opponent.name + ' rendered home player rows from an honest verified lineup source: ' + result.boxScore.players.home.rosterSource);
 
-    assert.strictEqual(result.boxScore.players.away.batters.length, 9, team.name + ' renders exactly nine verified batting-order rows');
-    assert.strictEqual(result.boxScore.players.home.batters.length, 9, opponent.name + ' renders exactly nine verified batting-order rows');
+    // The engine models in-game substitutions, so a pinch hitter legitimately adds a
+    // SECOND row in its starter's slot - exactly how a real box score prints it. Pinning
+    // the raw row count to 9 outlawed that (16 of 60 sides had a sub on a live slate).
+    // Check what actually matters instead: nine non-sub starters filling slots 1-9 once
+    // each, and every extra row flagged as a sub sitting in a real slot.
+    assertBattingRows(result.boxScore.players.away.batters, team.name);
+    assertBattingRows(result.boxScore.players.home.batters, opponent.name);
     result.boxScore.players.away.batters.concat(result.boxScore.players.home.batters).forEach((row) => {
       assert(!/projected|placeholder|slot|modeled/i.test(row.name), 'batting rows do not use invented player names: ' + row.name);
     });
 
     const awayRosterNames = new Set(rosters[team.abbreviation].players.map((player) => normalizeName(player.name)));
     const homeRosterNames = new Set(rosters[opponent.abbreviation].players.map((player) => normalizeName(player.name)));
-    renderedNames(result.boxScore.players.away).forEach((name) => {
-      assert(awayRosterNames.has(normalizeName(name)), team.name + ' rendered player belongs to selected team roster: ' + name);
-    });
-    renderedNames(result.boxScore.players.home).forEach((name) => {
-      assert(homeRosterNames.has(normalizeName(name)), opponent.name + ' rendered player belongs to selected team roster: ' + name);
-    });
+    // EMERGENCY_DEPTH_ARM_20260727 is a deliberate generic tier between the three
+    // named bullpen arms and the position-player fallback, and it renders as
+    // "<ABBR> emergency reliever" - the one row in a box score that is not supposed
+    // to be a rostered player. Allow exactly that form for exactly that team; every
+    // other rendered name must still be a real player on the selected active roster.
+    const assertRenderedRoster = (side, sideTeam, rosterNames) => {
+      renderedNames(result.boxScore.players[side]).forEach((name) => {
+        if (name === sideTeam.abbreviation + ' emergency reliever') return;
+        assert(rosterNames.has(normalizeName(name)), sideTeam.name + ' rendered player belongs to selected team roster: ' + name);
+      });
+    };
+    assertRenderedRoster('away', team, awayRosterNames);
+    assertRenderedRoster('home', opponent, homeRosterNames);
   });
 
   console.log('mlb-simulator-live-roster-validation-test: ok');
