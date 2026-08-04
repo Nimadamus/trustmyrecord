@@ -30,8 +30,13 @@ const arg = (f, d) => { const i = argv.indexOf(f); return i === -1 ? d : argv[i 
 
 const SITE = arg('--local', arg('--site', 'https://trustmyrecord.com'));
 const API = 'https://trustmyrecord-api.onrender.com/api';
-const USER = arg('--user', '');
-const PASS = arg('--pass', '');
+/* Credentials come from the ENVIRONMENT. Passing them as --user/--pass put
+   them in the process command line, where they show up in process listings,
+   shell history and CI logs; the flags are kept only so an existing invocation
+   does not break, and env wins when both are present.
+     TMR_SMOKE_LOGIN=<user> TMR_SMOKE_PASSWORD=<pass> node <this file> ... */
+const USER = process.env.TMR_SMOKE_LOGIN || arg('--user', '');
+const PASS = process.env.TMR_SMOKE_PASSWORD || arg('--pass', '');
 const CASE = arg('--case', 'live');
 const WIDTHS = arg('--widths', '320,360,390,430').split(',').map(Number);
 const SETTLE = Number(arg('--settle', 6000));

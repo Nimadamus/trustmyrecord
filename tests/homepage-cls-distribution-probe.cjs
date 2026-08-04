@@ -34,8 +34,13 @@ const SLOW_AUTH = Number(arg('--slow-auth', '0'));
 const SLOW_API = Number(arg('--slow-api', '0'));
 const SETTLE = Number(arg('--settle', '7000'));
 const JSON_OUT = arg('--json', '');
-const USER = arg('--user', '');
-const PASS = arg('--pass', '');
+/* Credentials come from the ENVIRONMENT. Passing them as --user/--pass put
+   them in the process command line, where they show up in process listings,
+   shell history and CI logs; the flags are kept only so an existing invocation
+   does not break, and env wins when both are present.
+     TMR_SMOKE_LOGIN=<user> TMR_SMOKE_PASSWORD=<pass> node <this file> ... */
+const USER = process.env.TMR_SMOKE_LOGIN || arg('--user', '');
+const PASS = process.env.TMR_SMOKE_PASSWORD || arg('--pass', '');
 
 /* Records every layout-shift entry with its sources, and separately tracks the
    geometry of the things most likely to be responsible, sampled at first

@@ -29,8 +29,13 @@ const OUT = arg('--out', path.join(__dirname, '..', '..', 'tmr_homeload_live'));
 const SITE = arg('--site', 'https://trustmyrecord.com');
 const API = 'https://trustmyrecord-api.onrender.com/api';
 const LOGIN = argv.includes('--login');
-const USER = arg('--user', '');
-const PASS = arg('--pass', '');
+/* Credentials come from the ENVIRONMENT. Passing them as --user/--pass put
+   them in the process command line, where they show up in process listings,
+   shell history and CI logs; the flags are kept only so an existing invocation
+   does not break, and env wins when both are present.
+     TMR_SMOKE_LOGIN=<user> TMR_SMOKE_PASSWORD=<pass> node <this file> ... */
+const USER = process.env.TMR_SMOKE_LOGIN || arg('--user', '');
+const PASS = process.env.TMR_SMOKE_PASSWORD || arg('--pass', '');
 
 const ANCHORS = {
   nav: '.ds-nav',
@@ -313,6 +318,10 @@ async function run(browser, scenario, opts) {
   const browser = await chromium.launch();
 
   let storageState;
+  if (LOGIN && (!USER || !PASS)) {
+    console.error('  --login was requested but TMR_SMOKE_LOGIN / TMR_SMOKE_PASSWORD are not set.');
+    process.exit(1);
+  }
   if (LOGIN && USER && PASS) {
     const r = await fetch(`${API}/auth/login`, {
       method: 'POST',
@@ -330,7 +339,12 @@ async function run(browser, scenario, opts) {
       ] }] };
       console.log(`  signed in as ${USER} (id ${d.user && d.user.id})\n`);
     } else {
-      console.log(`  LOGIN FAILED (${r.status}) — logged-in scenarios will run signed out\n`);
+      /* Fail CLOSED. Silently downgrading to signed-out meant a run invoked
+         with --login could report a full pass while never exercising a single
+         signed-in scenario. */
+      console.error(`  LOGIN FAILED (${r.status}) — --login was requested, so this is a failure, `
+        + `not a reason to run signed out.\n`);
+      process.exit(1);
     }
   }
 
