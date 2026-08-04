@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=f25a83e12dec">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=11d348bd51c3">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=64ea668a0dec"></script>
 </head>
@@ -781,7 +781,15 @@
                 + '</section>';
         }).join('');
 
-        host.innerHTML = html || '<p class="hx-note">No filter matches that search.</p>';
+        // The library's own notes -- how conditions combine, and that a split
+        // describes what already happened rather than forecasting anything. The
+        // server sends them; dropping them left the one caveat that matters
+        // most unsaid on the panel where the conditions are chosen.
+        var notes = (library.notes || []).map(function (n) {
+            return '<li>' + esc(n) + '</li>';
+        }).join('');
+        host.innerHTML = (html || '<p class="hx-note">No filter matches that search.</p>')
+            + (notes ? '<ul class="hx-flib-notes">' + notes + '</ul>' : '');
         renderChosen();
     }
 
@@ -1255,6 +1263,9 @@
                     + '</ul></div>'
                 : '')
             + '<p class="hx-note">' + context.map(esc).join(' · ') + '.</p>'
+            + '<p class="hx-note hx-note--caveat">These are completed games that already met these '
+            + 'conditions. The figures describe that sample and nothing else &mdash; they are not a '
+            + 'forecast, and a condition appearing alongside a result is not evidence it caused one.</p>'
             + '<div class="hx-receipt">' + receiptRow(res) + '</div>'
             + '</section>';
 
