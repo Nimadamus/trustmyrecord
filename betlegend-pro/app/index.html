@@ -430,7 +430,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260805r';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260805s';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -532,9 +532,10 @@
         var box = $('allowanceNotice');
         if (!box) return;
         if (ACCESS.entitled) {
-            box.innerHTML = '<div class="note is-ok"><span><strong>Unlimited reports.</strong> '
-                + 'Your plan covers every tool here — no TMR Coin is deducted and the daily '
-                + 'free allowance does not apply to you.</span></div>';
+            // Entitled users already see their plan in the header chip. A
+            // full-width banner repeating it every visit takes space from the
+            // research tool and tells them nothing they can act on.
+            box.innerHTML = '';
             return;
         }
         if (COST.freeAvailable) {
@@ -601,16 +602,18 @@
                     : ACCESS.is_lifetime ? 'Lifetime'
                     : ACCESS.plan === 'annual' ? 'Annual' : ACCESS.plan === 'monthly' ? 'Monthly' : 'Pro';
                 planChip.className = 'chip is-plan';
-                planChip.innerHTML = '<strong>' + esc(planName) + '</strong>&nbsp;· unlimited';
+                planChip.innerHTML = '<strong>' + esc(planName) + '</strong>';
                 planChip.hidden = false;
                 balanceChip.hidden = true;
                 $('manageBtn').hidden = !ACCESS.manageable;
                 $('upgradeBtn').hidden = true;
             } else {
                 planChip.className = 'chip';
+                // A count, not a mood: "1 of 1 free reports left today" is
+                // the number a user needs to decide whether to run one.
                 planChip.textContent = COST.freeAvailable
-                    ? 'Free report available today'
-                    : "Today's free report used";
+                    ? '1 of 1 free reports left today'
+                    : '0 of 1 free reports left today';
                 planChip.hidden = false;
                 balanceChip.hidden = false;
                 $('balanceValue').textContent = fmtInt(s.balance);
