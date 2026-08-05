@@ -238,6 +238,11 @@
                             </button>
                         </div>
                         <p class="review" id="review" hidden></p>
+                        <!-- Sample-size feedback. Counts only, from the same
+                             query the report runs, and free: a user must be
+                             able to see that their combination leaves three
+                             games BEFORE it costs them their daily report. -->
+                        <div class="trail" id="trail" hidden aria-live="polite"></div>
                     </form>
 
                     <div id="resultsView" hidden>
@@ -425,7 +430,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260804d';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260805r';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -715,6 +720,9 @@
     function activeFilterCount() {
         return Object.keys(filters).filter(function (k) { return isSet(filters[k]); }).length;
     }
+    function clearFilterId(id) {
+        ['game', 't1', 't2'].forEach(function (b) { delete filters[fkey(b, id)]; });
+    }
 
     function categorised() {
         if (!library) return [];
@@ -749,29 +757,47 @@
         });
     }
 
-    function renderControl(spec) {
-        var v = filters[spec.id];
+    // A condition is stored under a composite key: which side it is about,
+    // then its id. 'game' conditions describe the game itself and read the
+    // same from both sides; 't1'/'t2' describe one team going into it.
+    //
+    // Without this split the panel cannot express the query this tool exists
+    // for -- "the Giants were on one day of rest AND the Dodgers were coming
+    // off a loss" is two conditions on two different teams in the same game.
+    function fkey(bucket, id) { return bucket + '|' + id; }
+    function bktOf(key) { return key.split('|')[0]; }
+    function idOf(key) { return key.split('|').slice(1).join('|'); }
+    function bucketsFor(spec) { return spec.applies_to === 'game' ? ['game'] : ['t1', 't2']; }
+    function teamName(bucket) {
+        if (bucket === 't1') return mAway.value || 'Away team';
+        if (bucket === 't2') return mHome.value || 'Home team';
+        return '';
+    }
+
+    function renderControl(spec, bucket) {
+        var key = fkey(bucket, spec.id);
+        var v = filters[key];
         if (spec.kind === 'enum') {
-            return '<select class="fsel" data-fid="' + esc(spec.id) + '"><option value="">Any</option>'
+            return '<select class="fsel" data-fid="' + esc(key) + '"><option value="">Any</option>'
                 + spec.options.map(function (o) {
                     return '<option value="' + esc(o.value) + '"' + (v === o.value ? ' selected' : '')
                         + '>' + esc(o.label) + '</option>';
                 }).join('') + '</select>';
         }
         if (spec.kind === 'bool') {
-            var id = 'f-' + spec.id;
+            var id = 'f-' + bucket + '-' + spec.id;
             return '<label class="fcheck' + (v === true ? ' is-on' : '') + '" for="' + id + '">'
-                + '<input type="checkbox" id="' + id + '" data-fid="' + esc(spec.id) + '"'
+                + '<input type="checkbox" id="' + id + '" data-fid="' + esc(key) + '"'
                 + (v === true ? ' checked' : '') + '><span>Yes</span></label>';
         }
         if (spec.kind === 'int') {
-            return '<input class="fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="value" placeholder="Any"'
+            return '<input class="fnum" type="number" data-fid="' + esc(key) + '" data-bound="value" placeholder="Any"'
                 + (spec.min != null ? ' min="' + spec.min + '"' : '')
                 + (spec.max != null ? ' max="' + spec.max + '"' : '')
                 + (v != null && v !== '' ? ' value="' + esc(v) + '"' : '') + '>';
         }
         if (spec.kind === 'text') {
-            return '<input class="ftext" type="text" data-fid="' + esc(spec.id) + '" data-bound="value" placeholder="Any"'
+            return '<input class="ftext" type="text" data-fid="' + esc(key) + '" data-bound="value" placeholder="Any"'
                 + (v ? ' value="' + esc(v) + '"' : '') + '>';
         }
         var r = (v && typeof v === 'object') ? v : {};
@@ -779,10 +805,10 @@
             + (spec.max != null ? ' max="' + spec.max + '"' : '')
             + (spec.step != null ? ' step="' + spec.step + '"' : '');
         return '<span class="frange">'
-            + '<input class="fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="min" placeholder="Min"'
+            + '<input class="fnum" type="number" data-fid="' + esc(key) + '" data-bound="min" placeholder="Min"'
             + attrs + (r.min != null ? ' value="' + esc(r.min) + '"' : '') + '>'
             + '<span class="fto">to</span>'
-            + '<input class="fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="max" placeholder="Max"'
+            + '<input class="fnum" type="number" data-fid="' + esc(key) + '" data-bound="max" placeholder="Max"'
             + attrs + (r.max != null ? ' value="' + esc(r.max) + '"' : '') + '>'
             + (spec.unit ? '<span class="funit">' + esc(spec.unit) + '</span>' : '')
             + '</span>';
@@ -799,15 +825,30 @@
         }
         box.innerHTML = cats.map(function (c) {
             var open = filterSearch ? true : !closedCats[c.id];
-            var n = c.liveAll.filter(function (s) { return isSet(filters[s.id]); }).length;
+            var n = c.liveAll.reduce(function (acc, spec) {
+                return acc + bucketsFor(spec).filter(function (b) {
+                    return isSet(filters[fkey(b, spec.id)]);
+                }).length;
+            }, 0);
             var body = open
                 ? '<div class="cat-body">'
                     + c.live.map(function (spec) {
+                        var buckets = bucketsFor(spec);
+                        // A team condition is asked once per team, each control
+                        // under its own team's name. One shared control with a
+                        // hidden "which side?" is exactly the ambiguity this
+                        // panel exists to remove.
+                        var controls = buckets.length === 1
+                            ? renderControl(spec, buckets[0])
+                            : '<div class="f-teams">' + buckets.map(function (b) {
+                                return '<div class="f-team"><span class="f-team-name">'
+                                    + esc(teamName(b)) + '</span>' + renderControl(spec, b) + '</div>';
+                            }).join('') + '</div>';
                         return '<div class="f">'
                             + '<label class="f-lbl"'
                             + (spec.help ? ' title="' + esc(spec.help + (spec.era_note ? ' ' + spec.era_note : '')) + '"' : '')
                             + '>' + esc(spec.label) + '</label>'
-                            + renderControl(spec)
+                            + controls
                             + (spec.era_note ? '<p class="f-era">' + esc(spec.era_note) + '</p>' : '')
                             + '</div>';
                     }).join('')
@@ -859,10 +900,17 @@
 
     function renderChosen() {
         var picked = [];
-        Object.keys(filters).forEach(function (id) {
-            if (!isSet(filters[id])) return;
-            var spec = specById(id);
-            if (spec) picked.push({ id: id, label: chipFor(spec, filters[id]) });
+        Object.keys(filters).forEach(function (key) {
+            if (!isSet(filters[key])) return;
+            var spec = specById(idOf(key));
+            if (!spec) return;
+            // The team prefix is not decoration: without it "1 day of rest"
+            // reads as a property of the matchup rather than of one side.
+            picked.push({
+                id: key,
+                team: teamName(bktOf(key)),
+                label: chipFor(spec, filters[key])
+            });
         });
         $('clearAll').hidden = picked.length === 0;
         $('filterCount').textContent = picked.length
@@ -870,11 +918,12 @@
         var box = $('chosen');
         if (!picked.length) {
             box.hidden = true; box.innerHTML = '';
-            syncSetup(); scheduleReview();
+            syncSetup(); scheduleReview(); scheduleTrail();
             return;
         }
         var html = '<span class="chosen-lbl">Applied</span>' + picked.map(function (p) {
             return '<button type="button" class="tagx" data-remove="' + esc(p.id) + '">'
+                + (p.team ? '<b class="tagx-team">' + esc(p.team) + '</b>' : '')
                 + esc(p.label) + '<i aria-hidden="true">×</i><span class="sr"> — remove</span></button>';
         }).join('');
         // Only rewrite when the chips changed: clicking one blurs whatever
@@ -882,7 +931,7 @@
         // unconditional rewrite there replaces the very button being clicked.
         if (box.innerHTML !== html) box.innerHTML = html;
         box.hidden = false;
-        syncSetup(); scheduleReview();
+        syncSetup(); scheduleReview(); scheduleTrail();
     }
 
     // A catalogue call against the same registry the report uses: no engine
@@ -891,11 +940,79 @@
     var reviewTimer = null, reviewSig = null;
     function scheduleReview() { clearTimeout(reviewTimer); reviewTimer = setTimeout(runReview, 300); }
 
+    // ---- Live sample size -------------------------------------------------
+    // POST /betlegend-pro/matchup-preview returns counts and the narrowing
+    // trail, nothing else: no game list, no records, no averages. It is never
+    // billed and never spends the daily free report, so it can run while the
+    // user is still choosing.
+    //
+    // Debounced and signature-guarded: the engine scan is seconds, and a burst
+    // of clicks must not queue a burst of scans or let a stale answer land on
+    // top of a fresh one.
+    var trailTimer = null, trailSig = null, lastPreview = null;
+
+    function scheduleTrail() { clearTimeout(trailTimer); trailTimer = setTimeout(runTrail, 450); }
+
+    function trailReady() {
+        return mSport.value && mAway.value && mHome.value && mAway.value !== mHome.value;
+    }
+
+    async function runTrail() {
+        var host = $('trail');
+        if (!host) return;
+        if (!trailReady()) { host.hidden = true; host.innerHTML = ''; trailSig = null; return; }
+        var payload = currentPayload();
+        var sig = JSON.stringify(payload);
+        if (sig === trailSig) return;
+        trailSig = sig;
+        host.hidden = false;
+        host.innerHTML = '<p class="trail-loading">Counting matching games…</p>';
+        try {
+            var pv = await window.api.previewBetLegendProHistoricalMatchup(payload);
+            if (sig !== trailSig) return;      // a newer selection is in flight
+            lastPreview = pv;
+            paintTrail(pv);
+        } catch (err) {
+            if (sig !== trailSig) return;
+            lastPreview = null;
+            // An assist, never a gate: the report itself is still runnable.
+            host.innerHTML = '<p class="trail-loading">Sample preview unavailable right now.</p>';
+        }
+    }
+
+    function paintTrail(pv) {
+        var host = $('trail');
+        if (!host || !pv) return;
+        var steps = pv.games_after_each_filter || [];
+        var rows = '<li><span>All ' + esc(pv.team_1) + ' vs ' + esc(pv.team_2) + ' meetings</span>'
+            + '<b>' + fmtInt(pv.total_meetings) + '</b></li>'
+            + steps.map(function (st) {
+                return '<li><span>' + esc(st.filter) + '</span><b>' + fmtInt(st.games_after)
+                    + (st.removed > 0 ? '<i>&minus;' + fmtInt(st.removed) + '</i>' : '') + '</b></li>';
+            }).join('');
+        var span = (pv.first_game && pv.last_game)
+            ? '<p class="trail-span">' + esc(pv.first_game) + ' through ' + esc(pv.last_game) + '</p>' : '';
+        var warn = pv.small_sample_note
+            ? '<p class="trail-warn">' + esc(pv.small_sample_note) + '</p>' : '';
+        var notes = (pv.filters_not_applied || []).concat(pv.unavailable_filters || []);
+        host.innerHTML = '<div class="trail-head"><span class="trail-lbl">Matching games</span>'
+            + '<b class="trail-n">' + fmtInt(pv.qualifying_games)
+            + '<i> of ' + fmtInt(pv.total_meetings) + ' meetings</i></b></div>'
+            + '<ol class="trail-list">' + rows + '</ol>' + span + warn
+            + (notes.length
+                ? '<p class="trail-note">' + notes.map(function (n) {
+                    return '<b>' + esc(n.filter) + ':</b> ' + esc(n.reason);
+                }).join(' ') + '</p>' : '');
+    }
+
     async function runReview() {
         var hostEl = $('review');
         if (!hostEl) return;
         var chosen = {};
-        Object.keys(filters).forEach(function (k) { if (isSet(filters[k])) chosen[k] = filters[k]; });
+        // The review endpoint takes filter ids, not the panel's bucketed keys.
+        // A condition set on both teams is the same id twice, which the review
+        // (conflicts and availability, both team-independent) reads identically.
+        Object.keys(filters).forEach(function (k) { if (isSet(filters[k])) chosen[idOf(k)] = filters[k]; });
         var sig = mSport.value + '|' + JSON.stringify(chosen);
         if (sig === reviewSig) return;
         reviewSig = sig;
@@ -1007,6 +1124,26 @@
         renderCategories();
     });
 
+    // The zero-result card's one-click ways out. Delegated on the report
+    // host because the card is re-rendered with every report.
+    document.addEventListener('click', function (ev) {
+        var btn = ev.target.closest && ev.target.closest('[data-zero-action]');
+        if (!btn) return;
+        var action = btn.getAttribute('data-zero-action');
+        if (action === 'clear_filters') {
+            filters = {};
+        } else if (action === 'remove_filter') {
+            var id = btn.getAttribute('data-zero-filter');
+            if (!id) return;
+            clearFilterId(id);
+        } else {
+            return;
+        }
+        renderCategories();
+        showSetup();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
     $('chosen').addEventListener('click', function (ev) {
         var btn = ev.target.closest && ev.target.closest('[data-remove]');
         if (!btn) return;
@@ -1034,13 +1171,20 @@
     });
 
     function filterPayload() {
-        var body = {}, extra = {};
-        Object.keys(filters).forEach(function (k) {
-            if (!isSet(filters[k])) return;
-            if (LEGACY_IDS[k]) { body[k] = filters[k]; return; }
-            extra[k] = filters[k];
+        var body = {}, game = {}, t1 = {}, t2 = {};
+        Object.keys(filters).forEach(function (key) {
+            if (!isSet(filters[key])) return;
+            var id = idOf(key), bucket = bktOf(key);
+            // The six legacy ids are top-level request fields; the endpoint
+            // reads them there and skips them in the library pass.
+            if (LEGACY_IDS[id]) { body[id] = filters[key]; return; }
+            if (bucket === 't1') t1[id] = filters[key];
+            else if (bucket === 't2') t2[id] = filters[key];
+            else game[id] = filters[key];
         });
-        if (Object.keys(extra).length) body.filters = extra;
+        if (Object.keys(game).length) body.filters = game;
+        if (Object.keys(t1).length) body.team_1_filters = t1;
+        if (Object.keys(t2).length) body.team_2_filters = t2;
         return body;
     }
 
@@ -1139,7 +1283,16 @@
         mHome.value = a;
         syncSetup();
     });
-    [mAway, mHome].forEach(function (s) { s.addEventListener('change', syncSetup); });
+    [mAway, mHome].forEach(function (s) {
+        s.addEventListener('change', function () {
+            // Team conditions are labelled with the team they measure, so a
+            // team change has to relabel them. Without this the controls keep
+            // saying "Away team" after a team is chosen -- a per-team control
+            // whose team is not named is the ambiguity this panel removes.
+            if (library) renderCategories();
+            syncSetup();
+        });
+    });
 
     function setProgress(step) {
         var order = ['matchup', 'filters', 'results'];
@@ -1196,6 +1349,7 @@
             setProgress('matchup'); note.textContent = 'Pick a sport and two teams to begin';
         }
         return ready && !SUBMIT_BLOCKED;
+        scheduleTrail();
     }
 
     // ------------------------------------------------------------- results
@@ -1344,6 +1498,63 @@
             + body + '</section>';
     }
 
+    /**
+     * The neutral, two-team view of the qualifying sample.
+     *
+     * Every figure here is the server's, computed from exactly the games the
+     * tables below list, and every label names the team it describes. "Record:
+     * 11-7" with no team attached is the ambiguity this block exists to
+     * remove.
+     */
+    function matchupSummary(d) {
+        var m = d.matchup_summary;
+        if (!m || !m.qualifying_games) return '';
+        var kpi = function (label, value, hint) {
+            return '<div class="kpi"><span>' + esc(label) + '</span><strong>' + value + '</strong>'
+                + (hint ? '<em>' + esc(hint) + '</em>' : '') + '</div>';
+        };
+        var pct = function (v) { return v == null ? '' : v + '%'; };
+        var rec = function (t) {
+            return esc(t.wins + '-' + t.losses + (m.ties ? '-' + m.ties : ''));
+        };
+        var sc = m.scoring, mk = m.market, st = m.streaks, cg = m.close_games;
+
+        var lines = [m.team_1.record_label, m.team_2.record_label];
+        if (m.home_side_label) lines.push(m.home_side_label);
+        if (sc) { lines.push(sc.avg_score_label); lines.push(sc.combined_label); }
+        if (cg) lines.push(cg.label);
+        if (mk) { lines.push(mk.ats.label); lines.push(mk.over_under.label); }
+        if (st) {
+            if (st.current_label) lines.push(st.current_label);
+            lines.push(st.longest_label);
+        }
+
+        return '<section class="rcard">'
+            + '<div class="rcard-head"><h3>These ' + fmtInt(m.qualifying_games) + ' meetings</h3></div>'
+            + '<div class="kpis">'
+            + kpi(m.team_1.team, rec(m.team_1), pct(m.team_1.win_pct))
+            + kpi(m.team_2.team, rec(m.team_2), pct(m.team_2.win_pct))
+            + kpi('Home side wins', fmtInt(m.home_side_wins), 'whichever team was at home')
+            + kpi('Away side wins', fmtInt(m.away_side_wins), 'whichever team was on the road')
+            + (sc ? kpi(m.team_1.team + ' avg', num(sc.avg_team_1), 'median ' + num(sc.median_team_1)) : '')
+            + (sc ? kpi(m.team_2.team + ' avg', num(sc.avg_team_2), 'median ' + num(sc.median_team_2)) : '')
+            + (sc ? kpi('Combined ' + esc(m.scoring_noun), num(sc.avg_combined), 'median ' + num(sc.median_combined)) : '')
+            + (sc ? kpi('Avg margin', num(sc.avg_margin), 'either side') : '')
+            + (cg ? kpi(esc(cg.label.split(':')[0]), fmtInt(cg.count), cg.pct + '% of the sample') : '')
+            + (mk ? kpi(m.team_1.team + ' as favorite', esc(mk.favorite.record), mk.favorite.eligible_games + ' eligible') : '')
+            + (mk ? kpi(m.team_1.team + ' as underdog', esc(mk.underdog.record), mk.underdog.eligible_games + ' eligible') : '')
+            + (mk ? kpi(m.team_1.team + ' ATS', esc(mk.ats.record), mk.ats.eligible_games + ' eligible') : '')
+            + (mk ? kpi('Over / under', esc(mk.over_under.record), mk.over_under.eligible_games + ' eligible') : '')
+            + '</div>'
+            + '<ul class="sum-lines">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'
+            + ((m.unavailable_readings || []).length
+                ? '<div class="block-note"><strong>Not shown, and why</strong><ul>'
+                    + m.unavailable_readings.map(function (u) {
+                        return '<li>' + esc(u.reading) + ': ' + esc(u.reason) + '</li>';
+                    }).join('') + '</ul></div>' : '')
+            + '</section>';
+    }
+
     function renderReport(res) {
         var d = res.result || res;
         var noun = SCORE_NOUN[d.sport] || 'points';
@@ -1404,9 +1615,52 @@
                 + (thin.length ? '<p class="note-s">' + thin.map(function (r) { return esc(r.note); }).join(' ') + '</p>' : '')
                 + '</div>' : '';
 
+        // What was searched, in words, plus the sample's own span. This is
+        // the verification surface for the whole report: it is generated from
+        // the values the query actually ran on, so a user can check that the
+        // tool understood their choices before reading a single number.
+        var qs = d.query_summary || null;
+        var span = d.qualifying_span || null;
+        var verify = qs
+            ? '<div class="verify">'
+                + '<p class="verify-text">' + esc(qs.text) + '</p>'
+                + (span
+                    ? '<p class="verify-span">' + esc(span.label) + '</p>'
+                        + '<p class="note-s">Earliest matching game ' + esc(span.first_game)
+                        + ' · latest ' + esc(span.last_game) + ' · ' + fmtInt(span.years_represented)
+                        + ' year' + (span.years_represented === 1 ? '' : 's') + ' represented.</p>'
+                    : '')
+                + ((qs.conditions || []).length
+                    ? '<ul class="verify-list">' + qs.conditions.map(function (c) {
+                        return '<li>' + (c.applies_to_team
+                            ? '<b>' + esc(c.applies_to_team) + '</b> ' : '') + esc(c.description)
+                            + (c.unavailable_reason
+                                ? ' <i>— not applied: ' + esc(c.unavailable_reason) + '</i>' : '')
+                            + '</li>';
+                    }).join('') + '</ul>' : '')
+                + '</div>'
+            : '';
+
+        // A zero is an answer, not an error. It names the condition that
+        // emptied the sample, because "remove a filter" is useless advice
+        // without saying which one.
+        var zero = d.zero_result
+            ? '<div class="block-note is-warn zero"><strong>' + esc(d.zero_result.message) + '</strong>'
+                + (d.zero_result.narrowest_filter
+                    ? '<p>' + esc(d.zero_result.narrowest_filter.filter) + ' was the narrowest part of this query — '
+                        + fmtInt(d.zero_result.narrowest_filter.games_before) + ' qualified before it, '
+                        + fmtInt(d.zero_result.narrowest_filter.games_after) + ' after.</p>' : '')
+                + '<div class="zero-acts">' + (d.zero_result.actions || []).map(function (a) {
+                    return '<button type="button" class="zero-act" data-zero-action="' + esc(a.action) + '"'
+                        + (a.filter_id ? ' data-zero-filter="' + esc(a.filter_id) + '"' : '') + '>'
+                        + '<b>' + esc(a.label) + '</b><span>' + esc(a.detail) + '</span></button>';
+                }).join('') + '</div></div>'
+            : '';
+
         var head = '<section class="rcard is-head">'
             + '<div class="rcard-head"><h2>' + esc(d.team_1) + ' at ' + esc(d.team_2) + '</h2>'
             + '<span class="range">' + esc(d.sport) + '</span></div>'
+            + verify + zero
             + '<div class="tags">'
             + (applied.length
                 ? applied.map(function (a) { return '<span class="tag">' + esc(a) + '</span>'; }).join('')
@@ -1464,7 +1718,7 @@
                 + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
                 + '</div>' + thinNote(h2h) + '</section>' : '';
 
-        return head + '<div class="two">' + teamSummary(d.team_1_report, noun) + teamSummary(d.team_2_report, noun) + '</div>'
+        return head + matchupSummary(d) + '<div class="two">' + teamSummary(d.team_1_report, noun) + teamSummary(d.team_2_report, noun) + '</div>'
             + h2hBlock
             + teamGames(d.team_1_report) + teamGames(d.team_2_report)
             + '<p class="method">Every record, average and percentage above is the plain arithmetic of the games '

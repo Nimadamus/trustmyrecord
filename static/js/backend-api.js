@@ -1270,6 +1270,14 @@ class TrustMyRecordAPI {
         return this.request('/betlegend-pro/matchup-historical', { method: 'POST', body: payload });
     }
 
+    // How many games still qualify, condition by condition. Counts only --
+    // no game list, no records, no averages -- so it is never billed and
+    // never spends the daily free report. This is what lets a user find out
+    // their combination leaves three games BEFORE paying for it.
+    async previewBetLegendProHistoricalMatchup(payload) {
+        return this.request('/betlegend-pro/matchup-preview', { method: 'POST', body: payload });
+    }
+
     // The filter library for a sport. A catalogue, not an inquiry: it runs no
     // engine scan, returns no research, and is never billed -- so the filter
     // panel can load without spending the user's daily free inquiry.
