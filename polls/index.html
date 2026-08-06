@@ -2920,6 +2920,24 @@
         var statusLabel = isResolved ? 'Final' : (isExp ? 'Locked' : 'Live');
         var statusClass = isResolved ? 'closed' : (isExp ? 'expired' : 'active');
 
+        // A pending question is only WORTH telling the user about when grading
+        // has genuinely stalled: a completed/uncheckable game the grader has
+        // already retried past its window. Everything else (not started, in
+        // progress, not yet checked) is obvious from the schedule and is never
+        // surfaced — that noise is what made a live quiz read as broken.
+        var ATTENTION_REASONS = {
+            SOURCE_UNAVAILABLE: 1, STAT_UNREADABLE: 1, GAME_NOT_FOUND: 1,
+            NO_GRADE_SPEC: 1, AWAITING_FINAL: 1, NO_SCORE_YET: 1
+        };
+        var ATTENTION_AFTER_ATTEMPTS = 3;
+        function needsAttention(pr) {
+            if (!pr || pr.state !== 'pending') return false;
+            if (pr.needs_attention === true) return true;
+            return !!ATTENTION_REASONS[pr.reason] &&
+                   (parseInt(pr.attempts, 10) || 0) >= ATTENTION_AFTER_ATTEMPTS;
+        }
+        var stalledQs = questions.filter(function(q){ return !q.graded && needsAttention(q.pending_reason); });
+
         var qsHtml = questions.map(function(q, qi) {
             var worth = parseInt(q.base_points) || 0;
             var ua = q.user_answer || null;
@@ -2933,13 +2951,15 @@
             var qBadge = qGraded ? '<span class="tmr-q-tag correct" style="margin-left:6px;">Resolved</span>'
                        : qVoided ? '<span class="tmr-q-tag" style="margin-left:6px;background:rgba(148,163,184,.18);color:#CBD5E1;">Voided</span>'
                        : '<span class="tmr-q-tag" style="margin-left:6px;background:rgba(148,163,184,.14);color:#93A4BA;">Pending</span>';
-            // The ACTUAL reason this question has no result yet, straight from
-            // the grader (services/pollAutoGrade.js writes it per question).
-            // A bare "Pending" with no explanation is exactly what hid the
-            // Aug 2 2026 quiz sitting stuck for a full day.
+            // Only two cases earn a line under a question: a VOID (the result
+            // exists and it is "no result", which the player must be told), or
+            // a genuinely stalled grade. Ordinary pre-game / pre-grade states
+            // render nothing at all — no grader-status language before results.
             var pr = q.pending_reason || null;
-            var reasonLine = (!qGraded && pr && pr.message)
-                ? '<div class="tmr-q-reason"><i class="fas fa-' + (pr.state === 'void' ? 'ban' : 'clock') + '"></i> ' +
+            var showReason = !qGraded && pr && pr.message &&
+                             (pr.state === 'void' || needsAttention(pr));
+            var reasonLine = showReason
+                ? '<div class="tmr-q-reason"><i class="fas fa-' + (pr.state === 'void' ? 'ban' : 'triangle-exclamation') + '"></i> ' +
                   escHtml(pr.message) + '</div>'
                 : '';
             var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span>' + qBadge + '</div>' +
@@ -3147,34 +3167,31 @@
                : ' &middot; ' + myEntry.correct_answers + ' correct of ' + myEntry.questions_resolved + ' resolved' +
                  (myEntry.questions_pending ? ' &middot; ' + myEntry.questions_pending + ' still pending' : ''))
             : '';
-        // Why is it not graded yet? Group the grader's real per-question
-        // reasons ("3 games still in progress", "1 waiting on the official box
-        // score") instead of printing a generic line that says nothing and
-        // hides a stuck pipeline.
-        function pendingReasonSummary() {
-            var list = grading.pending_reasons || [];
-            if (!list.length) return '';
+        // Grouped one-liner naming ONLY the genuinely stalled questions.
+        // Normal pending states never reach here.
+        function stalledSummary() {
+            if (!stalledQs.length) return '';
             var byMsg = {};
-            list.forEach(function (r) {
-                var m = r && r.message ? r.message : 'Waiting on the official result';
+            stalledQs.forEach(function (q) {
+                var m = (q.pending_reason && q.pending_reason.message) || 'Waiting on the official result';
                 byMsg[m] = (byMsg[m] || 0) + 1;
             });
-            var parts = Object.keys(byMsg).map(function (m) {
+            return Object.keys(byMsg).map(function (m) {
                 return byMsg[m] + ' × ' + escHtml(m);
-            });
-            return ' <span class="tmr-grade-why">Why: ' + parts.join('; ') + '.</span>';
+            }).join('; ');
         }
-        var whyLine = pendingReasonSummary();
+        var stalledText = stalledSummary();
+        // Before any result exists the page shows the quiz and nothing else:
+        // "awaiting results" is obvious from the schedule and made the page read
+        // as broken/unfinished. A compact status line appears ONLY for a real
+        // problem (a completed game whose grade has stalled past its window) or
+        // once grading is final and something voided.
         var gradingBanner =
-            grading.state === 'awaiting'
-              ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-hourglass-half"></i> <strong>Awaiting results.</strong> ' +
-                'None of the ' + grading.total_questions + ' questions have an official result yet, so no scores or rankings are available.' + whyLine + myLine + '</div>'
-              : grading.state === 'partial'
-              ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-spinner"></i> <strong>Partially resolved.</strong> ' +
-                grading.questions_resolved + ' of ' + grading.total_questions + ' questions are official; ' + grading.questions_pending + ' still pending. ' +
-                'Standings are provisional until every question resolves.' + whyLine + myLine + '</div>'
-              : (grading.questions_pending
-                  ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-flag-checkered"></i> <strong>Final.</strong> ' +
+            stalledText
+              ? '<div class="tmr-empty-msg" style="padding:10px 13px;margin:10px 0 0;text-align:left;"><i class="fas fa-triangle-exclamation"></i> ' +
+                '<strong>Grading delayed.</strong> ' + stalledText + '.' + (grading.state === 'awaiting' ? '' : myLine) + '</div>'
+              : (grading.state === 'final' && grading.questions_pending
+                  ? '<div class="tmr-empty-msg" style="padding:10px 13px;margin:10px 0 0;text-align:left;"><i class="fas fa-flag-checkered"></i> <strong>Final.</strong> ' +
                     grading.questions_resolved + ' of ' + grading.total_questions + ' questions graded; ' + grading.questions_pending +
                     ' voided (no usable result) and scored for nobody.' + myLine + '</div>'
                   : '');
@@ -3190,7 +3207,7 @@
                       (grading.state === 'awaiting' ? 'Entries' : 'Leaders') + '</h3>' +
                       '<span>' + (grading.state === 'final' ? 'Final standings'
                                 : grading.state === 'partial' ? (grading.questions_resolved + ' of ' + grading.total_questions + ' resolved')
-                                : 'Awaiting results &middot; ' + g.total_players + ' in') + '</span></div>' +
+                                : g.total_players + ' in') + '</span></div>' +
                   leadersHtml +
               '</aside>'
             : '';
