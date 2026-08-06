@@ -736,9 +736,30 @@ box-shadow:none !important;color:#7f8ea6 !important}
      fade into a slot that is already the right size. Nothing is shown before the
      real balance lands — the reserved box is empty, not a placeholder figure.
      Scoped here rather than in tmr-ds.css because that stylesheet is referenced
-     by content hash on 97 other pages; this is the homepage's fix. */
+     by content hash on 97 other pages; this is the homepage's fix.
+
+     The reservation applies ONLY while the pill is still hidden. It used to
+     apply to the visible pill too, and a 34px right-aligned box around a
+     2-digit balance parked ~16px of dead space between the coin icon and the
+     number — on top of the 6px flex gap the pill read as a gap with a digit
+     stuck to its right edge. Once the real balance lands the span sizes to its
+     text and the pill is the tight icon+number chip .v2nav-coins describes
+     (inline-flex, gap 6px, padding 0 12px, width auto, no space-between). */
   body.tmr-ds .v2nav-coins[hidden] { display: inline-flex; visibility: hidden; }
-  body.tmr-ds .v2nav-coins #navCoinBalance { min-width: 34px; text-align: right; }
+  body.tmr-ds .v2nav-coins[hidden] #navCoinBalance { min-width: 34px; }
+  /* Compact chip. Same specificity as tmr-ds.css's rule but later in the
+     document, so this wins without touching that content-hashed stylesheet.
+     Height, radius, colours and the href are its business and stay untouched —
+     only the internal spacing is set here, and the box stays content-sized at
+     every width (no fixed width, no space-between). */
+  body.tmr-ds .v2nav-coins {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 0 12px;
+    width: auto;
+  }
 </style>
 <script>document.documentElement.className += ' tmr-lw-b1 tmr-lw-b2 tmr-lw-b3';</script>
 </head>
