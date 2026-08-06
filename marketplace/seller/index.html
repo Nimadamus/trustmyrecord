@@ -240,6 +240,14 @@
             if (res.status === 404) { content.innerHTML = '<div class="mp-empty">Seller not found.</div>'; return; }
             if (!res.ok) throw new Error('HTTP ' + res.status);
             store = await res.json();
+            // 2026-08-06: a member who does not sell picks now answers 200 with
+            // seller:null instead of 404, because that 404 put a red console error
+            // on every ordinary profile page load. Branch on the payload, not the
+            // status -- store.seller.display_name would throw on null.
+            if (!store || !store.seller) {
+                content.innerHTML = '<div class="mp-empty">This member is not selling picks right now. <a href="/marketplace/" style="color:var(--cyan);">Browse the marketplace</a>.</div>';
+                return;
+            }
             document.title = (store.seller.display_name || store.seller.username) + ' | Pick Marketplace | TrustMyRecord';
             render();
         } catch (err) {
