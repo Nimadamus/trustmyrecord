@@ -172,14 +172,23 @@
                                         </select>
                                     </div>
                                     <div class="field">
-                                        <label class="lbl" for="mAway">Away team</label>
+                                        <label class="lbl" for="mAway">Team</label>
                                         <select class="sel" id="mAway" disabled><option value="">Loading&hellip;</option></select>
                                     </div>
+                                    <!-- v6.6 frames a query as Team + Venue + Opponent, so the venue
+                                         sits between the two teams: it is part of the question, not a
+                                         filter narrowing it. "A at B" and "B at A" are different
+                                         questions and must not return one answer. -->
                                     <div class="swapcol">
-                                        <button class="swap" id="mSwap" type="button" aria-label="Swap away and home teams" title="Swap teams">&#8646;</button>
+                                        <select class="sel venuesel" id="mVenue" aria-label="Venue: where the team played">
+                                            <option value="away" selected>at</option>
+                                            <option value="home">vs</option>
+                                            <option value="all">at or vs</option>
+                                        </select>
+                                        <button class="swap" id="mSwap" type="button" aria-label="Swap the team and the opponent" title="Swap teams">&#8646;</button>
                                     </div>
                                     <div class="field">
-                                        <label class="lbl" for="mHome">Home team</label>
+                                        <label class="lbl" for="mHome">Opponent</label>
                                         <select class="sel" id="mHome" disabled><option value="">Loading&hellip;</option></select>
                                     </div>
                                     <div class="field">
@@ -430,7 +439,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260805s';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260806v';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -679,7 +688,7 @@
 
     // ================================================== MATCHUP RESEARCH
 
-    var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome');
+    var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome'), mVenue = $('mVenue');
     var mTimeframe = $('mTimeframe'), mDateFrom = $('mDateFrom'), mDateTo = $('mDateTo');
     var mSubmit = $('mSubmit');
     submitButtons.push(mSubmit);
@@ -772,8 +781,8 @@
     function idOf(key) { return key.split('|').slice(1).join('|'); }
     function bucketsFor(spec) { return spec.applies_to === 'game' ? ['game'] : ['t1', 't2']; }
     function teamName(bucket) {
-        if (bucket === 't1') return mAway.value || 'Away team';
-        if (bucket === 't2') return mHome.value || 'Home team';
+        if (bucket === 't1') return mAway.value || 'Team';
+        if (bucket === 't2') return mHome.value || 'Opponent';
         return '';
     }
 
@@ -1280,6 +1289,8 @@
         loadMatchupTeams(mSport.value);
     });
 
+    mVenue.addEventListener('change', syncSetup);
+
     $('mSwap').addEventListener('click', function () {
         var a = mAway.value;
         mAway.value = mHome.value;
@@ -1312,7 +1323,7 @@
     function syncSetup() {
         var away = mAway.value, home = mHome.value;
         var err = '';
-        if (away && home && away === home) err = 'Away and home must be two different teams.';
+        if (away && home && away === home) err = 'The team and the opponent must be two different teams.';
         if (!err && mTimeframe.value === 'custom') {
             if (!mDateFrom.value && !mDateTo.value) err = 'Enter a from date, a to date, or both.';
             else if (mDateFrom.value && mDateTo.value && mDateFrom.value > mDateTo.value) {
@@ -1337,7 +1348,8 @@
         } else if (SUBMIT_BLOCKED) {
             summary.textContent = 'Today’s free report is used. A plan (or TMR Coin) is needed to run another one today.';
         } else {
-            summary.innerHTML = '<strong>' + esc(mSport.value) + '</strong> · ' + esc(away) + ' at '
+            var joiner = mVenue.value === 'all' ? ' and ' : (mVenue.value === 'away' ? ' at ' : ' vs ');
+            summary.innerHTML = '<strong>' + esc(mSport.value) + '</strong> · ' + esc(away) + esc(joiner)
                 + esc(home) + ' · ' + esc(timeframeLabel()) + ' · <strong>' + n + '</strong> '
                 + (n === 1 ? 'condition' : 'conditions') + (n ? ', combined with AND' : '');
         }
@@ -1661,7 +1673,9 @@
             : '';
 
         var head = '<section class="rcard is-head">'
-            + '<div class="rcard-head"><h2>' + esc(d.team_1) + ' at ' + esc(d.team_2) + '</h2>'
+            + '<div class="rcard-head"><h2>' + esc(d.team_1)
+            + esc(d.team_venue === 'all' ? ' and ' : (d.team_venue === 'home' ? ' vs ' : ' at '))
+            + esc(d.team_2) + '</h2>'
             + '<span class="range">' + esc(d.sport) + '</span></div>'
             + verify + zero
             + '<div class="tags">'
@@ -1758,6 +1772,9 @@
         var tf = mTimeframe.value;
         var body = {
             sport: mSport.value, team_1: mAway.value, team_2: mHome.value,
+            // Which of the two questions is being asked. The bridge forwards
+            // this; the engine resolves it onto its own `location` field.
+            team_venue: mVenue.value,
             // null is meaningful to this endpoint: every qualifying game, still
             // bounded by the engine's own cap, which the report states.
             sample_size: (tf === 'all' || tf === 'custom') ? null : Number(tf)
@@ -1788,7 +1805,9 @@
         var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
         if (!isFinite(balanceBefore)) balanceBefore = null;
 
-        var label = mAway.value + ' at ' + mHome.value;
+        var label = mVenue.value === 'all'
+            ? mAway.value + ' and ' + mHome.value
+            : mAway.value + (mVenue.value === 'away' ? ' at ' : ' vs ') + mHome.value;
         var sub = mSport.value + ' · ' + timeframeLabel() + ' · '
             + activeFilterCount() + ' condition' + (activeFilterCount() === 1 ? '' : 's');
 

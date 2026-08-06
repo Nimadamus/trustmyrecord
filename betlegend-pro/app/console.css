@@ -259,6 +259,10 @@ a { color: var(--accent); text-underline-offset: 2px; }
 }
 .sel:disabled { background-color: var(--sink); color: var(--ink-3); cursor: not-allowed; }
 .swapcol { display: flex; align-items: flex-end; justify-content: center; }
+/* The venue shares the middle column with the swap, so the row gains no
+   height and reads as the sentence it is: Team [at] Opponent. */
+.swapcol { gap: 8px; }
+.venuesel { width: auto; min-width: 84px; }
 .swap {
     width: 36px; height: 36px; flex: 0 0 36px; cursor: pointer;
     border: 1px solid var(--line-2); border-radius: 50%;
