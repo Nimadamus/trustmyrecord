@@ -53,9 +53,50 @@ jobs:
       - name: Re-pin every reference to its content hash
         run: python scripts/version_static_refs.py
 
+      - name: Re-publish the content-hashed design-system builds
+        # THE TWO VERSIONING SYSTEMS USED TO FIGHT EACH OTHER (2026-08-06).
+        # version_static_refs.py rewrites ?v= refs INSIDE unhashed sources, and
+        # static/js/tmr-ds-nav.js is one of them -- it names its notifications
+        # dependency chain (config.js, backend-api.js, ...) in JavaScript. It also
+        # skips hashed filenames by design. So every time this job re-pinned a ref
+        # inside tmr-ds-nav.js, the tmr-ds-nav.<hash>.js copy that every page
+        # actually loads silently froze at the refs it had when it was hashed.
+        # That is not cosmetic: it shipped a nav requesting backend-api.js under a
+        # stamp no other page used -- a second cache entry for the same bundle, and
+        # potentially an older build of it.
+        #
+        # Re-hashing here closes the loop: the source is re-pinned first, then its
+        # hashed copy is republished from those exact bytes and every page is
+        # pointed at it. build_ds_assets.py never rewrites an existing hashed file,
+        # so previously published URLs stay immutable for cached documents.
+        run: |
+          python scripts/build_ds_assets.py
+          python scripts/repoint_ds_assets.py
+          python scripts/version_static_refs.py
+
+      - name: Prove every hashed build matches its own name
+        # Fail closed: a hashed filename whose bytes are not what the name says is
+        # the precise failure content hashing exists to prevent.
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, sys
+          m = json.loads(pathlib.Path('static/ds-assets.json').read_text(encoding='utf-8'))
+          bad = []
+          for src, url in sorted(m.items()):
+              raw = pathlib.Path(src).read_bytes()
+              cur = hashlib.sha256(raw).hexdigest()[:12]
+              named = url.rsplit('.', 2)[-2]
+              target = pathlib.Path(url.lstrip('/'))
+              if cur != named or not target.exists() or target.read_bytes() != raw:
+                  bad.append(f"{src}: manifest={named} source={cur} exists={target.exists()}")
+          if bad:
+              sys.exit("hashed build mismatch:\n  " + "\n  ".join(bad))
+          print(f"all {len(m)} hashed builds match their names")
+          PY
+
       - name: Commit only if a tag actually changed
         run: |
-          git add -u
+          git add -A
           if git diff --cached --quiet; then
             echo "All static refs already match their content hashes."
           else

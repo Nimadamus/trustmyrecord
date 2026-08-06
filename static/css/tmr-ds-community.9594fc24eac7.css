@@ -1,0 +1,119 @@
+/* =============================================================================
+   TrustMyRecord — Community directory, design-system adoption layer.
+   The page is small and already close in structure; this is mostly a token
+   remap plus the shared head band, card and button treatments. Its `--c-teal`
+   was #37d6c1 (the homepage logo-mark teal) rather than the brand #0C948C, which
+   is one of the drifted accents the audit found; it resolves to the brand here.
+   The page's own h1/h2 !important rules are stripped at adoption, so nothing
+   below needs to escalate.
+   Created Jul 20, 2026.
+   ============================================================================= */
+
+body.tmr-ds{
+  --c-bg:var(--page);
+  --c-panel:var(--panel);
+  --c-panel-2:var(--panel-2);
+  --c-line:var(--line);
+  --c-line-strong:var(--line-2);
+  --c-text:var(--ink);
+  --c-muted:var(--muted);
+  --c-dim:var(--muted);
+  --c-teal:var(--brand);
+  --c-green:var(--green);
+}
+
+body.tmr-ds.tmr-community-page{background:var(--page);color:var(--ink);font-family:var(--font)}
+body.tmr-ds .cwrap{max-width:var(--wrap);padding:0 var(--gutter)}
+
+/* ---------- head band ---------- */
+body.tmr-ds .chead{
+  padding:30px 28px;
+  margin:20px 0 4px;
+  border-bottom:0;
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  background:
+    radial-gradient(46rem 20rem at 88% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 64%, var(--navy-3) 100%);
+}
+body.tmr-ds .chead .kick{font-size:11px;font-weight:900;letter-spacing:.1em;color:#8DEDE0}
+body.tmr-ds.tmr-community-page .chead h1{
+  font-family:var(--display);
+  font-size:34px;
+  font-weight:900;
+  line-height:1.04;
+  letter-spacing:.008em;
+  text-transform:uppercase;
+  color:#fff;
+  margin:8px 0 0;
+}
+body.tmr-ds .chead p{margin-top:10px;color:#B7CEE4;font-size:15px;line-height:1.5;max-width:62ch}
+
+/* ---------- section labels + cards ---------- */
+body.tmr-ds .csec{
+  font-family:var(--font);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.1em;
+  color:var(--muted);
+  margin:26px 0 12px;
+}
+body.tmr-ds .cgrid{gap:var(--gap)}
+body.tmr-ds .ccard{
+  gap:14px;
+  padding:20px;
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  background:var(--panel);
+  box-shadow:var(--sh);
+  transition:.15s;
+}
+body.tmr-ds .ccard:hover{border-color:var(--line-2);background:var(--panel);box-shadow:var(--sh-up)}
+body.tmr-ds .ccard .ic{
+  flex:0 0 40px;width:40px;height:40px;
+  border-radius:9px;
+  background:var(--brand-soft);
+  border:0;
+  color:var(--brand-dk);
+}
+body.tmr-ds.tmr-community-page .ccard h2{
+  font-family:var(--display);
+  font-size:22px;
+  font-weight:900;
+  line-height:1.08;
+  letter-spacing:.01em;
+  text-transform:uppercase;
+  color:var(--ink);
+  margin:0;
+}
+body.tmr-ds .ccard p{margin-top:5px;color:var(--ink-2);font-size:14px;line-height:1.5}
+body.tmr-ds .ccard .go{margin-top:9px;color:var(--brand-dk);font-weight:800;font-size:14px;letter-spacing:0}
+
+/* ---------- buttons ---------- */
+body.tmr-ds .cfoot-cta{gap:10px;margin:28px 0 48px}
+body.tmr-ds .cbtn{
+  height:46px;
+  padding:0 24px;
+  border-radius:var(--r-sm);
+  border:1.5px solid var(--line-2);
+  font-family:var(--font);
+  font-size:15.5px;
+  font-weight:800;
+  letter-spacing:-.012em;
+  transition:.15s;
+}
+body.tmr-ds .cbtn--teal{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+}
+body.tmr-ds .cbtn--teal:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92)}
+body.tmr-ds .cbtn--ghost{background:var(--panel);border-color:var(--line-2);color:var(--ink-2)}
+body.tmr-ds .cbtn--ghost:hover{border-color:var(--brand);color:var(--brand-dk)}
+
+@media(max-width:760px){
+  body.tmr-ds .chead{padding:20px 18px}
+  body.tmr-ds.tmr-community-page .chead h1{font-size:26px}
+  body.tmr-ds .ccard{padding:16px}
+}

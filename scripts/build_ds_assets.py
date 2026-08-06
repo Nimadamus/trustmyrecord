@@ -91,13 +91,13 @@ def main(only=()):
         # the hash it was built with, and pruning it turns the whole nav/data
         # layer into a 404 for that visitor. Immutable files are cheap; a
         # broken cached page is not.
-        # Write ONLY when the target does not exist yet. A hashed build is
-        # immutable by definition -- its name IS its content -- so rewriting one
-        # can never be a correction, but it CAN be damage: some of these copies
-        # were built in CI (LF) from a source that is CRLF in a Windows checkout,
-        # so an unconditional write rewrote ten live stylesheets end to end with
-        # no content change at all, purely to flip line endings. (2026-08-06)
-        if not hashed.exists():
+        # The target's name IS sha256(raw), so by construction it must contain
+        # exactly `raw`. Write when it is missing or when it does not -- that is
+        # always a correction, never churn. Skipping an identical file matters:
+        # an unconditional write flipped line endings on copies that CI had
+        # committed as LF from a source that is CRLF in a Windows checkout, which
+        # rewrote live stylesheets end to end for no content change. (2026-08-06)
+        if not hashed.exists() or hashed.read_bytes() != raw:
             hashed.write_bytes(raw)
         mapping[key] = "/" + str(hashed.relative_to(ROOT)).replace("\\", "/")
         print(f"{key}  ->  {mapping[key]}")
