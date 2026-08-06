@@ -1,7 +1,39 @@
 /**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
+ *
+ * SINGLE-DEFINITION GUARD (2026-08-06)
+ * ------------------------------------
+ * This file used to declare `class TrustMyRecordAPI` and `const api` at true top
+ * level. Both are lexical bindings on the global scope, so ANY second execution
+ * in the same JS realm threw
+ *     Uncaught SyntaxError: Identifier 'TrustMyRecordAPI' has already been declared
+ * and that error aborts the WHOLE file -- every method below silently stops
+ * existing for that load.
+ *
+ * A realm survives document.open()/document.write(), which is how the public
+ * profile pages mount the real /profile/ app at a /u/<username>/ URL
+ * (tmr-profile-hydrate.js). A pre-swap callback that injected this file into the
+ * post-swap document therefore ran it twice in one realm and produced exactly
+ * that error, visible to signed-in visitors on /u/<username>/.
+ *
+ * The class is now defined inside an IIFE and published on the global object, and
+ * a re-execution returns the EXISTING singleton rather than redeclaring. This is a
+ * real single-definition guard, not a try/catch wrapped around the symptom: `api`
+ * keeps its identity, its tokens and its in-flight state across a document swap.
  */
+(function () {
+    var g = typeof globalThis !== 'undefined' ? globalThis
+          : typeof window !== 'undefined' ? window
+          : typeof self !== 'undefined' ? self : this;
+
+    // Already defined in this realm -> reuse it. Never redeclare.
+    if (g && g.TrustMyRecordAPI) {
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = { TrustMyRecordAPI: g.TrustMyRecordAPI, api: g.api };
+        }
+        return;
+    }
 
 class TrustMyRecordAPI {
     constructor() {
@@ -1479,13 +1511,19 @@ if (typeof window !== 'undefined') {
     };
 }
 
-// Create global API instance
-const api = new TrustMyRecordAPI();
-if (typeof window !== 'undefined') {
-    window.api = api;
-}
 
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { TrustMyRecordAPI, api };
-}
+    // Create the singleton for this realm.
+    const api = new TrustMyRecordAPI();
+
+    // Publish on the global object rather than as a top-level lexical binding, so
+    // a second execution hits the guard above instead of a SyntaxError.
+    if (g) {
+        g.TrustMyRecordAPI = TrustMyRecordAPI;
+        if (!g.api) g.api = api;
+    }
+
+    // Export for module systems
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = { TrustMyRecordAPI: TrustMyRecordAPI, api: (g && g.api) || api };
+    }
+})();

@@ -51,14 +51,16 @@ def _ds_assets():
             m = json.load(fh)
         return (m["static/css/tmr-ds.css"],
                 m["static/css/tmr-ds-user.css"],
-                m["static/js/tmr-ds-nav.js"])
+                m["static/js/tmr-ds-nav.js"],
+                m["static/js/tmr-profile-hydrate.js"])
     except Exception:
         return ("/static/css/tmr-ds.css",
                 "/static/css/tmr-ds-user.css",
-                "/static/js/tmr-ds-nav.js")
+                "/static/js/tmr-ds-nav.js",
+                "/static/js/tmr-profile-hydrate.js")
 
 
-_DS_CSS, _DS_USER_CSS, _DS_NAV = _ds_assets()
+_DS_CSS, _DS_USER_CSS, _DS_NAV, _HYDRATE = _ds_assets()
 
 # Head block: the design system replaces tmr-sitewide.css. These pages also named
 # 'Inter' and 'Barlow' in CSS while loading NEITHER, so they rendered in the
@@ -74,8 +76,20 @@ DS_HEAD = (
     '<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">'
 )
 # Shared nav + footer, so these pages are no longer chrome-less dead ends.
-DS_FOOT = (f'<script src="{_DS_NAV}"></script>'
-           '<script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>')
+#
+# BOOT_20260806: these ship INERT (type="text/tmr-fallback"), and
+# tmr-profile-hydrate.js activates them only if the /profile/ app swap fails.
+# On the success path this whole document is replaced within ~100ms and the app
+# shell loads all of these itself; running them here as well meant executing the
+# same files twice in one JS realm (document.write replaces the DOM, not the
+# realm), which is what produced duplicate script downloads, duplicate listeners,
+# duplicate /api/auth/me calls, and -- via tmr-ds-nav.js's notifications
+# dependency chain re-injecting backend-api.js -- the visitor-facing
+#   Uncaught SyntaxError: Identifier 'TrustMyRecordAPI' has already been declared
+# A browser does not fetch or execute a <script> with an unknown type, so this
+# costs nothing on the fast path. A no-JS client never needed them either.
+DS_FOOT = (f'<script type="text/tmr-fallback" data-src="{_DS_NAV}"></script>'
+           '<script type="text/tmr-fallback" data-src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>')
 
 # ---------------------------------------------------------------------------
 # SHARE_SYSTEM_PHASE1_20260721
@@ -87,8 +101,107 @@ DS_FOOT = (f'<script src="{_DS_NAV}"></script>'
 OG_CARD_BASE = "https://trustmyrecord-api.onrender.com/api/share/og"
 SHARE_HEAD = (
     '<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">\n'
-    '<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>'
+    # Inert until the fallback path needs it -- see the DS_FOOT note above.
+    '<script type="text/tmr-fallback" data-src="/static/js/tmr-share.js?v=20260721share1"></script>'
 )
+
+
+# ---------------------------------------------------------------------------
+# BOOT_20260806 -- first-paint contract for /u/<username>/
+#
+# These pages are a baked SEO snapshot (refreshed on a 30-minute cron), and
+# tmr-profile-hydrate.js replaces them with the live /profile/ app. Until now the
+# baked snapshot was the first paint, so a visitor saw an out-of-date profile for
+# as long as the swap took. Two changes fix that at the HTML level, with no JS
+# required for either:
+#
+#   1. <body class="tmr-u-booting"> + inline <head> CSS hides the baked snapshot
+#      and shows a branded skeleton from the very first paint. A <noscript> block
+#      immediately reverses both, so crawlers and no-JS clients still get the full
+#      baked content -- the indexable payload is unchanged.
+#   2. An inline <head> script starts the /profile/ shell fetch (and the public
+#      metrics fetch) before the body is even parsed, ~120ms earlier than the
+#      deferred hydrate script could, so the swap generally lands before the
+#      skeleton has been on screen long enough to read.
+#
+# The skeleton mirrors the real profile's geometry (avatar + name + 4 stat tiles
+# + table) so the swap is not a layout jump.
+BOOT_CSS = """
+body.tmr-u-booting>main,body.tmr-u-booting>.tmr-global-nav,body.tmr-u-booting>footer{visibility:hidden!important;}
+#tmrUBoot{display:none;}
+body.tmr-u-booting #tmrUBoot{display:block;position:fixed;inset:0;z-index:2147483000;background:#0b0b12;overflow:hidden;}
+.tmr-uboot-wrap{max-width:820px;margin:0 auto;padding:26px 18px;}
+.tmr-uboot-brand{display:flex;align-items:center;gap:9px;font-family:'Barlow Condensed','Barlow',Inter,system-ui,sans-serif;font-weight:800;letter-spacing:.06em;font-size:19px;color:#e8e8f0;text-transform:uppercase;}
+.tmr-uboot-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#00aeff,#0067d6);color:#fff;font-size:12px;letter-spacing:0;}
+.tmr-uboot-brand em{font-style:normal;color:#00aeff;}
+.tmr-uboot-head{display:flex;gap:16px;align-items:center;margin:30px 0 6px;}
+.tmr-uboot-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0;}
+.tmr-uboot-card{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;}
+.tmr-uboot-rows{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;margin-top:22px;}
+.tmr-uboot-b{background:#1c1c28;border-radius:6px;position:relative;overflow:hidden;}
+.tmr-uboot-b+.tmr-uboot-b{margin-top:10px;}
+.tmr-uboot-b::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:tmrUBootShim 1.25s infinite;}
+@keyframes tmrUBootShim{100%{transform:translateX(100%);}}
+@media (prefers-reduced-motion:reduce){.tmr-uboot-b::after{animation:none;}}
+@media(max-width:640px){.tmr-uboot-stats{grid-template-columns:repeat(2,1fr);}}
+"""
+
+BOOT_NOSCRIPT = ('<noscript><style>body.tmr-u-booting>main,body.tmr-u-booting>.tmr-global-nav,'
+                 'body.tmr-u-booting>footer{visibility:visible!important;}'
+                 'body.tmr-u-booting #tmrUBoot{display:none!important;}</style></noscript>')
+
+BOOT_SKELETON = (
+    '<div id="tmrUBoot" role="status" aria-live="polite" aria-label="Loading verified profile">'
+    '<div class="tmr-uboot-wrap">'
+    '<div class="tmr-uboot-brand"><span class="tmr-uboot-mark">TMR</span>'
+    '<span>Trust<em>My</em>Record</span></div>'
+    '<div class="tmr-uboot-head">'
+    '<div class="tmr-uboot-b" style="width:64px;height:64px;border-radius:50%"></div>'
+    '<div style="flex:1">'
+    '<div class="tmr-uboot-b" style="width:min(240px,62%);height:24px"></div>'
+    '<div class="tmr-uboot-b" style="width:min(160px,44%);height:12px"></div>'
+    '</div></div>'
+    '<div class="tmr-uboot-stats">'
+    + ('<div class="tmr-uboot-card">'
+       '<div class="tmr-uboot-b" style="width:66%;height:20px"></div>'
+       '<div class="tmr-uboot-b" style="width:86%;height:10px"></div></div>') * 4 +
+    '</div>'
+    '<div class="tmr-uboot-rows">'
+    + '<div class="tmr-uboot-b" style="height:14px"></div>' * 6 +
+    '</div></div></div>'
+)
+
+
+def boot_script(un):
+    """Inline <head> preflight. Starts the app-shell fetch before the body parses.
+
+    The metrics preload carries the visitor's own bearer token when there is one,
+    because GET /api/users/:username/metrics is viewer-dependent (routes/users.js
+    gates non-public picks on isOwner) -- preloading it anonymously would show an
+    owner the public-only version of their own record, which is exactly the
+    "incorrect profile information" this whole fix exists to prevent. Any non-200
+    resolves to null and the app just makes its own request. Everything here is an
+    optimisation: a throw leaves the normal deferred path untouched."""
+    u = json.dumps(un)
+    return (
+        '<script>window.__TMR_PROFILE_USERNAME=' + u + ';(function(){try{'
+        "var s=fetch('/profile/',{headers:{Accept:'text/html'},credentials:'omit'});"
+        # Park a no-op rejection handler NOW. tmr-profile-hydrate.js is deferred, so
+        # on a failing network this promise can reject before anything attaches a
+        # handler, and the browser reports that as an uncaught "Failed to fetch" in
+        # the console. The handler below is inert -- hydrate still chains off `s`
+        # and still runs its own fallback on rejection.
+        's.catch(function(){});window.__TMR_SHELL_PROMISE=s;'
+        'var t=null;try{t=localStorage.getItem("trustmyrecord_token")||localStorage.getItem("tmr_token")'
+        '||localStorage.getItem("accessToken")||null;}catch(e){}'
+        'var h={Accept:"application/json","Cache-Control":"no-cache"};if(t)h.Authorization="Bearer "+t;'
+        'var b=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)'
+        '||"https://trustmyrecord-api.onrender.com/api";'
+        'window.__TMR_PROFILE_PRELOAD={username:' + u + ',authed:!!t,'
+        'metrics:fetch(b+"/users/"+encodeURIComponent(' + u + ')+"/metrics",{headers:h,cache:"no-store"})'
+        '.then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})};'
+        '}catch(e){}})();</script>'
+    )
 
 
 def share_description(disp, w, l, p, graded, units, roi):
@@ -593,9 +706,12 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
 .u-award-stats{{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}}
 .u-award-stat{{white-space:nowrap;}}.u-award-stat + .u-award-stat::before{{content:" · ";color:#68758b;}}
 @media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
-</style>
+{BOOT_CSS}</style>
+{BOOT_NOSCRIPT}
+{boot_script(un)}
 </head>
-<body class="tmr-ds">
+<body class="tmr-ds tmr-u-booting">
+{BOOT_SKELETON}
 <main class="u-wrap">
   <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>{e(disp)}</span></nav>
   <div class="u-head">
@@ -648,9 +764,8 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     <a href="/how-it-works/">How It Works</a>
   </div>
 </main>
-<script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
-<script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
-<script src="/static/js/tmr-public-awards.js?v=20260731awards1" defer></script>
+<script src="{_HYDRATE}" defer></script>
+<script type="text/tmr-fallback" data-src="/static/js/tmr-public-awards.js?v=20260731awards1"></script>
 {DS_FOOT}
 </body>
 </html>
@@ -735,9 +850,12 @@ def compact_html(un, awards=None):
 .u-award-stats{{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}}
 .u-award-stat{{white-space:nowrap;}}.u-award-stat + .u-award-stat::before{{content:" · ";color:#68758b;}}
 @media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
-</style>
+{BOOT_CSS}</style>
+{BOOT_NOSCRIPT}
+{boot_script(un)}
 </head>
-<body class="tmr-ds">
+<body class="tmr-ds tmr-u-booting">
+{BOOT_SKELETON}
 <main class="u-wrap">
   <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>{e(un)}</span></nav>
   <div class="u-head">
@@ -769,9 +887,8 @@ def compact_html(un, awards=None):
      <a href="/contests/">Contests</a> ·
      <a href="/forum/">Forum</a></div>
 </main>
-<script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
-<script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
-<script src="/static/js/tmr-public-awards.js?v=20260731awards1" defer></script>
+<script src="{_HYDRATE}" defer></script>
+<script type="text/tmr-fallback" data-src="/static/js/tmr-public-awards.js?v=20260731awards1"></script>
 {DS_FOOT}
 </body>
 </html>

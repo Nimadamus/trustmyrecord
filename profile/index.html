@@ -7454,8 +7454,27 @@
             return;
         }
         let data;
+        /* BOOT_20260806 -- /u/<username>/ preload handoff.
+           A public profile page issues this exact request inline in its <head>,
+           before its own body is parsed, and parks the promise on window (globals
+           survive the document.open()/write() swap that mounts this app at the /u/
+           URL). Consuming it here is what removes the multi-second "Loading
+           verified metrics..." beat after the swap: on its own this app does not
+           reach this line until its boot chain gets here, measured live at ~1.65s
+           after navigation start. The preload carries the visitor's own bearer
+           token, because GET /api/users/:username/metrics is viewer-dependent
+           (routes/users.js gates non-public picks on isOwner), so an owner still
+           gets the owner view. Anything that did not produce a usable payload
+           falls through to the normal request below. */
         try {
-            data = await withTimeout(
+            const pre = window.__TMR_PROFILE_PRELOAD;
+            if (pre && pre.username === username && pre.metrics) {
+                window.__TMR_PROFILE_PRELOAD = null;   // single use -- never reused on a later render
+                data = await withTimeout(pre.metrics, 10000, 'Metrics preload');
+            }
+        } catch (err) { data = null; }
+        try {
+            if (!data) data = await withTimeout(
                 api.request('/users/' + encodeURIComponent(username) + '/metrics'),
                 10000,
                 'Metrics request'

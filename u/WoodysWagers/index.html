@@ -26,9 +26,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/tmr-ds.87c81a8f762d.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-user.25c2e88397fa.css">
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=37caa790256d">
-<link rel="stylesheet" href="/static/css/tmr-share.css?v=1765835da36e">
-<script defer src="/static/js/tmr-share.js?v=eb28abdc3050"></script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+<script type="text/tmr-fallback" data-src="/static/js/tmr-share.js?v=20260721share1"></script>
 <style>
 .u-wrap{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}
 .u-wrap a{color:#00aeff;text-decoration:none;}
@@ -65,9 +65,30 @@
 .u-award-stats{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}
 .u-award-stat{white-space:nowrap;}.u-award-stat + .u-award-stat::before{content:" · ";color:#68758b;}
 @media(max-width:640px){.u-stats{grid-template-columns:repeat(2,1fr);}.u-table{font-size:12.5px;}}
+
+body.tmr-u-booting>main,body.tmr-u-booting>.tmr-global-nav,body.tmr-u-booting>footer{visibility:hidden!important;}
+#tmrUBoot{display:none;}
+body.tmr-u-booting #tmrUBoot{display:block;position:fixed;inset:0;z-index:2147483000;background:#0b0b12;overflow:hidden;}
+.tmr-uboot-wrap{max-width:820px;margin:0 auto;padding:26px 18px;}
+.tmr-uboot-brand{display:flex;align-items:center;gap:9px;font-family:'Barlow Condensed','Barlow',Inter,system-ui,sans-serif;font-weight:800;letter-spacing:.06em;font-size:19px;color:#e8e8f0;text-transform:uppercase;}
+.tmr-uboot-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#00aeff,#0067d6);color:#fff;font-size:12px;letter-spacing:0;}
+.tmr-uboot-brand em{font-style:normal;color:#00aeff;}
+.tmr-uboot-head{display:flex;gap:16px;align-items:center;margin:30px 0 6px;}
+.tmr-uboot-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0;}
+.tmr-uboot-card{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;}
+.tmr-uboot-rows{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;margin-top:22px;}
+.tmr-uboot-b{background:#1c1c28;border-radius:6px;position:relative;overflow:hidden;}
+.tmr-uboot-b+.tmr-uboot-b{margin-top:10px;}
+.tmr-uboot-b::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:tmrUBootShim 1.25s infinite;}
+@keyframes tmrUBootShim{100%{transform:translateX(100%);}}
+@media (prefers-reduced-motion:reduce){.tmr-uboot-b::after{animation:none;}}
+@media(max-width:640px){.tmr-uboot-stats{grid-template-columns:repeat(2,1fr);}}
 </style>
+<noscript><style>body.tmr-u-booting>main,body.tmr-u-booting>.tmr-global-nav,body.tmr-u-booting>footer{visibility:visible!important;}body.tmr-u-booting #tmrUBoot{display:none!important;}</style></noscript>
+<script>window.__TMR_PROFILE_USERNAME="WoodysWagers";(function(){try{var s=fetch('/profile/',{headers:{Accept:'text/html'},credentials:'omit'});s.catch(function(){});window.__TMR_SHELL_PROMISE=s;var t=null;try{t=localStorage.getItem("trustmyrecord_token")||localStorage.getItem("tmr_token")||localStorage.getItem("accessToken")||null;}catch(e){}var h={Accept:"application/json","Cache-Control":"no-cache"};if(t)h.Authorization="Bearer "+t;var b=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||"https://trustmyrecord-api.onrender.com/api";window.__TMR_PROFILE_PRELOAD={username:"WoodysWagers",authed:!!t,metrics:fetch(b+"/users/"+encodeURIComponent("WoodysWagers")+"/metrics",{headers:h,cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})};}catch(e){}})();</script>
 </head>
-<body class="tmr-ds">
+<body class="tmr-ds tmr-u-booting">
+<div id="tmrUBoot" role="status" aria-live="polite" aria-label="Loading verified profile"><div class="tmr-uboot-wrap"><div class="tmr-uboot-brand"><span class="tmr-uboot-mark">TMR</span><span>Trust<em>My</em>Record</span></div><div class="tmr-uboot-head"><div class="tmr-uboot-b" style="width:64px;height:64px;border-radius:50%"></div><div style="flex:1"><div class="tmr-uboot-b" style="width:min(240px,62%);height:24px"></div><div class="tmr-uboot-b" style="width:min(160px,44%);height:12px"></div></div></div><div class="tmr-uboot-stats"><div class="tmr-uboot-card"><div class="tmr-uboot-b" style="width:66%;height:20px"></div><div class="tmr-uboot-b" style="width:86%;height:10px"></div></div><div class="tmr-uboot-card"><div class="tmr-uboot-b" style="width:66%;height:20px"></div><div class="tmr-uboot-b" style="width:86%;height:10px"></div></div><div class="tmr-uboot-card"><div class="tmr-uboot-b" style="width:66%;height:20px"></div><div class="tmr-uboot-b" style="width:86%;height:10px"></div></div><div class="tmr-uboot-card"><div class="tmr-uboot-b" style="width:66%;height:20px"></div><div class="tmr-uboot-b" style="width:86%;height:10px"></div></div></div><div class="tmr-uboot-rows"><div class="tmr-uboot-b" style="height:14px"></div><div class="tmr-uboot-b" style="height:14px"></div><div class="tmr-uboot-b" style="height:14px"></div><div class="tmr-uboot-b" style="height:14px"></div><div class="tmr-uboot-b" style="height:14px"></div><div class="tmr-uboot-b" style="height:14px"></div></div></div></div>
 <main class="u-wrap">
   <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>WoodysWagers</span></nav>
   <div class="u-head">
@@ -99,9 +120,8 @@
      <a href="/contests/">Contests</a> ·
      <a href="/forum/">Forum</a></div>
 </main>
-<script>window.__TMR_PROFILE_USERNAME="WoodysWagers";</script>
-<script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
-<script src="/static/js/tmr-public-awards.js?v=98453db0c574" defer></script>
-<script src="/static/js/tmr-ds-nav.6cb0456f7681.js"></script><script defer src="/static/js/tmr-linkhub.js?v=f34371a91b66"></script>
+<script src="/static/js/tmr-profile-hydrate.435af30ef9ca.js" defer></script>
+<script type="text/tmr-fallback" data-src="/static/js/tmr-public-awards.js?v=20260731awards1"></script>
+<script type="text/tmr-fallback" data-src="/static/js/tmr-ds-nav.bccfd4d43640.js"></script><script type="text/tmr-fallback" data-src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 </body>
 </html>

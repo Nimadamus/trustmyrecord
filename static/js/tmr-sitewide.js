@@ -1273,9 +1273,26 @@
         ["/static/js/auth-persistent.js?v=533b6a5999e2", "auth-persistent.js"],
         ["/static/js/notifications.js?v=b237c77f13ca", "notifications.js"]
     ].forEach(([src, name]) => {
-        if (document.querySelector('script[src*="' + name + '"]')) return;
+        // REALM-LEVEL GUARD (2026-08-06). A DOM-only check is defeated by
+        // document.open()/document.write() -- the /u/<username/ -> /profile/ swap in
+        // tmr-profile-hydrate.js -- because that replaces the DOM but not the JS
+        // realm, so a stale callback re-injected backend-api.js and redeclared
+        // class TrustMyRecordAPI. window survives the swap; record the load there
+        // as well as checking the DOM.
+        if (!window.__TMR_SCRIPTS_LOADED) window.__TMR_SCRIPTS_LOADED = {};
+        const base = src.split("?")[0];
+        if (window.__TMR_SCRIPTS_LOADED[base] || document.querySelector('script[src*="' + name + '"]')) {
+            window.__TMR_SCRIPTS_LOADED[base] = 1;
+            return;
+        }
+        window.__TMR_SCRIPTS_LOADED[base] = 1;
         const depScript = document.createElement("script");
-        depScript.src = src + "?v=alertsv2-20260720";
+        // src already carries its own ?v= content stamp (re-pinned on every push by
+        // .github/workflows/static-asset-versions.yml). Appending a second query
+        // string produced ".js?v=<hash>?v=alertsv2-20260720" -- a URL the edge
+        // caches as a DISTINCT object from the one every other page requests, so
+        // the identical file was downloaded twice per visitor.
+        depScript.src = src;
         depScript.async = false;
         depScript.setAttribute("data-tmr-notifications-dep", name);
         document.head.appendChild(depScript);
