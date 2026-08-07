@@ -146,14 +146,21 @@
                     <nav class="prog" aria-label="Report progress">
                         <span class="prog-step is-on" data-step="matchup"><b>1</b>Matchup</span>
                         <span class="prog-sep" aria-hidden="true"></span>
-                        <span class="prog-step" data-step="filters"><b>2</b>Filters</span>
+                        <span class="prog-step" data-step="period"><b>2</b>Period</span>
                         <span class="prog-sep" aria-hidden="true"></span>
-                        <span class="prog-step" data-step="results"><b>3</b>Results</span>
+                        <span class="prog-step" data-step="filters"><b>3</b>Conditions</span>
+                        <span class="prog-sep" aria-hidden="true"></span>
+                        <span class="prog-step" data-step="results"><b>4</b>Results</span>
                         <span class="prog-spacer"></span>
                         <p class="prog-note" id="progNote">Pick a sport and two teams to begin</p>
                     </nav>
 
                     <form id="matchupForm" novalidate>
+                        <!-- ============================================ 1. MATCHUP ==
+                             The two teams ARE the query. Away and home are named
+                             outright and read back in a full sentence underneath:
+                             "at" is the standard notation but must never be the only
+                             place the meaning lives. -->
                         <section class="card">
                             <div class="card-head">
                                 <h2>Matchup</h2>
@@ -172,35 +179,61 @@
                                         </select>
                                     </div>
                                     <div class="field">
-                                        <label class="lbl" for="mAway">Team</label>
+                                        <label class="lbl" for="mAway">Away team</label>
                                         <select class="sel" id="mAway" disabled><option value="">Loading&hellip;</option></select>
                                     </div>
-                                    <!-- v6.6 frames a query as Team + Venue + Opponent, so the venue
-                                         sits between the two teams: it is part of the question, not a
-                                         filter narrowing it. "A at B" and "B at A" are different
-                                         questions and must not return one answer. -->
                                     <div class="swapcol">
-                                        <select class="sel venuesel" id="mVenue" aria-label="Venue: where the team played">
+                                        <select class="sel venuesel" id="mVenue" aria-label="Where the games were played">
                                             <option value="away" selected>at</option>
                                             <option value="home">vs</option>
                                             <option value="all">at or vs</option>
                                         </select>
-                                        <button class="swap" id="mSwap" type="button" aria-label="Swap the team and the opponent" title="Swap teams">&#8646;</button>
+                                        <button class="swap" id="mSwap" type="button" aria-label="Swap the away and home teams" title="Swap teams">&#8646;</button>
                                     </div>
                                     <div class="field">
-                                        <label class="lbl" for="mHome">Opponent</label>
+                                        <label class="lbl" for="mHome">Home team</label>
                                         <select class="sel" id="mHome" disabled><option value="">Loading&hellip;</option></select>
                                     </div>
+                                </div>
+                                <p class="orient" id="orientRead" aria-live="polite">Choose an away team and a home team.</p>
+                                <p class="err-line" id="setupErr" hidden></p>
+                                <div class="note is-err" id="teamsErr" hidden>
+                                    <span>Couldn't load the team list.</span>
+                                    <button class="btn" id="teamsRetry" type="button">Retry</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ================================== 2. HISTORICAL PERIOD ==
+                             Years, never a game count. Every option is built from the
+                             era the database actually holds for the selected sport, so
+                             this list can never offer a season that is not on file. The
+                             result limit is a SEPARATE control below it, and it trims
+                             the list only. -->
+                        <section class="card">
+                            <div class="card-head">
+                                <h2>Historical period</h2>
+                                <span class="spacer"></span>
+                                <span class="meta" id="coverMeta"></span>
+                            </div>
+                            <div class="card-body">
+                                <p class="cover" id="coverLine">Reading database coverage&hellip;</p>
+                                <div class="setup setup-2">
                                     <div class="field">
-                                        <label class="lbl" for="mTimeframe">Timeframe</label>
+                                        <label class="lbl" for="mTimeframe">Search period</label>
                                         <select class="sel" id="mTimeframe">
-                                            <option value="5">Last 5 qualifying games</option>
-                                            <option value="10">Last 10 qualifying games</option>
-                                            <option value="20" selected>Last 20 qualifying games</option>
-                                            <option value="50">Last 50 qualifying games</option>
-                                            <option value="100">Last 100 qualifying games</option>
-                                            <option value="all">All qualifying games</option>
+                                            <option value="all" selected>All available history</option>
                                             <option value="custom">Custom date range&hellip;</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="lbl" for="mLimit">Result limit (optional)</label>
+                                        <select class="sel" id="mLimit">
+                                            <option value="all" selected>Every qualifying meeting in the period</option>
+                                            <option value="10">Most recent 10 qualifying meetings</option>
+                                            <option value="20">Most recent 20 qualifying meetings</option>
+                                            <option value="50">Most recent 50 qualifying meetings</option>
+                                            <option value="100">Most recent 100 qualifying meetings</option>
                                         </select>
                                     </div>
                                 </div>
@@ -214,29 +247,45 @@
                                         <input class="inp" id="mDateTo" type="date">
                                     </div>
                                 </div>
-                                <p class="err-line" id="setupErr" hidden></p>
-                                <div class="note is-err" id="teamsErr" hidden>
-                                    <span>Couldn't load the team list.</span>
-                                    <button class="btn" id="teamsRetry" type="button">Retry</button>
-                                </div>
+                                <p class="note-s">The limit applies last, to the list only. Records, averages and
+                                market splits always cover every qualifying meeting in the period.</p>
                             </div>
                         </section>
 
+                        <!-- ================================ 3. OPTIONAL CONDITIONS ==
+                             Added one at a time from a searchable picker, never a
+                             permanent wall of controls: a matchup with no conditions is
+                             already a complete query, and the panel should look like it.
+                             A condition about a team is added FOR a named team -- "one
+                             day of rest" is meaningless on a two-team report until it
+                             says whose. -->
                         <section class="card">
                             <div class="card-head">
                                 <div class="ftools">
-                                    <h2>Filters</h2>
+                                    <h2>Optional conditions</h2>
                                     <span class="meta" id="filterCount">None</span>
                                     <span class="spacer"></span>
-                                    <label class="sr" for="filterSearch">Search filters</label>
-                                    <input class="search" id="filterSearch" type="search" placeholder="Search conditions&hellip;" autocomplete="off">
-                                    <button class="linkbtn" id="collapseAll" type="button">Collapse all</button>
-                                    <button class="linkbtn" id="clearAll" type="button" hidden>Clear all</button>
+                                    <button class="linkbtn" id="clearAll" type="button" hidden>Remove all</button>
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="cats" id="cats"></div>
-                                <div class="chosen" id="chosen" hidden></div>
+                                <p class="note-s" id="condIntro">No conditions. The report will list
+                                <strong>every</strong> historical meeting between these two teams in the selected
+                                period &mdash; the simplest and most common question this tool answers.</p>
+                                <div class="condlist" id="condList"></div>
+                                <div class="condadd">
+                                    <button class="btn" id="addCond" type="button" aria-expanded="false" disabled>+ Add condition</button>
+                                    <span class="meta" id="addCondHint">Choose both teams first.</span>
+                                    <div class="condmenu" id="condMenu" hidden role="dialog" aria-label="Add a condition">
+                                        <div class="condmenu-head">
+                                            <label class="sr" for="filterSearch">Search conditions</label>
+                                            <input class="search" id="filterSearch" type="search"
+                                                   placeholder="Search conditions &mdash; rest, streak, night game, moneyline&hellip;" autocomplete="off">
+                                            <button class="linkbtn" id="condClose" type="button">Close</button>
+                                        </div>
+                                        <div class="condmenu-body" id="condOptions"></div>
+                                    </div>
+                                </div>
                             </div>
                         </section>
 
@@ -439,7 +488,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260806v';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260807-matchup';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -690,6 +739,11 @@
 
     var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome'), mVenue = $('mVenue');
     var mTimeframe = $('mTimeframe'), mDateFrom = $('mDateFrom'), mDateTo = $('mDateTo');
+    var mLimit = $('mLimit');
+    // This sport's measured database era, carried on the filter library the
+    // panel already fetches. Every year the period selector offers comes from
+    // here, so it can never list a season the database does not hold.
+    var coverage = null;
     var mSubmit = $('mSubmit');
     submitButtons.push(mSubmit);
 
@@ -700,28 +754,14 @@
         head_to_head_only: 1, min_rest_days: 1
     };
 
-    // The server groups its filters by the dataset field behind them; those are
-    // engine concepts. These are the headings a handicapper thinks in. The
-    // server stays the source of truth for what exists and what is honest for a
-    // sport — an id it adds that is not named here lands in Advanced Filters
-    // rather than disappearing.
-    var CATEGORIES = [
-        { id: 'matchup',     label: 'Matchup',            ids: ['venue', 'opponent_type', 'season_type'] },
-        { id: 'market',      label: 'Betting Market',     ids: ['spread_range', 'moneyline_range', 'su_result', 'ats_result'] },
-        { id: 'form',        label: 'Recent Form',        ids: ['prev_result', 'prev_margin', 'last10_win_pct'] },
-        { id: 'schedule',    label: 'Schedule & Rest',    ids: ['min_rest_days', 'back_to_back', 'long_rest', 'nfl_week'] },
-        { id: 'venue',       label: 'Venue & Travel',     ids: ['day_night', 'start_time', 'roof', 'surface', 'temperature', 'wind', 'attendance'] },
-        { id: 'streaks',     label: 'Streaks',            ids: ['su_streak', 'ats_streak', 'ou_streak'] },
-        { id: 'scoring',     label: 'Scoring',            ids: ['total_range', 'ou_result'] },
-        { id: 'opponent',    label: 'Opponent Strength',  ids: ['role'] },
-        { id: 'situational', label: 'Situational Trends', ids: ['day_of_week', 'month'] },
-        { id: 'h2h',         label: 'Head-to-Head',       ids: ['head_to_head_only'] },
-        { id: 'advanced',    label: 'Advanced Filters',   ids: [] }
-    ];
-
+    // Conditions are offered from the SERVER's own groups (GET
+    // matchup-filters), not from a local re-grouping. A local category map is a
+    // second source of truth that silently hides any id the server adds, and
+    // its headings -- "Betting Market", "Recent Form" -- turned optional
+    // narrowings into top-level sections of the page, which is precisely the
+    // dashboard framing this tool is not.
     var library = null, libraryFor = null, libraryCache = {};
     var filters = {};
-    var closedCats = {};       // open by default; this records what was shut
     var filterSearch = '';
 
     function isSet(v) {
@@ -736,37 +776,31 @@
         ['game', 't1', 't2'].forEach(function (b) { delete filters[fkey(b, id)]; });
     }
 
-    function categorised() {
+    /** Every condition the picker may offer, in the server's own groups.
+     *  Unavailable ones are kept and shown with the server's reason: hiding a
+     *  condition a user is looking for leaves them wondering, and inventing an
+     *  answer for it is worse. Structural questions are never offered --
+     *  `venue` is the orientation control, every game here is already
+     *  head-to-head, and division/conference is fixed by the two teams. */
+    var STRUCTURAL = { venue: 1, head_to_head_only: 1, opponent_type: 1 };
+
+    function menuGroups() {
         if (!library) return [];
-        var byId = {};
-        (library.groups || []).forEach(function (g) {
-            (g.filters || []).forEach(function (f) { byId[f.id] = f; });
-        });
-        var claimed = {};
-        CATEGORIES.forEach(function (c) { c.ids.forEach(function (id) { claimed[id] = 1; }); });
         var q = filterSearch.toLowerCase();
         var matches = function (spec) {
             if (!q) return true;
             return spec.label.toLowerCase().indexOf(q) !== -1
-                || (spec.help || '').toLowerCase().indexOf(q) !== -1;
+                || (spec.help || '').toLowerCase().indexOf(q) !== -1
+                || (spec.options || []).some(function (o) { return o.label.toLowerCase().indexOf(q) !== -1; });
         };
-        return CATEGORIES.map(function (c) {
-            var ids = c.id === 'advanced'
-                ? Object.keys(byId).filter(function (id) { return !claimed[id]; })
-                : c.ids;
-            var live = [], off = [];
-            ids.forEach(function (id) {
-                var spec = byId[id];
-                if (!spec) return;
-                (spec.available ? live : off).push(spec);
+        return (library.groups || []).map(function (g) {
+            var specs = (g.filters || []).filter(function (f) {
+                return !STRUCTURAL[f.id] && matches(f);
             });
-            return { id: c.id, label: c.label, live: live.filter(matches), off: off, liveAll: live };
-        }).filter(function (c) {
-            // While searching, what matters is what MATCHED. Otherwise a
-            // category shows whenever this sport can actually run something in
-            // it — a heading with nothing behind it reads as broken.
-            return q ? c.live.length > 0 : c.liveAll.length > 0;
-        });
+            // Answerable first; an unavailable one never sits above a live one.
+            specs.sort(function (a, b) { return (b.available ? 1 : 0) - (a.available ? 1 : 0); });
+            return { label: g.label, specs: specs };
+        }).filter(function (g) { return g.specs.length > 0; });
     }
 
     // A condition is stored under a composite key: which side it is about,
@@ -826,63 +860,90 @@
             + '</span>';
     }
 
-    function renderCategories() {
-        var box = $('cats');
-        if (!library) { box.innerHTML = '<p class="empty-note">Loading the condition library…</p>'; return; }
-        var cats = categorised();
-        if (!cats.length) {
-            box.innerHTML = '<p class="empty-note">No condition matches that search.</p>';
-            renderChosen();
+    /** The conditions the user has added, as rows. Nothing is on screen until
+     *  they put it there, and every team condition carries the team's name. */
+    function renderConditions() {
+        var box = $('condList');
+        var rows = [];
+        Object.keys(filters).forEach(function (key) {
+            var spec = specById(idOf(key));
+            if (!spec) return;
+            rows.push({ key: key, spec: spec, bucket: bktOf(key) });
+        });
+        rows.sort(function (a, b) { return a.key.localeCompare(b.key); });
+
+        box.innerHTML = rows.map(function (r) {
+            var team = teamName(r.bucket);
+            var set = isSet(filters[r.key]);
+            return '<div class="cond' + (set ? '' : ' is-unset') + '">'
+                + '<div class="cond-head">'
+                + (team ? '<b class="cond-team">' + esc(team) + '</b>' : '')
+                + '<span class="cond-label">' + esc(r.spec.label) + '</span>'
+                + '<span class="spacer"></span>'
+                + '<button type="button" class="cond-x" data-remove="' + esc(r.key) + '" '
+                + 'aria-label="Remove condition: ' + esc(r.spec.label) + (team ? ' for ' + esc(team) : '') + '">&times;</button>'
+                + '</div>'
+                + '<div class="cond-body">' + renderControl(r.spec, r.bucket) + '</div>'
+                + (r.spec.help ? '<p class="cond-help">' + esc(r.spec.help) + '</p>' : '')
+                + (r.spec.available === false
+                    ? '<p class="cond-warn">' + esc(r.spec.unavailable_reason
+                        || ('Not offered for ' + mSport.value + '.')) + ' This condition will not be sent.</p>'
+                    : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
+                           : '<p class="cond-warn">Set a value &mdash; until then this condition is not part of the query.</p>'))
+                + '</div>';
+        }).join('');
+
+        var n = activeFilterCount();
+        $('clearAll').hidden = rows.length === 0;
+        $('condIntro').hidden = rows.length > 0;
+        $('filterCount').textContent = n ? (n + (n === 1 ? ' condition' : ' conditions')) : 'None';
+        syncSetup(); scheduleReview(); scheduleTrail();
+    }
+
+    /** The searchable picker. A popover, not a permanent panel: the library is
+     *  ~85 conditions and putting them all on screen reads as a form to fill in
+     *  rather than an optional narrowing of a query that is already complete. */
+    function renderCondMenu() {
+        var box = $('condOptions');
+        if (!library) {
+            box.innerHTML = '<p class="empty-note">Loading the condition library&hellip;</p>';
             return;
         }
-        box.innerHTML = cats.map(function (c) {
-            var open = filterSearch ? true : !closedCats[c.id];
-            var n = c.liveAll.reduce(function (acc, spec) {
-                return acc + bucketsFor(spec).filter(function (b) {
-                    return isSet(filters[fkey(b, spec.id)]);
-                }).length;
-            }, 0);
-            var body = open
-                ? '<div class="cat-body">'
-                    + c.live.map(function (spec) {
-                        var buckets = bucketsFor(spec);
-                        // A team condition is asked once per team, each control
-                        // under its own team's name. One shared control with a
-                        // hidden "which side?" is exactly the ambiguity this
-                        // panel exists to remove.
-                        var controls = buckets.length === 1
-                            ? renderControl(spec, buckets[0])
-                            : '<div class="f-teams">' + buckets.map(function (b) {
-                                return '<div class="f-team"><span class="f-team-name">'
-                                    + esc(teamName(b)) + '</span>' + renderControl(spec, b) + '</div>';
-                            }).join('') + '</div>';
-                        return '<div class="f">'
-                            + '<label class="f-lbl"'
-                            + (spec.help ? ' title="' + esc(spec.help + (spec.era_note ? ' ' + spec.era_note : '')) + '"' : '')
-                            + '>' + esc(spec.label) + '</label>'
-                            + controls
-                            + (spec.era_note ? '<p class="f-era">' + esc(spec.era_note) + '</p>' : '')
-                            + '</div>';
-                    }).join('')
-                    // Named, never drawn as a dead control, never a paragraph of
-                    // yellow. The reason for each is on its tooltip.
-                    + (c.off.length && !filterSearch
-                        ? '<p class="cat-off"><b>Not in ' + esc(mSport.value) + ' data</b>'
-                            + c.off.map(function (s) {
-                                return '<i title="' + esc(s.unavailable_reason || 'not carried for this sport')
-                                    + '">' + esc(s.label) + '</i>';
-                            }).join(', ') + '</p>'
-                        : '')
-                    + '</div>'
-                : '';
-            return '<section class="cat' + (open ? ' is-open' : '') + '" data-cat="' + esc(c.id) + '">'
-                + '<button type="button" class="cat-head" aria-expanded="' + (open ? 'true' : 'false') + '">'
-                + '<span class="caret" aria-hidden="true">▸</span>'
-                + '<span class="cat-title">' + esc(c.label) + '</span>'
-                + (n ? '<span class="cat-count">' + n + '</span>' : '')
-                + '</button>' + body + '</section>';
+        var groups = menuGroups();
+        if (!groups.length) {
+            box.innerHTML = '<p class="empty-note">No condition matches that search. This database supports '
+                + 'only the conditions listed here &mdash; nothing is estimated or substituted.</p>';
+            return;
+        }
+        box.innerHTML = groups.map(function (g) {
+            return '<section class="condgrp"><p class="condgrp-h">' + esc(g.label) + '</p>'
+                + g.specs.map(function (spec) {
+                    var buckets = bucketsFor(spec);
+                    var actions = !spec.available ? ''
+                        : '<div class="cond-acts">' + buckets.map(function (b) {
+                            // A team condition is added FOR a named side. No
+                            // default team: guessing one is how "one day of
+                            // rest" ends up meaning the wrong bench.
+                            var label = (buckets.length === 1) ? 'Add' : teamName(b);
+                            var already = (fkey(b, spec.id) in filters);
+                            return '<button type="button" class="cond-add" data-add="' + esc(fkey(b, spec.id)) + '"'
+                                + (already ? ' disabled' : '') + '>+ ' + esc(label) + '</button>';
+                        }).join('') + '</div>';
+                    return '<div class="condopt' + (spec.available ? '' : ' is-off') + '">'
+                        + '<div class="condopt-t"><span class="condopt-l">' + esc(spec.label) + '</span>'
+                        + (spec.help ? '<span class="condopt-h">' + esc(spec.help) + '</span>' : '')
+                        + (spec.available ? '' : '<span class="cond-warn">' + esc(spec.unavailable_reason
+                            || ('Not offered for ' + mSport.value + '.')) + '</span>')
+                        + '</div>' + actions + '</div>';
+                }).join('') + '</section>';
         }).join('');
-        renderChosen();
+    }
+
+    function openCondMenu(open) {
+        var menu = $('condMenu');
+        menu.hidden = !open;
+        $('addCond').setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) { renderCondMenu(); $('filterSearch').focus(); }
     }
 
     function chipFor(spec, v) {
@@ -908,42 +969,6 @@
             (g.filters || []).forEach(function (f) { if (f.id === id) found = f; });
         });
         return found;
-    }
-
-    function renderChosen() {
-        var picked = [];
-        Object.keys(filters).forEach(function (key) {
-            if (!isSet(filters[key])) return;
-            var spec = specById(idOf(key));
-            if (!spec) return;
-            // The team prefix is not decoration: without it "1 day of rest"
-            // reads as a property of the matchup rather than of one side.
-            picked.push({
-                id: key,
-                team: teamName(bktOf(key)),
-                label: chipFor(spec, filters[key])
-            });
-        });
-        $('clearAll').hidden = picked.length === 0;
-        $('filterCount').textContent = picked.length
-            ? picked.length + (picked.length === 1 ? ' condition' : ' conditions') : 'None';
-        var box = $('chosen');
-        if (!picked.length) {
-            box.hidden = true; box.innerHTML = '';
-            syncSetup(); scheduleReview(); scheduleTrail();
-            return;
-        }
-        var html = '<span class="chosen-lbl">Applied</span>' + picked.map(function (p) {
-            return '<button type="button" class="tagx" data-remove="' + esc(p.id) + '">'
-                + (p.team ? '<b class="tagx-team">' + esc(p.team) + '</b>' : '')
-                + esc(p.label) + '<i aria-hidden="true">×</i><span class="sr"> — remove</span></button>';
-        }).join('');
-        // Only rewrite when the chips changed: clicking one blurs whatever
-        // input had focus, which fires `change` BEFORE the click lands, and an
-        // unconditional rewrite there replaces the very button being clicked.
-        if (box.innerHTML !== html) box.innerHTML = html;
-        box.hidden = false;
-        syncSetup(); scheduleReview(); scheduleTrail();
     }
 
     // A catalogue call against the same registry the report uses: no engine
@@ -1055,14 +1080,21 @@
     }
 
     async function loadFilterLibrary(sport) {
-        if (libraryFor === sport && library) { renderCategories(); return; }
+        var apply = function () {
+            coverage = (library && library.database_coverage) || null;
+            paintCoverage();
+            buildPeriodOptions();
+            renderConditions();
+            if (!$('condMenu').hidden) renderCondMenu();
+        };
+        if (libraryFor === sport && library) { apply(); return; }
         libraryFor = sport;
         // One library per sport for the session: MLB -> NFL -> MLB refetched a
         // catalogue that cannot have changed and dropped the panel back to
         // "Loading…" each time.
-        if (libraryCache[sport]) { library = libraryCache[sport]; renderCategories(); return; }
-        library = null;
-        renderCategories();
+        if (libraryCache[sport]) { library = libraryCache[sport]; apply(); return; }
+        library = null; coverage = null;
+        apply();
         try {
             var lib = await window.api.getBetLegendProMatchupFilters(sport);
             if (libraryFor !== sport) return;     // sport changed mid-flight
@@ -1070,11 +1102,50 @@
             library = lib;
         } catch (err) {
             library = null;
-            $('cats').innerHTML = '<p class="empty-note">The condition library could not be loaded, so only '
-                + 'the unfiltered report is available right now.</p>';
+            $('condOptions').innerHTML = '<p class="empty-note">The condition library could not be loaded, so '
+                + 'only the unfiltered report is available right now.</p>';
+            $('coverLine').textContent = 'Database coverage could not be read right now. The report still '
+                + 'searches every year on file.';
             return;
         }
-        renderCategories();
+        apply();
+    }
+
+    /** "MLB database coverage: 2000-2026 · 64,273 games on file" — measured,
+     *  never configured. The first question a historical tool has to answer. */
+    function paintCoverage() {
+        var line = $('coverLine'), meta = $('coverMeta');
+        if (!coverage || coverage.earliest_season == null || coverage.latest_season == null) {
+            line.textContent = 'Reading database coverage\u2026';
+            meta.textContent = '';
+            return;
+        }
+        line.innerHTML = '<strong>' + esc(mSport.value) + ' database coverage: '
+            + esc(coverage.earliest_season) + '–' + esc(coverage.latest_season) + '</strong>'
+            + ' <span class="cover-sub">· ' + fmtInt(coverage.games) + ' games on file</span>';
+        meta.textContent = coverage.earliest_date + ' → ' + coverage.latest_date;
+    }
+
+    /** All available history, then every season on file newest-first, then a
+     *  custom range. A game COUNT is never a period: that is what the result
+     *  limit is for, and conflating the two was the central mistake of the
+     *  screen this replaces. */
+    function buildPeriodOptions() {
+        var keep = mTimeframe.value;
+        var first = coverage && coverage.earliest_season, last = coverage && coverage.latest_season;
+        var opts = ['<option value="all">All available history'
+            + (first ? ' — since ' + first : '') + '</option>'];
+        if (first && last) {
+            for (var y = last; y >= first; y--) opts.push('<option value="' + y + '">' + y + '</option>');
+        }
+        opts.push('<option value="custom">Custom date range\u2026</option>');
+        mTimeframe.innerHTML = opts.join('');
+        // Keep the user's choice across a re-render; a season the new sport
+        // does not cover falls back to all-history rather than silently
+        // querying a year that is not there.
+        mTimeframe.value = [].some.call(mTimeframe.options, function (o) { return o.value === keep; })
+            ? keep : 'all';
+        $('dateRow').hidden = mTimeframe.value !== 'custom';
     }
 
     function setFilter(fid, bound, raw) {
@@ -1090,21 +1161,26 @@
         else filters[fid] = raw;
     }
 
-    /** Repaint only the per-category counters. A full re-render on every
-     *  keystroke would tear out the input being typed into. */
-    function paintCatCounts() {
-        categorised().forEach(function (c) {
-            var head = $('cats').querySelector('[data-cat="' + c.id + '"] .cat-head');
-            if (!head) return;
-            var n = c.liveAll.filter(function (s) { return isSet(filters[s.id]); }).length;
-            var badge = head.querySelector('.cat-count');
-            if (n && !badge) head.insertAdjacentHTML('beforeend', '<span class="cat-count">' + n + '</span>');
-            else if (n && badge) badge.textContent = n;
-            else if (!n && badge) badge.remove();
-        });
+    /** Repaint only the parts of a condition row that a keystroke changes. A
+     *  full re-render on every keystroke would tear out the input being typed
+     *  into. */
+    function paintCondRow(el) {
+        var row = el.closest && el.closest('.cond');
+        if (!row) return;
+        var key = el.getAttribute('data-fid');
+        var spec = specById(idOf(key));
+        if (!spec) return;
+        var set = isSet(filters[key]);
+        row.classList.toggle('is-unset', !set);
+        var reads = row.querySelector('.cond-reads, .cond-warn');
+        if (!reads || spec.available === false) return;
+        reads.className = set ? 'cond-reads' : 'cond-warn';
+        reads.textContent = set
+            ? 'Reads as: ' + chipFor(spec, filters[key])
+            : 'Set a value — until then this condition is not part of the query.';
     }
 
-    $('cats').addEventListener('change', function (ev) {
+    $('condList').addEventListener('change', function (ev) {
         var el = ev.target;
         if (!el || !el.getAttribute) return;
         var fid = el.getAttribute('data-fid');
@@ -1116,24 +1192,18 @@
         } else {
             setFilter(fid, el.getAttribute('data-bound'), el.value);
         }
-        renderChosen(); paintCatCounts();
+        paintCondRow(el);
+        syncSetup(); scheduleReview(); scheduleTrail();
     });
 
-    $('cats').addEventListener('input', function (ev) {
+    $('condList').addEventListener('input', function (ev) {
         var el = ev.target;
         if (!el || !el.getAttribute) return;
         var fid = el.getAttribute('data-fid');
         if (!fid || el.type === 'checkbox' || el.tagName === 'SELECT') return;
         setFilter(fid, el.getAttribute('data-bound'), el.value);
-        renderChosen(); paintCatCounts();
-    });
-
-    $('cats').addEventListener('click', function (ev) {
-        var head = ev.target.closest && ev.target.closest('.cat-head');
-        if (!head) return;
-        var cid = head.parentNode.getAttribute('data-cat');
-        closedCats[cid] = !closedCats[cid];
-        renderCategories();
+        paintCondRow(el);
+        syncSetup(); scheduleReview(); scheduleTrail();
     });
 
     // The zero-result card's one-click ways out. Delegated on the report
@@ -1151,35 +1221,70 @@
         } else {
             return;
         }
-        renderCategories();
+        renderConditions();
         showSetup();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    $('chosen').addEventListener('click', function (ev) {
+    $('condList').addEventListener('click', function (ev) {
         var btn = ev.target.closest && ev.target.closest('[data-remove]');
         if (!btn) return;
         delete filters[btn.getAttribute('data-remove')];
-        renderCategories();
+        renderConditions();
+    });
+
+    $('addCond').addEventListener('click', function () {
+        openCondMenu($('condMenu').hidden);
+    });
+    $('condClose').addEventListener('click', function () { openCondMenu(false); });
+
+    $('condOptions').addEventListener('click', function (ev) {
+        var btn = ev.target.closest && ev.target.closest('[data-add]');
+        if (!btn) return;
+        var key = btn.getAttribute('data-add');
+        var spec = specById(idOf(key));
+        if (!spec) return;
+        // Enums land on their first option and ranges land empty-but-listed: an
+        // added condition is visible immediately, and one that cannot yet
+        // narrow anything says so on its own row rather than vanishing.
+        filters[key] = spec.kind === 'bool' ? true
+            : spec.kind === 'enum' ? ((spec.options[0] || {}).value || '')
+            : spec.kind === 'range' ? { min: null, max: null }
+            : '';
+        openCondMenu(false);
+        filterSearch = ''; $('filterSearch').value = '';
+        renderConditions();
     });
 
     $('filterSearch').addEventListener('input', function () {
         filterSearch = $('filterSearch').value.trim();
-        renderCategories();
-    });
-
-    $('collapseAll').addEventListener('click', function () {
-        var anyOpen = categorised().some(function (c) { return !closedCats[c.id]; });
-        categorised().forEach(function (c) { closedCats[c.id] = anyOpen; });
-        $('collapseAll').textContent = anyOpen ? 'Expand all' : 'Collapse all';
-        renderCategories();
+        renderCondMenu();
     });
 
     $('clearAll').addEventListener('click', function () {
         filters = {};
         filterSearch = '';
         $('filterSearch').value = '';
-        renderCategories();
+        openCondMenu(false);
+        renderConditions();
+    });
+
+    // A click anywhere else closes the picker, the same as Escape.
+    //
+    // Bound to the shadow ROOT, not the host: an event crossing a shadow
+    // boundary is RETARGETED, so a listener on the host sees the host itself as
+    // event.target and every click looks like an outside click -- which closed
+    // the picker on the very click that opened it.
+    root.addEventListener('click', function (ev) {
+        if ($('condMenu').hidden) return;
+        var path = ev.composedPath ? ev.composedPath() : [ev.target];
+        var inside = path.some(function (n) {
+            return n && n.id && (n.id === 'condMenu' || n.id === 'addCond');
+        });
+        if (!inside) openCondMenu(false);
+    });
+    root.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape' && !$('condMenu').hidden) openCondMenu(false);
     });
 
     function filterPayload() {
@@ -1206,11 +1311,15 @@
         filters = {};
         filterSearch = '';
         $('filterSearch').value = '';
+        openCondMenu(false);
         reviewSig = null;
         $('review').hidden = true;
+        // A season from another league is not a valid period here.
+        mTimeframe.value = 'all';
+        coverage = null; paintCoverage();
         loadFilterLibrary(mSport.value);
         loadMatchupTeams(mSport.value);
-        syncSetup();
+        renderConditions();
     });
 
     mTimeframe.addEventListener('change', function () {
@@ -1219,6 +1328,7 @@
         if (!custom) { mDateFrom.value = ''; mDateTo.value = ''; }
         syncSetup();
     });
+    mLimit.addEventListener('change', syncSetup);
     [mDateFrom, mDateTo].forEach(function (el) {
         el.addEventListener('change', syncSetup);
         el.addEventListener('input', syncSetup);
@@ -1232,8 +1342,26 @@
             if (mDateTo.value) return 'up to ' + mDateTo.value;
             return 'a custom date range';
         }
-        if (v === 'all') return 'all qualifying games';
-        return 'the last ' + v + ' qualifying games';
+        if (v === 'all') {
+            return (coverage && coverage.earliest_season)
+                ? 'all available history since ' + coverage.earliest_season
+                : 'all available history';
+        }
+        return 'the ' + v + ' season';
+    }
+
+    /** The matchup in a full sentence. "at" is standard notation, but it must
+     *  never be the only place the meaning lives. */
+    function paintOrient() {
+        var a = mAway.value, h = mHome.value, el = $('orientRead');
+        if (!el) return;
+        if (!a || !h) { el.textContent = 'Choose an away team and a home team.'; return; }
+        var v = mVenue.value;
+        el.innerHTML = '<strong>' + esc(a) + (v === 'all' ? ' and ' : (v === 'home' ? ' vs ' : ' at '))
+            + esc(h) + '</strong> — ' + (v === 'all'
+                ? 'either location: ' + esc(a) + ' home or ' + esc(h) + ' home.'
+                : (v === 'home' ? esc(a) + ' at home, ' + esc(h) + ' away.'
+                                : esc(a) + ' away, ' + esc(h) + ' at home.'));
     }
 
     // --------------------------------------------------------------- teams
@@ -1303,13 +1431,14 @@
             // team change has to relabel them. Without this the controls keep
             // saying "Away team" after a team is chosen -- a per-team control
             // whose team is not named is the ambiguity this panel removes.
-            if (library) renderCategories();
+            if (library) renderConditions();
             syncSetup();
         });
     });
+    mVenue.addEventListener('change', paintOrient);
 
     function setProgress(step) {
-        var order = ['matchup', 'filters', 'results'];
+        var order = ['matchup', 'period', 'filters', 'results'];
         var at = order.indexOf(step);
         $$('.prog-step').forEach(function (el) {
             var i = order.indexOf(el.getAttribute('data-step'));
@@ -1323,7 +1452,15 @@
     function syncSetup() {
         var away = mAway.value, home = mHome.value;
         var err = '';
-        if (away && home && away === home) err = 'The team and the opponent must be two different teams.';
+        // Conditions attach to NAMED sides, so there is nothing to attach them
+        // to until both teams are chosen. The button says why rather than
+        // sitting live and adding a condition about "Away team".
+        var bothPicked = !!away && !!home && away !== home;
+        $('addCond').disabled = !bothPicked;
+        $('addCondHint').hidden = bothPicked;
+        if (!bothPicked && !$('condMenu').hidden) openCondMenu(false);
+        paintOrient();
+        if (away && home && away === home) err = 'The away team and the home team must be two different teams.';
         if (!err && mTimeframe.value === 'custom') {
             if (!mDateFrom.value && !mDateTo.value) err = 'Enter a from date, a to date, or both.';
             else if (mDateFrom.value && mDateTo.value && mDateFrom.value > mDateTo.value) {
@@ -1349,9 +1486,10 @@
             summary.textContent = 'Today’s free report is used. A plan (or TMR Coin) is needed to run another one today.';
         } else {
             var joiner = mVenue.value === 'all' ? ' and ' : (mVenue.value === 'away' ? ' at ' : ' vs ');
-            summary.innerHTML = '<strong>' + esc(mSport.value) + '</strong> · ' + esc(away) + esc(joiner)
-                + esc(home) + ' · ' + esc(timeframeLabel()) + ' · <strong>' + n + '</strong> '
-                + (n === 1 ? 'condition' : 'conditions') + (n ? ', combined with AND' : '');
+            summary.innerHTML = '<strong>' + esc(away) + esc(joiner) + esc(home) + '</strong> · '
+                + esc(mSport.value) + ' · ' + esc(timeframeLabel()) + ' · '
+                + (n ? '<strong>' + n + '</strong> ' + (n === 1 ? 'condition' : 'conditions') + ', combined with AND'
+                     : 'no optional conditions — every meeting in the period');
         }
 
         var note = $('progNote');
@@ -1363,8 +1501,11 @@
         } else {
             setProgress('matchup'); note.textContent = 'Pick a sport and two teams to begin';
         }
-        return ready && !SUBMIT_BLOCKED;
+        // Ahead of the return, or it never runs: the free sample count has to
+        // refresh when the teams or the venue change, not only when a condition
+        // does.
         scheduleTrail();
+        return ready && !SUBMIT_BLOCKED;
     }
 
     // ------------------------------------------------------------- results
@@ -1444,72 +1585,92 @@
         return bits.length ? '<div class="thin"><span>' + bits.join(' ') + '</span></div>' : '';
     }
 
-    /** The comparison half: the figures a handicapper reads side by side.
-     *  Split from the game log because a nine-column table cannot fit in half
-     *  a screen -- it was being clipped, and the game log IS the evidence the
-     *  report exists to show. */
-    function teamSummary(r, noun) {
-        if (!r) return '';
-        var range = r.date_range
-            ? '<span class="range">' + esc(r.date_range.from) + ' → ' + esc(r.date_range.to) + '</span>' : '';
-        var games = r.games || [];
-        var total = (r.total_qualifying_games != null) ? r.total_qualifying_games : r.qualifying_games;
-        return '<section class="rcard">'
-            + '<div class="rcard-head"><h3>' + esc(r.team) + '</h3>' + range + '</div>'
-            + '<div class="kpis">'
-            + '<div class="kpi"><span>Record</span><strong>' + (r.record ? esc(r.record) : DASH) + '</strong></div>'
-            + '<div class="kpi"><span>Win %</span><strong>' + hxPct(r.win_pct) + '</strong></div>'
-            + '<div class="kpi"><span>ATS</span><strong>' + ((r.ats && r.ats.record) ? esc(r.ats.record) : DASH) + '</strong></div>'
-            + '<div class="kpi"><span>Over / under</span><strong>' + ((r.ou && r.ou.record) ? esc(r.ou.record) : DASH) + '</strong></div>'
-            + '<div class="kpi"><span>Avg score (' + esc(noun) + ')</span><strong>'
-                + num(r.avg_scored) + ' – ' + num(r.avg_allowed) + '</strong></div>'
-            + '<div class="kpi"><span>Avg margin</span><strong>' + signed(r.avg_margin) + '</strong></div>'
-            + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(games)) + '</strong></div>'
-            + '<div class="kpi"><span>Qualifying games</span><strong>' + esc(total) + '</strong></div>'
+    /** What this report searched, before any number it produced: the era the
+     *  database holds, the period asked for, how many meetings qualified and
+     *  the years they span. All four are the server's, measured. */
+    function searchedBlock(d) {
+        var cov = d.database_coverage, per = d.report_period, span = d.qualifying_span;
+        var total = (d.team_1_report && d.team_1_report.total_qualifying_games) || 0;
+        var listed = (d.team_1_report && (d.team_1_report.games || []).length) || 0;
+        var fact = function (label, value) {
+            return '<div class="fact"><span>' + esc(label) + '</span><strong>' + value + '</strong></div>';
+        };
+        return '<div class="facts">'
+            + fact('Database coverage', (cov && cov.earliest_season != null)
+                ? esc(d.sport) + ' ' + esc(cov.earliest_season) + '–' + esc(cov.latest_season)
+                    + ' <em>(' + fmtInt(cov.games) + ' games)</em>'
+                : DASH)
+            + fact('Report period', per ? esc(per.label) : 'All available history')
+            + fact('Qualifying meetings', fmtInt(total))
+            + fact('Span of the answer', span
+                ? esc(span.first_game) + ' → ' + esc(span.last_game) : DASH)
             + '</div>'
-            + splitsLine(r) + funnelLine(r)
-            + (r.conditions_applied === false
-                ? '<p class="note-s">Your conditions were <strong>not</strong> applied to this team — the scope you chose targets the other side only.</p>'
-                : '')
-            + thinNote(r)
-            + '<p class="note-s">Avg total is the mean combined final score of the qualifying games listed '
-            + 'further down, not the average closing number.</p>'
-            + '</section>';
+            + ((listed && listed < total)
+                ? '<p class="note-s">The list below shows the ' + fmtInt(listed) + ' most recent of them. '
+                    + 'The records, averages and market splits cover all ' + fmtInt(total) + '.</p>'
+                : '');
     }
 
-    /** The evidence half: every qualifying game, at full width so all nine
-     *  columns are readable without side-scrolling. */
-    function teamGames(r) {
+    /** Every qualifying meeting, once. One row per MEETING, away side first,
+     *  presented neutrally rather than as either team's game log -- the two
+     *  mirrored per-team tables this replaces listed the same games twice and
+     *  made one report read as two separate team reports. */
+    function meetingsTable(d) {
+        var r = d.team_1_report;
         if (!r) return '';
-        var range = r.date_range
-            ? '<span class="range">' + esc(r.date_range.from) + ' \u2192 ' + esc(r.date_range.to) + '</span>' : '';
         var games = r.games || [];
-        // Every returned game is listed, not the first 25. "Why it qualified"
-        // is the whole point of this table.
+        var total = (r.total_qualifying_games != null) ? r.total_qualifying_games : games.length;
         var rows = games.map(function (g) {
-            var where = g.venue_name ? esc(g.venue || '') + ' \u00b7 ' + esc(g.venue_name) : esc(g.venue || '');
-            var why = (g.qualified_because || []);
-            return '<tr><td>' + esc(g.date || '') + '</td><td>' + esc(g.opponent || '') + '</td>'
-                + '<td>' + (where || DASH) + '</td><td class="n">' + esc(g.score || '') + '</td>'
-                + '<td><span class="res res-' + esc(String(g.result || '').toLowerCase()) + '">'
-                + esc(g.result || '') + '</span></td>'
-                + '<td>' + (g.role ? esc(g.role) + (g.closing_line != null ? ' ' + signed(g.closing_line) : '') : DASH) + '</td>'
-                // A dash is "no closing total on file", which is not a total of
-                // zero. Both are real rows here, so they must not render alike.
-                + '<td class="n">' + (g.closing_total != null ? esc(g.closing_total) : DASH) + '</td>'
-                + '<td class="n">' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
-                + '<td class="why">' + (why.length ? esc(why.join(' \u00b7 ')) : DASH) + '</td></tr>';
+            var homeSide = g.venue === 'Home';
+            var away = homeSide ? g.opponent : g.team;
+            var home = homeSide ? g.team : g.opponent;
+            var score = homeSide ? (g.opponent_score + '-' + g.team_score)
+                                 : (g.team_score + '-' + g.opponent_score);
+            var winner = g.result === 'W' ? g.team : (g.result === 'L' ? (g.opponent || '') : 'Tie');
+            var where = g.venue_name || (home ? home + ' (home)' : '');
+            // role/closing_line are team-1 relative and dog-positive, so the
+            // favoured side's own number is the negation when team 1 was the dog.
+            var fav = (g.role == null || g.closing_line == null) ? DASH
+                : (g.role === 'Favorite'
+                    ? esc(g.team) + ' ' + signed(g.closing_line)
+                    : esc(g.opponent || '') + ' ' + signed(Math.round(-g.closing_line * 10) / 10));
+            // An estimated total is not a closing total: shown as absent rather
+            // than as a line no book ever hung.
+            var totalCell = (g.closing_total == null || g.closing_total_available === false)
+                ? DASH : esc(g.closing_total);
+            var ml = (g.moneyline == null && g.opponent_moneyline == null) ? DASH
+                : (esc(g.team) + ' ' + (g.moneyline == null ? DASH : signed(g.moneyline))
+                   + ' · ' + esc(g.opponent || '') + ' '
+                   + (g.opponent_moneyline == null ? DASH : signed(g.opponent_moneyline)));
+            var why = g.qualified_because || [];
+            return '<tr><td>' + esc(g.date || '') + '</td>'
+                + '<td>' + esc(away || '') + ' at ' + esc(home || '') + '</td>'
+                + '<td>' + (where ? esc(where) : DASH) + '</td>'
+                + '<td class="n">' + esc(score) + '</td>'
+                + '<td><span class="res res-' + (g.result === 'T' ? 't' : (winner === g.team ? 'w' : 'l')) + '">'
+                + esc(winner) + '</span></td>'
+                + '<td class="n">' + Math.abs(g.margin) + '</td>'
+                + '<td class="n">' + fav + '</td>'
+                + '<td class="n">' + totalCell + '</td>'
+                + '<td class="n">' + ml + '</td>'
+                + '<td class="why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
         }).join('');
         var body = rows
             ? '<div class="tablewrap"><table class="games">'
-                + '<caption class="sr">Qualifying games for ' + esc(r.team) + ', with the conditions each one satisfied</caption>'
-                + '<thead><tr><th>Date</th><th>Opponent</th><th>Location</th><th>Final score</th>'
-                + '<th>Result</th><th>Closing line</th><th>Closing total</th><th>Rest</th>'
-                + '<th>Why it qualified</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-            : '<p class="note-s">No qualifying games found for these conditions. Widen the timeframe or remove a '
-                + 'condition \u2014 nothing here is broken, the dataset simply holds no game that met all of them.</p>';
+                + '<caption class="sr">Qualifying meetings between ' + esc(d.team_1) + ' and ' + esc(d.team_2)
+                + ', with the conditions each one satisfied</caption>'
+                + '<thead><tr><th>Date</th><th>Matchup</th><th>Location</th><th>Final score</th>'
+                + '<th>Winner</th><th>Margin</th><th>Favorite</th><th>Closing total</th>'
+                + '<th>Closing moneyline</th><th>Why it qualified</th></tr></thead><tbody>'
+                + rows + '</tbody></table></div>'
+            : '<p class="note-s">No meeting matches these conditions in this period. Remove a condition or '
+                + 'widen the period — nothing here is broken, the dataset simply holds no meeting that met '
+                + 'all of them.</p>';
         return '<section class="rcard">'
-            + '<div class="rcard-head"><h3>' + esc(r.team) + ' \u2014 qualifying games</h3>' + range + '</div>'
+            + '<div class="rcard-head"><h3>' + ((games.length && games.length < total)
+                ? 'Qualifying meetings — most recent ' + fmtInt(games.length) + ' of ' + fmtInt(total)
+                : 'Every qualifying meeting (' + fmtInt(total) + ')') + '</h3>'
+            + '<span class="range">Away side listed first</span></div>'
             + body + '</section>';
     }
 
@@ -1529,50 +1690,81 @@
                 + (hint ? '<em>' + esc(hint) + '</em>' : '') + '</div>';
         };
         var pct = function (v) { return v == null ? '' : v + '%'; };
-        var rec = function (t) {
-            return esc(t.wins + '-' + t.losses + (m.ties ? '-' + m.ties : ''));
-        };
-        var sc = m.scoring, mk = m.market, st = m.streaks, cg = m.close_games;
+        var rec = function (t) { return esc(t.wins + '-' + t.losses + (m.ties ? '-' + m.ties : '')); };
+        var sc = m.scoring, mk = m.market || null, st = m.streaks;
 
-        var lines = [m.team_1.record_label, m.team_2.record_label];
-        if (m.home_side_label) lines.push(m.home_side_label);
-        if (sc) { lines.push(sc.avg_score_label); lines.push(sc.combined_label); }
-        if (cg) lines.push(cg.label);
-        if (mk) { lines.push(mk.ats.label); lines.push(mk.over_under.label); }
-        if (st) {
-            if (st.current_label) lines.push(st.current_label);
-            lines.push(st.longest_label);
-        }
-
-        return '<section class="rcard">'
-            + '<div class="rcard-head"><h3>These ' + fmtInt(m.qualifying_games) + ' meetings</h3></div>'
+        var result = '<section class="rcard">'
+            + '<div class="rcard-head"><h3>Head-to-head result</h3>'
+            + '<span class="range">' + fmtInt(m.qualifying_games) + ' qualifying meetings</span></div>'
             + '<div class="kpis">'
-            + kpi(m.team_1.team, rec(m.team_1), pct(m.team_1.win_pct))
-            + kpi(m.team_2.team, rec(m.team_2), pct(m.team_2.win_pct))
-            + kpi('Home side wins', fmtInt(m.home_side_wins), 'whichever team was at home')
-            + kpi('Away side wins', fmtInt(m.away_side_wins), 'whichever team was on the road')
-            + (sc ? kpi(m.team_1.team + ' avg', num(sc.avg_team_1), 'median ' + num(sc.median_team_1)) : '')
-            + (sc ? kpi(m.team_2.team + ' avg', num(sc.avg_team_2), 'median ' + num(sc.median_team_2)) : '')
-            + (sc ? kpi('Combined ' + esc(m.scoring_noun), num(sc.avg_combined), 'median ' + num(sc.median_combined)) : '')
-            + (sc ? kpi('Avg margin', num(sc.avg_margin), 'either side') : '')
-            + (cg ? kpi(esc(cg.label.split(':')[0]), fmtInt(cg.count), cg.pct + '% of the sample') : '')
-            + (mk ? kpi(m.team_1.team + ' as favorite', esc(mk.favorite.record), mk.favorite.eligible_games + ' eligible') : '')
-            + (mk ? kpi(m.team_1.team + ' as underdog', esc(mk.underdog.record), mk.underdog.eligible_games + ' eligible') : '')
-            + (mk ? kpi(m.team_1.team + ' ATS', esc(mk.ats.record), mk.ats.eligible_games + ' eligible') : '')
-            + (mk ? kpi('Over / under', esc(mk.over_under.record), mk.over_under.eligible_games + ' eligible') : '')
+            + kpi(m.team_1.team + ' record', rec(m.team_1), pct(m.team_1.win_pct))
+            + kpi(m.team_2.team + ' record', rec(m.team_2), pct(m.team_2.win_pct))
+            + (sc ? kpi('Avg ' + m.scoring_noun + ' — ' + m.team_1.team, num(sc.avg_team_1),
+                        'median ' + num(sc.median_team_1)) : '')
+            + (sc ? kpi('Avg ' + m.scoring_noun + ' — ' + m.team_2.team, num(sc.avg_team_2),
+                        'median ' + num(sc.median_team_2)) : '')
+            + (sc ? kpi('Average margin', num(sc.avg_margin),
+                        'combined ' + num(sc.avg_combined) + ' per game') : '')
+            + kpi('Home side', fmtInt(m.home_side_wins) + '-' + fmtInt(m.away_side_wins),
+                  'whichever team hosted')
             + '</div>'
-            + '<ul class="sum-lines">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'
+            + ((st && st.current_label)
+                ? '<p class="note-s">' + esc(st.current_label) + '. ' + esc(st.longest_label) + '.</p>' : '')
+            + '<p class="note-s">Every figure here is the plain arithmetic of the qualifying meetings listed '
+            + 'below.</p></section>';
+
+        // Markets are conditional on real data. One with nothing behind it says
+        // so in a sentence: an empty record reads as 0-0, which is a finding
+        // rather than an absence.
+        var ml = mk && mk.moneyline;
+        var atsN = mk ? mk.ats.eligible_games : 0;
+        var ouN = mk ? mk.over_under.eligible_games : 0;
+        var absent = function (market, text) {
+            return '<p class="market-absent"><strong>' + esc(market) + ':</strong> ' + esc(text) + '</p>';
+        };
+        var units = function (u) { return u == null ? DASH : (u > 0 ? '+' : '') + u + 'u'; };
+        var markets = '<section class="rcard">'
+            + '<div class="rcard-head"><h3>Historical betting markets</h3>'
+            + '<span class="range">Genuine stored lines only</span></div>'
+            + '<div class="kpis">'
+            + (ml
+                ? kpi('Moneyline — ' + ml.team_1.team, esc(ml.team_1.record),
+                      pct(ml.team_1.win_pct) + ' · ' + units(ml.team_1.units) + ' flat · '
+                      + ml.team_1.eligible_games + ' priced')
+                  + kpi('Moneyline — ' + ml.team_2.team, esc(ml.team_2.record),
+                      pct(ml.team_2.win_pct) + ' · ' + units(ml.team_2.units) + ' flat · '
+                      + ml.team_2.eligible_games + ' priced')
+                : '')
+            + (atsN > 0
+                ? kpi('Against the spread — ' + m.team_1.team, esc(mk.ats.record),
+                      pct(mk.ats.cover_pct) + ' · ' + atsN + ' of ' + fmtInt(m.qualifying_games)
+                      + ' carried a real closing spread')
+                : '')
+            + (ouN > 0
+                ? kpi('Over / under', esc(mk.over_under.record),
+                      pct(mk.over_under.over_pct) + ' over · ' + ouN + ' of ' + fmtInt(m.qualifying_games)
+                      + ' carried a real closing total')
+                : '')
+            + '</div>'
+            + (ml ? '' : absent('Moneyline', 'no genuine closing moneyline is on file for any of these '
+                + 'meetings, so no moneyline record is reported.'))
+            + (atsN > 0 ? '' : absent('Spread', 'none of these meetings carry a genuine closing spread, so no '
+                + 'against-the-spread record is reported.'))
+            + (ouN > 0 ? '' : absent('Totals', 'none of these meetings carry a genuine closing total, so no '
+                + 'over/under record is reported.'))
+            + (ml ? '<p class="note-s">' + esc(ml.note) + '</p>' : '')
             + ((m.unavailable_readings || []).length
                 ? '<div class="block-note"><strong>Not shown, and why</strong><ul>'
                     + m.unavailable_readings.map(function (u) {
                         return '<li>' + esc(u.reading) + ': ' + esc(u.reason) + '</li>';
                     }).join('') + '</ul></div>' : '')
             + '</section>';
+
+        return result + markets;
     }
 
     function renderReport(res) {
         var d = res.result || res;
-        var noun = SCORE_NOUN[d.sport] || 'points';
         var applied = d.filters_applied || [];
         var declined = d.filters_not_applied || [];
         var unavailable = d.unavailable_filters || [];
@@ -1677,6 +1869,7 @@
             + esc(d.team_venue === 'all' ? ' and ' : (d.team_venue === 'home' ? ' vs ' : ' at '))
             + esc(d.team_2) + '</h2>'
             + '<span class="range">' + esc(d.sport) + '</span></div>'
+            + searchedBlock(d)
             + verify + zero
             + '<div class="tags">'
             + (applied.length
@@ -1735,12 +1928,12 @@
                 + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
                 + '</div>' + thinNote(h2h) + '</section>' : '';
 
-        return head + matchupSummary(d) + '<div class="two">' + teamSummary(d.team_1_report, noun) + teamSummary(d.team_2_report, noun) + '</div>'
-            + h2hBlock
-            + teamGames(d.team_1_report) + teamGames(d.team_2_report)
-            + '<p class="method">Every record, average and percentage above is the plain arithmetic of the games '
-            + 'listed, computed from BetLegend Pro’s graded-game database. Games with no final score are '
-            + 'excluded; a game with no closing line on file shows a dash for role rather than an inferred value.</p>';
+        return head + matchupSummary(d) + meetingsTable(d) + h2hBlock
+            + '<p class="method">Every record, average and percentage above is the plain arithmetic of the '
+            + 'qualifying meetings, computed from BetLegend Pro’s graded-game database. Every game listed '
+            + 'is a meeting between these two teams; games against any other opponent are never included. '
+            + 'Games with no final score are excluded, and a game with no closing line, total or moneyline on '
+            + 'file shows a dash rather than an inferred value.</p>';
     }
 
     // ------------------------------------------------------ view switching
@@ -1775,13 +1968,16 @@
             // Which of the two questions is being asked. The bridge forwards
             // this; the engine resolves it onto its own `location` field.
             team_venue: mVenue.value,
-            // null is meaningful to this endpoint: every qualifying game, still
+            // The PERIOD is years. The LIMIT is a listing control chosen after
+            // it: null means every qualifying meeting in the period, still
             // bounded by the engine's own cap, which the report states.
-            sample_size: (tf === 'all' || tf === 'custom') ? null : Number(tf)
+            sample_size: mLimit.value === 'all' ? null : Number(mLimit.value)
         };
         if (tf === 'custom') {
             if (mDateFrom.value) body.date_from = mDateFrom.value;
             if (mDateTo.value) body.date_to = mDateTo.value;
+        } else if (tf !== 'all') {
+            body.season = tf;
         }
         var chosen = filterPayload();
         Object.keys(chosen).forEach(function (k) {
@@ -2259,7 +2455,7 @@
         }
         $('app').hidden = false;
         selectTool((location.hash || '').replace('#', '') || 'matchup', false);
-        renderCategories();
+        renderConditions();
         syncSetup();
         updateEdgeNote();
         loadFilterLibrary(mSport.value);
