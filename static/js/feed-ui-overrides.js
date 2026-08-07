@@ -261,14 +261,20 @@ function renderTextPost(item) {
 function renderPollCard(item) {
     const id = item.poll_id || item.id || item.item_id;
     const opts = Array.isArray(item.options) ? item.options : [];
-    const questionCount = Number(item.question_count || 0);
-    // Multi-question quizzes have no single option array in the feed - link out.
+    const questionCount = Number(item.question_count || item.total_questions || 0);
+    // A prediction quiz NEVER renders its questions or answer controls in the
+    // feed - the feed only ever gets a compact preview that links to the quiz
+    // page. This holds whether or not the payload happens to carry an options
+    // array for the first question.
+    const isQuiz = questionCount > 1 || item.is_game === true || item.game_mode === true ||
+        String(item.poll_type || item.type || '') === 'game';
     let body;
-    if (!opts.length && questionCount > 1) {
+    if (isQuiz) {
+        const qLabel = questionCount > 1 ? questionCount + '-question prediction quiz' : 'Prediction quiz';
         body = '<div class="tmrp" data-poll-id="' + esc(id) + '">' +
             '<a class="tmrp-opt tmrp-link" href="/polls/#poll-' + esc(id) + '">' +
-            '<span class="tmrp-label">' + questionCount + '-question prediction quiz</span>' +
-            '<span class="tmrp-pct">Enter &rarr;</span></a></div>';
+            '<span class="tmrp-label">' + esc(qLabel) + '</span>' +
+            '<span class="tmrp-pct">Play Quiz &rarr;</span></a></div>';
     } else if (window.TMRPoll) {
         body = window.TMRPoll.optionsHTML(item);
     } else {

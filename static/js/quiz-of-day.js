@@ -1,14 +1,14 @@
 /**
- * quiz-of-day.js — shared "Prediction Quiz of the Day" card.
- * ==========================================================
- * Renders the SAME featured quiz record returned by GET /api/polls/featured
- * (no duplication) and lets a logged-in user answer inline, on the homepage
- * and the community feed, then shows their picks + community consensus without
- * leaving the page. Deep-links to /polls/#poll-<id> for the full leaderboard.
+ * quiz-of-day.js — compact "Prediction Quiz of the Day" PREVIEW card.
+ * ===================================================================
+ * Announces the featured quiz returned by GET /api/polls/featured and links to
+ * the dedicated quiz page. It is a preview ONLY: it must never render quiz
+ * questions, answer options, Over/Under buttons, numeric inputs, or any other
+ * response control. Answering happens on /polls/ — the community feed stays
+ * social and compact, whatever the quiz is and however many questions it has.
  *
- * Prediction quizzes only: every question has an objectively gradeable outcome
- * and is auto-graded by the backend (points + Elo). This widget never creates
- * or renders ungraded opinion polls.
+ * Shows: eyebrow, status chip, title, sport, question count, points available,
+ * closing time, entries, the viewer's participation status, and one CTA.
  *
  * Isolated + additive: reuses window.api (auth/refresh) when present; falls
  * back to a plain fetch against the configured API base otherwise. It does NOT
@@ -52,8 +52,8 @@
     return data;
   }
 
-  function loginUrl() {
-    try { return '/login/?next=' + encodeURIComponent(location.pathname + location.hash); }
+  function loginUrl(next) {
+    try { return '/login/?next=' + encodeURIComponent(next || (location.pathname + location.hash)); }
     catch (e) { return '/login/'; }
   }
 
@@ -68,45 +68,24 @@
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     var css = [
-      '.tmr-qotd{--q-bg:#0f1b2e;--q-card:#132339;--q-line:rgba(120,150,190,.22);--q-mut:#93a4ba;--q-cyan:#22d3ee;--q-green:#34d399;',
-      'background:linear-gradient(160deg,#14263f 0%,#0f1b2e 100%);',
-      'border:1px solid var(--q-line);border-radius:16px;padding:16px 18px;color:#e6eefb;font-family:inherit;box-shadow:0 6px 26px rgba(4,10,22,.32)}',
+      '.tmr-qotd{--q-line:rgba(120,150,190,.22);--q-mut:#93a4ba;--q-cyan:#22d3ee;--q-green:#34d399;',
+      'display:block;text-decoration:none;background:linear-gradient(160deg,#14263f 0%,#0f1b2e 100%);',
+      'border:1px solid var(--q-line);border-radius:16px;padding:16px 18px;color:#e6eefb;font-family:inherit;box-shadow:0 6px 26px rgba(4,10,22,.32);transition:border-color .15s ease,transform .15s ease}',
+      '.tmr-qotd:hover{border-color:var(--q-cyan);transform:translateY(-1px)}',
       '.tmr-qotd *{box-sizing:border-box}',
       '.tmr-qotd-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--q-cyan)}',
       '.tmr-qotd-chip{font-size:.6rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-left:8px}',
       '.tmr-qotd-chip.live{background:rgba(52,211,153,.14);color:#6ee7b7;border:1px solid rgba(52,211,153,.4)}',
       '.tmr-qotd-chip.done{background:rgba(148,163,184,.14);color:#cbd5e1;border:1px solid rgba(148,163,184,.3)}',
-      '.tmr-qotd-title{font-size:1.12rem;font-weight:900;line-height:1.25;margin:8px 0 10px}',
+      '.tmr-qotd-title{font-size:1.12rem;font-weight:900;line-height:1.25;margin:8px 0 10px;color:#e6eefb}',
       '.tmr-qotd-facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.76rem;color:var(--q-mut);font-weight:700;margin-bottom:12px}',
       '.tmr-qotd-facts i{color:var(--q-cyan);margin-right:5px}',
       '.tmr-qotd-facts .first{color:var(--q-green)}',
-      '.tmr-qotd-q{border-top:1px solid var(--q-line);padding:11px 0}',
-      '.tmr-qotd-q:first-of-type{border-top:none}',
-      '.tmr-qotd-qtitle{font-size:.86rem;font-weight:800;margin-bottom:8px}',
-      '.tmr-qotd-opts{display:grid;gap:6px}',
-      '.tmr-qotd-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;padding:9px 12px;border-radius:9px;',
-      'border:1px solid var(--q-line);background:var(--q-card);color:#e6eefb;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;width:100%;overflow:hidden}',
-      '.tmr-qotd-opt:hover:not(:disabled){border-color:var(--q-cyan)}',
-      '.tmr-qotd-opt.sel{border-color:var(--q-cyan);background:rgba(34,211,238,.12)}',
-      '.tmr-qotd-opt.correct{border-color:var(--q-green);background:rgba(52,211,153,.14)}',
-      '.tmr-qotd-opt[disabled]{cursor:default;opacity:.96}',
-      '.tmr-qotd-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(34,211,238,.12);z-index:0}',
-      '.tmr-qotd-opt.correct .tmr-qotd-bar{background:rgba(52,211,153,.16)}',
-      '.tmr-qotd-olabel,.tmr-qotd-opct{position:relative;z-index:1}',
-      '.tmr-qotd-opct{font-variant-numeric:tabular-nums;color:var(--q-mut);font-weight:800;font-size:.74rem;white-space:nowrap}',
-      '.tmr-qotd-tag{font-size:.58rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;margin-left:6px}',
-      '.tmr-qotd-tag.you{background:rgba(34,211,238,.18);color:#67e8f9}',
-      '.tmr-qotd-tag.correct{background:rgba(52,211,153,.2);color:#6ee7b7}',
-      '.tmr-qotd-tag.pts{background:rgba(250,204,21,.16);color:#fde047}',
-      '.tmr-qotd-num{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--q-line);background:var(--q-card);color:#e6eefb;font-family:inherit;font-size:.82rem;font-weight:700}',
+      '.tmr-qotd-note{font-size:.76rem;color:var(--q-mut);font-weight:700}',
+      '.tmr-qotd-note strong{color:#cfe0f5}',
       '.tmr-qotd-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:13px}',
       '.tmr-qotd-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:999px;border:1px solid rgba(34,211,238,.5);',
-      'background:linear-gradient(135deg,var(--q-green),var(--q-cyan));color:#06111f;font-family:inherit;font-weight:900;font-size:.84rem;cursor:pointer}',
-      '.tmr-qotd-btn[disabled]{opacity:.55;cursor:not-allowed}',
-      '.tmr-qotd-link{color:var(--q-cyan);font-weight:800;font-size:.8rem;text-decoration:none}',
-      '.tmr-qotd-link:hover{text-decoration:underline}',
-      '.tmr-qotd-note{font-size:.76rem;color:var(--q-mut);font-weight:700}',
-      '.tmr-qotd-err{color:#fca5a5;font-size:.76rem;font-weight:800;margin-top:8px;min-height:1em}',
+      'background:linear-gradient(135deg,var(--q-green),var(--q-cyan));color:#06111f;font-family:inherit;font-weight:900;font-size:.84rem}',
       '.tmr-qotd-skel{height:150px;border-radius:16px;border:1px solid var(--q-line);background:linear-gradient(90deg,#122036,#16294247,#122036);',
       'background-size:200% 100%;animation:tmrqotdsk 1.4s ease-in-out infinite}',
       '@keyframes tmrqotdsk{0%{background-position:200% 0}100%{background-position:-200% 0}}',
@@ -119,94 +98,28 @@
 
   // ---- render ---------------------------------------------------------------
 
-  function optionResultHTML(o, total, yourOptId, resolved) {
-    var vc = parseInt(o.vote_count || 0);
-    var pct = total > 0 ? (vc / total * 100) : 0;
-    var pctText = (parseFloat(o.vote_percentage != null ? o.vote_percentage : pct) || 0).toFixed(0);
-    var correct = resolved && o.is_correct;
-    var you = yourOptId != null && parseInt(o.id) === parseInt(yourOptId);
-    var cls = 'tmr-qotd-opt' + (correct ? ' correct' : '') + (you ? ' sel' : '');
-    var tags = (correct ? '<span class="tmr-qotd-tag correct">Correct</span>' : '') +
-      (you ? '<span class="tmr-qotd-tag you">You</span>' : '');
-    return '<div class="' + cls + '" disabled>' +
-      '<span class="tmr-qotd-bar" style="width:' + Math.min(100, pct).toFixed(0) + '%"></span>' +
-      '<span class="tmr-qotd-olabel">' + esc(o.option_text) + tags + '</span>' +
-      '<span class="tmr-qotd-opct">' + pctText + '% &middot; ' + vc + '</span></div>';
-  }
-
-  function questionHTML(q, mode) {
-    // mode: 'answer' (open, logged in) | 'results' (voted/resolved/logged out)
-    // GRADED, not merely "resolved": a voided question (postponed game, player
-    // DNP) is status='resolved' with no correct option and pays nobody, so it
-    // must never render a result or a points tag.
-    var resolved = q.graded === true || (q.graded === undefined && q.status === 'resolved' &&
-      (q.numeric_target != null || (q.options || []).some(function (o) { return o.is_correct === true; })));
-    var voided = q.status === 'resolved' && !resolved;
-    var ua = q.user_answer || null;
-    var yourOpt = ua ? ua.option_id : null;
-    var showResults = mode === 'results' || resolved || !!ua;
-    var head = '<div class="tmr-qotd-qtitle">' + esc(q.title) +
-      (ua && resolved && ua.points_earned != null ? ' <span class="tmr-qotd-tag pts">+' + ua.points_earned + '</span>' : '') +
-      (voided ? ' <span class="tmr-qotd-tag">Voided</span>' : '') +
-      '</div>';
-
-    var body;
-    if (showResults) {
-      if (q.scoring_mode === 'closest') {
-        var yourNum = ua && ua.numeric_value != null ? ua.numeric_value : null;
-        body = '<div class="tmr-qotd-note">' + (yourNum != null ? 'Your answer: <strong>' + esc(yourNum) + '</strong>' : 'Closest-number question') +
-          (resolved && q.numeric_target != null ? ' &middot; Actual: <strong>' + esc(q.numeric_target) + '</strong>' : '') + '</div>';
-      } else {
-        var total = parseInt(q.total_votes || 0);
-        body = '<div class="tmr-qotd-opts">' + (q.options || []).map(function (o) {
-          return optionResultHTML(o, total, yourOpt, resolved);
-        }).join('') + '</div>';
-      }
-    } else {
-      if (q.scoring_mode === 'closest') {
-        body = '<input class="tmr-qotd-num" type="number" step="any" data-qid="' + q.id + '" data-mode="closest" placeholder="Your number">';
-      } else {
-        body = '<div class="tmr-qotd-opts" role="radiogroup">' + (q.options || []).map(function (o) {
-          return '<button type="button" class="tmr-qotd-opt" role="radio" aria-checked="false" ' +
-            'data-qid="' + q.id + '" data-oid="' + o.id + '" data-mode="option">' +
-            '<span class="tmr-qotd-olabel">' + esc(o.option_text) + '</span></button>';
-        }).join('') + '</div>';
-      }
-    }
-    return '<div class="tmr-qotd-q">' + head + body + '</div>';
-  }
-
-  function render(container) {
-    var st = STATE.get(container);
-    if (!st) return;
-    var f = st.f, game = st.game;
+  function render(container, f, game) {
     var qs = (game && game.questions) || [];
     var isOpen = f.featured_status === 'open' && f.status !== 'resolved';
     var resolved = f.featured_status === 'results' || f.status === 'resolved';
     var pending = !isOpen && !resolved; // answering closed, awaiting grading
     var loggedIn = isLoggedIn();
-    var answerMode = isOpen && loggedIn;
     var entries = f.total_players || 0;
+    var totalQ = f.question_count || f.total_questions || qs.length || 0;
+    var quizUrl = '/polls/#poll-' + f.id;
 
     // Grading state is authoritative over the answering-window state: a quiz can
     // be open for answers while some questions have already resolved, and can be
     // long closed with nothing resolved at all.
     var gstate = (f.state) || (resolved ? 'final' : 'awaiting');
     var chip = gstate === 'final' ? '<span class="tmr-qotd-chip done">Final Results</span>' :
-      gstate === 'partial' ? '<span class="tmr-qotd-chip done">' + (f.questions_resolved || 0) + '/' + (f.total_questions || qs.length) + ' resolved</span>' :
+      gstate === 'partial' ? '<span class="tmr-qotd-chip done">' + (f.questions_resolved || 0) + '/' + totalQ + ' resolved</span>' :
       pending ? '<span class="tmr-qotd-chip done">Awaiting Results</span>' :
       '<span class="tmr-qotd-chip live">Live</span>';
 
-    // Never let a submission count read as a score.
-    var myPicks = qs.filter(function (q) { return q.user_answer; }).length;
-    var entryNote = (myPicks > 0 && gstate !== 'final')
-      ? '<div class="tmr-qotd-note" style="margin-bottom:10px;"><strong>' + myPicks + ' pick' + (myPicks === 1 ? '' : 's') + ' submitted</strong>' +
-        (gstate === 'awaiting' ? ' &middot; awaiting results' : ' &middot; ' + (f.questions_resolved || 0) + ' of ' + (f.total_questions || qs.length) + ' questions resolved') + '</div>'
-      : '';
-
     var facts = '<div class="tmr-qotd-facts">' +
       '<span><i class="fas fa-baseball"></i>' + esc(f.sport || 'Sports') + '</span>' +
-      '<span><i class="fas fa-list-ol"></i>' + (f.question_count || qs.length) + ' questions</span>' +
+      '<span><i class="fas fa-list-ol"></i>' + totalQ + ' questions</span>' +
       '<span><i class="fas fa-coins"></i>' + (f.points_available || 0) + ' pts available</span>' +
       (f.closes_at ? '<span><i class="fas fa-clock"></i>' + (isOpen ? 'Closes ' : 'Closed ') + esc(fmtDate(f.closes_at)) + '</span>' : '') +
       (entries > 0
@@ -216,112 +129,39 @@
             : '<span><i class="fas fa-users"></i>No entries</span>')) +
       '</div>';
 
-    var qMode = answerMode ? 'answer' : 'results';
-    var qsHtml = qs.map(function (q) { return questionHTML(q, qMode); }).join('');
-
-    var actions;
-    if (!isOpen) {
-      var linkLabel = resolved ? 'View full results &amp; leaderboard &rarr;' : 'View quiz &amp; standings &rarr;';
-      actions = '<div class="tmr-qotd-actions">' +
-        (pending ? '<span class="tmr-qotd-note">Answering closed &middot; grading soon</span>' : '') +
-        '<a class="tmr-qotd-link" href="/polls/#poll-' + f.id + '">' + linkLabel + '</a></div>';
-    } else if (!loggedIn) {
-      actions = '<div class="tmr-qotd-actions">' +
-        '<a class="tmr-qotd-btn" href="' + loginUrl() + '"><i class="fas fa-right-to-bracket"></i> Log in to play</a>' +
-        '<a class="tmr-qotd-link" href="/polls/#poll-' + f.id + '">See the quiz &rarr;</a></div>';
-    } else {
-      var already = qs.some(function (q) { return q.user_answer; });
-      actions = '<div class="tmr-qotd-actions">' +
-        '<button type="button" class="tmr-qotd-btn" data-act="submit"><i class="fas fa-check"></i> ' +
-        (already ? 'Update My Picks' : 'Lock In Picks') + '</button>' +
-        '<a class="tmr-qotd-link" href="/polls/#poll-' + f.id + '">Full quiz &amp; leaderboard &rarr;</a></div>';
+    // Participation status only — never a submission count read as a score.
+    var myPicks = qs.filter(function (q) { return q.user_answer; }).length;
+    var status = '';
+    if (loggedIn && myPicks > 0) {
+      status = '<div class="tmr-qotd-note"><strong>' + myPicks + ' of ' + (totalQ || myPicks) + ' picks submitted</strong>' +
+        (gstate === 'final' ? ' &middot; graded' :
+         gstate === 'partial' ? ' &middot; ' + (f.questions_resolved || 0) + ' of ' + totalQ + ' questions resolved' :
+         ' &middot; awaiting results') + '</div>';
+    } else if (loggedIn && isOpen) {
+      status = '<div class="tmr-qotd-note">You have not entered yet</div>';
+    } else if (pending) {
+      status = '<div class="tmr-qotd-note">Answering closed &middot; grading soon</div>';
     }
 
+    var cta;
+    if (resolved) cta = '<i class="fas fa-trophy"></i> View Results';
+    else if (!isOpen) cta = '<i class="fas fa-list-check"></i> View Quiz';
+    else if (!loggedIn) cta = '<i class="fas fa-right-to-bracket"></i> Log in to play';
+    else cta = '<i class="fas fa-check"></i> ' + (myPicks > 0 ? 'Update My Predictions' : 'Make Predictions');
+
+    var href = (isOpen && !loggedIn) ? loginUrl(quizUrl) : quizUrl;
+
     container.innerHTML =
-      '<div class="tmr-qotd">' +
+      '<a class="tmr-qotd" href="' + esc(href) + '">' +
         '<div><span class="tmr-qotd-eyebrow"><i class="fas fa-trophy"></i> Prediction Quiz of the Day</span>' + chip + '</div>' +
         '<div class="tmr-qotd-title">' + esc(f.title) + '</div>' +
         facts +
-        entryNote +
-        qsHtml +
-        '<div class="tmr-qotd-err" data-err></div>' +
-        actions +
-      '</div>';
-
-    // restore local selections after a re-render (before submit)
-    if (st.sel) {
-      Object.keys(st.sel).forEach(function (qid) {
-        var btn = container.querySelector('.tmr-qotd-opt[data-qid="' + qid + '"][data-oid="' + st.sel[qid] + '"]');
-        if (btn) { btn.classList.add('sel'); btn.setAttribute('aria-checked', 'true'); }
-      });
-    }
-  }
-
-  // ---- interaction ----------------------------------------------------------
-
-  function onClick(container, e) {
-    var opt = e.target.closest('.tmr-qotd-opt[data-mode="option"]');
-    if (opt && !opt.hasAttribute('disabled')) {
-      var qid = opt.getAttribute('data-qid');
-      var oid = opt.getAttribute('data-oid');
-      var st = STATE.get(container); if (!st) return;
-      st.sel = st.sel || {};
-      st.sel[qid] = oid;
-      // clear siblings, mark this
-      container.querySelectorAll('.tmr-qotd-opt[data-qid="' + qid + '"]').forEach(function (b) {
-        b.classList.remove('sel'); b.setAttribute('aria-checked', 'false');
-      });
-      opt.classList.add('sel'); opt.setAttribute('aria-checked', 'true');
-      return;
-    }
-    var submit = e.target.closest('[data-act="submit"]');
-    if (submit) { e.preventDefault(); doSubmit(container, submit); }
-  }
-
-  function collectAnswers(container) {
-    var st = STATE.get(container);
-    var qs = (st.game && st.game.questions) || [];
-    var answers = [];
-    qs.forEach(function (q) {
-      if (q.scoring_mode === 'closest') {
-        var inp = container.querySelector('.tmr-qotd-num[data-qid="' + q.id + '"]');
-        if (inp && inp.value !== '' && !isNaN(Number(inp.value))) answers.push({ question_id: q.id, numeric_value: Number(inp.value) });
-      } else if (st.sel && st.sel[q.id]) {
-        answers.push({ question_id: q.id, option_id: parseInt(st.sel[q.id]) });
-      }
-    });
-    return answers;
-  }
-
-  async function doSubmit(container, btn) {
-    if (!isLoggedIn()) { location.href = loginUrl(); return; }
-    var st = STATE.get(container);
-    var errEl = container.querySelector('[data-err]');
-    var answers = collectAnswers(container);
-    if (!answers.length) { if (errEl) errEl.textContent = 'Answer at least one question first.'; return; }
-    if (errEl) errEl.textContent = '';
-    btn.disabled = true; var html = btn.innerHTML; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
-    try {
-      var res = await req('/polls/' + st.f.id + '/game/vote', { method: 'POST', body: { answers: answers } });
-      // The vote response is authoritative (includes the user's answers +
-      // updated counts). Keep it; do NOT let a lagged /featured read wipe it.
-      if (res && res.game) st.game = res.game;
-      // Best-effort meta refresh only (entries), never the game payload.
-      try {
-        var fresh = await req('/polls/featured');
-        if (fresh && fresh.featured && String(fresh.featured.id) === String(st.f.id)) st.f = fresh.featured;
-      } catch (e) {}
-      st.sel = null;
-      render(container);
-    } catch (err) {
-      btn.disabled = false; btn.innerHTML = html;
-      if (errEl) errEl.textContent = (err && err.message) ? err.message : 'Could not submit picks.';
-    }
+        status +
+        '<div class="tmr-qotd-actions"><span class="tmr-qotd-btn">' + cta + '</span></div>' +
+      '</a>';
   }
 
   // ---- boot -----------------------------------------------------------------
-
-  var STATE = new WeakMap();
 
   async function load(container) {
     injectStyles();
@@ -330,13 +170,8 @@
     try { data = await req('/polls/featured'); }
     catch (e) { container.style.display = 'none'; return; }
     if (!data || !data.featured) { container.style.display = 'none'; return; }
-    STATE.set(container, { f: data.featured, game: data.game, sel: null });
     container.style.display = '';
-    render(container);
-    if (!container._tmrQotdBound) {
-      container.addEventListener('click', function (e) { onClick(container, e); });
-      container._tmrQotdBound = true;
-    }
+    render(container, data.featured, data.game);
   }
 
   window.TMRQuizOfDay = {
