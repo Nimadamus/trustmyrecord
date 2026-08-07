@@ -92,6 +92,66 @@
             </div>
         </header>
 
+        <!-- ============================================== INTRODUCTION ==
+             What the tool is, which years it holds, and how to drive it --
+             above the tool because a user who has just arrived is asking
+             those three questions and nothing else. Kept to one band: the
+             coverage table and the steps sit side by side on desktop and
+             stack on mobile, so the tool itself stays near the top of the
+             page. Every year shown is measured from the loaded database
+             (GET matchup-filters -> coverage_all); nothing here is written
+             into the markup. -->
+        <section class="intro" id="intro">
+            <div class="intro-lede">
+                <h1 class="intro-title">BetLegend Pro <span>Historical Matchup Research</span></h1>
+                <p>BetLegend Pro is a historical matchup research tool. Pick two teams and search their
+                head-to-head history in our graded-game database. See the complete matchup history, or
+                narrow it with situational filters to see how those two teams actually performed under
+                specific conditions. Everything it returns is games that have already been played &mdash;
+                it is research, not a prediction, and not a guarantee of any result.</p>
+            </div>
+
+            <div class="intro-grid">
+                <section class="intro-block">
+                    <p class="intro-h">Database coverage</p>
+                    <ul class="cover-table" id="coverTable">
+                        <li class="cover-row"><span>Reading the database&hellip;</span></li>
+                    </ul>
+                    <p class="intro-note" id="coverActive"></p>
+                </section>
+
+                <!-- A disclosure, open by default. Stacked (below 900px) the
+                     five steps plus the coverage table pushed the tool 1,400px
+                     down the page, which is not "near the top" by any reading,
+                     so boot collapses it there and the reader opens it if they
+                     want it. Wide screens and no-JS both get it open. -->
+                <details class="intro-block intro-block-wide how-wrap" id="howWrap" open>
+                    <summary class="intro-h how-summary">How it works<span class="how-toggle" aria-hidden="true"></span></summary>
+                    <ol class="how">
+                        <li><b>1</b><span><strong>Select the sport.</strong> The coverage above marks the
+                            years on file for it.</span></li>
+                        <li><b>2</b><span><strong>Select the matchup.</strong> Away team, where the games
+                            were played, home team.</span></li>
+                        <li><b>3</b><span><strong>Choose the history.</strong> The widest option is
+                            <em id="howSince">since the first year on file</em>; you can narrow it to a
+                            single season or an exact date range.</span></li>
+                        <li><b>4</b><span><strong>Add filters &mdash; optional.</strong> With none, you get
+                            <strong>every</strong> qualifying meeting in that period. Each one you add
+                            narrows the sample: day or night, coming off a win or a loss, win and losing
+                            streaks, days of rest, starting-pitcher handedness, previous-game scoring,
+                            moneyline range. Only conditions this sport's data can actually answer are
+                            offered.</span></li>
+                        <li><b>5</b><span><strong>Run the report.</strong> It returns the qualifying games
+                            with both teams' records, win percentage, scoring, and the exact period and
+                            conditions it searched.</span></li>
+                    </ol>
+                    <p class="intro-note"><strong>Sample size matters.</strong> Every filter you add makes
+                    the sample smaller. 7-1 and 70-10 are not the same evidence, so read the qualifying
+                    count next to any record before you lean on it.</p>
+                </details>
+            </div>
+        </section>
+
         <section class="card" id="authGate" hidden>
             <div class="card-body">
                 <div class="empty">
@@ -488,7 +548,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260807-matchup';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260807-intro';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -1113,7 +1173,42 @@
 
     /** "MLB database coverage: 2000-2026 · 64,273 games on file" — measured,
      *  never configured. The first question a historical tool has to answer. */
+    /** The coverage table and the "since" wording in the instructions.
+     *
+     *  Both are filled from the era the server measured for every sport
+     *  (`coverage_all` on the filter library), never from anything written
+     *  into the page: a hard-coded year here would be a claim about the
+     *  database that the database never made. */
+    function paintIntro() {
+        var box = $('coverTable'), active = $('coverActive'), since = $('howSince');
+        var rows = (library && library.coverage_all) || (coverage ? [coverage] : []);
+        if (!rows.length) {
+            box.innerHTML = '<li class="cover-row"><span>Reading the database\u2026</span></li>';
+            active.textContent = '';
+            return;
+        }
+        box.innerHTML = rows.map(function (r) {
+            var on = r.sport === mSport.value;
+            return '<li class="cover-row' + (on ? ' is-on' : '') + '"'
+                + (on ? ' aria-current="true"' : '') + '>'
+                + '<b>' + esc(r.sport) + '</b>'
+                + '<span class="cover-years">' + (r.earliest_season != null
+                    ? esc(r.earliest_season) + '\u2013' + esc(r.latest_season) : '\u2014') + '</span>'
+                + '<i>' + fmtInt(r.games) + ' games</i></li>';
+        }).join('');
+        var mine = rows.filter(function (r) { return r.sport === mSport.value; })[0];
+        active.innerHTML = mine
+            ? 'Searching <strong>' + esc(mine.sport) + '</strong> from <strong>' + esc(mine.earliest_date)
+                + '</strong> through <strong>' + esc(mine.latest_date) + '</strong>. Every year listed is '
+                + 'measured from the games on file, not a configured value.'
+            : '';
+        if (since && mine && mine.earliest_season != null) {
+            since.textContent = 'since ' + mine.earliest_season;
+        }
+    }
+
     function paintCoverage() {
+        paintIntro();
         var line = $('coverLine'), meta = $('coverMeta');
         if (!coverage || coverage.earliest_season == null || coverage.latest_season == null) {
             line.textContent = 'Reading database coverage\u2026';
@@ -2455,6 +2550,14 @@
         }
         $('app').hidden = false;
         selectTool((location.hash || '').replace('#', '') || 'matchup', false);
+        // See the comment on #howWrap: the steps stay open on desktop and start
+        // collapsed on a phone so the tool is not pushed off the first screen.
+        try {
+            // 900px is where .intro-grid stops being two columns: once the
+            // band stacks, five open steps push the tool off the first screen
+            // (measured 1,169px on a 834px tablet, 1,422px on a phone).
+            if (window.matchMedia('(max-width: 899px)').matches) $('howWrap').open = false;
+        } catch (e) { /* matchMedia is not worth failing boot over */ }
         renderConditions();
         syncSetup();
         updateEdgeNote();
