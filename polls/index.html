@@ -843,14 +843,14 @@
         .pl-lb-you { background: linear-gradient(180deg, rgba(34,211,238,0.07), rgba(34,211,238,0.02)); border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px; }
         .pl-lb-you h3 { margin: 0 0 9px; font-size: 0.86rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 7px; }
         .pl-lb-you h3 .pl-lb-rankbig { color: var(--accent); font-variant-numeric: tabular-nums; }
-        .pl-lb-youstats { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+        .pl-lb-youstats { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
         .pl-lb-youstats div { min-width: 0; }
         .pl-lb-youstats .k { display: block; color: var(--muted); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
         .pl-lb-youstats .v { display: block; color: var(--text); font-size: 0.9rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; }
 
         /* ---- table ---- */
         .pl-lb-tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); -webkit-overflow-scrolling: touch; }
-        .pl-lb-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 880px; }
+        .pl-lb-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 960px; }
         .pl-lb-table th, .pl-lb-table td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
         .pl-lb-table th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); color: var(--muted); font-size: 0.63rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
         .pl-lb-table th:first-child, .pl-lb-table td:first-child { text-align: center; width: 52px; }
@@ -865,6 +865,16 @@
         .pl-lb-num.bad { color: var(--red); }
         .pl-lb-num.pend { color: var(--muted); }
         .pl-lb-pts { color: var(--text); font-weight: 800; font-variant-numeric: tabular-nums; }
+        .pl-lb-ppp { color: var(--text); font-weight: 750; font-variant-numeric: tabular-nums; }
+        /* Sortable column header. The button carries the click target so the
+           control is reachable by keyboard, not just by mouse. */
+        .pl-lb-table th.pl-lb-sortth { padding: 0; }
+        .pl-lb-sortbtn { appearance: none; width: 100%; display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 8px 10px; background: none; border: 0; cursor: pointer; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; white-space: nowrap; }
+        .pl-lb-sortbtn:hover { color: var(--text); }
+        .pl-lb-sortbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+        .pl-lb-sortbtn i { font-size: 0.72em; opacity: 0.55; }
+        .pl-lb-table th.pl-lb-sortth.is-sorted { color: var(--accent); }
+        .pl-lb-table th.pl-lb-sortth.is-sorted .pl-lb-sortbtn i { opacity: 1; }
         .pl-lb-rank { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-2); }
         .pl-lb-rank.m1 { background: var(--gold-dim); color: var(--gold); }
         .pl-lb-rank.m2 { background: rgba(190,205,222,0.14); color: #C9D6E5; }
@@ -1059,6 +1069,10 @@
                             <th scope="col" title="Current correct streak">Streak</th>
                             <th scope="col" title="Best correct streak">Best</th>
                             <th scope="col">Points</th>
+                            <th scope="col" class="pl-lb-sortth" id="pollLbPppTh" aria-sort="none"
+                                title="Average points per graded poll — total points divided by polls that have been graded">
+                                <button type="button" class="pl-lb-sortbtn" id="pollLbPppBtn" onclick="setLbSort('points_per_poll')">Avg Pts/Poll <i class="fas fa-sort" id="pollLbPppIcon" aria-hidden="true"></i></button>
+                            </th>
                             <th scope="col" class="pl-lb-tmrcol" title="TMR Coin earned from polls">TMR</th>
                         </tr>
                     </thead>
@@ -3776,6 +3790,12 @@
     state.lb = {
         period: 'all',
         league: 'all',
+        // Column ordering. 'rank' is the default board (points ranking); the
+        // Avg Pts/Poll header toggles desc -> asc -> back to rank. Sorting is
+        // done server-side so it orders the WHOLE field, not just the rows
+        // that happen to be loaded on this page.
+        sort: 'rank',
+        dir: 'asc',
         rows: [],
         you: null,
         summary: null,
@@ -3847,6 +3867,21 @@
         return false;
     }
     function lbNum(v) { return Number(v || 0).toLocaleString(); }
+    // Points-per-poll is a rate, always to 1 decimal.
+    function lbRate(v) {
+        return Number(v).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    }
+    function lbPppText(row) {
+        // No graded poll yet => no average. Never a fabricated 0.0.
+        var v = row ? row.points_per_poll : null;
+        return (v === null || v === undefined) ? null : lbRate(v);
+    }
+    function lbPppHtml(row) {
+        var t = lbPppText(row);
+        if (t === null) return '<span class="pl-lb-num pend" title="No graded polls yet">&mdash;</span>';
+        return '<span class="pl-lb-ppp" title="' + lbNum(row.total_points) + ' points over ' +
+               lbNum(row.graded_polls) + ' graded poll' + (row.graded_polls === 1 ? '' : 's') + '">' + t + '</span>';
+    }
 
     function setLbPeriod(period) {
         if (state.lb.period === period) return;
@@ -3859,6 +3894,32 @@
         state.lb.league = league;
         syncLbChips();
         loadLeaderboard({ reset: true });
+    }
+    // Toggle order on the Avg Pts/Poll column: best first, then worst first,
+    // then back to the default points ranking.
+    function setLbSort(key) {
+        var lb = state.lb;
+        if (lb.sort !== key) { lb.sort = key; lb.dir = 'desc'; }
+        else if (lb.dir === 'desc') { lb.dir = 'asc'; }
+        else { lb.sort = 'rank'; lb.dir = 'asc'; }
+        syncLbSort();
+        loadLeaderboard({ reset: true });
+    }
+    function syncLbSort() {
+        var th = document.getElementById('pollLbPppTh');
+        if (!th) return;
+        var on = state.lb.sort === 'points_per_poll';
+        var asc = state.lb.dir === 'asc';
+        th.classList.toggle('is-sorted', on);
+        th.setAttribute('aria-sort', on ? (asc ? 'ascending' : 'descending') : 'none');
+        var ic = document.getElementById('pollLbPppIcon');
+        if (ic) ic.className = 'fas fa-' + (!on ? 'sort' : asc ? 'arrow-up-short-wide' : 'arrow-down-wide-short');
+        var btn = document.getElementById('pollLbPppBtn');
+        if (btn) {
+            btn.setAttribute('title', !on ? 'Sort by average points per graded poll'
+                : asc ? 'Lowest average first \u2014 click to clear the sort'
+                      : 'Highest average first \u2014 click again for lowest first');
+        }
     }
     function syncLbChips() {
         document.querySelectorAll('#pollLbPeriodChips .pl-lb-chip').forEach(function(b) {
@@ -3903,6 +3964,8 @@
                 'league=' + encodeURIComponent(lb.league),
                 'limit=' + LB_PAGE,
                 'offset=' + offset,
+                'sort=' + encodeURIComponent(lb.sort),
+                'dir=' + encodeURIComponent(lb.dir),
                 'avatars=path'
             ];
             var data = await api.request('/polls/leaderboard?' + qs.join('&'));
@@ -3936,7 +3999,7 @@
         var body = document.getElementById('pollLbBody');
         var list = document.getElementById('pollLbCardList');
         var cells = '';
-        for (var c = 0; c < 11; c++) cells += '<td><div class="pl-lb-skel"></div></td>';
+        for (var c = 0; c < 12; c++) cells += '<td><div class="pl-lb-skel"></div></td>';
         var html = '';
         for (var i = 0; i < 6; i++) html += '<tr>' + cells + '</tr>';
         if (body) body.innerHTML = html;
@@ -3990,6 +4053,7 @@
               '<div class="pl-lb-youstats">' +
                 stat('Points', lbNum(y.total_points)) +
                 stat('Polls', lbNum(y.polls_entered)) +
+                stat('Avg Pts/Poll', lbPppText(y) === null ? '&mdash;' : lbPppText(y)) +
                 stat('Correct', lbNum(y.correct_predictions)) +
                 stat('Wrong', lbNum(y.incorrect_predictions)) +
                 stat('Pending', lbNum(y.pending_predictions)) +
@@ -4016,7 +4080,7 @@
                 : '<i class="fas fa-ranking-star" aria-hidden="true"></i><b>No graded entries yet</b>' +
                   'Nobody has a graded pick in this filter. Polls are scored only after the games are final &mdash; ' +
                   'enter a prediction quiz above and check back once the slate settles.';
-            if (body) body.innerHTML = '<tr><td colspan="11"><div class="pl-lb-empty">' + empty + '</div></td></tr>';
+            if (body) body.innerHTML = '<tr><td colspan="12"><div class="pl-lb-empty">' + empty + '</div></td></tr>';
             if (list) list.innerHTML = '<div class="pl-lb-empty">' + empty + '</div>';
             return;
         }
@@ -4040,6 +4104,7 @@
                 '<td>' + lbStreakHtml(r.current_streak, true) + '</td>' +
                 '<td class="pl-lb-num">' + (r.best_streak || '&mdash;') + '</td>' +
                 '<td class="pl-lb-pts">' + lbNum(r.total_points) + '</td>' +
+                '<td>' + lbPppHtml(r) + '</td>' +
                 '<td class="pl-lb-num pl-lb-tmrcol"' + (showTmr ? '' : ' hidden') + '>' + lbNum(r.tmr_earned) + '</td>' +
                 '</tr>';
 
@@ -4049,6 +4114,7 @@
                     '<span class="pl-lb-mc-pts">' + lbNum(r.total_points) + ' pts</span></div>' +
                 '<div class="pl-lb-mc-grid">' +
                     mstat('Polls', lbNum(r.polls_entered)) +
+                    mstat('Pts/Poll', lbPppHtml(r)) +
                     mstat('Correct', lbNum(r.correct_predictions)) +
                     mstat('Wrong', lbNum(r.incorrect_predictions)) +
                     mstat('Pending', lbNum(r.pending_predictions)) +
@@ -4132,6 +4198,7 @@
               '<li><b>Pending</b> picks do not count as wins or losses. A poll is graded only once the game is final &mdash; upcoming and live games stay pending.</li>' +
               '<li><b>Voided</b> questions (postponed games, a player who never took the field) score for nobody and are removed from your record entirely &mdash; not a win, not a loss, not an entry.</li>' +
               '<li><b>Win %</b> is correct &divide; graded picks. It shows a dash until something has actually been graded, and needs <b>' + minScored + '</b> graded picks before it headlines the Best Accuracy card.</li>' +
+              '<li><b>Avg Pts/Poll</b> is total points &divide; the number of your polls that have actually been graded. Pending and voided polls are not in the denominator, so entering more polls never dilutes it. Sort the column to rank the board by efficiency instead of volume.</li>' +
               '<li><b>Streaks</b> count consecutive correct picks in the order they were graded. A void neither breaks nor extends a streak.</li>' +
               '<li><b>Ties</b> break on, in order: most points, then higher accuracy, then more correct picks, then more polls entered, then whoever got there first.</li>' +
               '<li>Each poll counts once per player. Regrades and corrections recalculate every figure above automatically.</li>' +
@@ -4139,6 +4206,7 @@
     }
 
     function renderLeaderboard() {
+        syncLbSort();
         renderLbCards();
         renderLbYou();
         renderLbRows();

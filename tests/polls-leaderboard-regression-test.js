@@ -94,6 +94,26 @@ console.log('\nSummary cards');
   ok('summary card: ' + c, new RegExp("card\\('" + c + "'").test(html));
 });
 
+console.log('\nPoints per poll');
+ok('the table has an Avg Pts/Poll column', /id="pollLbPppTh"/.test(html) && />Avg Pts\/Poll /.test(html));
+ok('the column is sortable, with a real button so it is keyboard reachable',
+  /class="pl-lb-sortbtn" id="pollLbPppBtn" onclick="setLbSort\('points_per_poll'\)"/.test(html));
+ok('sorting is announced to assistive tech', /id="pollLbPppTh" aria-sort="none"/.test(html) &&
+  /setAttribute\('aria-sort'/.test(html));
+ok('sorting goes to the server, so it orders the whole field and not just this page',
+  /'sort=' \+ encodeURIComponent\(lb\.sort\)/.test(html) && /'dir=' \+ encodeURIComponent\(lb\.dir\)/.test(html));
+ok('the page never computes the average itself — it renders row.points_per_poll',
+  /points_per_poll/.test(html) && !/total_points\s*\/\s*(r|y)\.(polls_entered|graded_polls)/.test(html));
+ok('the average is rendered to one decimal place',
+  /minimumFractionDigits: 1, maximumFractionDigits: 1/.test(html));
+ok('no graded poll shows a dash, never a fabricated 0.0',
+  /No graded polls yet"?>&mdash;/.test(html) || /pend" title="No graded polls yet"/.test(html));
+ok('the stat is in the Your poll stats box next to Points and Polls',
+  /stat\('Points'[\s\S]{0,120}stat\('Avg Pts\/Poll'/.test(html));
+ok('the stat is on the mobile card too', /mstat\('Pts\/Poll'/.test(html));
+ok('the extra column is reflected in the skeleton and the empty state',
+  /c < 12; c\+\+/.test(html) && /colspan="12"/.test(html));
+
 console.log('\nMobile');
 ok('the table is replaced by cards on a phone',
   /@media \(max-width: 720px\)[\s\S]{0,600}\.pl-lb-tablewrap \{ display: none; \}/.test(html));
