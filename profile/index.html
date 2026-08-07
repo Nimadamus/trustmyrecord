@@ -2257,20 +2257,35 @@
                         </div>
                       </div>
 
-                      <div class="tmrx-section" id="tmrxCoinSection" hidden>
-                        <div class="tmrx-section-head">
-                          <div>
-                            <div class="tmrx-section-title"><img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true" style="width:1em;height:1em;vertical-align:-0.15em;margin-right:0.35em;">TMR Coin</div>
-                            <div class="tmrx-section-sub">The platform currency of TrustMyRecord. Earn it through signup, participation, and achievements.</div>
+                      <!-- ===== TMR COIN - compact wallet summary (WALLET_CARD_20260807) =====
+                           Was a single .tmrx-cell inside a 5-column .tmrx-ribbon, so one balance
+                           box stretched across a full-width grid row and left ~80% of it empty.
+                           Now a self-contained .tmrw-* mini wallet: header + CTA, one focal
+                           balance, then a dense transaction list. It no longer contains a
+                           .tmrx-ribbon, so its flex order (which came from the
+                           `.tmrx-section:has(.tmrx-ribbon){order:80}` rule) is pinned by id below
+                           at the identical value, keeping its position on the page unchanged.
+                           Data contract unchanged: /coins/balance + /coins/history?limit=5. -->
+                      <div class="tmrx-section tmrx-wallet" id="tmrxCoinSection" hidden>
+                        <div class="tmrw-head">
+                          <img class="tmrw-logo" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true" width="30" height="30">
+                          <div class="tmrw-headings">
+                            <div class="tmrx-section-title">TMR Coin</div>
+                            <div class="tmrx-section-sub">The platform currency of TrustMyRecord.</div>
                           </div>
+                          <a class="tmrw-cta" href="/wallet/">View Wallet <span aria-hidden="true">&rarr;</span></a>
                         </div>
-                        <div class="tmrx-ribbon">
-                          <div class="tmrx-cell"><div class="tmrx-label">Balance</div><div class="tmrx-value is-placeholder" id="tmrxCoinBalance">&mdash;</div><div class="tmrx-sub"><a href="/wallet/">View wallet &rarr;</a></div></div>
+                        <div class="tmrw-summary">
+                          <div class="tmrw-balance">
+                            <div class="tmrx-label">Balance</div>
+                            <div class="tmrw-amount"><span class="tmrw-num is-placeholder" id="tmrxCoinBalance">&mdash;</span><span class="tmrw-unit">TMR</span></div>
+                          </div>
+                          <span class="tmrw-frozen" id="tmrxCoinFrozen" hidden>Frozen</span>
                         </div>
-                        <div class="tmrx-coin-recent" id="tmrxCoinRecent" hidden style="margin-top:0.75rem;">
-                          <div class="tmrx-section-sub" style="margin-bottom:0.35rem;">Recent activity</div>
-                          <div id="tmrxCoinRecentList" style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;"></div>
-                          <div style="margin-top:0.5rem;"><a href="/wallet/">View full transaction history &rarr;</a></div>
+                        <div class="tmrx-coin-recent tmrw-recent" id="tmrxCoinRecent" hidden>
+                          <div class="tmrw-recent-title">Recent activity</div>
+                          <ul class="tmrw-tx" id="tmrxCoinRecentList"></ul>
+                          <a class="tmrw-more" href="/wallet/">View full transaction history <span aria-hidden="true">&rarr;</span></a>
                         </div>
                       </div>
 
@@ -7062,9 +7077,13 @@
                     const coinSection = document.getElementById('tmrxCoinSection');
                     const coinCell = document.getElementById('tmrxCoinBalance');
                     if (coinCell) {
-                        coinCell.textContent = coinData.balance.toLocaleString('en-US') + (coinData.is_frozen ? ' (frozen)' : '');
+                        coinCell.textContent = coinData.balance.toLocaleString('en-US');
                         coinCell.classList.remove('is-placeholder');
                     }
+                    // Frozen is now its own badge instead of a '(frozen)' suffix glued to
+                    // the balance number -- the number is the focal point of the card.
+                    const frozenBadge = document.getElementById('tmrxCoinFrozen');
+                    if (frozenBadge) frozenBadge.hidden = !coinData.is_frozen;
                     if (coinSection) coinSection.hidden = false;
                 }
             } catch (e) { /* wallet is a soft enrichment -- never blocks the profile */ }
@@ -7078,13 +7097,20 @@
                         const d = new Date(iso);
                         return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     };
+                    // One <li> per entry: description over date on the left, signed amount
+                    // right-aligned. Colours come from the .is-pos/.is-neg classes in the
+                    // wallet-card CSS so they follow the theme tokens, not hard-coded hex.
                     const rows = entries.map((entry) => {
                         const sign = entry.amount > 0 ? '+' : '';
-                        const color = entry.amount > 0 ? '#1a9e5c' : (entry.amount < 0 ? '#c0392b' : 'inherit');
-                        return '<div style="display:flex;justify-content:space-between;gap:0.75rem;">' +
-                            '<span style="opacity:0.8;">' + fmtTxDate(entry.created_at) + '&nbsp;&mdash;&nbsp;' + escTx(entry.description) + '</span>' +
-                            '<span style="color:' + color + ';white-space:nowrap;">' + sign + entry.amount.toLocaleString('en-US') + '</span>' +
-                            '</div>';
+                        const cls = entry.amount > 0 ? ' is-pos' : (entry.amount < 0 ? ' is-neg' : '');
+                        const count = entry.consolidated_count > 1 ? ' (' + entry.consolidated_count + ')' : '';
+                        return '<li>' +
+                            '<div class="tmrw-tx-main">' +
+                              '<div class="tmrw-tx-desc" title="' + escTx(entry.description) + '">' + escTx(entry.description) + count + '</div>' +
+                              '<div class="tmrw-tx-date">' + fmtTxDate(entry.created_at) + '</div>' +
+                            '</div>' +
+                            '<div class="tmrw-tx-amt' + cls + '">' + sign + entry.amount.toLocaleString('en-US') + '</div>' +
+                            '</li>';
                     }).join('');
                     const recentList = document.getElementById('tmrxCoinRecentList');
                     const recentWrap = document.getElementById('tmrxCoinRecent');
@@ -15063,6 +15089,98 @@
          Its own ribbon would otherwise inherit order:10 from the :has(.tmrx-ribbon)
          rule, so pin it explicitly at 25. */
       body.profile-page.tmr-social-profile .tmrx-section#communityActivity { order: 25 !important; }
+      /* ===== TMR COIN WALLET CARD (WALLET_CARD_20260807) =====
+         Compact mini-wallet. Deliberately uses NO .tmrx-ribbon/.tmrx-cell: those
+         carry `grid-template-columns: repeat(5, minmax(180px,1fr))` and
+         `min-height:104px` !important, which is what made a one-stat section tall
+         and mostly empty. Everything here is scoped to .tmrx-wallet/.tmrw-* so no
+         other tmrx section changes. Order pinned because the section no longer
+         matches `:has(.tmrx-ribbon)`. */
+      body.profile-page.tmr-social-profile .tmrx-section#tmrxCoinSection { order: 80 !important; }
+      .tmrx-wallet { padding: 16px 20px !important; }
+      .tmrx-wallet .tmrw-head {
+        display: flex; align-items: flex-start; gap: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line, rgba(148,163,184,.22));
+      }
+      .tmrx-wallet .tmrw-logo { width: 30px; height: 30px; flex: 0 0 auto; margin-top: 1px; }
+      .tmrx-wallet .tmrw-headings { flex: 1 1 auto; min-width: 0; }
+      .tmrx-wallet .tmrx-section-title { line-height: 1.15 !important; }
+      .tmrx-wallet .tmrx-section-sub { margin-top: 3px; }
+      .tmrx-wallet .tmrw-cta {
+        flex: 0 0 auto; align-self: center;
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 32px; padding: 0 14px;
+        border: 1px solid var(--line-2, rgba(148,163,184,.4));
+        border-radius: var(--r-sm, 8px);
+        background: var(--panel-2, rgba(255,255,255,.04));
+        color: var(--ink, inherit);
+        font-size: 12.5px; font-weight: 800; letter-spacing: .02em;
+        text-decoration: none; white-space: nowrap;
+        transition: border-color .15s ease, color .15s ease, background .15s ease;
+      }
+      .tmrx-wallet .tmrw-cta:hover {
+        border-color: var(--brand, #22d3ee);
+        color: var(--brand, #22d3ee);
+      }
+      .tmrx-wallet .tmrw-summary { display: flex; align-items: center; gap: 12px; padding: 11px 0 1px; }
+      .tmrx-wallet .tmrw-balance { min-width: 0; }
+      .tmrx-wallet .tmrw-amount { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; }
+      .tmrx-wallet .tmrw-num {
+        font-family: var(--display, inherit); font-weight: 900;
+        font-size: clamp(30px, 2.6vw, 38px); line-height: 1;
+        letter-spacing: -.03em; color: var(--ink, inherit);
+        font-variant-numeric: tabular-nums;
+      }
+      .tmrx-wallet .tmrw-unit { font-size: 12.5px; font-weight: 900; letter-spacing: .12em; color: var(--muted); }
+      .tmrx-wallet .tmrw-frozen {
+        align-self: flex-end; margin-bottom: 4px;
+        padding: 3px 9px; border-radius: 999px;
+        border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.12);
+        color: var(--red, #ef4444);
+        font-size: 10.5px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+      }
+      .tmrx-wallet .tmrw-recent {
+        margin-top: 11px; padding-top: 9px;
+        border-top: 1px solid var(--line, rgba(148,163,184,.22));
+      }
+      .tmrx-wallet .tmrw-recent-title {
+        font-size: 11px; font-weight: 900; letter-spacing: .1em; line-height: 1.2;
+        text-transform: uppercase; color: var(--muted);
+      }
+      .tmrx-wallet .tmrw-tx { list-style: none; margin: 4px 0 0; padding: 0; }
+      .tmrx-wallet .tmrw-tx li {
+        display: flex; align-items: center; justify-content: space-between; gap: 14px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--line, rgba(148,163,184,.16));
+      }
+      .tmrx-wallet .tmrw-tx li:last-child { border-bottom: 0; padding-bottom: 2px; }
+      .tmrx-wallet .tmrw-tx-main { min-width: 0; }
+      .tmrx-wallet .tmrw-tx-desc {
+        font-size: 13.5px; font-weight: 700; line-height: 1.3; color: var(--ink-2, inherit);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .tmrx-wallet .tmrw-tx-date { margin-top: 1px; font-size: 11.5px; font-weight: 700; line-height: 1.2; color: var(--muted); }
+      .tmrx-wallet .tmrw-tx-amt {
+        flex: 0 0 auto; font-family: var(--display, inherit);
+        font-size: 15px; font-weight: 900; line-height: 1.2; font-variant-numeric: tabular-nums;
+        white-space: nowrap; text-align: right;
+      }
+      .tmrx-wallet .tmrw-tx-amt.is-pos { color: var(--green, #22c55e); }
+      .tmrx-wallet .tmrw-tx-amt.is-neg { color: var(--red, #ef4444); }
+      .tmrx-wallet .tmrw-more {
+        display: inline-block; margin-top: 10px; line-height: 1.3;
+        font-size: 12.5px; font-weight: 800; text-decoration: none;
+        color: var(--brand, #22d3ee);
+      }
+      .tmrx-wallet .tmrw-more:hover { text-decoration: underline; }
+      @media (max-width: 640px) {
+        .tmrx-wallet { padding: 16px !important; }
+        .tmrx-wallet .tmrw-head { flex-wrap: wrap; }
+        .tmrx-wallet .tmrw-cta { order: 3; width: 100%; justify-content: center; margin-top: 11px; }
+        .tmrx-wallet .tmrw-num { font-size: 30px; }
+        .tmrx-wallet .tmrw-tx li { gap: 10px; }
+      }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
         order: 50 !important;
