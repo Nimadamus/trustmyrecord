@@ -30,6 +30,7 @@
     ];
     const communityRoutes = [
         ["/community/", "Community Home"],
+        ["/feed/", "Community Feed"],
         ["/forum/", "Forums"],
         ["/sports-talk/", "Sports Talk"],
         ["/chat/", "Chat"],
