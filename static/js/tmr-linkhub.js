@@ -526,6 +526,7 @@
             ['/predictions/', 'Predictions']
         ]],
         ['Community', [
+            ['/feed/', 'Community Feed'],
             ['/forum/', 'Forum'],
             ['/sports-talk/', 'Sports Talk'],
             ['/chat/', 'Chat'],
