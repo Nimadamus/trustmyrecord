@@ -100,6 +100,36 @@ for (const page of SIM_PAGES) {
         !/display\s*:\s*none/.test(gate) && /requireAuth/.test(gate));
 }
 
+// ---- activation funnel: the two milestones that happen off the simulator
+{
+    const funnel = read('static/js/tmr-activation-funnel.js');
+    const gate = read('static/js/sim-auth-gate.js');
+
+    ok('gate stamps an attribution origin for the later funnel steps',
+        /tmr_sim_funnel_origin/.test(gate) && /stampFunnelOrigin\(\)/.test(gate));
+    ok('funnel reads the same origin key the gate writes',
+        /tmr_sim_funnel_origin/.test(funnel));
+    ok('gate impression is tracked when the panel renders',
+        /simulator_gate_impression/.test(gate));
+
+    ['activation_first_pick_after_signup', 'activation_first_coin_after_signup']
+        .forEach(ev => ok('funnel event ' + ev + ' is emitted', funnel.indexOf(ev) !== -1));
+
+    ok('funnel milestones are fire-once (markers persisted before tracking)',
+        /tmr_funnel_first_pick_done/.test(funnel) && /tmr_funnel_first_coin_done/.test(funnel));
+    ok('funnel records a coin baseline so pre-existing balances are not counted',
+        /tmr_funnel_coin_baseline/.test(funnel));
+    ok('funnel bounds attribution to a window', /ATTRIBUTION_WINDOW_MS/.test(funnel));
+    ok('funnel has a kill switch', /TMR_FUNNEL_FLAGS/.test(funnel));
+    ok('funnel forwards api.request untouched (read-only observer)',
+        /window\.api\.request\.bind\(window\.api\)/.test(funnel) && /return result;/.test(funnel));
+
+    // It must load where picks are actually submitted, or step 9 never fires.
+    ['mlb-simulator/index.html', 'nfl-simulator/index.html', 'sportsbook/index.html']
+        .forEach(page => ok(page + ' loads the activation funnel',
+            /\/static\/js\/tmr-activation-funnel\.js/.test(read(page))));
+}
+
 // ---- adapters agree with the core on the storage contract
 {
     const gate = read('static/js/sim-auth-gate.js');

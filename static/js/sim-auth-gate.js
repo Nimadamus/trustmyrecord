@@ -29,12 +29,23 @@
      back to running freely for logged-out visitors, no code change, no deploy of
      this file. { resume:false } disables only the auto-resume half.
 
-   Analytics (GA4 via TMRAnalytics/tmrTrack, never throws, never blocks):
-     simulator_page_viewed, simulator_configured, simulator_run_clicked_logged_out,
-     simulator_signup_started, simulator_signup_completed, simulator_login_completed,
-     simulator_state_restored, simulator_simulation_completed,
-     simulator_first_simulation_completed, simulator_return_visit,
-     simulator_gate_dismissed
+   Analytics (GA4 via TMRAnalytics/tmrTrack, never throws, never blocks) - the
+   funnel in order, so a drop-off is readable step to step:
+     simulator_page_viewed              visitor reached a simulator
+     simulator_configured               they touched any setting (intent)
+     simulator_run_clicked_logged_out   they tried to run without an account
+     simulator_gate_impression          the signup panel was actually on screen
+     simulator_gate_dismissed           they closed it instead (+ dismiss_reason)
+     simulator_signup_started           they left for /register/ or /login/ (+ auth_method)
+     simulator_signup_completed         they came back signed up
+     simulator_login_completed          they came back logged in
+     simulator_state_restored           their configuration survived the round trip
+     simulator_simulation_completed     a run finished
+     simulator_first_simulation_completed   their first ever, as a member
+     simulator_return_visit             they came back later (+ days_since_last_visit)
+   The two later milestones - first verified pick, first TMR Coin - happen on
+   other pages days later and are emitted by static/js/tmr-activation-funnel.js
+   against the origin stamp written here.
    ============================================================================= */
 (function () {
     'use strict';
@@ -45,6 +56,7 @@
     var STORE_KEY = 'tmr_sim_gate_pending';
     var VISIT_PREFIX = 'tmr_sim_visited_';
     var FIRST_PREFIX = 'tmr_sim_first_done_';
+    var ORIGIN_KEY = 'tmr_sim_funnel_origin';
     var TTL_MS = 45 * 60 * 1000;
     var STYLE_ID = 'tmr-sim-gate-style';
 
@@ -100,6 +112,24 @@
     }
     function writeStore(obj) { try { localStorage.setItem(STORE_KEY, JSON.stringify(obj)); } catch (e) { } }
     function clearStore() { try { localStorage.removeItem(STORE_KEY); } catch (e) { } }
+
+    /* Attribution stamp for the later half of the funnel (first verified pick,
+       first TMR Coin) which happens on other pages, days later - see
+       static/js/tmr-activation-funnel.js. Written once, at the moment a
+       logged-out visitor is actually asked to sign up, so those milestones can
+       be traced back to the simulator that produced the account instead of
+       looking like generic site activity. Never overwritten by a later gate:
+       first touch wins, matching how tmr_first_touch treats signup source. */
+    function stampFunnelOrigin() {
+        try {
+            if (localStorage.getItem(ORIGIN_KEY)) return;
+            localStorage.setItem(ORIGIN_KEY, JSON.stringify({
+                simulator: (cfg && cfg.simulator) || 'unknown',
+                path: (cfg && cfg.returnPath) || window.location.pathname,
+                ts: Date.now()
+            }));
+        } catch (e) { }
+    }
 
     /* Only an on-site relative path is ever produced/honored here - same guard as
        login/index.html safeNextPath() and register/index.html's ?return= check,
@@ -211,20 +241,36 @@
         var signupHref = '/register/?return=' + encodeURIComponent(rp);
         var loginHref = '/login/?next=' + encodeURIComponent(rp);
 
-        qs('tsgLogin').setAttribute('href', loginHref);
-        qs('tsgLogin').addEventListener('click', function () {
-            track('simulator_signup_started', { auth_method: 'login' });
+        // simulator_signup_started is the step the whole funnel is judged on -
+        // it is the denominator for "did they finish signing up". gtag batches
+        // its queue, so firing an event and navigating in the SAME tick can
+        // drop it, which would silently under-report exactly the number we are
+        // trying to improve. Give the beacon a beat, then navigate. The delay
+        // is imperceptible, and navigation still happens even if tracking threw.
+        function leaveFor(href, method) {
+            track('simulator_signup_started', { auth_method: method });
+            setTimeout(function () { window.location.href = href; }, 160);
+        }
+
+        qs('tsgLogin').setAttribute('href', loginHref);   // real href: middle-click / open-in-new-tab still work
+        qs('tsgLogin').addEventListener('click', function (e) {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;  // let the browser handle it
+            e.preventDefault();
+            leaveFor(loginHref, 'login');
         });
-        qs('tsgSignup').addEventListener('click', function () {
-            track('simulator_signup_started', { auth_method: 'register' });
-            window.location.href = signupHref;
-        });
+        qs('tsgSignup').addEventListener('click', function () { leaveFor(signupHref, 'register'); });
         qs('tsgClose').addEventListener('click', function () { closeModal('close_button'); });
         qs('tsgLater').addEventListener('click', function () { closeModal('not_now'); });
         overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal('backdrop'); });
         document.addEventListener('keydown', onKeydown, true);
 
         setTimeout(function () { try { qs('tsgSignup').focus(); } catch (e) { } }, 30);
+
+        // Impression is tracked when the panel is genuinely on screen, not
+        // when the click happened - the two diverge if rendering ever fails,
+        // and the funnel's denominator has to be what people actually saw.
+        stampFunnelOrigin();
+        track('simulator_gate_impression', { has_context: ctxLine ? 'yes' : 'no' });
     }
 
     function toast(message) {
