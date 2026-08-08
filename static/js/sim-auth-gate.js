@@ -248,6 +248,21 @@
         simulator_simulation_completed: 'simulation_completed'
     };
 
+    /* Automation declares itself. navigator.webdriver is set by every
+       WebDriver-controlled browser (Playwright, Puppeteer, Selenium) and is not
+       something a normal visitor has, so this is a reliable self-identification
+       rather than a guess about who someone is. The server treats it as an
+       opt-IN to exclusion only: a client can use this to remove itself from the
+       counters, never to claim 'real'. Server-side user-agent detection stays
+       the authority - this closes the case where a headless browser presents a
+       normal-looking UA and would otherwise land in the REAL experiment arms.
+       Keeping QA out of CONTROL/VARIANT matters more than anywhere else: arm
+       counts are small by design, so a handful of test sessions can invert the
+       result. */
+    function trafficHint() {
+        try { return navigator.webdriver === true ? 'qa' : ''; } catch (e) { return ''; }
+    }
+
     function apiBase() {
         try { return (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api'; }
         catch (e) { return 'https://trustmyrecord-api.onrender.com/api'; }
@@ -269,7 +284,8 @@
                 milestone: pre,
                 simulator: simulator,
                 detail: detail || '',
-                arm: experiments.run_cta || ''
+                arm: experiments.run_cta || '',
+                traffic: trafficHint()
             });
             // sendBeacon survives the navigation that signup_started triggers.
             if (navigator.sendBeacon) {
