@@ -827,10 +827,18 @@
             el('authRetryBtn').hidden = false;
         }
 
+        // Bounded retry: a fixed table of delays, never an unconditional loop.
+        // `retryTimer` holds the pending retry so a manual Retry press can
+        // cancel it -- without the handle, tapping Retry while a scheduled
+        // attempt is still in flight runs two boots at once. This exact shape
+        // is asserted by tests/recursion-retry-guard-test.js; change both
+        // together or the regression lock fails the build.
         var RETRY_DELAYS_MS = [1200, 2500, 5000];
         var attempt = 0;
+        var retryTimer = null;
 
         async function boot() {
+            if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
             if (!(window.api && window.api.isLoggedIn())) { showLoginRequired(); return; }
             try {
                 skeleton.hidden = false;
@@ -847,7 +855,7 @@
                 if (attempt < RETRY_DELAYS_MS.length) {
                     var delay = RETRY_DELAYS_MS[attempt];
                     attempt += 1;
-                    setTimeout(boot, delay);
+                    retryTimer = setTimeout(function () { boot(); }, delay);
                     return;
                 }
                 showLoadError();
