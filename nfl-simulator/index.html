@@ -430,7 +430,7 @@ async function boot(){
   $$('#windowSeg button').forEach(b=>b.onclick=()=>{STATE.window=b.dataset.window;segSet('#windowSeg',b);updateChips();rerunIfShown()});
   // custom
   $('#swapBtn').onclick=swapCustom;
-  $('#runBtn').onclick=()=>runCustom(20260716);
+  $('#runBtn').onclick=()=>runCustom(null);
 
   STATE.season=2026;
   await Promise.all([loadSchedule(true),loadTeams()]);
@@ -531,7 +531,7 @@ function pickGame(g){
   if(!STATE.lastRun){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
   STATE.venue='home';STATE.venueTouched=false;
   relabelVenue();updateChips();
-  runScheduled(g.ref,20260716);
+  runScheduled(g.ref,null);
 }
 function segSelect(sel,key,val){$$(sel+' button').forEach(x=>x.classList.toggle('on',x.dataset[key]===val))}
 
@@ -585,6 +585,14 @@ function venueParamWeekly(){
   if(STATE.venue==='away')return 'away';
   return STATE.venueTouched?'home':null; // omit when untouched so real neutral-site games are respected
 }
+/* SEED CONTRACT (this is what used to make every run identical).
+   seed == null  -> send NO seed. The API mints a fresh random seed and answers
+                    no-store, so the press is a genuinely new simulation.
+   seed == N     -> replay that exact run (reproducible + cacheable). Used only
+                    by rerunIfShown() when the user changes a SETTING and should
+                    keep looking at the same simulated game.
+   Either way the effective seed comes back in meta.seed and is stored, so the
+   game on screen can always be re-run or shared. */
 async function runScheduled(ref,seed){
   STATE.selRef=ref;
   const out=$('#result');out.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -593,7 +601,7 @@ async function runScheduled(ref,seed){
   const vp=venueParamWeekly();if(vp)q.set('venue',vp);
   if(STATE.window)q.set('window',STATE.window);
   STATE.lastRun={kind:'scheduled',ref,seed};
-  try{const d=await api(`/simulate/${ref}?${q.toString()}`);renderResult(out,d)}catch(e){errNode(out,e)}
+  try{const d=await api(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
 }
 async function runCustom(seed){
   const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);
@@ -611,7 +619,7 @@ async function runCustom(seed){
   const q=new URLSearchParams();q.set('home',host.ref);q.set('away',visitor.ref);q.set('sims',STATE.sims);
   if(neutral)q.set('venue','neutral');if(STATE.window)q.set('window',STATE.window);if(seed)q.set('seed',seed);
   STATE.lastRun={kind:'custom',seed};
-  try{const d=await api(`/simulate-custom?${q.toString()}`);renderResult(out,d)}catch(e){errNode(out,e)}
+  try{const d=await api(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
 }
 /* re-run the currently shown result with the SAME seed but updated settings */
 function rerunIfShown(){
@@ -619,11 +627,11 @@ function rerunIfShown(){
   if(STATE.lastRun.kind==='scheduled')runScheduled(STATE.lastRun.ref,STATE.lastRun.seed);
   else runCustom(STATE.lastRun.seed);
 }
+/* a brand new simulation: send no seed, so the server mints a fresh one */
 function simulateAgain(){
-  const seed=Math.floor(Math.random()*1e9);
   if(!STATE.lastRun)return;
-  if(STATE.lastRun.kind==='scheduled')runScheduled(STATE.lastRun.ref,seed);
-  else runCustom(seed);
+  if(STATE.lastRun.kind==='scheduled')runScheduled(STATE.lastRun.ref,null);
+  else runCustom(null);
 }
 
 /* ============================ SVG chart helpers (from real sim data) ============================ */
@@ -748,7 +756,7 @@ function renderResult(out,d){
   /* ---- summary cards ---- */
   const k=el('div','kpis');
   const cards=[
-    `<div class="kpi"><div class="k">Projected score</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)}</div></div>`,
+    `<div class="kpi"><div class="k">Projected score</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · average of ${fmtN(d.meta.simulations)} sims</div></div>`,
     `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)}</div></div>`,
     `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`,
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
@@ -868,7 +876,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     ]));
     board.appendChild(ls);body.appendChild(board);
     const cta=el('div','callout');
-    cta.innerHTML=`<span style="font-size:1.1rem;line-height:1">🎲</span><span><b>This is a representative simulated game</b> — one outcome near the median of ${fmtN(d.meta.simulations)} simulations, shown play-by-play so the numbers reconcile. The <b>Overview</b> tab shows probabilities and the projected score averaged across every run.</span>`;
+    cta.innerHTML=`<span style="font-size:1.1rem;line-height:1">🎲</span><span><b>This is one simulated game</b> — a single outcome drawn at random from the ${fmtN(d.meta.simulations)} simulations, shown play-by-play so the numbers reconcile. Simulate again and you get a different game: sometimes a blowout, sometimes an upset, at the rates the model actually produces them. The <b>Overview</b> tab is the opposite — probabilities and a projected score averaged across every run, so it barely moves.</span>`;
     body.appendChild(cta);
     const block=(title,tbl)=>{const b=el('div','statblock');b.appendChild(Object.assign(el('h3',null,title)));b.appendChild(tbl);return b};
     const grp=(a,bl)=>{const w=el('div','grp');w.appendChild(a);if(bl)w.appendChild(bl);return w};
