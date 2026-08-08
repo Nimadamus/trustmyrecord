@@ -139,6 +139,47 @@
         .auth-state h2 { margin: 0 0 8px; font-family: Barlow, Inter, sans-serif; }
         .auth-state p { margin: 0 0 16px; color: var(--muted); }
 
+        /* ------------------------------------------------------------------
+           Sitewide-CSS override guard.
+
+           tmr-sitewide.css applies `!important` typography to every `p`, `li`,
+           `td`, `th` and `label` under `body.tmr-site-shell` -- e.g.
+           `.tmr-site-shell p { color: rgb(169,184,202) !important }`. That
+           silently flattened this page's numbers: the balance rendered at
+           15.2px in muted grey instead of 34px+ in gold, verified live on
+           production with getComputedStyle.
+
+           Specificity alone cannot win against `!important`, so the page's own
+           intent is restated here with `!important` and scoped to `.wallet-page`
+           so it can never leak into the shared shell. Everything below is a
+           re-assertion of a value already declared above -- if you change one
+           of those, change it here too.
+           ------------------------------------------------------------------ */
+        .wallet-page h1 { font-size: clamp(34px, 5vw, 56px) !important; line-height: 0.95 !important; color: var(--text) !important; }
+        .wallet-page .wallet-kicker { font-size: 12px !important; color: var(--gold) !important; }
+        .wallet-page .wallet-subtitle { font-size: 14.5px !important; color: var(--muted) !important; }
+        .wallet-page .disclaimer { font-size: 13px !important; color: #fde68a !important; }
+        .wallet-page .balance-value { font-size: clamp(34px, 5vw, 52px) !important; color: var(--gold) !important; }
+        .wallet-page .balance-card.sub .balance-value { font-size: clamp(24px, 3.4vw, 32px) !important; color: var(--text) !important; }
+        .wallet-page .balance-label { font-size: 11px !important; color: var(--muted) !important; }
+        .wallet-page .balance-hint { font-size: 12.5px !important; color: var(--muted) !important; }
+        .wallet-page .stat-value { font-size: 22px !important; color: var(--text) !important; }
+        .wallet-page .stat-label { font-size: 11px !important; color: var(--muted) !important; }
+        .wallet-page .pane p.lead { font-size: 13.5px !important; color: var(--muted) !important; }
+        .wallet-page .earn-desc { font-size: 13px !important; color: var(--muted) !important; }
+        .wallet-page .ch-meta { font-size: 13px !important; color: var(--muted) !important; }
+        .wallet-page thead th { font-size: 11px !important; color: var(--muted) !important; }
+        .wallet-page tbody td { font-size: 13.5px !important; color: var(--text) !important; }
+        .wallet-page tbody td .amt-pos { color: var(--green) !important; }
+        .wallet-page tbody td .amt-neg { color: var(--red) !important; }
+        .wallet-page .field label { font-size: 12px !important; color: var(--muted) !important; }
+        .wallet-page .field .hint { font-size: 12px !important; color: var(--muted) !important; }
+        .wallet-page .empty-state p { font-size: 13.5px !important; color: var(--muted) !important; }
+        .wallet-page .auth-state p { color: var(--muted) !important; }
+        .wallet-page .frozen-banner { color: #fecaca !important; }
+        .wallet-page .msg.err { color: #fecaca !important; }
+        .wallet-page .msg.ok { color: #bbf7d0 !important; }
+
         @media (max-width: 860px) {
             .balance-grid { grid-template-columns: 1fr; }
         }
