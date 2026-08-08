@@ -220,6 +220,18 @@
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=a248f63dc4fd">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
 <script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<!-- SIM_AUTH_GATE_20260808: same free-account-to-RUN gate the MLB Simulator
+     uses. config.js + backend-api.js supply window.api (login state + the
+     history API); analytics.js supplies window.TMRAnalytics. All four load
+     synchronously because the simulator app below is an inline script that
+     registers its gate adapter as it boots. Kill switches: gate:false =
+     run freely again, resume:false = no auto-resume after auth,
+     autoSave:false = no simulation-history write. Flip + redeploy. -->
+<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true };</script>
+<script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+<script src="/static/js/backend-api.js?v=0c7db839b982"></script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script src="/static/js/sim-auth-gate.js?v=d875c7b5bd00"></script>
 </head>
 <body>
 <header class="top"><div class="top-in">
@@ -395,7 +407,11 @@ function teamMark(abbr,size){
   return wrap;
 }
 
-async function api(p){
+/* Named nflApi, NOT api: a top-level `function api(){}` in a classic
+   script becomes window.api and would clobber the sitewide backend client
+   from static/js/backend-api.js, which the auth gate below needs to read
+   login state. SIM_AUTH_GATE_20260808. */
+async function nflApi(p){
   let r; try{r=await fetch(API+p,{headers:{Accept:'application/json'}})}catch(e){throw{msg:'Network error — please try again.'}}
   if(r.status===429){throw{msg:'A lot of people are simulating right now. Please wait a few seconds and retry.'}}
   const j=await r.json().catch(()=>({}));
@@ -478,7 +494,7 @@ function relabelVenue(){
 async function loadSchedule(pickDefaultWeek){
   loading($('#games'),'Loading games…');
   try{
-    const d=await api(`/schedule?season=${STATE.season}`);
+    const d=await nflApi(`/schedule?season=${STATE.season}`);
     STATE.games=d.games; STATE.weeksMeta=d.weeks;
     if(!d.weeks.length){$('#games').innerHTML='';$('#games').appendChild(Object.assign(el('div','unavail'),{textContent:'No scheduled games for this season yet.'}));$('#week').innerHTML='<option>—</option>';return}
     $('#week').innerHTML=d.weeks.map(w=>{const l=w.season_type_code===3?('Playoffs '+w.week):('Week '+w.week);return `<option value="${w.season_type_code}:${w.week}">${l}</option>`}).join('');
@@ -538,7 +554,7 @@ function segSelect(sel,key,val){$$(sel+' button').forEach(x=>x.classList.toggle(
 /* ============================ custom teams ============================ */
 async function loadTeams(){
   try{
-    const d=await api('/teams');STATE.teams=d.teams||[];
+    const d=await nflApi('/teams');STATE.teams=d.teams||[];
     const opts=STATE.teams.map(t=>`<option value="${t.ref}">${esc(t.name)}</option>`).join('');
     $('#t1').innerHTML=opts;$('#t2').innerHTML=opts;
     // sensible defaults: two different teams
@@ -601,7 +617,7 @@ async function runScheduled(ref,seed){
   const vp=venueParamWeekly();if(vp)q.set('venue',vp);
   if(STATE.window)q.set('window',STATE.window);
   STATE.lastRun={kind:'scheduled',ref,seed};
-  try{const d=await api(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
+  try{const d=await nflApi(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
 }
 async function runCustom(seed){
   const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);
@@ -619,7 +635,7 @@ async function runCustom(seed){
   const q=new URLSearchParams();q.set('home',host.ref);q.set('away',visitor.ref);q.set('sims',STATE.sims);
   if(neutral)q.set('venue','neutral');if(STATE.window)q.set('window',STATE.window);if(seed)q.set('seed',seed);
   STATE.lastRun={kind:'custom',seed};
-  try{const d=await api(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
+  try{const d=await nflApi(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
 }
 /* re-run the currently shown result with the SAME seed but updated settings */
 function rerunIfShown(){
@@ -932,13 +948,269 @@ function abbrOf(name){
 
 async function showMethodology(){
   const out=$('#result');loading(out,'Loading…');
-  try{const d=await api('/methodology');out.innerHTML='';const p=el('div','panel');p.innerHTML=`<h2>${esc(d.title)}</h2>`;
+  try{const d=await nflApi('/methodology');out.innerHTML='';const p=el('div','panel');p.innerHTML=`<h2>${esc(d.title)}</h2>`;
     for(const s of d.sections){p.appendChild(Object.assign(el('h3',null,s.h)));p.appendChild(Object.assign(el('p','muted'),{textContent:s.p}))}
     out.appendChild(p);out.scrollIntoView({behavior:'smooth'});
   }catch(e){errNode(out,e)}
 }
 
-boot();
+/* ============================================================================
+   TMR SIM AUTH GATE ADAPTER (NFL)                        SIM_AUTH_GATE_20260808
+   ----------------------------------------------------------------------------
+   Same behaviour as the MLB Simulator: the page, the schedule, the team pickers
+   and every setting stay fully open to logged-out visitors and to crawlers -
+   only the RUN itself is gated. Implemented by wrapping the two run entry
+   points (runScheduled / runCustom) rather than by intercepting clicks, so in
+   Weekly mode tapping a game still SELECTS it (and relabels venue, chips, etc.)
+   before the gate appears; the selection is part of what gets preserved.
+
+   renderResult is wrapped too, purely to append the post-result activation
+   panel and write the run to the member's simulation history. The original
+   function runs first and untouched, so a failure here can never blank a
+   result.
+
+   Everything is behind window.SIM_GATE_FLAGS (set in <head>): gate:false
+   restores the old free-running behaviour exactly.
+   ========================================================================== */
+const SIM_PICK_INTENT_KEY='tmr_sim_pick_intent';
+let SIM_LAST_SAVE_SIG=null;
+
+function simCaptureState(){
+  return {mode:STATE.mode,season:STATE.season,week:STATE.week,selRef:STATE.selRef,
+          t1:STATE.t1,t2:STATE.t2,sims:STATE.sims,venue:STATE.venue,
+          venueTouched:STATE.venueTouched,window:STATE.window};
+}
+
+function simDescribeState(){
+  if(STATE.mode==='weekly'){
+    const g=selectedGame();
+    if(g)return `<b>${esc(g.away)}</b> at <b>${esc(g.home)}</b> &middot; ${fmtN(STATE.sims)} sims`;
+  }else{
+    const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);
+    if(a&&b)return `<b>${esc(a.name)}</b> vs <b>${esc(b.name)}</b> &middot; ${fmtN(STATE.sims)} sims`;
+  }
+  return '';
+}
+
+/* Re-applies a snapshot through the page's own state + render helpers, in the
+   same order a person clicking would produce (season -> schedule -> week ->
+   game / teams -> settings). Awaited by the gate before it re-runs. */
+async function simRestoreState(s){
+  if(!s)return;
+  if(s.season&&+s.season!==+STATE.season){
+    const sel=$('#season');if(sel)sel.value=String(s.season);
+    STATE.season=+s.season;
+    await loadSchedule(false);
+  }
+  setMode(s.mode==='custom'?'custom':'weekly');
+  if(STATE.mode==='weekly'){
+    const wk=$('#week');
+    if(s.week&&wk&&Array.from(wk.options).some(o=>o.value===s.week))wk.value=s.week;
+    STATE.week=wk?wk.value:s.week;
+    renderGames();
+    if(s.selRef){
+      STATE.selRef=s.selRef;
+      for(const c of $('#games').children)c.classList.toggle('sel',c.dataset.ref===s.selRef);
+    }
+  }else{
+    if(s.t1&&$('#t1')){STATE.t1=s.t1;$('#t1').value=s.t1}
+    if(s.t2&&$('#t2')){STATE.t2=s.t2;$('#t2').value=s.t2}
+  }
+  if(s.sims){STATE.sims=+s.sims;segSelect('#simSeg','sims',String(s.sims));$('#cSimsN').textContent=fmtN(STATE.sims)}
+  if(s.window){STATE.window=s.window;segSelect('#windowSeg','window',s.window)}
+  if(s.venue){STATE.venue=s.venue;STATE.venueTouched=!!s.venueTouched}
+  relabelVenue();
+  if(s.venue)segSelect('#venueSeg','venue',s.venue);
+  updateChips();
+}
+
+function simRunNow(s){
+  const mode=(s&&s.mode)||STATE.mode;
+  if(mode==='custom'){runCustom(null);return}
+  const ref=(s&&s.selRef)||STATE.selRef;
+  if(ref)runScheduled(ref,null);
+}
+
+/* ---- simulation history (shared owner-scoped store with the MLB sim) ---- */
+function simAutoSave(d){
+  const F=window.SIM_GATE_FLAGS||{};
+  if(F.autoSave===false)return;
+  if(!window.TMRSimGate||!window.TMRSimGate.isLoggedIn())return;
+  if(!window.api||typeof window.api.request!=='function')return;
+  const g=d.game,p=d.projection;
+  const summarized={
+    awayTeam:g.away,homeTeam:g.home,
+    awayScore:p&&p.score?String(p.score.away):null,homeScore:p&&p.score?String(p.score.home):null,
+    winner:(p&&p.win_probability&&p.win_probability.home>=p.win_probability.away)?g.home:g.away,
+    winProbability:p&&p.win_probability?pct(Math.max(p.win_probability.home,p.win_probability.away),1):null,
+    simulations:d.meta&&d.meta.simulations,
+    venue:d.environment&&d.environment.summary?d.environment.summary.venue:null,
+    kickoffWindow:d.environment?d.environment.kickoff_window_label:null,
+    spread:p&&p.spread?p.spread.line:null,total:p&&p.total?p.total.line:null
+  };
+  const inputs=simCaptureState();
+  let sig;try{sig=JSON.stringify(inputs)+'|'+summarized.awayScore+'-'+summarized.homeScore}catch(e){sig=null}
+  if(sig&&sig===SIM_LAST_SAVE_SIG)return;
+  SIM_LAST_SAVE_SIG=sig;
+  window.api.request('/mlb-simulator-save',{method:'POST',body:{
+    name:`${g.away} @ ${g.home}`,simulation_type:'nfl_game',
+    input_parameters:inputs,summarized_result:summarized
+  }}).then(()=>{
+    window.TMRSimGate.track('simulator_result_auto_saved',{simulation_type:'nfl_game'});
+    const n=$('#simSavedNote');if(n)n.textContent='Saved to your simulation history.';
+  }).catch(()=>{
+    const n=$('#simSavedNote');if(n)n.textContent='';
+  });
+}
+
+/* ---- post-result activation panel: simulation -> verified pick ---- */
+function simRenderConversion(out,d){
+  if(!window.TMRSimGate)return;
+  const g=d.game,p=d.projection;
+  if(!g||!p||!p.win_probability)return;
+  const favHome=p.win_probability.home>=p.win_probability.away;
+  const proj=favHome?g.home:g.away;
+
+  const panel=el('div','panel');
+  panel.id='simConvertPanel';
+  panel.style.cssText='margin-top:14px;border:1px solid rgba(45,212,191,.35);background:linear-gradient(180deg,rgba(45,212,191,.07),transparent)';
+  panel.innerHTML=
+    '<h3 style="margin-top:0">Turn this into a verified pick</h3>'+
+    '<p class="muted" style="font-size:.9rem;margin:0 0 10px">Lock it before kickoff and TrustMyRecord timestamps it, grades it automatically, and counts it toward your public record. The simulation is research; the record is proof.</p>'+
+    '<div id="simPickTeams" role="radiogroup" aria-label="Pick a side" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+    '<button type="button" class="btn" id="simPickCta">Add This Pick to My Verified Record</button>'+
+    '<a class="btn ghost" href="/mlb-simulator/saved/">My Simulation History</a>'+
+    '<span class="dim" id="simSavedNote"></span></div>';
+
+  const teams=$('#simPickTeams',panel);
+  [g.away,g.home].forEach(name=>{
+    const b=el('button',null,name);
+    b.type='button';b.setAttribute('role','radio');
+    b.dataset.team=name;
+    b.className='btn ghost'+(name===proj?' on':'');
+    b.style.cssText='font-size:.85rem;padding:8px 14px'+(name===proj?';border-color:#2DD4BF;color:#2DD4BF':'');
+    b.setAttribute('aria-checked',name===proj?'true':'false');
+    b.onclick=()=>{
+      for(const c of teams.children){
+        const on=c===b;
+        c.setAttribute('aria-checked',on?'true':'false');
+        c.style.borderColor=on?'#2DD4BF':'';c.style.color=on?'#2DD4BF':'';
+      }
+    };
+    teams.appendChild(b);
+  });
+
+  $('#simPickCta',panel).onclick=()=>{
+    let sel=proj;
+    for(const c of teams.children)if(c.getAttribute('aria-checked')==='true')sel=c.dataset.team;
+    try{localStorage.setItem(SIM_PICK_INTENT_KEY,JSON.stringify({
+      v:1,ts:Date.now(),pick_team:sel,away_team_name:g.away,home_team_name:g.home,
+      board_game_id:null,sport:'NFL',source:'nfl-simulator'
+    }))}catch(e){}
+    window.TMRSimGate.track('simulator_pick_started',{simulation_type:'nfl_game'});
+    window.location.href='/sportsbook/?simpick=1';
+  };
+
+  out.appendChild(panel);
+}
+
+/* ---- install: wrap the run + render entry points, then register ---- */
+function installSimGate(){
+  if(!window.TMRSimGate)return;
+
+  const _runScheduled=runScheduled,_runCustom=runCustom,_renderResult=renderResult;
+
+  runScheduled=function(ref,seed){
+    STATE.selRef=ref;
+    if(!window.TMRSimGate.requireAuth({sim_mode:'weekly'}))return Promise.resolve();
+    return _runScheduled(ref,seed);
+  };
+  runCustom=function(seed){
+    if(!window.TMRSimGate.requireAuth({sim_mode:'custom'}))return Promise.resolve();
+    return _runCustom(seed);
+  };
+  renderResult=function(out,d){
+    const r=_renderResult(out,d);
+    try{
+      if(d&&!d.unavailable){
+        window.TMRSimGate.markCompleted({simulation_type:'nfl_game',simulations:d.meta&&d.meta.simulations});
+        simAutoSave(d);
+        simRenderConversion(out,d);
+      }
+    }catch(e){}
+    return r;
+  };
+
+  /* "configured" = the visitor touched any control that shapes the run */
+  ['#simSeg','#venueSeg','#windowSeg','#modebar'].forEach(sel=>{
+    const n=$(sel);if(n)n.addEventListener('click',()=>window.TMRSimGate.markConfigured({control:sel.replace('#','')}));
+  });
+  ['#season','#week','#t1','#t2'].forEach(sel=>{
+    const n=$(sel);if(n)n.addEventListener('change',()=>window.TMRSimGate.markConfigured({control:sel.replace('#','')}));
+  });
+  const gamesBox=$('#games');
+  if(gamesBox)gamesBox.addEventListener('click',()=>window.TMRSimGate.markConfigured({control:'game'}),true);
+
+  // Captured BEFORE register(), which strips these params from the URL.
+  const hadResume=/[?&](simResume|signedUp)=1\b/.test(location.search);
+
+  window.TMRSimGate.register({
+    simulator:'nfl',
+    label:'NFL matchup',
+    returnPath:'/nfl-simulator/',
+    captureState:simCaptureState,
+    describeState:simDescribeState,
+    restoreState:simRestoreState,
+    runNow:simRunNow
+  });
+
+  simHandleSavedId(hadResume);
+}
+
+/* /nfl-simulator/?savedId=N&mode=view|rerun — the return path from the
+   member's simulation history (see static/js/mlb-sim-saved.js). Absent the
+   parameter this is a no-op and the page is an ordinary simulator. */
+async function simHandleSavedId(hadResume){
+  let params;try{params=new URLSearchParams(location.search)}catch(e){return}
+  const id=params.get('savedId');
+  if(!id||hadResume)return;                                     // resume owns the page
+  if(!window.api||typeof window.api.request!=='function')return;
+  if(!window.TMRSimGate.isLoggedIn())return;
+  const mode=params.get('mode')||'view';
+  try{
+    const resp=await window.api.request('/mlb-simulator-save/'+encodeURIComponent(id));
+    const saved=resp&&resp.saved;
+    if(saved&&saved.input_parameters){
+      await simRestoreState(saved.input_parameters);
+      window.TMRSimGate.track('simulator_saved_reopened',{simulation_type:'nfl_game',view_mode:mode});
+      if(mode==='rerun')simRunNow(saved.input_parameters);
+      else{
+        const r=saved.summarized_result||{};
+        const out=$('#result');
+        const card=el('div','panel');
+        card.innerHTML='<h3 style="margin-top:0">'+esc(saved.name||'Saved simulation')+'</h3>'+
+          '<div class="mono" style="font-size:1.05rem">'+esc(r.awayTeam||'Away')+' '+esc(r.awayScore||'')+
+          ' &nbsp;&ndash;&nbsp; '+esc(r.homeTeam||'Home')+' '+esc(r.homeScore||'')+'</div>'+
+          (r.winner?'<div class="muted" style="margin-top:6px">Projected winner: '+esc(r.winner)+(r.winProbability?' ('+esc(r.winProbability)+')':'')+'</div>':'')+
+          (saved.created_at?'<div class="dim" style="margin-top:6px">Saved '+esc(new Date(saved.created_at).toLocaleString())+'</div>':'')+
+          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'+
+          '<button type="button" class="btn" id="simReopenRun">Run This Simulation Again</button>'+
+          '<a class="btn ghost" href="/mlb-simulator/saved/">My Simulation History</a></div>';
+        out.innerHTML='';out.appendChild(card);
+        $('#simReopenRun',card).onclick=()=>{out.innerHTML='';simRunNow(saved.input_parameters)};
+      }
+    }
+  }catch(e){/* not found / not yours — page still works as a normal simulator */}
+  try{
+    const u=new URL(location.href);u.searchParams.delete('savedId');u.searchParams.delete('mode');
+    history.replaceState({},'',u.toString());
+  }catch(e){}
+}
+
+/* Register only once the schedule + team lists have loaded, so a post-signup
+   auto-resume never fires against empty selectors. */
+boot().then(installSimGate,installSimGate);
 </script>
 </body>
 </html>

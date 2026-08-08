@@ -102,7 +102,8 @@
                 if (isPickPost && p && typeof p.then === 'function') {
                     p.then(function (resp) {
                         if (resp) {
-                            track('simulator_pick_submitted', { source: 'mlb-simulator' });
+                            track('simulator_pick_submitted', { source: intent.source || 'mlb-simulator', sport: intent.sport || 'MLB' });
+                            track('simulator_verified_pick_created', { source: intent.source || 'mlb-simulator', sport: intent.sport || 'MLB' });
                             try { localStorage.removeItem(KEY); } catch (e) { }
                         }
                     }).catch(function () { });
@@ -113,17 +114,21 @@
     }
 
     var tries = 0;
-    var switchedToMlb = false;
+    var switchedSport = false;
+    // Which board to open. Written by the simulator that created the intent
+    // (MLB Simulator -> 'MLB', NFL Simulator -> 'NFL'); older intents that
+    // predate the field are MLB by definition.
+    var INTENT_SPORT = (intent.sport && /^[A-Z]{2,5}$/.test(intent.sport)) ? intent.sport : 'MLB';
     function attempt() {
         tries++;
         var games = (window.TMR && (window.TMR.currentGames || window.TMR._cachedGames)) || null;
-        if ((!games || !games.length) && !switchedToMlb && tries >= 4 &&
+        if ((!games || !games.length) && !switchedSport && tries >= 4 &&
             typeof window.selectSportAndShowGames === 'function') {
-            // The board defaults to another sport's tab; open the MLB board the
-            // same way the visible MLB tab button does. Selection only — this
-            // cannot submit anything.
-            switchedToMlb = true;
-            try { window.selectSportAndShowGames('MLB'); } catch (e) { }
+            // The board defaults to another sport's tab; open the intent's board
+            // the same way the visible sport tab button does. Selection only —
+            // this cannot submit anything.
+            switchedSport = true;
+            try { window.selectSportAndShowGames(INTENT_SPORT); } catch (e) { }
         }
         if (!games || !games.length) {
             if (tries < 100) { setTimeout(attempt, 400); return; }   // ~40s window for slow API

@@ -361,7 +361,7 @@
             });
         };
         if (isLoggedIn()) {
-            row.innerHTML = '<button type="button" class="simv2-btn simv2-btn-gold" id="simv2PickCta">Add This Pick to My Slip</button>' +
+            row.innerHTML = '<button type="button" class="simv2-btn simv2-btn-gold" id="simv2PickCta">Add This Pick to My Verified Record</button>' +
                 '<a class="simv2-btn simv2-btn-ghost" href="/handicappers/">View Verified Handicappers</a>';
         } else {
             row.innerHTML = '<button type="button" class="simv2-btn simv2-btn-gold" id="simv2PickCta">Create Free Account &amp; Lock This Pick</button>' +
@@ -383,6 +383,7 @@
             away_team_name: g ? g.away_team_name : m.away,
             home_team_name: g ? g.home_team_name : m.home,
             board_game_id: g ? g.board_game_id : null,
+            sport: 'MLB',
             source: 'mlb-simulator'
         };
         try { localStorage.setItem(PICK_INTENT_KEY, JSON.stringify(intent)); } catch (e) { }

@@ -24,9 +24,23 @@
         try { if (window.TMRAnalytics && typeof window.TMRAnalytics.track === 'function') window.TMRAnalytics.track(name, params || {}); } catch (e) {}
     }
 
+    // SIM_AUTH_GATE_20260808: this list is now the member's history for EVERY
+    // TrustMyRecord simulator, not just MLB (rows carry simulation_type and all
+    // simulators write to the same owner-scoped store). Rows must therefore say
+    // which simulator produced them and send View/Rerun back to that simulator.
+    var SIM_KINDS = {
+        game: { label: 'MLB', path: '/mlb-simulator/' },
+        nfl_game: { label: 'NFL', path: '/nfl-simulator/' }
+    };
+    function simKind(saved) {
+        return SIM_KINDS[saved.simulation_type] || { label: (saved.simulation_type || 'game').toUpperCase(), path: '/mlb-simulator/' };
+    }
+
     function savedCardHtml(saved) {
         var r = saved.summarized_result || {};
-        var label = (r.awayTeam || 'Away') + ' vs ' + (r.homeTeam || 'Home');
+        var kind = simKind(saved);
+        var matchup = (r.awayTeam || 'Away') + ' vs ' + (r.homeTeam || 'Home');
+        var label = kind.label + ' - ' + matchup;
         var score = (r.awayScore && r.homeScore) ? (r.awayScore + ' - ' + r.homeScore) : '';
         return '<div class="season-card-wrap">' +
             '<div class="season-card" data-saved-id="' + saved.id + '">' +
@@ -39,8 +53,8 @@
             (saved.last_rerun_at ? (' &middot; last rerun ' + escapeHtml(formatDate(saved.last_rerun_at))) : '') + '</span>' +
             '</div>' +
             '<div class="season-card-actions">' +
-            '<a class="sim-button secondary" href="/mlb-simulator/?savedId=' + saved.id + '&mode=view">View</a>' +
-            '<a class="sim-button secondary" href="/mlb-simulator/?savedId=' + saved.id + '&mode=rerun">Rerun</a>' +
+            '<a class="sim-button secondary" href="' + kind.path + '?savedId=' + saved.id + '&mode=view">View</a>' +
+            '<a class="sim-button secondary" href="' + kind.path + '?savedId=' + saved.id + '&mode=rerun">Rerun</a>' +
             '<button type="button" class="sim-button secondary" data-action="rename" data-id="' + saved.id + '">Save Name</button>' +
             '<button type="button" class="sim-button secondary" data-tone="danger" data-action="delete" data-id="' + saved.id + '">Delete</button>' +
             '</div></div></div>';
@@ -59,7 +73,7 @@
             var results = (resp && resp.results) || [];
             if (!results.length) {
                 list.setAttribute('data-state', 'empty');
-                list.innerHTML = '<p>No saved simulations yet. Run a matchup on the <a href="/mlb-simulator/">MLB Simulator</a> and save it.</p>';
+                list.innerHTML = '<p>No simulations yet. Run a matchup on the <a href="/mlb-simulator/">MLB Simulator</a> or the <a href="/nfl-simulator/">NFL Simulator</a> &mdash; every run you make while signed in is saved here automatically.</p>';
             } else {
                 list.setAttribute('data-state', 'loaded');
                 list.innerHTML = results.map(savedCardHtml).join('');

@@ -659,11 +659,20 @@
     <!-- analytics.js provides window.TMRAnalytics; without it every
          simulator_* funnel event is silently dropped by the guards. -->
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-    <script defer src="/static/js/mlb-simulator-conversion.js?v=f3371e3c98c2"></script>
+    <script defer src="/static/js/mlb-simulator-conversion.js?v=c141d55cf99f"></script>
+    <!-- SIM_AUTH_GATE_20260808: free-account gate on RUN only (the page,
+         the selectors and every setting stay open to logged-out visitors
+         and to crawlers), plus state preservation across signup/login and
+         automatic simulation history for members. Kill switches:
+         gate:false = run freely again, resume:false = no auto-resume,
+         autoSave:false = no history write. Flip + redeploy, no code change. -->
+    <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true };</script>
+    <script defer src="/static/js/sim-auth-gate.js?v=d875c7b5bd00"></script>
+    <script defer src="/static/js/mlb-simulator-gate.js?v=bc942e917287"></script>
     <!-- SIMV2_LANDING_20260730: landing/conversion layer. Kill switch:
          set landing:false + redeploy; core simulator is independent. -->
     <script>window.SIM_LANDING_FLAGS = { landing: true };</script>
-    <script defer src="/static/js/mlb-sim-landing.js?v=6098060b6112"></script>
+    <script defer src="/static/js/mlb-sim-landing.js?v=8984a46197c6"></script>
     <!-- MLB_SIM_HISTORY_20260803: records a COMPLETED run to the public
          daily consensus feed and adds the "View All Simulations Today"
          link to the existing result-card action row. Kill switch:

@@ -242,12 +242,38 @@
     panel.id = 'simcConversionPanel';
 
     if (isLoggedIn()) {
+      // MLB_SIM_GATE_20260808: mlb-simulator-gate.js now writes every completed
+      // run to the member's history automatically, so the manual Save button
+      // would create a duplicate row. Show the saved state instead as soon as
+      // that write lands (it may still be in flight when this panel renders).
       panel.innerHTML =
-        '<h3>Save Your Simulation</h3>' +
-        '<p>Keep this result in My Simulations so you can reopen or rerun it later.</p>' +
-        '<div class="simc-row"><button type="button" class="simc-btn primary" id="simcSaveDirectBtn">Save</button>' +
-        '<a class="simc-btn secondary" href="/mlb-simulator/saved/">My Saved Simulations</a></div>';
+        '<h3>Saved to Your Simulation History</h3>' +
+        '<p id="simcSaveState">Saving this result to your account&hellip;</p>' +
+        '<div class="simc-row"><button type="button" class="simc-btn primary" id="simcSaveDirectBtn" style="display:none">Save</button>' +
+        '<a class="simc-btn secondary" href="/mlb-simulator/saved/">My Simulation History</a></div>';
       target.after(panel);
+      var stateEl = qs('simcSaveState');
+      function markSaved() {
+        if (stateEl) stateEl.textContent = 'This result is in your simulation history — reopen or rerun it any time.';
+        var b = qs('simcSaveDirectBtn');
+        if (b) b.style.display = 'none';
+      }
+      function offerManualSave() {
+        if (stateEl) stateEl.textContent = 'Keep this result in your simulation history so you can reopen or rerun it later.';
+        var b = qs('simcSaveDirectBtn');
+        if (b) b.style.display = '';
+      }
+      if (window.TMRSimHistory && window.TMRSimHistory.lastAutoSaveId) markSaved();
+      else {
+        document.addEventListener('tmr:sim-autosaved', markSaved, { once: true });
+        // Auto-save is best-effort (and disabled outright when
+        // SIM_GATE_FLAGS.autoSave === false). If it has not reported in a few
+        // seconds, fall back to the original manual Save button so the member
+        // is never left without a way to keep the result.
+        setTimeout(function () {
+          if (!(window.TMRSimHistory && window.TMRSimHistory.lastAutoSaveId)) offerManualSave();
+        }, 5000);
+      }
       qs('simcSaveDirectBtn').addEventListener('click', function () { onSaveDirectClick(inputs, result); });
     } else {
       panel.innerHTML =
