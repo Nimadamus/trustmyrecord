@@ -5,7 +5,23 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const LIVE_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
+const RAW_LIVE_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
+
+// Pin the mainline pick slip.
+//
+// static/js/sportsbook-multislip.js is on a staged rollout: ROLLOUT_PERCENT is
+// 10 and the bucket is `Math.floor(Math.random() * 100)` kept in localStorage.
+// CI starts from a clean profile every run, so roughly one run in ten drew the
+// multislip panel instead -- a different component that does not render
+// `.sportsbook-ticket-preview-card` or `#summaryPick`, which is what the F5
+// assertion below waits for. That timed out with the sportsbook working.
+// `?multislip=0` is the kill switch the module already exposes; an explicit
+// ?multislip= in TMR_SPORTSBOOK_URL still wins.
+const LIVE_URL = (() => {
+  const url = new URL(RAW_LIVE_URL);
+  if (!url.searchParams.has('multislip')) url.searchParams.set('multislip', '0');
+  return url.toString();
+})();
 const OUT = path.join(process.cwd(), 'artifacts', 'sportsbook-live-browser-proof.png');
 const REPORT = path.join(process.cwd(), 'artifacts', 'sportsbook-live-f5-submit-proof.json');
 

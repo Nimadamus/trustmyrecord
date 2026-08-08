@@ -19,8 +19,22 @@ const ROUTES = [
 const SPORT_TABS = ['NBA', 'NHL', 'NFL', 'MLB', 'NCAAB', 'NCAAF', 'Soccer'];
 const UNIT_VALUES = ['0.5', '1', '2', '3'];
 
+// Pin the mainline pick slip on every sportsbook route.
+//
+// static/js/sportsbook-multislip.js is on a staged rollout: ROLLOUT_PERCENT is
+// 10 and the bucket is `Math.floor(Math.random() * 100)` kept in localStorage.
+// CI starts from a clean profile, so roughly one run in ten drew the multislip
+// panel -- a different component whose markup the slip assertions in this file
+// (#pickDetails, the risk/to-win preview) were never written against. That is a
+// coin flip inside a deployment gate. `?multislip=0` is the kill switch the
+// module already exposes. Nothing else about the route changes.
+function pinSlipVariant(path) {
+  if (!path.startsWith('/sportsbook/')) return path;
+  return path + (path.includes('?') ? '&' : '?') + 'multislip=0';
+}
+
 async function gotoRoute(page, path) {
-  await page.goto(path, { waitUntil: 'domcontentloaded' });
+  await page.goto(pinSlipVariant(path), { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
 }
 
