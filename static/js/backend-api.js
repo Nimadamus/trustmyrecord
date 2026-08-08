@@ -1234,6 +1234,67 @@ class TrustMyRecordAPI {
         }
     }
 
+    // ==================== TMR WALLET / ECONOMY ROUTES ====================
+    // TMR is an internal, non-monetary balance. Nothing below buys TMR with
+    // money, converts TMR to money, or moves it on a blockchain.
+    //
+    // Transfers, challenges and marketplace purchases are each gated on a
+    // backend feature flag that defaults OFF and cannot be enabled without a
+    // recorded legal sign-off, so these calls answer 403 until that happens.
+    // The UI asks getWalletConfig() what is live rather than assuming --
+    // never hard-code a limit or a fee here, they are admin-configurable.
+    //
+    // These deliberately do NOT swallow errors the way the older getCoin*
+    // helpers below do: a failed transfer must surface, not read as an empty
+    // result. Callers handle the rejection.
+
+    async getWalletSummary() { return this.request('/wallet/summary'); }
+
+    async getWalletConfig() { return this.request('/wallet/config'); }
+
+    async getWalletTransactions(options = {}) {
+        const params = new URLSearchParams();
+        params.set('limit', options.limit || 25);
+        if (options.before != null) params.set('before', options.before);
+        if (options.direction) params.set('direction', options.direction);
+        return this.request(`/wallet/transactions?${params}`);
+    }
+
+    async getWalletTransfers(options = {}) {
+        const params = new URLSearchParams();
+        params.set('limit', options.limit || 25);
+        return this.request(`/wallet/transfers?${params}`);
+    }
+
+    async previewWalletTransfer(toUsername, amount) {
+        const params = new URLSearchParams({ toUsername, amount: String(amount) });
+        return this.request(`/wallet/transfer/preview?${params}`);
+    }
+
+    async sendWalletTransfer(body) {
+        return this.request('/wallet/transfer', { method: 'POST', body: JSON.stringify(body) });
+    }
+
+    async sendWalletTip(body) {
+        return this.request('/wallet/tip', { method: 'POST', body: JSON.stringify(body) });
+    }
+
+    async getWalletChallenges(scope = 'mine') {
+        return this.request(`/wallet/challenges?scope=${encodeURIComponent(scope)}`);
+    }
+
+    async createWalletChallenge(body) {
+        return this.request('/wallet/challenges', { method: 'POST', body: JSON.stringify(body) });
+    }
+
+    async respondToWalletChallenge(id, action, body = {}) {
+        return this.request(`/wallet/challenges/${id}/${action}`, {
+            method: 'POST', body: JSON.stringify(body)
+        });
+    }
+
+    async getTmrSupply() { return this.request('/wallet/supply'); }
+
     // ==================== COINS ROUTES ====================
     // TMR Coin -- internal, non-monetary reward currency. No purchase,
     // transfer, cash-out, or redemption endpoint exists on the backend.

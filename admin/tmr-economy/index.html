@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Economy Control Center | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#2dd4bf; --gold:#facc15; --red:#f87171; --green:#4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        main { padding: 20px; max-width: 1080px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; }
+        .msg.err { color: var(--red); }
+        .msg.ok { color: var(--green); }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 4px; font-size: 15px; }
+        .panel p.note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        input, textarea, select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 13px; }
+        input[type=number] { width: 130px; }
+        input.wide, textarea { width: 100%; }
+        textarea { min-height: 48px; resize: vertical; }
+        button { background: var(--panel2); color: var(--text); border: 1px solid rgba(45,212,191,0.3); border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.danger { border-color: rgba(248,113,113,0.45); color: #fecaca; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel2); }
+        .tile .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 5px; }
+        .tile .v { margin: 0; font-size: 21px; font-weight: 800; }
+        .tile .v.gold { color: var(--gold); }
+        .ok-pill { color: var(--green); font-weight: 800; }
+        .bad-pill { color: var(--red); font-weight: 800; }
+        .flag-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .flag-row:last-child { border-bottom: none; }
+        .flag-name { font-weight: 800; font-size: 13.5px; }
+        .flag-alias { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, monospace; }
+        .flag-state { font-size: 12px; margin-top: 5px; }
+        .flag-signoff { margin-top: 8px; }
+        .group-title { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+        @media (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; }
+            td { border: none; padding: 5px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <h1>TMR Economy Control Center</h1>
+        <span class="badge">ADMIN</span>
+        <a href="/admin/tmr-coin/">On-chain panel →</a>
+        <a href="/admin/tmr-coin/ledger/">Ledger audit →</a>
+    </div>
+    <main>
+        <div id="msg" class="msg"></div>
+
+        <!-- ============ SUPPLY ============ -->
+        <div class="panel">
+            <h2>Supply</h2>
+            <p class="note">
+                Every figure below is derived from the ledger and the treasury counters. There is no field anywhere that
+                sets a circulating-supply number by hand, and there must never be one.
+            </p>
+            <div class="grid" id="supplyGrid"></div>
+        </div>
+
+        <!-- ============ INTEGRITY ============ -->
+        <div class="panel">
+            <h2>Integrity</h2>
+            <p class="note">
+                Two checks this panel owns: every wallet's locked balance equals the sum of its open escrow rows, and the
+                treasury counter equals the treasury ledger it is derived from. A failure here means stop and investigate
+                before moving any TMR.
+            </p>
+            <table><tbody id="integrityRows"></tbody></table>
+        </div>
+
+        <!-- ============ FEATURE FLAGS ============ -->
+        <div class="panel">
+            <h2>Feature flags</h2>
+            <p class="note">
+                These are the legally sensitive capabilities. Each is OFF by default and cannot be enabled without a
+                written legal sign-off note recorded here &mdash; the backend refuses the change without one, so this is
+                not a UI convention. Do not enter a placeholder: this note is the record of who authorised it and on what
+                basis.
+            </p>
+            <div id="flagList"></div>
+        </div>
+
+        <!-- ============ CONFIG ============ -->
+        <div class="panel">
+            <h2>Economy settings</h2>
+            <p class="note">
+                Fees, limits and operational switches. Nothing here is hard-coded in the product &mdash; the platform fee
+                on a creator sale, the transfer ceiling and the challenge rake all read from this table on every
+                transaction. Every change is written to a history table with who made it.
+            </p>
+            <div id="configGroups"></div>
+        </div>
+
+        <!-- ============ TREASURY ============ -->
+        <div class="panel">
+            <h2>Treasury &amp; burns</h2>
+            <p class="note">
+                Fees and rake land in the treasury. Burning destroys treasury-held TMR permanently and cannot be undone.
+                This cannot reach a member's wallet &mdash; adjusting a member is the per-wallet admin tool, which writes
+                its own ledger row against them.
+            </p>
+            <div class="grid" id="treasuryGrid" style="margin-bottom:14px;"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
+                <input type="number" id="burnAmount" min="1" step="1" placeholder="Amount">
+                <input type="text" id="burnReason" class="wide" style="max-width:340px;" placeholder="Reason (required, recorded)">
+                <button class="danger" id="burnBtn" type="button">Burn</button>
+            </div>
+            <h3 style="font-size:12.5px;color:var(--muted);margin:18px 0 6px;text-transform:uppercase;letter-spacing:0.06em;">Recent treasury movements</h3>
+            <table>
+                <thead><tr><th>When</th><th>Kind</th><th>Amount</th><th>Balance after</th><th>Note</th></tr></thead>
+                <tbody id="treasuryRows"></tbody>
+            </table>
+        </div>
+
+        <!-- ============ TRANSACTION LOOKUP ============ -->
+        <div class="panel">
+            <h2>Transaction lookup</h2>
+            <p class="note">Look up any ledger row by id. The other half of a transfer or tip shares its idempotency key and is shown alongside.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <input type="number" id="txLookupId" placeholder="Ledger id">
+                <button id="txLookupBtn" type="button">Find</button>
+            </div>
+            <div id="txLookupResult" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- ============ CHALLENGES ============ -->
+        <div class="panel">
+            <h2>Challenges</h2>
+            <p class="note">
+                Settling releases both stakes and moves the net to the winner, minus whatever rake was set when the
+                challenge was created. Void returns both stakes and names no winner.
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                <select id="chStatusFilter">
+                    <option value="">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="settled">Settled</option>
+                    <option value="voided">Voided</option>
+                    <option value="declined">Declined</option>
+                    <option value="expired">Expired</option>
+                </select>
+                <button id="chRefresh" type="button">Refresh</button>
+                <button id="chExpire" type="button">Expire stale pending</button>
+            </div>
+            <table>
+                <thead><tr><th>#</th><th>Challenger</th><th>Opponent</th><th>Stake</th><th>Status</th><th>Settle</th></tr></thead>
+                <tbody id="chRows"></tbody>
+            </table>
+        </div>
+
+        <!-- ============ TRANSFERS ============ -->
+        <div class="panel">
+            <h2>Recent transfers</h2>
+            <p class="note">Member-to-member movements, newest first. Fees and burns are shown as recorded on each row.</p>
+            <table>
+                <thead><tr><th>When</th><th>From</th><th>To</th><th>Amount</th><th>Fee</th><th>Burned</th></tr></thead>
+                <tbody id="transferRows"></tbody>
+            </table>
+        </div>
+
+        <!-- ============ ESCROW ============ -->
+        <div class="panel">
+            <h2>Open escrow</h2>
+            <p class="note">Every TMR currently held out of a member's available balance, and why.</p>
+            <table>
+                <thead><tr><th>#</th><th>Member</th><th>Amount</th><th>Purpose</th><th>Reference</th><th>Since</th></tr></thead>
+                <tbody id="escrowRows"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+    <script src="/static/js/backend-api.js?v=b95fe2fe34b2"></script>
+    <script>
+    (function () {
+        'use strict';
+        var el = function (id) { return document.getElementById(id); };
+        var msg = el('msg');
+
+        function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+            });
+        }
+        function num(v) { return (Number(v) || 0).toLocaleString('en-US'); }
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            var d = new Date(iso);
+            return isNaN(d.getTime()) ? '—' : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+        function say(text, kind) {
+            msg.textContent = text;
+            msg.className = 'msg ' + (kind || 'ok');
+            if (kind !== 'err') setTimeout(function () { if (msg.textContent === text) msg.textContent = ''; }, 5000);
+        }
+        function req(path, options) { return window.api.request('/admin/economy' + path, options); }
+
+        // ---- overview -------------------------------------------------------
+        async function loadOverview() {
+            var d = await req('/overview');
+
+            var s = d.supply;
+            el('supplyGrid').innerHTML = [
+                ['Maximum supply', s.max_supply, 'gold'],
+                ['Issued to date', s.total_issued, ''],
+                ['Remaining issuable', s.remaining_issuable, ''],
+                ['Held by members', s.member_available, ''],
+                ['Locked', s.member_locked, ''],
+                ['Treasury', s.treasury, ''],
+                ['Burned', s.burned, ''],
+                ['Wallets', s.wallets, '']
+            ].map(function (r) {
+                return '<div class="tile"><p class="k">' + esc(r[0]) + '</p><p class="v ' + r[2] + '">' + num(r[1]) + '</p></div>';
+            }).join('');
+
+            el('treasuryGrid').innerHTML = [
+                ['Treasury balance', d.treasury.balance],
+                ['Burned to date', d.treasury.burned_total],
+                ['Open escrow', d.escrow.total],
+                ['Escrow rows', d.escrow.n],
+                ['Ledger rows (24h)', d.activity_24h.ledger_24h],
+                ['Issued (24h)', d.activity_24h.issued_24h],
+                ['Spent (24h)', d.activity_24h.spent_24h]
+            ].map(function (r) {
+                return '<div class="tile"><p class="k">' + esc(r[0]) + '</p><p class="v">' + num(r[1]) + '</p></div>';
+            }).join('');
+
+            renderFlags(d.flags, d.flag_aliases);
+        }
+
+        // ---- integrity ------------------------------------------------------
+        async function loadIntegrity() {
+            var d = await req('/integrity');
+            var rows = [
+                ['locked_balance matches open escrow', d.locked_balances.ok,
+                 d.locked_balances.checked + ' wallet(s) checked' +
+                 (d.locked_balances.mismatches.length ? ' · ' + d.locked_balances.mismatches.length + ' MISMATCH' : '')],
+                ['treasury counter matches its ledger', d.treasury_reconciliation.ok,
+                 'stored ' + num(d.treasury_reconciliation.stored) + ' vs ledger ' + num(d.treasury_reconciliation.from_ledger)]
+            ];
+            el('integrityRows').innerHTML = rows.map(function (r) {
+                return '<tr><td>' + esc(r[0]) + '</td>' +
+                    '<td><span class="' + (r[1] ? 'ok-pill">PASS' : 'bad-pill">FAIL') + '</span></td>' +
+                    '<td style="color:var(--muted);">' + esc(r[2]) + '</td></tr>';
+            }).join('');
+        }
+
+        // ---- flags ----------------------------------------------------------
+        function renderFlags(flags, aliases) {
+            var aliasFor = {};
+            Object.keys(aliases || {}).forEach(function (a) { aliasFor[aliases[a]] = a; });
+            el('flagList').innerHTML = Object.keys(flags).map(function (key) {
+                var f = flags[key];
+                var live = !!(f.enabled && f.legal_signoff_note);
+                return '<div class="flag-row">' +
+                    '<div>' +
+                        '<div class="flag-name">' + esc(key) + '</div>' +
+                        (aliasFor[key] ? '<div class="flag-alias">' + esc(aliasFor[key]) + '</div>' : '') +
+                        '<div class="flag-state">' + (live
+                            ? '<span class="ok-pill">ENABLED</span> &middot; signed off ' + fmtDate(f.legal_signoff_date)
+                            : '<span class="bad-pill">DISABLED</span>') + '</div>' +
+                        (f.legal_signoff_note ? '<div class="flag-state" style="color:var(--muted);">' + esc(f.legal_signoff_note) + '</div>' : '') +
+                        (live ? '' : '<div class="flag-signoff"><textarea data-signoff="' + esc(key) + '" placeholder="Written legal sign-off reference (required to enable)"></textarea></div>') +
+                    '</div>' +
+                    '<div>' + (live
+                        ? '<button class="danger" data-flag-off="' + esc(key) + '" type="button">Disable</button>'
+                        : '<button data-flag-on="' + esc(key) + '" type="button">Enable</button>') + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+        el('flagList').addEventListener('click', async function (ev) {
+            var on = ev.target.closest('[data-flag-on]');
+            var off = ev.target.closest('[data-flag-off]');
+            if (!on && !off) return;
+            var key = (on || off).getAttribute(on ? 'data-flag-on' : 'data-flag-off');
+            try {
+                if (on) {
+                    var note = (el('flagList').querySelector('[data-signoff="' + key + '"]') || {}).value || '';
+                    if (!note.trim()) { say('A written legal sign-off note is required to enable ' + key + '.', 'err'); return; }
+                    if (!window.confirm('Enable ' + key + '? This switches on a real capability for every member.')) return;
+                    await req('/flags/' + encodeURIComponent(key), {
+                        method: 'PUT', body: JSON.stringify({ enabled: true, legalSignoffNote: note })
+                    });
+                } else {
+                    await req('/flags/' + encodeURIComponent(key), { method: 'PUT', body: JSON.stringify({ enabled: false }) });
+                }
+                say(key + ' updated.');
+                await loadOverview();
+            } catch (e) { say(e.message || 'Could not update that flag.', 'err'); }
+        });
+
+        // ---- config ---------------------------------------------------------
+        async function loadConfig() {
+            var d = await req('/config');
+            var groups = {};
+            d.config.forEach(function (row) { (groups[row.group] = groups[row.group] || []).push(row); });
+            el('configGroups').innerHTML = Object.keys(groups).map(function (g) {
+                return '<div class="group-title">' + esc(g) + '</div>' +
+                    '<table><tbody>' + groups[g].map(function (row) {
+                        var input = row.type === 'boolean'
+                            ? '<select data-cfg="' + esc(row.key) + '">' +
+                                '<option value="true"' + (row.value ? ' selected' : '') + '>On</option>' +
+                                '<option value="false"' + (!row.value ? ' selected' : '') + '>Off</option></select>'
+                            : '<input type="number" data-cfg="' + esc(row.key) + '" value="' + Number(row.value) + '" step="1">';
+                        return '<tr><td style="width:44%;"><strong>' + esc(row.label) + '</strong>' +
+                            '<div class="flag-alias">' + esc(row.key) + (row.is_overridden ? ' · overridden (default ' + esc(String(row.default)) + ')' : '') + '</div></td>' +
+                            '<td>' + input + '</td>' +
+                            '<td><button data-cfg-save="' + esc(row.key) + '" type="button">Save</button></td></tr>';
+                    }).join('') + '</tbody></table>';
+            }).join('');
+        }
+        el('configGroups').addEventListener('click', async function (ev) {
+            var btn = ev.target.closest('[data-cfg-save]');
+            if (!btn) return;
+            var key = btn.getAttribute('data-cfg-save');
+            var field = el('configGroups').querySelector('[data-cfg="' + key + '"]');
+            var value = field.tagName === 'SELECT' ? field.value === 'true' : Number(field.value);
+            var reason = window.prompt('Why is ' + key + ' changing? (recorded in the change log)');
+            if (reason === null) return;
+            btn.disabled = true;
+            try {
+                await req('/config/' + encodeURIComponent(key), {
+                    method: 'PUT', body: JSON.stringify({ value: value, reason: reason })
+                });
+                say(key + ' set to ' + value + '.');
+                await loadConfig();
+            } catch (e) { say(e.message || 'Could not save that setting.', 'err'); }
+            finally { btn.disabled = false; }
+        });
+
+        // ---- treasury -------------------------------------------------------
+        async function loadTreasury() {
+            var d = await req('/treasury?limit=25');
+            el('treasuryRows').innerHTML = d.ledger.length
+                ? d.ledger.map(function (r) {
+                    return '<tr><td>' + fmtDate(r.created_at) + '</td><td>' + esc(r.kind) + '</td>' +
+                        '<td>' + num(r.amount) + '</td><td>' + num(r.balance_after) + '</td>' +
+                        '<td style="color:var(--muted);">' + esc(r.note || '') + '</td></tr>';
+                }).join('')
+                : '<tr><td colspan="5" style="color:var(--muted);">No treasury movements yet.</td></tr>';
+        }
+        el('burnBtn').addEventListener('click', async function () {
+            var amount = parseInt(el('burnAmount').value, 10);
+            var reason = el('burnReason').value.trim();
+            if (!(amount > 0) || !reason) { say('A whole amount and a reason are both required.', 'err'); return; }
+            if (!window.confirm('Burn ' + num(amount) + ' TMR permanently? This cannot be undone.')) return;
+            el('burnBtn').disabled = true;
+            try {
+                await req('/burn', { method: 'POST', body: JSON.stringify({ amount: amount, reason: reason }) });
+                say('Burned ' + num(amount) + ' TMR.');
+                el('burnAmount').value = ''; el('burnReason').value = '';
+                await loadOverview(); await loadTreasury();
+            } catch (e) { say(e.message || 'Burn failed.', 'err'); }
+            finally { el('burnBtn').disabled = false; }
+        });
+
+        // ---- transaction lookup ---------------------------------------------
+        el('txLookupBtn').addEventListener('click', async function () {
+            var id = parseInt(el('txLookupId').value, 10);
+            if (!(id > 0)) { say('Enter a ledger id.', 'err'); return; }
+            try {
+                var d = await req('/transaction/' + id);
+                var t = d.transaction;
+                var rowsHtml = [t].concat(d.counterparts).map(function (r) {
+                    return '<tr><td>#' + r.id + '</td><td>' + esc(r.username) + '</td><td>' + esc(r.entry_type) + '</td>' +
+                        '<td>' + num(r.amount) + '</td><td>' + num(r.balance_before) + ' → ' + num(r.balance_after) + '</td>' +
+                        '<td>' + esc(r.bucket || '') + '</td><td>' + fmtDate(r.created_at) + '</td></tr>';
+                }).join('');
+                el('txLookupResult').innerHTML =
+                    '<table><thead><tr><th>Id</th><th>Member</th><th>Type</th><th>Amount</th><th>Balance</th><th>Bucket</th><th>When</th></tr></thead>' +
+                    '<tbody>' + rowsHtml + '</tbody></table>' +
+                    (t.admin_note ? '<p class="note" style="margin-top:8px;">Note: ' + esc(t.admin_note) + '</p>' : '');
+            } catch (e) {
+                el('txLookupResult').innerHTML = '<p class="note" style="color:var(--red);">' + esc(e.message || 'Not found') + '</p>';
+            }
+        });
+
+        // ---- challenges -----------------------------------------------------
+        async function loadChallenges() {
+            var status = el('chStatusFilter').value;
+            var d = await req('/challenges?limit=50' + (status ? '&status=' + encodeURIComponent(status) : ''));
+            el('chRows').innerHTML = d.challenges.length
+                ? d.challenges.map(function (c) {
+                    var canSettle = c.status === 'accepted' || c.status === 'awaiting_settlement';
+                    return '<tr><td>#' + c.id + '</td><td>' + esc(c.challenger_username) + '</td>' +
+                        '<td>' + esc(c.opponent_username || '—') + '</td><td>' + num(c.stake) + '</td>' +
+                        '<td>' + esc(c.status) + (c.outcome ? ' (' + esc(c.outcome) + ')' : '') + '</td>' +
+                        '<td>' + (canSettle
+                            ? '<button data-settle="' + c.id + '" data-outcome="challenger" type="button">Challenger</button> ' +
+                              '<button data-settle="' + c.id + '" data-outcome="opponent" type="button">Opponent</button> ' +
+                              '<button data-settle="' + c.id + '" data-outcome="push" type="button">Push</button> ' +
+                              '<button class="danger" data-settle="' + c.id + '" data-outcome="void" type="button">Void</button>'
+                            : '') + '</td></tr>';
+                }).join('')
+                : '<tr><td colspan="6" style="color:var(--muted);">No challenges.</td></tr>';
+        }
+        el('chRows').addEventListener('click', async function (ev) {
+            var btn = ev.target.closest('[data-settle]');
+            if (!btn) return;
+            var id = btn.getAttribute('data-settle');
+            var outcome = btn.getAttribute('data-outcome');
+            if (!window.confirm('Settle challenge #' + id + ' as "' + outcome + '"? This moves TMR and cannot be undone.')) return;
+            var note = window.prompt('Settlement note (recorded on the challenge):') || '';
+            btn.disabled = true;
+            try {
+                await req('/challenges/' + id + '/settle', {
+                    method: 'POST', body: JSON.stringify({ outcome: outcome, note: note })
+                });
+                say('Challenge #' + id + ' settled as ' + outcome + '.');
+                await loadChallenges(); await loadOverview(); await loadIntegrity();
+            } catch (e) { say(e.message || 'Settlement failed.', 'err'); btn.disabled = false; }
+        });
+        el('chRefresh').addEventListener('click', loadChallenges);
+        el('chStatusFilter').addEventListener('change', loadChallenges);
+        el('chExpire').addEventListener('click', async function () {
+            try {
+                var d = await req('/challenges/expire', { method: 'POST', body: JSON.stringify({ limit: 200 }) });
+                say('Expired ' + d.expired + ' stale challenge(s).');
+                await loadChallenges(); await loadOverview();
+            } catch (e) { say(e.message || 'Could not expire.', 'err'); }
+        });
+
+        // ---- transfers + escrow ---------------------------------------------
+        async function loadTransfers() {
+            var d = await req('/transfers?limit=25');
+            el('transferRows').innerHTML = d.transfers.length
+                ? d.transfers.map(function (t) {
+                    return '<tr><td>' + fmtDate(t.created_at) + '</td><td>' + esc(t.from_username) + '</td>' +
+                        '<td>' + esc(t.to_username) + '</td><td>' + num(t.amount) + '</td>' +
+                        '<td>' + num(t.fee) + '</td><td>' + num(t.burned) + '</td></tr>';
+                }).join('')
+                : '<tr><td colspan="6" style="color:var(--muted);">No transfers yet.</td></tr>';
+        }
+        async function loadEscrow() {
+            var d = await req('/escrow?status=open&limit=100');
+            el('escrowRows').innerHTML = d.escrow.length
+                ? d.escrow.map(function (e) {
+                    return '<tr><td>#' + e.id + '</td><td>' + esc(e.username) + '</td><td>' + num(e.amount) + '</td>' +
+                        '<td>' + esc(e.purpose) + '</td><td>' + esc((e.related_entity_type || '') + ' ' + (e.related_entity_id || '')) + '</td>' +
+                        '<td>' + fmtDate(e.created_at) + '</td></tr>';
+                }).join('')
+                : '<tr><td colspan="6" style="color:var(--muted);">Nothing is locked.</td></tr>';
+        }
+
+        async function boot() {
+            if (!(window.api && window.api.isLoggedIn())) {
+                say('Admin login required.', 'err');
+                return;
+            }
+            try {
+                await loadOverview();
+                await Promise.all([loadIntegrity(), loadConfig(), loadTreasury(), loadChallenges(), loadTransfers(), loadEscrow()]);
+            } catch (e) {
+                say('Failed to load (admin login required): ' + (e.message || e), 'err');
+            }
+        }
+        boot();
+    })();
+    </script>
+</body>
+</html>

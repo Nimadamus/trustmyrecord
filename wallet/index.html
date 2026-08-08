@@ -4,7 +4,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMR Coin Wallet | TrustMyRecord</title>
+    <title>TMR Wallet | TrustMyRecord</title>
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/wallet/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +24,7 @@
             --gold: #facc15;
             --green: #22c55e;
             --red: #f87171;
+            --teal: #2dd4bf;
         }
         * { box-sizing: border-box; }
         body {
@@ -35,109 +36,143 @@
             color: var(--text);
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
-        .wallet-page { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 56px; }
-        .wallet-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 18px; flex-wrap: wrap; }
+        .wallet-page { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 72px; }
+        .wallet-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 20px; flex-wrap: wrap; }
         .wallet-kicker { margin: 0 0 10px; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
         h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 0.95; }
         .wallet-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
         .wallet-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; }
-        .disclaimer { margin: 18px 0; padding: 12px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13px; line-height: 1.5; }
-        .earn-card { padding: 22px 26px; border: 1px solid rgba(250, 204, 21, 0.28); border-radius: 10px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.55), rgba(8, 13, 22, 0.9)); margin: 18px 0 22px; }
-        .earn-kicker { margin: 0 0 14px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
-        .earn-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-        .earn-list li { padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: rgba(15, 23, 42, 0.4); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+        .btn-sm { min-height: 34px; padding: 0 13px; font-size: 12.5px; }
+
+        /* Balance header -- the three numbers that matter, in a financial hierarchy:
+           what you can use now, what is committed, what you have ever earned. */
+        .balance-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+        .balance-card { padding: 24px 26px; border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 12px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.9), rgba(8, 13, 22, 0.96)); }
+        .balance-card.sub { border-color: var(--line); background: linear-gradient(180deg, rgba(16, 24, 38, 0.9), rgba(8, 13, 22, 0.96)); }
+        .balance-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
+        .balance-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 52px); color: var(--gold); font-weight: 800; line-height: 1; }
+        .balance-card.sub .balance-value { font-size: clamp(24px, 3.4vw, 32px); color: var(--text); }
+        .balance-hint { margin: 10px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+        .tmr-coin-icon { width: 16px; height: 16px; vertical-align: -3px; }
+
+        .disclaimer { margin: 0 0 22px; padding: 12px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13px; line-height: 1.5; }
+        .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); border-radius: 8px; color: #fecaca; font-size: 14px; font-weight: 700; }
+        [hidden] { display: none !important; }
+
+        /* Lifetime figures */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 26px; }
+        .stat { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .stat-label { margin: 0 0 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+        .stat-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: 22px; font-weight: 800; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+        .tab { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .tab.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+        .tab-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(248, 113, 113, 0.22); color: #fecaca; font-size: 11px; font-weight: 800; }
+
+        section.pane { margin-bottom: 10px; }
+        .pane h2 { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 22px; }
+        .pane p.lead { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; line-height: 1.6; max-width: 68ch; }
+
+        /* Tables + mobile cards */
+        .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); }
+        tbody td { padding: 12px; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+        .amt-pos { color: var(--green); font-weight: 800; }
+        .amt-neg { color: var(--red); font-weight: 800; }
+        .mobile-cards { display: none; }
+        .mc-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 13px 14px; margin-bottom: 10px; }
+        .mc-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: 13px; }
+        .mc-row + .mc-row { margin-top: 6px; color: var(--muted); font-size: 12.5px; }
+
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+        .chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .chip.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+
+        /* Forms */
+        .form-card { padding: 20px 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); max-width: 520px; }
+        .field { margin-bottom: 14px; }
+        .field label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .field input, .field textarea, .field select {
+            width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid var(--line); background: rgba(6, 11, 18, 0.8); color: var(--text);
+            font-family: inherit; font-size: 15px;
+        }
+        .field .hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+        .confirm-box { margin: 14px 0; padding: 14px 16px; border: 1px solid rgba(45, 212, 191, 0.3); border-radius: 10px; background: rgba(10, 26, 28, 0.6); font-size: 13.5px; line-height: 1.7; }
+        .confirm-box strong { color: var(--teal); }
+        .msg { margin: 12px 0 0; padding: 11px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; }
+        .msg.err { border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); color: #fecaca; }
+        .msg.ok { border: 1px solid rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.1); color: #bbf7d0; }
+
+        .locked-notice { padding: 18px 20px; border: 1px dashed var(--line); border-radius: 10px; background: rgba(15, 23, 42, 0.4); color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+        .locked-notice strong { color: var(--text); }
+
+        .empty-state { padding: 34px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .empty-state h3 { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 18px; }
+        .empty-state p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+        .earn-list, .spend-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+        .earn-list li, .spend-list li { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
         .earn-item-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
         .earn-coins { font-family: Barlow, Inter, sans-serif; font-size: 18px; font-weight: 800; color: var(--green); min-width: 40px; }
         .earn-title { font-weight: 800; font-size: 14.5px; }
         .earn-desc { margin: 0 0 10px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-        .earn-list li .btn { min-height: 34px; padding: 0 13px; font-size: 12.5px; }
-        .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); border-radius: 8px; color: #fecaca; font-size: 14px; font-weight: 700; }
-        .frozen-banner[hidden] { display: none; }
-        .balance-card { padding: 26px; border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 10px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.9), rgba(8, 13, 22, 0.96)); margin-bottom: 22px; }
-        .balance-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
-        .balance-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(38px, 6vw, 58px); color: var(--gold); font-weight: 800; line-height: 1; }
-        .balance-hint { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
-        .tmrcoin-card { padding: 22px 26px; border: 1px solid rgba(45, 212, 191, 0.32); border-radius: 10px; background: linear-gradient(180deg, rgba(10, 26, 28, 0.9), rgba(8, 13, 22, 0.96)); margin-bottom: 22px; }
-        .tmrcoin-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-        .tmrcoin-label { margin: 0; color: #99f6e4; font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
-        .tmrcoin-network-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; background: rgba(45, 212, 191, 0.16); border: 1px solid rgba(45, 212, 191, 0.45); color: #99f6e4; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
-        .tmrcoin-unverified-badge { display: inline-block; margin-left: 8px; padding: 3px 9px; border-radius: 999px; background: rgba(248, 113, 113, 0.16); border: 1px solid rgba(248, 113, 113, 0.45); color: #fecaca; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; }
-        .tmrcoin-note { margin: 6px 0 16px; color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 62ch; }
-        .tmrcoin-contract { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
-        .tmrcoin-contract a { color: #99f6e4; }
-        .tmrcoin-address { margin: 0 0 6px; color: var(--muted); font-size: 12.5px; font-family: monospace; word-break: break-all; }
-        .tmrcoin-balance { margin: 0 0 14px; font-family: Barlow, Inter, sans-serif; font-size: 28px; color: #99f6e4; font-weight: 800; }
-        .tmrcoin-hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
-        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
-        .chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-        .chip.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
-        table { width: 100%; border-collapse: collapse; }
-        thead th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); }
-        tbody td { padding: 12px; font-size: 13.5px; border-bottom: 1px solid var(--line); }
-        .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
-        .amt-pos { color: var(--green); font-weight: 800; }
-        .amt-neg { color: var(--red); font-weight: 800; }
-        .muted-count { color: var(--muted); font-size: 12px; cursor: help; }
-        .mobile-cards { display: none; }
-        .mc-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--panel); }
-        .mc-row { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
-        @media (max-width: 760px) {
+
+        .ch-card { padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 12px; }
+        .ch-top { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+        .ch-stake { font-family: Barlow, Inter, sans-serif; font-size: 20px; font-weight: 800; color: var(--gold); }
+        .ch-status { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+        .ch-status.won { border-color: rgba(34,197,94,0.5); color: #bbf7d0; }
+        .ch-status.lost { border-color: rgba(248,113,113,0.5); color: #fecaca; }
+        .ch-meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+        .ch-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .skeleton .sk-line { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #131c2b, #1b2434, #131c2b); margin-bottom: 12px; }
+        .sk-block { background: linear-gradient(90deg, #131c2b, #1b2434, #131c2b); }
+        .auth-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .auth-state h2 { margin: 0 0 8px; font-family: Barlow, Inter, sans-serif; }
+        .auth-state p { margin: 0 0 16px; color: var(--muted); }
+
+        @media (max-width: 860px) {
+            .balance-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            .wallet-page { padding-top: 92px; }
             .table-wrap { display: none; }
             .mobile-cards { display: block; }
+            .form-card { max-width: none; padding: 16px 15px; }
+            .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
+            .tab { flex: 0 0 auto; }
         }
-        .skeleton .sk-line { height: 14px; border-radius: 6px; background: rgba(148,163,184,.14); margin-bottom: 8px; }
-        .sk-block { display: inline-block; background: rgba(148,163,184,.14); border-radius: 6px; }
-        .auth-state, .empty-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
-        .auth-state[hidden], .empty-state[hidden], #loadingSkeleton[hidden], #walletContent[hidden] { display: none; }
-        .tmr-coin-icon { width: 1em; height: 1em; vertical-align: -0.15em; margin-right: 0.35em; flex: 0 0 auto; }
-        .history-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
-        .history-heading .tmr-coin-icon { width: 15px; height: 15px; }
     </style>
 </head>
-<body class="tmr-site-shell" data-tmr-route="wallet">
+<body>
     <main class="wallet-page">
         <header class="wallet-head">
             <div>
-                <p class="wallet-kicker"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">TMR Coin</p>
-                <h1>Wallet</h1>
-                <p class="wallet-subtitle">Your TMR Coin balance and complete transaction history.</p>
+                <p class="wallet-kicker">TMR Wallet</p>
+                <h1>Your TMR</h1>
+                <p class="wallet-subtitle">TMR is the currency of sports credibility on TrustMyRecord. Earn it by building a real record and contributing to the community, then spend it on tools, contests and creators.</p>
             </div>
-            <nav class="wallet-actions" aria-label="Wallet actions">
-                <a class="btn" href="/wallet/rewards/">Rewards Catalog</a>
-                <a class="btn" href="/how-tmr-coin-works/">How It Works</a>
-                <a class="btn" href="/profile/">Profile</a>
-            </nav>
+            <div class="wallet-actions">
+                <a class="btn" href="/tmr-coin/">What is TMR Coin?</a>
+                <a class="btn" href="/wallet/rewards/">Rewards</a>
+            </div>
         </header>
 
-        <section class="earn-card" aria-labelledby="earnHeading">
-            <p class="earn-kicker" id="earnHeading">How to Earn TMR Coins</p>
-            <ul class="earn-list">
-                <li>
-                    <div class="earn-item-head"><span class="earn-coins">+25</span><span class="earn-title">Sign up</span></div>
-                    <p class="earn-desc">Every new member receives 25 TMR Coins after signing up.</p>
-                </li>
-                <li>
-                    <div class="earn-item-head"><span class="earn-coins">+10</span><span class="earn-title">Make your first pick</span></div>
-                    <p class="earn-desc">Submit your first valid pick through the TMR Sportsbook to earn a one-time 10-coin bonus.</p>
-                    <a class="btn" href="/sportsbook/">Make a Pick</a>
-                </li>
-                <li>
-                    <div class="earn-item-head"><span class="earn-coins">+5</span><span class="earn-title">Create your first forum thread</span></div>
-                    <p class="earn-desc">Create your first valid community forum thread to receive a one-time 5-coin bonus.</p>
-                    <a class="btn" href="/forum/">Create a Thread</a>
-                </li>
-                <li>
-                    <div class="earn-item-head"><span class="earn-coins">+1</span><span class="earn-title">Create a qualifying forum thread (after your first)</span></div>
-                    <p class="earn-desc">Earn 1 TMR Coin for the first qualifying forum thread you create each calendar day. Additional threads that same day don't earn extra &mdash; the next coin unlocks the following day.</p>
-                </li>
-            </ul>
-        </section>
+        <p class="disclaimer">
+            TMR is an internal balance with no cash value. It cannot be bought with money, sold, withdrawn, or exchanged for cryptocurrency, and it is not an investment.
+        </p>
 
         <section id="loadingSkeleton" class="skeleton" aria-hidden="true">
-            <div class="sk-block" style="height:120px;border-radius:10px;margin-bottom:22px;"></div>
+            <div class="sk-block" style="height:130px;border-radius:12px;margin-bottom:22px;"></div>
             <div class="sk-line" style="width:140px;"></div>
-            <div class="sk-line" style="width:100%;height:44px;"></div>
             <div class="sk-line" style="width:100%;height:44px;"></div>
             <div class="sk-line" style="width:100%;height:44px;"></div>
         </section>
@@ -149,227 +184,635 @@
             <button id="authRetryBtn" type="button" class="btn" hidden>Retry</button>
         </section>
 
-        <section id="walletContent" hidden>
+        <div id="walletContent" hidden>
             <div id="frozenBanner" class="frozen-banner" hidden>
-                Your wallet is frozen. TMR Coin cannot be earned or spent while frozen, but your balance and history are safe. Contact support if you believe this is a mistake.
+                Your TMR wallet is on hold. Your balance and history are safe. Contact support if you believe this is a mistake.
             </div>
 
-            <div class="balance-card">
-                <p class="balance-label"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">Current Balance</p>
-                <p class="balance-value" id="balanceValue">&mdash;</p>
-                <p class="balance-hint">TMR Coin &middot; TrustMyRecord rewards points &middot; no cash value</p>
-            </div>
-
-
-            <p class="history-heading"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">Transaction History</p>
-            <div class="toolbar" id="historyFilters" role="group" aria-label="Filter transaction history">
-                <button class="chip on" data-filter="" type="button">All</button>
-                <button class="chip" data-filter="earned" type="button">Earned</button>
-                <button class="chip" data-filter="granted" type="button">Granted</button>
-                <button class="chip" data-filter="deducted" type="button">Adjustment</button>
-                <button class="chip" data-filter="reversed" type="button">Reversed</button>
-                <button class="chip" data-filter="expired" type="button">Expired</button>
-                <button class="chip" data-filter="redeemed" type="button">Redeemed</button>
-                <button class="chip" data-filter="tips_sent" type="button">Tips Sent</button>
-                <button class="chip" data-filter="tips_received" type="button">Tips Received</button>
-            </div>
-
-            <div id="emptyState" class="empty-state" hidden>
-                <h2>No transactions yet</h2>
-                <p>TMR Coin you earn or receive will show up here with a running balance.</p>
-            </div>
-
-            <section id="historyPanel" hidden>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyRows"></tbody>
-                    </table>
+            <div class="balance-grid">
+                <div class="balance-card">
+                    <p class="balance-label"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">Available</p>
+                    <p class="balance-value" id="availableValue">&mdash;</p>
+                    <p class="balance-hint">Ready to tip, spend or stake right now.</p>
                 </div>
-                <div id="historyCards" class="mobile-cards"></div>
-                <div id="loadMoreWrap" style="text-align:center;margin-top:14px;" hidden>
-                    <button id="loadMoreBtn" class="btn" type="button">Load More</button>
+                <div class="balance-card sub">
+                    <p class="balance-label">Locked</p>
+                    <p class="balance-value" id="lockedValue">&mdash;</p>
+                    <p class="balance-hint" id="lockedHint">Committed to open challenges.</p>
+                </div>
+                <div class="balance-card sub">
+                    <p class="balance-label">Lifetime earned</p>
+                    <p class="balance-value" id="earnedValue">&mdash;</p>
+                    <p class="balance-hint">Everything you have ever been credited.</p>
+                </div>
+            </div>
+
+            <div class="stat-grid" id="statGrid"></div>
+
+            <nav class="tabs" id="tabs" role="tablist">
+                <button class="tab on" data-pane="activity" type="button" role="tab">Recent activity</button>
+                <button class="tab" data-pane="send" type="button" role="tab">Send TMR</button>
+                <button class="tab" data-pane="challenges" type="button" role="tab">Challenges<span class="tab-badge" id="challengeBadge" hidden>0</span></button>
+                <button class="tab" data-pane="earn" type="button" role="tab">Earn TMR</button>
+                <button class="tab" data-pane="spend" type="button" role="tab">Spend TMR</button>
+                <button class="tab" data-pane="about" type="button" role="tab">About TMR</button>
+            </nav>
+
+            <!-- ================= ACTIVITY ================= -->
+            <section class="pane" id="pane-activity" role="tabpanel">
+                <h2>Recent transactions</h2>
+                <p class="lead">Every movement of TMR in or out of your wallet, with the balance it left behind. This is your statement &mdash; nothing here is ever rewritten.</p>
+                <div class="toolbar" id="txFilters" role="group" aria-label="Filter transactions">
+                    <button class="chip on" data-dir="" type="button">All</button>
+                    <button class="chip" data-dir="in" type="button">In</button>
+                    <button class="chip" data-dir="out" type="button">Out</button>
+                </div>
+                <div id="txEmpty" class="empty-state" hidden>
+                    <h3>No transactions yet</h3>
+                    <p>TMR you earn or receive will show up here with a running balance.</p>
+                </div>
+                <div id="txPanel" hidden>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>Balance</th></tr></thead>
+                            <tbody id="txRows"></tbody>
+                        </table>
+                    </div>
+                    <div id="txCards" class="mobile-cards"></div>
+                    <div id="txMoreWrap" style="text-align:center;margin-top:14px;" hidden>
+                        <button id="txMoreBtn" class="btn" type="button">Load more</button>
+                    </div>
                 </div>
             </section>
-        </section>
+
+            <!-- ================= SEND ================= -->
+            <section class="pane" id="pane-send" role="tabpanel" hidden>
+                <h2>Send TMR to a member</h2>
+                <p class="lead">Send TMR directly to another TrustMyRecord member. They are notified straight away, and both sides get a permanent record of it.</p>
+
+                <div id="sendDisabled" class="locked-notice" hidden>
+                    <strong>Member-to-member transfers are not switched on yet.</strong><br>
+                    Transfers stay off until TrustMyRecord has the compliance structure in place for them. Tipping is available today &mdash; you can tip any post, pick or profile.
+                </div>
+
+                <form class="form-card" id="sendForm" hidden autocomplete="off">
+                    <div class="field">
+                        <label for="sendTo">Send to</label>
+                        <input type="text" id="sendTo" placeholder="username" maxlength="60" required>
+                        <p class="hint">Enter the member's TrustMyRecord username.</p>
+                    </div>
+                    <div class="field">
+                        <label for="sendAmount">Amount</label>
+                        <input type="number" id="sendAmount" min="1" step="1" inputmode="numeric" placeholder="50" required>
+                        <p class="hint" id="sendLimits"></p>
+                    </div>
+                    <div class="field">
+                        <label for="sendMemo">Note (optional)</label>
+                        <input type="text" id="sendMemo" maxlength="200" placeholder="Great read on the Dodgers series">
+                    </div>
+                    <button class="btn btn-primary" id="sendReviewBtn" type="submit">Review transfer</button>
+                    <div id="sendConfirm" class="confirm-box" hidden></div>
+                    <div id="sendMsg" class="msg" hidden></div>
+                </form>
+
+                <h2 style="margin-top:28px;">Transfer history</h2>
+                <div id="transferEmpty" class="empty-state" hidden>
+                    <h3>No transfers yet</h3>
+                    <p>TMR you send or receive from other members shows up here.</p>
+                </div>
+                <div id="transferList"></div>
+            </section>
+
+            <!-- ================= CHALLENGES ================= -->
+            <section class="pane" id="pane-challenges" role="tabpanel" hidden>
+                <h2>Challenge Center</h2>
+                <p class="lead">Put TMR behind your opinion against another member. Both stakes are held while the game plays out, then settled on the official result.</p>
+
+                <div id="challengesDisabled" class="locked-notice" hidden>
+                    <strong>Head-to-head challenges are not switched on yet.</strong><br>
+                    The Challenge Center is built and waiting. It stays off until TrustMyRecord has the right compliance structure for member-versus-member competition.
+                </div>
+
+                <div id="challengesLive" hidden>
+                    <div class="toolbar" id="chFilters" role="group" aria-label="Filter challenges">
+                        <button class="chip on" data-scope="received" type="button">Received</button>
+                        <button class="chip" data-scope="sent" type="button">Sent</button>
+                        <button class="chip" data-scope="open" type="button">Open board</button>
+                        <button class="chip" data-scope="mine" type="button">All mine</button>
+                        <button class="chip" data-scope="completed" type="button">Completed</button>
+                    </div>
+                    <div id="chEmpty" class="empty-state" hidden>
+                        <h3>Nothing here yet</h3>
+                        <p>Challenges you send or receive will appear in this list.</p>
+                    </div>
+                    <div id="chList"></div>
+
+                    <h2 style="margin-top:28px;">Issue a challenge</h2>
+                    <form class="form-card" id="chForm" autocomplete="off">
+                        <div class="field">
+                            <label for="chOpponent">Challenge (leave blank to post publicly)</label>
+                            <input type="text" id="chOpponent" placeholder="username" maxlength="60">
+                        </div>
+                        <div class="field">
+                            <label for="chStake">Stake</label>
+                            <input type="number" id="chStake" min="1" step="1" inputmode="numeric" placeholder="100" required>
+                            <p class="hint" id="chLimits"></p>
+                        </div>
+                        <div class="field">
+                            <label for="chPick">Your pick</label>
+                            <input type="text" id="chPick" maxlength="200" placeholder="Dodgers -1.5" required>
+                        </div>
+                        <div class="field">
+                            <label for="chSport">Sport</label>
+                            <select id="chSport">
+                                <option value="MLB">MLB</option>
+                                <option value="NFL">NFL</option>
+                                <option value="NBA">NBA</option>
+                                <option value="NHL">NHL</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Issue challenge</button>
+                        <div id="chMsg" class="msg" hidden></div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ================= EARN ================= -->
+            <section class="pane" id="pane-earn" role="tabpanel" hidden>
+                <h2>Earn TMR</h2>
+                <p class="lead">TMR rewards the things that make TrustMyRecord worth reading: a real, tracked betting record and genuine contributions to the community.</p>
+                <ul class="earn-list" id="earnList">
+                    <li>
+                        <div class="earn-item-head"><span class="earn-coins">+25</span><span class="earn-title">Create your account</span></div>
+                        <p class="earn-desc">Every verified member starts with a one-time signup reward.</p>
+                    </li>
+                    <li>
+                        <div class="earn-item-head"><span class="earn-coins">+10</span><span class="earn-title">Make your first pick</span></div>
+                        <p class="earn-desc">Submit your first valid pick through the TMR Sportsbook.</p>
+                        <a class="btn btn-sm" href="/sportsbook/">Make a pick</a>
+                    </li>
+                    <li>
+                        <div class="earn-item-head"><span class="earn-coins">+5</span><span class="earn-title">Create your first forum thread</span></div>
+                        <p class="earn-desc">Start your first community thread.</p>
+                        <a class="btn btn-sm" href="/forum/">Start a thread</a>
+                    </li>
+                    <li>
+                        <div class="earn-item-head"><span class="earn-coins">+1</span><span class="earn-title">A qualifying thread each day</span></div>
+                        <p class="earn-desc">One coin for the first qualifying thread you create each calendar day.</p>
+                    </li>
+                    <li>
+                        <div class="earn-item-head"><span class="earn-coins">Tips</span><span class="earn-title">Get tipped for good analysis</span></div>
+                        <p class="earn-desc">Members can tip your posts, picks and profile when your work is worth it.</p>
+                    </li>
+                </ul>
+                <p class="lead" style="margin-top:14px;">Live reward rules and your progress are on the <a href="/wallet/rewards/" style="color:var(--gold);">rewards page</a>.</p>
+            </section>
+
+            <!-- ================= SPEND ================= -->
+            <section class="pane" id="pane-spend" role="tabpanel" hidden>
+                <h2>Spend TMR</h2>
+                <p class="lead">What TMR is for. More sinks open as the economy grows &mdash; anything not yet live is marked.</p>
+                <ul class="spend-list">
+                    <li>
+                        <div class="earn-item-head"><span class="earn-title">BetLegend Pro inquiries</span></div>
+                        <p class="earn-desc">One free handicap inquiry a day, then pay in TMR for extra ones.</p>
+                        <a class="btn btn-sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>
+                    </li>
+                    <li>
+                        <div class="earn-item-head"><span class="earn-title">Tips</span></div>
+                        <p class="earn-desc">Reward the handicappers whose work you actually use.</p>
+                        <a class="btn btn-sm" href="/forum/">Go to the forum</a>
+                    </li>
+                    <li>
+                        <div class="earn-item-head"><span class="earn-title">Rewards catalog</span></div>
+                        <p class="earn-desc">Redeem TMR for the items currently listed.</p>
+                        <a class="btn btn-sm" href="/wallet/rewards/">View catalog</a>
+                    </li>
+                    <li id="spendChallenges">
+                        <div class="earn-item-head"><span class="earn-title">Head-to-head challenges</span></div>
+                        <p class="earn-desc" id="spendChallengesDesc">Stake TMR against another member on a game.</p>
+                    </li>
+                    <li id="spendMarketplace">
+                        <div class="earn-item-head"><span class="earn-title">Creator content</span></div>
+                        <p class="earn-desc" id="spendMarketplaceDesc">Buy premium cards and write-ups from strong handicappers with TMR.</p>
+                    </li>
+                    <li id="spendContests">
+                        <div class="earn-item-head"><span class="earn-title">Contests</span></div>
+                        <p class="earn-desc" id="spendContestsDesc">Free contests with TMR prize pools. Entry-fee contests are not live.</p>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- ================= ABOUT ================= -->
+            <section class="pane" id="pane-about" role="tabpanel" hidden>
+                <h2>About TMR</h2>
+                <p class="lead">
+                    TMR is an internal balance inside TrustMyRecord. It is earned through participation, spent on tools and content inside the site, and recorded in an append-only ledger where every movement keeps its own before-and-after balance.
+                </p>
+                <p class="lead">
+                    <strong>What TMR is not.</strong> It cannot be bought with money, sold, cashed out, withdrawn, or moved to a cryptocurrency wallet. It is not an investment and nobody is promising its value will rise. Anything that would change that requires a compliance structure TrustMyRecord does not have yet, and stays switched off until it does.
+                </p>
+                <h2 style="margin-top:24px;font-size:18px;">Supply</h2>
+                <p class="lead">These figures come straight from the ledger. Nothing here is a marketing number.</p>
+                <div class="stat-grid" id="supplyGrid"></div>
+            </section>
+        </div>
     </main>
 
     <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
     <script src="/static/js/backend-api.js?v=b95fe2fe34b2"></script>
-    <script src="/static/js/vendor/ethers.umd.min.js?v=1"></script>
     <script>
     (function () {
-        var authState = document.getElementById('authState');
-        var skeleton = document.getElementById('loadingSkeleton');
-        var content = document.getElementById('walletContent');
-        var emptyState = document.getElementById('emptyState');
-        var panel = document.getElementById('historyPanel');
-        var rows = document.getElementById('historyRows');
-        var cards = document.getElementById('historyCards');
-        var frozenBanner = document.getElementById('frozenBanner');
-        var filtersEl = document.getElementById('historyFilters');
-        var loadMoreWrap = document.getElementById('loadMoreWrap');
-        var loadMoreBtn = document.getElementById('loadMoreBtn');
+        'use strict';
 
-        function esc(value) {
-            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
-                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        var el = function (id) { return document.getElementById(id); };
+        var skeleton = el('loadingSkeleton');
+        var authState = el('authState');
+        var content = el('walletContent');
+
+        var state = { summary: null, config: null, txDirection: '', txNext: null, txHasMore: false, txRows: [], chScope: 'received' };
+
+        function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
             });
         }
+        function num(v) { return (Number(v) || 0).toLocaleString('en-US'); }
         function fmtDate(iso) {
             if (!iso) return '—';
             var d = new Date(iso);
             if (isNaN(d.getTime())) return '—';
             return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
-        function amountHtml(amount) {
-            var sign = amount > 0 ? '+' : '';
-            var cls = amount > 0 ? 'amt-pos' : (amount < 0 ? 'amt-neg' : '');
-            return '<span class="' + cls + '">' + sign + amount.toLocaleString('en-US') + '</span>';
+        function amountHtml(a) {
+            var cls = a > 0 ? 'amt-pos' : (a < 0 ? 'amt-neg' : '');
+            return '<span class="' + cls + '">' + (a > 0 ? '+' : '') + num(a) + '</span>';
         }
-        // description/type are already clean, user-facing text from the
-        // backend serializer (routes/coins.js -> services/tmrCoinLabels.js)
-        // -- no raw admin_note/reward_key ever reaches this page.
-        function descriptionFor(entry) {
-            var text = esc(entry.description);
-            if (entry.consolidated_count > 1) {
-                text += ' <span class="muted-count" title="' + entry.consolidated_count + ' corrections combined into this one entry">(' + entry.consolidated_count + ' combined)</span>';
-            }
-            return text;
+        // Every movement needs a key that survives a double-click and a flaky
+        // connection. One fresh value per submission, reused by the retry.
+        function newKey(prefix) {
+            return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
         }
-
-        function rowHtml(entry) {
-            return '<tr><td>' + fmtDate(entry.created_at) + '</td><td>' + esc(entry.type) + '</td>' +
-                '<td>' + descriptionFor(entry) + '</td><td>' + amountHtml(entry.amount) + '</td>' +
-                '<td>' + entry.balance_after.toLocaleString('en-US') + '</td></tr>';
+        function showMsg(node, text, kind) {
+            node.textContent = text;
+            node.className = 'msg ' + (kind || 'err');
+            node.hidden = false;
         }
-        function cardHtml(entry) {
-            return '<div class="mc-card">' +
-                '<div class="mc-row"><strong>' + esc(entry.type) + '</strong>' + amountHtml(entry.amount) + '</div>' +
-                '<div class="mc-row"><span>' + descriptionFor(entry) + '</span></div>' +
-                '<div class="mc-row"><span>' + fmtDate(entry.created_at) + '</span><span>Balance: ' + entry.balance_after.toLocaleString('en-US') + '</span></div>' +
-                '</div>';
+        function errText(e) {
+            if (!e) return 'Something went wrong.';
+            if (e.data && e.data.error) return e.data.error;
+            if (e.message) return e.message;
+            return 'Something went wrong.';
         }
 
-        var allEntries = [];
-        var hasMore = false;
-        var nextBefore = null;
-        function render(entries) {
-            content.hidden = false;
-            if (!entries.length) {
-                emptyState.hidden = false;
-                panel.hidden = true;
-                loadMoreWrap.hidden = true;
-                return;
-            }
-            emptyState.hidden = true;
-            panel.hidden = false;
-            rows.innerHTML = entries.map(rowHtml).join('');
-            cards.innerHTML = entries.map(cardHtml).join('');
-            loadMoreWrap.hidden = !hasMore;
-        }
-
-        var activeFilter = '';
-        filtersEl.addEventListener('click', function (ev) {
-            var btn = ev.target.closest('.chip');
+        // ---- tabs ----------------------------------------------------------
+        var PANES = ['activity', 'send', 'challenges', 'earn', 'spend', 'about'];
+        el('tabs').addEventListener('click', function (ev) {
+            var btn = ev.target.closest('.tab');
             if (!btn) return;
-            activeFilter = btn.getAttribute('data-filter') || '';
-            Array.prototype.forEach.call(filtersEl.querySelectorAll('.chip'), function (c) { c.classList.toggle('on', c === btn); });
-            loadHistory();
+            var pane = btn.getAttribute('data-pane');
+            PANES.forEach(function (p) { el('pane-' + p).hidden = (p !== pane); });
+            Array.prototype.forEach.call(el('tabs').querySelectorAll('.tab'), function (t) {
+                t.classList.toggle('on', t === btn);
+            });
+            if (pane === 'send') loadTransfers();
+            if (pane === 'challenges') loadChallenges();
+            if (pane === 'about') loadSupply();
         });
 
-        function isLoggedIn() { return !!(window.api && window.api.isLoggedIn()); }
+        // ---- header + lifetime stats ---------------------------------------
+        function renderSummary(s) {
+            el('availableValue').textContent = num(s.available);
+            el('lockedValue').textContent = num(s.locked);
+            el('earnedValue').textContent = num(s.lifetime_earned);
+            el('frozenBanner').hidden = !s.is_frozen;
+            el('lockedHint').textContent = s.escrow && s.escrow.open_count
+                ? 'Committed to ' + s.escrow.open_count + ' open challenge' + (s.escrow.open_count === 1 ? '' : 's') + '.'
+                : 'Nothing is committed right now.';
+
+            var stats = [
+                ['Lifetime spent', s.lifetime_spent],
+                ['Tips received', s.tips_received],
+                ['Tips sent', s.tips_sent],
+                ['Received from members', s.lifetime_received_from_users],
+                ['Sent to members', s.lifetime_sent_to_users],
+                ['Challenge winnings', s.challenge_winnings],
+                ['Contest winnings', s.contest_winnings],
+                ['Creator earnings', s.marketplace_earnings]
+            ];
+            el('statGrid').innerHTML = stats.map(function (row) {
+                return '<div class="stat"><p class="stat-label">' + esc(row[0]) + '</p>' +
+                       '<p class="stat-value">' + num(row[1]) + '</p></div>';
+            }).join('');
+
+            var pending = (s.challenges && s.challenges.received_pending) || 0;
+            el('challengeBadge').hidden = !pending;
+            el('challengeBadge').textContent = pending;
+        }
+
+        // ---- config gating --------------------------------------------------
+        function applyConfig(cfg) {
+            var f = cfg.features || {};
+            var l = cfg.limits || {};
+
+            el('sendDisabled').hidden = !!f.transfers;
+            el('sendForm').hidden = !f.transfers;
+            el('sendLimits').textContent = 'Between ' + num(l.transfer_min) + ' and ' + num(l.transfer_max) + ' TMR.' +
+                (cfg.fees && cfg.fees.transfer_fee_bps ? ' A ' + (cfg.fees.transfer_fee_bps / 100) + '% fee applies.' : '');
+
+            el('challengesDisabled').hidden = !!f.challenges;
+            el('challengesLive').hidden = !f.challenges;
+            el('chLimits').textContent = 'Between ' + num(l.challenge_min_stake) + ' and ' + num(l.challenge_max_stake) + ' TMR.';
+
+            el('spendChallengesDesc').textContent = f.challenges
+                ? 'Stake TMR against another member on a game.'
+                : 'Stake TMR against another member on a game. Not live yet.';
+            el('spendMarketplaceDesc').textContent = f.marketplace
+                ? 'Buy premium cards and write-ups from strong handicappers with TMR.'
+                : 'Buy premium cards and write-ups from strong handicappers with TMR. Not live yet.';
+            el('spendContestsDesc').textContent = f.paid_contests
+                ? 'Enter contests using TMR.'
+                : 'Free contests with TMR prize pools. Entry-fee contests are not live.';
+        }
+
+        // ---- transactions ---------------------------------------------------
+        function txRowHtml(t) {
+            return '<tr><td>' + fmtDate(t.created_at) + '</td><td>' + esc(t.label) + '</td>' +
+                '<td>' + esc(t.description || '') + '</td><td>' + amountHtml(t.amount) + '</td>' +
+                '<td>' + num(t.balance_after) + '</td></tr>';
+        }
+        function txCardHtml(t) {
+            return '<div class="mc-card">' +
+                '<div class="mc-row"><strong>' + esc(t.label) + '</strong>' + amountHtml(t.amount) + '</div>' +
+                '<div class="mc-row"><span>' + esc(t.description || '') + '</span></div>' +
+                '<div class="mc-row"><span>' + fmtDate(t.created_at) + '</span><span>Balance: ' + num(t.balance_after) + '</span></div>' +
+                '</div>';
+        }
+        function renderTx() {
+            var rows = state.txRows;
+            el('txEmpty').hidden = rows.length > 0;
+            el('txPanel').hidden = rows.length === 0;
+            el('txRows').innerHTML = rows.map(txRowHtml).join('');
+            el('txCards').innerHTML = rows.map(txCardHtml).join('');
+            el('txMoreWrap').hidden = !state.txHasMore;
+        }
+        async function loadTx(append) {
+            var opts = { limit: 25 };
+            if (state.txDirection) opts.direction = state.txDirection;
+            if (append && state.txNext != null) opts.before = state.txNext;
+            var data = await window.api.getWalletTransactions(opts);
+            var list = (data && data.transactions) || [];
+            state.txRows = append ? state.txRows.concat(list) : list;
+            state.txHasMore = !!(data && data.has_more);
+            state.txNext = (data && data.next_before) || null;
+            renderTx();
+        }
+        el('txFilters').addEventListener('click', function (ev) {
+            var chip = ev.target.closest('.chip');
+            if (!chip) return;
+            state.txDirection = chip.getAttribute('data-dir') || '';
+            Array.prototype.forEach.call(el('txFilters').querySelectorAll('.chip'), function (c) {
+                c.classList.toggle('on', c === chip);
+            });
+            state.txNext = null;
+            loadTx(false);
+        });
+        el('txMoreBtn').addEventListener('click', function () { loadTx(true); });
+
+        // ---- transfers ------------------------------------------------------
+        var pendingTransfer = null;
+
+        el('sendForm').addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            var msg = el('sendMsg');
+            msg.hidden = true;
+            var to = el('sendTo').value.trim();
+            var amount = parseInt(el('sendAmount').value, 10);
+            var memo = el('sendMemo').value.trim();
+            if (!to || !(amount > 0)) { showMsg(msg, 'Enter a username and a whole number of TMR.'); return; }
+
+            // Two-step: the confirmation screen is built from a SERVER preview,
+            // so the recipient, the fee and the resulting balance are the
+            // backend's numbers, not this page's arithmetic.
+            if (!pendingTransfer) {
+                try {
+                    var preview = await window.api.previewWalletTransfer(to, amount);
+                    pendingTransfer = { to: to, amount: amount, memo: memo, key: newKey('xfer') };
+                    el('sendConfirm').innerHTML =
+                        'Send <strong>' + num(amount) + ' TMR</strong> to <strong>@' + esc(preview.recipient.username) + '</strong>.<br>' +
+                        (preview.fee ? 'Fee: <strong>' + num(preview.fee) + ' TMR</strong> &middot; they receive <strong>' + num(preview.recipient_receives) + ' TMR</strong>.<br>' : '') +
+                        'Your balance afterwards: <strong>' + num(preview.your_balance_after) + ' TMR</strong>.<br>' +
+                        'This cannot be undone. Press again to confirm.';
+                    el('sendConfirm').hidden = false;
+                    el('sendReviewBtn').textContent = 'Confirm and send';
+                } catch (e) {
+                    showMsg(msg, errText(e));
+                }
+                return;
+            }
+
+            el('sendReviewBtn').disabled = true;
+            try {
+                var res = await window.api.sendWalletTransfer({
+                    toUsername: pendingTransfer.to,
+                    amount: pendingTransfer.amount,
+                    memo: pendingTransfer.memo || undefined,
+                    idempotencyKey: pendingTransfer.key
+                });
+                showMsg(msg, 'Sent ' + num(res.transfer.amount) + ' TMR to @' + res.transfer.to + '.', 'ok');
+                el('sendForm').reset();
+                el('sendConfirm').hidden = true;
+                await refreshSummary();
+                await loadTransfers();
+            } catch (e) {
+                showMsg(msg, errText(e));
+            } finally {
+                pendingTransfer = null;
+                el('sendReviewBtn').disabled = false;
+                el('sendReviewBtn').textContent = 'Review transfer';
+            }
+        });
+        // Editing any field after reviewing invalidates the confirmation, so a
+        // changed amount can never be sent under the old confirmation screen.
+        ['sendTo', 'sendAmount', 'sendMemo'].forEach(function (id) {
+            el(id).addEventListener('input', function () {
+                if (!pendingTransfer) return;
+                pendingTransfer = null;
+                el('sendConfirm').hidden = true;
+                el('sendReviewBtn').textContent = 'Review transfer';
+            });
+        });
+
+        async function loadTransfers() {
+            try {
+                var data = await window.api.getWalletTransfers({ limit: 25 });
+                var list = (data && data.transfers) || [];
+                el('transferEmpty').hidden = list.length > 0;
+                el('transferList').innerHTML = list.map(function (t) {
+                    var sent = t.direction === 'sent';
+                    return '<div class="mc-card"><div class="mc-row">' +
+                        '<strong>' + (sent ? 'Sent to @' : 'Received from @') + esc(t.counterparty) + '</strong>' +
+                        amountHtml(sent ? -t.amount : t.amount) + '</div>' +
+                        (t.memo ? '<div class="mc-row"><span>' + esc(t.memo) + '</span></div>' : '') +
+                        '<div class="mc-row"><span>' + fmtDate(t.created_at) + '</span></div></div>';
+                }).join('');
+            } catch (e) { /* transfers are secondary; the wallet still works */ }
+        }
+
+        // ---- challenges -----------------------------------------------------
+        function chCardHtml(c) {
+            var statusCls = c.status === 'settled' ? (c.i_won ? 'won' : 'lost') : '';
+            var who = c.is_challenger
+                ? (c.opponent ? 'You challenged @' + esc(c.opponent) : 'Open to anyone')
+                : '@' + esc(c.challenger) + ' challenged you';
+            var pick = c.terms && c.terms.selection && c.terms.selection.pick ? esc(c.terms.selection.pick) : (c.message ? esc(c.message) : '');
+            var actions = '';
+            if (c.status === 'pending' && !c.is_challenger) {
+                actions = '<button class="btn btn-sm btn-primary" data-ch-accept="' + c.id + '">Accept</button>' +
+                          '<button class="btn btn-sm" data-ch-decline="' + c.id + '">Decline</button>';
+            } else if (c.status === 'pending' && c.is_challenger) {
+                actions = '<button class="btn btn-sm" data-ch-cancel="' + c.id + '">Withdraw</button>';
+            }
+            return '<div class="ch-card">' +
+                '<div class="ch-top"><span class="ch-stake">' + num(c.stake) + ' TMR</span>' +
+                '<span class="ch-status ' + statusCls + '">' + esc(c.status === 'settled' && c.i_won ? 'won' : (c.status === 'settled' ? 'lost' : c.status)) + '</span></div>' +
+                '<p class="ch-meta">' + who + (pick ? ' &middot; ' + pick : '') + (c.sport ? ' &middot; ' + esc(c.sport) : '') + '</p>' +
+                (actions ? '<div class="ch-actions">' + actions + '</div>' : '') +
+                '</div>';
+        }
+        async function loadChallenges() {
+            if (!state.config || !state.config.features.challenges) return;
+            try {
+                var data = await window.api.getWalletChallenges(state.chScope);
+                var list = (data && data.challenges) || [];
+                el('chEmpty').hidden = list.length > 0;
+                el('chList').innerHTML = list.map(chCardHtml).join('');
+            } catch (e) { /* leave the previous list in place */ }
+        }
+        el('chFilters').addEventListener('click', function (ev) {
+            var chip = ev.target.closest('.chip');
+            if (!chip) return;
+            state.chScope = chip.getAttribute('data-scope');
+            Array.prototype.forEach.call(el('chFilters').querySelectorAll('.chip'), function (c) {
+                c.classList.toggle('on', c === chip);
+            });
+            loadChallenges();
+        });
+        el('chList').addEventListener('click', async function (ev) {
+            var btn = ev.target.closest('[data-ch-accept],[data-ch-decline],[data-ch-cancel]');
+            if (!btn) return;
+            var id = btn.getAttribute('data-ch-accept') || btn.getAttribute('data-ch-decline') || btn.getAttribute('data-ch-cancel');
+            var action = btn.hasAttribute('data-ch-accept') ? 'accept'
+                       : btn.hasAttribute('data-ch-decline') ? 'decline' : 'cancel';
+            if (action === 'accept' && !window.confirm('Accepting stakes your TMR until this settles. Continue?')) return;
+            btn.disabled = true;
+            try {
+                await window.api.respondToWalletChallenge(id, action,
+                    action === 'accept' ? { idempotencyKey: newKey('chacc') } : {});
+                await refreshSummary();
+                await loadChallenges();
+            } catch (e) {
+                window.alert(errText(e));
+                btn.disabled = false;
+            }
+        });
+        el('chForm').addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            var msg = el('chMsg');
+            msg.hidden = true;
+            var stake = parseInt(el('chStake').value, 10);
+            var pick = el('chPick').value.trim();
+            if (!(stake > 0) || !pick) { showMsg(msg, 'Enter a stake and your pick.'); return; }
+            try {
+                await window.api.createWalletChallenge({
+                    opponentUsername: el('chOpponent').value.trim() || undefined,
+                    stake: stake,
+                    sport: el('chSport').value,
+                    format: 'straight',
+                    message: pick,
+                    terms: { selection: { pick: pick } },
+                    idempotencyKey: newKey('chnew')
+                });
+                showMsg(msg, 'Challenge issued. Your stake is held until it settles.', 'ok');
+                el('chForm').reset();
+                await refreshSummary();
+                await loadChallenges();
+            } catch (e) {
+                showMsg(msg, errText(e));
+            }
+        });
+
+        // ---- supply ---------------------------------------------------------
+        async function loadSupply() {
+            try {
+                var s = await window.api.getTmrSupply();
+                var rows = [
+                    ['Maximum supply', s.max_supply],
+                    ['Issued to date', s.total_issued],
+                    ['Held by members', s.circulating],
+                    ['Locked', s.member_locked],
+                    ['Treasury', s.treasury],
+                    ['Burned', s.burned]
+                ];
+                el('supplyGrid').innerHTML = rows.map(function (r) {
+                    return '<div class="stat"><p class="stat-label">' + esc(r[0]) + '</p>' +
+                           '<p class="stat-value">' + num(r[1]) + '</p></div>';
+                }).join('');
+            } catch (e) {
+                el('supplyGrid').innerHTML = '<div class="stat"><p class="stat-label">Supply</p><p class="stat-value">&mdash;</p></div>';
+            }
+        }
+
+        // ---- boot -----------------------------------------------------------
+        async function refreshSummary() {
+            state.summary = await window.api.getWalletSummary();
+            renderSummary(state.summary);
+        }
 
         function showLoginRequired() {
             content.hidden = true; skeleton.hidden = true; authState.hidden = false;
-            document.getElementById('authHeading').textContent = 'Log in to view your wallet';
-            document.getElementById('authMessage').textContent = 'This page is private to your account.';
-            document.getElementById('authLoginBtn').hidden = false;
-            document.getElementById('authRetryBtn').hidden = true;
+            el('authHeading').textContent = 'Log in to view your wallet';
+            el('authMessage').textContent = 'This page is private to your account.';
+            el('authLoginBtn').hidden = false;
+            el('authRetryBtn').hidden = true;
             setTimeout(function () { window.location.href = '/login/?next=/wallet/'; }, 900);
         }
         function showLoadError() {
             content.hidden = true; skeleton.hidden = true; authState.hidden = false;
-            document.getElementById('authHeading').textContent = 'Could not load your wallet';
-            document.getElementById('authMessage').textContent = 'The server did not respond. Your balance is safe. Tap Retry.';
-            document.getElementById('authLoginBtn').hidden = true;
-            document.getElementById('authRetryBtn').hidden = false;
-        }
-        function withTimeout(promise, ms) {
-            return new Promise(function (resolve, reject) {
-                var t = setTimeout(function () { reject(Object.assign(new Error('request timeout'), { status: 0 })); }, ms);
-                promise.then(function (v) { clearTimeout(t); resolve(v); }, function (e) { clearTimeout(t); reject(e); });
-            });
-        }
-
-        var HISTORY_PAGE_SIZE = 25;
-
-        async function loadHistory() {
-            var data = await withTimeout(window.api.getCoinTransactions({ limit: HISTORY_PAGE_SIZE, category: activeFilter || undefined }), 12000);
-            allEntries = (data && data.entries) || [];
-            hasMore = !!(data && data.has_more);
-            nextBefore = (data && data.next_before) || null;
-            render(allEntries);
-        }
-
-        async function loadMoreHistory() {
-            if (!hasMore || nextBefore == null) return;
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = 'Loading…';
-            try {
-                var data = await withTimeout(window.api.getCoinTransactions({ limit: HISTORY_PAGE_SIZE, category: activeFilter || undefined, before: nextBefore }), 12000);
-                var more = (data && data.entries) || [];
-                allEntries = allEntries.concat(more);
-                hasMore = !!(data && data.has_more);
-                nextBefore = (data && data.next_before) || null;
-                render(allEntries);
-            } finally {
-                loadMoreBtn.disabled = false;
-                loadMoreBtn.textContent = 'Load More';
-            }
-        }
-        loadMoreBtn.addEventListener('click', loadMoreHistory);
-
-        async function loadBalance() {
-            var bal = await withTimeout(window.api.getCoinBalance(), 12000);
-            document.getElementById('balanceValue').textContent = (bal && typeof bal.balance === 'number' ? bal.balance : 0).toLocaleString('en-US');
-            frozenBanner.hidden = !(bal && bal.is_frozen);
+            el('authHeading').textContent = 'Could not load your wallet';
+            el('authMessage').textContent = 'The server did not respond. Your balance is safe. Tap Retry.';
+            el('authLoginBtn').hidden = true;
+            el('authRetryBtn').hidden = false;
         }
 
         var RETRY_DELAYS_MS = [1200, 2500, 5000];
         var attempt = 0;
-        var retryTimer = null;
 
         async function boot() {
-            if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
-            if (!isLoggedIn()) { showLoginRequired(); return; }
+            if (!(window.api && window.api.isLoggedIn())) { showLoginRequired(); return; }
             try {
                 skeleton.hidden = false;
                 authState.hidden = true;
-                await loadBalance();
-                await loadHistory();
+                state.config = await window.api.getWalletConfig();
+                applyConfig(state.config);
+                await refreshSummary();
+                await loadTx(false);
+                skeleton.hidden = true;
+                content.hidden = false;
                 attempt = 0;
             } catch (error) {
                 if (error && (error.status === 401 || error.status === 403)) { showLoginRequired(); return; }
                 if (attempt < RETRY_DELAYS_MS.length) {
                     var delay = RETRY_DELAYS_MS[attempt];
                     attempt += 1;
-                    retryTimer = setTimeout(function () { boot(); }, delay);
+                    setTimeout(boot, delay);
                     return;
                 }
                 showLoadError();
             }
         }
-
-        document.getElementById('authRetryBtn').addEventListener('click', function () { attempt = 0; boot(); });
+        el('authRetryBtn').addEventListener('click', function () { attempt = 0; boot(); });
         boot();
     })();
     </script>
