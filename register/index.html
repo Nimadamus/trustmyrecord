@@ -481,6 +481,26 @@
                 message.style.display = text ? 'block' : 'none';
             }
 
+            // BAN_NOTICE_20260808: signup from a banned IP gets the same
+            // three-line notice the login page shows. textContent only.
+            function setBanMessage(ban) {
+                const message = document.getElementById('message');
+                message.className = 'message error';
+                message.textContent = '';
+                const lines = [
+                    { text: ban.message || 'You have been banned from TMR', style: 'font-weight:800;text-transform:uppercase;letter-spacing:0.02em;' },
+                    { text: ban.banLiftedLabel || 'Date the ban will be lifted:', style: 'margin-top:10px;opacity:0.85;' },
+                    { text: ban.banLiftedAt || 'NEVER', style: 'margin-top:2px;font-weight:800;font-size:1.15em;letter-spacing:0.08em;' }
+                ];
+                lines.forEach(function (line) {
+                    const el = document.createElement('div');
+                    el.textContent = line.text;
+                    el.setAttribute('style', line.style);
+                    message.appendChild(el);
+                });
+                message.style.display = 'block';
+            }
+
             async function persistBackendLogin(userData) {
                 if (!window.auth) return;
                 const loginValue = userData.username || userData.email || '';
@@ -605,6 +625,12 @@
                     // Server-provided errors (validation, duplicate account,
                     // etc.) are regular Errors with a real message and pass
                     // through unchanged.
+                    if (error && error.code === 'ACCOUNT_BANNED') {
+                        setBanMessage(error.data || {});
+                        document.getElementById('passwordValue').value = '';
+                        document.getElementById('confirmValue').value = '';
+                        return; // finally{} still restores the button
+                    }
                     var friendlyMessage = (error instanceof TypeError)
                         ? "Couldn't reach the server. Check your connection and try again."
                         : (error && error.message) || 'Registration failed.';

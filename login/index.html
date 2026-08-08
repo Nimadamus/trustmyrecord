@@ -434,6 +434,28 @@
                 message.style.display = text ? 'block' : 'none';
             }
 
+            // BAN_NOTICE_20260808: a banned account gets a three-line notice
+            // (headline / lift-date label / lift date) instead of the one-line
+            // error, so there is no ambiguity about what happened or when it
+            // ends. Built with textContent, never innerHTML.
+            function setBanMessage(ban) {
+                const message = document.getElementById('message');
+                message.className = 'message error';
+                message.textContent = '';
+                const lines = [
+                    { text: ban.message || 'You have been banned from TMR', style: 'font-weight:800;text-transform:uppercase;letter-spacing:0.02em;' },
+                    { text: ban.banLiftedLabel || 'Date the ban will be lifted:', style: 'margin-top:10px;opacity:0.85;' },
+                    { text: ban.banLiftedAt || 'NEVER', style: 'margin-top:2px;font-weight:800;font-size:1.15em;letter-spacing:0.08em;' }
+                ];
+                lines.forEach(function (line) {
+                    const el = document.createElement('div');
+                    el.textContent = line.text;
+                    el.setAttribute('style', line.style);
+                    message.appendChild(el);
+                });
+                message.style.display = 'block';
+            }
+
             async function persistBackendLogin(userData, rememberMe) {
                 if (!window.auth) return;
                 const loginValue = userData.username || userData.email || '';
@@ -470,7 +492,9 @@
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
-                    throw new Error(data.error || data.message || 'Login failed.');
+                    const error = new Error(data.error || data.message || 'Login failed.');
+                    if (data.code === 'ACCOUNT_BANNED') error.ban = data;
+                    throw error;
                 }
                 if (window.api && typeof window.api.saveTokens === 'function') {
                     window.api.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token);
@@ -541,6 +565,11 @@
                     // See register/index.html: a raw network failure surfaces
                     // as a bare TypeError with the browser's internal message
                     // ("Failed to fetch"), not something a user should see.
+                    if (error && error.ban) {
+                        setBanMessage(error.ban);
+                        document.getElementById('passwordValue').value = '';
+                        return; // finally{} still restores the button
+                    }
                     var friendlyMessage = (error instanceof TypeError)
                         ? "Couldn't reach the server. Check your connection and try again."
                         : (error && error.message) || 'Login failed.';
