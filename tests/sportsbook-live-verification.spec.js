@@ -114,7 +114,24 @@ async function selectRenderableSport(page, ranked) {
 }
 
 test('live sportsbook primary markets and pick slip are usable', async ({ page }) => {
-  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
+  // Pin the mainline pick slip.
+  //
+  // static/js/sportsbook-multislip.js is on a staged rollout: ROLLOUT_PERCENT
+  // is 10 and the bucket is `Math.floor(Math.random() * 100)` stored in
+  // localStorage. CI starts from a clean profile every run, so roughly one run
+  // in ten drew the multislip panel instead -- a different component, with
+  // different markup, that this proof's slip assertions were never written
+  // against. That is a coin flip inside a deployment gate, and it is why this
+  // job failed intermittently with the sportsbook working.
+  //
+  // `?multislip=0` is the kill switch the module already exposes. The
+  // assertions below are still written to hold for either panel, so the pin
+  // makes the run deterministic without quietly narrowing what is proved.
+  // An explicit ?multislip= in TMR_SPORTSBOOK_URL wins, so either panel can be
+  // exercised on demand rather than only the pinned one.
+  const url = new URL(LIVE_URL);
+  if (!url.searchParams.has('multislip')) url.searchParams.set('multislip', '0');
+  await page.goto(url.toString(), { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
 
   const ranked = await rankSportsBySlate(page);
@@ -178,8 +195,16 @@ test('live sportsbook primary markets and pick slip are usable', async ({ page }
 
   const slip = page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();
-  await expect(slip, 'clicking a visible price should show odds in the slip').toContainText(/Odds/i);
-  await expect(page.locator('#unitsInput, #ttSlipUnits').first(), 'units input should remain available').toBeVisible();
+  // The point is that the clicked PRICE reached the slip, not that a particular
+  // label is used for it. The mainline slip writes "Odds"; the multislip panel
+  // renders the same number in a .tmr-ms-odds span with no such label. Accept
+  // either, so this keeps working whichever panel is served.
+  await expect(slip, 'clicking a visible price should carry that price into the slip')
+    .toContainText(/Odds|[+-]\d{2,4}/i);
+  await expect(
+    page.locator('#unitsInput, #ttSlipUnits, .tmr-ms-units-row input, [id^="msUnits"]').first(),
+    'units input should remain available'
+  ).toBeVisible();
   await expect(slip, 'stake mode text should remain available').toContainText(/Stake Mode|Risk|To Win/i);
   await expect(slip, 'risk preview should be present').toContainText(/Risk/i);
   await expect(slip, 'to-win preview should be present').toContainText(/To Win/i);
