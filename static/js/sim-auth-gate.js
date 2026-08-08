@@ -65,6 +65,124 @@
     var modalEl = null;
     var resumeHandled = false;
 
+    /* ------------------------------------------------------------------ */
+    /* CONFIGURED-BUT-NO-RUN diagnostics                                    */
+    /* ------------------------------------------------------------------ */
+    /* The largest drop in the funnel is people who configure a matchup and
+       never press Run. "They lost interest" is a guess; this records what was
+       actually true when they left, so the reason can be attributed instead of
+       assumed. Everything here is page-local state about the page's own DOM —
+       no identifiers, nothing about the person. It is reported once, on the way
+       out, and only when a run never happened. */
+    var diag = {
+        configuredAt: 0,
+        firstRunAt: 0,
+        runAttempts: 0,
+        reconfigures: 0,      // changed their selection again after configuring
+        runEverVisible: false,
+        runEverInViewport: false,
+        runEverEnabled: false,
+        uiError: null,
+        reported: false
+    };
+
+    function runControlEl() {
+        try {
+            var sels = (cfg && (cfg.runControlSelectors || cfg.runSelectors)) || [];
+            for (var i = 0; i < sels.length; i++) {
+                var el = document.querySelector(sels[i]);
+                if (el) return el;
+            }
+        } catch (e) { }
+        return null;
+    }
+
+    function inspectRunControl() {
+        var el = runControlEl();
+        if (!el) return { present: false, visible: false, enabled: false, inViewport: false };
+        var visible = false, inViewport = false, enabled = false;
+        try {
+            var cs = window.getComputedStyle(el);
+            var r = el.getBoundingClientRect();
+            visible = cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) !== 0 && r.width > 0 && r.height > 0;
+            inViewport = visible && r.top < (window.innerHeight || 0) && r.bottom > 0;
+            enabled = !el.disabled && el.getAttribute('aria-disabled') !== 'true';
+        } catch (e) { }
+        return { present: true, visible: visible, enabled: enabled, inViewport: inViewport };
+    }
+
+    /* Sampled while the visitor is still on the page, because at pagehide the
+       layout may already be torn down and every measurement reads false. */
+    function sampleRunControl() {
+        var s = inspectRunControl();
+        if (!s.present) return;
+        if (s.visible) diag.runEverVisible = true;
+        if (s.inViewport) diag.runEverInViewport = true;
+        if (s.enabled) diag.runEverEnabled = true;
+    }
+
+    /* One label, chosen from what we observed - not from what we assume. */
+    function classifyNoRun(state) {
+        if (diag.uiError) return 'validation_error';
+        if (state.present && !state.everVisible) return 'run_not_visible';
+        if (state.present && state.everVisible && !state.everEnabled) return 'run_disabled';
+        if (state.present && state.everVisible && !state.everInViewport) return 'run_never_scrolled_into_view';
+        if (state.navigatedAway) return 'navigation_away';
+        if (state.reconfigures > 0) return 'kept_reconfiguring';
+        if (state.loggedIn) return 'already_logged_in_no_run';
+        return 'abandoned';
+    }
+
+    function reportConfiguredNoRun(navigatedAway) {
+        if (diag.reported) return;
+        if (!configuredFired) return;          // never configured: not this funnel step
+        if (diag.runAttempts > 0) return;      // they ran: nothing to explain
+        diag.reported = true;
+
+        var live = inspectRunControl();
+        var state = {
+            present: live.present,
+            everVisible: diag.runEverVisible || live.visible,
+            everEnabled: diag.runEverEnabled || live.enabled,
+            everInViewport: diag.runEverInViewport || live.inViewport,
+            navigatedAway: !!navigatedAway,
+            reconfigures: diag.reconfigures,
+            loggedIn: isLoggedIn()
+        };
+
+        track('simulator_configured_no_run', {
+            reason: classifyNoRun(state),
+            run_present: state.present ? 'yes' : 'no',
+            run_visible: state.everVisible ? 'yes' : 'no',
+            run_enabled: state.everEnabled ? 'yes' : 'no',
+            run_in_viewport: state.everInViewport ? 'yes' : 'no',
+            reconfigured: state.reconfigures,
+            gate_eligible: (FLAGS.gate !== false && !state.loggedIn) ? 'yes' : 'no',
+            ui_error: diag.uiError ? String(diag.uiError).slice(0, 80) : 'none',
+            seconds_since_configured: diag.configuredAt ? Math.round((Date.now() - diag.configuredAt) / 1000) : null
+        });
+    }
+
+    function installDiagnostics() {
+        // Sample the Run control periodically and on scroll, while the page is
+        // still alive to measure.
+        var sampler = setInterval(sampleRunControl, 1500);
+        window.addEventListener('scroll', sampleRunControl, { passive: true });
+        window.addEventListener('resize', sampleRunControl, { passive: true });
+
+        // A page error while configuring is a real candidate explanation.
+        window.addEventListener('error', function (e) {
+            if (!diag.uiError) diag.uiError = (e && e.message) || 'script error';
+        });
+
+        // pagehide is the reliable end-of-session signal on mobile Safari, where
+        // unload frequently never fires.
+        window.addEventListener('pagehide', function () { clearInterval(sampler); reportConfiguredNoRun(true); });
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') reportConfiguredNoRun(false);
+        });
+    }
+
     /* ---------------------------------------------------------------- utils */
 
     function qs(id) { return document.getElementById(id); }
@@ -98,13 +216,16 @@
         simulator_run_clicked_logged_out: 'run_clicked_logged_out',
         simulator_gate_impression: 'gate_impression',
         simulator_gate_dismissed: 'gate_dismissed',
+        simulator_run_clicked: 'run_clicked',
+        simulator_configured_no_run: 'configured_no_run',
         simulator_signup_started: 'signup_started'
     };
     var SERVER_POST = {
         simulator_signup_completed: 'signup_completed',
         simulator_login_completed: 'returned_to_simulator',
         simulator_state_restored: 'returned_to_simulator',
-        simulator_first_simulation_completed: 'first_simulation'
+        simulator_first_simulation_completed: 'first_simulation',
+        simulator_simulation_completed: 'simulation_completed'
     };
 
     function apiBase() {
@@ -345,8 +466,27 @@
         catch (e) { return ''; }
     }
 
+    /* CONFIGURE -> RUN was unmeasurable before this. simulator_run_clicked_logged_out
+       only fires on the gated branch, so every run by a signed-in member was
+       invisible and the gap between "configured" and "gate impression" looked
+       like people refusing to press Run when much of it was simply members
+       running simulations normally. noteRunAttempt fires for EVERY run attempt,
+       logged in or out, so the drop-off can actually be attributed.
+       Deduped: the capture-phase guard and an adapter's own requireAuth call can
+       both land on one click. */
+    var lastRunAttemptAt = 0;
+    function noteRunAttempt(meta) {
+        var now = Date.now();
+        if (now - lastRunAttemptAt < 120) return;
+        lastRunAttemptAt = now;
+        diag.runAttempts += 1;
+        diag.firstRunAt = diag.firstRunAt || now;
+        track('simulator_run_clicked', Object.assign({ member: isLoggedIn() ? 'yes' : 'no' }, meta || {}));
+    }
+
     /* Returns TRUE when the run may proceed, FALSE when it was gated. */
     function requireAuth(meta) {
+        noteRunAttempt(meta);
         if (FLAGS.gate === false) return true;
         if (!cfg) return true;
         if (isLoggedIn()) return true;
@@ -444,6 +584,16 @@
        point is not reachable as a function (e.g. the MLB simulator's IIFE). */
     function installClickGuard(selectors) {
         if (!selectors || !selectors.length) return;
+        // Always-on, non-blocking: records the attempt for EVERY visitor so
+        // CONFIGURE -> RUN is measurable, then the guard below decides.
+        document.addEventListener('click', function (e) {
+            var t0 = e.target;
+            if (!t0 || !t0.closest) return;
+            for (var k = 0; k < selectors.length; k++) {
+                if (t0.closest(selectors[k])) { noteRunAttempt({ trigger: selectors[k] }); break; }
+            }
+        }, true);
+
         document.addEventListener('click', function (e) {
             if (isLoggedIn() || FLAGS.gate === false) return;
             var t = e.target;
@@ -468,6 +618,7 @@
             installClickGuard(cfg.runSelectors);
             var start = function () {
                 trackVisit();
+                installDiagnostics();
                 handleResume();
             };
             if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
@@ -478,14 +629,24 @@
         /* Adapters whose run path IS reachable as a function call this directly. */
         requireAuth: requireAuth,
 
+        /* Adapters whose run path is not a click can record the attempt directly. */
+        noteRunAttempt: noteRunAttempt,
+
+        /* An adapter that catches a user-facing failure can name it, so a
+           configured-but-no-run session is classified as an error rather than
+           being written off as abandonment. */
+        noteUiError: function (message) { if (!diag.uiError) diag.uiError = message; },
+
         isLoggedIn: isLoggedIn,
         track: track,
         toast: toast,
 
         /* Fire once per page when the visitor first touches any setting. */
         markConfigured: function (params) {
-            if (configuredFired) return;
+            if (configuredFired) { diag.reconfigures += 1; return; }
             configuredFired = true;
+            diag.configuredAt = Date.now();
+            sampleRunControl();
             track('simulator_configured', params || {});
         },
 

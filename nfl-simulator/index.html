@@ -231,7 +231,7 @@
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
 <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-<script src="/static/js/sim-auth-gate.js?v=ad2ffacebbab"></script>
+<script src="/static/js/sim-auth-gate.js?v=b456330d2d36"></script>
 <!-- SIM_ACTIVATION_20260808: measures the two activation milestones that
      happen away from the simulator - first verified pick and first TMR Coin
      after a simulator-sourced signup. Read-only observer. Kill switch:
@@ -424,7 +424,7 @@ async function nflApi(p){
   return j;
 }
 function loading(node,msg){node.innerHTML='';const s=el('div','state');s.innerHTML='<div class="spin"></div>'+esc(msg);node.appendChild(s)}
-function errNode(node,e){node.innerHTML='';const d=el('div','err',e.msg||'Something went wrong.');node.appendChild(d)}
+function errNode(node,e){node.innerHTML='';const d=el('div','err',e.msg||'Something went wrong.');node.appendChild(d);try{window.TMRSimGate&&window.TMRSimGate.noteUiError(e&&e.msg||'sim error')}catch(_){}}
 
 const WINDOW_LABEL={early:'Early afternoon',late:'Late afternoon',night:'Night',intl:'Intl / morning'};
 let STATE={mode:'weekly',season:null,week:null,games:[],weeksMeta:[],selRef:null,
@@ -1164,6 +1164,10 @@ function installSimGate(){
     simulator:'nfl',
     label:'NFL matchup',
     returnPath:'/nfl-simulator/',
+    // Weekly mode runs by tapping a game card; custom mode uses #runBtn. Both
+    // are listed so the configured-but-no-run diagnostics measure whichever
+    // control this visitor was actually looking at.
+    runControlSelectors:['#runBtn','#games .game'],
     captureState:simCaptureState,
     describeState:simDescribeState,
     restoreState:simRestoreState,

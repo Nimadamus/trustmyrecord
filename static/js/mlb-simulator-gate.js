@@ -184,6 +184,7 @@
         label: 'MLB matchup',
         returnPath: '/mlb-simulator/',
         runSelectors: ['#runSimulationButton'],
+        runControlSelectors: ['#runSimulationButton'],
         captureState: captureState,
         describeState: describeState,
         restoreState: restoreState,

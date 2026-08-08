@@ -143,6 +143,38 @@
         }, true);
     }
 
+    /* The activation service stores simulator names lowercase ('mlb', 'nfl');
+       the sportsbook's sportKeyMap and its rail buttons are uppercase ('MLB',
+       'NFL'). Without this the remembered sport silently fails every lookup and
+       the member falls through to the in-season default - which is exactly the
+       bug this feature exists to fix, so it would have looked like it worked. */
+    function toBoardSport(name) {
+        if (!name) return null;
+        var want = String(name).toLowerCase();
+        try {
+            var keys = Object.keys(window.TMR.sportKeyMap || {});
+            for (var i = 0; i < keys.length; i++) {
+                if (keys[i].toLowerCase() === want) return keys[i];
+            }
+        } catch (e) { }
+        return null;
+    }
+
+    /* The member's remembered simulator sport, from their ACCOUNT. Server-side
+       so it follows them between devices, and only ever updated by a completed
+       simulation - never by an incidental tab click. Resolves to null for a
+       logged-out visitor or any failure, which falls through to the in-season
+       probe below. */
+    function accountSport() {
+        try {
+            if (!window.api || typeof window.api.request !== 'function') return Promise.resolve(null);
+            if (typeof window.api.isLoggedIn !== 'function' || !window.api.isLoggedIn()) return Promise.resolve(null);
+            return window.api.request('/activation/my-sport')
+                .then(function (r) { return toBoardSport(r && r.sport); })
+                .catch(function () { return null; });
+        } catch (e) { return Promise.resolve(null); }
+    }
+
     function run() {
         // The simulator handoff owns the sport on this load.
         try {
@@ -153,7 +185,7 @@
 
         var saved = remembered();
         if (saved) {
-            // An explicit past choice wins, even if it is empty today.
+            // An explicit past choice on THIS device wins, even if empty today.
             if (saved !== (window.TMR.selectedSport || null)) selectSport(saved);
             return;
         }
@@ -162,8 +194,26 @@
         // if the board it settled on is genuinely empty.
         setTimeout(function () {
             if (currentGameCount() > 0) return;
-            firstSportWithGames(PRIORITY).then(function (sport) {
-                if (!sport) return;                        // nothing in season anywhere: leave the page alone
+
+            // Resolution order, most specific first:
+            //   1. ?simpick=1 intent            (returned above)
+            //   2. an explicit choice on this device (returned above)
+            //   3. the member's remembered simulator sport, from their account
+            //   4. the first sport that actually has games
+            accountSport().then(function (mine) {
+                if (currentGameCount() > 0) return;
+                if (mine) {
+                    return countFor(mine).then(function (n) {
+                        // Honour their sport when it has games; if their league is
+                        // out of season, fall through rather than showing them an
+                        // empty board in the name of a preference.
+                        if (n > 0) { selectSport(mine); return null; }
+                        return firstSportWithGames(PRIORITY);
+                    });
+                }
+                return firstSportWithGames(PRIORITY);
+            }).then(function (sport) {
+                if (!sport) return;                        // handled, or nothing in season anywhere
                 if (currentGameCount() > 0) return;        // it filled in while we were probing
                 selectSport(sport);
                 log('defaulted board to ' + sport);
