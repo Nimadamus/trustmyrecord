@@ -258,7 +258,8 @@
             var post = SERVER_POST[name];
             if (post && isLoggedIn() && window.api && typeof window.api.request === 'function') {
                 window.api.request('/activation/milestone', {
-                    method: 'POST', body: { milestone: post, simulator: simulator }
+                    method: 'POST',
+                    body: { milestone: post, simulator: simulator, arm: experiments.run_cta || '' }
                 }).catch(function () { });
                 return;
             }
@@ -267,7 +268,8 @@
             var body = JSON.stringify({
                 milestone: pre,
                 simulator: simulator,
-                detail: detail || ''
+                detail: detail || '',
+                arm: experiments.run_cta || ''
             });
             // sendBeacon survives the navigation that signup_started triggers.
             if (navigator.sendBeacon) {
