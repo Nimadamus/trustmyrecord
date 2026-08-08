@@ -35,40 +35,94 @@ const SPORT_KEYS = {
   WNBA: 'basketball_wnba',
 };
 
-async function pickSportInSeason(page) {
-  const withGames = [];
+// How far ahead a game still counts as part of the slate the board renders.
+// Wide enough to cover a full day plus late starts, narrow enough to exclude
+// a schedule posted weeks in advance.
+const SLATE_WINDOW_HOURS = 30;
+const SLATE_GRACE_HOURS = 3; // a game that started recently is still on the board
+
+/**
+ * Rank the sports by how big a slate they have RIGHT NOW, best first.
+ *
+ * The previous version counted every game the odds endpoint returned that had
+ * any bookmaker attached, which is not the same question as "will the board
+ * render cards today". On 2026-08-08 that made this test pick NFL: the
+ * endpoint returned 19 NFL games with prices, but the earliest kicked off five
+ * days later and the latest in mid-September, so the board correctly showed an
+ * empty state and the proof failed on the calendar again -- the exact bug the
+ * season-awareness was added to kill, one level down. MLB had 15 games all
+ * inside 24 hours and rendered 30 cards.
+ *
+ * So games are counted only inside the window the board actually shows, and
+ * the result is a RANKED LIST rather than a single winner: the caller walks it
+ * until a board really renders, so one sport whose slate is posted but not yet
+ * on the board cannot fail the run on its own.
+ */
+async function rankSportsBySlate(page) {
+  const ranked = [];
   for (const [tab, key] of Object.entries(SPORT_KEYS)) {
-    const count = await page.evaluate(async (sportKey) => {
+    const counts = await page.evaluate(async ({ sportKey, windowHours, graceHours }) => {
       try {
         const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
           || 'https://trustmyrecord-api.onrender.com/api';
         const res = await fetch(base + '/games/odds/' + sportKey);
-        if (!res.ok) return 0;
+        if (!res.ok) return { imminent: 0, priced: 0 };
         const body = await res.json();
         const games = Array.isArray(body) ? body : (body.games || []);
-        return games.filter((g) => (g.bookmakers || []).length > 0).length;
-      } catch (e) { return 0; }
-    }, key);
-    if (count > 0) withGames.push({ tab, count });
+        const priced = games.filter((g) => (g.bookmakers || []).length > 0);
+        const now = Date.now();
+        const imminent = priced.filter((g) => {
+          const t = new Date(g.commence_time).getTime();
+          if (!Number.isFinite(t)) return false;
+          return t > now - graceHours * 3600e3 && t < now + windowHours * 3600e3;
+        });
+        return { imminent: imminent.length, priced: priced.length };
+      } catch (e) { return { imminent: 0, priced: 0 }; }
+    }, { sportKey: key, windowHours: SLATE_WINDOW_HOURS, graceHours: SLATE_GRACE_HOURS });
+    if (counts.imminent > 0) ranked.push({ tab, ...counts });
   }
+  ranked.sort((a, b) => b.imminent - a.imminent);
+
   expect(
-    withGames.length,
-    'no sport has a posted slate at all -- the odds feed is down, not merely out of season'
+    ranked.length,
+    `no sport has a slate inside the next ${SLATE_WINDOW_HOURS}h -- the odds feed is down, ` +
+    'not merely out of season (a schedule posted weeks ahead does not count: the board only ' +
+    'renders games it is showing today)'
   ).toBeGreaterThan(0);
-  return withGames.sort((a, b) => b.count - a.count)[0].tab;
+  return ranked.map((r) => r.tab);
+}
+
+/**
+ * Click through the ranked sports and return the first whose board genuinely
+ * renders game cards. Only when every sport with a live slate fails to render
+ * is this a real regression -- and then it fails, loudly, naming them all.
+ */
+async function selectRenderableSport(page, ranked) {
+  const tried = [];
+  for (const sport of ranked) {
+    await clickSport(page, sport);
+    await waitForBoardSettled(page);
+    const rendered = await page
+      .locator('#lobbyBoardRows article, #gamesListContainer .tmr-market-card, main article')
+      .count()
+      .catch(() => 0);
+    if (rendered > 0) return sport;
+    tried.push(`${sport} (slate posted, board rendered 0 cards)`);
+  }
+  throw new Error(
+    'every sport with a live slate failed to render any card: ' + tried.join(', '));
 }
 
 test('live sportsbook primary markets and pick slip are usable', async ({ page }) => {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
 
-  const sport = await pickSportInSeason(page);
-  await clickSport(page, sport);
+  const ranked = await rankSportsBySlate(page);
+  const sport = await selectRenderableSport(page, ranked);
+  // selectRenderableSport already proved this sport's board renders, but the
+  // board container is shared and re-renders in place, so re-settle and
+  // re-assert before the card assertions below read from it.
   await waitForBoardSettled(page);
-  // The board container is already on screen (showing the previous sport, or an
-  // empty-state panel), so container visibility alone settles instantly and the
-  // card assertions below would race the re-render. Wait for the new sport's
-  // cards to actually land.
   await expect
     .poll(
       async () => page.locator('#lobbyBoardRows article, #gamesListContainer .tmr-market-card, main article').count(),
