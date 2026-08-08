@@ -65,6 +65,10 @@
     var modalEl = null;
     var resumeHandled = false;
 
+    // Experiment arms, attached to every funnel event so any step can be split
+    // by arm without a second analytics path to keep in sync.
+    var experiments = {};
+
     /* ------------------------------------------------------------------ */
     /* CONFIGURED-BUT-NO-RUN diagnostics                                    */
     /* ------------------------------------------------------------------ */
@@ -83,8 +87,20 @@
         runEverInViewport: false,
         runEverEnabled: false,
         uiError: null,
+        wentBackground: false,
+        maxScrollPct: 0,
         reported: false
     };
+
+    function scrollDepthPct() {
+        try {
+            var h = document.documentElement.scrollHeight - window.innerHeight;
+            if (h <= 0) return 100;
+            var pct = Math.round((window.scrollY / h) * 100);
+            if (pct > diag.maxScrollPct) diag.maxScrollPct = Math.min(100, Math.max(0, pct));
+            return diag.maxScrollPct;
+        } catch (e) { return null; }
+    }
 
     function runControlEl() {
         try {
@@ -159,7 +175,10 @@
             reconfigured: state.reconfigures,
             gate_eligible: (FLAGS.gate !== false && !state.loggedIn) ? 'yes' : 'no',
             ui_error: diag.uiError ? String(diag.uiError).slice(0, 80) : 'none',
-            seconds_since_configured: diag.configuredAt ? Math.round((Date.now() - diag.configuredAt) / 1000) : null
+            seconds_since_configured: diag.configuredAt ? Math.round((Date.now() - diag.configuredAt) / 1000) : null,
+            viewport: (window.innerWidth || 0) + 'x' + (window.innerHeight || 0),
+            scroll_depth_pct: scrollDepthPct(),
+            went_background: diag.wentBackground ? 'yes' : 'no'
         });
     }
 
@@ -179,6 +198,7 @@
         // unload frequently never fires.
         window.addEventListener('pagehide', function () { clearInterval(sampler); reportConfiguredNoRun(true); });
         document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') diag.wentBackground = true;
             if (document.visibilityState === 'hidden') reportConfiguredNoRun(false);
         });
     }
@@ -233,7 +253,7 @@
         catch (e) { return 'https://trustmyrecord-api.onrender.com/api'; }
     }
 
-    function mirrorToServer(name, simulator) {
+    function mirrorToServer(name, simulator, detail) {
         try {
             var post = SERVER_POST[name];
             if (post && isLoggedIn() && window.api && typeof window.api.request === 'function') {
@@ -244,7 +264,11 @@
             }
             var pre = SERVER_PRE[name];
             if (!pre) return;
-            var body = JSON.stringify({ milestone: pre, simulator: simulator });
+            var body = JSON.stringify({
+                milestone: pre,
+                simulator: simulator,
+                detail: detail || ''
+            });
             // sendBeacon survives the navigation that signup_started triggers.
             if (navigator.sendBeacon) {
                 navigator.sendBeacon(apiBase() + '/activation/pulse', new Blob([body], { type: 'application/json' }));
@@ -264,10 +288,11 @@
             p.device = deviceCategory();
             p.logged_in = isLoggedIn() ? 'yes' : 'no';
             p.page_path = window.location.pathname;
+            for (var exp in experiments) { if (experiments.hasOwnProperty(exp)) p['exp_' + exp] = experiments[exp]; }
             if (window.TMRAnalytics && typeof window.TMRAnalytics.track === 'function') window.TMRAnalytics.track(name, p);
             else if (typeof window.tmrTrack === 'function') window.tmrTrack(name, p);
             else if (typeof window.gtag === 'function') window.gtag('event', name, p);
-            mirrorToServer(name, p.simulator);
+            mirrorToServer(name, p.simulator, p.reason);
         } catch (e) { /* analytics must never break a simulator */ }
     }
 
@@ -631,6 +656,9 @@
 
         /* Adapters whose run path is not a click can record the attempt directly. */
         noteRunAttempt: noteRunAttempt,
+
+        /* Register an experiment arm for this page view. */
+        setExperiment: function (name, armValue) { if (name && armValue) experiments[name] = armValue; },
 
         /* An adapter that catches a user-facing failure can name it, so a
            configured-but-no-run session is classified as an error rather than

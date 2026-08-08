@@ -667,13 +667,23 @@
          gate:false = run freely again, resume:false = no auto-resume,
          autoSave:false = no history write. Flip + redeploy, no code change. -->
     <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true };</script>
-    <script defer src="/static/js/sim-auth-gate.js?v=b456330d2d36"></script>
+    <script defer src="/static/js/sim-auth-gate.js?v=6b9d5be6a63c"></script>
     <script defer src="/static/js/mlb-simulator-gate.js?v=1595c3a615be"></script>
     <!-- SIM_ACTIVATION_20260808: measures the two activation milestones that
          happen away from the simulator - first verified pick and first TMR Coin
          after a simulator-sourced signup. Read-only observer. Kill switch:
          window.TMR_FUNNEL_FLAGS = { enabled: false }. -->
     <script defer src="/static/js/tmr-activation-funnel.js?v=1e4bb9d262f6"></script>
+    <!-- SIM_RUN_CTA_20260808: A/B on Run placement. Evidence: the first
+         configured_no_run classifications came back run_never_scrolled_into_view
+         - the button was visible and enabled and simply never entered the
+         viewport. VARIANT shows a sticky bar that CLICKS THE REAL BUTTON (one
+         run path, one set of validations, no double submit). CONTROL is the
+         page exactly as it is. No auto-run, no urgency, dismissible, and it
+         pads the body so it never covers content.
+         Kill: window.SIM_RUN_CTA_FLAGS = { enabled: false } -> everyone control. -->
+    <script>window.SIM_RUN_CTA_FLAGS = { enabled: true };</script>
+    <script defer src="/static/js/sim-run-cta.js?v=6944f77771d0"></script>
     <!-- SIMV2_LANDING_20260730: landing/conversion layer. Kill switch:
          set landing:false + redeploy; core simulator is independent. -->
     <script>window.SIM_LANDING_FLAGS = { landing: true };</script>
