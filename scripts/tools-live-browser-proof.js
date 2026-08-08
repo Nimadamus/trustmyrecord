@@ -107,7 +107,54 @@ async function verifyTrendspotter(page) {
   return captureRoot('trendspotter-live-browser-addressbar-proof.png');
 }
 
+// SIM_AUTH_GATE_20260808: running a simulation now requires a free account, so
+// this proof does two passes.
+//
+// Pass 1 (gate on, logged out) is the new product contract: the page, the team
+// selectors and every setting must still be fully usable and crawlable, and
+// pressing Run must open the signup gate WITHOUT producing a projection. That
+// is the half a regression would silently undo.
+//
+// Pass 2 re-runs the original output coverage - pitcher dropdowns, projection
+// render, disclaimer wording, forbidden-claim scan - with the gate turned off
+// through its own documented kill switch (window.SIM_GATE_FLAGS.gate). Using
+// the real kill switch rather than a fake session means this proof also
+// confirms the rollback path still works on production every time it runs.
+async function verifyMlbSimulatorGate(page) {
+  await page.goto(SIM_URL, { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
+  await page.waitForFunction(() => {
+    const select = document.querySelector('#awayTeamSelect');
+    return select && select.options.length > 2;
+  }, null, { timeout: 30000 });
+
+  // The page itself must never be gated - that is what Google sees.
+  if (await page.$('.tsg-overlay')) throw new Error('MLB Simulator gated the PAGE, not just the run.');
+  await selectByText(page, '#awayTeamSelect', 'Chicago White Sox');
+  await selectByText(page, '#homeTeamSelect', 'Colorado Rockies');
+
+  await page.click('#runSimulationButton');
+  const gated = await page.waitForSelector('.tsg-overlay', { timeout: 15000 }).catch(() => null);
+  if (!gated) throw new Error('Run Simulation did not open the signup gate for a logged-out visitor.');
+  const projected = await page.evaluate(() =>
+    document.querySelector('#projectionShell')?.getAttribute('data-projection-state'));
+  if (projected === 'projected') throw new Error('A logged-out visitor received a projection despite the gate.');
+  const gateText = await page.locator('.tsg-overlay').innerText();
+  if (!/free TrustMyRecord account/i.test(gateText)) {
+    throw new Error(`Signup gate copy is missing the free-account message: ${gateText.slice(0, 120)}`);
+  }
+}
+
 async function verifyMlbSimulator(page) {
+  // Turn the gate off through its own kill switch, before any page script runs,
+  // so the rest of this proof exercises the simulator exactly as a member sees it.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'SIM_GATE_FLAGS', {
+      configurable: true,
+      get() { return window.__tmrSimFlags; },
+      set(value) { const next = value || {}; next.gate = false; window.__tmrSimFlags = next; }
+    });
+  });
   await page.goto(SIM_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   await selectByText(page, '#awayTeamSelect', 'Chicago White Sox');
@@ -260,6 +307,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
       return;
     }
     if (process.env.TMR_ONLY_MLB_SIMULATOR === '1') {
+      await verifyMlbSimulatorGate(page);
       const mlbSimulator = await verifyMlbSimulator(page);
       const report = {
         checked_at: new Date().toISOString(),
@@ -272,6 +320,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
     }
     const hub = await verifyHubAndRoutes(page);
     const trendspotter = await verifyTrendspotter(page);
+    await verifyMlbSimulatorGate(page);
     const mlbSimulator = await verifyMlbSimulator(page);
     const modelBuilder = await verifyModelBuilder(page);
     await verifyLinkedWorkflow(page, PUBLIC_RECORDS_URL, 'Handicappers|verified records|Discover');
