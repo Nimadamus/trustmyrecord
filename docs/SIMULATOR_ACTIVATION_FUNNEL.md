@@ -53,12 +53,39 @@ step can be split by simulator or by device. Events 9 and 10 carry
 - **Are they in the economy?** `activation_first_coin_after_signup` ÷ signups.
 - **Do they come back?** `simulator_return_visit` with `member = yes`.
 
+## Where the numbers actually live
+
+GA4 is the **fast** view. The **authoritative** view is server-side and
+account-scoped, which is what makes it cross-device:
+
+```
+node scripts/activation-report.js --days 30        # in trustmyrecord-backend
+GET /api/activation/report?days=30                 # x-admin-token or admin bearer
+```
+
+| Store | Holds | Keyed on |
+| --- | --- | --- |
+| `activation_funnel_daily` | the steps before an account exists | day + simulator + milestone. **No identity of any kind** |
+| `user_activation` | signup, return, first simulation, first pick, first coin | `user_id`, one row per member, each milestone write-once |
+
+`first_pick` is stamped by `routes/picks.js` when the pick row is written, so
+it cannot be forged, replayed, or missed because the member switched devices.
+`first_coin` is derived from `tmr_coin_ledger` (excluding the welcome grant,
+which is given rather than earned), so it works retroactively and cannot miss
+an award path. `POST /api/activation/milestone` **rejects** both outright —
+a client can only report things only it can see.
+
 ## Honest limits
 
-- These are **browser-scoped**. Milestones are marked once per browser via
-  `localStorage`, so a member who signs up on mobile and picks on desktop
-  counts the signup on one and may not count the pick anywhere. Treat the
-  later steps as a floor, not an exact count.
+- **GA4's** later steps are browser-scoped: a member who signs up on mobile and
+  picks on desktop may not link in GA4. The server-side report does not have
+  this problem — use it for any decision. GA4 is for speed and for the
+  pre-account steps.
+- **Pre-signup counters cannot exclude test/QA/bot traffic**, because there is
+  no account yet to identify. Post-signup rows do exclude it. So QA runs
+  inflate VISITS through SIGNUP STARTS only, which drags SIGNUP START →
+  COMPLETE artificially down. It washes out at real volume; do not read that
+  one rate on a near-empty window.
 - `activation_first_coin_after_signup` records a **baseline** balance the first
   time it looks, and only fires when the balance rises above it. A member who
   already held coin before the simulator gate existed will not produce a false
