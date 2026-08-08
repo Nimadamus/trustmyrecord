@@ -87,6 +87,55 @@
         return 'desktop';
     }
 
+    /* GA4 name -> server milestone. GA4 alone cannot answer "did THIS ACCOUNT
+       come back on another device", so the funnel is mirrored to the backend:
+       pre-account steps become anonymous daily counters, post-account steps
+       become write-once timestamps on the member's own activation row. See
+       services/activationFunnel.js. */
+    var SERVER_PRE = {
+        simulator_page_viewed: 'page_viewed',
+        simulator_configured: 'configured',
+        simulator_run_clicked_logged_out: 'run_clicked_logged_out',
+        simulator_gate_impression: 'gate_impression',
+        simulator_gate_dismissed: 'gate_dismissed',
+        simulator_signup_started: 'signup_started'
+    };
+    var SERVER_POST = {
+        simulator_signup_completed: 'signup_completed',
+        simulator_login_completed: 'returned_to_simulator',
+        simulator_state_restored: 'returned_to_simulator',
+        simulator_first_simulation_completed: 'first_simulation'
+    };
+
+    function apiBase() {
+        try { return (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api'; }
+        catch (e) { return 'https://trustmyrecord-api.onrender.com/api'; }
+    }
+
+    function mirrorToServer(name, simulator) {
+        try {
+            var post = SERVER_POST[name];
+            if (post && isLoggedIn() && window.api && typeof window.api.request === 'function') {
+                window.api.request('/activation/milestone', {
+                    method: 'POST', body: { milestone: post, simulator: simulator }
+                }).catch(function () { });
+                return;
+            }
+            var pre = SERVER_PRE[name];
+            if (!pre) return;
+            var body = JSON.stringify({ milestone: pre, simulator: simulator });
+            // sendBeacon survives the navigation that signup_started triggers.
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(apiBase() + '/activation/pulse', new Blob([body], { type: 'application/json' }));
+            } else {
+                fetch(apiBase() + '/activation/pulse', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: body, keepalive: true
+                }).catch(function () { });
+            }
+        } catch (e) { /* the funnel must never break a simulator */ }
+    }
+
     function track(name, params) {
         try {
             var p = params || {};
@@ -97,6 +146,7 @@
             if (window.TMRAnalytics && typeof window.TMRAnalytics.track === 'function') window.TMRAnalytics.track(name, p);
             else if (typeof window.tmrTrack === 'function') window.tmrTrack(name, p);
             else if (typeof window.gtag === 'function') window.gtag('event', name, p);
+            mirrorToServer(name, p.simulator);
         } catch (e) { /* analytics must never break a simulator */ }
     }
 
