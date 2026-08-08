@@ -388,6 +388,13 @@
         applyInputsAndRun(resp.saved.input_parameters, true);
         api('/' + id + '/rerun', { method: 'POST' }).catch(function () {});
       } else {
+        // SIM_AUTH_GATE_20260808: reopening a saved run now also re-applies its
+        // inputs to the form (without running it), so "View" leaves the member
+        // looking at the matchup they saved instead of the simulator's default
+        // teams. Matches what the NFL simulator's savedId handler does. The
+        // read-only summary card above it still shows the stored result, which
+        // is the authoritative snapshot.
+        applyInputsAndRun(resp.saved.input_parameters, false);
         renderSummaryCard(resp.saved, {});
       }
     } catch (e) { /* saved result not found/not yours - silently ignore, page still works as a normal simulator */ }
