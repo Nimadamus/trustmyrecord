@@ -16,6 +16,12 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      # SEO_20260809 — offline indexability guard. Runs before the browser suite
+      # because it is fast and catches the class of regression that used to reach
+      # Search Console instead of CI: sitemap URLs that 404, an accidental
+      # noindex, a redirect stub leaking into the sitemap, a /u/ profile that
+      # stops baking its record (soft 404), or an internal link to a dead URL.
+      - run: npm run test:seo
       - run: npx playwright install --with-deps chromium
       - run: npm run verify:regression
       - uses: actions/upload-artifact@v4

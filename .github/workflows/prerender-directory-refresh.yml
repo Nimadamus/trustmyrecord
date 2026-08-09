@@ -77,6 +77,20 @@ jobs:
         # of the sitemap. A failure here stops the commit; the last good bake stays.
         run: python scripts/build_forum_threads.py
 
+      - name: SEO indexability gate (fail closed before anything is published)
+        # SEO_20260809. The generators in the two steps above are what actually
+        # publishes /u/ and /forum/ URLs and rewrites sitemap.xml, on a 30-minute
+        # cron, with no human in the loop. Every indexation problem this repo has
+        # had reached production through exactly this path and was only noticed
+        # weeks later in Search Console.
+        #
+        # This gate runs BEFORE the commit step, so a bad bake is never pushed:
+        # a sitemap URL that would 404, an accidental noindex, a redirect stub in
+        # the sitemap, a profile page that stopped baking its record (the soft-404
+        # regression), or an internal link to a URL that does not exist all stop
+        # the job here and leave the last good bake live.
+        run: npm run test:seo
+
       - name: Re-pin static asset refs to content hashes
         # Any mutable /static/ JS/CSS whose bytes changed gets a new ?v tag in
         # every referencing page (and loader JS) in the SAME commit, so
@@ -91,7 +105,10 @@ jobs:
           # that just crossed the graded-pick threshold (untracked files need
           # `git add` before a --cached diff can see them) and NEW/renamed forum
           # thread dirs.
-          git add -A handicappers/index.html leaderboards/index.html index.html u forum/thread sitemap.xml
+          # `forum` (not just forum/thread) so a NEW board directory from
+          # build_forum_threads.py's category pass is committed too — an untracked
+          # new dir was previously invisible to `git add -u` and never shipped.
+          git add -A handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml
           git add -u
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."

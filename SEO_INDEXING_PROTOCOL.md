@@ -81,6 +81,64 @@ meta-robots or X-Robots-Tag noindex, has an exact self-referencing canonical, an
 title + H1. The deploy is NOT complete until it prints `ALL SEO CHECKS PASSED`.
 A failure (exit 2) means fix and re-run — never report the deploy done while it fails.
 
+## 8b. August 9, 2026 — soft-404 root cause and the gate that now blocks it
+Search Console showed 76 "Soft 404" + 62 "Not found (404)" + 53 noindex + 13
+"Crawled - currently not indexed" AFTER the June/July repairs. The sitemap was
+clean and `scripts/seo_audit.py` passed, because **neither tool looked at the
+pages that were not in the sitemap.** Findings:
+
+1. **The soft 404s were the compact `/u/<username>/` template.** `GRADED_MIN`
+   selected between two templates, and the compact one baked NO record data —
+   `Loading record` plus an empty `#uDeep`, ~500 chars of crawlable text, every
+   number arriving only after `tmr-profile-hydrate.js` ran. 70 URLs served 200 OK
+   saying nothing. The data was already fetched at build time. **There is now ONE
+   template** (`page_html(..., compact=True)`); `compact` only changes the title
+   wording, adds the "building a record" note, and keeps the page out of the
+   sitemap. Do NOT fork the profile template again — the fork is how an entire
+   page family drifted into an empty-shell state unnoticed.
+2. **Nine `/u/` pages belonged to accounts the API 404s** (deleted members + 4 QA
+   accounts). `existing` meant a `/u/` dir, once created, was regenerated forever.
+   `build_profile_pages.py` now prunes a page only when `/api/users/<name>`
+   positively returns 404/410, and fails closed on every other outcome. Never
+   change that to prune on a generic fetch failure.
+3. **`build_forum_threads.py` deleted live threads on a transient API failure.**
+   `keep` was populated only after the per-thread fetch succeeded, while the prune
+   loop deletes any id not in `keep` — so one cold-start/rate-limit/OOM blip
+   deleted that thread's page and sitemap entry, and the next 30-minute cron run
+   re-created it. Each flap = a real indexed thread 404ing to Googlebot. `keep` is
+   now seeded from the (fail-closed) enumeration first.
+4. **Two login-gated pages were in the sitemap** (`/trivia/history/`,
+   `/wallet/referrals/` — the latter literally renders "This page is private to
+   your account"). Removed. Private/personal pages are never submitted.
+5. **Empty forum boards are no longer submitted** until they have ≥1 thread. The
+   page stays live and linked; only the `<loc>` waits.
+6. Thread breadcrumbs pointed at `/forum/#cat-<slug>` (a fragment, not a URL), so
+   the 12 real board pages got no inbound link from any of the 103 thread pages.
+   Now `/forum/<slug>/`, in both the visible crumb and the JSON-LD.
+
+**The 62 real 404s were legitimate**: ~69 forum threads deleted from the database
+since July 20. Nothing links to them and none is in the sitemap. A deleted thread
+returning 404 is correct — do not resurrect or redirect them.
+
+**The 53 noindex are correct too**, and `/mlb-simulator/simulations/<date>/<matchup>/`
+must stay 200+noindex rather than 404 when the matchup is thin: that URL space is
+time-indexed, so today's "nonexistent" matchup is tomorrow's real one. 404ing it
+would break a URL that is about to be valid.
+
+**Gate:** `npm run test:seo`
+(`tests/seo-indexability-regression-test.js`) is offline, runs in
+`regression-lock.yml` on every push/PR, and — critically — runs inside
+`prerender-directory-refresh.yml` **before the commit step**, so the 30-minute
+cron that owns `/u/`, `/forum/` and `sitemap.xml` cannot publish a bad bake. It
+asserts: every sitemap URL resolves + is self-canonical + not noindex + not a
+meta-refresh + has title/h1; no page is noindex outside a 4-entry allowlist;
+every alias stub stays out of the sitemap with a canonical matching its refresh
+target; every `/u/` page is index,follow + self-canonical + ProfilePage + carries
+baked stats (the `Loading record` placeholder is a hard failure); every internal
+href in every HTML file resolves; and no shipped JS builds the slugless
+`/forum/thread/<slug>/` URL. `seo_audit.py` (live) and this test (static) are
+complementary — run both.
+
 ## 9. Deploy + verify
 GitHub Pages from `main`. `git push` is blocked by the local publish guard, so deploy
 changed files via the GitHub Contents API (`gh api --method PUT repos/Nimadamus/trustmyrecord/contents/<path>`).

@@ -313,7 +313,12 @@ def page_html(t, posts):
                     {"@type": "ListItem", "position": 1, "name": "Forums",
                      "item": f"{SITE}/forum/"},
                     {"@type": "ListItem", "position": 2, "name": cat_name,
-                     "item": f"{SITE}/forum/#cat-{cat_slug}" if cat_slug else f"{SITE}/forum/"},
+                     # BREADCRUMB_20260809: point at the real, indexable board page
+                # (/forum/<slug>/), not a fragment of /forum/. A fragment is not a
+                # distinct URL, so the breadcrumb's middle item resolved to the
+                # forum index for all 12 boards, and the board pages themselves got
+                # no inbound link from any of the 103 thread pages.
+                "item": f"{SITE}/forum/{cat_slug}/" if cat_slug else f"{SITE}/forum/"},
                     {"@type": "ListItem", "position": 3, "name": title_txt, "item": url},
                 ],
             },
@@ -353,7 +358,8 @@ def page_html(t, posts):
     crumb = (f'<nav class="ft-crumb" aria-label="Breadcrumb">'
              f'<a href="/">Home</a> &rsaquo; '
              f'<a href="/forum/">Forums</a> &rsaquo; '
-             + (f'<a href="/forum/#cat-{e(cat_slug)}">{e(cat_name)}</a> &rsaquo; ' if cat_slug
+             # BREADCRUMB_20260809: real board URL, matching the JSON-LD crumb.
+             + (f'<a href="/forum/{e(cat_slug)}/">{e(cat_name)}</a> &rsaquo; ' if cat_slug
                 else f'<span>{e(cat_name)}</span> &rsaquo; ')
              + f'<span>{e(title_txt)}</span></nav>')
 
@@ -428,7 +434,7 @@ def page_html(t, posts):
   {crumb}
   <h1 class="ft-title">{e(title_txt)}</h1>
   <p class="ft-sub">Posted by {author_link(author)} in
-     {(f'<a href="/forum/#cat-{e(cat_slug)}">{e(cat_name)}</a>' if cat_slug else e(cat_name))}
+     {(f'<a href="/forum/{e(cat_slug)}/">{e(cat_name)}</a>' if cat_slug else e(cat_name))}
      &middot; {e(human_date(created))} &middot; {reply_n} {"reply" if reply_n == 1 else "replies"}</p>
   {share_html}
   {locked}
@@ -659,6 +665,29 @@ def main():
     print(f"enumerated {len(threads)} threads")
 
     built, entries, keep = [], [], {}
+
+    # DELETE_ON_FETCH_FAIL_20260809 -- seed `keep` from the ENUMERATED list first.
+    #
+    # `keep` used to be populated only after fetch_thread()/fetch_posts() both
+    # succeeded, while the prune loop below deletes any directory whose id is not
+    # in `keep`. So the "skipped, keeping any existing page" message below was a
+    # lie: one transient failure on one thread -- a cold Render instance, a rate
+    # limit, an OOM restart -- deleted that live thread's page from the site and
+    # dropped it from the sitemap. The next 30-minute cron run re-created it.
+    # Every flap is a real, indexed forum thread returning 404 to Googlebot for
+    # as long as the flap lasts, and it regenerates a fresh batch of Search
+    # Console "Not found (404)" entries indefinitely.
+    #
+    # list_threads() already fails closed on a partial enumeration (it aborts if
+    # the count disagrees with the API's own total), so anything in `threads` is
+    # known to exist. Seeding from it means a per-thread fetch failure now leaves
+    # the existing page and sitemap entry exactly where they were, and only a
+    # thread that is genuinely absent from the enumeration is pruned.
+    for t0 in threads:
+        existing_slug = t0.get("slug") or slugify(t0.get("title"))
+        if existing_slug:
+            keep[str(t0["id"])] = existing_slug
+
     for t0 in threads:
         tid = t0["id"]
         try:
@@ -666,6 +695,13 @@ def main():
             posts = fetch_posts(tid)
         except Exception as ex:
             print(f"  ! thread {tid}: fetch failed ({ex}) — skipped, keeping any existing page")
+            # Keep the sitemap stable too: the page is still on disk and still
+            # 200, so dropping its <loc> for one flaky fetch would churn the
+            # sitemap for no reason.
+            kept_slug = keep.get(str(tid))
+            if kept_slug and os.path.isfile(os.path.join(TDIR, str(tid), kept_slug, "index.html")):
+                entries.append((thread_url(tid, kept_slug),
+                                (iso_date(t0.get("last_post_at") or t0.get("created_at")) or "")[:10]))
             continue
         slug = t.get("slug") or slugify(t.get("title"))
         keep[str(tid)] = slug
@@ -736,7 +772,7 @@ def main():
         by_cat.setdefault(t.get("category_slug") or "", []).append(t)
     for lst in by_cat.values():
         lst.sort(key=lambda t: (t.get("last_post_at") or t.get("created_at") or ""), reverse=True)
-    cat_entries = []
+    cat_entries, empty_boards = [], []
     for c in cats:
         cthreads = by_cat.get(c["slug"], [])
         d = os.path.join(ROOT, "forum", c["slug"])
@@ -746,12 +782,24 @@ def main():
             raise SystemExit(f"ABORT: empty HTML generated for category {c['slug']}")
         with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(page)
-        last = ""
-        if cthreads:
-            last = (iso_date(cthreads[0].get("last_post_at") or cthreads[0].get("created_at")) or "")[:10]
+        # EMPTY_BOARD_20260809: a board with zero threads renders "No threads yet.
+        # Be the first to post." over ~370 characters of nav. That is a real page
+        # and it stays live, linked from /forum/ and from every thread crumb -- but
+        # submitting it in the sitemap is asking Google to index an empty list, and
+        # empty boards were sitting in Search Console's "Crawled - currently not
+        # indexed" bucket. The <loc> comes back automatically on the next cron run
+        # after the board gets its first thread. No noindex, no redirect, no
+        # deletion: submission only.
+        if not cthreads:
+            empty_boards.append(c["slug"])
+            continue
+        last = (iso_date(cthreads[0].get("last_post_at") or cthreads[0].get("created_at")) or "")[:10]
         cat_entries.append((cat_url(c["slug"]), last))
     if cats:
-        print(f"wrote {len(cat_entries)} category pages under forum/<slug>/")
+        print(f"wrote {len(cats)} category pages under forum/<slug>/")
+        if empty_boards:
+            print(f"  {len(empty_boards)} empty board(s) written but NOT submitted "
+                  f"to the sitemap: {empty_boards}")
         regen_sitemap_cats(cat_entries)
 
 

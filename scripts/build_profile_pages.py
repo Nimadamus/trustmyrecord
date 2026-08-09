@@ -10,9 +10,21 @@ public verified record. This bakes that page and regenerates sitemap.xml.
 INDEXING: every public profile is `index, follow`. This site NEVER uses noindex,
 on any page, for any reason (owner rule, restated July 15 2026: "There's no reason
 to noindex anything. If Google doesn't want to index them they won't."). The old
-GRADED_MIN noindex gate is GONE. GRADED_MIN now only selects which TEMPLATE a
-profile gets -- full (>= GRADED_MIN settled picks) or compact -- never whether it
-may be indexed. Do not reintroduce a noindex gate here under any rationale.
+GRADED_MIN noindex gate is GONE. Do not reintroduce a noindex gate here under any
+rationale.
+
+SOFT404_20260809: there is now ONE template. `compact` (below GRADED_MIN) used to
+mean a second, divergent template that baked no record data at all -- it emitted
+"Loading record" and an empty #uDeep and left every number to client-side
+hydration. ~70 live /u/ URLs therefore served 200 OK with ~500 characters of
+crawlable text, and Search Console filed them as "Soft 404". `compact` now only
+changes the title wording, adds the "building a record" note, and keeps the page
+out of the sitemap. All factual blocks -- stat tiles, sport splits, recent graded
+picks, ProfilePage JSON-LD -- are baked identically. Do not fork this template
+again: the fork is what let the whole family drift into an empty shell.
+
+A member with zero graded picks still gets no record blocks. Nothing is invented
+to pad a page.
 
 Sitemap: only full profiles are submitted. Compact profiles are still fully
 indexable and reachable via internal links; they are simply not listed. That is a
@@ -33,7 +45,7 @@ Build only. Does NOT commit or deploy. Run from the repo root:
     python scripts/build_profile_pages.py
 Add --dry-run to print the eligible/excluded sets without writing files.
 """
-import json, os, sys, html, urllib.request, urllib.parse, datetime, re
+import json, os, sys, html, urllib.request, urllib.error, urllib.parse, datetime, re, shutil
 
 API   = "https://trustmyrecord-api.onrender.com/api"
 SITE  = "https://trustmyrecord.com"
@@ -328,6 +340,39 @@ def eligible(detail):
         return False, f"only {g} graded picks (< {GRADED_MIN})"
     return True, "ok"
 
+# QA / audit accounts. These are created by test runs and BLP audits, are not
+# real members, and must never become public SEO surfaces. INTERNAL_DENYLIST is
+# exact-match only, so it never caught e.g. `qa_audit_20260726`,
+# `nimaqacheck0801v2`, `blpauditacct1`, `blpanalyzercheck2026` -- all four were
+# live, indexable /u/ pages.
+TEST_ACCOUNT_RE = re.compile(
+    r"(?:^qa[_-])|(?:qacheck)|(?:^test[_-])|(?:[_-]test$)|(?:auditacct)|"
+    r"(?:analyzercheck)|(?:^blpaudit)|(?:^tmr_qa)|(?:^smoke[_-])|(?:^e2e[_-])",
+    re.I)
+
+
+def test_account(un):
+    return bool(un) and bool(TEST_ACCOUNT_RE.search(un))
+
+
+def confirmed_gone(un):
+    """True ONLY when the API positively reports this member does not exist.
+
+    Anything else (timeout, 5xx, rate limit, malformed JSON) returns False so the
+    existing page is kept. See the ZOMBIE_20260809 note in main() for why this
+    has to fail closed.
+    """
+    try:
+        get(f"{API}/users/{urllib.parse.quote(un)}")
+        return False
+    except urllib.error.HTTPError as ex:
+        if ex.code in (404, 410):
+            return True
+        return False
+    except Exception:
+        return False
+
+
 def fetch_picks(un):
     """All public picks for a user (paginate; API caps limit at 100)."""
     out, off = [], 0
@@ -480,7 +525,27 @@ def derive(picks):
     graded_sorted = sorted(graded, key=lambda p: p.get("graded_at") or "", reverse=True)
     return graded_sorted[:5], avg_amer, sport_rows, len(graded)
 
-def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=None):
+def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=None,
+              compact=False):
+    """Render a /u/<username>/ page.
+
+    SOFT404_20260809: `compact` no longer means "render an empty shell". It used
+    to: the compact template emitted `<b>&mdash;</b><span>Loading record</span>`
+    and an empty `#uDeep`, so ~70 profiles shipped ~500 characters of crawlable
+    text with every real number arriving only after tmr-profile-hydrate.js ran.
+    Google classifies that as a soft 404 (200 OK for a page that says nothing),
+    which is exactly what the Search Console "Soft 404" bucket was full of.
+
+    The record data was already being fetched at build time for the full
+    template, so there was never a reason to withhold it here. `compact` now
+    only means: below GRADED_MIN, so keep the modest title, add the
+    "building a record" note, and stay out of the sitemap (owner instruction).
+    Everything factual -- stats tiles, sport splits, recent graded picks,
+    ProfilePage markup -- is baked exactly as it is for a full profile.
+
+    Nothing here is invented: a member with no graded picks still gets no
+    record blocks, because there is no record to state.
+    """
     e = html.escape
     un    = d["username"]
     disp  = d.get("display_name") or un
@@ -514,9 +579,21 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
         best  = int(num(d.get("best_streak")))
     rec   = f"{w}-{l}" + (f"-{p}" if p else "")
     url   = f"{SITE}/u/{un}/"
-    title = f"{disp} - Verified Sports Betting Record, ROI & Public Picks | TrustMyRecord"
-    desc  = (f"View {disp}'s verified TrustMyRecord betting record, including graded picks, "
-             f"units, ROI, win percentage, streaks, and public performance history.")
+    # A profile with a graded record advertises it. A profile with none says so
+    # instead of promising "ROI & Public Picks" it cannot show.
+    if compact and tp < 1:
+        title = f"{disp} | TrustMyRecord"
+        desc  = (f"Public TrustMyRecord profile for {disp} - verified locked-pick record, units, "
+                 f"ROI, and history. No graded picks yet; the record fills in as picks settle.")
+    elif compact:
+        title = f"{disp} - Verified Betting Record ({rec}, {tp} graded) | TrustMyRecord"
+        desc  = (f"{disp}'s verified TrustMyRecord record: {rec} across {tp} graded picks, "
+                 f"{fmt_units(units)} net units, {roi:.1f}% ROI. Every pick locked before "
+                 f"game time and graded from the final result.")
+    else:
+        title = f"{disp} - Verified Sports Betting Record, ROI & Public Picks | TrustMyRecord"
+        desc  = (f"View {disp}'s verified TrustMyRecord betting record, including graded picks, "
+                 f"units, ROI, win percentage, streaks, and public performance history.")
     desc  = e(desc)
     # SHARE_SYSTEM_PHASE1_20260721: one card PER MEMBER, rendered on demand by
     # the API from this member's live ledger, instead of the single generic
@@ -556,6 +633,10 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     if avg_amer is not None:
         stats.append(stat(fmt_amer(avg_amer), "Avg Odds"))
     stats_html = "".join(stats)
+    # A member with nothing graded gets one honest tile, not a grid of zeros
+    # that reads like broken data.
+    if tp < 1:
+        stats_html = stat("0", "Graded Picks")
 
     # Sport breakdown: rich (units/ROI/win%) when metrics is available, else
     # the record-only fallback from the pick log.
@@ -646,6 +727,24 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
                        **({"image": avatar} if avatar else {})},
         "url": url,
     })
+    # Below GRADED_MIN: say so plainly. This is the ONLY copy difference between
+    # a compact and a full profile now -- the data blocks above are identical.
+    building_html = ""
+    if compact:
+        building_html = (
+            '<p class="u-how">Building a public record. '
+            f'Full SEO feature listing unlocks at {GRADED_MIN} graded picks; '
+            'the stats above are the live graded totals and update automatically '
+            'as picks settle.</p>')
+    # "How this record is verified" describes an existing record. Don't assert one
+    # for a member who has never had a pick graded.
+    how_html = "" if tp < 1 else (
+        '<div class="u-how">'
+        f'<strong>How this record is verified:</strong> every pick {e(disp)} makes is timestamped and\n'
+        '    locked before the game starts, then graded automatically when the result settles. Wins and\n'
+        '    losses both stay on this public record, so the units, ROI, and win percentage above reflect\n'
+        '    the full graded history, not a highlight reel.\n'
+        '  </div>')
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -732,12 +831,8 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
   {recent_html}
   {related_html}
   </div>
-  <div class="u-how">
-    <strong>How this record is verified:</strong> every pick {e(disp)} makes is timestamped and
-    locked before the game starts, then graded automatically when the result settles. Wins and
-    losses both stay on this public record, so the units, ROI, and win percentage above reflect
-    the full graded history, not a highlight reel.
-  </div>
+  {building_html}
+  {how_html}
   <a class="u-cta" href="/register/">Start Your Free Verified Record</a>
   <div class="u-links">
     <strong>More from {e(disp)}:</strong>
@@ -771,128 +866,26 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
 </html>
 """
 
-def compact_html(un, awards=None):
-    """Compact profile for an existing /u page below GRADED_MIN. A REAL profile
-    for visitors: the same headline/#uStats + #uDeep mounts that
-    tmr-profile-hydrate.js fills live from the metrics aggregator, so clicking
-    "View" from the leaderboard for a rising or new member shows their real (if
-    smaller) stats, not a dead-end stub.
+def compact_html(un, awards=None, d=None, recent=None, avg_amer=None,
+                 sport_rows=None, m=None, siblings=None):
+    """A below-GRADED_MIN profile, rendered by the SAME template as a full one.
 
-    INDEXABLE — `index, follow`, like every other page on this site. Never add a
-    noindex here."""
-    e = html.escape
-    url = f"{SITE}/u/{un}/"
-    # Same per-member card the full template uses. The API renders it from this
-    # member's live ledger, so a profile with few graded picks still previews as
-    # itself instead of borrowing the generic site image.
-    og_card = OG_CARD_BASE + "/profile/" + urllib.parse.quote(un) + ".png"
-    cdesc = e(f"Public TrustMyRecord profile for {un} - verified locked-pick record, units, ROI "
-              f"and history. Every pick is locked before game time and graded from the final result.")
-    share_html = share_button(un, un)
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="{url}">
-<title>{e(un)} | TrustMyRecord</title>
-<meta name="description" content="Public TrustMyRecord profile for {e(un)} - verified locked-pick record, units, ROI, and history. Building toward the featured leaderboard.">
-<meta property="og:type" content="profile">
-<meta property="og:site_name" content="TrustMyRecord">
-<meta property="og:title" content="{e(un)} | TrustMyRecord">
-<meta property="og:url" content="{url}">
-<meta property="og:description" content="{cdesc}">
-<meta property="og:image" content="{og_card}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="{e(un)} - verified record on TrustMyRecord">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{e(un)} | TrustMyRecord">
-<meta name="twitter:description" content="{cdesc}">
-<meta name="twitter:image" content="{og_card}">
-<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-{DS_HEAD}
-{SHARE_HEAD}
-<style>
-.u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
-.u-wrap a{{color:#00aeff;text-decoration:none;}}
-.u-crumb{{font-size:13px;color:#8890ad;margin:0 0 14px;}}
-.u-crumb span{{color:#c9d0e4;}}
-.u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
-.u-actions{{margin:2px 0 10px;}}
-.u-name{{font-size:26px;margin:0;font-family:'Barlow',sans-serif;}}
-.u-tag{{color:#8890ad;font-size:13px;margin:2px 0 0;}}
-.u-stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0;}}
-.u-stat{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;}}
-.u-stat b{{display:block;font-size:20px;}}
-.u-stat span{{color:#9aa;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}}
-.u-block{{margin-top:26px;}}
-.u-block h2{{font-family:'Barlow',sans-serif;font-size:18px;margin:0 0 10px;}}
-.u-table{{width:100%;border-collapse:collapse;font-size:14px;background:#13131c;border:1px solid #262636;border-radius:12px;overflow:hidden;}}
-.u-table th,.u-table td{{text-align:left;padding:9px 11px;border-bottom:1px solid #20202e;}}
-.u-table th{{color:#8890ad;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}}
-.u-win{{color:#00ff88;font-weight:700;}}.u-loss{{color:#ff5566;font-weight:700;}}.u-push{{color:#9aa;font-weight:700;}}
-.u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}
-.u-scroll{{overflow-x:auto;}}
-.u-building{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px 16px;color:#a9b0c8;line-height:1.55;font-size:13.5px;margin-top:18px;}}
-.u-awards{{margin-top:26px;background:linear-gradient(145deg,rgba(17,24,39,.98),rgba(7,10,18,.98));border:1px solid rgba(255,215,0,.24);border-radius:16px;padding:20px;}}
-.u-awards-head{{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}}
-.u-awards h2{{margin:0;font-family:'Barlow',Inter,sans-serif;font-size:21px;}}
-.u-awards-kicker{{color:#aab6c9;font-size:12px;margin:4px 0 0;}}
-.u-awards-count{{color:#ffd86a;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}}
-.u-award-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
-.u-award-card{{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;min-height:92px;padding:13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,215,0,.18);}}
-.u-award-badge{{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,244,180,.28),rgba(255,193,7,.06) 62%,transparent 63%);border:1px solid rgba(255,215,0,.35);}}
-.u-award-badge svg{{width:42px;height:42px;}}
-.u-award-name{{color:#f8fafc;font-weight:800;font-size:15px;line-height:1.25;}}
-.u-award-period{{color:#ffd86a;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}}
-.u-award-stats{{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}}
-.u-award-stat{{white-space:nowrap;}}.u-award-stat + .u-award-stat::before{{content:" · ";color:#68758b;}}
-@media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
-{BOOT_CSS}</style>
-{BOOT_NOSCRIPT}
-{boot_script(un)}
-</head>
-<body class="tmr-ds tmr-u-booting">
-{BOOT_SKELETON}
-<main class="u-wrap">
-  <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>{e(un)}</span></nav>
-  <div class="u-head">
-    <div>
-      <h1 class="u-name">{e(un)}</h1>
-      <p class="u-tag">@{e(un)} · Public pick record</p>
-    </div>
-  </div>
-  {share_html}
-  <section class="u-stats" id="uStats">
-    <div class="u-stat"><b>&mdash;</b><span>Loading record</span></div>
-  </section>
-  {awards_html(awards or [])}
-  <div id="uDeep"></div>
-  <p class="u-building">Building a public record. Full SEO feature listing unlocks at {GRADED_MIN} graded picks;
-  the live stats above update automatically as picks settle.</p>
-  <div class="u-note"><strong>More from {e(un)}:</strong>
-     <a href="/profile/?user={e(un)}">Full interactive profile</a> ·
-     <a href="/profile/?user={e(un)}#record">Picks &amp; record</a> ·
-     <a href="/profile/?user={e(un)}#followers">Followers &amp; following</a> ·
-     <a href="/marketplace/seller/?u={e(un)}">Pick storefront</a></div>
-  <div class="u-note"><strong>Explore:</strong>
-     <a href="/">Home</a> ·
-     <a href="/sportsbook/">Make a Verified Pick</a> ·
-     <a href="/leaderboards/">Verified Leaderboards</a> ·
-     <a href="/handicappers/">Handicappers</a> ·
-     <a href="/tools/">Tools &amp; Simulators</a> ·
-     <a href="/challenges/">Challenges</a> ·
-     <a href="/contests/">Contests</a> ·
-     <a href="/forum/">Forum</a></div>
-</main>
-<script src="{_HYDRATE}" defer></script>
-<script type="text/tmr-fallback" data-src="/static/js/tmr-public-awards.js?v=20260731awards1"></script>
-{DS_FOOT}
-</body>
-</html>
-"""
+    SOFT404_20260809: this used to be a second, divergent template that baked no
+    record data at all -- just `Loading record` and an empty `#uDeep` -- so ~70
+    live URLs returned 200 with ~500 characters of text and Google filed them
+    under "Soft 404". The numbers were available at build time the whole way; the
+    old template simply did not print them.
+
+    Keeping one template is the actual fix: a divergent second template is what
+    let a whole page family silently drift into an empty-shell state. Anything
+    genuinely absent (no graded picks -> no record blocks) stays absent; nothing
+    is invented to pad the page.
+    """
+    d = dict(d or {})
+    d.setdefault("username", un)
+    return page_html(d, recent or [], avg_amer, sport_rows or [], m,
+                     siblings=siblings, awards=awards, compact=True)
+
 
 def forum_thread_authors():
     """Usernames the forum links to as /u/<name>/.
@@ -966,6 +959,38 @@ def main():
                          | linked_lowdata | forum_linked)
                         - elig_names)
 
+    # ZOMBIE_20260809 -- prune pages for accounts that no longer exist.
+    #
+    # `existing` above meant a /u/ dir, once created, was regenerated forever.
+    # Nine of them belonged to accounts the API now 404s (deleted members plus
+    # four QA accounts that were never meant to be public SEO surfaces), so the
+    # site was serving 200 OK for members that do not exist -- a permanent soft
+    # 404 that no amount of content could fix, because there is no member.
+    #
+    # Only a POSITIVE 404 from the user detail endpoint prunes. Any other
+    # outcome -- timeout, 5xx, rate limit, connection reset -- keeps the page.
+    # Fail-closed matters here: this is a Render 512MB instance, and treating a
+    # transient failure as "member deleted" would delete real profiles and hand
+    # Google a fresh batch of 404s, which is the exact failure mode this whole
+    # audit was cleaning up.
+    zombies = []
+    for un in list(to_compact):
+        if un in linked_lowdata or un in forum_linked:
+            continue          # something live still links here: keep it
+        if confirmed_gone(un):
+            zombies.append(un)
+    if zombies:
+        to_compact = [n for n in to_compact if n not in zombies]
+
+    # QA/test accounts never become a NEW public page. Existing dirs are left
+    # alone (removing an indexed URL is a bigger deal than a thin one); in
+    # practice the QA accounts on disk are already deleted upstream, so the
+    # zombie sweep above is what actually retires them.
+    skipped_test = sorted(n for n in to_compact
+                          if test_account(n) and not os.path.isdir(os.path.join(UDIR, n)))
+    if skipped_test:
+        to_compact = [n for n in to_compact if n not in skipped_test]
+
     print(f"eligible (>= {GRADED_MIN} graded): {len(eligible_pages)}")
     for d in sorted(eligible_pages, key=lambda x: x["username"].lower()):
         print(f"  + {d['username']}  ({graded_count(d)} graded)")
@@ -973,6 +998,8 @@ def main():
     for un, why in sorted(excluded):
         print(f"  - {un}: {why}")
     print(f"compact low-data pages (existing + linked-but-missing): {len(to_compact)} -> {to_compact}")
+    print(f"zombie pages to prune (API 404s the account): {len(zombies)} -> {zombies}")
+    print(f"QA/test accounts not published: {len(skipped_test)} -> {skipped_test}")
     if dry:
         print("DRY RUN — no files written")
         return
@@ -989,10 +1016,29 @@ def main():
             sibs = [x for x in sorted(elig_names) if x != un]
             f.write(page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs, awards=awards))
     for un in to_compact:
+        # SOFT404_20260809: compact pages get the SAME baked record data as full
+        # ones. These three calls are the whole fix -- the data was always
+        # available, the old compact template just never printed it.
+        recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
+        m = fetch_metrics(un)
+        try:
+            det = get(f"{API}/users/{urllib.parse.quote(un)}")
+            det = det.get("user", det)
+        except Exception:
+            det = None
+        sibs = [x for x in sorted(elig_names) if x != un]
         os.makedirs(os.path.join(UDIR, un), exist_ok=True)
         with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(compact_html(un, awards=fetch_awards(un)))
+            f.write(compact_html(un, awards=fetch_awards(un), d=det, recent=recent,
+                                 avg_amer=avg_amer, sport_rows=sport_rows, m=m,
+                                 siblings=sibs))
+    for un in zombies:
+        shutil.rmtree(os.path.join(UDIR, un), ignore_errors=True)
     print(f"wrote {len(eligible_pages)} full + {len(to_compact)} compact pages under {UDIR} (ALL index, follow)")
+    if zombies:
+        print(f"pruned {len(zombies)} page(s) for accounts the API 404s (now correctly 404): {zombies}")
+    if skipped_test:
+        print(f"skipped {len(skipped_test)} QA/test account(s), never published: {skipped_test}")
 
     regen_sitemap(sorted(elig_names))
 
