@@ -209,7 +209,27 @@ check('the browser clock is never used for a day decision', () => {
     .split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n');
   assert.ok(!/Date\.now\(\)/.test(code), 'Date.now() would trust the browser clock');
   assert.ok(!/new Date\(\)/.test(code), 'new Date() with no argument would trust the browser clock');
-  assert.ok(/headers\.get\('date'\)/.test(js), 'server Date header is not being read');
+  // The HTTP Date header is NOT usable: it is not CORS-safelisted, and the API
+  // is a different origin, so headers.get('date') is null in the browser
+  // (confirmed against production - only cache-control, content-type, expires
+  // and pragma are exposed). The clock therefore comes from a response body.
+  assert.ok(/\/api\/health/.test(code), 'no server-clock source is being read');
+  assert.ok(/h\.timestamp/.test(code), 'the server timestamp is not being taken from the body');
+  assert.ok(!/headers\.get\(['"]date['"]\)/.test(code),
+    'still reading the HTTP Date header, which is always null cross-origin');
+});
+
+check('the day-sensitive modules wait for the server clock', () => {
+  const js = read('static/js/today-card.js');
+  const start = js.slice(js.indexOf('function start()'));
+  assert.ok(/clock\.then\(loadPoll\)/.test(start), 'the quiz module does not wait for server time');
+  assert.ok(/clock\.then\(loadTrivia\)/.test(start), 'the trivia module does not wait for server time');
+});
+
+check('the sitewide nav Today link is authenticated-only', () => {
+  const sw = read('static/js/tmr-sitewide.js');
+  assert.ok(/hasAuthTokens\(\)\s*\?\s*`<a class="tmr-global-nav__today"/.test(sw),
+    'the sitewide Today link is not gated on an existing session');
 });
 
 if (failures) { console.error('\n' + failures + ' failing check(s)\n'); process.exit(1); }

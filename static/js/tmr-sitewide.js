@@ -525,6 +525,16 @@
                     </div>
                 </div>
                 <div class="tmr-global-nav__links">
+                    ${/* TODAY_20260809: the one authenticated-only primary link.
+                          hasAuthTokens() answers synchronously from storage, so it
+                          is present in the nav's first paint rather than appearing
+                          late and shifting the bar. A logged-out visitor - and
+                          therefore every crawler - gets the nav exactly as it was
+                          before this release, so the crawlable link graph is
+                          unchanged. Asserted in tests/today-card-test.js. */ ""}
+                    ${hasAuthTokens()
+                        ? `<a class="tmr-global-nav__today" href="/today/"${currentFile === "today.html" ? ' aria-current="page"' : ""}>Today</a>`
+                        : ""}
                     ${primaryRoutes.map(([href, label]) => {
                         const hrefPath = href.split("#")[0].toLowerCase();
                         const segs = hrefPath.split("/").filter(Boolean);

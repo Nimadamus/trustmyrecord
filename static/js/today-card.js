@@ -175,14 +175,30 @@
       }
       return fetch(API + path, opts).then(function (r) {
         clearTimeout(timer);
-        // Every response carries the server's clock. Take it once.
-        try {
-          var d = r.headers && r.headers.get ? r.headers.get('date') : null;
-          if (d) { var t2 = Date.parse(d); if (!isNaN(t2)) serverNow = t2; }
-        } catch (e) {}
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       }).catch(function (e) { clearTimeout(timer); throw e; });
+    }
+
+    /**
+     * The server's clock.
+     *
+     * The obvious source - the HTTP `Date` response header - is NOT readable
+     * here: `Date` is not on the CORS-safelisted response header list, and the
+     * API is a different origin, so headers.get('date') returns null in the
+     * browser. Verified against production: the only exposed headers are
+     * cache-control, content-type, expires and pragma.
+     *
+     * So the instant comes from a response BODY instead. /api/health is public,
+     * cheap, and returns an ISO `timestamp` written by the server. If it fails,
+     * serverNow stays null and every day-sensitive module falls back to its
+     * neutral state rather than guessing from the browser clock.
+     */
+    function loadServerNow() {
+      return get('/api/health', false).then(function (h) {
+        var t = h && h.timestamp ? Date.parse(h.timestamp) : NaN;
+        if (!isNaN(t)) serverNow = t;
+      }).catch(function () { /* serverNow stays null: we decline to guess */ });
     }
 
     function el(id) { return document.getElementById(id); }
@@ -356,9 +372,13 @@
         return;
       }
       track('today_viewed', { authed: 'yes' });
-      // Poll first so serverNow is set as early as possible for the others.
-      loadPoll().then(renderDate);
-      loadTrivia();
+      // The server clock has to land before anything that decides "today", so
+      // the two day-sensitive modules wait on it. The other two do not care and
+      // start immediately.
+      var clock = loadServerNow();
+      clock.then(renderDate);
+      clock.then(loadPoll);
+      clock.then(loadTrivia);
       loadTeams();
       loadPicks();
       setTimeout(function () {
