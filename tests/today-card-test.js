@@ -128,6 +128,65 @@ check('the closed and completed branches offer no play CTA in the page code', ()
   assert.ok(!/Answer today/.test(closed), 'closed branch offers an answer CTA');
 });
 
+/* --------------------------------- 2b. mixed state from per-question locks */
+
+// Each quiz question now closes at its own game's first pitch, so a quiz is
+// routinely part open and part shut. A single open/closed label would be wrong
+// either way: "open" invites answers the backend rejects, "closed" hides
+// questions that are still playable.
+
+check('part-open quiz reports open, with the count still answerable', () => {
+  const res = L.pollState({
+    questions_open: 6, questions_open_unanswered: 6, total_questions: 10, user_answered: false
+  }, AFTERNOON_ET);
+  assert.strictEqual(res.state, 'open');
+  assert.strictEqual(res.open, 6);
+  assert.strictEqual(res.total, 10);
+});
+
+check('every question shut reports closed, not open', () => {
+  const res = L.pollState({
+    questions_open: 0, questions_open_unanswered: 0, total_questions: 10, user_answered: false
+  }, AFTERNOON_ET);
+  assert.strictEqual(res.state, 'closed');
+});
+
+check('every question shut, but they played, reports completed', () => {
+  const res = L.pollState({
+    questions_open: 0, questions_open_unanswered: 0, total_questions: 10, user_answered: true
+  }, AFTERNOON_ET);
+  assert.strictEqual(res.state, 'completed');
+});
+
+check('answered everything still open reports completed, not open', () => {
+  const res = L.pollState({
+    questions_open: 4, questions_open_unanswered: 0, total_questions: 10, user_answered: true
+  }, AFTERNOON_ET);
+  assert.strictEqual(res.state, 'completed', 'would nag a member who has answered everything available');
+});
+
+check('per-question state wins over the parent deadline', () => {
+  // Parent deadline long past, but questions are still open: trust the questions,
+  // because that is what the vote endpoint enforces.
+  const res = L.pollState({
+    questions_open: 3, questions_open_unanswered: 3, total_questions: 10,
+    user_answered: false, closes_at: '2026-08-09T10:00:00Z', status: 'active'
+  }, Date.parse('2026-08-09T20:00:00Z'));
+  assert.strictEqual(res.state, 'open');
+});
+
+check('a pre-fix quiz with no per-question field uses the old logic unchanged', () => {
+  const legacy = { status: 'active', user_answered: false, closes_at: '2026-08-09T22:00:00Z', question_count: 10 };
+  assert.strictEqual(L.pollState(legacy, Date.parse('2026-08-09T18:00:00Z')).state, 'open');
+  assert.strictEqual(L.pollState(legacy, Date.parse('2026-08-09T23:00:00Z')).state, 'closed');
+});
+
+check('the card renders the mixed count rather than a bare "open"', () => {
+  const js = read('static/js/today-card.js');
+  assert.ok(/res\.open \+ ' of ' \+ res\.total \+ ' questions still open'/.test(js),
+    'the mixed state is computed but never shown to the member');
+});
+
 /* ------------------------------------------------------ 3. team module CTA */
 
 check('a member with no teams gets a real call to action', () => {

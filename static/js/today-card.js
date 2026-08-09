@@ -83,6 +83,33 @@
    */
   function pollState(featured, nowMs) {
     if (!featured) return { state: 'unavailable' };
+
+    // PER_QUESTION_DEADLINES_20260809
+    //
+    // Each question now closes at its own game's first pitch, so a quiz is
+    // routinely part open and part shut and a single open/closed label would
+    // be a lie either way. When the API reports per-question state, trust it:
+    // it is computed from the same voting_deadline the vote endpoint enforces.
+    // A quiz created before this shipped has no such field and falls through
+    // to the original parent-deadline logic below, unchanged.
+    if (typeof featured.questions_open === 'number') {
+      var total = featured.total_questions || featured.question_count || 0;
+      var openCount = featured.questions_open;
+      var unanswered = (typeof featured.questions_open_unanswered === 'number')
+        ? featured.questions_open_unanswered : openCount;
+      if (openCount <= 0) {
+        // Nothing left to answer. Completed if they played, closed if they did not.
+        return featured.user_answered
+          ? { state: 'completed', poll: featured }
+          : { state: 'closed', poll: featured };
+      }
+      if (unanswered <= 0) {
+        // Every question still open has already been answered by this member.
+        return { state: 'completed', poll: featured, open: openCount, total: total };
+      }
+      return { state: 'open', poll: featured, open: openCount, total: total, unanswered: unanswered };
+    }
+
     if (featured.user_answered) return { state: 'completed', poll: featured };
     var status = String(featured.status || '').toLowerCase();
     if (status && status !== 'active' && status !== 'open') return { state: 'closed', poll: featured };
@@ -242,6 +269,13 @@
         if (res.state === 'unknown_time') {
           setStatus('tdPollStatus', 'Open the quiz to check today’s deadline');
           setCta('tdPollCta', 'Open the quiz', '/polls/');
+          return;
+        }
+        // Mixed state: say exactly how much is still answerable, so nobody
+        // opens the quiz expecting ten questions and finds four.
+        if (res.open && res.total && res.open < res.total) {
+          setStatus('tdPollStatus', res.open + ' of ' + res.total + ' questions still open');
+          setCta('tdPollCta', 'Answer what’s open', '/polls/');
           return;
         }
         var bits = [];
