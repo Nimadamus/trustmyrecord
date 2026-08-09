@@ -128,6 +128,23 @@
       '<img class="ds-coinlink-ico" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">' +
       esc(r[1]) + '</a>';
   }
+  /**
+   * TODAY_20260809: the one authenticated-only entry in the primary nav.
+   *
+   * Rendered ONLY when this browser already holds a session, which hasTokens()
+   * can answer synchronously from localStorage - so the item is present in the
+   * very first paint of the nav rather than appearing a moment later and
+   * pushing the rest of the bar sideways.
+   *
+   * A logged-out visitor, and therefore every crawler, gets a nav that is
+   * byte-identical to the one shipped before this release: the public,
+   * crawlable link graph is unchanged. Asserted in tests/today-card-test.js.
+   */
+  function todayLink() {
+    if (!hasTokens()) return '';
+    return '<a class="ds-todaylink" href="/today/"' +
+      (isCurrent('/today/') ? ' aria-current="page"' : '') + '>Today</a>';
+  }
   function menu(label, list) {
     var on = list.some(function (r) { return isCurrent(r[0]); });
     return '<div class="ds-menu' + (on ? ' is-current' : '') + '">' +
@@ -159,6 +176,7 @@
         '</button>' +
         '<div class="ds-nav-panel">' +
           '<div class="ds-mainnav">' +
+            todayLink() +
             menu('Sportsbook', SPORTSBOOK) +
             menu('Handicappers', HANDICAPPERS) +
             menu('Compete', COMPETE) +

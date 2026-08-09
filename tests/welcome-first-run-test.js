@@ -149,7 +149,12 @@ check('the three actions are present and the pick step is marked optional', () =
 });
 
 check('skip is plain HTML and works without JavaScript', () => {
-  assert.ok(/<a href="\/" id="wcSkip"/.test(html), 'skip is not a plain anchor to /');
+  // The destination moved from / to /today/ when the daily card shipped; what
+  // must never change is that skipping is a real anchor to a real on-site path,
+  // so a member can always leave even with JavaScript broken.
+  const m = html.match(/<a href="(\/[^"]*)" id="wcSkip"/);
+  assert.ok(m, 'skip is not a plain anchor with a relative href');
+  assert.ok(!/javascript:/i.test(m[1]), 'skip target is not a real path');
 });
 
 check('every CTA has a real href even before JavaScript runs', () => {
