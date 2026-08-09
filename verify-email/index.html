@@ -246,6 +246,10 @@
             if (!redirect) return '/';
             sessionStorage.removeItem('tmr_post_auth_redirect');
 
+            // WELCOME_20260809: registration now stores 'welcome' so an account
+            // that had to confirm an address lands on the same first-run page as
+            // one that did not. Unknown values still fall through to '/'.
+            if (redirect === 'welcome') return '/welcome/';
             if (redirect === 'picks') return '/picks/';
             if (redirect === 'profile') return '/profile/';
             if (redirect === 'leaderboards') return '/leaderboards/';

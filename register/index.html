@@ -568,7 +568,12 @@
                     if (data && data.user && (data.accessToken || data.access_token || data.tokens)) {
                         await persistBackendLogin(data.user);
                         var ru = data.user || {};
-                        try { sessionStorage.setItem('tmr_post_auth_redirect', 'picks'); } catch (error) {}
+                        // WELCOME_20260809: a brand-new account goes to /welcome/, not
+                        // straight onto the odds board. Consumed by verify-email's
+                        // resolvePostVerifyRedirect() for the flow where the account has
+                        // to confirm an address first. Set only here, on registration,
+                        // and removed on read, so a returning LOGIN never sees it.
+                        try { sessionStorage.setItem('tmr_post_auth_redirect', 'welcome'); } catch (error) {}
                         // Activation funnel markers (returned_after_signup + first-pick welcome banner).
                         try { localStorage.setItem('tmr_signup_ts', String(Date.now())); } catch (error) {}
                         try { sessionStorage.setItem('tmr_show_first_pick_welcome', '1'); } catch (error) {}
@@ -606,7 +611,17 @@
                             window.location.replace(returnUrl);
                             return;
                         }
-                        window.location.replace('/sportsbook/?first_pick=1');
+                        // WELCOME_20260809: was '/sportsbook/?first_pick=1'. A first-time
+                        // member landing on the full board had exactly one suggested
+                        // action - lock a unit-sized pick to a permanent public record -
+                        // which is the highest-commitment thing on the site and useless
+                        // to someone who does not bet. /welcome/ offers the daily quiz,
+                        // trivia, and the board, with the board marked optional.
+                        //
+                        // NOTE: the ?return= branch immediately above still returns
+                        // before this line, so the simulator signup gate (which sends
+                        // /register/?return=<sim path>&simResume=1) is untouched.
+                        window.location.replace('/welcome/');
                         return;
                     }
 
