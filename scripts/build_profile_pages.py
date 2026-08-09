@@ -548,7 +548,22 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     """
     e = html.escape
     un    = d["username"]
-    disp  = d.get("display_name") or un
+    # IDENTITY_REVERT_20260809 (owner-approved). Unifying the templates on
+    # 2026-08-09 pulled the FULL template's identity presentation onto the 61
+    # compact pages as an unintended side effect: display_name replaced the
+    # username in <h1>/<title>/og:title/JSON-LD (so /u/cfunesti/ started
+    # announcing itself as "c$"), the tagline changed, and 23 titles gained the
+    # member's win-loss record. None of that was requested; the approved change
+    # was to bake the RECORD DATA, not to restyle whose page it is.
+    #
+    # A compact page therefore keeps its pre-2026-08-09 identity exactly:
+    # username in the heading and title, the original tagline, the original
+    # description. Only the body content (stat tiles, sport splits, recent
+    # graded picks, ProfilePage markup, related links) is new.
+    #
+    # Full profiles are untouched by this and always used display_name.
+    disp  = un if compact else (d.get("display_name") or un)
+    tagline = "Public pick record" if compact else "Verified sports betting record"
     bio   = (d.get("bio") or "").strip()
     avatar= d.get("avatar_url") or ""
     if avatar.startswith("data:") or len(avatar) > 300:
@@ -579,17 +594,14 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
         best  = int(num(d.get("best_streak")))
     rec   = f"{w}-{l}" + (f"-{p}" if p else "")
     url   = f"{SITE}/u/{un}/"
-    # A profile with a graded record advertises it. A profile with none says so
-    # instead of promising "ROI & Public Picks" it cannot show.
-    if compact and tp < 1:
+    # IDENTITY_REVERT_20260809: a compact page's <title> and description are the
+    # pre-2026-08-09 strings, byte for byte. Putting a member's win-loss record in
+    # the indexed title of their own page is a product decision, not an SEO fix,
+    # and it was never approved -- do not reintroduce it here.
+    if compact:
         title = f"{disp} | TrustMyRecord"
         desc  = (f"Public TrustMyRecord profile for {disp} - verified locked-pick record, units, "
-                 f"ROI, and history. No graded picks yet; the record fills in as picks settle.")
-    elif compact:
-        title = f"{disp} - Verified Betting Record ({rec}, {tp} graded) | TrustMyRecord"
-        desc  = (f"{disp}'s verified TrustMyRecord record: {rec} across {tp} graded picks, "
-                 f"{fmt_units(units)} net units, {roi:.1f}% ROI. Every pick locked before "
-                 f"game time and graded from the final result.")
+                 f"ROI, and history. Building toward the featured leaderboard.")
     else:
         title = f"{disp} - Verified Sports Betting Record, ROI & Public Picks | TrustMyRecord"
         desc  = (f"View {disp}'s verified TrustMyRecord betting record, including graded picks, "
@@ -601,13 +613,22 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     # to that static image if the renderer is unavailable, so this can only
     # improve a preview, never break one.
     og_card = OG_CARD_BASE + "/profile/" + urllib.parse.quote(un) + ".png"
-    og_desc = e(share_description(disp, w, l, p, tp, units, roi))
+    # IDENTITY_REVERT_20260809: share/social identity strings also revert to the
+    # pre-2026-08-09 compact wording. The og:image CARD still renders the live
+    # record from the API -- that was never changed and is not identity text.
+    compact_share_desc = (f"Public TrustMyRecord profile for {disp} - verified locked-pick record, "
+                          f"units, ROI and history. Every pick is locked before game time and "
+                          f"graded from the final result.")
+    og_desc = e(compact_share_desc if compact
+                else share_description(disp, w, l, p, tp, units, roi))
+    og_social_title = (f"{disp} | TrustMyRecord" if compact
+                       else f"{disp} - Verified Sports Betting Record | TrustMyRecord")
     og_img = (f'\n<meta property="og:image" content="{og_card}">'
               '\n<meta property="og:image:width" content="1200">'
               '\n<meta property="og:image:height" content="630">'
               f'\n<meta property="og:image:alt" content="{e(disp)} - verified record on TrustMyRecord">'
               '\n<meta name="twitter:card" content="summary_large_image">'
-              f'\n<meta name="twitter:title" content="{e(disp)} - Verified Sports Betting Record | TrustMyRecord">'
+              f'\n<meta name="twitter:title" content="{e(og_social_title)}">'
               f'\n<meta name="twitter:description" content="{og_desc}">'
               f'\n<meta name="twitter:image" content="{og_card}">')
     avatar_html = (f'<img class="u-avatar" src="{e(avatar)}" alt="{e(disp)} avatar" '
@@ -755,7 +776,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
 <title>{e(title)}</title>
 <meta name="description" content="{desc}">
 <meta property="og:type" content="profile">
-<meta property="og:title" content="{e(disp)} - Verified Sports Betting Record | TrustMyRecord">
+<meta property="og:title" content="{e(og_social_title)}">
 <meta property="og:url" content="{url}">
 <meta property="og:description" content="{og_desc}">{og_img}
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -817,7 +838,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     {avatar_html}
     <div>
       <h1 class="u-name">{e(disp)}</h1>
-      <p class="u-tag">@{e(un)} · Verified sports betting record</p>
+      <p class="u-tag">@{e(un)} · {e(tagline)}</p>
       {bio_html}
     </div>
   </div>
