@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/polls/history/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previous Polls: Completed Quiz Results &amp; Standings | TrustMyRecord</title>
+    <meta name="description" content="Every completed TrustMyRecord prediction quiz, newest first, with the final standings: points earned, correct answers and accuracy for every player.">
+    <meta name="keywords" content="poll results, previous polls, prediction quiz results, sports quiz standings, poll history">
+    <meta property="og:title" content="Previous Polls | Completed Quiz Results &amp; Standings">
+    <meta property="og:description" content="The permanent archive of graded TrustMyRecord prediction quizzes and their final standings.">
+    <meta property="og:url" content="https://trustmyrecord.com/polls/history/">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/tmr-ds.e73d6ffbe2fb.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           TMR POLL HISTORY — permanent archive of graded quizzes.
+           Same token ramp, surfaces and accents as /polls/ so the two
+           pages read as one product. Nothing here is a new visual
+           language; the list card and the standings table are the
+           poll page's own card + leaderboard row patterns.
+           ============================================================ */
+        :root, body.tmr-ds.tmr-ds--dark.polls-page {
+            --bg: #0A1322;
+            --bg-deep: #071020;
+            --surface-1: #101B2C;
+            --surface-2: #152134;
+            --surface-3: #1C2B42;
+            --border: rgba(146, 176, 214, 0.13);
+            --border-strong: rgba(146, 176, 214, 0.26);
+            --text: #E8F0FA;
+            --text-2: #A7BAD1;
+            --muted: #7C90AB;
+            --accent: #22D3EE;
+            --accent-2: #38BDF8;
+            --accent-dim: rgba(34, 211, 238, 0.11);
+            --accent-border: rgba(34, 211, 238, 0.32);
+            --accent-ink: #04222B;
+            --green: #34D399;
+            --green-dim: rgba(52, 211, 153, 0.12);
+            --gold: #E9BE63;
+            --gold-dim: rgba(233, 190, 99, 0.12);
+            --red: #F87171;
+            --red-dim: rgba(248, 113, 113, 0.12);
+            --r-sm: 7px;
+            --r-md: 11px;
+            --r-lg: 14px;
+            --fs-xs: 0.72rem;
+            --fs-sm: 0.78rem;
+            --fs-base: 0.875rem;
+            --fs-md: 0.95rem;
+            --fs-lg: 1.1rem;
+            --fs-xl: 1.3rem;
+            --nav-h: 70px;
+            --shadow-1: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-2: 0 8px 24px rgba(0,0,0,0.32);
+            --tmr-fb-link: #67E8F9;
+            --tmr-fb-link-hover: #A5F3FC;
+            --tmr-fb-cyan: var(--accent);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { background: var(--bg-deep); }
+        html body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+            background:
+                radial-gradient(58rem 22rem at 50% -8rem, rgba(34, 211, 238, 0.07), transparent 68%) no-repeat,
+                radial-gradient(46rem 30rem at 92% 12rem, rgba(56, 189, 248, 0.045), transparent 70%) no-repeat,
+                linear-gradient(180deg, #0A1322 0px, #071020 860px) no-repeat,
+                var(--bg-deep) !important;
+            color: var(--text) !important;
+            font-size: 15px;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: var(--tmr-fb-link); text-decoration: none; }
+        a:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
+        button, select, input, textarea, a { font-family: inherit; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+        /* The sitewide sheet styles bare h2/h3 as huge uppercase display type
+           with !important — re-assert the card scale at higher specificity. */
+        html body .ph-card h2, html body .ph-res h2 { text-transform: none !important; }
+        body.polls-page .tmrlh-crumbs { display: none !important; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+        .tmr-shell2 { max-width: 1240px; margin: 0 auto; padding: 18px 24px 72px; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+        .tmr-shell2 h1, .tmr-shell2 h2, .tmr-shell2 h3 { font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important; }
+
+        /* ============ HERO ============ */
+        .pl-hero {
+            position: relative;
+            display: flex; align-items: flex-end; justify-content: space-between;
+            gap: 18px 24px; flex-wrap: wrap;
+            padding: 16px 20px 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            background:
+                radial-gradient(30rem 12rem at 8% -4rem, rgba(34, 211, 238, 0.10), transparent 70%),
+                linear-gradient(135deg, #142338 0%, #111C2E 52%, #0E1828 100%);
+            box-shadow: var(--shadow-1);
+            overflow: hidden;
+        }
+        .pl-hero::after {
+            content: ""; position: absolute; inset: 0 0 auto 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), rgba(56,189,248,0.5), transparent);
+            opacity: 0.55;
+        }
+        .pl-hero-main { min-width: 0; flex: 1 1 380px; }
+        .tmr-fb-breadcrumb { color: var(--muted); font-size: 0.7rem; margin-bottom: 7px; }
+        .tmr-fb-breadcrumb a { color: var(--muted); font-weight: 500; }
+        .tmr-fb-breadcrumb a:hover { color: var(--tmr-fb-link); }
+        .tmr-fb-breadcrumb .sep { margin: 0 6px; opacity: 0.55; }
+        html body .pl-hero h1 {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+            font-size: 1.72rem !important; font-weight: 800 !important; color: #FFFFFF !important;
+            letter-spacing: -0.022em; line-height: 1.12 !important; margin: 0 !important; text-transform: none !important;
+        }
+        .pl-hero-sub { color: var(--text-2); font-size: 0.9rem; margin-top: 6px; line-height: 1.45; max-width: 52ch; }
+        .pl-hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: 0 0 auto; }
+
+        /* ============ BUTTONS ============ */
+        .tmr-hbtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 17px; border-radius: var(--r-sm); font-weight: 650; font-size: 0.83rem; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); text-decoration: none; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease; }
+        .tmr-hbtn:hover { border-color: var(--accent-border); color: var(--text); background: var(--surface-3); text-decoration: none; }
+        .tmr-hbtn.is-primary { background: linear-gradient(135deg, #2BD3E8, #16B6D6); color: #04222B; border-color: transparent; font-weight: 750; box-shadow: 0 3px 12px rgba(34, 211, 238, 0.22); }
+        .tmr-hbtn.is-primary:hover { background: linear-gradient(135deg, #46DDEF, #22C4E2); color: #04222B; transform: translateY(-1px); }
+        .tmr-hbtn[disabled] { opacity: 0.55; cursor: default; }
+
+        /* ============ ARCHIVE LIST ============ */
+        .ph-wrap { margin-top: 20px; }
+        .ph-count { color: var(--muted); font-size: var(--fs-sm); margin: 0 0 12px; }
+        .ph-list { display: grid; gap: 11px; }
+        .ph-card {
+            display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 20px;
+            align-items: center;
+            border: 1px solid var(--border); border-radius: var(--r-md);
+            background: linear-gradient(150deg, #142131, #101A2A);
+            padding: 14px 16px; box-shadow: var(--shadow-1);
+            transition: border-color 0.15s ease, transform 0.12s ease;
+        }
+        .ph-card:hover { border-color: var(--accent-border); }
+        .ph-card-main { min-width: 0; }
+        .ph-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 7px; }
+        .ph-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 0.645rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); }
+        .ph-badge.is-final { background: var(--green-dim); border-color: rgba(52,211,153,0.32); color: var(--green); }
+        .ph-badge.is-sport { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+        html body .ph-card h2 {
+            font-size: 1.02rem !important; font-weight: 700 !important; color: #FFFFFF !important;
+            line-height: 1.3 !important; letter-spacing: -0.012em; margin: 0 !important;
+        }
+        .ph-card h2 a { color: inherit; }
+        .ph-facts { display: flex; flex-wrap: wrap; gap: 5px 16px; margin-top: 9px; color: var(--muted); font-size: var(--fs-sm); }
+        .ph-facts span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .ph-facts i { color: var(--accent); font-size: 0.72rem; opacity: 0.85; }
+        .ph-facts b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+        .ph-winner { display: flex; align-items: center; gap: 7px; margin-top: 10px; color: var(--muted); font-size: var(--fs-sm); flex-wrap: wrap; }
+        .ph-winner i { color: var(--gold); }
+        .ph-winner b { color: var(--text); font-weight: 700; }
+        .ph-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
+
+        /* ============ FINAL RESULTS ============ */
+        .ph-res { margin-top: 18px; }
+        .ph-res-head {
+            border: 1px solid var(--border); border-radius: var(--r-lg) var(--r-lg) 0 0;
+            background: linear-gradient(135deg, #142338 0%, #111C2E 60%, #0E1828 100%);
+            padding: 16px 18px 15px;
+        }
+        html body .ph-res-head h2 {
+            font-size: 1.34rem !important; font-weight: 800 !important; color: #FFFFFF !important;
+            line-height: 1.2 !important; letter-spacing: -0.018em; margin: 0 !important;
+        }
+        .ph-res-body { border: 1px solid var(--border); border-top: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); background: var(--surface-1); padding: 14px 14px 16px; }
+        .ph-standings { width: 100%; border-collapse: collapse; }
+        .ph-standings th {
+            text-align: right; color: var(--muted); font-size: 0.63rem; font-weight: 800;
+            letter-spacing: 0.09em; text-transform: uppercase; padding: 0 10px 9px; white-space: nowrap;
+        }
+        .ph-standings th.ph-c-rank, .ph-standings th.ph-c-player { text-align: left; }
+        .ph-standings td { padding: 9px 10px; border-top: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); font-size: var(--fs-base); }
+        .ph-standings tbody tr:hover { background: var(--surface-2); }
+        .ph-c-rank { width: 62px; }
+        .ph-c-player { text-align: left !important; }
+        .pl-lb-rank { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 30px; height: 22px; padding: 0 6px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-2); background: var(--surface-2); }
+        .pl-lb-rank.m1 { background: var(--gold-dim); color: var(--gold); }
+        .pl-lb-rank.m2 { background: rgba(190,205,222,0.14); color: #C9D6E5; }
+        .pl-lb-rank.m3 { background: rgba(205,127,80,0.15); color: #E0A277; }
+        .ph-player { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
+        .pl-lb-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--surface-3); flex: 0 0 auto; border: 1px solid var(--border); }
+        .pl-lb-av-f { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2); font-size: 0.74rem; font-weight: 800; flex: 0 0 auto; }
+        .ph-uname { color: var(--text); font-weight: 700; font-size: var(--fs-base); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        a.ph-avlink:hover, a.ph-uname:hover { text-decoration: none; }
+        a.ph-uname:hover { color: var(--accent); }
+        .ph-pts { color: var(--text); font-weight: 800; }
+        .ph-pts span { color: var(--muted); font-size: 0.68rem; font-weight: 700; margin-left: 3px; }
+        .ph-acc { color: var(--text-2); font-weight: 700; }
+        .ph-note { color: var(--muted); font-size: var(--fs-xs); margin-top: 12px; line-height: 1.5; }
+
+        /* Mobile: the standings table becomes stacked rows — no side scroll. */
+        @media (max-width: 640px) {
+            .tmr-shell2 { padding: 14px 14px 56px; }
+            .ph-card { grid-template-columns: minmax(0, 1fr); }
+            .ph-card-side { align-items: stretch; }
+            .ph-card-side .tmr-hbtn { width: 100%; }
+            .ph-standings thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+            .ph-standings, .ph-standings tbody, .ph-standings tr, .ph-standings td { display: block; width: 100%; }
+            .ph-standings tr { border-top: 1px solid var(--border); padding: 10px 2px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "rank player pts" ". correct accuracy"; align-items: center; gap: 3px 10px; }
+            .ph-standings td { border: 0; padding: 0; text-align: left; }
+            .ph-standings td.ph-c-rank { grid-area: rank; width: auto; }
+            .ph-standings td.ph-c-player { grid-area: player; min-width: 0; }
+            .ph-standings td.ph-c-pts { grid-area: pts; text-align: right; }
+            /* Correct and accuracy each get their OWN cell on the second row —
+               sharing one grid area stacks them on top of each other. */
+            .ph-standings td.ph-c-correct { grid-area: correct; color: var(--muted); font-size: var(--fs-sm); }
+            .ph-standings td.ph-c-correct::after { content: " correct"; }
+            .ph-standings td.ph-c-acc { grid-area: accuracy; text-align: right; font-size: var(--fs-sm); }
+        }
+
+        /* ============ STATES ============ */
+        .ph-state { border: 1px dashed var(--border-strong); border-radius: var(--r-md); background: var(--surface-1); padding: 34px 20px; text-align: center; color: var(--muted); font-size: var(--fs-base); }
+        .ph-state i { display: block; font-size: 1.5rem; color: var(--muted); opacity: 0.6; margin-bottom: 10px; }
+        .ph-state strong { display: block; color: var(--text); font-size: 1rem; font-weight: 700; margin-bottom: 5px; }
+        .ph-state.is-error { border-color: rgba(248,113,113,0.4); }
+        .ph-pager { display: flex; justify-content: center; margin-top: 16px; }
+        .ph-pager .tmr-hbtn { min-width: 220px; }
+        .ph-skel { height: 92px; border-radius: var(--r-md); border: 1px solid var(--border); background: linear-gradient(100deg, var(--surface-1) 30%, var(--surface-2) 50%, var(--surface-1) 70%); background-size: 220% 100%; animation: phShim 1.25s linear infinite; }
+        @keyframes phShim { from { background-position: 120% 0; } to { background-position: -20% 0; } }
+    </style>
+</head>
+<body class="polls-page tmr-ds tmr-ds--dark">
+    <!-- Global nav: same canonical component as every other page
+         (tmr-ds-nav.js), loaded with the page scripts at the end of body. -->
+
+    <div class="tmr-shell2">
+        <header class="pl-hero">
+            <div class="pl-hero-main">
+                <nav class="tmr-fb-breadcrumb" aria-label="Breadcrumb"><a href="/">TrustMyRecord</a><span class="sep" aria-hidden="true">&rsaquo;</span><a href="/polls/">Polls</a><span class="sep" aria-hidden="true">&rsaquo;</span><span aria-current="page">Previous Polls</span></nav>
+                <h1 id="phTitle">Previous Polls</h1>
+                <p class="pl-hero-sub" id="phSub">Every completed prediction quiz, newest first. Open one to see the final standings exactly as they were scored.</p>
+            </div>
+            <div class="pl-hero-side">
+                <a class="tmr-hbtn" href="/polls/"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back to Polls</a>
+            </div>
+        </header>
+
+        <main class="ph-wrap">
+            <!-- List of completed quizzes -->
+            <section id="phListView" aria-labelledby="phTitle">
+                <p class="ph-count" id="phCount" aria-live="polite"></p>
+                <div class="ph-list" id="phList"></div>
+                <div class="ph-pager" id="phPager"></div>
+            </section>
+
+            <!-- Final results for one completed quiz -->
+            <section id="phResultView" hidden aria-label="Final results"></section>
+        </main>
+    </div>
+
+    <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+    <script src="/static/js/tmr-ds-nav.2d15523f1e1f.js"></script>
+    <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+    <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
+    <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
+    <script>
+    /* ================================================================
+       PREVIOUS POLLS
+       ----------------------------------------------------------------
+       Read-only archive. Two API calls, both serving numbers that were
+       banked at grading time (services/pollHistory.js on the backend):
+
+         GET /api/polls/history        completed contests, newest first
+         GET /api/polls/:id/results    that contest's final standings
+
+       Nothing on this page computes or adjusts a score. The standings
+       payload is the SAME shaped rows the contest page itself renders,
+       so a result can never read differently in two places.
+       ================================================================ */
+    (function() {
+    'use strict';
+
+    var PAGE_SIZE = 20;
+    var state = { page: 0, pages: 0, total: 0, contests: [], loading: false, openId: null };
+
+    function escHtml(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function(ch) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+        });
+    }
+    function initialOf(name) {
+        var s = String(name || '?').trim();
+        return escHtml(s ? s.charAt(0).toUpperCase() : '?');
+    }
+    function num(n) { return (parseInt(n, 10) || 0).toLocaleString('en-US'); }
+    function plural(n, word) { return n + ' ' + word + (Number(n) === 1 ? '' : 's'); }
+
+    // Contest timestamps are UTC wall-clock in naive columns; the backend
+    // sends them as ISO strings. Show the calendar date only — a settled
+    // contest is a day, not a minute — and read that day in US Eastern, since
+    // these are US sports slates. A late deadline would otherwise land on the
+    // next calendar day for anyone east of it.
+    function fmtDate(v) {
+        if (!v) return null;
+        // The archive sends plain 'YYYY-MM-DD' calendar days already resolved
+        // to US Eastern (services/pollHistory.js). Build the Date from the
+        // parts so no timezone conversion can move the day. Anything else
+        // (a full ISO instant) falls back to an Eastern render.
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v));
+        if (m) {
+            var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        var t = new Date(v);
+        if (isNaN(t.getTime())) return null;
+        return t.toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York'
+        });
+    }
+    function sportLabel(c) {
+        var s = (c.league && String(c.league).trim()) || (c.sport && String(c.sport).trim()) || '';
+        return s || 'Other';
+    }
+
+    function avatarUrl(row) {
+        var p = row && (row.avatar_path || row.avatar_url);
+        if (!p) return null;
+        if (/^(https?:|data:)/i.test(p)) return p;
+        var base = (window.api && api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || '';
+        return base.replace(/\/$/, '') + p;
+    }
+    function avatarHtml(row) {
+        var url = avatarUrl(row);
+        if (url) {
+            // A broken/absent avatar must not leave a torn image icon in a row.
+            return '<img class="pl-lb-av" src="' + escHtml(url) + '" alt="" loading="lazy" ' +
+                   'onerror="this.outerHTML=&quot;<span class=\'pl-lb-av-f\' aria-hidden=\'true\'>' + initialOf(row.username) + '</span>&quot;">';
+        }
+        return '<span class="pl-lb-av-f" aria-hidden="true">' + initialOf(row.username) + '</span>';
+    }
+    function profileHref(username) { return '/profile/?user=' + encodeURIComponent(username || ''); }
+    function rankHtml(rank) {
+        var cls = rank === 1 ? ' m1' : rank === 2 ? ' m2' : rank === 3 ? ' m3' : '';
+        var medal = rank <= 3 ? '<i class="fas fa-medal" aria-hidden="true"></i>' : '';
+        return '<span class="pl-lb-rank' + cls + '">' + medal + rank + '</span>' +
+               (rank <= 3 ? '<span class="sr-only">(medal position ' + rank + ')</span>' : '');
+    }
+    function stateHtml(o) {
+        return '<div class="ph-state' + (o.error ? ' is-error' : '') + '">' +
+            '<i class="fas fa-' + (o.icon || 'clock-rotate-left') + '" aria-hidden="true"></i>' +
+            '<strong>' + escHtml(o.title) + '</strong>' + escHtml(o.sub || '') +
+            (o.actions ? '<div style="margin-top:14px;">' + o.actions + '</div>' : '') + '</div>';
+    }
+
+    // ---------------- list ----------------
+    function contestCardHtml(c) {
+        var date = fmtDate(c.poll_date || c.scored_date || c.scored_at);
+        var win = c.winner;
+        var winners = c.winners || (win ? [win] : []);
+        var winLine = '';
+        if (winners.length) {
+            // Tied entrants share rank 1 — name all of them rather than
+            // silently crowning whichever row sorted first.
+            var names = winners.map(function(w) {
+                return '<a href="' + escHtml(w.profile_url || profileHref(w.username)) + '"><b>' + escHtml(w.username) + '</b></a>';
+            }).join(' &amp; ');
+            winLine = '<div class="ph-winner"><i class="fas fa-crown" aria-hidden="true"></i> ' +
+                (winners.length > 1 ? 'Tied for first: ' : 'Winner: ') + names +
+                ' &middot; ' + num(winners[0].final_points) + ' pts</div>';
+        } else if (c.entries === 0) {
+            winLine = '<div class="ph-winner"><i class="fas fa-ghost" aria-hidden="true"></i> No entries in this quiz</div>';
+        }
+        return '<article class="ph-card">' +
+            '<div class="ph-card-main">' +
+                '<div class="ph-badges">' +
+                    '<span class="ph-badge is-sport">' + escHtml(sportLabel(c)) + '</span>' +
+                    '<span class="ph-badge is-final"><i class="fas fa-flag-checkered" aria-hidden="true"></i> ' + escHtml(c.status_label || 'Final') + '</span>' +
+                    (c.questions_voided ? '<span class="ph-badge">' + plural(c.questions_voided, 'question') + ' voided</span>' : '') +
+                '</div>' +
+                '<h2><a href="?poll=' + c.id + '" onclick="return phOpen(event, ' + c.id + ')">' + escHtml(c.title) + '</a></h2>' +
+                '<div class="ph-facts">' +
+                    (date ? '<span><i class="fas fa-calendar-day" aria-hidden="true"></i> ' + escHtml(date) + '</span>' : '') +
+                    '<span><i class="fas fa-list-ol" aria-hidden="true"></i> <b>' + num(c.question_count) + '</b> questions</span>' +
+                    '<span><i class="fas fa-coins" aria-hidden="true"></i> <b>' + num(c.total_points) + '</b> points possible</span>' +
+                    '<span><i class="fas fa-users" aria-hidden="true"></i> <b>' + num(c.entries) + '</b> ' + (c.entries === 1 ? 'entry' : 'entries') + '</span>' +
+                '</div>' + winLine +
+            '</div>' +
+            '<div class="ph-card-side">' +
+                '<a class="tmr-hbtn is-primary" href="?poll=' + c.id + '" onclick="return phOpen(event, ' + c.id + ')">' +
+                    '<i class="fas fa-ranking-star" aria-hidden="true"></i> Final Results</a>' +
+            '</div>' +
+        '</article>';
+    }
+
+    function renderList() {
+        var list = document.getElementById('phList');
+        var count = document.getElementById('phCount');
+        var pager = document.getElementById('phPager');
+        if (!state.contests.length) {
+            list.innerHTML = stateHtml({
+                icon: 'clock-rotate-left',
+                title: 'No completed polls yet.',
+                sub: 'Graded quizzes are archived here permanently as soon as they are scored.',
+                actions: '<a class="tmr-hbtn is-primary" href="/polls/">Go to live polls</a>'
+            });
+            count.textContent = '';
+            pager.innerHTML = '';
+            return;
+        }
+        list.innerHTML = state.contests.map(contestCardHtml).join('');
+        count.textContent = 'Showing ' + state.contests.length + ' of ' + plural(state.total, 'completed poll') + ' · newest first';
+        pager.innerHTML = (state.page < state.pages)
+            ? '<button type="button" class="tmr-hbtn" id="phMore" onclick="phLoadMore()"><i class="fas fa-arrow-down" aria-hidden="true"></i> Load older polls</button>'
+            : '';
+    }
+
+    async function loadList(reset) {
+        if (state.loading) return;
+        state.loading = true;
+        var list = document.getElementById('phList');
+        if (reset) {
+            state.page = 0; state.contests = [];
+            list.innerHTML = '<div class="ph-skel"></div><div class="ph-skel"></div><div class="ph-skel"></div>';
+        }
+        var more = document.getElementById('phMore');
+        if (more) { more.disabled = true; more.innerHTML = '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Loading'; }
+        try {
+            var next = state.page + 1;
+            var data = await api.request('/polls/history?page=' + next + '&limit=' + PAGE_SIZE);
+            state.page = data.pagination.page;
+            state.pages = data.pagination.pages;
+            state.total = data.pagination.total;
+            state.contests = state.contests.concat(data.contests || []);
+            renderList();
+        } catch (err) {
+            console.error('poll history', err);
+            list.innerHTML = stateHtml({
+                error: true, icon: 'triangle-exclamation',
+                title: 'Could not load previous polls.',
+                sub: 'Try again in a few seconds.',
+                actions: '<button type="button" class="tmr-hbtn is-primary" onclick="phRetry()">Retry</button>'
+            });
+            document.getElementById('phCount').textContent = '';
+            document.getElementById('phPager').innerHTML = '';
+        } finally {
+            state.loading = false;
+        }
+    }
+
+    // ---------------- final results ----------------
+    function standingsRowHtml(s) {
+        // Denominator is what actually GRADED, never the raw question count —
+        // a voided question is nobody's miss. accuracy comes from the backend
+        // display contract (services/pollGrading.summarizeEntry).
+        var href = s.profile_url || profileHref(s.username);
+        var correct = (s.correct_answers != null ? s.correct_answers : s.correct_count);
+        var acc = (s.accuracy != null) ? (s.accuracy + '%') : '&mdash;';
+        return '<tr>' +
+            '<td class="ph-c-rank">' + rankHtml(s.rank) + '</td>' +
+            '<td class="ph-c-player"><span class="ph-player">' +
+                '<a class="ph-avlink" href="' + escHtml(href) + '" tabindex="-1" aria-hidden="true">' + avatarHtml(s) + '</a>' +
+                '<a class="ph-uname" href="' + escHtml(href) + '">' + escHtml(s.username) + '</a>' +
+            '</span></td>' +
+            '<td class="ph-c-pts"><span class="ph-pts">' + num(s.final_points) + '<span>pts</span></span></td>' +
+            '<td class="ph-c-correct">' + correct + '/' + s.questions_resolved + '</td>' +
+            '<td class="ph-c-acc"><span class="ph-acc">' + acc + '</span></td>' +
+        '</tr>';
+    }
+
+    function renderResults(data) {
+        var c = data.contest;
+        var rows = data.standings || [];
+        var date = fmtDate(c.poll_date || c.scored_date || c.scored_at);
+        var scored = fmtDate(c.scored_date || c.scored_at);
+        var head = '<div class="ph-res-head">' +
+            '<div class="ph-badges">' +
+                '<span class="ph-badge is-sport">' + escHtml(sportLabel(c)) + '</span>' +
+                '<span class="ph-badge is-final"><i class="fas fa-flag-checkered" aria-hidden="true"></i> ' + escHtml(c.status_label || 'Final') + '</span>' +
+                (c.questions_voided ? '<span class="ph-badge">' + plural(c.questions_voided, 'question') + ' voided</span>' : '') +
+            '</div>' +
+            '<h2>' + escHtml(c.title) + '</h2>' +
+            '<div class="ph-facts">' +
+                (date ? '<span><i class="fas fa-calendar-day" aria-hidden="true"></i> ' + escHtml(date) + '</span>' : '') +
+                '<span><i class="fas fa-list-ol" aria-hidden="true"></i> <b>' + num(c.question_count) + '</b> questions</span>' +
+                '<span><i class="fas fa-coins" aria-hidden="true"></i> <b>' + num(c.total_points) + '</b> points possible</span>' +
+                '<span><i class="fas fa-users" aria-hidden="true"></i> <b>' + num(c.entries) + '</b> ' + (c.entries === 1 ? 'entry' : 'entries') + '</span>' +
+            '</div></div>';
+
+        var body;
+        if (!rows.length) {
+            body = '<div class="ph-res-body">' + stateHtml({
+                icon: 'user-slash',
+                title: 'Nobody was scored in this quiz.',
+                sub: 'It was graded with no eligible entries, so there are no standings to show.'
+            }) + '</div>';
+        } else {
+            body = '<div class="ph-res-body">' +
+                '<table class="ph-standings">' +
+                    '<thead><tr>' +
+                        '<th class="ph-c-rank" scope="col">Rank</th>' +
+                        '<th class="ph-c-player" scope="col">Player</th>' +
+                        '<th scope="col">Points</th>' +
+                        '<th scope="col">Correct</th>' +
+                        '<th scope="col">Accuracy</th>' +
+                    '</tr></thead>' +
+                    '<tbody>' + rows.map(standingsRowHtml).join('') + '</tbody>' +
+                '</table>' +
+                '<p class="ph-note">Final standings, ranked highest points to lowest, exactly as this quiz was scored. ' +
+                    'Accuracy is correct answers over the questions that actually resolved' +
+                    (c.questions_voided ? ' — ' + plural(c.questions_voided, 'voided question') + ' counted for nobody.' : '.') +
+                    ' Players on the same points share a rank and are listed alphabetically.</p>' +
+            '</div>';
+        }
+
+        var back = '<div style="margin-top:16px;"><a class="tmr-hbtn" href="?" onclick="return phBack(event)">' +
+            '<i class="fas fa-arrow-left" aria-hidden="true"></i> All previous polls</a></div>';
+        document.getElementById('phResultView').innerHTML = '<div class="ph-res">' + head + body + '</div>' + back;
+        document.getElementById('phTitle').textContent = 'Final Results';
+        document.getElementById('phSub').textContent = 'Scored ' + (scored || 'when the quiz closed') + '. These standings are a permanent record and do not change.';
+        document.title = c.title + ' — Final Results | TrustMyRecord';
+    }
+
+    async function loadResults(id) {
+        var view = document.getElementById('phResultView');
+        document.getElementById('phListView').hidden = true;
+        view.hidden = false;
+        view.innerHTML = '<div class="ph-skel" style="height:150px;"></div>';
+        try {
+            var data = await api.request('/polls/' + id + '/results');
+            renderResults(data);
+        } catch (err) {
+            console.error('poll results', err);
+            var missing = err && /not found|404|no completed/i.test(err.message || '');
+            view.innerHTML = stateHtml({
+                error: true, icon: missing ? 'circle-question' : 'triangle-exclamation',
+                title: missing ? 'No final results for that poll.' : 'Could not load these results.',
+                sub: missing ? 'It may still be open or awaiting grading. Open polls keep their answers hidden until they close and are scored.' : 'Try again in a few seconds.',
+                actions: '<a class="tmr-hbtn is-primary" href="?" onclick="return phBack(event)">All previous polls</a>'
+            });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showList() {
+        document.getElementById('phResultView').hidden = true;
+        document.getElementById('phResultView').innerHTML = '';
+        document.getElementById('phListView').hidden = false;
+        document.getElementById('phTitle').textContent = 'Previous Polls';
+        document.getElementById('phSub').textContent = 'Every completed prediction quiz, newest first. Open one to see the final standings exactly as they were scored.';
+        document.title = 'Previous Polls: Completed Quiz Results & Standings | TrustMyRecord';
+        if (!state.contests.length) loadList(true);
+    }
+
+    // ---------------- routing (?poll=<id> is shareable) ----------------
+    function currentPollId() {
+        var m = /[?&]poll=(\d+)/.exec(window.location.search || '');
+        return m ? parseInt(m[1], 10) : 0;
+    }
+    function route() {
+        var id = currentPollId();
+        state.openId = id || null;
+        if (id) loadResults(id); else showList();
+    }
+    window.phOpen = function(ev, id) {
+        if (ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button === 1)) return true;
+        if (ev) ev.preventDefault();
+        window.history.pushState({ poll: id }, '', '?poll=' + id);
+        route();
+        return false;
+    };
+    window.phBack = function(ev) {
+        if (ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey)) return true;
+        if (ev) ev.preventDefault();
+        window.history.pushState({}, '', window.location.pathname);
+        route();
+        return false;
+    };
+    window.phLoadMore = function() { loadList(false); };
+    window.phRetry = function() { loadList(true); };
+    window.addEventListener('popstate', route);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        (async function() {
+            try { if (window.api && api.ready) await api.ready; } catch (e) {}
+            route();
+        })();
+    });
+    })();
+    </script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+</body>
+</html>
