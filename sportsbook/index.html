@@ -10239,6 +10239,64 @@
         background: linear-gradient(90deg, rgba(34,211,238,.55), rgba(34,211,238,.10) 62%, rgba(34,211,238,0)) !important;
     }
     </style>
+    <style id="tmr-sportsbook-polish-2">
+    /* VISUAL POLISH SLICE 2 -- the left sports rail (2026-08-10).
+       Same cascade approach as slice 1: last in <head> with an `html` prefix,
+       because the redesign override sheet is @imported from a <style> in the
+       BODY and would otherwise win at equal specificity.
+
+       Nothing here changes sport order, labels, destinations, click behaviour,
+       filtering or board logic. Four measured defects, no redesign. */
+
+    /* 1. HOVER MOVED THE ROW. Resting transform is none; hover was
+          matrix(1,0,0,1,0,-1) -- a 1px lift. A list of 16 rows that each jump
+          under the cursor reads as jitter, not feedback. The colour and border
+          change already say "interactive"; the geometry should hold still. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board:hover,
+    html body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-board:hover{
+        transform: none !important;
+    }
+
+    /* 2. THE SELECTED ROW SAT 3px RIGHT OF EVERY OTHER ROW.
+          transform: matrix(1,0,0,1,3,0) on .is-active physically displaced the
+          current sport, breaking the rail's left edge exactly where the eye is
+          drawn. The 3px inset accent bar it was presumably compensating for is
+          kept -- that is the marker; the displacement is not. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board.is-active,
+    html body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-board.is-active{
+        transform: none !important;
+    }
+
+    /* 3. KEYBOARD FOCUS WAS INVISIBLE. The rows fell back to the UA default,
+          outline:1px auto rgb(16,16,16) -- near-black on a navy rail. These are
+          the page's primary navigation controls, so a keyboard user could not
+          see where they were. :focus-visible only, so the ring appears for
+          keyboard use and never on mouse click. Uses the accent already on the
+          rail, no new colour. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board:focus-visible,
+    html body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-board:focus-visible{
+        outline: 2px solid rgba(34,211,238,.85) !important;
+        outline-offset: 2px !important;
+    }
+
+    /* 4. THE CHIP OUTWEIGHED THE SPORT NAME. "BOARD" is a 9px caption, but the
+          chip rendered 28px tall inside a 49px row -- well over half the row
+          height for the least important text in it, at weight 800. It is a
+          status marker, not a button. Same family, quieter: shorter box, softer
+          fill, one step down in weight. The sport name is untouched and now
+          clearly leads. BOARD, GROUP and SOON all share this rule, so the three
+          variants stay one control. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-count,
+    html body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-board-count{
+        align-self: center !important;
+        min-height: 0 !important;
+        height: 20px !important;
+        padding: 0 7px !important;
+        font-weight: 700 !important;
+        line-height: 20px !important;
+        background: rgba(148,163,184,.055) !important;
+    }
+    </style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-ds--dark" data-tmr-route="sportsbook" data-tmr-test-route="sportsbook">
     <script>
