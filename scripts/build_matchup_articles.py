@@ -697,7 +697,7 @@ TEMPLATE = """<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/tmr-ds.47f68ba9c379.css">
+<link rel="stylesheet" href="/static/css/tmr-ds.css">
 <link rel="stylesheet" href="/static/css/tmr-gamefile.css">
 <script type="application/ld+json">
 {jsonld}
@@ -785,7 +785,7 @@ TEMPLATE = """<!DOCTYPE html>
 </main>
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
 <script src="/static/js/tmr-gamefile.js"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.442cd8eb543c.js"></script>
+<script src="/static/js/tmr-session.js"></script><script src="/static/js/tmr-ds-nav.js"></script>
 </body>
 </html>
 """
