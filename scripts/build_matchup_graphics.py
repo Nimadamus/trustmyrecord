@@ -153,13 +153,13 @@ def h2h():
     s = head(W, H, "Head to head: the 2026 series set against sixteen seasons of meetings")
     s += f'<rect width="{W}" height="64" fill="{PANEL}"/><rect y="63" width="{W}" height="1" fill="{RULE}"/>'
     s += lab(28, 40, "HEAD TO HEAD &#183; TWO SAMPLES, ONE PICTURE", 13, ACC)
-    s += lab(28, 108, "THIS SEASON &#183; 11 MEETINGS", 11, MUT)
+    s += lab(28, 108, "THIS SEASON &#183; 10 MEETINGS", 11, MUT)
     unit = 60
-    for i in range(11):
+    for i in range(10):
         s += (f'<rect x="{28+i*unit}" y="122" width="50" height="30" rx="3" '
               f'fill="{NYM if i < 6 else ATL}" opacity="{".85" if i < 6 else ".7"}"/>')
-    s += txt(28 + 11 * unit + 16, 143, "NYM 6&#8211;5", 15, INK, 800)
-    s += lab(28, 180, "SMALL SAMPLE &#8212; ELEVEN GAMES IS A COIN FLIP&#8217;S WORTH OF INFORMATION",
+    s += txt(28 + 10 * unit + 16, 143, "NYM 6&#8211;4", 15, INK, 800)
+    s += lab(28, 180, "SMALL SAMPLE &#8212; TEN GAMES IS A COIN FLIP&#8217;S WORTH OF INFORMATION",
              10.5, MUT, 700, "start", .8)
     s += f'<rect x="28" y="198" width="{W-56}" height="1" fill="{RULE}"/>'
     s += lab(28, 234, "SINCE 2010 &#183; 259 MEETINGS &#183; TMR TREND SPOTTER", 11, MUT)
