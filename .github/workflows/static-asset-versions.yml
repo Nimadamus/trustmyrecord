@@ -69,8 +69,55 @@ jobs:
         # hashed copy is republished from those exact bytes and every page is
         # pointed at it. build_ds_assets.py never rewrites an existing hashed file,
         # so previously published URLs stay immutable for cached documents.
+        #
+        # PUBLISH AND REPOINT ARE NOW TWO SEPARATE DEPLOYS (2026-08-10). They used
+        # to be one commit, and that is what let the edge cache a 404 for an asset
+        # every page needs.
+        #
+        # Shipping the new hashed file and the HTML that references it in the SAME
+        # commit means both go live in the same deploy -- but a Pages deploy is not
+        # atomic across paths. A request for the new URL can arrive after the HTML
+        # is being served and before the asset is fetchable. Cloudflare caches that
+        # 404, /static/ carries max-age=14400, and the URL is immutable, so nothing
+        # ever re-fetches it: one unlucky request pins a 404 onto the design system
+        # for four hours while the origin is perfectly healthy. That is exactly what
+        # happened to tmr-ds.61394bbbaf14.css, and every job in this file was green
+        # while all 99 design-system pages rendered unstyled.
+        #
+        # Publishing first removes the race rather than repairing it. After this
+        # step the new hashed file exists on main and deploys, but NOTHING links to
+        # it -- so nothing requests it, so no 404 can be cached for it. Only once
+        # the URL is proven fetchable does the next step point pages at it.
+        run: python scripts/build_ds_assets.py
+
+      - name: PHASE 1 - publish the new hashed builds, referenced by nothing yet
+        id: publish
         run: |
-          python scripts/build_ds_assets.py
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No new hashed builds to publish."
+          else
+            git config user.name "tmr-asset-version-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(assets): publish new content-hashed builds [skip ci]"
+            git push origin HEAD:main
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git show --stat --oneline HEAD
+          fi
+
+      - name: Wait until every hashed URL is actually fetchable on the live host
+        # The gate that makes the sequence deterministic. Only when the published
+        # URL answers 200 from the real hostname is it safe for a page to name it.
+        # --no-purge on purpose: at this point the URL has never been referenced, so
+        # a failure here means the deploy has not landed yet, not that the edge
+        # holds a stale negative. Retries cover Pages propagation; if it still is
+        # not live the job fails rather than repointing pages at a URL that 404s.
+        if: steps.publish.outputs.changed == 'true'
+        run: python scripts/verify_ds_assets_live.py --attempts 20 --delay 15 --no-purge
+
+      - name: PHASE 2 - now point every page at the URLs proven live above
+        run: |
           python scripts/repoint_ds_assets.py
           python scripts/version_static_refs.py
 
