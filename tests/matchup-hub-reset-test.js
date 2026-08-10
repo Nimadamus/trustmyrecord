@@ -85,6 +85,8 @@ function bake(payload, label) {
 const read = (rel) => fs.readFileSync(path.join(tmp, rel), 'utf8');
 
 try {
+  const homeBefore = fs.readFileSync(path.join(tmp, 'index.html'), 'utf8');
+
   /* ---- 1. published ---------------------------------------------------- */
   bake({ ok: true, count: 1, featured: ARTICLE, articles: [ARTICLE] }, 'published');
 
@@ -104,8 +106,16 @@ try {
   else bad('published: /matchups/ has no link to the article');
   if (map1.includes(`/matchups/mlb/${SLUG}/`)) ok('published: sitemap contains the article');
   else bad('published: sitemap is missing the article');
-  if (home1.includes('class="motd"')) ok('published: homepage cover is injected');
-  else bad('published: homepage cover was not injected');
+  /* The homepage cover was rejected and its generator deleted. These two
+     assertions used to check that publishing INJECTED a cover; they now check
+     the opposite, and check it as a property of the file rather than of one
+     class name: publishing a Game File must leave index.html byte-for-byte
+     alone. That is the guarantee worth locking, and it does not depend on
+     remembering which markup a future promo module might use. */
+  if (home1 === homeBefore) ok('published: homepage is byte-identical (never written)');
+  else bad('published: the bake MODIFIED the homepage');
+  if (!home1.includes('class="motd"')) ok('published: no cover markup on the homepage');
+  else bad('published: rejected cover markup is back on the homepage');
 
   const articleFile = path.join(tmp, 'matchups', 'mlb', SLUG, 'index.html');
   assert.ok(fs.existsSync(articleFile), 'article file should exist after publish');
@@ -133,8 +143,8 @@ try {
   else bad('withdrawn: /matchups/ STILL links the withdrawn article');
   if (!map2.includes(`/matchups/mlb/${SLUG}/`)) ok('withdrawn: sitemap entry is gone');
   else bad('withdrawn: sitemap STILL contains the withdrawn article');
-  if (!home2.includes('class="motd"')) ok('withdrawn: homepage cover is deactivated');
-  else bad('withdrawn: homepage cover is STILL active');
+  if (home2 === homeBefore) ok('withdrawn: homepage still byte-identical');
+  else bad('withdrawn: the bake MODIFIED the homepage');
 
   // PERMANENCE. Discovery went away; the publication did not.
   if (fs.existsSync(articleFile)) ok('withdrawn: the article FILE survives (permanence rule)');
@@ -145,4 +155,4 @@ try {
 }
 
 if (failures) { console.error(`\n${failures} failing`); process.exit(1); }
-console.log('\nmatchup hub reset: hubs, sitemap and cover return to empty; the article file stays');
+console.log('\nmatchup hub reset: hubs and sitemap return to empty; homepage untouched; the article file stays');
