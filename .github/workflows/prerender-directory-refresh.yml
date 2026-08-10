@@ -91,6 +91,15 @@ jobs:
         # the job here and leave the last good bake live.
         run: npm run test:seo
 
+      - name: /u/ existence gate (edge fallback template + worker wiring)
+        # EDGE_FALLBACK_20260810. This step regenerates
+        # static/prerender/u-fallback.html, which is what the Cloudflare worker
+        # serves for a member whose page has not been baked yet. If that
+        # template or the worker's use of it regresses, every newly registered
+        # member's canonical URL goes back to 404ing for ~10 minutes and nobody
+        # finds out until someone clicks the newest-member link.
+        run: npm run test:uprofile
+
       - name: Re-pin static asset refs to content hashes
         # Any mutable /static/ JS/CSS whose bytes changed gets a new ?v tag in
         # every referencing page (and loader JS) in the SAME commit, so
@@ -108,7 +117,12 @@ jobs:
           # `forum` (not just forum/thread) so a NEW board directory from
           # build_forum_threads.py's category pass is committed too — an untracked
           # new dir was previously invisible to `git add -u` and never shipped.
-          git add -A handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml
+          # static/prerender/u-fallback.html is the compact-profile template the
+          # Cloudflare worker serves for a member whose /u/ page has not been
+          # baked yet (EDGE_FALLBACK_20260810). It is regenerated from the same
+          # renderer on every run, so it must ship in the same commit or the
+          # edge would serve a page built from a stale template.
+          git add -A handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml static/prerender
           git add -u
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."

@@ -255,6 +255,46 @@ def share_button(un, disp):
 UDIR  = os.path.join(ROOT, "u")
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 
+# ---------------------------------------------------------------------------
+# EDGE_FALLBACK_20260810 — the bake is not, and cannot be, instant.
+#
+# /u/<username>/ is a STATIC file. The API publishes that exact URL the second
+# an account exists (`GET /api/users/newest-member` returns
+# profile_url:"/u/<username>/", and the forum + /handicappers/ "newest member"
+# widgets link straight to it), but the file only appears after this script
+# runs in CI, the SEO gate passes, the commit lands and GitHub Pages
+# redeploys. Measured on 2026-08-10 for member `whocares67`: registered
+# 21:24:53Z, backend repository_dispatch fired 21:24:56Z (3s — the notifier
+# works), workflow finished 21:34:40Z, page live ~21:35:13Z. The canonical
+# public URL of a real, verified member was a genuine 404 for 10m20s, and the
+# newest-member widget pointed at it for every one of those seconds.
+#
+# The 2026-08-09 fixes (services/prerenderNotifier.js notifyMemberJoined in the
+# backend; the /u/ branch in 404.html) only SHRANK that window — the 404.html
+# branch deliberately leaves "page just not baked yet" as a genuine 404. A
+# shrunken race is still a race, which is why this recurred.
+#
+# The fix is to stop making existence depend on the bake: this template is a
+# real compact profile page rendered by the SAME renderer as every baked page
+# (page_html/compact_html — do NOT fork it, that is the SOFT404_20260809
+# lesson), with the username replaced by a placeholder. The Cloudflare worker
+# workers/home-ssr/worker.mjs serves it with HTTP 200 for any /u/<name>/ that
+# the origin 404s AND the API confirms is a real member, so the URL is valid
+# from the instant the account exists and self-heals to the full bake minutes
+# later. Nothing is invented: a brand-new member's record genuinely is 0-0.
+#
+# It lives under /static/ (not /u/) on purpose: it must not itself become a
+# crawlable member URL. It is not linked anywhere and not in the sitemap, and
+# it self-canonicals to the placeholder /u/ URL rather than to itself.
+#
+# The placeholder is alphanumeric so HTML-escaping and URL-encoding are both
+# the identity function on it; the worker only substitutes usernames matching
+# ^[A-Za-z0-9_-]+$ for the same reason, and passes the honest 404 through for
+# anything else.
+EDGE_SENTINEL   = "TMREDGEUSERNAME"
+EDGE_PLACEHOLDER = "__TMR_USERNAME__"
+EDGE_TEMPLATE   = os.path.join(ROOT, "static", "prerender", "u-fallback.html")
+
 GRADED_MIN = 25   # minimum settled (won/lost/push) picks to index a profile (trust-first)
 
 # Internal/system/test accounts to exclude even if they otherwise look eligible.
@@ -908,6 +948,31 @@ def compact_html(un, awards=None, d=None, recent=None, avg_amer=None,
                      siblings=siblings, awards=awards, compact=True)
 
 
+def write_edge_fallback_template():
+    """Emit static/prerender/u-fallback.html — see EDGE_FALLBACK_20260810 above.
+
+    Rendered through compact_html() with an empty ledger, which is exactly what
+    a member who registered seconds ago has. Because it comes out of the same
+    renderer, a change to the profile template propagates to the edge fallback
+    on the very next bake; there is no second template to drift.
+    """
+    out = compact_html(
+        EDGE_SENTINEL,
+        awards=[],
+        d={"username": EDGE_SENTINEL, "display_name": EDGE_SENTINEL,
+           "verification_status": "verified"},
+        recent=[], avg_amer=None, sport_rows=[], m=None, siblings=[],
+    )
+    if EDGE_SENTINEL not in out:
+        raise SystemExit("edge fallback: renderer emitted no username — refusing to write")
+    out = out.replace(EDGE_SENTINEL, EDGE_PLACEHOLDER)
+    os.makedirs(os.path.dirname(EDGE_TEMPLATE), exist_ok=True)
+    with open(EDGE_TEMPLATE, "w", encoding="utf-8", newline="\n") as f:
+        f.write(out)
+    print(f"wrote edge fallback template ({len(out)} bytes, "
+          f"{out.count(EDGE_PLACEHOLDER)} placeholders) -> {EDGE_TEMPLATE}")
+
+
 def forum_thread_authors():
     """Usernames the forum links to as /u/<name>/.
 
@@ -1060,6 +1125,8 @@ def main():
         print(f"pruned {len(zombies)} page(s) for accounts the API 404s (now correctly 404): {zombies}")
     if skipped_test:
         print(f"skipped {len(skipped_test)} QA/test account(s), never published: {skipped_test}")
+
+    write_edge_fallback_template()
 
     regen_sitemap(sorted(elig_names))
 

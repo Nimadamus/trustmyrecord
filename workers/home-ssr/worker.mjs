@@ -32,6 +32,56 @@ const SLATE_TZ = 'America/Los_Angeles';
    pattern is configuration and this is the invariant the code depends on. */
 const HOME_PATHS = new Set(['/', '/index.html']);
 
+/* ---- /u/<username>/ existence guarantee (EDGE_FALLBACK_20260810) ----------
+   /u/<username>/ is the canonical public profile URL and it is a STATIC file
+   baked by scripts/build_profile_pages.py in CI. The API hands that URL out
+   the instant an account exists (GET /api/users/newest-member returns
+   profile_url:"/u/<username>/", and the forum + /handicappers/ newest-member
+   widgets link to it immediately), but the file does not exist until the bake
+   runs, passes the SEO gate, commits and Pages redeploys. Measured for member
+   `whocares67` on 2026-08-10: account created 21:24:53Z, the backend's
+   repository_dispatch fired at 21:24:56Z, the workflow finished 21:34:40Z.
+   The canonical URL of a real member 404'd for 10m20s.
+
+   Making the dispatch faster cannot fix this — that was the 2026-08-09 attempt
+   (services/prerenderNotifier.js notifyMemberJoined + the /u/ branch in
+   404.html) and it is why the bug recurred: a shorter race is still a race,
+   and 404.html explicitly leaves "not baked yet" as a genuine 404.
+
+   So existence stops depending on the bake. When the origin 404s a /u/ URL and
+   the API confirms a real member with that exact canonical username, the edge
+   serves the compact profile page with HTTP 200. The page is not written here:
+   it is static/prerender/u-fallback.html, produced by the SAME renderer as
+   every baked page, with the username as a placeholder. There is no second
+   template to drift (the SOFT404_20260809 lesson), nothing is invented (a
+   member who registered seconds ago genuinely is 0-0), the URL is unchanged,
+   and the real bake replaces this within minutes.
+
+   Fail-open in every direction: no member, an unrecognised username shape, an
+   unreachable API or a missing template all return the origin's honest 404. */
+const U_PATH_RE = /^\/u\/([^/]+)(\/?)$/;
+/* Escaping and URL-encoding are both the identity function on this character
+   set, which is what lets the template be filled with a plain substitution.
+   Anything outside it is passed through to the origin 404 rather than guessed
+   at. Matches the registration validator in the backend's routes/auth.js. */
+const U_SAFE_NAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const API_USER = 'https://trustmyrecord-api.onrender.com/api/users/';
+/* The SAME set scripts/build_profile_pages.py discovers members from
+   (list_users), which is the backend's canonical publicDirectoryUserWhere
+   filter: active, not deleted, is_public, not an official bot, not a
+   test/qa/banned account_type. Gating on this instead of on "does
+   /api/users/<name> answer" is what keeps the edge and the bake in agreement:
+   the edge will only ever serve a page the baker would also have created, so
+   a private, retired or QA account stays an honest 404 here exactly as it does
+   on disk. ~6KB, edge-cached. */
+const API_DIRECTORY = 'https://trustmyrecord-api.onrender.com/api/users/directory-usernames';
+const DIRECTORY_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/directory-usernames-v1';
+const DIRECTORY_TTL_SECONDS = 60;
+const U_TEMPLATE_PATH = '/static/prerender/u-fallback.html';
+const U_TEMPLATE_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/u-fallback-v1';
+const U_TEMPLATE_TTL_SECONDS = 300;
+const U_PLACEHOLDER = '__TMR_USERNAME__';
+
 const num = (v) => { const n = parseFloat(v); return Number.isNaN(n) ? 0 : n; };
 const sign = (n) => (n > 0 ? '+' : '') + n.toFixed(2);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
@@ -209,6 +259,124 @@ function slateIsToday(slate) {
   } catch (e) { return false; }
 }
 
+/* The compact profile template, edge-cached. Fetched from the request's own
+   origin so www. and apex both work. Returns null on anything unexpected. */
+async function getUTemplate(url, ctx) {
+  const cache = caches.default;
+  const cacheKey = new Request(U_TEMPLATE_CACHE_KEY);
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit.text();
+
+  const resp = await fetch(new URL(U_TEMPLATE_PATH, url).toString(), {
+    headers: { Accept: 'text/html' },
+    signal: AbortSignal.timeout(API_TIMEOUT_MS),
+  });
+  if (!resp.ok) return null;
+  const body = await resp.text();
+  /* A template that lost its placeholder would render a page named after the
+     sentinel for every new member. Refuse it and let the 404 stand. */
+  if (!body.includes(U_PLACEHOLDER)) return null;
+  ctx.waitUntil(cache.put(cacheKey, new Response(body, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': `public, max-age=${U_TEMPLATE_TTL_SECONDS}`,
+    },
+  })));
+  return body;
+}
+
+async function lookupMember(name) {
+  const resp = await fetch(API_USER + encodeURIComponent(name), {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(API_TIMEOUT_MS),
+  });
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  const user = data && data.user;
+  return user && user.username ? user : null;
+}
+
+/* Public-directory usernames, edge-cached. Returns null (not an empty set) on
+   any failure so the caller can tell "not a member" from "could not tell" and
+   leave the origin's 404 alone rather than guess. */
+async function getDirectoryNames(ctx) {
+  const cache = caches.default;
+  const cacheKey = new Request(DIRECTORY_CACHE_KEY);
+  const hit = await cache.match(cacheKey);
+  const body = hit ? await hit.text() : await (async () => {
+    const resp = await fetch(API_DIRECTORY, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+    });
+    if (!resp.ok) return null;
+    const text = await resp.text();
+    ctx.waitUntil(cache.put(cacheKey, new Response(text, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${DIRECTORY_TTL_SECONDS}`,
+      },
+    })));
+    return text;
+  })();
+  if (!body) return null;
+  const data = JSON.parse(body);
+  if (!data || !Array.isArray(data.users)) return null;
+  return new Set(data.users.map((u) => u && u.username).filter(Boolean));
+}
+
+async function handleUserProfile(req, ctx, rawName, trailingSlash) {
+  const origin = await fetch(req);
+  /* The page is baked: nothing to do. This is the steady state for all but the
+     first few minutes of a member's life. */
+  if (origin.status !== 404) return origin;
+
+  let typed;
+  try { typed = decodeURIComponent(rawName); } catch (e) { return origin; }
+
+  const user = await lookupMember(typed).catch(() => null);
+  if (!user) return origin;                       // no such member: honest 404
+
+  if (!U_SAFE_NAME_RE.test(user.username)) return origin;
+
+  /* Only members the baker itself would publish a page for. A private, retired
+     or QA account answers /api/users/<name> but is deliberately absent from
+     /u/, and must stay absent here too. Checked BEFORE the canonical-case
+     redirect below, so a non-public member is never bounced to a URL that then
+     404s — that would be a redirect whose destination does not exist, which is
+     worse than the honest 404 we already have. */
+  const directory = await getDirectoryNames(ctx).catch(() => null);
+  if (!directory || !directory.has(user.username)) return origin;
+
+  const url = new URL(req.url);
+
+  /* The lookup is case-insensitive but GitHub Pages filenames are not, so a
+     link in the wrong case lands here for a real member; so does a missing
+     trailing slash on an unbaked page (Pages only adds it for directories that
+     exist). Send both to the one canonical URL — this is the router 404.html
+     already ran client-side, just as a real 301 — rather than serving the same
+     member at two addresses. */
+  if (user.username !== typed || !trailingSlash) {
+    const canonical = `${url.origin}/u/${encodeURIComponent(user.username)}/${url.search}`;
+    return Response.redirect(canonical, 301);
+  }
+
+  const template = await getUTemplate(url, ctx).catch(() => null);
+  if (!template) return origin;
+
+  const headers = new Headers({
+    'Content-Type': 'text/html; charset=utf-8',
+    /* Never cached: the moment CI publishes the real bake, that must be what
+       the next request gets. This response is a stopgap for one member for a
+       few minutes, not a cacheable document. */
+    'Cache-Control': 'no-store, max-age=0, must-revalidate',
+    'x-tmr-u': 'edge-rendered',
+  });
+  return new Response(template.split(U_PLACEHOLDER).join(user.username), {
+    status: 200,
+    headers,
+  });
+}
+
 function buildRewriter(data, slate) {
   const rw = new HTMLRewriter();
 
@@ -311,7 +479,17 @@ function buildRewriter(data, slate) {
 export default {
   async fetch(req, env, ctx) {
     try {
-      if (!HOME_PATHS.has(new URL(req.url).pathname)) return fetch(req);
+      const pathname = new URL(req.url).pathname;
+
+      /* EDGE_FALLBACK_20260810 — guarantee /u/<username>/ exists for a real
+         member from the instant the account does. GET/HEAD only; everything
+         else about this path is the origin's business. */
+      const uMatch = U_PATH_RE.exec(pathname);
+      if (uMatch && (req.method === 'GET' || req.method === 'HEAD')) {
+        return handleUserProfile(req, ctx, uMatch[1], uMatch[2] === '/');
+      }
+
+      if (!HOME_PATHS.has(pathname)) return fetch(req);
 
       /* Origin document and both data sources in parallel — the injection costs
          whichever of them is slowest, not the sum. */

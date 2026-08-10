@@ -239,7 +239,7 @@
 
   function showLockedState(p) {
     var when = p.locked_at ? new Date(p.locked_at).toLocaleString() : '';
-    setStatus('<i class="fas fa-lock"></i> <b>Predictions locked.</b> Submitted ' + esc(when) + '. Your picks are timestamped and public on your record. <a href="/u/' + esc(p.username || '') + '/">View your profile</a>', 'locked');
+    setStatus('<i class="fas fa-lock"></i> <b>Predictions locked.</b> Submitted ' + esc(when) + '. Your picks are timestamped and public on your record. <a href="/u/' + encodeURIComponent(p.username || '') + '/">View your profile</a>', 'locked');
     var actions = el('ss-actions'); if (actions) actions.style.display = 'none';
     document.querySelectorAll('#ss-builder input, #ss-builder select, #ss-builder button.ss-team-btn').forEach(function (n) { n.disabled = true; });
   }
@@ -334,7 +334,7 @@
         host.innerHTML = '<div class="ss-pub-head"><span>Rank</span><span>Member</span><span>Score</span><span>WS</span><span>Graded</span></div>' +
           rows.map(function (p) {
             return '<div class="ss-pub-row"><span class="ss-rank">#' + p.rank + '</span>' +
-              '<a href="/u/' + esc(p.username) + '/" class="ss-pub-user">@' + esc(p.username) + '</a>' +
+              '<a href="/u/' + encodeURIComponent(p.username) + '/" class="ss-pub-user">@' + esc(p.username) + '</a>' +
               '<span class="ss-pub-ws"><b>' + (p.score != null ? p.score : 0) + '</b></span>' +
               '<span>' + esc(p.world_series_champion || '--') + '</span>' +
               '<span class="ss-muted">' + (p.graded_at ? new Date(p.graded_at).toLocaleDateString() : '') + '</span></div>';
@@ -354,7 +354,7 @@
         if (!rows.length) { host.innerHTML = '<p class="ss-muted" style="padding:18px;text-align:center;">No locked predictions yet. Be the first to call the season.</p>'; return; }
         host.innerHTML = '<div class="ss-pub-head"><span>Member</span><span>WS Champion</span><span>AL</span><span>NL</span><span>Locked</span></div>' +
           rows.map(function (p) {
-            return '<div class="ss-pub-row"><a href="/u/' + esc(p.username) + '/" class="ss-pub-user">@' + esc(p.username) + '</a>' +
+            return '<div class="ss-pub-row"><a href="/u/' + encodeURIComponent(p.username) + '/" class="ss-pub-user">@' + esc(p.username) + '</a>' +
               '<span class="ss-pub-ws">' + esc(p.world_series_champion || '--') + '</span>' +
               '<span>' + esc(p.al_champion || '--') + '</span>' +
               '<span>' + esc(p.nl_champion || '--') + '</span>' +

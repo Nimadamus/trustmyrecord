@@ -645,7 +645,7 @@
         + '</span>'
         + '<h1>' + esc(t.title) + '</h1>'
         + '<div class="st-thread-meta">'
-        +   '<span>Started by <a href="/u/' + esc(t.username || '') + '/" style="color:#2dd4bf;text-decoration:none;font-weight:600;">' + esc(t.username || '') + '</a>'
+        +   '<span>Started by <a href="/u/' + encodeURIComponent(t.username || '') + '/" style="color:#2dd4bf;text-decoration:none;font-weight:600;">' + esc(t.username || '') + '</a>'
         +   (t.author_is_official_bot ? ' <span class="st-badge st-badge--bot">Resident Bot</span>' : '') + '</span>'
         +   '<span>' + timeAgo(t.created_at) + '</span>'
         +   '<span>' + (Number(t.view_count) || 0) + ' views</span>'
@@ -679,7 +679,7 @@
         '<div class="st-post" id="post-op">'
         + avatarHtml(t.avatar_url, t.username)
         + '<div class="st-post-bd">'
-        +   '<div class="st-post-top"><a href="/u/' + esc(t.username || '') + '/">' + esc(t.username || '') + '</a>'
+        +   '<div class="st-post-top"><a href="/u/' + encodeURIComponent(t.username || '') + '/">' + esc(t.username || '') + '</a>'
         +   (t.author_is_official_bot ? '<span class="st-badge st-badge--bot">Resident Bot</span>' : '')
         +   '<time>' + timeAgo(t.created_at) + '</time></div>'
         +   '<div class="st-post-content">' + renderContent(t.content) + '</div>'
@@ -690,7 +690,7 @@
         '<div class="st-post" id="post-' + p.id + '">'
         + avatarHtml(p.avatar_url, p.username)
         + '<div class="st-post-bd">'
-        +   '<div class="st-post-top"><a href="/u/' + esc(p.username || '') + '/">' + esc(p.username || '') + '</a>'
+        +   '<div class="st-post-top"><a href="/u/' + encodeURIComponent(p.username || '') + '/">' + esc(p.username || '') + '</a>'
         +   (p.author_is_official_bot ? '<span class="st-badge st-badge--bot">Resident Bot</span>' : '')
         +   '<time>' + timeAgo(p.created_at) + (p.is_edited ? ' &middot; edited' : '') + '</time></div>'
         +   '<div class="st-post-content">' + renderContent(p.content) + '</div>'
