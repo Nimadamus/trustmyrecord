@@ -86,6 +86,29 @@ assert.ok(worker.includes("rw.on('#tmrEyebrowPicks', new TextCell(picksText))") 
           worker.includes("rw.on('#tmrStatPicks', new TextCell(picksText))"),
   'worker.mjs must inject the eyebrow and the stripe from the same picksText');
 
+/* ---------- 5b. "Picks Tracked" is the site-wide canonical count ---------- */
+// Added 2026-08-10. The homepage read /users/directory-counts
+// `counts.total_valid_picks` — every non-deleted row in the picks table,
+// including pending picks, voids, and picks owned by banned, soft-deleted and
+// QA accounts — and printed 3,022 while /handicappers/ printed the real
+// figure, 2,738, from metrics.total_graded_picks. Two labels for one quantity,
+// two queries. metrics.total_graded_picks is produced in exactly one place
+// (backend services/siteStatsService.js) and is the only source allowed here.
+// Both the edge injection and the client repaint must read it, or the visitor
+// watches the number change on load.
+for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
+  assert.ok(/metrics|\bm\b|\bd\.metrics\b/.test(src) && src.includes('total_graded_picks'),
+    `${name} must take the "Picks Tracked" figure from metrics.total_graded_picks ` +
+    '— the one site-wide count /handicappers/ also displays');
+  assert.ok(!src.includes('total_valid_picks'),
+    `${name} still references total_valid_picks — that is the raw-table ops/debug ` +
+    'count (pending + void + banned/QA accounts), NOT the site-wide statistic. ' +
+    'This is the exact 3,022-vs-2,738 split-source bug.');
+  assert.ok(!/directory-counts/.test(src),
+    `${name} must not call /users/directory-counts — it is an ops endpoint and ` +
+    'nothing it returns may be painted on a public page');
+}
+
 /* ---------- 6. the worker covers the routable URL shapes of the homepage --- */
 // A Cloudflare route pattern matches the FULL URL. `trustmyrecord.com/` alone
 // does not match `trustmyrecord.com/?utm_source=…` or `/index.html`, so ad

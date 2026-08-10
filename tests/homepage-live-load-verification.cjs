@@ -94,7 +94,11 @@ async function truth() {
   const r = await fetch(`${API}/users/home-bootstrap`, { headers: { Accept: 'application/json' } });
   const d = await r.json();
   return {
-    picks: Number(d.counts.total_valid_picks).toLocaleString('en-US'),
+    // The canonical site-wide count (see services/siteStatsService.js in the
+    // backend) — the same field /handicappers/ prints as "Total Graded Picks".
+    // NOT counts.total_valid_picks, the raw-table debug figure this page used
+    // to display.
+    picks: Number(d.metrics.total_graded_picks).toLocaleString('en-US'),
     cappers: String(Number(d.total_eligible_handicappers)),
     members: String(Number(d.metrics.total_members)),
     capperPicks: String(Number(d.capper.user.total_picks)),

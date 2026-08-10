@@ -225,10 +225,18 @@ function buildRewriter(data, slate) {
     ));
   }
 
-  const counts = data.counts || {};
   const metrics = data.metrics || {};
   const eligible = data.total_eligible_handicappers != null ? String(num(data.total_eligible_handicappers)) : null;
-  const picksText = counts.total_valid_picks != null ? num(counts.total_valid_picks).toLocaleString('en-US') : null;
+  // "Picks tracked" = metrics.total_graded_picks, the single site-wide count
+  // (backend services/siteStatsService.js) that /handicappers/ shows as "Total
+  // Graded Picks". Must match tmr-home-live.js exactly: the edge paints this
+  // number, the script repaints it, and a different source in either place is
+  // a visible number-swap on load. Never the raw directory pick total —
+  // that is the debug figure (pending + voids + banned/QA accounts) that made
+  // this stripe read 3,022 against the Handicappers page's 2,738.
+  const picksText = metrics.total_graded_picks != null
+    ? num(metrics.total_graded_picks).toLocaleString('en-US')
+    : null;
   const members = metrics.total_members != null ? String(num(metrics.total_members)) : null;
 
   rw.on('#tmrEyebrowPicks', new TextCell(picksText));

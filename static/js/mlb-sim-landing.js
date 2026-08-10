@@ -443,14 +443,18 @@
     /* Live site stats (social proof)                                      */
     /* ------------------------------------------------------------------ */
     function initStats() {
+        // All three figures come from the one authoritative aggregate, so this
+        // page's "Picks recorded" is the same number the homepage prints as
+        // "Picks Tracked" and /handicappers/ prints as "Total Graded Picks".
+        // It used to read directory-counts.total_valid_picks (the raw-table
+        // debug count: pending + voids + banned/QA accounts), which is why it
+        // agreed with the homepage's wrong number instead of the right one.
         fetchJson(API_BASE + '/users/directory-metrics', 9000).then(function (d) {
             if (d && d.metrics) {
+                setStat('simv2StatPicks', d.metrics.total_graded_picks);
                 setStat('simv2StatMembers', d.metrics.total_members);
                 setStat('simv2StatVerified', d.metrics.verified_handicappers);
             }
-        });
-        fetchJson(API_BASE + '/users/directory-counts', 9000).then(function (d) {
-            if (d && d.counts) setStat('simv2StatPicks', d.counts.total_valid_picks);
         });
         fetchJson(API_BASE + '/users/leaderboard?sortBy=net_units&limit=3', 9000).then(function (d) {
             var el = byId('simv2LeaderPreview');

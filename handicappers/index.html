@@ -2237,7 +2237,6 @@
             const pickMakers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
             const verifiedTier = pickMakers.filter(member => tierOf(member) === 'verified');
             const buildingTier = pickMakers.filter(member => tierOf(member) !== 'verified');
-            const totalGradedPicks = members.reduce((sum, member) => sum + gradedCount(member), 0);
             const weekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
             const activeWeek = pickMakers.filter(member => lastPickTime(member) >= weekCutoff).length;
 
@@ -2253,7 +2252,13 @@
             const pickMakersCount = metric('pick_makers', membersAreFresh ? pickMakers.length : null);
             const verifiedCount = metric('verified_handicappers', membersAreFresh ? verifiedTier.length : null);
             const buildingCount = metric('building_records', membersAreFresh ? buildingTier.length : null);
-            const totalGraded = metric('total_graded_picks', membersAreFresh ? totalGradedPicks : null);
+            // NO client-side fallback for this one. It is the site-wide pick
+            // count the homepage also prints ("Picks Tracked"), and a locally
+            // summed version can only ever be the loaded page of the directory
+            // rather than the platform total -- a second definition of the very
+            // number this card exists to state. If the metrics call has not
+            // landed yet, the card keeps its loading state and says nothing.
+            const totalGraded = metric('total_graded_picks', null);
             const activeWeekCount = metric('active_this_week', membersAreFresh ? activeWeek : null);
 
             if (verifiedCount != null) {
