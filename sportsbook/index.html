@@ -31210,8 +31210,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=10c33537f738">
     <link rel="stylesheet" href="/static/css/sportsbook-multislip.css?v=9ba1637211f1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=5c74b848a5fe">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=443af57b7454">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=83e250b54787">
+    <!-- The two redesign-override sheets used to be linked a THIRD time right
+         here, between their <head> links and the @import tail guard immediately
+         below that loads the very same two URLs. Removing a middle duplicate of
+         an identical sheet cannot change the cascade: for any declaration that
+         ties, the LAST copy already decided it, and that copy is the tail guard
+         below. So this is a pure removal -- no rule, no order, no route and no
+         behaviour changes with it. -->
     <style id="tmr-redesign-tail-guard">
     /* Inline backstop so nothing loaded later in <body> can overwrite the
        redesign. Source-order LAST + !important = absolute cascade win. */
