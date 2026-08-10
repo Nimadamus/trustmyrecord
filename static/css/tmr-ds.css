@@ -149,6 +149,97 @@ body.tmr-ds{
 }
 
 /* ---------------------------------------------------------------------------
+   1d. SELECT SCALE  (slice 4A, 2026-08-10)
+   -----------------------------------------------------------------------------
+   The design system had no select component, so every page that needed one
+   invented its own. Measured live across 15 pages: 26 selects, 7 signatures,
+   heights 38/40/42/44/56, radii 7/10, weights 400/600/800, and right padding
+   from 9px to 42px. None of that variation encodes a difference in role -- it
+   is just what each page happened to land on.
+
+   TWO ROLES, not seven signatures:
+
+     STANDARD   an ordinary filter or form control. Converges on the geometry
+                hm-select already used -- 40px, 7px radius, 14px/600 -- which is
+                the cleanest of the existing set, sits one step above .ds-btn's
+                36px as a text-bearing control should, and uses --r-sm rather
+                than a radius the system does not define.
+
+     PROMINENT  the simulator's matchup and starter choosers, which genuinely
+                lead their sections. They stay larger and keep their own surface
+                and radius; only the accidental differences are removed.
+
+   Colour is deliberately untouched. These controls sit on light surfaces
+   (handicappers, trendspotter, leaderboards) and dark ones (both simulator
+   pages), and each already reads correctly against its own page. This block
+   normalises geometry and type only.
+
+   No appearance override is introduced: every one of these relies on the
+   native dropdown arrow, and the one page that had suppressed it was showing a
+   plain rounded box with no indicator at all.
+   --------------------------------------------------------------------------- */
+body.tmr-ds .hm-select,
+body.tmr-ds .ts-field > select,
+body.tmr-ds .filters-grid .field > select,
+body.tmr-ds .sh-field > select{
+  min-height:40px;
+  height:40px;
+  border-radius:var(--r-sm);
+  font-size:14px;
+  font-weight:600;
+  padding-left:12px;
+  padding-right:12px;
+}
+
+/* The leaderboards filters set appearance:none and then drew nothing in its
+   place, so the control rendered as a plain rounded box -- no arrow, no cue
+   that it opens. Handing it back to the platform restores the indicator every
+   other select on the site already shows. */
+body.tmr-ds .filters-grid .field > select{
+  appearance:auto;
+  -webkit-appearance:auto;
+}
+
+/* Prominent choosers. Height and surface stay; what goes is the 42px right
+   padding (legacy -- the native arrow needs roughly 20px, so this was ~20px of
+   dead gutter) and the weight split, where two selects of the same class on the
+   same page rendered at 800 and 400. */
+body.tmr-ds .sim-select{
+  padding-right:26px;
+  font-weight:600;
+}
+/* starter-select is deliberately LEFT ALONE at 56px. It is the simulator's
+   primary team/pitcher chooser -- the hero interaction of that page -- and
+   mlb-simulator.css pins it with `min-height:56px !important` alongside
+   display/width forcing. Overriding that would mean adding !important to
+   this file, which its own rule 2 forbids, in order to shrink the one
+   control on the page whose prominence is intentional. Its 42px right
+   padding is left with it for the same reason: the two belong to the same
+   forced block, and splitting them would be a worse outcome than leaving a
+   deliberately large control deliberately large. */
+
+/* One focus treatment for all of them. Several had none of their own and fell
+   through to the UA ring, which is near-invisible on the dark simulator
+   surfaces. :focus-visible only, so it appears for keyboard use. */
+body.tmr-ds .hm-select:focus-visible,
+body.tmr-ds .ts-field > select:focus-visible,
+body.tmr-ds .filters-grid .field > select:focus-visible,
+body.tmr-ds .sh-field > select:focus-visible,
+body.tmr-ds .sim-select:focus-visible{
+  outline:2px solid var(--brand);
+  outline-offset:2px;
+}
+
+body.tmr-ds .hm-select:disabled,
+body.tmr-ds .ts-field > select:disabled,
+body.tmr-ds .filters-grid .field > select:disabled,
+body.tmr-ds .sh-field > select:disabled,
+body.tmr-ds .sim-select:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
    1c. SHELL-MODE BASELINE — only what the chrome used to borrow from the page
    -----------------------------------------------------------------------------
    On a `tmr-ds` page the navbar and footer quietly rely on three page-wide rules
