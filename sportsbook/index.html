@@ -10297,6 +10297,25 @@
         background: rgba(148,163,184,.055) !important;
     }
     </style>
+    <style id="tmr-sportsbook-polish-3">
+    /* VISUAL POLISH SLICE 3 -- sportsbook share of the navbar-to-title stack.
+       The shared breadcrumb half of this slice is fixed at its own source in
+       static/css/tmr-linkhub.css, not patched here. This block only corrects
+       the one contribution that genuinely belongs to this page.
+
+       DUPLICATED SPACING. The logged-out banner is a wrapping flex row with
+       gap:14px, and its action block ALSO carried margin-top:16px. The two
+       stack: on mobile the button wraps onto its own line and takes 14px of gap
+       plus 16px of margin for one 28px control, and on desktop the margin
+       pushes the button 16px below the centre line of a row whose align-items
+       is centre -- so it was both bulky and misaligned. The gap already does
+       this job, so the margin goes. Measured: banner 70px -> 52px at 1440 and
+       137px -> 119px at 390, with the button now vertically centred. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-loggedout-actions,
+    html body[data-tmr-test-route="sportsbook"] #picks .make-picks-loggedout-actions{
+        margin-top: 0 !important;
+    }
+    </style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-ds--dark" data-tmr-route="sportsbook" data-tmr-test-route="sportsbook">
     <script>

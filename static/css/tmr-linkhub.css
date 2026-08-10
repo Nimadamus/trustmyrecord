@@ -87,8 +87,17 @@
     flex-wrap: wrap !important;
     text-align: left !important;
     gap: 6px 8px;
-    margin: 0 0 16px;
-    padding: 8px 12px;
+    /* SPACING (2026-08-10). Measured across eight page types, this bar was
+       50px tall plus a 16px margin -- 66px between the navbar and the page
+       title on every page carrying it, for one line of 13px context text. It
+       was one of the taller elements on pages whose own title is 25px.
+
+       The numbers are not invented: /mlb-simulator/ already runs this bar at
+       padding 4px with no bottom margin and reads fine, so a tighter bar is
+       proven acceptable in production. This lands between the two -- enough
+       air to stay a distinct band, without dominating the title it precedes. */
+    margin: 0 0 10px;
+    padding: 5px 12px;
     background: var(--tmrlh-surface);
     border: 1px solid var(--tmrlh-line);
     border-radius: 10px;
@@ -353,7 +362,11 @@ body.tmr-ds .tmrlh-related h2 {
 @media (max-width: 640px) {
     .tmrlh-crumbs {
         font-size: 12.5px;
-        padding: 7px 9px;
+        /* Matches the desktop tightening above. Phones are where the stack
+           above the page title hurts most -- measured 233px on /sportsbook/
+           before this slice -- so the bar should not be carrying more
+           padding here than it does on a 1440px screen. */
+        padding: 5px 9px;
         border-radius: 9px;
     }
     /* Deep trails wrap rather than overflow the viewport on phones. */
