@@ -353,6 +353,106 @@ body.tmr-ds .sh-date-input[readonly]{
 }
 
 /* ---------------------------------------------------------------------------
+   1f. PAGE-LOCAL BUTTON FAMILIES -- accidental variance only (2026-08-10)
+   -----------------------------------------------------------------------------
+   Each product area grew its own button family, and that is fine: hm-*, pl-*,
+   simv2-*, ts-*, st-* and the rest carry real role differences and are NOT being
+   collapsed into one class. What is corrected here is only variance nobody chose:
+
+     - the SAME class rendering at two heights
+         .ts-btn        44px and 36px
+         .simv2-btn     36px (primary) and 46px (ghost)
+     - PRIMARY actions at weight 400, lighter than the body text around them
+         .simv2-btn-primary  13.6px/400
+         .ts-btn-primary     16px/400
+     - a weight that is on no scale
+         .tmr-hbtn      650, and the same class at 13.28px and 16px
+     - radii the design system does not define (it has 10px, 7px and 999px pills)
+         .simv2-btn 9px and 12px, .tmr-poll-vote-btn.is-big 11px, sim tab 9px
+     - two chip families on ONE page, 5px apart
+         .pl-chip 31px, .pl-lb-chip 36px
+
+   Colour, background, border colour and role treatment are untouched throughout
+   -- every family keeps its own palette and its own primary/ghost distinction.
+   Only height, radius, size and weight are brought onto the scale already used
+   by the majority of controls on those pages. No width is set anywhere.
+   --------------------------------------------------------------------------- */
+
+/* Simulator and TrendSpotter action buttons: one height per family. 40px is the
+   midpoint of what each family already used and matches .st-btn, which was
+   already there. */
+body.tmr-ds .simv2-btn,
+body.tmr-ds .ts-btn{
+  height:40px;
+  min-height:40px;
+  border-radius:var(--r-sm);
+  font-size:14px;
+  font-weight:700;
+}
+
+/* A primary action should not be lighter than the prose beside it. */
+body.tmr-ds .simv2-btn-primary,
+body.tmr-ds .ts-btn-primary{
+  font-weight:700;
+}
+
+/* One size and one weight for the poll/history button, which rendered at three
+   combinations of the two across two pages. */
+body.tmr-ds .tmr-hbtn{
+  font-size:14px;
+  font-weight:700;
+}
+
+/* Radii back onto the system scale. */
+body.tmr-ds .tmr-poll-vote-btn.is-big{border-radius:var(--r)}
+
+/* Both poll chip families are chips on the same page; they should not be 5px
+   apart. Pill shape kept -- that is the affordance. */
+body.tmr-ds .pl-chip,
+body.tmr-ds .pl-lb-chip{
+  height:34px;
+  min-height:34px;
+  font-size:13.5px;
+  font-weight:700;
+}
+
+/* Sort buttons are bare text controls with no fill, on three different pages,
+   at 10.08/11px and weights 800/900. One compact caption treatment. */
+body.tmr-ds .hm-sort,
+body.tmr-ds .pl-lb-sortbtn{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+
+/* Focus, consistently, for every family touched above. Outline rather than a
+   shadow so a family that paints its own box-shadow cannot erase its own focus
+   ring, and no geometry moves when it appears. */
+body.tmr-ds .simv2-btn:focus-visible,
+body.tmr-ds .ts-btn:focus-visible,
+body.tmr-ds .tmr-hbtn:focus-visible,
+body.tmr-ds .pl-chip:focus-visible,
+body.tmr-ds .pl-lb-chip:focus-visible,
+body.tmr-ds .hm-tab:focus-visible,
+body.tmr-ds .st-btn:focus-visible,
+body.tmr-ds .st-tab:focus-visible,
+body.tmr-ds .hm-action-btn:focus-visible,
+body.tmr-ds .hm-page-button:focus-visible{
+  outline:2px solid var(--brand);
+  outline-offset:2px;
+}
+
+/* Disabled reads as unavailable, never as missing. */
+body.tmr-ds .simv2-btn:disabled,
+body.tmr-ds .ts-btn:disabled,
+body.tmr-ds .tmr-hbtn:disabled,
+body.tmr-ds .hm-action-btn:disabled,
+body.tmr-ds .hm-page-button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
    1c. SHELL-MODE BASELINE — only what the chrome used to borrow from the page
    -----------------------------------------------------------------------------
    On a `tmr-ds` page the navbar and footer quietly rely on three page-wide rules
