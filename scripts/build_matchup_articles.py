@@ -103,8 +103,28 @@ def read(path):
 
 
 def write(path, text):
+    """Write, PRESERVING the file's existing line endings.
+
+    This repo has mixed line endings and core.autocrlf=false, so index.html is
+    stored with CRLF. Writing it back with newline="\\n" changes every line in
+    the file: `git diff --numstat` went 1298/1298 for a change that added
+    nothing. That is unreviewable on its own, and worse, this script runs inside
+    the 30-minute prerender cron alongside a job that edits the same file — two
+    writers, one of them rewriting the whole document every tick, is a merge
+    conflict generator and an enormous pointless Pages rebuild.
+
+    A NEW file gets LF, which is what every other generator here emits.
+    """
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
+    newline = "\n"
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            existing = f.read()
+        crlf = existing.count(b"\r\n")
+        lf = existing.count(b"\n") - crlf
+        if crlf > lf:
+            newline = "\r\n"
+    with open(path, "w", encoding="utf-8", newline=newline) as f:
         f.write(text)
     # C: on this machine intermittently writes files as all-NULL bytes. A Game
     # File that bakes to 40KB of \x00 would pass every downstream check that

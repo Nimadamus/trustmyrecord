@@ -279,9 +279,9 @@
       $('fOg').value = a.og_image_url || '';
       $('fReason').value = '';
       $('fBody').value = JSON.stringify(a.body_json || [], null, 2);
-      return api('/matchups/' + id + '/readiness').then(function (r) {
+      return api('/matchups/admin/' + id + '/readiness').then(function (r) {
         renderReadiness(r);
-        return api('/matchups/' + a.sport + '/' + a.slug).catch(function () { return {}; });
+        return api('/matchups/admin/' + id).catch(function () { return {}; });
       }).then(function (full) {
         $('fProv').value = JSON.stringify((full && full.provenance) || [], null, 2);
       });
@@ -320,14 +320,14 @@
     try { prov = JSON.parse($('fProv').value || '[]'); } catch (e) { return alert('provenance is not valid JSON: ' + e.message); }
     api('/matchups/' + current.id, { method: 'PATCH', body: { patch: patch, materialChange: $('fReason').value || null } })
       .then(function () { return api('/matchups/' + current.id + '/provenance', { method: 'POST', body: { rows: prov } }); })
-      .then(function () { return api('/matchups/' + current.id + '/readiness'); })
+      .then(function () { return api('/matchups/admin/' + current.id + '/readiness'); })
       .then(function (r) { renderReadiness(r); loadList(); })
       .catch(function (e) { alert('Save failed: ' + (e.error || e.__status)); });
   };
 
   $('checkBtn').onclick = function () {
     if (!current) return;
-    api('/matchups/' + current.id + '/readiness').then(renderReadiness);
+    api('/matchups/admin/' + current.id + '/readiness').then(renderReadiness);
   };
 
   $('pubBtn').onclick = function () {
