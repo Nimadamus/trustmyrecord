@@ -36,7 +36,7 @@ const worker = fs.readFileSync(path.join(ROOT, 'workers', 'home-ssr', 'worker.mj
 const SKELETON_SLOTS = [
   ['tmrEyebrowPicks', 'hero eyebrow "picks tracked" count'],
   ['tmrStatPicks', 'stats stripe: Picks Tracked'],
-  ['tmrStatCappers', 'stats stripe: Verified Cappers'],
+  ['tmrStatCappers', 'stats stripe: Pick Makers'],
   ['tmrStatMembers', 'stats stripe: Members'],
 ];
 for (const [id, what] of SKELETON_SLOTS) {
@@ -108,6 +108,30 @@ for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
     `${name} must not call /users/directory-counts — it is an ops endpoint and ` +
     'nothing it returns may be painted on a public page');
 }
+
+/* ---------- 5c. the second stripe cell says what it counts --------------- */
+// Added 2026-08-10. The tile read "Verified Cappers" over
+// total_eligible_handicappers = members with at least one GRADED pick (37).
+// "Verified" on /handicappers/ means 25+ graded picks — 14 members — so the
+// homepage was overstating the verified population by 2.6x with a number that
+// was not even the verified definition. It is now "Pick Makers" over
+// metrics.pick_makers: same label, same field, same definition as the
+// /handicappers/ card. total_eligible_handicappers keeps the "public records"
+// badge, where the words match the figure.
+assert.ok(/id="tmrStatCappers"[\s\S]{0,200}?<span>Pick Makers<\/span>/.test(html),
+  'the second stats-stripe cell must be labelled "Pick Makers" — it carries ' +
+  'metrics.pick_makers, not a count of verified handicappers');
+assert.ok(!/<span>Verified Cappers<\/span>/.test(html),
+  'index.html still says "Verified Cappers" — that label named neither the ' +
+  'figure behind it nor the /handicappers/ definition of "verified" (25+ graded)');
+for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
+  assert.ok(src.includes('pick_makers'),
+    `${name} must fill the Pick Makers cell from metrics.pick_makers so the ` +
+    'homepage and /handicappers/ mean the same thing by the same word');
+}
+// The two figures must not be swapped back into one cell.
+assert.ok(/public records/.test(js) && /public records/.test(worker),
+  'total_eligible_handicappers must keep feeding the "public records" badge');
 
 /* ---------- 6. the worker covers the routable URL shapes of the homepage --- */
 // A Cloudflare route pattern matches the FULL URL. `trustmyrecord.com/` alone

@@ -238,10 +238,17 @@ function buildRewriter(data, slate) {
     ? num(metrics.total_graded_picks).toLocaleString('en-US')
     : null;
   const members = metrics.total_members != null ? String(num(metrics.total_members)) : null;
+  // #tmrStatCappers is labelled "Pick Makers" and carries metrics.pick_makers —
+  // the same field under the same label on /handicappers/. It previously showed
+  // total_eligible_handicappers (members with a graded pick) under the label
+  // "Verified Cappers", which named neither figure: "verified" on /handicappers/
+  // means 25+ graded picks. `eligible` stays behind the "public records" badge,
+  // which is what it actually counts. Must match tmr-home-live.js exactly.
+  const pickMakers = metrics.pick_makers != null ? String(num(metrics.pick_makers)) : null;
 
   rw.on('#tmrEyebrowPicks', new TextCell(picksText));
   rw.on('#tmrStatPicks', new TextCell(picksText));
-  rw.on('#tmrStatCappers', new TextCell(eligible));
+  rw.on('#tmrStatCappers', new TextCell(pickMakers));
   rw.on('#tmrStatMembers', new TextCell(members));
   if (eligible != null) {
     rw.on('.explore .ei .badge2', new NthHtmlCell(2, `<span class="bl"></span>${esc(eligible)} public records`));
