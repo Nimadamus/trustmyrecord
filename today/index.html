@@ -34,7 +34,26 @@
          value the design system has. */
       .td-wrap{max-width:640px;margin:0 auto}
       .td-hero{text-align:center}
-      .td-eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+
+      /* PAGE TITLE. Deliberately NOT the design system's h1 (a 64px uppercase
+         Barlow Condensed hero) and not .ds-h-lg (30px, same condensed caps).
+         Both were tried and both changed this page's voice: the card's title is
+         a sentence someone reads, not a banner. This keeps the size and face the
+         page has always had -- Inter, 800, title case, ~36px -- and takes from
+         the design system only what genuinely unifies: the token for ink, the
+         shared font stack, and consistent spacing. Scoped under body.tmr-ds
+         because a bare h1 rule would lose to the system's element rule. */
+      body.tmr-ds .td-h1{font-family:var(--font);font-size:36px;font-weight:800;line-height:1.15;
+              text-transform:none;letter-spacing:-0.01em;color:var(--ink);margin:0}
+
+      /* ACCENT. This page's blue is the established accent here and stays. The
+         design system's teal is not substituted in, because swapping a page's
+         accent one page at a time is how a site ends up with several palettes
+         rather than one. If TMR's accent direction changes it should change as a
+         decision about the whole product, in the tokens, not here. Everything
+         that is genuinely shared -- surfaces, ink, borders, semantic green and
+         gold -- does come from tokens below. */
+      .td-eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#00aeff;margin-bottom:6px}
       .td-sub{color:var(--ink-2);font-size:15px;line-height:1.6;margin-top:6px}
 
       /* Height reserved from the first frame - the four checks resolve at
@@ -65,17 +84,17 @@
          teal fill -- 1.68:1, nowhere near the 4.5:1 AA needs, on the primary
          action of the page. The dark ink here is deliberate and must win. */
       body.tmr-ds .td-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:11px;
-              background:var(--brand);color:var(--navy);border:0;border-radius:var(--r-sm);padding:12px 18px;
+              background:#00aeff;color:#04121f;border:0;border-radius:var(--r-sm);padding:12px 18px;
               font-weight:800;font-size:14.5px;text-decoration:none;cursor:pointer;min-height:44px}
-      body.tmr-ds .td-cta:hover{background:var(--brand-dk);color:var(--navy)}
+      body.tmr-ds .td-cta:hover{background:#31c1ff;color:#04121f}
       /* A closed or completed module keeps a working link but stops shouting -
          it must not read as an invitation to play something that is shut. */
       body.tmr-ds .td-cta.is-muted{background:transparent;color:var(--ink-2);border:1px solid var(--line-2)}
       body.tmr-ds .td-cta.secondary{background:transparent;color:var(--ink-2);border:1px solid var(--line-2)}
       .td-optional{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
                    border:1px solid var(--line-2);border-radius:999px;padding:2px 9px;margin-left:8px;white-space:nowrap}
-      .td-loggedout{margin-top:18px;padding:18px;border:1px dashed var(--line-2);border-radius:var(--r);
-                    background:var(--brand-soft);text-align:center}
+      .td-loggedout{margin-top:18px;padding:18px;border:1px dashed #2c4a63;border-radius:var(--r);
+                    background:rgba(0,174,255,.06);text-align:center}
       .td-loggedout p{color:var(--ink-2);margin:0 0 12px;font-size:14.5px}
       @media(max-width:520px){
         .td-row{padding:14px;gap:11px}
@@ -95,11 +114,7 @@
 
     <header class="td-hero">
       <span class="td-eyebrow" id="tdDate">Today</span>
-      <!-- ds-h-lg, not the bare h1: the design system's h1 is the 64px hero used
-           on marketing surfaces, and this is a compact daily card. ds-h-lg is the
-           system's own 30px display size for dense UI, so the page title reads as
-           a page title in the same voice as every other design-system page. -->
-      <h1 class="ds-h-lg" id="tdHead">Your card for today</h1>
+      <h1 class="td-h1" id="tdHead">Your card for today</h1>
       <p class="td-sub" id="tdSub">The best things you can do on TrustMyRecord right now.</p>
     </header>
 
