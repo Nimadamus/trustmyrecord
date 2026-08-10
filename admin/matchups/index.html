@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matchup of the Day Admin | TrustMyRecord</title>
+  <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0b1117; color:#e8eef5; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    .wrap { max-width:1240px; margin:0 auto; padding:26px 18px 70px; }
+    h1 { margin:0 0 4px; font-size:26px; }
+    h2 { font-size:17px; margin:0 0 10px; }
+    .muted { color:#9bacbd; font-size:13px; line-height:1.6; }
+    .panel { background:#121a23; border:1px solid #263546; border-radius:10px; padding:16px; margin-bottom:14px; }
+    label { display:block; font-size:11px; color:#9bacbd; text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
+    input, select, textarea {
+      background:#0d141c; border:1px solid #304155; border-radius:7px; color:#e8eef5;
+      padding:8px 10px; font-family:inherit; font-size:13.5px; width:100%; box-sizing:border-box;
+    }
+    textarea { min-height:120px; resize:vertical; font-family:ui-monospace,Consolas,monospace; font-size:12.5px; }
+    button {
+      background:#1c66d6; border:1px solid #2a7ae8; color:#fff; border-radius:7px;
+      padding:9px 15px; font-size:13.5px; font-weight:700; cursor:pointer;
+    }
+    button.ghost { background:#18222d; border-color:#31445a; color:#cddbe8; }
+    button.danger { background:#5d2626; border-color:#8a3b3b; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .row > * { flex:1 1 200px; }
+    .row .narrow { flex:0 0 auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid #1e2a37; vertical-align:top; }
+    th { color:#9bacbd; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:800; }
+    .pill.researching { background:#3a3520; color:#e8c96a; }
+    .pill.draft_ready { background:#1d3350; color:#7fb0ff; }
+    .pill.needs_review { background:#432a1c; color:#f0a868; }
+    .pill.published    { background:#17402c; color:#5fd39a; }
+    .pill.updated      { background:#17402c; color:#5fd39a; }
+    .pill.unpublished  { background:#3a2020; color:#e08787; }
+    .ok  { color:#5fd39a; }
+    .bad { color:#e08787; }
+    .warn{ color:#e8c96a; }
+    code { background:#0d141c; padding:1px 5px; border-radius:4px; font-size:12px; }
+    .viol { border-left:3px solid #e08787; padding:6px 10px; margin:6px 0; background:#1a1216; font-size:12.5px; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media (max-width:900px){ .grid2 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Matchup of the Day</h1>
+  <p class="muted">
+    Select a game, assemble the research, review it, publish it. Publishing is
+    gated: an article containing a number with no provenance record is refused
+    by the API, not by this page. The Readiness panel shows exactly what is
+    blocking it while there is still time to fix it.
+  </p>
+
+  <div class="panel">
+    <h2>Admin access</h2>
+    <div class="row">
+      <div>
+        <label for="tok">Admin token (x-admin-token)</label>
+        <input id="tok" type="password" placeholder="ADMIN_TOKEN, or leave blank if signed in as BetLegend" autocomplete="off">
+      </div>
+      <div class="narrow"><button id="saveTok" class="ghost">Remember</button></div>
+      <div class="narrow"><button id="reload">Reload</button></div>
+    </div>
+    <p class="muted" id="authNote">Stored in this browser only.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>1. Select a game</h2>
+      <div class="row">
+        <div>
+          <label for="league">League</label>
+          <select id="league"><option value="mlb">MLB</option></select>
+        </div>
+        <div>
+          <label for="gdate">Date</label>
+          <input id="gdate" type="date">
+        </div>
+        <div class="narrow"><button id="loadGames" class="ghost">Load slate</button></div>
+      </div>
+      <label for="game">Game</label>
+      <select id="game"><option value="">— load a slate —</option></select>
+      <p style="margin-top:12px"><button id="createBtn" disabled>Set as Matchup of the Day</button></p>
+      <p class="muted">Creates the article record and mints its permanent URL. The
+        slug is written once here and never changes again.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Readiness</h2>
+      <div id="readiness"><p class="muted">Select an existing Game File below.</p></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Game Files</h2>
+    <div id="list"><p class="muted">Loading…</p></div>
+  </div>
+
+  <div class="panel" id="editorPanel" hidden>
+    <h2>3. Edit <span id="editorTitle"></span></h2>
+    <p class="muted" id="editorUrl"></p>
+    <div class="grid2">
+      <div>
+        <label for="fTitle">&lt;title&gt; (max 70)</label><input id="fTitle">
+        <label for="fH1">H1 (max 110)</label><input id="fH1">
+        <label for="fDesc">Meta description (max 165)</label><textarea id="fDesc" style="min-height:60px"></textarea>
+        <label for="fDek">Dek — why this game was selected</label><textarea id="fDek" style="min-height:60px"></textarea>
+      </div>
+      <div>
+        <label for="fHero">Hero image URL (/static/… only)</label><input id="fHero">
+        <label for="fHeroAlt">Hero alt text</label><input id="fHeroAlt">
+        <label for="fOg">OpenGraph image URL</label><input id="fOg">
+        <label for="fReason">Material change reason (only fill this in for a real update)</label>
+        <input id="fReason" placeholder="e.g. confirmed lineup posted">
+      </div>
+    </div>
+    <label for="fBody">body_json</label>
+    <textarea id="fBody" style="min-height:260px"></textarea>
+    <label for="fProv">provenance rows (array)</label>
+    <textarea id="fProv" style="min-height:200px"></textarea>
+    <p style="margin-top:12px" class="row">
+      <span class="narrow"><button id="saveBtn">Save draft</button></span>
+      <span class="narrow"><button id="checkBtn" class="ghost">Check readiness</button></span>
+      <span class="narrow"><button id="pubBtn">Publish</button></span>
+      <span class="narrow"><button id="featBtn" class="ghost">Feature on homepage today</button></span>
+      <span class="narrow"><button id="unpubBtn" class="danger">Unpublish</button></span>
+    </p>
+    <p class="muted">Unpublish removes the sitemap entry and the hub listings. The
+      article URL keeps serving the article — a published Game File is permanent
+      and is never deleted by a state change or a bake.</p>
+  </div>
+
+  <p class="muted"><a href="/matchups/" style="color:#7fb0ff">/matchups/</a> ·
+     <a href="/about/research/" style="color:#7fb0ff">/about/research/</a></p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var API = (window.TMR_CONFIG && window.TMR_CONFIG.API_BASE) || 'https://trustmyrecord-api.onrender.com/api';
+  var $ = function (id) { return document.getElementById(id); };
+  var current = null;
+
+  var tok = localStorage.getItem('tmrMatchupAdminToken') || '';
+  $('tok').value = tok;
+  $('saveTok').onclick = function () {
+    tok = $('tok').value.trim();
+    localStorage.setItem('tmrMatchupAdminToken', tok);
+    $('authNote').textContent = 'Saved in this browser.';
+  };
+  $('reload').onclick = function () { loadList(); };
+
+  function headers(json) {
+    var h = {};
+    if (json) h['Content-Type'] = 'application/json';
+    if (tok) h['x-admin-token'] = tok;
+    var bearer = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (bearer) h['Authorization'] = 'Bearer ' + bearer;
+    return h;
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    return fetch(API + path, {
+      method: opts.method || 'GET',
+      headers: headers(!!opts.body),
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) { data.__status = r.status; throw data; }
+        return data;
+      });
+    });
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  /* ---- 1. slate ---------------------------------------------------------- */
+  var today = new Date();
+  $('gdate').value = today.toISOString().slice(0, 10);
+
+  $('loadGames').onclick = function () {
+    var sel = $('game');
+    sel.innerHTML = '<option value="">loading…</option>';
+    // Reuses the Trend Spotter matchup feed: it already returns today + the next
+    // 36 hours as researchable cards and drops the placeholder fixtures the odds
+    // feed sometimes emits.
+    fetch(API + '/trendspotter/matchups?league=' + encodeURIComponent($('league').value))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var games = d.matchups || d.games || [];
+        sel.innerHTML = '<option value="">— select —</option>';
+        games.forEach(function (g) {
+          var o = document.createElement('option');
+          o.value = JSON.stringify({
+            externalGameId: g.id || g.game_id, awayTeam: g.away_team || g.away,
+            homeTeam: g.home_team || g.home, gameTimeUtc: g.commence_time || g.start_time
+          });
+          o.textContent = (g.away_team || g.away) + ' @ ' + (g.home_team || g.home) +
+                          '  ·  ' + new Date(g.commence_time || g.start_time).toLocaleString();
+          sel.appendChild(o);
+        });
+        if (!games.length) sel.innerHTML = '<option value="">no games returned</option>';
+        $('createBtn').disabled = !games.length;
+      })
+      .catch(function (e) { sel.innerHTML = '<option value="">error: ' + esc(e.message) + '</option>'; });
+  };
+
+  $('createBtn').onclick = function () {
+    var raw = $('game').value;
+    if (!raw) return alert('Select a game first.');
+    var g = JSON.parse(raw);
+    g.sport = $('league').value;
+    api('/matchups', { method: 'POST', body: g })
+      .then(function (d) { alert('Created ' + d.article.url); loadList(); })
+      .catch(function (e) { alert('Failed: ' + (e.error || e.__status)); });
+  };
+
+  /* ---- 2. list ----------------------------------------------------------- */
+  function loadList() {
+    api('/matchups/admin/list').then(function (d) {
+      var rows = (d.articles || []).map(function (a) {
+        return '<tr>' +
+          '<td><a href="#" data-edit="' + a.id + '" style="color:#7fb0ff">' +
+            esc(a.away_team) + ' vs ' + esc(a.home_team) + '</a><br>' +
+            '<code>' + esc(a.path) + '</code></td>' +
+          '<td><span class="pill ' + esc(a.status) + '">' + esc(a.status) + '</span></td>' +
+          '<td>' + esc(a.sport.toUpperCase()) + '</td>' +
+          '<td>' + esc(new Date(a.game_time_utc).toLocaleString()) + '</td>' +
+          '<td>' + (a.provenance_rows || 0) + '</td>' +
+          '<td>' + (a.featured_on ? esc(a.featured_on).slice(0, 10) : '—') + '</td>' +
+          '<td>' + (a.published_at ? esc(new Date(a.published_at).toLocaleDateString()) : '—') + '</td>' +
+          '<td>' + (a.content_modified_at ? esc(new Date(a.content_modified_at).toLocaleString()) : '—') + '</td>' +
+          '<td>' + (['published', 'updated'].indexOf(a.status) >= 0 ? '<span class="ok">in sitemap</span>' : '<span class="muted">not listed</span>') + '</td>' +
+          '</tr>';
+      }).join('');
+      $('list').innerHTML = rows
+        ? '<table><thead><tr><th>Matchup / URL</th><th>Status</th><th>Sport</th><th>Game time</th>' +
+          '<th>Prov.</th><th>Featured</th><th>Published</th><th>Content modified</th><th>Sitemap</th></tr></thead><tbody>' +
+          rows + '</tbody></table>'
+        : '<p class="muted">No Game Files yet.</p>';
+      Array.prototype.forEach.call($('list').querySelectorAll('[data-edit]'), function (el) {
+        el.onclick = function (ev) { ev.preventDefault(); openEditor(el.getAttribute('data-edit')); };
+      });
+    }).catch(function (e) {
+      $('list').innerHTML = '<p class="bad">Could not load (' + esc(e.error || e.__status || 'error') + '). Check the admin token.</p>';
+    });
+  }
+
+  /* ---- 3. editor --------------------------------------------------------- */
+  function openEditor(id) {
+    api('/matchups/admin/list').then(function (d) {
+      var a = (d.articles || []).filter(function (x) { return String(x.id) === String(id); })[0];
+      if (!a) return;
+      current = a;
+      $('editorPanel').hidden = false;
+      $('editorTitle').textContent = a.away_team + ' vs ' + a.home_team;
+      $('editorUrl').innerHTML = 'Canonical <code>https://trustmyrecord.com' + esc(a.path) + '</code> · ' +
+        'short id <code>g' + esc(a.short_id) + '</code> · immutable';
+      $('fTitle').value = a.title || '';
+      $('fH1').value = a.h1 || '';
+      $('fDesc').value = a.meta_description || '';
+      $('fDek').value = a.dek || '';
+      $('fHero').value = a.hero_image_url || '';
+      $('fHeroAlt').value = a.hero_image_alt || '';
+      $('fOg').value = a.og_image_url || '';
+      $('fReason').value = '';
+      $('fBody').value = JSON.stringify(a.body_json || [], null, 2);
+      return api('/matchups/' + id + '/readiness').then(function (r) {
+        renderReadiness(r);
+        return api('/matchups/' + a.sport + '/' + a.slug).catch(function () { return {}; });
+      }).then(function (full) {
+        $('fProv').value = JSON.stringify((full && full.provenance) || [], null, 2);
+      });
+    });
+  }
+
+  function renderReadiness(r) {
+    if (!r) { $('readiness').innerHTML = ''; return; }
+    var head = r.publishable
+      ? '<p class="ok"><strong>Ready to publish.</strong> ' + r.provenance_rows + ' provenance rows.</p>'
+      : '<p class="bad"><strong>Blocked.</strong> ' + (r.violations || []).length +
+        ' issue(s), ' + r.provenance_rows + ' provenance rows.</p>';
+    var list = (r.violations || []).map(function (v) {
+      return '<div class="viol"><strong>' + esc(v.code) + '</strong> — ' +
+             esc(v.module || '') + '<br>' + esc(v.detail) + '</div>';
+    }).join('');
+    $('readiness').innerHTML = head + list;
+  }
+
+  function collect() {
+    return {
+      title: $('fTitle').value, h1: $('fH1').value,
+      meta_description: $('fDesc').value, dek: $('fDek').value,
+      hero_image_url: $('fHero').value, hero_image_alt: $('fHeroAlt').value,
+      og_image_url: $('fOg').value,
+      og_title: $('fTitle').value, og_description: $('fDesc').value,
+      body_json: JSON.parse($('fBody').value || '[]')
+    };
+  }
+
+  $('saveBtn').onclick = function () {
+    if (!current) return;
+    var patch;
+    try { patch = collect(); } catch (e) { return alert('body_json is not valid JSON: ' + e.message); }
+    var prov;
+    try { prov = JSON.parse($('fProv').value || '[]'); } catch (e) { return alert('provenance is not valid JSON: ' + e.message); }
+    api('/matchups/' + current.id, { method: 'PATCH', body: { patch: patch, materialChange: $('fReason').value || null } })
+      .then(function () { return api('/matchups/' + current.id + '/provenance', { method: 'POST', body: { rows: prov } }); })
+      .then(function () { return api('/matchups/' + current.id + '/readiness'); })
+      .then(function (r) { renderReadiness(r); loadList(); })
+      .catch(function (e) { alert('Save failed: ' + (e.error || e.__status)); });
+  };
+
+  $('checkBtn').onclick = function () {
+    if (!current) return;
+    api('/matchups/' + current.id + '/readiness').then(renderReadiness);
+  };
+
+  $('pubBtn').onclick = function () {
+    if (!current) return;
+    if (!confirm('Publish this Game File? It becomes a permanent public URL.')) return;
+    api('/matchups/' + current.id + '/publish', { method: 'POST', body: { feature: true } })
+      .then(function () { alert('Published.'); loadList(); openEditor(current.id); })
+      .catch(function (e) {
+        renderReadiness({ publishable: false, provenance_rows: '?', violations: e.violations || [] });
+        alert('Publication blocked (' + (e.__status || '') + '): ' + (e.error || 'see Readiness'));
+      });
+  };
+
+  $('featBtn').onclick = function () {
+    if (!current) return;
+    api('/matchups/' + current.id + '/feature', { method: 'POST', body: {} })
+      .then(function () { loadList(); }).catch(function (e) { alert(e.error || 'failed'); });
+  };
+
+  $('unpubBtn').onclick = function () {
+    if (!current) return;
+    if (!confirm('Unpublish? The article stays live at its URL; it leaves the sitemap and the hubs.')) return;
+    api('/matchups/' + current.id + '/unpublish', { method: 'POST', body: { reason: 'admin' } })
+      .then(function (d) { alert(d.note); loadList(); }).catch(function (e) { alert(e.error || 'failed'); });
+  };
+
+  loadList();
+}());
+</script>
+</body>
+</html>

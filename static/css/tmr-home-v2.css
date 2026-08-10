@@ -595,3 +595,84 @@ box-shadow:none !important;color:#7f8ea6 !important}
 @media(max-width:410px){
   .spot .sub2{line-height:1.5;min-height:6em;min-height:4lh}
 }
+
+/* ---------------------------------------------------------------------------
+   MATCHUP OF THE DAY COVER — MATCHUP_OF_THE_DAY_PHASE1_20260810
+   -----------------------------------------------------------------------------
+   The approved daily cover for today's TMR Game File. Approved by Nima
+   2026-08-10 as an isolated, additive homepage component: an integrated
+   editorial cover, explicitly NOT a popup, modal, interstitial or anything with
+   a close button, and it never covers the navbar or hides homepage content from
+   a visitor or a crawler.
+
+   ISOLATION. Every rule below is scoped under .motd. Nothing here touches .hero,
+   .bridge, .wrap, .dash or any existing selector, and no approved value is
+   changed: the cover is a new <section> that sits ABOVE .hero, so the hero and
+   everything under it keep the exact geometry the baseline lock asserts. The
+   locked `.hero{...min-height:calc(100vh - var(--header-height))...}` rules are
+   deliberately untouched — the hero still owns a full viewport, it is simply the
+   second one now.
+
+   The --header-height measurement script is unaffected: it measures
+   .hero.getBoundingClientRect().top, which is still the real distance from the
+   top of the document to the hero, cover included.
+
+   HEIGHT. 78vh desktop / 62svh mobile. Both are deliberately under 100: the
+   cover must read as "there is more site below this", and on a phone the next
+   thing down has to be reachable with one ordinary scroll. svh (not vh) on
+   mobile because vh on iOS is the *large* viewport and would push the hero a
+   toolbar's height further down than intended.
+
+   When no Game File is published the marker block is empty, this section does
+   not exist, and the homepage renders exactly as it does today.
+   --------------------------------------------------------------------------- */
+body.tmr-ds .motd{position:relative;isolation:isolate;overflow:hidden;
+  min-height:78vh;display:flex;align-items:center;
+  background:
+    radial-gradient(1100px 620px at 18% 12%,rgba(34,210,192,.20),transparent 62%),
+    radial-gradient(900px 560px at 88% 86%,rgba(185,133,5,.16),transparent 60%),
+    linear-gradient(168deg,#04101C 0%,#07192B 46%,#040D17 100%)}
+body.tmr-ds .motd::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(110deg,rgba(255,255,255,.026) 0 1.5px,transparent 1.5px 26px)}
+body.tmr-ds .motd-in{position:relative;z-index:2;max-width:1720px;margin:0 auto;padding:56px 28px;width:100%}
+body.tmr-ds .motd-kicker{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;
+  background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;
+  font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+body.tmr-ds .motd-teams{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 22px;margin:22px 0 6px;
+  font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;
+  font-size:clamp(46px,7.2vw,104px);line-height:.98;font-weight:900;text-transform:uppercase;
+  letter-spacing:.004em;color:#fff}
+body.tmr-ds .motd-teams em{font-style:normal;font-family:Inter,'Inter Fallback W',sans-serif;
+  font-size:clamp(15px,1.5vw,22px);font-weight:800;letter-spacing:.16em;color:var(--brand-lt);
+  text-transform:lowercase}
+body.tmr-ds .motd-file{font-size:clamp(14px,1.5vw,19px);font-weight:800;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold-b);margin:0 0 16px}
+body.tmr-ds .motd-dek{color:#B7CEE4;font-size:clamp(15px,1.5vw,18.5px);line-height:1.6;max-width:64ch;
+  font-weight:450;margin:0 0 26px}
+body.tmr-ds .motd-cta{display:flex;align-items:center;gap:14px 26px;flex-wrap:wrap;margin:0}
+body.tmr-ds .motd-btn{display:inline-flex;align-items:center;justify-content:center;height:54px;padding:0 32px;
+  border-radius:var(--r-sm);font-size:17px;font-weight:800;letter-spacing:-.012em;
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);color:#fff;
+  box-shadow:0 2px 14px rgba(12,148,140,.36);white-space:nowrap;transition:.15s}
+body.tmr-ds .motd-btn:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
+body.tmr-ds .motd-alt{color:#B7CEE4;font-size:15px;font-weight:700;border-bottom:1px solid rgba(183,206,228,.4);
+  padding-bottom:2px}
+body.tmr-ds .motd-alt:hover{color:#fff;border-bottom-color:#fff}
+body.tmr-ds .motd-scroll{margin:30px 0 0;color:#6E8CA8;font-size:12px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase}
+@media(max-width:900px){
+  body.tmr-ds .motd{min-height:62vh;min-height:62svh}
+  body.tmr-ds .motd-in{padding:38px 20px}
+  /* Stacked, because "AWAY vs HOME" on one line at phone widths either wraps
+     mid-word or shrinks the type until the cover stops feeling like a cover. */
+  body.tmr-ds .motd-teams{display:block;font-size:clamp(40px,13vw,64px);margin:18px 0 4px}
+  body.tmr-ds .motd-teams em{display:block;margin:2px 0;font-size:14px}
+  /* The dek is the only variable-height element in the cover, and a long one
+     was pushing the section to ~92% of a phone viewport in testing — past the
+     point where the site underneath reads as continuous. Clamped rather than
+     shortened so the copy stays the same on desktop, where there is room. */
+  body.tmr-ds .motd-dek{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+    overflow:hidden;font-size:15.5px;margin-bottom:22px}
+  body.tmr-ds .motd-btn{height:50px;width:100%;max-width:340px}
+  body.tmr-ds .motd-scroll{margin-top:22px}
+}

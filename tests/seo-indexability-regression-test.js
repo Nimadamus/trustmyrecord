@@ -291,6 +291,147 @@ console.log('\n/u/ profile pages');
   ok(names.length + ' profiles: index,follow + self-canonical + ProfilePage + baked stats');
 }
 
+/* ------------------------- 8b. /matchups/ Game Files: the permanence guard */
+
+console.log('\n/matchups/ Game Files');
+{
+  const mdir = path.join(ROOT, 'matchups');
+  const sitemapXml = read(path.join(ROOT, 'sitemap.xml'));
+
+  // The two hubs are the discovery path. If they are not indexable, every
+  // article behind them is one internal link poorer and the archive stops
+  // compounding, which is the entire point of the section.
+  for (const hub of ['matchups', 'matchups/mlb']) {
+    const file = path.join(ROOT, hub, 'index.html');
+    if (!fs.existsSync(file)) { fail('missing hub: /' + hub + '/'); continue; }
+    const html = read(file);
+    const url = SITE + '/' + hub + '/';
+    if (metaRobots(html).includes('noindex')) fail('hub is noindex: ' + url);
+    if (norm(canonical(html)) !== norm(url)) fail('hub is not self-canonical: ' + url);
+    if (!/<h1[\s>]/i.test(html)) fail('hub has no <h1>: ' + url);
+    if (!/"@type":\s*"BreadcrumbList"/.test(html)) fail('hub has no BreadcrumbList: ' + url);
+  }
+
+  // The methodology destination the byline points at has to exist, or the
+  // author attribution is a dead link on every article on the site.
+  if (!fs.existsSync(path.join(ROOT, 'about', 'research', 'index.html')))
+    fail('/about/research/ is missing — every Game File byline links to it');
+
+  const articles = [];
+  if (fs.existsSync(mdir)) {
+    for (const sport of fs.readdirSync(mdir)) {
+      const sdir = path.join(mdir, sport);
+      if (!fs.statSync(sdir).isDirectory()) continue;
+      for (const slug of fs.readdirSync(sdir)) {
+        const file = path.join(sdir, slug, 'index.html');
+        if (fs.existsSync(file)) articles.push({ sport, slug, file });
+      }
+    }
+  }
+
+  const shortIds = new Map();
+  for (const a of articles) {
+    const html = read(a.file);
+    const url = `${SITE}/matchups/${a.sport}/${a.slug}/`;
+
+    // --- URL identity -----------------------------------------------------
+    // No date in the slug, ever. A dated slug turns a permanent publication
+    // into a dated one and invites the "replace it tomorrow" mistake this
+    // whole architecture exists to prevent.
+    if (/\d{4}-\d{2}-\d{2}/.test(a.slug) || /-(january|february|march|april|may|june|july|august|september|october|november|december)-/.test(a.slug))
+      fail('Game File slug contains a date: ' + url);
+    const m = /-g(\d+)$/.exec(a.slug);
+    if (!m) fail('Game File slug does not end in the immutable -g<id>: ' + url);
+    else {
+      if (shortIds.has(m[1]))
+        fail(`short id g${m[1]} is used by two Game Files: ${shortIds.get(m[1])} and ${url}`);
+      shortIds.set(m[1], url);
+    }
+    if (a.slug !== a.slug.toLowerCase()) fail('Game File slug is not lowercase: ' + url);
+
+    // --- indexability -----------------------------------------------------
+    const robots = metaRobots(html);
+    if (robots.includes('noindex')) fail('Game File is noindex: ' + url);
+    if (!/index/.test(robots)) fail('Game File has no index,follow robots tag: ' + url);
+    if (!/max-image-preview:large/.test(robots))
+      fail('Game File is missing max-image-preview:large: ' + url);
+    if (norm(canonical(html)) !== norm(url))
+      fail('Game File is not self-canonical: ' + url + ' -> ' + canonical(html));
+
+    // --- the content is actually IN the document --------------------------
+    // This is the C1/soft-404 guard, in the form it takes for an article: the
+    // failure mode is not an empty shell, it is a shell that looks convincing.
+    if (!/<h1[\s>]/i.test(html)) fail('Game File has no <h1>: ' + url);
+    if (/Loading analysis|Loading…|Loading\.\.\./i.test(html))
+      fail('Game File ships a loading placeholder instead of baked content: ' + url);
+    if (textLen(html) < 2500)
+      fail(`Game File has only ${textLen(html)} chars of text — a flagship article that thin is a soft 404: ${url}`);
+
+    // --- authorship + dates -----------------------------------------------
+    if (!/href="\/about\/research\/"/.test(html))
+      fail('Game File byline does not link to /about/research/: ' + url);
+    if (!/<time datetime="20\d\d-/.test(html))
+      fail('Game File has no machine-readable published/updated date: ' + url);
+
+    // --- structured data, and it must agree with the page -----------------
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    if (!blocks.length) { fail('Game File has no JSON-LD: ' + url); continue; }
+    let article = null, crumbs = null;
+    for (const b of blocks) {
+      let parsed;
+      try { parsed = JSON.parse(b[1]); }
+      catch (err) { fail('Game File JSON-LD does not parse: ' + url + ' — ' + err.message); continue; }
+      for (const node of parsed['@graph'] || [parsed]) {
+        if (node['@type'] === 'Article') article = node;
+        if (node['@type'] === 'BreadcrumbList') crumbs = node;
+      }
+    }
+    if (!article) { fail('Game File has no Article schema: ' + url); }
+    else {
+      for (const field of ['headline', 'description', 'image', 'datePublished', 'dateModified', 'author', 'publisher', 'mainEntityOfPage'])
+        if (!article[field]) fail(`Article schema is missing ${field}: ${url}`);
+      if (article.mainEntityOfPage && norm(article.mainEntityOfPage['@id']) !== norm(url))
+        fail('Article mainEntityOfPage does not match the canonical: ' + url);
+      if (article.author && article.author.name !== 'TrustMyRecord Research')
+        fail('Article author is not the approved organisational byline: ' + url);
+      // Schema must describe the page, not decorate it: the headline has to be
+      // the H1 the reader actually sees.
+      const h1 = (/<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(html) || [])[1] || '';
+      const plainH1 = h1.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim();
+      if (plainH1 && article.headline && plainH1 !== article.headline.trim())
+        fail(`Article headline ("${article.headline}") does not match the visible H1 ("${plainH1}"): ${url}`);
+    }
+    if (!crumbs) fail('Game File has no BreadcrumbList: ' + url);
+    else if ((crumbs.itemListElement || []).length < 4)
+      fail('BreadcrumbList should be Home > Matchups > Sport > Matchup: ' + url);
+
+    // --- imagery ----------------------------------------------------------
+    const hero = /<img class="gf-hero-img" src="([^"]+)"[^>]*alt="([^"]*)"/.exec(html);
+    if (!hero) fail('Game File has no hero image: ' + url);
+    else {
+      if (!/^\/static\//.test(hero[1]))
+        fail('Game File hero is not served from a TMR-controlled path: ' + hero[1]);
+      if (!hero[2].trim()) fail('Game File hero image has empty alt text: ' + url);
+    }
+
+    // --- discovery --------------------------------------------------------
+    const occurrences = sitemapXml.split(`<loc>${url}</loc>`).length - 1;
+    if (occurrences > 1) fail(`Game File appears ${occurrences} times in the sitemap: ${url}`);
+    // Zero is legitimate: an unpublished article keeps its page and loses its
+    // sitemap entry. That is the designed behaviour, not a defect.
+    if (occurrences === 1) {
+      const hub = read(path.join(ROOT, 'matchups', 'index.html'));
+      const sportHub = path.join(ROOT, 'matchups', a.sport, 'index.html');
+      const href = `/matchups/${a.sport}/${a.slug}/`;
+      if (!hub.includes(href))
+        fail('published Game File has no crawlable link from /matchups/: ' + url);
+      if (fs.existsSync(sportHub) && !read(sportHub).includes(href))
+        fail(`published Game File has no crawlable link from /matchups/${a.sport}/: ` + url);
+    }
+  }
+  ok(articles.length + ' Game File(s): permanent slug + self-canonical + Article/Breadcrumb schema + baked body');
+}
+
 /* --------------------------------------- 9. internal links all resolve */
 
 console.log('\ninternal link integrity');

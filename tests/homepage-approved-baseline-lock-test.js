@@ -86,6 +86,25 @@ const REQUIRED = [
   '.hero-grid{grid-template-columns:minmax(0,1fr) 460px;gap:48px}',
   '.hero-grid{grid-template-columns:1fr;gap:40px}',
   '.bridge-in{grid-template-columns:repeat(2,1fr)',
+
+  // MATCHUP OF THE DAY COVER — the ONE authorised addition to this baseline
+  // (Nima, 2026-08-10). Scope of the authorisation: recognise the isolated
+  // cover component. Nothing above was removed or relaxed to accommodate it,
+  // and the FORBIDDEN list below is extended, not shortened.
+  //
+  // The cover is injected between the ticker and .hero, so the hero keeps its
+  // full-viewport geometry and every approved rule above still applies to it
+  // unchanged. These entries lock the properties that make the cover safe:
+  // it is a normal in-flow section, it is under a full viewport tall, and it
+  // scrolls away like any other content.
+  // The marker pair, asserted as two separate strings: once a Game File is
+  // featured the generator writes the cover BETWEEN them, so an "empty pair"
+  // assertion would pass only on days with nothing published.
+  '<!--MK:motdCover-->',
+  '<!--/MK:motdCover-->',
+  'body.tmr-ds .motd{position:relative;isolation:isolate;overflow:hidden;',
+  'min-height:78vh;display:flex;align-items:center;',
+  'body.tmr-ds .motd{min-height:62vh;min-height:62svh}',
 ];
 
 // the rejected bed0bac1 "rebalance" layout (reverted twice: 835b1fe3, f5ac1ca7)
@@ -99,6 +118,20 @@ const FORBIDDEN = [
   ['position:fixed', 'stripe/hero must scroll naturally, never position:fixed'],
   ['<div class="wrap bridge"', 'rejected wrap-constrained bridge stripe (large side margins) — must be full-width, replaced 2026-08-01'],
   ['border-radius:12px;box-shadow:0 1px 2px rgba(3,10,20,.16), 0 14px 34px rgba(3,10,20,.24);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;overflow:hidden}', 'rejected rounded-card bridge-in (replaced by full-width flush stripe 2026-08-01)'],
+
+  // The cover was approved as an INTEGRATED editorial cover and explicitly not
+  // as an overlay. These are the shapes that would turn it into one, and the
+  // ways it could start hiding the site underneath it. Any of them appearing
+  // here means the approved behaviour has been violated, whatever the CSS was
+  // trying to achieve.
+  ['.motd{position:fixed', 'the cover must scroll away with the page, never overlay it'],
+  ['.motd{position:sticky', 'the cover must scroll away with the page, never stick over it'],
+  ['class="motd-close"', 'the cover must never have a dismiss/X control — it is not a popup'],
+  ['.motd-backdrop', 'the cover must never dim or block the page behind it'],
+  ['.motd{min-height:100vh', 'the cover must stay under a full viewport so the site below is visibly continuous'],
+  ['min-height:100svh}\n.motd', 'the cover must stay under a full viewport on mobile'],
+  ['.motd{z-index:', 'the cover must not be stacked above the navbar or the ticker'],
+  ['body.motd-open', 'the cover must never lock or modify page scrolling'],
 ];
 
 for (const required of REQUIRED) {
@@ -108,4 +141,27 @@ for (const [forbidden, why] of FORBIDDEN) {
   assert(!page.includes(forbidden), `rejected layout value found (${why}):\n  ${forbidden}`);
 }
 
-console.log(`homepage approved-baseline lock passed (${REQUIRED.length} required, ${FORBIDDEN.length} forbidden)`);
+// Structural checks for the authorised cover. String membership cannot express
+// "above the hero and below the ticker", and that placement is the whole reason
+// the approved hero geometry above is still valid.
+{
+  const cover = page.indexOf('<!--MK:motdCover-->');
+  const coverEnd = page.indexOf('<!--/MK:motdCover-->');
+  const hero = page.indexOf('<section class="hero">');
+  const ticker = page.indexOf('<div class="ticker">');
+  assert(cover > -1 && coverEnd > cover, 'the Matchup of the Day cover marker pair is malformed');
+  assert(coverEnd < hero,
+    'the Matchup of the Day cover must sit ABOVE <section class="hero"> — the approved hero ' +
+    'geometry locked above depends on the hero being untouched and merely moved down');
+  assert(ticker > -1 && ticker < cover,
+    'the cover must sit BELOW the live-score ticker — it may never cover the nav or the ticker');
+
+  // The cover is allowed to be empty (no Game File featured today). What it is
+  // never allowed to be is the only thing on the page: the homepage's own H1
+  // and hero must still be present and after it.
+  assert(page.indexOf('<h1 class="hh"') > coverEnd || page.indexOf('class="hh"') > coverEnd,
+    'the homepage hero headline must still follow the cover — the cover never replaces the homepage');
+}
+
+console.log(`homepage approved-baseline lock passed (${REQUIRED.length} required, ${FORBIDDEN.length} forbidden, ` +
+            `+ cover placement)`);
