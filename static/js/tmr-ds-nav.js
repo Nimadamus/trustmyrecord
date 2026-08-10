@@ -472,7 +472,17 @@
   }
 
   function init() {
-    if (!document.body.classList.contains('tmr-ds')) return;   // opt-in only
+    /* Opt-in only, in either mode. `tmr-ds` adopts the whole design system;
+       `tmr-ds-shell` takes the shared header and footer and nothing else, for a
+       mature page that keeps its own visual language (see the SHELL-ONLY
+       ADOPTION note in tmr-ds.css).
+
+       This gate previously tested the literal `tmr-ds` class, so a shell-mode
+       page loaded the stylesheet, carried the class, and then got no navbar at
+       all -- the CSS half of shell mode existed without the JS half. Caught on
+       /sportsbook/ before it shipped: dsNav=false, dsFooter=false. */
+    var cl = document.body.classList;
+    if (!cl.contains('tmr-ds') && !cl.contains('tmr-ds-shell')) return;
     buildNav();
     buildFooter();
 
