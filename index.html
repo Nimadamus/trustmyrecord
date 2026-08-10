@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="05475722c013">
+<html lang="en" data-tmr-build="7fbd7fff0c09">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -625,6 +625,68 @@ box-shadow:none !important;color:#7f8ea6 !important}
 @media(max-width:410px){
   .spot .sub2{line-height:1.5;min-height:6em;min-height:4lh}
 }
+
+/* ===================================================== TMR GAME FILE TICKER ==
+   The one game with a published Game File keeps its existing ticker card and
+   gains a way in. Applied by tmr-home-live.js; absent whenever nothing is
+   published, so these rules simply never match.
+
+   Every value here is chosen to cost zero layout. The accent bar is an inset
+   shadow rather than a border, the badge is absolutely positioned, and the
+   pulse animates box-shadow and opacity only. The strip's height, the card's
+   width and the position of every other game are exactly what they were.
+   ============================================================================ */
+
+.ticker .gm.gm--gf {
+  position: relative;
+  background: rgba(34, 210, 192, .085);
+  border-color: rgba(34, 210, 192, .38);
+  /* Left accent: inset, so it does not add the 3px a border would. */
+  box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0);
+}
+.ticker a.gm.gm--gf:hover {
+  background: rgba(34, 210, 192, .16);
+  border-color: rgba(34, 210, 192, .62);
+}
+
+/* The badge is out of flow and reserves NO space. Two earlier attempts did:
+   padding on the trend row widened this card from 260px to 325px and pushed the
+   three games to its right along with it, which is exactly the movement we were
+   asked not to cause. The badge now overlays the tail of the trend line behind a
+   short scrim. The trend text is unchanged in the DOM and still fully readable
+   from the card's title attribute. */
+.ticker .gm.gm--gf .gm-tr::after {
+  content: ""; position: absolute; right: 0; bottom: 0; width: 108px; height: 18px;
+  background: linear-gradient(90deg, rgba(9,24,32,0) 0%, rgba(9,26,34,.92) 42%, rgba(9,26,34,.97) 100%);
+  pointer-events: none;
+}
+.ticker .gm.gm--gf .gm-tr { position: static; }
+
+.ticker .gm.gm--gf .gm-gf {
+  position: absolute; bottom: 5px; right: 8px;
+  font-size: 8.5px; font-weight: 900; letter-spacing: .1em;
+  color: #06231F; background: var(--brand-lt, #22D2C0);
+  padding: 2px 5px; border-radius: 3px; line-height: 1;
+  pointer-events: none; white-space: nowrap;
+}
+
+/* One slow breath every 7s. Long gap, shallow amplitude, no colour flashing:
+   it should read as "this one is different", not as an advertisement. */
+@keyframes tmrGfPulse {
+  0%, 82%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                              0 0 0 0 rgba(34, 210, 192, 0); }
+  88%           { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                              0 0 0 4px rgba(34, 210, 192, .20); }
+  94%           { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                              0 0 0 7px rgba(34, 210, 192, 0); }
+}
+.ticker .gm.gm--gf { animation: tmrGfPulse 7s ease-in-out infinite; }
+
+/* Someone who has asked the OS for less motion gets the styling and none of the
+   animation. The card is still obviously the featured one without it. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker .gm.gm--gf { animation: none; }
+}
 </style>
 <!-- END HOME CRITICAL CSS -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -1195,7 +1257,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.05475722c013.js"></script>
+<script src="/static/js/tmr-home-live.7fbd7fff0c09.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page
