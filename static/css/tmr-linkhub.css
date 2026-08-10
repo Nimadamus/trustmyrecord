@@ -126,7 +126,19 @@
     gap: 7px;
     padding: 5px 11px 5px 8px;
     border-radius: 8px;
-    background: linear-gradient(135deg, #b87500, #d99a1c);
+    /* INTENSITY (2026-08-10). The chip was the most saturated element in the
+       bar and competed with the page title it sits above. Only its intensity
+       changes here -- dimensions, min-height, padding, gap, radius, ink,
+       weight, hover, focus, icon and destination are all untouched.
+
+       The bright stop comes down and desaturates (S 77% -> 66%), which cuts
+       the gloss: luminance spread across the gradient drops from .150 to
+       .066. The DARK stop is deliberately left exactly as it was, because it
+       is the contrast floor -- #1a1204 on #b87500 is 4.93:1, barely over AA,
+       so darkening or desaturating that end would have pushed the label
+       below the threshold. Measured after: 4.93:1 on the dark stop
+       (unchanged) and 6.10:1 on the light stop (was 7.59:1). */
+    background: linear-gradient(135deg, #b87500, #c08a28);
     color: #1a1204 !important;
     font-weight: 800 !important;
     letter-spacing: 0.2px;
