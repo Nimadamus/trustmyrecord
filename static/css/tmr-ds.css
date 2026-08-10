@@ -237,6 +237,14 @@ body.tmr-ds .ds-mainnav{
   display:flex;align-items:center;justify-content:center;
   column-gap:2px;row-gap:4px;min-width:0;flex-wrap:wrap;flex:1 1 auto;
 }
+/* THE TOP-LEVEL NAV ITEM. `.ds-navitem` is the one component every entry in the
+   primary row uses, in one of two modes: `--trigger` opens a dropdown,
+   `--link` goes straight to a route. Both modes are the same box — same face,
+   size, weight, colour, height, padding and trailing slot — so a direct link
+   is not visibly a different kind of control from a trigger beside it.
+   The `.ds-mainnav a` / `.ds-menu>button` selectors stay because the dropdown
+   PANEL links still inherit their display/transition basics from the first. */
+body.tmr-ds .ds-navitem,
 body.tmr-ds .ds-mainnav a,
 body.tmr-ds .ds-menu>button{
   font-size:15px;font-weight:700;color:#AEC6DC;line-height:1.25;
@@ -245,8 +253,14 @@ body.tmr-ds .ds-menu>button{
   display:inline-flex;align-items:center;gap:6px;
   transition:color .15s ease,background-color .15s ease;
 }
+body.tmr-ds .ds-navitem:hover,
 body.tmr-ds .ds-mainnav a:hover,
 body.tmr-ds .ds-menu>button:hover{color:#fff;background:rgba(255,255,255,.07)}
+/* Current-page treatment is the same subtle weightless chip in both modes: a
+   link marks itself with aria-current, a trigger's parent gets .is-current when
+   any route inside its panel is the one being viewed. No pill, no border, no
+   accent fill — the item must not look like a different control when active. */
+body.tmr-ds .ds-navitem[aria-current="page"],
 body.tmr-ds .ds-mainnav a.on,
 body.tmr-ds .ds-mainnav a[aria-current="page"],
 body.tmr-ds .ds-menu.is-current>button{color:#fff;background:rgba(255,255,255,.09)}
@@ -254,12 +268,27 @@ body.tmr-ds .ds-menu.is-open>button{color:#fff;background:rgba(255,255,255,.09)}
 
 /* dropdowns preserve every route the previous nav exposed */
 body.tmr-ds .ds-menu{position:relative}
-/* The chevron is a hairline, not a filled arrowhead: 5px box, 1.6px strokes,
-   held at 55% opacity so it reads as an affordance rather than a second glyph
-   competing with the label. translate-then-rotate (not the old
+/* THE TRAILING SLOT (2026-08-10). Every .ds-navitem reserves the SAME trailing
+   slot, whichever mode it is in — a trigger paints a chevron in it, a direct
+   link leaves it empty. That is what keeps the row's rhythm even.
+
+   Before this, the chevron was content only triggers had, so it widened only
+   their boxes: measured on the live nav at 1440px, every trigger sat 22px from
+   its label's right edge to its own border while Today sat 9px, which put 20px
+   of air between Today and Sportsbook against 33px between every other pair.
+   Today read as crowded and stranded — not because it was styled differently,
+   but because the shared layout silently charged the chevron to one mode only.
+   Reserving the slot on the component, rather than nudging Today with a
+   one-off margin, is what makes direct links and triggers even as siblings.
+
+   The chevron itself is a hairline, not a filled arrowhead: 5px box, 1.6px
+   strokes, held at 55% opacity so it reads as an affordance rather than a
+   second glyph competing with the label. translate-then-rotate (not the old
    rotate-then-translate, which nudged along the ROTATED axis and therefore
    pushed the mark diagonally) keeps it optically centred on the text baseline
-   in every item, and it flips to point up while its panel is open. */
+   in every item, and it flips to point up while its panel is open. The link
+   mode keeps the identical box and transform with transparent strokes, so the
+   two modes cannot drift apart. */
 body.tmr-ds .ds-menu>button::after{
   content:"";width:5px;height:5px;flex:0 0 auto;margin-left:1px;
   border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;
@@ -268,6 +297,18 @@ body.tmr-ds .ds-menu>button::after{
 }
 body.tmr-ds .ds-menu>button:hover::after{opacity:.95}
 body.tmr-ds .ds-menu.is-open>button::after{opacity:.95;transform:translateY(1px) rotate(-135deg)}
+/* Link mode reserves the identical box with transparent strokes. Same width,
+   same margin, same transform — so the two modes cannot drift apart, and a
+   direct link ends up exactly as wide as a trigger with the same label. The
+   chevron rule above deliberately keeps its structural `.ds-menu>button`
+   selector: the signed-in account trigger is a `.ds-menu` button too and is
+   rendered by a different code path, so re-keying it on a class would have
+   silently dropped its chevron. */
+body.tmr-ds .ds-navitem--link::after{
+  content:"";width:5px;height:5px;flex:0 0 auto;margin-left:1px;
+  border-right:1.6px solid transparent;border-bottom:1.6px solid transparent;
+  transform:translateY(-2px) rotate(45deg);
+}
 body.tmr-ds .ds-menu-panel{
   position:absolute;top:calc(100% + 10px);left:-2px;width:max-content;min-width:170px;
   background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);

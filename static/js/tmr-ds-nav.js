@@ -136,15 +136,21 @@
    * byte-identical to the one shipped before this release: the public,
    * crawlable link graph is unchanged. Asserted in tests/today-card-test.js.
    */
+  /* Today is a `.ds-navitem` in LINK mode — the same top-level component the
+     dropdowns use, just pointing at a route instead of opening a panel. It is
+     not a bespoke nav element: everything about how it looks and spaces itself
+     comes from `.ds-navitem` in tmr-ds.css, and `--link` only tells that
+     component to leave the trailing chevron slot empty. `ds-todaylink` is kept
+     purely as a hook for tests/analytics; it carries no styling. */
   function todayLink() {
     if (!hasTokens()) return '';
-    return '<a class="ds-todaylink" href="/today/"' +
+    return '<a class="ds-navitem ds-navitem--link ds-todaylink" href="/today/"' +
       (isCurrent('/today/') ? ' aria-current="page"' : '') + '>Today</a>';
   }
   function menu(label, list) {
     var on = list.some(function (r) { return isCurrent(r[0]); });
     return '<div class="ds-menu' + (on ? ' is-current' : '') + '">' +
-      '<button type="button" aria-expanded="false" aria-haspopup="true">' + label + '</button>' +
+      '<button type="button" class="ds-navitem ds-navitem--trigger" aria-expanded="false" aria-haspopup="true">' + label + '</button>' +
       '<div class="ds-menu-panel" role="menu" aria-label="' + label + ' links">' +
       list.map(function (r) {
         return '<a href="' + r[0] + '" role="menuitem"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
