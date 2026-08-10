@@ -480,7 +480,7 @@ def b_cards(block):
             raise RuntimeError("player card src must be a TMR-controlled /static/ path: %r" % src)
         if not c.get("alt"):
             raise RuntimeError("player card %s has no alt text" % src)
-        out.append('<img src="%s" alt="%s" width="520" height="300" loading="lazy" decoding="async">'
+        out.append('<img src="%s" alt="%s" width="520" height="190" loading="lazy" decoding="async">'
                    % (esc(src), esc(c.get("alt"))))
     return '<div class="gf-cards">%s</div>' % "".join(out)
 
@@ -862,50 +862,6 @@ def itemlist_jsonld(articles, list_url, name):
         payload, indent=2, ensure_ascii=False)
 
 
-def cover_html(article):
-    """The homepage cover. Static, self-contained, no runtime dependency: if the
-    API is down the last baked cover is still a correct, clickable link to a real
-    article rather than a spinner in the first viewport."""
-    matchup_a = esc(article["away_team"])
-    matchup_b = esc(article["home_team"])
-    href = "/matchups/%s/%s/" % (esc(article["sport"]), esc(article["slug"]))
-    label = esc(SPORT_LABEL.get(article["sport"], article["sport"].upper()))
-    # Counts are COMPUTED from the article, never authored. A cover that claims
-    # "27 trends" over a page carrying nine is the same class of small lie the
-    # provenance gate exists to stop, and it would be the first thing a visitor
-    # could check.
-    trends = count_trends(article)
-    claims = len(article.get("provenance") or [])
-    modules = len([m for m in (article.get("body_json") or [])
-                   if m.get("module") != "hero-facts"])
-    stats = []
-    if trends:
-        stats.append('<span><b>%d</b> sourced matchup trends</span>' % trends)
-    if claims:
-        stats.append('<span><b>%d</b> verified research claims</span>' % claims)
-    if modules:
-        stats.append('<span><b>%d</b> analysis modules</span>' % modules)
-    stats_html = ('    <p class="motd-stats">%s</p>\n' % "".join(stats)) if stats else ""
-
-    return (
-        '\n<section class="motd" aria-labelledby="motd-h">\n'
-        '  <div class="motd-in">\n'
-        '    <p class="motd-kicker">TMR Matchup of the Day &middot; %s</p>\n'
-        '    <h2 class="motd-teams" id="motd-h">'
-        '<span>%s</span><em>vs</em><span>%s</span></h2>\n'
-        '    <p class="motd-file">The TMR Game File</p>\n'
-        '    <p class="motd-dek">%s</p>\n'
-        '%s'
-        '    <p class="motd-cta">'
-        '<a class="motd-btn" href="%s">Enter the Game File</a>'
-        '<a class="motd-alt" href="/matchups/">All TMR Game Files</a></p>\n'
-        '    <p class="motd-scroll" aria-hidden="true">Scroll for the rest of TrustMyRecord</p>\n'
-        '  </div>\n'
-        '</section>\n' % (label, matchup_a, matchup_b,
-                          esc(article.get("dek") or article.get("meta_description") or ""),
-                          stats_html, href))
-
-
 def sitemap_block(articles, hubs):
     lines = ["  <!-- BEGIN_MATCHUP_URLS -->"]
     for loc, lastmod in hubs:
@@ -1051,13 +1007,16 @@ def main():
                               sport_path)
         writes.append((sport_path, text))
 
-    # ---- homepage cover -----------------------------------------------------
-    home = read(HOME)
-    if "<!--MK:motdCover-->" in home:
-        home = replace_marker(home, "motdCover", cover_html(lead) if lead else "", HOME)
-        writes.append((HOME, home))
-    else:
-        print("WARN: homepage has no MK:motdCover marker; cover not injected")
+    # ---- homepage: intentionally NOT touched --------------------------------
+    # A full-viewport Matchup cover was built here and rejected outright. The
+    # homepage is not this system's surface, so the generator no longer writes
+    # to it at all - not even behind a marker check. Leaving the injection code
+    # in place "harmlessly" is how a rejected design comes back: someone restores
+    # the marker and the cover silently reappears on the highest-traffic page on
+    # the site. If a homepage promo is ever wanted it will be a small, separately
+    # approved module, added deliberately rather than revived by accident.
+    #
+    # Guarded by tests/homepage-approved-baseline-lock-test.js.
 
     # ---- sitemap ------------------------------------------------------------
     # Hubs are discovered from DISK, not from the published set. A sport hub is
@@ -1105,6 +1064,8 @@ def main():
     for path, text in rendered.values():
         write(path, text)
     for path, text in writes:
+        # Hard stop: this generator has no business writing the homepage.
+        assert os.path.abspath(path) != os.path.abspath(HOME),             "build_matchup_articles.py must never write the homepage"
         write(path, text)
 
     print("baked %d Game File(s); updated %d shared file(s)" % (len(rendered), len(writes)))

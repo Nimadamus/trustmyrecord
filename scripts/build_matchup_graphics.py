@@ -114,44 +114,50 @@ def stadium(away_hex, home_hex):
     write("g1000-stadium.svg", s)
 
 
-def player_card(slug, name, mono, team, pos, hand, accent, stats):
-    """A designed card, not a stand-in for a missing photo.
+def player_card(slug, name, mono, team, pos, hand, accent, sample):
+    """Identity card for a starter. Deliberately NOT a stat card.
 
-    The monogram is the subject: large, low-contrast, cropped by the frame, so
-    the card reads as deliberate graphic design rather than an empty avatar.
+    The stats live in the comparison block directly beneath this on the page,
+    with bars that put the two starters on the same scale. Printing them here as
+    well duplicated every number and made the card read as a broken widget, so
+    the card now does the one job the comparison cannot: say who this is.
+
+    The monogram is the subject - large, low-contrast, cropped by the frame - so
+    the card is a designed object rather than an empty avatar waiting for the
+    headshot we cannot license.
     """
-    W, H = 520, 300
-    alt = f'{name}, {team} {pos}, {hand}. ' + ", ".join(f"{v} {k}" for k, v in stats)
+    W, H = 520, 190
+    alt = f'{name}, {team} {pos}, {hand}, {sample}.'
     s = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
          f'role="img" aria-label="{alt}">')
     s += ('<defs>'
           f'<linearGradient id="bg{slug}" x1="0" y1="0" x2="1" y2="1">'
-          '<stop offset="0%" stop-color="#111922"/><stop offset="100%" stop-color="#0A0E14"/>'
+          '<stop offset="0%" stop-color="#121A24"/><stop offset="100%" stop-color="#0A0E14"/>'
           '</linearGradient>'
           f'<linearGradient id="acc{slug}" x1="0" y1="0" x2="1" y2="0">'
-          f'<stop offset="0%" stop-color="{accent}" stop-opacity=".9"/>'
-          f'<stop offset="100%" stop-color="{accent}" stop-opacity=".15"/></linearGradient>'
+          f'<stop offset="0%" stop-color="{accent}" stop-opacity=".95"/>'
+          f'<stop offset="100%" stop-color="{accent}" stop-opacity=".12"/></linearGradient>'
+          f'<radialGradient id="glow{slug}" cx="88%" cy="16%" r="62%">'
+          f'<stop offset="0%" stop-color="{accent}" stop-opacity=".22"/>'
+          f'<stop offset="100%" stop-color="{accent}" stop-opacity="0"/></radialGradient>'
           f'<clipPath id="clip{slug}"><rect width="{W}" height="{H}" rx="6"/></clipPath>'
           '</defs>')
     s += f'<g clip-path="url(#clip{slug})">'
     s += f'<rect width="{W}" height="{H}" fill="url(#bg{slug})"/>'
-    s += (f'<text x="{W-14}" y="{H+44}" text-anchor="end" font-family="{COND}" font-size="250" '
-          f'font-weight="900" fill="#FFFFFF" opacity=".05">{mono}</text>')
+    s += f'<rect width="{W}" height="{H}" fill="url(#glow{slug})"/>'
+    # Cropped monogram: sits behind the type and runs off the bottom-right edge.
+    s += (f'<text x="{W-10}" y="{H+52}" text-anchor="end" font-family="{COND}" font-size="215" '
+          f'font-weight="900" fill="#FFFFFF" opacity=".055">{mono}</text>')
     s += f'<rect width="{W}" height="4" fill="url(#acc{slug})"/>'
-    s += (f'<text x="26" y="56" font-family="{FONT}" font-size="12" font-weight="800" '
+    s += (f'<text x="26" y="52" font-family="{FONT}" font-size="11.5" font-weight="800" '
           f'letter-spacing="2.4" fill="{accent}">{team}</text>')
-    s += (f'<text x="26" y="92" font-family="{FONT}" font-size="26" font-weight="800" '
+    s += (f'<text x="26" y="94" font-family="{FONT}" font-size="30" font-weight="800" '
           f'fill="{INK}">{name}</text>')
-    s += (f'<text x="26" y="116" font-family="{FONT}" font-size="11.5" font-weight="700" '
-          f'letter-spacing="1.8" fill="{MUT}">{pos} &#183; {hand}</text>')
-    s += f'<rect x="26" y="138" width="{W-52}" height="1" fill="#FFFFFF" opacity=".09"/>'
-    for i, (label, value) in enumerate(stats[:4]):
-        cx = 26 + (i % 2) * 240
-        cy = 186 + (i // 2) * 66
-        s += (f'<text x="{cx}" y="{cy}" font-family="{FONT}" font-size="30" font-weight="900" '
-              f'fill="{INK}">{value}</text>')
-        s += (f'<text x="{cx}" y="{cy+19}" font-family="{FONT}" font-size="10" font-weight="800" '
-              f'letter-spacing="1.6" fill="{MUT}">{label}</text>')
+    s += (f'<text x="26" y="120" font-family="{FONT}" font-size="11.5" font-weight="700" '
+          f'letter-spacing="1.8" fill="{MUT}">{pos.upper()} &#183; {hand.upper()}</text>')
+    s += f'<rect x="26" y="142" width="86" height="1.5" fill="{accent}" opacity=".65"/>'
+    s += (f'<text x="26" y="168" font-family="{FONT}" font-size="12" font-weight="600" '
+          f'fill="{MUT}">{sample}</text>')
     s += f'<rect width="{W}" height="{H}" rx="6" fill="none" stroke="#FFFFFF" stroke-opacity=".09"/>'
     s += '</g>'
     write(f"g1000-card-{slug}.svg", s)
@@ -160,10 +166,9 @@ def player_card(slug, name, mono, team, pos, hand, accent, stats):
 if __name__ == "__main__":
     NYM, ATL = "#FF5910", "#CE1141"
     stadium(NYM, ATL)
+    # No stats on the card: they are in the comparison block below it.
     player_card("scott", "Christian Scott", "CS", "NEW YORK METS", "Starting pitcher",
-                "Right-handed", NYM,
-                [("ERA", "3.15"), ("OPP AVG", ".221"), ("HR ALLOWED", "7"), ("INNINGS", "74.1")])
+                "Right-handed", NYM, "16 starts this season")
     player_card("elder", "Bryce Elder", "BE", "ATLANTA BRAVES", "Starting pitcher",
-                "Right-handed", ATL,
-                [("ERA", "3.69"), ("OPP AVG", ".230"), ("HR ALLOWED", "19"), ("INNINGS", "126.2")])
+                "Right-handed", ATL, "22 starts this season")
     print("done")
