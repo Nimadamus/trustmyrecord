@@ -142,6 +142,23 @@ function measure(page) {
     else if (!rm.featured) bad('reduced motion: the card lost its featured styling entirely');
     else bad(`reduced motion: animation still running (${rm.anim})`);
 
+
+    /* The bug that actually shipped. On production the ticker is server-rendered
+       by the tmr-home-ssr Worker, so renderTicker() never runs and the slate
+       payload it captures is never set. Matching depended on that payload, so
+       the feature worked locally and did nothing live. The browser cases above
+       all exercise the JS-rendered path and cannot see it, so this asserts the
+       fallback exists at the source level. */
+    {
+      const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+      const fn = src.slice(src.indexOf('function applyGameFile'));
+      const body = fn.slice(0, fn.indexOf('
+  }'));
+      if (/if \(!lastSlate\)/.test(body) && /nav\/mlb-slate/.test(body))
+        ok('SSR path: applyGameFile fetches the slate when the strip was not rendered by this script');
+      else
+        bad('SSR path: applyGameFile depends on renderTicker having run - it will no-op on production');
+    }
   } finally {
     await browser.close();
     server.close();
