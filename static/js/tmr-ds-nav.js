@@ -83,6 +83,14 @@
       ['/premium/', 'Premium']
     ]],
     ['Explore', [
+      /* TMR Game Files joined Explore on 2026-08-10. Before this the entire
+         /matchups/ section was reachable from exactly one place on the site —
+         the homepage Matchup of the Day cover — and from nowhere in the nav or
+         footer, so a visitor on any other page had no route to the archive and
+         the crawl graph had a single entry point into a section meant to grow
+         indefinitely. It sits in Explore rather than Tools because a Game File
+         is editorial content, not a tool. One link, sitewide, crawlable. */
+      ['/matchups/', 'TMR Game Files'],
       ['/leaderboards/', 'Leaderboards'],
       ['/handicappers/', 'Browse Handicappers'],
       ['/verified-handicapper-records/', 'Verified Records'],

@@ -204,21 +204,40 @@ def iso_date(value):
     return parsed.date().isoformat() if parsed else ""
 
 
-# ---------------------------------------------------------------- block render
+# =============================================================== components ==
+#
+# The Game File renders as a sequence of SECTIONS, each with its own surface
+# environment, rather than one column of cards. Every chart below is HTML and
+# CSS: the numbers stay in the DOM as selectable, crawlable, screen-readable
+# text, they reflow on a phone instead of letterboxing, and the page makes no
+# extra requests to draw them.
 
-def sample_chip(block):
-    sample = block.get("sample")
-    if not sample:
-        return ""
-    grade = block.get("sample_grade") or "interesting"
-    return ' <span class="gf-sample" data-grade="%s">%s</span>' % (esc(grade), esc(sample))
+SOURCE_SHORT = {
+    "statsapi": "MLB Data",
+    "betlegend-pro": "BetLegend Pro",
+    "trendspotter": "Trend Spotter",
+    "tmr-sim": "TMR Simulator",
+    "actionnetwork": "Market feed",
+    "fanduel": "FanDuel props",
+    "tmr-editorial": "TMR Research",
+}
+
+SOURCE_LABEL = {
+    "statsapi": "MLB Stats API (official league data)",
+    "betlegend-pro": "BetLegend Pro historical database (TMR)",
+    "trendspotter": "TMR Trend Spotter",
+    "tmr-sim": "TMR MLB Simulator",
+    "actionnetwork": "Market odds feed",
+    "fanduel": "FanDuel player props feed",
+    "tmr-editorial": "TrustMyRecord Research (editorial analysis)",
+}
 
 
 def safe_href(href):
     """Internal, resolvable links only.
 
-    tests/seo-indexability-regression-test.js fails the whole build if any page
-    links to a path that does not exist, and it is right to: TMR must never hand
+    tests/seo-indexability-regression-test.js fails the build if any page links
+    to a path that does not exist, and it is right to: TMR must never hand
     Googlebot a 404. Anything not site-relative is dropped rather than shipped.
     """
     href = str(href or "").strip()
@@ -227,172 +246,257 @@ def safe_href(href):
     return None
 
 
+def src_badge(source):
+    if not source:
+        return ""
+    return '<span class="gf-src" data-s="%s">%s</span>' % (
+        esc(source), esc(SOURCE_SHORT.get(source, source)))
+
+
+def share(part, whole):
+    """Share of a pair, clamped so a zero never renders an invisible bar."""
+    try:
+        part, whole = float(part), float(whole)
+    except (TypeError, ValueError):
+        return 50.0
+    if whole <= 0:
+        return 50.0
+    return max(3.0, min(97.0, part / whole * 100.0))
+
+
+# ------------------------------------------------------------------ blocks ---
+
+def b_prose(block):
+    return "<p>%s</p>" % esc(block.get("text"))
+
+
+def b_h3(block):
+    return "<h3>%s</h3>" % esc(block.get("text"))
+
+
+def b_list(block):
+    items = []
+    for i in block.get("items") or []:
+        text = i.get("text") if isinstance(i, dict) else i
+        note = ""
+        if isinstance(i, dict) and i.get("sample"):
+            note = ' <span class="gf-src">%s</span>' % esc(i["sample"])
+        items.append("<li>%s%s</li>" % (esc(text), note))
+    return "<ul>%s</ul>" % "".join(items)
+
+
+def b_herolines(block):
+    """Consumed by the hero, not rendered in place.
+
+    It is still authored as a block, and still carries provenance_keys, because
+    the line under each team name is numbers ("52-67 / 27-33 on the road"). A
+    hero assembled from an un-gated field would be the one place on the page
+    where a figure could appear unsourced.
+    """
+    return ""
+
+
+def b_rail(block):
+    """Edge-to-edge stat rail: the research half of the hero."""
+    cells = []
+    for i in block.get("items") or []:
+        tone = (' data-t="%s"' % esc(i["tone"])) if i.get("tone") else ""
+        cells.append('<div class="gf-railcell"%s><b>%s</b><span>%s</span></div>'
+                     % (tone, esc(i.get("value")), esc(i.get("label"))))
+    return '<div class="gf-rail">%s</div>' % "".join(cells)
+
+
+def b_trendboard(block):
+    """The scannable core: big number, what it is, then where it came from."""
+    out = []
+    for cat in block.get("categories") or []:
+        cards = []
+        for it in cat.get("items") or []:
+            meta = []
+            if it.get("sample"):
+                meta.append(esc(it["sample"]))
+            if it.get("timeframe"):
+                meta.append(esc(it["timeframe"]))
+            cards.append(
+                '<div class="gf-tcard"%s><b>%s</b>'
+                '<span class="gf-tcard-l">%s</span>'
+                '<span class="gf-tcard-m">%s%s</span></div>' % (
+                    (' data-t="%s"' % esc(it["tone"])) if it.get("tone") else "",
+                    esc(it.get("value")), esc(it.get("label")),
+                    src_badge(it.get("source")),
+                    ("<span>" + " &middot; ".join(meta) + "</span>") if meta else ""))
+        out.append('<div class="gf-tgroup"><h3>%s</h3><div class="gf-tcards">%s</div></div>'
+                   % (esc(cat.get("name")), "".join(cards)))
+    note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+    return "".join(out) + note
+
+
+def b_bars(block):
+    """Diverging comparison bars. Bar length is each side's share of the pair,
+    so the ratio is visible; the literal value sits beside it."""
+    rows = []
+    for r in block.get("rows") or []:
+        a_raw = r.get("away_n") or 0
+        h_raw = r.get("home_n") or 0
+        share_a = share(a_raw, a_raw + h_raw)
+        better = r.get("better")
+        rows.append(
+            '<div class="gf-bar">'
+            '<div class="gf-bar-s gf-bar-s--a%s"><span class="gf-bar-v">%s</span>'
+            '<span class="gf-bar-t" style="width:%.1f%%"></span></div>'
+            '<div class="gf-bar-k">%s</div>'
+            '<div class="gf-bar-s gf-bar-s--h%s"><span class="gf-bar-t" style="width:%.1f%%"></span>'
+            '<span class="gf-bar-v">%s</span></div></div>' % (
+                " is-better" if better == "away" else "", esc(r.get("away")), share_a * 0.88,
+                esc(r.get("key")),
+                " is-better" if better == "home" else "", (100 - share_a) * 0.88, esc(r.get("home"))))
+    legend = (
+        '<div class="gf-legend">'
+        '<span><i style="background:var(--gf-away)"></i>%s</span>'
+        '<span><i style="background:var(--gf-home)"></i>%s</span></div>' % (
+            esc(block.get("away_label")), esc(block.get("home_label"))))
+    head = ('<p class="gf-chart-t">%s%s</p>' % (
+        esc(block.get("title") or ""), src_badge(block.get("source")))) if block.get("title") else ""
+    note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+    return '<div class="gf-chart">%s<div class="gf-bars">%s</div>%s%s</div>' % (
+        head, "".join(rows), legend, note)
+
+
+def b_benchmark(block):
+    """Actual win rate against the market's break-even, on one shared axis.
+
+    This is the chart that explains how 947-825 loses money: the actual marker
+    sits LEFT of the expected marker, and that gap is the ROI. A bar chart of
+    the win rate alone cannot show it, which is why this component exists.
+    """
+    lo = float(block.get("min", 48))
+    hi = float(block.get("max", 58))
+
+    def x(v):
+        return max(0.0, min(100.0, (float(v) - lo) / (hi - lo) * 100.0))
+
+    rows = []
+    for r in block.get("rows") or []:
+        act, exp = float(r["actual"]), float(r["expected"])
+        rows.append(
+            '<div class="gf-bench-row" data-t="%s">'
+            '<div class="gf-bench-who">%s<small>%s</small></div>'
+            '<div class="gf-bench-track">'
+            '<span class="gf-bench-fill" style="width:%.1f%%"></span>'
+            '<span class="gf-bench-act" style="left:%.1f%%"></span>'
+            '<span class="gf-bench-tag gf-bench-tag--act" style="left:%.1f%%">%s%% actual</span>'
+            '<span class="gf-bench-exp" style="left:%.1f%%"></span>'
+            '<span class="gf-bench-tag gf-bench-tag--exp" style="left:%.1f%%">%s%% break-even</span>'
+            '</div>'
+            '<div class="gf-bench-roi">%s<small>Return</small></div></div>' % (
+                esc(r.get("tone", "")), esc(r.get("who")), esc(r.get("sub")),
+                x(act), x(act), x(act), esc(r.get("actual")),
+                x(exp), x(exp), esc(r.get("expected")), esc(r.get("roi"))))
+    head = '<p class="gf-chart-t">%s%s</p>' % (
+        esc(block.get("title") or ""), src_badge(block.get("source")))
+    note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+    return '<div class="gf-chart">%s<div class="gf-bench">%s</div>%s</div>' % (head, "".join(rows), note)
+
+
+def b_timeline(block):
+    games = []
+    for g in block.get("games") or []:
+        games.append('<div class="gf-tlg" data-w="%s"><b>%s</b><span>%s</span><span>%s</span></div>'
+                     % (esc(g.get("winner")), esc(g.get("score")), esc(g.get("date")), esc(g.get("site"))))
+    head = '<p class="gf-chart-t">%s%s</p>' % (
+        esc(block.get("title") or ""), src_badge(block.get("source")))
+    note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+    return '<div class="gf-chart">%s<div class="gf-tl">%s</div>%s</div>' % (head, "".join(games), note)
+
+
+def b_form(block):
+    rows = []
+    for t in block.get("teams") or []:
+        seq = "".join('<i data-r="%s">%s</i>' % (esc(r), esc(r)) for r in t.get("results") or [])
+        rows.append('<div class="gf-form"><span class="gf-form-who">%s</span>'
+                    '<span class="gf-form-seq">%s</span>'
+                    '<span class="gf-form-sum">%s</span></div>' % (
+                        esc(t.get("name")), seq, esc(t.get("summary"))))
+    head = '<p class="gf-chart-t">%s%s</p>' % (
+        esc(block.get("title") or ""), src_badge(block.get("source")))
+    note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+    return '<div class="gf-chart">%s%s%s</div>' % (head, "".join(rows), note)
+
+
+def b_showdown(block):
+    """Pitcher feature cards. The monogram behind each card stands in for a
+    photograph we cannot license: obviously a graphic, not a fake picture."""
+    cards = []
+    for side in ("away", "home"):
+        p = block.get(side) or {}
+        stats = []
+        for s in p.get("stats") or []:
+            fill = ('<em><i style="width:%.0f%%"></i></em>' % float(s["fill"])) if s.get("fill") else ""
+            stats.append('<div class="gf-showstat"><b>%s</b><span>%s</span>%s</div>'
+                         % (esc(s.get("value")), esc(s.get("label")), fill))
+        cards.append(
+            '<div class="gf-showcard" data-t="%s" data-mono="%s">'
+            '<p class="gf-showname">%s</p><p class="gf-showmeta">%s</p>'
+            '<div class="gf-showstats">%s</div></div>' % (
+                side, esc(p.get("mono")), esc(p.get("name")), esc(p.get("meta")), "".join(stats)))
+    note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+    return '<div class="gf-show">%s</div>%s' % ("".join(cards), note)
+
+
+def b_call(block):
+    body = "".join("<p>%s</p>" % esc(p) for p in (block.get("paragraphs") or [block.get("text", "")]))
+    extra = ('<span class="gf-src">%s</span>' % esc(block["sample"])) if block.get("sample") else ""
+    return '<aside class="gf-call"><p class="gf-call-t">%s%s%s</p>%s</aside>' % (
+        esc(block.get("tag") or "TMR Research"), src_badge(block.get("source")), extra, body)
+
+
+def b_verdict(block):
+    conf = int(block.get("confidence", 0))
+    pips = "".join('<i class="%s"></i>' % ("on" if i < conf else "") for i in range(5))
+    why = "".join("<li>%s</li>" % esc(x) for x in block.get("why") or [])
+    chg = "".join("<li>%s</li>" % esc(x) for x in block.get("changes") or [])
+    return (
+        '<div class="gf-verdict">'
+        '<div class="gf-verdict-l">'
+        '<p class="gf-verdict-k">TMR lean</p>'
+        '<p class="gf-verdict-team">%s</p>'
+        '<p class="gf-verdict-k">Confidence &middot; %s</p>'
+        '<div class="gf-conf">%s</div>'
+        '<p class="gf-verdict-k" style="margin-top:14px;letter-spacing:.04em;text-transform:none">%s</p>'
+        '</div>'
+        '<div class="gf-verdict-r"><h3>Why</h3><ul>%s</ul>'
+        '<h3>What would change it</h3><ul>%s</ul></div></div>' % (
+            esc(block.get("team")), esc(block.get("confidence_label")), pips,
+            esc(block.get("note") or ""), why, chg))
+
+
+def b_tools(block):
+    items = []
+    for link in block.get("links") or []:
+        href = safe_href(link.get("href"))
+        if not href:
+            continue
+        items.append('<li><a href="%s">%s</a></li>' % (esc(href), esc(link.get("text"))))
+    if not items:
+        return ""
+    return '<div class="gf-tools"><p>%s</p><ul>%s</ul></div>' % (
+        esc(block.get("heading") or "Run this research yourself"), "".join(items))
+
+
+RENDERERS = {
+    "p": b_prose, "h3": b_h3, "list": b_list, "rail": b_rail, "herolines": b_herolines,
+    "trendboard": b_trendboard, "bars": b_bars, "benchmark": b_benchmark,
+    "timeline": b_timeline, "form": b_form, "showdown": b_showdown,
+    "call": b_call, "verdict": b_verdict, "toollinks": b_tools,
+}
+
+
 def render_block(block):
     kind = (block or {}).get("type", "p")
-
-    if kind in ("p", "stat"):
-        return "<p>%s%s</p>" % (esc(block.get("text")), sample_chip(block))
-
-    if kind == "h3":
-        return "<h3>%s</h3>" % esc(block.get("text"))
-
-    if kind == "list":
-        items = "".join(
-            "<li>%s%s</li>" % (esc(i.get("text") if isinstance(i, dict) else i),
-                               sample_chip(i if isinstance(i, dict) else {}))
-            for i in block.get("items") or []
-        )
-        return "<ul>%s</ul>" % items
-
-    if kind == "finding":
-        variant = block.get("variant") or ""
-        cls = "gf-finding" + (" gf-finding--%s" % esc(variant) if variant else "")
-        body = "".join("<p>%s</p>" % esc(p) for p in (block.get("paragraphs") or [block.get("text", "")]))
-        return '<aside class="%s"><span class="gf-finding-tag">%s</span>%s%s</aside>' % (
-            cls, esc(block.get("tag") or "TMR Research"), body,
-            ('<p>%s</p>' % sample_chip(block)) if block.get("sample") else "")
-
-    if kind == "numbers":
-        cells = "".join(
-            '<div class="gf-num"><b>%s</b><span>%s</span>%s</div>' % (
-                esc(i.get("value")), esc(i.get("label")),
-                ("<em>%s</em>" % esc(i.get("note"))) if i.get("note") else "")
-            for i in block.get("items") or []
-        )
-        return '<div class="gf-numbers">%s</div>' % cells
-
-    if kind == "tape":
-        rows = ['<div class="gf-tape-row is-head"><div>%s</div><div class="gf-tape-k">&nbsp;</div><div>%s</div></div>'
-                % (esc(block.get("away_label")), esc(block.get("home_label")))]
-        for row in block.get("rows") or []:
-            better = row.get("better")
-            rows.append(
-                '<div class="gf-tape-row">'
-                '<div class="gf-tape-v%s">%s</div>'
-                '<div class="gf-tape-k">%s</div>'
-                '<div class="gf-tape-v%s">%s</div></div>' % (
-                    " is-better" if better == "away" else "", esc(row.get("away")),
-                    esc(row.get("key")),
-                    " is-better" if better == "home" else "", esc(row.get("home"))))
-        return '<div class="gf-tape">%s</div>' % "".join(rows)
-
-    if kind == "table":
-        head = "".join("<th scope=\"col\">%s</th>" % esc(h) for h in block.get("head") or [])
-        body = "".join(
-            "<tr>%s</tr>" % "".join(
-                ("<th scope=\"row\">%s</th>" % esc(c)) if ci == 0 else ("<td>%s</td>" % esc(c))
-                for ci, c in enumerate(row))
-            for row in block.get("rows") or [])
-        caption = ("<caption>%s</caption>" % esc(block.get("caption"))) if block.get("caption") else ""
-        return ('<div class="gf-tablewrap"><table class="gf-table">%s<thead><tr>%s</tr></thead>'
-                '<tbody>%s</tbody></table></div>') % (caption, head, body)
-
-    if kind == "simbar":
-        a, b = block.get("a") or {}, block.get("b") or {}
-        try:
-            apct = max(0.0, min(100.0, float(a.get("pct", 0))))
-        except (TypeError, ValueError):
-            apct = 0.0
-        bpct = max(0.0, 100.0 - apct)
-        return (
-            '<div class="gf-simbar" role="img" aria-label="%s %s percent, %s %s percent">'
-            '<span class="a" style="width:%.1f%%">%s%%</span>'
-            '<span class="b" style="width:%.1f%%">%s%%</span></div>'
-            '<div class="gf-simlegend"><span><i style="background:var(--brand)"></i>%s</span>'
-            '<span><i style="background:var(--violet)"></i>%s</span></div>%s' % (
-                esc(a.get("label")), esc(a.get("pct")), esc(b.get("label")), esc(b.get("pct")),
-                apct, esc(a.get("pct")), bpct, esc(b.get("pct")),
-                esc(a.get("label")), esc(b.get("label")),
-                ('<p class="gf-mod-sub">%s</p>' % esc(block.get("note"))) if block.get("note") else ""))
-
-    if kind == "keyfacts":
-        cells = "".join(
-            '<div class="gf-keyfact"><b>%s</b><span>%s</span></div>' % (
-                esc(i.get("value")), esc(i.get("label")))
-            for i in block.get("items") or [])
-        return '<div class="gf-keyfacts">%s</div>' % cells
-
-    if kind == "trendboard":
-        # The scannable core. Each item carries its own sample, timeframe and
-        # source, because a trend without those three is a claim, not evidence.
-        cats = []
-        for cat in block.get("categories") or []:
-            items = []
-            for it in cat.get("items") or []:
-                meta = []
-                if it.get("sample"):
-                    meta.append("<em>%s</em>" % esc(it["sample"]))
-                if it.get("timeframe"):
-                    meta.append(esc(it["timeframe"]))
-                if it.get("source"):
-                    meta.append(esc(SOURCE_SHORT.get(it["source"], it["source"])))
-                items.append(
-                    '<li class="gf-trend">'
-                    '<span class="gf-tag" data-s="%s">%s</span>'
-                    '<span><span class="gf-trend-txt">%s</span>'
-                    '<span class="gf-trend-meta">%s</span></span></li>' % (
-                        esc(it.get("strength") or "interesting"),
-                        esc(it.get("strength") or "context"),
-                        esc(it.get("text")),
-                        " &middot; ".join(meta)))
-            cats.append('<div class="gf-board-cat"><h3>%s</h3><ul class="gf-trends">%s</ul></div>'
-                        % (esc(cat.get("name")), "".join(items)))
-        note = ('<p class="gf-boardnote">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
-        return '<div class="gf-board">%s</div>%s' % ("".join(cats), note)
-
-    if kind == "compare":
-        away, home = block.get("away") or {}, block.get("home") or {}
-        rows = []
-        for row in block.get("rows") or []:
-            better = row.get("better")
-            rows.append(
-                '<div class="gf-compare-row">'
-                '<div class="gf-compare-v%s">%s</div>'
-                '<div class="gf-compare-k">%s</div>'
-                '<div class="gf-compare-v%s">%s</div></div>' % (
-                    " is-better" if better == "away" else "", esc(row.get("away")),
-                    esc(row.get("key")),
-                    " is-better" if better == "home" else "", esc(row.get("home"))))
-        return (
-            '<div class="gf-compare">'
-            '<div class="gf-compare-head">'
-            '<div class="gf-compare-who">%s<small>%s</small></div>'
-            '<div class="gf-compare-k">&nbsp;</div>'
-            '<div class="gf-compare-who">%s<small>%s</small></div></div>%s</div>' % (
-                esc(away.get("name")), esc(away.get("sub")),
-                esc(home.get("name")), esc(home.get("sub")), "".join(rows)))
-
-    if kind == "figure":
-        # Dimensions are REQUIRED: an image without width/height is a layout
-        # shift, and this page has enough graphics for that to be measurable.
-        src = block.get("src")
-        if not str(src or "").startswith("/static/"):
-            raise RuntimeError("figure src must be a TMR-controlled /static/ path, got %r" % src)
-        if not block.get("alt"):
-            raise RuntimeError("figure %s has no alt text" % src)
-        if not (block.get("width") and block.get("height")):
-            raise RuntimeError("figure %s needs width and height (CLS)" % src)
-        cap = ('<figcaption>%s</figcaption>' % esc(block.get("caption"))) if block.get("caption") else ""
-        return (
-            '<figure class="gf-fig"><img src="%s" alt="%s" width="%s" height="%s" '
-            'loading="lazy" decoding="async">%s</figure>' % (
-                esc(src), esc(block.get("alt")), esc(block.get("width")),
-                esc(block.get("height")), cap))
-
-    if kind == "toollinks":
-        items = []
-        for link in block.get("links") or []:
-            href = safe_href(link.get("href"))
-            if not href:
-                continue
-            items.append('<li><a href="%s">%s</a></li>' % (esc(href), esc(link.get("text"))))
-        if not items:
-            return ""
-        return '<div class="gf-toollinks"><p>%s</p><ul>%s</ul></div>' % (
-            esc(block.get("heading") or "Run this research yourself"), "".join(items))
-
-    # An unknown block type is a bug in the caller, not something to render badly.
-    raise RuntimeError("unknown block type: %r" % kind)
+    fn = RENDERERS.get(kind)
+    if not fn:
+        raise RuntimeError("unknown block type: %r" % kind)
+    return fn(block)
 
 
 def module_id(module, index):
@@ -402,36 +506,39 @@ def module_id(module, index):
 
 
 def render_body(article):
-    """Render the modules, the jump nav, and the hero key-facts strip.
+    """Render the sections, the jump nav, the hero rail and the hero lines.
 
-    A module named `hero-facts` is lifted OUT of the body flow and rendered in
-    the hero instead. It is authored as a normal module so the publish gate
-    still sees its numbers and demands provenance for them — the gate walks
-    body_json, and a hero built from a separate un-gated field would be the one
-    place on the page where a number could appear unsourced.
+    The `hero-rail` module is lifted OUT of the body flow and rendered into the
+    hero. It is still authored as a normal module so the publish gate sees its
+    numbers and demands provenance for them.
     """
-    out, toc, hero_facts = [], [], ""
+    out, nav, rail, hero = [], [], "", {}
     for index, module in enumerate(article.get("body_json") or []):
-        if module.get("module") == "hero-facts":
-            hero_facts = "".join(render_block(b) for b in module.get("blocks") or [])
+        if module.get("module") == "hero-rail":
+            for b in module.get("blocks") or []:
+                if (b or {}).get("type") == "herolines":
+                    hero = b
+                else:
+                    rail += render_block(b)
             continue
         mid = module_id(module, index)
         heading = module.get("heading") or module.get("module") or ""
-        toc.append('<li><a href="#%s">%s</a></li>' % (esc(mid), esc(module.get("nav") or heading)))
+        nav.append('<li><a href="#%s">%s</a></li>' % (esc(mid), esc(module.get("nav") or heading)))
         blocks = "".join(render_block(b) for b in module.get("blocks") or [])
-        sub = ('<p class="gf-mod-sub">%s</p>' % esc(module.get("sub"))) if module.get("sub") else ""
-        out.append('<section class="gf-mod" id="%s"><h2>%s</h2>%s%s</section>' % (
-            esc(mid), esc(heading), sub, blocks))
-    return "".join(out), "".join(toc), hero_facts
+        sub = ('<p class="gf-sect-sub">%s</p>' % esc(module.get("sub"))) if module.get("sub") else ""
+        mark = (' data-mark="%s"' % esc(module["mark"])) if module.get("mark") else ""
+        out.append(
+            '<section class="gf-sect" id="%s" data-env="%s"%s><div class="gf-wrap">'
+            '<div class="gf-sect-head"><h2>%s</h2>%s</div>%s%s</div></section>' % (
+                esc(mid), esc(module.get("env", "flat")), mark, esc(heading),
+                src_badge(module.get("source")), sub, blocks))
+    return "".join(out), "".join(nav), rail, hero
 
 
 def count_trends(article):
-    """How many trend rows the Trend Board actually carries.
-
-    Used by the homepage cover. It is counted from the rendered article, never
-    typed in by hand: a marketing number that drifts from the page is exactly
-    the kind of small lie this whole system exists to prevent.
-    """
+    """How many trend cards the board carries. Read off the article the cover is
+    baking, never typed in: a marketing number that drifts from the page is the
+    small lie this whole system exists to prevent."""
     n = 0
     for module in article.get("body_json") or []:
         for block in module.get("blocks") or []:
@@ -441,8 +548,6 @@ def count_trends(article):
                 n += len(cat.get("items") or [])
     return n
 
-
-# ------------------------------------------------------------- article render
 
 def check_image(url, what):
     if not url:
@@ -464,19 +569,17 @@ def render_article(article, provenance, neighbours):
     url = "%s/matchups/%s/%s/" % (SITE, sport, article["slug"])
     matchup = "%s vs. %s" % (article["away_team"], article["home_team"])
 
-    hero = check_image(article.get("hero_image_url"), "hero_image_url")
-    og_image = absolute(check_image(article.get("og_image_url") or hero, "og_image_url"))
+    og_image = absolute(check_image(article.get("og_image_url"), "og_image_url"))
     hero_alt = article.get("hero_image_alt")
     if not hero_alt:
-        raise RuntimeError("hero_image_alt is required (accessibility + image search)")
+        raise RuntimeError("hero_image_alt is required (social + image search)")
 
     published = article.get("published_at")
     modified = article.get("content_modified_at") or published
-    body_html, toc_html, hero_facts_html = render_body(article)
+    body_html, nav_html, rail_html, hero = render_body(article)
     if not body_html:
         raise RuntimeError("article %s has no body modules" % article["slug"])
 
-    # ---- structured data. Every field here is also visible on the page. ----
     graph = [
         {
             "@type": "Article",
@@ -487,17 +590,10 @@ def render_article(article, provenance, neighbours):
             "image": [og_image],
             "datePublished": parse_iso(published).isoformat() if parse_iso(published) else None,
             "dateModified": parse_iso(modified).isoformat() if parse_iso(modified) else None,
-            "author": {
-                "@type": "Organization",
-                "name": "TrustMyRecord Research",
-                "url": SITE + "/about/research/",
-            },
-            "publisher": {
-                "@type": "Organization",
-                "name": "TrustMyRecord",
-                "url": SITE + "/",
-                "logo": {"@type": "ImageObject", "url": SITE + "/static/og/og-home.png"},
-            },
+            "author": {"@type": "Organization", "name": "TrustMyRecord Research",
+                       "url": SITE + "/about/research/"},
+            "publisher": {"@type": "Organization", "name": "TrustMyRecord", "url": SITE + "/",
+                          "logo": {"@type": "ImageObject", "url": SITE + "/static/og/og-home.png"}},
             "isAccessibleForFree": True,
         },
         {
@@ -516,7 +612,6 @@ def render_article(article, provenance, neighbours):
     jsonld = json.dumps({"@context": "https://schema.org", "@graph": graph},
                         indent=2, ensure_ascii=False)
 
-    # ---- methodology + sources, built from the provenance record ----
     sources = sorted({(p.get("source") or "").strip() for p in provenance if p.get("source")})
     retrieved = [parse_iso(p.get("retrieved_at")) for p in provenance if parse_iso(p.get("retrieved_at"))]
     counts = {}
@@ -525,7 +620,6 @@ def render_article(article, provenance, neighbours):
     source_items = "".join("<li>%s</li>" % esc(SOURCE_LABEL.get(s, s)) for s in sources)
     research_window = human_datetime(max(retrieved).isoformat()) if retrieved else ""
 
-    # ---- previous / next, so no article is ever an orphan ----
     prev_a, next_a = neighbours
     nav_bits = []
     if prev_a:
@@ -538,70 +632,41 @@ def render_article(article, provenance, neighbours):
     postgame_html = ""
     postgame = article.get("postgame_json")
     if postgame:
-        pg_blocks = "".join(render_block(b) for b in (postgame.get("blocks") or []))
+        pg = "".join(render_block(b) for b in (postgame.get("blocks") or []))
         postgame_html = (
-            '<section class="gf-postgame" id="postgame"><h2>Postgame update</h2>'
-            '<p class="gf-mod-sub">Added after the game. The pregame analysis below is '
-            'unchanged from what we published before first pitch.</p>%s</section>' % pg_blocks)
+            '<section class="gf-sect" data-env="raised" id="postgame"><div class="gf-wrap">'
+            '<div class="gf-sect-head"><h2>Postgame update</h2></div>'
+            '<p class="gf-sect-sub">Added after the game. The pregame analysis below is unchanged '
+            'from what we published before first pitch.</p>%s</div></section>' % pg)
 
     return TEMPLATE.format(
-        url=esc(url),
-        title=esc(article.get("title")),
+        url=esc(url), title=esc(article.get("title")),
         description=esc(article.get("meta_description")),
         og_title=esc(article.get("og_title") or article.get("title")),
         og_description=esc(article.get("og_description") or article.get("meta_description")),
-        og_image=esc(og_image),
-        sport=esc(sport),
-        sport_label=esc(sport_label),
-        matchup=esc(matchup),
-        h1=esc(article.get("h1") or matchup),
-        dek=esc(article.get("dek") or ""),
-        hero=esc(hero),
-        hero_alt=esc(hero_alt),
+        og_image=esc(og_image), hero_alt=esc(hero_alt),
+        sport=esc(sport), sport_label=esc(sport_label), matchup=esc(matchup),
+        h1=esc(article.get("h1") or matchup), dek=esc(article.get("dek") or ""),
         jsonld=jsonld,
+        away_color=esc(hero.get("away_color", "#FF5910")),
+        home_color=esc(hero.get("home_color", "#CE1141")),
+        away_city=esc(hero.get("away_city", "")), away_nick=esc(hero.get("away_nick", "")),
+        home_city=esc(hero.get("home_city", "")), home_nick=esc(hero.get("home_nick", "")),
+        away_line=esc(hero.get("away_line", "")), home_line=esc(hero.get("home_line", "")),
+        matchup_arrow=esc(hero.get("arrow", "at")),
+        rail=rail_html, nav=nav_html, body=body_html, postgame=postgame_html,
         published_iso=esc(parse_iso(published).isoformat() if parse_iso(published) else ""),
         modified_iso=esc(parse_iso(modified).isoformat() if parse_iso(modified) else ""),
         published_human=esc(human_date(published)),
         modified_human=esc(human_datetime(modified)),
         game_time_human=esc(human_datetime(article.get("game_time_utc"))),
-        venue_sep=" &middot; " if article.get("venue_name") else "",
         venue=esc(article.get("venue_name") or ""),
-        toc=toc_html,
-        hero_facts=hero_facts_html,
-        body=body_html,
-        postgame=postgame_html,
         source_items=source_items or "<li>No external sources recorded.</li>",
         research_window=esc(research_window),
-        n_facts=counts.get("fact", 0),
-        n_derived=counts.get("derived", 0),
-        n_analysis=counts.get("analysis", 0),
-        n_total=len(provenance),
+        n_facts=counts.get("fact", 0), n_derived=counts.get("derived", 0),
+        n_analysis=counts.get("analysis", 0), n_total=len(provenance),
         prevnext=(" &middot; ".join(nav_bits)) or "",
     )
-
-
-# Short forms for the Trend Board chips. The long labels below are for the
-# methodology block, where there is room to be explicit; a board row needs the
-# source named in three words or it stops being scannable.
-SOURCE_SHORT = {
-    "statsapi": "MLB Stats API",
-    "betlegend-pro": "BetLegend Pro",
-    "trendspotter": "Trend Spotter",
-    "tmr-sim": "TMR Simulator",
-    "actionnetwork": "Market feed",
-    "fanduel": "FanDuel props",
-    "tmr-editorial": "TMR editorial",
-}
-
-SOURCE_LABEL = {
-    "statsapi": "MLB Stats API (official league data)",
-    "betlegend-pro": "BetLegend Pro historical database (TMR)",
-    "trendspotter": "TMR Trend Spotter",
-    "tmr-sim": "TMR MLB Simulator",
-    "actionnetwork": "Market odds feed",
-    "fanduel": "FanDuel player props feed",
-    "tmr-editorial": "TrustMyRecord Research (editorial analysis)",
-}
 
 
 TEMPLATE = """<!DOCTYPE html>
@@ -639,67 +704,83 @@ TEMPLATE = """<!DOCTYPE html>
 </script>
 </head>
 <body class="tmr-ds tmr-ds--dark">
-<main class="gf-article">
+<main class="gf-doc" style="--gf-away:{away_color};--gf-home:{home_color}">
 
-  <nav class="gf-crumb" aria-label="Breadcrumb">
-    <a href="/">Home</a> <span aria-hidden="true">&rsaquo;</span>
-    <a href="/matchups/">Matchups</a> <span aria-hidden="true">&rsaquo;</span>
-    <a href="/matchups/{sport}/">{sport_label}</a> <span aria-hidden="true">&rsaquo;</span>
-    <span>{matchup}</span>
+  <header class="gf-hero">
+    <div class="gf-hero-in gf-wrap">
+      <nav class="gf-crumb" aria-label="Breadcrumb" style="padding:0 0 18px">
+        <a href="/">Home</a> <span aria-hidden="true">&rsaquo;</span>
+        <a href="/matchups/">Matchups</a> <span aria-hidden="true">&rsaquo;</span>
+        <a href="/matchups/{sport}/">{sport_label}</a> <span aria-hidden="true">&rsaquo;</span>
+        <span>{matchup}</span>
+      </nav>
+      <p class="gf-kicker">
+        <span class="gf-chip">TMR Game File</span>
+        <span class="gf-chip gf-chip--ghost">Matchup of the Day</span>
+        <span class="gf-chip gf-chip--ghost">{sport_label}</span>
+      </p>
+      <div class="gf-vs">
+        <div class="gf-side gf-side--away"><i></i>
+          <span class="gf-city">{away_city}</span>
+          <span class="gf-nick">{away_nick}</span>
+          <span class="gf-sideline">{away_line}</span>
+        </div>
+        <div class="gf-vsmark">{matchup_arrow}</div>
+        <div class="gf-side gf-side--home"><i></i>
+          <span class="gf-city">{home_city}</span>
+          <span class="gf-nick">{home_nick}</span>
+          <span class="gf-sideline">{home_line}</span>
+        </div>
+      </div>
+      <p class="gf-herometa">
+        <span>{venue}</span><span><b>{game_time_human}</b></span>
+      </p>
+    </div>
+    {rail}
+  </header>
+
+  <nav class="gf-nav" aria-label="Sections in this Game File">
+    <div class="gf-wrap"><ol>{nav}</ol></div>
   </nav>
 
-  <p class="gf-eyebrow">TMR Game File &middot; Matchup of the Day &middot; {sport_label}</p>
-  <h1 class="gf-title">{h1}</h1>
-
-  <figure class="gf-hero">
-    <img class="gf-hero-img" src="{hero}" alt="{hero_alt}" width="1200" height="630"
-         fetchpriority="high" decoding="async">
-  </figure>
-
-  <p class="gf-dek">{dek}</p>
-
-  {hero_facts}
-
-  <div class="gf-byline">
-    <span>By <a href="/about/research/">TrustMyRecord Research</a></span>
-    <span class="gf-sep" aria-hidden="true">|</span>
-    <span>Published <time datetime="{published_iso}">{published_human}</time></span>
-    <span class="gf-sep" aria-hidden="true">|</span>
-    <span>Updated <time datetime="{modified_iso}">{modified_human}</time></span>
-    <span class="gf-sep" aria-hidden="true">|</span>
-    <span>First pitch {game_time_human}{venue_sep}{venue}</span>
+  <div class="gf-wrap" style="padding-top:34px">
+    <h1 class="gf-title">{h1}</h1>
+    <p class="gf-dek">{dek}</p>
+    <div class="gf-byline">
+      <span>By <a href="/about/research/">TrustMyRecord Research</a></span>
+      <span class="gf-sep" aria-hidden="true">|</span>
+      <span>Published <time datetime="{published_iso}">{published_human}</time></span>
+      <span class="gf-sep" aria-hidden="true">|</span>
+      <span>Updated <time datetime="{modified_iso}">{modified_human}</time></span>
+    </div>
   </div>
 
-  <nav class="gf-toc" aria-label="Sections in this Game File">
-    <ol>{toc}</ol>
-  </nav>
-
   {postgame}
-
   {body}
 
-  <details class="gf-sources" id="methodology">
-    <summary>Methodology, sources and research record</summary>
-    <div class="gf-sources-in">
-      <p>This Game File carries {n_total} recorded research items:
-         {n_facts} measured facts, {n_derived} derived metrics and
-         {n_analysis} labelled editorial judgements. Every quantitative claim on
-         this page has a stored source, sample and retrieval time; our publishing
-         system will not publish a number that does not.</p>
-      <p>Research completed {research_window}.</p>
-      <h3>Sources used</h3>
-      <ul>{source_items}</ul>
-      <p><a href="/about/research/">How TrustMyRecord Research works</a> &mdash; what
-         our tools do, how we grade sample size, and where automation is and is not
-         used.</p>
-    </div>
-  </details>
+  <div class="gf-wrap">
+    <details class="gf-meth" id="methodology">
+      <summary>Methodology, sources and research record</summary>
+      <div class="gf-meth-in">
+        <p>This Game File carries {n_total} recorded research items: {n_facts} measured
+           facts, {n_derived} derived metrics and {n_analysis} labelled editorial
+           judgements. Every quantitative claim on this page has a stored source,
+           sample and retrieval time; our publishing system will not publish a number
+           that does not.</p>
+        <p>Research completed {research_window}.</p>
+        <h3>Sources used</h3>
+        <ul>{source_items}</ul>
+        <p><a href="/about/research/">How TrustMyRecord Research works</a> &mdash; what our
+           tools do, how we grade sample size, and where automation is and is not used.</p>
+      </div>
+    </details>
 
-  <nav class="gf-related" aria-label="More Game Files">
-    <p>{prevnext}</p>
-    <p><a href="/matchups/{sport}/">All {sport_label} Game Files</a> &middot;
-       <a href="/matchups/">All TMR Game Files</a></p>
-  </nav>
+    <nav class="gf-foot" aria-label="More Game Files">
+      <p>{prevnext}</p>
+      <p><a href="/matchups/{sport}/">All {sport_label} Game Files</a> &middot;
+         <a href="/matchups/">All TMR Game Files</a></p>
+    </nav>
+  </div>
 
 </main>
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
@@ -710,7 +791,6 @@ TEMPLATE = """<!DOCTYPE html>
 """
 
 
-# ------------------------------------------------------------------ listings
 
 def card_html(article, lead=False):
     sport_label = SPORT_LABEL.get(article["sport"], article["sport"].upper())

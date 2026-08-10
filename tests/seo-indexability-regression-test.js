@@ -406,12 +406,28 @@ console.log('\n/matchups/ Game Files');
       fail('BreadcrumbList should be Home > Matchups > Sport > Matchup: ' + url);
 
     // --- imagery ----------------------------------------------------------
-    const hero = /<img class="gf-hero-img" src="([^"]+)"[^>]*alt="([^"]*)"/.exec(html);
-    if (!hero) fail('Game File has no hero image: ' + url);
-    else {
-      if (!/^\/static\//.test(hero[1]))
-        fail('Game File hero is not served from a TMR-controlled path: ' + hero[1]);
-      if (!hero[2].trim()) fail('Game File hero image has empty alt text: ' + url);
+    // The hero is a CSS/typographic composition, not a photograph, so there is
+    // no hero <img> to check any more. The two things that still matter are
+    // unchanged and are checked instead: the social card must be a real
+    // TMR-controlled asset with alt text, and any image that IS in the article
+    // must be ours and described. TMR does not hotlink third-party imagery, and
+    // an undescribed image is invisible to a screen reader and to image search.
+    const ogImg = (/<meta property="og:image" content="([^"]*)"/.exec(html) || [])[1] || '';
+    const ogAlt = (/<meta property="og:image:alt" content="([^"]*)"/.exec(html) || [])[1] || '';
+    if (!/^https:\/\/trustmyrecord\.com\/static\//.test(ogImg))
+      fail('Game File og:image is not a TMR-controlled /static/ asset: ' + (ogImg || '(missing)'));
+    if (!ogAlt.trim()) fail('Game File og:image has empty alt text: ' + url);
+
+    for (const m of html.matchAll(/<img\b[^>]*>/g)) {
+      const tag = m[0];
+      const src = (/\ssrc="([^"]*)"/.exec(tag) || [])[1] || '';
+      const alt = (/\salt="([^"]*)"/.exec(tag) || [])[1];
+      if (src && !/^\/static\//.test(src) && !/^https:\/\/trustmyrecord\.com\/static\//.test(src))
+        fail('Game File embeds a non-TMR image: ' + src + ' on ' + url);
+      if (alt === undefined || !alt.trim())
+        fail('Game File image has no alt text: ' + (src || tag.slice(0, 60)) + ' on ' + url);
+      if (!/\bwidth="/.test(tag) || !/\bheight="/.test(tag))
+        fail('Game File image has no intrinsic width/height (layout shift): ' + src);
     }
 
     // --- discovery --------------------------------------------------------
