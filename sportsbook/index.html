@@ -10209,6 +10209,36 @@
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=dd2021b118a8">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+    <style id="tmr-sportsbook-polish-1">
+    /* VISUAL POLISH SLICE 1 -- top-level sportsbook presentation (2026-08-10).
+       Deliberately last in <head> so it settles the cascade by source order at
+       the same specificity the page already uses, rather than by escalating
+       specificity against the dozens of competing declarations for these two
+       properties. Nothing here touches odds cells, market rows, filters, the
+       slip, pick selection or submission. */
+
+    /* The lede was set in ALL CAPS by CSS -- the markup itself is already a
+       normal sentence ("Choose a sport, select a game, ..."). A 15.5px
+       full-sentence shout wrapping onto two lines is the least finished thing
+       in the header; sentence case is simply what the copy was written as. The
+       words, size and colour are untouched -- only the transform, plus the
+       line-height that mixed case wants. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-sub,
+    html body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-intro p{
+        text-transform: none !important;
+    }
+
+    /* The 4px rule on the page header ran cyan -> lime -> gold. Three hues,
+       two of which appear nowhere else in TMR, on the most prominent edge of
+       the page. Reduced to a single quiet fade of the accent the sportsbook
+       already uses, so the header still has a defined top edge without the
+       page opening on a rainbow. No new colour is introduced. */
+    html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .section-header.sportsbook-page-shell::before,
+    html body[data-tmr-test-route="sportsbook"] #picks .section-header.sportsbook-page-shell::before{
+        height: 2px !important;
+        background: linear-gradient(90deg, rgba(34,211,238,.55), rgba(34,211,238,.10) 62%, rgba(34,211,238,0)) !important;
+    }
+    </style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-ds--dark" data-tmr-route="sportsbook" data-tmr-test-route="sportsbook">
     <script>
