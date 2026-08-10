@@ -305,6 +305,80 @@ def render_block(block):
                 esc(a.get("label")), esc(b.get("label")),
                 ('<p class="gf-mod-sub">%s</p>' % esc(block.get("note"))) if block.get("note") else ""))
 
+    if kind == "keyfacts":
+        cells = "".join(
+            '<div class="gf-keyfact"><b>%s</b><span>%s</span></div>' % (
+                esc(i.get("value")), esc(i.get("label")))
+            for i in block.get("items") or [])
+        return '<div class="gf-keyfacts">%s</div>' % cells
+
+    if kind == "trendboard":
+        # The scannable core. Each item carries its own sample, timeframe and
+        # source, because a trend without those three is a claim, not evidence.
+        cats = []
+        for cat in block.get("categories") or []:
+            items = []
+            for it in cat.get("items") or []:
+                meta = []
+                if it.get("sample"):
+                    meta.append("<em>%s</em>" % esc(it["sample"]))
+                if it.get("timeframe"):
+                    meta.append(esc(it["timeframe"]))
+                if it.get("source"):
+                    meta.append(esc(SOURCE_SHORT.get(it["source"], it["source"])))
+                items.append(
+                    '<li class="gf-trend">'
+                    '<span class="gf-tag" data-s="%s">%s</span>'
+                    '<span><span class="gf-trend-txt">%s</span>'
+                    '<span class="gf-trend-meta">%s</span></span></li>' % (
+                        esc(it.get("strength") or "interesting"),
+                        esc(it.get("strength") or "context"),
+                        esc(it.get("text")),
+                        " &middot; ".join(meta)))
+            cats.append('<div class="gf-board-cat"><h3>%s</h3><ul class="gf-trends">%s</ul></div>'
+                        % (esc(cat.get("name")), "".join(items)))
+        note = ('<p class="gf-boardnote">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
+        return '<div class="gf-board">%s</div>%s' % ("".join(cats), note)
+
+    if kind == "compare":
+        away, home = block.get("away") or {}, block.get("home") or {}
+        rows = []
+        for row in block.get("rows") or []:
+            better = row.get("better")
+            rows.append(
+                '<div class="gf-compare-row">'
+                '<div class="gf-compare-v%s">%s</div>'
+                '<div class="gf-compare-k">%s</div>'
+                '<div class="gf-compare-v%s">%s</div></div>' % (
+                    " is-better" if better == "away" else "", esc(row.get("away")),
+                    esc(row.get("key")),
+                    " is-better" if better == "home" else "", esc(row.get("home"))))
+        return (
+            '<div class="gf-compare">'
+            '<div class="gf-compare-head">'
+            '<div class="gf-compare-who">%s<small>%s</small></div>'
+            '<div class="gf-compare-k">&nbsp;</div>'
+            '<div class="gf-compare-who">%s<small>%s</small></div></div>%s</div>' % (
+                esc(away.get("name")), esc(away.get("sub")),
+                esc(home.get("name")), esc(home.get("sub")), "".join(rows)))
+
+    if kind == "figure":
+        # Dimensions are REQUIRED: an image without width/height is a layout
+        # shift, and this page has enough graphics for that to be measurable.
+        src = block.get("src")
+        if not str(src or "").startswith("/static/"):
+            raise RuntimeError("figure src must be a TMR-controlled /static/ path, got %r" % src)
+        if not block.get("alt"):
+            raise RuntimeError("figure %s has no alt text" % src)
+        if not (block.get("width") and block.get("height")):
+            raise RuntimeError("figure %s needs width and height (CLS)" % src)
+        cap = ('<figcaption>%s</figcaption>' % esc(block.get("caption"))) if block.get("caption") else ""
+        return (
+            '<figure class="gf-fig"><img src="%s" alt="%s" width="%s" height="%s" '
+            'loading="lazy" decoding="async">%s</figure>' % (
+                esc(src), esc(block.get("alt")), esc(block.get("width")),
+                esc(block.get("height")), cap))
+
     if kind == "toollinks":
         items = []
         for link in block.get("links") or []:
@@ -328,16 +402,44 @@ def module_id(module, index):
 
 
 def render_body(article):
-    out, toc = [], []
+    """Render the modules, the jump nav, and the hero key-facts strip.
+
+    A module named `hero-facts` is lifted OUT of the body flow and rendered in
+    the hero instead. It is authored as a normal module so the publish gate
+    still sees its numbers and demands provenance for them — the gate walks
+    body_json, and a hero built from a separate un-gated field would be the one
+    place on the page where a number could appear unsourced.
+    """
+    out, toc, hero_facts = [], [], ""
     for index, module in enumerate(article.get("body_json") or []):
+        if module.get("module") == "hero-facts":
+            hero_facts = "".join(render_block(b) for b in module.get("blocks") or [])
+            continue
         mid = module_id(module, index)
         heading = module.get("heading") or module.get("module") or ""
-        toc.append('<li><a href="#%s">%s</a></li>' % (esc(mid), esc(heading)))
+        toc.append('<li><a href="#%s">%s</a></li>' % (esc(mid), esc(module.get("nav") or heading)))
         blocks = "".join(render_block(b) for b in module.get("blocks") or [])
         sub = ('<p class="gf-mod-sub">%s</p>' % esc(module.get("sub"))) if module.get("sub") else ""
         out.append('<section class="gf-mod" id="%s"><h2>%s</h2>%s%s</section>' % (
             esc(mid), esc(heading), sub, blocks))
-    return "".join(out), "".join(toc)
+    return "".join(out), "".join(toc), hero_facts
+
+
+def count_trends(article):
+    """How many trend rows the Trend Board actually carries.
+
+    Used by the homepage cover. It is counted from the rendered article, never
+    typed in by hand: a marketing number that drifts from the page is exactly
+    the kind of small lie this whole system exists to prevent.
+    """
+    n = 0
+    for module in article.get("body_json") or []:
+        for block in module.get("blocks") or []:
+            if (block or {}).get("type") != "trendboard":
+                continue
+            for cat in block.get("categories") or []:
+                n += len(cat.get("items") or [])
+    return n
 
 
 # ------------------------------------------------------------- article render
@@ -370,7 +472,7 @@ def render_article(article, provenance, neighbours):
 
     published = article.get("published_at")
     modified = article.get("content_modified_at") or published
-    body_html, toc_html = render_body(article)
+    body_html, toc_html, hero_facts_html = render_body(article)
     if not body_html:
         raise RuntimeError("article %s has no body modules" % article["slug"])
 
@@ -465,6 +567,7 @@ def render_article(article, provenance, neighbours):
         venue_sep=" &middot; " if article.get("venue_name") else "",
         venue=esc(article.get("venue_name") or ""),
         toc=toc_html,
+        hero_facts=hero_facts_html,
         body=body_html,
         postgame=postgame_html,
         source_items=source_items or "<li>No external sources recorded.</li>",
@@ -476,6 +579,19 @@ def render_article(article, provenance, neighbours):
         prevnext=(" &middot; ".join(nav_bits)) or "",
     )
 
+
+# Short forms for the Trend Board chips. The long labels below are for the
+# methodology block, where there is room to be explicit; a board row needs the
+# source named in three words or it stops being scannable.
+SOURCE_SHORT = {
+    "statsapi": "MLB Stats API",
+    "betlegend-pro": "BetLegend Pro",
+    "trendspotter": "Trend Spotter",
+    "tmr-sim": "TMR Simulator",
+    "actionnetwork": "Market feed",
+    "fanduel": "FanDuel props",
+    "tmr-editorial": "TMR editorial",
+}
 
 SOURCE_LABEL = {
     "statsapi": "MLB Stats API (official league data)",
@@ -532,14 +648,17 @@ TEMPLATE = """<!DOCTYPE html>
     <span>{matchup}</span>
   </nav>
 
-  <p class="gf-eyebrow">TMR Game File &middot; {sport_label}</p>
+  <p class="gf-eyebrow">TMR Game File &middot; Matchup of the Day &middot; {sport_label}</p>
   <h1 class="gf-title">{h1}</h1>
-  <p class="gf-dek">{dek}</p>
 
   <figure class="gf-hero">
     <img class="gf-hero-img" src="{hero}" alt="{hero_alt}" width="1200" height="630"
          fetchpriority="high" decoding="async">
   </figure>
+
+  <p class="gf-dek">{dek}</p>
+
+  {hero_facts}
 
   <div class="gf-byline">
     <span>By <a href="/about/research/">TrustMyRecord Research</a></span>
@@ -552,7 +671,6 @@ TEMPLATE = """<!DOCTYPE html>
   </div>
 
   <nav class="gf-toc" aria-label="Sections in this Game File">
-    <h2>In this Game File</h2>
     <ol>{toc}</ol>
   </nav>
 
@@ -638,6 +756,23 @@ def cover_html(article):
     matchup_b = esc(article["home_team"])
     href = "/matchups/%s/%s/" % (esc(article["sport"]), esc(article["slug"]))
     label = esc(SPORT_LABEL.get(article["sport"], article["sport"].upper()))
+    # Counts are COMPUTED from the article, never authored. A cover that claims
+    # "27 trends" over a page carrying nine is the same class of small lie the
+    # provenance gate exists to stop, and it would be the first thing a visitor
+    # could check.
+    trends = count_trends(article)
+    claims = len(article.get("provenance") or [])
+    modules = len([m for m in (article.get("body_json") or [])
+                   if m.get("module") != "hero-facts"])
+    stats = []
+    if trends:
+        stats.append('<span><b>%d</b> sourced matchup trends</span>' % trends)
+    if claims:
+        stats.append('<span><b>%d</b> verified research claims</span>' % claims)
+    if modules:
+        stats.append('<span><b>%d</b> analysis modules</span>' % modules)
+    stats_html = ('    <p class="motd-stats">%s</p>\n' % "".join(stats)) if stats else ""
+
     return (
         '\n<section class="motd" aria-labelledby="motd-h">\n'
         '  <div class="motd-in">\n'
@@ -646,13 +781,15 @@ def cover_html(article):
         '<span>%s</span><em>vs</em><span>%s</span></h2>\n'
         '    <p class="motd-file">The TMR Game File</p>\n'
         '    <p class="motd-dek">%s</p>\n'
+        '%s'
         '    <p class="motd-cta">'
         '<a class="motd-btn" href="%s">Enter the Game File</a>'
         '<a class="motd-alt" href="/matchups/">All TMR Game Files</a></p>\n'
         '    <p class="motd-scroll" aria-hidden="true">Scroll for the rest of TrustMyRecord</p>\n'
         '  </div>\n'
         '</section>\n' % (label, matchup_a, matchup_b,
-                          esc(article.get("dek") or article.get("meta_description") or ""), href))
+                          esc(article.get("dek") or article.get("meta_description") or ""),
+                          stats_html, href))
 
 
 def sitemap_block(articles, hubs):
@@ -727,7 +864,15 @@ def main():
     today_iso = dt.datetime.now(dt.timezone.utc).date().isoformat()
 
     # ---- hub listings -------------------------------------------------------
-    lead = featured if featured and featured.get("slug") else (ordered[0] if ordered else None)
+    # Resolve `featured` back to the row in `articles`. The API's featured field
+    # is a bare article record without its provenance attached, and the cover
+    # counts research claims off it — using the bare copy silently dropped the
+    # "verified research claims" line from the homepage.
+    lead = None
+    if featured and featured.get("slug"):
+        lead = next((a for a in ordered if a["slug"] == featured["slug"]), featured)
+    elif ordered:
+        lead = ordered[0]
     rest = [a for a in ordered if not lead or a["slug"] != lead["slug"]]
 
     hub_today = card_html(lead, lead=True) if lead else (

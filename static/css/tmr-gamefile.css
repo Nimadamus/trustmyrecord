@@ -1,324 +1,535 @@
 /* ============================================================================
    tmr-gamefile.css — MATCHUP_OF_THE_DAY_PHASE1_20260810
+   Presentation pass 2026-08-10: type scale, restrained palette, trend board.
 
    The TMR Game File: /matchups/, /matchups/<sport>/ and the article pages.
 
-   Everything here is scoped under .gf- and rides on the design system's tokens
-   (tmr-ds.css, dark surface). No token is redefined: if TMR's palette moves,
-   these pages move with it rather than becoming a private theme, which is the
-   mistake /today/ had to be walked back from.
+   ---------------------------------------------------------------------------
+   TYPE SCALE — AND WHY EVERY RULE IS SCOPED UNDER body.tmr-ds
+   ---------------------------------------------------------------------------
+   The design system styles bare elements through `body.tmr-ds h1`, `h2`, `p`,
+   `a` — specificity (0,1,1). A single-class rule like `.gf-title` is (0,1,0)
+   and loses; `.gf-mod > h2` is (0,1,1) and ties, so load order decides. The
+   first version of this file lost both fights: the article shipped a 64px H1
+   and 36px section headings — landing-page sizing applied to a longform
+   research piece, and the reason the page read as oversized.
 
-   The homepage cover is NOT in this file. It is inlined in index.html's
-   critical block, because a render-blocking stylesheet request for the first
-   thing in the viewport is exactly how a "premium" hero becomes a slow one.
+   Everything that sets type is therefore scoped under body.tmr-ds, and the
+   scale is declared once in tokens so the hierarchy is legible in one place:
+
+     H1            40px   the only display-scale element
+     section h2    26px
+     subsection h3 19px
+     body          16px / 1.62
+     trend item    14.5px
+     caption       13px
+     metadata      12.5px
+     stat label    11px
+     stat number   28px   selectively large, tabular
+
+   ---------------------------------------------------------------------------
+   PALETTE — ONE ACCENT
+   ---------------------------------------------------------------------------
+   Surfaces and ink stay on the design system's dark tokens, so the Game File
+   moves with TMR rather than becoming its own theme (the mistake /today/ had to
+   be walked back from).
+
+   What changed: the finding callouts used to come in four colours — teal,
+   violet, gold, blue — one per source. That produced module borders that
+   differed for reasons a reader had no key to decode: decoration pretending to
+   be information. There is now ONE accent (brand teal) for every proprietary
+   callout, and colour is otherwise reserved for meaning — green/red on sample
+   strength, nothing else. Which TMR system produced a finding is stated in the
+   label, which is what labels are for.
+
+   The homepage cover is NOT in this file — it is inlined in index.html's
+   critical block, because a render-blocking request for the first thing in the
+   viewport is how a premium hero becomes a slow one.
    ========================================================================== */
 
-/* LINK COLOUR, settled once.
+body.tmr-ds .gf-hub,
+body.tmr-ds .gf-article {
+  --gf-h1: 40px;
+  --gf-h2: 26px;
+  --gf-h3: 19px;
+  --gf-body: 16px;
+  --gf-trend: 14.5px;
+  --gf-caption: 13px;
+  --gf-meta: 12.5px;
+  --gf-label: 11px;
+  --gf-stat: 28px;
+  --gf-lh: 1.62;
+  /* One accent, aliased so a future palette move is a one-line change. */
+  --gf-accent: var(--brand);
+  --gf-rule: var(--line);
+}
 
-   The design system styles bare elements - a, h2, p - through rules like
-   "body.tmr-ds a", at specificity (0,1,1). A single-class rule such as
-   ".gf-toollinks a" is also (0,1,1), so which one wins comes down to load
-   order. That is how the Game File's contextual tool links first rendered in
-   the body colour instead of the brand colour, and it is why the homepage
-   cover's team names first rendered nearly black.
+/* -------------------------------------------------------------- structure - */
 
-   Everything that sets a link colour on these pages is therefore scoped under
-   body.tmr-ds, so the outcome does not depend on the order two stylesheets
-   happen to arrive in. The default comes first; the exceptions follow, listed
-   together rather than scattered, so the whole link palette reads in one place. */
+body.tmr-ds .gf-hub,
+body.tmr-ds .gf-article {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 18px 20px 80px;
+  font-size: var(--gf-body);
+}
+body.tmr-ds .gf-article { max-width: 860px; }
+
+body.tmr-ds .gf-crumb {
+  font-size: var(--gf-meta);
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+body.tmr-ds .gf-crumb span[aria-hidden] { padding: 0 4px; color: var(--line-2); }
+
+body.tmr-ds .gf-eyebrow {
+  display: inline-block;
+  font-size: var(--gf-label);
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gf-accent);
+  margin: 0 0 8px;
+}
+
+/* ---- LINK COLOUR, settled once (see the specificity note above) ---------- */
 body.tmr-ds .gf-hub a,
-body.tmr-ds .gf-article a { color: var(--brand); }
-
+body.tmr-ds .gf-article a { color: var(--gf-accent); }
 body.tmr-ds .gf-crumb a,
 body.tmr-ds .gf-byline a,
 body.tmr-ds .gf-toc a { color: var(--ink-2); }
 body.tmr-ds .gf-crumb a:hover,
 body.tmr-ds .gf-byline a:hover,
-body.tmr-ds .gf-toc a:hover { color: var(--brand); }
-
+body.tmr-ds .gf-toc a:hover { color: var(--gf-accent); }
 body.tmr-ds .gf-card h3 a { color: var(--ink); }
-body.tmr-ds .gf-card h3 a:hover { color: var(--brand); }
+body.tmr-ds .gf-card h3 a:hover { color: var(--gf-accent); }
 
-/* -------------------------------------------------------------- structure - */
+/* ------------------------------------------------------------ hero (art) - */
 
-.gf-hub,
-.gf-article {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px 20px 80px;
-}
-.gf-article { max-width: 880px; }
-
-.gf-crumb {
-  font-size: 13px;
-  color: var(--muted);
-  margin: 2px 0 18px;
-  line-height: 1.6;
-}
-.gf-crumb a { color: var(--ink-2); }
-.gf-crumb a:hover { color: var(--brand); }
-.gf-crumb span[aria-hidden] { padding: 0 4px; color: var(--muted); }
-
-.gf-eyebrow {
-  display: inline-block;
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--brand);
-  margin: 0 0 8px;
-}
-
-.gf-hub-head { margin: 0 0 34px; }
-.gf-hub-head h1 { margin: 0 0 12px; }
-.gf-hub-dek {
-  color: var(--ink-2);
-  font-size: 17px;
-  line-height: 1.65;
-  max-width: 68ch;
-  margin: 0 0 10px;
-}
-.gf-hub-dek--sm { font-size: 14.5px; color: var(--muted); }
-.gf-hub-dek a, .gf-prose a, .gf-note a { color: var(--brand); }
-.gf-hub-dek a:hover, .gf-prose a:hover { text-decoration: underline; }
-
-.gf-sec { margin: 0 0 40px; }
-.gf-sec > h2 {
-  font-size: 26px;
-  margin: 0 0 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-.gf-empty { color: var(--muted); font-size: 15px; }
-
-/* ------------------------------------------------------------ prose page - */
-
-.gf-prose p { color: var(--ink-2); font-size: 16px; line-height: 1.72; margin: 0 0 14px; max-width: 72ch; }
-.gf-prose h3 { font-size: 18px; margin: 22px 0 10px; }
-.gf-deflist { margin: 6px 0 0; max-width: 72ch; }
-.gf-deflist dt { font-weight: 800; color: var(--ink); margin-top: 14px; }
-.gf-deflist dd { margin: 4px 0 0; color: var(--ink-2); line-height: 1.7; }
-.gf-note {
-  border-left: 3px solid var(--brand);
-  background: var(--brand-soft);
-  padding: 12px 16px;
-  border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  color: var(--ink-2);
-  font-size: 15px;
-  line-height: 1.65;
-  margin: 16px 0;
-  max-width: 72ch;
-}
-
-/* ------------------------------------------------------------- hub cards - */
-
-/* Article cards. The whole card is not a link: the heading is, so the anchor
-   text a crawler sees is the article's actual name rather than the entire card
-   contents. */
-.gf-card {
-  display: block;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 18px 20px;
-  margin: 0 0 14px;
-  box-shadow: var(--sh);
-}
-.gf-card--lead { border-color: var(--brand); box-shadow: var(--sh-up); }
-.gf-card-kicker {
-  font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--muted); margin: 0 0 8px;
-}
-.gf-card--lead .gf-card-kicker { color: var(--brand); }
-.gf-card h3 { font-size: 21px; line-height: 1.28; margin: 0 0 8px; }
-.gf-card h3 a { color: var(--ink); }
-.gf-card h3 a:hover { color: var(--brand); }
-.gf-card p { color: var(--ink-2); font-size: 15px; line-height: 1.6; margin: 0 0 10px; max-width: 70ch; }
-.gf-card-meta {
-  display: flex; flex-wrap: wrap; gap: 8px 16px;
-  font-size: 12.5px; color: var(--muted); margin: 0;
-}
-.gf-card-meta strong { color: var(--ink-2); font-weight: 700; }
-
-.gf-sportlist, .gf-linklist { list-style: none; margin: 0; padding: 0; }
-.gf-sportlist li, .gf-linklist li { margin: 0 0 10px; }
-.gf-sportlist a, .gf-linklist a { color: var(--brand); font-size: 15.5px; font-weight: 600; }
-.gf-sportlist a:hover, .gf-linklist a:hover { text-decoration: underline; }
-.gf-linklist--plain li { color: var(--ink-2); font-size: 15.5px; line-height: 1.6; }
-
-.gf-inside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.gf-inside-card {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 16px 18px;
-}
-.gf-inside-card h3 { font-size: 16px; margin: 0 0 8px; }
-.gf-inside-card p { color: var(--ink-2); font-size: 14.5px; line-height: 1.6; margin: 0; }
-.gf-inside-card a { color: var(--brand); }
-
-/* ------------------------------------------------------------- article --- */
-
-.gf-hero {
+body.tmr-ds .gf-hero {
   position: relative;
   border-radius: var(--r);
   overflow: hidden;
-  border: 1px solid var(--line);
-  margin: 0 0 24px;
+  border: 1px solid var(--gf-rule);
+  margin: 0 0 18px;
   background: var(--panel-2);
 }
-/* Explicit aspect ratio so the box is the right size before the image decodes.
-   The hero is the LCP element on this page; a hero that resizes on load is a
-   CLS score and a bad first impression at the same time. */
-.gf-hero-img { display: block; width: 100%; height: auto; aspect-ratio: 1200 / 630; object-fit: cover; }
-
-.gf-title { font-size: 42px; line-height: 1.08; margin: 6px 0 14px; }
-.gf-dek { color: var(--ink-2); font-size: 18px; line-height: 1.6; margin: 0 0 18px; max-width: 70ch; }
-
-.gf-byline {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
-  font-size: 13.5px; color: var(--muted);
-  padding: 14px 0; margin: 0 0 26px;
-  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+/* Explicit ratio so the box is correct before decode. The hero is the LCP
+   element; a hero that resizes on load is a CLS score and a bad first
+   impression at the same time. */
+body.tmr-ds .gf-hero-img {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 1200 / 630; object-fit: cover;
 }
-.gf-byline a { color: var(--ink-2); font-weight: 700; }
-.gf-byline a:hover { color: var(--brand); }
-.gf-byline .gf-sep { color: var(--line-2); }
 
-/* Section navigation. Sticky only where there is room for it to be sticky
-   without eating a phone screen. */
-.gf-toc {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 14px 18px;
-  margin: 0 0 30px;
+body.tmr-ds .gf-title {
+  font-size: var(--gf-h1);
+  line-height: 1.06;
+  letter-spacing: -.005em;
+  margin: 4px 0 10px;
+  color: var(--ink);
 }
-.gf-toc h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
-.gf-toc ol { margin: 0; padding: 0 0 0 2px; list-style: none; columns: 2; column-gap: 26px; }
-.gf-toc li { margin: 0 0 7px; break-inside: avoid; }
-.gf-toc a { color: var(--ink-2); font-size: 14.5px; }
-.gf-toc a:hover { color: var(--brand); }
-
-.gf-mod { margin: 0 0 38px; scroll-margin-top: 24px; }
-.gf-mod > h2 {
-  font-size: 28px;
-  margin: 0 0 6px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--brand);
-  display: inline-block;
-}
-.gf-mod-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
-.gf-mod p { color: var(--ink-2); font-size: 16.5px; line-height: 1.72; margin: 0 0 14px; max-width: 72ch; }
-.gf-mod h3 { font-size: 18px; margin: 22px 0 8px; }
-.gf-mod ul { margin: 0 0 14px; padding-left: 20px; }
-.gf-mod li { color: var(--ink-2); font-size: 16px; line-height: 1.7; margin: 0 0 8px; max-width: 70ch; }
-
-/* Proprietary-finding callout. This is the moat made visible: a reader should
-   be able to tell at a glance which findings came out of TMR's own systems. */
-.gf-finding {
-  background: var(--panel);
-  border: 1px solid var(--line-2);
-  border-left: 4px solid var(--brand);
-  border-radius: 0 var(--r) var(--r) 0;
-  padding: 16px 20px;
+body.tmr-ds .gf-dek {
+  color: var(--ink-2);
+  font-size: 17px;
+  line-height: 1.55;
   margin: 0 0 16px;
+  max-width: 68ch;
+  font-weight: 400;
 }
-.gf-finding-tag {
-  display: inline-block;
-  font-size: 10.5px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--brand); margin: 0 0 8px;
+
+/* Hero key-facts strip: orient and impress, then get out of the way. */
+body.tmr-ds .gf-keyfacts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--gf-rule);
+  border: 1px solid var(--gf-rule);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin: 0 0 18px;
 }
-.gf-finding--sim { border-left-color: var(--violet); }
-.gf-finding--sim .gf-finding-tag { color: var(--violet); }
-.gf-finding--blp { border-left-color: var(--gold); }
-.gf-finding--blp .gf-finding-tag { color: var(--gold); }
-.gf-finding--trend { border-left-color: var(--blue); }
-.gf-finding--trend .gf-finding-tag { color: var(--blue); }
-.gf-finding p { margin: 0 0 8px; font-size: 16px; }
-.gf-finding p:last-child { margin-bottom: 0; }
-
-/* Sample-size chip. Never optional next to a statistic. */
-.gf-sample {
-  display: inline-block;
-  font-size: 11.5px; font-weight: 700;
-  padding: 2px 8px; border-radius: 999px;
-  background: var(--panel-3); color: var(--muted);
-  border: 1px solid var(--line);
-  white-space: nowrap;
+body.tmr-ds .gf-keyfact { background: var(--panel); padding: 12px 14px; }
+body.tmr-ds .gf-keyfact b {
+  display: block; font-size: 24px; font-weight: 800; line-height: 1.1;
+  letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums;
 }
-.gf-sample[data-grade="strong"]       { color: var(--green);  border-color: var(--green);  background: var(--green-soft); }
-.gf-sample[data-grade="supportive"]   { color: var(--blue);   border-color: var(--blue);   background: var(--blue-soft); }
-.gf-sample[data-grade="interesting"]  { color: var(--ink-2); }
-.gf-sample[data-grade="small-sample"] { color: var(--gold);   border-color: var(--gold);   background: var(--gold-soft); }
-.gf-sample[data-grade="weak"]         { color: var(--red);    border-color: var(--red);    background: var(--red-soft); }
+body.tmr-ds .gf-keyfact span {
+  display: block; font-size: var(--gf-label); font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 5px;
+}
 
-/* Tale of the tape / comparison rows. */
-.gf-tape { display: grid; gap: 2px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
-.gf-tape-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 2px; background: var(--line); }
-.gf-tape-row > * { background: var(--panel); padding: 11px 14px; }
-.gf-tape-row.is-head > * { background: var(--panel-3); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
-.gf-tape-v { font-size: 16px; font-weight: 700; color: var(--ink); text-align: center; font-variant-numeric: tabular-nums; }
-.gf-tape-v.is-better { color: var(--brand); }
-.gf-tape-k { text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; min-width: 130px; }
+body.tmr-ds .gf-byline {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
+  font-size: var(--gf-meta); color: var(--muted);
+  padding: 11px 0; margin: 0 0 20px;
+  border-top: 1px solid var(--gf-rule); border-bottom: 1px solid var(--gf-rule);
+}
+body.tmr-ds .gf-byline a { font-weight: 700; }
+body.tmr-ds .gf-byline .gf-sep { color: var(--line-2); }
 
-/* Big-number callouts. */
-.gf-numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 18px; }
-.gf-num { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
-.gf-num b { display: block; font-size: 30px; font-weight: 900; letter-spacing: -.03em; line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
-.gf-num span { display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 7px; line-height: 1.4; }
-.gf-num em { display: block; font-style: normal; font-size: 12px; color: var(--muted); margin-top: 6px; }
+body.tmr-ds .gf-readon {
+  display: inline-block; font-size: var(--gf-label); font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  margin: 0 0 20px;
+}
 
-/* Tables. Every table scrolls inside its own box; the page body never does. */
-.gf-tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: var(--r); margin: 0 0 16px; }
-.gf-table { width: 100%; border-collapse: collapse; min-width: 480px; }
-.gf-table caption { text-align: left; padding: 12px 14px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); }
-.gf-table th, .gf-table td { padding: 10px 14px; text-align: right; font-size: 14.5px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-.gf-table th:first-child, .gf-table td:first-child { text-align: left; font-variant-numeric: normal; }
-.gf-table thead th { background: var(--panel-3); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
-.gf-table tbody tr:last-child td { border-bottom: 0; }
-.gf-table td { color: var(--ink-2); }
+/* --------------------------------------------------------------- jump nav - */
 
-/* Simulation bar. A plain, honest distribution: no library, no runtime cost. */
-.gf-simbar { display: flex; height: 34px; border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--line); margin: 0 0 10px; }
-.gf-simbar span { display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #06121f; }
-.gf-simbar .a { background: var(--brand); }
-.gf-simbar .b { background: var(--violet); }
-.gf-simlegend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
-.gf-simlegend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+/* Sticky on desktop only, and only because it is ~40px tall. On a phone it
+   becomes a plain scrollable strip: permanent chrome eating a fifth of a small
+   screen is a worse trade than scrolling back up. */
+body.tmr-ds .gf-toc {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--page);
+  border-bottom: 1px solid var(--gf-rule);
+  margin: 0 0 26px;
+  padding: 8px 0;
+}
+body.tmr-ds .gf-toc ol {
+  margin: 0; padding: 0; list-style: none;
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+body.tmr-ds .gf-toc ol::-webkit-scrollbar { display: none; }
+body.tmr-ds .gf-toc li { flex: 0 0 auto; }
+body.tmr-ds .gf-toc a {
+  display: block; padding: 6px 11px; border-radius: 999px;
+  font-size: var(--gf-meta); font-weight: 700; white-space: nowrap;
+  border: 1px solid transparent;
+}
+body.tmr-ds .gf-toc a:hover { background: var(--panel); border-color: var(--gf-rule); }
+body.tmr-ds .gf-toc a.is-current { color: var(--gf-accent); border-color: var(--gf-accent); }
 
-/* Contextual tool links, in the module they belong to — not a footer farm. */
-.gf-toollinks { background: var(--panel-2); border: 1px dashed var(--line-2); border-radius: var(--r); padding: 14px 18px; margin: 16px 0 0; }
-.gf-toollinks p { font-size: 13px; color: var(--muted); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
-.gf-toollinks ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
-.gf-toollinks a { color: var(--brand); font-size: 14.5px; font-weight: 600; }
-.gf-toollinks a:hover { text-decoration: underline; }
+/* ---------------------------------------------------------------- modules - */
 
-/* Methodology / sources. Collapsed by default: it must be present for a reader
-   who wants it and must not push the analysis down the page for one who does
-   not. <details> is used so the content is in the DOM and crawlable either way. */
-.gf-sources { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r); padding: 0; margin: 0 0 24px; }
-.gf-sources > summary { cursor: pointer; padding: 14px 18px; font-weight: 800; font-size: 15px; color: var(--ink-2); list-style: none; }
-.gf-sources > summary::-webkit-details-marker { display: none; }
-.gf-sources > summary::after { content: " +"; color: var(--brand); }
-.gf-sources[open] > summary::after { content: " \2212"; }
-.gf-sources-in { padding: 0 18px 16px; }
+body.tmr-ds .gf-mod { margin: 0 0 34px; scroll-margin-top: 66px; }
+body.tmr-ds .gf-mod > h2 {
+  font-size: var(--gf-h2);
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  margin: 0 0 4px;
+  padding: 0 0 8px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--gf-rule);
+}
+body.tmr-ds .gf-mod h3 {
+  font-size: var(--gf-h3); line-height: 1.25; margin: 20px 0 8px; color: var(--ink);
+}
+body.tmr-ds .gf-mod-sub {
+  color: var(--muted); font-size: var(--gf-caption); margin: 8px 0 14px; line-height: 1.5;
+}
+body.tmr-ds .gf-mod p {
+  color: var(--ink-2); font-size: var(--gf-body); line-height: var(--gf-lh);
+  margin: 0 0 12px; max-width: 70ch;
+}
+body.tmr-ds .gf-mod ul { margin: 0 0 12px; padding-left: 18px; }
+body.tmr-ds .gf-mod li {
+  color: var(--ink-2); font-size: var(--gf-body); line-height: 1.58;
+  margin: 0 0 6px; max-width: 68ch;
+}
 
-.gf-postgame { border: 1px solid var(--gold); background: var(--gold-soft); border-radius: var(--r); padding: 16px 20px; margin: 0 0 26px; }
-.gf-postgame h2 { font-size: 20px; margin: 0 0 8px; }
+/* ------------------------------------------------------------ TREND BOARD - */
 
-.gf-related { border-top: 1px solid var(--line); padding-top: 22px; }
+/* The scannable core of the page. Someone who only reads this should still
+   leave with the research. Compact by design: 14.5px, tight rows, one accent. */
+body.tmr-ds .gf-board { margin: 0 0 10px; }
+body.tmr-ds .gf-board-cat { margin: 0 0 18px; }
+body.tmr-ds .gf-board-cat > h3 {
+  font-size: var(--gf-label); font-weight: 800; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 0 0 8px; padding: 0 0 6px;
+  border-bottom: 1px solid var(--gf-rule);
+}
+/* These beat `body.tmr-ds .gf-mod ul/li` (0,2,2), which would otherwise give
+   trend rows the 16px body size, an 18px bullet indent and a 68ch max-width —
+   the last of which visibly cut the board short of its own category rules. */
+body.tmr-ds .gf-mod ul.gf-trends { list-style: none; margin: 0; padding: 0; }
+body.tmr-ds .gf-mod li.gf-trend {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 0 14px;
+  align-items: start;
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: var(--r-sm);
+  font-size: var(--gf-trend);
+  line-height: 1.45;
+  max-width: none;
+}
+body.tmr-ds .gf-mod li.gf-trend:nth-child(odd) { background: var(--panel-2); }
+body.tmr-ds .gf-trend-txt { color: var(--ink); line-height: 1.45; margin: 0; font-size: var(--gf-trend); }
+body.tmr-ds .gf-trend-meta {
+  display: block; color: var(--muted); font-size: var(--gf-meta);
+  margin-top: 3px; line-height: 1.45;
+}
+body.tmr-ds .gf-trend-meta em { font-style: normal; color: var(--ink-2); }
+
+/* Strength marker. Colour carries meaning here and nowhere else. */
+body.tmr-ds .gf-tag {
+  display: inline-block; align-self: start;
+  font-size: 9.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 3px; white-space: nowrap; text-align: center;
+  width: 100%; box-sizing: border-box;
+  border: 1px solid var(--line-2); color: var(--muted); background: transparent;
+}
+body.tmr-ds .gf-tag[data-s="strong"]       { color: var(--green); border-color: var(--green); }
+body.tmr-ds .gf-tag[data-s="supportive"]   { color: var(--ink-2); border-color: var(--line-2); }
+body.tmr-ds .gf-tag[data-s="interesting"]  { color: var(--muted); }
+body.tmr-ds .gf-tag[data-s="small-sample"] { color: var(--red); border-color: var(--red); }
+body.tmr-ds .gf-tag[data-s="weak"]         { color: var(--red); border-color: var(--red); }
+body.tmr-ds .gf-tag[data-s="market"]       { color: var(--gf-accent); border-color: var(--gf-accent); }
+
+body.tmr-ds .gf-boardnote {
+  font-size: var(--gf-caption); color: var(--muted); line-height: 1.55;
+  border-left: 2px solid var(--gf-rule); padding-left: 12px; margin: 14px 0 0; max-width: 72ch;
+}
+
+/* ------------------------------------------------------- compare / tables - */
+
+body.tmr-ds .gf-compare {
+  border: 1px solid var(--gf-rule); border-radius: var(--r);
+  overflow: hidden; margin: 0 0 14px; background: var(--panel);
+}
+body.tmr-ds .gf-compare-head {
+  display: grid; grid-template-columns: 1fr 158px 1fr;
+  background: var(--panel-3); border-bottom: 1px solid var(--gf-rule);
+}
+body.tmr-ds .gf-compare-head > div { padding: 11px 14px; }
+body.tmr-ds .gf-compare-who { font-size: 15px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+body.tmr-ds .gf-compare-who small {
+  display: block; font-size: var(--gf-label); font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); margin-top: 3px;
+}
+body.tmr-ds .gf-compare-head > div:last-child { text-align: right; }
+body.tmr-ds .gf-compare-row {
+  display: grid; grid-template-columns: 1fr 158px 1fr;
+  border-bottom: 1px solid var(--gf-rule);
+}
+body.tmr-ds .gf-compare-row:last-child { border-bottom: 0; }
+body.tmr-ds .gf-compare-row > div { padding: 9px 14px; font-size: 15px; }
+body.tmr-ds .gf-compare-v { color: var(--ink-2); font-variant-numeric: tabular-nums; font-weight: 700; }
+body.tmr-ds .gf-compare-row > div:last-child { text-align: right; }
+body.tmr-ds .gf-compare-v.is-better { color: var(--gf-accent); }
+body.tmr-ds .gf-compare-k {
+  /* Wide enough that OPPONENT AVG and BATTERS FACED stay on one line; a
+     wrapping key made every other row a different height. */
+  text-align: center; font-size: var(--gf-label); font-weight: 800;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+  background: var(--panel-2);
+}
+
+body.tmr-ds .gf-tablewrap {
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--gf-rule); border-radius: var(--r); margin: 0 0 14px;
+}
+body.tmr-ds .gf-table { width: 100%; border-collapse: collapse; min-width: 460px; }
+body.tmr-ds .gf-table caption {
+  text-align: left; padding: 10px 14px; font-size: var(--gf-caption);
+  color: var(--muted); border-bottom: 1px solid var(--gf-rule);
+}
+body.tmr-ds .gf-table th,
+body.tmr-ds .gf-table td {
+  padding: 8px 14px; text-align: right; font-size: 14.5px;
+  border-bottom: 1px solid var(--gf-rule); font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+body.tmr-ds .gf-table th:first-child,
+body.tmr-ds .gf-table td:first-child { text-align: left; font-variant-numeric: normal; color: var(--ink); }
+body.tmr-ds .gf-table thead th {
+  background: var(--panel-3); font-size: var(--gf-label); text-transform: uppercase;
+  letter-spacing: .07em; color: var(--muted); font-weight: 800;
+}
+body.tmr-ds .gf-table tbody tr:last-child td,
+body.tmr-ds .gf-table tbody tr:last-child th { border-bottom: 0; }
+
+/* ------------------------------------------------------------- graphics --- */
+
+body.tmr-ds .gf-fig { margin: 0 0 16px; }
+body.tmr-ds .gf-fig img {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--gf-rule); border-radius: var(--r); background: var(--panel-2);
+}
+body.tmr-ds .gf-fig figcaption {
+  font-size: var(--gf-caption); color: var(--muted); margin-top: 7px; line-height: 1.5;
+}
+
+/* ------------------------------------------------- proprietary callout ---- */
+
+body.tmr-ds .gf-finding {
+  background: var(--panel);
+  border: 1px solid var(--gf-rule);
+  border-left: 3px solid var(--gf-accent);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 14px 18px;
+  margin: 0 0 14px;
+}
+body.tmr-ds .gf-finding-tag {
+  display: block; font-size: var(--gf-label); font-weight: 800; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--gf-accent); margin: 0 0 7px;
+}
+body.tmr-ds .gf-finding p { margin: 0 0 7px; font-size: 15.5px; line-height: 1.6; }
+body.tmr-ds .gf-finding p:last-child { margin-bottom: 0; }
+
+body.tmr-ds .gf-sample {
+  display: inline-block; font-size: var(--gf-label); font-weight: 700;
+  padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+  background: transparent; color: var(--muted); border: 1px solid var(--line-2);
+}
+body.tmr-ds .gf-sample[data-grade="strong"]       { color: var(--green); border-color: var(--green); }
+body.tmr-ds .gf-sample[data-grade="small-sample"] { color: var(--red);   border-color: var(--red); }
+body.tmr-ds .gf-sample[data-grade="weak"]         { color: var(--red);   border-color: var(--red); }
+
+body.tmr-ds .gf-numbers {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px; background: var(--gf-rule); border: 1px solid var(--gf-rule);
+  border-radius: var(--r); overflow: hidden; margin: 0 0 14px;
+}
+body.tmr-ds .gf-num { background: var(--panel); padding: 12px 14px; }
+body.tmr-ds .gf-num b {
+  display: block; font-size: var(--gf-stat); font-weight: 800; letter-spacing: -.025em;
+  line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums;
+}
+body.tmr-ds .gf-num span {
+  display: block; font-size: var(--gf-label); font-weight: 800; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--muted); margin-top: 6px; line-height: 1.35;
+}
+body.tmr-ds .gf-num em {
+  display: block; font-style: normal; font-size: var(--gf-meta); color: var(--muted); margin-top: 4px;
+}
+
+body.tmr-ds .gf-toollinks {
+  border: 1px solid var(--gf-rule); border-radius: var(--r);
+  padding: 12px 16px; margin: 14px 0 0; background: var(--panel-2);
+}
+body.tmr-ds .gf-toollinks p {
+  font-size: var(--gf-label); color: var(--muted); margin: 0 0 7px;
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 800;
+}
+body.tmr-ds .gf-toollinks ul {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+}
+body.tmr-ds .gf-toollinks li { margin: 0; }
+body.tmr-ds .gf-toollinks a { font-size: 14.5px; font-weight: 600; }
+
+body.tmr-ds .gf-sources {
+  background: var(--panel-2); border: 1px solid var(--gf-rule);
+  border-radius: var(--r); padding: 0; margin: 0 0 22px;
+}
+body.tmr-ds .gf-sources > summary {
+  cursor: pointer; padding: 12px 16px; font-weight: 800;
+  font-size: 14.5px; color: var(--ink-2); list-style: none;
+}
+body.tmr-ds .gf-sources > summary::-webkit-details-marker { display: none; }
+body.tmr-ds .gf-sources > summary::after { content: " +"; color: var(--gf-accent); }
+body.tmr-ds .gf-sources[open] > summary::after { content: " \2212"; }
+body.tmr-ds .gf-sources-in { padding: 0 16px 14px; }
+body.tmr-ds .gf-sources-in p,
+body.tmr-ds .gf-sources-in li { font-size: 14.5px; color: var(--ink-2); line-height: 1.6; }
+body.tmr-ds .gf-sources-in h3 { font-size: var(--gf-h3); margin: 14px 0 6px; }
+
+body.tmr-ds .gf-postgame {
+  border: 1px solid var(--line-2); background: var(--panel);
+  border-radius: var(--r); padding: 14px 18px; margin: 0 0 22px;
+}
+body.tmr-ds .gf-postgame h2 { font-size: var(--gf-h3); margin: 0 0 6px; }
+
+body.tmr-ds .gf-related {
+  border-top: 1px solid var(--gf-rule); padding-top: 18px;
+  font-size: 14.5px; color: var(--muted);
+}
+body.tmr-ds .gf-related p { margin: 0 0 8px; }
+
+/* -------------------------------------------------------------- hub pages - */
+
+body.tmr-ds .gf-hub-head { margin: 0 0 28px; }
+body.tmr-ds .gf-hub-head h1 { font-size: var(--gf-h1); line-height: 1.06; margin: 0 0 10px; color: var(--ink); }
+body.tmr-ds .gf-hub-dek {
+  color: var(--ink-2); font-size: 16.5px; line-height: 1.6; max-width: 68ch; margin: 0 0 8px;
+}
+body.tmr-ds .gf-hub-dek--sm { font-size: 14px; color: var(--muted); }
+body.tmr-ds .gf-sec { margin: 0 0 34px; }
+body.tmr-ds .gf-sec > h2 {
+  font-size: var(--gf-h2); line-height: 1.15; margin: 0 0 14px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--gf-rule); color: var(--ink);
+}
+body.tmr-ds .gf-empty { color: var(--muted); font-size: 14.5px; }
+
+body.tmr-ds .gf-card {
+  display: block; background: var(--panel); border: 1px solid var(--gf-rule);
+  border-radius: var(--r); padding: 16px 18px; margin: 0 0 12px;
+}
+body.tmr-ds .gf-card--lead { border-color: var(--gf-accent); }
+body.tmr-ds .gf-card-kicker {
+  font-size: var(--gf-label); font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 7px;
+}
+body.tmr-ds .gf-card--lead .gf-card-kicker { color: var(--gf-accent); }
+body.tmr-ds .gf-card h3 { font-size: var(--gf-h3); line-height: 1.28; margin: 0 0 7px; }
+body.tmr-ds .gf-card p { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; margin: 0 0 9px; max-width: 70ch; }
+body.tmr-ds .gf-card-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 14px;
+  font-size: var(--gf-meta); color: var(--muted); margin: 0;
+}
+body.tmr-ds .gf-card-meta strong { color: var(--ink-2); font-weight: 700; }
+
+body.tmr-ds .gf-sportlist,
+body.tmr-ds .gf-linklist { list-style: none; margin: 0; padding: 0; }
+body.tmr-ds .gf-sportlist li,
+body.tmr-ds .gf-linklist li { margin: 0 0 8px; }
+body.tmr-ds .gf-sportlist a,
+body.tmr-ds .gf-linklist a { font-size: 15px; font-weight: 600; }
+body.tmr-ds .gf-linklist--plain li { color: var(--ink-2); font-size: 15px; line-height: 1.55; }
+
+body.tmr-ds .gf-inside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+body.tmr-ds .gf-inside-card {
+  background: var(--panel-2); border: 1px solid var(--gf-rule);
+  border-radius: var(--r); padding: 14px 16px;
+}
+body.tmr-ds .gf-inside-card h3 { font-size: 15px; margin: 0 0 6px; color: var(--ink); }
+body.tmr-ds .gf-inside-card p { color: var(--ink-2); font-size: 14px; line-height: 1.55; margin: 0; }
+
+/* ---------------------------------------------------------- prose page ---- */
+
+body.tmr-ds .gf-prose p { color: var(--ink-2); font-size: var(--gf-body); line-height: var(--gf-lh); margin: 0 0 12px; max-width: 70ch; }
+body.tmr-ds .gf-prose h3 { font-size: var(--gf-h3); margin: 18px 0 8px; color: var(--ink); }
+body.tmr-ds .gf-deflist { margin: 4px 0 0; max-width: 70ch; }
+body.tmr-ds .gf-deflist dt { font-weight: 800; color: var(--ink); margin-top: 12px; font-size: 15px; }
+body.tmr-ds .gf-deflist dd { margin: 3px 0 0; color: var(--ink-2); line-height: 1.6; font-size: 15px; }
+body.tmr-ds .gf-note {
+  border-left: 2px solid var(--gf-accent); background: var(--panel-2);
+  padding: 11px 14px; border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--ink-2); font-size: 14.5px; line-height: 1.6; margin: 14px 0; max-width: 70ch;
+}
+
+/* ------------------------------------------------------------- responsive - */
 
 @media (max-width: 760px) {
-  .gf-hub, .gf-article { padding: 16px 15px 60px; }
-  .gf-title { font-size: 30px; }
-  .gf-dek { font-size: 16px; }
-  .gf-sec > h2, .gf-mod > h2 { font-size: 22px; }
-  .gf-inside { grid-template-columns: minmax(0, 1fr); }
-  .gf-toc ol { columns: 1; }
-  .gf-tape-k { min-width: 92px; font-size: 11px; }
-  .gf-tape-row > * { padding: 9px 10px; }
-  .gf-tape-v { font-size: 14.5px; }
-  .gf-num b { font-size: 25px; }
-  .gf-mod p, .gf-mod li { font-size: 16px; }
+  body.tmr-ds .gf-hub,
+  body.tmr-ds .gf-article {
+    --gf-h1: 28px;
+    --gf-h2: 21px;
+    --gf-h3: 17px;
+    --gf-stat: 23px;
+    padding: 14px 15px 60px;
+  }
+  body.tmr-ds .gf-dek { font-size: 15.5px; }
+  body.tmr-ds .gf-keyfacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.tmr-ds .gf-keyfact b { font-size: 20px; }
+  body.tmr-ds .gf-inside { grid-template-columns: minmax(0, 1fr); }
+  /* Not sticky on a phone: 40px of permanent chrome on an 844px screen is a
+     worse trade than scrolling back up. */
+  body.tmr-ds .gf-toc { position: static; }
+  body.tmr-ds .gf-compare-head,
+  body.tmr-ds .gf-compare-row { grid-template-columns: 1fr 92px 1fr; }
+  body.tmr-ds .gf-compare-row > div { padding: 8px 9px; font-size: 14px; }
+  body.tmr-ds .gf-compare-head > div { padding: 9px 10px; }
+  body.tmr-ds .gf-compare-who { font-size: 13.5px; }
+  body.tmr-ds .gf-compare-k { font-size: 9.5px; }
+  /* Trend rows stack: a 116px tag column beside text at 390px leaves ~200px
+     for the trend itself, which wraps to five lines. */
+  body.tmr-ds .gf-mod li.gf-trend { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 9px 11px; }
+  body.tmr-ds .gf-tag { width: auto; }
 }

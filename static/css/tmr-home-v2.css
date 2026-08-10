@@ -649,6 +649,13 @@ body.tmr-ds .motd-file{font-size:clamp(14px,1.5vw,19px);font-weight:800;letter-s
   text-transform:uppercase;color:var(--gold-b);margin:0 0 16px}
 body.tmr-ds .motd-dek{color:#B7CEE4;font-size:clamp(15px,1.5vw,18.5px);line-height:1.6;max-width:64ch;
   font-weight:450;margin:0 0 26px}
+/* Computed counts, not marketing. The generator reads these off the article it
+   is baking, so the cover cannot claim a trend count the page does not carry. */
+body.tmr-ds .motd-stats{display:flex;flex-wrap:wrap;gap:10px 26px;margin:0 0 26px;padding:0}
+body.tmr-ds .motd-stats span{display:inline-flex;align-items:baseline;gap:7px;
+  font-size:13.5px;font-weight:600;color:#8FAECB;letter-spacing:.01em}
+body.tmr-ds .motd-stats b{font-size:19px;font-weight:900;color:var(--brand-lt);
+  letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 body.tmr-ds .motd-cta{display:flex;align-items:center;gap:14px 26px;flex-wrap:wrap;margin:0}
 body.tmr-ds .motd-btn{display:inline-flex;align-items:center;justify-content:center;height:54px;padding:0 32px;
   border-radius:var(--r-sm);font-size:17px;font-weight:800;letter-spacing:-.012em;
@@ -671,8 +678,17 @@ body.tmr-ds .motd-scroll{margin:30px 0 0;color:#6E8CA8;font-size:12px;font-weigh
      was pushing the section to ~92% of a phone viewport in testing — past the
      point where the site underneath reads as continuous. Clamped rather than
      shortened so the copy stays the same on desktop, where there is room. */
-  body.tmr-ds .motd-dek{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
-    overflow:hidden;font-size:15.5px;margin-bottom:22px}
+  /* Three lines, not four. The computed stats row below added ~46px and pushed
+     the cover from 64% of a phone viewport to 79%, past the point where the
+     site underneath reads as continuous. The dek is the only elastic element
+     here, so it absorbs the change; the copy is unchanged on desktop. */
+  body.tmr-ds .motd-dek{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+    overflow:hidden;font-size:15px;margin-bottom:16px}
+  body.tmr-ds .motd-stats{gap:6px 18px;margin-bottom:18px}
+  body.tmr-ds .motd-stats span{font-size:12.5px}
+  body.tmr-ds .motd-stats b{font-size:16px}
+  body.tmr-ds .motd-teams{font-size:clamp(36px,11.5vw,58px);margin:14px 0 2px}
+  body.tmr-ds .motd-file{margin-bottom:12px}
   body.tmr-ds .motd-btn{height:50px;width:100%;max-width:340px}
   body.tmr-ds .motd-scroll{margin-top:22px}
 }
