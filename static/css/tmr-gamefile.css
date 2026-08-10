@@ -308,7 +308,11 @@ body.tmr-ds .gf-aside-row b { color: var(--gf-ink); font-variant-numeric: tabula
    never shift layout while decoding. */
 body.tmr-ds .gf-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
 body.tmr-ds .gf-cards img {
-  display: block; width: 100%; height: auto; aspect-ratio: 520 / 300;
+  /* Must track the artwork in build_matchup_graphics.py. A stale ratio here
+     does not crop the card - the SVG letterboxes inside it - it just parks
+     empty bands above and below, which is how the 300-tall version looked
+     after the card shrank to 190. */
+  display: block; width: 100%; height: auto; aspect-ratio: 520 / 190;
   border-radius: 6px; border: 1px solid var(--gf-line); background: var(--gf-panel);
 }
 
