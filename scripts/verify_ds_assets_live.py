@@ -107,12 +107,37 @@ def main() -> int:
     broken: list[str] = []
     for url in urls:
         name = url.rsplit("/", 1)[-1]
+        # POLL PAST THE EDGE, NOT THROUGH IT (fixed 2026-08-10).
+        #
+        # The first version of this loop polled the bare URL, and on the run that
+        # published tmr-ds.b15051383f72.css the very first probe -- sent while the
+        # Pages deploy was still landing -- returned `404 cf=MISS` and TAUGHT the
+        # edge that 404. The next twelve probes read it straight back as
+        # `cf=HIT` until the negative entry aged out at `cf=EXPIRED`, three
+        # minutes later. A check written to prevent a cached 404 was creating one.
+        #
+        # It was harmless in that it happened during phase 1, when nothing
+        # references the URL yet -- but it stalled the deploy for three minutes
+        # and seeded exactly the state this script exists to detect.
+        #
+        # So ask the ORIGIN whether the file has landed, using a unique query
+        # string that cannot share a cache key with the real URL. Only once the
+        # origin says yes is the bare URL checked, and by then a 200 is what the
+        # edge will store.
         for attempt in range(1, args.attempts + 1):
-            status, cf = fetch_status(url)
-            if status == 200:
-                print(f"  ok   {name}  (cf={cf})")
+            probe, _ = fetch_status(f"{url}?__deploy_probe={attempt}")
+            if probe == 200:
+                status, cf = fetch_status(url)
+                if status == 200:
+                    print(f"  ok   {name}  (cf={cf})")
+                    break
+                # Origin has it but the edge is serving a negative response held
+                # from before the deploy. That IS the incident this guards
+                # against, and a purge is the only thing that clears it.
+                print(f"  !!   {name}  origin 200 but edge HTTP {status} cf={cf} -- edge holds a stale negative")
+                broken.append(url)
                 break
-            print(f"  ...  {name}  HTTP {status} cf={cf}  try {attempt}/{args.attempts}")
+            print(f"  ...  {name}  origin HTTP {probe}  try {attempt}/{args.attempts}")
             if attempt < args.attempts:
                 time.sleep(args.delay)
         else:
