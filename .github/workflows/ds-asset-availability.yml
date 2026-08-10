@@ -25,10 +25,26 @@ name: DS Asset Availability
 # the CLOUDFLARE_API_TOKEN secret; without it the job still DETECTS and fails,
 # it just cannot repair, which is still far better than silence.
 
+# TRIGGERS. The first version of this file listened for a workflow_run from
+# "pages build and deployment" and consequently never ran once: `gh workflow
+# list` reports the built-in Pages workflow as `pages-build-deployment`, and
+# workflow_run matches on that name, not on the label shown against a run. Both
+# spellings are listed now so a rename on either side cannot silently unhook it.
+#
+# page_build is the deploy event itself and does not depend on knowing any
+# workflow's name at all. The hourly schedule is the backstop that makes the
+# whole thing fail-safe rather than fail-silent: even if every event trigger
+# were wrong again, a cached 404 surfaces within the hour instead of living for
+# the full 4h edge TTL with nobody watching. This job's whole reason to exist is
+# that the last failure was invisible, so it should not depend on one trigger
+# being correct.
 on:
+  page_build:
   workflow_run:
-    workflows: ["pages build and deployment"]
+    workflows: ["pages-build-deployment", "pages build and deployment"]
     types: [completed]
+  schedule:
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -41,7 +57,7 @@ concurrency:
 jobs:
   check:
     # Only meaningful after a deploy that actually shipped.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -50,7 +66,7 @@ jobs:
           # Check the manifest of the commit that was DEPLOYED, not whatever main
           # has drifted to since -- otherwise a fast follow-up push makes this job
           # verify URLs the live site is not referencing yet.
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          ref: ${{ github.event.workflow_run.head_sha || github.event.build.commit || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
