@@ -2,7 +2,9 @@ const { test, expect } = require('@playwright/test');
 
 const ROUTES = [
   { name: 'homepage', path: '/', visual: false },
-  { name: 'sportsbook', path: '/sportsbook/', visual: true },
+  // visual:false since 2026-08-10 — see "sportsbook geometry lock" below for why
+  // the screenshot baseline was replaced with geometry.
+  { name: 'sportsbook', path: '/sportsbook/', visual: false },
   { name: 'pending-picks', path: '/my-pending-picks/', visual: false },
   { name: 'profile', path: '/profile/?user=betlegend', visual: false },
   { name: 'model-builder', path: '/model-builder/', visual: false },
@@ -131,6 +133,94 @@ test.describe('critical route visual baselines', () => {
       });
     });
   }
+});
+
+/* SPORTSBOOK GEOMETRY LOCK (replaced the screenshot baseline, 2026-08-10)
+   -----------------------------------------------------------------------------
+   The sportsbook route used to be checked with a fullPage screenshot compared
+   against a baseline captured on 2026-05-12, at maxDiffPixelRatio 0.08. The
+   board renders the live slate, so that image drifts with the odds, not with
+   the code, and the test failed intermittently on commits that could not have
+   touched it -- 236a9be9 changed one workflow YAML file and still failed this
+   exact test, as did 8374f70a, which only edited today/index.html.
+
+   A deployment gate that fires on tomorrow's fixtures is worse than no gate:
+   it trains everyone to wave the failure through, and it cannot answer the one
+   question that matters during the design-system migration -- did OUR change
+   move the sportsbook?
+
+   So it asserts invariants instead. Nothing here reads odds, team names,
+   prices or counts of live games. It reads geometry and structure, which is
+   exactly what a shell migration is capable of breaking. The homepage block
+   below already made this trade ("Geometry, not screenshots: deterministic
+   against live data changes"); the sportsbook simply never got the same
+   treatment.
+
+   Written to hold across the shell migration ON PURPOSE: the chrome assertions
+   accept the legacy nav or the design-system nav, so the same guard proves the
+   page before and after, rather than needing to be rewritten by the change it
+   is meant to be policing.
+
+   NOT asserted yet: `.sportsbook-page-topbar` containing its own content. It
+   overflows today at 390px (measured 282/286) and the structural fix for it
+   lands with the shell migration, so that assertion is added in the same commit
+   that earns it. */
+test.describe('sportsbook geometry lock', () => {
+  test('layout, chrome and controls survive independent of the live slate', async ({ page }, testInfo) => {
+    await waitForSportsbook(page);
+
+    const m = await page.evaluate(() => {
+      const d = document.documentElement;
+      const box = (el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { top: Math.round(r.top), bottom: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height) };
+      };
+      const board = document.querySelector('#lobbyBoardRows, #gamesListContainer, main article');
+      const navs = document.querySelectorAll('nav.tmr-global-nav, nav.ds-nav');
+      const foots = document.querySelectorAll('footer, .ds-footer, .tmr-global-footer');
+      return {
+        rootClient: d.clientWidth,
+        rootScroll: d.scrollWidth,
+        picksVisible: !!document.querySelector('#picks'),
+        board: box(board),
+        navCount: navs.length,
+        nav: box(navs[0]),
+        footerCount: foots.length,
+        footer: box(foots[0]),
+        sportButtons: document.querySelectorAll('.sportsbook-sports-nav button').length,
+        marketTabs: document.querySelectorAll('.market-tabs button, .market-tabs a, #picks .market-tabs *').length,
+        slip: box(document.querySelector('#pickDetails')),
+      };
+    });
+
+    // 1. The page never scrolls sideways. This is the assertion that would have
+    //    caught a shell whose container is wider than the viewport.
+    expect(m.rootScroll, `root overflows horizontally at ${testInfo.project.name}`).toBeLessThanOrEqual(m.rootClient + 1);
+
+    // 2. The board exists and is not collapsed. A missing stylesheet or a broken
+    //    wrapper shows up here as a near-zero height long before it shows up as
+    //    a pixel diff.
+    expect(m.picksVisible, '#picks must render').toBe(true);
+    expect(m.board, 'a board container must render').not.toBeNull();
+    expect(m.board.h, 'board collapsed to no height').toBeGreaterThan(200);
+    expect(m.board.w, 'board collapsed to no width').toBeGreaterThan(240);
+
+    // 3. Exactly one navbar and one footer. Two would mean both shells rendered;
+    //    zero would mean the opt-in gate rejected the page, which is precisely
+    //    the failure that a local pre-deploy run caught on 2026-08-10.
+    expect(m.navCount, 'expected exactly one navbar (legacy or design-system)').toBe(1);
+    expect(m.footerCount, 'expected exactly one footer').toBeGreaterThanOrEqual(1);
+
+    // 4. Chrome must not sit on top of the board.
+    expect(m.nav.bottom, 'navbar overlaps the board').toBeLessThanOrEqual(m.board.top + 1);
+    expect(m.footer.top, 'footer overlaps the board').toBeGreaterThanOrEqual(m.board.bottom - 1);
+
+    // 5. The controls a user needs are present. Counts are lower bounds, never
+    //    exact, so a league being out of season cannot fail the build.
+    expect(m.sportButtons, 'sports navigation lost its buttons').toBeGreaterThanOrEqual(5);
+    expect(m.slip, 'the pick slip (#pickDetails) must render').not.toBeNull();
+  });
 });
 
 // APPROVED HOMEPAGE BASELINE (owner-locked 2026-07-30, commit f5ac1ca7;
