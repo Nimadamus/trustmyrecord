@@ -7,6 +7,15 @@ on:
       - 'sportsbook/**'
       - 'static/js/sportsbook-production-fix-persist-reliability.js'
       - 'static/css/**sportsbook**'
+      # The design-system shell. Once sportsbook renders on tmr-ds.css and
+      # tmr-ds-nav.js, a change to either can move this page's layout, its nav,
+      # or the cascade around the board -- without touching a single path listed
+      # above. The end-to-end submit proof is the only check that would catch
+      # that, so it has to be reachable from the shell's own files.
+      - 'static/css/tmr-ds.css'
+      - 'static/js/tmr-ds-nav.js'
+      - 'static/js/tmr-session.js'
+      - 'static/ds-assets.json'
       - 'tests/sportsbook-live-verification.*'
       - 'tests/sportsbook-live-browser-proof.js'
       - 'tests/sportsbook-team-totals-browser-proof.js'
