@@ -470,6 +470,29 @@ def b_verdict(block):
             esc(block.get("note") or ""), why, chg))
 
 
+def b_cards(block):
+    """Graphic player cards. Intrinsic dimensions are required: a card that
+    resizes on decode is a layout shift on the busiest part of the page."""
+    out = []
+    for c in block.get("items") or []:
+        src = c.get("src")
+        if not str(src or "").startswith("/static/"):
+            raise RuntimeError("player card src must be a TMR-controlled /static/ path: %r" % src)
+        if not c.get("alt"):
+            raise RuntimeError("player card %s has no alt text" % src)
+        out.append('<img src="%s" alt="%s" width="520" height="300" loading="lazy" decoding="async">'
+                   % (esc(src), esc(c.get("alt"))))
+    return '<div class="gf-cards">%s</div>' % "".join(out)
+
+
+def b_asidestats(block):
+    rows = "".join('<div class="gf-aside-row"><span>%s</span><b>%s</b></div>'
+                   % (esc(r.get("label")), esc(r.get("value")))
+                   for r in block.get("rows") or [])
+    return '<div class="gf-aside-card"><h4>%s</h4>%s</div>' % (
+        esc(block.get("heading") or "Key numbers"), rows)
+
+
 def b_tools(block):
     items = []
     for link in block.get("links") or []:
@@ -488,6 +511,7 @@ RENDERERS = {
     "trendboard": b_trendboard, "bars": b_bars, "benchmark": b_benchmark,
     "timeline": b_timeline, "form": b_form, "showdown": b_showdown,
     "call": b_call, "verdict": b_verdict, "toollinks": b_tools,
+    "cards": b_cards, "asidestats": b_asidestats,
 }
 
 
@@ -524,14 +548,24 @@ def render_body(article):
         mid = module_id(module, index)
         heading = module.get("heading") or module.get("module") or ""
         nav.append('<li><a href="#%s">%s</a></li>' % (esc(mid), esc(module.get("nav") or heading)))
-        blocks = "".join(render_block(b) for b in module.get("blocks") or [])
+        # A block may declare slot:"aside" to sit in the right-hand rail. It stays
+        # inside `blocks` rather than a separate `aside` array on purpose: the
+        # publish gate walks body_json[].blocks[], so anything moved out of that
+        # array would be rendered on a live page without its numbers ever being
+        # checked. Layout choice must not create a hole in the guarantee.
+        main_bs = [b for b in module.get("blocks") or [] if (b or {}).get("slot") != "aside"]
+        aside_bs = [b for b in module.get("blocks") or [] if (b or {}).get("slot") == "aside"]
+        blocks = "".join(render_block(b) for b in main_bs)
         sub = ('<p class="gf-sect-sub">%s</p>' % esc(module.get("sub"))) if module.get("sub") else ""
         mark = (' data-mark="%s"' % esc(module["mark"])) if module.get("mark") else ""
+        aside = "".join(render_block(b) for b in aside_bs)
+        body = ('<div class="gf-split"><div class="gf-split-main">%s</div>'
+                '<div class="gf-split-aside">%s</div></div>' % (blocks, aside)) if aside else blocks
         out.append(
             '<section class="gf-sect" id="%s" data-env="%s"%s><div class="gf-wrap">'
             '<div class="gf-sect-head"><h2>%s</h2>%s</div>%s%s</div></section>' % (
                 esc(mid), esc(module.get("env", "flat")), mark, esc(heading),
-                src_badge(module.get("source")), sub, blocks))
+                src_badge(module.get("source")), sub, body))
     return "".join(out), "".join(nav), rail, hero
 
 

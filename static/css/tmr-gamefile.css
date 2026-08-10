@@ -61,17 +61,17 @@ body.tmr-ds .gf-doc {
   --gf-away:    #FF5910;   /* overridden per matchup by the generator */
   --gf-home:    #CE1141;
 
-  --gf-display: 56px;
-  --gf-h1: 34px;
-  --gf-h2: 23px;
-  --gf-h3: 16px;
-  --gf-body: 16.5px;
+  --gf-display: 50px;
+  --gf-h1: 30px;
+  --gf-h2: 21px;
+  --gf-h3: 15.5px;
+  --gf-body: 16px;
   --gf-small: 14px;
   --gf-micro: 11px;
 
   --gf-cond: 'Barlow Condensed', 'Barlow Cond Fallback W', 'Barlow Cond Fallback A', Inter, sans-serif;
-  --gf-max: 1080px;
-  --gf-read: 720px;
+  --gf-max: 1120px;
+  --gf-read: 68ch;
 
   background: var(--gf-bg);
   color: var(--gf-ink);
@@ -89,7 +89,8 @@ body.tmr-ds .gf-hero {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(1100px 460px at 50% -12%, rgba(47,216,196,.10), transparent 62%),
+    radial-gradient(1100px 460px at 50% -12%, rgba(47,216,196,.09), transparent 62%),
+    url("/static/media/matchups/g1000-stadium.svg") center 62% / cover no-repeat,
     linear-gradient(180deg, #0A1017 0%, #070A0E 100%);
   border-bottom: 1px solid var(--gf-line);
 }
@@ -201,7 +202,7 @@ body.tmr-ds .gf-nav a:hover { color: var(--gf-ink); background: var(--gf-panel);
 
 /* ========================================================= SECTIONS ===== */
 
-body.tmr-ds .gf-sect { padding: 40px 0; scroll-margin-top: 52px; position: relative; }
+body.tmr-ds .gf-sect { padding: 30px 0; scroll-margin-top: 52px; position: relative; }
 body.tmr-ds .gf-sect[data-env="raised"] {
   background: var(--gf-bg-2); border-top: 1px solid var(--gf-line); border-bottom: 1px solid var(--gf-line);
 }
@@ -232,7 +233,7 @@ body.tmr-ds .gf-sect h2 {
 body.tmr-ds .gf-sect-sub { font-size: 13px; line-height: 1.55; color: var(--gf-mut); margin: 0 0 20px; max-width: 74ch; }
 body.tmr-ds .gf-sect h3 { font-size: var(--gf-h3); font-weight: 800; color: var(--gf-ink); margin: 22px 0 10px; }
 body.tmr-ds .gf-sect p {
-  font-size: var(--gf-body); line-height: 1.62; color: var(--gf-ink-2); margin: 0 0 13px; max-width: var(--gf-read);
+  font-size: var(--gf-body); line-height: 1.58; color: var(--gf-ink-2); margin: 0 0 11px; max-width: var(--gf-read);
 }
 body.tmr-ds .gf-sect ul { margin: 0 0 13px; padding-left: 17px; max-width: var(--gf-read); }
 body.tmr-ds .gf-sect li { font-size: var(--gf-body); line-height: 1.55; color: var(--gf-ink-2); margin: 0 0 7px; }
@@ -247,7 +248,7 @@ body.tmr-ds .gf-src[data-s="betlegend-pro"] { color: var(--gf-acc); border-color
 
 /* ====================================================== TREND BOARD ===== */
 
-body.tmr-ds .gf-tgroup { margin: 0 0 26px; }
+body.tmr-ds .gf-tgroup { margin: 0 0 20px; }
 body.tmr-ds .gf-tgroup > h3 {
   display: flex; align-items: center; gap: 12px;
   font-size: var(--gf-micro); font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
@@ -256,24 +257,59 @@ body.tmr-ds .gf-tgroup > h3 {
 body.tmr-ds .gf-tgroup > h3::after { content: ""; flex: 1; height: 1px; background: var(--gf-line); }
 
 body.tmr-ds .gf-tcards {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--gf-line);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--gf-line);
 }
 body.tmr-ds .gf-tcard {
-  background: var(--gf-panel); padding: 14px 16px; min-width: 0;
-  display: flex; flex-direction: column; gap: 6px;
+  background: var(--gf-panel); padding: 12px 14px; min-width: 0;
+  display: flex; flex-direction: column; gap: 5px;
 }
 body.tmr-ds .gf-tcard b {
-  font-size: 26px; font-weight: 900; letter-spacing: -.03em; line-height: 1;
+  font-size: 23px; font-weight: 900; letter-spacing: -.03em; line-height: 1;
   font-variant-numeric: tabular-nums; color: var(--gf-ink);
 }
 body.tmr-ds .gf-tcard[data-t="away"] b { color: var(--gf-away); }
 body.tmr-ds .gf-tcard[data-t="home"] b { color: var(--gf-home); }
 body.tmr-ds .gf-tcard[data-t="warn"] b { color: var(--gf-neg); }
 body.tmr-ds .gf-tcard[data-t="good"] b { color: var(--gf-pos); }
-body.tmr-ds .gf-tcard-l { font-size: 12.5px; font-weight: 700; color: var(--gf-ink); line-height: 1.35; }
+body.tmr-ds .gf-tcard-l { font-size: 12px; font-weight: 700; color: var(--gf-ink); line-height: 1.35; }
 body.tmr-ds .gf-tcard-m {
   font-size: 10.5px; color: var(--gf-mut); line-height: 1.4; margin-top: auto;
   display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center;
+}
+
+
+/* SPLIT SECTIONS. The single biggest thing wrong with the first version was
+   dead space: a 68ch measure inside a 1120px shell left the right half of a
+   desktop screen empty, which reads as "oversized and sparse" even when the
+   type is correctly sized. A section marked data-layout="split" puts the prose
+   in the measure and a supporting rail beside it, so the width is used by
+   content instead of margin. It collapses to one column under 1000px. */
+body.tmr-ds .gf-split { display: grid; grid-template-columns: minmax(0, 1fr) 316px; gap: 34px; align-items: start; }
+body.tmr-ds .gf-split-main { min-width: 0; }
+body.tmr-ds .gf-split-aside { min-width: 0; position: sticky; top: 58px; }
+body.tmr-ds .gf-split-aside .gf-chart { margin-bottom: 16px; }
+body.tmr-ds .gf-aside-card {
+  border: 1px solid var(--gf-line); border-radius: 5px; background: var(--gf-panel-2);
+  padding: 14px 16px; margin: 0 0 14px;
+}
+body.tmr-ds .gf-aside-card h4 {
+  font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gf-mut); margin: 0 0 10px;
+}
+body.tmr-ds .gf-aside-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 7px 0; border-bottom: 1px solid var(--gf-line); font-size: 13px;
+}
+body.tmr-ds .gf-aside-row:last-child { border-bottom: 0; }
+body.tmr-ds .gf-aside-row span { color: var(--gf-mut); }
+body.tmr-ds .gf-aside-row b { color: var(--gf-ink); font-variant-numeric: tabular-nums; font-weight: 800; }
+
+/* Player cards. Two up on desktop, stacked on a phone, intrinsic ratio so they
+   never shift layout while decoding. */
+body.tmr-ds .gf-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
+body.tmr-ds .gf-cards img {
+  display: block; width: 100%; height: auto; aspect-ratio: 520 / 300;
+  border-radius: 6px; border: 1px solid var(--gf-line); background: var(--gf-panel);
 }
 
 /* ============================================================ CHARTS ==== */
@@ -534,10 +570,12 @@ body.tmr-ds .gf-sect .gf-call-t     { font-size: 10px; margin: 0 0 9px; color: v
 
 @media (max-width: 1000px) {
   body.tmr-ds .gf-doc { --gf-display: 42px; }
+  body.tmr-ds .gf-split { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  body.tmr-ds .gf-split-aside { position: static; }
+  body.tmr-ds .gf-tcards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   body.tmr-ds .gf-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   body.tmr-ds .gf-railcell:nth-child(3n) { border-right: 0; }
   body.tmr-ds .gf-railcell:nth-child(-n+3) { border-bottom: 1px solid var(--gf-line); }
-  body.tmr-ds .gf-tcards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.tmr-ds .gf-verdict { grid-template-columns: minmax(0, 1fr); }
   body.tmr-ds .gf-verdict-l { border-right: 0; border-bottom: 1px solid var(--gf-line); }
   body.tmr-ds .gf-inside { grid-template-columns: minmax(0, 1fr); }
@@ -558,7 +596,8 @@ body.tmr-ds .gf-sect .gf-call-t     { font-size: 10px; margin: 0 0 9px; color: v
   body.tmr-ds .gf-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.tmr-ds .gf-railcell:nth-child(2n) { border-right: 0; }
   body.tmr-ds .gf-railcell { border-bottom: 1px solid var(--gf-line); }
-  body.tmr-ds .gf-tcards { grid-template-columns: minmax(0, 1fr); }
+  body.tmr-ds .gf-tcards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.tmr-ds .gf-cards { grid-template-columns: minmax(0, 1fr); }
   body.tmr-ds .gf-show { grid-template-columns: minmax(0, 1fr); }
   body.tmr-ds .gf-nav { position: static; }
   body.tmr-ds .gf-bar { grid-template-columns: 1fr 88px 1fr; gap: 7px; }
