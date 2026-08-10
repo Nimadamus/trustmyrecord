@@ -10180,7 +10180,15 @@
          approved TrustMyRecord branding shell as the rest of the app instead of
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <script defer src="/static/js/tmr-sitewide.js?v=a46586bedd8f"></script>
+    <!-- SHELL MIGRATION 2026-08-10. Only the legacy chrome BUILDER is replaced.
+         tmr-sitewide.css stays exactly where it was: 425 inline rules on this
+         page, plus the shared layout rules, are written against it and against
+         the .tmr-site-shell class, so removing it would restyle the board. The
+         design system is loaded in SHELL-ONLY mode (body.tmr-ds-shell), which
+         carries the tokens and .ds-nav/.ds-footer and none of the page-wide
+         element rules -- full adoption would have beaten 56 of this page's own
+         selectors across ~340 nodes. -->
+    <link rel="stylesheet" href="/static/css/tmr-ds.47f68ba9c379.css">
     <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=443af57b7454">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=83e250b54787">
@@ -10202,7 +10210,7 @@
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=dd2021b118a8">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
 </head>
-<body data-tmr-test-route="sportsbook">
+<body class="tmr-site-shell tmr-ds-shell tmr-ds--dark" data-tmr-route="sportsbook" data-tmr-test-route="sportsbook">
     <script>
     // Force the picks board to be the active section on every load of
     // /sportsbook/, regardless of what late-loading scripts do. Reddit
@@ -34682,6 +34690,7 @@ document.addEventListener('DOMContentLoaded', function() {
      window.TMR.setSport the visible tab calls. An explicit choice always wins.
      Kill: window.SB_DEFAULT_BOARD_FLAGS = { enabled: false }. -->
 <script defer src="/static/js/sportsbook-default-board.js?v=8bc4c765f703"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.442cd8eb543c.js"></script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
