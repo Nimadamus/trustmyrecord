@@ -315,6 +315,10 @@ body.tmr-ds .gf-aside-row b { color: var(--gf-ink); font-variant-numeric: tabula
 /* Player cards. Two up on desktop, stacked on a phone, intrinsic ratio so they
    never shift layout while decoding. */
 body.tmr-ds .gf-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
+/* A lone image spans the column instead of sitting in a half-width cell
+   with a hole beside it. */
+body.tmr-ds .gf-cards:has(> img:only-child) { grid-template-columns: 1fr; }
+body.tmr-ds .gf-cards > img:only-child { aspect-ratio: 1040 / 300; }
 body.tmr-ds .gf-cards img {
   /* Must track the artwork in build_matchup_graphics.py. A stale ratio here
      does not crop the card - the SVG letterboxes inside it - it just parks
