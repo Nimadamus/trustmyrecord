@@ -240,6 +240,119 @@ body.tmr-ds .sim-select:disabled{
 }
 
 /* ---------------------------------------------------------------------------
+   1e. INPUT SCALE  (slice 4B, 2026-08-10)
+   -----------------------------------------------------------------------------
+   Sibling of the select scale above, and deliberately the same numbers: an
+   ordinary input and an ordinary select sitting next to each other should look
+   related, because on these pages they usually are next to each other.
+
+   Measured live: 11 rendered inputs, 8 signatures, heights 16/30/32/39/40/42/44.
+   Two of those were not text controls at all --
+     16px  = <input type=checkbox> on /handicappers/. Checkboxes are out of
+             scope for this slice and are untouched.
+     30px  = the <input type=date> on /mlb-simulator/simulations/, which nobody
+             had ever styled: 2px UA border, square corners, white background
+             and black text, sitting on a dark page under a cyan label. That is
+             the one genuine defect here, not a size to preserve.
+
+   Colour comes from tokens so each control follows the surface it is on --
+   these pages are a mix of light (handicappers, leaderboards, trendspotter)
+   and dark (polls, simulations).
+
+   WIDTH IS NEVER SET. A price field, a team search and a full-width name field
+   legitimately differ; only the control language is shared.
+   --------------------------------------------------------------------------- */
+
+/* STANDARD: text, number and rectangular search. */
+body.tmr-ds .hm-input,
+body.tmr-ds .hh-find > input,
+body.tmr-ds .filters-grid .field > input,
+body.tmr-ds .ts-field > input,
+body.tmr-ds .ts-range input,
+body.tmr-ds .sh-date-input{
+  min-height:40px;
+  height:40px;
+  border-radius:var(--r-sm);
+  font-size:14px;
+  font-weight:600;
+  padding-left:12px;
+  padding-right:12px;
+}
+
+/* The date control specifically: give it the page surface instead of the
+   browser default it was still wearing. No appearance override -- the native
+   picker affordance stays exactly as it is. */
+body.tmr-ds .sh-date-input{
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+}
+
+/* PILL SEARCH stays a pill. The rounded search field is an established pattern
+   on both pages that use it, and roundness is the affordance, so only the
+   height and type join the scale. Horizontal padding is deliberately NOT
+   touched: /polls/ reserves 30px on the left for its search icon and a clear
+   button on the right, and normalising that would push text under them. */
+body.tmr-ds .pl-search > input,
+body.tmr-ds .ts-search > input{
+  min-height:40px;
+  height:40px;
+  font-size:14px;
+  font-weight:600;
+}
+
+/* Placeholder: clearly subordinate to entered text, still readable on both
+   ramps. --muted is the token that already flips with the surface. */
+body.tmr-ds .hm-input::placeholder,
+body.tmr-ds .hh-find > input::placeholder,
+body.tmr-ds .filters-grid .field > input::placeholder,
+body.tmr-ds .ts-field > input::placeholder,
+body.tmr-ds .ts-range input::placeholder,
+body.tmr-ds .pl-search > input::placeholder,
+body.tmr-ds .ts-search > input::placeholder{
+  color:var(--muted);
+  font-weight:500;
+  opacity:1;
+}
+
+/* Same focus philosophy as the selects: one visible ring, keyboard only, and
+   no border-width change so nothing shifts when it appears. */
+body.tmr-ds .hm-input:focus-visible,
+body.tmr-ds .hh-find > input:focus-visible,
+body.tmr-ds .filters-grid .field > input:focus-visible,
+body.tmr-ds .ts-field > input:focus-visible,
+body.tmr-ds .ts-range input:focus-visible,
+body.tmr-ds .sh-date-input:focus-visible,
+body.tmr-ds .pl-search > input:focus-visible,
+body.tmr-ds .ts-search > input:focus-visible{
+  outline:2px solid var(--brand);
+  outline-offset:2px;
+}
+
+/* DISABLED and READONLY are different states and must not look alike.
+   Disabled: unavailable, dimmed, not-allowed.
+   Readonly: still readable and selectable at full contrast -- the value is the
+   point -- but on a recessed surface so it does not invite typing. Nothing on
+   the audited pages is currently readonly; this is defined so the next control
+   that needs it inherits the distinction rather than reinventing it. */
+body.tmr-ds .hm-input:disabled,
+body.tmr-ds .hh-find > input:disabled,
+body.tmr-ds .filters-grid .field > input:disabled,
+body.tmr-ds .ts-field > input:disabled,
+body.tmr-ds .ts-range input:disabled,
+body.tmr-ds .sh-date-input:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+body.tmr-ds .hm-input[readonly],
+body.tmr-ds .filters-grid .field > input[readonly],
+body.tmr-ds .ts-field > input[readonly],
+body.tmr-ds .sh-date-input[readonly]{
+  background:var(--panel-2);
+  cursor:default;
+}
+
+/* ---------------------------------------------------------------------------
    1c. SHELL-MODE BASELINE — only what the chrome used to borrow from the page
    -----------------------------------------------------------------------------
    On a `tmr-ds` page the navbar and footer quietly rely on three page-wide rules
