@@ -152,8 +152,7 @@ function measure(page) {
     {
       const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
       const fn = src.slice(src.indexOf('function applyGameFile'));
-      const body = fn.slice(0, fn.indexOf('
-  }'));
+      const body = fn.slice(0, fn.indexOf('var pk = gameFilePk'));
       if (/if \(!lastSlate\)/.test(body) && /nav\/mlb-slate/.test(body))
         ok('SSR path: applyGameFile fetches the slate when the strip was not rendered by this script');
       else
