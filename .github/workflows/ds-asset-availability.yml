@@ -1,0 +1,65 @@
+name: DS Asset Availability
+
+# Proves, from outside the build, that every content-hashed design-system asset
+# is actually reachable on trustmyrecord.com after a deploy.
+#
+# THE FAILURE THIS CATCHES (2026-08-10)
+# -------------------------------------
+# Content hashing makes an asset immune to being served STALE -- the URL changes
+# whenever the bytes change. The half that was missed is that it does NOT make
+# the asset immune to a cached 404. `/static/` is edge-cached for 4 hours keyed
+# on the full URL, so if anything requests the new hashed URL in the window
+# between the repointed HTML going live and the asset finishing propagation, the
+# edge caches a 404 and keeps serving it for hours while the origin is perfectly
+# healthy.
+#
+# On 2026-08-10 that pinned a 404 onto tmr-ds.<hash>.css and every one of the 99
+# pages on the design system rendered unstyled. Every workflow was green: the
+# build succeeded, the hashes matched their bytes, Pages deployed. Nothing that
+# runs INSIDE CI can see it, because the breakage lives in the edge cache in
+# front of the site. So this job runs after the deploy and fetches the real URLs
+# over the public internet, exactly as a visitor would.
+#
+# If a URL is still failing after retries, the job purges those URLs (a cached
+# negative response is precisely what a purge fixes) and re-checks. Purging needs
+# the CLOUDFLARE_API_TOKEN secret; without it the job still DETECTS and fails,
+# it just cannot repair, which is still far better than silence.
+
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ds-asset-availability
+  cancel-in-progress: false
+
+jobs:
+  check:
+    # Only meaningful after a deploy that actually shipped.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Check the manifest of the commit that was DEPLOYED, not whatever main
+          # has drifted to since -- otherwise a fast follow-up push makes this job
+          # verify URLs the live site is not referencing yet.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Every hashed design-system asset resolves on the live host
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        # Generous retries: a 404 in the first seconds after a deploy is normal
+        # propagation, not a fault. 8 x 15s gives propagation two full minutes
+        # before anything is treated as broken or purged.
+        run: python scripts/verify_ds_assets_live.py --attempts 8 --delay 15
