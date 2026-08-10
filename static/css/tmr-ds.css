@@ -453,6 +453,53 @@ body.tmr-ds .hm-page-button:disabled{
 }
 
 /* ---------------------------------------------------------------------------
+   1g. CARDS, TABLES, BADGES -- onto the system scale (2026-08-10)
+   -----------------------------------------------------------------------------
+   The design system declares three radii: 10px, 7px, and 999px for pills. Live
+   audit across 11 pages found cards at 7/10/11/12/14/16px and badges at
+   0/5/999px -- 24 card signatures and 15 badge signatures, most of the spread
+   being radius alone.
+
+   Only radius, and for badges the caption type, is touched. Padding, colour,
+   border colour, shadow and layout stay exactly as each page has them: a card
+   that is deliberately roomier stays roomier, it just stops inventing its own
+   corner.
+   --------------------------------------------------------------------------- */
+
+/* Cards and panels -> --r (10px). */
+body.tmr-ds .ph-card,
+body.tmr-ds .pl-lb-card,
+body.tmr-ds .tmrlh-related,
+body.tmr-ds .ts-card,
+body.tmr-ds .sim-panel{
+  border-radius:var(--r);
+}
+
+/* Rectangular status badges -> --r-sm (7px) and one caption treatment. The
+   pill badges (.ph-badge and the chip families) keep 999px: on those the shape
+   is the affordance, not decoration. */
+/* html-prefixed: these two are painted by area stylesheets that load after
+   this file, so an equal-specificity rule here loses on source order. */
+html body.tmr-ds .hm-badge,
+html body.tmr-ds .badge,
+body.tmr-ds .simv2-tag{
+  border-radius:var(--r-sm);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.03em;
+}
+
+/* Table headers: 11px/800 uppercase on both live tables, which had 11px/900 and
+   10.08px/800. Row typography, alignment, borders and sorting are untouched. */
+body.tmr-ds .pl-lb-table th,
+body.tmr-ds .hm-table th,
+body.tmr-ds table th{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+
+/* ---------------------------------------------------------------------------
    1c. SHELL-MODE BASELINE — only what the chrome used to borrow from the page
    -----------------------------------------------------------------------------
    On a `tmr-ds` page the navbar and footer quietly rely on three page-wide rules
