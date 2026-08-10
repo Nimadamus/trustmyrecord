@@ -12,8 +12,11 @@
       right of it along by 65px.
    3. RESPECTS prefers-reduced-motion.
 
-   Runs against the built homepage over a local static server, with the slate
-   coming from the real API and /api/matchups/today stubbed both ways.
+   Runs against the built homepage over a local static server on an ephemeral
+   port, with BOTH the slate and /api/matchups/today stubbed. Neither is live:
+   a fixed port collided with a not-yet-released socket from the previous run,
+   and hitting the real slate made the assertions depend on Mets-Braves still
+   being on today's board.
    ========================================================================== */
 'use strict';
 
@@ -23,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const PORT = 8817;
+let PORT = 0;   // assigned by the OS in serve()
 const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
                '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json',
                '.woff2': 'font/woff2', '.xml': 'application/xml' };
@@ -44,7 +47,7 @@ function serve() {
         r.end(d);
       });
     });
-    s.listen(PORT, () => res(s));
+    s.listen(0, () => { PORT = s.address().port; res(s); });
   });
 }
 
@@ -74,6 +77,20 @@ function measure(page) {
   const server = await serve();
   const browser = await chromium.launch();
   try {
+    const SLATE = {
+      ok: true, slate_date: '2026-08-10', games: [
+        { game_pk: 111, away: 'BOS', home: 'TOR', away_team_name: 'Boston Red Sox',
+          home_team_name: 'Toronto Blue Jays', start_time_utc: '2026-08-10T22:07:00.000Z',
+          status: 'scheduled', away_pitcher: 'S. Gray', home_pitcher: 'J. Taillon' },
+        { game_pk: 222, away: 'NYM', home: 'ATL', away_team_name: 'New York Mets',
+          home_team_name: 'Atlanta Braves', start_time_utc: '2026-08-10T23:15:00.000Z',
+          status: 'scheduled', away_pitcher: 'C. Scott', home_pitcher: 'B. Elder' },
+        { game_pk: 333, away: 'BAL', home: 'MIN', away_team_name: 'Baltimore Orioles',
+          home_team_name: 'Minnesota Twins', start_time_utc: '2026-08-10T23:40:00.000Z',
+          status: 'scheduled', away_pitcher: 'T. Rogers', home_pitcher: 'D. Kremer' },
+      ],
+    };
+
     const FEATURED = {
       ok: true,
       featured: {
@@ -86,6 +103,8 @@ function measure(page) {
 
     /* ---- with a published Game File ---------------------------------- */
     let page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.route('**/api/nav/mlb-slate*', (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SLATE) }));
     await page.route('**/api/matchups/today', (r) =>
       r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(FEATURED) }));
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
@@ -95,6 +114,8 @@ function measure(page) {
 
     /* ---- with none published ----------------------------------------- */
     page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.route('**/api/nav/mlb-slate*', (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SLATE) }));
     await page.route('**/api/matchups/today', (r) => r.fulfill({ status: 404, body: '{}' }));
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
     await page.waitForTimeout(5000);
@@ -128,6 +149,8 @@ function measure(page) {
 
     /* ---- reduced motion ----------------------------------------------- */
     page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    await page.route('**/api/nav/mlb-slate*', (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SLATE) }));
     await page.route('**/api/matchups/today', (r) =>
       r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(FEATURED) }));
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
