@@ -46,7 +46,15 @@
               background:var(--panel-3);color:var(--ink-2);font-size:15px;border:1px solid var(--line-2)}
       .td-row.is-done .td-ico{background:var(--green);color:var(--navy);border-color:var(--green)}
       .td-body{flex:1 1 auto;min-width:0}
-      .td-title{margin:0;font-size:16px;font-weight:800;color:var(--ink);line-height:1.3}
+      /* Scoped under body.tmr-ds on purpose. These module titles are <h2>, and
+         the design system styles h2 as a 36px uppercase Barlow Condensed section
+         heading -- correct for a section, wrong for a row inside a card, where it
+         rendered as loud as the page title and flattened the hierarchy. An
+         unscoped .td-title loses to `body.tmr-ds h2` on specificity, so the
+         override has to carry the same scope the system uses, and it must reset
+         family/transform/spacing explicitly rather than only size. */
+      body.tmr-ds .td-title{margin:0;font-family:var(--font);font-size:16px;font-weight:800;
+              color:var(--ink);line-height:1.3;text-transform:none;letter-spacing:normal}
       .td-status{display:block;margin-top:7px;font-size:13px;font-weight:700;min-height:1.25em;color:var(--muted);
                  overflow-wrap:anywhere}
       .td-status.ok{color:var(--green)}
