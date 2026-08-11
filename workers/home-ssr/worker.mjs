@@ -81,6 +81,45 @@ const U_TEMPLATE_PATH = '/static/prerender/u-fallback.html';
 const U_TEMPLATE_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/u-fallback-v1';
 const U_TEMPLATE_TTL_SECONDS = 300;
 const U_PLACEHOLDER = '__TMR_USERNAME__';
+const DIRECTORY_PAGE_SIZE = 200;
+
+/* RACE_20260811 — why the existence guarantee above still 404'd intermittently.
+   Every lookup on this path used API_TIMEOUT_MS, which is 1.2s because it
+   budgets a HOMEPAGE injection: there the origin document is already a complete
+   page, so a slow API just means the un-injected bake ships and nothing is lost.
+   Here the trade is the opposite — the alternative to waiting is publishing a
+   404 for a URL the site is actively linking to — and a brand-new member needs
+   TWO serial API calls (the 60s-cached directory list cannot yet contain them,
+   so the force-refresh in handleUserProfile always fires), which doubled the
+   exposure for exactly the members this path exists to protect.
+
+   Measured on 2026-08-11 for member `diddy` (registered 15:11:24Z): the edge
+   rendered the fallback (HTTP 200, 13207 bytes = the 13537-byte template with
+   its 30 placeholders filled) and the very next request to the same URL seconds
+   later returned the origin's 404 page. Same member, same URL, same minute.
+
+   So the /u/ path gets its own generous budget plus one retry. API_TIMEOUT_MS
+   is left alone: the homepage's fail-open is correct and must stay fast. */
+const U_API_TIMEOUT_MS = 5000;
+const U_API_ATTEMPTS = 2;
+
+/* One retry, for timeouts and network errors only. A non-2xx response is an
+   ANSWER (that member or that template really is absent) and is handed back
+   as-is rather than retried. */
+async function uFetch(url, accept) {
+  let lastErr;
+  for (let attempt = 0; attempt < U_API_ATTEMPTS; attempt += 1) {
+    try {
+      return await fetch(url, {
+        headers: { Accept: accept },
+        signal: AbortSignal.timeout(U_API_TIMEOUT_MS),
+      });
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
 
 const num = (v) => { const n = parseFloat(v); return Number.isNaN(n) ? 0 : n; };
 const sign = (n) => (n > 0 ? '+' : '') + n.toFixed(2);
@@ -267,10 +306,7 @@ async function getUTemplate(url, ctx) {
   const hit = await cache.match(cacheKey);
   if (hit) return hit.text();
 
-  const resp = await fetch(new URL(U_TEMPLATE_PATH, url).toString(), {
-    headers: { Accept: 'text/html' },
-    signal: AbortSignal.timeout(API_TIMEOUT_MS),
-  });
+  const resp = await uFetch(new URL(U_TEMPLATE_PATH, url).toString(), 'text/html');
   if (!resp.ok) return null;
   const body = await resp.text();
   /* A template that lost its placeholder would render a page named after the
@@ -286,10 +322,7 @@ async function getUTemplate(url, ctx) {
 }
 
 async function lookupMember(name) {
-  const resp = await fetch(API_USER + encodeURIComponent(name), {
-    headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(API_TIMEOUT_MS),
-  });
+  const resp = await uFetch(API_USER + encodeURIComponent(name), 'application/json');
   if (!resp.ok) return null;
   const data = await resp.json();
   const user = data && data.user;
@@ -299,17 +332,34 @@ async function lookupMember(name) {
 /* Public-directory usernames, edge-cached. Returns null (not an empty set) on
    any failure so the caller can tell "not a member" from "could not tell" and
    leave the origin's 404 alone rather than guess. */
-async function getDirectoryNames(ctx) {
+/* `fresh` skips the 60s edge cache. A member who registered seconds ago cannot
+   be in a list that was cached before they existed, so the caller re-asks once
+   with fresh=true before concluding "not a member" — otherwise the guarantee
+   would not hold for up to a minute at exactly the moment it is needed. */
+async function getDirectoryNames(ctx, fresh) {
   const cache = caches.default;
   const cacheKey = new Request(DIRECTORY_CACHE_KEY);
-  const hit = await cache.match(cacheKey);
+  const hit = fresh ? null : await cache.match(cacheKey);
   const body = hit ? await hit.text() : await (async () => {
-    const resp = await fetch(API_DIRECTORY, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(API_TIMEOUT_MS),
-    });
-    if (!resp.ok) return null;
-    const text = await resp.text();
+    /* PAGINATED: the endpoint caps a page at DIRECTORY_PAGE_SIZE and the bake
+       script (scripts/build_profile_pages.py list_users) walks every page. A
+       single unpaginated call silently stopped agreeing with the baker the
+       moment the site passed one page of members — and it fails on the NEWEST
+       members first, because the list is not ordered in their favour. Same loop
+       here, so the two can never diverge. */
+    const names = [];
+    for (let offset = 0; ; offset += DIRECTORY_PAGE_SIZE) {
+      const resp = await uFetch(
+        `${API_DIRECTORY}?limit=${DIRECTORY_PAGE_SIZE}&offset=${offset}`,
+        'application/json',
+      );
+      if (!resp.ok) return null;
+      const page = await resp.json();
+      if (!page || !Array.isArray(page.users)) return null;
+      names.push(...page.users.map((u) => (typeof u === 'string' ? u : u && u.username)).filter(Boolean));
+      if (page.users.length < DIRECTORY_PAGE_SIZE) break;
+    }
+    const text = JSON.stringify({ users: names.map((username) => ({ username })) });
     ctx.waitUntil(cache.put(cacheKey, new Response(text, {
       headers: {
         'Content-Type': 'application/json',
@@ -321,7 +371,7 @@ async function getDirectoryNames(ctx) {
   if (!body) return null;
   const data = JSON.parse(body);
   if (!data || !Array.isArray(data.users)) return null;
-  return new Set(data.users.map((u) => u && u.username).filter(Boolean));
+  return new Set(data.users.map((u) => (typeof u === 'string' ? u : u && u.username)).filter(Boolean));
 }
 
 async function handleUserProfile(req, ctx, rawName, trailingSlash) {
@@ -344,7 +394,10 @@ async function handleUserProfile(req, ctx, rawName, trailingSlash) {
      redirect below, so a non-public member is never bounced to a URL that then
      404s — that would be a redirect whose destination does not exist, which is
      worse than the honest 404 we already have. */
-  const directory = await getDirectoryNames(ctx).catch(() => null);
+  let directory = await getDirectoryNames(ctx).catch(() => null);
+  if (directory && !directory.has(user.username)) {
+    directory = await getDirectoryNames(ctx, true).catch(() => null);
+  }
   if (!directory || !directory.has(user.username)) return origin;
 
   const url = new URL(req.url);
