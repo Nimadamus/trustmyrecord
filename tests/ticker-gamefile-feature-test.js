@@ -125,6 +125,45 @@ function measure(page) {
     const on = await measure(page);
     await page.close();
 
+    /* ---- the game_pk path: ANY game with a breakdown, not just the cover ---
+       The featured article here is deliberately a DIFFERENT game (the Orioles
+       fixture) while `games` names the Mets one. The old code matched the
+       featured article by team name and would have marked the Orioles card. The
+       ticker's question is "does THIS game have a breakdown?", so the Mets card
+       is the one that must light up. */
+    {
+      const byPk = {
+        ok: true,
+        featured: { status: 'published', url: 'https://trustmyrecord.com/x/',
+                    away_team: 'Baltimore Orioles', home_team: 'Minnesota Twins',
+                    game_time_utc: at('23:40') },
+        games: [{ game_pk: 222, url: 'https://trustmyrecord.com/matchup-of-the-day/mets-braves-x/',
+                  away_team: 'New York Mets', home_team: 'Atlanta Braves' }],
+      };
+      const pg = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+      await pg.route('**/api/nav/mlb-slate*', (r) =>
+        r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SLATE) }));
+      await pg.route('**/api/matchups/today', (r) =>
+        r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(byPk) }));
+      await pg.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
+      await pg.waitForTimeout(1400);
+      const which = await pg.evaluate(() => {
+        const c = document.querySelector('.ticker .gm--gf');
+        return c ? { pk: c.getAttribute('data-game-pk'), href: c.getAttribute('href'),
+                     badge: c.querySelector('.gm-gf') ? c.querySelector('.gm-gf').textContent : null } : null;
+      });
+      await pg.close();
+
+      if (which && which.pk === '222') ok('game_pk map: the game WITH a breakdown is the one marked');
+      else bad('game_pk map: marked ' + JSON.stringify(which) + ', expected game_pk 222');
+
+      if (which && /matchup-of-the-day/.test(which.href || '')) ok("game_pk map: links to that game's article");
+      else bad('game_pk map: wrong href ' + (which && which.href));
+
+      if (which && which.badge === 'VIEW BREAKDOWN') ok('game_pk map: badge reads VIEW BREAKDOWN');
+      else bad('game_pk map: badge reads ' + (which && which.badge));
+    }
+
     /* ---- with none published ----------------------------------------- */
     page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await page.route('**/api/nav/mlb-slate*', (r) =>
@@ -144,8 +183,13 @@ function measure(page) {
     if (on.badge) ok('published: the card carries a badge');
     else bad('published: no badge on the featured card');
 
-    if (on.aria && /Game File/i.test(on.aria)) ok('published: the link has an accessible name');
-    else bad('published: featured card has no descriptive aria-label');
+    /* The accessible name has to describe the DESTINATION and stay in step with
+       the visible badge, which now reads "VIEW BREAKDOWN" — pinning the old
+       product name here would mean a screen reader and the badge saying two
+       different things about the same link. */
+    if (on.aria && /breakdown/i.test(on.aria) && /analysis/i.test(on.aria)) {
+      ok('published: the link has an accessible name that matches the badge');
+    } else bad('published: featured card has no descriptive aria-label (got: ' + on.aria + ')');
 
     if (off.featured === false && off.badge === false) ok('no Game File: no card is featured');
     else bad('no Game File: a card was featured anyway');
