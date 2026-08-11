@@ -77,4 +77,28 @@ jobs:
           # tag ships with it rather than being stranded until the next human push.
           git add -u
           git commit -m "chore(mlb-simulator): weekly rotation refresh from live MLB active rosters"
-          git push
+          # The prerender cron commits several times an hour, so this push loses a
+          # race often. Before this retry loop a rejected push failed the whole run
+          # and threw the regenerated table away - rotations then stayed stale until
+          # someone dispatched the job by hand (the 2026-08-10 failure, which left
+          # 15 of 30 teams showing a pitcher no longer in their top five).
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt) - rebasing onto origin/main and retrying"
+            # No --force anywhere: a genuine content conflict fails the run loudly
+            # rather than clobbering whatever landed first.
+            git pull --rebase --autostash origin main
+            # The rebase can bring in another job's asset edits, so re-pin and fold
+            # the result into this commit rather than shipping a stale ?v= tag.
+            python scripts/version_static_refs.py
+            if ! git diff --quiet; then
+              git add -u
+              git commit --amend --no-edit
+            fi
+            sleep $((attempt * 5))
+          done
+          echo "::error::push still rejected after 5 attempts - rotations not updated"
+          exit 1
