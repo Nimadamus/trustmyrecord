@@ -50,6 +50,7 @@ CARDS = {
     "og-leaderboards": ("Public Betting Leaderboards Built on Units and ROI", "Real, verified performance. No screenshots. No deleted losses."),
     "og-transparent": ("Communities With Transparent Pick Tracking", "Locked picks. Auto-graded results. Public records nobody can fake."),
     "og-profile": ("Verified Sports Betting Record", "Every pick locked before the game and graded automatically on TrustMyRecord."),
+    "og-trivia": ("Free Sports Trivia: NFL, NBA, MLB and NHL Quizzes", "Timed questions, scored on the server. Build streaks and climb the leaderboard."),
 }
 
 def make(name, headline, sub):
