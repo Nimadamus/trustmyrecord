@@ -334,7 +334,8 @@
                                 period &mdash; the simplest and most common question this tool answers.</p>
                                 <div class="condlist" id="condList"></div>
                                 <div class="condadd">
-                                    <button class="btn" id="addCond" type="button" aria-expanded="false" disabled>+ Add condition</button>
+                                    <button class="btn" id="addCond" type="button" aria-expanded="false"
+                                            aria-describedby="addCondHint" disabled>+ Add condition</button>
                                     <span class="meta" id="addCondHint">Choose both teams first.</span>
                                     <div class="condmenu" id="condMenu" hidden role="dialog" aria-label="Add a condition">
                                         <div class="condmenu-head">
@@ -953,10 +954,8 @@
                 + '</div>';
         }).join('');
 
-        var n = activeFilterCount();
         $('clearAll').hidden = rows.length === 0;
         $('condIntro').hidden = rows.length > 0;
-        $('filterCount').textContent = n ? (n + (n === 1 ? ' condition' : ' conditions')) : 'None';
         syncSetup(); scheduleReview(); scheduleTrail();
     }
 
@@ -1574,6 +1573,11 @@
         mSubmit.disabled = !ready || SUBMIT_BLOCKED;
 
         var n = activeFilterCount();
+        // The header count belongs here, not in renderConditions: setting a
+        // value on a row that already exists changes the count without
+        // re-rendering the list, and the chip sat on the stale number while
+        // the progress rail below it already said "2 conditions set".
+        $('filterCount').textContent = n ? (n + (n === 1 ? ' condition' : ' conditions')) : 'None';
         var summary = $('runSummary');
         if (!ready) {
             summary.innerHTML = err ? esc(err) : 'Choose a sport and two different teams to continue.';

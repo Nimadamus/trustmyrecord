@@ -131,9 +131,14 @@ a { color: var(--accent); text-underline-offset: 2px; }
     font-size: 13px; font-weight: 600; text-decoration: none;
     transition: background .12s ease, border-color .12s ease, color .12s ease;
 }
-.btn:hover { background: var(--card-2); border-color: #aebbcb; color: var(--ink); }
+.btn:hover:not(:disabled) { background: var(--card-2); border-color: #aebbcb; color: var(--ink); }
 .btn.is-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn.is-primary:hover { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+.btn.is-primary:hover:not(:disabled) { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+/* A disabled .btn used to be indistinguishable from a live one -- same fill,
+   same border, same hover, same pointer cursor -- so "+ Add condition" before
+   both teams are chosen read as a working button that did nothing when
+   clicked. A control that cannot act has to look like it. */
+.btn:disabled { opacity: .5; cursor: not-allowed; background: var(--sink); color: var(--ink-3); }
 
 /* ================================================================== layout */
 .layout { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
@@ -767,7 +772,10 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
 .condadd { position: relative; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 11px; }
 .condmenu {
     position: absolute; z-index: 40; top: calc(100% + 7px); left: 0;
-    width: min(560px, calc(100vw - 40px));
+    /* Bounded by the panel it hangs off, not by the viewport: 100vw includes
+       the scrollbar and ignores the card's own left inset, so on a phone the
+       picker ran past the right edge of the screen. */
+    width: min(560px, 100%);
     background: var(--card); border: 1px solid var(--line-2); border-radius: 11px;
     box-shadow: 0 12px 34px rgba(13, 21, 32, .17);
     display: grid; grid-template-rows: auto minmax(0, 1fr);
@@ -818,7 +826,6 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
 .market-absent strong { color: var(--ink); font-weight: 700; }
 
 @media (max-width: 560px) {
-    .condmenu { width: calc(100vw - 32px); }
     .condopt { flex-direction: column; align-items: stretch; }
     .cond-acts { justify-content: flex-start; }
 }
