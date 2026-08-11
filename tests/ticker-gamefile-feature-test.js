@@ -77,16 +77,29 @@ function measure(page) {
   const server = await serve();
   const browser = await chromium.launch();
   try {
+    /* The slate date and the fixture times are TODAY's, computed at run time.
+       They used to be hard-coded to 2026-08-10, which was "today" on the day
+       this test was written — and tmr-home-live.js deliberately refuses a slate
+       whose slate_date is not the current Pacific date (a guard against a
+       response that raced across a date rollover). So from 2026-08-11 onwards
+       the stub was rejected, the ticker rendered "temporarily unavailable", and
+       all five featured-card assertions failed every single day. A test that
+       only passes on one calendar date is not a test. */
+    const PT = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date());
+    const at = (hhmm) => `${PT}T${hhmm}:00.000Z`;
+
     const SLATE = {
-      ok: true, slate_date: '2026-08-10', games: [
+      ok: true, slate_date: PT, games: [
         { game_pk: 111, away: 'BOS', home: 'TOR', away_team_name: 'Boston Red Sox',
-          home_team_name: 'Toronto Blue Jays', start_time_utc: '2026-08-10T22:07:00.000Z',
+          home_team_name: 'Toronto Blue Jays', start_time_utc: at('22:07'),
           status: 'scheduled', away_pitcher: 'S. Gray', home_pitcher: 'J. Taillon' },
         { game_pk: 222, away: 'NYM', home: 'ATL', away_team_name: 'New York Mets',
-          home_team_name: 'Atlanta Braves', start_time_utc: '2026-08-10T23:15:00.000Z',
+          home_team_name: 'Atlanta Braves', start_time_utc: at('23:15'),
           status: 'scheduled', away_pitcher: 'C. Scott', home_pitcher: 'B. Elder' },
         { game_pk: 333, away: 'BAL', home: 'MIN', away_team_name: 'Baltimore Orioles',
-          home_team_name: 'Minnesota Twins', start_time_utc: '2026-08-10T23:40:00.000Z',
+          home_team_name: 'Minnesota Twins', start_time_utc: at('23:40'),
           status: 'scheduled', away_pitcher: 'T. Rogers', home_pitcher: 'D. Kremer' },
       ],
     };
@@ -97,7 +110,7 @@ function measure(page) {
         status: 'published',
         url: 'https://trustmyrecord.com/matchups/mlb/mets-vs-braves-g1000/',
         away_team: 'New York Mets', home_team: 'Atlanta Braves',
-        game_time_utc: '2026-08-10T23:15:00.000Z',
+        game_time_utc: at('23:15'),
       },
     };
 

@@ -638,26 +638,44 @@ box-shadow:none !important;color:#7f8ea6 !important}
 
 .ticker .gm.gm--gf .gm-gf {
   position: absolute; bottom: 5px; right: 8px;
-  font-size: 8.5px; font-weight: 900; letter-spacing: .1em;
+  font-size: 8.5px; font-weight: 900; letter-spacing: .08em;
   color: #06231F; background: var(--brand-lt, #22D2C0);
   padding: 2px 5px; border-radius: 3px; line-height: 1;
   pointer-events: none; white-space: nowrap;
 }
 
-/* One slow breath every 7s. Long gap, shallow amplitude, no colour flashing:
-   it should read as "this one is different", not as an advertisement. */
+/* The pulse, made visible. It used to breathe once every SEVEN seconds with a
+   4px halo — so faint and so rare that on a moving ticker nobody ever saw it,
+   which is the same as not having it. Now every 3s, with a wider halo and the
+   card's own tint lifting with it, so the eye is caught by the card rather than
+   only by the badge. Still box-shadow and background only: no geometry moves,
+   so the strip's height and every other card stay exactly where they were. */
 @keyframes tmrGfPulse {
-  0%, 82%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                              0 0 0 0 rgba(34, 210, 192, 0); }
-  88%           { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                              0 0 0 4px rgba(34, 210, 192, .20); }
-  94%           { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                              0 0 0 7px rgba(34, 210, 192, 0); }
+  0%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 0 rgba(34, 210, 192, 0);
+             background: rgba(34, 210, 192, .085); }
+  45%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 5px rgba(34, 210, 192, .30);
+             background: rgba(34, 210, 192, .20); }
+  75%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 11px rgba(34, 210, 192, 0);
+             background: rgba(34, 210, 192, .10); }
 }
-.ticker .gm.gm--gf { animation: tmrGfPulse 7s ease-in-out infinite; }
+.ticker .gm.gm--gf { animation: tmrGfPulse 3s ease-in-out infinite; }
+
+/* The badge blinks with it, on the same clock. */
+@keyframes tmrGfBadge {
+  0%, 100% { opacity: 1; }
+  45%      { opacity: .55; }
+}
+.ticker .gm.gm--gf .gm-gf { animation: tmrGfBadge 3s ease-in-out infinite; }
 
 /* Someone who has asked the OS for less motion gets the styling and none of the
    animation. The card is still obviously the featured one without it. */
 @media (prefers-reduced-motion: reduce) {
-  .ticker .gm.gm--gf { animation: none; }
+  .ticker .gm.gm--gf,
+  .ticker .gm.gm--gf .gm-gf { animation: none; }
+  /* Without the pulse the card still has to read as the featured one, so it
+     keeps the brighter of the two tints rather than the resting one. */
+  .ticker .gm.gm--gf { background: rgba(34, 210, 192, .16); }
 }
