@@ -39,23 +39,36 @@
    ============================================================================= */
 
 body.tmr-ds .ed {
-  /* -- surfaces ------------------------------------------------------------ */
-  --ed-bg:       #08090B;
-  --ed-bg-warm:  #0C0E12;   /* breakout sections sit on this */
-  --ed-panel:    #10141A;
-  --ed-line:     rgba(255,255,255,.08);
-  --ed-line-2:   rgba(255,255,255,.16);
+  /* -- surfaces -------------------------------------------------------------
+     Cooler and a little further apart than the first pass, which sat every
+     surface within four points of #0A0C10 and read as one muddy field with
+     faint lines drawn on it. The steps below are visible without turning the
+     page grey: near-black base, a distinctly lifted band for breakouts, and a
+     panel lighter again so a card looks like an object rather than a shadow. */
+  --ed-bg:       #070910;
+  --ed-bg-warm:  #0D1119;   /* breakout sections sit on this */
+  --ed-panel:    #131924;
+  --ed-line:     rgba(150,180,220,.13);
+  --ed-line-2:   rgba(150,180,220,.26);
 
-  /* -- ink ----------------------------------------------------------------- */
-  --ed-ink:      #EEF1F5;
-  --ed-body:     #C4CDD7;   /* prose. Deliberately softer than headings. */
-  --ed-mut:      #7C8794;
-  --ed-faint:    #59636F;
+  /* -- ink ------------------------------------------------------------------
+     Body copy was #C4CDD7 on #0C0E12 — about 11:1, technically fine and
+     visually flat, because the headings above it were only a shade brighter.
+     Widening the gap is what makes a hierarchy read at a glance. */
+  --ed-ink:      #F7F9FC;
+  --ed-body:     #CBD5E1;
+  --ed-mut:      #8A97A8;
+  --ed-faint:    #6B7787;
 
-  /* -- accents ------------------------------------------------------------- */
-  --ed-acc:      #2FD8C4;
-  --ed-pos:      #4ECB8C;
-  --ed-neg:      #E4685F;
+  /* -- accents --------------------------------------------------------------
+     One accent, used deliberately: the kicker, the section rule, the active
+     jump link, the verdict's top edge. Everything else is club colour or ink.
+     Brighter and slightly bluer than the old teal, which went dull against a
+     warm surface. */
+  --ed-acc:      #35E0CB;
+  --ed-acc-soft: rgba(53,224,203,.14);
+  --ed-pos:      #43D68F;
+  --ed-neg:      #FF6B61;
   --ed-away:     #FF5910;   /* the generator overrides both per matchup */
   --ed-home:     #CE1141;
 
@@ -421,7 +434,7 @@ body.tmr-ds .ed-jump a:hover { color: var(--ed-ink); border-bottom-color: var(--
 
 /* ================================================================ the body == */
 
-body.tmr-ds .gf-sect { padding: clamp(34px, 5.5vw, 70px) 0; }
+body.tmr-ds .gf-sect { padding: clamp(40px, 6vw, 84px) 0; }
 
 /* Alternating surfaces give the page a rhythm without drawing a single box.
    A run of prose, then a breakout that is visibly a different surface, then
@@ -462,7 +475,24 @@ body.tmr-ds .gf-call {
   max-width: var(--ed-read);
 }
 
-body.tmr-ds .gf-sect-head { margin: 0 0 clamp(18px, 2.6vw, 26px); }
+body.tmr-ds .gf-sect-head {
+  margin: 0 0 clamp(20px, 3vw, 30px);
+  padding-bottom: clamp(12px, 1.6vw, 16px);
+  border-bottom: 1px solid var(--ed-line);
+  position: relative;
+}
+/* A short accent rule sitting on the divider. Marks where a section starts
+   without adding another box. */
+body.tmr-ds .gf-sect-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 46px;
+  height: 2px;
+  background: var(--ed-acc);
+  border-radius: 1px;
+}
 body.tmr-ds .gf-sect-head h2 {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
@@ -551,6 +581,10 @@ body.tmr-ds .gf-tcards {
 body.tmr-ds .gf-tcard {
   background: var(--ed-bg);
   padding: clamp(16px, 2.2vw, 22px);
+  /* A grid item defaults to min-width:auto, so a long sample line ("442.0
+     relief IP · 2026") refused to shrink and ran straight through the divider
+     into the next card. */
+  min-width: 0;
 }
 body.tmr-ds .gf-sect[data-env="raised"] .gf-tcard,
 body.tmr-ds .gf-sect[data-env="inset"] .gf-tcard { background: var(--ed-bg-warm); }
@@ -574,12 +608,20 @@ body.tmr-ds .gf-tcard-l {
 }
 body.tmr-ds .gf-tcard-m {
   display: block;
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: .68rem;
   line-height: 1.5;
   color: var(--ed-faint);
+  overflow-wrap: anywhere;
 }
-body.tmr-ds .gf-tcard-m .gf-src { margin: 0 6px 0 0; }
+/* Source badge on its own line above the sample, rather than inline with it.
+   Inline, the badge is nowrap and the sample wrapped around it into a ragged
+   two-line block that read as broken. */
+body.tmr-ds .gf-tcard-m .gf-src {
+  display: inline-block;
+  margin: 0 0 6px;
+}
+body.tmr-ds .gf-tcard-m > span { display: block; }
 body.tmr-ds .gf-tcard[data-t="pos"] b { color: var(--ed-pos); }
 body.tmr-ds .gf-tcard[data-t="neg"] b { color: var(--ed-neg); }
 
@@ -599,6 +641,7 @@ body.tmr-ds :is(.gf-tcards, .gf-tl, .gf-show, .gf-rail) {
 body.tmr-ds :is(.gf-tcard, .gf-tlg, .gf-showcard, .gf-railcell) {
   border-left: 1px solid var(--ed-line);
   background: none;
+  min-width: 0;
 }
 /* No rule on the leftmost cell of each row. -1px margin pulls the first column
    out under the container's own left edge, which is cheaper and more reliable
