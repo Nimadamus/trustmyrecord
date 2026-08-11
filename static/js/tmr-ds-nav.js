@@ -36,6 +36,13 @@
      fit elsewhere. ------------------------------------------------------- */
   var SPORTSBOOK = [
     ['/sportsbook/', 'Make Picks'],
+    /* Added 2026-08-11. The daily article was reachable from the FOOTER and
+       from the homepage ticker card — and the ticker card only appears on days
+       an article is actually published, so on any day it is not, the section
+       had no entry point above the fold anywhere on the site. It sits in
+       Sportsbook next to the Handicapping Hub because it is game analysis,
+       which is what a reader is doing when they are in this menu. */
+    ['/matchup-of-the-day/', 'Matchup of the Day'],
     ['/handicapping/', 'Handicapping Hub']
   ];
   var HANDICAPPERS = [
