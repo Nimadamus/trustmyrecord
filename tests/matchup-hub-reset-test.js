@@ -46,6 +46,11 @@ for (const rel of ['matchups', 'matchups/mlb', 'scripts']) {
 }
 fs.copyFileSync(path.join(ROOT, 'scripts', 'build_matchup_articles.py'),
                 path.join(tmp, 'scripts', 'build_matchup_articles.py'));
+// The bake imports build_matchup_graphics to draw each article's artwork, so
+// the harness needs both scripts. Copying only the first left the bake dying
+// on ModuleNotFoundError inside the temp tree.
+fs.copyFileSync(path.join(ROOT, 'scripts', 'build_matchup_graphics.py'),
+                path.join(tmp, 'scripts', 'build_matchup_graphics.py'));
 fs.copyFileSync(path.join(ROOT, 'matchups', 'index.html'),
                 path.join(tmp, 'matchups', 'index.html'));
 fs.copyFileSync(path.join(ROOT, 'matchups', 'mlb', 'index.html'),
