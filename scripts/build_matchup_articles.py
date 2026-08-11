@@ -66,6 +66,26 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MATCHUPS_DIR = os.path.join(ROOT, "matchups")
 MOTD_DIR = os.path.join(ROOT, "matchup-of-the-day")
+
+# ---------------------------------------------------------------- superseded
+#
+# A published URL is never deleted here — that rule is absolute and is why this
+# script only ever REPORTS orphans. But an article can be republished at a
+# better address, and then the old directory is still on disk serving the same
+# piece, which is duplicate content pointing at itself.
+#
+# The fix is a canonical, not a redirect: the old page keeps serving, and tells
+# search engines which address is the real one. Both stay reachable, nothing
+# 404s, and the link equity goes to the right URL.
+#
+#   "<old path>": "<new path>"
+#
+# mets-vs-braves-g1000 was minted by Phase 1, before the rule that a slug must
+# describe the matchup rather than carry an id. It now lives at a slug naming
+# the pitcher the piece is actually about.
+SUPERSEDED = {
+    "matchups/mlb/mets-vs-braves-g1000": "matchup-of-the-day/mets-braves-christian-scott-pitching-edge",
+}
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 HOME = os.path.join(ROOT, "index.html")
 
@@ -1449,6 +1469,24 @@ def main():
 
     for path, text in rendered.values():
         write(path, text)
+
+    # ---- superseded URLs: repoint the canonical, keep serving --------------
+    for old_rel, new_rel in SUPERSEDED.items():
+        old_file = os.path.join(ROOT, old_rel.replace("/", os.sep), "index.html")
+        if not os.path.exists(old_file):
+            continue
+        new_url = "%s/%s/" % (SITE, new_rel)
+        page = read(old_file)
+        page, n = re.subn(r'<link rel="canonical" href="[^"]*">',
+                          '<link rel="canonical" href="%s">' % new_url, page, count=1)
+        if not n:
+            print("WARN: %s has no canonical tag to repoint" % old_rel)
+            continue
+        # og:url follows the canonical, or a share preview names the old address.
+        page = re.sub(r'<meta property="og:url" content="[^"]*">',
+                      '<meta property="og:url" content="%s">' % new_url, page, count=1)
+        write(old_file, page)
+        print("canonical %s -> %s" % (old_rel, new_rel))
     for path, text in writes:
         # Hard stop: this generator has no business writing the homepage.
         assert os.path.abspath(path) != os.path.abspath(HOME),             "build_matchup_articles.py must never write the homepage"

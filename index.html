@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="2008b0f20cc6">
+<html lang="en" data-tmr-build="e3d0aaf07da5">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -680,25 +680,48 @@ box-shadow:none !important;color:#7f8ea6 !important}
    card's own tint lifting with it, so the eye is caught by the card rather than
    only by the badge. Still box-shadow and background only: no geometry moves,
    so the strip's height and every other card stay exactly where they were. */
+/* A real flash, on a 2s clock.
+   The previous pass took this from one faint breath every 7s to a halo every 3s
+   and it was still too quiet to notice on a strip that is itself moving. This
+   version drives the BORDER as well as the halo and the fill, so the card's
+   whole outline lights rather than a soft glow appearing around it, and it
+   holds the bright state briefly instead of passing through it.
+
+   Still box-shadow, border-color and background only — no geometry — so the
+   strip's height and every card's x and width are untouched, which is what the
+   layout assertions in tests/ticker-gamefile-feature-test.js check. */
 @keyframes tmrGfPulse {
   0%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
                          0 0 0 0 rgba(34, 210, 192, 0);
-             background: rgba(34, 210, 192, .085); }
-  45%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 0 5px rgba(34, 210, 192, .30);
-             background: rgba(34, 210, 192, .20); }
-  75%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 0 11px rgba(34, 210, 192, 0);
+             border-color: rgba(34, 210, 192, .38);
              background: rgba(34, 210, 192, .10); }
+  35%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 4px rgba(34, 210, 192, .55);
+             border-color: rgba(34, 210, 192, 1);
+             background: rgba(34, 210, 192, .30); }
+  55%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 6px rgba(34, 210, 192, .38);
+             border-color: rgba(34, 210, 192, .95);
+             background: rgba(34, 210, 192, .26); }
+  85%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 14px rgba(34, 210, 192, 0);
+             border-color: rgba(34, 210, 192, .38);
+             background: rgba(34, 210, 192, .12); }
 }
-.ticker .gm.gm--gf { animation: tmrGfPulse 3s ease-in-out infinite; }
+.ticker .gm.gm--gf { animation: tmrGfPulse 2s ease-in-out infinite; }
 
-/* The badge blinks with it, on the same clock. */
+/* The badge flashes on the same clock, and harder than the card: it is the bit
+   carrying the call to action. */
 @keyframes tmrGfBadge {
-  0%, 100% { opacity: 1; }
-  45%      { opacity: .55; }
+  0%, 100% { opacity: .82; transform: scale(1); }
+  35%      { opacity: 1;   transform: scale(1.06); }
+  55%      { opacity: 1;   transform: scale(1.04); }
 }
-.ticker .gm.gm--gf .gm-gf { animation: tmrGfBadge 3s ease-in-out infinite; }
+.ticker .gm.gm--gf .gm-gf {
+  animation: tmrGfBadge 2s ease-in-out infinite;
+  transform-origin: 100% 100%;
+  box-shadow: 0 0 12px rgba(34, 210, 192, .45);
+}
 
 /* Someone who has asked the OS for less motion gets the styling and none of the
    animation. The card is still obviously the featured one without it. */
@@ -708,6 +731,54 @@ box-shadow:none !important;color:#7f8ea6 !important}
   /* Without the pulse the card still has to read as the featured one, so it
      keeps the brighter of the two tints rather than the resting one. */
   .ticker .gm.gm--gf { background: rgba(34, 210, 192, .16); }
+}
+
+/* ============================================================================
+   THE BREAKDOWN CALL-OUT  (#tmr-gf-callout, injected by tmr-home-live.js)
+
+   A stationary second entry point under the strip. The badge on a ticker card
+   is small, the strip pages every few seconds, and the flagged game is often
+   not on the first page — so on a cold load a reader can miss it entirely.
+   This does not move and states the offer in words.
+
+   Injected, never baked into index.html: the homepage markup is locked, and a
+   matchup cover was built into it once and rejected. It appears only when there
+   is an article to point at.
+   ========================================================================== */
+.gf-callout {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  max-width: 1240px;
+  margin: 8px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(34, 210, 192, .40);
+  border-left: 3px solid var(--brand-lt, #22D2C0);
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(34,210,192,.14) 0%, rgba(34,210,192,.05) 55%, transparent 100%);
+  text-decoration: none;
+  color: inherit;
+}
+.gf-callout:hover {
+  border-color: rgba(34, 210, 192, .75);
+  background: linear-gradient(90deg, rgba(34,210,192,.22) 0%, rgba(34,210,192,.08) 55%, transparent 100%);
+}
+.gf-callout-k {
+  font-size: 9.5px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
+  color: #06231F; background: var(--brand-lt, #22D2C0);
+  padding: 3px 7px; border-radius: 3px; line-height: 1;
+}
+.gf-callout-m { font-size: 14px; font-weight: 800; color: #EAF3F6; }
+.gf-callout-d { font-size: 12.5px; color: #8FA3AD; flex: 1 1 220px; min-width: 0; }
+.gf-callout-cta {
+  font-size: 12px; font-weight: 800; letter-spacing: .02em;
+  color: var(--brand-lt, #22D2C0); white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .gf-callout { margin-inline: 12px; padding: 9px 12px; }
+  .gf-callout-d { display: none; }
 }
 </style>
 <!-- END HOME CRITICAL CSS -->
@@ -1279,7 +1350,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.2008b0f20cc6.js"></script>
+<script src="/static/js/tmr-home-live.e3d0aaf07da5.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page

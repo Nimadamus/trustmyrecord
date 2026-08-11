@@ -431,8 +431,22 @@ console.log('\n/matchups/ Game Files');
     if (!/index/.test(robots)) fail('Game File has no index,follow robots tag: ' + url);
     if (!/max-image-preview:large/.test(robots))
       fail('Game File is missing max-image-preview:large: ' + url);
-    if (norm(canonical(html)) !== norm(url))
-      fail('Game File is not self-canonical: ' + url + ' -> ' + canonical(html));
+    /* Self-canonical, UNLESS the piece has been republished at a better address.
+       A superseded page keeps serving — a published URL is never deleted — and
+       points at its replacement, which is precisely what a canonical is for. So
+       the rule is: self-canonical, or canonical to a Game File that EXISTS. The
+       second half matters more than the first; a canonical aimed at a 404 is
+       worse than no canonical at all. */
+    const canon = norm(canonical(html));
+    if (canon !== norm(url)) {
+      const target = canon.replace(/^https?:\/\/[^/]+/, '').replace(/^\/|\/$/g, '');
+      const targetFile = path.join(ROOT, target, 'index.html');
+      if (!fs.existsSync(targetFile)) {
+        fail('Game File canonical points at a page that does not exist: ' + url + ' -> ' + canonical(html));
+      } else {
+        ok('superseded Game File canonicals to its replacement: ' + url);
+      }
+    }
 
     // --- the content is actually IN the document --------------------------
     // This is the C1/soft-404 guard, in the form it takes for an article: the
