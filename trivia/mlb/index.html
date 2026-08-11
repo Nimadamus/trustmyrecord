@@ -1,0 +1,3492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>window.TMR_TRIVIA_CATEGORY = "mlb";</script>
+    <link rel="canonical" href="https://trustmyrecord.com/trivia/mlb/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB Trivia: Free Baseball Trivia Questions &amp; Quiz | TrustMyRecord</title>
+    <meta name="description" content="Free MLB trivia. Timed baseball trivia questions on World Series history, career records and Hall of Famers. Score points, build streaks and climb the leaderboard.">
+    <meta name="keywords" content="mlb trivia, baseball trivia, mlb trivia questions, baseball trivia questions, mlb quiz, baseball quiz, world series trivia, mlb trivia game">
+    <meta property="og:title" content="MLB Trivia | Free Baseball Trivia Questions">
+    <meta property="og:description" content="Free MLB trivia. Timed baseball trivia questions on World Series history, career records and Hall of Famers. Score points, build streaks and climb the leaderboard.">
+    <meta property="og:url" content="https://trustmyrecord.com/trivia/mlb/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image" content="https://trustmyrecord.com/static/og/og-trivia.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="TrustMyRecord MLB Trivia - free baseball trivia questions">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MLB Trivia | Free Baseball Trivia Questions">
+    <meta name="twitter:description" content="Free MLB trivia. Timed baseball trivia questions on World Series history, career records and Hall of Famers. Score points, build streaks and climb the leaderboard.">
+    <meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-trivia.png">
+    <meta name="twitter:image:alt" content="TrustMyRecord MLB Trivia - free baseball trivia questions">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
+<script defer src="/static/js/tmr-sitewide.js?v=a46586bedd8f"></script>
+<!-- TRIVIA_BACKEND_UI_GUARD_20260509: backend categories, sessions, stats, reports, and creator flow are protected. -->
+    <style>
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+            /* Aliases for legacy references */
+            --bg-primary: #0a0a0f;
+            --bg-card: rgba(20, 20, 35, 0.8);
+            --bg-card-solid: rgba(20, 20, 35, 0.95);
+            --primary: #00ffff;
+            --primary-dim: rgba(0, 255, 255, 0.15);
+            --primary-glow: rgba(0, 255, 255, 0.4);
+            --warning: #ffd700;
+            --success: #39ff14;
+            --danger: #ff073a;
+            --text-dim: #606070;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'Barlow', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .nav-links a.active {
+            color: var(--neon-cyan);
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .page-header h1 {
+            font-family: 'Barlow', sans-serif;
+            font-size: clamp(1.5rem, 2.1vw, 1.8rem) !important;
+            line-height: 1.12 !important;
+            font-weight: 800;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            margin-bottom: 8px;
+        }
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ===== STATS BAR ===== */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin: 24px 0 40px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            text-align: center;
+            min-width: 140px;
+            padding: 18px 16px;
+        }
+        .stat-box .stat-value {
+            font-family: 'Barlow', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.1;
+        }
+        .stat-box .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        /* ===== VIEW TABS ===== */
+        .view-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 32px;
+            background: var(--bg-card-solid);
+            border-radius: 12px;
+            padding: 4px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .view-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .view-tab:hover { color: var(--text-primary); }
+        .view-tab.active {
+            background: var(--primary);
+            color: #000;
+        }
+        /* Make the Create tab visually distinct so users see it as a real action */
+        .view-tab--create {
+            color: var(--neon-cyan, #2dd4bf);
+            border: 1px dashed rgba(45, 212, 191, 0.55);
+        }
+        .view-tab--create:hover {
+            color: #000;
+            background: var(--neon-cyan, #2dd4bf);
+            border-color: transparent;
+        }
+        .view-tab--create.active {
+            background: var(--neon-cyan, #2dd4bf);
+            color: #000;
+            border-color: transparent;
+        }
+        .view-tab--create span { font-weight: 900; margin-right: 4px; }
+
+        /* Page-header CTA "Create Trivia Question" */
+        .trivia-page-header { text-align: left; }
+        .trivia-page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .trivia-page-header-copy { flex: 1 1 360px; }
+        .trivia-page-header-copy h1 { text-align: left; margin-bottom: 8px; }
+        .trivia-page-header-copy p { text-align: left; max-width: 620px; margin: 0; }
+        .trivia-create-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 13px 22px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #22c55e 0%, #22d3ee 100%);
+            color: #06111F;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            text-transform: none;
+            border: 0;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(45, 212, 191, 0.30);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .trivia-create-cta:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(45, 212, 191, 0.42); }
+        .trivia-create-cta span { font-size: 18px; line-height: 1; font-weight: 900; }
+        .trivia-create-cta--inline { padding: 10px 18px; font-size: 13.5px; }
+
+        /* "Build The Trivia Pool" explainer card — accent border so it stands apart */
+        .trivia-pool-card {
+            border: 1px solid rgba(45, 212, 191, 0.32) !important;
+            background:
+                linear-gradient(180deg, rgba(34, 197, 94, 0.07) 0%, rgba(34, 211, 238, 0.05) 100%),
+                var(--bg-card, rgba(15, 20, 40, 0.85)) !important;
+        }
+
+        /* Helper + moderation note inside the create form */
+        .trivia-create-helper {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 0 0 6px;
+        }
+        .trivia-create-mod-note {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.5;
+            font-style: italic;
+            margin: 0 0 14px;
+            opacity: 0.85;
+        }
+        .trivia-create-warning {
+            background: rgba(255, 7, 58, 0.08);
+            border: 1px solid rgba(255, 7, 58, 0.4);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin: 0 0 18px;
+            color: #ffd2d8;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .trivia-create-warning strong { color: #ff6b80; }
+
+        /* Report-question button + modal */
+        .quiz-report-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            color: #ffd700;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .quiz-report-btn:hover { background: rgba(255, 215, 0, 0.12); }
+        .quiz-report-row { display: flex; justify-content: center; margin-top: 14px; }
+
+        .report-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100060;   /* above the quiz overlay */
+            padding: 20px;
+        }
+        .report-modal {
+            background: var(--bg-card-solid);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            max-width: 440px;
+            width: 100%;
+            padding: 22px;
+            color: var(--text-primary);
+        }
+        .report-modal h3 { margin: 0 0 6px; font-size: 18px; }
+        .report-modal p { color: var(--text-secondary); font-size: 13px; margin: 0 0 14px; line-height: 1.5; }
+        .report-reason-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+        .report-reason-list label {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .report-reason-list label:hover { background: rgba(255,255,255,0.04); }
+        .report-modal textarea {
+            width: 100%;
+            min-height: 70px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            margin-bottom: 14px;
+        }
+        .report-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .report-modal-actions button {
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-primary);
+        }
+        .report-modal-actions .is-primary {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+        }
+        .report-modal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .trivia-loggedout-prompt {
+            text-align: center;
+            padding: 36px 22px;
+            border: 1px dashed rgba(45, 212, 191, 0.5);
+            border-radius: 14px;
+            background: rgba(45, 212, 191, 0.05);
+        }
+        .trivia-loggedout-prompt h2 { margin-bottom: 8px; }
+        .trivia-loggedout-prompt p { color: var(--text-muted); margin: 0 0 14px; }
+        .trivia-loggedout-actions { display: inline-flex; gap: 10px; flex-wrap: wrap; }
+        .trivia-loggedout-actions a {
+            padding: 10px 18px; border-radius: 10px;
+            text-decoration: none; font-weight: 800;
+            background: var(--neon-cyan, #2dd4bf); color: #000;
+        }
+        .trivia-loggedout-actions a.is-secondary {
+            background: rgba(255,255,255,0.06); color: var(--text-primary, #fff);
+            border: 1px solid rgba(148, 163, 184, 0.32);
+        }
+        .trivia-loggedout-actions a:hover { filter: brightness(1.08); }
+
+        /* ===== VIEW PANELS ===== */
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+
+        /* ===== CATEGORY CARDS ===== */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .category-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .category-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(14, 165, 233, 0.15);
+        }
+        .category-card:hover::before { opacity: 1; }
+        .category-card .card-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+        .category-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .category-card .card-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .category-card .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category-card .q-count {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .category-card .q-count strong {
+            color: var(--primary);
+        }
+        .category-card .play-btn {
+            background: var(--primary-dim);
+            color: var(--primary);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+
+        /* ===== QUIZ MODAL ===== */
+        .quiz-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .quiz-overlay.active { display: flex; }
+
+        .quiz-container {
+            background: var(--bg-card-solid);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 640px;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Quiz header */
+        .quiz-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .quiz-timer {
+            font-family: 'Barlow', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 60px;
+            text-align: center;
+        }
+        .quiz-timer.warning { color: #ff9800; }
+        .quiz-timer.danger { color: var(--danger); animation: pulse 0.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .quiz-progress-wrap { flex: 1; margin: 0 20px; }
+        .quiz-progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .quiz-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .quiz-progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .quiz-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .quiz-close-btn:hover { color: var(--danger); }
+
+        /* Cheat warning */
+        .cheat-banner {
+            background: rgba(255, 68, 68, 0.12);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: var(--danger);
+            text-align: center;
+            padding: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            display: none;
+        }
+        .cheat-banner.visible { display: block; }
+
+        /* Quiz body */
+        .quiz-body { padding: 28px 24px; }
+        .quiz-question-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            line-height: 1.4;
+            text-align: center;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Answer options */
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+        .quiz-option {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .quiz-option:hover {
+            border-color: rgba(14, 165, 233, 0.4);
+            background: rgba(14, 165, 233, 0.05);
+        }
+        .quiz-option.selected {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.1);
+        }
+        .quiz-option.correct {
+            background: rgba(0, 200, 83, 0.15) !important;
+            border-color: var(--success) !important;
+        }
+        .quiz-option.wrong {
+            background: rgba(255, 68, 68, 0.15) !important;
+            border-color: var(--danger) !important;
+        }
+        .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+        .quiz-option.disabled.correct { opacity: 1; }
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .quiz-option.selected .option-letter {
+            background: var(--primary);
+            color: #000;
+        }
+        .option-text { font-size: 15px; color: var(--text-primary); }
+
+        /* Submit button */
+        .quiz-submit-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .quiz-submit-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .quiz-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Quiz live stats */
+        .quiz-live-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .quiz-live-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ===== RESULTS SCREEN (inside quiz modal) ===== */
+        .results-screen { text-align: center; padding: 40px 24px; }
+        .results-screen .result-emoji { font-size: 64px; margin-bottom: 16px; }
+        .results-screen h2 { font-size: 24px; margin-bottom: 8px; color: var(--text-primary); }
+        .results-screen .result-big-score {
+            font-family: 'Barlow', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .results-screen .result-pct {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .results-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .results-detail-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .results-detail-box .rdl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .results-detail-box .rdv { font-size: 20px; font-weight: 700; color: var(--neon-gold); }
+        .cheat-penalty-box {
+            background: rgba(255, 68, 68, 0.08);
+            border: 1px solid rgba(255, 68, 68, 0.25);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .results-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .results-actions button {
+            padding: 12px 32px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary-action {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            color: #000;
+        }
+        .btn-secondary-action {
+            background: var(--bg-card-solid);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border) !important;
+        }
+
+        /* ===== LEADERBOARD & HISTORY PANELS ===== */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .glass-card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .history-row, .lb-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .history-row:last-child, .lb-row:last-child { border-bottom: none; }
+        .row-left { display: flex; align-items: center; gap: 12px; }
+        .row-left .icon { font-size: 20px; }
+        .row-left .info-primary { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+        .row-left .info-secondary { color: var(--text-muted); font-size: 12px; }
+        .row-right { text-align: right; }
+        .row-right .score { font-weight: 700; font-size: 15px; }
+        .row-right .pts { color: var(--warning); font-size: 12px; }
+        /* Loading state */
+        .tmr-loading-state { text-align: center; padding: 60px 20px; }
+        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,255,0.15); border-top-color: var(--primary); border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes tmr-spin { to { transform: rotate(360deg); } }
+        .tmr-loading-state p { color: var(--text-secondary); font-size: 0.95rem; margin: 8px 0; }
+        .tmr-loading-state .tmr-loading-slow { color: var(--warning); display: none; }
+        .tmr-loading-state .tmr-loading-retry { display: none; }
+        .tmr-loading-state .tmr-loading-retry button { background: var(--primary); color: var(--bg-primary); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
+        .tmr-loading-state .tmr-loading-retry button:hover { opacity: 0.85; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .big-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+        /* ===== CREATE QUESTION PANEL ===== */
+        .create-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 28px;
+        }
+        .create-card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .create-card .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-textarea { min-height: 80px; resize: vertical; }
+        .form-select option { background: var(--bg-card-solid); color: var(--text-primary); }
+
+        .answer-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .answer-row .form-input { flex: 1; }
+        .correct-radio-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            border: 2px solid var(--glass-border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            flex-shrink: 0;
+            position: relative;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .correct-radio-btn input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+        }
+        .correct-radio-btn:hover {
+            border-color: #00ffff;
+            color: #00ffff;
+            background: rgba(0,255,255,0.08);
+        }
+        .correct-radio-btn:focus-within {
+            outline: 2px solid #00ffff;
+            outline-offset: 2px;
+        }
+        .correct-radio-btn.selected,
+        .correct-radio-btn:has(input:checked) {
+            background: linear-gradient(135deg, #00ffff 0%, #b388ff 100%);
+            border-color: #00ffff;
+            color: #07101a;
+            box-shadow: 0 0 0 3px rgba(0,255,255,0.25), 0 0 18px 4px rgba(179,136,255,0.55);
+            transform: scale(1.08);
+        }
+        .correct-radio-btn.selected::after,
+        .correct-radio-btn:has(input:checked)::after {
+            content: "\2713";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00ffff;
+            color: #07101a;
+            font-size: 12px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 8px rgba(0,255,255,0.7);
+            pointer-events: none;
+        }
+        .answer-row.is-correct .form-input,
+        .answer-row:has(input[name="cqCorrect"]:checked) .form-input {
+            border-color: rgba(0,255,255,0.55);
+            box-shadow: 0 0 0 2px rgba(0,255,255,0.12);
+        }
+        .correct-answer-summary {
+            margin: 6px 0 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .correct-answer-summary strong {
+            color: #00ffff;
+            letter-spacing: 0.5px;
+        }
+        .correct-answer-summary.is-empty strong { color: var(--text-muted); }
+        .form-error {
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: none;
+        }
+        .form-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .form-submit-btn:hover { filter: brightness(1.1); }
+        .form-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .login-prompt {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+        }
+        .login-prompt a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Custom questions list */
+        .custom-q-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+        .custom-q-item .cq-question { font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 14px; }
+        .custom-q-item .cq-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
+        .custom-q-item .cq-delete {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 0;
+            margin-left: auto;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 720px) {
+            .trivia-info-row { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+            .page-header h1 { font-size: 1.6rem !important; }
+            .stats-bar {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+            .stat-box {
+                min-width: 0;
+                width: 100%;
+            }
+            .categories-grid { grid-template-columns: 1fr; }
+            .trivia-page-header-row { flex-direction: column; align-items: stretch; gap: 14px; }
+            .trivia-create-cta { width: 100%; }
+            .quiz-container { border-radius: 16px; }
+            .quiz-body { padding: 20px 16px; }
+            .quiz-question-text { font-size: 17px; }
+            .nav-links a { padding: 8px 10px; font-size: 13px; }
+            .results-detail-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <style>
+        /* Premium refinement pass */
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 22%),
+                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
+        }
+
+        header {
+            background: rgba(7, 15, 27, 0.86) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 22px;
+            margin: 14px auto 0;
+            max-width: 1380px;
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+        }
+
+        .header-content {
+            max-width: none;
+            padding: 0 22px;
+            min-height: 72px;
+        }
+
+        .logo {
+            font-size: 1.25rem !important;
+            background: linear-gradient(135deg, #ecfeff, #2dd4bf 58%, #7dd3fc 100%) !important;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            padding: 10px 14px !important;
+            border-radius: 999px;
+            color: #9fb0c6 !important;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #f4f7fb !important;
+            background: rgba(45, 212, 191, 0.1) !important;
+        }
+
+        .main-container {
+            max-width: 1280px;
+            padding: 32px 22px 72px;
+        }
+
+        .page-header,
+        .stats-bar,
+        .glass-card,
+        .category-card,
+        .empty-state {
+            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+        }
+
+        .page-header {
+            border-radius: 20px;
+            padding: 18px 22px !important;
+        }
+
+        .page-header h1 {
+            font-size: clamp(1.5rem, 2.1vw, 1.8rem) !important;
+            line-height: 1.12 !important;
+        }
+
+        .page-header p { color: #97abc1 !important; }
+
+        .stats-bar {
+            border-radius: 22px;
+            padding: 18px !important;
+            gap: 12px;
+        }
+
+        .stat-box {
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .stat-box .stat-label {
+            color: #7f92aa !important;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.72rem !important;
+        }
+
+        .glass-card,
+        .category-card,
+        .empty-state { border-radius: 24px !important; }
+
+        .view-tabs {
+            background: rgba(12, 23, 39, 0.94) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            border-radius: 18px;
+            padding: 8px;
+        }
+
+        .view-tab {
+            border-radius: 12px;
+            color: #97abc1 !important;
+        }
+
+        .view-tab.active {
+            background: rgba(45, 212, 191, 0.11) !important;
+            color: #f4f7fb !important;
+        }
+
+        .categories-grid { gap: 18px !important; }
+
+        /* ===================== TRIVIA v3 ===================== */
+        .stats-bar--six { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+        @media (max-width: 900px) { .stats-bar--six { grid-template-columns:repeat(3,1fr); } }
+        @media (max-width: 520px) { .stats-bar--six { grid-template-columns:repeat(2,1fr); } }
+
+        /* --- leaderboard board tabs --- */
+        .tb-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+        .tb-tab {
+            background: rgba(148,163,184,0.08); border:1px solid rgba(148,163,184,0.18);
+            color:#cbd5e1; border-radius:999px; padding:7px 14px; font-size:12.5px;
+            font-weight:600; cursor:pointer; transition:all .15s ease; white-space:nowrap;
+        }
+        .tb-tab:hover { border-color: rgba(45,212,191,0.4); color:#f4f7fb; }
+        .tb-tab.active { background: rgba(45,212,191,0.16); border-color: rgba(45,212,191,0.5); color:#5eead4; }
+        .tb-period {
+            display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;
+            font-size:12.5px; color:#94a3b8; margin:0 0 14px; padding:9px 12px;
+            background: rgba(148,163,184,0.06); border:1px solid rgba(148,163,184,0.12); border-radius:10px;
+        }
+        .tb-period:empty { display:none; }
+        .tb-period-copy { flex:1 1 240px; line-height:1.5; }
+        .tb-period-nav { display:flex; gap:8px; }
+        .tb-period-nav button {
+            background: rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.2);
+            color:#cbd5e1; border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer;
+        }
+        .tb-period-nav button[disabled] { opacity:.4; cursor:default; }
+
+        /* --- history rows --- */
+        .hist-lead { color:#94a3b8; font-size:13px; margin:0 0 14px; }
+        .hist-lead a { color:#5eead4; }
+        .hist-badge {
+            display:inline-block; padding:1px 7px; border-radius:999px; font-size:10.5px;
+            font-weight:700; letter-spacing:.03em; text-transform:uppercase; margin-right:4px;
+        }
+        .hist-badge.is-correct { background:rgba(0,200,83,.16); color:#4ade80; }
+        .hist-badge.is-wrong   { background:rgba(255,68,68,.16); color:#f87171; }
+        .hist-badge.is-forfeit { background:rgba(249,115,22,.18); color:#fb923c; }
+        .hist-badge.is-expired { background:rgba(255,152,0,.16); color:#fbbf24; }
+        .hist-badge.is-diff    { background:rgba(148,163,184,.14); color:#cbd5e1; }
+        .history-row .info-primary { white-space:normal; line-height:1.4; }
+
+        /* --- in-quiz chrome --- */
+        body.trivia-quiz-open { overflow:hidden; }
+        .quiz-timer-track { height:4px; background:rgba(148,163,184,.14); overflow:hidden; }
+        .quiz-timer-fill {
+            height:100%; background:#2dd4bf; transition:width .2s linear, background .3s ease;
+        }
+        .quiz-timer-fill.is-warning { background:#f59e0b; }
+        .quiz-timer-fill.is-danger  { background:#ef4444; }
+
+        .quiz-qmeta { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
+        .quiz-chip {
+            font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+            padding:3px 9px; border-radius:999px;
+            background:rgba(148,163,184,.12); color:#cbd5e1;
+        }
+        .quiz-chip--easy   { background:rgba(0,200,83,.16); color:#4ade80; }
+        .quiz-chip--medium { background:rgba(45,212,191,.16); color:#5eead4; }
+        .quiz-chip--hard   { background:rgba(239,68,68,.16); color:#f87171; }
+        .quiz-chip--pts    { background:rgba(250,204,21,.14); color:#fde047; }
+
+        .quiz-option { width:100%; text-align:left; font:inherit; }
+        .quiz-option[disabled] { cursor:default; }
+        .quiz-submit-btn.is-armed  { border-color:rgba(45,212,191,.55); }
+        .quiz-submit-btn.is-warn    { background:rgba(255,68,68,.28); color:#ff6b6b; }
+        .quiz-submit-btn.is-correct { background:rgba(0,200,83,.28); color:#4ade80; }
+        .quiz-submit-btn.is-wrong   { background:rgba(255,68,68,.28); color:#f87171; }
+        .quiz-submit-btn.is-expired { background:rgba(255,152,0,.28); color:#fbbf24; }
+        .quiz-submit-btn.is-forfeit { background:rgba(249,115,22,.3);  color:#fb923c; }
+
+        .quiz-result-box {
+            margin-top:16px; padding:16px 18px; border-radius:14px; text-align:left;
+            border:1px solid rgba(148,163,184,.2); background:rgba(15,23,42,.55);
+        }
+        .quiz-result-box[hidden] { display:none; }
+        .quiz-result-box.is-correct { border-color:rgba(0,200,83,.4);  background:rgba(0,200,83,.08); }
+        .quiz-result-box.is-wrong   { border-color:rgba(255,68,68,.4); background:rgba(255,68,68,.07); }
+        .quiz-result-box.is-expired { border-color:rgba(255,152,0,.4); background:rgba(255,152,0,.07); }
+        .quiz-result-box.is-forfeit { border-color:rgba(249,115,22,.5); background:rgba(249,115,22,.09); }
+        .qr-headline { font-size:16px; font-weight:700; color:#f4f7fb; margin-bottom:6px; }
+        .qr-math, .qr-reason { font-size:12.5px; color:#94a3b8; margin-bottom:8px; line-height:1.55; }
+        .qr-correct { font-size:14px; color:#e2e8f0; margin-bottom:8px; }
+        .qr-explain { font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom:10px;
+            padding-left:11px; border-left:2px solid rgba(45,212,191,.45); }
+        .qr-streak { font-size:13px; color:#fde047; margin-bottom:10px; }
+        .qr-next {
+            width:100%; padding:11px; border-radius:10px; cursor:pointer;
+            background:rgba(45,212,191,.16); border:1px solid rgba(45,212,191,.45);
+            color:#5eead4; font-weight:700; font-size:13.5px;
+        }
+        .qr-next:hover { background:rgba(45,212,191,.24); }
+        .results-actions a.btn-secondary-action {
+            text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 700;
+            background: var(--bg-card-solid); color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+        .results-actions a.btn-secondary-action:hover { border-color: rgba(45,212,191,.45); color: #5eead4; }
+
+        /* ================================================================
+           TRIVIA "ARENA" LOOK -- the quiz is the product, so it gets to
+           feel like a game show rather than a form. Everything below is
+           presentation only: the server still owns the clock and the score.
+           ================================================================ */
+
+        .quiz-overlay {
+            /* The sitewide fixed nav sits at z-index 99999. A live timed
+               question is a modal and must sit above it, otherwise the nav
+               covers the countdown and the exit button. */
+            z-index: 100050 !important;
+            align-items: center !important;
+            padding: 20px 16px !important;
+            background:
+                radial-gradient(90% 60% at 50% 0%, rgba(45,212,191,.10), transparent 60%),
+                radial-gradient(70% 50% at 50% 100%, rgba(139,92,246,.10), transparent 60%),
+                rgba(3,6,12,.92) !important;
+            backdrop-filter: blur(14px) saturate(1.2);
+        }
+
+        .quiz-container {
+            /* The CARD scrolls, not the page. That keeps the sticky header
+               (countdown + exit) pinned when a question card with an open
+               result box is taller than the viewport. Note: this only works
+               because the card itself is the scroll container -- a sticky
+               child cannot pin against an outer scroller through an
+               overflow:hidden ancestor. */
+            max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain;
+            max-width: 720px !important;
+            background:
+                linear-gradient(180deg, rgba(23,32,50,.96), rgba(11,16,26,.98)) !important;
+            border: 1px solid rgba(148,163,184,.16) !important;
+            border-radius: 22px !important;
+            box-shadow:
+                0 0 0 1px rgba(45,212,191,.10),
+                0 30px 80px -20px rgba(0,0,0,.85),
+                0 0 90px -40px rgba(45,212,191,.5);
+            position: relative;
+            animation: qzIn .32s cubic-bezier(.2,.9,.25,1);
+        }
+        @keyframes qzIn { from { opacity:0; transform: translateY(22px) scale(.985); } to { opacity:1; transform:none; } }
+
+        /* --- the fuse: time remaining across the top edge of the card --- */
+        .quiz-timer-track {
+            height: 5px !important;
+            background: rgba(148,163,184,.10) !important;
+            border-radius: 0 !important;
+        }
+        .quiz-timer-fill {
+            background: linear-gradient(90deg,#22d3ee,#2dd4bf) !important;
+            box-shadow: 0 0 14px rgba(45,212,191,.7);
+        }
+        .quiz-timer-fill.is-warning { background: linear-gradient(90deg,#fbbf24,#f59e0b) !important; box-shadow:0 0 14px rgba(245,158,11,.7); }
+        .quiz-timer-fill.is-danger  { background: linear-gradient(90deg,#f87171,#ef4444) !important; box-shadow:0 0 16px rgba(239,68,68,.85); }
+
+        /* --- header: pinned so the countdown and the exit button stay reachable
+               while a long question or an open result box is scrolled --- */
+        .quiz-timer-track { position: sticky; top: 0; z-index: 6; flex: 0 0 auto; }
+        .quiz-top-bar {
+            position: sticky; top: 5px; z-index: 5;
+            padding: 14px 20px 12px !important;
+            border-bottom: 1px solid rgba(148,163,184,.10) !important;
+            gap: 14px;
+            background: linear-gradient(180deg, rgba(23,32,50,.99), rgba(20,28,44,.96));
+            backdrop-filter: blur(8px);
+        }
+
+        /* countdown ring wrapping the seconds readout */
+        .qz-ring { position: relative; width: 62px; height: 62px; flex: 0 0 62px; }
+        .qz-ring svg { width: 62px; height: 62px; transform: rotate(-90deg); display: block; }
+        .qz-ring .qz-ring-bg   { fill: none; stroke: rgba(148,163,184,.16); stroke-width: 5; }
+        .qz-ring .qz-ring-arc  {
+            fill: none; stroke: #2dd4bf; stroke-width: 5; stroke-linecap: round;
+            filter: drop-shadow(0 0 6px rgba(45,212,191,.65));
+            transition: stroke .3s ease;
+        }
+        .qz-ring.is-warning .qz-ring-arc { stroke:#f59e0b; filter:drop-shadow(0 0 6px rgba(245,158,11,.7)); }
+        .qz-ring.is-danger  .qz-ring-arc { stroke:#ef4444; filter:drop-shadow(0 0 8px rgba(239,68,68,.85)); }
+        .quiz-timer {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 21px !important; font-weight: 800 !important;
+            min-width: 0 !important; color: #e2f7f3 !important;
+            font-variant-numeric: tabular-nums;
+        }
+        .quiz-timer.warning { color:#fcd34d !important; }
+        .quiz-timer.danger  { color:#fca5a5 !important; animation: qzTick .6s ease-in-out infinite; }
+        @keyframes qzTick { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.13);} }
+
+        /* question progress as one dot per question, coloured by outcome */
+        .quiz-progress-wrap { margin: 0 !important; }
+        .quiz-progress-bar { display: none !important; }
+        .qz-dots { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:6px; }
+        .qz-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: rgba(148,163,184,.22); transition: all .25s ease;
+        }
+        .qz-dot.is-correct { background:#22c55e; box-shadow:0 0 8px rgba(34,197,94,.8); }
+        .qz-dot.is-wrong   { background:#ef4444; }
+        .qz-dot.is-forfeit { background:#f97316; }
+        .qz-dot.is-expired { background:#f59e0b; }
+        .qz-dot.is-current { background:#2dd4bf; transform:scale(1.5); box-shadow:0 0 12px rgba(45,212,191,.9); }
+        .quiz-progress-text {
+            font-size: 11px !important; letter-spacing:.09em; text-transform:uppercase;
+            font-weight: 700; color:#7d8ca3 !important;
+        }
+
+        .quiz-close-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(148,163,184,.08) !important;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px !important; flex: 0 0 36px;
+        }
+        .quiz-close-btn:hover { background: rgba(239,68,68,.18) !important; }
+
+        /* --- body --- */
+        .quiz-body { padding: 24px 26px 26px !important; }
+        .quiz-qmeta { justify-content: center; }
+        .quiz-question-text {
+            font-family: 'Barlow', Inter, sans-serif;
+            font-size: clamp(20px, 2.6vw, 27px) !important;
+            font-weight: 800 !important;
+            line-height: 1.28 !important;
+            letter-spacing: -.01em;
+            margin-bottom: 22px !important;
+            background: linear-gradient(180deg,#ffffff,#c9d6e6);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- answers --- */
+        .quiz-options { gap: 11px !important; }
+        .quiz-option {
+            min-height: 58px;
+            padding: 14px 16px !important;
+            border-radius: 14px !important;
+            border: 1.5px solid rgba(148,163,184,.16) !important;
+            background: linear-gradient(180deg, rgba(148,163,184,.07), rgba(148,163,184,.03)) !important;
+            position: relative; overflow: hidden;
+            transition: transform .14s cubic-bezier(.2,.9,.25,1), border-color .16s, background .16s, box-shadow .16s !important;
+        }
+        .quiz-option:not([disabled]):hover {
+            transform: translateX(4px);
+            border-color: rgba(45,212,191,.5) !important;
+            background: linear-gradient(180deg, rgba(45,212,191,.12), rgba(45,212,191,.05)) !important;
+            box-shadow: 0 6px 22px -12px rgba(45,212,191,.9);
+        }
+        .quiz-option:not([disabled]):active { transform: translateX(4px) scale(.99); }
+        .quiz-option.selected {
+            border-color: #2dd4bf !important;
+            background: linear-gradient(180deg, rgba(45,212,191,.18), rgba(45,212,191,.07)) !important;
+            box-shadow: 0 0 0 1px rgba(45,212,191,.35), 0 10px 30px -16px rgba(45,212,191,1);
+        }
+        .quiz-option.correct {
+            background: linear-gradient(180deg, rgba(34,197,94,.24), rgba(34,197,94,.09)) !important;
+            border-color: #22c55e !important;
+            box-shadow: 0 0 0 1px rgba(34,197,94,.4), 0 0 34px -14px rgba(34,197,94,1);
+        }
+        .quiz-option.wrong {
+            background: linear-gradient(180deg, rgba(239,68,68,.22), rgba(239,68,68,.08)) !important;
+            border-color: #ef4444 !important;
+            animation: qzShake .42s cubic-bezier(.36,.07,.19,.97);
+        }
+        @keyframes qzShake {
+            10%,90% { transform: translateX(-2px); } 20%,80% { transform: translateX(4px); }
+            30%,50%,70% { transform: translateX(-7px); } 40%,60% { transform: translateX(7px); }
+        }
+        .quiz-option.disabled { opacity: .55; }
+        .quiz-option.disabled.correct, .quiz-option.disabled.wrong { opacity: 1; }
+        .option-letter {
+            width: 34px !important; height: 34px !important;
+            border-radius: 10px !important;
+            background: rgba(148,163,184,.14) !important;
+            font-family:'Barlow',Inter,sans-serif; font-size:15px !important; font-weight:800 !important;
+            color:#cbd5e1 !important;
+        }
+        .quiz-option.selected .option-letter { background:#2dd4bf !important; color:#04211d !important; }
+        .quiz-option.correct .option-letter  { background:#22c55e !important; color:#04210f !important; }
+        .quiz-option.wrong   .option-letter  { background:#ef4444 !important; color:#2a0606 !important; }
+        .option-text { font-size: 15.5px !important; font-weight: 500; line-height:1.35; }
+
+        /* keyboard affordance -- speed is worth points, so make it fast to play */
+        .qz-key {
+            margin-left: auto; flex: 0 0 auto;
+            font-size: 10px; font-weight: 700; letter-spacing:.06em;
+            color:#64748b; background:rgba(148,163,184,.10);
+            border:1px solid rgba(148,163,184,.16); border-radius:6px;
+            padding:2px 6px; text-transform:uppercase;
+        }
+        .quiz-option:not([disabled]):hover .qz-key { color:#5eead4; border-color:rgba(45,212,191,.4); }
+        .quiz-option.disabled .qz-key { opacity:0; }
+        .qz-hint {
+            text-align:center; font-size:11px; color:#5c6a7f; margin-top:12px;
+            letter-spacing:.04em;
+        }
+        .qz-hint b { color:#8fa3b8; font-weight:700; }
+        @media (hover: none) { .qz-key, .qz-hint { display:none; } }
+
+        /* --- submit --- */
+        .quiz-submit-btn {
+            margin-top: 18px !important;
+            padding: 15px !important;
+            border-radius: 14px !important;
+            font-size: 14px !important; letter-spacing: 1.4px !important;
+            background: linear-gradient(135deg,#22d3ee,#8b5cf6) !important;
+            box-shadow: 0 12px 34px -16px rgba(45,212,191,1);
+        }
+        .quiz-submit-btn.is-armed { animation: qzArmed 1.8s ease-in-out infinite; }
+        @keyframes qzArmed {
+            0%,100% { box-shadow: 0 12px 34px -16px rgba(45,212,191,1); }
+            50%     { box-shadow: 0 12px 44px -12px rgba(139,92,246,1); }
+        }
+        .quiz-submit-btn:disabled { opacity: 1 !important; }
+        .quiz-submit-btn.is-correct { background: linear-gradient(135deg,#16a34a,#22c55e) !important; color:#031b0c !important; }
+        .quiz-submit-btn.is-wrong   { background: linear-gradient(135deg,#b91c1c,#ef4444) !important; color:#fff !important; }
+        .quiz-submit-btn.is-expired { background: linear-gradient(135deg,#b45309,#f59e0b) !important; color:#241002 !important; }
+        .quiz-submit-btn.is-forfeit { background: linear-gradient(135deg,#c2410c,#f97316) !important; color:#250d02 !important; }
+
+        /* --- verdict flash + points fly-up --- */
+        .qz-flash {
+            position:absolute; inset:0; border-radius:22px; pointer-events:none;
+            opacity:0; z-index:3;
+        }
+        .qz-flash.go {
+            animation: qzFlash .7s ease-out forwards;
+        }
+        .qz-flash.is-correct { box-shadow: inset 0 0 90px rgba(34,197,94,.55); }
+        .qz-flash.is-wrong   { box-shadow: inset 0 0 90px rgba(239,68,68,.5); }
+        .qz-flash.is-forfeit { box-shadow: inset 0 0 90px rgba(249,115,22,.5); }
+        .qz-flash.is-expired { box-shadow: inset 0 0 90px rgba(245,158,11,.45); }
+        @keyframes qzFlash { 0% { opacity:0; } 18% { opacity:1; } 100% { opacity:0; } }
+
+        .qz-pointsfly {
+            position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);
+            font-family:'Barlow',Inter,sans-serif; font-size:64px; font-weight:900;
+            color:#4ade80; text-shadow:0 0 34px rgba(34,197,94,.9);
+            pointer-events:none; z-index:4; opacity:0;
+        }
+        .qz-pointsfly.go { animation: qzFly 1.15s cubic-bezier(.2,.9,.25,1) forwards; }
+        @keyframes qzFly {
+            0%   { opacity:0; transform:translate(-50%,-50%) scale(.5); }
+            22%  { opacity:1; transform:translate(-50%,-58%) scale(1.12); }
+            55%  { opacity:1; transform:translate(-50%,-64%) scale(1); }
+            100% { opacity:0; transform:translate(-50%,-108%) scale(.92); }
+        }
+
+        /* --- live score strip --- */
+        .quiz-live-stats {
+            gap: 10px !important; flex-wrap: wrap;
+            border-top: 1px solid rgba(148,163,184,.09) !important;
+            margin-top: 18px !important; padding-top: 14px !important;
+        }
+        .quiz-live-stat {
+            background: rgba(148,163,184,.07); border:1px solid rgba(148,163,184,.12);
+            border-radius: 999px; padding: 5px 12px; font-size:12px !important; font-weight:600;
+        }
+        .qz-streakchip {
+            background: linear-gradient(135deg, rgba(249,115,22,.25), rgba(234,179,8,.18)) !important;
+            border-color: rgba(249,115,22,.45) !important; color:#fdba74 !important;
+            animation: qzPulseWarm 1.6s ease-in-out infinite;
+        }
+        @keyframes qzPulseWarm { 0%,100%{ box-shadow:0 0 0 0 rgba(249,115,22,.35);} 50%{ box-shadow:0 0 16px 2px rgba(249,115,22,.35);} }
+
+        .quiz-report-row { margin-top: 12px; text-align:center; }
+        .quiz-report-btn { font-size: 11.5px !important; opacity:.6; }
+        .quiz-report-btn:hover { opacity:1; }
+
+        /* --- result box --- */
+        .quiz-result-box { animation: qzIn .26s cubic-bezier(.2,.9,.25,1); border-width:1.5px !important; }
+        .qr-headline { font-family:'Barlow',Inter,sans-serif; font-size:19px !important; letter-spacing:-.01em; }
+
+        /* --- results screen --- */
+        .results-screen { padding: 34px 26px 30px !important; }
+        .qz-scorering { position:relative; width:172px; height:172px; margin:0 auto 18px; }
+        .qz-scorering svg { width:172px; height:172px; transform:rotate(-90deg); }
+        .qz-scorering .bg  { fill:none; stroke:rgba(148,163,184,.14); stroke-width:11; }
+        .qz-scorering .arc { fill:none; stroke:url(#qzGrad); stroke-width:11; stroke-linecap:round;
+                             filter:drop-shadow(0 0 12px rgba(45,212,191,.6));
+                             animation: qzArc 1.1s cubic-bezier(.2,.9,.25,1) forwards; }
+        @keyframes qzArc { from { stroke-dashoffset: var(--qz-circ); } }
+        .qz-scorering .inner {
+            position:absolute; inset:0; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:2px;
+        }
+        .qz-scorering .inner .big {
+            font-family:'Barlow',Inter,sans-serif; font-size:44px; font-weight:900; line-height:1;
+            color:#f4f7fb;
+        }
+        .qz-scorering .inner .sub { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#7d8ca3; font-weight:700; }
+        .results-screen .result-big-score, .results-screen .result-pct { display:none; }
+        .qz-recap { display:flex; flex-wrap:wrap; gap:7px; justify-content:center; margin:0 0 20px; }
+        .qz-recap .qz-dot { width:11px; height:11px; }
+        .qz-points-earned {
+            font-family:'Barlow',Inter,sans-serif; font-size:34px; font-weight:900;
+            color:#4ade80; text-shadow:0 0 26px rgba(34,197,94,.5); margin-bottom:2px;
+        }
+        .qz-points-label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#7d8ca3; font-weight:700; margin-bottom:20px; }
+        .results-detail-box { border-radius:12px !important; }
+        .results-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+
+        /* --- category cards --- */
+        a.category-card { display: block; text-decoration: none; color: inherit; }
+        .category-card {
+            position: relative; overflow: hidden;
+            border-radius: 18px !important;
+            transition: transform .18s cubic-bezier(.2,.9,.25,1), border-color .2s, box-shadow .2s !important;
+        }
+        .category-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 22px 46px -26px rgba(45,212,191,.9);
+        }
+        .category-card .card-icon { font-size: 34px !important; filter: drop-shadow(0 6px 14px rgba(0,0,0,.6)); }
+        .qz-mix { display:flex; height:5px; border-radius:999px; overflow:hidden; margin:12px 0 10px; background:rgba(148,163,184,.12); }
+        .qz-mix i { display:block; height:100%; }
+        .qz-mix .e { background:#22c55e; } .qz-mix .m { background:#2dd4bf; } .qz-mix .h { background:#f87171; }
+        .qz-mixlegend { display:flex; gap:12px; font-size:10.5px; color:#7d8ca3; font-weight:600; margin-bottom:10px; }
+        .qz-mixlegend b { color:#cbd5e1; font-weight:800; }
+        .qz-mine {
+            font-size:11px; color:#5eead4; background:rgba(45,212,191,.10);
+            border:1px solid rgba(45,212,191,.22); border-radius:8px;
+            padding:6px 9px; margin-bottom:10px; font-weight:600;
+        }
+
+        @media (max-width: 560px) {
+            .quiz-body { padding: 18px 15px 20px !important; }
+            .quiz-top-bar { padding: 11px 13px 10px !important; gap:10px; }
+            .qz-ring, .qz-ring svg { width:52px; height:52px; }
+            .qz-ring { flex: 0 0 52px; }
+            .quiz-timer { font-size: 18px !important; }
+            .quiz-option { min-height: 56px; padding: 13px 13px !important; }
+            .option-text { font-size: 15px !important; }
+            .qz-scorering, .qz-scorering svg { width:148px; height:148px; }
+            .qz-scorering .inner .big { font-size:38px; }
+            .results-actions .btn-primary-action,
+            .results-actions .btn-secondary-action { flex: 1 1 132px; text-align:center; justify-content:center; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .quiz-container, .quiz-result-box { animation: none !important; }
+            .quiz-option.wrong { animation: none !important; }
+            .quiz-timer.danger, .quiz-submit-btn.is-armed, .qz-streakchip { animation: none !important; }
+            .qz-pointsfly.go { animation: qzFlyStill 1s linear forwards; }
+            @keyframes qzFlyStill { 0%,70% { opacity:1; } 100% { opacity:0; } }
+            .qz-scorering .arc { animation: none !important; }
+            .quiz-option:not([disabled]):hover { transform: none; }
+            .category-card:hover { transform: none !important; }
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(45, 212, 191, 0.26) !important;
+        }
+    </style>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Sports Trivia", "item": "https://trustmyrecord.com/trivia/"}, {"@type": "ListItem", "position": 3, "name": "MLB Trivia", "item": "https://trustmyrecord.com/trivia/mlb/"}]}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "WebApplication", "name": "TrustMyRecord MLB Trivia", "url": "https://trustmyrecord.com/trivia/mlb/", "applicationCategory": "GameApplication", "applicationSubCategory": "MLB Trivia", "operatingSystem": "Any (web browser)", "browserRequirements": "Requires JavaScript", "inLanguage": "en-US", "isAccessibleForFree": true, "image": "https://trustmyrecord.com/static/og/og-trivia.png", "description": "Free MLB trivia. Timed baseball trivia questions on World Series history, career records and Hall of Famers. Score points, build streaks and climb the leaderboard.", "featureList": ["NFL trivia", "NBA trivia", "MLB trivia", "NHL trivia", "Sports history trivia", "Mixed sports trivia", "Pop culture trivia", "Public trivia leaderboards", "Community-submitted questions"], "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/"}}
+</script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
+<script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+</head>
+<body class="tmr-site-shell">
+
+<!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260729navclean1 -->
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-container">
+
+    <!-- Page Header -->
+    <div class="page-header trivia-page-header">
+        <div class="trivia-page-header-row">
+            <div class="trivia-page-header-copy">
+                <h1>MLB TRIVIA</h1>
+                <p>Timed MLB trivia questions on World Series history, career records, Hall of Famers and stats. Climb the leaderboard, or contribute your own questions to the community pool.</p>
+            </div>
+            <button type="button" class="trivia-create-cta" onclick="openCreateTrivia()">
+                <span aria-hidden="true">＋</span> Create Trivia Question
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar stats-bar--six" aria-label="Your trivia stats">
+        <div class="stat-box">
+            <div class="stat-value" id="statTotalPoints">0</div>
+            <div class="stat-label">Career Points</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statQuestionsAnswered">0</div>
+            <div class="stat-label">Questions Attempted</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statQuestionsCorrect">0</div>
+            <div class="stat-label">Correct Answers</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statAccuracy">0%</div>
+            <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statStreak">0</div>
+            <div class="stat-label">Current Streak</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statAvgTime">--</div>
+            <div class="stat-label">Avg Response</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statGames">0</div>
+            <div class="stat-label">Games Played</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statBestGame">0</div>
+            <div class="stat-label">Best Game</div>
+        </div>
+    </div>
+
+    <!-- View Tabs -->
+    <div class="view-tabs" role="tablist" aria-label="Trivia modes">
+        <button class="view-tab active" role="tab" onclick="switchView('play')">Play</button>
+        <button class="view-tab" role="tab" onclick="switchView('leaderboard')">Leaderboard</button>
+        <button class="view-tab" role="tab" onclick="switchView('history')">History</button>
+        <button class="view-tab view-tab--create" role="tab" id="triviaTabCreate" onclick="switchView('create')">
+            <span aria-hidden="true">＋</span> Create
+        </button>
+    </div>
+
+    <!-- ===== PLAY VIEW ===== -->
+    <div class="view-panel active" id="view-play">
+        <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+
+    <!-- ===== LEADERBOARD VIEW ===== -->
+    <div class="view-panel" id="view-leaderboard">
+        <div class="glass-card">
+            <h2>&#127942; Trivia Leaderboards</h2>
+            <p style="margin:0 0 12px;color:#94a3b8;font-size:13.5px;">Updates the instant a question is settled. Weekly and monthly boards keep every past period &mdash; nothing is ever wiped.</p>
+            <div class="tb-tabs" id="triviaBoardTabs" role="tablist" aria-label="Leaderboard type"></div>
+            <div class="tb-period" id="leaderboardPeriod"></div>
+            <div id="leaderboardList"></div>
+        </div>
+        <div class="glass-card" style="margin-top:18px;">
+            <h2>&#128221; Trivia Creators Leaderboard</h2>
+            <p style="margin:0 0 14px;color:#94a3b8;font-size:13.5px;">Recognizing community members who contribute original trivia questions.</p>
+            <div id="leaderboardCreatorsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== HISTORY VIEW ===== -->
+    <div class="view-panel" id="view-history">
+        <div class="glass-card">
+            <h2>&#128203; Recent Results</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- ===== CREATE VIEW ===== -->
+    <div class="view-panel" id="view-create">
+        <div class="create-card" id="createQuestionCard"></div>
+        <div class="glass-card" style="margin-top:24px;" id="customQuestionsCard">
+            <h2>&#128221; Your Custom Questions</h2>
+            <div id="customQuestionsList"></div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="margin-top:28px;">
+        <h2 style="margin-bottom: 10px;font-size:1.05rem;">About MLB Trivia</h2>
+        <p style="color: var(--text-muted); line-height: 1.6; margin: 0 0 12px;font-size:14px;">MLB trivia is the deepest category on TrustMyRecord, and it is played against a server-side clock rather than an honour system. Baseball trivia questions cover World Series history, career and single-season records, Hall of Fame cases, no-hitters and perfect games, franchise history and the statistical arguments that never quite settle, each graded easy, medium or hard before you see it. A fast correct answer earns up to double points from the speed multiplier; a question that times out earns zero. Because members submit and review baseball questions, the pool keeps deepening rather than going stale. Create a free TrustMyRecord profile to save your MLB trivia scores, carry a streak between sessions and climb the public leaderboard.</p>
+        <p style="color: var(--text-muted); line-height: 1.6; margin: 0;font-size:14px;">More categories: <a href="/trivia/nfl/">NFL Trivia</a> &middot; <a href="/trivia/nba/">NBA Trivia</a> &middot; <a href="/trivia/nhl/">NHL Trivia</a> &middot; <a href="/trivia/">all sports trivia</a>.</p>
+    </div>
+
+    <!-- Supporting info (moved below the game so the categories sit near the top) -->
+    <div class="trivia-info-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;">
+        <div class="glass-card">
+            <h2 style="margin-bottom: 10px;font-size:1.05rem;">How Trivia Scoring Works</h2>
+            <p style="color: var(--text-muted); line-height: 1.6; margin: 0;font-size:14px;" id="scoringExplainer">
+                Points = base points x speed multiplier. Base is set by difficulty (easy 100, medium 200, hard 300). The speed multiplier runs from 2.00x for an instant answer down to 1.00x at the buzzer. Wrong answers, expired questions and forfeited questions all score 0. The clock and the scoring run on the server.
+            </p>
+            <p style="color: var(--text-muted); line-height: 1.6; margin: 12px 0 0;font-size:13px;">
+                <strong>Stay on the page.</strong> Switching tabs, minimising the browser, moving to another window or navigating away while a question is live forfeits that question for 0 points.
+            </p>
+        </div>
+        <div class="glass-card trivia-pool-card">
+            <h2 style="margin-bottom: 10px;font-size:1.05rem;">Build The Trivia Pool</h2>
+            <p style="color: var(--text-muted); line-height: 1.6; margin: 0 0 14px;font-size:14px;">
+                TrustMyRecord trivia is community driven, not just preloaded quizzes. Users can submit NFL, NBA, MLB, NHL, betting history, stats, and pop culture sports questions. Approved questions can appear in public quizzes, leaderboards, and user profiles.
+            </p>
+            <button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()">
+                <span aria-hidden="true">＋</span> Create Trivia Question
+            </button>
+        </div>
+    </div>
+
+</div><!-- end main-container -->
+
+<!-- ===== QUIZ OVERLAY ===== -->
+<div class="quiz-overlay" id="quizOverlay">
+    <div class="quiz-container" id="quizContainer">
+        <!-- Dynamically populated -->
+    </div>
+</div>
+
+<script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+    <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
+<script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
+<script src="/static/js/nav-badges.js?v=e5bfe5d9e8b9"></script>
+    <script src="/static/js/notifications.js?v=b237c77f13ca"></script>
+<script>
+// ================================================================
+// AUTH HELPERS
+// ================================================================
+function isLoggedIn() {
+    if (window.api && typeof api.isLoggedIn === 'function') {
+        return api.isLoggedIn();
+    }
+    if (window.auth && typeof auth.isLoggedIn === 'function') {
+        return auth.isLoggedIn();
+    }
+    return false;
+}
+function getCurrentSessionUser() {
+    try {
+        if (window.auth && typeof window.auth.getCurrentUser === 'function') {
+            var authUser = window.auth.getCurrentUser();
+            if (authUser && (authUser.username || authUser.email || authUser.id)) return authUser;
+        }
+    } catch(e) {}
+    try {
+        if (api && typeof api.getCurrentUser === 'function') {
+            var apiUser = api.getCurrentUser();
+            // api.getCurrentUser() hits /auth/me and returns a Promise, so it can never
+            // answer synchronously here. Swallow the rejection instead of letting a
+            // logged-out 401 escape as an unhandled "Access token required" page error.
+            if (apiUser && typeof apiUser.then === 'function') apiUser.catch(function () {});
+            else if (apiUser && (apiUser.username || apiUser.email || apiUser.id)) return apiUser;
+        }
+    } catch(e) {}
+    var sessionKeys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+    for (var i = 0; i < sessionKeys.length; i++) {
+        try {
+            var raw = localStorage.getItem(sessionKeys[i]);
+            if (!raw) continue;
+            var parsed = JSON.parse(raw);
+            var user = parsed && parsed.user ? parsed.user : parsed;
+            if (user && (user.username || user.email || user.id)) return user;
+        } catch(e) {}
+    }
+    return null;
+}
+function getCurrentUsername() {
+    var u = getCurrentSessionUser();
+    if (u && u.username) return u.username;
+    if (u && u.displayName) return u.displayName;
+    return null;
+}
+
+// ================================================================
+// QUIZ STATE
+// ================================================================
+var currentSession = null;
+var currentQuestion = null;
+var currentQuizProgress = 0;
+var currentQuizTotal = 10;
+var currentQuizScore = 0;
+var currentQuizCategory = '';
+var currentCategorySlug = '';
+var selectedAnswerId = null;
+var quizActive = false;
+var answerLocked = false;
+var cheatCount = 0;
+var timerInterval = null;
+var timeLeft = 20;
+// --- trivia v3 state: the server owns all of these; we only mirror them ---
+var currentAttemptId = null;
+var serverClockOffsetMs = 0;
+var questionDeadlineMs = 0;
+var questionStartedMs = 0;
+var currentQuizForfeits = 0;
+var currentQuizExpired = 0;
+// One entry per settled question this game, in order, for the progress dots
+// and the end-of-game recap strip.
+var quizOutcomes = [];
+var RING_R = 26;
+var RING_CIRC = 2 * Math.PI * RING_R;
+var quizStartTime = null;
+var questionTimes = [];
+var totalPointsEarned = 0;
+var backendCategories = [];
+
+// ================================================================
+// UTILITY
+// ================================================================
+function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+}
+
+// ================================================================
+// VIEW SWITCHING
+// ================================================================
+function switchView(view) {
+    document.querySelectorAll('.view-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
+    event.target.classList.add('active');
+    document.getElementById('view-' + view).classList.add('active');
+
+    if (view === 'leaderboard') renderLeaderboard();
+    if (view === 'history') renderHistory();
+    if (view === 'create') renderCreateView();
+}
+
+// ================================================================
+// CATEGORY CARDS (from backend API)
+// ================================================================
+// TRIVIA_SEO_CATEGORY_ROUTES_20260811 -- league slugs that have a crawlable
+// page of their own at /trivia/<slug>/. This is the kill switch for the whole
+// SEO category-routing release: set it to [] and every card renders as the
+// original <div>, with no other change anywhere on the page.
+var TRIVIA_SEO_CATEGORY_ROUTES = ['nfl', 'nba', 'mlb', 'nhl'];
+
+// Set by the generated league shells (scripts/build_trivia_categories.py).
+// Null on /trivia/ itself, which is what keeps the hub's behaviour identical.
+function triviaPageCategory() {
+    var s = String(window.TMR_TRIVIA_CATEGORY || '').toLowerCase();
+    return TRIVIA_SEO_CATEGORY_ROUTES.indexOf(s) !== -1 ? s : null;
+}
+
+var categoryIcons = {
+    'nfl': '\uD83C\uDFC8', 'nba': '\uD83C\uDFC0', 'mlb': '\u26BE',
+    'nhl': '\uD83C\uDFD2', 'soccer': '\u26BD', 'mixed': '\uD83C\uDFB2', 'general': '\uD83C\uDFB2'
+};
+
+async function loadCategories() {
+    var grid = document.getElementById('categoriesGrid');
+    grid.innerHTML = '<div class="tmr-loading-state" id="triviaLoadingState"><div class="tmr-spinner"></div><p>Loading trivia...</p><p class="tmr-loading-slow" id="triviaLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="triviaLoadingRetry"><p>Could not connect to servers.</p><button onclick="loadCategories()">Refresh</button></div></div>';
+    var _triviaSlowTimer = setTimeout(function() { var el = document.getElementById('triviaLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+    var _triviaRetryTimer = setTimeout(function() { var el = document.getElementById('triviaLoadingRetry'); var sl = document.getElementById('triviaLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
+    try {
+        await api.ready;
+        clearTimeout(_triviaSlowTimer); clearTimeout(_triviaRetryTimer);
+        // v2 carries the difficulty mix and (when signed in) the player's own
+        // record per category. Fall back to the legacy shape if it 404s.
+        var data;
+        try { data = await api.request('/trivia/v2/categories'); }
+        catch (e) { data = await api.request('/trivia/categories'); }
+        if (data && data.scoring) { SCORING_SPEC = data.scoring; renderScoringExplainer(); }
+        var rawCats = data.categories || data || [];
+        // Hide the "Betting Knowledge" category (parlay/vig/juice/ATS/EV
+        // jargon questions). Nima asked these gone — they're betting math,
+        // not sports trivia. Backend init-db migration disables them too;
+        // this is the instant client-side filter so the category drops
+        // immediately without waiting on the next Render build.
+        backendCategories = rawCats.filter(function (c) {
+            var slug = String(c.slug || '').toLowerCase();
+            var name = String(c.name || '').toLowerCase();
+            if (slug === 'betting') return false;
+            if (name.indexOf('betting knowledge') !== -1) return false;
+            return true;
+        });
+        renderCategories();
+    } catch(e) {
+        clearTimeout(_triviaSlowTimer); clearTimeout(_triviaRetryTimer);
+        console.error('Failed to load categories:', e);
+        grid.innerHTML = '<div class="tmr-loading-state"><div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">&#9888;</div><p>Could not load trivia categories.</p><p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" style="display:block;"><button onclick="loadCategories()">Try Again</button></div></div>';
+    }
+}
+
+function renderCategories() {
+    var grid = document.getElementById('categoriesGrid');
+    if (!backendCategories.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>No categories available yet.</p></div>';
+        return;
+    }
+    var html = '';
+    // On a league page the league being viewed leads the grid. On /trivia/
+    // triviaPageCategory() is null and the order is untouched.
+    var pageCat = triviaPageCategory();
+    var ordered = backendCategories;
+    if (pageCat) {
+        ordered = backendCategories.slice().sort(function (a, b) {
+            var as = String(a.slug || '').toLowerCase() === pageCat ? 0 : 1;
+            var bs = String(b.slug || '').toLowerCase() === pageCat ? 0 : 1;
+            return as - bs;
+        });
+    }
+    ordered.forEach(function(cat) {
+        var slug = cat.slug || cat.name.toLowerCase();
+        var icon = categoryIcons[slug] || '\uD83C\uDFB2';
+        var qCount = cat.question_count || cat.questionCount || 0;
+        var desc = cat.description || 'Test your ' + cat.name + ' knowledge';
+
+        // Difficulty mix bar -- shows what the player is walking into.
+        var e = Number(cat.easy_count) || 0, m = Number(cat.medium_count) || 0, h = Number(cat.hard_count) || 0;
+        var mixTotal = e + m + h;
+        var mixHtml = '';
+        if (mixTotal > 0) {
+            mixHtml =
+                '<div class="qz-mix" aria-hidden="true">' +
+                    '<i class="e" style="width:' + ((e / mixTotal) * 100).toFixed(1) + '%"></i>' +
+                    '<i class="m" style="width:' + ((m / mixTotal) * 100).toFixed(1) + '%"></i>' +
+                    '<i class="h" style="width:' + ((h / mixTotal) * 100).toFixed(1) + '%"></i>' +
+                '</div>' +
+                '<div class="qz-mixlegend">' +
+                    '<span><b>' + e + '</b> easy</span><span><b>' + m + '</b> medium</span><span><b>' + h + '</b> hard</span>' +
+                '</div>';
+        }
+
+        // The player's own record in this category, when we have one.
+        var mineHtml = '';
+        if (cat.mine && Number(cat.mine.attempts) > 0) {
+            var acc = Math.round((Number(cat.mine.correct) / Number(cat.mine.attempts)) * 100);
+            mineHtml = '<div class="qz-mine">Your record: ' + cat.mine.correct + '/' + cat.mine.attempts +
+                ' (' + acc + '%) &middot; ' + Number(cat.mine.points).toLocaleString() + ' pts</div>';
+        }
+
+        var players = Number(cat.players_count) || 0;
+
+        // A league with its own page gets a real <a href>, so the category is
+        // crawlable and middle/ctrl-click opens it like any other link. A plain
+        // left-click is preventDefault()ed and opens the quiz overlay, which is
+        // exactly what the card did before. The league you are already on stays
+        // a <div> -- a card must never link to its own page.
+        var seoSlug = TRIVIA_SEO_CATEGORY_ROUTES.indexOf(slug) !== -1 && slug !== pageCat ? slug : '';
+        var cardOpen = seoSlug
+            ? '<a class="category-card" href="/trivia/' + escapeHtml(seoSlug) + '/"' +
+              ' onclick="if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button)return true;' +
+              'event.preventDefault();startQuiz(\'' + escapeHtml(slug) + '\');return false;">'
+            : '<div class="category-card" role="button" tabindex="0" onclick="startQuiz(\'' + escapeHtml(slug) + '\')"' +
+              ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();startQuiz(\'' + escapeHtml(slug) + '\');}">';
+        var cardClose = seoSlug ? '</a>' : '</div>';
+        html += cardOpen +
+            '<div class="card-icon">' + icon + '</div>' +
+            '<h3>' + escapeHtml(cat.name) + '</h3>' +
+            '<div class="card-desc">' + escapeHtml(desc) + '</div>' +
+            mixHtml +
+            mineHtml +
+            '<div class="card-meta">' +
+            '<span class="q-count"><strong>' + qCount + '</strong> questions' +
+                (players ? ' &middot; ' + players + ' player' + (players === 1 ? '' : 's') : '') + '</span>' +
+            '<span class="play-btn">PLAY</span>' +
+            '</div>' + cardClose;
+    });
+    grid.innerHTML = html;
+}
+
+// ================================================================
+// TRIVIA v3 ENGINE -- server-authoritative timed play
+//
+// The server owns the clock, correctness, points and forfeiture. This file
+// only renders what the server says and reports events (answer / forfeit).
+// Nothing here can award a point.
+// ================================================================
+
+var SCORING_SPEC = null;
+
+async function loadScoringSpec() {
+    if (SCORING_SPEC) return SCORING_SPEC;
+    try {
+        await api.ready;
+        var d = await api.request('/trivia/v2/scoring');
+        SCORING_SPEC = d.scoring || null;
+    } catch (e) { SCORING_SPEC = null; }
+    return SCORING_SPEC;
+}
+
+async function startQuiz(categorySlug) {
+    if (!isLoggedIn()) {
+        window.location.href = '/login/?redirect=' + encodeURIComponent('/trivia/');
+        return;
+    }
+
+    currentCategorySlug = categorySlug;
+    currentQuizCategory = categorySlug.toUpperCase();
+    currentQuizProgress = 0;
+    currentQuizScore = 0;
+    currentQuizTotal = 10;
+    currentQuizForfeits = 0;
+    currentQuizExpired = 0;
+    quizOutcomes = [];
+    selectedAnswerId = null;
+    quizActive = false;
+    answerLocked = true;
+    currentAttemptId = null;
+    quizStartTime = Date.now();
+    totalPointsEarned = 0;
+    currentSession = null;
+    currentQuestion = null;
+
+    var overlay = document.getElementById('quizOverlay');
+    overlay.classList.add('active');
+    document.body.classList.add('trivia-quiz-open');
+
+    var container = document.getElementById('quizContainer');
+    container.innerHTML = '<div class="quiz-body" style="text-align:center;padding:60px 24px;">' +
+        '<div style="font-size:40px;margin-bottom:16px;">&#9203;</div>' +
+        '<p style="color:var(--text-muted);">Starting quiz...</p></div>';
+
+    try {
+        await api.ready;
+        var sessionData = await api.request('/trivia/v2/sessions', {
+            method: 'POST',
+            body: { category_slug: categorySlug, question_count: 10 }
+        });
+        currentSession = sessionData;
+        currentQuizTotal = sessionData.question_count || 10;
+        if (sessionData.scoring) SCORING_SPEC = sessionData.scoring;
+        await loadNextQuestion();
+    } catch (e) {
+        console.error('Failed to start quiz session:', e);
+        container.innerHTML = '<div class="quiz-body" style="text-align:center;padding:60px 24px;">' +
+            '<div style="font-size:40px;margin-bottom:16px;">&#9888;</div>' +
+            '<h2 style="margin-bottom:8px;">Could Not Start Quiz</h2>' +
+            '<p style="color:var(--text-muted);margin-bottom:20px;">' + escapeHtml(e.message || 'Backend error') + '</p>' +
+            '<button class="btn-primary-action" onclick="closeQuiz(true)">Close</button></div>';
+    }
+}
+
+async function loadNextQuestion() {
+    // Between questions nothing is live, so nothing can be forfeited.
+    quizActive = false;
+    answerLocked = true;
+    stopTimer();
+
+    try {
+        var sessionId = currentSession.session_id || currentSession.id;
+        var data = await api.request('/trivia/v2/sessions/' + sessionId + '/next');
+
+        // The server may have settled an abandoned question while we were away.
+        if (data.expired_notice) {
+            currentQuizProgress++;
+            currentQuizExpired++;
+        }
+
+        if (data.session_complete) {
+            finishQuiz(data.results || {});
+            return;
+        }
+
+        currentQuestion = data.question;
+        currentAttemptId = data.attempt_id;
+        currentQuizTotal = data.question_count || currentQuizTotal;
+        currentQuizProgress = Math.max(0, (data.question_number || 1) - 1);
+        renderQuizQuestion(data);
+    } catch (e) {
+        console.error('Failed to load next question:', e);
+        var container = document.getElementById('quizContainer');
+        container.innerHTML = '<div class="quiz-body" style="text-align:center;padding:60px 24px;">' +
+            '<div style="font-size:40px;margin-bottom:16px;">&#9888;</div>' +
+            '<p style="color:var(--text-muted);">' + escapeHtml(e.message || 'Error loading question') + '</p>' +
+            '<button class="btn-primary-action" onclick="closeQuiz(true)">Close</button></div>';
+    }
+}
+
+/**
+ * Close the quiz. If a question is live this is a deliberate exit and the
+ * question is forfeited for 0 points, exactly like a tab switch.
+ */
+function closeQuiz(skipForfeit) {
+    if (!skipForfeit && quizActive && !answerLocked && currentAttemptId) {
+        forfeitActiveQuestion('manual_exit', true);
+    }
+    quizActive = false;
+    answerLocked = true;
+    currentAttemptId = null;
+    stopTimer();
+    document.body.classList.remove('trivia-quiz-open');
+    document.getElementById('quizOverlay').classList.remove('active');
+    loadUserStats();
+}
+
+// ================================================================
+// RENDER QUESTION
+// ================================================================
+function renderQuizQuestion(data) {
+    var question = data.question;
+    var answers = data.answers || [];
+    selectedAnswerId = null;
+
+    // Server clock offset so a tampered local clock cannot buy extra seconds.
+    serverClockOffsetMs = new Date(data.server_time).getTime() - Date.now();
+    questionDeadlineMs = new Date(data.deadline_at).getTime();
+    questionStartedMs = new Date(data.started_at).getTime();
+    var limit = question.time_limit_seconds || 25;
+
+    var total = currentQuizTotal;
+    var pct = ((currentQuizProgress / total) * 100).toFixed(0);
+    var wrongCount = currentQuizProgress - currentQuizScore - currentQuizForfeits - currentQuizExpired;
+    if (wrongCount < 0) wrongCount = 0;
+
+    var letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    var optionsHtml = '';
+    answers.forEach(function (ans, idx) {
+        optionsHtml += '<button type="button" class="quiz-option" data-answer-id="' + ans.id + '" data-idx="' + idx + '">' +
+            '<span class="option-letter">' + (letters[idx] || (idx + 1)) + '</span>' +
+            '<span class="option-text">' + escapeHtml(ans.answer_text) + '</span>' +
+            '<span class="qz-key">' + (idx + 1) + '</span></button>';
+    });
+
+    var diff = String(question.difficulty || 'medium');
+    var maxPts = question.max_points || (question.base_points || 200) * 2;
+
+    // Streak within this game, for the live "N in a row" chip.
+    var runStreak = 0;
+    for (var oi = quizOutcomes.length - 1; oi >= 0; oi--) {
+        if (quizOutcomes[oi] === 'correct') runStreak++; else break;
+    }
+
+    var container = document.getElementById('quizContainer');
+    container.innerHTML =
+        '<div class="qz-flash" id="qzFlash"></div>' +
+        '<div class="qz-pointsfly" id="qzPointsFly"></div>' +
+        '<div class="quiz-timer-track"><div class="quiz-timer-fill" id="quizTimerFill" style="width:100%"></div></div>' +
+        '<div class="quiz-top-bar">' +
+            '<div class="qz-ring" id="qzRing">' +
+                '<svg viewBox="0 0 62 62" aria-hidden="true">' +
+                    '<circle class="qz-ring-bg" cx="31" cy="31" r="' + RING_R + '"></circle>' +
+                    '<circle class="qz-ring-arc" id="qzRingArc" cx="31" cy="31" r="' + RING_R + '" ' +
+                        'stroke-dasharray="' + RING_CIRC.toFixed(2) + '" stroke-dashoffset="0"></circle>' +
+                '</svg>' +
+                '<div class="quiz-timer" id="quizTimer" role="timer" aria-live="off">' + limit + 's</div>' +
+            '</div>' +
+            '<div class="quiz-progress-wrap">' +
+                '<div class="qz-dots">' + progressDotsHtml() + '</div>' +
+                '<div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:' + pct + '%"></div></div>' +
+                '<div class="quiz-progress-text">Question ' + (currentQuizProgress + 1) + ' of ' + total + '</div>' +
+            '</div>' +
+            '<button class="quiz-close-btn" type="button" onclick="closeQuiz()" aria-label="Exit quiz">&times;</button>' +
+        '</div>' +
+        '<div class="cheat-banner" id="cheatBanner"></div>' +
+        '<div class="quiz-body">' +
+            '<div class="quiz-qmeta">' +
+                '<span class="quiz-chip quiz-chip--' + escapeHtml(diff) + '">' + escapeHtml(diff.toUpperCase()) + '</span>' +
+                '<span class="quiz-chip">' + escapeHtml(String(question.category_name || currentQuizCategory)) + '</span>' +
+                '<span class="quiz-chip quiz-chip--pts">Up to ' + maxPts + ' pts</span>' +
+            '</div>' +
+            '<div class="quiz-question-text">' + escapeHtml(question.question_text) + '</div>' +
+            '<div class="quiz-options" id="quizOptions">' + optionsHtml + '</div>' +
+            '<button class="quiz-submit-btn" id="submitBtn" type="button" onclick="submitQuizAnswer()">SUBMIT ANSWER</button>' +
+            '<div class="quiz-result-box" id="quizResultBox" hidden></div>' +
+            '<div class="qz-hint">Press <b>1&ndash;' + answers.length + '</b> to pick &middot; <b>Enter</b> to lock it in</div>' +
+            '<div class="quiz-live-stats">' +
+                '<div class="quiz-live-stat">&#9989; ' + currentQuizScore + ' Correct</div>' +
+                '<div class="quiz-live-stat">&#10060; ' + wrongCount + ' Wrong</div>' +
+                '<div class="quiz-live-stat">&#127919; ' + totalPointsEarned + ' pts</div>' +
+                (runStreak >= 2 ? '<div class="quiz-live-stat qz-streakchip">&#128293; ' + runStreak + ' in a row</div>' : '') +
+                (currentQuizForfeits > 0 ? '<div class="quiz-live-stat" style="color:var(--danger);">&#9888; ' + currentQuizForfeits + ' Forfeited</div>' : '') +
+            '</div>' +
+            '<div class="quiz-report-row">' +
+                '<button type="button" class="quiz-report-btn" onclick="openReportModal()">&#9888; Report this question</button>' +
+            '</div>' +
+        '</div>';
+
+    // Delegated click handling keeps focus inside the quiz container, which is
+    // what lets the blur guard tell "player tapped an answer" apart from
+    // "player left the page".
+    var opts = document.getElementById('quizOptions');
+    opts.addEventListener('pointerdown', noteInternalInteraction, true);
+    opts.addEventListener('click', function (e) {
+        var btn = e.target.closest('.quiz-option');
+        if (!btn) return;
+        selectQuizAnswer(parseInt(btn.getAttribute('data-idx'), 10), parseInt(btn.getAttribute('data-answer-id'), 10));
+    });
+    document.getElementById('submitBtn').addEventListener('pointerdown', noteInternalInteraction, true);
+
+    answerLocked = false;
+    quizActive = true;
+    startTimer();
+}
+
+/**
+ * Repaint the live score strip and the progress dots after a question settles,
+ * so the running totals on screen match what the server just recorded.
+ */
+function refreshLiveHud() {
+    var strip = document.querySelector('.quiz-live-stats');
+    if (strip) {
+        var wrong = 0, run = 0, best = 0;
+        quizOutcomes.forEach(function (o) {
+            if (o === 'wrong') wrong++;
+            if (o === 'correct') { run++; best = Math.max(best, run); } else { run = 0; }
+        });
+        strip.innerHTML =
+            '<div class="quiz-live-stat">&#9989; ' + currentQuizScore + ' Correct</div>' +
+            '<div class="quiz-live-stat">&#10060; ' + wrong + ' Wrong</div>' +
+            '<div class="quiz-live-stat">&#127919; ' + totalPointsEarned.toLocaleString() + ' pts</div>' +
+            (run >= 2 ? '<div class="quiz-live-stat qz-streakchip">&#128293; ' + run + ' in a row</div>' : '') +
+            (currentQuizForfeits > 0 ? '<div class="quiz-live-stat" style="color:var(--danger);">&#9888; ' + currentQuizForfeits + ' Forfeited</div>' : '');
+    }
+    var dots = document.querySelector('.qz-dots');
+    if (dots) dots.innerHTML = progressDotsHtml();
+}
+
+/**
+ * One dot per question in the game: settled ones coloured by outcome, the
+ * live one pulsing, the rest dim.
+ */
+function progressDotsHtml(finalView) {
+    var total = Math.max(currentQuizTotal, quizOutcomes.length);
+    var html = '';
+    for (var i = 0; i < total; i++) {
+        var cls = 'qz-dot';
+        if (i < quizOutcomes.length) cls += ' is-' + quizOutcomes[i];
+        else if (!finalView && i === quizOutcomes.length) cls += ' is-current';
+        html += '<span class="' + cls + '"></span>';
+    }
+    return html;
+}
+
+// ================================================================
+// TIMER -- rendered from the SERVER deadline, never from a local countdown
+// ================================================================
+function serverNow() { return Date.now() + serverClockOffsetMs; }
+
+function startTimer() {
+    stopTimer();
+    updateTimerDisplay();
+    timerInterval = setInterval(updateTimerDisplay, 200);
+}
+
+function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimerDisplay() {
+    var el = document.getElementById('quizTimer');
+    var fill = document.getElementById('quizTimerFill');
+    var ring = document.getElementById('qzRing');
+    var arc = document.getElementById('qzRingArc');
+    if (!el || !questionDeadlineMs) return;
+
+    var remainMs = questionDeadlineMs - serverNow();
+    var totalMs = questionDeadlineMs - questionStartedMs;
+    timeLeft = Math.max(0, Math.ceil(remainMs / 1000));
+    var frac = totalMs > 0 ? Math.max(0, Math.min(1, remainMs / totalMs)) : 0;
+    var state = timeLeft <= 5 ? 'danger' : timeLeft <= 10 ? 'warning' : '';
+
+    el.textContent = timeLeft + 's';
+    el.className = 'quiz-timer' + (state ? ' ' + state : '');
+
+    // The fuse across the top edge of the card.
+    if (fill) {
+        fill.style.width = (frac * 100).toFixed(2) + '%';
+        fill.className = 'quiz-timer-fill' + (state ? ' is-' + state : '');
+    }
+    // The ring around the seconds readout. SVG needs setAttribute, not .className.
+    if (ring) ring.setAttribute('class', 'qz-ring' + (state ? ' is-' + state : ''));
+    if (arc) arc.setAttribute('stroke-dashoffset', (RING_CIRC * (1 - frac)).toFixed(2));
+
+    if (remainMs <= 0) {
+        stopTimer();
+        handleTimeUp();
+    }
+}
+
+/** Verdict feedback: a coloured flash over the card, and a points fly-up. */
+function quizFeedback(kind, points) {
+    var flash = document.getElementById('qzFlash');
+    if (flash) {
+        flash.className = 'qz-flash is-' + kind;
+        void flash.offsetWidth;          // restart the animation
+        flash.classList.add('go');
+    }
+    if (kind === 'correct' && points > 0) {
+        var fly = document.getElementById('qzPointsFly');
+        if (fly) {
+            fly.textContent = '+' + points;
+            fly.className = 'qz-pointsfly';
+            void fly.offsetWidth;
+            fly.classList.add('go');
+        }
+    }
+}
+
+async function handleTimeUp() {
+    if (answerLocked) return;
+    answerLocked = true;
+    quizActive = false;
+
+    var btn = document.getElementById('submitBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '&#8987; TIME UP'; }
+
+    // Tell the server; it re-checks the deadline against its own clock.
+    try {
+        var result = await api.request('/trivia/v2/attempts/' + currentAttemptId + '/answer', {
+            method: 'POST',
+            body: { answer_id: selectedAnswerId }
+        });
+        showAnswerResult(result);
+    } catch (e) {
+        currentQuizExpired++;
+        currentQuizProgress++;
+        showTerminalNotice('&#8987;', 'Time expired', 'The clock ran out before an answer was locked in. 0 points.');
+    }
+}
+
+// ================================================================
+// ANTI-CHEAT -- leaving the trivia page forfeits the live question
+//
+// Signals used:
+//   * Page Visibility API  (tab switch, browser minimise, app switch on mobile)
+//   * window blur          (switching to another window/app with the tab visible)
+//   * pagehide / beforeunload (navigation away, back button, tab close)
+//
+// False-positive guards -- none of these forfeit:
+//   * clicks on answers, submit, report or close inside the quiz
+//   * the report modal taking focus
+//   * a blur where focus stays inside our own document
+//   * anything once the answer is locked in
+// The server is the authority either way: it re-validates the deadline and
+// refuses to score a forfeited or expired attempt.
+// ================================================================
+var lastInternalInteractionAt = 0;
+var antiCheatSuppressed = false;
+var blurGraceTimer = null;
+
+function noteInternalInteraction() { lastInternalInteractionAt = Date.now(); }
+function suppressAntiCheat(on) { antiCheatSuppressed = !!on; }
+
+function questionIsLive() {
+    return quizActive && !answerLocked && !!currentAttemptId;
+}
+
+function focusIsInsideQuiz() {
+    var c = document.getElementById('quizContainer');
+    var modal = document.getElementById('reportModalBackdrop');
+    var el = document.activeElement;
+    if (!el) return false;
+    if (c && c.contains(el)) return true;
+    if (modal && modal.contains(el)) return true;
+    return false;
+}
+
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && questionIsLive() && !antiCheatSuppressed) {
+        forfeitActiveQuestion('tab_hidden');
+    }
+});
+
+window.addEventListener('blur', function () {
+    if (!questionIsLive() || antiCheatSuppressed) return;
+    // A tap on an answer can momentarily blur the window on some mobile
+    // browsers. Wait a beat, then only forfeit if the page really lost focus.
+    if (blurGraceTimer) clearTimeout(blurGraceTimer);
+    blurGraceTimer = setTimeout(function () {
+        blurGraceTimer = null;
+        if (!questionIsLive() || antiCheatSuppressed) return;
+        if (Date.now() - lastInternalInteractionAt < 700) return;  // our own control
+        if (document.hasFocus()) return;                            // never actually left
+        if (focusIsInsideQuiz()) return;                            // focus stayed in the quiz
+        forfeitActiveQuestion('window_blur');
+    }, 400);
+});
+
+window.addEventListener('focus', function () {
+    if (blurGraceTimer) { clearTimeout(blurGraceTimer); blurGraceTimer = null; }
+});
+
+// Navigating away / closing the tab / back button: fire-and-forget beacon.
+function beaconForfeit(reason) {
+    if (!questionIsLive()) return;
+    try {
+        var base = (window.api && api.baseUrl) ? api.baseUrl : '';
+        var url = base + '/trivia/v2/attempts/' + currentAttemptId + '/forfeit';
+        var token = (window.api && api.token) ? api.token
+            : (localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken'));
+        // sendBeacon cannot set an Authorization header, so use a keepalive
+        // fetch which can. Both survive the page teardown.
+        fetch(url, {
+            method: 'POST',
+            keepalive: true,
+            headers: Object.assign({ 'Content-Type': 'application/json' },
+                token ? { Authorization: 'Bearer ' + token } : {}),
+            body: JSON.stringify({ reason: reason })
+        }).catch(function () {});
+    } catch (e) {}
+    quizActive = false;
+    answerLocked = true;
+}
+
+window.addEventListener('pagehide', function () { beaconForfeit('page_hide'); });
+window.addEventListener('beforeunload', function () { beaconForfeit('navigate_away'); });
+window.addEventListener('popstate', function () { beaconForfeit('navigate_away'); });
+
+/**
+ * Forfeit the live question. The server records status='forfeited', 0 points,
+ * and a permanent history row. We then show the player exactly why.
+ */
+async function forfeitActiveQuestion(reason, silent) {
+    if (!questionIsLive()) return;
+    var attemptId = currentAttemptId;
+    answerLocked = true;
+    quizActive = false;
+    stopTimer();
+
+    if (!silent) {
+        currentQuizForfeits++;
+        var banner = document.getElementById('cheatBanner');
+        if (banner) {
+            banner.innerHTML = '&#9888; QUESTION FORFEITED &mdash; you left the trivia page. 0 points.';
+            banner.classList.add('visible');
+        }
+        document.querySelectorAll('.quiz-option').forEach(function (o) { o.classList.add('disabled'); o.disabled = true; });
+        var btn = document.getElementById('submitBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '&#9888; FORFEITED &mdash; 0 PTS'; btn.classList.add('is-forfeit'); }
+    }
+
+    var result = null;
+    try {
+        result = await api.request('/trivia/v2/attempts/' + attemptId + '/forfeit', {
+            method: 'POST',
+            body: { reason: reason }
+        });
+    } catch (e) { /* server-side reaper will settle it regardless */ }
+
+    if (silent) return;
+
+    showForfeitResult(result, reason);
+}
+
+var FORFEIT_COPY = {
+    tab_hidden:   'You switched tabs or minimised the browser while the question was live.',
+    window_blur:  'You switched to another window or app while the question was live.',
+    navigate_away:'You navigated away from the trivia page while the question was live.',
+    page_hide:    'The trivia page was closed or hidden while the question was live.',
+    manual_exit:  'You exited the quiz while the question was live.'
+};
+
+function showForfeitResult(result, reason) {
+    currentQuizProgress++;
+    quizOutcomes.push('forfeit');
+    quizFeedback('forfeit', 0);
+    var box = document.getElementById('quizResultBox');
+    var correctText = result && result.correct_answer ? result.correct_answer : null;
+    var explanation = result && result.explanation ? result.explanation : null;
+
+    if (box) {
+        box.hidden = false;
+        box.className = 'quiz-result-box is-forfeit';
+        box.innerHTML =
+            '<div class="qr-headline">&#9888; Question forfeited &mdash; <strong>0 points</strong></div>' +
+            '<div class="qr-reason">' + escapeHtml(FORFEIT_COPY[reason] || FORFEIT_COPY.tab_hidden) +
+                ' Trivia questions must be answered on this page, in one sitting.</div>' +
+            (correctText ? '<div class="qr-correct">Correct answer: <strong>' + escapeHtml(correctText) + '</strong></div>' : '') +
+            (explanation ? '<div class="qr-explain">' + escapeHtml(explanation) + '</div>' : '') +
+            '<button type="button" class="qr-next" id="qrNextBtn" onclick="loadNextQuestion()">Next question &rarr;</button>';
+    }
+    refreshLiveHud();
+    loadUserStats();
+}
+
+function showTerminalNotice(icon, title, body) {
+    var box = document.getElementById('quizResultBox');
+    if (!box) return;
+    box.hidden = false;
+    box.className = 'quiz-result-box is-expired';
+    box.innerHTML = '<div class="qr-headline">' + icon + ' ' + escapeHtml(title) + '</div>' +
+        '<div class="qr-reason">' + escapeHtml(body) + '</div>' +
+        '<button type="button" class="qr-next" id="qrNextBtn" onclick="loadNextQuestion()">Next question &rarr;</button>';
+}
+
+// ================================================================
+// KEYBOARD PLAY
+//
+// Points scale with how fast you answer, so the game has to be playable
+// without moving the mouse. 1-9 / A-I pick an answer, Enter locks it in,
+// Enter or Space advances to the next question.
+//
+// Every handler calls noteInternalInteraction() first: a keystroke is an
+// in-quiz action, and must never be mistaken for the player leaving.
+// ================================================================
+document.addEventListener('keydown', function (e) {
+    var overlay = document.getElementById('quizOverlay');
+    if (!overlay || !overlay.classList.contains('active')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    // Never hijack typing in the report modal.
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+
+    noteInternalInteraction();
+
+    if (e.key === 'Escape') { e.preventDefault(); closeQuiz(); return; }
+
+    var next = document.getElementById('qrNextBtn');
+    if (next && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        next.click();
+        return;
+    }
+
+    if (answerLocked) return;
+
+    if (e.key === 'Enter') { e.preventDefault(); submitQuizAnswer(); return; }
+
+    var opts = document.querySelectorAll('#quizOptions .quiz-option');
+    if (!opts.length) return;
+
+    var idx = -1;
+    if (/^[1-9]$/.test(e.key)) idx = parseInt(e.key, 10) - 1;
+    else if (/^[a-iA-I]$/.test(e.key)) idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    if (idx < 0 || idx >= opts.length) return;
+
+    e.preventDefault();
+    selectQuizAnswer(idx, parseInt(opts[idx].getAttribute('data-answer-id'), 10));
+});
+
+// ================================================================
+// REPORT QUESTION
+// ================================================================
+function openReportModal() {
+    noteInternalInteraction();
+    if (!currentQuestion || !currentQuestion.id) return;
+    var existing = document.getElementById('reportModalBackdrop');
+    if (existing) existing.remove();
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'report-modal-backdrop';
+    backdrop.id = 'reportModalBackdrop';
+    backdrop.innerHTML =
+        '<div class="report-modal" role="dialog" aria-modal="true">' +
+            '<h3>Report this question</h3>' +
+            '<p>Help us keep trivia clean and fair. Reports are reviewed and accounts that submit nonsense or offensive content can be banned from creating trivia.</p>' +
+            '<div class="report-reason-list">' +
+                '<label><input type="radio" name="reportReason" value="inappropriate"> Inappropriate / vulgar / offensive</label>' +
+                '<label><input type="radio" name="reportReason" value="wrong_answer"> Wrong or unverifiable answer</label>' +
+                '<label><input type="radio" name="reportReason" value="too_easy"> Absurdly easy / pointless</label>' +
+                '<label><input type="radio" name="reportReason" value="too_hard"> Impossible / unfair</label>' +
+                '<label><input type="radio" name="reportReason" value="spam"> Spam / nonsense / off-topic</label>' +
+                '<label><input type="radio" name="reportReason" value="other"> Other</label>' +
+            '</div>' +
+            '<textarea id="reportDetails" placeholder="Optional details (max 500 chars)" maxlength="500"></textarea>' +
+            '<div class="report-modal-actions">' +
+                '<button type="button" onclick="closeReportModal()">Cancel</button>' +
+                '<button type="button" class="is-primary" id="reportSubmitBtn" onclick="submitReport()">Submit report</button>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(backdrop);
+    // The report modal is part of the trivia experience: focusing it must never
+    // be read as leaving the page.
+    suppressAntiCheat(true);
+    noteInternalInteraction();
+    backdrop.addEventListener('pointerdown', noteInternalInteraction, true);
+    backdrop.addEventListener('click', function(e) {
+        if (e.target === backdrop) closeReportModal();
+    });
+}
+
+function closeReportModal() {
+    var b = document.getElementById('reportModalBackdrop');
+    if (b) b.remove();
+    suppressAntiCheat(false);
+    noteInternalInteraction();
+}
+
+async function submitReport() {
+    if (!currentQuestion || !currentQuestion.id) return;
+    var checked = document.querySelector('input[name="reportReason"]:checked');
+    if (!checked) {
+        alert('Pick a reason first.');
+        return;
+    }
+    var details = (document.getElementById('reportDetails') || {}).value || '';
+    var btn = document.getElementById('reportSubmitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
+    try {
+        await api.request('/trivia/questions/' + currentQuestion.id + '/report', {
+            method: 'POST',
+            body: { reason: checked.value, details: details }
+        });
+        if (btn) btn.textContent = 'Reported &#10003;';
+        setTimeout(closeReportModal, 900);
+    } catch(e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit report'; }
+        alert('Could not submit report: ' + (e.message || 'unknown error'));
+    }
+}
+
+// ================================================================
+// SELECT & SUBMIT ANSWER
+// ================================================================
+function selectQuizAnswer(idx, answerId) {
+    noteInternalInteraction();
+    if (answerLocked) return;
+    selectedAnswerId = answerId;
+    var opts = document.querySelectorAll('.quiz-option');
+    opts.forEach(function (opt) { opt.classList.remove('selected'); });
+    if (opts[idx]) opts[idx].classList.add('selected');
+    var btn = document.getElementById('submitBtn');
+    if (btn) btn.classList.add('is-armed');
+}
+
+async function submitQuizAnswer() {
+    noteInternalInteraction();
+    if (answerLocked) return;
+
+    var btn = document.getElementById('submitBtn');
+    if (selectedAnswerId === null) {
+        btn.textContent = 'SELECT AN ANSWER FIRST';
+        btn.classList.add('is-warn');
+        setTimeout(function () {
+            if (!answerLocked) { btn.textContent = 'SUBMIT ANSWER'; btn.classList.remove('is-warn'); }
+        }, 1200);
+        return;
+    }
+
+    // Lock immediately: an answer can never be changed once submitted.
+    answerLocked = true;
+    quizActive = false;
+    stopTimer();
+    btn.textContent = 'SUBMITTING...';
+    btn.disabled = true;
+
+    try {
+        var result = await api.request('/trivia/v2/attempts/' + currentAttemptId + '/answer', {
+            method: 'POST',
+            body: { answer_id: selectedAnswerId }
+        });
+        showAnswerResult(result);
+    } catch (e) {
+        console.error('Failed to submit answer:', e);
+        // 409 = the server already settled this question (expired / forfeited /
+        // answered in another tab). Its verdict wins.
+        var settled = e && e.data && e.data.result;
+        if (settled) { showAnswerResult(settled); return; }
+        showTerminalNotice('&#9888;', 'Answer not recorded',
+            (e && e.message) ? e.message : 'The server did not accept that answer.');
+        currentQuizProgress++;
+    }
+}
+
+/**
+ * Render the server's verdict: points earned, the correct answer, and why.
+ */
+function showAnswerResult(result) {
+    var isCorrect = result.is_correct === true;
+    var expired = result.expired === true;
+    var forfeited = result.forfeited === true;
+    var pointsEarned = Number(result.points_earned) || 0;
+    var correctText = result.correct_answer || '';
+
+    if (forfeited) { showForfeitResult(result, result.forfeit_reason || 'tab_hidden'); return; }
+
+    if (isCorrect) {
+        currentQuizScore++;
+        totalPointsEarned += pointsEarned;
+        quizOutcomes.push('correct');
+    } else if (expired) {
+        currentQuizExpired++;
+        quizOutcomes.push('expired');
+    } else {
+        quizOutcomes.push('wrong');
+    }
+    quizFeedback(isCorrect ? 'correct' : expired ? 'expired' : 'wrong', pointsEarned);
+
+    // Paint the option grid.
+    document.querySelectorAll('.quiz-option').forEach(function (opt) {
+        opt.classList.add('disabled');
+        opt.disabled = true;
+        var txt = opt.querySelector('.option-text');
+        var thisText = txt ? txt.textContent : '';
+        if (correctText && thisText === correctText) opt.classList.add('correct');
+        if (!isCorrect && parseInt(opt.getAttribute('data-answer-id'), 10) === selectedAnswerId) opt.classList.add('wrong');
+    });
+
+    var btn = document.getElementById('submitBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.remove('is-armed', 'is-warn');
+        if (isCorrect) { btn.innerHTML = '&#9989; CORRECT &mdash; +' + pointsEarned + ' PTS'; btn.classList.add('is-correct'); }
+        else if (expired) { btn.innerHTML = '&#8987; TIME EXPIRED &mdash; 0 PTS'; btn.classList.add('is-expired'); }
+        else { btn.innerHTML = '&#10060; INCORRECT &mdash; 0 PTS'; btn.classList.add('is-wrong'); }
+    }
+
+    var secs = result.response_time_ms != null ? (result.response_time_ms / 1000).toFixed(1) + 's' : null;
+    var mult = Number(result.speed_multiplier) || 0;
+    var base = Number(result.base_points) || 0;
+
+    var box = document.getElementById('quizResultBox');
+    if (box) {
+        box.hidden = false;
+        box.className = 'quiz-result-box ' + (isCorrect ? 'is-correct' : expired ? 'is-expired' : 'is-wrong');
+        box.innerHTML =
+            '<div class="qr-headline">' +
+                (isCorrect ? '&#9989; Correct! <strong>+' + pointsEarned + ' points</strong>'
+                 : expired ? '&#8987; Time expired &mdash; <strong>0 points</strong>'
+                 : '&#10060; Incorrect &mdash; <strong>0 points</strong>') +
+            '</div>' +
+            (isCorrect
+                ? '<div class="qr-math">' + base + ' base (' + escapeHtml(String(result.difficulty || '')) + ')' +
+                  ' &times; ' + mult.toFixed(2) + ' speed' + (secs ? ' &middot; answered in ' + secs : '') + '</div>'
+                : (secs ? '<div class="qr-math">Answered in ' + secs + '</div>' : '')) +
+            (correctText ? '<div class="qr-correct">Correct answer: <strong>' + escapeHtml(correctText) + '</strong></div>' : '') +
+            (result.explanation ? '<div class="qr-explain">' + escapeHtml(result.explanation) + '</div>' : '') +
+            (result.streak && result.streak.current >= 2
+                ? '<div class="qr-streak">&#128293; ' + result.streak.current + '-answer streak</div>' : '') +
+            '<button type="button" class="qr-next" id="qrNextBtn" onclick="loadNextQuestion()">Next question &rarr;</button>';
+        var nb = document.getElementById('qrNextBtn');
+        if (nb) nb.addEventListener('pointerdown', noteInternalInteraction, true);
+    }
+
+    currentQuizProgress++;
+    refreshLiveHud();
+    loadUserStats();
+}
+
+// ================================================================
+// FINISH QUIZ
+// ================================================================
+function finishQuiz(results) {
+    quizActive = false;
+    answerLocked = true;
+    currentAttemptId = null;
+    stopTimer();
+
+    var correct = Number(results.correct_answers != null ? results.correct_answers : currentQuizScore);
+    var total = Number(results.total_questions != null ? results.total_questions : currentQuizProgress) || currentQuizTotal;
+    var points = Number(results.total_points != null ? results.total_points : totalPointsEarned);
+    var forfeited = Number(results.forfeited || 0);
+    var expired = Number(results.expired || 0);
+    var avgMs = Number(results.avg_response_ms || 0);
+    var percentage = total > 0 ? (correct / total) * 100 : 0;
+
+    var elapsed = Math.round((Date.now() - quizStartTime) / 1000);
+    var minutes = Math.floor(elapsed / 60);
+    var seconds = elapsed % 60;
+    var timeStr = (minutes > 0 ? minutes + 'm ' : '') + seconds + 's';
+
+    var bestRun = 0, run = 0;
+    quizOutcomes.forEach(function (o) {
+        if (o === 'correct') { run++; bestRun = Math.max(bestRun, run); } else { run = 0; }
+    });
+
+    var emoji = forfeited > 0 ? '&#9888;'
+        : percentage >= 80 ? '&#127942;' : percentage >= 60 ? '&#127881;' : percentage >= 40 ? '&#128077;' : '&#128218;';
+    var headline = percentage >= 90 ? 'Elite' : percentage >= 70 ? 'Sharp' :
+                   percentage >= 50 ? 'Solid' : percentage >= 30 ? 'Rough' : 'Brutal';
+    var circ = 2 * Math.PI * 74;
+    var dash = circ * Math.max(0, Math.min(1, percentage / 100));
+
+    var penaltyHtml = (forfeited > 0 || expired > 0)
+        ? '<div class="cheat-penalty-box">' +
+            (forfeited > 0 ? '&#9888; ' + forfeited + ' question' + (forfeited > 1 ? 's' : '') + ' forfeited for leaving the trivia page. ' : '') +
+            (expired > 0 ? '&#8987; ' + expired + ' question' + (expired > 1 ? 's' : '') + ' expired. ' : '') +
+            'Forfeited and expired questions score 0.</div>'
+        : '';
+
+    var container = document.getElementById('quizContainer');
+    container.innerHTML =
+        '<div class="results-screen">' +
+            '<div class="result-emoji">' + emoji + '</div>' +
+            '<h2>' + headline + ' &mdash; quiz complete</h2>' +
+            '<div class="qz-scorering" style="--qz-circ:' + circ.toFixed(2) + 'px;">' +
+                '<svg viewBox="0 0 172 172" aria-hidden="true">' +
+                    '<defs><linearGradient id="qzGrad" x1="0" y1="0" x2="1" y2="1">' +
+                        '<stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#8b5cf6"/>' +
+                    '</linearGradient></defs>' +
+                    '<circle class="bg" cx="86" cy="86" r="74"></circle>' +
+                    '<circle class="arc" cx="86" cy="86" r="74" stroke-dasharray="' +
+                        dash.toFixed(2) + ' ' + circ.toFixed(2) + '"></circle>' +
+                '</svg>' +
+                '<div class="inner">' +
+                    '<div class="big">' + correct + '/' + total + '</div>' +
+                    '<div class="sub">' + percentage.toFixed(0) + '% correct</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="qz-recap">' + progressDotsHtml(true) + '</div>' +
+            '<div class="qz-points-earned">+' + Number(points).toLocaleString() + '</div>' +
+            '<div class="qz-points-label">Points earned</div>' +
+            '<div class="result-big-score">' + correct + '/' + total + '</div>' +
+            '<div class="result-pct">' + percentage.toFixed(0) + '% correct</div>' +
+            penaltyHtml +
+            '<div class="results-detail-grid">' +
+                '<div class="results-detail-box"><div class="rdl">Best Run</div><div class="rdv">' + bestRun + ' in a row</div></div>' +
+                '<div class="results-detail-box"><div class="rdl">Time Taken</div><div class="rdv">' + timeStr + '</div></div>' +
+                '<div class="results-detail-box"><div class="rdl">Category</div><div class="rdv" style="font-size:16px;">' + escapeHtml(currentQuizCategory) + '</div></div>' +
+                '<div class="results-detail-box"><div class="rdl">Avg Response</div><div class="rdv" style="font-size:16px;">' + (avgMs ? (avgMs / 1000).toFixed(1) + 's' : '--') + '</div></div>' +
+            '</div>' +
+            '<div class="results-actions">' +
+                '<button class="btn-primary-action" onclick="closeQuiz(true)">Done</button>' +
+                '<button class="btn-secondary-action" onclick="closeQuiz(true); startQuiz(\'' + escapeHtml(currentCategorySlug) + '\')">Play Again</button>' +
+                '<button class="btn-secondary-action" onclick="closeQuiz(true); switchViewDirect(\'leaderboard\')">Leaderboard</button>' +
+                '<a class="btn-secondary-action" href="/trivia/history/">Full history</a>' +
+            '</div>' +
+        '</div>';
+
+    loadUserStats();
+}
+
+function switchViewDirect(view) {
+    document.querySelectorAll('.view-tab').forEach(function(t, i) {
+        t.classList.remove('active');
+        if ((view === 'play' && i === 0) || (view === 'leaderboard' && i === 1) ||
+            (view === 'history' && i === 2) || (view === 'create' && i === 3)) {
+            t.classList.add('active');
+        }
+    });
+    document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById('view-' + view).classList.add('active');
+    if (view === 'leaderboard') renderLeaderboard();
+    if (view === 'history') renderHistory();
+    if (view === 'create') renderCreateView();
+}
+
+// ================================================================
+// LEADERBOARD (from backend API)
+// ================================================================
+var TRIVIA_BOARDS = [
+    { key: 'career',  label: 'Career Points', metric: 'points',   suffix: ' pts' },
+    { key: 'weekly',  label: 'This Week',     metric: 'points',   suffix: ' pts' },
+    { key: 'monthly', label: 'This Month',    metric: 'points',   suffix: ' pts' },
+    { key: 'correct', label: 'Correct Answers', metric: 'correct', suffix: '' },
+    { key: 'accuracy', label: 'Accuracy',     metric: 'accuracy', suffix: '%' },
+    { key: 'streak',  label: 'Best Streak',   metric: 'best_streak', suffix: '' },
+    { key: 'speed',   label: 'Fastest',       metric: 'avg_response_ms', suffix: '' }
+];
+var currentBoard = 'career';
+var currentBoardOffset = 0;
+
+function renderBoardTabs() {
+    var bar = document.getElementById('triviaBoardTabs');
+    if (!bar) return;
+    bar.innerHTML = TRIVIA_BOARDS.map(function (b) {
+        return '<button type="button" class="tb-tab' + (b.key === currentBoard ? ' active' : '') +
+            '" onclick="selectBoard(\'' + b.key + '\')">' + escapeHtml(b.label) + '</button>';
+    }).join('');
+}
+
+function selectBoard(key) {
+    currentBoard = key;
+    currentBoardOffset = 0;
+    renderBoardTabs();
+    renderLeaderboard();
+}
+
+function shiftBoardPeriod(delta) {
+    currentBoardOffset = Math.max(0, currentBoardOffset + delta);
+    renderLeaderboard();
+}
+
+function fmtMs(ms) {
+    var n = Number(ms) || 0;
+    return n >= 1000 ? (n / 1000).toFixed(2) + 's' : n + 'ms';
+}
+
+async function renderLeaderboard() {
+    var container = document.getElementById('leaderboardList');
+    var meta = document.getElementById('leaderboardPeriod');
+    renderBoardTabs();
+    container.innerHTML = '<div class="empty-state"><p>Loading leaderboard...</p></div>';
+
+    var board = TRIVIA_BOARDS.filter(function (b) { return b.key === currentBoard; })[0] || TRIVIA_BOARDS[0];
+
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/v2/leaderboards?board=' + encodeURIComponent(currentBoard) +
+            '&offset=' + currentBoardOffset + '&limit=50');
+        var rows = data.leaderboard || [];
+        var period = data.period || {};
+
+        if (meta) {
+            var periodBits = ['<strong>' + escapeHtml(board.label) + '</strong>'];
+            if (period.label) periodBits.push(escapeHtml(period.label));
+            if (period.start && period.end) {
+                periodBits.push(new Date(period.start).toLocaleDateString() + ' &ndash; ' +
+                    new Date(new Date(period.end).getTime() - 1).toLocaleDateString());
+            }
+            if (period.resets_at) periodBits.push('Resets ' + new Date(period.resets_at).toLocaleString());
+            if (period.note) periodBits.push(escapeHtml(period.note));
+            var nav = (currentBoard === 'weekly' || currentBoard === 'monthly')
+                ? '<div class="tb-period-nav">' +
+                    '<button type="button" onclick="shiftBoardPeriod(1)">&larr; Previous</button>' +
+                    '<button type="button" onclick="shiftBoardPeriod(-1)"' + (currentBoardOffset === 0 ? ' disabled' : '') + '>Next &rarr;</button>' +
+                  '</div>'
+                : '';
+            meta.innerHTML = '<div class="tb-period-copy">' + periodBits.join(' &middot; ') + '</div>' + nav;
+        }
+
+        if (!rows.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>No qualifying players for this board yet.</p></div>';
+            renderCreatorsLeaderboard();
+            return;
+        }
+
+        var medals = ['🥇', '🥈', '🥉'];
+        container.innerHTML = rows.map(function (entry, idx) {
+            var username = entry.username || 'Unknown';
+            var primary;
+            if (board.metric === 'avg_response_ms') primary = fmtMs(entry.avg_response_ms);
+            else if (board.metric === 'accuracy') primary = (Number(entry.accuracy) || 0).toFixed(1) + '%';
+            else primary = (Number(entry[board.metric]) || 0).toLocaleString() + board.suffix;
+
+            var secondaryBits = [];
+            if (entry.games_played != null) secondaryBits.push(entry.games_played + ' game' + (Number(entry.games_played) === 1 ? '' : 's'));
+            if (entry.attempts != null) secondaryBits.push(entry.attempts + ' questions');
+            if (entry.correct != null) secondaryBits.push(entry.correct + ' correct');
+            if (entry.accuracy != null && board.metric !== 'accuracy') secondaryBits.push(Number(entry.accuracy).toFixed(1) + '% accuracy');
+            if (entry.points_per_question != null) secondaryBits.push(Number(entry.points_per_question).toFixed(1) + ' pts/question');
+            if (entry.best_streak != null && board.metric !== 'best_streak') secondaryBits.push('best streak ' + entry.best_streak);
+            if (entry.points != null && board.metric !== 'points') secondaryBits.push(Number(entry.points).toLocaleString() + ' pts');
+            if (board.metric === 'avg_response_ms' && entry.best_response_ms != null) secondaryBits.push('best ' + fmtMs(entry.best_response_ms));
+
+            return '<div class="lb-row">' +
+                '<div class="row-left">' +
+                    '<span class="icon" style="font-size:18px;width:32px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + entry.rank) + '</span>' +
+                    '<div><a class="info-primary" data-tmr-username="' + escapeHtml(username) + '" href="/u/' + encodeURIComponent(username) + '/">@' + escapeHtml(username) + '</a>' +
+                    '<div class="info-secondary">' + escapeHtml(secondaryBits.join(' · ')) + '</div></div>' +
+                '</div>' +
+                '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + primary + '</div></div>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        console.error('Failed to load leaderboard:', e);
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load leaderboard.</p></div>';
+    }
+    renderCreatorsLeaderboard();
+}
+
+async function renderCreatorsLeaderboard() {
+    var container = document.getElementById('leaderboardCreatorsList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state"><p>Loading creators...</p></div>';
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/leaderboard/creators?limit=50');
+        var rows = data.leaderboard || [];
+        if (!rows.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>No community-created questions yet. Trivia questions generated by the site are not credited to individual members.</p><button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()"><span aria-hidden="true">&#65291;</span> Create Trivia Question</button></div>';
+            return;
+        }
+        var medals = ['🥇', '🥈', '🥉'];
+        container.innerHTML = rows.map(function(entry, idx) {
+            var username = entry.username || 'Unknown';
+            var n = Number(entry.questions_created) || 0;
+            return '<div class="lb-row">' +
+                '<div class="row-left">' +
+                    '<span class="icon" style="font-size:18px;width:28px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + (idx + 1)) + '</span>' +
+                    '<div><div class="info-primary" data-tmr-username="' + escapeHtml(username) + '">@' + escapeHtml(username) + '</div>' +
+                    '<div class="info-secondary">Trivia author</div></div>' +
+                '</div>' +
+                '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + n + ' Q' + (n === 1 ? '' : 's') + '</div></div>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        console.error('Failed to load creators leaderboard:', e);
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load creators leaderboard.</p></div>';
+    }
+}
+
+// ================================================================
+// HISTORY -- permanent attempt ledger (last 25; full page at /trivia/history/)
+// ================================================================
+function resultBadge(a) {
+    if (a.forfeited) return '<span class="hist-badge is-forfeit">Forfeited</span>';
+    if (a.expired) return '<span class="hist-badge is-expired">Expired</span>';
+    if (a.is_correct) return '<span class="hist-badge is-correct">Correct</span>';
+    return '<span class="hist-badge is-wrong">Incorrect</span>';
+}
+
+async function renderHistory() {
+    var container = document.getElementById('historyList');
+    var username = getCurrentUsername();
+
+    if (!username) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128203;</div><p>Log in to see your trivia history.</p></div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="empty-state"><p>Loading history...</p></div>';
+
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/v2/users/' + encodeURIComponent(username) + '/history?limit=25');
+        var attempts = data.attempts || [];
+
+        if (!attempts.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128203;</div><p>No trivia attempts yet. Play your first question!</p></div>';
+            return;
+        }
+
+        container.innerHTML =
+            '<p class="hist-lead">Your ' + attempts.length + ' most recent questions of ' + data.pagination.total +
+            ' all time. <a href="/trivia/history/">Open the full trivia history &rarr;</a></p>' +
+            attempts.map(function (a) {
+                var when = a.settled_at ? new Date(a.settled_at).toLocaleString() : '';
+                var secs = a.response_time_ms != null ? (a.response_time_ms / 1000).toFixed(1) + 's' : '--';
+                return '<div class="history-row">' +
+                    '<div class="row-left">' +
+                        '<div style="min-width:0;">' +
+                            '<div class="info-primary">' + escapeHtml(a.question_text || '(question removed)') + '</div>' +
+                            '<div class="info-secondary">' + resultBadge(a) +
+                                ' <span class="hist-badge is-diff">' + escapeHtml(String(a.difficulty || '')) + '</span>' +
+                                ' ' + escapeHtml(String(a.category_name || a.category_slug || '')) +
+                                ' &middot; ' + escapeHtml(when) + ' &middot; ' + secs + '</div>' +
+                            '<div class="info-secondary">Your answer: <strong>' + escapeHtml(a.selected_answer || '(none)') + '</strong>' +
+                                (a.correct_answer ? ' &middot; Correct: <strong>' + escapeHtml(a.correct_answer) + '</strong>' : '') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="row-right"><div class="pts">+' + (Number(a.points_earned) || 0) + '</div></div>' +
+                '</div>';
+            }).join('');
+    } catch (e) {
+        console.error('Failed to load history:', e);
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load trivia history.</p></div>';
+    }
+}
+
+// ================================================================
+// CREATE QUESTION VIEW (backend-backed)
+// ================================================================
+function renderCreateView() {
+    var card = document.getElementById('createQuestionCard');
+    var categoryOptions = backendCategories.length
+        ? backendCategories.map(function(cat) {
+            return '<option value="' + escapeHtml(String(cat.id)) + '">' + escapeHtml(cat.name) + '</option>';
+        }).join('')
+        : '<option value="">Loading categories...</option>';
+
+    if (!isLoggedIn()) {
+        card.innerHTML =
+            '<div class="trivia-loggedout-prompt">' +
+                '<div style="font-size:42px;margin-bottom:10px;opacity:0.6;">&#128274;</div>' +
+                '<h2>Log in or join free to create trivia questions.</h2>' +
+                '<p>Submitted questions can appear in public quizzes, leaderboards, and user profiles.</p>' +
+                '<div class="trivia-loggedout-actions">' +
+                    '<a href="/login/">Log In</a>' +
+                    '<a class="is-secondary" href="/register/">Join Free</a>' +
+                '</div>' +
+            '</div>';
+        renderCustomQuestionsList();
+        return;
+    }
+
+    card.innerHTML =
+        '<h2>&#9998; Create a Trivia Question</h2>' +
+        '<p class="trivia-create-helper">Create sports trivia for the community. Approved questions can appear in public quizzes, leaderboards, and user profiles.</p>' +
+        '<p class="trivia-create-mod-note">Submitted questions may be reviewed before going live.</p>' +
+        '<div class="trivia-create-warning">' +
+            '<strong>&#9888; Keep it real, fun, and on-topic.</strong> ' +
+            'Questions must be sports-related and have one verifiable correct answer. ' +
+            'No vulgar, sexual, racist, or joke questions. No questions that are absurdly easy or impossible to answer. ' +
+            'Other users can report your questions, and accounts that submit nonsense or offensive content will be banned from creating trivia. ' +
+            'You will not see your own questions in the quiz.' +
+        '</div>' +
+        '<form id="createQuestionForm" onsubmit="handleCreateQuestion(event)">' +
+            '<div class="form-group">' +
+                '<label>Question</label>' +
+                '<textarea class="form-textarea" id="cqQuestion" placeholder="What is your trivia question?" maxlength="300" required></textarea>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Sport / Category</label>' +
+                '<select class="form-select" id="cqCategory"' + (backendCategories.length ? '' : ' disabled') + '>' +
+                    categoryOptions +
+                '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Difficulty</label>' +
+                '<select class="form-select" id="cqDifficulty">' +
+                    '<option value="easy">Easy</option>' +
+                    '<option value="medium" selected>Medium</option>' +
+                    '<option value="hard">Hard</option>' +
+                '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Four Answer Choices <span style="color:var(--text-muted);font-weight:500;">(click the A/B/C/D circle to mark the correct one)</span></label>' +
+                '<div class="answer-row" id="cqAnswerRow0">' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn0" data-letter-idx="0" aria-label="Mark answer A as correct"><span>A</span><input type="radio" name="cqCorrect" value="0"></label>' +
+                    '<input type="text" class="form-input" id="cqAnswer0" placeholder="Answer A" maxlength="120">' +
+                '</div>' +
+                '<div class="answer-row" id="cqAnswerRow1">' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn1" data-letter-idx="1" aria-label="Mark answer B as correct"><span>B</span><input type="radio" name="cqCorrect" value="1"></label>' +
+                    '<input type="text" class="form-input" id="cqAnswer1" placeholder="Answer B" maxlength="120">' +
+                '</div>' +
+                '<div class="answer-row" id="cqAnswerRow2">' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn2" data-letter-idx="2" aria-label="Mark answer C as correct"><span>C</span><input type="radio" name="cqCorrect" value="2"></label>' +
+                    '<input type="text" class="form-input" id="cqAnswer2" placeholder="Answer C" maxlength="120">' +
+                '</div>' +
+                '<div class="answer-row" id="cqAnswerRow3">' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn3" data-letter-idx="3" aria-label="Mark answer D as correct"><span>D</span><input type="radio" name="cqCorrect" value="3"></label>' +
+                    '<input type="text" class="form-input" id="cqAnswer3" placeholder="Answer D" maxlength="120">' +
+                '</div>' +
+                '<input type="hidden" id="cqCorrectIdx" value="">' +
+                '<div class="correct-answer-summary is-empty" id="cqCorrectSummary" aria-live="polite">Correct answer: <strong>none selected yet</strong></div>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Explanation <span style="color:var(--text-muted);font-weight:500;">(optional &mdash; shown after the answer is revealed)</span></label>' +
+                '<textarea class="form-textarea" id="cqExplanation" placeholder="Why is this the correct answer? Add context, source, or trivia color." maxlength="600"></textarea>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Tags <span style="color:var(--text-muted);font-weight:500;">(optional &mdash; comma-separated, e.g. playoffs, mvp, betting)</span></label>' +
+                '<input type="text" class="form-input" id="cqTags" placeholder="finals, dynasty, prop bets" maxlength="160">' +
+            '</div>' +
+            '<div class="form-error" id="cqError"></div>' +
+            '<button type="submit" class="form-submit-btn">Submit Trivia Question</button>' +
+        '</form>';
+
+    selectedCorrectAnswer = -1;
+    var hidden = document.getElementById('cqCorrectIdx');
+    if (hidden) hidden.value = '';
+    updateCorrectAnswerSummary();
+    bindCorrectAnswerDelegation();
+    renderCustomQuestionsList();
+}
+
+// Native-radio change listener — selection lives in form state, so this
+// just mirrors it into the JS var, hidden input, .selected class, and
+// the live "Correct answer: X" summary. Idempotent and bulletproof.
+function bindCorrectAnswerDelegation() {
+    var form = document.getElementById('createQuestionForm');
+    if (!form || form.__correctAnswerBound) return;
+    form.addEventListener('change', function(ev) {
+        var t = ev.target;
+        if (!t || t.name !== 'cqCorrect') return;
+        var idx = parseInt(t.value, 10);
+        if (isNaN(idx)) return;
+        setCorrectAnswer(idx);
+    });
+    form.__correctAnswerBound = true;
+}
+
+function updateCorrectAnswerSummary() {
+    var summary = document.getElementById('cqCorrectSummary');
+    if (!summary) return;
+    var hidden = document.getElementById('cqCorrectIdx');
+    var raw = hidden ? hidden.value : '';
+    var idx = raw === '' ? -1 : parseInt(raw, 10);
+    var letters = ['A', 'B', 'C', 'D'];
+    if (idx >= 0 && idx <= 3) {
+        summary.classList.remove('is-empty');
+        summary.innerHTML = 'Correct answer: <strong>' + letters[idx] + '</strong>';
+    } else {
+        summary.classList.add('is-empty');
+        summary.innerHTML = 'Correct answer: <strong>none selected yet</strong>';
+    }
+}
+
+// Public entry point used by the page-header + Build-the-Pool buttons.
+// Switches to the Create tab, scrolls into view, and (when logged out)
+// the renderCreateView() call paints the join prompt instead of the form.
+function openCreateTrivia() {
+    if (typeof switchView === 'function') {
+        switchView('create');
+    }
+    var anchor = document.getElementById('view-create');
+    if (anchor && anchor.scrollIntoView) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+window.openCreateTrivia = openCreateTrivia;
+
+var selectedCorrectAnswer = -1;
+
+function setCorrectAnswer(idx) {
+    if (typeof idx !== 'number' || idx < 0 || idx > 3) return;
+    selectedCorrectAnswer = idx;
+    var hidden = document.getElementById('cqCorrectIdx');
+    if (hidden) hidden.value = String(idx);
+    // Tick the native radio so form state matches.
+    var radios = document.querySelectorAll('input[name="cqCorrect"]');
+    radios.forEach(function(r) {
+        var rIdx = parseInt(r.value, 10);
+        if (rIdx === idx) r.checked = true;
+    });
+    for (var i = 0; i < 4; i++) {
+        var btn = document.getElementById('cqCorrectBtn' + i);
+        var row = document.getElementById('cqAnswerRow' + i);
+        if (!btn) continue;
+        if (i === idx) {
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+            if (row) row.classList.add('is-correct');
+        } else {
+            btn.classList.remove('selected');
+            btn.setAttribute('aria-pressed', 'false');
+            if (row) row.classList.remove('is-correct');
+        }
+    }
+    updateCorrectAnswerSummary();
+    // Clear any pre-existing red error the moment a selection is made.
+    var errEl = document.getElementById('cqError');
+    if (errEl && errEl.style.display !== 'none') {
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+    }
+}
+window.setCorrectAnswer = setCorrectAnswer;
+
+function getSelectedCorrectIdx() {
+    // Native radio is the source of truth.
+    var checked = document.querySelector('input[name="cqCorrect"]:checked');
+    if (checked) {
+        var v = parseInt(checked.value, 10);
+        if (!isNaN(v) && v >= 0 && v <= 3) return v;
+    }
+    // Fallback layers in case the radios were never rendered.
+    var hidden = document.getElementById('cqCorrectIdx');
+    if (hidden && hidden.value !== '') {
+        var hv = parseInt(hidden.value, 10);
+        if (!isNaN(hv) && hv >= 0 && hv <= 3) return hv;
+    }
+    if (typeof selectedCorrectAnswer === 'number' && selectedCorrectAnswer >= 0 && selectedCorrectAnswer <= 3) {
+        return selectedCorrectAnswer;
+    }
+    for (var i = 0; i < 4; i++) {
+        var btn = document.getElementById('cqCorrectBtn' + i);
+        if (btn && btn.classList.contains('selected')) return i;
+    }
+    return -1;
+}
+
+async function handleCreateQuestion(e) {
+    e.preventDefault();
+    var errEl = document.getElementById('cqError');
+    errEl.style.display = 'none';
+    errEl.textContent = '';
+
+    var question = document.getElementById('cqQuestion').value.trim();
+    var answers = [];
+    for (var i = 0; i < 4; i++) answers.push(document.getElementById('cqAnswer' + i).value.trim());
+    var categoryId = parseInt(document.getElementById('cqCategory').value, 10);
+    var difficulty = document.getElementById('cqDifficulty').value;
+    var explanationEl = document.getElementById('cqExplanation');
+    var tagsEl = document.getElementById('cqTags');
+    var explanation = explanationEl ? explanationEl.value.trim() : '';
+    var tagsRaw = tagsEl ? tagsEl.value.trim() : '';
+    var tags = tagsRaw ? tagsRaw.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [];
+    // Soft-tag layer: prefix the explanation with [tags: ...] so tags round-trip
+    // even before the backend exposes a dedicated tags column.
+    var combinedExplanation = explanation;
+    if (tags.length) {
+        combinedExplanation = '[tags: ' + tags.join(', ') + ']' + (explanation ? '\n\n' + explanation : '');
+    }
+    var submitBtn = document.querySelector('.form-submit-btn');
+
+    var correctIdx = getSelectedCorrectIdx();
+
+    if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    if (answers.some(function(a) { return !a; })) { errEl.textContent = 'Please fill in all 4 answers.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    if (correctIdx < 0) { errEl.textContent = 'Click the letter button (A/B/C/D) next to the correct answer.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    if (!categoryId) { errEl.textContent = 'Please choose a sport / category.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    // Keep the local var aligned with the resolved index so the rest of the flow uses it.
+    selectedCorrectAnswer = correctIdx;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    try {
+        await api.ready;
+        await api.request('/trivia/questions', {
+            method: 'POST',
+            body: {
+                category_id: categoryId,
+                question_text: question,
+                difficulty: difficulty,
+                points: difficulty === 'hard' ? 150 : difficulty === 'medium' ? 125 : 100,
+                time_limit_seconds: 30,
+                explanation: combinedExplanation || undefined,
+                answers: answers.map(function(answerText, idx) {
+                    return {
+                        answer_text: answerText,
+                        is_correct: idx === selectedCorrectAnswer
+                    };
+                })
+            }
+        });
+
+        document.getElementById('cqQuestion').value = '';
+        for (var j = 0; j < 4; j++) {
+            document.getElementById('cqAnswer' + j).value = '';
+            var resetBtn = document.getElementById('cqCorrectBtn' + j);
+            var resetRow = document.getElementById('cqAnswerRow' + j);
+            if (resetBtn) {
+                resetBtn.classList.remove('selected');
+                resetBtn.setAttribute('aria-pressed', 'false');
+            }
+            if (resetRow) resetRow.classList.remove('is-correct');
+        }
+        document.querySelectorAll('input[name="cqCorrect"]').forEach(function(r) { r.checked = false; });
+        if (explanationEl) explanationEl.value = '';
+        if (tagsEl) tagsEl.value = '';
+        var resetHidden = document.getElementById('cqCorrectIdx');
+        if (resetHidden) resetHidden.value = '';
+        selectedCorrectAnswer = -1;
+        updateCorrectAnswerSummary();
+        await loadCategories();
+        await renderCustomQuestionsList();
+
+        submitBtn.textContent = 'Question Submitted!';
+        submitBtn.style.background = 'var(--success)';
+        setTimeout(function() {
+            submitBtn.textContent = 'Submit Trivia Question';
+            submitBtn.style.background = '';
+            submitBtn.disabled = false;
+        }, 2000);
+    } catch (err) {
+        console.error('[trivia] create question failed:', err, err && err.data);
+        var msg = err && err.message ? err.message : 'Failed to create question.';
+        // Surface express-validator field paths if the backend rejected the body.
+        if (err && err.data && Array.isArray(err.data.errors) && err.data.errors.length) {
+            msg = err.data.errors.map(function(e) {
+                var path = e.path || e.param || '';
+                return (path ? path + ': ' : '') + (e.msg || e.message || 'invalid');
+            }).join(' • ');
+        }
+        if (err && err.status === 401) msg = 'You must be logged in to submit a trivia question. Please log in and try again.';
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        errEl.scrollIntoView({behavior:'smooth', block:'center'});
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Trivia Question';
+    }
+}
+
+async function renderCustomQuestionsList() {
+    var container = document.getElementById('customQuestionsList');
+    var username = getCurrentUsername();
+    if (!username) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>Log in to create and review your submitted trivia questions.</p></div>';
+        return;
+    }
+
+    if (!backendCategories.length) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9203;</div><p>Loading your submitted trivia questions...</p></div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9203;</div><p>Loading your submitted trivia questions...</p></div>';
+
+    try {
+        var createdQuestions = [];
+        var usedDirectEndpoint = false;
+        try {
+            // Preferred path: dedicated per-user endpoint. Returns every
+            // question the user authored across all categories, not just the
+            // first page of each one.
+            var directData = await api.request('/trivia/users/' + encodeURIComponent(username) + '/created');
+            var directList = (directData && directData.questions) || [];
+            directList.forEach(function(question) {
+                createdQuestions.push({
+                    question_text: question.question_text,
+                    category_name: question.category_name || 'General',
+                    difficulty: question.difficulty,
+                    created_at: question.created_at
+                });
+            });
+            usedDirectEndpoint = true;
+        } catch (directErr) {
+            // Fallback: older backend without /users/:username/created.
+            // Scan the first page of every category and filter by created_by.
+            usedDirectEndpoint = false;
+        }
+
+        if (!usedDirectEndpoint) {
+            for (var i = 0; i < backendCategories.length; i++) {
+                var cat = backendCategories[i];
+                var data = await api.request('/trivia/categories/' + encodeURIComponent(cat.slug) + '?page=1&limit=50');
+                var questions = data.questions || [];
+                questions.forEach(function(question) {
+                    if (String(question.created_by || '').toLowerCase() === String(username).toLowerCase()) {
+                        createdQuestions.push({
+                            question_text: question.question_text,
+                            category_name: cat.name,
+                            difficulty: question.difficulty,
+                            created_at: question.created_at
+                        });
+                    }
+                });
+            }
+        }
+
+        if (!createdQuestions.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div>' +
+                '<p style="margin-bottom:8px;">No trivia questions submitted yet. Create the first one.</p>' +
+                '<button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()"><span aria-hidden="true">&#65291;</span> Create Trivia Question</button>' +
+                '</div>';
+            return;
+        }
+
+        createdQuestions.sort(function(a, b) {
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        var html = '';
+        createdQuestions.forEach(function(question) {
+            var dateStr = question.created_at ? new Date(question.created_at).toLocaleDateString() : '';
+            html += '<div class="custom-q-item">' +
+                '<div class="cq-question">' + escapeHtml(question.question_text) + '</div>' +
+                '<div class="cq-meta">' +
+                    '<span>' + escapeHtml(question.category_name || 'General') + '</span>' +
+                    '<span>' + escapeHtml((question.difficulty || 'easy').toUpperCase()) + '</span>' +
+                    '<span data-tmr-username="' + escapeHtml(username) + '">By @' + escapeHtml(username) + '</span>' +
+                    '<span>' + dateStr + '</span>' +
+                    '<span>Live</span>' +
+                '</div></div>';
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>' + escapeHtml(err.message || 'Could not load your submitted trivia questions.') + '</p></div>';
+    }
+}
+
+// ================================================================
+// UPDATE STATS BAR (from backend)
+// ================================================================
+async function loadUserStats() {
+    var ids = ['statTotalPoints', 'statQuestionsAnswered', 'statQuestionsCorrect',
+               'statAccuracy', 'statStreak', 'statAvgTime', 'statGames', 'statBestGame'];
+    function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+    function zero() { ids.forEach(function (i) { set(i, i === 'statAccuracy' ? '0%' : i === 'statAvgTime' ? '--' : '0'); }); }
+
+    if (!isLoggedIn()) { zero(); return; }
+
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/v2/me/stats');
+        var st = data.stats || {};
+        set('statTotalPoints', (Number(st.career_points) || 0).toLocaleString());
+        set('statQuestionsAnswered', Number(st.attempts) || 0);
+        set('statQuestionsCorrect', Number(st.correct) || 0);
+        set('statAccuracy', (Number(st.accuracy) || 0).toFixed(1) + '%');
+        set('statStreak', Number(st.current_streak) || 0);
+        set('statAvgTime', st.avg_response_ms ? (st.avg_response_ms / 1000).toFixed(1) + 's' : '--');
+        set('statGames', Number(st.games_played) || 0);
+        set('statBestGame', (Number(st.best_game_score) || 0).toLocaleString());
+    } catch (e) {
+        console.error('Failed to load user stats:', e);
+        zero();
+    }
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', async function() {
+    loadScoringSpec().then(renderScoringExplainer);
+    await loadCategories();
+    loadUserStats();
+    // If a question was left live in a previous visit, settle it now so the
+    // player is never silently holding an open attempt.
+    if (isLoggedIn()) {
+        try { await api.ready; await api.request('/trivia/v2/attempts/active'); } catch (e) {}
+    }
+});
+
+function renderScoringExplainer() {
+    var el = document.getElementById('scoringExplainer');
+    if (!el || !SCORING_SPEC || !SCORING_SPEC.base_points) return;
+    var b = SCORING_SPEC.base_points || {};
+    el.innerHTML =
+        'Points = <strong>base points &times; speed multiplier</strong>. ' +
+        'Base is set by difficulty (easy ' + b.easy + ', medium ' + b.medium + ', hard ' + b.hard + '). ' +
+        'The speed multiplier runs from <strong>2.00x</strong> for an instant answer down to <strong>1.00x</strong> at the buzzer, ' +
+        'so the fastest correct answers are worth up to ' + (SCORING_SPEC.max_points || {}).hard + ' points on a hard question. ' +
+        '<strong>Wrong answers, expired questions and forfeited questions all score 0.</strong> ' +
+        'The clock, the deadline and the scoring all run on the server &mdash; the browser clock is never trusted.';
+}
+</script>
+
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=a46586bedd8f -->
+
+
+</body>
+</html>
+
+

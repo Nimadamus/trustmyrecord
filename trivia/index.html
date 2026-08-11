@@ -1522,6 +1522,7 @@
         .results-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
 
         /* --- category cards --- */
+        a.category-card { display: block; text-decoration: none; color: inherit; }
         .category-card {
             position: relative; overflow: hidden;
             border-radius: 18px !important;
@@ -1831,6 +1832,19 @@ function switchView(view) {
 // ================================================================
 // CATEGORY CARDS (from backend API)
 // ================================================================
+// TRIVIA_SEO_CATEGORY_ROUTES_20260811 -- league slugs that have a crawlable
+// page of their own at /trivia/<slug>/. This is the kill switch for the whole
+// SEO category-routing release: set it to [] and every card renders as the
+// original <div>, with no other change anywhere on the page.
+var TRIVIA_SEO_CATEGORY_ROUTES = ['nfl', 'nba', 'mlb', 'nhl'];
+
+// Set by the generated league shells (scripts/build_trivia_categories.py).
+// Null on /trivia/ itself, which is what keeps the hub's behaviour identical.
+function triviaPageCategory() {
+    var s = String(window.TMR_TRIVIA_CATEGORY || '').toLowerCase();
+    return TRIVIA_SEO_CATEGORY_ROUTES.indexOf(s) !== -1 ? s : null;
+}
+
 var categoryIcons = {
     'nfl': '\uD83C\uDFC8', 'nba': '\uD83C\uDFC0', 'mlb': '\u26BE',
     'nhl': '\uD83C\uDFD2', 'soccer': '\u26BD', 'mixed': '\uD83C\uDFB2', 'general': '\uD83C\uDFB2'
@@ -1878,7 +1892,18 @@ function renderCategories() {
         return;
     }
     var html = '';
-    backendCategories.forEach(function(cat) {
+    // On a league page the league being viewed leads the grid. On /trivia/
+    // triviaPageCategory() is null and the order is untouched.
+    var pageCat = triviaPageCategory();
+    var ordered = backendCategories;
+    if (pageCat) {
+        ordered = backendCategories.slice().sort(function (a, b) {
+            var as = String(a.slug || '').toLowerCase() === pageCat ? 0 : 1;
+            var bs = String(b.slug || '').toLowerCase() === pageCat ? 0 : 1;
+            return as - bs;
+        });
+    }
+    ordered.forEach(function(cat) {
         var slug = cat.slug || cat.name.toLowerCase();
         var icon = categoryIcons[slug] || '\uD83C\uDFB2';
         var qCount = cat.question_count || cat.questionCount || 0;
@@ -1910,8 +1935,20 @@ function renderCategories() {
 
         var players = Number(cat.players_count) || 0;
 
-        html += '<div class="category-card" role="button" tabindex="0" onclick="startQuiz(\'' + escapeHtml(slug) + '\')"' +
-            ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();startQuiz(\'' + escapeHtml(slug) + '\');}">' +
+        // A league with its own page gets a real <a href>, so the category is
+        // crawlable and middle/ctrl-click opens it like any other link. A plain
+        // left-click is preventDefault()ed and opens the quiz overlay, which is
+        // exactly what the card did before. The league you are already on stays
+        // a <div> -- a card must never link to its own page.
+        var seoSlug = TRIVIA_SEO_CATEGORY_ROUTES.indexOf(slug) !== -1 && slug !== pageCat ? slug : '';
+        var cardOpen = seoSlug
+            ? '<a class="category-card" href="/trivia/' + escapeHtml(seoSlug) + '/"' +
+              ' onclick="if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button)return true;' +
+              'event.preventDefault();startQuiz(\'' + escapeHtml(slug) + '\');return false;">'
+            : '<div class="category-card" role="button" tabindex="0" onclick="startQuiz(\'' + escapeHtml(slug) + '\')"' +
+              ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();startQuiz(\'' + escapeHtml(slug) + '\');}">';
+        var cardClose = seoSlug ? '</a>' : '</div>';
+        html += cardOpen +
             '<div class="card-icon">' + icon + '</div>' +
             '<h3>' + escapeHtml(cat.name) + '</h3>' +
             '<div class="card-desc">' + escapeHtml(desc) + '</div>' +
@@ -1921,7 +1958,7 @@ function renderCategories() {
             '<span class="q-count"><strong>' + qCount + '</strong> questions' +
                 (players ? ' &middot; ' + players + ' player' + (players === 1 ? '' : 's') : '') + '</span>' +
             '<span class="play-btn">PLAY</span>' +
-            '</div></div>';
+            '</div>' + cardClose;
     });
     grid.innerHTML = html;
 }
