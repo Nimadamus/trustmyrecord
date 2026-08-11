@@ -1,0 +1,109 @@
+name: Matchup of the Day watchdog
+
+# The failure this exists to catch is NOT "the job crashed" — a crashed job is
+# a red run in the Actions tab and an email. It is the quieter one: the schedule
+# stops firing at all.
+#
+# GitHub disables scheduled workflows in repositories with no activity for 60
+# days, silently drops schedules under load, and a workflow file with a bad cron
+# simply never runs. In every one of those cases the publish workflow produces
+# no failure, because it produces nothing. The site goes on looking maintained
+# while yesterday's article sits under today's date.
+#
+# So this asks the SITE, not the workflow: does the API say a Matchup of the Day
+# is published for today, and does its own run ledger have a row for every day
+# in the last week? A gap means nothing even tried, and that is an error.
+
+on:
+  schedule:
+    # 23:30 UTC = 16:30 PT — after all three publish attempts, before the
+    # evening slate is over, so a missed day can still be recovered by hand.
+    - cron: '30 23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: matchup-of-the-day-watchdog
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ask the API whether the daily feature is alive
+        id: check
+        env:
+          API: https://trustmyrecord-api.onrender.com/api
+        run: |
+          set -euo pipefail
+          curl -sS --max-time 300 --retry 3 --retry-connrefused \
+            "$API/matchups/health?days=7" -o /tmp/health.json
+          cat /tmp/health.json | jq .
+
+          OK=$(jq -r '.ok' /tmp/health.json)
+          TODAY=$(jq -r '.todayPublished' /tmp/health.json)
+          MISSING=$(jq -r '.missingDays | join(", ")' /tmp/health.json)
+          URL=$(jq -r '.todayUrl // "none"' /tmp/health.json)
+
+          {
+            echo "missing=$MISSING"
+            echo "today=$TODAY"
+            echo "url=$URL"
+          } >> "$GITHUB_OUTPUT"
+
+          PROBLEM=""
+          [ "$TODAY" = "true" ] || PROBLEM="No Matchup of the Day is published for today."
+          [ -z "$MISSING" ] || PROBLEM="$PROBLEM Days with no run at all: $MISSING."
+
+          if [ -n "$PROBLEM" ]; then
+            echo "problem=$PROBLEM" >> "$GITHUB_OUTPUT"
+            echo "::error::$PROBLEM"
+            exit 1
+          fi
+
+          echo "::notice::Today's Matchup of the Day is live: $URL"
+
+      # An email from a failed run is easy to miss twice; an open issue is not.
+      # Reuses one issue rather than opening a new one per day, so a week-long
+      # outage is one thread rather than seven.
+      - name: Raise it where it will be seen
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Matchup of the Day has stopped publishing';
+            const body = [
+              `The daily watchdog failed on ${new Date().toISOString().slice(0, 10)}.`,
+              '',
+              `- ${{ toJSON(steps.check.outputs.problem) }}`,
+              `- Today's article: ${{ toJSON(steps.check.outputs.url) }}`,
+              `- Days with no run recorded: ${{ toJSON(steps.check.outputs.missing) }}`,
+              '',
+              'Check, in order:',
+              '1. The **Matchup of the Day** workflow — did it run today, and what did it say?',
+              '2. `GET /api/matchups/admin/health` for the full run ledger and failure reasons.',
+              '3. Re-run it by hand with **Run workflow** on the Matchup of the Day workflow.',
+              '',
+              'A day that is genuinely `skipped` (no slate, or nothing on it worth a feature)',
+              'is not a fault and will not appear as a missing day.',
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'matchup-of-the-day',
+            });
+
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['matchup-of-the-day'],
+              });
+            }

@@ -43,7 +43,7 @@ def write(name, body):
     print("%-30s %6d bytes" % (name, os.path.getsize(path)))
 
 
-def stadium(away_hex, home_hex):
+def stadium(away_hex, home_hex, out_name="g1000-stadium.svg"):
     """Hero backdrop.
 
     Deliberately low-contrast: this sits BEHIND headline type, so every value is
@@ -111,10 +111,10 @@ def stadium(away_hex, home_hex):
     s += f'<rect width="{W}" height="{H}" fill="url(#tintA)"/>'
     s += f'<rect width="{W}" height="{H}" fill="url(#tintH)"/>'
     s += f'<rect width="{W}" height="{H}" fill="url(#fade)"/>'
-    write("g1000-stadium.svg", s)
+    write(out_name, s)
 
 
-def player_card(slug, name, mono, team, pos, hand, accent, sample):
+def player_card(slug, name, mono, team, pos, hand, accent, sample, out_name=None):
     """Identity card for a starter. Deliberately NOT a stat card.
 
     The stats live in the comparison block directly beneath this on the page,
@@ -160,10 +160,10 @@ def player_card(slug, name, mono, team, pos, hand, accent, sample):
           f'fill="{MUT}">{sample}</text>')
     s += f'<rect width="{W}" height="{H}" rx="6" fill="none" stroke="#FFFFFF" stroke-opacity=".09"/>'
     s += '</g>'
-    write(f"g1000-card-{slug}.svg", s)
+    write(out_name or f"g1000-card-{slug}.svg", s)
 
 
-def venue(name, city, away_hex, home_hex):
+def venue(name, city, away_hex, home_hex, out_name="g1000-venue.svg"):
     """Original TMR venue plate for the head-to-head section.
 
     A schematic diamond, not a map and not a photograph of anywhere. It exists
@@ -217,7 +217,34 @@ def venue(name, city, away_hex, home_hex):
           f'fill="{MUT}">Home field for the split that decides this game.</text>')
     s += f'<rect width="{W}" height="{H}" rx="6" fill="none" stroke="#FFFFFF" stroke-opacity=".09"/>'
     s += '</g>'
-    write("g1000-venue.svg", s)
+    write(out_name, s)
+
+
+def build_for_article(slug, spec):
+    """Every graphic for one Game File, named after its permanent slug.
+
+    Called by build_matchup_articles.py during the bake, so a new article's
+    artwork appears in the same commit as the article. Output is deterministic:
+    the same article regenerates byte-identical files, so re-running the bake
+    produces no diff and no pointless Pages rebuild.
+
+    `spec` comes straight off the published record — team colours, the two
+    starters, the venue — so the artwork cannot drift from the piece beside it.
+    """
+    away_hex = spec.get("away_color") or "#FF5910"
+    home_hex = spec.get("home_color") or "#CE1141"
+
+    stadium(away_hex, home_hex, out_name="%s-stadium.svg" % slug)
+
+    # No monogram cards. They existed to stand in for photography the article
+    # was not using; the starters' real headshots are now on the page, and a
+    # generated card of the same two men beside them is the same information
+    # twice, once for real and once not. player_card() is kept — a sport
+    # without a headshot feed will want it.
+
+    if spec.get("venue_name"):
+        venue(spec["venue_name"], spec.get("venue_city") or "",
+              away_hex, home_hex, out_name="%s-venue.svg" % slug)
 
 
 if __name__ == "__main__":

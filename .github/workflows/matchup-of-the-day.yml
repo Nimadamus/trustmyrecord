@@ -1,0 +1,161 @@
+name: Matchup of the Day
+
+# Publishes one new Matchup of the Day, every day, and bakes it into the site.
+#
+# WHY THE SCHEDULER LIVES HERE AND NOT IN THE BACKEND
+# The API server runs on Render behind a load balancer, so an in-process cron
+# would fire once per instance and two instances would both try to be today's
+# writer. (The generator holds a Postgres advisory lock and would survive that,
+# but a scheduler you cannot see the history of is a scheduler that can stop
+# without anyone noticing.) A workflow run is a visible, dated, re-runnable
+# record of every attempt — which is exactly what a daily feature needs.
+#
+# THREE ATTEMPTS, and they are not a retry loop:
+#   14:00 UTC (07:00 PT) the main run, before the earliest first pitch.
+#   17:00 UTC (10:00 PT) catches the mornings when a probable starter had not
+#                        been posted yet at 07:00 — the generator refuses to
+#                        write a pitching preview around a TBD.
+#   21:00 UTC (14:00 PT) last chance before the evening slate starts.
+# The endpoint is idempotent: once a day has an article, later runs return it
+# and change nothing.
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Sports day to generate (YYYY-MM-DD). Blank = today.'
+        required: false
+      force:
+        description: 'Publish an additional article even if today already has one. Never overwrites.'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: matchup-of-the-day
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ---------------------------------------------------------------------
+      # 1. Research, write and publish. All of it happens server-side so the
+      #    provenance gate and the advisory lock are the same ones the admin
+      #    console goes through.
+      # ---------------------------------------------------------------------
+      - name: Generate and publish today's Matchup of the Day
+        id: generate
+        env:
+          ADMIN_TOKEN: ${{ secrets.TMR_ADMIN_TOKEN }}
+          API: https://trustmyrecord-api.onrender.com/api
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_TOKEN}" ]; then
+            echo "::error::TMR_ADMIN_TOKEN is not set. The daily article cannot be generated."
+            exit 1
+          fi
+
+          BODY=$(jq -nc \
+            --arg date "${{ github.event.inputs.date }}" \
+            --argjson force ${{ github.event.inputs.force == 'true' && 'true' || 'false' }} \
+            '{runner:"workflow", force:$force} + (if $date == "" then {} else {date:$date} end)')
+
+          # Render's free tier cold-starts; the first request can take a while.
+          HTTP=$(curl -sS -o /tmp/run.json -w '%{http_code}' \
+                 --max-time 600 --retry 2 --retry-connrefused \
+                 -X POST "$API/matchups/admin/daily-run" \
+                 -H "x-admin-token: $ADMIN_TOKEN" \
+                 -H 'content-type: application/json' \
+                 -d "$BODY")
+
+          echo "HTTP $HTTP"
+          jq '{status, day, url, angle: .angle.angle, metrics, repaired, note}' /tmp/run.json || cat /tmp/run.json
+
+          STATUS=$(jq -r '.status // "unknown"' /tmp/run.json)
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+          case "$STATUS" in
+            published|already-published)
+              ;;
+            skipped)
+              # An empty or unusable slate is a legitimate outcome, not a
+              # failure. The archive is honest about days baseball did not
+              # give us a game worth featuring.
+              echo "::notice::No article today: $(jq -r '.considered.rejected // "no eligible games"' /tmp/run.json)"
+              ;;
+            busy)
+              echo "::notice::Another runner holds today; nothing to do."
+              ;;
+            blocked)
+              # The draft exists and failed the provenance gate. Nothing
+              # unsourced was published, and this must be loud.
+              echo "::error::Today's draft was blocked by the publish gate and is unpublished."
+              jq -r '.violations[]? | "  \(.code) \(.module): \(.detail)"' /tmp/run.json
+              exit 1
+              ;;
+            *)
+              echo "::error::Daily run failed (HTTP $HTTP)."
+              cat /tmp/run.json
+              exit 1
+              ;;
+          esac
+
+      # ---------------------------------------------------------------------
+      # 2. Bake. Fail-closed by design: the script renders every page into
+      #    memory and writes nothing if any of them fails, so a bad read leaves
+      #    the last good bake live.
+      # ---------------------------------------------------------------------
+      - name: Bake the articles, hubs, artwork and sitemap
+        run: python scripts/build_matchup_articles.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # ---------------------------------------------------------------------
+      # 3. Prove it before it ships. These two are the guards that matter:
+      #    permanence (no published URL ever disappears) and indexability.
+      # ---------------------------------------------------------------------
+      - name: Game File permanence + hub reset guards
+        run: node tests/matchup-hub-reset-test.js
+
+      - name: SEO indexability regression
+        run: node tests/seo-indexability-regression-test.js
+
+      - name: Commit the day's article
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Explicit paths. `git add -A` in this repo sweeps up untracked working
+          # files that other jobs leave behind.
+          git add matchup-of-the-day matchups static/media/matchups sitemap.xml
+
+          if git diff --cached --quiet; then
+            echo "Nothing changed; no commit."
+            exit 0
+          fi
+
+          SLUG=$(git diff --cached --name-only \
+                 | grep -oP '(?<=^matchup-of-the-day/)[^/]+(?=/index\.html$)' \
+                 | head -1 || true)
+          git commit -m "Matchup of the Day: ${SLUG:-refresh} [skip ci]"
+          git push

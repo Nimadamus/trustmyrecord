@@ -1,0 +1,1121 @@
+/* =============================================================================
+   tmr-article.css — the Matchup of the Day article page.
+
+   MATCHUP_OF_THE_DAY_PHASE2_20260811.
+
+   Replaces tmr-gamefile.css ON THE ARTICLE ONLY. The hubs keep the old sheet;
+   this one exists because the article was being designed as a dashboard —
+   panel, panel, panel, six equal stat cells, condensed caps everywhere — and a
+   dashboard is not what a reader came for. The piece is journalism. It should
+   look like the feature it is.
+
+   THE RULES THIS SHEET FOLLOWS, taken from how serious sports desks actually
+   set a feature:
+
+   1. THE HEADLINE LEADS. Not the scoreboard. The old hero gave its largest type
+      to two club names and left the actual headline below the fold, in body
+      size, which is the layout of a fixture list rather than an article. The
+      fixture is real information and it stays — as a strip UNDER the headline,
+      where a reader looks once and moves on.
+
+   2. ONE NARROW COLUMN OF PROSE, and it is genuinely narrow: 34rem of 19.5px
+      type at 1.75 leading. Everything else on the page is an interruption of
+      that column, which is what gives a graphic its impact.
+
+   3. DATA BREAKS OUT. Charts are wider than the text, sit against a different
+      surface, and carry their own top and bottom air. A chart inside the text
+      column at text width is a table.
+
+   4. HAIRLINES, NOT BOXES. Almost nothing here has a border on four sides. The
+      old sheet's panel-in-panel-in-card is where the dashboard feeling came
+      from; rules and space separate things just as well and stay quiet.
+
+   5. NUMBERS GET THE CONDENSED FACE, WORDS DO NOT. Barlow Condensed is superb
+      for a 44px stat and wrong for a headline — condensed caps read as a
+      scoreboard graphic. Headlines and prose are Inter.
+
+   Type scale is fluid via clamp(), so the phone gets a real headline rather
+   than a shrunken desktop one.
+   ============================================================================= */
+
+body.tmr-ds .ed {
+  /* -- surfaces ------------------------------------------------------------ */
+  --ed-bg:       #08090B;
+  --ed-bg-warm:  #0C0E12;   /* breakout sections sit on this */
+  --ed-panel:    #10141A;
+  --ed-line:     rgba(255,255,255,.08);
+  --ed-line-2:   rgba(255,255,255,.16);
+
+  /* -- ink ----------------------------------------------------------------- */
+  --ed-ink:      #EEF1F5;
+  --ed-body:     #C4CDD7;   /* prose. Deliberately softer than headings. */
+  --ed-mut:      #7C8794;
+  --ed-faint:    #59636F;
+
+  /* -- accents ------------------------------------------------------------- */
+  --ed-acc:      #2FD8C4;
+  --ed-pos:      #4ECB8C;
+  --ed-neg:      #E4685F;
+  --ed-away:     #FF5910;   /* the generator overrides both per matchup */
+  --ed-home:     #CE1141;
+
+  /* -- measure ------------------------------------------------------------- */
+  --ed-read:     34rem;     /* the prose column */
+  --ed-wide:     52rem;     /* charts and breakouts */
+  --ed-full:     74rem;     /* hero and full-bleed furniture */
+  --ed-gutter:   clamp(20px, 5vw, 40px);
+
+  --ed-cond: 'Barlow Condensed', 'Barlow Cond Fallback W', 'Barlow Cond Fallback A', Inter, sans-serif;
+
+  background: var(--ed-bg);
+  color: var(--ed-body);
+  font-size: 19.5px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------------------------------------------------------- heading reset
+
+   tmr-ds.css sets EVERY h1-h4 sitewide to condensed, 900, UPPERCASE. That is
+   right for a scoreboard, a stat panel and a section label — it is most of what
+   the design system is used for — and wrong for an article, where an all-caps
+   headline reads as a graphic rather than as a sentence and costs a reader real
+   legibility over three lines. The article opts out explicitly rather than
+   fighting it selector by selector further down. */
+body.tmr-ds .ed :is(h1, h2, h3, h4) {
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  text-transform: none;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.25;
+  color: var(--ed-ink);
+}
+
+/* Layout primitives. `--w` lets one class serve all three measures. */
+body.tmr-ds .ed-w {
+  width: 100%;
+  max-width: var(--w, var(--ed-read));
+  margin-inline: auto;
+  padding-inline: var(--ed-gutter);
+  box-sizing: border-box;
+}
+body.tmr-ds .ed-w--wide { --w: var(--ed-wide); }
+body.tmr-ds .ed-w--full { --w: var(--ed-full); }
+
+/* =============================================================== the hero == */
+
+body.tmr-ds .ed-hero {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(28px, 6vw, 62px) 0 clamp(24px, 4vw, 40px);
+  border-bottom: 1px solid var(--ed-line);
+  overflow: hidden;
+}
+
+/* The artwork is atmosphere and nothing else. It is masked to nothing behind
+   the headline: generated ballpark tiers at any real opacity read as a halftone
+   pattern under type, and a texture competing with a headline always loses. */
+body.tmr-ds .ed-hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  opacity: .30;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.15) 62%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.15) 62%, transparent 100%);
+  pointer-events: none;
+}
+body.tmr-ds .ed-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(8,9,11,.55) 0%, rgba(8,9,11,.88) 55%, var(--ed-bg) 100%);
+  pointer-events: none;
+}
+
+body.tmr-ds .ed-crumb {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ed-faint);
+  margin: 0 0 clamp(20px, 4vw, 34px);
+  letter-spacing: .01em;
+}
+body.tmr-ds .ed-crumb a { color: var(--ed-mut); text-decoration: none; }
+body.tmr-ds .ed-crumb a:hover { color: var(--ed-ink); text-decoration: underline; }
+body.tmr-ds .ed-crumb span[aria-hidden] { color: var(--ed-faint); padding: 0 5px; }
+
+/* The kicker names the section and the day's angle. Two tones on purpose: the
+   section is a permanent label, the angle is this article only. */
+body.tmr-ds .ed-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 clamp(14px, 2.4vw, 20px);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+body.tmr-ds .ed-kicker-mark { color: var(--ed-acc); }
+body.tmr-ds .ed-kicker-angle {
+  color: var(--ed-ink);
+  padding-left: 14px;
+  border-left: 1px solid var(--ed-line-2);
+}
+
+/* ----------------------------------------------------------- hero portraits
+
+   The two starters, beside the headline. This is the page's lead image, and it
+   is the two people the piece is about rather than an abstract backdrop — the
+   thing a reader recognises before they have read a word.
+
+   Below 900px the faces move under the copy and shrink rather than stacking
+   into a second screenful: a portrait that pushes the headline off a phone is
+   worse than a smaller portrait. */
+body.tmr-ds .ed-hero-grid {
+  display: grid;
+  gap: clamp(22px, 4vw, 48px);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  body.tmr-ds .ed-hero-grid { grid-template-columns: minmax(0, 1fr) auto; }
+}
+body.tmr-ds .ed-hero-copy { min-width: 0; }
+
+body.tmr-ds .ed-hero-faces {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+body.tmr-ds .ed-face {
+  width: clamp(96px, 15vw, 176px);
+  height: clamp(96px, 15vw, 176px);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  background: #0A0E13;
+  border: 3px solid var(--ed-line-2);
+  box-shadow: 0 18px 44px rgba(0,0,0,.55);
+}
+/* Overlapped, the way a broadcast sets up a pitching matchup. The second face
+   sits in front so the pairing reads as one object rather than two circles. */
+body.tmr-ds .ed-face--away { border-color: var(--ed-away); }
+body.tmr-ds .ed-face--home {
+  border-color: var(--ed-home);
+  margin-left: clamp(-40px, -4vw, -22px);
+  position: relative;
+  z-index: 2;
+}
+
+body.tmr-ds .ed-title {
+  margin: 0;
+  max-width: 20ch;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: clamp(2.15rem, 1.15rem + 4.4vw, 4.05rem);
+  font-weight: 800;
+  line-height: 1.03;
+  letter-spacing: -.028em;
+  color: var(--ed-ink);
+  text-wrap: balance;
+}
+
+body.tmr-ds .ed-dek {
+  margin: clamp(16px, 2.4vw, 24px) 0 0;
+  max-width: 46ch;
+  font-size: clamp(1.06rem, .96rem + .5vw, 1.35rem);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--ed-mut);
+  text-wrap: pretty;
+}
+
+body.tmr-ds .ed-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: clamp(22px, 3.2vw, 34px);
+  padding-top: 18px;
+  border-top: 1px solid var(--ed-line);
+  max-width: 46ch;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ed-faint);
+}
+body.tmr-ds .ed-byline a { color: var(--ed-body); text-decoration: none; font-weight: 600; }
+body.tmr-ds .ed-byline a:hover { text-decoration: underline; }
+body.tmr-ds .ed-byline .ed-sep { color: var(--ed-line-2); }
+
+/* ------------------------------------------------------- the fixture strip
+
+   The scoreboard, demoted to what it is: reference. Club colours identify the
+   two sides with a 3px rule apiece rather than by tinting anything, because a
+   coloured panel behind text is a legibility problem in 30 clubs' worth of
+   palettes and a hairline is a problem in none. */
+
+body.tmr-ds .ed-fixture {
+  border-bottom: 1px solid var(--ed-line);
+  background: var(--ed-bg-warm);
+}
+body.tmr-ds .ed-fixture-in {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: clamp(12px, 3vw, 30px);
+  padding-block: clamp(20px, 3vw, 30px);
+}
+body.tmr-ds .ed-team--home { text-align: right; }
+body.tmr-ds .ed-team i {
+  display: block;
+  width: 34px;
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 12px;
+  background: var(--ed-away);
+}
+body.tmr-ds .ed-team--home i { margin-left: auto; background: var(--ed-home); }
+
+/* The club's own mark. Sized in CSS rather than trusted to the SVG's intrinsic
+   box, because the league's logo files do not share one: some are square, some
+   are wide wordmarks, and left to themselves they set two different heights on
+   the two sides of the same strip. */
+body.tmr-ds .ed-team-logo {
+  display: block;
+  width: auto;
+  height: clamp(34px, 4.4vw, 52px);
+  max-width: 120px;
+  margin-bottom: 10px;
+  object-fit: contain;
+  object-position: left center;
+}
+body.tmr-ds .ed-team--home .ed-team-logo { margin-left: auto; object-position: right center; }
+body.tmr-ds .ed-team-city {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .ed-team-nick {
+  display: block;
+  font-family: var(--ed-cond);
+  font-size: clamp(1.5rem, 1rem + 2.1vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: .005em;
+  text-transform: uppercase;
+  color: var(--ed-ink);
+  margin-top: 2px;
+}
+body.tmr-ds .ed-team-line {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ed-mut);
+  font-variant-numeric: tabular-nums;
+}
+body.tmr-ds .ed-at {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+  padding-bottom: 10px;
+}
+body.tmr-ds .ed-fixture-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding-bottom: clamp(16px, 2.4vw, 22px);
+  font-size: 13px;
+  color: var(--ed-mut);
+}
+body.tmr-ds .ed-fixture-meta b { color: var(--ed-body); font-weight: 600; }
+
+/* ------------------------------------------------------------- the tape rail
+
+   Six numbers under the fixture. Set as display figures on a plain surface, not
+   as six bordered cells — the old version's equal boxes were the single biggest
+   contributor to the dashboard look. */
+
+body.tmr-ds .gf-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px;
+  background: var(--ed-line);
+  border-bottom: 1px solid var(--ed-line);
+}
+body.tmr-ds .gf-railcell {
+  background: var(--ed-bg);
+  padding: clamp(14px, 2vw, 20px) clamp(12px, 2vw, 18px);
+  text-align: left;
+}
+body.tmr-ds .gf-railcell b {
+  display: block;
+  font-family: var(--ed-cond);
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .01em;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+body.tmr-ds .gf-railcell span {
+  display: block;
+  margin-top: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+  line-height: 1.35;
+}
+body.tmr-ds .gf-railcell[data-t="pos"] b { color: var(--ed-pos); }
+body.tmr-ds .gf-railcell[data-t="neg"] b { color: var(--ed-neg); }
+
+/* ------------------------------------------------------------ the jump nav */
+
+body.tmr-ds .ed-jump {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(8,9,11,.86);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--ed-line);
+}
+body.tmr-ds .ed-jump ol {
+  display: flex;
+  gap: 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body.tmr-ds .ed-jump ol::-webkit-scrollbar { display: none; }
+body.tmr-ds .ed-jump li { flex: none; }
+body.tmr-ds .ed-jump a {
+  display: block;
+  padding: 15px 0;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ed-mut);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+body.tmr-ds .ed-jump a:hover { color: var(--ed-ink); border-bottom-color: var(--ed-acc); }
+
+/* ================================================================ the body == */
+
+body.tmr-ds .gf-sect { padding: clamp(34px, 5.5vw, 70px) 0; }
+
+/* Alternating surfaces give the page a rhythm without drawing a single box.
+   A run of prose, then a breakout that is visibly a different surface, then
+   prose again. */
+body.tmr-ds .gf-sect[data-env="raised"] { background: var(--ed-bg-warm); }
+body.tmr-ds .gf-sect[data-env="inset"] {
+  background: var(--ed-bg-warm);
+  border-block: 1px solid var(--ed-line);
+}
+
+/* ONE COLUMN EDGE FOR THE WHOLE PAGE.
+
+   Every section shares the same wide wrap and the same left edge; the PROSE is
+   what gets constrained, to the reading measure, and it is left-aligned inside
+   that wrap. Charts then simply fill the wrap.
+
+   The first cut did the opposite — a narrow centred column with charts breaking
+   out of it via negative margins — and the result was that a prose section and
+   a chart section had visibly different left edges, so the page looked like two
+   layouts spliced together. It also made the breakout maths fragile: inside a
+   split, the negative margin slid the chart under the aside rail. Constraining
+   the text instead of widening the graphics removes both problems and needs no
+   arithmetic. */
+body.tmr-ds .gf-sect .gf-wrap {
+  width: 100%;
+  max-width: var(--ed-full);
+  margin-inline: auto;
+  padding-inline: var(--ed-gutter);
+  box-sizing: border-box;
+}
+
+/* The reading measure, applied to the things that are read rather than scanned. */
+body.tmr-ds .gf-sect > .gf-wrap > :is(p, ul, ol, h3),
+body.tmr-ds .gf-split-main > :is(p, ul, ol, h3),
+body.tmr-ds .gf-sect-head,
+body.tmr-ds .gf-sect-sub,
+body.tmr-ds .gf-call {
+  max-width: var(--ed-read);
+}
+
+body.tmr-ds .gf-sect-head { margin: 0 0 clamp(18px, 2.6vw, 26px); }
+body.tmr-ds .gf-sect-head h2 {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: clamp(1.45rem, 1.2rem + 1.1vw, 2.05rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.018em;
+  color: var(--ed-ink);
+  text-wrap: balance;
+}
+body.tmr-ds .gf-sect-sub {
+  margin: 10px 0 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ed-mut);
+}
+
+/* ----------------------------------------------------------------- prose -- */
+
+body.tmr-ds .gf-sect p {
+  margin: 0 0 1.25em;
+  color: var(--ed-body);
+  text-wrap: pretty;
+}
+body.tmr-ds .gf-sect p:last-child { margin-bottom: 0; }
+body.tmr-ds .gf-sect a { color: var(--ed-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--ed-line-2); }
+body.tmr-ds .gf-sect a:hover { text-decoration-color: var(--ed-acc); }
+
+body.tmr-ds .gf-sect h3 {
+  margin: 2em 0 .6em;
+  font-size: 1.16rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -.01em;
+  color: var(--ed-ink);
+}
+body.tmr-ds .gf-sect ul { margin: 0 0 1.25em; padding-left: 1.15em; }
+body.tmr-ds .gf-sect li { margin-bottom: .5em; color: var(--ed-body); }
+
+/* Charts fill the wrap. No negative-margin breakout: see the note above the
+   section wrap for why that approach was removed rather than repaired. */
+body.tmr-ds :is(.gf-chart, .gf-show, .gf-tgroup, .gf-cards, .gf-verdict) {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------ source badge */
+
+body.tmr-ds .gf-src {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 7px;
+  border: 1px solid var(--ed-line);
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+body.tmr-ds .gf-src span { display: block; letter-spacing: .04em; text-transform: none; font-weight: 600; }
+
+/* ------------------------------------------------------------- stat board --
+
+   The evidence for the day's angle. Big figure, what it is, then the sample —
+   in that order, because that is the order the eye wants them and the order
+   that keeps a reader honest about what a number rests on. */
+
+body.tmr-ds .gf-tgroup { margin-block: clamp(26px, 4vw, 40px); }
+body.tmr-ds .gf-tgroup h3 {
+  margin: 0 0 16px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--ed-acc);
+}
+body.tmr-ds .gf-tcards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(168px, 100%), 1fr));
+  gap: 1px;
+  background: var(--ed-line);
+  border-block: 1px solid var(--ed-line);
+}
+body.tmr-ds .gf-tcard {
+  background: var(--ed-bg);
+  padding: clamp(16px, 2.2vw, 22px);
+}
+body.tmr-ds .gf-sect[data-env="raised"] .gf-tcard,
+body.tmr-ds .gf-sect[data-env="inset"] .gf-tcard { background: var(--ed-bg-warm); }
+body.tmr-ds .gf-tcard b {
+  display: block;
+  font-family: var(--ed-cond);
+  font-size: clamp(2.1rem, 1.7rem + 1.5vw, 3rem);
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: .005em;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+body.tmr-ds .gf-tcard-l {
+  display: block;
+  margin-top: 10px;
+  font-size: .8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ed-body);
+}
+body.tmr-ds .gf-tcard-m {
+  display: block;
+  margin-top: 8px;
+  font-size: .68rem;
+  line-height: 1.5;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-tcard-m .gf-src { margin: 0 6px 0 0; }
+body.tmr-ds .gf-tcard[data-t="pos"] b { color: var(--ed-pos); }
+body.tmr-ds .gf-tcard[data-t="neg"] b { color: var(--ed-neg); }
+
+
+/* ---------------------------------------------------------- cell dividers
+
+   These grids used the 1px-gap-over-a-coloured-container trick to draw their
+   hairlines. It is neat until a row is short: a five-item board on a four-up
+   grid leaves one empty track, and the container's colour shows through it as a
+   solid panel floating beside the last card. Dividers are drawn on the CELLS
+   instead, so an empty track is simply empty.
+   --------------------------------------------------------------------------- */
+body.tmr-ds :is(.gf-tcards, .gf-tl, .gf-show, .gf-rail) {
+  gap: 0;
+  background: none;
+}
+body.tmr-ds :is(.gf-tcard, .gf-tlg, .gf-showcard, .gf-railcell) {
+  border-left: 1px solid var(--ed-line);
+  background: none;
+}
+/* No rule on the leftmost cell of each row. -1px margin pulls the first column
+   out under the container's own left edge, which is cheaper and more reliable
+   than counting columns in a responsive auto-fit grid. */
+body.tmr-ds :is(.gf-tcards, .gf-tl, .gf-show, .gf-rail) {
+  margin-left: -1px;
+}
+
+/* ---------------------------------------------------------------- charts -- */
+
+body.tmr-ds .gf-chart { margin-block: clamp(28px, 4.5vw, 46px); }
+body.tmr-ds .gf-chart-t {
+  margin: 0 0 clamp(18px, 2.4vw, 24px);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ed-line);
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -.005em;
+  color: var(--ed-ink);
+}
+body.tmr-ds .gf-chart-note {
+  margin: 14px 0 0;
+  font-size: .72rem;
+  line-height: 1.6;
+  color: var(--ed-faint);
+}
+
+/* Diverging bars. Rows are a 3-column grid so the centre labels align in a
+   true column, which is the whole point of the form. */
+body.tmr-ds .gf-bars { display: grid; gap: 3px; }
+body.tmr-ds .gf-bar {
+  display: grid;
+  grid-template-columns: 1fr minmax(88px, auto) 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+}
+body.tmr-ds .gf-bar + .gf-bar { border-top: 1px solid var(--ed-line); }
+body.tmr-ds .gf-bar-k {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--ed-mut);
+  line-height: 1.3;
+}
+body.tmr-ds .gf-bar-s { display: flex; align-items: center; gap: 10px; min-width: 0; }
+body.tmr-ds .gf-bar-s--a { flex-direction: row-reverse; }
+body.tmr-ds .gf-bar-t {
+  display: block;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
+  background: color-mix(in srgb, var(--ed-away) 62%, transparent);
+}
+body.tmr-ds .gf-bar-s--h .gf-bar-t { background: color-mix(in srgb, var(--ed-home) 62%, transparent); }
+body.tmr-ds .gf-bar-s.is-better .gf-bar-t { background: var(--ed-away); }
+body.tmr-ds .gf-bar-s--h.is-better .gf-bar-t { background: var(--ed-home); }
+body.tmr-ds .gf-bar-v {
+  font-family: var(--ed-cond);
+  font-size: 1.42rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ed-mut);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  min-width: 3.4ch;
+}
+body.tmr-ds .gf-bar-s--a .gf-bar-v { text-align: left; }
+body.tmr-ds .gf-bar-s--h .gf-bar-v { text-align: right; }
+body.tmr-ds .gf-bar-s.is-better .gf-bar-v { color: var(--ed-ink); }
+
+body.tmr-ds .gf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 16px;
+  font-size: .72rem;
+  color: var(--ed-mut);
+}
+body.tmr-ds .gf-legend i {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+
+/* ------------------------------------------------------------ the starters
+
+   Two feature cards. The oversized monogram is the artwork standing in for a
+   photograph we do not license; it is set low enough in contrast to read as a
+   watermark rather than as a failed image load. */
+
+body.tmr-ds .gf-show {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 1px;
+  margin-block: clamp(26px, 4vw, 40px);
+  background: var(--ed-line);
+  border-block: 1px solid var(--ed-line);
+}
+body.tmr-ds .gf-showcard {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(20px, 2.6vw, 28px);
+  background: var(--ed-bg);
+}
+body.tmr-ds .gf-sect[data-env="raised"] .gf-showcard,
+body.tmr-ds .gf-sect[data-env="inset"] .gf-showcard { background: var(--ed-bg-warm); }
+/* With a photograph, the card is a two-column header: face, then name and line.
+   The oversized monogram is suppressed — it exists to fill the space a missing
+   headshot would leave, and behind a real face it is just noise. */
+body.tmr-ds .gf-showcard.has-shot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'shot who' 'stats stats';
+  align-items: center;
+  column-gap: clamp(14px, 1.8vw, 20px);
+}
+body.tmr-ds .gf-showcard.has-shot::before { content: none; }
+body.tmr-ds .gf-showshot {
+  grid-area: shot;
+  width: clamp(84px, 9vw, 116px);
+  height: clamp(84px, 9vw, 116px);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  background: #0A0E13;
+  border: 2px solid var(--ed-line-2);
+}
+body.tmr-ds .gf-showcard[data-t="away"] .gf-showshot { border-color: color-mix(in srgb, var(--ed-away) 55%, transparent); }
+body.tmr-ds .gf-showcard[data-t="home"] .gf-showshot { border-color: color-mix(in srgb, var(--ed-home) 55%, transparent); }
+body.tmr-ds .gf-showcard.has-shot .gf-showwho { grid-area: who; min-width: 0; }
+body.tmr-ds .gf-showcard.has-shot .gf-showstats { grid-area: stats; }
+
+body.tmr-ds .gf-showcard::before {
+  content: attr(data-mono);
+  position: absolute;
+  right: -.09em;
+  bottom: -.34em;
+  font-family: var(--ed-cond);
+  font-size: 11rem;
+  font-weight: 900;
+  line-height: .8;
+  color: #FFFFFF;
+  opacity: .028;
+  pointer-events: none;
+}
+body.tmr-ds .gf-showcard::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--ed-away);
+}
+body.tmr-ds .gf-showcard[data-t="home"]::after { background: var(--ed-home); }
+body.tmr-ds .gf-showname {
+  position: relative;
+  margin: 0;
+  font-size: 1.32rem;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.2;
+  color: var(--ed-ink);
+}
+body.tmr-ds .gf-showmeta {
+  position: relative;
+  margin: 7px 0 0;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-showstats {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+  gap: 18px 14px;
+  margin-top: clamp(18px, 2.4vw, 24px);
+  padding-top: 18px;
+  border-top: 1px solid var(--ed-line);
+}
+body.tmr-ds .gf-showstat b {
+  display: block;
+  font-family: var(--ed-cond);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+body.tmr-ds .gf-showstat span {
+  display: block;
+  margin-top: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-showstat em {
+  display: block;
+  height: 2px;
+  margin-top: 8px;
+  background: var(--ed-line);
+  border-radius: 1px;
+}
+body.tmr-ds .gf-showstat em i { display: block; height: 100%; background: var(--ed-acc); border-radius: 1px; }
+
+/* ------------------------------------------------------------------ form -- */
+
+body.tmr-ds .gf-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 14px 0;
+}
+body.tmr-ds .gf-form + .gf-form { border-top: 1px solid var(--ed-line); }
+body.tmr-ds .gf-form-who { font-size: .88rem; font-weight: 600; color: var(--ed-body); }
+body.tmr-ds .gf-form-seq { display: flex; gap: 4px; }
+body.tmr-ds .gf-form-seq i {
+  display: grid;
+  place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  font-style: normal;
+  color: var(--ed-bg);
+  background: var(--ed-faint);
+}
+body.tmr-ds .gf-form-seq i[data-r="W"] { background: var(--ed-pos); }
+body.tmr-ds .gf-form-seq i[data-r="L"] { background: var(--ed-neg); }
+body.tmr-ds .gf-form-sum {
+  font-family: var(--ed-cond);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------- timeline -- */
+
+body.tmr-ds .gf-tl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%), 1fr));
+  gap: 1px;
+  background: var(--ed-line);
+  border-block: 1px solid var(--ed-line);
+}
+body.tmr-ds .gf-tlg {
+  background: var(--ed-bg);
+  padding: 16px 12px;
+  text-align: center;
+  border-top: 2px solid var(--ed-away);
+}
+body.tmr-ds .gf-sect[data-env="raised"] .gf-tlg,
+body.tmr-ds .gf-sect[data-env="inset"] .gf-tlg { background: var(--ed-bg-warm); }
+body.tmr-ds .gf-tlg[data-w="home"] { border-top-color: var(--ed-home); }
+body.tmr-ds .gf-tlg b {
+  display: block;
+  font-family: var(--ed-cond);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+body.tmr-ds .gf-tlg span {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--ed-faint);
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------------- pull quote --
+
+   A quote, not a callout box. Large type, an accent rule, and air. The old
+   version was a bordered panel with a label, which reads as an alert. */
+
+body.tmr-ds .gf-call {
+  margin: clamp(30px, 4.5vw, 44px) 0;
+  padding-left: clamp(18px, 2.6vw, 26px);
+  border-left: 3px solid var(--ed-acc);
+}
+body.tmr-ds .gf-call-t {
+  display: block;
+  margin: 0 0 12px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--ed-acc);
+}
+body.tmr-ds .gf-call p {
+  margin: 0 0 .6em;
+  font-size: clamp(1.15rem, 1.02rem + .6vw, 1.42rem);
+  line-height: 1.45;
+  font-weight: 500;
+  letter-spacing: -.012em;
+  color: var(--ed-ink);
+}
+body.tmr-ds .gf-call p:last-child { margin-bottom: 0; }
+
+/* ----------------------------------------------------------------- aside -- */
+
+body.tmr-ds .gf-split { display: grid; gap: clamp(24px, 3vw, 34px); }
+@media (min-width: 1080px) {
+  body.tmr-ds .gf-split {
+    grid-template-columns: minmax(0, 1fr) 250px;
+    align-items: start;
+  }
+}
+body.tmr-ds .gf-aside-card {
+  padding: 20px 22px;
+  border: 1px solid var(--ed-line);
+  border-radius: 4px;
+  background: var(--ed-panel);
+}
+body.tmr-ds .gf-aside-card h4 {
+  margin: 0 0 14px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-aside-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 0;
+  font-size: .8rem;
+  color: var(--ed-mut);
+}
+body.tmr-ds .gf-aside-row + .gf-aside-row { border-top: 1px solid var(--ed-line); }
+body.tmr-ds .gf-aside-row b {
+  font-family: var(--ed-cond);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- artwork -- */
+
+body.tmr-ds .gf-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: clamp(12px, 1.6vw, 18px);
+  margin-block: clamp(24px, 3.4vw, 34px);
+}
+body.tmr-ds .gf-cards img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid var(--ed-line);
+}
+
+/* --------------------------------------------------------------- verdict -- */
+
+body.tmr-ds .gf-verdict {
+  display: grid;
+  gap: clamp(22px, 3vw, 34px);
+  margin-block: clamp(24px, 3.4vw, 34px);
+  padding: clamp(24px, 3.2vw, 34px);
+  border: 1px solid var(--ed-line);
+  border-top: 3px solid var(--ed-acc);
+  border-radius: 4px;
+  background: var(--ed-panel);
+}
+@media (min-width: 860px) {
+  body.tmr-ds .gf-verdict { grid-template-columns: minmax(0, 240px) minmax(0, 1fr); }
+}
+body.tmr-ds .gf-verdict-k {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-verdict-team {
+  margin: 10px 0 18px;
+  font-family: var(--ed-cond);
+  font-size: clamp(1.85rem, 1.5rem + 1.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ed-ink);
+}
+body.tmr-ds .gf-conf { display: flex; gap: 5px; margin-top: 10px; }
+body.tmr-ds .gf-conf i { width: 26px; height: 4px; border-radius: 2px; background: var(--ed-line-2); }
+body.tmr-ds .gf-conf i.on { background: var(--ed-acc); }
+body.tmr-ds .gf-verdict-r h3 {
+  margin: 0 0 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-verdict-r h3 + ul { margin-bottom: 26px; }
+body.tmr-ds .gf-verdict-r ul { margin: 0; padding-left: 1.1em; }
+body.tmr-ds .gf-verdict-r li { margin-bottom: .55em; font-size: .92rem; line-height: 1.6; color: var(--ed-body); }
+
+/* ----------------------------------------------------------------- tools -- */
+
+body.tmr-ds .gf-tools {
+  margin-top: clamp(26px, 3.4vw, 36px);
+  padding-top: 22px;
+  border-top: 1px solid var(--ed-line);
+}
+body.tmr-ds .gf-tools p {
+  margin: 0 0 14px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-tools ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+body.tmr-ds .gf-tools a {
+  display: inline-block;
+  padding: 9px 15px;
+  border: 1px solid var(--ed-line-2);
+  border-radius: 3px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--ed-body);
+  text-decoration: none;
+}
+body.tmr-ds .gf-tools a:hover { border-color: var(--ed-acc); color: var(--ed-ink); }
+
+/* ----------------------------------------------------- methodology + foot -- */
+
+body.tmr-ds .ed-end { padding: clamp(30px, 4.5vw, 56px) 0 clamp(40px, 6vw, 72px); }
+body.tmr-ds .gf-meth {
+  border: 1px solid var(--ed-line);
+  border-radius: 4px;
+  background: var(--ed-bg-warm);
+}
+body.tmr-ds .gf-meth summary {
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--ed-body);
+  list-style: none;
+}
+body.tmr-ds .gf-meth summary::-webkit-details-marker { display: none; }
+body.tmr-ds .gf-meth summary::after { content: ' +'; color: var(--ed-faint); }
+body.tmr-ds .gf-meth[open] summary::after { content: ' \2212'; }
+body.tmr-ds .gf-meth-in { padding: 4px 20px 22px; border-top: 1px solid var(--ed-line); }
+body.tmr-ds .gf-meth-in p,
+body.tmr-ds .gf-meth-in li { font-size: .82rem; line-height: 1.7; color: var(--ed-mut); }
+body.tmr-ds .gf-meth-in h3 {
+  margin: 20px 0 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--ed-faint);
+}
+body.tmr-ds .gf-meth-in ul { margin: 0; padding-left: 1.15em; }
+
+body.tmr-ds .gf-foot {
+  margin-top: clamp(26px, 3.4vw, 38px);
+  padding-top: 22px;
+  border-top: 1px solid var(--ed-line);
+  font-size: .82rem;
+  line-height: 1.8;
+  color: var(--ed-mut);
+}
+body.tmr-ds .gf-foot p { margin: 0 0 6px; }
+body.tmr-ds .gf-foot a { color: var(--ed-body); text-decoration: none; font-weight: 600; }
+body.tmr-ds .gf-foot a:hover { color: var(--ed-ink); text-decoration: underline; }
+
+body.tmr-ds .gf-empty { color: var(--ed-mut); font-size: .9rem; }
+body.tmr-ds .gf-sample { color: var(--ed-faint); font-size: .78rem; }
+
+/* ------------------------------------------------------------------ small -- */
+
+@media (max-width: 640px) {
+  body.tmr-ds .ed { font-size: 18px; }
+  body.tmr-ds .ed-fixture-in { grid-template-columns: 1fr auto 1fr; gap: 10px; }
+  body.tmr-ds .ed-team-line { font-size: 12px; }
+  body.tmr-ds .gf-bar { grid-template-columns: 1fr minmax(66px, auto) 1fr; gap: 6px; }
+  body.tmr-ds .gf-bar-v { font-size: 1.15rem; min-width: 3ch; }
+  body.tmr-ds .gf-bar-k { font-size: 9px; letter-spacing: .06em; }
+  body.tmr-ds .gf-form { grid-template-columns: 1fr auto; }
+  body.tmr-ds .gf-form-seq { grid-column: 1 / -1; }
+  body.tmr-ds .gf-showcard::before { font-size: 7.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.tmr-ds .ed * { animation: none !important; transition: none !important; }
+}
+
+/* Print: the artwork and the sticky nav are screen furniture. */
+@media print {
+  body.tmr-ds .ed-hero-art,
+  body.tmr-ds .ed-jump { display: none; }
+  body.tmr-ds .ed { background: #fff; color: #111; font-size: 11pt; }
+}

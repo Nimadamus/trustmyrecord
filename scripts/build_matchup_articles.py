@@ -2,17 +2,23 @@
 """
 build_matchup_articles.py - bake TMR Game Files into the static site.
 
-MATCHUP_OF_THE_DAY_PHASE1_20260810.
+MATCHUP_OF_THE_DAY_PHASE1_20260810, daily automation PHASE2_20260811.
 
 What it does
 ------------
 Reads published Game Files from /api/matchups and writes:
 
-    matchups/<sport>/<slug>/index.html   one permanent article per Game File
-    matchups/index.html                  hub listings (marker blocks)
-    matchups/<sport>/index.html          sport hub listings (marker blocks)
-    index.html                           the homepage cover (marker block)
-    sitemap.xml                          <!-- BEGIN_MATCHUP_URLS --> block
+    matchup-of-the-day/<slug>/index.html  one permanent article per Game File,
+                                          slugged after what the game is about
+    matchup-of-the-day/index.html         the daily hub + archive (markers)
+    static/media/matchups/<slug>-*.svg    that article's original artwork
+    matchups/index.html                   the earlier archive (markers)
+    matchups/<sport>/index.html           earlier sport hubs (markers)
+    sitemap.xml                           <!-- BEGIN_MATCHUP_URLS --> block
+
+It does NOT write the homepage. The homepage link updates itself: the ticker
+reads /api/matchups/today and follows the `url` the API returns, so featuring a
+new article moves the link with no bake and no deploy.
 
 Build only. Does NOT commit or deploy. Run from the repo root:
 
@@ -59,8 +65,35 @@ SITE = "https://trustmyrecord.com"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MATCHUPS_DIR = os.path.join(ROOT, "matchups")
+MOTD_DIR = os.path.join(ROOT, "matchup-of-the-day")
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 HOME = os.path.join(ROOT, "index.html")
+
+def article_rel(article):
+    """The article's path, relative to the repo root. ONE definition, because
+    the URL appears in the file tree, the canonical tag, the hub cards, the
+    JSON-LD, the prev/next links and the sitemap, and six copies of a path
+    expression is six chances for them to disagree.
+
+    Two shapes, and the row says which. An article created from 2026-08-11 has
+    an angle and lives at /matchup-of-the-day/<slug>/, where the slug describes
+    what the game is about. The handful created before that are at
+    /matchups/<sport>/<slug>/, are indexed there, and STAY there: a published
+    URL is permanent, and tidying the tree is not a good enough reason to 404
+    something Google already has.
+    """
+    if article.get("angle_key"):
+        return "matchup-of-the-day/%s" % article["slug"]
+    return "matchups/%s/%s" % (article["sport"], article["slug"])
+
+
+def article_href(article):
+    return "/%s/" % article_rel(article)
+
+
+def article_abs(article):
+    return "%s/%s/" % (SITE, article_rel(article))
+
 
 SPORT_LABEL = {
     "mlb": "MLB", "nba": "NBA", "nfl": "NFL", "nhl": "NHL",
@@ -70,6 +103,20 @@ SPORT_LABEL = {
 # Only these hosts may appear in an article image. A Game File must not hotlink
 # a photograph from wherever the research happened to find it.
 ALLOWED_IMAGE_PREFIXES = ("/static/", SITE + "/static/", "https://trustmyrecord-api.onrender.com/api/share/og")
+
+# Hosts a build may DOWNLOAD from. Not hosts a page may link to — a page links to
+# /static/ and nothing else. An article's images are fetched once, at bake time,
+# and committed, so a published piece has no third-party dependency at render
+# time and cannot have an image change or disappear underneath it later.
+ALLOWED_FETCH_HOSTS = ("https://midfield.mlbstatic.com/", "https://www.mlbstatic.com/")
+
+# A downloaded file has to actually be the kind of image it claims to be. Size
+# alone is not a check: an error page is several KB of perfectly valid bytes.
+MAGIC = {
+    ".png": (bytes.fromhex("89504e470d0a1a0a"),),
+    ".svg": (b"<svg", b"<?xml"),
+    ".jpg": (bytes.fromhex("ffd8ff"),),
+}
 
 DISPLAY_TZ = "America/Los_Angeles"
 
@@ -434,11 +481,27 @@ def b_showdown(block):
             fill = ('<em><i style="width:%.0f%%"></i></em>' % float(s["fill"])) if s.get("fill") else ""
             stats.append('<div class="gf-showstat"><b>%s</b><span>%s</span>%s</div>'
                          % (esc(s.get("value")), esc(s.get("label")), fill))
+        # The photograph, when the league has one. `mono` stays as the
+        # fallback: a September call-up with no headshot gets the monogram card
+        # rather than a broken image or an empty frame.
+        photo = p.get("photo") or {}
+        shot = ""
+        if photo.get("src"):
+            check_image(photo["src"], "starter headshot")
+            if not photo.get("alt"):
+                raise RuntimeError("headshot %s has no alt text" % photo["src"])
+            shot = ('<img class="gf-showshot" src="%s" alt="%s" width="%s" height="%s" '
+                    'loading="lazy" decoding="async">' % (
+                        esc(photo["src"]), esc(photo["alt"]),
+                        esc(photo.get("width", 480)), esc(photo.get("height", 480))))
+
         cards.append(
-            '<div class="gf-showcard" data-t="%s" data-mono="%s">'
-            '<p class="gf-showname">%s</p><p class="gf-showmeta">%s</p>'
+            '<div class="gf-showcard%s" data-t="%s" data-mono="%s">'
+            '%s<div class="gf-showwho"><p class="gf-showname">%s</p>'
+            '<p class="gf-showmeta">%s</p></div>'
             '<div class="gf-showstats">%s</div></div>' % (
-                side, esc(p.get("mono")), esc(p.get("name")), esc(p.get("meta")), "".join(stats)))
+                " has-shot" if shot else "", side, esc(p.get("mono")), shot,
+                esc(p.get("name")), esc(p.get("meta")), "".join(stats)))
     note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
     return '<div class="gf-show">%s</div>%s' % ("".join(cards), note)
 
@@ -597,13 +660,152 @@ def absolute(url):
     return url if str(url).startswith("http") else SITE + str(url)
 
 
+def breadcrumb_items(article, sport, sport_label, matchup):
+    """Breadcrumbs that match the URL the reader is actually on. A trail
+    claiming Home > Matchups > MLB on a page served from /matchup-of-the-day/
+    is a structured-data error and, worse, a link to a section the page is not
+    in."""
+    site = SITE
+    if article.get("angle_key"):
+        return [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": site + "/"},
+            {"@type": "ListItem", "position": 2, "name": "Matchup of the Day",
+             "item": site + "/matchup-of-the-day/"},
+            {"@type": "ListItem", "position": 3, "name": matchup},
+        ]
+    return [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": site + "/"},
+        {"@type": "ListItem", "position": 2, "name": "Matchups", "item": site + "/matchups/"},
+        {"@type": "ListItem", "position": 3, "name": sport_label,
+         "item": "%s/matchups/%s/" % (site, sport)},
+        {"@type": "ListItem", "position": 4, "name": matchup},
+    ]
+
+
+def breadcrumb_html(article, sport, sport_label):
+    sep = ' <span aria-hidden="true">&rsaquo;</span>\n        '
+    if article.get("angle_key"):
+        return ('<a href="/">Home</a>' + sep
+                + '<a href="/matchup-of-the-day/">Matchup of the Day</a>'
+                + ' <span aria-hidden="true">&rsaquo;</span>')
+    return ('<a href="/">Home</a>' + sep
+            + '<a href="/matchups/">Matchups</a>' + sep
+            + '<a href="/matchups/%s/">%s</a>' % (esc(sport), esc(sport_label))
+            + ' <span aria-hidden="true">&rsaquo;</span>')
+
+
+def collect_media(articles):
+    """Every (src, fetch_from) pair the published set needs, de-duplicated.
+
+    Assets are keyed by their own path, not by article, so a pitcher who starts
+    twenty Game Files is downloaded once and shared by all of them.
+    """
+    wanted = {}
+
+    def walk(node):
+        if isinstance(node, dict):
+            src, remote = node.get("src"), node.get("fetch_from")
+            if src and remote:
+                wanted[src] = remote
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for a in articles:
+        walk(a.get("body_json") or [])
+    return wanted
+
+
+def fetch_media(wanted):
+    """Download anything not already in the tree. Returns how many were new.
+
+    NEVER re-downloads and never deletes. An asset already committed is the one
+    the published article is showing; re-fetching it would let a CDN change the
+    picture under a piece that has already been read, and would churn the repo
+    on every bake for no reason.
+    """
+    added = 0
+    for src, remote in sorted(wanted.items()):
+        if not src.startswith("/static/"):
+            sys.exit("ABORT: media src %r is not a /static/ path" % src)
+        if not remote.startswith(ALLOWED_FETCH_HOSTS):
+            sys.exit("ABORT: refusing to download %r - host is not on the allow-list" % remote)
+
+        path = os.path.join(ROOT, src.lstrip("/").replace("/", os.sep))
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            continue
+
+        try:
+            req = urllib.request.Request(remote, headers={"User-Agent": "TrustMyRecord/1.0 (+%s)" % SITE})
+            with urllib.request.urlopen(req, timeout=45) as r:
+                blob = r.read()
+        except Exception as err:                        # noqa: BLE001
+            sys.exit("ABORT: could not download %s (%s). Nothing written; the "
+                     "last good bake stays live." % (remote, err))
+
+        ext = os.path.splitext(path)[1].lower()
+        expected = MAGIC.get(ext)
+        if not blob:
+            sys.exit("ABORT: %s came back empty" % remote)
+        if expected and not any(blob.lstrip()[:16].startswith(m) for m in expected):
+            sys.exit("ABORT: %s did not return a %s (got %r). An error page is "
+                     "valid bytes; it is not an image." % (remote, ext, blob[:24]))
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
+            f.write(blob)
+        print("media  %-58s %7d bytes" % (src, len(blob)))
+        added += 1
+    return added
+
+
+def graphics_spec(article):
+    """The artwork brief, read off the article the bake is about to write.
+
+    Deliberately derived from body_json rather than passed alongside it. The
+    hero already carries the club colours and the pitching section already
+    carries the two starters, so taking the brief from there means the artwork
+    and the article cannot disagree — there is only one copy of each value. It
+    also keeps the API payload from having to grow a graphics field.
+    """
+    spec = {"venue_name": article.get("venue_name"), "venue_city": ""}
+    for module in article.get("body_json") or []:
+        for block in module.get("blocks") or []:
+            kind = (block or {}).get("type")
+            if kind == "herolines":
+                spec["away_color"] = block.get("away_color")
+                spec["home_color"] = block.get("home_color")
+                spec["away_team"] = ("%s %s" % (block.get("away_city", ""), block.get("away_nick", ""))).strip()
+                spec["home_team"] = ("%s %s" % (block.get("home_city", ""), block.get("home_nick", ""))).strip()
+            elif kind == "showdown":
+                for side in ("away", "home"):
+                    p = block.get(side) or {}
+                    if not p.get("name"):
+                        continue
+                    spec[side] = {
+                        "name": p.get("name"),
+                        "mono": p.get("mono"),
+                        "team": spec.get("%s_team" % side) or "",
+                        "role": "Starting pitcher",
+                        "hand": "Left-handed" if str(p.get("meta", "")).startswith("LHP") else "Right-handed",
+                        "note": "Tonight's starter",
+                    }
+    return spec
+
+
 def render_article(article, provenance, neighbours):
     sport = article["sport"]
     sport_label = SPORT_LABEL.get(sport, sport.upper())
-    url = "%s/matchups/%s/%s/" % (SITE, sport, article["slug"])
+    url = article_abs(article)
     matchup = "%s vs. %s" % (article["away_team"], article["home_team"])
 
     og_image = absolute(check_image(article.get("og_image_url"), "og_image_url"))
+    # The hero artwork is now RENDERED, not merely recorded. Phase 1 validated
+    # hero_image_alt and then never emitted an <img>, so every article carried
+    # alt text for a picture that was not on the page.
+    hero_image = check_image(article.get("hero_image_url"), "hero_image_url")
     hero_alt = article.get("hero_image_alt")
     if not hero_alt:
         raise RuntimeError("hero_image_alt is required (social + image search)")
@@ -633,13 +835,7 @@ def render_article(article, provenance, neighbours):
         {
             "@type": "BreadcrumbList",
             "@id": url + "#breadcrumbs",
-            "itemListElement": [
-                {"@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/"},
-                {"@type": "ListItem", "position": 2, "name": "Matchups", "item": SITE + "/matchups/"},
-                {"@type": "ListItem", "position": 3, "name": sport_label,
-                 "item": "%s/matchups/%s/" % (SITE, sport)},
-                {"@type": "ListItem", "position": 4, "name": matchup},
-            ],
+            "itemListElement": breadcrumb_items(article, sport, sport_label, matchup),
         },
     ]
     graph[0] = {k: v for k, v in graph[0].items() if v is not None}
@@ -657,11 +853,11 @@ def render_article(article, provenance, neighbours):
     prev_a, next_a = neighbours
     nav_bits = []
     if prev_a:
-        nav_bits.append('<a href="/matchups/%s/%s/">&larr; Previous Game File: %s vs. %s</a>' % (
-            esc(prev_a["sport"]), esc(prev_a["slug"]), esc(prev_a["away_team"]), esc(prev_a["home_team"])))
+        nav_bits.append('<a href="%s">&larr; Previous Game File: %s vs. %s</a>' % (
+            esc(article_href(prev_a)), esc(prev_a["away_team"]), esc(prev_a["home_team"])))
     if next_a:
-        nav_bits.append('<a href="/matchups/%s/%s/">Next Game File: %s vs. %s &rarr;</a>' % (
-            esc(next_a["sport"]), esc(next_a["slug"]), esc(next_a["away_team"]), esc(next_a["home_team"])))
+        nav_bits.append('<a href="%s">Next Game File: %s vs. %s &rarr;</a>' % (
+            esc(article_href(next_a)), esc(next_a["away_team"]), esc(next_a["home_team"])))
 
     postgame_html = ""
     postgame = article.get("postgame_json")
@@ -673,17 +869,68 @@ def render_article(article, provenance, neighbours):
             '<p class="gf-sect-sub">Added after the game. The pregame analysis below is unchanged '
             'from what we published before first pitch.</p>%s</div></section>' % pg)
 
+    research = article.get("research_json") or {}
+    eyebrow = article.get("angle_label") or research.get("eyebrow") or sport_label
+
+    def club_mark(side):
+        """The club's own mark, or the coloured rule that stood there before it.
+
+        Falls back rather than failing: a logo the bake could not fetch must not
+        take the article down, and the coloured rule identified the two sides
+        perfectly well on its own."""
+        mark = hero.get("%s_logo" % side) or {}
+        if not mark.get("src"):
+            return "<i></i>"
+        check_image(mark["src"], "%s club logo" % side)
+        return ('<img class="ed-team-logo" src="%s" alt="%s" width="72" height="72" '
+                'loading="lazy" decoding="async">' % (
+                    esc(mark["src"]), esc(hero.get("%s_logo_alt" % side) or "")))
+
+    away_logo_html = club_mark("away")
+    home_logo_html = club_mark("home")
+
+    def hero_faces_html():
+        """The two starters, in the hero, beside the headline.
+
+        Read off the pitching block rather than passed in separately, so the
+        faces in the hero are by construction the same two people the article
+        analyses. Renders nothing at all if either headshot is missing — one
+        face and an empty circle is worse than no portraits.
+        """
+        shots = []
+        for module in article.get("body_json") or []:
+            for block in module.get("blocks") or []:
+                if (block or {}).get("type") != "showdown":
+                    continue
+                for side in ("away", "home"):
+                    photo = ((block.get(side) or {}).get("photo")) or {}
+                    if photo.get("src") and photo.get("alt"):
+                        check_image(photo["src"], "hero portrait")
+                        shots.append((side, photo))
+        if len(shots) != 2:
+            return ""
+        cells = "".join(
+            '<img class="ed-face ed-face--%s" src="%s" alt="%s" width="480" height="480" '
+            'fetchpriority="high" decoding="async">' % (side, esc(p["src"]), esc(p["alt"]))
+            for side, p in shots)
+        return '<div class="ed-hero-faces" aria-hidden="false">%s</div>' % cells
+
+    faces_html = hero_faces_html()
+
     return TEMPLATE.format(
+        crumbs=breadcrumb_html(article, sport, sport_label),
+        eyebrow=esc(eyebrow),
         url=esc(url), title=esc(article.get("title")),
         description=esc(article.get("meta_description")),
         og_title=esc(article.get("og_title") or article.get("title")),
         og_description=esc(article.get("og_description") or article.get("meta_description")),
-        og_image=esc(og_image), hero_alt=esc(hero_alt),
+        og_image=esc(og_image), hero_image=esc(hero_image), hero_alt=esc(hero_alt),
         sport=esc(sport), sport_label=esc(sport_label), matchup=esc(matchup),
         h1=esc(article.get("h1") or matchup), dek=esc(article.get("dek") or ""),
         jsonld=jsonld,
         away_color=esc(hero.get("away_color", "#FF5910")),
         home_color=esc(hero.get("home_color", "#CE1141")),
+        away_logo=away_logo_html, home_logo=home_logo_html, hero_faces=faces_html,
         away_city=esc(hero.get("away_city", "")), away_nick=esc(hero.get("away_nick", "")),
         home_city=esc(hero.get("home_city", "")), home_nick=esc(hero.get("home_nick", "")),
         away_line=esc(hero.get("away_line", "")), home_line=esc(hero.get("home_line", "")),
@@ -732,67 +979,81 @@ TEMPLATE = """<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/tmr-ds.css">
-<link rel="stylesheet" href="/static/css/tmr-gamefile.css">
+<link rel="stylesheet" href="/static/css/tmr-article.css">
 <script type="application/ld+json">
 {jsonld}
 </script>
 </head>
 <body class="tmr-ds tmr-ds--dark">
-<main class="gf-doc" style="--gf-away:{away_color};--gf-home:{home_color}">
+<main class="ed" style="--ed-away:{away_color};--ed-home:{home_color}">
 
-  <header class="gf-hero">
-    <div class="gf-hero-in gf-wrap">
-      <nav class="gf-crumb" aria-label="Breadcrumb" style="padding:0 0 18px">
-        <a href="/">Home</a> <span aria-hidden="true">&rsaquo;</span>
-        <a href="/matchups/">Matchups</a> <span aria-hidden="true">&rsaquo;</span>
-        <a href="/matchups/{sport}/">{sport_label}</a> <span aria-hidden="true">&rsaquo;</span>
+  <header class="ed-hero">
+    <img class="ed-hero-art" src="{hero_image}" alt="{hero_alt}" width="1600" height="620"
+         fetchpriority="high" decoding="async">
+
+    <div class="ed-w ed-w--full">
+      <nav class="ed-crumb" aria-label="Breadcrumb">
+        {crumbs}
         <span>{matchup}</span>
       </nav>
-      <p class="gf-kicker">
-        <span class="gf-chip">TMR Game File</span>
-        <span class="gf-chip gf-chip--ghost">Matchup of the Day</span>
-        <span class="gf-chip gf-chip--ghost">{sport_label}</span>
+
+      <div class="ed-hero-grid">
+      <div class="ed-hero-copy">
+      <p class="ed-kicker">
+        <span class="ed-kicker-mark">Matchup of the Day</span>
+        <span class="ed-kicker-angle">{eyebrow}</span>
       </p>
-      <div class="gf-vs">
-        <div class="gf-side gf-side--away"><i></i>
-          <span class="gf-city">{away_city}</span>
-          <span class="gf-nick">{away_nick}</span>
-          <span class="gf-sideline">{away_line}</span>
+
+      <h1 class="ed-title">{h1}</h1>
+      <p class="ed-dek">{dek}</p>
+
+      <div class="ed-byline">
+        <span>By <a href="/about/research/">TrustMyRecord Research</a></span>
+        <span class="ed-sep" aria-hidden="true">&middot;</span>
+        <span><time datetime="{published_iso}">{published_human}</time></span>
+        <span class="ed-sep" aria-hidden="true">&middot;</span>
+        <span>Updated <time datetime="{modified_iso}">{modified_human}</time></span>
+      </div>
+      </div>
+      {hero_faces}
+      </div>
+    </div>
+  </header>
+
+  <!-- The fixture, demoted to reference: who is playing, where, when, and what
+       each club's record is. It was the hero in the first cut, which made the
+       page read as a fixture list with an article attached to it. -->
+  <section class="ed-fixture" aria-label="The fixture">
+    <div class="ed-w ed-w--full">
+      <div class="ed-fixture-in">
+        <div class="ed-team ed-team--away">{away_logo}
+          <span class="ed-team-city">{away_city}</span>
+          <span class="ed-team-nick">{away_nick}</span>
+          <span class="ed-team-line">{away_line}</span>
         </div>
-        <div class="gf-vsmark">{matchup_arrow}</div>
-        <div class="gf-side gf-side--home"><i></i>
-          <span class="gf-city">{home_city}</span>
-          <span class="gf-nick">{home_nick}</span>
-          <span class="gf-sideline">{home_line}</span>
+        <div class="ed-at">{matchup_arrow}</div>
+        <div class="ed-team ed-team--home">{home_logo}
+          <span class="ed-team-city">{home_city}</span>
+          <span class="ed-team-nick">{home_nick}</span>
+          <span class="ed-team-line">{home_line}</span>
         </div>
       </div>
-      <p class="gf-herometa">
+      <p class="ed-fixture-meta">
         <span>{venue}</span><span><b>{game_time_human}</b></span>
       </p>
     </div>
-    {rail}
-  </header>
+  </section>
 
-  <nav class="gf-nav" aria-label="Sections in this Game File">
-    <div class="gf-wrap"><ol>{nav}</ol></div>
+  {rail}
+
+  <nav class="ed-jump" aria-label="Sections in this article">
+    <div class="ed-w ed-w--full"><ol>{nav}</ol></div>
   </nav>
-
-  <div class="gf-wrap" style="padding-top:34px">
-    <h1 class="gf-title">{h1}</h1>
-    <p class="gf-dek">{dek}</p>
-    <div class="gf-byline">
-      <span>By <a href="/about/research/">TrustMyRecord Research</a></span>
-      <span class="gf-sep" aria-hidden="true">|</span>
-      <span>Published <time datetime="{published_iso}">{published_human}</time></span>
-      <span class="gf-sep" aria-hidden="true">|</span>
-      <span>Updated <time datetime="{modified_iso}">{modified_human}</time></span>
-    </div>
-  </div>
 
   {postgame}
   {body}
 
-  <div class="gf-wrap">
+  <div class="ed-w ed-w--wide ed-end">
     <details class="gf-meth" id="methodology">
       <summary>Methodology, sources and research record</summary>
       <div class="gf-meth-in">
@@ -811,8 +1072,8 @@ TEMPLATE = """<!DOCTYPE html>
 
     <nav class="gf-foot" aria-label="More Game Files">
       <p>{prevnext}</p>
-      <p><a href="/matchups/{sport}/">All {sport_label} Game Files</a> &middot;
-         <a href="/matchups/">All TMR Game Files</a></p>
+      <p><a href="/matchup-of-the-day/">Every Matchup of the Day</a> &middot;
+         <a href="/matchups/">The earlier Game File archive</a></p>
     </nav>
   </div>
 
@@ -829,7 +1090,7 @@ TEMPLATE = """<!DOCTYPE html>
 def card_html(article, lead=False):
     sport_label = SPORT_LABEL.get(article["sport"], article["sport"].upper())
     matchup = "%s vs. %s" % (article["away_team"], article["home_team"])
-    href = "/matchups/%s/%s/" % (article["sport"], article["slug"])
+    href = article_href(article)
     # Descriptive anchor text. The link text is the article's name, never "read more".
     return (
         '<article class="gf-card%s">'
@@ -840,7 +1101,8 @@ def card_html(article, lead=False):
         '<span>Published %s</span></p>'
         '</article>' % (
             " gf-card--lead" if lead else "",
-            esc("Today's Game File" if lead else sport_label + " Game File"),
+            esc(article.get("angle_label")
+                or ("Today's Game File" if lead else sport_label + " Game File")),
             esc(href), esc(matchup),
             esc(article.get("dek") or article.get("meta_description") or ""),
             esc(sport_label), esc(human_date(article.get("published_at")))))
@@ -852,7 +1114,7 @@ def itemlist_jsonld(articles, list_url, name):
     items = [{
         "@type": "ListItem",
         "position": i + 1,
-        "url": "%s/matchups/%s/%s/" % (SITE, a["sport"], a["slug"]),
+        "url": article_abs(a),
         "name": "%s vs. %s" % (a["away_team"], a["home_team"]),
     } for i, a in enumerate(articles[:50])]
     payload = {"@context": "https://schema.org", "@type": "ItemList",
@@ -872,9 +1134,9 @@ def sitemap_block(articles, hubs):
         # date, and a widget refresh does not move it: a lastmod that changes
         # every day on a page that did not change teaches Google to ignore it.
         lastmod = iso_date(a.get("content_modified_at") or a.get("published_at"))
-        lines.append('  <url><loc>%s/matchups/%s/%s/</loc>%s'
+        lines.append('  <url><loc>%s</loc>%s'
                      '<changefreq>monthly</changefreq><priority>0.7</priority></url>' % (
-                         SITE, a["sport"], a["slug"],
+                         article_abs(a),
                          "<lastmod>%s</lastmod>" % lastmod if lastmod else ""))
     lines.append("  <!-- END_MATCHUP_URLS -->")
     return "\n".join(lines)
@@ -926,10 +1188,28 @@ def main():
         prov = a.get("provenance") or []
         try:
             rendered[a["slug"]] = (
-                os.path.join(MATCHUPS_DIR, a["sport"], a["slug"], "index.html"),
+                os.path.join(ROOT, article_rel(a), "index.html"),
                 render_article(a, prov, (prev_a, next_a)))
         except Exception as err:                        # noqa: BLE001
             sys.exit("ABORT: %s failed to render: %s" % (a["slug"], err))
+
+    # ---- artwork -----------------------------------------------------------
+    # Generated for every published article on every bake. Output is
+    # deterministic, so an unchanged article rewrites byte-identical files and
+    # produces no diff; a NEW article gets its artwork in the same commit as its
+    # HTML, which is the only way the hero image is never a 404 on the day the
+    # piece goes live.
+    if not args.dry_run:
+        # Photography first: a missing headshot must stop the bake BEFORE any
+        # HTML is written, not after, or the article ships with a broken <img>.
+        fetch_media(collect_media(ordered))
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            import build_matchup_graphics as art
+            for a in ordered:
+                art.build_for_article(a["slug"], graphics_spec(a))
+        except Exception as err:                        # noqa: BLE001
+            sys.exit("ABORT: artwork generation failed: %s" % err)
 
     today_iso = dt.datetime.now(dt.timezone.utc).date().isoformat()
 
@@ -938,6 +1218,13 @@ def main():
     # is a bare article record without its provenance attached, and the cover
     # counts research claims off it — using the bare copy silently dropped the
     # "verified research claims" line from the homepage.
+    # The two hubs do not compete. /matchup-of-the-day/ is the daily feature and
+    # lists the articles that have an angle; /matchups/ is the earlier archive
+    # and lists only its own. Before this split both hubs listed every article,
+    # which put two near-identical listing pages in the index pointing at the
+    # same URLs — the sort of self-competition that costs a section its rankings.
+    legacy = [a for a in ordered if not a.get("angle_key")]
+
     lead = None
     if featured and featured.get("slug"):
         lead = next((a for a in ordered if a["slug"] == featured["slug"]), featured)
@@ -945,17 +1232,20 @@ def main():
         lead = ordered[0]
     rest = [a for a in ordered if not lead or a["slug"] != lead["slug"]]
 
+    legacy_lead = legacy[0] if legacy else None
+    legacy_rest = legacy[1:]
+
     hub_today = card_html(lead, lead=True) if lead else (
         '<p class="gf-empty">Today&rsquo;s Game File is being prepared. '
         'It publishes in the morning, ahead of first pitch.</p>')
     hub_recent = "".join(card_html(a) for a in rest[:20]) or (
         '<p class="gf-empty">The archive starts with our first published Game File.</p>')
 
-    sports_present = sorted({a["sport"] for a in ordered})
+    sports_present = sorted({a["sport"] for a in legacy})
     sport_items = []
     for sport in sports_present or ["mlb"]:
         label = SPORT_LABEL.get(sport, sport.upper())
-        n = sum(1 for a in ordered if a["sport"] == sport)
+        n = sum(1 for a in legacy if a["sport"] == sport)
         sport_items.append(
             '<li><a href="/matchups/%s/">%s Game Files &mdash; matchup analysis, trends and advanced stats</a>'
             '%s</li>' % (esc(sport), esc(label),
@@ -964,13 +1254,46 @@ def main():
 
     writes = []
 
+    # /matchup-of-the-day/ — the daily feature's own home and its archive.
+    # Driven off the articles that HAVE an angle, so the legacy /matchups/ pages
+    # keep their own listings and neither hub claims the other's articles.
+    motd_path = os.path.join(MOTD_DIR, "index.html")
+    if os.path.exists(motd_path):
+        daily = [a for a in ordered if a.get("angle_key")]
+        motd_lead = lead if (lead and lead.get("angle_key")) else (daily[0] if daily else None)
+        motd_rest = [a for a in daily if not motd_lead or a["slug"] != motd_lead["slug"]]
+        text = read(motd_path)
+        text = replace_marker(text, "motdToday",
+                              card_html(motd_lead, lead=True) if motd_lead else
+                              '<p class="gf-empty">Today&rsquo;s Matchup of the Day is being '
+                              'prepared. It publishes in the morning, ahead of first pitch.</p>',
+                              motd_path)
+        text = replace_marker(text, "motdRecent",
+                              "".join(card_html(a) for a in motd_rest[:40]) or
+                              '<p class="gf-empty">The archive starts with our first '
+                              'Matchup of the Day.</p>', motd_path)
+        text = replace_marker(text, "motdItemList",
+                              itemlist_jsonld(daily, SITE + "/matchup-of-the-day/",
+                                              "TMR Matchup of the Day"), motd_path)
+        writes.append((motd_path, text))
+    else:
+        print("WARN: matchup-of-the-day/index.html is missing; the daily hub was not written")
+
     hub_path = os.path.join(MATCHUPS_DIR, "index.html")
     hub = read(hub_path)
-    hub = replace_marker(hub, "matchupsHubToday", hub_today, hub_path)
-    hub = replace_marker(hub, "matchupsHubRecent", hub_recent, hub_path)
+    hub = replace_marker(hub, "matchupsHubToday",
+                         card_html(legacy_lead, lead=True) if legacy_lead else
+                         '<p class="gf-empty">The daily article now publishes at '
+                         '<a href="/matchup-of-the-day/">Matchup of the Day</a>. '
+                         'The Game Files below remain published at their original addresses.</p>',
+                         hub_path)
+    hub = replace_marker(hub, "matchupsHubRecent",
+                         "".join(card_html(a) for a in legacy_rest[:20]) or
+                         '<p class="gf-empty">Every Game File in this archive is listed above.</p>',
+                         hub_path)
     hub = replace_marker(hub, "matchupsHubSports", hub_sports, hub_path)
     hub = replace_marker(hub, "matchupsHubItemList",
-                         itemlist_jsonld(ordered, SITE + "/matchups/", "TMR Game Files"), hub_path)
+                         itemlist_jsonld(legacy, SITE + "/matchups/", "TMR Game Files"), hub_path)
     writes.append((hub_path, hub))
 
     # Iterate over the hub shells that EXIST, not over the sports that happen to
@@ -988,7 +1311,7 @@ def main():
             print("WARN: no hub shell for %s; its articles are still baked" % sport)
     for sport in hub_sports:
         sport_path = os.path.join(MATCHUPS_DIR, sport, "index.html")
-        in_sport = [a for a in ordered if a["sport"] == sport]
+        in_sport = [a for a in legacy if a["sport"] == sport]
         s_lead = in_sport[0] if in_sport else None
         s_rest = in_sport[1:]
         text = read(sport_path)
@@ -1027,7 +1350,10 @@ def main():
     # silently drop /matchups/mlb/ out of the sitemap whenever nothing is
     # published, which is exactly the kind of on-again-off-again URL that taught
     # Google to distrust this site's sitemap in the first place.
-    hubs = [("%s/matchups/" % SITE, today_iso)]
+    hubs = []
+    if os.path.exists(os.path.join(MOTD_DIR, "index.html")):
+        hubs.append(("%s/matchup-of-the-day/" % SITE, today_iso))
+    hubs.append(("%s/matchups/" % SITE, today_iso))
     if os.path.isdir(MATCHUPS_DIR):
         for sport in sorted(os.listdir(MATCHUPS_DIR)):
             if os.path.exists(os.path.join(MATCHUPS_DIR, sport, "index.html")):
@@ -1038,6 +1364,12 @@ def main():
     # ---- orphan report. REPORT ONLY. Nothing here deletes anything. ---------
     known = {a["slug"] for a in ordered}
     orphans = []
+    if os.path.isdir(MOTD_DIR):
+        for entry in os.listdir(MOTD_DIR):
+            if entry == "index.html" or not os.path.isdir(os.path.join(MOTD_DIR, entry)):
+                continue
+            if entry not in known:
+                orphans.append("matchup-of-the-day/%s" % entry)
     if os.path.isdir(MATCHUPS_DIR):
         for sport in os.listdir(MATCHUPS_DIR):
             sport_dir = os.path.join(MATCHUPS_DIR, sport)
@@ -1049,7 +1381,7 @@ def main():
                 if entry not in known:
                     orphans.append("%s/%s" % (sport, entry))
     for orphan in orphans:
-        print("NOTE: /matchups/%s/ is on disk but not in the published set. "
+        print("NOTE: /%s/ is on disk but not in the published set. "
               "LEFT IN PLACE - a published Game File is permanent, and removing one "
               "is a deliberate manual act, never a side effect of a bake." % orphan)
 

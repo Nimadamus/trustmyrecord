@@ -90,7 +90,11 @@
          the crawl graph had a single entry point into a section meant to grow
          indefinitely. It sits in Explore rather than Tools because a Game File
          is editorial content, not a tool. One link, sitewide, crawlable. */
-      ['/matchups/', 'TMR Game Files'],
+      /* Repointed 2026-08-11 to the daily section. /matchups/ is still a live,
+         indexed archive of the Game Files published before the URL scheme
+         changed, and it is linked from the new hub — but the sitewide nav entry
+         belongs to the thing that publishes every day, not to the archive. */
+      ['/matchup-of-the-day/', 'Matchup of the Day'],
       ['/leaderboards/', 'Leaderboards'],
       ['/handicappers/', 'Browse Handicappers'],
       ['/verified-handicapper-records/', 'Verified Records'],
