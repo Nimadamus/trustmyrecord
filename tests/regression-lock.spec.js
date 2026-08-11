@@ -652,19 +652,24 @@ test.describe('handicappers directory canonical profile links', () => {
     // around the race instead of against it. The edge worker now guarantees this
     // URL exists from the instant the account does (workers/home-ssr/worker.mjs,
     // EDGE_FALLBACK_20260810), so the FIRST request must already be 200.
-    const first = await page.goto(newestHref, { waitUntil: 'domcontentloaded' });
-    expect(first && first.status(), `${newestHref} (newest member) must be 200 on the FIRST request, with no wait for the bake`).toBe(200);
-    await expect(page).not.toHaveTitle(/page not found/i);
-    await expect(page.locator('body'), 'must not land on the generic 404 redirect shell').not.toContainText(/we couldn.t find that page/i);
-    await expect(page.locator('body'), 'the page served must actually be this member\'s profile').toContainText(member.username);
-
-    // RACE_20260811: the failure this locks was INTERMITTENT -- the edge path
-    // fell back to the origin 404 only when an upstream call ran slow, so a
-    // single green request proved nothing. Ask repeatedly; every answer must be
-    // 200. This is the assertion that would have caught the 2026-08-11 report.
+    // Deliberately absolute, NOT page.goto(): the guarantee is a production edge
+    // behaviour, and this suite's default baseURL is the local static server
+    // (scripts/serve-static-regression.js), where an unbaked member legitimately
+    // has no file and the worker is not in the path at all. Checking the local
+    // server here would assert something the fix never claimed.
+    //
+    // RACE_20260811: the failure was INTERMITTENT -- the edge fell back to the
+    // origin 404 only when an upstream call ran slow -- so one green request
+    // proves nothing. Every one of these must be 200, starting with the first:
+    // no polling, no grace period for the bake. That tolerance is what let the
+    // 404 keep reaching real visitors.
+    const liveProfileUrl = `https://trustmyrecord.com${newestHref}`;
     for (let attempt = 0; attempt < 10; attempt += 1) {
-      const again = await request.get(`https://trustmyrecord.com${newestHref}`);
-      expect(again.status(), `${newestHref} must be 200 on every request (attempt ${attempt + 1}/10) -- an intermittent 404 here is the bug, not flake`).toBe(200);
+      const live = await request.get(liveProfileUrl);
+      expect(live.status(), `${liveProfileUrl} must be 200 on every request (attempt ${attempt + 1}/10) -- an intermittent 404 here is the bug, not flake`).toBe(200);
+      const body = await live.text();
+      expect(body, 'must not serve the site 404 page under a 200').not.toMatch(/page not found/i);
+      expect(body, 'the page served must actually be this member\'s profile').toContain(member.username);
     }
   });
 });
