@@ -1298,3 +1298,53 @@ body.tmr-ds .gf-showshot {
   width: clamp(76px, 7.6vw, 104px) !important;
   height: clamp(76px, 7.6vw, 104px) !important;
 }
+
+/* ====================================================== prose beside data ==
+
+   The single biggest source of length on this page was not type size — that has
+   been cut twice — it was a 36rem reading column sitting inside a 74rem wrap
+   with the charts queued underneath it, so half the screen was empty on every
+   paragraph and everything stacked.
+
+   Each section now runs two streams side by side, prose left and visuals right,
+   order preserved within each. Sections that are all prose or all visuals are
+   not split (see render_body) and keep the full width, so nothing ends up as a
+   column of nothing.
+
+   Below 960px it collapses back to one column in source order, which is the
+   order it was authored in.
+   =========================================================================== */
+
+body.tmr-ds .gf-duo {
+  display: grid;
+  gap: clamp(16px, 2.2vw, 30px);
+  align-items: start;
+}
+@media (min-width: 960px) {
+  body.tmr-ds .gf-duo { grid-template-columns: minmax(0, 27rem) minmax(0, 1fr); }
+  /* The data column can be taller than the prose beside it; letting it stick
+     would fight the sticky jump nav, so it simply starts level. */
+  body.tmr-ds .gf-duo-read > :first-child { margin-top: 0; }
+  body.tmr-ds .gf-duo-data > :first-child { margin-top: 0; }
+}
+body.tmr-ds .gf-duo-read { min-width: 0; }
+body.tmr-ds .gf-duo-data { min-width: 0; }
+
+/* Inside the pair, prose is already in a column of its own — the global
+   reading-measure cap would narrow it a second time. */
+body.tmr-ds .gf-duo-read > :is(p, ul, ol, h3),
+body.tmr-ds .gf-duo-read > .gf-call { max-width: none; }
+
+/* Charts in the right-hand stream carry less vertical air than they do when
+   they are interrupting a full-width column. */
+body.tmr-ds .gf-duo-data > .gf-chart:first-child,
+body.tmr-ds .gf-duo-data > .gf-show:first-child,
+body.tmr-ds .gf-duo-data > .gf-tgroup:first-child { margin-top: 0; }
+body.tmr-ds .gf-duo-data > :last-child { margin-bottom: 0; }
+
+/* NOT two-up. Splitting the trend board into CSS columns was tried and made it
+   TALLER — 1,534px to 2,021px — because each group holds its own auto-fit grid
+   of cards, so halving a group's width simply gave it more rows, and the extra
+   rows cost more than the second column saved. Measured, reverted, recorded so
+   it is not tried again. The .gf-tboard wrapper stays; it is harmless and makes
+   the block addressable. */

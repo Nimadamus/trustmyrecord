@@ -375,7 +375,11 @@ def b_trendboard(block):
         out.append('<div class="gf-tgroup"><h3>%s</h3><div class="gf-tcards">%s</div></div>'
                    % (esc(cat.get("name")), "".join(cards)))
     note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
-    return "".join(out) + note
+    # Wrapped so the groups can be laid out two-up on a wide screen. Eight
+    # groups stacked in one column was the tallest single block on the page,
+    # and a stat board is scanned rather than read, so a second column costs
+    # the reader nothing.
+    return '<div class="gf-tboard">%s</div>%s' % ("".join(out), note)
 
 
 def b_bars(block):
@@ -618,12 +622,37 @@ def render_body(article):
         # checked. Layout choice must not create a hole in the guarantee.
         main_bs = [b for b in module.get("blocks") or [] if (b or {}).get("slot") != "aside"]
         aside_bs = [b for b in module.get("blocks") or [] if (b or {}).get("slot") == "aside"]
-        blocks = "".join(render_block(b) for b in main_bs)
         sub = ('<p class="gf-sect-sub">%s</p>' % esc(module.get("sub"))) if module.get("sub") else ""
         mark = (' data-mark="%s"' % esc(module["mark"])) if module.get("mark") else ""
         aside = "".join(render_block(b) for b in aside_bs)
-        body = ('<div class="gf-split"><div class="gf-split-main">%s</div>'
-                '<div class="gf-split-aside">%s</div></div>' % (blocks, aside)) if aside else blocks
+
+        # ---- prose and data side by side, not stacked -----------------------
+        #
+        # The reading measure is ~36rem inside a ~74rem wrap, so on a desktop the
+        # right half of the page was empty on every paragraph while the charts
+        # queued up underneath. That is where the length was coming from: not
+        # type size — which has already been cut twice — but a single column
+        # using half the available width.
+        #
+        # Each section is now two streams, prose left and visuals right, with
+        # ORDER PRESERVED WITHIN EACH STREAM, which is how a magazine sets a
+        # feature and keeps it readable. Sections that are all prose or all
+        # visuals (the trend board) are left alone and run full width; splitting
+        # those would only make a column of nothing.
+        PROSE = {"p", "h3", "list", "call"}
+        prose_bs = [b for b in main_bs if (b or {}).get("type", "p") in PROSE]
+        data_bs = [b for b in main_bs if (b or {}).get("type", "p") not in PROSE]
+
+        if prose_bs and data_bs and not aside_bs:
+            body = ('<div class="gf-duo">'
+                    '<div class="gf-duo-read">%s</div>'
+                    '<div class="gf-duo-data">%s</div></div>' % (
+                        "".join(render_block(b) for b in prose_bs),
+                        "".join(render_block(b) for b in data_bs)))
+        else:
+            blocks = "".join(render_block(b) for b in main_bs)
+            body = ('<div class="gf-split"><div class="gf-split-main">%s</div>'
+                    '<div class="gf-split-aside">%s</div></div>' % (blocks, aside)) if aside else blocks
         out.append(
             '<section class="gf-sect" id="%s" data-env="%s"%s><div class="gf-wrap">'
             '<div class="gf-sect-head"><h2>%s</h2>%s</div>%s%s</div></section>' % (
