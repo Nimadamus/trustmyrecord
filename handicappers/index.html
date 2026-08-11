@@ -1749,9 +1749,11 @@
             try {
                 const data = await directApiRequest('/users/newest-member');
                 const m = data && data.member;
-                if (!m || !m.username) { el.hidden = true; return; }
+                // Canonical URL comes from the API (backend utils/profileUrl.js); it is
+                // the one the edge guarantees a real page for. Never re-derive it here.
+                if (!m || !m.username || !m.profile_url) { el.hidden = true; return; }
                 const name = m.display_name || m.username;
-                const href = m.profile_url || ('/u/' + encodeURIComponent(m.username) + '/');
+                const href = m.profile_url;
                 el.innerHTML = 'Newest member: <a href="' + escapeHtml(href) + '">' + escapeHtml(name) + '</a>';
                 el.hidden = false;
             } catch (error) {

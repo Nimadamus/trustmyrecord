@@ -4387,10 +4387,14 @@ function loadNewestMember() {
         .then(function(r){ return r.ok ? r.json() : null; })
         .then(function(data){
             var m = data && data.member;
-            if (!m || !m.username) { el.hidden = true; return; }
+            // profile_url is the API's canonical answer (backend utils/profileUrl.js)
+            // and it is the URL the edge guarantees a real page for. Re-deriving it
+            // here from the username would be a second definition of the same thing
+            // that is only equal by coincidence, which is how this drifted before.
+            if (!m || !m.username || !m.profile_url) { el.hidden = true; return; }
             var name = m.display_name || m.username;
-            var href = m.profile_url || ('/u/' + encodeURIComponent(m.username) + '/');
-            el.innerHTML = 'Welcome to our newest member, <a href="' + href + '">' + escHtml(name) + '</a>!';
+            var href = m.profile_url;
+            el.innerHTML = 'Welcome to our newest member, <a href="' + escHtml(href) + '">' + escHtml(name) + '</a>!';
             el.hidden = false;
         })
         .catch(function(){ el.hidden = true; });
@@ -4424,10 +4428,10 @@ function loadForumStatistics() {
 
             var newestEl = document.getElementById('fstatNewest');
             var m = data.newest_member;
-            if (newestEl && m && m.username) {
+            if (newestEl && m && m.username && m.profile_url) {
                 var name = m.display_name || m.username;
-                var href = m.profile_url || ('/u/' + encodeURIComponent(m.username) + '/');
-                newestEl.innerHTML = 'Newest Member: <a href="' + href + '">' + escHtml(name) + '</a>';
+                var href = m.profile_url;   // canonical, from the API. See loadNewestMember().
+                newestEl.innerHTML = 'Newest Member: <a href="' + escHtml(href) + '">' + escHtml(name) + '</a>';
                 newestEl.hidden = false;
             } else if (newestEl) {
                 newestEl.hidden = true;

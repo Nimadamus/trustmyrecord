@@ -614,10 +614,14 @@ test.describe('handicappers directory canonical profile links', () => {
   // saw members returned by GET /api/users -- which requires a settled pick
   // -- so it never baked even a compact /u/<username>/ page for them. Fixed
   // by adding GET /api/users/directory-usernames (no settled-pick
-  // requirement) as the discovery source. This test locks two things: the
-  // newest-member widget must build its href with the exact same /u/
-  // convention every directory card uses, and that URL must actually
-  // resolve (not the redirect-shell 404) once baked.
+  // requirement) as the discovery source.
+  //
+  // It came back on 2026-08-11 (member `diddy`) because that fix only shortened
+  // the race: /u/ is baked by CI, newest-member is live from the DB, so the link
+  // is published before the page is. The real fix is the edge worker serving the
+  // compact page for any directory member whose bake has not landed, and the
+  // assertions below are written to fail on the intermittency rather than wait
+  // it out.
   test('newest member link matches the canonical /u/<username>/ route used by directory cards, and resolves', async ({ page, request }) => {
     const api = await request.get('https://trustmyrecord-api.onrender.com/api/users/newest-member');
     expect(api.ok(), 'newest-member API should respond').toBeTruthy();
@@ -629,8 +633,10 @@ test.describe('handicappers directory canonical profile links', () => {
     await expect(newestLink, 'newest member link should render').toBeVisible({ timeout: 20000 });
 
     const newestHref = await newestLink.getAttribute('href');
-    const expectedHref = `/u/${encodeURIComponent(member.username)}/`;
-    expect(newestHref, 'newest-member link must point at the canonical /u/<username>/ route, not /profile/?user= or anything else').toBe(expectedHref);
+    // The API's profile_url IS the canonical answer (backend utils/profileUrl.js).
+    // The widget must render that value, not a second derivation of it.
+    expect(member.profile_url, 'newest-member API must return a canonical profile_url').toBe(`/u/${encodeURIComponent(member.username)}/`);
+    expect(newestHref, 'newest-member link must render the API\'s profile_url verbatim, not /profile/?user= or a locally rebuilt href').toBe(member.profile_url);
 
     // Same href-building convention must be used by ordinary directory cards
     // elsewhere on this same page -- one shared pattern, not two link builders.
@@ -640,17 +646,25 @@ test.describe('handicappers directory canonical profile links', () => {
       expect(href, `every /u/ link on the directory must follow the /u/<username>/ shape (got ${href})`).toMatch(/^\/u\/[^/]+\/$/);
     }
 
-    // The freshly-verified member's page may still be mid-bake (prerender
-    // dispatch fires on verification but isn't instant) -- poll briefly
-    // rather than treat that legitimate race as a hard failure.
-    let response = null;
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      response = await page.goto(newestHref, { waitUntil: 'domcontentloaded' });
-      if (response && response.status() !== 404) break;
-      await page.waitForTimeout(15000);
-    }
-    expect(response && response.status(), `${newestHref} (newest member) must not 404`).not.toBe(404);
+    // NO retry tolerance, deliberately. The previous version of this assertion
+    // polled four times over 45s "because the bake isn't instant", which is
+    // exactly why the 404 kept reaching real visitors: the test was written
+    // around the race instead of against it. The edge worker now guarantees this
+    // URL exists from the instant the account does (workers/home-ssr/worker.mjs,
+    // EDGE_FALLBACK_20260810), so the FIRST request must already be 200.
+    const first = await page.goto(newestHref, { waitUntil: 'domcontentloaded' });
+    expect(first && first.status(), `${newestHref} (newest member) must be 200 on the FIRST request, with no wait for the bake`).toBe(200);
     await expect(page).not.toHaveTitle(/page not found/i);
     await expect(page.locator('body'), 'must not land on the generic 404 redirect shell').not.toContainText(/we couldn.t find that page/i);
+    await expect(page.locator('body'), 'the page served must actually be this member\'s profile').toContainText(member.username);
+
+    // RACE_20260811: the failure this locks was INTERMITTENT -- the edge path
+    // fell back to the origin 404 only when an upstream call ran slow, so a
+    // single green request proved nothing. Ask repeatedly; every answer must be
+    // 200. This is the assertion that would have caught the 2026-08-11 report.
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const again = await request.get(`https://trustmyrecord.com${newestHref}`);
+      expect(again.status(), `${newestHref} must be 200 on every request (attempt ${attempt + 1}/10) -- an intermittent 404 here is the bug, not flake`).toBe(200);
+    }
   });
 });
