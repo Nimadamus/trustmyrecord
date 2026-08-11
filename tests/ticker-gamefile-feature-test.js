@@ -164,6 +164,47 @@ function measure(page) {
       else bad('game_pk map: badge reads ' + (which && which.badge));
     }
 
+    /* ---- two eligible games, exactly ONE card marked --------------------
+       Clubs play series and the window is deliberately wider than a day, so the
+       API can legitimately name more than one game with a breakdown. Two lit
+       cards makes neither look like the pick of the day, so the ticker takes the
+       first placeable one and stops. The list arrives featured-first, so that is
+       also the right one. */
+    {
+      const two = {
+        ok: true, featured: null,
+        games: [
+          { game_pk: 222, url: 'https://trustmyrecord.com/matchup-of-the-day/a/',
+            away_team: 'New York Mets', home_team: 'Atlanta Braves' },
+          { game_pk: 333, url: 'https://trustmyrecord.com/matchup-of-the-day/b/',
+            away_team: 'Baltimore Orioles', home_team: 'Minnesota Twins' },
+        ],
+      };
+      const pg = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+      await pg.route('**/api/nav/mlb-slate*', (r) =>
+        r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SLATE) }));
+      await pg.route('**/api/matchups/today', (r) =>
+        r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(two) }));
+      await pg.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
+      await pg.waitForTimeout(1400);
+      const count = await pg.evaluate(() => ({
+        marked: document.querySelectorAll('.ticker .gm--gf').length,
+        badges: document.querySelectorAll('.ticker .gm-gf').length,
+        first: (document.querySelector('.ticker .gm--gf') || {}).getAttribute
+          ? document.querySelector('.ticker .gm--gf').getAttribute('data-game-pk') : null,
+      }));
+      await pg.close();
+
+      if (count.marked === 1) ok('two eligible games: exactly one card is marked');
+      else bad('two eligible games: ' + count.marked + ' cards marked, expected 1');
+
+      if (count.badges === 1) ok('two eligible games: exactly one VIEW BREAKDOWN badge');
+      else bad('two eligible games: ' + count.badges + ' badges, expected 1');
+
+      if (count.first === '222') ok('two eligible games: the first in the list wins');
+      else bad('two eligible games: marked pk ' + count.first + ', expected the first (222)');
+    }
+
     /* ---- with none published ----------------------------------------- */
     page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await page.route('**/api/nav/mlb-slate*', (r) =>
