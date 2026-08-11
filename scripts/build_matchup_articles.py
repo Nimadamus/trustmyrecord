@@ -399,8 +399,8 @@ def b_bars(block):
                 " is-better" if better == "home" else "", (100 - share_a) * 0.88, esc(r.get("home"))))
     legend = (
         '<div class="gf-legend">'
-        '<span><i style="background:var(--gf-away)"></i>%s</span>'
-        '<span><i style="background:var(--gf-home)"></i>%s</span></div>' % (
+        '<span><i class="gf-key gf-key--a"></i>%s</span>'
+        '<span><i class="gf-key gf-key--h"></i>%s</span></div>' % (
             esc(block.get("away_label")), esc(block.get("home_label"))))
     head = ('<p class="gf-chart-t">%s%s</p>' % (
         esc(block.get("title") or ""), src_badge(block.get("source")))) if block.get("title") else ""
@@ -889,6 +889,17 @@ def render_article(article, provenance, neighbours):
     away_logo_html = club_mark("away")
     home_logo_html = club_mark("home")
 
+    # The two club marks as CSS variables on the article root. This is what lets
+    # legends, form rows, the season timeline and the verdict all show the badge
+    # without every one of those blocks having to carry an image in its data —
+    # and a mark in place of a spelled-out club name costs less height than the
+    # words did, which is the only way to add imagery without adding scroll.
+    logo_bits = ""
+    for side in ("away", "home"):
+        mark = hero.get("%s_logo" % side) or {}
+        if mark.get("src"):
+            logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(mark["src"]))
+
     def hero_faces_html():
         """The two starters, in the hero, beside the headline.
 
@@ -917,6 +928,17 @@ def render_article(article, provenance, neighbours):
 
     faces_html = hero_faces_html()
 
+    venue_html = ""
+    if article.get("venue_name"):
+        venue_src = "/static/media/matchups/%s-venue.svg" % article["slug"]
+        check_image(venue_src, "venue plate")
+        venue_html = (
+            '<figure class="ed-venue"><img src="%s" alt="%s" width="1040" height="300" '
+            'loading="lazy" decoding="async"><figcaption>%s</figcaption></figure>' % (
+                esc(venue_src),
+                esc("TMR schematic of the ballpark hosting this game: %s" % article["venue_name"]),
+                esc(article["venue_name"])))
+
     return TEMPLATE.format(
         crumbs=breadcrumb_html(article, sport, sport_label),
         eyebrow=esc(eyebrow),
@@ -931,6 +953,7 @@ def render_article(article, provenance, neighbours):
         away_color=esc(hero.get("away_color", "#FF5910")),
         home_color=esc(hero.get("home_color", "#CE1141")),
         away_logo=away_logo_html, home_logo=home_logo_html, hero_faces=faces_html,
+        logo_vars=logo_bits, venue_plate=venue_html,
         away_city=esc(hero.get("away_city", "")), away_nick=esc(hero.get("away_nick", "")),
         home_city=esc(hero.get("home_city", "")), home_nick=esc(hero.get("home_nick", "")),
         away_line=esc(hero.get("away_line", "")), home_line=esc(hero.get("home_line", "")),
@@ -985,7 +1008,7 @@ TEMPLATE = """<!DOCTYPE html>
 </script>
 </head>
 <body class="tmr-ds tmr-ds--dark">
-<main class="ed" style="--ed-away:{away_color};--ed-home:{home_color}">
+<main class="ed" style="--ed-away:{away_color};--ed-home:{home_color}{logo_vars}">
 
   <header class="ed-hero">
     <img class="ed-hero-art" src="{hero_image}" alt="{hero_alt}" width="1600" height="620"
@@ -1045,6 +1068,8 @@ TEMPLATE = """<!DOCTYPE html>
   </section>
 
   {rail}
+
+  {venue_plate}
 
   <nav class="ed-jump" aria-label="Sections in this article">
     <div class="ed-w ed-w--full"><ol>{nav}</ol></div>
