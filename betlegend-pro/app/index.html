@@ -808,13 +808,6 @@
     var mSubmit = $('mSubmit');
     submitButtons.push(mSubmit);
 
-    // Six ids exist both as a top-level request field (the original API) and as
-    // an id in the filter library. Those must travel top-level.
-    var LEGACY_IDS = {
-        venue: 1, role: 1, opponent_type: 1, season_type: 1,
-        head_to_head_only: 1, min_rest_days: 1
-    };
-
     // Conditions are offered from the SERVER's own groups (GET
     // matchup-filters), not from a local re-grouping. A local category map is a
     // second source of truth that silently hides any id the server adds, and
@@ -1386,12 +1379,19 @@
         Object.keys(filters).forEach(function (key) {
             if (!isSet(filters[key])) return;
             var id = idOf(key), bucket = bktOf(key);
-            // The six legacy ids are top-level request fields; the endpoint
-            // reads them there and skips them in the library pass.
-            if (LEGACY_IDS[id]) { body[id] = filters[key]; return; }
-            if (bucket === 't1') t1[id] = filters[key];
-            else if (bucket === 't2') t2[id] = filters[key];
-            else game[id] = filters[key];
+            // Every condition travels in the bucket it was added FOR, legacy
+            // ids included. The endpoint promotes a legacy id out of `filters`
+            // onto its top-level field, so game-level ones run exactly as they
+            // always did -- while a TEAM-level one (role, min_rest_days) keeps
+            // the side it was chosen for. Sent top-level it had no side at all,
+            // so "Colorado as underdog" was answered for Atlanta, and the same
+            // id picked for both teams silently kept one.
+            // A whole-number condition is sent as a number, not the raw
+            // input string.
+            var value = (id === 'min_rest_days') ? Number(filters[key]) : filters[key];
+            if (bucket === 't1') t1[id] = value;
+            else if (bucket === 't2') t2[id] = value;
+            else game[id] = value;
         });
         if (Object.keys(game).length) body.filters = game;
         if (Object.keys(t1).length) body.team_1_filters = t1;
@@ -2079,9 +2079,7 @@
             body.season = tf;
         }
         var chosen = filterPayload();
-        Object.keys(chosen).forEach(function (k) {
-            body[k] = (k === 'min_rest_days') ? Number(chosen[k]) : chosen[k];
-        });
+        Object.keys(chosen).forEach(function (k) { body[k] = chosen[k]; });
         return body;
     }
 
