@@ -365,11 +365,32 @@ def rewrite_value(value: str, role: str) -> str:
 DECL_RE = re.compile(r"([-A-Za-z][-A-Za-z0-9_]*)(\s*:\s*)([^;{}]+)")
 
 
+COMMENT = re.compile(r"/\*.*?\*/", re.S)
+
+
 def rewrite_declarations(css: str, clip_text: bool = False) -> tuple[str, int]:
     hits = [0]
 
+    # Comments come out first. Prose contains colons, and the declaration regex
+    # is happy to read "page grey: near-black base ... */ --ed-bg: #070910" as a
+    # single declaration named `grey` -- silently swallowing the real token
+    # behind it, which is what left the Game File pages on a #070910 ground.
+    stash: list[str] = []
+
+    def hide(m):
+        stash.append(m.group(0))
+        return f"\x01C{len(stash) - 1}\x01"
+
+    css = COMMENT.sub(hide, css)
+
     def repl(m):
         prop, sep, val = m.group(1), m.group(2), m.group(3)
+        # Not a colour, but it decides the UA's ink for form controls,
+        # scrollbars and autofill. Left on `dark` under a light page it produces
+        # a white-on-white text input that no rule of ours ever touched.
+        if prop.strip().lower() == "color-scheme" and "dark" in val.lower():
+            hits[0] += 1
+            return prop + sep + val.lower().replace("dark", "light")
         role = role_for(prop, val, clip_text)
         if not role:
             return m.group(0)
@@ -380,7 +401,10 @@ def rewrite_declarations(css: str, clip_text: bool = False) -> tuple[str, int]:
             hits[0] += 1
         return prop + sep + new
 
-    return DECL_RE.sub(repl, css), hits[0]
+    out = DECL_RE.sub(repl, css)
+    for i, c in enumerate(stash):
+        out = out.replace(f"\x01C{i}\x01", c)
+    return out, hits[0]
 
 
 CLIP_TEXT = re.compile(r"(?:-webkit-)?background-clip\s*:\s*text", re.I)
@@ -412,6 +436,17 @@ def rewrite_css(css: str) -> tuple[str, int]:
     """
     total = [0]
 
+    # Same reason as in rewrite_declarations, one level up: a comment above a
+    # rule would otherwise be read as part of its selector, and a comment that
+    # merely MENTIONS `.hero` would take the rule for a dark band.
+    stash: list[str] = []
+
+    def hide(m):
+        stash.append(m.group(0))
+        return f"\x01C{len(stash) - 1}\x01"
+
+    css = COMMENT.sub(hide, css)
+
     def rule(m):
         sel, body = m.group(1), m.group(2)
         dark, light = [], []
@@ -431,7 +466,10 @@ def rewrite_css(css: str) -> tuple[str, int]:
         return (lead + ",".join(dark) + "{" + body + "}\n"
                 + lead + ",".join(light) + "{" + out + "}")
 
-    return INNER_RULE.sub(rule, css), total[0]
+    out = INNER_RULE.sub(rule, css)
+    for i, c in enumerate(stash):
+        out = out.replace(f"\x01C{i}\x01", c)
+    return out, total[0]
 
 
 def split_selector(sel: str) -> list[str]:

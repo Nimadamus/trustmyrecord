@@ -46,6 +46,11 @@ EXCLUDE = re.compile(
 # Data-dense tools that stay on the navy ramp even though they are tmr-ds--dark.
 DS_DARK_KEEP = re.compile(r"^(mlb-simulator/|sportsbook/)")
 
+# Public pages that are dark but carry NO shared sheet at all -- written
+# standalone, so the tmr-sitewide.css test never sees them. Found by rendering
+# every route and measuring, not by reading the markup.
+EXTRA_SHELL = ["activation/index.html"]
+
 
 def git_html_files() -> list[str]:
     out = subprocess.check_output(["git", "ls-files", "*.html"], cwd=ROOT)
@@ -69,7 +74,7 @@ def classify():
             if not DS_DARK_KEEP.search(rel):
                 ds_dark.append(rel)
             continue
-        if "tmr-sitewide.css" in html:
+        if "tmr-sitewide.css" in html or rel in EXTRA_SHELL:
             shell.append(rel)
     return sorted(shell), sorted(ds_dark)
 

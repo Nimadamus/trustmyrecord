@@ -47,6 +47,12 @@ SOURCES = [
     # rather than editing is what lets the two diverge.
     ("static/css/blp-pro.css",
      re.compile(r"(?:\bbody)?\.blp-page\b"), "body.tmr-light"),
+    # Scoped on a bare `body`, and shared by /profile/ (light now), /forum/
+    # (already light, never opted in) and /sportsbook/ (stays dark). Deriving is
+    # the only way to move one of the three. /u/<name>/ renders THROUGH the
+    # profile document, so this covers all 89 baked profile routes too.
+    ("static/css/tmr-redesign-overrides.css",
+     re.compile(r"(?!x)x"), "body.tmr-light"),
 ]
 
 # Selectors whose colour must not be touched: the dark navy chrome is the part

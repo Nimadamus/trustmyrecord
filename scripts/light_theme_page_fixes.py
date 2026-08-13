@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""
+The handful of colours the automatic remap cannot get right, fixed by hand.
+
+Each of these is a case where the ROLE of a colour is not recoverable from the
+declaration it sits in, so no rule the transform could learn would fix it:
+
+  * a badge painting a solid semantic colour and relying on black ink
+  * a disabled button whose background and its text both resolve to --text-muted
+  * colour literals inside JavaScript string templates, which the transform
+    deliberately never touches
+
+Kept as a script rather than as edits-in-place so that re-running the pipeline
+from a clean checkout reproduces the finished state exactly. Every replacement
+is asserted: if a source file changes shape, this fails loudly instead of
+silently skipping.
+
+  python scripts/light_theme_page_fixes.py          # apply
+  python scripts/light_theme_page_fixes.py --check  # exit 1 if not applied
+"""
+from __future__ import annotations
+
+import io
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+FIXES = [
+    # /premium/ -- "Save 17%" was black ink on solid --neon-green, which the
+    # remap turns into #0A8B4E: dark on dark. It becomes a soft green chip.
+    ("premium/index.html",
+     "background: var(--neon-green);\n            color: #000;",
+     "background: #DFF3E8;\n            color: #0A8B4E;"),
+
+    # /premium/ -- the primary CTA was a gold-to-cyan gradient carrying black
+    # ink. On a light page that reads as a washed-out band; the design of
+    # record says a primary action is solid teal with white ink.
+    ("premium/index.html",
+     "background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));\n            color: #000;",
+     "background: var(--primary);\n            color: #FFFFFF;"),
+
+    # /premium/ -- background AND colour both resolved to --text-muted, so the
+    # disabled button rendered its label in its own background colour.
+    ("premium/index.html",
+     "background: var(--text-muted);\n            cursor: not-allowed;",
+     "background: #E6EDF5;\n            border: 1px solid #D2DEEA;\n            cursor: not-allowed;"),
+
+    # /contests/justbet-mlb/ -- entrant names are built in a JS template with a
+    # pale-gold literal, chosen for the old dark table.
+    ("contests/justbet-mlb/index.html",
+     'style="color:#fff5d8; font-weight:700;"',
+     'style="color:#07182A; font-weight:700;"'),
+
+    # The JustBet promo widget writes the invite code the same way.
+    ("static/js/justbet-promo.js",
+     '<strong style="color:#ffd766;letter-spacing:0.06em;">',
+     '<strong style="color:#B98505;letter-spacing:0.06em;">'),
+
+    # Shared breadcrumb chip: gold background, and the label inherits the page
+    # link colour instead of the chip's own ink -- 1.9:1 on every page that
+    # renders the link hub. The :hover rule already specifies the right value;
+    # this is the resting state catching up. (Pre-existing, not introduced by
+    # the light rollout -- it read the same on the dark site.)
+    ("static/css/tmr-linkhub.css",
+     ".tmrlh-home.tmrlh-a:hover,\n.tmrlh-home.tmrlh-a:focus-visible {",
+     ".tmrlh-home.tmrlh-a,\n.tmrlh-home.tmrlh-a span {\n    color: #1a1204 !important;\n}\n\n"
+     ".tmrlh-home.tmrlh-a:hover,\n.tmrlh-home.tmrlh-a:focus-visible {"),
+]
+
+
+def main() -> int:
+    check = "--check" in sys.argv
+    missing = 0
+    for rel, old, new in FIXES:
+        path = os.path.join(ROOT, rel.replace("/", os.sep))
+        with io.open(path, "r", encoding="utf-8", newline="") as fh:
+            src = fh.read()
+        if new in src and old not in src:
+            print(f"ok       {rel}: already applied")
+            continue
+        if old not in src:
+            print(f"MISSING  {rel}: pattern not found -- source changed shape")
+            missing += 1
+            continue
+        if check:
+            print(f"PENDING  {rel}")
+            missing += 1
+            continue
+        with io.open(path, "w", encoding="utf-8", newline="") as fh:
+            fh.write(src.replace(old, new, 1))
+        print(f"applied  {rel}")
+    return 1 if missing else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
