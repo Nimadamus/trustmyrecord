@@ -1372,7 +1372,13 @@ def main():
     motd_path = os.path.join(MOTD_DIR, "index.html")
     if os.path.exists(motd_path):
         daily = [a for a in ordered if a.get("angle_key")]
-        motd_lead = lead if (lead and lead.get("angle_key")) else (daily[0] if daily else None)
+        # NEWEST WINS, ALWAYS (Nima's ruling, 2026-08-13). This used to prefer
+        # whatever the API had flagged `featured`, falling back to newest — so a
+        # `featured_on` that failed to move, or a day whose article published
+        # after the flag was set, left the section's lead card AND the nav's
+        # /today/ handoff pointing at yesterday's piece while today's sat live
+        # in the archive below it. `ordered` is already newest-first.
+        motd_lead = daily[0] if daily else None
         motd_rest = [a for a in daily if not motd_lead or a["slug"] != motd_lead["slug"]]
         text = read(motd_path)
         text = replace_marker(text, "motdToday",
