@@ -179,6 +179,17 @@
     var k = String(sport || '').toLowerCase().replace(/\s+fan$/, '').trim();
     return LEAGUES[k] ? 'https://a.espncdn.com/i/teamlogos/leagues/500/' + k + '.png' : null;
   }
+  // Which of the four pro leagues a team name belongs to, from the same table
+  // the logo URL comes from, so the two can never disagree. Null when unknown
+  // (college, soccer, tennis, a typo) - callers must treat that as "no league",
+  // never as a default.
+  function league(name) {
+    var ref = ABBR[slugify(name)];
+    return ref ? ref.split('/')[0] : null;
+  }
 
-  window.TMRTeamLogo = { slugify: slugify, url: url, html: html, initials: initials, leagueUrl: leagueUrl };
+  window.TMRTeamLogo = {
+    slugify: slugify, url: url, html: html, initials: initials,
+    leagueUrl: leagueUrl, league: league
+  };
 })();

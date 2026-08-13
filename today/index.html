@@ -14,91 +14,362 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="TrustMyRecord">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://a.espncdn.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-ds.308be035fb97.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-      /* Four rows, one column, readable in seconds. This is a daily card, not
-         a dashboard: no stat walls, no leaderboards, no betting jargon.
+      /* ======================================================================
+         /today/ — the personalised daily dashboard.
 
-         DESIGN SYSTEM, 2026-08-10. This page used to carry the legacy sitewide
-         shell, which meant /today/ -- the destination the nav's own Today link
-         points at -- rendered the legacy navbar while the link that got you here
-         rendered the new one. It now runs on tmr-ds.css in dark-surface mode.
+         WHAT CHANGED, 2026-08-13. This page used to be four stacked rows in a
+         640px column: one statistic and one button each, identical in size and
+         weight, on a 1720px canvas. It read as a settings screen, not as the
+         front door of a sports product.
 
-         The card's layout and proportions are deliberately unchanged; what
-         changed is that its colours are no longer hardcoded. Every value below
-         is the design-system token nearest the hex it replaced, so the surface
-         stays the same weight while the page stops being its own private
-         palette. Radii move to the system's 10px/7px because 14px was not a
-         value the design system has. */
-      .td-wrap{max-width:640px;margin:0 auto}
-      .td-hero{text-align:center}
+         It is now a real dashboard, and the rules it follows are:
 
-      /* PAGE TITLE. Deliberately NOT the design system's h1 (a 64px uppercase
-         Barlow Condensed hero) and not .ds-h-lg (30px, same condensed caps).
-         Both were tried and both changed this page's voice: the card's title is
-         a sentence someone reads, not a banner. This keeps the size and face the
-         page has always had -- Inter, 800, title case, ~36px -- and takes from
-         the design system only what genuinely unifies: the token for ink, the
-         shared font stack, and consistent spacing. Scoped under body.tmr-ds
-         because a bare h1 rule would lose to the system's element rule. */
-      body.tmr-ds .td-h1{font-family:var(--font);font-size:36px;font-weight:800;line-height:1.15;
-              text-transform:none;letter-spacing:-0.01em;color:var(--ink);margin:0}
+           - IT USES THE PAGE. `.ds-wrap` is the design system's own container
+             (max 1720px). No private width.
+           - IMPORTANCE DECIDES SIZE. The prediction quiz is the reason to come
+             back daily, so it is the largest surface on the grid and the only
+             one with a primary-filled CTA. Trivia, standings and community are
+             rail-width. Teams and the board are wide but secondary.
+           - EVERY NUMBER SHOWN IS ALREADY IN THE PRODUCT. Nothing here is
+             invented, projected or written back. See today-card.js for the
+             endpoint list; all are read-only and all pre-date this redesign.
+           - NO SKELETON THAT MOVES A BUTTON. Every module reserves its height
+             and resolves in place.
 
-      /* ACCENT. This page's blue is the established accent here and stays. The
-         design system's teal is not substituted in, because swapping a page's
-         accent one page at a time is how a site ends up with several palettes
-         rather than one. If TMR's accent direction changes it should change as a
-         decision about the whole product, in the tokens, not here. Everything
-         that is genuinely shared -- surfaces, ink, borders, semantic green and
-         gold -- does come from tokens below. */
-      .td-eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#00aeff;margin-bottom:6px}
-      .td-sub{color:var(--ink-2);font-size:15px;line-height:1.6;margin-top:6px}
+         COLOUR. Everything is a design-system token in dark-surface mode. The
+         page's old private #00aeff accent is gone: the primary action now uses
+         the system's brand teal, which is what the rest of TMR uses.
+         ====================================================================== */
 
-      /* Height reserved from the first frame - the four checks resolve at
-         different speeds and must never move a button under a thumb. */
-      .td-row{display:flex;gap:14px;align-items:flex-start;padding:16px;border:1px solid var(--line);
-              border-radius:var(--r);background:var(--panel);margin-top:12px;min-height:100px}
-      .td-row.is-done{border-color:var(--green);background:var(--green-soft)}
-      .td-ico{flex:0 0 auto;width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;
-              background:var(--panel-3);color:var(--ink-2);font-size:15px;border:1px solid var(--line-2)}
-      .td-row.is-done .td-ico{background:var(--green);color:var(--navy);border-color:var(--green)}
-      .td-body{flex:1 1 auto;min-width:0}
-      /* Scoped under body.tmr-ds on purpose. These module titles are <h2>, and
-         the design system styles h2 as a 36px uppercase Barlow Condensed section
-         heading -- correct for a section, wrong for a row inside a card, where it
-         rendered as loud as the page title and flattened the hierarchy. An
-         unscoped .td-title loses to `body.tmr-ds h2` on specificity, so the
-         override has to carry the same scope the system uses, and it must reset
-         family/transform/spacing explicitly rather than only size. */
-      body.tmr-ds .td-title{margin:0;font-family:var(--font);font-size:16px;font-weight:800;
-              color:var(--ink);line-height:1.3;text-transform:none;letter-spacing:normal}
-      .td-status{display:block;margin-top:7px;font-size:13px;font-weight:700;min-height:1.25em;color:var(--muted);
-                 overflow-wrap:anywhere}
-      .td-status.ok{color:var(--green)}
-      .td-status.warn{color:var(--gold)}
-      /* Scoped under body.tmr-ds for the same reason .td-title is: these buttons
-         are <a>, and `body.tmr-ds a{color:inherit}` outranks a bare .td-cta. Left
-         unscoped, the filled CTA inherited the page's light ink onto the brand
-         teal fill -- 1.68:1, nowhere near the 4.5:1 AA needs, on the primary
-         action of the page. The dark ink here is deliberate and must win. */
-      body.tmr-ds .td-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:11px;
-              background:#00aeff;color:#04121f;border:0;border-radius:var(--r-sm);padding:12px 18px;
-              font-weight:800;font-size:14.5px;text-decoration:none;cursor:pointer;min-height:44px}
-      body.tmr-ds .td-cta:hover{background:#31c1ff;color:#04121f}
-      /* A closed or completed module keeps a working link but stops shouting -
-         it must not read as an invitation to play something that is shut. */
-      body.tmr-ds .td-cta.is-muted{background:transparent;color:var(--ink-2);border:1px solid var(--line-2)}
-      body.tmr-ds .td-cta.secondary{background:transparent;color:var(--ink-2);border:1px solid var(--line-2)}
-      .td-optional{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
-                   border:1px solid var(--line-2);border-radius:999px;padding:2px 9px;margin-left:8px;white-space:nowrap}
-      .td-loggedout{margin-top:18px;padding:18px;border:1px dashed #2c4a63;border-radius:var(--r);
-                    background:rgba(0,174,255,.06);text-align:center}
-      .td-loggedout p{color:var(--ink-2);margin:0 0 12px;font-size:14.5px}
-      @media(max-width:520px){
-        .td-row{padding:14px;gap:11px}
-        .td-cta{width:100%}
+      /* ---------------------------------------------------------------- shell */
+      /* The nav is `position:sticky`, so it occupies flow — but a heading whose
+         box starts within a few pixels of it still reads as tucked underneath,
+         and any in-page anchor would genuinely land under it. Both are fixed
+         here: real separation above the hero, and a scroll margin that clears
+         the bar for good. */
+      body.tmr-ds .td-main{padding:0 0 64px}
+      /* Several blocks here are display:flex/grid AND start life `hidden`. A
+         display declaration beats the [hidden] UA rule, so without this the
+         signed-out panel renders behind a signed-in member's dashboard. */
+      body.tmr-ds .td-main [hidden]{display:none !important}
+      .td-hero{
+        scroll-margin-top:calc(var(--nav-h) + 18px);
+        margin:30px 0 22px;padding:26px 30px;
+        display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:center;
+        border:1px solid var(--edge);border-radius:14px;
+        background:
+          radial-gradient(1100px 300px at 12% -40%, rgba(34,210,192,.16), transparent 62%),
+          linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
+        box-shadow:var(--sh);
+      }
+      .td-hero-l{min-width:0}
+      .td-eyebrow{
+        display:inline-flex;align-items:center;gap:9px;padding:5px 13px;border-radius:999px;
+        background:var(--brand-soft);border:1px solid rgba(34,210,192,.34);
+        color:var(--brand-dk);font-size:12px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
+      }
+      .td-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-lt);flex:0 0 7px}
+      /* The page title. Barlow Condensed caps is the design system's display
+         face and TMR's voice everywhere else; the old Inter title was this
+         page's private exception and there is no longer a reason for it. */
+      body.tmr-ds .td-h1{
+        font-family:var(--display);font-weight:900;text-transform:uppercase;
+        font-size:clamp(38px,4.2vw,56px);line-height:1;letter-spacing:.006em;
+        color:var(--ink);margin:13px 0 0;
+      }
+      body.tmr-ds .td-h1 .thin{color:var(--brand-dk)}
+      .td-sub{color:var(--ink-2);font-size:16px;line-height:1.55;margin:11px 0 0;max-width:70ch;min-height:1.55em}
+      .td-sub b{color:var(--ink);font-weight:800}
+
+      /* Identity + numbers, right side of the hero. */
+      .td-hero-r{display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:flex-end}
+      .td-who{display:flex;align-items:center;gap:13px}
+      .td-avatar{
+        width:58px;height:58px;border-radius:50%;object-fit:cover;flex:0 0 58px;
+        border:2px solid var(--line-2);background:var(--panel-3);
+      }
+      .td-who-name{font-size:19px;font-weight:900;color:var(--ink);line-height:1.15}
+      .td-who-meta{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:3px}
+      .td-statrail{display:flex;gap:10px;flex-wrap:wrap}
+      .td-stat{
+        min-width:112px;padding:12px 15px;border-radius:var(--r);
+        border:1px solid var(--line);background:rgba(255,255,255,.035);
+      }
+      .td-stat b{
+        display:block;font-size:25px;font-weight:900;line-height:1.05;color:var(--ink);
+        font-variant-numeric:tabular-nums;letter-spacing:-.03em;
+      }
+      .td-stat span{
+        display:block;margin-top:4px;font-size:10.5px;font-weight:900;letter-spacing:.1em;
+        text-transform:uppercase;color:var(--muted);white-space:nowrap;
+      }
+      .td-stat.is-brand b{color:var(--brand-dk)}
+      .td-stat.is-gold b{color:var(--gold)}
+      .td-stat.is-green b{color:var(--green)}
+
+      /* ----------------------------------------------------------- the grid */
+      /* A primary area and a fixed rail, and inside the primary area a second
+         two-column band. That reads as a three-column dashboard on a wide
+         screen without the failure mode of one flat six-cell grid, where a
+         tall rail module leaves a hole under a short primary one. Each column
+         flows on its own, so nothing has to be the same height as its
+         neighbour and there are no dead rectangles. */
+      .td-grid{display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 384px;align-items:start}
+      .td-col{display:grid;gap:20px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+      .td-rail{display:grid;gap:20px;align-content:start}
+      .td-wide{grid-column:span 2}
+
+      .td-card{
+        background:var(--panel);border:1px solid var(--edge);border-radius:14px;
+        box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;
+      }
+      .td-card-head{
+        display:flex;align-items:center;justify-content:space-between;gap:14px;
+        padding:16px 22px;border-bottom:2px solid var(--panel-3);
+      }
+      .td-card-head .l{display:flex;align-items:center;gap:11px;min-width:0}
+      .td-ico{
+        width:34px;height:34px;border-radius:9px;flex:0 0 34px;
+        display:flex;align-items:center;justify-content:center;font-size:15px;
+        background:var(--panel-3);color:var(--brand-dk);border:1px solid var(--line-2);
+      }
+      .td-ico.gold{color:var(--gold)}
+      .td-ico.violet{color:var(--violet)}
+      .td-ico.blue{color:var(--blue)}
+      body.tmr-ds .td-card-head h2{
+        font-family:var(--display);font-weight:900;text-transform:uppercase;
+        font-size:21px;line-height:1.1;letter-spacing:.012em;color:var(--ink);margin:0;
+      }
+      .td-kicker{display:block;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:.1em;
+                 text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+      /* A module the member has already finished. Quiet, not celebratory: it
+         marks the card as done without competing with the modules still to do. */
+      .td-card.is-done{border-color:rgba(63,208,138,.40)}
+      .td-card.is-done .td-card-head{border-bottom-color:rgba(63,208,138,.34)}
+      .td-card-body{padding:20px 22px;flex:1 1 auto}
+      .td-card-foot{
+        padding:13px 22px;background:var(--panel-2);border-top:1px solid var(--line);
+        display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      }
+      .td-foot-note{font-size:13px;font-weight:700;color:var(--muted);min-height:1.2em}
+
+      /* status chips */
+      .td-chip{
+        display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;
+        font-size:11.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
+        background:var(--panel-3);color:var(--ink-2);white-space:nowrap;
+      }
+      .td-chip.live{background:var(--brand-soft);color:var(--brand-dk)}
+      .td-chip.done{background:var(--green-soft);color:var(--green)}
+      .td-chip.warn{background:var(--gold-soft);color:var(--gold)}
+      .td-chip.shut{background:rgba(255,255,255,.06);color:var(--muted)}
+
+      /* buttons — .td-cta keeps the 44px tap minimum the gate asserts */
+      body.tmr-ds .td-cta{
+        display:inline-flex;align-items:center;justify-content:center;gap:9px;
+        min-height:44px;padding:0 22px;border-radius:var(--r-sm);
+        font-size:15px;font-weight:800;letter-spacing:-.01em;cursor:pointer;
+        border:1.5px solid var(--line-2);background:transparent;color:var(--ink-2);transition:.15s;
+      }
+      body.tmr-ds .td-cta:hover{border-color:var(--brand);color:var(--brand-dk)}
+      body.tmr-ds .td-cta.primary{
+        background:linear-gradient(180deg,#13B0A5,#0A8A83);color:#fff;border-color:transparent;
+        box-shadow:0 2px 12px rgba(12,148,140,.34);
+      }
+      body.tmr-ds .td-cta.primary:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
+      body.tmr-ds .td-cta.sm{min-height:38px;padding:0 15px;font-size:14px}
+      /* A shut or finished module keeps a working link but stops shouting. */
+      body.tmr-ds .td-cta.is-muted{background:transparent;color:var(--muted);border-color:var(--line)}
+      .td-ctas{display:flex;gap:10px;flex-wrap:wrap}
+
+      /* ------------------------------------------------------- quiz module */
+      .td-quiz .td-card-head{background:linear-gradient(90deg,rgba(34,210,192,.10),transparent 70%)}
+      .td-quiz-top{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:space-between}
+      .td-bignums{display:flex;gap:26px;flex-wrap:wrap}
+      .td-big{min-width:88px}
+      .td-big b{display:block;font-size:34px;font-weight:900;line-height:1;color:var(--ink);
+                font-variant-numeric:tabular-nums;letter-spacing:-.035em}
+      .td-big.brand b{color:var(--brand-dk)}
+      .td-big.gold b{color:var(--gold)}
+      .td-big span{display:block;margin-top:6px;font-size:10.5px;font-weight:900;letter-spacing:.1em;
+                   text-transform:uppercase;color:var(--muted)}
+      .td-bar{height:7px;border-radius:999px;background:var(--panel-3);overflow:hidden;margin:18px 0 6px}
+      .td-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#13B0A5,#22D2C0);width:0;transition:width .5s ease}
+      .td-barcap{font-size:12.5px;font-weight:700;color:var(--muted)}
+      .td-qlist{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:8px;min-height:132px}
+      .td-qlist li{
+        display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);
+        background:var(--panel-2);border:1px solid var(--line);
+      }
+      .td-qlist .qn{
+        flex:0 0 26px;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+        background:var(--panel-3);color:var(--muted);font-size:12px;font-weight:900;
+      }
+      .td-qlist li.answered .qn{background:var(--green-soft);color:var(--green)}
+      .td-qlist li.shut{opacity:.62}
+      .td-qlist .qt{flex:1 1 auto;min-width:0;font-size:14px;font-weight:700;color:var(--ink-2);
+                    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .td-qlist .qm{flex:0 0 auto;font-size:11.5px;font-weight:900;color:var(--muted);
+                    font-variant-numeric:tabular-nums;letter-spacing:.02em}
+      .td-qlist .qm .pt{color:var(--gold)}
+
+      /* ----------------------------------------------------- trivia module */
+      .td-trivia-hero{text-align:left;padding-bottom:4px}
+      .td-trivia-hero b{
+        display:block;font-size:46px;font-weight:900;line-height:1;color:var(--gold);
+        font-variant-numeric:tabular-nums;letter-spacing:-.035em;
+      }
+      .td-trivia-hero span{display:block;margin-top:7px;font-size:11px;font-weight:900;letter-spacing:.1em;
+                           text-transform:uppercase;color:var(--muted)}
+      .td-minigrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:16px}
+      .td-mini{padding:11px 13px;border-radius:var(--r-sm);background:var(--panel-2);border:1px solid var(--line)}
+      .td-mini b{display:block;font-size:19px;font-weight:900;color:var(--ink);line-height:1.1;
+                 font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+      .td-mini span{display:block;margin-top:3px;font-size:10px;font-weight:900;letter-spacing:.09em;
+                    text-transform:uppercase;color:var(--muted)}
+      .td-cats{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px;min-height:32px}
+      body.tmr-ds .td-cat{
+        display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;
+        border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);
+        font-size:12.5px;font-weight:800;transition:.15s;
+      }
+      body.tmr-ds .td-cat:hover{border-color:var(--brand);color:var(--brand-dk)}
+      .td-cat .n{font-size:11px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums}
+
+      /* ------------------------------------------------------ teams module */
+      /* One team per row, full width. Side-by-side tiles at this column width
+         truncated "San Francisco 49ers" and left a hole under a three-team
+         card; a list matches the board beside it and has room for the logo,
+         the matchup, the time and the price without eliding any of them. */
+      .td-teams-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-height:118px}
+      .td-team{
+        display:flex;gap:13px;align-items:flex-start;padding:14px 15px;border-radius:var(--r);
+        background:var(--panel-2);border:1px solid var(--line);position:relative;overflow:hidden;
+      }
+      .td-team.is-today{border-color:rgba(34,210,192,.45);background:linear-gradient(180deg,rgba(34,210,192,.09),var(--panel-2))}
+      .td-tl{position:relative;display:inline-flex;align-items:center;justify-content:center;
+             width:46px;height:46px;flex:0 0 46px;border-radius:11px;background:rgba(255,255,255,.06);overflow:hidden}
+      .td-tl-img{width:38px;height:38px;object-fit:contain;display:block}
+      .td-tl-fallback{display:none;font-size:14px;font-weight:900;color:var(--ink-2)}
+      .td-tl.is-fallback .td-tl-fallback{display:block}
+      .td-team-b{flex:1 1 auto;min-width:0}
+      .td-team-n{font-size:15px;font-weight:900;color:var(--ink);line-height:1.25}
+      .td-team-league{
+        display:inline-block;margin-left:7px;padding:1px 6px;border-radius:4px;vertical-align:2px;
+        background:var(--panel-3);color:var(--muted);font-size:9.5px;font-weight:900;letter-spacing:.08em;
+      }
+      .td-matchup{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+      .td-mu-l{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:0 0 22px;
+               border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+      .td-mu-l-img{width:19px;height:19px;object-fit:contain;display:block}
+      .td-mu-l-fallback{display:none;font-size:9px;font-weight:900;color:var(--ink-2)}
+      .td-mu-l.is-fallback .td-mu-l-fallback{display:block}
+      .td-mu-t{font-size:13.5px;font-weight:800;color:var(--ink-2)}
+      .td-mu-when{margin-left:auto;font-size:12.5px;font-weight:800;color:var(--brand-dk);font-variant-numeric:tabular-nums}
+      .td-mu-when.dim{color:var(--muted)}
+      .td-mu-odds{font-size:12px;font-weight:900;color:var(--ink-2);font-variant-numeric:tabular-nums;
+                  background:var(--panel-3);border-radius:5px;padding:3px 8px}
+
+      /* ------------------------------------------------------ board module */
+      .td-games{display:grid;gap:8px;min-height:120px}
+      .td-game{
+        display:grid;grid-template-columns:74px minmax(0,1fr) auto;gap:14px;align-items:center;
+        padding:11px 15px;border-radius:var(--r-sm);background:var(--panel-2);border:1px solid var(--line);
+        transition:.15s;
+      }
+      body.tmr-ds a.td-game:hover{border-color:var(--brand);background:var(--panel-3)}
+      .td-g-when{font-size:12.5px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.25}
+      .td-g-when em{display:block;font-style:normal;font-size:10px;letter-spacing:.09em;color:var(--brand-dk)}
+      .td-g-teams{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+      .td-g-side{display:flex;align-items:center;gap:7px;min-width:0}
+      .td-g-name{font-size:14px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .td-g-at{font-size:11px;font-weight:900;color:var(--muted);letter-spacing:.08em}
+      .td-g-odds{display:flex;gap:6px;flex:0 0 auto}
+      .td-g-ml{
+        min-width:56px;text-align:center;padding:5px 9px;border-radius:6px;
+        background:var(--panel-3);color:var(--ink-2);font-size:12.5px;font-weight:900;
+        font-variant-numeric:tabular-nums;
+      }
+      .td-g-ml.fav{color:var(--green)}
+      .td-g-ml.pending{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.04em}
+
+      /* ------------------------------------- standings + community modules */
+      .td-lb{display:grid;gap:6px;min-height:150px}
+      .td-lbrow{
+        display:grid;grid-template-columns:26px 28px minmax(0,1fr) auto;gap:10px;align-items:center;
+        padding:8px 11px;border-radius:var(--r-sm);background:var(--panel-2);border:1px solid transparent;
+      }
+      .td-lbrow.me{border-color:var(--brand);background:var(--brand-soft)}
+      .td-lb-rank{font-size:13px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
+      .td-lbrow.me .td-lb-rank{color:var(--brand-dk)}
+      .td-lb-av{width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--panel-3);display:block}
+      .td-lb-avf{width:28px;height:28px;border-radius:50%;background:var(--panel-3);display:flex;align-items:center;
+                 justify-content:center;font-size:11px;font-weight:900;color:var(--ink-2)}
+      .td-lb-n{font-size:13.5px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .td-lb-n em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
+      .td-lb-p{font-size:14px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums}
+      .td-lbrow.me .td-lb-p{color:var(--brand-dk)}
+
+      .td-pulse{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;min-height:88px}
+      .td-newest{
+        display:flex;align-items:center;gap:11px;margin-top:13px;padding:11px 13px;
+        border-radius:var(--r-sm);background:var(--panel-2);border:1px solid var(--line);min-height:56px;
+      }
+      .td-newest .av{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--panel-3);flex:0 0 34px}
+      .td-newest .avf{width:34px;height:34px;border-radius:50%;background:var(--panel-3);flex:0 0 34px;
+                      display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--ink-2)}
+      .td-newest .t{min-width:0}
+      .td-newest .t b{display:block;font-size:14px;font-weight:900;color:var(--ink);line-height:1.2}
+      .td-newest .t span{display:block;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+      /* ------------------------------------------------------ empty states */
+      .td-empty{
+        display:flex;flex-direction:column;align-items:flex-start;gap:11px;
+        padding:20px;border:1px dashed var(--line-2);border-radius:var(--r);background:rgba(255,255,255,.02);
+      }
+      .td-empty p{margin:0;color:var(--ink-2);font-size:14.5px;line-height:1.5}
+      .td-loggedout{
+        margin:0 0 22px;padding:26px 30px;border:1px dashed rgba(34,210,192,.42);border-radius:14px;
+        background:rgba(34,210,192,.06);display:flex;align-items:center;justify-content:space-between;
+        gap:20px;flex-wrap:wrap;
+      }
+      .td-loggedout p{color:var(--ink-2);margin:0;font-size:16px;max-width:62ch;line-height:1.55}
+
+      /* ------------------------------------------------------- breakpoints */
+      /* Below this the primary band cannot hold two readable game rows side by
+         side, so it becomes a single stack and the rail stays. */
+      @media(max-width:1500px){
+        .td-grid{grid-template-columns:minmax(0,1fr) 352px}
+        .td-col{grid-template-columns:minmax(0,1fr)}
+        .td-wide{grid-column:span 1}
+      }
+      @media(max-width:1080px){
+        .td-grid{grid-template-columns:minmax(0,1fr)}
+        .td-col,.td-rail{grid-template-columns:minmax(0,1fr)}
+        .td-wide{grid-column:span 1}
+        .td-hero{grid-template-columns:minmax(0,1fr);gap:20px}
+        .td-hero-r{justify-content:flex-start}
+      }
+      @media(max-width:720px){
+        .td-hero{margin:18px 0 16px;padding:20px 18px}
+        .td-card-head{padding:14px 16px}
+        .td-card-body{padding:16px}
+        .td-card-foot{padding:12px 16px}
+        .td-bignums{gap:18px}
+        .td-big b{font-size:28px}
+        .td-trivia-hero b{font-size:38px}
+        .td-avatar{width:48px;height:48px;flex:0 0 48px}
+        .td-stat{min-width:calc(50% - 5px);flex:1 1 calc(50% - 5px)}
+        .td-game{grid-template-columns:62px minmax(0,1fr);gap:10px}
+        .td-g-odds{grid-column:1 / -1;justify-content:flex-start}
+        .td-ctas{width:100%}
+        .td-ctas .td-cta{flex:1 1 auto}
+        .td-qlist .qt{white-space:normal}
       }
     </style>
 <script type="application/ld+json">
@@ -108,63 +379,213 @@
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
 </head>
 <body class="tmr-ds tmr-ds--dark">
-<main class="ds-main">
+<main class="ds-main td-main">
   <div class="ds-wrap">
-  <div class="td-wrap">
 
-    <header class="td-hero">
-      <span class="td-eyebrow" id="tdDate">Today</span>
-      <h1 class="td-h1" id="tdHead">Your card for today</h1>
-      <p class="td-sub" id="tdSub">The best things you can do on TrustMyRecord right now.</p>
+    <header class="td-hero" id="tdHero">
+      <div class="td-hero-l">
+        <span class="td-eyebrow"><span class="dot" aria-hidden="true"></span><span id="tdDate">Today</span></span>
+        <h1 class="td-h1" id="tdHead">Today</h1>
+        <p class="td-sub" id="tdSub">Your quiz, your trivia, your teams and today&rsquo;s board &mdash; in one place.</p>
+      </div>
+      <div class="td-hero-r" id="tdHeroR">
+        <div class="td-who" id="tdWho" hidden>
+          <img class="td-avatar" id="tdAvatar" src="/static/favicon.svg" alt="" width="58" height="58">
+          <div>
+            <div class="td-who-name" id="tdWhoName">&nbsp;</div>
+            <div class="td-who-meta" id="tdWhoMeta">&nbsp;</div>
+          </div>
+        </div>
+        <div class="td-statrail" id="tdStats">
+          <div class="td-stat is-brand"><b id="tdStatRank">&mdash;</b><span>Quiz rank</span></div>
+          <div class="td-stat"><b id="tdStatPollPts">&mdash;</b><span>Quiz points</span></div>
+          <div class="td-stat is-gold"><b id="tdStatTrivia">&mdash;</b><span>Trivia points</span></div>
+          <div class="td-stat is-green"><b id="tdStatStreak">&mdash;</b><span>Trivia streak</span></div>
+        </div>
+      </div>
     </header>
 
     <div class="td-loggedout" id="tdLoggedOut" hidden>
-      <p>Log in to see today’s quiz, your trivia streak and your teams’ games.</p>
-      <a class="td-cta" href="/login/">Log in</a>
-      <a class="td-cta secondary" href="/register/">Join free</a>
+      <p>Log in to see today&rsquo;s prediction quiz, your trivia streak, your teams&rsquo; games and your place on the standings.</p>
+      <div class="td-ctas">
+        <a class="td-cta primary" href="/login/">Log in</a>
+        <a class="td-cta" href="/register/">Join free</a>
+      </div>
     </div>
 
-    <section id="tdGrid" aria-label="Today's actions">
+    <div class="td-grid" id="tdGrid">
+     <div class="td-col">
 
-      <div class="td-row" id="tdRowPoll">
-        <span class="td-ico" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
-        <div class="td-body">
-          <h2 class="td-title">Today’s prediction quiz</h2>
-          <span class="td-status" id="tdPollStatus">Checking today’s quiz&hellip;</span>
-          <a class="td-cta" id="tdPollCta" href="/polls/" data-action="poll">Answer today’s quiz</a>
+      <!-- ============ 1. FEATURED: today's prediction quiz (widest, loudest) -->
+      <section class="td-card td-wide td-quiz" id="tdModPoll" aria-labelledby="tdPollH">
+        <div class="td-card-head">
+          <div class="l">
+            <span class="td-ico" aria-hidden="true"><i class="fas fa-bullseye"></i></span>
+            <div>
+              <span class="td-kicker">Featured &middot; play first</span>
+              <h2 id="tdPollH">Today&rsquo;s Prediction Quiz</h2>
+            </div>
+          </div>
+          <span class="td-chip" id="tdPollChip">Checking&hellip;</span>
         </div>
-      </div>
-
-      <div class="td-row" id="tdRowTrivia">
-        <span class="td-ico" aria-hidden="true"><i class="fas fa-brain"></i></span>
-        <div class="td-body">
-          <h2 class="td-title">Daily trivia</h2>
-          <span class="td-status" id="tdTriviaStatus">Checking your trivia&hellip;</span>
-          <a class="td-cta" id="tdTriviaCta" href="/trivia/" data-action="trivia">Play trivia</a>
+        <div class="td-card-body">
+          <div class="td-quiz-top">
+            <div class="td-bignums">
+              <div class="td-big gold"><b id="tdPollPts">&mdash;</b><span>Points on offer</span></div>
+              <div class="td-big"><b id="tdPollQs">&mdash;</b><span>Questions</span></div>
+              <div class="td-big brand"><b id="tdPollOpen">&mdash;</b><span>Still open</span></div>
+              <div class="td-big"><b id="tdPollLock">&mdash;</b><span>Next lock</span></div>
+            </div>
+          </div>
+          <div class="td-bar" aria-hidden="true"><i id="tdPollBar"></i></div>
+          <div class="td-barcap" id="tdPollBarCap">Loading today&rsquo;s quiz&hellip;</div>
+          <ul class="td-qlist" id="tdPollList"></ul>
         </div>
-      </div>
-
-      <div class="td-row" id="tdRowTeam">
-        <span class="td-ico" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
-        <div class="td-body">
-          <h2 class="td-title">Your teams</h2>
-          <span class="td-status" id="tdTeamStatus">Checking today’s games&hellip;</span>
-          <a class="td-cta secondary" id="tdTeamCta" href="/profile/" data-action="teams">Pick your teams</a>
+        <div class="td-card-foot">
+          <span class="td-foot-note" id="tdPollNote">&nbsp;</span>
+          <div class="td-ctas">
+            <a class="td-cta primary" id="tdPollCta" href="/polls/" data-action="poll">Answer today&rsquo;s quiz</a>
+            <a class="td-cta sm" href="/polls/history/" data-action="poll_history">Past quizzes</a>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="td-row" id="tdRowPick">
-        <span class="td-ico" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
-        <div class="td-body">
-          <h2 class="td-title">Today’s board<span class="td-optional">Optional</span></h2>
-          <span class="td-status" id="tdPickStatus">Checking your record&hellip;</span>
-          <a class="td-cta secondary" id="tdPickCta" href="/sportsbook/" data-action="pick">See today’s board</a>
+      <!-- ============ 3. YOUR TEAMS --------------------------------------- -->
+      <section class="td-card" id="tdModTeams" aria-labelledby="tdTeamH">
+        <div class="td-card-head">
+          <div class="l">
+            <span class="td-ico blue" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
+            <div>
+              <span class="td-kicker">Following</span>
+              <h2 id="tdTeamH">Your Teams</h2>
+            </div>
+          </div>
+          <span class="td-chip" id="tdTeamChip">Checking&hellip;</span>
         </div>
-      </div>
+        <div class="td-card-body">
+          <div class="td-teams-grid" id="tdTeamGrid"></div>
+        </div>
+        <div class="td-card-foot">
+          <span class="td-foot-note" id="tdTeamNote">&nbsp;</span>
+          <div class="td-ctas">
+            <a class="td-cta sm" id="tdTeamCta" href="/profile/" data-action="teams">Manage your teams</a>
+          </div>
+        </div>
+      </section>
 
-    </section>
+      <!-- ============ 4. TODAY'S BOARD ------------------------------------ -->
+      <section class="td-card" id="tdModBoard" aria-labelledby="tdBoardH">
+        <div class="td-card-head">
+          <div class="l">
+            <span class="td-ico" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
+            <div>
+              <span class="td-kicker">Live lines</span>
+              <h2 id="tdBoardH">Today&rsquo;s Board</h2>
+            </div>
+          </div>
+          <span class="td-chip" id="tdBoardChip">Checking&hellip;</span>
+        </div>
+        <div class="td-card-body">
+          <div class="td-games" id="tdBoardList"></div>
+        </div>
+        <div class="td-card-foot">
+          <span class="td-foot-note" id="tdPickNote">&nbsp;</span>
+          <div class="td-ctas">
+            <a class="td-cta sm" id="tdPickCta" href="/sportsbook/" data-action="pick">See today&rsquo;s board</a>
+          </div>
+        </div>
+      </section>
 
-  </div>
+     </div>
+     <div class="td-rail">
+
+      <!-- ============ 2. RAIL: daily trivia ------------------------------- -->
+      <section class="td-card td-trivia" id="tdModTrivia" aria-labelledby="tdTriviaH">
+        <div class="td-card-head">
+          <div class="l">
+            <span class="td-ico gold" aria-hidden="true"><i class="fas fa-brain"></i></span>
+            <div>
+              <span class="td-kicker">Daily streak</span>
+              <h2 id="tdTriviaH">Sports Trivia</h2>
+            </div>
+          </div>
+          <span class="td-chip" id="tdTriviaChip">Checking&hellip;</span>
+        </div>
+        <div class="td-card-body">
+          <div class="td-trivia-hero">
+            <b id="tdTriviaPts">&mdash;</b>
+            <span>Career points</span>
+          </div>
+          <div class="td-minigrid">
+            <div class="td-mini"><b id="tdTriviaStreak">&mdash;</b><span>Current streak</span></div>
+            <div class="td-mini"><b id="tdTriviaBest">&mdash;</b><span>Best streak</span></div>
+            <div class="td-mini"><b id="tdTriviaAcc">&mdash;</b><span>Accuracy</span></div>
+            <div class="td-mini"><b id="tdTriviaGames">&mdash;</b><span>Best game</span></div>
+          </div>
+          <div class="td-cats" id="tdTriviaCats"></div>
+        </div>
+        <div class="td-card-foot">
+          <span class="td-foot-note" id="tdTriviaNote">&nbsp;</span>
+          <a class="td-cta primary sm" id="tdTriviaCta" href="/trivia/" data-action="trivia">Play trivia</a>
+        </div>
+      </section>
+
+      <!-- ============ 5. RAIL: quiz standings ----------------------------- -->
+      <section class="td-card" id="tdModStand" aria-labelledby="tdStandH">
+        <div class="td-card-head">
+          <div class="l">
+            <span class="td-ico violet" aria-hidden="true"><i class="fas fa-ranking-star"></i></span>
+            <div>
+              <span class="td-kicker">All-time</span>
+              <h2 id="tdStandH">Quiz Standings</h2>
+            </div>
+          </div>
+          <span class="td-chip" id="tdStandChip">&nbsp;</span>
+        </div>
+        <div class="td-card-body">
+          <div class="td-lb" id="tdStandList"></div>
+        </div>
+        <div class="td-card-foot">
+          <span class="td-foot-note" id="tdStandNote">&nbsp;</span>
+          <a class="td-cta sm" href="/leaderboards/" data-action="standings">All leaderboards</a>
+        </div>
+      </section>
+
+      <!-- ============ 6. RAIL: community pulse ---------------------------- -->
+      <section class="td-card" id="tdModCommunity" aria-labelledby="tdCommH">
+        <div class="td-card-head">
+          <div class="l">
+            <span class="td-ico" aria-hidden="true"><i class="fas fa-comments"></i></span>
+            <div>
+              <span class="td-kicker">Right now</span>
+              <h2 id="tdCommH">Community</h2>
+            </div>
+          </div>
+          <span class="td-chip" id="tdCommChip">&nbsp;</span>
+        </div>
+        <div class="td-card-body">
+          <div class="td-pulse" id="tdCommPulse">
+            <div class="td-mini"><b id="tdCommThreads">&mdash;</b><span>Threads</span></div>
+            <div class="td-mini"><b id="tdCommPosts">&mdash;</b><span>Posts</span></div>
+            <div class="td-mini"><b id="tdCommMembers">&mdash;</b><span>Members</span></div>
+            <div class="td-mini"><b id="tdCommNew">&mdash;</b><span>New today</span></div>
+          </div>
+          <div class="td-newest" id="tdCommNewest" hidden>
+            <span class="avf" id="tdNewestAvf" aria-hidden="true">?</span>
+            <div class="t">
+              <b id="tdNewestName">&nbsp;</b>
+              <span>Newest member</span>
+            </div>
+          </div>
+        </div>
+        <div class="td-card-foot">
+          <span class="td-foot-note">Sports Talk &amp; forum</span>
+          <a class="td-cta sm" href="/community/" data-action="community">Open community</a>
+        </div>
+      </section>
+
+     </div>
+    </div>
   </div>
   <!--MK:gfCrossLink-->
   <p class="tmr-gfx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.55;color:#8FA6BC">Researching tonight&rsquo;s card? Read the <a href="/matchups/" style="color:#22D2C0;font-weight:700;text-decoration:none">TMR Game File</a> &mdash; one matchup a day taken apart in full, with every number sourced.</p>
@@ -172,6 +593,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+<script src="/static/js/tmr-team-logo.js?v=b86cede00025"></script>
 <script src="/static/js/today-card.js?v=eaa87d5793b7"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.1ed17cb0a57f.js"></script>
 </body>

@@ -210,6 +210,84 @@ check('a failed slate does not erase the fact that they have teams', () => {
   assert.strictEqual(L.teamState(['Miami Dolphins'], null).state, 'unavailable');
 });
 
+/* ----------------------------- 3b. the board is the game source now */
+
+// /api/nav/mlb-slate stopped answering (no response inside 45s, three attempts,
+// 2026-08-13), which is exactly why the teams module rendered "Following 3
+// teams" and nothing else. The board endpoint replaces it. These helpers are
+// what turn its payload into a matchup, a time and a price.
+
+const BOARD = [
+  { away_team: 'Tennessee Titans', home_team: 'San Francisco 49ers',
+    commence_time: '2026-08-14T01:00:00.000Z',   // 9:00pm ET on 08-13
+    market_groups: [{ items: [
+      { market_type: 'h2h', selection: 'San Francisco 49ers', odds_display: '-150' },
+      { market_type: 'h2h', selection: 'Tennessee Titans', odds_display: '+130' }] }] },
+  { away_team: 'Colorado Rockies', home_team: 'San Francisco Giants',
+    commence_time: '2026-08-15T02:15:00.000Z' },  // 10:15pm ET on 08-14
+];
+const BOARD_NOW = Date.parse('2026-08-13T18:00:00Z');  // 2:00pm ET on 08-13
+
+check('a game late tonight is still TODAY in Eastern, not tomorrow', () => {
+  // 01:00 UTC on the 14th is 9pm ET on the 13th. A UTC-day filter would drop
+  // every night game from the board, which is most of them.
+  assert.strictEqual(L.gamesOnDay(BOARD, L.etDay(BOARD_NOW)).length, 1);
+  assert.strictEqual(L.gamesOnDay(BOARD, L.etDay(BOARD_NOW))[0].home_team, 'San Francisco 49ers');
+});
+
+check("today's game wins over a later one", () => {
+  const f = L.teamGame(BOARD, 'San Francisco 49ers', BOARD_NOW);
+  assert.ok(f && f.isToday, 'a game today must be reported as today');
+});
+
+check('a team not playing today gets its NEXT game, flagged as not today', () => {
+  const f = L.teamGame(BOARD, 'San Francisco Giants', BOARD_NOW);
+  assert.ok(f && !f.isToday);
+  assert.strictEqual(f.game.away_team, 'Colorado Rockies');
+});
+
+check('a finished game is never shown as what is next', () => {
+  const after = Date.parse('2026-08-16T18:00:00Z');
+  assert.strictEqual(L.teamGame(BOARD, 'San Francisco Giants', after), null);
+});
+
+check('an unknown clock never invents a "next" game', () => {
+  assert.strictEqual(L.teamGame(BOARD, 'San Francisco Giants', null), null);
+});
+
+check('moneylines are read, never computed', () => {
+  assert.strictEqual(L.moneyline(BOARD[0], 'San Francisco 49ers'), '-150');
+  assert.strictEqual(L.moneyline(BOARD[0], 'Tennessee Titans'), '+130');
+  assert.strictEqual(L.moneyline(BOARD[1], 'San Francisco Giants'), null,
+    'a game with no posted price must report none, not a guess');
+});
+
+check('only leagues with upcoming games are requested', () => {
+  const health = { games: {
+    baseball_mlb: { upcoming: 103 }, americanfootball_nfl: { upcoming: 320 },
+    basketball_nba: { upcoming: 0 }, icehockey_nhl: { upcoming: 0 } } };
+  assert.deepStrictEqual(L.activeLeagues(health).sort(), ['mlb', 'nfl']);
+  assert.deepStrictEqual(L.activeLeagues(null), [], 'no health payload must not fan out four requests');
+});
+
+check('club nicknames are right, not "York Yankees"', () => {
+  const cases = {
+    'New York Yankees': 'Yankees', 'Green Bay Packers': 'Packers',
+    'Golden State Warriors': 'Warriors', 'Los Angeles Dodgers': 'Dodgers',
+    'Boston Red Sox': 'Red Sox', 'Chicago White Sox': 'White Sox',
+    'Toronto Blue Jays': 'Blue Jays', 'Portland Trail Blazers': 'Trail Blazers',
+    'Vegas Golden Knights': 'Golden Knights', 'San Francisco 49ers': '49ers',
+    'Athletics': 'Athletics', '': '',
+  };
+  Object.keys(cases).forEach((k) => assert.strictEqual(L.shortTeamName(k), cases[k], k));
+});
+
+check('the shared logo table can name a team\'s league', () => {
+  const logo = read('static/js/tmr-team-logo.js');
+  assert.ok(/function league\(name\)/.test(logo), 'TMRTeamLogo.league is missing');
+  assert.ok(/leagueUrl: leagueUrl, league: league/.test(logo), 'league is not exported');
+});
+
 /* ------------------------------------------------- 4. nav / SEO invariants */
 
 const nav = read('static/js/tmr-ds-nav.js');
@@ -244,14 +322,78 @@ check('every module has a real href before JavaScript runs', () => {
   });
 });
 
-check('exactly four modules - this is a card, not a dashboard', () => {
-  assert.strictEqual((html.match(/class="td-row"/g) || []).length, 4);
+/* ---------------------------------------------- 5. the dashboard layout */
+
+// REDESIGN_20260813. This was four identical 100px rows in a 640px column on a
+// 1720px canvas, which is why it read as an admin screen. The checks below are
+// the shape of the fix, not decoration: if a future edit collapses the grid back
+// to one column of equal boxes, or re-narrows the page, these fail.
+
+check('the signed-out panel can never render behind a signed-in dashboard', () => {
+  // Every one of these blocks is display:flex/grid AND ships `hidden`.
+  assert.ok(/\[hidden\]\{display:none !important\}/.test(html),
+    'a display declaration beats the [hidden] UA rule');
 });
 
-check('tap targets meet the 44px minimum and rows reserve height', () => {
-  assert.ok(/\.td-cta\{[^}]*min-height:44px/.test(html));
-  assert.ok(/\.td-row\{[^}]*min-height:\d+px/.test(html));
-  assert.ok(/\.td-status\{[^}]*min-height:/.test(html));
+check('six modules, each with a heading - this is a dashboard', () => {
+  const mods = html.match(/class="td-card(?: td-[a-z-]+)*"/g) || [];
+  assert.strictEqual(mods.length, 6, 'expected six dashboard modules');
+  ['tdModPoll', 'tdModTrivia', 'tdModTeams', 'tdModStand', 'tdModBoard', 'tdModCommunity']
+    .forEach((id) => assert.ok(html.includes('id="' + id + '"'), 'missing module ' + id));
+  assert.strictEqual((html.match(/<h2 id="td/g) || []).length, 6, 'every module needs its own h2');
+});
+
+check('modules are NOT all the same size', () => {
+  // The quiz is the only full-bleed surface in the primary band; teams and the
+  // board share that band's two columns; the rail is narrower than all of them.
+  assert.strictEqual((html.match(/td-card td-wide/g) || []).length, 1,
+    'exactly one hero-sized module - otherwise the hierarchy is flat again');
+  assert.ok(/\.td-wide\{grid-column:span 2\}/.test(html), 'the hero module must span the primary band');
+  assert.ok(/<div class="td-col">/.test(html) && /<div class="td-rail">/.test(html),
+    'the primary band and the rail must be separate columns, or a tall rail card leaves a hole');
+});
+
+check('the page uses the design system container, not a private narrow column', () => {
+  assert.ok(/<div class="ds-wrap">/.test(html), 'the page must use .ds-wrap');
+  assert.ok(!/\.td-wrap\{max-width:\d+px/.test(html), 'a private max-width column is back');
+});
+
+check('the grid is multi-column on desktop and single-column on mobile', () => {
+  assert.ok(/\.td-grid\{[^}]*grid-template-columns:minmax\(0,1fr\) \d+px/.test(html),
+    'desktop must be a primary band plus a rail');
+  assert.ok(/\.td-col\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/.test(html),
+    'the primary band must be two columns on a wide screen - three columns overall');
+  assert.ok(/@media\(max-width:1080px\)\{[\s\S]*?\.td-grid\{grid-template-columns:minmax\(0,1fr\)\}/.test(html),
+    'narrow viewports must collapse to one column');
+});
+
+check('the title clears the sticky navbar', () => {
+  assert.ok(/\.td-hero\{[\s\S]*?scroll-margin-top:calc\(var\(--nav-h\)/.test(html),
+    'an in-page anchor would land the hero under the sticky nav');
+  assert.ok(/\.td-hero\{[\s\S]*?margin:\d+px 0/.test(html), 'the hero must reserve space below the nav');
+});
+
+check('the page stopped carrying its own private accent colour', () => {
+  // The prose above the stylesheet names the retired colour on purpose, so
+  // only the declarations are searched.
+  const css = html.slice(html.indexOf('<style>'), html.indexOf('</style>')).replace(/\/\*[\s\S]*?\*\//g, ' ');
+  assert.ok(!/#00aeff/i.test(css), 'the retired page-private blue is back; use the brand token');
+});
+
+check('tap targets meet the 44px minimum and every module reserves height', () => {
+  assert.ok(/\.td-cta\{[^}]*min-height:44px/.test(html), 'CTAs must keep the 44px tap minimum');
+  ['\\.td-qlist', '\\.td-teams-grid', '\\.td-games', '\\.td-lb', '\\.td-pulse'].forEach((sel) => {
+    assert.ok(new RegExp(sel + '\\{[^}]*min-height:\\d+px').test(html),
+      sel + ' does not reserve height - its buttons would jump under a thumb');
+  });
+  assert.ok(/\.td-foot-note\{[^}]*min-height:/.test(html));
+});
+
+check('team marks come from the shared logo helper, not a second copy', () => {
+  assert.ok(html.includes('/static/js/tmr-team-logo.js'), 'the shared logo helper is not loaded');
+  const js = read('static/js/today-card.js');
+  assert.ok(/TL\.html\(name, \{ className: cls \}\)/.test(js), 'logos are not going through TMRTeamLogo');
+  assert.ok(!/a\.espncdn\.com/.test(js), 'a second hardcoded logo CDN path has appeared in the page code');
 });
 
 check('the page writes nothing', () => {
