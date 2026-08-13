@@ -534,6 +534,29 @@ def transform_css_file(css: str) -> tuple[str, int]:
     return rewrite_css(css)
 
 
+# Stylesheets that live inside a JS string array and are injected at runtime.
+# The transform never touches <script> content, and rightly so -- but a file
+# whose whole job is to build a stylesheet is a stylesheet. /u/<name>/ kept a
+# navy "Sports Identity" card on a light page for exactly this reason.
+#
+# Only the slice between the two markers is rewritten, so surrounding logic --
+# and any colour a code path computes rather than declares -- is untouched.
+JS_CSS_BLOCKS = {
+    "static/js/tmr-fan-identity.js": ("css.textContent = [", "].join('');"),
+}
+
+
+def transform_js_css(src: str, rel: str) -> tuple[str, int]:
+    start_mark, end_mark = JS_CSS_BLOCKS[rel]
+    i = src.find(start_mark)
+    j = src.find(end_mark, i)
+    if i < 0 or j < 0:
+        raise SystemExit(f"{rel}: CSS block markers not found")
+    i += len(start_mark)
+    body, n = rewrite_css(src[i:j])
+    return src[:i] + body + src[j:], n
+
+
 # --------------------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser()
@@ -545,7 +568,10 @@ def main():
         path = os.path.join(ROOT, rel.replace("/", os.sep))
         with io.open(path, "r", encoding="utf-8", newline="") as fh:
             src = fh.read()
-        if path.endswith(".css"):
+        key = rel.replace(os.sep, "/")
+        if key in JS_CSS_BLOCKS:
+            out, n = transform_js_css(src, key)
+        elif path.endswith(".css"):
             out, n = transform_css_file(src)
         else:
             out, n = transform_html(src)
