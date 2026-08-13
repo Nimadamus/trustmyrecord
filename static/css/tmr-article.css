@@ -1348,3 +1348,120 @@ body.tmr-ds .gf-duo-data > :last-child { margin-bottom: 0; }
    rows cost more than the second column saved. Measured, reverted, recorded so
    it is not tried again. The .gf-tboard wrapper stays; it is harmless and makes
    the block addressable. */
+
+/* ========================================================== the cover ======
+   2026-08-13. The article opened on four stacked full-width bands — headline,
+   fixture strip, stat rail, ballpark plate — 1,120px of furniture before the
+   first sentence. All of it is reference read once, so it moves BESIDE the
+   headline into a single card and the page opens on the piece itself.
+
+   The card is also where the article's imagery now lives above the fold: club
+   marks, both starters' headshots and the ballpark schematic, in one object
+   rather than spread over three bands that each cost their own screen.
+   =========================================================================== */
+
+body.tmr-ds .ed-hero { padding-block: clamp(18px, 2.6vw, 30px) clamp(14px, 2vw, 22px); }
+
+@media (min-width: 1000px) {
+  body.tmr-ds .ed-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    align-items: center;
+    gap: clamp(26px, 3.4vw, 46px);
+  }
+}
+
+body.tmr-ds .ed-cover {
+  background: linear-gradient(180deg, rgba(19,25,36,.94) 0%, rgba(13,17,25,.94) 100%);
+  border: 1px solid var(--ed-line-2);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  /* The two club colours, as the card's own top edge. Identifies the fixture
+     before a word is read and costs no height. */
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--ed-away) 0 50%, var(--ed-home) 50% 100%) 1;
+  border-image-width: 3px 0 0 0;
+}
+
+body.tmr-ds .ed-cover .ed-fixture-in {
+  padding: 16px 16px 12px;
+  align-items: end;
+  gap: 10px;
+}
+body.tmr-ds .ed-cover .ed-team-nick { font-size: 1.32rem; }
+body.tmr-ds .ed-cover .ed-team-logo { height: 30px; margin-bottom: 8px; }
+body.tmr-ds .ed-cover .ed-at { padding-bottom: 8px; }
+
+/* The two starters, centred under the clubs they pitch for rather than floated
+   next to the headline, so the card reads top to bottom as one fixture. */
+body.tmr-ds .ed-cover .ed-hero-faces {
+  justify-content: center;
+  padding: 4px 16px 12px;
+}
+body.tmr-ds .ed-cover .ed-face { width: 92px; height: 92px; border-width: 2px; }
+body.tmr-ds .ed-cover .ed-face--home { margin-left: -24px; }
+
+body.tmr-ds .ed-cover .ed-fixture-meta {
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--ed-line);
+  background: rgba(0,0,0,.25);
+  font-size: 12px;
+}
+
+/* The headline no longer has the full wrap to itself, so the 20ch cap that kept
+   it from running edge to edge now makes it needlessly narrow. */
+body.tmr-ds .ed-title { max-width: 26ch; }
+body.tmr-ds .ed-dek { max-width: 52ch; }
+
+/* ================================================== the reading column =====
+   The duo put prose in a fixed 27rem beside a 1fr data column. On a section
+   with four paragraphs and one small graphic that produced a 769px column of
+   text next to 230px of card and half a screen of nothing, and the fixed column
+   meant a wider viewport bought the reader no shorter article. Proportional
+   columns let the prose take the space the graphic is not using.
+
+   Measured at 1440x900 on the Guardians/Tigers piece: 4,365px before this
+   pass, 3,4xx after. Do not restore the fixed 27rem without re-measuring —
+   that is the change that made this page long.
+   =========================================================================== */
+@media (min-width: 960px) {
+  body.tmr-ds .gf-duo { grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); }
+}
+
+/* Prose, one notch tighter. 17/1.62 is a magazine measure for a 36rem column;
+   this column is wider now and the leading was doing the same job twice. */
+body.tmr-ds .gf-sect p { line-height: 1.56; margin-bottom: .7em; }
+body.tmr-ds .gf-sect { padding-block: clamp(14px, 1.7vw, 22px); }
+body.tmr-ds .gf-sect-head { margin-bottom: clamp(8px, 1vw, 11px); }
+
+/* ------------------------------------------------------------ the measure --
+   74rem was set when the prose sat in a fixed 27rem column, so widening the
+   wrap only widened the empty half. With proportional columns the extra width
+   goes to the reading column and buys real lines back. */
+body.tmr-ds .ed { --ed-full: 80rem; }
+
+/* Furniture, trimmed. Each of these is read once: the headline block, the
+   verdict's tool row, the methodology drawer and the prev/next. None of them
+   earned the air they had at the bottom of a long page. */
+body.tmr-ds .ed-title { font-size: clamp(1.75rem, 1.05rem + 2.5vw, 2.6rem); }
+body.tmr-ds .ed-crumb { margin-bottom: clamp(10px, 1.4vw, 14px); }
+body.tmr-ds .ed-kicker { margin-bottom: clamp(10px, 1.6vw, 14px); }
+body.tmr-ds .ed-byline { margin-top: clamp(12px, 1.6vw, 16px); padding-top: 10px; }
+
+body.tmr-ds .gf-tools { margin-top: 18px; }
+body.tmr-ds .gf-tools h4 { margin-bottom: 8px; }
+body.tmr-ds .ed-end { padding-block: clamp(14px, 1.8vw, 22px); }
+body.tmr-ds .gf-foot p { margin: 6px 0; }
+
+/* In a split the aside is short and the prose beside it is capped to the 36rem
+   reading measure, so the section ran 300px past the card next to it. A 44rem
+   measure is still inside the range a newspaper sets a feature at and takes a
+   fifth off the column. */
+body.tmr-ds .gf-split-main > :is(p, ul, ol) { max-width: 44rem; }
+
+/* The byline's 46ch cap was set against a full-width hero. Beside the cover it
+   wrapped mid-list and left a separator dangling at the end of a line. */
+body.tmr-ds .ed-byline { max-width: none; }

@@ -977,6 +977,12 @@ def render_article(article, provenance, neighbours):
 
     faces_html = hero_faces_html()
 
+    # The ballpark plate is generated and checked, but it is no longer PLACED.
+    # It burns the venue name into the artwork at a fixed 52px in a 1040-wide
+    # viewBox, so at any width narrower than the old full-bleed band the name is
+    # clipped by the SVG itself — and inside the cover card it also printed the
+    # name a second time next to the live one in the meta line. The check stays
+    # because it is what catches a plate the graphics build failed to write.
     venue_html = ""
     if article.get("venue_name"):
         venue_src = "/static/media/matchups/%s-venue.svg" % article["slug"]
@@ -1069,6 +1075,13 @@ TEMPLATE = """<!DOCTYPE html>
         <span>{matchup}</span>
       </nav>
 
+      <!-- THE COVER. Headline on the left, the whole fixture on the right, one
+           band. Until 2026-08-13 the headline, the fixture strip, the stat rail
+           and the ballpark plate were four stacked full-width bands and cost
+           1120px before a reader reached the first sentence — on a 900px screen
+           the article started below the second scroll. They are all reference
+           material read once, so they belong beside the headline rather than in
+           front of it, and the page now opens on the piece itself. -->
       <div class="ed-hero-grid">
       <div class="ed-hero-copy">
       <p class="ed-kicker">
@@ -1087,38 +1100,31 @@ TEMPLATE = """<!DOCTYPE html>
         <span>Updated <time datetime="{modified_iso}">{modified_human}</time></span>
       </div>
       </div>
-      {hero_faces}
+
+      <aside class="ed-cover" aria-label="The fixture">
+        <div class="ed-fixture-in">
+          <div class="ed-team ed-team--away">{away_logo}
+            <span class="ed-team-city">{away_city}</span>
+            <span class="ed-team-nick">{away_nick}</span>
+            <span class="ed-team-line">{away_line}</span>
+          </div>
+          <div class="ed-at">{matchup_arrow}</div>
+          <div class="ed-team ed-team--home">{home_logo}
+            <span class="ed-team-city">{home_city}</span>
+            <span class="ed-team-nick">{home_nick}</span>
+            <span class="ed-team-line">{home_line}</span>
+          </div>
+        </div>
+        {hero_faces}
+        <p class="ed-fixture-meta">
+          <span>{venue}</span><span><b>{game_time_human}</b></span>
+        </p>
+      </aside>
       </div>
     </div>
   </header>
 
-  <!-- The fixture, demoted to reference: who is playing, where, when, and what
-       each club's record is. It was the hero in the first cut, which made the
-       page read as a fixture list with an article attached to it. -->
-  <section class="ed-fixture" aria-label="The fixture">
-    <div class="ed-w ed-w--full">
-      <div class="ed-fixture-in">
-        <div class="ed-team ed-team--away">{away_logo}
-          <span class="ed-team-city">{away_city}</span>
-          <span class="ed-team-nick">{away_nick}</span>
-          <span class="ed-team-line">{away_line}</span>
-        </div>
-        <div class="ed-at">{matchup_arrow}</div>
-        <div class="ed-team ed-team--home">{home_logo}
-          <span class="ed-team-city">{home_city}</span>
-          <span class="ed-team-nick">{home_nick}</span>
-          <span class="ed-team-line">{home_line}</span>
-        </div>
-      </div>
-      <p class="ed-fixture-meta">
-        <span>{venue}</span><span><b>{game_time_human}</b></span>
-      </p>
-    </div>
-  </section>
-
   {rail}
-
-  {venue_plate}
 
   <nav class="ed-jump" aria-label="Sections in this article">
     <div class="ed-w ed-w--full"><ol>{nav}</ol></div>
@@ -1159,6 +1165,38 @@ TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
+
+
+TODAY_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<title>Today&#39;s Matchup of the Day: {matchup} | TrustMyRecord</title>
+<meta name="description" content="Today&#39;s Matchup of the Day: {matchup}. Opening the full analysis.">
+<link rel="canonical" href="{target_abs}">
+<meta http-equiv="refresh" content="0; url={target}">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<script>location.replace({target!r});</script>
+<style>
+  html,body{{margin:0;background:#070910;color:#CBD5E1;
+    font:500 15px/1.6 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}}
+  .t{{max-width:34rem;margin:0 auto;padding:22vh 24px 0}}
+  .t p{{color:#8A97A8;margin:0 0 14px;font-size:12px;font-weight:800;
+    letter-spacing:.16em;text-transform:uppercase}}
+  .t a{{color:#F7F9FC;font-size:1.4rem;font-weight:800;line-height:1.25;
+    letter-spacing:-.02em;text-decoration:none;border-bottom:2px solid #35E0CB}}
+</style>
+</head>
+<body>
+<main class="t">
+  <p>Matchup of the Day</p>
+  <a href="{target}">{headline}</a>
+</main>
+</body>
+</html>
+"""
 
 
 def card_html(article, lead=False):
@@ -1350,6 +1388,33 @@ def main():
                               itemlist_jsonld(daily, SITE + "/matchup-of-the-day/",
                                               "TMR Matchup of the Day"), motd_path)
         writes.append((motd_path, text))
+
+        # /matchup-of-the-day/today/ — the front door for the NAV.
+        #
+        # The Sportsbook menu used to point at the hub, so clicking "Matchup of
+        # the Day" landed a reader on a page explaining what the section is,
+        # with the day's piece a scroll and a second click away. Pointing the
+        # menu straight at the article's own URL is not an option: that URL
+        # changes every morning and the nav bundle is content-hashed and
+        # referenced by every page on the site, so a daily href would rewrite
+        # the whole tree daily.
+        #
+        # This is the stable address in between. It is baked with the day's
+        # article, canonicalised TO that article so search consolidates on the
+        # permanent URL rather than this one, and it is deliberately kept out of
+        # the sitemap for the same reason. It is not noindexed: it is a real
+        # page with a real link on it, and it hands off in about a frame.
+        if motd_lead:
+            target = article_href(motd_lead)
+            today_dir = os.path.join(MOTD_DIR, "today")
+            headline = motd_lead.get("h1") or ("%s vs. %s" % (
+                motd_lead["away_team"], motd_lead["home_team"]))
+            writes.append((os.path.join(today_dir, "index.html"), TODAY_TEMPLATE.format(
+                target=esc(target),
+                target_abs=esc(SITE + target),
+                headline=esc(headline),
+                matchup=esc("%s vs. %s" % (motd_lead["away_team"], motd_lead["home_team"])),
+            )))
     else:
         print("WARN: matchup-of-the-day/index.html is missing; the daily hub was not written")
 
