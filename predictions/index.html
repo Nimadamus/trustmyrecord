@@ -10,15 +10,15 @@
   <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
   <style>
     :root {
-      --page-bg: #0a1420;
-      --ink: #f1f5f9;
-      --muted: #93a3b5;
-      --line: rgba(148,163,184,0.18);
-      --panel: #111d2d;
-      --accent: #2dd4bf;
-      --accent-soft: rgba(45,212,191,0.12);
-      --warn-bg: rgba(244,201,93,0.08);
-      --warn-line: rgba(244,201,93,0.32);
+      --page-bg: #FFFFFF;
+      --ink: #07182A;
+      --muted: #2E4459;
+      --line: #D2DEEA;
+      --panel: #F6F9FC;
+      --accent: #0C948C;
+      --accent-soft: rgba(12,148,140,0.12);
+      --warn-bg: rgba(185,133,5,0.08);
+      --warn-line: rgba(185,133,5,.30);
     }
 
     body.tmr-site-shell {
@@ -33,10 +33,10 @@
     }
 
     .predictions-header {
-      background: #101820;
-      color: #fff;
+      background: #FFFFFF;
+      color: #07182A;
       padding: 28px max(18px, 6vw) 24px;
-      border-bottom: 1px solid #22313f;
+      border-bottom: 1px solid #D2DEEA;
     }
 
     .predictions-header h1 {
@@ -49,7 +49,7 @@
     .predictions-header p {
       max-width: 920px;
       margin: 4px 0;
-      color: #d8e1ea;
+      color: #07182A;
       line-height: 1.45;
     }
 
@@ -65,9 +65,9 @@
       align-items: center;
       min-height: 30px;
       padding: 0 10px;
-      border: 1px solid rgba(255, 255, 255, .22);
+      border: 1px solid #D2DEEA;
       border-radius: 6px;
-      color: #edf4f8;
+      color: #07182A;
       font-size: 13px;
     }
 
@@ -83,7 +83,7 @@
       border-radius: 8px;
       padding: 14px 16px;
       margin-bottom: 16px;
-      color: #cbd5e1;
+      color: #07182A;
       line-height: 1.45;
     }
 
@@ -105,10 +105,10 @@
     }
 
     .backtest-stat {
-      border: 1px solid rgba(148,163,184,0.16);
+      border: 1px solid #D2DEEA;
       border-radius: 8px;
       padding: 10px;
-      background: rgba(5,9,18,0.42);
+      background: rgba(7,24,42,0.05);
     }
 
     .backtest-stat strong {
@@ -126,7 +126,7 @@
 
     .model-caution {
       margin: 12px 0 0;
-      color: #93a3b5;
+      color: #2E4459;
       font-size: 13px;
       line-height: 1.4;
     }
@@ -136,7 +136,7 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 18px;
-      box-shadow: 0 1px 2px rgba(16, 24, 32, .04);
+      box-shadow: 0 1px 2px rgba(7,24,42,0.04);
     }
 
     .game-kicker {
@@ -161,10 +161,10 @@
 
     .score-box {
       min-height: 82px;
-      border: 1px solid rgba(148,163,184,0.16);
+      border: 1px solid #D2DEEA;
       border-radius: 8px;
       padding: 12px;
-      background: rgba(5,9,18,0.42);
+      background: rgba(7,24,42,0.05);
     }
 
     .score-label {
@@ -180,7 +180,7 @@
       font-size: 24px;
       font-weight: 800;
       line-height: 1.18;
-      color: #f1f5f9;
+      color: #07182A;
       overflow-wrap: anywhere;
     }
 
@@ -199,7 +199,7 @@
     }
 
     .factor-panel {
-      border-top: 1px solid rgba(148,163,184,0.16);
+      border-top: 1px solid #D2DEEA;
       padding-top: 12px;
     }
 
@@ -212,7 +212,7 @@
     .factor-panel p,
     .explanation-list li {
       margin: 6px 0;
-      color: #cbd5e1;
+      color: #07182A;
       line-height: 1.42;
     }
 
@@ -227,7 +227,7 @@
       background: var(--warn-bg);
       border: 1px solid var(--warn-line);
       border-radius: 8px;
-      color: #fde68a;
+      color: #B98505;
     }
 
     @media (max-width: 760px) {
@@ -247,8 +247,9 @@
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell">
+<body class="tmr-site-shell tmr-light">
   <main class="predictions-shell">
     <header class="predictions-header">
       <h1>MLB Run Prediction Model</h1>
@@ -267,8 +268,8 @@
     <section class="predictions-content" aria-label="About the MLB run prediction model">
       <div class="prediction-card">
         <h2>How the MLB Run Prediction Model Works</h2>
-        <p style="color:#cbd5e1;line-height:1.5;">Each model run projects team run totals and a predicted final score for every MLB matchup on the slate. The projections are built from four factor groups per team: offense against the opposing starter's handedness (lineup wRC+, wOBA, and ISO versus that hand), the opposing starter's underlying skill (FIP and K-BB rate rather than surface ERA), opposing bullpen condition (30-day FIP plus recent pitch workload and high-leverage availability), and recent team form (runs per game over the last 14 days). A park factor adjusts the run environment for the venue.</p>
-        <p style="color:#cbd5e1;line-height:1.5;">Every card shows projected runs and win probability for both teams, the market total for context, and a plain-language explanation of which factors drove the number. The backtest panel above the cards reports the model's historical out-of-sample accuracy: team-run mean absolute error, winner accuracy, exact final-score hit rate, and total-direction win rate at a one-run edge. These projections are a research view of the matchup, not betting advice, and the page states its data limitations directly on each run.</p>
+        <p style="color:#07182A;line-height:1.5;">Each model run projects team run totals and a predicted final score for every MLB matchup on the slate. The projections are built from four factor groups per team: offense against the opposing starter's handedness (lineup wRC+, wOBA, and ISO versus that hand), the opposing starter's underlying skill (FIP and K-BB rate rather than surface ERA), opposing bullpen condition (30-day FIP plus recent pitch workload and high-leverage availability), and recent team form (runs per game over the last 14 days). A park factor adjusts the run environment for the venue.</p>
+        <p style="color:#07182A;line-height:1.5;">Every card shows projected runs and win probability for both teams, the market total for context, and a plain-language explanation of which factors drove the number. The backtest panel above the cards reports the model's historical out-of-sample accuracy: team-run mean absolute error, winner accuracy, exact final-score hit rate, and total-direction win rate at a one-run edge. These projections are a research view of the matchup, not betting advice, and the page states its data limitations directly on each run.</p>
       </div>
       <div class="prediction-card" style="margin-top:16px;">
         <h2>Related TrustMyRecord Tools</h2>

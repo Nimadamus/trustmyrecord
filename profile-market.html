@@ -13,19 +13,24 @@
   <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
   <script src="/static/js/tmr-sitewide.js?v=a46586bedd8f" defer></script>
   <style>
-    :root{--bg:#050a14;--panel:#0a1322;--panel2:#101b30;--line:rgba(148,163,184,.16);--ink:#f8fbff;--muted:#91a0b5;--green:#22c55e;--red:#ff3333}
-    body{margin:0;background:radial-gradient(900px 520px at 85% -10%,rgba(31,184,217,.09),transparent 58%),var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    .page{width:min(100% - 32px,1260px);margin:0 auto;padding:28px 0 48px}.back{display:inline-flex;color:#b8d7ff;text-decoration:none;font-weight:800;margin-bottom:18px}
-    .hero,.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.24)}.hero,.card{padding:18px}.hero{padding:24px}
+    :root{--bg:#F4F7FA;--panel:#FFFFFF;--panel2:#F6F9FC;--line:#D2DEEA;--ink:#07182A;--muted:#2E4459;--green:#0A8B4E;--red:#BC372E}
+    body{margin:0;background:radial-gradient(900px 520px at 85% -10%,rgba(12,148,140,0.09),transparent 58%),var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .page{width:min(100% - 32px,1260px);margin:0 auto;padding:28px 0 48px}.back{display:inline-flex;color:#1B4F9E;text-decoration:none;font-weight:800;margin-bottom:18px}
+    .hero{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.24)}
+
+    .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgba(7,24,42,0.082)}.hero{padding:18px}
+.card{padding:18px}.hero{padding:24px}
     .eyebrow{color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:900}h1{margin:6px 0 4px;font-size:clamp(32px,4vw,48px);line-height:1;letter-spacing:0}h2{margin:0 0 12px;font-size:18px;letter-spacing:0}.sub,.empty,.error{color:var(--muted)}
-    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}.kpi{background:#08111f;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:64px}.kpi span{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-size:10px;font-weight:900}.kpi strong{display:block;margin-top:5px;font-size:20px}
-    .grid{display:grid;gap:18px;margin-top:18px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:10px 9px;border-bottom:1px solid rgba(148,163,184,.12);text-align:left;font-size:13px;vertical-align:top}th{color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:900;background:rgba(2,6,23,.28)}td{color:#dce7f5}.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.split-list{display:grid;gap:8px}.split-row{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid rgba(148,163,184,.12);border-radius:10px;background:#08111f}.split-row span{color:var(--muted)}.pos{color:var(--green)}.neg{color:var(--red)}.neutral{color:var(--ink)}.error{color:#ffd0d6}
-    @media(max-width:900px){.kpis,.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.page{width:min(100% - 20px,1260px);padding-top:18px}.hero,.card{padding:14px;border-radius:12px}.kpis,.summary-grid{grid-template-columns:1fr}}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}.kpi{background:#FFFFFF;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:64px}.kpi span{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-size:10px;font-weight:900}.kpi strong{display:block;margin-top:5px;font-size:20px}
+    .grid{display:grid;gap:18px;margin-top:18px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:10px 9px;border-bottom:1px solid #D2DEEA;text-align:left;font-size:13px;vertical-align:top}th{color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:900;background:rgba(7,24,42,0.034)}td{color:#07182A}.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.split-list{display:grid;gap:8px}.split-row{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #D2DEEA;border-radius:10px;background:#FFFFFF}.split-row span{color:var(--muted)}.pos{color:var(--green)}.neg{color:var(--red)}.neutral{color:var(--ink)}.error{color:#07182A}
+    @media(max-width:900px){.kpis,.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.page{width:min(100% - 20px,1260px);padding-top:18px}.hero{padding:14px;border-radius:12px}
+.card{padding:14px;border-radius:12px}.kpis,.summary-grid{grid-template-columns:1fr}}
   </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell" data-tmr-route="profile-market">
+<body class="tmr-site-shell tmr-light" data-tmr-route="profile-market">
   <main class="page">
     <a class="back" id="backLink" href="/profile/">Back to profile</a>
     <section class="hero" id="hero"><div class="empty">Loading market breakdown...</div></section>

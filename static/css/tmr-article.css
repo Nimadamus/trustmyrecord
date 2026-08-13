@@ -53,19 +53,19 @@ body.tmr-ds .ed {
      page grey: near-black base, a distinctly lifted band for breakouts, and a
      panel lighter again so a card looks like an object rather than a shadow. */
   --ed-bg:       #070910;
-  --ed-bg-warm:  #0D1119;   /* breakout sections sit on this */
-  --ed-panel:    #131924;
-  --ed-line:     rgba(150,180,220,.13);
-  --ed-line-2:   rgba(150,180,220,.26);
+  --ed-bg-warm:  #FFFFFF;   /* breakout sections sit on this */
+  --ed-panel:    #FFFFFF;
+  --ed-line:     rgba(30,91,191,.26);
+  --ed-line-2:   rgba(30,91,191,.26);
 
   /* -- ink ------------------------------------------------------------------
      Body copy was #C4CDD7 on #0C0E12 — about 11:1, technically fine and
      visually flat, because the headings above it were only a shade brighter.
      Widening the gap is what makes a hierarchy read at a glance. */
-  --ed-ink:      #F7F9FC;
-  --ed-body:     #CBD5E1;
-  --ed-mut:      #8A97A8;
-  --ed-faint:    #6B7787;
+  --ed-ink:      #07182A;
+  --ed-body:     #07182A;
+  --ed-mut:      #2E4459;
+  --ed-faint:    #5E7590;
 
   /* -- accents --------------------------------------------------------------
      One accent, used deliberately: the kicker, the section rule, the active
@@ -73,11 +73,11 @@ body.tmr-ds .ed {
      Brighter and slightly bluer than the old teal, which went dull against a
      warm surface. */
   --ed-acc:      #35E0CB;
-  --ed-acc-soft: rgba(53,224,203,.14);
-  --ed-pos:      #43D68F;
-  --ed-neg:      #FF6B61;
-  --ed-away:     #FF5910;   /* the generator overrides both per matchup */
-  --ed-home:     #CE1141;
+  --ed-acc-soft: rgba(12,148,140,0.14);
+  --ed-pos:      #0A8B4E;
+  --ed-neg:      #BC372E;
+  --ed-away:     #B98505;   /* the generator overrides both per matchup */
+  --ed-home:     #BC372E;
 
   /* -- measure ------------------------------------------------------------- */
   --ed-read:     36rem;     /* the prose column */
@@ -155,7 +155,7 @@ body.tmr-ds .ed-hero::after {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(120% 80% at 50% 0%, rgba(8,9,11,.55) 0%, rgba(8,9,11,.88) 55%, var(--ed-bg) 100%);
+    radial-gradient(120% 80% at 50% 0%, rgba(7,24,42,0.06) 0%, #F4F7FA 55%, var(--ed-bg) 100%);
   pointer-events: none;
 }
 
@@ -220,9 +220,9 @@ body.tmr-ds .ed-face {
   border-radius: 50%;
   object-fit: cover;
   object-position: top center;
-  background: #0A0E13;
+  background: #F4F7FA;
   border: 3px solid var(--ed-line-2);
-  box-shadow: 0 18px 44px rgba(0,0,0,.55);
+  box-shadow: 0 18px 44px rgba(7,24,42,0.1);
 }
 /* Overlapped, the way a broadcast sets up a pitching matchup. The second face
    sits in front so the pairing reads as one object rather than two circles. */
@@ -416,7 +416,7 @@ body.tmr-ds .ed-jump {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(8,9,11,.86);
+  background: #F4F7FA;
   backdrop-filter: saturate(140%) blur(10px);
   -webkit-backdrop-filter: saturate(140%) blur(10px);
   border-bottom: 1px solid var(--ed-line);
@@ -801,7 +801,7 @@ body.tmr-ds .gf-showshot {
   border-radius: 50%;
   object-fit: cover;
   object-position: top center;
-  background: #0A0E13;
+  background: #F4F7FA;
   border: 2px solid var(--ed-line-2);
 }
 body.tmr-ds .gf-showcard[data-t="away"] .gf-showshot { border-color: color-mix(in srgb, var(--ed-away) 55%, transparent); }
@@ -818,7 +818,7 @@ body.tmr-ds .gf-showcard::before {
   font-size: 11rem;
   font-weight: 900;
   line-height: .8;
-  color: #FFFFFF;
+  color: #07182A;
   opacity: .028;
   pointer-events: none;
 }

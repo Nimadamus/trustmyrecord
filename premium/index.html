@@ -25,18 +25,18 @@
 
     <style>
         :root {
-            --neon-cyan: #00ffff;
-            --neon-purple: #ff00ff;
-            --neon-green: #39ff14;
-            --neon-gold: #ffd700;
-            --neon-red: #ff073a;
-            --dark-bg: #0a0a0f;
-            --darker-bg: #050508;
-            --card-bg: rgba(20, 20, 35, 0.8);
-            --glass-border: rgba(0, 255, 255, 0.2);
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0c0;
-            --text-muted: #808090;
+            --neon-cyan: #0C948C;
+            --neon-purple: #5940AE;
+            --neon-green: #0A8B4E;
+            --neon-gold: #B98505;
+            --neon-red: #BC372E;
+            --dark-bg: #F4F7FA;
+            --darker-bg: #F4F7FA;
+            --card-bg: #FFFFFF;
+            --glass-border: rgba(12,148,140,.28);
+            --text-primary: #07182A;
+            --text-secondary: #2E4459;
+            --text-muted: #5E7590;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,8 +45,8 @@
             font-family: 'Inter', sans-serif;
             background: var(--dark-bg);
             background-image:
-                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 25% 75%, rgba(12,148,140,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(185,133,5,0.08) 0%, transparent 50%),
                 linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
             color: var(--text-primary);
             min-height: 100vh;
@@ -60,8 +60,8 @@
             width: 100%;
             height: 100%;
             background-image:
-                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+                linear-gradient(rgba(12,148,140,0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(12,148,140,0.08) 1px, transparent 1px);
             background-size: 50px 50px;
             pointer-events: none;
             z-index: -1;
@@ -71,7 +71,7 @@
 
         /* Header */
         header {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(7,24,42,0.048);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
             padding: 15px 0;
@@ -115,7 +115,7 @@
 
         .nav-link:hover {
             color: var(--neon-cyan);
-            background: rgba(0, 255, 255, 0.1);
+            background: rgba(12,148,140,0.1);
         }
 
         /* Page Hero */
@@ -155,7 +155,7 @@
 
         /* Current Status Banner */
         .status-banner {
-            background: rgba(0, 255, 255, 0.1);
+            background: rgba(12,148,140,0.1);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             padding: 20px;
@@ -165,7 +165,7 @@
         }
 
         .status-banner.premium {
-            background: rgba(255, 215, 0, 0.1);
+            background: rgba(185,133,5,0.1);
             border-color: var(--neon-gold);
         }
 
@@ -178,15 +178,15 @@
         .current-tier {
             display: inline-block;
             padding: 5px 15px;
-            background: rgba(0, 255, 255, 0.2);
+            background: rgba(12,148,140,0.14);
             border-radius: 20px;
             font-weight: 700;
             color: var(--neon-cyan);
         }
 
-        .current-tier.elite { background: rgba(255, 215, 0, 0.2); color: var(--neon-gold); }
-        .current-tier.pro { background: rgba(255, 0, 255, 0.2); color: var(--neon-purple); }
-        .current-tier.basic { background: rgba(57, 255, 20, 0.2); color: var(--neon-green); }
+        .current-tier.elite { background: rgba(185,133,5,0.14); color: var(--neon-gold); }
+        .current-tier.pro { background: rgba(89,64,174,0.14); color: var(--neon-purple); }
+        .current-tier.basic { background: rgba(10,139,78,0.14); color: var(--neon-green); }
 
         /* Billing Toggle */
         .billing-toggle {
@@ -209,7 +209,7 @@
         .toggle-switch {
             width: 60px;
             height: 30px;
-            background: rgba(0, 255, 255, 0.2);
+            background: rgba(12,148,140,0.14);
             border-radius: 15px;
             cursor: pointer;
             position: relative;
@@ -235,8 +235,8 @@
         }
 
         .save-badge {
-            background: var(--neon-green);
-            color: #000;
+            background: #DFF3E8;
+            color: #0A8B4E;
             padding: 3px 10px;
             border-radius: 10px;
             font-size: 0.75rem;
@@ -265,12 +265,12 @@
 
         .pricing-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 40px rgba(7,24,42,0.1);
         }
 
         .pricing-card.featured {
             border-color: var(--neon-gold);
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 255, 255, 0.1));
+            background: linear-gradient(135deg, rgba(185,133,5,0.1), rgba(12,148,140,0.1));
         }
 
         .pricing-card.featured::before {
@@ -326,7 +326,7 @@
 
         .tier-features li {
             padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #D2DEEA;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -365,30 +365,31 @@
         }
 
         .upgrade-btn.primary {
-            background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
-            color: #000;
+            background: var(--primary);
+            color: #FFFFFF;
         }
 
         .upgrade-btn.primary:hover {
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 30px rgba(7,24,42,0.1);
             transform: scale(1.02);
         }
 
         .upgrade-btn.secondary {
-            background: rgba(0, 255, 255, 0.1);
+            background: rgba(12,148,140,0.1);
             border: 1px solid var(--neon-cyan);
             color: var(--neon-cyan);
         }
 
         .upgrade-btn.secondary:hover {
-            background: rgba(0, 255, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            background: rgba(12,148,140,0.14);
+            box-shadow: 0 0 20px rgba(7,24,42,0.1);
         }
 
         .upgrade-btn:disabled {
-            background: var(--text-muted);
+            background: #E6EDF5;
+            border: 1px solid #D2DEEA;
             cursor: not-allowed;
-            color: #666;
+            color: #5E7590;
         }
 
         .upgrade-btn:disabled:hover {
@@ -398,7 +399,7 @@
 
         /* Features Comparison */
         .features-section {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(7,24,42,0.036);
             padding: 80px 20px;
         }
 
@@ -417,7 +418,7 @@
             grid-template-columns: 2fr repeat(4, 1fr);
             gap: 10px;
             padding: 15px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #D2DEEA;
             max-width: 1200px;
             margin: 0 auto;
         }
@@ -517,7 +518,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: #F4F7FA;
             padding: 15px 25px;
             border-radius: 10px;
             font-weight: 700;
@@ -573,23 +574,28 @@
     <style>
         body {
             background:
-                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
-                linear-gradient(180deg, #08111d, #0d1726) !important;
-            color: #eef4fb;
+                radial-gradient(circle at 12% 0%, rgba(12,148,140,0.12), transparent 28%),
+                linear-gradient(180deg, #FFFFFF, #FFFFFF) !important;
+            color: #07182A;
             font-family: 'Inter', sans-serif;
         }
 
         header {
-            background: rgba(8, 15, 26, 0.88);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            background: #FFFFFF;
+            border-bottom: 1px solid #D2DEEA;
             backdrop-filter: blur(18px);
             padding: 12px 0;
         }
 
-        .logo,
-        .premium-hero h1,
-        .tier-name,
-        .features-section h2 {
+        .premium-hero h1{
+            font-family: 'Barlow', sans-serif;
+            letter-spacing: -0.03em;
+            -webkit-text-fill-color: initial;
+            background: none;
+        }
+
+
+        .logo,.tier-name,.features-section h2{
             font-family: 'Barlow', sans-serif;
             letter-spacing: -0.03em;
             -webkit-text-fill-color: initial;
@@ -597,19 +603,19 @@
         }
 
         .logo {
-            color: #eef4fb;
+            color: #07182A;
             font-size: 1.5rem;
         }
 
         .nav-link {
-            color: #9aacbf;
+            color: #2E4459;
             border-radius: 999px;
             padding: 9px 14px;
         }
 
         .nav-link:hover {
-            color: #eef4fb;
-            background: rgba(255,255,255,0.05);
+            color: #07182A;
+            background: rgba(7,24,42,0.02);
         }
 
         .premium-hero {
@@ -629,10 +635,13 @@
             line-height: 0.96;
         }
 
-        .premium-hero p,
-        .billing-toggle span,
-        .feature-row .feature-name {
+        .premium-hero p{
             color: #97a8bc;
+        }
+
+
+        .billing-toggle span,.feature-row .feature-name{
+            color: #2E4459;
         }
 
         .status-banner,
@@ -640,11 +649,11 @@
         .features-section,
         .feature-row,
         .premium-lock {
-            border-color: rgba(148, 163, 184, 0.16) !important;
+            border-color: #D2DEEA !important;
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
-                rgba(11, 20, 34, 0.9) !important;
-            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+                linear-gradient(180deg, rgba(7,24,42,0.02), rgba(7,24,42,0.02)),
+                #FFFFFF !important;
+            box-shadow: 0 18px 42px rgba(7,24,42,0.075);
         }
 
         .status-banner,
@@ -656,13 +665,13 @@
         .current-tier,
         .toggle-switch::after,
         .pricing-card.featured::before {
-            background: linear-gradient(135deg, #2dd4bf, #8df5ea);
+            background: linear-gradient(135deg, #DEF4F2, #DEF4F2);
             color: #06120f !important;
         }
 
         .toggle-switch {
-            background: rgba(255,255,255,0.08);
-            border-color: rgba(148, 163, 184, 0.16);
+            background: rgba(7,24,42,0.028);
+            border-color: #D2DEEA;
         }
 
         .pricing-grid {
@@ -675,11 +684,11 @@
 
         .pricing-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(45, 212, 191, 0.22);
+            border-color: rgba(12,148,140,.28);
         }
 
         .pricing-card.featured {
-            border-color: rgba(45, 212, 191, 0.26);
+            border-color: rgba(12,148,140,.28);
         }
 
         .tier-icon {
@@ -687,12 +696,12 @@
         }
 
         .tier-name {
-            color: #eef4fb;
+            color: #07182A;
             font-size: 1.45rem;
         }
 
         .tier-price {
-            color: #eef4fb;
+            color: #07182A;
             font-family: 'Barlow', sans-serif;
         }
 
@@ -700,21 +709,21 @@
         .tier-original-price,
         .tier-features li,
         .feature-row .tier-value {
-            color: #97a8bc;
+            color: #2E4459;
         }
 
         .tier-features .check,
         .feature-row .tier-value.yes {
-            color: #2dd4bf;
+            color: #07736D;
         }
 
         .tier-features .x,
         .feature-row .tier-value.no {
-            color: #ef4444;
+            color: #BC372E;
         }
 
         .premium-lock {
-            color: #d7fffb;
+            color: #07182A;
         }
     </style>
     <!-- Google tag (gtag.js) -->
@@ -730,8 +739,9 @@
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell">
+<body class="tmr-site-shell tmr-light">
     <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260729navclean1 -->
 
     <!-- Hero Section -->

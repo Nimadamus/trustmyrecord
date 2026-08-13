@@ -1,0 +1,494 @@
+/* =============================================================================
+   TrustMyRecord — LIGHT WORKSPACE LAYER  (tmr-light-base.css)
+   -----------------------------------------------------------------------------
+   /handicappers/ is the design of record for this: dark navy nav, a light
+   #F4F7FA workspace, white cards, dark navy ink, teal accents, and dark navy
+   kept deliberately for heroes and headline stat panels so the page still has
+   contrast. That page gets it from static/css/tmr-ds.css.
+
+   The ~140 legacy pages on tmr-sitewide.css cannot adopt tmr-ds.css wholesale:
+   full adoption REMOVES tmr-sitewide.css and restyles every bare element, which
+   on a mature page is a redesign, not a re-skin. So this file gives those pages
+   the same LOOK from the same VALUES without touching their structure.
+
+   A page opts in with one class:  <body class="tmr-site-shell tmr-light">
+   and opts out by deleting it. Nothing else about the page changes.
+
+   THREE PARTS
+     1. this file  — tokens, the surface reset, and the shared components
+     2. _light-auto.css — colour-only overrides lifted from the legacy shell
+                          sheets by scripts/build_light_overrides.py
+     3. the page's own <style>, remapped in place by
+        scripts/light_theme_transform.py
+
+   WHY !important APPEARS HERE
+   tmr-sitewide.css paints the page background with `!important` (it had to, to
+   beat the per-page backgrounds it was consolidating). An override of an
+   `!important` declaration has to carry one too. It is used for exactly that
+   reason and nowhere else.
+
+   Token values are copied verbatim from `body.tmr-ds` in tmr-ds.css. This file
+   introduces NO new colour.
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   1. TOKENS — the legacy --tmr-* vocabulary, reassigned to the light ramp
+   --------------------------------------------------------------------------- */
+body.tmr-light {
+  /* design-system source values */
+  --page:#F4F7FA;
+  --panel:#FFFFFF; --panel-2:#F6F9FC; --panel-3:#E6EDF5;
+  --ink:#07182A; --ink-2:#2E4459;
+  --line:#D2DEEA; --line-2:#B7C8DA; --edge:rgba(7,24,42,.13);
+  --brand:#0C948C; --brand-dk:#07736D; --brand-lt:#22D2C0; --brand-soft:#DEF4F2;
+  --navy:#08192B; --navy-2:#10334F; --navy-3:#164A73;
+  --gold:#B98505; --gold-b:#FFC93C; --gold-soft:#FBF1D8;
+  --green:#0A8B4E; --green-soft:#DFF3E8;
+  --red:#BC372E;   --red-soft:#FAE9E7;
+  --violet:#5940AE;--violet-soft:#EBE7F9;
+  --blue:#1E5BBF;  --blue-soft:#E3ECFB;
+  --r:10px; --r-sm:7px;
+  --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+  --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
+
+  /* the names tmr-sitewide.css and the legacy pages actually consume */
+  --tmr-bg:#F4F7FA;             --tmr-bg-soft:#F6F9FC;
+  --tmr-app-bg:#F4F7FA;         --tmr-app-bg-2:#F6F9FC;
+  --tmr-panel:#FFFFFF;          --tmr-panel-2:#F6F9FC;
+  --tmr-card:#FFFFFF;           --tmr-card-strong:#FFFFFF;
+  --tmr-card-soft:#F6F9FC;
+  --tmr-line:#D2DEEA;           --tmr-line-strong:#B7C8DA;
+  --tmr-border:#D2DEEA;         --tmr-border-strong:#B7C8DA;
+  --tmr-text:#07182A;           --tmr-text-strong:#07182A;
+  --tmr-text-soft:#2E4459;      --tmr-text-muted:#5E7590;
+  --tmr-muted:#5E7590;
+  --tmr-teal:#0C948C;           --tmr-accent:#0C948C;
+  --tmr-accent-2:#1E5BBF;       --tmr-action:#07736D;
+  --tmr-gold:#B98505;           --tmr-warning:#B98505;
+  --tmr-green:#0A8B4E;          --tmr-success:#0A8B4E;
+  --tmr-red:#BC372E;            --tmr-danger:#BC372E;
+  --tmr-radius:10px;            --tmr-radius-sm:7px;
+  --tmr-radius-md:10px;         --tmr-radius-lg:10px;
+  --tmr-shadow:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+  --tmr-shadow-card:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
+
+  /* the generic names the SEO/marketing page template invented, one page at a
+     time, for the same seven roles. Redefining them here is what lets 40-odd
+     pages change together instead of one at a time. */
+  --bg:#F4F7FA;        --bg-dark:#F4F7FA;      --bg-primary:#F4F7FA;
+  --dark-bg:#F4F7FA;   --darker-bg:#EDF2F7;    --page-bg:#F4F7FA;
+  --bg-surface:#FFFFFF;--bg-secondary:#F6F9FC; --surface:#FFFFFF;
+  --bg-card:#FFFFFF;   --card-bg:#FFFFFF;      --card-bg-solid:#FFFFFF;
+  --panel2:#F6F9FC;    --paper:#FFFFFF;
+  --bg-card-hover:#F6F9FC; --bg-hover:#F6F9FC; --surface-hover:#F6F9FC;
+  --surface-1:#FFFFFF; --surface-2:#F6F9FC;    --surface-3:#E6EDF5;
+  --border:#D2DEEA;    --border-color:#D2DEEA;  --border-light:#E6EDF5;
+  --border-glow:#B7C8DA; --glass-border:#D2DEEA; --line-strong:#B7C8DA;
+  --faint:rgba(7,24,42,.05);
+  --text:#07182A;      --text-primary:#07182A;  --text-pri:#07182A;
+  --text-secondary:#2E4459; --text-dim:#2E4459;
+  --text-muted:#5E7590;--muted:#5E7590;
+  --primary:#0C948C;   --primary-dim:rgba(12,148,140,.12);
+  --primary-glow:rgba(12,148,140,.22);
+  --accent:#0C948C;    --teal:#0C948C;          --cyan:#1E5BBF;
+  --neon-cyan:#0C948C; --neon-green:#0A8B4E;    --neon-gold:#B98505;
+  --neon-red:#BC372E;  --neon-purple:#5940AE;
+  --accent-gold:#B98505; --gold-bright:#B98505;
+  --accent-green:#0A8B4E; --success:#0A8B4E;
+  --accent-red:#BC372E;   --danger:#BC372E;
+  --accent-purple:#5940AE; --purple:#5940AE;
+  --accent-blue:#1E5BBF;
+}
+
+/* ---------------------------------------------------------------------------
+   2. SURFACE RESET
+   --------------------------------------------------------------------------- */
+html:has(body.tmr-light) { background:#F4F7FA; }
+
+html body.tmr-light {
+  background:#F4F7FA !important;
+  color:#07182A !important;
+}
+
+body.tmr-light h1,
+body.tmr-light h2,
+body.tmr-light h3,
+body.tmr-light h4 { color:#07182A; }
+
+body.tmr-light p,
+body.tmr-light li,
+body.tmr-light dd,
+body.tmr-light dt { color:#2E4459; }
+
+body.tmr-light small,
+body.tmr-light .muted,
+body.tmr-light .text-muted,
+body.tmr-light .subtitle,
+body.tmr-light .note { color:#5E7590; }
+
+body.tmr-light a { color:#07736D; }
+body.tmr-light a:hover { color:#0C948C; }
+
+body.tmr-light hr { border:0; border-top:1px solid #D2DEEA; }
+
+/* ---------------------------------------------------------------------------
+   3. THE DARK BANDS WE KEEP
+   -----------------------------------------------------------------------------
+   Contrast is the point of the reference design, not an exception to it. These
+   two classes are the only sanctioned way to put navy back on a light page, so
+   every hero and headline stat panel across the site is the SAME navy rather
+   than the forty different near-blacks the pages had before.
+
+   Custom properties inherit, so re-pinning the ink tokens on the band is enough
+   to make everything inside it render on-dark without per-element rules.
+   --------------------------------------------------------------------------- */
+/* The band list, written once. :is() takes the specificity of its heaviest
+   argument -- all of these are single classes -- so every rule below is exactly
+   as specific as it looks, and adding a page's hero to the set is one word. */
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) {
+  --page:#08192B;
+  --panel:#0C2138;   --panel-2:#0A1B2D;   --panel-3:#143453;
+  --ink:#EAF2FA;     --ink-2:#C3D8EC;     --muted:#8FAECB;
+  --line:rgba(174,198,220,.18);           --line-2:rgba(174,198,220,.30);
+  --brand:#22D2C0;   --brand-dk:#7FEBDC;  --brand-soft:rgba(34,210,192,.14);
+  --gold:#FFC93C;    --green:#3FD08A;     --red:#F1867C;
+  --blue:#7FB0EF;    --violet:#A996EA;
+
+  --tmr-bg:#08192B;             --tmr-bg-soft:#0A1B2D;
+  --tmr-panel:#0C2138;          --tmr-panel-2:#0A1B2D;
+  --tmr-card:#0C2138;           --tmr-card-strong:#0C2138;
+  --tmr-line:rgba(174,198,220,.18);
+  --tmr-border:rgba(174,198,220,.18);
+  --tmr-border-strong:rgba(174,198,220,.30);
+  --tmr-text:#EAF2FA;           --tmr-text-strong:#EAF2FA;
+  --tmr-text-soft:#C3D8EC;      --tmr-text-muted:#8FAECB;
+  --tmr-muted:#8FAECB;
+  --tmr-teal:#22D2C0;           --tmr-accent:#22D2C0;
+  --tmr-gold:#FFC93C;           --tmr-green:#3FD08A;  --tmr-red:#F1867C;
+
+  --bg:#08192B;      --bg-dark:#08192B;    --dark-bg:#08192B;
+  --darker-bg:#061321; --page-bg:#08192B;  --bg-primary:#08192B;
+  --bg-surface:#0C2138; --bg-card:#0C2138; --card-bg:#0C2138;
+  --surface:#0C2138; --panel2:#0A1B2D;
+  --border:rgba(174,198,220,.18); --border-color:rgba(174,198,220,.18);
+  --glass-border:rgba(174,198,220,.18);
+  --text:#EAF2FA;    --text-primary:#EAF2FA; --text-pri:#EAF2FA;
+  --text-secondary:#C3D8EC; --text-dim:#C3D8EC;
+  --text-muted:#8FAECB;
+  --primary:#22D2C0; --teal:#22D2C0;       --accent:#22D2C0;
+  --neon-cyan:#22D2C0; --neon-green:#3FD08A; --neon-gold:#FFC93C;
+  --neon-red:#F1867C;  --neon-purple:#A996EA;
+  --accent-gold:#FFC93C; --accent-green:#3FD08A; --accent-red:#F1867C;
+  --accent-purple:#A996EA;
+}
+
+/* One navy, one radius, sitewide.
+
+   `!important` here is not decoration: tmr-sitewide.css paints `.about-hero`,
+   `.feed-hero`, `.premium-hero` and `.hero` from a 30-selector card rule that is
+   itself `!important`, so a hero would otherwise come out as a white card. */
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) {
+  background:linear-gradient(160deg,#08192B 0%,#0E2A44 58%,#10334F 100%) !important;
+  color:#EAF2FA;
+  border:1px solid rgba(174,198,220,.16) !important;
+  border-radius:10px !important;
+  box-shadow:none !important;
+}
+body.tmr-light .tmr-hero-dark {
+  padding:clamp(26px,4vw,52px) clamp(20px,3.4vw,44px);
+  margin-bottom:24px;
+}
+
+/* Everything INSIDE a band renders on-dark -- and the global nav and footer
+   count as bands, because the derived sheet lightens h1-h4 and body copy
+   sitewide with `!important` and would otherwise paint navy ink onto navy. */
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) :is(h1,h2,h3,h4,.section-title,.page-title,.hero-title) { color:#FFFFFF !important; }
+
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) :is(p,li,span,div,b,i,em,strong,small,dd,dt,label,td,th,h5,h6,figcaption,blockquote) { color:#C3D8EC !important; }
+
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) :is(.muted,.subtitle,.note,.tagline,.sub,.text-muted) { color:#8FAECB !important; }
+
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) a:not([class*="btn"]):not([class*="cta"]):not([class*="button"]) { color:#7FEBDC !important; }
+
+/* Panels nested in a band: a white card on navy is the mismatch this whole
+   pass exists to remove. They become the on-dark surface instead. */
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) :is(.card,.panel,.box,.tile,.stat,.stat-card,.stats-card,.info-card,
+      .metric-card,.glass-card,[class$="-card"]) {
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(174,198,220,.18) !important;
+  box-shadow:none !important;
+  color:#EAF2FA;
+}
+
+/* Secondary buttons on a navy band. The band re-pins --text to on-dark ink,
+   which is right for copy and wrong for a button that sets its own white
+   background -- JustBet's "Share Contest" came out white on white. One shape
+   for all of them: white surface, navy ink, same as the design of record. */
+body.tmr-light :is(
+  .tmr-dark, .tmr-hero-dark, .hero, .ss-hero, .about-hero, .as-hero, .cl-hero,
+  .og-hero, .wc-hero, .tmrc-hero, .blp-hero, .feed-hero, .premium-hero,
+  .page-hero, .nv-head, .tmr-jb-bonus
+) :is(.cta-ghost,.btn-secondary,.button-secondary,.cta-secondary,
+      .tmr-cta-secondary,.btn-outline,.btn-white,.btn-light) {
+  background:#FFFFFF !important;
+  color:#07182A !important;
+  border:1px solid #D2DEEA !important;
+}
+
+/* The JustBet promo widget (static/js/justbet-promo.js) draws a gold button and
+   relies on inheriting dark ink. Sitewide link colour would repaint it teal. */
+body.tmr-light .tmr-jb-bonus__cta { color:#0F1F3D !important; }
+
+/* A navy stat strip — the "important numbers" panel from the reference page. */
+body.tmr-light .tmr-dark {
+  background:#08192B !important;
+  color:#EAF2FA;
+  border-radius:10px;
+}
+
+/* ---------------------------------------------------------------------------
+   3b. THE CHROME KEEPS ITS OWN INK
+   -----------------------------------------------------------------------------
+   The navy nav, its dropdowns and the footer are the one part of these pages
+   that was already right, and the rule is "don't touch what is polished". But
+   the derived sheet re-inks h1-h4, p and li across the whole body with
+   `!important` -- so leaving the chrome alone means putting its colours back
+   deliberately, matched to the ORIGINAL declarations rather than blanketed.
+
+   Blanket element rules were tried here first and were wrong: a `span` rule
+   caught .tmr-global-nav__mark, the teal logo tile, whose dark ink is the
+   whole point of it.
+   --------------------------------------------------------------------------- */
+/* The chrome inherits its ink from <body>, which is now navy-on-light. Setting
+   it back on the container is what keeps unclassed text inside a dropdown
+   readable without a rule per element. */
+body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
+                   .tmr-community-menu,.tmr-support-menu,.tmr-user-menu-panel,
+                   .tmr-search-modal,.tmr-account-modal,
+                   .tmr-community-menu__panel,.tmr-support-menu__panel) {
+  color:#EAF2FA;
+  /* The chrome's own rules read these tokens; without re-pinning them the
+     navbar would draw its brand wordmark in page ink, on navy. */
+  --tmr-text:#EAF2FA;           --tmr-text-strong:#EAF2FA;
+  --tmr-text-soft:#C3D8EC;      --tmr-text-muted:#93AEC7;
+  --tmr-muted:#93AEC7;
+  --tmr-panel:#0C2138;          --tmr-panel-2:#0A1B2D;
+  --tmr-card:#0C2138;           --tmr-bg:#08192B;
+  --tmr-line:rgba(174,198,220,.18);
+  --tmr-border:rgba(174,198,220,.18);
+  --tmr-border-strong:rgba(174,198,220,.30);
+  --tmr-teal:#22D2C0;           --tmr-accent:#22D2C0;
+  --tmr-gold:#FFC93C;           --tmr-green:#3FD08A;  --tmr-red:#F1867C;
+  --ink:#EAF2FA; --ink-2:#C3D8EC; --muted:#93AEC7;
+  --panel:#0C2138; --page:#08192B; --line:rgba(174,198,220,.18);
+  --brand:#22D2C0; --text:#EAF2FA; --text-muted:#93AEC7;
+}
+
+body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
+                   .tmr-community-menu,.tmr-support-menu,.tmr-user-menu-panel,
+                   .tmr-search-modal,.tmr-account-modal)
+  :is(h1,h2,h3,h4,.section-title) { color:#EAF2FA !important; }
+
+body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
+                   .tmr-community-menu,.tmr-support-menu,.tmr-user-menu-panel,
+                   .tmr-search-modal,.tmr-account-modal)
+  :is(p,li,dd,dt,label,small,.muted) { color:#93AEC7 !important; }
+
+body.tmr-light :is(.tmr-global-footer,.tmrlh-footer) a { color:#B9CCE0 !important; }
+body.tmr-light :is(.tmr-global-footer,.tmrlh-footer) a:hover { color:#22D2C0 !important; }
+
+body.tmr-light .tmr-global-nav__links a,
+body.tmr-light .tmr-global-nav__actions a { color:#DCE8F5 !important; }
+body.tmr-light .tmr-global-nav__links a:hover,
+body.tmr-light .tmr-global-nav__links a[aria-current="page"] { color:#22D2C0 !important; }
+body.tmr-light .tmr-global-nav__brand { color:#EAF2FA !important; }
+body.tmr-light .tmr-global-nav__brand span span { color:#22D2C0 !important; }
+/* the teal logo tile: dark ink on a bright mark, exactly as shipped */
+body.tmr-light .tmr-global-nav__mark { color:#06120F !important; }
+
+/* ---------------------------------------------------------------------------
+   4. SHARED COMPONENTS
+   -----------------------------------------------------------------------------
+   Geometry only where the pages already agree on the shape and disagree only on
+   the numbers: radii were 6/8/12/14/16/18/20/24/28px across these pages, shadows
+   were nine different blurs, inputs were five heights. The reference page uses
+   10px / 7px and two shadows, so that is what everything converges on.
+   --------------------------------------------------------------------------- */
+body.tmr-light .card,
+body.tmr-light .panel,
+body.tmr-light .box,
+body.tmr-light .tile,
+body.tmr-light .stat-card,
+body.tmr-light .stats-card,
+body.tmr-light .info-card,
+body.tmr-light .feature-card,
+body.tmr-light .content-card,
+body.tmr-light .section-card,
+body.tmr-light .glass-card,
+body.tmr-light .metric-card {
+  background:#FFFFFF;
+  border:1px solid #D2DEEA;
+  border-radius:10px;
+  box-shadow:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+  backdrop-filter:none;
+}
+
+body.tmr-light .card:hover,
+body.tmr-light .stat-card:hover,
+body.tmr-light .feature-card:hover,
+body.tmr-light .metric-card:hover {
+  border-color:#B7C8DA;
+  box-shadow:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
+}
+
+/* Inputs: one height, one radius, one focus ring. */
+body.tmr-light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+body.tmr-light select,
+body.tmr-light textarea {
+  background:#FFFFFF;
+  border:1px solid #D2DEEA;
+  border-radius:7px;
+  color:#07182A;
+}
+body.tmr-light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+body.tmr-light select {
+  min-height:40px;
+}
+body.tmr-light input:focus,
+body.tmr-light select:focus,
+body.tmr-light textarea:focus {
+  outline:none;
+  border-color:#0C948C;
+  box-shadow:0 0 0 3px rgba(12,148,140,.16);
+}
+body.tmr-light input::placeholder,
+body.tmr-light textarea::placeholder { color:#8598AD; }
+
+/* Buttons: teal is the action, everything else is a quiet outline. */
+body.tmr-light .btn-primary,
+body.tmr-light .button-primary,
+body.tmr-light .cta-primary,
+body.tmr-light .tmr-btn-primary,
+body.tmr-light button.primary {
+  background:#0C948C;
+  border:1px solid #0C948C;
+  color:#FFFFFF;
+  border-radius:7px;
+}
+body.tmr-light .btn-primary:hover,
+body.tmr-light .button-primary:hover,
+body.tmr-light .cta-primary:hover,
+body.tmr-light .tmr-btn-primary:hover,
+body.tmr-light button.primary:hover {
+  background:#07736D;
+  border-color:#07736D;
+  color:#FFFFFF;
+}
+body.tmr-light .btn-secondary,
+body.tmr-light .button-secondary,
+body.tmr-light .cta-secondary,
+body.tmr-light .btn-outline,
+body.tmr-light .tmr-btn-outline {
+  background:#FFFFFF;
+  border:1px solid #D2DEEA;
+  color:#07182A;
+  border-radius:7px;
+}
+body.tmr-light .btn-secondary:hover,
+body.tmr-light .button-secondary:hover,
+body.tmr-light .cta-secondary:hover,
+body.tmr-light .btn-outline:hover,
+body.tmr-light .tmr-btn-outline:hover {
+  border-color:#0C948C;
+  color:#07736D;
+}
+
+/* tmr-page-polish.css builds its CTA out of a neon cyan/magenta gradient with
+   black ink. Re-anchored on hue alone that lands on a mid blue with black text;
+   the design of record says a primary action is solid teal with white ink. */
+body.tmr-light .tmr-cta-primary {
+  background:#0C948C !important;
+  color:#FFFFFF !important;
+  border:1px solid #0C948C !important;
+  border-radius:7px !important;
+}
+body.tmr-light .tmr-cta-primary:hover {
+  background:#07736D !important;
+  border-color:#07736D !important;
+}
+body.tmr-light .tmr-cta-secondary {
+  background:#FFFFFF !important;
+  color:#07182A !important;
+  border:1px solid #D2DEEA !important;
+  border-radius:7px !important;
+}
+body.tmr-light .tmr-cta-secondary:hover { border-color:#0C948C !important; color:#07736D !important; }
+
+/* Active / selected states are teal, not "whatever the page had". */
+body.tmr-light .tab.active,
+body.tmr-light .tab.is-active,
+body.tmr-light .filter-btn.active,
+body.tmr-light .chip.active,
+body.tmr-light .pill.active,
+body.tmr-light [aria-selected="true"],
+body.tmr-light [aria-current="page"]:not(.tmr-global-nav__links a) {
+  background:#DEF4F2;
+  border-color:#0C948C;
+  color:#07736D;
+}
+
+/* Tables read as data, not as a dark grid. */
+body.tmr-light table { background:#FFFFFF; border-color:#D2DEEA; }
+body.tmr-light thead th {
+  background:#F6F9FC;
+  color:#5E7590;
+  border-bottom:1px solid #D2DEEA;
+}
+body.tmr-light tbody td { border-bottom:1px solid #E6EDF5; color:#07182A; }
+body.tmr-light tbody tr:hover td { background:#F6F9FC; }
+
+/* Semantic colours keep their meaning at light-surface contrast. */
+body.tmr-light .positive, body.tmr-light .win,  body.tmr-light .up   { color:#0A8B4E; }
+body.tmr-light .negative, body.tmr-light .loss, body.tmr-light .down { color:#BC372E; }
+body.tmr-light .push, body.tmr-light .pending { color:#B98505; }
+
+/* Section rhythm: the pages used 24/30/40/48/56/64/80px. Two values now. */
+body.tmr-light section + section,
+body.tmr-light .section + .section { margin-top:clamp(28px,4vw,52px); }
+
+/* ---------------------------------------------------------------------------
+   5. MEDIA
+   -----------------------------------------------------------------------------
+   Several pages darkened their own imagery to sit on a black page. On a light
+   page that reads as a printing fault.
+   --------------------------------------------------------------------------- */
+body.tmr-light img,
+body.tmr-light video { filter:none; }

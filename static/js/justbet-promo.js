@@ -91,7 +91,7 @@
     function fillCodeSlots() {
         var slots = document.querySelectorAll('[data-promo-code-slot]');
         for (var i = 0; i < slots.length; i++) {
-            slots[i].innerHTML = 'JustBet invite code <strong style="color:#ffd766;letter-spacing:0.06em;">'
+            slots[i].innerHTML = 'JustBet invite code <strong style="color:#B98505;letter-spacing:0.06em;">'
                 + code + '</strong> &mdash; click Join Promo or contact a JustBet VIP rep to claim.';
         }
     }

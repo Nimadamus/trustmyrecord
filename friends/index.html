@@ -15,28 +15,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --neon-cyan: #00ffff;
-            --neon-purple: #ff00ff;
-            --neon-green: #39ff14;
-            --neon-gold: #ffd700;
-            --neon-red: #ff073a;
-            --neon-orange: #ff8c00;
-            --dark-bg: #0a0a0f;
-            --darker-bg: #050508;
-            --card-bg: rgba(20, 20, 35, 0.8);
-            --glass-border: rgba(0, 255, 255, 0.2);
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0c0;
-            --text-muted: #808090;
-            --border-color: rgba(0, 255, 255, 0.2);
+            --neon-cyan: #0C948C;
+            --neon-purple: #5940AE;
+            --neon-green: #0A8B4E;
+            --neon-gold: #B98505;
+            --neon-red: #BC372E;
+            --neon-orange: #B98505;
+            --dark-bg: #F4F7FA;
+            --darker-bg: #F4F7FA;
+            --card-bg: #FFFFFF;
+            --glass-border: rgba(12,148,140,.28);
+            --text-primary: #07182A;
+            --text-secondary: #2E4459;
+            --text-muted: #5E7590;
+            --border-color: rgba(12,148,140,.28);
             /* Aliases for legacy references */
-            --bg-dark: #0a0a0f;
-            --bg-card: rgba(20, 20, 35, 0.8);
-            --bg-hover: rgba(0, 255, 255, 0.1);
-            --primary: #00ffff;
-            --success: #39ff14;
-            --danger: #ff073a;
-            --warning: #ffd700;
+            --bg-dark: #F4F7FA;
+            --bg-card: #FFFFFF;
+            --bg-hover: rgba(12,148,140,0.1);
+            --primary: #0C948C;
+            --success: #0A8B4E;
+            --danger: #BC372E;
+            --warning: #B98505;
         }
 
         * {
@@ -49,8 +49,8 @@
             font-family: 'Inter', sans-serif;
             background: var(--dark-bg);
             background-image:
-                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
+                radial-gradient(circle at 25% 75%, rgba(12,148,140,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(185,133,5,0.08) 0%, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
         }
@@ -58,7 +58,7 @@
         /* Header */
         /* Main Navigation - LARGER, CLEARER, BETTER SPACED */
         header {
-            background: rgba(0, 0, 0, 0.6);
+            background: #F4F7FA;
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
             padding: 15px 0;
@@ -173,7 +173,7 @@
         .search-input {
             flex: 1;
             padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(7,24,42,0.02);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             color: white;
@@ -346,19 +346,19 @@
         }
 
         .action-btn:hover {
-            background: rgba(0, 243, 255, 0.1);
+            background: rgba(12,148,140,0.1);
             border-color: var(--primary);
             color: var(--primary);
         }
 
         .action-btn.danger:hover {
-            background: rgba(255, 7, 58, 0.1);
+            background: rgba(188,55,46,0.1);
             border-color: var(--danger);
             color: var(--danger);
         }
 
         .action-btn.success:hover {
-            background: rgba(57, 255, 20, 0.1);
+            background: rgba(10,139,78,0.1);
             border-color: var(--success);
             color: var(--success);
         }
@@ -389,7 +389,7 @@
         }
 
         .btn-accept:hover {
-            background: #2dd112;
+            background: #DFF3E8;
         }
 
         .btn-decline {
@@ -405,7 +405,7 @@
 
         /* Loading state */
         .tmr-loading-state { text-align: center; padding: 60px 20px; }
-        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,255,0.15); border-top-color: var(--neon-cyan); border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
+        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(12,148,140,.28); border-top-color: var(--neon-cyan); border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
         @keyframes tmr-spin { to { transform: rotate(360deg); } }
         .tmr-loading-state p { color: var(--text-secondary); font-size: 0.95rem; margin: 8px 0; }
         .tmr-loading-state .tmr-loading-slow { color: var(--neon-gold); display: none; }
@@ -442,7 +442,7 @@
             align-items: center;
             gap: 15px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(7,24,42,0.02);
             border-radius: 12px;
             margin-bottom: 10px;
         }
@@ -461,7 +461,7 @@
 
         .add-friend-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.3);
+            box-shadow: 0 5px 20px rgba(7,24,42,0.1);
         }
 
         .add-friend-btn:disabled {
@@ -545,8 +545,8 @@
             gap: 16px;
             overflow-x: auto;
             white-space: nowrap;
-            background: #102338;
-            color: #ffffff;
+            background: #F6F9FC;
+            color: #07182A;
             padding: 10px 20px;
             font-size: 0.9rem;
             scrollbar-width: none;
@@ -578,10 +578,10 @@
             -webkit-text-fill-color: initial;
         }
 
-        .logo span { color: #f58220; }
+        .logo span { color: #B98505; }
 
         .nav-links a {
-            color: #637389;
+            color: #5E7590;
             font-weight: 700;
             font-size: 1.08rem;
             padding: 14px 8px;
@@ -590,7 +590,7 @@
 
         .nav-links a:hover,
         .nav-links a.active {
-            color: #f58220;
+            color: #B98505;
         }
 
         .container {
@@ -608,7 +608,7 @@
         }
 
         .page-subtitle {
-            color: #637389;
+            color: #5E7590;
         }
 
         .stats-bar,
@@ -616,12 +616,12 @@
         .friend-card {
             background: #ffffff;
             border: 1px solid #d8dde6;
-            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            box-shadow: 0 18px 48px rgba(7,24,42,0.04);
         }
 
         .stat-value {
             font-family: 'Barlow', 'Inter', sans-serif;
-            color: #1f7ae0;
+            color: #1B4F9E;
         }
 
         .search-input {
@@ -633,9 +633,9 @@
 
         .search-btn,
         .add-friend-btn {
-            background: #f58220;
+            background: #B98505;
             border: none;
-            color: #ffffff;
+            color: #07182A;
         }
 
         .tabs {
@@ -644,25 +644,25 @@
 
         .tab {
             border-color: #d8dde6;
-            color: #637389;
+            color: #5E7590;
             font-family: 'Inter', sans-serif;
         }
 
         .tab.active {
-            background: rgba(31, 122, 224, 0.1);
-            border-color: #1f7ae0;
-            color: #1f7ae0;
+            background: rgba(30,91,191,0.1);
+            border-color: rgba(30,91,191,.26);
+            color: #1B4F9E;
         }
 
         .friend-card:hover {
-            border-color: #1f7ae0;
+            border-color: rgba(30,91,191,.26);
         }
 
         .friend-avatar {
-            background: linear-gradient(135deg, #1f7ae0, #102338);
+            background: linear-gradient(135deg, #1E5BBF, #F6F9FC);
         }
 
-        footer a:hover { color: #1f7ae0 !important; }
+        footer a:hover { color: #1B4F9E !important; }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -676,10 +676,10 @@
         /* Premium refinement pass */
         body {
             background:
-                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 28%),
-                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 22%),
-                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
-            color: #f4f7fb;
+                radial-gradient(circle at top left, rgba(12,148,140,0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(185,133,5,0.08), transparent 22%),
+                linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 52%, #FFFFFF 100%) !important;
+            color: #07182A;
         }
 
         .friends-top-strip,
@@ -689,21 +689,21 @@
         }
 
         .friends-top-strip {
-            background: rgba(8, 15, 28, 0.82) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16);
+            background: #FFFFFF !important;
+            border: 1px solid rgba(12,148,140,.28);
             border-radius: 18px;
             padding: 10px 18px;
-            color: #9cb0c8;
+            color: #2E4459;
             margin-top: 14px;
             backdrop-filter: blur(18px);
         }
 
         header {
-            background: rgba(7, 15, 27, 0.86) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16);
+            background: #FFFFFF !important;
+            border: 1px solid rgba(12,148,140,.28);
             border-radius: 22px;
             margin-top: 14px;
-            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 24px 54px rgba(7,24,42,0.095);
         }
 
         .header-content {
@@ -715,7 +715,7 @@
         .logo {
             font-size: 1.25rem !important;
             letter-spacing: 0.08em;
-            background: linear-gradient(135deg, #ecfeff, #2dd4bf 58%, #7dd3fc 100%) !important;
+            background: linear-gradient(135deg, #07182A, #07736D 58%, #07736D 100%) !important;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -726,16 +726,16 @@
             padding: 10px 14px !important;
             border-radius: 999px;
             font-size: 0.84rem !important;
-            color: #9fb0c6 !important;
+            color: #2E4459 !important;
             background: transparent !important;
             border: 1px solid transparent;
         }
 
         .nav-link:hover,
         .nav-link.active {
-            color: #f4f7fb !important;
-            background: rgba(45, 212, 191, 0.1) !important;
-            border-color: rgba(45, 212, 191, 0.22);
+            color: #07182A !important;
+            background: rgba(12,148,140,0.1) !important;
+            border-color: rgba(12,148,140,.28);
         }
 
         .container {
@@ -750,9 +750,9 @@
         .friend-card,
         .request-card,
         .empty-state {
-            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+            background: linear-gradient(180deg, #FFFFFF, #FFFFFF) !important;
+            border: 1px solid #D2DEEA !important;
+            box-shadow: 0 24px 44px rgba(7,24,42,0.082);
         }
 
         .page-header {
@@ -770,7 +770,7 @@
         .page-subtitle {
             max-width: 760px;
             font-size: 1rem !important;
-            color: #97abc1 !important;
+            color: #2E4459 !important;
         }
 
         .stats-bar {
@@ -783,16 +783,16 @@
         .stat-item {
             padding: 10px 14px;
             border-radius: 18px;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(7,24,42,0.02);
         }
 
         .stat-value {
             font-size: 1.55rem !important;
-            color: #f8fbff;
+            color: #07182A;
         }
 
         .stat-label {
-            color: #7f92aa !important;
+            color: #2E4459 !important;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             font-size: 0.72rem !important;
@@ -805,16 +805,16 @@
         }
 
         .search-box {
-            background: rgba(7, 15, 27, 0.88) !important;
-            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+            background: #FFFFFF !important;
+            border: 1px solid #D2DEEA !important;
             border-radius: 18px;
         }
 
-        .search-input { color: #f4f7fb !important; }
+        .search-input { color: #07182A !important; }
 
         .search-btn {
             border-radius: 14px;
-            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
+            background: linear-gradient(135deg, #DEF4F2, #0C948C) !important;
             box-shadow: none;
         }
 
@@ -828,15 +828,15 @@
         .tab {
             border-radius: 14px;
             padding: 12px 16px !important;
-            color: #97abc1 !important;
+            color: #2E4459 !important;
             background: transparent !important;
             border: 1px solid transparent;
         }
 
         .tab.active {
-            background: rgba(45, 212, 191, 0.11) !important;
-            border-color: rgba(45, 212, 191, 0.24);
-            color: #f4f7fb !important;
+            background: rgba(12,148,140,0.11) !important;
+            border-color: rgba(12,148,140,.28);
+            color: #07182A !important;
         }
 
         .friends-grid {
@@ -855,13 +855,14 @@
         .friend-card:hover,
         .request-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(45, 212, 191, 0.26) !important;
+            border-color: rgba(12,148,140,.28) !important;
         }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell">
+<body class="tmr-site-shell tmr-light">
     <div class="friends-top-strip">
         <strong>Today:</strong>
         <span>Followers and following</span>

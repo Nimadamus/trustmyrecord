@@ -39,28 +39,28 @@
     <script defer src="/static/js/tmr-sitewide.js?v=a46586bedd8f"></script>
     <script defer src="/static/js/config.js?v=7e4b853bbb3d"></script>
     <script defer src="/static/js/backend-api.js?v=0c7db839b982"></script>
-    <script defer src="/static/js/justbet-promo.js?v=3c5c2f51163e"></script>
+    <script defer src="/static/js/justbet-promo.js?v=74080d56c634"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root {
-            --bg: #07111d;
-            --panel: rgba(10, 19, 33, 0.96);
-            --panel-2: rgba(16, 29, 49, 0.82);
-            --line: rgba(148, 163, 184, 0.16);
-            --line-strong: rgba(45, 212, 191, 0.32);
-            --text: #eef4fb;
-            --muted: #9fb0c3;
-            --faint: #6f8093;
-            --cyan: #2dd4bf;
-            --blue: #38bdf8;
-            --gold: #d4a72c;
-            --gold-bright: #f0c449;
-            --green: #22c55e;
-            --red: #ef4444;
-            --justbet: #ffb800;
+            --bg: #FFFFFF;
+            --panel: #FFFFFF;
+            --panel-2: #F6F9FC;
+            --line: #D2DEEA;
+            --line-strong: rgba(12,148,140,.28);
+            --text: #07182A;
+            --muted: #2E4459;
+            --faint: #5E7590;
+            --cyan: #0C948C;
+            --blue: #0C948C;
+            --gold: #B98505;
+            --gold-bright: #B98505;
+            --green: #0A8B4E;
+            --red: #BC372E;
+            --justbet: #B98505;
         }
         * { box-sizing: border-box; }
         body {
@@ -69,17 +69,17 @@
             color: var(--text);
             font-family: "Inter", system-ui, sans-serif;
             background:
-                radial-gradient(circle at 8% 0%, rgba(255, 184, 0, 0.10), transparent 28%),
-                radial-gradient(circle at 92% 7%, rgba(212, 167, 44, 0.10), transparent 27%),
-                linear-gradient(180deg, #07111d 0%, #0a1421 58%, #08101c 100%);
+                radial-gradient(circle at 8% 0%, rgba(185,133,5,0.1), transparent 28%),
+                radial-gradient(circle at 92% 7%, rgba(185,133,5,0.1), transparent 27%),
+                linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 58%, #FFFFFF 100%);
         }
         a { color: inherit; text-decoration: none; }
         button, input, select, textarea { font: inherit; }
         .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 64px; }
         .panel {
             border: 1px solid var(--line);
-            background: linear-gradient(180deg, rgba(18, 31, 52, 0.96), rgba(8, 15, 27, 0.97));
-            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.28);
+            background: linear-gradient(180deg, #F6F9FC, #FFFFFF);
+            box-shadow: 0 22px 58px rgba(7,24,42,0.095);
             border-radius: 18px;
         }
 
@@ -117,27 +117,27 @@
             border-radius: 999px; font-size: 0.7rem; font-weight: 900;
             letter-spacing: 0.14em; text-transform: uppercase;
             padding: 7px 12px; border: 1px solid var(--line-strong);
-            background: rgba(45, 212, 191, 0.10); color: #d8fffb;
+            background: rgba(12,148,140,0.1); color: #07182A;
         }
         .status-tag {
             display: inline-flex; align-items: center; gap: 8px;
             border-radius: 999px; padding: 7px 14px;
-            border: 1px solid rgba(34, 197, 94, 0.45);
-            background: rgba(34, 197, 94, 0.10);
-            color: #b6f5cd;
+            border: 1px solid rgba(10,139,78,.28);
+            background: rgba(10,139,78,0.1);
+            color: #0A8B4E;
             font-size: 0.72rem; font-weight: 900;
             letter-spacing: 0.16em; text-transform: uppercase;
         }
         .status-tag .pulse {
             width: 8px; height: 8px; border-radius: 50%;
-            background: #34d399;
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+            background: #DFF3E8;
+            box-shadow: 0 0 0 0 rgba(7,24,42,0.1);
             animation: pulse 2s ease-out infinite;
         }
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
-            70% { box-shadow: 0 0 0 12px rgba(52, 211, 153, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(7,24,42,0.1); }
+            70% { box-shadow: 0 0 0 12px rgba(7,24,42,0.04); }
+            100% { box-shadow: 0 0 0 0 rgba(7,24,42,0.04); }
         }
         h1, h2, h3 { margin: 0; font-family: "Barlow", "Inter", sans-serif; }
         h1 {
@@ -146,7 +146,7 @@
             line-height: 1.0;
             font-weight: 900;
             letter-spacing: -0.01em;
-            background: linear-gradient(180deg, #fff5d8 0%, #ffd770 100%);
+            background: linear-gradient(180deg, #07182A 0%, #B98505 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -166,28 +166,28 @@
         .hero-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
 
         .prize-card {
-            border: 1px solid rgba(255, 184, 0, 0.42);
+            border: 1px solid rgba(185,133,5,.30);
             border-radius: 16px;
             padding: 22px;
             background:
-                radial-gradient(circle at 0% 0%, rgba(255, 184, 0, 0.16), transparent 55%),
-                linear-gradient(180deg, rgba(28, 22, 8, 0.96), rgba(14, 11, 5, 0.97));
+                radial-gradient(circle at 0% 0%, rgba(185,133,5,0.14), transparent 55%),
+                linear-gradient(180deg, #FFFFFF, #F4F7FA);
             text-align: center;
-            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(255, 184, 0, 0.08);
+            box-shadow: 0 18px 44px rgba(7,24,42,0.1), inset 0 0 0 1px rgba(7,24,42,0.04);
         }
-        .prize-card .label { font-size: 0.72rem; color: #c9b27a; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; }
+        .prize-card .label { font-size: 0.72rem; color: #B98505; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; }
         .prize-card .amount {
             margin: 8px 0 4px;
             font-family: "Barlow", sans-serif;
             font-size: clamp(2.6rem, 5vw, 3.6rem);
             font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 24px rgba(255, 184, 0, 0.4);
+            color: #07182A;
+            text-shadow: 0 0 24px rgba(7,24,42,0.1);
         }
         .prize-card .amount .currency { color: var(--gold-bright); margin-right: 6px; }
-        .prize-card .sub { font-size: 0.9rem; color: #e7d6a8; }
-        .prize-card .breakdown { margin-top: 14px; display: flex; gap: 8px; justify-content: center; font-size: 0.78rem; color: #c9b27a; }
-        .prize-card .breakdown span { padding: 4px 8px; border: 1px solid rgba(255, 184, 0, 0.25); border-radius: 6px; }
+        .prize-card .sub { font-size: 0.9rem; color: #B98505; }
+        .prize-card .breakdown { margin-top: 14px; display: flex; gap: 8px; justify-content: center; font-size: 0.78rem; color: #B98505; }
+        .prize-card .breakdown span { padding: 4px 8px; border: 1px solid rgba(185,133,5,.30); border-radius: 6px; }
 
         /* ======== SHARED CTA ======== */
         .cta-primary {
@@ -200,17 +200,17 @@
             font-size: 1rem;
             letter-spacing: 0.04em;
             text-transform: uppercase;
-            border: 1px solid #b4881d;
-            box-shadow: 0 12px 28px rgba(212, 167, 44, 0.32);
+            border: 1px solid rgba(185,133,5,.30);
+            box-shadow: 0 12px 28px rgba(7,24,42,0.1);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             white-space: nowrap;
             cursor: pointer;
         }
-        .cta-primary:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(212, 167, 44, 0.42); }
+        .cta-primary:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(7,24,42,0.1); }
         .cta-ghost {
             display: inline-flex; align-items: center; gap: 10px;
             padding: 13px 20px; border-radius: 10px;
-            background: rgba(15, 23, 42, 0.74);
+            background: #FFFFFF;
             color: var(--text);
             border: 1px solid var(--line);
             font-weight: 800;
@@ -222,7 +222,7 @@
         .cta-disabled {
             display: inline-flex; align-items: center; gap: 10px;
             padding: 13px 20px; border-radius: 10px;
-            background: rgba(15, 23, 42, 0.40);
+            background: rgba(7,24,42,0.048);
             color: var(--muted);
             border: 1px dashed var(--line);
             font-weight: 800;
@@ -240,37 +240,39 @@
             align-items: center;
             gap: 22px;
             border-radius: 18px;
-            border: 1px solid rgba(255, 184, 0, 0.45);
+            border: 1px solid rgba(185,133,5,.30);
             background:
-                radial-gradient(circle at 0% 0%, rgba(255, 184, 0, 0.16), transparent 55%),
-                linear-gradient(180deg, rgba(28, 22, 8, 0.96), rgba(14, 11, 5, 0.97));
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(255, 184, 0, 0.12);
+                radial-gradient(circle at 0% 0%, rgba(185,133,5,0.14), transparent 55%),
+                linear-gradient(180deg, #FFFFFF, #F4F7FA);
+            box-shadow: 0 24px 60px rgba(7,24,42,0.1), inset 0 0 0 1px rgba(7,24,42,0.041);
         }
         .req-tag {
             display: inline-flex; align-items: center; gap: 8px;
             border-radius: 999px; padding: 6px 12px;
-            border: 1px solid rgba(255, 184, 0, 0.55);
-            background: rgba(255, 184, 0, 0.12);
-            color: #ffe4a3;
+            border: 1px solid rgba(185,133,5,.30);
+            background: rgba(185,133,5,0.12);
+            color: #B98505;
             font-size: 0.7rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
         }
         .signup-banner h2 {
             margin-top: 10px;
             font-size: clamp(1.4rem, 2.6vw, 2rem);
             font-weight: 900;
-            color: #fff5d8;
+            color: #07182A;
             line-height: 1.15;
         }
         .signup-banner p {
-            margin: 10px 0 0; color: #e7d6a8;
+            margin: 10px 0 0; color: #B98505;
             font-size: 0.98rem; line-height: 1.5; max-width: 62ch;
         }
         .promo-slot {
-            margin-top: 12px; font-size: 0.82rem; color: #c9b27a;
+            margin-top: 12px; font-size: 0.82rem; color: #B98505;
             letter-spacing: 0.04em;
         }
         @media (max-width: 720px) {
-            .signup-banner, .hero-grid { grid-template-columns: 1fr; }
+            .hero-grid{ grid-template-columns: 1fr; }
+
+            .signup-banner{ grid-template-columns: 1fr; }
             .cta-primary { width: 100%; justify-content: center; }
         }
 
@@ -290,31 +292,31 @@
             border-radius: 14px;
             text-align: center;
             border: 1px solid var(--line);
-            background: linear-gradient(180deg, rgba(20, 32, 52, 0.96), rgba(10, 18, 30, 0.97));
+            background: linear-gradient(180deg, #F6F9FC, #FFFFFF);
             position: relative;
             overflow: hidden;
         }
-        .prize-tier.first { border-color: rgba(255, 184, 0, 0.5); background: linear-gradient(180deg, rgba(40, 30, 8, 0.96), rgba(20, 14, 4, 0.97)); }
-        .prize-tier.second { border-color: rgba(186, 198, 213, 0.42); }
-        .prize-tier.third { border-color: rgba(196, 132, 56, 0.42); }
+        .prize-tier.first { border-color: rgba(185,133,5,.30); background: linear-gradient(180deg, #F6F9FC, #FFFFFF); }
+        .prize-tier.second { border-color: #D2DEEA; }
+        .prize-tier.third { border-color: rgba(185,133,5,.30); }
         .prize-tier .place { font-size: 0.74rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 900; color: var(--muted); }
-        .prize-tier.first .place { color: #ffd770; }
-        .prize-tier.second .place { color: #d6e2ef; }
-        .prize-tier.third .place { color: #e5b07e; }
+        .prize-tier.first .place { color: #B98505; }
+        .prize-tier.second .place { color: #07182A; }
+        .prize-tier.third .place { color: #B98505; }
         .prize-tier .amt {
             margin-top: 10px;
             font-family: "Barlow", sans-serif;
             font-size: clamp(1.8rem, 3.4vw, 2.4rem);
             font-weight: 900;
-            color: #fff;
+            color: #07182A;
         }
         .prize-tier .amt .currency { margin-right: 4px; }
         .prize-tier.first .amt .currency { color: var(--gold-bright); }
 
         /* ======== RULES + HOW-IT-WORKS ======== */
         .rules-list { margin: 0; padding-left: 20px; }
-        .rules-list li { margin: 10px 0; color: #d9e3f0; line-height: 1.55; }
-        .rules-list strong { color: #fff; }
+        .rules-list li { margin: 10px 0; color: #07182A; line-height: 1.55; }
+        .rules-list strong { color: #07182A; }
         .rules-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -328,7 +330,7 @@
             background: var(--panel-2);
         }
         .rule-stat .k { font-size: 0.72rem; color: var(--faint); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; }
-        .rule-stat .v { margin-top: 6px; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1.5rem; color: #fff; }
+        .rule-stat .v { margin-top: 6px; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1.5rem; color: #07182A; }
 
         .steps {
             display: grid;
@@ -348,13 +350,13 @@
             background: linear-gradient(180deg, var(--gold-bright), var(--gold));
             color: #1a1206;
         }
-        .step h3 { margin-top: 10px; font-size: 1.05rem; color: #fff; font-weight: 900; }
+        .step h3 { margin-top: 10px; font-size: 1.05rem; color: #07182A; font-weight: 900; }
         .step p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
 
         /* ======== FAQ ======== */
         .faq-item { padding: 14px 0; border-top: 1px solid var(--line); }
         .faq-item:first-of-type { border-top: 0; }
-        .faq-item h3 { font-size: 1.05rem; color: #fff; margin-bottom: 6px; font-weight: 800; }
+        .faq-item h3 { font-size: 1.05rem; color: #07182A; margin-bottom: 6px; font-weight: 800; }
         .faq-item p { margin: 0; color: var(--muted); line-height: 1.55; }
 
         /* ======== FINAL CTA ======== */
@@ -362,20 +364,20 @@
             margin-top: 22px;
             padding: 30px;
             border-radius: 18px;
-            border: 1px solid rgba(255, 184, 0, 0.45);
+            border: 1px solid rgba(185,133,5,.30);
             background:
-                radial-gradient(circle at 100% 0%, rgba(255, 184, 0, 0.18), transparent 50%),
-                linear-gradient(180deg, rgba(28, 22, 8, 0.96), rgba(14, 11, 5, 0.97));
+                radial-gradient(circle at 100% 0%, rgba(185,133,5,0.14), transparent 50%),
+                linear-gradient(180deg, #FFFFFF, #F4F7FA);
             text-align: center;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+            box-shadow: 0 24px 60px rgba(7,24,42,0.1);
         }
         .final-cta h2 {
             font-size: clamp(1.6rem, 3vw, 2.2rem);
             font-weight: 900;
-            color: #fff5d8;
+            color: #07182A;
             margin-bottom: 10px;
         }
-        .final-cta p { color: #e7d6a8; max-width: 60ch; margin: 0 auto 22px; font-size: 1rem; line-height: 1.55; }
+        .final-cta p { color: #B98505; max-width: 60ch; margin: 0 auto 22px; font-size: 1rem; line-height: 1.55; }
         .final-cta .row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
         .footnote { margin-top: 22px; color: var(--faint); font-size: 0.78rem; line-height: 1.55; max-width: 70ch; }
@@ -393,7 +395,7 @@
             border-radius: 14px;
             padding: 20px 22px;
         }
-        .reg-card h3 { font-size: 1.15rem; color: #fff; margin-bottom: 10px; font-weight: 900; }
+        .reg-card h3 { font-size: 1.15rem; color: #07182A; margin-bottom: 10px; font-weight: 900; }
         .reg-form label {
             display: block;
             margin-top: 12px;
@@ -412,19 +414,19 @@
             padding: 10px 12px;
             border-radius: 8px;
             border: 1px solid var(--line);
-            background: rgba(8, 14, 26, 0.85);
+            background: #F4F7FA;
             color: var(--text);
             font-size: 0.95rem;
         }
         .reg-form input:focus, .reg-form select:focus {
             outline: none;
             border-color: var(--gold);
-            box-shadow: 0 0 0 2px rgba(212, 167, 44, 0.18);
+            box-shadow: 0 0 0 2px rgba(7,24,42,0.061);
         }
         .reg-consent {
             display: flex; gap: 10px; align-items: flex-start;
             margin-top: 16px;
-            font-size: 0.88rem; color: #d9e3f0; line-height: 1.5;
+            font-size: 0.88rem; color: #07182A; line-height: 1.5;
         }
         .reg-consent input { margin-top: 4px; }
         .reg-help { font-size: 0.78rem; color: var(--faint); margin-top: 6px; line-height: 1.45; }
@@ -432,18 +434,18 @@
             margin-top: 12px;
             padding: 10px 12px;
             border-radius: 8px;
-            border: 1px solid rgba(239, 68, 68, 0.45);
-            background: rgba(239, 68, 68, 0.10);
-            color: #fecaca;
+            border: 1px solid rgba(188,55,46,.28);
+            background: rgba(188,55,46,0.1);
+            color: #BC372E;
             font-size: 0.88rem;
         }
         .reg-success {
             margin-top: 12px;
             padding: 10px 12px;
             border-radius: 8px;
-            border: 1px solid rgba(34, 197, 94, 0.45);
-            background: rgba(34, 197, 94, 0.10);
-            color: #bbf7d0;
+            border: 1px solid rgba(10,139,78,.28);
+            background: rgba(10,139,78,0.1);
+            color: #0A8B4E;
             font-size: 0.88rem;
         }
         .reg-status-pill {
@@ -453,24 +455,24 @@
             letter-spacing: 0.06em; text-transform: uppercase;
         }
         .reg-status-pill.pending {
-            background: rgba(212, 167, 44, 0.14);
-            border: 1px solid rgba(212, 167, 44, 0.4);
-            color: #ffe9a8;
+            background: rgba(185,133,5,0.14);
+            border: 1px solid rgba(185,133,5,.30);
+            color: #B98505;
         }
         .reg-status-pill.verified {
-            background: rgba(34, 197, 94, 0.12);
-            border: 1px solid rgba(34, 197, 94, 0.45);
-            color: #bbf7d0;
+            background: rgba(10,139,78,0.12);
+            border: 1px solid rgba(10,139,78,.28);
+            color: #0A8B4E;
         }
         .reg-status-pill.needs_info {
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            color: #bae6fd;
+            background: rgba(12,148,140,0.12);
+            border: 1px solid rgba(12,148,140,.28);
+            color: #1B4F9E;
         }
         .reg-status-pill.rejected {
-            background: rgba(239, 68, 68, 0.12);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #fecaca;
+            background: rgba(188,55,46,0.12);
+            border: 1px solid rgba(188,55,46,.28);
+            color: #BC372E;
         }
         .reg-board {
             margin-top: 16px;
@@ -485,7 +487,7 @@
             border-bottom: 1px solid var(--line);
         }
         .reg-board th {
-            background: rgba(15, 23, 42, 0.6);
+            background: #FFFFFF;
             font-size: 0.74rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -504,14 +506,15 @@
             font-size: 0.85rem; color: var(--muted);
             margin-bottom: 10px;
         }
-        .reg-counts b { color: #fff; font-weight: 800; }
+        .reg-counts b { color: #07182A; font-weight: 800; }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-share.css?v=1765835da36e">
     <script defer src="/static/js/tmr-share.js?v=eb28abdc3050"></script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body>
+<body class="tmr-light">
     <div id="tmr-nav-placeholder"></div>
 
     <main class="page">
@@ -605,7 +608,7 @@
                     <div id="reg-state-loading" style="color: var(--muted); font-size: 0.92rem;">Loading…</div>
 
                     <div id="reg-state-anon" hidden>
-                        <p style="color:#d9e3f0; line-height:1.55;">You must be logged into your TrustMyRecord account to register.</p>
+                        <p style="color:#07182A; line-height:1.55;">You must be logged into your TrustMyRecord account to register.</p>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px;">
                             <a class="cta-ghost" href="/login/"><i class="fa-solid fa-right-to-bracket"></i> Log In</a>
                             <a class="cta-ghost" href="/register/"><i class="fa-solid fa-user-plus"></i> Create TMR Account</a>
@@ -643,10 +646,10 @@
                     <div id="reg-state-existing" hidden>
                         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                             <span id="reg-status-pill" class="reg-status-pill verified">Registered</span>
-                            <span id="reg-username-label" style="color:#fff5d8; font-weight:800;"></span>
+                            <span id="reg-username-label" style="color:#07182A; font-weight:800;"></span>
                         </div>
-                        <p id="reg-status-msg" style="margin-top: 10px; color:#d9e3f0; line-height:1.55;"></p>
-                        <p id="reg-status-reason" style="margin-top: 6px; color:#fecaca; font-size:0.9rem;" hidden></p>
+                        <p id="reg-status-msg" style="margin-top: 10px; color:#07182A; line-height:1.55;"></p>
+                        <p id="reg-status-reason" style="margin-top: 6px; color:#BC372E; font-size:0.9rem;" hidden></p>
                         <div style="margin-top: 12px; font-size:0.85rem; color: var(--muted);">
                             Your sportsbook account/customer ID is stored privately and is visible only to TrustMyRecord admins for verification. It is <strong>never</strong> shown on the public contest board.
                         </div>
@@ -867,7 +870,7 @@
                     }
                     tbody.innerHTML = entries.map(function (e) {
                         return '<tr>' +
-                            '<td><a href="/profile/?username=' + encodeURIComponent(e.username) + '" style="color:#fff5d8; font-weight:700;">@' + escapeHtml(e.username) + '</a></td>' +
+                            '<td><a href="/profile/?username=' + encodeURIComponent(e.username) + '" style="color:#07182A; font-weight:700;">@' + escapeHtml(e.username) + '</a></td>' +
                             '<td><span class="reg-status-pill verified">Registered</span></td>' +
                             '</tr>';
                     }).join('');
@@ -890,32 +893,32 @@
 
         <!-- ===================== JUSTBET SIGNUP BONUS ===================== -->
         <section class="section panel" id="justbet-bonus" aria-label="JustBet new player bonus">
-            <span class="kicker" style="background:rgba(255, 184, 0, 0.12); border-color:rgba(255, 184, 0, 0.42); color:#ffe4a3;"><i class="fa-solid fa-gift"></i> JustBet Signup Bonus</span>
+            <span class="kicker" style="background:rgba(185,133,5,0.12); border-color:rgba(185,133,5,.30); color:#B98505;"><i class="fa-solid fa-gift"></i> JustBet Signup Bonus</span>
             <h2 style="margin-top: 12px;">New Player Bonus Available</h2>
             <p class="lead">Players who open a new JustBet account through the official contest signup link on this page are eligible for the current JustBet new player offer:</p>
             <ul style="list-style:none; padding:0; margin: 0 0 16px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
-                <li style="padding:16px; border-radius:12px; border:1px solid rgba(255, 184, 0, 0.32); background:rgba(28, 22, 8, 0.55);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#fff;">115%</div>
-                    <div style="margin-top:4px; color:#e7d6a8; font-size:0.9rem; line-height:1.45;">Free Play bonus</div>
+                <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#07182A;">115%</div>
+                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Free Play bonus</div>
                 </li>
-                <li style="padding:16px; border-radius:12px; border:1px solid rgba(255, 184, 0, 0.32); background:rgba(28, 22, 8, 0.55);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#fff;">11x</div>
-                    <div style="margin-top:4px; color:#e7d6a8; font-size:0.9rem; line-height:1.45;">Rollover requirement</div>
+                <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#07182A;">11x</div>
+                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Rollover requirement</div>
                 </li>
-                <li style="padding:16px; border-radius:12px; border:1px solid rgba(255, 184, 0, 0.32); background:rgba(28, 22, 8, 0.55);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#fff;">$300</div>
-                    <div style="margin-top:4px; color:#e7d6a8; font-size:0.9rem; line-height:1.45;">Minimum qualifying deposit</div>
+                <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#07182A;">$300</div>
+                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Minimum qualifying deposit</div>
                 </li>
-                <li style="padding:16px; border-radius:12px; border:1px solid rgba(255, 184, 0, 0.32); background:rgba(28, 22, 8, 0.55);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#fff;">$1,500</div>
-                    <div style="margin-top:4px; color:#e7d6a8; font-size:0.9rem; line-height:1.45;">Maximum qualifying deposit</div>
+                <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#07182A;">$1,500</div>
+                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Maximum qualifying deposit</div>
                 </li>
-                <li style="padding:16px; border-radius:12px; border:1px solid rgba(255, 184, 0, 0.32); background:rgba(28, 22, 8, 0.55);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#fff;">10,000 BetPoints</div>
-                    <div style="margin-top:4px; color:#e7d6a8; font-size:0.9rem; line-height:1.45;">Redeemable for $55 cash</div>
+                <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#07182A;">10,000 BetPoints</div>
+                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Redeemable for $55 cash</div>
                 </li>
             </ul>
-            <p style="margin: 0 0 16px; color: var(--muted); font-size:0.92rem; line-height:1.5;"><strong style="color:#fff5d8;">VIP support:</strong> JustBet VIP Services will have agents standing by to assist once the contest goes live.</p>
+            <p style="margin: 0 0 16px; color: var(--muted); font-size:0.92rem; line-height:1.5;"><strong style="color:#07182A;">VIP support:</strong> JustBet VIP Services will have agents standing by to assist once the contest goes live.</p>
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <a class="cta-primary"
                    href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
@@ -1035,13 +1038,13 @@
                 <li><strong>Units are graded</strong> through the standard TrustMyRecord unit P/L formula. Pushes count 0u.</li>
                 <li><strong>Ranking</strong> is by net units across all 50 contest picks. Ties broken by win percentage, then earliest submission.</li>
                 <li><strong>Contest picks are isolated</strong> from regular TrustMyRecord public records and personal profile stats. Submitting a contest pick does not affect your main TMR record.</li>
-                <li><strong>One entry per person and one entry per household.</strong> No exceptions. Per the TrustMyRecord <a href="/rules/" style="color:#2dd4bf;font-weight:800;">Account Integrity Rule</a>, users may not create multiple accounts or have relatives, roommates, household members, or friends in the same household enter additional accounts. Duplicate accounts will be deleted. Confirmed duplicate, suspicious, or related household accounts are disqualified, deleted, removed from the contest, permanently banned, and voided from leaderboards, prizes, verified records, and contest results.</li>
+                <li><strong>One entry per person and one entry per household.</strong> No exceptions. Per the TrustMyRecord <a href="/rules/" style="color:#07736D;font-weight:800;">Account Integrity Rule</a>, users may not create multiple accounts or have relatives, roommates, household members, or friends in the same household enter additional accounts. Duplicate accounts will be deleted. Confirmed duplicate, suspicious, or related household accounts are disqualified, deleted, removed from the contest, permanently banned, and voided from leaderboards, prizes, verified records, and contest results.</li>
                 <li><strong>Eligibility.</strong> Entrants must meet JustBet's age (21+ where applicable) and jurisdictional requirements.</li>
                 <li><strong>Prizes.</strong> 1st: $1,500 · 2nd: $750 · 3rd: $250.</li>
             </ol>
-            <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px;border-radius:12px;border:1px solid rgba(255,184,0,0.32);background:rgba(28,22,8,0.55);">
-                <div style="flex:1;min-width:240px;color:#e7d6a8;font-size:0.95rem;">
-                    <strong style="color:#fff5d8;">Came from Twitter or TrustMyRecord?</strong> You still must click the JustBet signup button on this page to qualify.
+            <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px;border-radius:12px;border:1px solid rgba(185,133,5,.30);background:rgba(7,24,42,0.06);">
+                <div style="flex:1;min-width:240px;color:#B98505;font-size:0.95rem;">
+                    <strong style="color:#07182A;">Came from Twitter or TrustMyRecord?</strong> You still must click the JustBet signup button on this page to qualify.
                 </div>
                 <a class="cta-primary"
                    href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"

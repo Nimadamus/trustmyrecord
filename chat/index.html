@@ -31,25 +31,25 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --neon-cyan: #00ffff;
-            --neon-purple: #ff00ff;
-            --neon-green: #39ff14;
-            --neon-gold: #ffd700;
-            --neon-red: #ff073a;
-            --dark-bg: #0a0a0f;
-            --card-bg: rgba(20, 20, 35, 0.8);
-            --glass-border: rgba(0, 255, 255, 0.2);
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0c0;
-            --text-muted: #808090;
+            --neon-cyan: #0C948C;
+            --neon-purple: #5940AE;
+            --neon-green: #0A8B4E;
+            --neon-gold: #B98505;
+            --neon-red: #BC372E;
+            --dark-bg: #F4F7FA;
+            --card-bg: #FFFFFF;
+            --glass-border: rgba(12,148,140,.28);
+            --text-primary: #07182A;
+            --text-secondary: #2E4459;
+            --text-muted: #5E7590;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background: var(--dark-bg);
             background-image:
-                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
+                radial-gradient(circle at 25% 75%, rgba(12,148,140,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(185,133,5,0.08) 0%, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
@@ -97,7 +97,7 @@
             gap: 12px;
             padding: 12px 16px;
             border-bottom: 1px solid var(--glass-border);
-            background: rgba(0, 0, 0, 0.35);
+            background: rgba(7,24,42,0.042);
         }
 
         .chat-topbar .room-name {
@@ -151,13 +151,13 @@
             transition: background 0.15s;
         }
 
-        .msg:hover { background: rgba(0, 255, 255, 0.04); }
+        .msg:hover { background: rgba(12,148,140,0.08); }
 
         .msg-avatar {
             width: 34px; height: 34px;
             border-radius: 50%;
             flex-shrink: 0;
-            background: linear-gradient(135deg, rgba(0,255,255,0.25), rgba(255,0,255,0.25));
+            background: linear-gradient(135deg, rgba(12,148,140,0.14), rgba(89,64,174,0.14));
             display: flex; align-items: center; justify-content: center;
             font-weight: 700; font-size: 0.9rem; color: var(--neon-cyan);
             overflow: hidden;
@@ -235,12 +235,12 @@
             border: none;
             cursor: pointer;
             display: none;
-            box-shadow: 0 4px 18px rgba(0, 255, 255, 0.35);
+            box-shadow: 0 4px 18px rgba(7,24,42,0.1);
         }
 
         .chat-composer {
             border-top: 1px solid var(--glass-border);
-            background: rgba(0, 0, 0, 0.35);
+            background: rgba(7,24,42,0.042);
             padding: 12px 16px;
         }
 
@@ -249,7 +249,7 @@
         .composer-row textarea {
             flex: 1;
             resize: none;
-            background: rgba(10, 10, 20, 0.8);
+            background: #F4F7FA;
             border: 1px solid var(--glass-border);
             border-radius: 10px;
             color: var(--text-primary);
@@ -261,7 +261,7 @@
             outline: none;
         }
 
-        .composer-row textarea:focus { border-color: var(--neon-cyan); box-shadow: 0 0 0 2px rgba(0,255,255,0.15); }
+        .composer-row textarea:focus { border-color: var(--neon-cyan); box-shadow: 0 0 0 2px rgba(7,24,42,0.051); }
 
         .send-btn {
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
@@ -276,7 +276,7 @@
             transition: transform 0.1s, box-shadow 0.15s;
         }
 
-        .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(0, 255, 255, 0.35); }
+        .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(7,24,42,0.1); }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .composer-hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
@@ -327,7 +327,7 @@
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%) translateY(80px);
-            background: rgba(15, 15, 28, 0.97);
+            background: #FFFFFF;
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
             padding: 12px 22px;
@@ -351,8 +351,9 @@
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body>
+<body class="tmr-light">
 
     <!-- Sitewide global nav is injected by tmr-sitewide.js?v=20260729navclean1 -->
 

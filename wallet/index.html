@@ -15,24 +15,24 @@
     <script defer src="/static/js/tmr-sitewide.js?v=a46586bedd8f"></script>
     <style>
         :root {
-            --page-bg: #060b12;
-            --panel: #0b111b;
-            --panel-2: #101826;
-            --line: rgba(148, 163, 184, 0.16);
-            --text: #f8fafc;
-            --muted: #9aa8ba;
-            --gold: #facc15;
-            --green: #22c55e;
-            --red: #f87171;
-            --teal: #2dd4bf;
+            --page-bg: #F4F7FA;
+            --panel: #FFFFFF;
+            --panel-2: #FFFFFF;
+            --line: #D2DEEA;
+            --text: #07182A;
+            --muted: #2E4459;
+            --gold: #B98505;
+            --green: #0A8B4E;
+            --red: #BC372E;
+            --teal: #0C948C;
         }
         * { box-sizing: border-box; }
         body {
             margin: 0;
             min-height: 100vh;
             background:
-                radial-gradient(circle at 14% 0%, rgba(250, 204, 21, 0.10), transparent 30%),
-                linear-gradient(180deg, #07111d 0%, var(--page-bg) 44%, #04070d 100%);
+                radial-gradient(circle at 14% 0%, rgba(185,133,5,0.1), transparent 30%),
+                linear-gradient(180deg, #FFFFFF 0%, var(--page-bg) 44%, #F4F7FA 100%);
             color: var(--text);
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
@@ -42,24 +42,24 @@
         h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 0.95; }
         .wallet-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
         .wallet-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid rgba(12,148,140,.28); color: #07182A; background: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
         .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-        .btn-primary { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+        .btn-primary { border-color: rgba(185,133,5,.30); background: rgba(185,133,5,0.14); color: var(--gold); }
         .btn-sm { min-height: 34px; padding: 0 13px; font-size: 12.5px; }
 
         /* Balance header -- the three numbers that matter, in a financial hierarchy:
            what you can use now, what is committed, what you have ever earned. */
         .balance-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
-        .balance-card { padding: 24px 26px; border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 12px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.9), rgba(8, 13, 22, 0.96)); }
-        .balance-card.sub { border-color: var(--line); background: linear-gradient(180deg, rgba(16, 24, 38, 0.9), rgba(8, 13, 22, 0.96)); }
+        .balance-card { padding: 24px 26px; border: 1px solid rgba(185,133,5,.30); border-radius: 12px; background: linear-gradient(180deg, #FFFFFF, #F4F7FA); }
+        .balance-card.sub { border-color: var(--line); background: linear-gradient(180deg, #FFFFFF, #F4F7FA); }
         .balance-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
         .balance-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 52px); color: var(--gold); font-weight: 800; line-height: 1; }
         .balance-card.sub .balance-value { font-size: clamp(24px, 3.4vw, 32px); color: var(--text); }
         .balance-hint { margin: 10px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
         .tmr-coin-icon { width: 16px; height: 16px; vertical-align: -3px; }
 
-        .disclaimer { margin: 0 0 22px; padding: 12px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13px; line-height: 1.5; }
-        .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); border-radius: 8px; color: #fecaca; font-size: 14px; font-weight: 700; }
+        .disclaimer { margin: 0 0 22px; padding: 12px 16px; border: 1px solid rgba(185,133,5,.30); background: rgba(185,133,5,0.08); border-radius: 8px; color: #B98505; font-size: 13px; line-height: 1.5; }
+        .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(188,55,46,.28); background: rgba(188,55,46,0.1); border-radius: 8px; color: #BC372E; font-size: 14px; font-weight: 700; }
         [hidden] { display: none !important; }
 
         /* Lifetime figures */
@@ -71,8 +71,8 @@
         /* Tabs */
         .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
         .tab { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-        .tab.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
-        .tab-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(248, 113, 113, 0.22); color: #fecaca; font-size: 11px; font-weight: 800; }
+        .tab.on { border-color: rgba(185,133,5,.30); background: rgba(185,133,5,0.14); color: var(--gold); }
+        .tab-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(188,55,46,0.14); color: #BC372E; font-size: 11px; font-weight: 800; }
 
         section.pane { margin-bottom: 10px; }
         .pane h2 { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 22px; }
@@ -92,7 +92,7 @@
 
         .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
         .chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
-        .chip.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+        .chip.on { border-color: rgba(185,133,5,.30); background: rgba(185,133,5,0.14); color: var(--gold); }
 
         /* Forms */
         .form-card { padding: 20px 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); max-width: 520px; }
@@ -100,17 +100,17 @@
         .field label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
         .field input, .field textarea, .field select {
             width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 8px;
-            border: 1px solid var(--line); background: rgba(6, 11, 18, 0.8); color: var(--text);
+            border: 1px solid var(--line); background: #F4F7FA; color: var(--text);
             font-family: inherit; font-size: 15px;
         }
         .field .hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
-        .confirm-box { margin: 14px 0; padding: 14px 16px; border: 1px solid rgba(45, 212, 191, 0.3); border-radius: 10px; background: rgba(10, 26, 28, 0.6); font-size: 13.5px; line-height: 1.7; }
+        .confirm-box { margin: 14px 0; padding: 14px 16px; border: 1px solid rgba(12,148,140,.28); border-radius: 10px; background: #FFFFFF; font-size: 13.5px; line-height: 1.7; }
         .confirm-box strong { color: var(--teal); }
         .msg { margin: 12px 0 0; padding: 11px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; }
-        .msg.err { border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); color: #fecaca; }
-        .msg.ok { border: 1px solid rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.1); color: #bbf7d0; }
+        .msg.err { border: 1px solid rgba(188,55,46,.28); background: rgba(188,55,46,0.1); color: #BC372E; }
+        .msg.ok { border: 1px solid rgba(10,139,78,.28); background: rgba(10,139,78,0.1); color: #0A8B4E; }
 
-        .locked-notice { padding: 18px 20px; border: 1px dashed var(--line); border-radius: 10px; background: rgba(15, 23, 42, 0.4); color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+        .locked-notice { padding: 18px 20px; border: 1px dashed var(--line); border-radius: 10px; background: rgba(7,24,42,0.048); color: var(--muted); font-size: 13.5px; line-height: 1.6; }
         .locked-notice strong { color: var(--text); }
 
         .empty-state { padding: 34px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
@@ -128,13 +128,13 @@
         .ch-top { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; flex-wrap: wrap; }
         .ch-stake { font-family: Barlow, Inter, sans-serif; font-size: 20px; font-weight: 800; color: var(--gold); }
         .ch-status { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
-        .ch-status.won { border-color: rgba(34,197,94,0.5); color: #bbf7d0; }
-        .ch-status.lost { border-color: rgba(248,113,113,0.5); color: #fecaca; }
+        .ch-status.won { border-color: rgba(10,139,78,.28); color: #0A8B4E; }
+        .ch-status.lost { border-color: rgba(188,55,46,.28); color: #BC372E; }
         .ch-meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
         .ch-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
 
-        .skeleton .sk-line { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #131c2b, #1b2434, #131c2b); margin-bottom: 12px; }
-        .sk-block { background: linear-gradient(90deg, #131c2b, #1b2434, #131c2b); }
+        .skeleton .sk-line { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #F6F9FC, #F6F9FC, #F6F9FC); margin-bottom: 12px; }
+        .sk-block { background: linear-gradient(90deg, #F6F9FC, #F6F9FC, #F6F9FC); }
         .auth-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
         .auth-state h2 { margin: 0 0 8px; font-family: Barlow, Inter, sans-serif; }
         .auth-state p { margin: 0 0 16px; color: var(--muted); }
@@ -144,7 +144,7 @@
 
            tmr-sitewide.css applies `!important` typography to every `p`, `li`,
            `td`, `th` and `label` under `body.tmr-site-shell` -- e.g.
-           `.tmr-site-shell p { color: rgb(169,184,202) !important }`. That
+           `.tmr-site-shell p { color: #2E4459 !important }`. That
            silently flattened this page's numbers: the balance rendered at
            15.2px in muted grey instead of 34px+ in gold, verified live on
            production with getComputedStyle.
@@ -158,7 +158,7 @@
         .wallet-page h1 { font-size: clamp(34px, 5vw, 56px) !important; line-height: 0.95 !important; color: var(--text) !important; }
         .wallet-page .wallet-kicker { font-size: 12px !important; color: var(--gold) !important; }
         .wallet-page .wallet-subtitle { font-size: 14.5px !important; color: var(--muted) !important; }
-        .wallet-page .disclaimer { font-size: 13px !important; color: #fde68a !important; }
+        .wallet-page .disclaimer { font-size: 13px !important; color: #B98505 !important; }
         .wallet-page .balance-value { font-size: clamp(34px, 5vw, 52px) !important; color: var(--gold) !important; }
         .wallet-page .balance-card.sub .balance-value { font-size: clamp(24px, 3.4vw, 32px) !important; color: var(--text) !important; }
         .wallet-page .balance-label { font-size: 11px !important; color: var(--muted) !important; }
@@ -176,9 +176,9 @@
         .wallet-page .field .hint { font-size: 12px !important; color: var(--muted) !important; }
         .wallet-page .empty-state p { font-size: 13.5px !important; color: var(--muted) !important; }
         .wallet-page .auth-state p { color: var(--muted) !important; }
-        .wallet-page .frozen-banner { color: #fecaca !important; }
-        .wallet-page .msg.err { color: #fecaca !important; }
-        .wallet-page .msg.ok { color: #bbf7d0 !important; }
+        .wallet-page .frozen-banner { color: #BC372E !important; }
+        .wallet-page .msg.err { color: #BC372E !important; }
+        .wallet-page .msg.ok { color: #0A8B4E !important; }
 
         @media (max-width: 860px) {
             .balance-grid { grid-template-columns: 1fr; }
@@ -192,8 +192,9 @@
             .tab { flex: 0 0 auto; }
         }
     </style>
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body>
+<body class="tmr-light">
     <main class="wallet-page">
         <header class="wallet-head">
             <div>

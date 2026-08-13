@@ -22,21 +22,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root {
-            --bg-dark: #0a0a0f;
-            --bg-surface: #12121a;
-            --bg-card: #1a1a2e;
-            --bg-card-hover: #222240;
-            --border: #2a2a4a;
-            --border-glow: #3a3a6a;
-            --primary: #00aeff;
-            --primary-dim: rgba(0, 174, 255, 0.15);
-            --accent-gold: #ffd700;
-            --accent-green: #00ff88;
-            --accent-red: #ff4444;
-            --accent-purple: #a855f7;
-            --text: #e8e8f0;
-            --text-dim: #8888aa;
-            --text-muted: #555577;
+            --bg-dark: #F4F7FA;
+            --bg-surface: #FFFFFF;
+            --bg-card: #F6F9FC;
+            --bg-card-hover: #F6F9FC;
+            --border: #D2DEEA;
+            --border-glow: #D2DEEA;
+            --primary: #0C948C;
+            --primary-dim: rgba(12,148,140,0.15);
+            --accent-gold: #B98505;
+            --accent-green: #0A8B4E;
+            --accent-red: #BC372E;
+            --accent-purple: #5940AE;
+            --text: #07182A;
+            --text-dim: #2E4459;
+            --text-muted: #5E7590;
             --font-display: 'Barlow', sans-serif;
             --font-body: 'Inter', sans-serif;
         }
@@ -52,11 +52,11 @@
         .nav-logo span { color: var(--accent-gold); }
         .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
         .nav-link { padding: 8px 16px; border-radius: 8px; color: var(--text-dim); font-weight: 500; font-size: 14px; transition: all 0.2s; }
-        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-        .nav-link.active { color: var(--accent-gold); background: rgba(255, 215, 0, 0.1); }
+        .nav-link:hover { color: var(--text); background: rgba(7,24,42,0.02); }
+        .nav-link.active { color: var(--accent-gold); background: rgba(185,133,5,0.1); }
         .nav-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
         .nav-user { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-        .nav-user:hover { background: rgba(255,255,255,0.05); }
+        .nav-user:hover { background: rgba(7,24,42,0.02); }
         .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-dim); border: 2px solid var(--primary); object-fit: cover; }
         .nav-username { font-size: 13px; color: var(--text); font-weight: 600; }
         .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; font-family: var(--font-body); }
@@ -76,7 +76,7 @@
         .page-title { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--accent-gold); margin-bottom: 8px; }
         .page-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 40px; }
 
-        .section-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--accent-gold); margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 215, 0, 0.2); letter-spacing: 0.5px; }
+        .section-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--accent-gold); margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(185,133,5,.30); letter-spacing: 0.5px; }
         .legal-text { color: var(--text-dim); font-size: 15px; line-height: 1.8; margin-bottom: 16px; }
         .legal-text ul { margin: 12px 0 12px 24px; }
         .legal-text li { margin-bottom: 8px; }
@@ -86,47 +86,47 @@
         /* Premium refinement pass */
         body {
             background:
-                radial-gradient(circle at top left, rgba(45, 212, 191, 0.1), transparent 26%),
-                radial-gradient(circle at top right, rgba(212, 167, 44, 0.07), transparent 20%),
-                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
+                radial-gradient(circle at top left, rgba(12,148,140,0.1), transparent 26%),
+                radial-gradient(circle at top right, rgba(185,133,5,0.08), transparent 20%),
+                linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 52%, #FFFFFF 100%) !important;
         }
 
         .nav {
             width: min(1280px, calc(100% - 36px));
             margin: 14px auto 0;
-            border: 1px solid rgba(45, 212, 191, 0.16) !important;
+            border: 1px solid rgba(12,148,140,.28) !important;
             border-radius: 22px;
-            background: rgba(7, 15, 27, 0.86) !important;
-            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+            background: #FFFFFF !important;
+            box-shadow: 0 24px 54px rgba(7,24,42,0.095);
         }
 
         .nav-logo {
-            color: #f4f7fb !important;
+            color: #07182A !important;
             letter-spacing: 0.06em;
         }
 
         .nav-logo span,
         .page-title,
-        .section-title { color: #2dd4bf !important; }
+        .section-title { color: #07736D !important; }
 
         .nav-link {
             border-radius: 999px;
-            color: #9fb0c6 !important;
+            color: #2E4459 !important;
         }
 
         .nav-link:hover,
         .nav-link.active {
-            background: rgba(45, 212, 191, 0.1) !important;
-            color: #f4f7fb !important;
+            background: rgba(12,148,140,0.1) !important;
+            color: #07182A !important;
         }
 
         .content-wrapper {
             max-width: 960px;
             padding-top: 38px;
-            background: linear-gradient(180deg, rgba(12, 23, 39, 0.9), rgba(8, 16, 28, 0.88));
-            border: 1px solid rgba(148, 163, 184, 0.14);
+            background: linear-gradient(180deg, #FFFFFF, #FFFFFF);
+            border: 1px solid #D2DEEA;
             border-radius: 28px;
-            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+            box-shadow: 0 24px 44px rgba(7,24,42,0.082);
             margin-top: 28px;
             margin-bottom: 72px;
         }
@@ -137,17 +137,18 @@
         }
 
         .page-subtitle,
-        .legal-text { color: #97abc1 !important; }
+        .legal-text { color: #2E4459 !important; }
 
-        .section-title { border-bottom-color: rgba(45, 212, 191, 0.18) !important; }
+        .section-title { border-bottom-color: rgba(12,148,140,.28) !important; }
     </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Terms of Service", "item": "https://trustmyrecord.com/terms/"}]}
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-polished-page">
+<body class="tmr-polished-page tmr-light">
 
 <!-- Legacy hardcoded nav removed; sitewide global nav is injected by tmr-sitewide.js?v=20260729navclean1 -->
 

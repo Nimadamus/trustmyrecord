@@ -27,10 +27,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root {
-            --bg-dark: #0a0a0f; --bg-surface: #12121a; --bg-card: #1a1a2e; --bg-card-hover: #222240;
-            --border: #2a2a4a; --primary: #00aeff; --primary-dim: rgba(0, 174, 255, 0.15);
-            --accent-gold: #ffd700; --accent-green: #00ff88; --accent-red: #ff4444; --accent-purple: #a855f7;
-            --text: #e8e8f0; --text-dim: #8888aa; --text-muted: #555577;
+            --bg-dark: #F4F7FA; --bg-surface: #FFFFFF; --bg-card: #F6F9FC; --bg-card-hover: #F6F9FC;
+            --border: #D2DEEA; --primary: #0C948C; --primary-dim: rgba(12,148,140,0.15);
+            --accent-gold: #B98505; --accent-green: #0A8B4E; --accent-red: #BC372E; --accent-purple: #5940AE;
+            --text: #07182A; --text-dim: #2E4459; --text-muted: #5E7590;
             --font-display: 'Barlow', sans-serif; --font-body: 'Inter', sans-serif;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -46,7 +46,7 @@
                         linear-gradient(180deg, rgba(26,26,46,0.95), rgba(10,10,15,0.95));
             border: 1px solid var(--border); }
         .ss-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
-            background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--accent-green);
+            background: rgba(10,139,78,0.1); border: 1px solid rgba(10,139,78,.28); color: var(--accent-green);
             font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
         .ss-hero h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.04; letter-spacing: -0.02em; }
         .ss-hero h1 .gold { color: var(--accent-gold); }
@@ -54,16 +54,16 @@
 
         /* AUTH CTA */
         .ss-auth-cta { display: none; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 24px; padding: 16px 20px;
-            background: rgba(255,215,0,0.07); border: 1px solid rgba(255,215,0,0.3); border-radius: 14px; }
+            background: rgba(185,133,5,0.08); border: 1px solid rgba(185,133,5,.30); border-radius: 14px; }
         .ss-auth-cta p { color: var(--text); font-weight: 600; }
         .ss-auth-cta .sp { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
 
         .btn { display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px; border-radius: 12px; font-family: var(--font-display);
             font-weight: 800; font-size: 0.98rem; cursor: pointer; border: 1px solid transparent; transition: transform .15s, box-shadow .15s; }
         .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
-        .btn-gold { background: linear-gradient(135deg, #ffd700, #ffb300); color: #1a1200; box-shadow: 0 10px 28px rgba(255,215,0,0.22); }
+        .btn-gold { background: linear-gradient(135deg, #FBF1D8, #FBF1D8); color: #1a1200; box-shadow: 0 10px 28px rgba(7,24,42,0.075); }
         .btn-gold:hover:not([disabled]) { transform: translateY(-2px); color: #1a1200; }
-        .btn-green { background: linear-gradient(135deg, #00ff88, #00cc6e); color: #00210f; }
+        .btn-green { background: linear-gradient(135deg, #DFF3E8, #DFF3E8); color: #00210f; }
         .btn-green:hover:not([disabled]) { transform: translateY(-2px); color: #00210f; }
         .btn-outline { background: transparent; border-color: var(--border); color: var(--text); }
         .btn-outline:hover:not([disabled]) { border-color: var(--primary); color: var(--text); }
@@ -72,21 +72,21 @@
         .ss-sim { margin-top: 26px; }
         .ss-statusbar { display: none; margin-bottom: 18px; padding: 14px 18px; border-radius: 12px; font-weight: 600;
             background: var(--bg-card); border: 1px solid var(--border); color: var(--text); }
-        .ss-statusbar.ok { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.35); color: #b6ffd9; }
-        .ss-statusbar.err { background: rgba(255,68,68,0.08); border-color: rgba(255,68,68,0.4); color: #ffc2c2; }
-        .ss-statusbar.locked { background: rgba(255,215,0,0.08); border-color: rgba(255,215,0,0.4); color: #ffe9a6; }
+        .ss-statusbar.ok { background: rgba(10,139,78,0.08); border-color: rgba(10,139,78,.28); color: #0A8B4E; }
+        .ss-statusbar.err { background: rgba(188,55,46,0.08); border-color: rgba(188,55,46,.28); color: #BC372E; }
+        .ss-statusbar.locked { background: rgba(185,133,5,0.08); border-color: rgba(185,133,5,.30); color: #B98505; }
 
         .ss-progress { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
         .ss-pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border-radius: 999px; font-size: 0.86rem; font-weight: 700;
             background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim); }
-        .ss-pill.done { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.35); color: var(--accent-green); }
+        .ss-pill.done { background: rgba(10,139,78,0.1); border-color: rgba(10,139,78,.28); color: var(--accent-green); }
         .ss-pill b { color: var(--text); }
         .ss-pill.done b { color: var(--accent-green); }
 
         .ss-step { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 24px 24px; margin-bottom: 18px; }
         .ss-step > h2 { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 12px; }
         .ss-step > h2 .n { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px;
-            background: var(--primary-dim); border: 1px solid rgba(0,174,255,0.35); color: var(--primary); font-size: 0.95rem; }
+            background: var(--primary-dim); border: 1px solid rgba(12,148,140,.28); color: var(--primary); font-size: 0.95rem; }
         .ss-step > p.hint { color: var(--text-dim); font-size: 0.92rem; margin: 8px 0 18px; }
 
         .ss-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
@@ -98,7 +98,7 @@
         .ss-team-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 10px;
             background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; transition: all .12s; font-family: var(--font-body); }
         .ss-team-btn:hover:not([disabled]) { border-color: var(--primary); color: var(--text); }
-        .ss-team-btn.sel { background: var(--primary-dim); border-color: var(--primary); color: #fff; }
+        .ss-team-btn.sel { background: var(--primary-dim); border-color: var(--primary); color: #07182A; }
         .ss-team-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
         .ss-team-btn .ab { font-family: var(--font-display); font-weight: 800; min-width: 38px; }
         .ss-team-btn .nm { font-size: 0.86rem; }
@@ -106,25 +106,25 @@
         .ss-field { display: flex; flex-direction: column; gap: 7px; }
         .ss-field span { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: var(--text-dim); }
         .ss-field select { padding: 12px 14px; border-radius: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text); font-family: var(--font-body); font-size: 0.95rem; }
-        .ss-field-ws select { border-color: rgba(255,215,0,0.4); }
+        .ss-field-ws select { border-color: rgba(185,133,5,.30); }
 
         .ss-bracket { display: grid; grid-template-columns: 1fr 0.8fr 1fr; gap: 14px; margin-top: 18px; align-items: stretch; }
         .ss-bracket-col { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
         .ss-bracket-col h4 { font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; margin-bottom: 10px; color: var(--text-dim); }
         .ss-seeds { display: flex; flex-direction: column; gap: 6px; min-height: 30px; }
         .ss-seed { font-size: 0.82rem; padding: 6px 8px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text); }
-        .ss-seed.champ { background: rgba(255,215,0,0.12); border-color: rgba(255,215,0,0.4); color: var(--accent-gold); }
+        .ss-seed.champ { background: rgba(185,133,5,0.12); border-color: rgba(185,133,5,.30); color: var(--accent-gold); }
         .ss-seed b { color: var(--primary); }
         .ss-pennant { margin-top: 12px; font-size: 0.84rem; color: var(--text-dim); }
         .ss-pennant b { color: var(--text); }
-        .ss-bracket-ws { background: linear-gradient(180deg, rgba(255,215,0,0.08), rgba(10,10,15,0.5)); border-color: rgba(255,215,0,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .ss-bracket-ws { background: linear-gradient(180deg, rgba(185,133,5,0.08), rgba(7,24,42,0.06)); border-color: rgba(185,133,5,.30); display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .ss-ws-trophy { font-size: 1.8rem; color: var(--accent-gold); }
         .ss-ws-pick { margin-top: 8px; font-family: var(--font-display); font-weight: 900; color: var(--accent-gold); font-size: 1.05rem; }
         .ss-muted { color: var(--text-muted); font-size: 0.84rem; }
 
         .ss-wt-group { margin-bottom: 16px; }
         .ss-wt-head { font-family: var(--font-display); font-weight: 800; font-size: 0.88rem; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
-        .ss-wt-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(42,42,74,0.5); }
+        .ss-wt-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #D2DEEA; }
         .ss-wt-team { flex: 1; font-size: 0.88rem; color: var(--text-dim); }
         .ss-wt-team b { color: var(--text); }
         .ss-wt-meta { display: block; font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
@@ -132,7 +132,7 @@
         .ss-roster-link:hover { color: var(--accent-gold); text-decoration: underline; }
         .ss-rank { font-family: var(--font-display); font-weight: 800; color: var(--accent-gold); }
         /* MODAL */
-        .ss-modal { position: fixed; inset: 0; z-index: 9999; background: rgba(5,5,10,0.82); display: flex; align-items: center; justify-content: center; padding: 18px; }
+        .ss-modal { position: fixed; inset: 0; z-index: 9999; background: #F4F7FA; display: flex; align-items: center; justify-content: center; padding: 18px; }
         .ss-modal-box { position: relative; width: 100%; max-width: 680px; max-height: 86vh; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 26px 26px 30px; }
         .ss-modal-box h3 { font-family: var(--font-display); font-weight: 900; font-size: 1.4rem; padding-right: 36px; }
         .ss-modal-sub { color: var(--text-dim); font-size: 0.86rem; margin: 8px 0 16px; }
@@ -155,7 +155,7 @@
         /* PUBLIC FEED */
         .ss-pub-head, .ss-pub-row { display: grid; grid-template-columns: 1.4fr 1fr 0.6fr 0.6fr 0.8fr; gap: 8px; padding: 11px 14px; align-items: center; }
         .ss-pub-head { font-family: var(--font-display); font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-        .ss-pub-row { border-bottom: 1px solid rgba(42,42,74,0.5); font-size: 0.9rem; }
+        .ss-pub-row { border-bottom: 1px solid #D2DEEA; font-size: 0.9rem; }
         .ss-pub-user { font-weight: 700; }
         .ss-pub-ws { font-family: var(--font-display); font-weight: 800; color: var(--accent-gold); }
 
@@ -168,7 +168,7 @@
         .ss-intro { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 28px 30px; line-height: 1.7; color: var(--text-dim); font-size: 1.02rem; }
         .ss-intro strong { color: var(--text); }
         .ss-intro p + p { margin-top: 14px; }
-        .ss-angle { background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,174,255,0.06)); border: 1px solid var(--border); border-radius: 20px; padding: 36px 32px; }
+        .ss-angle { background: linear-gradient(135deg, rgba(89,64,174,0.1), rgba(12,148,140,0.08)); border: 1px solid var(--border); border-radius: 20px; padding: 36px 32px; }
         .ss-angle h2 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.5rem, 3.4vw, 2.1rem); text-align: center; }
         .ss-angle h2 .purple { color: var(--accent-purple); }
         .ss-angle .lead { margin: 16px auto 22px; max-width: 780px; text-align: center; color: var(--text-dim); font-size: 1.04rem; line-height: 1.7; }
@@ -178,7 +178,7 @@
         .ss-pillar i { font-size: 1.3rem; color: var(--accent-green); margin-bottom: 10px; }
         .ss-pillar h3 { font-family: var(--font-display); font-weight: 800; font-size: 0.98rem; }
         .ss-pillar p { margin-top: 6px; color: var(--text-dim); font-size: 0.84rem; line-height: 1.5; }
-        .ss-pillar .step-n { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 11px; background: var(--primary-dim); border: 1px solid rgba(0,174,255,0.35); color: var(--primary); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; margin-bottom: 12px; }
+        .ss-pillar .step-n { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 11px; background: var(--primary-dim); border: 1px solid rgba(12,148,140,.28); color: var(--primary); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; margin-bottom: 12px; }
         .ss-steps .ss-pillar { text-align: left; }
         .ss-faq { display: grid; gap: 12px; }
         .ss-faq details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 4px 6px; }
@@ -205,8 +205,9 @@
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
 <script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell">
+<body class="tmr-site-shell tmr-light">
 
 <!-- Sitewide global nav + footer are injected by tmr-sitewide.js?v=20260729navclean1 -->
 
@@ -430,15 +431,15 @@
 <script defer src="/static/js/season-simulator.js?v=b865ec63498f"></script>
 
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
-<section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
-  <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#e8e8f0;margin:0 0 14px;">Related TrustMyRecord Tools & Pages</h2>
+<section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#FFFFFF;border:1px solid #D2DEEA;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
+  <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#07182A;margin:0 0 14px;">Related TrustMyRecord Tools & Pages</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 18px;">
-    <a href="/mlb-simulator/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Run a single-game MLB simulation</a>
-    <a href="/trendspotter/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Spot betting trends with Trend Spotter</a>
-    <a href="/model-builder/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Build your own prediction model</a>
-    <a href="/leaderboards/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>See the verified sports betting leaderboards</a>
-    <a href="/sportsbook/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Make and lock a verified pick</a>
-    <a href="/free-sports-betting-contest/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Enter the free sports betting contest</a>
+    <a href="/mlb-simulator/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Run a single-game MLB simulation</a>
+    <a href="/trendspotter/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Spot betting trends with Trend Spotter</a>
+    <a href="/model-builder/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Build your own prediction model</a>
+    <a href="/leaderboards/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>See the verified sports betting leaderboards</a>
+    <a href="/sportsbook/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Make and lock a verified pick</a>
+    <a href="/free-sports-betting-contest/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Enter the free sports betting contest</a>
   </div>
 </section>
 

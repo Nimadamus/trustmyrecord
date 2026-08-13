@@ -22,20 +22,20 @@
            override, no !important color fights. Email-style 3-column layout.
            ============================================================ */
         :root {
-            --msg-bg: #060b16;
-            --msg-surface: #0d1626;
-            --msg-surface-2: #111d31;
-            --msg-surface-3: #16233b;
-            --msg-border: rgba(148, 163, 184, 0.16);
-            --msg-border-strong: rgba(148, 163, 184, 0.26);
-            --msg-text: #f1f5f9;
-            --msg-text-soft: #c4d0e0;
-            --msg-text-muted: #8b9bb4;
-            --msg-accent: #38bdf8;
-            --msg-accent-soft: rgba(56, 189, 248, 0.14);
-            --msg-accent-line: #2dd4bf;
-            --msg-sent: #1f6feb;
-            --msg-danger: #f87171;
+            --msg-bg: #F4F7FA;
+            --msg-surface: #FFFFFF;
+            --msg-surface-2: #F6F9FC;
+            --msg-surface-3: #F6F9FC;
+            --msg-border: #D2DEEA;
+            --msg-border-strong: #D2DEEA;
+            --msg-text: #07182A;
+            --msg-text-soft: #07182A;
+            --msg-text-muted: #2E4459;
+            --msg-accent: #0C948C;
+            --msg-accent-soft: rgba(12,148,140,0.14);
+            --msg-accent-line: rgba(12,148,140,.28);
+            --msg-sent: #1E5BBF;
+            --msg-danger: #BC372E;
             --msg-radius: 8px;
             --msg-radius-lg: 10px;
             --msg-nav-w: 208px;
@@ -115,9 +115,9 @@
             cursor: pointer;
             transition: background 0.15s, transform 0.05s;
         }
-        .msg-compose-btn:hover { background: #5cc9fb; }
+        .msg-compose-btn:hover { background: #DEF4F2; }
         .msg-compose-btn:active { transform: translateY(1px); }
-        .msg-compose-btn:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+        .msg-compose-btn:focus-visible { outline: 2px solid rgba(12,148,140,.28); outline-offset: 2px; }
 
         .msg-folder {
             display: flex;
@@ -228,8 +228,8 @@
         }
         .msg-avatar {
             width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #1f7ae0, #0f2f4c);
-            color: #fff; font-weight: 700; font-size: 0.9rem;
+            background: linear-gradient(135deg, #1E5BBF, #FFFFFF);
+            color: #07182A; font-weight: 700; font-size: 0.9rem;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; flex-shrink: 0;
         }
@@ -278,8 +278,8 @@
             font-size: 0.76rem; color: var(--msg-text-muted); margin-top: 2px;
             display: flex; align-items: center; gap: 6px;
         }
-        .msg-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #64748b; }
-        .msg-status-dot.online { background: #22c55e; }
+        .msg-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #B7C8DA; }
+        .msg-status-dot.online { background: #DFF3E8; }
         .msg-pane-actions { margin-left: auto; display: flex; gap: 8px; }
 
         .msg-action-btn {
@@ -298,7 +298,7 @@
         .msg-action-btn:focus-visible { outline: 2px solid var(--msg-accent); outline-offset: 1px; }
 
         .msg-folder-danger { color: var(--msg-danger); }
-        .msg-folder-danger:hover { background: rgba(220, 60, 70, 0.12); color: var(--msg-danger); }
+        .msg-folder-danger:hover { background: rgba(188,55,46,0.12); color: var(--msg-danger); }
         .msg-row-delete {
             width: 22px; height: 22px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -358,7 +358,7 @@
         .msg-bubble.sent {
             align-self: flex-end;
             background: var(--msg-sent);
-            color: #f8fbff;
+            color: #07182A;
             border-bottom-right-radius: 3px;
         }
         .msg-bubble-time { font-size: 0.68rem; margin-top: 4px; opacity: 0.7; }
@@ -374,7 +374,7 @@
         .msg-bubble-delete, .msg-bubble-react, .msg-bubble-reply {
             width: 22px; height: 22px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(7,24,42,0.034); border: 1px solid #D2DEEA;
             color: inherit; cursor: pointer; padding: 0;
             font-size: 0.8rem; line-height: 1; opacity: 0.55;
             transition: opacity 0.12s ease;
@@ -397,12 +397,12 @@
         .msg-reply-quote {
             display: block; width: 100%; text-align: left;
             margin: 0 0 6px; padding: 5px 8px;
-            background: rgba(255,255,255,0.09);
+            background: rgba(7,24,42,0.032);
             border: none; border-left: 3px solid currentColor;
             border-radius: 6px; color: inherit; font: inherit;
             cursor: pointer; opacity: 0.85;
         }
-        .msg-bubble.received .msg-reply-quote { background: rgba(255,255,255,0.06); }
+        .msg-bubble.received .msg-reply-quote { background: rgba(7,24,42,0.021); }
         .msg-reply-quote:hover { opacity: 1; }
         .msg-reply-quote.unavailable { cursor: default; font-style: italic; }
         .msg-reply-quote-name { display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 1px; }
@@ -424,7 +424,7 @@
         .msg-reaction-chip {
             display: inline-flex; align-items: center; gap: 3px;
             font-size: 0.72rem; padding: 1px 7px; border-radius: 12px;
-            background: rgba(0,0,0,0.18); border: 1px solid transparent;
+            background: rgba(7,24,42,0.022); border: 1px solid transparent;
             cursor: pointer; color: inherit; line-height: 1.5;
         }
         .msg-reaction-chip.mine { border-color: currentColor; }
@@ -432,18 +432,18 @@
             position: fixed; z-index: 300; display: flex; gap: 2px;
             background: var(--msg-surface-3); border: 1px solid var(--msg-border);
             border-radius: 18px; padding: 4px 6px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            box-shadow: 0 6px 18px rgba(7,24,42,0.1);
         }
         .msg-react-palette button {
             background: none; border: none; font-size: 1.05rem; line-height: 1;
             cursor: pointer; padding: 3px 5px; border-radius: 8px;
         }
-        .msg-react-palette button:hover { background: rgba(255,255,255,0.08); }
+        .msg-react-palette button:hover { background: rgba(7,24,42,0.028); }
         .msg-bubble-time { display: flex; align-items: center; gap: 4px; }
         .msg-bubble.sent .msg-bubble-time { justify-content: flex-end; }
         .msg-ticks { display: inline-flex; align-items: center; opacity: 0.75; }
         .msg-ticks svg { width: 14px; height: 14px; }
-        .msg-ticks.read { color: #67e8f9; opacity: 1; }
+        .msg-ticks.read { color: #07736D; opacity: 1; }
 
         /* ---------- Composer (sticky bottom of pane) ---------- */
         #chatInputArea {
@@ -487,9 +487,9 @@
             cursor: pointer;
             transition: background 0.13s;
         }
-        .send-btn:hover { background: #5cc9fb; }
+        .send-btn:hover { background: #DEF4F2; }
         .send-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-        .send-btn:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+        .send-btn:focus-visible { outline: 2px solid rgba(12,148,140,.28); outline-offset: 2px; }
         .composer-hint { grid-area: tools; align-self: center; font-size: 0.72rem; color: var(--msg-text-muted); }
 
         /* Reply-to strip above the composer */
@@ -551,7 +551,7 @@
             background: var(--msg-accent); border: none; border-radius: var(--msg-radius);
             color: #04121f; font-family: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer;
         }
-        .msg-empty.error .msg-empty-icon { color: var(--msg-danger); border-color: rgba(248,113,113,0.4); }
+        .msg-empty.error .msg-empty-icon { color: var(--msg-danger); border-color: rgba(188,55,46,.28); }
 
         .msg-skeleton-row {
             display: grid; grid-template-columns: 36px 1fr; gap: 11px;
@@ -567,7 +567,7 @@
         /* ---------- Modal (new message) ---------- */
         .modal-overlay {
             position: fixed; inset: 0;
-            background: rgba(3, 7, 15, 0.72);
+            background: #F4F7FA;
             backdrop-filter: blur(6px);
             display: none; align-items: center; justify-content: center;
             z-index: 1000; padding: 20px;
@@ -579,7 +579,7 @@
             border: 1px solid var(--msg-border-strong);
             border-radius: 14px;
             padding: 22px;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            box-shadow: 0 30px 80px rgba(7,24,42,0.1);
         }
         .modal h3 { font-family: 'Barlow','Inter',sans-serif; color: var(--msg-text); font-size: 1.15rem; }
         .modal-input {
@@ -603,7 +603,7 @@
         .modal-btn.secondary { background: var(--msg-surface-3); color: var(--msg-text-soft); }
         .modal-btn.secondary:hover { color: var(--msg-text); }
         .modal-btn.primary { background: var(--msg-accent); color: #04121f; }
-        .modal-btn.primary:hover { background: #5cc9fb; }
+        .modal-btn.primary:hover { background: #DEF4F2; }
         .modal-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .modal-close {
             background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer;
@@ -619,8 +619,8 @@
         .composer-result:hover { background: var(--msg-surface-2); }
         .composer-result-avatar {
             width: 38px; height: 38px; border-radius: 50%;
-            background: linear-gradient(135deg, #1f7ae0, #0f2f4c);
-            color: #fff; font-weight: 700; font-size: 0.95rem;
+            background: linear-gradient(135deg, #1E5BBF, #FFFFFF);
+            color: #07182A; font-weight: 700; font-size: 0.95rem;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; flex-shrink: 0;
         }
@@ -689,8 +689,9 @@
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body>
+<body class="tmr-light">
     <!-- Sitewide global nav + footer are injected by tmr-sitewide.js?v=20260729navclean1 -->
 
     <section class="msg-context">

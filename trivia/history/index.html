@@ -19,57 +19,57 @@
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
     <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
     <style>
-        :root { color-scheme: dark; --text-muted:#94a3b8; }
-        body { margin:0; background:#070b12; color:#e8eef5; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
+        :root { color-scheme: dark; --text-muted:#2E4459; }
+        body { margin:0; background:#F4F7FA; color:#07182A; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
         html, body { overflow-x:hidden; max-width:100%; }
         .th-wrap { max-width:1120px; margin:0 auto; padding:26px 18px 70px; box-sizing:border-box; }
         .th-card, .th-stat, .th-row { box-sizing:border-box; max-width:100%; }
         .th-btn { flex:0 0 auto; }
         .th-head h1 { font-family:Barlow,Inter,sans-serif; font-size:clamp(26px,4vw,38px); margin:0 0 6px; letter-spacing:-.01em; }
         .th-head p { color:var(--text-muted); margin:0 0 20px; font-size:14.5px; line-height:1.6; }
-        .th-head a { color:#5eead4; }
+        .th-head a { color:#07736D; }
 
-        .th-card { background:rgba(15,23,42,.6); border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:18px; margin-bottom:18px; }
+        .th-card { background:#FFFFFF; border:1px solid #D2DEEA; border-radius:14px; padding:18px; margin-bottom:18px; }
         .th-card h2 { font-size:16px; margin:0 0 12px; font-family:Barlow,Inter,sans-serif; letter-spacing:.02em; }
 
         .th-summary { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
         @media (max-width:900px){ .th-summary { grid-template-columns:repeat(3,1fr); } }
         @media (max-width:520px){ .th-summary { grid-template-columns:repeat(2,1fr); } }
-        .th-stat { background:rgba(148,163,184,.06); border:1px solid rgba(148,163,184,.12); border-radius:11px; padding:12px 10px; text-align:center; }
-        .th-stat .v { font-size:20px; font-weight:800; color:#f4f7fb; font-family:Barlow,Inter,sans-serif; }
+        .th-stat { background:rgba(7,24,42,0.007); border:1px solid #D2DEEA; border-radius:11px; padding:12px 10px; text-align:center; }
+        .th-stat .v { font-size:20px; font-weight:800; color:#07182A; font-family:Barlow,Inter,sans-serif; }
         .th-stat .l { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-top:4px; }
 
         .th-filters { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
         .th-field { display:flex; flex-direction:column; gap:5px; flex:1 1 150px; min-width:0; }
         .th-field label { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
         .th-field select, .th-field input {
-            background:#0d141c; border:1px solid #2b3a4d; border-radius:8px; color:#e8eef5;
+            background:#FFFFFF; border:1px solid #D2DEEA; border-radius:8px; color:#07182A;
             padding:8px 10px; font-size:13px; font-family:inherit; width:100%; min-width:0; max-width:100%;
         }
         .th-btn {
-            background:rgba(45,212,191,.16); border:1px solid rgba(45,212,191,.45); color:#5eead4;
+            background:rgba(12,148,140,0.14); border:1px solid rgba(12,148,140,.28); color:#07736D;
             border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer;
         }
-        .th-btn.secondary { background:rgba(148,163,184,.1); border-color:rgba(148,163,184,.22); color:#cbd5e1; }
+        .th-btn.secondary { background:rgba(7,24,42,0.012); border-color:#D2DEEA; color:#07182A; }
 
         .th-row {
             display:flex; gap:14px; justify-content:space-between; align-items:flex-start;
-            padding:14px 0; border-bottom:1px solid rgba(148,163,184,.1);
+            padding:14px 0; border-bottom:1px solid #D2DEEA;
         }
         .th-row:last-child { border-bottom:none; }
-        .th-q { font-size:14.5px; color:#f4f7fb; line-height:1.45; margin-bottom:6px; overflow-wrap:anywhere; }
+        .th-q { font-size:14.5px; color:#07182A; line-height:1.45; margin-bottom:6px; overflow-wrap:anywhere; }
         .th-meta { font-size:12px; color:var(--text-muted); line-height:1.7; }
-        .th-meta strong { color:#e2e8f0; }
+        .th-meta strong { color:#07182A; }
         .th-pts { font-size:17px; font-weight:800; font-family:Barlow,Inter,sans-serif; white-space:nowrap; }
-        .th-pts.zero { color:#64748b; }
-        .th-pts.pos  { color:#4ade80; }
+        .th-pts.zero { color:#5E7590; }
+        .th-pts.pos  { color:#0A8B4E; }
         .badge { display:inline-block; padding:1px 8px; border-radius:999px; font-size:10px; font-weight:700;
                  letter-spacing:.04em; text-transform:uppercase; margin-right:5px; }
-        .badge.correct { background:rgba(0,200,83,.16); color:#4ade80; }
-        .badge.wrong   { background:rgba(255,68,68,.16); color:#f87171; }
-        .badge.forfeit { background:rgba(249,115,22,.18); color:#fb923c; }
-        .badge.expired { background:rgba(255,152,0,.16); color:#fbbf24; }
-        .badge.diff    { background:rgba(148,163,184,.14); color:#cbd5e1; }
+        .badge.correct { background:rgba(10,139,78,0.14); color:#0A8B4E; }
+        .badge.wrong   { background:rgba(188,55,46,0.14); color:#BC372E; }
+        .badge.forfeit { background:rgba(185,133,5,0.14); color:#B98505; }
+        .badge.expired { background:rgba(185,133,5,0.14); color:#B98505; }
+        .badge.diff    { background:rgba(7,24,42,0.017); color:#07182A; }
 
         .th-pager { display:flex; gap:10px; align-items:center; justify-content:center; margin-top:18px; flex-wrap:wrap; }
         .th-pager span { font-size:13px; color:var(--text-muted); }
@@ -78,12 +78,13 @@
         .th-breakdown { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
         @media (max-width:760px){ .th-breakdown { grid-template-columns:1fr; } }
         .th-bd-row { display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:7px 0;
-                     border-bottom:1px solid rgba(148,163,184,.08); }
+                     border-bottom:1px solid #D2DEEA; }
         .th-bd-row:last-child { border-bottom:none; }
         .th-bd-row .n { color:var(--text-muted); }
     </style>
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell">
+<body class="tmr-site-shell tmr-light">
 
 <div class="th-wrap">
     <div class="th-head">

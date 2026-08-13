@@ -30,7 +30,7 @@
     {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do pending picks affect my record on TrustMyRecord?", "acceptedAnswer": {"@type": "Answer", "text": "No. Pending picks are excluded from W-L-P, units, ROI, and streaks until the autograder settles them from final scores."}}, {"@type": "Question", "name": "Can I edit or delete a pending pick?", "acceptedAnswer": {"@type": "Answer", "text": "No. Picks lock at submission and cannot be edited or deleted. That restriction is what makes the record verifiable."}}, {"@type": "Question", "name": "When does a pending pick become graded?", "acceptedAnswer": {"@type": "Answer", "text": "After the game finishes, the autograder settles it from the final score as a win, loss, or push at the locked odds."}}, {"@type": "Question", "name": "Are contest picks pending in the same way?", "acceptedAnswer": {"@type": "Answer", "text": "Contest picks are sealed until first pitch and graded the same way, but they are tracked separately in Contest Mode and never mix with your main record."}}]}
     </script>
 <style>
-        :root{--bg-dark:#0a0a0f;--bg-card:#1a1a2e;--border:#2a2a4a;--primary:#00aeff;--primary-dim:rgba(0,174,255,0.15);--accent-gold:#ffd700;--accent-green:#00ff88;--accent-red:#ff5566;--accent-purple:#a855f7;--text:#e8e8f0;--text-dim:#8888aa;--text-muted:#555577;--font-display:'Barlow',sans-serif;--font-body:'Inter',sans-serif;}
+        :root{--bg-dark:#F4F7FA;--bg-card:#F6F9FC;--border:#D2DEEA;--primary:#0C948C;--primary-dim:rgba(12,148,140,0.15);--accent-gold:#B98505;--accent-green:#0A8B4E;--accent-red:#BC372E;--accent-purple:#5940AE;--text:#07182A;--text-dim:#2E4459;--text-muted:#5E7590;--font-display:'Barlow',sans-serif;--font-body:'Inter',sans-serif;}
         *{margin:0;padding:0;box-sizing:border-box;}
         body.tmr-site-shell{background:var(--bg-dark);color:var(--text);font-family:var(--font-body);min-height:100vh;}
         .ss-wrap a{color:var(--primary);text-decoration:none;}
@@ -39,7 +39,7 @@
         .ss-crumb{font-size:0.8rem;color:var(--text-muted);margin:22px 0 0;}
         .ss-crumb a{color:var(--text-dim);}
         .ss-hero{position:relative;overflow:hidden;border-radius:24px;margin-top:16px;padding:40px 34px;background:radial-gradient(1200px 400px at 15% -10%,rgba(0,174,255,0.16),transparent 60%),radial-gradient(1000px 360px at 95% 0%,rgba(168,85,247,0.14),transparent 55%),linear-gradient(180deg,rgba(26,26,46,0.95),rgba(10,10,15,0.95));border:1px solid var(--border);}
-        .ss-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--accent-green);font-size:0.72rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:16px;}
+        .ss-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(10,139,78,0.1);border:1px solid rgba(10,139,78,.28);color:var(--accent-green);font-size:0.72rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:16px;}
         .ss-hero h1{font-family:var(--font-display);font-weight:900;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.06;letter-spacing:-0.02em;}
         .ss-hero h1 .gold{color:var(--accent-gold);}.ss-hero h1 .blue{color:var(--primary);}
         .ss-hero .sub{margin-top:14px;color:var(--text-dim);font-size:clamp(1rem,2vw,1.14rem);font-weight:600;max-width:700px;line-height:1.55;}
@@ -51,8 +51,8 @@
         .ss-intro{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:26px 28px;line-height:1.75;color:var(--text-dim);font-size:1.02rem;}
         .ss-intro strong{color:var(--text);}.ss-intro p+p{margin-top:14px;}
         .ss-intro ul{margin:12px 0 0 20px;}.ss-intro li{margin-top:8px;}
-        .ss-formula{margin-top:16px;background:rgba(0,174,255,0.07);border:1px solid rgba(0,174,255,0.3);border-radius:14px;padding:20px 24px;font-family:'Barlow',sans-serif;font-weight:800;font-size:clamp(1rem,2.4vw,1.25rem);color:var(--text);text-align:center;letter-spacing:0.01em;}
-        .ss-callout{margin-top:16px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.25);border-radius:14px;padding:18px 22px;color:var(--text-dim);line-height:1.65;font-size:0.98rem;}
+        .ss-formula{margin-top:16px;background:rgba(12,148,140,0.08);border:1px solid rgba(12,148,140,.28);border-radius:14px;padding:20px 24px;font-family:'Barlow',sans-serif;font-weight:800;font-size:clamp(1rem,2.4vw,1.25rem);color:var(--text);text-align:center;letter-spacing:0.01em;}
+        .ss-callout{margin-top:16px;background:rgba(185,133,5,0.08);border:1px solid rgba(185,133,5,.30);border-radius:14px;padding:18px 22px;color:var(--text-dim);line-height:1.65;font-size:0.98rem;}
         .ss-callout strong{color:var(--accent-gold);}
         .ss-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
         .ss-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 20px;transition:border-color .2s,transform .2s;display:block;}
@@ -69,7 +69,7 @@
         table.ss-compare tbody tr:last-child td{border-bottom:none;}
         table.ss-compare .yes{color:var(--accent-green);font-weight:700;}
         table.ss-compare .no{color:var(--accent-red);font-weight:700;}
-        .ss-angle{background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(0,174,255,0.06));border:1px solid var(--border);border-radius:20px;padding:30px 30px;}
+        .ss-angle{background:linear-gradient(135deg,rgba(89,64,174,0.1),rgba(12,148,140,0.08));border:1px solid var(--border);border-radius:20px;padding:30px 30px;}
         .ss-angle h2{font-family:var(--font-display);font-weight:900;font-size:clamp(1.35rem,3vw,1.8rem);}
         .ss-angle h2 .purple{color:var(--accent-purple);}.ss-angle h2 .gold{color:var(--accent-gold);}
         .ss-angle .lead{margin:14px 0 0;max-width:840px;color:var(--text-dim);font-size:1.02rem;line-height:1.7;}
@@ -82,11 +82,11 @@
         .ss-faq details[open] summary::after{content:'\2212';}
         .ss-faq p{padding:0 18px 15px;color:var(--text-dim);line-height:1.65;}
         .btn{display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:11px;font-family:var(--font-display);font-weight:800;font-size:0.95rem;cursor:pointer;border:1px solid transparent;transition:transform .15s;}
-        .btn-gold{background:linear-gradient(135deg,#ffd700,#ffb300);color:#1a1200;box-shadow:0 10px 28px rgba(255,215,0,0.2);}
+        .btn-gold{background:linear-gradient(135deg,#FBF1D8,#FBF1D8);color:#1a1200;box-shadow:0 10px 28px rgba(7,24,42,0.068);}
         .btn-gold:hover{transform:translateY(-2px);color:#1a1200;}
         .btn-outline{background:transparent;border-color:var(--border);color:var(--text);}
         .btn-outline:hover{border-color:var(--primary);color:var(--text);}
-        .ss-cta{margin-top:50px;text-align:center;border-radius:24px;padding:40px 34px;background:radial-gradient(800px 300px at 50% 0%,rgba(255,215,0,0.12),transparent 60%),linear-gradient(180deg,rgba(26,26,46,0.95),rgba(10,10,15,0.95));border:1px solid rgba(255,215,0,0.22);}
+        .ss-cta{margin-top:50px;text-align:center;border-radius:24px;padding:40px 34px;background:radial-gradient(800px 300px at 50% 0%,rgba(185,133,5,0.12),transparent 60%),linear-gradient(180deg,#F6F9FC,#F4F7FA);border:1px solid rgba(185,133,5,.30);}
         .ss-cta h2{font-family:var(--font-display);font-weight:900;font-size:clamp(1.45rem,3.2vw,2rem);}
         .ss-cta h2 .gold{color:var(--accent-gold);}
         .ss-cta p{margin:13px auto 22px;max-width:620px;color:var(--text-dim);font-size:1.02rem;line-height:1.65;}
@@ -105,8 +105,9 @@
 </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
 <script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=bc3411da3d8b">
 </head>
-<body class="tmr-site-shell">
+<body class="tmr-site-shell tmr-light">
 <!-- TMR_STATS_HUB_20260604: documentation-style stat explainer. Sitewide nav + footer injected by tmr-sitewide.js?v=20260729navclean1 -->
 <main class="ss-wrap">
 
@@ -175,14 +176,14 @@
 </main>
 
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
-<section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
-  <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#e8e8f0;margin:0 0 14px;">More Stat Guides</h2>
+<section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#FFFFFF;border:1px solid #D2DEEA;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
+  <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#07182A;margin:0 0 14px;">More Stat Guides</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 18px;">
-    <a href="/sports-betting-glossary/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Sports betting glossary</a>
-    <a href="/stats/graded-picks/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Graded picks</a>
-    <a href="/stats/pick-diversity/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Pick diversity</a>
-    <a href="/stats/roi/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>ROI</a>
-    <a href="/leaderboards/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#ffd700;">&rsaquo;</span>Verified leaderboards</a>
+    <a href="/sports-betting-glossary/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Sports betting glossary</a>
+    <a href="/stats/graded-picks/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Graded picks</a>
+    <a href="/stats/pick-diversity/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Pick diversity</a>
+    <a href="/stats/roi/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>ROI</a>
+    <a href="/leaderboards/" style="color:#07736D;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#B98505;">&rsaquo;</span>Verified leaderboards</a>
   </div>
 </section>
 

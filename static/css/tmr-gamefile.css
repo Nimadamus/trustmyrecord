@@ -45,21 +45,21 @@
    ========================================================================== */
 
 body.tmr-ds .gf-doc {
-  --gf-bg:      #070A0E;
-  --gf-bg-2:    #0B0F15;
-  --gf-panel:   #0E141B;
-  --gf-panel-2: #121A23;
-  --gf-line:    rgba(255,255,255,.075);
-  --gf-line-2:  rgba(255,255,255,.15);
-  --gf-ink:     #F2F6FA;
-  --gf-ink-2:   #A7B4C2;
-  --gf-mut:     #6B7885;
-  --gf-acc:     #2FD8C4;
-  --gf-acc-dim: rgba(47,216,196,.10);
-  --gf-pos:     #46C98B;
-  --gf-neg:     #E0685F;
-  --gf-away:    #FF5910;   /* overridden per matchup by the generator */
-  --gf-home:    #CE1141;
+  --gf-bg:      #F4F7FA;
+  --gf-bg-2:    #FFFFFF;
+  --gf-panel:   #FFFFFF;
+  --gf-panel-2: #FFFFFF;
+  --gf-line:    #D2DEEA;
+  --gf-line-2:  #D2DEEA;
+  --gf-ink:     #07182A;
+  --gf-ink-2:   #2E4459;
+  --gf-mut:     #5E7590;
+  --gf-acc:     #0C948C;
+  --gf-acc-dim: rgba(12,148,140,0.1);
+  --gf-pos:     #0A8B4E;
+  --gf-neg:     #BC372E;
+  --gf-away:    #B98505;   /* overridden per matchup by the generator */
+  --gf-home:    #BC372E;
 
   --gf-display: 50px;
   --gf-h1: 30px;
@@ -89,15 +89,15 @@ body.tmr-ds .gf-hero {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(1100px 460px at 50% -12%, rgba(47,216,196,.09), transparent 62%),
+    radial-gradient(1100px 460px at 50% -12%, rgba(12,148,140,0.09), transparent 62%),
     url("/static/media/matchups/g1000-stadium.svg") center 62% / cover no-repeat,
-    linear-gradient(180deg, #0A1017 0%, #070A0E 100%);
+    linear-gradient(180deg, #FFFFFF 0%, #F4F7FA 100%);
   border-bottom: 1px solid var(--gf-line);
 }
 /* Field geometry: mowing lines, barely there. Depth without a photograph. */
 body.tmr-ds .gf-hero::before {
   content: ""; position: absolute; inset: auto 0 0 0; height: 62%;
-  background: repeating-linear-gradient(101deg, rgba(255,255,255,.02) 0 2px, transparent 2px 48px);
+  background: repeating-linear-gradient(101deg, rgba(7,24,42,0.02) 0 2px, transparent 2px 48px);
   -webkit-mask-image: linear-gradient(0deg, #000 0%, transparent 100%);
           mask-image: linear-gradient(0deg, #000 0%, transparent 100%);
   pointer-events: none;
@@ -105,7 +105,7 @@ body.tmr-ds .gf-hero::before {
 /* Stadium-light bloom above the fold line. */
 body.tmr-ds .gf-hero::after {
   content: ""; position: absolute; top: -150px; left: 8%; right: 8%; height: 320px;
-  background: radial-gradient(closest-side, rgba(255,255,255,.085), transparent 72%);
+  background: radial-gradient(closest-side, rgba(7,24,42,0.03), transparent 72%);
   filter: blur(26px); pointer-events: none;
 }
 body.tmr-ds .gf-hero-in { position: relative; z-index: 2; padding-top: 30px; padding-bottom: 26px; }
@@ -184,7 +184,7 @@ body.tmr-ds .gf-byline .gf-sep { color: var(--gf-line-2); }
 
 body.tmr-ds .gf-nav {
   position: sticky; top: 0; z-index: 6;
-  background: rgba(7,10,14,.93); backdrop-filter: blur(8px);
+  background: #F4F7FA; backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--gf-line);
 }
 body.tmr-ds .gf-nav ol {
@@ -213,7 +213,7 @@ body.tmr-ds .gf-sect[data-env="panel"] {
 body.tmr-ds .gf-sect[data-env="chart"] { background: var(--gf-bg); border-top: 1px solid var(--gf-line); }
 body.tmr-ds .gf-sect[data-env="close"] {
   background:
-    radial-gradient(700px 320px at 50% 0%, rgba(47,216,196,.07), transparent 65%),
+    radial-gradient(700px 320px at 50% 0%, rgba(12,148,140,0.08), transparent 65%),
     linear-gradient(180deg, var(--gf-panel) 0%, var(--gf-bg) 100%);
   border-top: 1px solid var(--gf-line-2);
 }
@@ -222,7 +222,7 @@ body.tmr-ds .gf-sect[data-mark]::before {
   content: attr(data-mark);
   position: absolute; right: 2%; top: 8px;
   font-family: var(--gf-cond); font-size: 190px; font-weight: 900; line-height: .8;
-  color: #fff; opacity: .016; letter-spacing: .02em; pointer-events: none; user-select: none;
+  color: #07182A; opacity: .016; letter-spacing: .02em; pointer-events: none; user-select: none;
 }
 
 body.tmr-ds .gf-sect-head { display: flex; align-items: baseline; gap: 14px; margin: 0 0 10px; flex-wrap: wrap; }
@@ -244,7 +244,7 @@ body.tmr-ds .gf-src {
   border: 1px solid var(--gf-line-2); color: var(--gf-mut); white-space: nowrap;
 }
 body.tmr-ds .gf-src[data-s="trendspotter"],
-body.tmr-ds .gf-src[data-s="betlegend-pro"] { color: var(--gf-acc); border-color: rgba(47,216,196,.4); }
+body.tmr-ds .gf-src[data-s="betlegend-pro"] { color: var(--gf-acc); border-color: rgba(12,148,140,.28); }
 
 /* ====================================================== TREND BOARD ===== */
 
@@ -368,7 +368,7 @@ body.tmr-ds .gf-bench-who { font-size: 13px; font-weight: 800; color: var(--gf-i
 body.tmr-ds .gf-bench-who small { display: block; font-size: 10.5px; font-weight: 600; color: var(--gf-mut); margin-top: 3px; }
 body.tmr-ds .gf-bench-track {
   position: relative; height: 32px; border-radius: 3px;
-  background: linear-gradient(90deg, rgba(255,255,255,.025), rgba(255,255,255,.05));
+  background: linear-gradient(90deg, rgba(7,24,42,0.02), rgba(7,24,42,0.02));
   border: 1px solid var(--gf-line);
 }
 body.tmr-ds .gf-bench-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 2px 0 0 2px; opacity: .3; }
@@ -406,7 +406,7 @@ body.tmr-ds .gf-form-seq i {
   font-size: 9.5px; font-weight: 900; font-style: normal; color: #05090D; background: var(--gf-line-2);
 }
 body.tmr-ds .gf-form-seq i[data-r="W"] { background: var(--gf-pos); }
-body.tmr-ds .gf-form-seq i[data-r="L"] { background: #2C3742; color: var(--gf-mut); }
+body.tmr-ds .gf-form-seq i[data-r="L"] { background: #E6EDF5; color: var(--gf-mut); }
 body.tmr-ds .gf-form-sum { font-size: 12px; font-weight: 800; color: var(--gf-ink); }
 
 /* ================================================ PITCHER SHOWDOWN ====== */
@@ -421,7 +421,7 @@ body.tmr-ds .gf-showcard[data-t="home"]::before { background: var(--gf-home); }
 body.tmr-ds .gf-showcard::after {
   content: attr(data-mono); position: absolute; right: -6px; bottom: -34px;
   font-family: var(--gf-cond); font-size: 148px; font-weight: 900; line-height: .8;
-  color: #fff; opacity: .035; pointer-events: none;
+  color: #07182A; opacity: .035; pointer-events: none;
 }
 body.tmr-ds .gf-showname { position: relative; font-size: 21px; font-weight: 800; color: var(--gf-ink); letter-spacing: -.01em; }
 body.tmr-ds .gf-showmeta {
