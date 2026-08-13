@@ -389,6 +389,41 @@ check('tap targets meet the 44px minimum and every module reserves height', () =
   assert.ok(/\.td-foot-note\{[^}]*min-height:/.test(html));
 });
 
+check('the finish is decorative only, and opt-out', () => {
+  // The ambient field, the specular edges and the logo bloom are presentation.
+  // If any of them ever reaches the accessibility tree, or motion escapes the
+  // reduced-motion guard, that is a regression and not a style choice.
+  assert.ok(/<div class="td-field" aria-hidden="true"><\/div>/.test(html),
+    'the ambient field must exist and be hidden from assistive tech');
+  const css = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
+  const guarded = css.slice(css.indexOf('@media (prefers-reduced-motion: no-preference)'));
+  ['tdRise', 'tdPulse', 'tdDrift', 'tdSheen', 'tdShimmer'].forEach((kf) => {
+    assert.ok(css.includes('@keyframes ' + kf), 'missing keyframes ' + kf);
+    assert.ok(guarded.includes('@keyframes ' + kf),
+      kf + ' is declared outside the reduced-motion guard');
+  });
+  assert.strictEqual((css.match(/animation:/g) || []).length,
+    (guarded.match(/animation:/g) || []).length,
+    'an animation is applied outside @media (prefers-reduced-motion: no-preference)');
+  const js = read('static/js/today-card.js');
+  const bloom = js.slice(js.indexOf('td-team-bloom'), js.indexOf('td-team-bloom') + 220);
+  assert.ok(/aria-hidden="true"/.test(bloom), 'the team colour bloom must be aria-hidden');
+  assert.ok(/alt=""/.test(bloom), 'the team colour bloom must have an empty alt');
+});
+
+check('the lock countdown ticks on the server clock, not the device clock', () => {
+  const js = read('static/js/today-card.js');
+  assert.ok(/performance\.now\(\)/.test(js), 'no monotonic source for elapsed time');
+  assert.ok(/function nowOnServerClock\(\)/.test(js), 'the countdown has no server-clock accessor');
+  assert.ok(/serverNow \+ \(m - serverNowAt\)/.test(js),
+    'elapsed time is not being added to the server reading');
+  // Only started where the quiz is genuinely answerable; everywhere else the
+  // strip is dismissed with NaN so it cannot count down to a shut deadline.
+  assert.ok(/startLockCountdown\(nextLock\)/.test(js), 'the open branch never starts the countdown');
+  assert.ok((js.match(/startLockCountdown\(NaN\)/g) || []).length >= 5,
+    'a non-open quiz branch is leaving the countdown running');
+});
+
 check('team marks come from the shared logo helper, not a second copy', () => {
   assert.ok(html.includes('/static/js/tmr-team-logo.js'), 'the shared logo helper is not loaded');
   const js = read('static/js/today-card.js');

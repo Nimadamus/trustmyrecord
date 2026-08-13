@@ -302,8 +302,30 @@
     var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
     var TIMEOUT_MS = 9000;
     var serverNow = null;   // ms, from a server response body. Never Date.now().
+    var serverNowAt = null; // monotonic reading taken at the same instant.
     var health = null;
     var TL = window.TMRTeamLogo || null;
+
+    /**
+     * The current instant, still on the SERVER's clock.
+     *
+     * serverNow is a single reading and goes stale the moment it lands, which is
+     * fine for "is it the same ET day" but not for a ticking countdown. Elapsed
+     * time since that reading comes from performance.now(), which is monotonic
+     * and - unlike Date.now() - cannot be wrong because the device's wall clock
+     * is wrong, cannot jump when the OS syncs time, and never reintroduces the
+     * browser clock this file exists to avoid. No performance API, no tick.
+     */
+    function monotonic() {
+      return (typeof performance !== 'undefined' && performance && typeof performance.now === 'function')
+        ? performance.now() : null;
+    }
+    function nowOnServerClock() {
+      if (serverNow === null) return null;
+      var m = monotonic();
+      if (m === null || serverNowAt === null) return serverNow;
+      return serverNow + (m - serverNowAt);
+    }
 
     // What the hero sentence is allowed to say, filled in as modules resolve.
     var summary = { name: null, questions: null, points: null, games: null };
@@ -362,7 +384,7 @@
       return get('/api/health', false).then(function (h) {
         health = h;
         var t = h && h.timestamp ? Date.parse(h.timestamp) : NaN;
-        if (!isNaN(t)) serverNow = t;
+        if (!isNaN(t)) { serverNow = t; serverNowAt = monotonic(); }
       }).catch(function () { /* serverNow stays null: we decline to guess */ });
     }
 
@@ -459,6 +481,38 @@
         : lead + ' &mdash; your quiz, your trivia, your teams and today&rsquo;s board.';
     }
 
+    /**
+     * The live countdown to the next question lock.
+     *
+     * Only started for a quiz that is actually open — counting down to a
+     * deadline on something already shut would be theatre. It stops itself at
+     * zero and says so rather than rolling into negatives, and it is the only
+     * animated thing on the page that carries a number.
+     */
+    var lockTimer = null;
+    function startLockCountdown(targetMs) {
+      if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
+      var strip = el('tdLockStrip');
+      if (!strip) return;
+      if (isNaN(targetMs) || nowOnServerClock() === null || monotonic() === null) { strip.hidden = true; return; }
+
+      function pad(n) { return (n < 10 ? '0' : '') + n; }
+      function tick() {
+        var left = targetMs - nowOnServerClock();
+        if (left <= 0) {
+          setText('tdLockVal', 'Locked');
+          if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
+          return;
+        }
+        var s = Math.floor(left / 1000);
+        var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+        setText('tdLockVal', h > 0 ? (h + ':' + pad(m) + ':' + pad(sec)) : (m + ':' + pad(sec)));
+      }
+      strip.hidden = false;
+      tick();
+      lockTimer = setInterval(tick, 1000);
+    }
+
     /* ------------------------------------------ module 1: today's quiz ---- */
 
     function renderQuizQuestions(questions, nowMs) {
@@ -504,6 +558,11 @@
 
         var bar = el('tdPollBar');
         if (bar && total) bar.style.width = Math.round((answered / total) * 100) + '%';
+        // The travelling highlight describes progress. With nothing answered
+        // there is no progress to describe and it would read as a spinner.
+        if (bar && bar.parentNode) {
+          bar.parentNode.classList.toggle('has-progress', !!(total && answered > 0));
+        }
         setText('tdPollBarCap', total
           ? answered + ' of ' + total + ' answered'
           : 'No questions posted yet');
@@ -513,6 +572,7 @@
         renderSummary();
 
         if (res.state === 'unavailable') {
+          startLockCountdown(NaN);
           setChip('tdPollChip', 'Not posted yet', 'warn');
           setText('tdPollNote', 'Today’s quiz has not been posted yet.');
           setCta('tdPollCta', 'See recent quizzes', '/polls/history/', true);
@@ -528,6 +588,7 @@
         return qs.then(function (questions) {
           renderQuizQuestions(questions, serverNow);
           if (res.state === 'completed') {
+            startLockCountdown(NaN);
             markDone('tdModPoll');
             setChip('tdPollChip', 'Answered', 'done');
             setText('tdPollNote', 'Results post after the games. ' +
@@ -537,12 +598,14 @@
           }
           if (res.state === 'closed') {
             // The backend would reject a play here, so do not offer one.
+            startLockCountdown(NaN);
             setChip('tdPollChip', 'Closed', 'shut');
             setText('tdPollNote', 'Closed for today — results post after the games.');
             setCta('tdPollCta', 'See the standings', '/polls/', true);
             return;
           }
           if (res.state === 'unknown_time') {
+            startLockCountdown(NaN);
             setChip('tdPollChip', 'Open the quiz', '');
             setText('tdPollNote', 'Open the quiz to check today’s deadline.');
             setCta('tdPollCta', 'Open the quiz', '/polls/');
@@ -551,11 +614,13 @@
           // Mixed state: say exactly how much is still answerable, so nobody
           // opens the quiz expecting ten questions and finds four.
           if (res.open && res.total && res.open < res.total) {
+            startLockCountdown(nextLock);
             setChip('tdPollChip', res.open + ' of ' + res.total + ' questions still open', 'live');
             setText('tdPollNote', res.open + ' of ' + res.total + ' questions still open — the rest have locked.');
             setCta('tdPollCta', 'Answer what’s open', '/polls/');
             return;
           }
+          startLockCountdown(nextLock);
           setChip('tdPollChip', 'Open now', 'live');
           setText('tdPollNote', f.total_players
             ? f.total_players + ' player' + (f.total_players === 1 ? '' : 's') + ' in so far today.'
@@ -563,6 +628,7 @@
           setCta('tdPollCta', 'Answer today’s quiz', '/polls/');
         });
       }).catch(function () {
+        startLockCountdown(NaN);
         setChip('tdPollChip', 'Unavailable', 'warn');
         setText('tdPollBarCap', 'Today’s quiz could not be loaded.');
         setText('tdPollNote', 'Open the quiz to see today’s questions.');
@@ -693,7 +759,14 @@
             '</div>';
         }
       }
-      return '<div class="td-team' + (isToday ? ' is-today' : '') + '">' +
+      // The club's own colour, taken from its own logo: a blurred copy behind
+      // the tile. Decorative and aria-hidden; if the logo will not resolve the
+      // tile simply has no bloom.
+      var bloomUrl = (TL && typeof TL.url === 'function') ? TL.url(team) : null;
+      var bloom = bloomUrl
+        ? '<img class="td-team-bloom" src="' + esc(bloomUrl) + '" alt="" aria-hidden="true" loading="eager">'
+        : '';
+      return '<div class="td-team' + (isToday ? ' is-today' : '') + '">' + bloom +
         logoMark(team, 'td-tl') +
         '<div class="td-team-b">' + name + body + '</div>' +
         '</div>';
@@ -741,26 +814,30 @@
       var lg = leagueOf(g.home_team) || leagueOf(g.away_team);
       var awayMl = moneyline(g, g.away_team);
       var homeMl = moneyline(g, g.home_team);
-      var odds;
-      if (awayMl || homeMl) {
-        var an = parseInt(String(awayMl).replace('+', ''), 10);
-        var hn = parseInt(String(homeMl).replace('+', ''), 10);
-        odds = '<span class="td-g-ml' + (isFinite(an) && isFinite(hn) && an < hn ? ' fav' : '') + '">' + esc(awayMl || '—') + '</span>' +
-               '<span class="td-g-ml' + (isFinite(an) && isFinite(hn) && hn < an ? ' fav' : '') + '">' + esc(homeMl || '—') + '</span>';
-      } else {
-        odds = '<span class="td-g-ml pending">Lines pending</span>';
+
+      // Which side is favoured is read off the two posted prices, never
+      // computed: lower number = shorter price. With one side missing, or
+      // neither posted, nothing is highlighted.
+      var an = awayMl === null ? NaN : parseInt(String(awayMl).replace('+', ''), 10);
+      var hn = homeMl === null ? NaN : parseInt(String(homeMl).replace('+', ''), 10);
+      var bothPriced = isFinite(an) && isFinite(hn);
+
+      function side(team, ml, isFav) {
+        var price = ml
+          ? '<span class="td-g-ml' + (isFav ? ' fav' : '') + '">' + esc(ml) + '</span>'
+          : '<span class="td-g-ml pending">Pending</span>';
+        return '<span class="td-g-row">' + logoMark(team, 'td-mu-l') +
+          '<span class="td-g-name">' + esc(shortTeam(team)) + '</span>' + price + '</span>';
       }
+
+      // Away above home, the order every scoreboard uses.
       return '<a class="td-game" href="/sportsbook/" data-action="board_game">' +
         '<span class="td-g-when">' + esc(etTime(ms)) +
           (lg ? '<em>' + esc(lg.toUpperCase()) + '</em>' : '') + '</span>' +
-        '<span class="td-g-teams">' +
-          '<span class="td-g-side">' + logoMark(g.away_team, 'td-mu-l') +
-            '<span class="td-g-name">' + esc(shortTeam(g.away_team)) + '</span></span>' +
-          '<span class="td-g-at">AT</span>' +
-          '<span class="td-g-side">' + logoMark(g.home_team, 'td-mu-l') +
-            '<span class="td-g-name">' + esc(shortTeam(g.home_team)) + '</span></span>' +
+        '<span class="td-g-sides">' +
+          side(g.away_team, awayMl, bothPriced && an < hn) +
+          side(g.home_team, homeMl, bothPriced && hn < an) +
         '</span>' +
-        '<span class="td-g-odds">' + odds + '</span>' +
       '</a>';
     }
 
