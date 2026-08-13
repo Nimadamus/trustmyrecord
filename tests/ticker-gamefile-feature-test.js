@@ -160,7 +160,7 @@ function measure(page) {
       if (which && /matchup-of-the-day/.test(which.href || '')) ok("game_pk map: links to that game's article");
       else bad('game_pk map: wrong href ' + (which && which.href));
 
-      if (which && which.badge === 'VIEW BREAKDOWN') ok('game_pk map: badge reads VIEW BREAKDOWN');
+      if (which && which.badge === 'TMR PREVIEW') ok('game_pk map: badge reads TMR PREVIEW');
       else bad('game_pk map: badge reads ' + (which && which.badge));
     }
 
@@ -198,7 +198,7 @@ function measure(page) {
       if (count.marked === 1) ok('two eligible games: exactly one card is marked');
       else bad('two eligible games: ' + count.marked + ' cards marked, expected 1');
 
-      if (count.badges === 1) ok('two eligible games: exactly one VIEW BREAKDOWN badge');
+      if (count.badges === 1) ok('two eligible games: exactly one TMR PREVIEW badge');
       else bad('two eligible games: ' + count.badges + ' badges, expected 1');
 
       if (count.first === '222') ok('two eligible games: the first in the list wins');
@@ -225,7 +225,7 @@ function measure(page) {
     else bad('published: no badge on the featured card');
 
     /* The accessible name has to describe the DESTINATION and stay in step with
-       the visible badge, which now reads "VIEW BREAKDOWN" — pinning the old
+       the visible badge, which now reads "TMR PREVIEW" — pinning the old
        product name here would mean a screen reader and the badge saying two
        different things about the same link. */
     if (on.aria && /breakdown/i.test(on.aria) && /analysis/i.test(on.aria)) {
