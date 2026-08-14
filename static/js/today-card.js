@@ -951,7 +951,7 @@
           setHTML('tdNewestAvf', esc(String(nm.display_name || nm.username).charAt(0).toUpperCase()));
           var name = el('tdNewestName');
           if (name) {
-            name.innerHTML = '<a href="' + esc(nm.profile_url || ('/u/' + nm.username + '/')) + '" data-action="newest_member">' +
+            name.innerHTML = '<a href="' + esc(nm.profile_url || ('/u/' + encodeURIComponent(nm.username) + '/')) + '" data-action="newest_member">' +
               esc(nm.display_name || nm.username) + '</a>';
           }
         }
