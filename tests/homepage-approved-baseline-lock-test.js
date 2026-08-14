@@ -40,7 +40,7 @@ const REQUIRED = [
   'min-height:calc(100vh - var(--header-height));',
   'min-height:calc(100dvh - var(--header-height));',
   'min-height:calc(100svh - var(--header-height));',
-  '.hero-in{position:relative;z-index:3;flex:1}',
+  '.hero-in{position:relative;z-index:3;flex:1;display:flex;align-items:center}',
   // runtime correction: nav is injected by tmr-ds-nav.js at runtime, so the
   // static 113px fallback above must be replaced with the actual measured
   // value once nav+ticker have rendered
