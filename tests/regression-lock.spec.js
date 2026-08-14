@@ -394,15 +394,15 @@ test.describe('homepage approved-baseline geometry', () => {
 
       expect(m.missing, 'hero, hero-grid, stats stripe and next section must all exist').toBeFalsy();
 
-      // --- approved design invariants -----------------------------------------
-      // RESTORED 2026-08-14 (Nima): content-height hero. The viewport-flush
-      // flex-column hero (and its "next section must be below the fold" rule)
-      // was rejected — the hero must NOT fill the screen on short desktop
-      // viewports, and "Happening Right Now" being visible near the fold is
-      // the approved behavior again.
-      expect(m.heroDisplay, 'hero is a normal block again — the flex-column viewport-flush shell was rejected').toBe('block');
+      // --- approved design invariants (unchanged) ---------------------------
+      // Owner-confirmed 2026-08-14: the full-viewport composition IS the
+      // desired homepage — nav + ticker + hero fill the screen, the stats
+      // stripe begins at the viewport's bottom edge, and "Happening Right
+      // Now" stays below the fold until the user scrolls.
+      expect(m.heroDisplay, 'hero must be a flex column so the stripe can be pushed to its bottom edge').toBe('flex');
       expect(m.heroPadding, 'hero padding must stay 28px 0 0 (bottom 0 = stripe flush)').toBe('28px 0px 0px');
       expect(Math.abs(m.gapBelowStripe), 'stats stripe must sit flush on the hero bottom edge').toBeLessThanOrEqual(1);
+      expect(m.dashTopVsViewport, `"Happening Right Now" must not be visible in the initial viewport at ${width}x${height}`).toBeGreaterThanOrEqual(-1);
       // full-width flush stripe (owner-requested 2026-08-01): no side margins, no rounded corners
       expect(Math.abs(m.stripeLeftMargin), 'stripe must span the full viewport width (no left margin)').toBeLessThanOrEqual(1);
       expect(Math.abs(m.stripeRightMargin), 'stripe must span the full viewport width (no right margin)').toBeLessThanOrEqual(1);
