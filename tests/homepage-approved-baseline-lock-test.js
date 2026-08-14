@@ -33,14 +33,12 @@ const REQUIRED = [
   // the old number laid the hero out 52px too tall until JS corrected it,
   // which dropped the stats stripe and everything under it into place.
   '--header-height:165px;',
-  // hero shell is a flex column filling the viewport below the injected nav,
-  // so .bridge (margin-top:auto below) always lands flush on the hero's
-  // bottom edge regardless of viewport height or content height
-  '.hero{position:relative;overflow:hidden;padding:28px 0 0;display:flex;flex-direction:column;',
-  'min-height:calc(100vh - var(--header-height));',
-  'min-height:calc(100dvh - var(--header-height));',
-  'min-height:calc(100svh - var(--header-height));',
-  '.hero-in{position:relative;z-index:3;flex:1}',
+  // RESTORED 2026-08-14 (Nima): content-height hero shell. The Jul 31
+  // viewport-flush experiment (flex column, min-height:100vh - header,
+  // stripe pinned with margin-top:auto) was rejected: it blew the hero up
+  // to fill the whole screen on ~900px-tall desktops.
+  '.hero{position:relative;overflow:hidden;padding:28px 0 0;',
+  '.hero-in{position:relative;z-index:3}',
   // runtime correction: nav is injected by tmr-ds-nav.js at runtime, so the
   // static 113px fallback above must be replaced with the actual measured
   // value once nav+ticker have rendered
@@ -75,10 +73,10 @@ const REQUIRED = [
   '.sparkwrap .lb{display:flex;justify-content:space-between;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}',
   '.spark{display:flex;align-items:flex-end;gap:4px;height:50px}',
   '.spot .ft{padding:15px 24px;',
-  // white stats stripe (bridge) — pushed to the hero's bottom edge by
-  // margin-top:auto inside the flex column (NOT a fixed offset); full-width,
-  // no side margins, no rounded card (owner-requested 2026-08-01)
-  '.bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0;width:100%}',
+  // white stats stripe (bridge) — fixed 44px offset below the hero content
+  // (RESTORED 2026-08-14; the viewport pin was rejected with the flush hero);
+  // still full-width, no side margins, no rounded card (owner, 2026-08-01)
+  '.bridge{position:relative;z-index:20;margin-top:44px}',
   '.bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 28px}',
   '<div class="bridge"',
   '<div class="bridge-in"',
@@ -95,7 +93,9 @@ const FORBIDDEN = [
   ['grid-template-columns:minmax(0,1fr) 450px', 'rejected shrunk capper-card column'],
   ['grid-template-columns:minmax(0,1fr) 400px', 'rejected shrunk capper-card column (1400px band)'],
   ['gap:72px;align-items:start', 'rejected hero-grid align-start'],
-  ['margin-top:44px', 'old fixed-offset stripe positioning (content-height dependent, not viewport-flush)'],
+  // the 'margin-top:44px is forbidden' entry added with the Jul 31
+  // viewport-flush hero was REMOVED 2026-08-14: Nima rejected the flush hero
+  // and the fixed 44px stripe offset is the approved positioning again.
   ['position:fixed', 'stripe/hero must scroll naturally, never position:fixed'],
   ['<div class="wrap bridge"', 'rejected wrap-constrained bridge stripe (large side margins) — must be full-width, replaced 2026-08-01'],
   ['border-radius:12px;box-shadow:0 1px 2px rgba(3,10,20,.16), 0 14px 34px rgba(3,10,20,.24);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;overflow:hidden}', 'rejected rounded-card bridge-in (replaced by full-width flush stripe 2026-08-01)'],
