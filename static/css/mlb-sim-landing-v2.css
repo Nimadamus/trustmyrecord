@@ -47,6 +47,15 @@ body.mlb-simulator-page nav.tmrlh-crumbs span {
     font-weight: 600 !important;
 }
 body.mlb-simulator-page nav.tmrlh-crumbs img { display: none !important; }
+/* The flattening above strips the home crumb's gold pill background, but
+   linkhub's own pill INK (#1a1204, specificity 0,3,1) still outranked the
+   muted color rule — near-black text on the navy page. Match the pill's
+   selector weight so the home link reads in the same muted ink as the rest
+   of the flattened trail. */
+body.mlb-simulator-page nav.tmrlh-crumbs a.tmrlh-home.tmrlh-a,
+body.mlb-simulator-page nav.tmrlh-crumbs a.tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark) {
+    color: var(--sv2-mut) !important;
+}
 body.mlb-simulator-page .sim-shell {
     max-width: 1200px;
     margin: 0 auto;
