@@ -549,7 +549,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260811-conddisabled';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260814-answerfirst';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -1792,7 +1792,7 @@
         var rec = function (t) { return esc(t.wins + '-' + t.losses + (m.ties ? '-' + m.ties : '')); };
         var sc = m.scoring, mk = m.market || null, st = m.streaks;
 
-        var result = '<section class="rcard">'
+        var result = '<section class="rcard is-answer">'
             + '<div class="rcard-head"><h3>Head-to-head result</h3>'
             + '<span class="range">' + fmtInt(m.qualifying_games) + ' qualifying meetings</span></div>'
             + '<div class="kpis">'
@@ -2027,7 +2027,9 @@
                 + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
                 + '</div>' + thinNote(h2h) + '</section>' : '';
 
-        return head + matchupSummary(d) + meetingsTable(d) + h2hBlock
+        // Answer first: the result card leads, the methodology card (what was
+        // searched, how the sample narrowed, coverage) follows as evidence.
+        return matchupSummary(d) + head + meetingsTable(d) + h2hBlock
             + '<p class="method">Every record, average and percentage above is the plain arithmetic of the '
             + 'qualifying meetings, computed from BetLegend Pro’s graded-game database. Every game listed '
             + 'is a meeting between these two teams; games against any other opponent are never included. '

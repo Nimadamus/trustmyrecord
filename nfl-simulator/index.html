@@ -237,19 +237,13 @@
      after a simulator-sourced signup. Read-only observer. Kill switch:
      window.TMR_FUNNEL_FLAGS = { enabled: false }. -->
 <script defer src="/static/js/tmr-activation-funnel.js?v=1e4bb9d262f6"></script>
+<!-- SHELL MIGRATION 2026-08-14: design system in SHELL-ONLY mode. The page keeps
+     its own dark tool styling (hybrid surface model); only the chrome — nav and
+     footer — comes from the shared system, replacing the page-local text-link
+     header that matched nothing else on the site. -->
+<link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
 </head>
-<body>
-<header class="top"><div class="top-in">
-  <a class="brand" href="https://trustmyrecord.com/" style="color:inherit"><span class="lg">TR</span> TrustMyRecord</a>
-  <nav style="margin-left:auto;display:flex;gap:16px;flex-wrap:wrap;font-size:.84rem;font-weight:600">
-    <a href="https://trustmyrecord.com/sportsbook/">Sportsbook</a>
-    <a href="https://trustmyrecord.com/handicappers/">Handicappers</a>
-    <a href="https://trustmyrecord.com/leaderboards/">Leaderboard</a>
-    <a href="https://trustmyrecord.com/tools/">Tools</a>
-    <a href="https://trustmyrecord.com/mlb-simulator/">MLB Sim</a>
-    <a href="/nfl-simulator/" aria-current="page" style="color:var(--ink)">NFL Sim</a>
-  </nav>
-</div></header>
+<body class="tmr-ds-shell tmr-ds--dark">
 
 <main class="wrap">
   <section class="hero">
@@ -1221,5 +1215,6 @@ async function simHandleSavedId(hadResume){
    auto-resume never fires against empty selectors. */
 boot().then(installSimGate,installSimGate);
 </script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.fccb86554571.js"></script>
 </body>
 </html>
