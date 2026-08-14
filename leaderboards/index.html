@@ -1180,7 +1180,10 @@
             const losses = num(entry.losses);
             const pushes = num(entry.pushes);
             const totalPicks = num(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
-            const roi = pct(entry.roi);
+            // The API returns roi already in percent (e.g. 0.59 means 0.59%).
+            // pct()'s 0..1 fraction heuristic turned 0.59% into 59.0% on the
+            // rendered board while the baked rows showed the true value.
+            const roi = num(entry.roi);
             const units = num(entry.net_units != null ? entry.net_units : entry.units);
             let winRate = pct(entry.win_percentage != null ? entry.win_percentage
                             : entry.winRate != null ? entry.winRate
