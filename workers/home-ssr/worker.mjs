@@ -286,6 +286,22 @@ function tickerHtml(games) {
   }).join('');
 }
 
+/* The NFL row - a byte-for-byte port of the client's nfl_games loop, same
+   lockstep rule as tickerHtml above. No data-game-pk: the MLB preview
+   treatment must never attach to a football card. */
+function nflTickerHtml(games) {
+  return (games || []).map((g) => (
+    '<a class="gm gm--nfl" data-sport="nfl"' +
+    ` href="${esc(g.href || '/sportsbook/')}">` +
+    '<span class="gm-top">' +
+      `<span class="t">${logoImg(g.away_logo)}${esc(g.away)}</span>` +
+      `<span class="t">${logoImg(g.home_logo)}${esc(g.home)}</span>` +
+      statusChip(g) +
+    '</span>' +
+    '</a>'
+  )).join('');
+}
+
 /* The slate is Pacific-dated. A payload that raced across the rollover — or one
    the edge cached just before it — must not be baked into the document. */
 function slateIsToday(slate) {
@@ -442,7 +458,7 @@ function buildRewriter(data, slate) {
       'aria-busy': 'false',
     }));
     rw.on('.ticker .ticker-games', new HtmlCell(
-      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games)}</div></div>`
+      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games)}${nflTickerHtml(slate.nfl_games)}</div></div>`
     ));
   }
 

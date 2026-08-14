@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '4fa00d754edc';
+  var BUILD = '610793a676ad';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -429,6 +429,22 @@
       }
       html += '</a>';
     });
+
+    /* The NFL row (Nima, 2026-08-14): the strip carries both sports, one row at
+       a time. NFL cards live in their own page(s) - layoutTicker never mixes
+       sports in a group - and carry the weekday in the chip because most NFL
+       games are not today's. No data-game-pk: the MLB preview treatment can
+       never attach to them. */
+    (payload.nfl_games || []).forEach(function (g) {
+      html += '<a class="gm gm--nfl" data-sport="nfl"' +
+        ' href="' + esc(g.href || '/sportsbook/') + '">' +
+        '<span class="gm-top">' +
+          '<span class="t">' + logoImg(g.away_logo) + esc(g.away) + '</span>' +
+          '<span class="t">' + logoImg(g.home_logo) + esc(g.home) + '</span>' +
+          statusChip(g) +
+        '</span>' +
+      '</a>';
+    });
     /* Render every card into one measuring row inside the track, then split into
        width-fitted groups. Cards are never dropped, duplicated or reordered here. */
     lane.innerHTML = '<div class="ticker-track"><div class="ticker-page">' + html + '</div></div>';
@@ -481,10 +497,14 @@
       pages = [cards.slice()];                 // hidden/unmeasurable: one group, no clipping
     } else {
       var cur = [], used = 0;
+      var sportOf = function (c) { return c.getAttribute('data-sport') || 'mlb'; };
       cards.forEach(function (c) {
         var w = c.offsetWidth;
         var add = w + (cur.length ? GAP : 0);
-        if (cur.length && used + add > vw) { pages.push(cur); cur = []; used = 0; add = w; }
+        /* A sport never shares a row: the NFL cards start their own page even
+           when the MLB one has width to spare. */
+        var breakHere = cur.length && sportOf(cur[cur.length - 1]) !== sportOf(c);
+        if (cur.length && (breakHere || used + add > vw)) { pages.push(cur); cur = []; used = 0; add = w; }
         cur.push(c); used += add;
       });
       if (cur.length) pages.push(cur);
@@ -509,6 +529,18 @@
     var lane = el('.ticker .ticker-games'); if (!lane) return;
     var track = lane.querySelector('.ticker-track'); if (!track) return;
     track.style.transform = 'translateX(-' + (tkPageIndex * 100) + '%)';
+    /* The lane label names the visible row: "Today" for the MLB slate, "NFL"
+       for the football row (those games are mostly later in the week, so
+       calling them Today would be wrong). Text node only - the dot and the
+       label's layout are untouched. */
+    var lbl = el('.ticker .tlbl');
+    var pg = track.children[tkPageIndex];
+    var first = pg && pg.querySelector ? pg.querySelector('.gm') : null;
+    if (lbl && first) {
+      var want = first.getAttribute('data-sport') === 'nfl' ? 'NFL' : 'Today';
+      var tn = lbl.lastChild;
+      if (tn && tn.nodeType === 3 && tn.nodeValue !== want) tn.nodeValue = want;
+    }
   }
 
   function goTicker(delta) {
