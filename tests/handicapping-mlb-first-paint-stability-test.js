@@ -37,9 +37,15 @@ async function test(name, fn) {
 
 /* ---------- fixtures ---------- */
 const iso = (h) => {
-  const d = new Date();
-  d.setUTCHours(h, 0, 0, 0);
-  return d.toISOString();
+  // Anchor to today's EASTERN date, not the UTC one: handicapping-mlb.js keeps
+  // only games on today's ET slate, and between 00:00 and 04:00 UTC those two
+  // dates differ - fixtures built on the UTC date fell off the board and every
+  // card assertion failed with "expected 3 cards, got 0" (first hit: the
+  // 2026-08-14T02:18Z CI run). 17-19 UTC is 13-15 ET, same ET day year-round.
+  const et = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+  return `${et}T${String(h).padStart(2, '0')}:00:00.000Z`;
 };
 
 const GAMES = [
