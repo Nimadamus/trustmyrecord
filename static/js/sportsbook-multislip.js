@@ -391,8 +391,22 @@
         html += '</div>';
 
         if (successMsg) {
-            html += '<div class="tmr-ms-success" role="status">' + successMsg.count + ' pick' + (successMsg.count === 1 ? '' : 's') +
-                ' submitted successfully. <a href="/my-pending-picks/">View pending picks</a></div>';
+            // Locking a pick is the platform's central transaction: confirm it
+            // with the pick's own details, not a one-line toast.
+            html += '<div class="tmr-ms-success tmr-ms-locked" role="status">';
+            html += '<div class="tmr-ms-locked-head"><span class="tmr-ms-locked-check" aria-hidden="true">&#10003;</span> ' +
+                (successMsg.count === 1 ? 'PICK LOCKED' : successMsg.count + ' PICKS LOCKED') + '</div>';
+            (successMsg.picks || []).forEach(function (p) {
+                html += '<div class="tmr-ms-locked-pick">' +
+                    '<div class="tmr-ms-locked-sel">' + esc(p.sel) + '</div>' +
+                    '<div class="tmr-ms-locked-meta">' + esc(p.market) + ' &middot; ' + esc(p.odds) +
+                    ' &middot; ' + esc(fmtUnits(p.units)) + ' unit' + (p.units === 1 ? '' : 's') + '</div>' +
+                    (p.matchup ? '<div class="tmr-ms-locked-match">' + esc(p.matchup) + '</div>' : '') +
+                    '</div>';
+            });
+            html += '<div class="tmr-ms-locked-time">On your public record as of ' + esc(successMsg.at || '') + '</div>';
+            html += '<a class="tmr-ms-locked-cta" href="/my-pending-picks/">View Pending Picks &rarr;</a>';
+            html += '</div>';
         }
 
         if (!n) {
@@ -755,6 +769,7 @@
         successMsg = null;
         var I = internals();
         var okCount = 0;
+        var lockedInfo = [];
         var authFailed = false;
 
         var chain = Promise.resolve();
@@ -792,6 +807,13 @@
                     } else {
                         e.state = 'done';
                         okCount++;
+                        lockedInfo.push({
+                            sel: e.opt.selection_label || e.opt.selection,
+                            matchup: (e.opt.away_team && e.opt.home_team) ? e.opt.away_team + ' @ ' + e.opt.home_team : '',
+                            market: marketLabel(e.opt.market_type),
+                            odds: fmtOdds(e.opt.odds),
+                            units: e.units
+                        });
                         try { window.dispatchEvent(new CustomEvent('tmr:pickLocked', { detail: { pick: response.pick } })); } catch (_) {}
                         track('sportsbook_pick_created', { multislip: 1, market_type: payload.market_type, sport: payload.sport_key });
                     }
@@ -824,7 +846,11 @@
             done.forEach(unhighlight);
             entries = entries.filter(function (e) { return e.state !== 'done' && e.state !== 'dup'; });
             if (okCount > 0) {
-                successMsg = { count: okCount };
+                var lockedAt = '';
+                try {
+                    lockedAt = new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+                } catch (_) {}
+                successMsg = { count: okCount, picks: lockedInfo, at: lockedAt };
                 if (I && I.refreshAfterSubmit) {
                     Promise.resolve(I.refreshAfterSubmit()).catch(function () {});
                 }
