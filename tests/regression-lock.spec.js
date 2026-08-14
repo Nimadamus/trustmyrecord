@@ -394,11 +394,15 @@ test.describe('homepage approved-baseline geometry', () => {
 
       expect(m.missing, 'hero, hero-grid, stats stripe and next section must all exist').toBeFalsy();
 
-      // --- approved design invariants (unchanged) ---------------------------
-      expect(m.heroDisplay, 'hero must be a flex column so the stripe can be pushed to its bottom edge').toBe('flex');
+      // --- approved design invariants -----------------------------------------
+      // RESTORED 2026-08-14 (Nima): content-height hero. The viewport-flush
+      // flex-column hero (and its "next section must be below the fold" rule)
+      // was rejected — the hero must NOT fill the screen on short desktop
+      // viewports, and "Happening Right Now" being visible near the fold is
+      // the approved behavior again.
+      expect(m.heroDisplay, 'hero is a normal block again — the flex-column viewport-flush shell was rejected').toBe('block');
       expect(m.heroPadding, 'hero padding must stay 28px 0 0 (bottom 0 = stripe flush)').toBe('28px 0px 0px');
       expect(Math.abs(m.gapBelowStripe), 'stats stripe must sit flush on the hero bottom edge').toBeLessThanOrEqual(1);
-      expect(m.dashTopVsViewport, `"Happening Right Now" must not be visible in the initial viewport at ${width}x${height}`).toBeGreaterThanOrEqual(-1);
       // full-width flush stripe (owner-requested 2026-08-01): no side margins, no rounded corners
       expect(Math.abs(m.stripeLeftMargin), 'stripe must span the full viewport width (no left margin)').toBeLessThanOrEqual(1);
       expect(Math.abs(m.stripeRightMargin), 'stripe must span the full viewport width (no right margin)').toBeLessThanOrEqual(1);
@@ -501,7 +505,13 @@ test.describe('core route and content locks', () => {
     await expect(page.locator('body')).not.toContainText(/Login required|Checking access/i);
     await expect(page.locator('h1')).toContainText(/Model Builder/i);
     await expect(page.locator('body')).toContainText(/verified/i);
-    // Saving/tracking still routes through login.
+    // Saving/tracking still routes through login. Since the DS shell
+    // migration (2026-08-14) the login link lives in the shared nav; on the
+    // mobile project it sits behind the nav toggle, so open it first.
+    const loginLink = page.locator('a[href*="/login/"]').first();
+    if (!(await loginLink.isVisible().catch(() => false))) {
+      await page.locator('.ds-nav-toggle').first().click();
+    }
     await expect(page.locator('a[href*="/login/"]').first()).toBeVisible();
   });
 });
