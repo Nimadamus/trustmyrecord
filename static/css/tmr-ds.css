@@ -76,6 +76,10 @@ body.tmr-ds,body.tmr-ds-shell{
 
   /* layout scale (approved homepage) */
   --wrap:1720px; --gutter:28px; --nav-h:70px; --gap:20px;
+  /* spacing scale (2026-08-14) — the only sanctioned gaps/padding steps for new
+     DS work. Do not invent in-between values; pick the nearest step. */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:64px;
   /* extra inset added on top of --gutter, nav row only: more breathing room
      before the logo and after the account cluster than the shared content gutter */
   --nav-edge:26px;
@@ -927,6 +931,14 @@ body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.p{
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.p:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.d{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.32)}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.d:hover{background:rgba(255,255,255,.2);border-color:#fff}
+/* Role set completed 2026-08-14: base = secondary, .p = primary, .d = on-dark,
+   .ghost = borderless low-emphasis, .danger = destructive (confirm/delete only).
+   No further button families — a new visual style is a design decision. */
+body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.ghost{background:transparent;border-color:transparent}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.ghost:hover{background:var(--panel-2);border-color:transparent;color:var(--brand-dk)}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.danger{background:var(--red);color:#fff;border-color:transparent}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.danger:hover{filter:brightness(.94);color:#fff}
+body:is(.tmr-ds,.tmr-ds-shell).tmr-ds--dark .ds-btn.danger{background:var(--red-soft);color:var(--red);border-color:var(--red)}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.sm{height:38px;padding:0 16px;font-size:14.5px}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.lg{height:54px;padding:0 32px;font-size:17px}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.xs{height:30px;padding:0 12px;font-size:13px;border-width:1px}
