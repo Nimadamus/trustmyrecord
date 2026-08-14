@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = 'aed01b3eb326';
+  var BUILD = '4fa00d754edc';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -377,9 +377,9 @@
        exactly where they were. */
     var badge = document.createElement('span');
     badge.className = 'gm-gf';
-    /* "TMR PREVIEW" — Nima's chosen label (2026-08-13) now that the card is the
-       only entry point: it names what this game has that the others do not. */
-    badge.textContent = 'TMR PREVIEW';
+    /* "PREVIEW" — Nima's label (2026-08-13): short and understated, so the
+       badge fits the card's top slack without ever touching the matchup info. */
+    badge.textContent = 'PREVIEW';
     badge.setAttribute('aria-hidden', 'true');
     card.appendChild(badge);
     return true;
