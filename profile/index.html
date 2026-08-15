@@ -17316,6 +17316,203 @@
      white covered the badge's label. Lift the badge above the rail - it is
      the one accent this panel is allowed. */
   #profileHeader::after { z-index: 3 !important; }
+
+  /* =====================================================================
+     PROFILE PRESENCE PASS  (STAGED 2026-08-14 - NOT APPROVED)
+     ---------------------------------------------------------------------
+     Replaces the rejected contrast pass. Direction from Nima: the profile
+     must feel BIGGER and more confident, the navbar must stop looking like
+     buttons-inside-a-bar, and structure must come from scale and spacing
+     rather than outlines. Measured first - nothing had actually shrunk
+     (card 1260, avatar 112, name 48px, stat 31.5px in both the original
+     and the rejected pass) - so this pass adds mass instead of undoing a
+     shrink. Presentation only.
+     ===================================================================== */
+
+  /* 1. NAVBAR - flat, integrated, no capsules ------------------------- */
+  /* tmr-redesign-overrides.css pills EVERY button on this page with
+     `body.tmr-social-profile button:not(.primary):not(.profile-tab):not(.tab)
+     :not(.is-primary)` - four :not()s put it at (0,5,2). The repeated nav
+     class is what outweighs it without reaching for an id. */
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav button:not(.tmr-global-nav__button--primary),
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav a:not(.tmr-global-nav__button--primary) {
+    border: 0 !important;
+    background: transparent !important;
+    border-radius: 6px !important;
+    padding: 10px 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: .01em !important;
+    /* the pill rule that used to carry these also carried their colour.
+       Flattening it left the labels inheriting the light page's near-black
+       ink (#07182A) on a charcoal bar - unreadable. */
+    color: #E8EDF2 !important;
+  }
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav button:hover,
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav a:hover {
+    background: rgba(255,255,255,.07) !important;
+    border: 0 !important;
+    color: #FFFFFF !important;
+  }
+  /* open / current menu: brighter label with a thin teal underline, no box */
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav button[aria-expanded="true"],
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav a[aria-current="page"] {
+    color: #FFFFFF !important;
+    box-shadow: inset 0 -2px 0 0 #22D2C0 !important;
+    border-radius: 6px 6px 0 0 !important;
+  }
+  /* TMR Coin sits in the same bar and must read as clearly */
+  body.tmr-social-profile .tmr-global-nav [class*="coin"],
+  body.tmr-social-profile .tmr-global-nav [href*="tmr-coin"] { color: #F1F4F6 !important; }
+  /* Join Free is the one filled control in the bar - flattening it would
+     remove the page's only call to action. */
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav a.tmr-global-nav__button--primary {
+    background: linear-gradient(180deg, #22D2C0, #0C948C) !important;
+    color: #04231F !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    padding: 11px 20px !important;
+    font-weight: 800 !important;
+  }
+  /* Log In keeps a hairline so the pair still reads as a pair */
+  body.tmr-social-profile .tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav.tmr-global-nav a.tmr-global-nav__button:not(.tmr-global-nav__button--primary) {
+    border: 1px solid rgba(255,255,255,.22) !important;
+    border-radius: 999px !important;
+    padding: 10px 18px !important;
+  }
+
+  /* the caret stays, just quieter */
+  body.tmr-social-profile .tmr-global-nav [class*="menu__trigger"] svg,
+  body.tmr-social-profile .tmr-global-nav [class*="menu__trigger"] i,
+  body.tmr-social-profile .tmr-global-nav [class*="menu__trigger"]::after {
+    opacity: .62 !important; color: #E8EDF2 !important;
+  }
+
+  /* 2. ADMIN badge - a real status marker, not a tag ------------------ */
+  #profileHeader .profile-admin-badge {
+    font-size: 13.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    padding: 6px 14px !important;
+    background: #B3261E !important;
+    color: #FFFFFF !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    line-height: 1.2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-top: 4px !important;
+  }
+
+  /* 3. WIDTH - use the desktop, shrink the gray gutters --------------- */
+  body.profile-page.tmr-social-profile .profile-header-section,
+  body.profile-page.tmr-social-profile .profile-header-section .container,
+  body.profile-page.tmr-social-profile .profile-body-section > .container,
+  body.profile-page.tmr-social-profile .profile-tabs-section > .container,
+  body.profile-page.tmr-social-profile .profile-tabs-section .container {
+    width: min(100% - 40px, 1520px) !important;
+    max-width: 1520px !important;
+  }
+  body.profile-page.tmr-social-profile .profile-body-grid {
+    width: min(100% - 40px, 1520px) !important;
+    max-width: 1520px !important;
+  }
+
+  /* the modules under the card keep their own 1100px cap, which left the
+     column staggered once the card widened. Same width for the whole
+     content column. */
+  body.profile-page.tmr-social-profile .tmr-fi-card,
+  body.profile-page.tmr-social-profile .tmrx-stats,
+  body.profile-page.tmr-social-profile .capper-monitor {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* 4 + 6. IDENTITY AS HERO - scale, not decoration ------------------- */
+  #profileHeader {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(37, 54, 74, 0.22) !important;
+    box-shadow: 0 1px 2px rgba(11,29,49,.04), 0 18px 40px rgba(11,29,49,.08) !important;
+    padding: 30px 34px 28px !important;
+  }
+  #profileHeader .profile-identity-row { padding-bottom: 22px !important; margin-bottom: 20px !important; border-bottom: 1px solid #E7ECF2; }
+  #profileHeader .profile-avatar,
+  #profileHeader .profile-avatar img,
+  #profileHeader img.profile-avatar {
+    width: 132px !important; height: 132px !important;
+  }
+  #profileHeader .profile-identity-copy h1,
+  #profileHeader .profile-name {
+    font-size: 58px !important; line-height: 1.02 !important; letter-spacing: -.035em !important; color: #0B1D31 !important;
+  }
+  #profileHeader .profile-handle { font-size: 17px !important; }
+  #profileHeader .profile-headline { font-size: 16.5px !important; line-height: 1.55 !important; max-width: 62ch !important; }
+
+  /* 5. metadata: mass from type, not borders -------------------------- */
+  #profileHeader .profile-fc { font-size: 15px !important; }
+  #profileHeader .profile-trust-pill { font-size: 14px !important; }
+  #profileHeader .profile-team-pill { font-size: 14px !important; }
+  #profileHeader .profile-affiliation-chip { font-size: 12.5px !important; }
+
+  /* 7. STATS - substantial, breathing, light rules -------------------- */
+  #profileHeader .profile-rail {
+    border: 1px solid rgba(37, 54, 74, 0.20) !important;
+    background: #FFFFFF !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+  }
+  #profileHeader .profile-rail-card {
+    border-color: #E1E7EE !important;
+    padding: 26px 26px !important;
+  }
+  #profileHeader .profile-rail-card b,
+  #profileHeader .profile-rail-card strong,
+  #profileHeader .profile-rail-value { font-size: 40px !important; letter-spacing: -.03em !important; }
+  #profileHeader .profile-rail-label { font-size: 11.5px !important; letter-spacing: .12em !important; color: #55657C !important; }
+
+  /* 8. BUTTONS - intentional, not incidental -------------------------- */
+  #profileHeader .btn,
+  #profileHeader .tmrsh-btn {
+    height: 48px !important; padding: 0 22px !important;
+    font-size: 14.5px !important; font-weight: 800 !important;
+    border: 1.5px solid rgba(37,54,74,.30) !important; color: #0B1D31 !important;
+    background: #FFFFFF !important; border-radius: 999px !important;
+  }
+  #profileHeader .btn:hover, #profileHeader .tmrsh-btn:hover {
+    border-color: rgba(37,54,74,.55) !important; background: #F6F9FC !important;
+  }
+
+  /* 9. AWARDS - a module with a head, lightly bounded ----------------- */
+  .profile-awards-preview {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(37,54,74,.18) !important;
+    border-radius: 16px !important;
+    padding: 20px 22px !important;
+  }
+  .profile-awards-preview__head,
+  .profile-awards-preview > :first-child { margin-bottom: 6px !important; }
+  .profile-awards-preview__stat { border-color: #E1E7EE !important; color: #0B1D31 !important; }
+
+  /* 10. correlated picks joins the system ----------------------------- */
+  body.profile-page.tmr-social-profile .profile-corr-panel {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(37,54,74,.18) !important;
+    border-radius: 14px !important;
+  }
+  body.profile-page.tmr-social-profile .profile-corr-panel summary {
+    background: #F7FAFC !important; color: #0B1D31 !important; font-weight: 700 !important;
+    padding: 14px 18px !important;
+  }
+
+  /* 11. breadcrumb belongs to the page, quietly ----------------------- */
+  body.profile-page .tmrlh-crumbs { background: transparent !important; border: 0 !important; padding-left: 0 !important; }
+  body.profile-page .tmrlh-crumbs a.tmrlh-home.tmrlh-a {
+    background: transparent !important; border: 0 !important;
+    color: #55657C !important; font-weight: 700 !important; padding-left: 0 !important;
+  }
+  body.profile-page .tmrlh-crumbs a.tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark) { color: #55657C !important; }
+  body.profile-page .tmrlh-crumbs .tmrlh-home-mark { background: #E7ECF2 !important; color: #55657C !important; }
+  body.profile-page .tmrlh-crumbs a.tmrlh-home.tmrlh-a:hover { color: #0B1D31 !important; }
 </style>
 <script>
 (function () {
