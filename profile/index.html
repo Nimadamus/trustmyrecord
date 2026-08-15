@@ -17167,6 +17167,155 @@
       padding-right: 28px !important;
     }
   }
+
+  /* =====================================================================
+     PROFILE HEADER POLISH (Nima, 2026-08-14)
+     ---------------------------------------------------------------------
+     Brief: too many outlined pills, information reading as buttons, washed
+     blue borders, weak hierarchy. This is a PRESENTATION pass only - no
+     markup, data or behaviour changes. Metadata becomes quiet inline text
+     separated by hairline dividers; genuine actions (Share, Embed) keep
+     their button treatment. !important is needed throughout because the
+     light-theme pass emits its own !important background/border rules.
+     ===================================================================== */
+
+  /* --- Followers / Following: plain text, not pills ------------------- */
+  /* these two are <button>s, so the light-theme `button:not(...):not(...)`
+     rule outranks a plain class selector - the repeated class is what wins
+     it back without resorting to an id or inline style. */
+  #profileHeader button.profile-fc {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    font-size: 13.5px !important;
+    color: #2E4459 !important;
+  }
+  #profileHeader button.profile-fc + button.profile-fc {
+    margin-left: 18px !important;
+    padding-left: 18px !important;
+    border-left: 1px solid #E3E9F0 !important;
+  }
+  #profileHeader .profile-fc-n { color: #07182A !important; font-weight: 800 !important; }
+  #profileHeader .profile-fc-l { color: #5E7590 !important; font-weight: 600 !important; }
+  #profileHeader button.profile-fc:hover { background: transparent !important; }
+
+  /* --- Status / Member since / Ledger: one quiet metadata line -------- */
+  body.profile-page.tmr-social-profile .profile-trust-row {
+    gap: 0 !important;
+    align-items: baseline !important;
+    margin-bottom: 12px !important;
+  }
+  body.profile-page.tmr-social-profile .profile-trust-pill {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #5E7590 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+  body.profile-page.tmr-social-profile .profile-trust-pill + .profile-trust-pill {
+    margin-left: 16px !important;
+    padding-left: 16px !important;
+    border-left: 1px solid #E3E9F0 !important;
+  }
+  body.profile-page.tmr-social-profile .profile-trust-pill strong {
+    color: #07182A !important;
+    font-weight: 800 !important;
+  }
+  /* verification is the one place the brand accent earns its keep */
+  body.profile-page.tmr-social-profile .profile-trust-pill--verified strong,
+  body.profile-page.tmr-social-profile .profile-trust-pill[data-trust="verified"] strong {
+    color: #07736D !important;
+  }
+
+  /* --- Sport interests: understated tags, not buttons ----------------- */
+  body.profile-page.tmr-social-profile .profile-affiliation-row {
+    gap: 14px !important;
+    align-items: center !important;
+  }
+  body.profile-page.tmr-social-profile .profile-affiliation-chip {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: .04em !important;
+    color: #5E7590 !important;
+  }
+  body.profile-page.tmr-social-profile .profile-affiliation-chip:hover {
+    background: transparent !important;
+    color: #07182A !important;
+  }
+
+  /* --- Favourite teams: keep the logos, drop the pill ----------------- */
+  body.profile-page.tmr-social-profile .profile-team-pill {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #2E4459 !important;
+    gap: 7px !important;
+  }
+  body.profile-page.tmr-social-profile .profile-team-pill + .profile-team-pill {
+    margin-left: 16px !important;
+    padding-left: 16px !important;
+    border-left: 1px solid #E3E9F0 !important;
+  }
+  body.profile-page.tmr-social-profile .profile-team-pill:hover {
+    background: transparent !important;
+    color: #07182A !important;
+  }
+
+  /* --- Hierarchy: name first, everything else clearly secondary ------- */
+  body.profile-page.tmr-social-profile .profile-identity-copy h1,
+  body.profile-page.tmr-social-profile .profile-name {
+    letter-spacing: -.03em !important;
+  }
+  body.profile-page.tmr-social-profile .profile-handle {
+    color: #5E7590 !important;
+    font-weight: 600 !important;
+  }
+
+  /* --- Fewer container borders: one calm card, not nested outlines ---- */
+  body.profile-page.tmr-social-profile .profile-corr-panel {
+    border-color: #E3E9F0 !important;
+    background: #FAFCFE !important;
+  }
+
+  /* --- Right stats panel: same materials as the left side ------------- */
+  /* It was reading as a separate design system: washed blue dividers on a
+     grey wash. Same hairline and same white ground as the profile card, so
+     the two halves look like one component. Numbers, colours of the values
+     and the grid itself are untouched. */
+  #profileHeader .profile-rail {
+    background: #FFFFFF !important;
+    border-color: #E3E9F0 !important;
+  }
+  #profileHeader .profile-rail-card {
+    background: #FFFFFF !important;
+    border-color: #E3E9F0 !important;
+  }
+  #profileHeader .profile-rail-label {
+    color: #5E7590 !important;
+    letter-spacing: .1em !important;
+    font-weight: 800 !important;
+  }
+  /* The "Verified Record" badge is #profileHeader::after. The rail used to be
+     translucent, so the badge showed through it; painting the rail opaque
+     white covered the badge's label. Lift the badge above the rail - it is
+     the one accent this panel is allowed. */
+  #profileHeader::after { z-index: 3 !important; }
 </style>
 <script>
 (function () {
