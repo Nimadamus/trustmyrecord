@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="4fa00d754edc">
+<html lang="en" data-tmr-build="610793a676ad">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -653,29 +653,39 @@ box-shadow:none !important;color:#7f8ea6 !important}
   border-color: rgba(34, 210, 192, .62);
 }
 
-/* The badge is out of flow and reserves NO space, and it must NEVER cover game
-   information (Nima, 2026-08-13): the earlier bottom-right placement sat on the
-   pitcher line. It now lives in the card's top padding + centering slack, above
-   the team row, as a small quiet pill - matchup first, preview second. */
+/* The badge is out of flow and reserves NO space. Two earlier attempts did:
+   padding on the trend row widened this card from 260px to 325px and pushed the
+   three games to its right along with it, which is exactly the movement we were
+   asked not to cause. The badge now overlays the tail of the trend line behind a
+   short scrim. The trend text is unchanged in the DOM and still fully readable
+   from the card's title attribute. */
+.ticker .gm.gm--gf .gm-tr::after {
+  content: ""; position: absolute; right: 0; bottom: 0; width: 108px; height: 18px;
+  background: linear-gradient(90deg, rgba(9,24,32,0) 0%, rgba(9,26,34,.92) 42%, rgba(9,26,34,.97) 100%);
+  pointer-events: none;
+}
+.ticker .gm.gm--gf .gm-tr { position: static; }
+
 .ticker .gm.gm--gf .gm-gf {
-  position: absolute; top: 1px; right: 8px;
-  font-size: 7px; font-weight: 800; letter-spacing: .12em;
-  color: var(--brand-lt, #22D2C0);
-  background: rgba(6, 35, 31, .55);
-  border: 1px solid rgba(34, 210, 192, .40);
-  padding: 1px 4px; border-radius: 999px; line-height: 1;
+  position: absolute; bottom: 5px; right: 8px;
+  font-size: 8.5px; font-weight: 900; letter-spacing: .08em;
+  color: #06231F; background: var(--brand-lt, #22D2C0);
+  padding: 2px 5px; border-radius: 3px; line-height: 1;
   pointer-events: none; white-space: nowrap;
 }
-/* When the card also carries a trend row its content fills the strip's height
-   and the top slack the badge sits in is gone - so the badge yields. The card's
-   tint + pulse still mark the preview game; nothing may overlap the matchup. */
-.ticker .gm.gm--gf:has(.gm-tr) .gm-gf { display: none; }
 
-/* The pulse: a slow, premium breathing glow (Nima, 2026-08-13). The hard 2s
-   border flash existed to compete with the call-out bar below the strip; that
-   bar is gone and the card is the ONLY entry point, so the treatment is now a
-   tasteful glow that lifts the border, halo and tint together and settles back
-   — noticeable on a moving strip without reading like a casino ad.
+/* The pulse, made visible. It used to breathe once every SEVEN seconds with a
+   4px halo — so faint and so rare that on a moving ticker nobody ever saw it,
+   which is the same as not having it. Now every 3s, with a wider halo and the
+   card's own tint lifting with it, so the eye is caught by the card rather than
+   only by the badge. Still box-shadow and background only: no geometry moves,
+   so the strip's height and every other card stay exactly where they were. */
+/* A real flash, on a 2s clock.
+   The previous pass took this from one faint breath every 7s to a halo every 3s
+   and it was still too quiet to notice on a strip that is itself moving. This
+   version drives the BORDER as well as the halo and the fill, so the card's
+   whole outline lights rather than a soft glow appearing around it, and it
+   holds the bright state briefly instead of passing through it.
 
    Still box-shadow, border-color and background only — no geometry — so the
    strip's height and every card's x and width are untouched, which is what the
@@ -683,30 +693,102 @@ box-shadow:none !important;color:#7f8ea6 !important}
 @keyframes tmrGfPulse {
   0%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
                          0 0 0 0 rgba(34, 210, 192, 0);
-             border-color: rgba(34, 210, 192, .40);
-             background: rgba(34, 210, 192, .09); }
-  50%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 10px 2px rgba(34, 210, 192, .38);
-             border-color: rgba(34, 210, 192, .85);
-             background: rgba(34, 210, 192, .18); }
+             border-color: rgba(34, 210, 192, .38);
+             background: rgba(34, 210, 192, .10); }
+  35%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 4px rgba(34, 210, 192, .55);
+             border-color: rgba(34, 210, 192, 1);
+             background: rgba(34, 210, 192, .30); }
+  55%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 6px rgba(34, 210, 192, .38);
+             border-color: rgba(34, 210, 192, .95);
+             background: rgba(34, 210, 192, .26); }
+  85%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 14px rgba(34, 210, 192, 0);
+             border-color: rgba(34, 210, 192, .38);
+             background: rgba(34, 210, 192, .12); }
 }
-.ticker .gm.gm--gf { animation: tmrGfPulse 2.6s ease-in-out infinite; }
+.ticker .gm.gm--gf { animation: tmrGfPulse 2s ease-in-out infinite; }
 
-/* The badge itself does not flash (Nima, 2026-08-13): the card's breathing
-   glow is the whole treatment, the badge just names it. */
+/* The badge flashes on the same clock, and harder than the card: it is the bit
+   carrying the call to action. */
+@keyframes tmrGfBadge {
+  0%, 100% { opacity: .82; transform: scale(1); }
+  35%      { opacity: 1;   transform: scale(1.06); }
+  55%      { opacity: 1;   transform: scale(1.04); }
+}
+.ticker .gm.gm--gf .gm-gf {
+  animation: tmrGfBadge 2s ease-in-out infinite;
+  transform-origin: 100% 100%;
+  box-shadow: 0 0 12px rgba(34, 210, 192, .45);
+}
 
 /* Someone who has asked the OS for less motion gets the styling and none of the
    animation. The card is still obviously the featured one without it. */
 @media (prefers-reduced-motion: reduce) {
-  .ticker .gm.gm--gf { animation: none; }
+  .ticker .gm.gm--gf,
+  .ticker .gm.gm--gf .gm-gf { animation: none; }
   /* Without the pulse the card still has to read as the featured one, so it
      keeps the brighter of the two tints rather than the resting one. */
   .ticker .gm.gm--gf { background: rgba(34, 210, 192, .16); }
 }
 
-/* The breakdown call-out bar that sat under the strip was REMOVED at Nima's
-   instruction (2026-08-13): the featured game's own ticker card is the single
-   entry point. Do not reintroduce a second promotional bar here. */
+/* ============================================================================
+   THE BREAKDOWN CALL-OUT  (#tmr-gf-callout, injected by tmr-home-live.js)
+
+   A stationary second entry point under the strip. The badge on a ticker card
+   is small, the strip pages every few seconds, and the flagged game is often
+   not on the first page — so on a cold load a reader can miss it entirely.
+   This does not move and states the offer in words.
+
+   Injected, never baked into index.html: the homepage markup is locked, and a
+   matchup cover was built into it once and rejected. It appears only when there
+   is an article to point at.
+   ========================================================================== */
+.gf-callout {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  max-width: 1240px;
+  margin: 8px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(34, 210, 192, .40);
+  border-left: 3px solid var(--brand-lt, #22D2C0);
+  border-radius: 6px;
+  /* An OPAQUE dark base under the tint. The first version used only a
+     translucent teal gradient, which assumed the strip below the ticker was
+     dark — on the live homepage it is not, and near-white text on a pale
+     section made the club names almost unreadable. The bar now carries its own
+     background instead of borrowing whatever it happens to sit on. */
+  background:
+    linear-gradient(90deg, rgba(34,210,192,.20) 0%, rgba(34,210,192,.07) 55%, rgba(34,210,192,0) 100%),
+    #0B1219;
+  text-decoration: none;
+  color: #EAF3F6;
+}
+.gf-callout:hover {
+  border-color: rgba(34, 210, 192, .75);
+  background:
+    linear-gradient(90deg, rgba(34,210,192,.30) 0%, rgba(34,210,192,.12) 55%, rgba(34,210,192,0) 100%),
+    #0E1720;
+}
+.gf-callout-k {
+  font-size: 9.5px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
+  color: #06231F; background: var(--brand-lt, #22D2C0);
+  padding: 3px 7px; border-radius: 3px; line-height: 1;
+}
+.gf-callout-m { font-size: 14px; font-weight: 800; color: #EAF3F6; }
+.gf-callout-d { font-size: 12.5px; color: #8FA3AD; flex: 1 1 220px; min-width: 0; }
+.gf-callout-cta {
+  font-size: 12px; font-weight: 800; letter-spacing: .02em;
+  color: var(--brand-lt, #22D2C0); white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .gf-callout { margin-inline: 12px; padding: 9px 12px; }
+  .gf-callout-d { display: none; }
+}
 </style>
 <!-- END HOME CRITICAL CSS -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -774,9 +856,9 @@ box-shadow:none !important;color:#7f8ea6 !important}
 }
 </script>
 <style>.loading{padding:22px 24px;color:#5E7590;font-size:14.5px;font-weight:600}</style>
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
-<script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
-<link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=03d00d40548f">
+<script defer src="/static/js/tmr-linkhub.js?v=60a7177f6ee4"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.308be035fb97.css">
 <!-- Live-wait gate (boards only): hide the three board bodies until
      tmr-home-live.js applies live rows (or its fetch settles), so visitors
      never watch stale baked rows swap to current ones. The hero stats and the
@@ -1124,19 +1206,19 @@ box-shadow:none !important;color:#7f8ea6 !important}
         <h3><span class="pulse"></span>Live Picks</h3>
         <span class="tabs"><button class="tab on">All</button><button class="tab">MLB</button><button class="tab">Soccer</button><button class="tab">NFL</button></span>
       </div>
-      <!--MK:homeLivePicks--><div class="body"><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><span class="avl">FA</span><a class="who-link" href="/u/fade_my_picks/"><b>fade_my_picks</b></a>· 14 hr ago</span><span class="ln">Miami Marlins (-118)</span><span class="mt"><span class="lgchip">BASE</span>h2h</span></span><span class="rt"><span class="badge w">Win</span><span class="u"><span class="pos">+1.69u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><span class="avl">MY</span><a class="who-link" href="/u/Myco_MMA/"><b>Myco_MMA</b></a>· 22 hr ago</span><span class="ln">Arizona Diamondbacks (-178)</span><span class="mt"><span class="lgchip">BASE</span>h2h</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-1.78u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><span class="avl">MY</span><a class="who-link" href="/u/Myco_MMA/"><b>Myco_MMA</b></a>· 23 hr ago</span><span class="ln">Over (-106)</span><span class="mt"><span class="lgchip">BASE</span>totals</span></span><span class="rt"><span class="badge w">Win</span><span class="u"><span class="pos">+0.94u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><span class="avl">MY</span><a class="who-link" href="/u/Myco_MMA/"><b>Myco_MMA</b></a>· 23 hr ago</span><span class="ln">Texas Rangers (-136)</span><span class="mt"><span class="lgchip">BASE</span>h2h</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-1.00u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><span class="avl">MY</span><a class="who-link" href="/u/Myco_MMA/"><b>Myco_MMA</b></a>· 23 hr ago</span><span class="ln">Tampa Bay Rays -1.5 (-133)</span><span class="mt"><span class="lgchip">BASE</span>spreads</span></span><span class="rt"><span class="badge w">Win</span><span class="u"><span class="pos">+0.75u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">TENN</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><a class="who-link" href="/u/MoneyMakers/"><b>MoneyMakers</b></a>· 1 d ago</span><span class="ln">Ben Shelton (-185)</span><span class="mt"><span class="lgchip">TENN</span>h2h</span></span><span class="rt"><span class="badge w">Win</span><span class="u"><span class="pos">+1.00u</span></span></span></div></div><!--/MK:homeLivePicks-->
+      <!--MK:homeLivePicks--><div class="body"><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/564/avatar" alt="" onerror="this.outerHTML='&lt;span class=&quot;avl&quot;&gt;FA&lt;/span&gt;'"><a class="who-link" href="/u/fade_my_picks/"><b>fade_my_picks</b></a>· 14 hr ago</span><span class="ln">Chicago White Sox (-157)</span><span class="mt"><span class="lgchip">BASE</span>h2h</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-1.50u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><a class="who-link" href="/u/BetLegend/"><b>BetLegend</b></a>· 14 hr ago</span><span class="ln">Under (-115)</span><span class="mt"><span class="lgchip">BASE</span>totals</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-1.15u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><a class="who-link" href="/u/BetLegend/"><b>BetLegend</b></a>· 14 hr ago</span><span class="ln">Under (-115)</span><span class="mt"><span class="lgchip">BASE</span>totals</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-1.15u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><a class="who-link" href="/u/BetLegend/"><b>BetLegend</b></a>· 14 hr ago</span><span class="ln">Cleveland Guardians +1.5 (-190)</span><span class="mt"><span class="lgchip">BASE</span>spreads</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-2.85u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><a class="who-link" href="/u/BetLegend/"><b>BetLegend</b></a>· 14 hr ago</span><span class="ln">Tampa Bay Rays (-173)</span><span class="mt"><span class="lgchip">BASE</span>h2h</span></span><span class="rt"><span class="badge w">Win</span><span class="u"><span class="pos">+2.50u</span></span></span></div><div class="pk"><span class="logo2"><span class="lgchip">BASE</span></span><span class="bd"><span class="who"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><a class="who-link" href="/u/BetLegend/"><b>BetLegend</b></a>· 14 hr ago</span><span class="ln">Philadelphia Phillies (-163)</span><span class="mt"><span class="lgchip">BASE</span>h2h</span></span><span class="rt"><span class="badge l">Loss</span><span class="u"><span class="neg">-1.63u</span></span></span></div></div><!--/MK:homeLivePicks-->
       <div class="foot"><a href="/picks/">View every tracked pick &rarr;</a></div>
     </section>
 
     <section class="card">
       <div class="chd"><h3>Leaderboard</h3><span class="cnt">All-time units</span></div>
-      <!--MK:homeLeaderboard--><div class="body"><div class="lbr"><span class="rk g1">1</span><span class="avl">MA</span><span class="nm"><a href="/u/makaveli66/"><b>makaveli66</b></a><span>187-128-3 · 318 picks</span></span><span class="un"><b class="pos">+93.31u</b><span>2.5% ROI</span></span></div><div class="lbr"><span class="rk g2">2</span><span class="avl">MI</span><span class="nm"><a href="/u/MIA55/"><b>MIA55</b></a><span>172-144-1 · 317 picks</span></span><span class="un"><b class="pos">+48.28u</b><span>10.1% ROI</span></span></div><div class="lbr"><span class="rk g3">3</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="nm"><a href="/u/MoneyMakers/"><b>MoneyMakers</b></a><span>298-149-2 · 449 picks</span></span><span class="un"><b class="pos">+17.00u</b><span>2.2% ROI</span></span></div><div class="lbr"><span class="rk">4</span><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="nm"><a href="/u/BetLegend/"><b>BetLegend</b></a><span>318-276-8 · 602 picks</span></span><span class="un"><b class="pos">+13.65u</b><span>0.7% ROI</span></span></div><div class="lbr"><span class="rk">5</span><span class="avl">CL</span><span class="nm"><a href="/u/clinscheid72/"><b>clinscheid72</b></a><span>36-26 · 62 picks</span></span><span class="un"><b class="pos">+12.46u</b><span>18.1% ROI</span></span></div><div class="lbr"><span class="rk">6</span><span class="avl">MY</span><span class="nm"><a href="/u/Myco_MMA/"><b>Myco_MMA</b></a><span>27-23 · 50 picks</span></span><span class="un"><b class="pos">+8.81u</b><span>6.8% ROI</span></span></div><div class="lbr"><span class="rk">7</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/507/avatar" alt=""><span class="nm"><a href="/u/Mike/"><b>Mike</b></a><span>7-7 · 14 picks</span></span><span class="un"><b class="pos">+7.03u</b><span>27.2% ROI</span></span></div><div class="lbr"><span class="rk">8</span><span class="avl">FA</span><span class="nm"><a href="/u/fade_my_picks/"><b>fade_my_picks</b></a><span>114-97-9 · 220 picks</span></span><span class="un"><b class="pos">+4.42u</b><span>1.9% ROI</span></span></div></div><!--/MK:homeLeaderboard-->
+      <!--MK:homeLeaderboard--><div class="body"><div class="lbr"><span class="rk g1">1</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/626/avatar" alt="" onerror="this.outerHTML='&lt;span class=&quot;avl&quot;&gt;MA&lt;/span&gt;'"><span class="nm"><a href="/u/makaveli66/"><b>makaveli66</b></a><span>187-128-3 · 318 picks</span></span><span class="un"><b class="pos">+93.31u</b><span>2.5% ROI</span></span></div><div class="lbr"><span class="rk g2">2</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/1268/avatar" alt="" onerror="this.outerHTML='&lt;span class=&quot;avl&quot;&gt;MI&lt;/span&gt;'"><span class="nm"><a href="/u/MIA55/"><b>MIA55</b></a><span>172-144-1 · 317 picks</span></span><span class="un"><b class="pos">+48.28u</b><span>10.1% ROI</span></span></div><div class="lbr"><span class="rk g3">3</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="nm"><a href="/u/MoneyMakers/"><b>MoneyMakers</b></a><span>297-148-2 · 447 picks</span></span><span class="un"><b class="pos">+21.00u</b><span>2.8% ROI</span></span></div><div class="lbr"><span class="rk">4</span><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="nm"><a href="/u/BetLegend/"><b>BetLegend</b></a><span>318-276-8 · 602 picks</span></span><span class="un"><b class="pos">+13.65u</b><span>0.7% ROI</span></span></div><div class="lbr"><span class="rk">5</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/1384/avatar" alt="" onerror="this.outerHTML='&lt;span class=&quot;avl&quot;&gt;CL&lt;/span&gt;'"><span class="nm"><a href="/u/clinscheid72/"><b>clinscheid72</b></a><span>36-26 · 62 picks</span></span><span class="un"><b class="pos">+12.46u</b><span>18.1% ROI</span></span></div><div class="lbr"><span class="rk">6</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/1472/avatar" alt="" onerror="this.outerHTML='&lt;span class=&quot;avl&quot;&gt;MY&lt;/span&gt;'"><span class="nm"><a href="/u/Myco_MMA/"><b>Myco_MMA</b></a><span>25-21 · 46 picks</span></span><span class="un"><b class="pos">+9.90u</b><span>7.9% ROI</span></span></div><div class="lbr"><span class="rk">7</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/507/avatar" alt=""><span class="nm"><a href="/u/Mike/"><b>Mike</b></a><span>7-7 · 14 picks</span></span><span class="un"><b class="pos">+7.03u</b><span>27.2% ROI</span></span></div><div class="lbr"><span class="rk">8</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/564/avatar" alt="" onerror="this.outerHTML='&lt;span class=&quot;avl&quot;&gt;FA&lt;/span&gt;'"><span class="nm"><a href="/u/fade_my_picks/"><b>fade_my_picks</b></a><span>113-97-9 · 219 picks</span></span><span class="un"><b class="pos">+2.73u</b><span>1.2% ROI</span></span></div></div><!--/MK:homeLeaderboard-->
       <div class="foot"><a href="/leaderboards/">Full leaderboards &rarr;</a></div>
     </section>
 
     <section class="card">
       <div class="chd"><h3>Sports Talk</h3><span class="cnt">Newest first</span></div>
-      <!--MK:homeSportsTalk--><div class="body"><a class="fr" href="/forum/thread/315/august-baseball-is-a-different-sport-and-nobody-warns-you/"><img class="ava" src="https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">august baseball is a different sport and nobody warns you</div><div class="fm">Little_Venom · 11 hr ago</div></span></a><a class="fr" href="/forum/thread/314/philadelphia-at-st-louis/"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">Philadelphia at St Louis..</div><div class="fm">MoneyMakers · 1 d ago</div></span></a><a class="fr" href="/forum/thread/313/8-11-2026-mlb-picks/"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">8-11-2026 MLB Picks</div><div class="fm">BetLegend · 1 d ago</div></span></a><a class="fr" href="/forum/thread/312/8-10-2026-mlb-picks/"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">8-10-2026 MLB Picks</div><div class="fm">BetLegend · 2 d ago</div></span></a><a class="fr" href="/forum/thread/311/contest-update-the-contest-has-not-started-yet/"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/675/avatar" alt=""><span class="fb"><span class="cat str">TrustMyRecord Updates</span><div class="ft2">Contest Update — The Contest Has NOT Started Yet</div><div class="fm">TMRPolls · 3 d ago</div></span></a><a class="fr" href="/forum/thread/309/8-9-2026-mlb-picks/"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">8-9-2026 MLB Picks</div><div class="fm">BetLegend · 3 d ago</div></span></a></div><!--/MK:homeSportsTalk-->
+      <!--MK:homeSportsTalk--><div class="body"><a class="fr" href="/forum/thread/314/philadelphia-at-st-louis/"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">Philadelphia at St Louis..</div><div class="fm">MoneyMakers · 10 hr ago</div></span></a><a class="fr" href="/forum/thread/313/8-11-2026-mlb-picks/"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">8-11-2026 MLB Picks</div><div class="fm">BetLegend · 14 hr ago</div></span></a><a class="fr" href="/forum/thread/312/8-10-2026-mlb-picks/"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">8-10-2026 MLB Picks</div><div class="fm">BetLegend · 1 d ago</div></span></a><a class="fr" href="/forum/thread/311/contest-update-the-contest-has-not-started-yet/"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/675/avatar" alt=""><span class="fb"><span class="cat str">TrustMyRecord Updates</span><div class="ft2">Contest Update — The Contest Has NOT Started Yet</div><div class="fm">TMRPolls · 2 d ago</div></span></a><a class="fr" href="/forum/thread/309/8-9-2026-mlb-picks/"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">8-9-2026 MLB Picks</div><div class="fm">BetLegend · 2 d ago</div></span></a><a class="fr" href="/forum/thread/310/detroit-at-san-francisco/"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">Detroit at San Francisco..</div><div class="fm">MoneyMakers · 2 d ago</div></span></a></div><!--/MK:homeSportsTalk-->
       <div class="foot"><a href="/forum/">Open the forum &rarr;</a></div>
     </section>
   </div>
@@ -1224,7 +1306,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
 </div>
 <!-- END STATIC BRIDGE -->
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
-<script src="/static/js/tmr-ds-nav.fccb86554571.js"></script>
+<script src="/static/js/tmr-ds-nav.1ed17cb0a57f.js"></script>
 <!-- tmr-home-auth.js retired: tmr-ds-nav.js's own init()/resolveUser() flow now
      renders the signed-in .ds-nav-right cluster (same v2nav-* markup, coin
      balance + notif badge fetches) that this page used to duplicate for its
@@ -1277,7 +1359,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.4fa00d754edc.js"></script>
+<script src="/static/js/tmr-home-live.610793a676ad.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page
