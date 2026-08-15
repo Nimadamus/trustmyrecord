@@ -17150,6 +17150,123 @@
       padding-right: 28px !important;
     }
   }
+
+  /* =====================================================================
+     PROFILE GEOMETRY PASS  (PREVIEW 2026-08-15 - NOT APPROVED)
+     ---------------------------------------------------------------------
+     Structure only. No colour, type or palette changes.
+
+     Measured at 1500px before this block:
+       most modules            left 113  right 1373  width 1260   <- the column
+       Sports Identity         left 193  right 1293  width 1100   <- inset 80
+       Advanced Metrics card   left 103  right 1383  width 1280   <- outdent 10
+     and .profile-body-grid / .profile-main / .tmrx-stats reported
+     scrollWidth 1281 vs clientWidth 1260 - the 1280px Advanced Metrics card
+     was the 21px that pushed the whole column into horizontal scroll, which
+     is what made the right edge look ragged.
+     ===================================================================== */
+
+  /* 1. one content width for every major module */
+  body.profile-page.tmr-social-profile #tmrFanIdentityCard,
+  body.profile-page.tmr-social-profile .profile-advanced-strip-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  body.profile-page.tmr-social-profile .profile-advanced-strip-section > .container {
+    width: min(100% - 40px, 1260px) !important;
+    max-width: 1260px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 2. nothing in the column may exceed it */
+  body.profile-page.tmr-social-profile .profile-body-grid,
+  body.profile-page.tmr-social-profile .profile-main,
+  body.profile-page.tmr-social-profile .profile-tab-panel,
+  body.profile-page.tmr-social-profile .tmrx-stats { max-width: 100% !important; overflow-x: clip !important; }
+
+  /* 3. wide tables scroll INSIDE their shell. The section itself is NOT
+     clipped: overflow:hidden here cut the ROI column off the right of
+     every grid. The shell owns the scrolling and the rounded corner. */
+  /* the shell carried an explicit width (1258px) alongside 22px side
+     margins, so its right edge landed ~20px past the card - this is what
+     made every grid overhang the column. width:auto lets the block fill
+     the card minus its own margins, and the shell keeps the scrolling. */
+  body.profile-page.tmr-social-profile .tmrx-table-shell {
+    width: auto !important;
+    /* max-width caps the used width even when something sets an explicit
+       width on the element (the ledger shell does): 100% minus its own
+       22px side margins keeps it inside the card. */
+    max-width: calc(100% - 44px) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.profile-page.tmr-social-profile .tmrx-table { min-width: 100% !important; }
+
+  /* 4 + 5. one corner radius and one outer geometry for the major cards */
+  body.profile-page.tmr-social-profile #profileHeader,
+  body.profile-page.tmr-social-profile .profile-tabs,
+  body.profile-page.tmr-social-profile #tmrFanIdentityCard,
+  body.profile-page.tmr-social-profile .profile-advanced-strip-card,
+  body.profile-page.tmr-social-profile .tmrlh-related,
+  body.profile-page.tmr-social-profile .mppfs-section,
+  body.profile-page.tmr-social-profile .tmrx-section {
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* The Pick History / Public Ledger shell is styled by a
+     `.tmrx-section:has(#tmrxTablePicks)` rule, whose :has() carries an id's
+     specificity, so the class-level cap above never reached it: it kept
+     width:100% alongside 22px side margins and hung 21px past the card.
+     Same specificity, declared later. */
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) .tmrx-table-shell,
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicksTop) .tmrx-table-shell {
+    width: auto !important;
+    max-width: calc(100% - 44px) !important;
+    overflow-x: auto !important;
+  }
+
+  /* ---------------------------------------------------------------------
+     PUBLIC LEDGER TABLE FIT  (PREVIEW 2026-08-15 - NOT APPROVED)
+     Measured before: shell inset was already symmetric (23px both sides),
+     but the Share column was only 61px wide and its button's right edge sat
+     at 1359 against a shell edge of 1350 - the button hung 9px outside the
+     table, and the table overflowed its wrapper by 10px (1222 vs 1212).
+     Widen the action column, give it real right padding, and take the room
+     back from the widest text column so the table still fits without the
+     profile getting any wider.
+     --------------------------------------------------------------------- */
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) .tmrx-table th:last-child,
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) .tmrx-table td:last-child,
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicksTop) .tmrx-table th:last-child,
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicksTop) .tmrx-table td:last-child {
+    width: 104px !important;
+    min-width: 104px !important;
+    padding-right: 18px !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+  /* the button never touches the edge and never spills out of its cell */
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) .tmrx-table td:last-child > *,
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicksTop) .tmrx-table td:last-child > * {
+    max-width: 100% !important;
+    margin-right: 0 !important;
+  }
+  /* the room comes back from the widest text column, not from page width */
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) .tmrx-table th:nth-child(3),
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) .tmrx-table td:nth-child(3),
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicksTop) .tmrx-table th:nth-child(3),
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicksTop) .tmrx-table td:nth-child(3) {
+    max-width: 168px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
 </style>
 <script>
 (function () {
