@@ -2187,8 +2187,6 @@
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
                 <button type="button" class="profile-tab active" data-tab="picks" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
                 <button type="button" class="profile-tab" data-tab="record" role="tab">Picks</button>
-                <button type="button" class="profile-tab" data-tab="analytics" role="tab">Analytics</button>
-                <button type="button" class="profile-tab" data-tab="community" role="tab">Community</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="gaming" role="tab">Online Gaming</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
@@ -10712,92 +10710,12 @@
         if (pollsTab) pollsTab.href = '/hangout/' + (safeUser ? ('?user=' + safeUser) : '');
     }
 
-    // ============== PROFILE INFORMATION ARCHITECTURE (2026-08-14) ==============
-    // Progressive disclosure: the Overview panel used to hold every tmrx
-    // analytics module at once (~12,000px). This moves the deep-analysis
-    // sections into dedicated Analytics / Community tabs and the Public Ledger
-    // into the Picks tab, WITHOUT touching any module's internals — nodes are
-    // re-parented before their hydration scripts run, and id-based lookups
-    // keep working wherever a node lives. Kill switch: window.TMR_PROFILE_IA_OFF.
-    // Overview keeps: Core Handicapper Stats, TMR Coin, Performance by Period,
-    // Equity Curve & Drawdown (charts must render visible), Streaks & Rolling
-    // Form, Best & Worst Categories.
-    (function initProfileIA() {
-        function onReady() {
-            try {
-                if (window.TMR_PROFILE_IA_OFF) return;
-                const root = document.getElementById('tmrxStatsRoot');
-                const overview = document.querySelector('.profile-tab-panel[data-panel="picks"]');
-                const record = document.querySelector('.profile-tab-panel[data-panel="record"]');
-                if (!root || !overview || !overview.parentNode) return;
-                const main = overview.parentNode;
-                function mkPanel(name, label) {
-                    const p = document.createElement('div');
-                    p.className = 'profile-tab-panel';
-                    p.setAttribute('data-panel', name);
-                    const inner = document.createElement('section');
-                    inner.className = 'tmrx-stats';
-                    inner.setAttribute('aria-label', label);
-                    p.appendChild(inner);
-                    return { panel: p, host: inner };
-                }
-                const analytics = mkPanel('analytics', 'Betting analytics');
-                const community = mkPanel('community', 'Community activity');
-                main.insertBefore(analytics.panel, overview.nextSibling);
-                main.insertBefore(community.panel, analytics.panel.nextSibling);
-                let recordHost = null;
-                function recordLedgerHost() {
-                    if (!record) return null;
-                    if (!recordHost) {
-                        recordHost = document.createElement('section');
-                        recordHost.className = 'tmrx-stats';
-                        recordHost.setAttribute('aria-label', 'Public pick ledger');
-                        record.appendChild(recordHost);
-                    }
-                    return recordHost;
-                }
-                const MAP = {
-                    'filters': 'analytics',
-                    'performance by sport': 'analytics',
-                    'performance by market type': 'analytics',
-                    'performance by team': 'analytics',
-                    'performance by unit size': 'analytics',
-                    'performance by odds range': 'analytics',
-                    'favorites vs underdogs': 'analytics',
-                    'day of week': 'analytics',
-                    'advanced metrics': 'analytics',
-                    'community activity': 'community',
-                    'trivia stats': 'community',
-                    'forum activity': 'community',
-                    'public ledger': 'record'
-                };
-                Array.prototype.slice.call(root.children).forEach(function (sec) {
-                    const t = sec.querySelector('.tmrx-section-title');
-                    if (!t) return;
-                    const dest = MAP[t.textContent.trim().toLowerCase()];
-                    if (!dest) return;
-                    if (dest === 'record') {
-                        const host = recordLedgerHost();
-                        if (host) host.appendChild(sec);
-                        return;
-                    }
-                    (dest === 'analytics' ? analytics : community).host.appendChild(sec);
-                });
-            } catch (e) { /* fail open: page renders exactly as before */ }
-        }
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', onReady);
-        } else {
-            onReady();
-        }
-    })();
-
     // ======================== TAB SWITCHING ========================
     (function initProfileTabs() {
         const onReady = function () {
             const bar = document.getElementById('profileTabsBar');
             if (!bar) return;
-            const TMRX_FULLWIDTH_TABS = { picks: 1, advanced: 1, charts: 1, splits: 1, record: 1, analytics: 1, community: 1 };
+            const TMRX_FULLWIDTH_TABS = { picks: 1, advanced: 1, charts: 1, splits: 1, record: 1 };
             const tmrxApplyFullwidth = (tab) => {
                 document.body.classList.toggle('tmrx-stats-fullwidth', !!TMRX_FULLWIDTH_TABS[tab]);
             };
