@@ -14788,6 +14788,22 @@
       .tmrx-equity-empty { display: none; padding: 28px 16px; text-align: center; color: #5E7590; font-size: 12.5px; font-style: italic; }
       .tmrx-equity-shell--empty .tmrx-equity-wrap { display: none; }
       .tmrx-equity-shell--empty .tmrx-equity-empty { display: block; }
+      /* BLACK PLOT AREA (Nima, 2026-08-14). The units curve is drawn for a dark
+         ground and always has been: the line is cyan #22D3EE, the guide lines
+         are #1F3350 and the zero line is a translucent white — on the light
+         card the guides read as hard black rules and the cyan wash goes flat.
+         Painting the shell black puts the chart back on the ground its own
+         palette was chosen for. Scoped to the equity shells only; every other
+         panel on the profile stays light. */
+      /* !important is required here, not cosmetic: the light-theme pass emits
+         `body.profile-page.tmr-social-profile .tmrx-table-shell{background:...
+         !important}`, which an id selector alone cannot beat. */
+      body.profile-page.tmr-social-profile #tmrxEquityShell,
+      body.profile-page.tmr-social-profile #tmrxEquityShellTop {
+        background: #05070C !important;
+        border-color: rgba(148,163,184,0.22) !important;
+      }
+      #tmrxEquityShell .tmrx-equity-empty, #tmrxEquityShellTop .tmrx-equity-empty { color: #94A3B8; }
       .tmrx-dd-strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 0 14px 14px; }
       .tmrx-dd-cell { padding: 10px 12px; border: 1px solid #D2DEEA; border-radius: 10px; background: rgba(7,24,42,0.048); }
       .tmrx-dd-cell .k { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #5E7590; }
