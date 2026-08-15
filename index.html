@@ -737,7 +737,18 @@ box-shadow:none !important;color:#7f8ea6 !important}
 .tkact[hidden]{display:none}
 
 .tkact-lbl{display:flex;align-items:center;gap:7px;color:var(--brand-lt);font-size:10px;
-  font-weight:900;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;line-height:1}
+  font-weight:900;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;line-height:1;
+  opacity:1;transition:opacity .24s ease}
+/* Until the first real event lands there is nothing to label. The box still
+   holds its width (so the games lane is never resized under the reader) but
+   shows NOTHING — a heading over an empty slot is the one state that reads as
+   broken. .is-ready is set by tmr-activity-feed.js when the first item paints;
+   if none ever does, the strip hides itself entirely. */
+.tkact:not(.is-ready) .tkact-lbl{opacity:0}
+/* The column rule is part of the same promise: no divider until there is a
+   column to divide. Colour only, so the 1px still occupies its place and the
+   games lane is measured against the final geometry from the first frame. */
+.tkact:not(.is-ready){border-left-color:transparent}
 .tkact-lbl .bl{width:6px;height:6px;border-radius:50%;background:var(--brand-lt);
   box-shadow:0 0 0 3px rgba(34,210,192,.2)}
 
@@ -774,7 +785,12 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
 .tkact-team{flex:0 0 auto;display:flex;align-items:center;gap:4px;color:#7593B1;
   font-size:10px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
 .tkact-team::before{content:"·";color:#4E6E8C;font-weight:700}
-.tkact-team img{width:13px;height:13px;object-fit:contain;display:block}
+/* Half of these marks are dark (the Steelers helmet, the Raiders shield) and a
+   13px dark logo on the #050F1B ticker is a smudge. The faintest disc behind it
+   is enough to separate it from the surface, and it matches the avatar tile's
+   treatment rather than introducing a new one. */
+.tkact-team img{width:13px;height:13px;object-fit:contain;display:block;
+  background:rgba(255,255,255,.10);border-radius:50%;padding:1px;box-sizing:content-box}
 .tkact-abbr{font-style:normal}
 .tkact-ago{flex:0 0 auto;margin-left:auto;padding-left:8px;color:#6F8CA8;font-size:10.5px;
   font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -787,13 +803,17 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
    team abbreviation go before the handle does — the mark still carries the
    personality, and the username is the part that must stay readable. */
 @media (max-width:1439px){
-  .tkact{width:250px;padding-left:14px;margin-left:14px}
+  /* The divider keeps the 18px the [TODAY] label uses on the other end of the
+     row, so the two column rules read as one system; only the inner padding
+     gives way. */
+  .tkact{width:250px;padding-left:16px;margin-left:18px}
   .tkact-abbr{display:none}
 }
 /* Below this the row belongs to the sports ticker alone. */
 @media (max-width:1179px){.tkact{display:none}}
 @media (prefers-reduced-motion:reduce){
   .tkact-item{transition:none}
+  .tkact-lbl{transition:none}
   .tkact-item.is-in,.tkact-item.is-out{opacity:0;transform:none}
 }
 </style>
@@ -1370,7 +1390,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->
-<script src="/static/js/tmr-activity-feed.d3cdf0b1484c.js" defer></script>
+<script src="/static/js/tmr-activity-feed.e50fa013f753.js" defer></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page
