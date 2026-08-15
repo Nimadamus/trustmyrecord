@@ -568,29 +568,47 @@ function normalizePublicPick(item) {
     };
 }
 
-async function fetchPublicUsersByName(names) {
+/* The feed used to fetch /users/<name> once per author to decorate each card.
+   With 20 items that was 13 extra round trips on top of /api/feed, each of
+   them 2.8-6.1s against production, and every field it wanted is already in
+   the feed payload: avatar_url, verification_status, record_wins/losses/
+   pushes, net_units and favorite_sports all ship with the item. So the map is
+   built from the response we already have - no network, same shape. */
+function buildUserMapFromFeed(items) {
     const out = {};
-    const unique = Array.from(new Set((names || []).filter(Boolean)));
-    await Promise.all(unique.map(async username => {
-        try {
-            const data = await api.request('/users/' + encodeURIComponent(username));
-            if (data && data.user) out[username] = data.user;
-        } catch(e) {}
-    }));
+    (items || []).forEach(item => {
+        const username = getUsername(item);
+        if (!username || out[username]) return;
+        out[username] = {
+            avatar_url: item.avatar_url,
+            favorite_sports: Array.isArray(item.favorite_sports) ? item.favorite_sports : undefined,
+            verification_status: item.verification_status,
+            wins: item.record_wins != null ? item.record_wins : item.wins_count,
+            losses: item.record_losses != null ? item.record_losses : item.losses_count,
+            pushes: item.record_pushes != null ? item.record_pushes : item.pushes_count,
+            net_units: item.net_units,
+            win_rate: item.win_rate
+        };
+    });
     return out;
 }
 
 function attachUserRecord(item, user) {
     if (!user) return item;
+    /* fill gaps only. This used to assign the fetched user's fields
+       unconditionally, which is safe when they come from /users/<name> but
+       would blank a value the feed item already carries. */
+    const keep = (a, b) => (a != null && a !== '' ? a : b);
     return {
         ...item,
-        avatar_url: item.avatar_url || user.avatar_url,
-        primary_sport: item.primary_sport || (Array.isArray(user.favorite_sports) ? user.favorite_sports[0] : null),
-        wins: user.wins,
-        losses: user.losses,
-        pushes: user.pushes,
-        net_units: user.net_units,
-        win_rate: user.win_rate
+        avatar_url: keep(item.avatar_url, user.avatar_url),
+        verification_status: keep(item.verification_status, user.verification_status),
+        primary_sport: keep(item.primary_sport, Array.isArray(user.favorite_sports) ? user.favorite_sports[0] : null),
+        wins: keep(item.wins, user.wins),
+        losses: keep(item.losses, user.losses),
+        pushes: keep(item.pushes, user.pushes),
+        net_units: keep(item.net_units, user.net_units),
+        win_rate: keep(item.win_rate, user.win_rate)
     };
 }
 
@@ -768,7 +786,7 @@ async function loadFeed() {
                 } catch(e) {}
             }
 
-            const userMap = await fetchPublicUsersByName(items.map(i => getUsername(i)));
+            const userMap = buildUserMapFromFeed(items);
             items = items.map(i => attachUserRecord(i, userMap[getUsername(i)]));
             items = aggregateFeedItems(items);
             items.sort((a, b) => new Date(b.graded_at || b.created_at || b.locked_at || 0) - new Date(a.graded_at || a.created_at || a.locked_at || 0));
