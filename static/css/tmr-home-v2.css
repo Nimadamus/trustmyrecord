@@ -288,7 +288,12 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
   linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 62%, var(--navy-3) 100%)}
 .hero .grain{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(110deg,rgba(255,255,255,.028) 0 1.5px,transparent 1.5px 24px)}
-.hero-in{position:relative;z-index:3;flex:1}
+/* Nima 2026-08-14: the breadcrumb bar above the ticker was removed, which
+   made the hero 72px taller. With the block top-anchored all of that
+   became dead space above the stats stripe ("too much empty space"), so
+   the block sits centred in the hero's free height instead. */
+.hero-in{position:relative;z-index:3;flex:1;display:flex;align-items:center}
+.hero-in>.wrap{width:100%}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt)}
@@ -623,39 +628,29 @@ box-shadow:none !important;color:#7f8ea6 !important}
   border-color: rgba(34, 210, 192, .62);
 }
 
-/* The badge is out of flow and reserves NO space. Two earlier attempts did:
-   padding on the trend row widened this card from 260px to 325px and pushed the
-   three games to its right along with it, which is exactly the movement we were
-   asked not to cause. The badge now overlays the tail of the trend line behind a
-   short scrim. The trend text is unchanged in the DOM and still fully readable
-   from the card's title attribute. */
-.ticker .gm.gm--gf .gm-tr::after {
-  content: ""; position: absolute; right: 0; bottom: 0; width: 108px; height: 18px;
-  background: linear-gradient(90deg, rgba(9,24,32,0) 0%, rgba(9,26,34,.92) 42%, rgba(9,26,34,.97) 100%);
-  pointer-events: none;
-}
-.ticker .gm.gm--gf .gm-tr { position: static; }
-
+/* The badge is out of flow and reserves NO space, and it must NEVER cover game
+   information (Nima, 2026-08-13): the earlier bottom-right placement sat on the
+   pitcher line. It now lives in the card's top padding + centering slack, above
+   the team row, as a small quiet pill - matchup first, preview second. */
 .ticker .gm.gm--gf .gm-gf {
-  position: absolute; bottom: 5px; right: 8px;
-  font-size: 8.5px; font-weight: 900; letter-spacing: .08em;
-  color: #06231F; background: var(--brand-lt, #22D2C0);
-  padding: 2px 5px; border-radius: 3px; line-height: 1;
+  position: absolute; top: 1px; right: 8px;
+  font-size: 7px; font-weight: 800; letter-spacing: .12em;
+  color: var(--brand-lt, #22D2C0);
+  background: rgba(6, 35, 31, .55);
+  border: 1px solid rgba(34, 210, 192, .40);
+  padding: 1px 4px; border-radius: 999px; line-height: 1;
   pointer-events: none; white-space: nowrap;
 }
+/* When the card also carries a trend row its content fills the strip's height
+   and the top slack the badge sits in is gone - so the badge yields. The card's
+   tint + pulse still mark the preview game; nothing may overlap the matchup. */
+.ticker .gm.gm--gf:has(.gm-tr) .gm-gf { display: none; }
 
-/* The pulse, made visible. It used to breathe once every SEVEN seconds with a
-   4px halo — so faint and so rare that on a moving ticker nobody ever saw it,
-   which is the same as not having it. Now every 3s, with a wider halo and the
-   card's own tint lifting with it, so the eye is caught by the card rather than
-   only by the badge. Still box-shadow and background only: no geometry moves,
-   so the strip's height and every other card stay exactly where they were. */
-/* A real flash, on a 2s clock.
-   The previous pass took this from one faint breath every 7s to a halo every 3s
-   and it was still too quiet to notice on a strip that is itself moving. This
-   version drives the BORDER as well as the halo and the fill, so the card's
-   whole outline lights rather than a soft glow appearing around it, and it
-   holds the bright state briefly instead of passing through it.
+/* The pulse: a slow, premium breathing glow (Nima, 2026-08-13). The hard 2s
+   border flash existed to compete with the call-out bar below the strip; that
+   bar is gone and the card is the ONLY entry point, so the treatment is now a
+   tasteful glow that lifts the border, halo and tint together and settles back
+   — noticeable on a moving strip without reading like a casino ad.
 
    Still box-shadow, border-color and background only — no geometry — so the
    strip's height and every card's x and width are untouched, which is what the
@@ -663,99 +658,27 @@ box-shadow:none !important;color:#7f8ea6 !important}
 @keyframes tmrGfPulse {
   0%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
                          0 0 0 0 rgba(34, 210, 192, 0);
-             border-color: rgba(34, 210, 192, .38);
-             background: rgba(34, 210, 192, .10); }
-  35%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 0 4px rgba(34, 210, 192, .55);
-             border-color: rgba(34, 210, 192, 1);
-             background: rgba(34, 210, 192, .30); }
-  55%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 0 6px rgba(34, 210, 192, .38);
-             border-color: rgba(34, 210, 192, .95);
-             background: rgba(34, 210, 192, .26); }
-  85%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 0 14px rgba(34, 210, 192, 0);
-             border-color: rgba(34, 210, 192, .38);
-             background: rgba(34, 210, 192, .12); }
+             border-color: rgba(34, 210, 192, .40);
+             background: rgba(34, 210, 192, .09); }
+  50%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 10px 2px rgba(34, 210, 192, .38);
+             border-color: rgba(34, 210, 192, .85);
+             background: rgba(34, 210, 192, .18); }
 }
-.ticker .gm.gm--gf { animation: tmrGfPulse 2s ease-in-out infinite; }
+.ticker .gm.gm--gf { animation: tmrGfPulse 2.6s ease-in-out infinite; }
 
-/* The badge flashes on the same clock, and harder than the card: it is the bit
-   carrying the call to action. */
-@keyframes tmrGfBadge {
-  0%, 100% { opacity: .82; transform: scale(1); }
-  35%      { opacity: 1;   transform: scale(1.06); }
-  55%      { opacity: 1;   transform: scale(1.04); }
-}
-.ticker .gm.gm--gf .gm-gf {
-  animation: tmrGfBadge 2s ease-in-out infinite;
-  transform-origin: 100% 100%;
-  box-shadow: 0 0 12px rgba(34, 210, 192, .45);
-}
+/* The badge itself does not flash (Nima, 2026-08-13): the card's breathing
+   glow is the whole treatment, the badge just names it. */
 
 /* Someone who has asked the OS for less motion gets the styling and none of the
    animation. The card is still obviously the featured one without it. */
 @media (prefers-reduced-motion: reduce) {
-  .ticker .gm.gm--gf,
-  .ticker .gm.gm--gf .gm-gf { animation: none; }
+  .ticker .gm.gm--gf { animation: none; }
   /* Without the pulse the card still has to read as the featured one, so it
      keeps the brighter of the two tints rather than the resting one. */
   .ticker .gm.gm--gf { background: rgba(34, 210, 192, .16); }
 }
 
-/* ============================================================================
-   THE BREAKDOWN CALL-OUT  (#tmr-gf-callout, injected by tmr-home-live.js)
-
-   A stationary second entry point under the strip. The badge on a ticker card
-   is small, the strip pages every few seconds, and the flagged game is often
-   not on the first page — so on a cold load a reader can miss it entirely.
-   This does not move and states the offer in words.
-
-   Injected, never baked into index.html: the homepage markup is locked, and a
-   matchup cover was built into it once and rejected. It appears only when there
-   is an article to point at.
-   ========================================================================== */
-.gf-callout {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  max-width: 1240px;
-  margin: 8px auto 0;
-  padding: 10px 16px;
-  border: 1px solid rgba(34, 210, 192, .40);
-  border-left: 3px solid var(--brand-lt, #22D2C0);
-  border-radius: 6px;
-  /* An OPAQUE dark base under the tint. The first version used only a
-     translucent teal gradient, which assumed the strip below the ticker was
-     dark — on the live homepage it is not, and near-white text on a pale
-     section made the club names almost unreadable. The bar now carries its own
-     background instead of borrowing whatever it happens to sit on. */
-  background:
-    linear-gradient(90deg, rgba(34,210,192,.20) 0%, rgba(34,210,192,.07) 55%, rgba(34,210,192,0) 100%),
-    #0B1219;
-  text-decoration: none;
-  color: #EAF3F6;
-}
-.gf-callout:hover {
-  border-color: rgba(34, 210, 192, .75);
-  background:
-    linear-gradient(90deg, rgba(34,210,192,.30) 0%, rgba(34,210,192,.12) 55%, rgba(34,210,192,0) 100%),
-    #0E1720;
-}
-.gf-callout-k {
-  font-size: 9.5px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
-  color: #06231F; background: var(--brand-lt, #22D2C0);
-  padding: 3px 7px; border-radius: 3px; line-height: 1;
-}
-.gf-callout-m { font-size: 14px; font-weight: 800; color: #EAF3F6; }
-.gf-callout-d { font-size: 12.5px; color: #8FA3AD; flex: 1 1 220px; min-width: 0; }
-.gf-callout-cta {
-  font-size: 12px; font-weight: 800; letter-spacing: .02em;
-  color: var(--brand-lt, #22D2C0); white-space: nowrap;
-}
-
-@media (max-width: 700px) {
-  .gf-callout { margin-inline: 12px; padding: 9px 12px; }
-  .gf-callout-d { display: none; }
-}
+/* The breakdown call-out bar that sat under the strip was REMOVED at Nima's
+   instruction (2026-08-13): the featured game's own ticker card is the single
+   entry point. Do not reintroduce a second promotional bar here. */
