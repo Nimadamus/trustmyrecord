@@ -324,7 +324,10 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    the block sits centred in the hero's free height instead. */
 .hero-in{position:relative;z-index:3;flex:1;display:flex;align-items:center}
 .hero-in>.wrap{width:100%}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 492px;gap:72px;align-items:center}
+/* Nima 2026-08-15: the headline column sits a few pixels high of dead centre,
+   and the Capper card is a touch smaller than it was. Both are deliberate. */
+.hero-grid>div:first-child{margin-top:-8px}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt)}
 .hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}
@@ -335,26 +338,26 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 /* verified-record card */
 .spot{background:var(--panel);border-radius:12px;box-shadow:0 6px 16px rgba(2,12,22,.22), 0 26px 56px rgba(2,12,22,.26);overflow:hidden}
 .spot .rail{height:4px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}
-.spot .hd{padding:15px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
-.spot .hd b{font-size:12.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
-.spot .bd{padding:22px 24px 20px}
-.spot .who{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-.spot .who .avbox{width:66px;height:66px;border-radius:12px;background:linear-gradient(140deg,var(--brand),var(--brand-dk));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px;flex:0 0 auto}
-.spot .nmrow{display:flex;align-items:center;gap:11px}
-.spot .who b{font-size:27px;font-weight:900;letter-spacing:-.035em;line-height:1.1}
-.spot .sub2{display:block;font-size:14.5px;color:var(--muted);font-weight:600;margin-top:5px}
+.spot .hd{padding:13px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.spot .hd b{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
+.spot .bd{padding:20px 22px 18px}
+.spot .who{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.spot .who .avbox{width:60px;height:60px;border-radius:12px;background:linear-gradient(140deg,var(--brand),var(--brand-dk));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:20px;flex:0 0 auto}
+.spot .nmrow{display:flex;align-items:center;gap:10px}
+.spot .who b{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1.1}
+.spot .sub2{display:block;font-size:13.5px;color:var(--muted);font-weight:600;margin-top:5px}
 .vchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;background:var(--brand-soft);color:var(--brand-dk);font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(12,148,140,.28)}
 .spot .g3{display:grid;grid-template-columns:minmax(max-content,1.15fr) minmax(0,1fr) minmax(0,1fr);border:1px solid var(--edge);border-radius:8px;overflow:hidden}
-.spot .g3>div{padding:18px 18px;border-right:1px solid var(--line);background:var(--panel-2);min-width:0}
+.spot .g3>div{padding:16px 16px;border-right:1px solid var(--line);background:var(--panel-2);min-width:0}
 .spot .g3>div:last-child{border-right:none}
-.spot .g3 b{display:block;font-size:26px;font-weight:900;letter-spacing:-.04em;line-height:1.1;white-space:nowrap}.spot .g3>div:first-child{padding-left:14px;padding-right:12px}.spot .g3>div:first-child b{font-size:clamp(17px,1.42vw,26px);letter-spacing:-.03em}
-.spot .g3 span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.sparkwrap{margin-top:18px}
-.sparkwrap .lb{display:flex;justify-content:space-between;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
-.spark{display:flex;align-items:flex-end;gap:4px;height:50px}
+.spot .g3 b{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em;line-height:1.1;white-space:nowrap}.spot .g3>div:first-child{padding-left:13px;padding-right:11px}.spot .g3>div:first-child b{font-size:clamp(16px,1.34vw,24px);letter-spacing:-.03em}
+.spot .g3 span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.sparkwrap{margin-top:16px}
+.sparkwrap .lb{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.spark{display:flex;align-items:flex-end;gap:4px;height:46px}
 .spark i{flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--brand-lt),var(--brand));display:block}
 .spark i.dn{background:#EFC3BE}
-.spot .ft{padding:15px 24px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);font-weight:600}
+.spot .ft{padding:13px 22px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);font-weight:600}
 
 /* ---------- BRIDGE (dark -> light connector) ---------- */
 .bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0;width:100%}
@@ -509,7 +512,7 @@ footer a{margin-right:22px;color:#93AEC7}
 footer a:hover{color:#fff}
 
 @media(max-width:1400px){
-  .hero-grid{grid-template-columns:minmax(0,1fr) 460px;gap:48px}
+  .hero-grid{grid-template-columns:minmax(0,1fr) 436px;gap:48px}
   .board{grid-template-columns:1fr}
   .compete{grid-template-columns:1fr}
   .bridge-in{grid-template-columns:repeat(2,1fr)}
@@ -519,6 +522,9 @@ footer a:hover{color:#fff}
 }
 @media(max-width:1180px){
   .hero-grid{grid-template-columns:1fr;gap:40px}
+  /* Stacked: the columns are full width, so the desktop nudge would only open a
+     gap above the card. */
+  .hero-grid>div:first-child{margin-top:0}
   .hero h1.hh{font-size:50px}
 }
 
@@ -1089,7 +1095,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
 
     <aside class="spot">
       <div class="rail"></div>
-      <div class="hd"><b>&#9733; Capper of the week</b><a class="tlink" style="font-size:14px" href="/handicappers/">Full profile &rarr;</a></div>
+      <div class="hd"><b>&#9733; Capper of the week</b><a class="tlink" style="font-size:13px" href="/handicappers/">Full profile &rarr;</a></div>
       <!--MK:homeCapper--><div class="bd is-skel" aria-busy="true">
         <div class="who"><span class="avbox"><i class="sk" style="width:34px"></i></span>
           <span><span class="nmrow" data-linked="1"><a href="/handicappers/"><b><i class="sk" style="width:132px"></i></b></a><span class="vchip">Verified</span></span><span class="sub2"><i class="sk" style="width:100%"></i><i class="sk" style="width:62%"></i></span></span></div>
@@ -1103,7 +1109,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
           <div class="spark"><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i></div>
         </div>
       </div><!--/MK:homeCapper-->
-      <div class="ft"><span><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:14px" id="tmrCapperBuy" href="/marketplace/">Buy picks &rarr;</a><a class="tlink" style="font-size:14px" href="/handicappers/">View ledger &rarr;</a></span></div>
+      <div class="ft"><span><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:13px" id="tmrCapperBuy" href="/marketplace/">Buy picks &rarr;</a><a class="tlink" style="font-size:13px" href="/handicappers/">View ledger &rarr;</a></span></div>
     </aside>
   </div></div>
 
