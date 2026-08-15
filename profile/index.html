@@ -2524,6 +2524,125 @@
                         </div>
                       </div>
 
+                      <!-- ===== DEPTH PANELS (2026-08-15) =========================
+                           Every panel below reads user_stat_breakdowns through
+                           loadDepthBreakdowns(). Same table markup, same classes
+                           and same sample rule as the panels above: a dimension a
+                           pick cannot be placed in honestly simply does not carry
+                           that pick, and a panel with no rows hides itself rather
+                           than printing an empty shell. ======================== -->
+                      <div class="tmrx-section" id="tmrxVenueSideSection" hidden>
+                        <div class="tmrx-grid-2">
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Home vs Away</div><div class="tmrx-section-sub">Which side of the venue the pick was on. Totals and props carry no side and are excluded.</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableHomeAwayTop">
+                                <thead><tr><th>Side</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No home/away rows yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Over vs Under</div><div class="tmrx-section-sub">Every total played, full game and team totals alike.</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableSideTotalTop">
+                                <thead><tr><th>Side</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No totals played yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section" id="tmrxTimingSection" hidden>
+                        <div class="tmrx-grid-2">
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Bet Timing</div><div class="tmrx-section-sub">Hours between locking the pick and first pitch. Are you sharper early, or late?</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableBetTimingTop">
+                                <thead><tr><th>When</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No timing rows yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Day vs Night</div><div class="tmrx-section-sub">Game start on the Eastern clock. 5:00 PM ET splits the slates.</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableDaypartTop">
+                                <thead><tr><th>Slate</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No day/night rows yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section" id="tmrxOpponentSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Teams Faded</div>
+                            <div class="tmrx-section-sub">The mirror of Performance by Team: every club bet <em>against</em>. Moneyline, spread and team totals; totals and props have no opponent and are excluded.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableOpponentTop">
+                            <thead><tr><th>Faded</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="7">No faded-team rows yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section" id="tmrxPropTypeSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Player Props by Stat</div>
+                            <div class="tmrx-section-sub">Every player prop, split by the stat itself.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTablePropTypeTop">
+                            <thead><tr><th>Stat</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="6">No player props yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section" id="tmrxLineNumberSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">By The Number</div>
+                            <div class="tmrx-section-sub">The exact number on the ticket &mdash; every spread, total and team total played, not a tier.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableLineNumberTop">
+                            <thead><tr><th>Number</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="7">No numbered markets yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section" id="tmrxMonthSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Month by Month</div>
+                            <div class="tmrx-section-sub">Calendar month of the game, newest first. Season totals sit underneath.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableMonthTop">
+                            <thead><tr><th>Month</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="6">No monthly rows yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                        <div class="tmrx-table-shell" id="tmrxSeasonShell" hidden>
+                          <table class="tmrx-table" id="tmrxTableSeasonTop">
+                            <thead><tr><th>Season</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody></tbody>
+                          </table>
+                        </div>
+                      </div>
+
                       <div class="tmrx-section">
                         <div class="tmrx-section-head">
                           <div>
@@ -2595,7 +2714,11 @@
                               <tr data-tmrx-adv-top="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite. Hidden until 25+ decisions.</td></tr>
                               <tr data-tmrx-adv-top="max_drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units.</td></tr>
                               <tr data-tmrx-adv-top="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
-                              <tr data-tmrx-adv-top="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td><b>Unavailable until closing-line tracking is enabled on the picks table.</b></td></tr>
+                              <tr data-tmrx-adv-top="win_rate_interval"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson interval: where the true win rate sits, given this sample. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv-top="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
+                              <tr data-tmrx-adv-top="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
+                              <tr data-tmrx-adv-top="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
+                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
                             </tbody>
                           </table>
                         </div>
@@ -3555,7 +3678,11 @@
                               <tr data-tmrx-adv="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite (ROI &middot; sample &middot; eWP &middot; Z &middot; drawdown &middot; consistency). Hidden until 25+ decisions.</td></tr>
                               <tr data-tmrx-adv="max_drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units along the equity curve.</td></tr>
                               <tr data-tmrx-adv="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
-                              <tr data-tmrx-adv="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td><b>Unavailable until closing-line tracking is enabled on the picks table.</b> No estimates, per the no-fake-data rule.</td></tr>
+                              <tr data-tmrx-adv="win_rate_interval"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson score interval: the band the true win rate falls in at this sample size. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
+                              <tr data-tmrx-adv="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
+                              <tr data-tmrx-adv="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
+                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
                             </tbody>
                           </table>
                         </div>
@@ -8304,6 +8431,55 @@
             setAdv('peak_units', fmtSigned(v, 'u', 2), v);
         }
 
+        // ---- Sample honesty + closing line value (2026-08-15) ----
+        // Each of these stays "—" unless the backend returned a real number:
+        // an interval needs 5+ decisions, and CLV needs a pick that was made
+        // after closing-line capture went live.
+        const wri = sc.win_rate_interval;
+        if (wri && wri.low != null && wri.high != null) {
+            setAdv('win_rate_interval', wri.low.toFixed(1) + '% – ' + wri.high.toFixed(1) + '%', null);
+        }
+        const be = sc.break_even;
+        if (be && be.gap_points != null) {
+            const g = Number(be.gap_points);
+            setAdv('break_even', fmtSigned(g, ' pts', 2) + ' (need ' + Number(be.break_even_win_rate).toFixed(2) + '%)', g);
+        }
+        const clvDetail = sc.clv_detail;
+        if (clvDetail && clvDetail.available) {
+            if (clvDetail.avg_clv != null) {
+                const c = Number(clvDetail.avg_clv);
+                setAdv('clv', fmtSigned(c, ' pts', 2) + ' · ' + clvDetail.sample_size + ' tracked', c);
+            }
+            if (clvDetail.beat_close_rate != null) {
+                const r = Number(clvDetail.beat_close_rate);
+                setAdv('clv_beat_rate', r.toFixed(1) + '% (' + clvDetail.beat_close_count + '/' + clvDetail.priced_sample_size + ')', r - 50);
+            }
+            const moved = clvDetail.line_moved_your_way;
+            if (moved && moved.rate != null) {
+                const r = Number(moved.rate);
+                setAdv('clv_line_moved', r.toFixed(1) + '% (' + moved.count + '/' + moved.sample_size + ')', r - 50);
+            }
+            // Say WHEN tracking started, on the CLV row itself, so a small
+            // sample is never read as a small record.
+            if (clvDetail.tracked_since) {
+                const since = new Date(clvDetail.tracked_since);
+                if (!isNaN(since.getTime())) {
+                    ['[data-tmrx-adv="clv"]', '[data-tmrx-adv-top="clv"]'].forEach(sel => {
+                        const tr = document.querySelector(sel);
+                        const cell = tr && tr.querySelectorAll('td')[2];
+                        if (!cell) return;
+                        const stamp = since.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                        if (!cell.querySelector('.tmrx-clv-since')) {
+                            const note = document.createElement('span');
+                            note.className = 'tmrx-clv-since';
+                            note.textContent = ' Tracking on this record since ' + stamp + '.';
+                            cell.appendChild(note);
+                        }
+                    });
+                }
+            }
+        }
+
         // ---- Equity curve + drawdown strip ----
         // Render directly into BOTH the Advanced-tab SVG (#tmrxEquitySvg) and
         // the default Picks-tab SVG (#tmrxEquitySvgTop). Mirror-via-innerHTML
@@ -12644,6 +12820,7 @@
         // on every refresh regardless of which advanced-stats branch runs.
         if (!teamSortInited) { initTeamBreakdownSort(); teamSortInited = true; }
         loadTeamBreakdown();
+        loadDepthBreakdowns();
         if (!profileUsername || !api || typeof api.getUserAdvancedStats !== 'function') {
             await loadSportBreakdown();
             renderBetTypeBreakdownFromPicks();
@@ -13119,6 +13296,222 @@
         const sport = TMRX_SPORT_PREFIX[prefix] || tmrxTitleize(prefix);
         const league = rest ? (rest.length <= 5 && rest.indexOf('_') < 0 ? rest.toUpperCase() : tmrxTitleize(rest)) : sport;
         return [sport || 'Other', league || 'Other'];
+    }
+
+    /* ---- DEPTH PANELS (2026-08-15) --------------------------------------
+       Home/away, over/under, prop stat, bet timing, day vs night, teams faded,
+       exact line number, month and season. All nine come from
+       user_stat_breakdowns in ONE request; each renders into the same
+       .tmrx-table markup the panels above it use, and a panel with no rows
+       stays hidden rather than showing an empty shell. Nothing here computes a
+       record - it renders what the aggregator already counted. */
+    const TMRX_DEPTH_CATEGORIES = [
+        'home_away', 'side_total', 'prop_type', 'bet_timing',
+        'daypart', 'opponent', 'line_number', 'month', 'season'
+    ];
+    const TMRX_DEPTH_LABELS = {
+        home: 'Home side', away: 'Away side',
+        over: 'Over', under: 'Under',
+        day: 'Day games (before 5 PM ET)', night: 'Night games (5 PM ET on)',
+        under_1h: 'Under 1 hour out', '1_to_6h': '1 – 6 hours out',
+        '6_to_24h': '6 – 24 hours out', '24h_plus': 'A day or more out',
+        strikeouts: 'Strikeouts', hits_allowed: 'Hits allowed', pitcher_walks: 'Walks',
+        earned_runs: 'Earned runs', outs: 'Outs recorded', hits: 'Hits',
+        total_bases: 'Total bases', rbi: 'RBI', runs: 'Runs', home_runs: 'Home runs',
+        spread: 'Spread', total: 'Total', team_total: 'Team total', first_five: 'First five'
+    };
+    /* Bet timing reads as a sequence, not a leaderboard - keep it in clock
+       order however the buckets happen to sort by net units. */
+    const TMRX_DEPTH_ORDER = {
+        bet_timing: ['24h_plus', '6_to_24h', '1_to_6h', 'under_1h'],
+        daypart: ['day', 'night'],
+        home_away: ['home', 'away'],
+        side_total: ['over', 'under']
+    };
+
+    function tmrxDepthLabel(value) {
+        const key = String(value == null ? '' : value).toLowerCase();
+        if (TMRX_DEPTH_LABELS[key]) return TMRX_DEPTH_LABELS[key];
+        return String(value || '—').replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    }
+
+    /* "2026-08" -> "August 2026". Parsed as a plain date string, never through
+       the visitor's clock, so the month can never slip by a timezone. */
+    function tmrxMonthLabel(value) {
+        const m = /^(\d{4})-(\d{2})$/.exec(String(value || ''));
+        if (!m) return String(value || '—');
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+        const idx = Number(m[2]) - 1;
+        return (MONTHS[idx] || m[2]) + ' ' + m[1];
+    }
+
+    /* Line-number buckets arrive as `sport|market|number` and render as
+       "Spread -1.5" so the number itself is the row, exactly as it was bet. */
+    function tmrxLineNumberLabel(rest) {
+        const parts = String(rest || '').split('|');
+        if (parts.length < 2) return tmrxDepthLabel(rest);
+        const market = tmrxDepthLabel(parts[0]);
+        const number = parts.slice(1).join('|').replace(/\b(over|under)\b/i, function (w) {
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        });
+        return market + ' ' + number;
+    }
+
+    /* Same signed formatting the other tmrx tables use (+1.25u / -3.40%);
+       their own fmtSigned lives inside the render closures, so this block
+       carries its own copy rather than reaching into one of them. */
+    function tmrxDepthSigned(value, suffix, decimals) {
+        const n = Number(value) || 0;
+        const d = decimals == null ? 2 : decimals;
+        return (n > 0 ? '+' : '') + n.toFixed(d) + (suffix || '');
+    }
+
+    function tmrxDepthRow(row, labelCells) {
+        const w = Number(row.wins) || 0, l = Number(row.losses) || 0, p = Number(row.pushes) || 0;
+        const dec = w + l;
+        const winPct = dec > 0 ? (w / dec) * 100 : 0;
+        const winCls = dec > 0 ? (winPct >= 50 ? 'pos' : 'neg') : 'zero';
+        const net = Number(row.net_units) || 0;
+        const wagered = Number(row.total_units_wagered) || 0;
+        const roi = Number(row.roi) || (wagered > 0 ? (net / wagered) * 100 : 0);
+        const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
+        const roiCls = roi > 0 ? 'pos' : roi < 0 ? 'neg' : 'zero';
+        return '<tr>' + labelCells.join('') +
+            '<td class="num">' + (Number(row.total_picks) || dec + p) + '</td>' +
+            '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>' +
+            '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>' +
+            '<td class="num ' + netCls + '">' + tmrxDepthSigned(net, 'u', 2) + '</td>' +
+            '<td class="num ' + roiCls + '">' + tmrxDepthSigned(roi, '%', 2) + '</td>' +
+            '</tr>';
+    }
+
+    /* One table + the section that owns it. Empty data leaves the section
+       hidden: an "Over vs Under" panel on a record with no totals is noise. */
+    function tmrxRenderDepthTable(tableId, sectionId, rows, opts) {
+        const table = document.getElementById(tableId);
+        const section = sectionId ? document.getElementById(sectionId) : null;
+        if (!table) return false;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return false;
+        opts = opts || {};
+        const list = (Array.isArray(rows) ? rows : []).slice();
+        if (!list.length) return false;
+
+        if (opts.order) {
+            list.sort(function (a, b) {
+                const ai = opts.order.indexOf(String(a.bucket));
+                const bi = opts.order.indexOf(String(b.bucket));
+                return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+            });
+        } else if (opts.sort === 'bucket_desc') {
+            list.sort(function (a, b) { return String(b.bucket).localeCompare(String(a.bucket)); });
+        } else {
+            list.sort(function (a, b) { return (Number(b.net_units) || 0) - (Number(a.net_units) || 0); });
+        }
+        if (opts.limit) list.length = Math.min(list.length, opts.limit);
+
+        tbody.innerHTML = list.map(function (row) {
+            return tmrxDepthRow(row, opts.labelCells(row));
+        }).join('');
+        if (section) section.hidden = false;
+        return true;
+    }
+
+    /* `sport_key|value` buckets: the team panel's own encoding, reused so a
+       club or a number never merges across leagues. */
+    function tmrxSplitScoped(bucket) {
+        const raw = String(bucket || '');
+        const sep = raw.indexOf('|');
+        return sep < 0
+            ? { sportKey: '', rest: raw }
+            : { sportKey: raw.slice(0, sep), rest: raw.slice(sep + 1) };
+    }
+
+    async function loadDepthBreakdowns() {
+        if (!profileUsername || !api || typeof api.request !== 'function') return;
+        let rows = [];
+        try {
+            const data = await api.request('/users/' + encodeURIComponent(profileUsername) +
+                '/stats/breakdowns?category=' + TMRX_DEPTH_CATEGORIES.join(','));
+            rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+        } catch (e) {
+            // Non-fatal: the panels stay hidden, the rest of the profile is untouched.
+            return;
+        }
+        if (!rows.length) return;
+
+        const byCategory = {};
+        rows.forEach(function (r) {
+            if (!r || !r.category) return;
+            (byCategory[r.category] = byCategory[r.category] || []).push(r);
+        });
+        const plain = function (labeller) {
+            return function (row) { return ['<td class="name">' + escapeHtml(labeller(row.bucket)) + '</td>']; };
+        };
+
+        const venue = tmrxRenderDepthTable('tmrxTableHomeAwayTop', null, byCategory.home_away,
+            { order: TMRX_DEPTH_ORDER.home_away, labelCells: plain(tmrxDepthLabel) });
+        const sides = tmrxRenderDepthTable('tmrxTableSideTotalTop', null, byCategory.side_total,
+            { order: TMRX_DEPTH_ORDER.side_total, labelCells: plain(tmrxDepthLabel) });
+        const venueSection = document.getElementById('tmrxVenueSideSection');
+        if (venueSection && (venue || sides)) venueSection.hidden = false;
+
+        const timing = tmrxRenderDepthTable('tmrxTableBetTimingTop', null, byCategory.bet_timing,
+            { order: TMRX_DEPTH_ORDER.bet_timing, labelCells: plain(tmrxDepthLabel) });
+        const daypart = tmrxRenderDepthTable('tmrxTableDaypartTop', null, byCategory.daypart,
+            { order: TMRX_DEPTH_ORDER.daypart, labelCells: plain(tmrxDepthLabel) });
+        const timingSection = document.getElementById('tmrxTimingSection');
+        if (timingSection && (timing || daypart)) timingSection.hidden = false;
+
+        tmrxRenderDepthTable('tmrxTablePropTypeTop', 'tmrxPropTypeSection', byCategory.prop_type,
+            { labelCells: plain(tmrxDepthLabel) });
+
+        /* Teams faded and exact numbers both carry a league column, same as the
+           team panel, and both are capped so the page stays scannable. */
+        tmrxRenderDepthTable('tmrxTableOpponentTop', 'tmrxOpponentSection', byCategory.opponent, {
+            limit: 25,
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + tmrxTeamLogoHtml(parts.rest) + escapeHtml(parts.rest) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+
+        tmrxRenderDepthTable('tmrxTableLineNumberTop', 'tmrxLineNumberSection', byCategory.line_number, {
+            limit: 25,
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + escapeHtml(tmrxLineNumberLabel(parts.rest)) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+
+        const months = tmrxRenderDepthTable('tmrxTableMonthTop', 'tmrxMonthSection', byCategory.month,
+            { sort: 'bucket_desc', labelCells: plain(tmrxMonthLabel) });
+        const seasonShell = document.getElementById('tmrxSeasonShell');
+        const seasons = tmrxRenderDepthTable('tmrxTableSeasonTop', null, byCategory.season, {
+            sort: 'bucket_desc',
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + escapeHtml(parts.rest) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+        if (seasonShell && seasons) seasonShell.hidden = false;
+        if (months || seasons) {
+            const monthSection = document.getElementById('tmrxMonthSection');
+            if (monthSection) monthSection.hidden = false;
+        }
     }
 
     async function loadTeamBreakdown() {
