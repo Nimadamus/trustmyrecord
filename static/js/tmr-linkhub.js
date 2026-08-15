@@ -51,7 +51,15 @@
     function qs(sel, root) { return (root || document).querySelector(sel); }
 
     function segments() {
-        return location.pathname.split('/').filter(Boolean);
+        var segs = location.pathname.split('/').filter(Boolean);
+        /* /foo/index.html IS /foo/, and /index.html IS the homepage. Without
+           this, the homepage served as /index.html got a "Home > Index" crumb
+           bar -- a white strip above the ticker naming a page that is the one
+           you are already on. Dropping the trailing index file leaves the
+           homepage with zero segments, which is what suppresses the bar. */
+        var last = segs[segs.length - 1];
+        if (last && /^index\.html?$/i.test(last)) segs.pop();
+        return segs;
     }
 
     function titleize(slug) {
