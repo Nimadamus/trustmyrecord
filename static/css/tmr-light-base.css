@@ -492,3 +492,29 @@ body.tmr-light .section + .section { margin-top:clamp(28px,4vw,52px); }
    --------------------------------------------------------------------------- */
 body.tmr-light img,
 body.tmr-light video { filter:none; }
+
+/* -----------------------------------------------------------------------
+   GLOBAL NAV ON LIGHT PAGES (Nima, 2026-08-15)
+   The nav bar is dark on every page, light theme or not. The derived light
+   overrides were painting the menu triggers as tinted capsules with #07182A
+   ink - near-black text on a dark bar, inside a button that should not have
+   been a button. Flat text, light ink, hover wash only.
+   ----------------------------------------------------------------------- */
+body.tmr-light .tmr-sportsbook-menu__trigger,
+body.tmr-light .tmr-community-menu__trigger,
+body.tmr-light .tmr-support-menu__trigger {
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    color: #E8EDF2;
+}
+body.tmr-light .tmr-sportsbook-menu__trigger:hover,
+body.tmr-light .tmr-community-menu__trigger:hover,
+body.tmr-light .tmr-support-menu__trigger:hover,
+body.tmr-light .tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__trigger,
+body.tmr-light .tmr-community-menu.is-open .tmr-community-menu__trigger,
+body.tmr-light .tmr-support-menu.is-open .tmr-support-menu__trigger {
+    color: #FFFFFF;
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.08);
+}

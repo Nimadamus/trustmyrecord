@@ -162,8 +162,9 @@ body.tmr-light .tmr-chart-stage__canvas{background:
 body.tmr-light .tmr-mailbox-indicator{background: rgba(188,55,46,0.12);border: 1px solid rgba(188,55,46,.28);color: #BC372E;box-shadow: 0 0 0 0 rgba(7,24,42,0.1);}
 body.tmr-light .tmr-mailbox-indicator:hover{background: rgba(188,55,46,0.14);color: #BC372E;}
 body.tmr-light .tmr-mailbox-indicator__count{background: #BC372E;color: #07182A;box-shadow: 0 0 4px rgba(7,24,42,0.1);}
-body.tmr-light .tmr-sportsbook-menu__trigger{border: 1px solid rgba(12,148,140,.28);background: rgba(12,148,140,0.1);color: #07182A;}
-body.tmr-light .tmr-sportsbook-menu__trigger:hover,body.tmr-light .tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__trigger,body.tmr-light .tmr-sportsbook-menu.is-current .tmr-sportsbook-menu__trigger{color: #07182A;border-color: rgba(12,148,140,.28);background: rgba(12,148,140,0.14);}
+body.tmr-light .tmr-sportsbook-menu__trigger{color: #07182A;}
+body.tmr-light .tmr-sportsbook-menu__trigger:hover,body.tmr-light .tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__trigger,body.tmr-light .tmr-sportsbook-menu.is-current .tmr-sportsbook-menu__trigger{color: #07182A;background: rgba(7,24,42,0.028);}
+body.tmr-light .tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__trigger,body.tmr-light .tmr-sportsbook-menu.is-current .tmr-sportsbook-menu__trigger{box-shadow: inset 0 -2px 0 0 rgba(7,24,42,0.1);}
 body.tmr-light .tmr-sportsbook-menu__panel{border: 1px solid #D2DEEA;background: #F4F7FA;box-shadow: 0 22px 48px rgba(7,24,42,0.1);}
 body.tmr-light .tmr-sportsbook-menu__panel a{color: #07182A;}
 body.tmr-light .tmr-sportsbook-menu__panel a:hover,body.tmr-light .tmr-sportsbook-menu__panel a[aria-current="page"]{background: rgba(7,24,42,0.021);}
@@ -929,4 +930,30 @@ body.tmr-light .section + .section { margin-top:clamp(28px,4vw,52px); }
    --------------------------------------------------------------------------- */
 body.tmr-light img,
 body.tmr-light video { filter:none; }
+
+/* -----------------------------------------------------------------------
+   GLOBAL NAV ON LIGHT PAGES (Nima, 2026-08-15)
+   The nav bar is dark on every page, light theme or not. The derived light
+   overrides were painting the menu triggers as tinted capsules with #07182A
+   ink - near-black text on a dark bar, inside a button that should not have
+   been a button. Flat text, light ink, hover wash only.
+   ----------------------------------------------------------------------- */
+body.tmr-light .tmr-sportsbook-menu__trigger,
+body.tmr-light .tmr-community-menu__trigger,
+body.tmr-light .tmr-support-menu__trigger {
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    color: #E8EDF2;
+}
+body.tmr-light .tmr-sportsbook-menu__trigger:hover,
+body.tmr-light .tmr-community-menu__trigger:hover,
+body.tmr-light .tmr-support-menu__trigger:hover,
+body.tmr-light .tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__trigger,
+body.tmr-light .tmr-community-menu.is-open .tmr-community-menu__trigger,
+body.tmr-light .tmr-support-menu.is-open .tmr-support-menu__trigger {
+    color: #FFFFFF;
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.08);
+}
 
