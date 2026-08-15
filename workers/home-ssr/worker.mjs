@@ -169,7 +169,11 @@ async function getSlate(ctx) {
   if (!resp.ok) return null;
   const body = await resp.text();
   const data = JSON.parse(body);
-  if (!data || data.ok === false || !Array.isArray(data.games)) return null;
+  /* A payload with no MLB row but a live NFL row is still worth baking - the
+     strip carries both sports, and one failed feed must not cost the other its
+     first paint. Only a payload with neither is refused. */
+  if (!data || data.ok === false ||
+      (!Array.isArray(data.games) && !Array.isArray(data.nfl_games))) return null;
   ctx.waitUntil(cache.put(cacheKey, new Response(body, {
     headers: {
       'Content-Type': 'application/json',
@@ -450,15 +454,18 @@ function buildRewriter(data, slate) {
   const rw = new HTMLRewriter();
 
   /* Today's games, rendered into the reserved lane. Only a same-day slate WITH
-     games is injected: an empty or stale one leaves the skeleton in place and
-     lets the page JS report the honest state, which it already knows how to do. */
-  if (slate && slateIsToday(slate) && slate.games && slate.games.length) {
+     cards is injected: an empty or stale one leaves the skeleton in place and
+     lets the page JS report the honest state, which it already knows how to do.
+     Cards from EITHER sport count - an MLB outage must not cost the NFL row its
+     first paint (2026-08-15). */
+  if (slate && slateIsToday(slate) &&
+      (((slate.games && slate.games.length) || 0) || ((slate.nfl_games && slate.nfl_games.length) || 0))) {
     rw.on('.ticker .ticker-games', new AttrCell({
       'data-slate-date': slate.slate_date,
       'aria-busy': 'false',
     }));
     rw.on('.ticker .ticker-games', new HtmlCell(
-      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games)}${nflTickerHtml(slate.nfl_games)}</div></div>`
+      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games || [])}${nflTickerHtml(slate.nfl_games)}</div></div>`
     ));
   }
 

@@ -394,13 +394,18 @@
     tickerSettled = true;
     showTicker();
 
-    if (!payload || payload.ok === false) {
+    /* One dead feed must not blank the strip. MLB and NFL are separate rows from
+       separate sources, so the lane goes to the unavailable message ONLY when
+       neither sport produced a card (2026-08-15: an MLB Stats API outage was
+       taking the football row down with it). */
+    var nflGames = (payload && payload.nfl_games) || [];
+    if (!payload || (payload.ok === false && !nflGames.length)) {
       laneMsg(lane, UNAVAILABLE_TEXT, '');
       return;
     }
     lastSlate = payload;
     var games = payload.games || [];
-    if (!games.length) {
+    if (!games.length && !nflGames.length) {
       laneMsg(lane, 'No MLB games scheduled today', payload.slate_date || '');
       return;
     }
@@ -435,7 +440,7 @@
        sports in a group - and carry the weekday in the chip because most NFL
        games are not today's. No data-game-pk: the MLB preview treatment can
        never attach to them. */
-    (payload.nfl_games || []).forEach(function (g) {
+    nflGames.forEach(function (g) {
       html += '<a class="gm gm--nfl" data-sport="nfl"' +
         ' href="' + esc(g.href || '/sportsbook/') + '">' +
         '<span class="gm-top">' +
