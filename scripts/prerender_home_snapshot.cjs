@@ -94,6 +94,28 @@ function isPlaceholder(html) {
   let out = null, failure = null;
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
+
+    // AVATAR BAKE DETERMINISM (2026-08-15). Member avatars render as
+    //   <img class="ava" src=".../users/<id>/avatar" onerror="...avl chip...">
+    // and the API answers 204 for anyone who never uploaded one. In THIS
+    // headless run the onerror handler therefore fires and rewrites the <img>
+    // into a grey initials chip - and whether it fires before the snapshot is a
+    // race, so consecutive bakes shipped different homepages: chip counts of
+    // 0, 2, 4, 5 and 7 across a single afternoon (2026-08-15), which is exactly
+    // the "it looked better half an hour ago" drift.
+    //
+    // Fulfilling avatar requests with a transparent pixel keeps every <img>
+    // intact through the snapshot, so the baked document ALWAYS carries the
+    // canonical img+onerror markup and every bake is byte-identical on this
+    // front. Real visitors are untouched: their browser loads the real avatar,
+    // or runs the same onerror fallback the markup has always carried.
+    const PIXEL = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    );
+    await page.route('**/api/users/*/avatar*', (route) =>
+      route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }));
+
     await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'domcontentloaded' });
 
     // Wait for the page's own scripts to fill every region.
@@ -125,6 +147,12 @@ function isPlaceholder(html) {
       if (html.includes(`<!--MK:${r.key}-->`) || html.includes(`<!--/MK:${r.key}-->`))
         throw new Error(`region ${r.key} captured its own marker - refusing to write`);
       if (isPlaceholder(html)) throw new Error(`region ${r.key} came back empty or as a placeholder - refusing to write`);
+      // The pixel route above means a swapped-in chip can only come from markup
+      // that never had an <img> to begin with. A capture that carries one anyway
+      // means the route stopped covering the avatar URL, and baking it would
+      // resume the flapping - fail loudly instead of shipping the drift.
+      if (/class="avl"/.test(html) && /onerror=/.test(html))
+        throw new Error(`region ${r.key} baked an avatar fallback chip - the avatar route no longer covers these requests`);
       const re = new RegExp(`(<!--MK:${r.key}-->)[\\s\\S]*?(<!--/MK:${r.key}-->)`);
       if (!re.test(text)) throw new Error(`marker <!--MK:${r.key}--> missing from index.html - the homepage markup lost its prerender anchor`);
       const next = text.replace(re, (_m, a, b) => a + html + b);
