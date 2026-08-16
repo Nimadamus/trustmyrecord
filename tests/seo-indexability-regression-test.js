@@ -235,6 +235,14 @@ console.log('\nnoindex allowlist');
   const ALLOW_NOINDEX = new Set([
     SITE + '/admin/tmr-economy/',
     SITE + '/betlegend-pro/app/',
+    // The service worker's offline fallback for the page above. Same private,
+    // per-account surface, and it is not a page anyone navigates to: it is
+    // returned by the worker when an installed app cannot reach the network,
+    // it is linked from nowhere, and its entire content is "you're offline".
+    // Indexing it would put that sentence in search results under the product's
+    // name. Added deliberately, per SEO_INDEXING_PROTOCOL.md section 2's
+    // "genuinely private/gated surfaces" carve-out.
+    SITE + '/betlegend-pro/app/offline.html',
     SITE + '/mlb-simulator/simulations/matchup/',
     SITE + '/mlb-simulator/simulations/run/',
   ]);

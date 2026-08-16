@@ -30,6 +30,13 @@ tools (`/admin/tmr-coin/`), and confirm-before-touching gated features flagged s
 to the owner (currently `/arena/challenge/` per-invite pages, `/mlb-simulator/season/` +
 `/mlb-simulator/season/calendar/` login-gated pages). Anything else with `noindex` is a bug —
 grep both repos for `noindex`/`X-Robots-Tag` and report it rather than assuming it's policy.
+
+Added 2026-08-16: `/betlegend-pro/app/offline.html`. It is the BetLegend Pro
+service worker's offline fallback for `/betlegend-pro/app/`, which is already on
+this list. Nobody navigates to it — the worker returns it when an installed app
+cannot reach the network, it is linked from nowhere, and its entire content is
+"you're offline". Indexing it would put that sentence in search results under
+the product's name. It is not in `sitemap.xml`.
 `/how-it-works/`, `/contact/`, and `/community/` are PUBLIC INDEXABLE pages, in the sitemap.
 NEVER ship a page with `noindex` that is also listed in `sitemap.xml`.
 
