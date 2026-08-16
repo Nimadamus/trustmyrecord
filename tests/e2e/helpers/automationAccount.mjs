@@ -35,6 +35,16 @@
  * exclusions above can be undone by editing a route: the invariant lives in the
  * database, not in Express.
  *
+ * The provenance is written IN the INSERT, not by a follow-up UPDATE, so the
+ * account is excluded from creation time -- it never counts as a member, not
+ * even for the instant between two statements. (That gap was real: the
+ * "user joined" feed trigger is AFTER INSERT and reads is_internal_test at that
+ * moment, which is how 2136 announced itself on the LIVE ON TMR strip.)
+ *
+ * DO NOT create an account on production to satisfy a spec without asking Nima
+ * first. This helper is for fixtures he has already approved; it makes an
+ * approved account safe, it does not make an unapproved one acceptable.
+ *
  * Do not register accounts any other way from a test. If you need one that
  * outlives the run, still create it through here -- provenance is what keeps it
  * out of the numbers, and it is permanent.
