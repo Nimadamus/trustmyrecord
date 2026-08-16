@@ -549,7 +549,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260814-answerfirst';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260816-picker-sortable';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -1374,6 +1374,69 @@
         if (ev.key === 'Escape' && !$('condMenu').hidden) openCondMenu(false);
     });
 
+    // ------------------------------------------------------- table sorting
+    /**
+     * Sort a rendered results table by one of its columns.
+     *
+     * Presentation only: it reorders the rows already on screen and never
+     * re-queries, so no record, average or sample size can move as a result.
+     * The caption says so, because a table that reorders itself is otherwise
+     * indistinguishable from one that re-filtered.
+     *
+     * A cell's `data-k` wins over its text where the two differ ("4-5" sorts
+     * on 9, "Yankees -148" on -148). Rows with no value for the column always
+     * sink to the bottom in both directions, so a run of "—" never breaks up
+     * the ordering the reader asked for.
+     */
+    function sortTableBy(th) {
+        var kind = th.getAttribute('data-sort');
+        if (!kind) return;
+        var table = th.closest('table');
+        var tbody = table.tBodies[0];
+        if (!tbody) return;
+        var index = [].indexOf.call(th.parentNode.children, th);
+        var next = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+        var dir = next === 'ascending' ? 1 : -1;
+
+        var keyed = [].map.call(tbody.rows, function (row, position) {
+            var cell = row.cells[index];
+            var raw = cell ? (cell.hasAttribute('data-k') ? cell.getAttribute('data-k')
+                                                          : cell.textContent.trim()) : '';
+            var empty = raw === '' || raw === '—';
+            var value = kind === 'num' ? Number(raw) : raw.toLowerCase();
+            if (kind === 'num' && !isFinite(value)) empty = true;
+            // `position` keeps the sort stable: equal keys hold the order the
+            // server returned them in rather than shuffling on every click.
+            return { row: row, value: value, empty: empty, position: position };
+        });
+        keyed.sort(function (a, b) {
+            if (a.empty !== b.empty) return a.empty ? 1 : -1;
+            if (a.empty) return a.position - b.position;
+            if (a.value < b.value) return -1 * dir;
+            if (a.value > b.value) return 1 * dir;
+            return a.position - b.position;
+        });
+        var frag = document.createDocumentFragment();
+        keyed.forEach(function (item) { frag.appendChild(item.row); });
+        tbody.appendChild(frag);
+
+        [].forEach.call(table.querySelectorAll('th[aria-sort]'), function (other) {
+            other.setAttribute('aria-sort', other === th ? next : 'none');
+        });
+    }
+
+    root.addEventListener('click', function (ev) {
+        var th = ev.target.closest && ev.target.closest('th.th-sort');
+        if (th) sortTableBy(th);
+    });
+    root.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        var th = ev.target.closest && ev.target.closest('th.th-sort');
+        if (!th) return;
+        ev.preventDefault();
+        sortTableBy(th);
+    });
+
     function filterPayload() {
         var body = {}, game = {}, t1 = {}, t2 = {};
         Object.keys(filters).forEach(function (key) {
@@ -1611,6 +1674,10 @@
     var SCORE_NOUN = { MLB: 'runs', NHL: 'goals', NBA: 'points', NFL: 'points' };
     var DASH = '&mdash;';
     var THIN_SAMPLE = 8;
+    // Sports whose spread is a FIXED +/-1.5 run line or puck line. It cannot
+    // say who was favoured -- the price does -- so anything that reports "the
+    // favourite and the number behind it" has to read the moneyline here.
+    var FIXED_LINE_SPORTS = { MLB: 1, NHL: 1 };
 
     function hxPct(v) { return (v === null || v === undefined) ? DASH : esc(v) + '%'; }
     function num(v) { return (v === null || v === undefined) ? DASH : esc(v); }
@@ -1727,12 +1794,34 @@
                                  : (g.team_score + '-' + g.opponent_score);
             var winner = g.result === 'W' ? g.team : (g.result === 'L' ? (g.opponent || '') : 'Tie');
             var where = g.venue_name || (home ? home + ' (home)' : '');
-            // role/closing_line are team-1 relative and dog-positive, so the
-            // favoured side's own number is the negation when team 1 was the dog.
-            var fav = (g.role == null || g.closing_line == null) ? DASH
-                : (g.role === 'Favorite'
+            // The favourite, and THE NUMBER THAT MADE THEM ONE -- which is not
+            // the same field in every sport, and pairing the wrong two produced
+            // a self-contradicting cell.
+            //
+            // `role` comes from the point spread in NFL/NBA and from the
+            // MONEYLINE in MLB/NHL, where the line is a fixed +/-1.5 that says
+            // nothing about who was favoured. `closing_line` is always the
+            // spread. So on MLB/NHL the cell was reading role off the price and
+            // the number off the run line, and a row where the two disagreed
+            // rendered "New York Yankees +1.5" -- a favourite laying a positive
+            // number. On MLB/NHL the price is also the only informative half:
+            // "-1.5" is true of every single row.
+            var fav;
+            if (g.role == null) {
+                fav = DASH;
+            } else if (FIXED_LINE_SPORTS[d.sport]) {
+                var favMl = g.role === 'Favorite' ? g.moneyline : g.opponent_moneyline;
+                fav = favMl == null ? DASH
+                    : esc(g.role === 'Favorite' ? g.team : (g.opponent || '')) + ' ' + signed(favMl);
+            } else if (g.closing_line == null) {
+                fav = DASH;
+            } else {
+                // Dog-positive and team-1 relative, so the favoured side's own
+                // number is the negation when team 1 was the dog.
+                fav = g.role === 'Favorite'
                     ? esc(g.team) + ' ' + signed(g.closing_line)
-                    : esc(g.opponent || '') + ' ' + signed(Math.round(-g.closing_line * 10) / 10));
+                    : esc(g.opponent || '') + ' ' + signed(Math.round(-g.closing_line * 10) / 10);
+            }
             // An estimated total is not a closing total: shown as absent rather
             // than as a line no book ever hung.
             var totalCell = (g.closing_total == null || g.closing_total_available === false)
@@ -1742,25 +1831,47 @@
                    + ' · ' + esc(g.opponent || '') + ' '
                    + (g.opponent_moneyline == null ? DASH : signed(g.opponent_moneyline)));
             var why = g.qualified_because || [];
+            // `data-k` is the value a column SORTS on, where that is not the
+            // text in the cell: combined score behind "4-5", the favourite's
+            // own number behind "Yankees -148". Sorting the rendered string
+            // would order 10 before 9 and put a "—" in the middle of the run.
+            var favKey = g.role == null ? ''
+                : (FIXED_LINE_SPORTS[d.sport]
+                    ? (g.role === 'Favorite' ? g.moneyline : g.opponent_moneyline)
+                    : (g.role === 'Favorite' ? g.closing_line : -g.closing_line));
             return '<tr><td>' + esc(g.date || '') + '</td>'
                 + '<td>' + esc(away || '') + ' at ' + esc(home || '') + '</td>'
                 + '<td>' + (where ? esc(where) : DASH) + '</td>'
-                + '<td class="n">' + esc(score) + '</td>'
+                + '<td class="n" data-k="' + ((g.team_score || 0) + (g.opponent_score || 0)) + '">' + esc(score) + '</td>'
                 + '<td><span class="res res-' + (g.result === 'T' ? 't' : (winner === g.team ? 'w' : 'l')) + '">'
                 + esc(winner) + '</span></td>'
-                + '<td class="n">' + Math.abs(g.margin) + '</td>'
-                + '<td class="n">' + fav + '</td>'
-                + '<td class="n">' + totalCell + '</td>'
+                + '<td class="n" data-k="' + Math.abs(g.margin) + '">' + Math.abs(g.margin) + '</td>'
+                + '<td class="n" data-k="' + (favKey === '' || favKey == null ? '' : favKey) + '">' + fav + '</td>'
+                + '<td class="n" data-k="' + (g.closing_total == null || g.closing_total_available === false ? '' : g.closing_total) + '">' + totalCell + '</td>'
                 + '<td class="n">' + ml + '</td>'
                 + '<td class="why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
         }).join('');
+        // Every column a research question could be asked of is sortable. Date
+        // starts descending because "most recent first" is what the report is
+        // already answering; clicking it flips to oldest first.
+        var head = [
+            ['Date', 'text', 'desc'], ['Matchup', 'text', ''], ['Location', 'text', ''],
+            ['Final score', 'num', ''], ['Winner', 'text', ''], ['Margin', 'num', ''],
+            ['Favorite', 'num', ''], ['Closing total', 'num', ''],
+            ['Closing moneyline', '', ''], ['Why it qualified', '', ''],
+        ].map(function (c) {
+            if (!c[1]) return '<th>' + c[0] + '</th>';
+            return '<th class="th-sort" data-sort="' + c[1] + '" tabindex="0" role="columnheader"'
+                + ' aria-sort="' + (c[2] === 'desc' ? 'descending' : 'none') + '"'
+                + ' title="Sort by ' + c[0].toLowerCase() + '">'
+                + '<span>' + c[0] + '</span><i class="th-arrow" aria-hidden="true"></i></th>';
+        }).join('');
         var body = rows
-            ? '<div class="tablewrap"><table class="games">'
+            ? '<div class="tablewrap"><table class="games is-sortable">'
                 + '<caption class="sr">Qualifying meetings between ' + esc(d.team_1) + ' and ' + esc(d.team_2)
-                + ', with the conditions each one satisfied</caption>'
-                + '<thead><tr><th>Date</th><th>Matchup</th><th>Location</th><th>Final score</th>'
-                + '<th>Winner</th><th>Margin</th><th>Favorite</th><th>Closing total</th>'
-                + '<th>Closing moneyline</th><th>Why it qualified</th></tr></thead><tbody>'
+                + ', with the conditions each one satisfied. Column headers sort the list; '
+                + 'the records and averages above always cover every qualifying meeting.</caption>'
+                + '<thead><tr>' + head + '</tr></thead><tbody>'
                 + rows + '</tbody></table></div>'
             : '<p class="note-s">No meeting matches these conditions in this period. Remove a condition or '
                 + 'widen the period — nothing here is broken, the dataset simply holds no meeting that met '
@@ -2396,6 +2507,52 @@
             if (tSport.value === sport) { tTeam.disabled = false; syncTrendSubmit(); }
         }
     }
+    /**
+     * Situations this sport's data can actually answer, from the engine's own
+     * catalogue rather than from a list typed into this file.
+     *
+     * The dropdown used to offer the same seventeen options for every sport,
+     * so MLB was offered "Large spread (7+)" — which matches nothing against a
+     * fixed ±1.5 run line — and "Close spread (within 3)", which matches every
+     * game and reads like a finding. A user could spend their one free report
+     * of the day discovering that. Unsupported options are now disabled and
+     * carry the engine's own reason; the list is never silently shortened, so
+     * the absence of a question is visible rather than invisible.
+     */
+    var situationCache = {};
+    async function loadTrendSituations(sport) {
+        var sel = $('tSituation');
+        var wanted = sel.value;
+        var cat;
+        try {
+            cat = situationCache[sport];
+            if (!cat) {
+                // Called through the shared client's own request() rather than
+                // via a new named method: backend-api.js is referenced with a
+                // hand-maintained `?v=` on every page of the site, so adding a
+                // method there would mean bumping that string sitewide and
+                // purging the 4h edge cache for one panel's dropdown.
+                cat = await window.api.request(
+                    '/betlegend-pro/situations/' + encodeURIComponent(sport));
+                situationCache[sport] = cat;
+            }
+        } catch (err) {
+            // A catalogue failure must never empty the control: the hardcoded
+            // options stay usable and the engine still refuses what it must.
+            return;
+        }
+        if (tSport.value !== sport || !cat || !cat.situations) return;
+        sel.innerHTML = cat.situations.map(function (s) {
+            return '<option value="' + esc(s.id) + '"' + (s.supported ? '' : ' disabled')
+                + (s.reason ? ' title="' + esc(s.reason) + '"' : '') + '>'
+                + esc(s.label) + (s.supported ? '' : ' — not available for ' + esc(sport))
+                + '</option>';
+        }).join('');
+        var keep = cat.situations.filter(function (s) { return s.id === wanted && s.supported; });
+        sel.value = keep.length ? wanted
+            : (cat.situations.filter(function (s) { return s.supported; })[0] || {}).id || '';
+    }
+
     function syncTrendSubmit() {
         var missing = !tTeam.value;
         tSubmit.disabled = missing || SUBMIT_BLOCKED;
@@ -2408,7 +2565,10 @@
             tSubmit.removeAttribute('title');
         }
     }
-    tSport.addEventListener('change', function () { loadTrendTeams(tSport.value); });
+    tSport.addEventListener('change', function () {
+        loadTrendTeams(tSport.value);
+        loadTrendSituations(tSport.value);
+    });
     tTeam.addEventListener('change', syncTrendSubmit);
 
     var tLastKey = null, tLastSig = null;
@@ -2568,6 +2728,7 @@
         loadFilterLibrary(mSport.value);
         loadMatchupTeams(mSport.value);
         loadTrendTeams(tSport.value);
+        loadTrendSituations(tSport.value);
         await refreshStatus();
     }
 
