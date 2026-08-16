@@ -1220,19 +1220,36 @@
         }
         box.innerHTML = rows.map(function (r) {
             var on = r.sport === mSport.value;
+            var known = r.earliest_season != null;
+            // Below 560px the row drops its third column and shows only the
+            // sport and the year range. Signed out there is no year range, so
+            // that phone row read "MLB \u2014" and said nothing at all. When the era
+            // is unknown the count takes the year slot instead, which is the
+            // fact we actually have and the one worth showing.
             return '<li class="cover-row' + (on ? ' is-on' : '') + '"'
                 + (on ? ' aria-current="true"' : '') + '>'
                 + '<b>' + esc(r.sport) + '</b>'
-                + '<span class="cover-years">' + (r.earliest_season != null
-                    ? esc(r.earliest_season) + '\u2013' + esc(r.latest_season) : '\u2014') + '</span>'
-                + '<i>' + fmtInt(r.games) + ' games</i></li>';
+                + '<span class="cover-years">' + (known
+                    ? esc(r.earliest_season) + '\u2013' + esc(r.latest_season)
+                    : fmtInt(r.games) + ' games') + '</span>'
+                + (known ? '<i>' + fmtInt(r.games) + ' games</i>' : '') + '</li>';
         }).join('');
         var mine = rows.filter(function (r) { return r.sport === mSport.value; })[0];
-        active.innerHTML = mine
-            ? 'Searching <strong>' + esc(mine.sport) + '</strong> from <strong>' + esc(mine.earliest_date)
-                + '</strong> through <strong>' + esc(mine.latest_date) + '</strong>. Every year listed is '
-                + 'measured from the games on file, not a configured value.'
-            : '';
+        // Signed out, the public coverage endpoint gives counts but no era, so
+        // `mine` has no dates. Printing the same sentence anyway rendered
+        // "from undefined through undefined"; the count is what is actually
+        // known, so that is what it says.
+        if (!mine) {
+            active.innerHTML = '';
+        } else if (mine.earliest_date && mine.latest_date) {
+            active.innerHTML = 'Searching <strong>' + esc(mine.sport) + '</strong> from <strong>'
+                + esc(mine.earliest_date) + '</strong> through <strong>' + esc(mine.latest_date)
+                + '</strong>. Every year listed is measured from the games on file, '
+                + 'not a configured value.';
+        } else {
+            active.innerHTML = '<strong>' + fmtInt(mine.games) + '</strong> '
+                + esc(mine.sport) + ' games on file. Sign in to search them.';
+        }
         if (since && mine && mine.earliest_season != null) {
             since.textContent = 'since ' + mine.earliest_season;
         }
@@ -1673,6 +1690,18 @@
         if (ready) mSubmit.removeAttribute('data-incomplete');
         else mSubmit.setAttribute('data-incomplete', '');
         mSubmit.disabled = !ready || SUBMIT_BLOCKED;
+        // The reason is on screen next to the button, so a sighted user is
+        // told. A screen reader landing on the button was not, and neither was
+        // anyone hovering it -- the button just refused. Every other disabled
+        // control in the console states its reason inline (the greyed-out
+        // situation options carry theirs); this one was the exception.
+        if (!ready) {
+            mSubmit.setAttribute('title', errEl.hidden
+                ? 'Choose a sport and two different teams to continue.'
+                : (errEl.textContent || '').trim());
+        } else if (!SUBMIT_BLOCKED) {
+            mSubmit.removeAttribute('title');
+        }
 
         var n = activeFilterCount();
         // The header count belongs here, not in renderConditions: setting a
@@ -2787,11 +2816,55 @@
         }
     }
 
+    // The signed-out first screen.
+    //
+    // boot() used to return immediately when there was no session, which left
+    // the two things below undone: the coverage table sat on its "Reading the
+    // database…" placeholder forever (it is replaced by paintIntro, which only
+    // ran after an authenticated library fetch), and #howWrap stayed open on a
+    // phone, pushing the sign-in card to y=982 in an 844px viewport.
+    //
+    // So the first screen of the app -- what a new visitor and a store reviewer
+    // both open -- was a dead loading state, an empty grey box where the
+    // database claim belongs, and no visible way in without scrolling.
+    //
+    // dataset-stats is the one BetLegend Pro route that does not require a
+    // token, which is what makes this fixable without opening anything new up:
+    // per-sport game counts, no era. paintIntro already renders a row with no
+    // season as an em-dash, so the counts alone are enough.
+    async function paintPublicCoverage() {
+        try {
+            var stats = await window.api.request('/betlegend-pro/dataset-stats');
+            var counts = (stats && stats.by_sport_games) || {};
+            var rows = Object.keys(counts).map(function (s) {
+                return { sport: s, games: counts[s], earliest_season: null, latest_season: null };
+            }).sort(function (a, b) { return b.games - a.games; });
+            if (!rows.length) return;
+            library = { coverage_all: rows };
+            paintIntro();
+        } catch (err) {
+            // A signed-out visitor is not owed a database census, but they are
+            // owed the truth about why the panel is empty rather than a
+            // "Reading the database…" that never resolves.
+            var box = $('coverTable');
+            if (box) {
+                box.innerHTML = '<li class="cover-row"><span>Coverage is unavailable right now. '
+                    + 'Sign in to search the database.</span></li>';
+            }
+            var active = $('coverActive');
+            if (active) active.textContent = '';
+        }
+    }
+
     // ============================================================= boot
     async function boot() {
         if (!(window.api && window.api.isLoggedIn())) {
             $('authGate').hidden = false;
             $('topbarRight').hidden = true;
+            try {
+                if (window.matchMedia('(max-width: 899px)').matches) $('howWrap').open = false;
+            } catch (e) { /* matchMedia is not worth failing boot over */ }
+            await paintPublicCoverage();
             return;
         }
         $('app').hidden = false;

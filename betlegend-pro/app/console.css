@@ -964,3 +964,63 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
     .how li { font-size: 12px; }
     .intro-note { font-size: 11.5px; padding: 8px 10px; }
 }
+
+/* ==========================================================================
+   Phone layout repairs — 2026-08-16
+   Measured at 390x844 (iPhone 12/13/14 class) against the real page. Each rule
+   below fixes something that was rendering wrong, not something that could be
+   nicer. Desktop is untouched: every rule is inside a narrow media query, or
+   is a no-wrap that only ever engages when the column is too tight.
+   ========================================================================== */
+
+/* The report's headline figures were breaking at their own hyphen. A record is
+   one token: "120-121" was rendering as "120-" / "121" across two lines at
+   26px, and "116-125-9" the same, because a normal-wrapping inline box may
+   break after a hyphen even when the whole string fits its tile (measured
+   65.1px of value in a 102px tile). These are numbers, never prose. */
+.kpi strong { white-space: nowrap; }
+
+@media (max-width: 560px) {
+    /* Two KPI tiles per row instead of four. At flex-basis 100px the tiles
+       collapsed to 74px, and the labels — which are real sentences, not
+       abbreviations — wrapped to three and four lines under one-line values:
+       "Against the spread — New York Yankees" was four lines tall. */
+    .kpi { flex: 1 1 140px; }
+    .rcard.is-answer .kpi strong { font-size: 22px; }
+
+    /* The game log's date column was 56px, enough to split "2026-06-28" into
+       "2026-" / "06-28", and the matchup column 82px, enough to put
+       "New York Yankees at Boston Red Sox" on four lines and stand the row up
+       84px tall. The table already lives in a horizontal scroller
+       (.tablewrap), so the honest fix is to let these two columns keep their
+       width and let the scroller do its job. */
+    table.games td:first-child,
+    table.games th:first-child { white-space: nowrap; }
+    table.games td:nth-child(2) { min-width: 190px; }
+}
+
+/* The tool tabs scroll horizontally below 1040px, but nothing said so: 366px
+   of a 706px strip sat off-screen behind a 2px scrollbar, so the last visible
+   label read "kroll Simulator" — cut mid-word at the container edge, which
+   reads as broken text rather than as more content. A right-edge fade is the
+   conventional signal, and it retracts once the strip is scrolled to its end. */
+@media (max-width: 1039px) {
+    .rail {
+        -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+        mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+    }
+    .rail:not(:hover) { scrollbar-width: none; }
+}
+
+/* The condition picker is absolutely positioned and had no height of its own,
+   so with the real registry (eight sections) it stood 491px tall from y=661 —
+   308px of it below an 844px fold, with its own Close control scrolled away
+   above. Bounding it to the space actually on screen makes it scroll itself. */
+@media (max-width: 899px) {
+    #condMenu {
+        max-height: min(62vh, 460px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+}
