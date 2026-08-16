@@ -1777,7 +1777,14 @@
     }
 
     function thinNote(r) {
-        var games = (r.games || []).length;
+        // The QUALIFYING count, not the length of the transmitted list. A
+        // result limit trims the list but not the sample every percentage above
+        // it was computed from, so reading the array made "Most recent 10
+        // qualifying meetings" print "Small sample: 10 games" over records
+        // drawn from 241 — a warning about a sample that does not exist, and
+        // the wrong margin-of-error beside it.
+        var games = (r.total_qualifying_games != null)
+            ? r.total_qualifying_games : (r.games || []).length;
         if (!games) return '';
         var bits = [];
         if (games < THIN_SAMPLE) {
@@ -2174,7 +2181,16 @@
                 + '<div class="kpi"><span>ATS</span><strong>' + ((h2h.ats && h2h.ats.record) ? esc(h2h.ats.record) : DASH) + '</strong></div>'
                 + '<div class="kpi"><span>Over / under</span><strong>' + ((h2h.ou && h2h.ou.record) ? esc(h2h.ou.record) : DASH) + '</strong></div>'
                 + '<div class="kpi"><span>Avg margin</span><strong>' + signed(h2h.avg_margin) + '</strong></div>'
-                + '<div class="kpi"><span>Avg total</span><strong>' + num(avgTotal(h2h.games)) + '</strong></div>'
+                // From the server's own two averages, which cover every
+                // meeting. Averaging the transmitted game list instead
+                // answered for whatever subset happened to be in the payload:
+                // 9.4 over 250 rows sitting beside a Meetings count of 485,
+                // in a card where every other figure covers all 485.
+                + '<div class="kpi"><span>Avg total</span><strong>'
+                + num(h2h.avg_scored != null && h2h.avg_allowed != null
+                    ? Math.round((h2h.avg_scored + h2h.avg_allowed) * 10) / 10
+                    : avgTotal(h2h.games))
+                + '</strong></div>'
                 + '</div>' + thinNote(h2h) + '</section>' : '';
 
         // Answer first: the result card leads, the methodology card (what was

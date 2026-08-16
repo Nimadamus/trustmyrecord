@@ -33,7 +33,18 @@ async function login(page, creds) {
   await page.locator('input[type=text]').first().fill(creds.user);
   await page.locator('input[type=password]').first().fill(creds.pass);
   await page.getByRole('button', { name: /log in/i }).click();
-  await page.waitForURL(/betlegend-pro\/app/, { timeout: 60000 });
+
+  // The login route rate-limits by IP, and a suite that logs in for every test
+  // trips it. Say so plainly instead of failing forty seconds later on a
+  // missing element, which reads as a broken product rather than a throttled
+  // test run.
+  const denied = page.getByText(/too many login attempts/i);
+  await Promise.race([
+    page.waitForURL(/betlegend-pro\/app/, { timeout: 60000 }),
+    denied.waitFor({ timeout: 60000 }).then(() => {
+      throw new Error('login was rate-limited: re-run this suite after a few minutes');
+    }),
+  ]);
   await expect(page.locator('#app')).toBeVisible({ timeout: 60000 });
 }
 
@@ -115,11 +126,15 @@ test.describe('a free TrustMyRecord member', () => {
 
   test('gets the tool, the daily allowance, and a route to buy', async ({ page }) => {
     await login(page, FREE);
-    await expect(page.locator('#allowanceNotice')).toContainText(/free report/i);
+    // The header chip carries the ALLOWANCE for a free account and the PLAN
+    // NAME for a subscriber -- one element, two jobs. So the assertion is
+    // about what it says, not about whether it is there.
+    await expect(page.locator('#planChip')).toContainText(/free report/i);
+    await expect(page.locator('#planChip')).not.toContainText(/Monthly|Annual|Lifetime|Owner/i);
     await expect(page.locator('#upgradeBtn')).toBeVisible();
     await expect(page.locator('#upgradeBtn')).toHaveAttribute('href', '/betlegend-pro/#pricing');
-    // Not a subscriber: no plan chip claiming otherwise.
-    await expect(page.locator('#planChip')).toBeHidden();
+    // Priced, not silently free: the submit button says what the next run costs.
+    await expect(page.locator('#mSubmit')).toContainText(/free report|TMR Coin|\d/i);
   });
 });
 
@@ -130,7 +145,7 @@ test.describe('a BetLegend Pro subscriber', () => {
 
   test('runs an unlimited report and is never shown an upsell', async ({ page }) => {
     await login(page, SUB);
-    await expect(page.locator('#planChip')).toBeVisible();
+    await expect(page.locator('#planChip')).toContainText(/Monthly|Annual|Lifetime|Owner/i);
     await expect(page.locator('#upgradeBtn')).toBeHidden();
     await expect(page.locator('#mSubmit')).toContainText(/Included/);
 
