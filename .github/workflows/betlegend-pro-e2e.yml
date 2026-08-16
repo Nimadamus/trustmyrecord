@@ -1,0 +1,62 @@
+name: BetLegend Pro E2E
+
+# The console's end-to-end suite. Kept out of the regression-lock workflow on
+# purpose: that one is a visual-baseline job with its own static server and a
+# testMatch these specs do not satisfy, which is exactly how tests/e2e ended up
+# orphaned before -- present in the repo, run by nothing, and stale enough that
+# it asserted a UI that had been retired.
+#
+# The specs serve the shipped page off disk with a stubbed API, so there is no
+# server to start and no credentials to hold. They exercise the real markup and
+# the real inline script.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'betlegend-pro/**'
+      - 'tests/e2e/betlegend-pro.spec.mjs'
+      - 'tests/e2e/fixtures/**'
+      - 'playwright.blp.config.cjs'
+      - '.github/workflows/betlegend-pro-e2e.yml'
+  pull_request:
+    paths:
+      - 'betlegend-pro/**'
+      - 'tests/e2e/betlegend-pro.spec.mjs'
+      - 'tests/e2e/fixtures/**'
+      - 'playwright.blp.config.cjs'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Static contract lock first: it needs no browser, so a broken
+      # invariant fails in seconds instead of after a Chromium download.
+      - name: BetLegend Pro contract lock
+        run: npm run test:blp
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: BetLegend Pro end-to-end
+        run: npm run test:blp-e2e
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blp-e2e-artifacts
+          path: artifacts/blp-playwright-results
+          retention-days: 7
