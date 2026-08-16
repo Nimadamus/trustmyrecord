@@ -1,4 +1,5 @@
 import { test, expect, request as pwRequest } from '@playwright/test';
+import { SUB_STATE, FREE_STATE } from './blp-live-setup.mjs';
 
 /**
  * BetLegend Pro against PRODUCTION.
@@ -13,7 +14,17 @@ import { test, expect, request as pwRequest } from '@playwright/test';
  * run does not go red for lacking secrets:
  *
  *   BLP_LIVE_SUB_USER  / BLP_LIVE_SUB_PASS    an entitled account
- *   BLP_LIVE_FREE_USER / BLP_LIVE_FREE_PASS   a non-entitled, non-test account
+ *   BLP_LIVE_FREE_USER / BLP_LIVE_FREE_PASS   a non-entitled account
+ *
+ * PROVISIONING (changed 2026-08-15 -- read this before creating a fixture):
+ * Both accounts MUST come from helpers/automationAccount.mjs. The earlier
+ * wording here said "non-test account", and it was taken literally: the free
+ * fixture `ledgercheck_mv7` was hand-registered as a plain member and production
+ * counted it as one -- member totals, Newest Member, the activity strip, a TMR
+ * Coin grant, and a baked /u/ SEO page. Registering through the helper sends
+ * `X-TMR-Automation`, which records permanent provenance and excludes the
+ * account from every one of those surfaces WITHOUT changing account_type,
+ * verification_status, or the entitlement path these tests actually exercise.
  *
  * A free account has ONE report a day, so the free-persona test asserts the
  * gating and the messaging rather than spending it.
@@ -28,24 +39,21 @@ const FREE = { user: process.env.BLP_LIVE_FREE_USER, pass: process.env.BLP_LIVE_
 // a report on top of it needs its own budget.
 test.setTimeout(180000);
 
-async function login(page, creds) {
-  await page.goto(`${SITE}/login/?next=/betlegend-pro/app/`);
-  await page.locator('input[type=text]').first().fill(creds.user);
-  await page.locator('input[type=password]').first().fill(creds.pass);
-  await page.getByRole('button', { name: /log in/i }).click();
-
-  // The login route rate-limits by IP, and a suite that logs in for every test
-  // trips it. Say so plainly instead of failing forty seconds later on a
-  // missing element, which reads as a broken product rather than a throttled
-  // test run.
-  const denied = page.getByText(/too many login attempts/i);
-  await Promise.race([
-    page.waitForURL(/betlegend-pro\/app/, { timeout: 60000 }),
-    denied.waitFor({ timeout: 60000 }).then(() => {
-      throw new Error('login was rate-limited: re-run this suite after a few minutes');
-    }),
-  ]);
-  await expect(page.locator('#app')).toBeVisible({ timeout: 60000 });
+/**
+ * Open the console as an already-signed-in role.
+ *
+ * The session comes from `blp-live-setup.mjs`, which signs in ONCE per role
+ * before the suite. Logging in inside each test meant sixteen logins, and
+ * TrustMyRecord's auth route rate-limits at fifteen per IP per window (which
+ * `auth-bruteforce-guard-test.js` asserts on purpose) -- so the sixteenth test
+ * failed on a console that never mounted, which reads as a broken product
+ * rather than a throttled test run.
+ */
+async function openConsole(page) {
+  await page.goto(`${SITE}/betlegend-pro/app/`);
+  await expect(page.locator('#app'),
+    'the saved session did not open the console — re-run so global setup signs in again')
+    .toBeVisible({ timeout: 60000 });
 }
 
 async function runReport(page, { away, home, sport = 'MLB' }) {
@@ -85,6 +93,11 @@ test.describe('a new visitor', () => {
     await expect(page.getByRole('heading', { name: /Sign in to open BetLegend Pro/i })).toBeVisible();
     await expect(page.locator('#app')).toBeHidden();
 
+    // Settle first. The page boots its console, rewrites the history entry and
+    // loads the site shell; evaluating into it mid-navigation throws
+    // "Execution context was destroyed" and reads as a product failure.
+    await page.waitForLoadState('networkidle');
+
     // Forcing the container visible must not produce a usable tool: the value
     // is behind the API, not behind a CSS class.
     await page.evaluate(() => {
@@ -123,9 +136,10 @@ test.describe('a new visitor', () => {
 
 test.describe('a free TrustMyRecord member', () => {
   test.skip(!FREE.user, 'set BLP_LIVE_FREE_USER / BLP_LIVE_FREE_PASS');
+  test.use({ storageState: FREE_STATE });
 
   test('gets the tool, the daily allowance, and a route to buy', async ({ page }) => {
-    await login(page, FREE);
+    await openConsole(page);
     // The header chip carries the ALLOWANCE for a free account and the PLAN
     // NAME for a subscriber -- one element, two jobs. So the assertion is
     // about what it says, not about whether it is there.
@@ -142,9 +156,10 @@ test.describe('a free TrustMyRecord member', () => {
 
 test.describe('a BetLegend Pro subscriber', () => {
   test.skip(!SUB.user, 'set BLP_LIVE_SUB_USER / BLP_LIVE_SUB_PASS');
+  test.use({ storageState: SUB_STATE });
 
   test('runs an unlimited report and is never shown an upsell', async ({ page }) => {
-    await login(page, SUB);
+    await openConsole(page);
     await expect(page.locator('#planChip')).toContainText(/Monthly|Annual|Lifetime|Owner/i);
     await expect(page.locator('#upgradeBtn')).toBeHidden();
     await expect(page.locator('#mSubmit')).toContainText(/Included/);
@@ -154,7 +169,7 @@ test.describe('a BetLegend Pro subscriber', () => {
   });
 
   test('the numbers in a report agree with each other', async ({ page }) => {
-    await login(page, SUB);
+    await openConsole(page);
     await runReport(page, { away: 'New York Yankees', home: 'Boston Red Sox' });
 
     const facts = await page.evaluate(() => {
@@ -164,7 +179,10 @@ test.describe('a BetLegend Pro subscriber', () => {
       const cell = (r, i) => r.cells[i].textContent.trim();
       return {
         listed: rows.length,
-        heading: root.querySelector('.rcard-head h3').textContent,
+        // The GAME TABLE's own card heading. `.rcard-head h3` unscoped picks
+        // up "Head-to-head result", which is a different card about a
+        // different sample.
+        heading: table.closest('.rcard').querySelector('.rcard-head h3').textContent,
         favourites: rows.map((r) => cell(r, 6)),
         moneylines: rows.map((r) => cell(r, 8)),
         dates: rows.map((r) => cell(r, 0)),
@@ -199,9 +217,10 @@ test.describe('a BetLegend Pro subscriber', () => {
 
 test.describe('a bettor building a specific situation', () => {
   test.skip(!SUB.user, 'set BLP_LIVE_SUB_USER / BLP_LIVE_SUB_PASS');
+  test.use({ storageState: SUB_STATE });
 
   test('a situation the sport cannot answer is refused, for free, before it runs', async ({ page }) => {
-    await login(page, SUB);
+    await openConsole(page);
     await page.getByRole('tab', { name: 'Team Trends' }).click();
     const select = page.locator('#tSituation');
     // MLB: a spread size cannot separate games behind a fixed +/-1.5 run line.
@@ -213,10 +232,14 @@ test.describe('a bettor building a specific situation', () => {
   });
 
   test('a favourite/underdog split is not the wrong side of itself', async ({ page }) => {
-    await login(page, SUB);
+    await openConsole(page);
     await page.getByRole('tab', { name: 'Team Trends' }).click();
     await page.locator('#tSport').selectOption('NFL');
-    await expect(page.locator('#tTeam option[value="Kansas City Chiefs"]')).toHaveCount(1, { timeout: 60000 });
+    // The team list is fetched per sport and the engine can be cold, so wait
+    // for the control to be READY rather than for one option to exist -- the
+    // select is disabled and holds a "Loading teams..." placeholder until it is.
+    await expect(page.locator('#tTeam')).toBeEnabled({ timeout: 90000 });
+    await expect(page.locator('#tTeam option[value="Kansas City Chiefs"]')).toHaveCount(1, { timeout: 90000 });
     await page.locator('#tTeam').selectOption('Kansas City Chiefs');
     await page.locator('#tSituation').selectOption('home_favorite');
     await page.locator('#tSubmit').click();

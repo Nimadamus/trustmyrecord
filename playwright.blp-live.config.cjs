@@ -17,6 +17,10 @@ const { defineConfig, devices } = require('@playwright/test');
 module.exports = defineConfig({
   testDir: './tests/e2e',
   testMatch: /betlegend-pro-live\.spec\.mjs/,
+  // Signs in once per role and saves the session. Logging in per test meant 16
+  // logins across the two projects, and the auth route rate-limits at 15 per
+  // IP per window on purpose.
+  globalSetup: './tests/e2e/blp-live-setup.mjs',
   timeout: 180000,
   expect: { timeout: 30000 },
   outputDir: 'artifacts/blp-live-results',
