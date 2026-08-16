@@ -1,5 +1,6 @@
 import { test, expect, request as pwRequest } from '@playwright/test';
-import { SUB_STATE, FREE_STATE } from './blp-live-setup.mjs';
+import { SUB_STATE, FREE_STATE, readFreeAccount } from './blp-live-setup.mjs';
+import { assertMarkedAsAutomation } from './helpers/automationAccount.mjs';
 
 /**
  * BetLegend Pro against PRODUCTION.
@@ -13,18 +14,29 @@ import { SUB_STATE, FREE_STATE } from './blp-live-setup.mjs';
  * Skips (does not fail) without credentials, so a fork or an unprivileged CI
  * run does not go red for lacking secrets:
  *
- *   BLP_LIVE_SUB_USER  / BLP_LIVE_SUB_PASS    an entitled account
- *   BLP_LIVE_FREE_USER / BLP_LIVE_FREE_PASS   a non-entitled account
+ *   BLP_LIVE_SUB_USER / BLP_LIVE_SUB_PASS   an entitled account
  *
- * PROVISIONING (changed 2026-08-15 -- read this before creating a fixture):
- * Both accounts MUST come from helpers/automationAccount.mjs. The earlier
- * wording here said "non-test account", and it was taken literally: the free
- * fixture `ledgercheck_mv7` was hand-registered as a plain member and production
- * counted it as one -- member totals, Newest Member, the activity strip, a TMR
- * Coin grant, and a baked /u/ SEO page. Registering through the helper sends
- * `X-TMR-Automation`, which records permanent provenance and excludes the
- * account from every one of those surfaces WITHOUT changing account_type,
- * verification_status, or the entitlement path these tests actually exercise.
+ * PROVISIONING (rewritten 2026-08-16 -- read this before creating a fixture):
+ * The FREE fixture is NOT supplied any more. globalSetup creates one per run
+ * through helpers/automationAccount.mjs and globalTeardown deletes it.
+ *
+ * The earlier wording here asked for "a non-entitled, non-test account" and it
+ * was taken literally: `ledgercheck_mv7` (user 2136) was hand-registered as a
+ * plain member, and production could not tell it from a human -- member totals,
+ * Newest Member, the LIVE ON TMR strip, a 25 TMR Coin grant and an indexable
+ * /u/ page. It has been purged, and this suite can no longer recreate that
+ * situation, because the only account it makes is one the database marks as
+ * automation inside the INSERT itself.
+ *
+ * Registering through the helper sends `X-TMR-Automation`, which records
+ * permanent provenance and excludes the account from every one of those
+ * surfaces WITHOUT changing account_type, verification_status, or the
+ * entitlement path these tests actually exercise -- so the free-tier behaviour
+ * asserted below is the genuine one.
+ *
+ * BLP_LIVE_FREE_USER still overrides it, for a long-lived fixture you have
+ * deliberately provisioned; it is borrowed, never deleted. Whatever the source,
+ * the guard below fails the run if the account is publicly resolvable.
  *
  * A free account has ONE report a day, so the free-persona test asserts the
  * gating and the messaging rather than spending it.
@@ -33,7 +45,11 @@ const SITE = process.env.BLP_LIVE_SITE || 'https://trustmyrecord.com';
 const API = process.env.BLP_LIVE_API || 'https://trustmyrecord-api.onrender.com';
 
 const SUB = { user: process.env.BLP_LIVE_SUB_USER, pass: process.env.BLP_LIVE_SUB_PASS };
-const FREE = { user: process.env.BLP_LIVE_FREE_USER, pass: process.env.BLP_LIVE_FREE_PASS };
+// Resolved by globalSetup: either BLP_LIVE_FREE_USER, or an account the run
+// provisioned for itself through helpers/automationAccount.mjs and deletes in
+// teardown. Reading the env var directly here skipped the free persona on every
+// run that did not export one -- which is now the normal case.
+const FREE = readFreeAccount() || { user: process.env.BLP_LIVE_FREE_USER, pass: process.env.BLP_LIVE_FREE_PASS };
 
 // The engine sleeps on a free instance; a cold start is measured at 28-53s and
 // a report on top of it needs its own budget.
@@ -65,6 +81,27 @@ async function runReport(page, { away, home, sport = 'MLB' }) {
   await page.locator('#mSubmit').click();
   await expect(page.locator('table.games')).toBeVisible({ timeout: 150000 });
 }
+
+/**
+ * Both fixtures must still be excluded from the member numbers.
+ *
+ * User 2136 was hand-registered as a plain member for this suite and production
+ * could not tell it from a human: it entered the directory, became "Newest
+ * Member", posted to the activity strip, minted itself TMR Coin and had an
+ * indexable /u/ page baked. It has since been purged and the accounts are
+ * created through helpers/automationAccount.mjs. This runs first so the suite
+ * fails LOUDLY if a fixture ever drifts back into the counts, rather than
+ * quietly inflating them for weeks.
+ */
+test.describe('fixtures stay out of the member numbers', () => {
+  test('neither fixture resolves as a public profile', async () => {
+    const api = await pwRequest.newContext();
+    for (const name of [SUB.user, FREE.user].filter(Boolean)) {
+      await assertMarkedAsAutomation(api, name);
+    }
+    await api.dispose();
+  });
+});
 
 // -------------------------------------------------- 1. a new visitor
 
@@ -135,7 +172,7 @@ test.describe('a new visitor', () => {
 // ---------------------------------------------- 2. a free TMR member
 
 test.describe('a free TrustMyRecord member', () => {
-  test.skip(!FREE.user, 'set BLP_LIVE_FREE_USER / BLP_LIVE_FREE_PASS');
+  test.skip(!FREE.user, 'no free-tier fixture: globalSetup could not provision one');
   test.use({ storageState: FREE_STATE });
 
   test('gets the tool, the daily allowance, and a route to buy', async ({ page }) => {

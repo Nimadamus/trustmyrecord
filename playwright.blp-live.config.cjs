@@ -5,12 +5,17 @@
  * instance; a cold start alone is 28-53s), need credentials, and must never be
  * mixed into a suite that runs on every push. Run it deliberately:
  *
- *   BLP_LIVE_SUB_USER=... BLP_LIVE_SUB_PASS=... \
- *   BLP_LIVE_FREE_USER=... BLP_LIVE_FREE_PASS=... \
- *   npm run test:blp-live
+ *   BLP_LIVE_SUB_USER=... BLP_LIVE_SUB_PASS=... npm run test:blp-live
  *
- * Without credentials the persona tests skip rather than fail, so the
- * logged-out and paywall checks still run anywhere.
+ * The FREE-tier fixture is no longer supplied: the run creates its own through
+ * helpers/automationAccount.mjs (marked automation at INSERT time, so it is
+ * excluded from member counts, feeds, leaderboards, coins and /u/ bakes) and
+ * globalTeardown deletes it. Set TMR_QA_DATABASE_URL to let teardown do that;
+ * BLP_LIVE_FREE_USER still overrides it with an account of your own, which is
+ * treated as borrowed and never deleted.
+ *
+ * Without subscriber credentials those persona tests skip rather than fail, so
+ * the logged-out and paywall checks still run anywhere.
  */
 const { defineConfig, devices } = require('@playwright/test');
 
@@ -21,6 +26,9 @@ module.exports = defineConfig({
   // logins across the two projects, and the auth route rate-limits at 15 per
   // IP per window on purpose.
   globalSetup: './tests/e2e/blp-live-setup.mjs',
+  // Deletes the free-tier account the run created. Never touches one supplied
+  // through BLP_LIVE_FREE_USER.
+  globalTeardown: './tests/e2e/blp-live-teardown.mjs',
   timeout: 180000,
   expect: { timeout: 30000 },
   outputDir: 'artifacts/blp-live-results',

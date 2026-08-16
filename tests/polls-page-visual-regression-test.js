@@ -78,12 +78,36 @@ for (const required of [
   assert(html.includes(required), `polls page missing required visual/function marker: ${required}`);
 }
 
+/*
+ * RETIRED 2026-08-13, commit dfba7027 "Convert the dark public pages to the
+ * Handicappers light workspace" (Nima).
+ *
+ * This block used to pin the deep-navy ramp:
+ *
+ *   --bg: #0A1322;   --surface-1: #101B2C;
+ *   --accent: #22D3EE;   --text-2: #A7BAD1;
+ *
+ * That commit deliberately moved 143 public pages, /polls/ among them, onto the
+ * light workspace, and it names the pages held back on the navy ramp —
+ * /sportsbook/, the simulators, /betlegend-pro/app/ and /forum/. Polls is not
+ * one of them, so these four assertions were pinning a design the owner had
+ * replaced on purpose. They are the only reason the Sportsbook Regression
+ * Guards have been red since 2026-08-13; the other 69 markers in this file all
+ * still pass, which is the evidence that the BOARD is intact and only the
+ * palette moved.
+ *
+ * Retargeted rather than deleted. The point of the block was never those four
+ * hex values — it was that the page keeps a deliberate, declared token ramp
+ * instead of drifting into unstyled defaults. So it now pins the light ramp
+ * actually shipped, and the negative guards below (no pure black, no pale admin
+ * gray, no fixed background-attachment, never noindex) are untouched.
+ */
 for (const requiredStyle of [
-  // token ramp — deep navy surfaces, teal accent, muted blue-gray secondary
-  '--bg: #0A1322;',
-  '--surface-1: #101B2C;',
-  '--accent: #22D3EE;',
-  '--text-2: #A7BAD1;',
+  // token ramp — light workspace surfaces, navy ink, teal accent
+  '--bg: #FFFFFF;',
+  '--surface-1: #FFFFFF;',
+  '--accent: #0C948C;',
+  '--text-2: #2E4459;',
   // layout: 3-up desktop grid, 2-up medium, 1-up mobile
   '.pl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));',
   '.pl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }',
