@@ -12,6 +12,25 @@
     <meta name="robots" content="noindex, follow">
     <meta name="description" content="Run matchup reports, AI handicapping reports, bankroll simulations and team trend searches against BetLegend Pro's graded-game dataset.">
     <link rel="canonical" href="https://trustmyrecord.com/betlegend-pro/app/">
+
+    <!-- Installable app. The manifest and the worker both sit under
+         /betlegend-pro/, so the worker's scope is that directory and it can
+         never take control of the rest of TrustMyRecord. Installing gives a
+         standalone window titled BetLegend Pro with the product's own monogram
+         as its icon; the free tools and every other page are untouched.
+         Signing in briefly leaves the scope (/login/ is site-wide), which the
+         browser marks with its own minimal bar and which resolves as soon as
+         the redirect lands back here. -->
+    <link rel="manifest" href="/betlegend-pro/manifest.webmanifest">
+    <meta name="theme-color" content="#0b5a54">
+    <meta name="color-scheme" content="light">
+    <meta name="application-name" content="BetLegend Pro">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BetLegend Pro">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/betlegend-pro/app/apple-touch-icon.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -44,6 +63,21 @@
         }
         #blpFallback h1 { margin: 0 0 8px; font-size: 20px; color: #0d1520; }
         #blpFallback a { color: #0d6e66; }
+
+        /* Installed as an app. The global nav stays -- it is how the wallet,
+           pricing and account are reached, and removing it would strand the
+           user. The site FOOTER does not: five columns of marketing links and
+           a site map are a website's furniture, and in a standalone window
+           they read as the app having accidentally embedded a web page. The
+           legal line at the bottom of it is kept, because a wagering-research
+           product may not quietly drop its disclaimer. */
+        @media (display-mode: standalone) {
+            body.tmr-site-shell[data-blp-console] .tmr-global-footer__grid,
+            body.tmr-site-shell[data-blp-console] .tmr-global-footer__resources {
+                display: none;
+            }
+            body.tmr-site-shell[data-blp-console] .tmr-global-footer { padding-top: 14px; }
+        }
     </style>
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=a46586bedd8f"></script>
@@ -89,6 +123,11 @@
                 </span>
                 <a class="btn" id="manageBtn" href="/betlegend-pro/" hidden>Manage plan</a>
                 <a class="btn is-primary" id="upgradeBtn" href="/betlegend-pro/#pricing" hidden>Get unlimited</a>
+                <!-- Revealed only when the browser has actually offered an
+                     install, and removed the moment one happens. A dead
+                     "Install" button on a platform that cannot install, or on a
+                     window that already is the app, is worse than none. -->
+                <button class="btn" id="installBtn" type="button" hidden>Install app</button>
             </div>
         </header>
 
@@ -2455,12 +2494,39 @@
                 { v: '$' + fmtInt(Math.round(out.mean_final_bankroll)), l: 'Mean finish', h: 'Average across every simulated run.' },
                 { v: pct(out.profit_probability), l: 'Finished ahead', h: 'Share of runs that ended above the starting bankroll.', tone: out.profit_probability >= 0.5 ? 'pos' : '' },
                 { v: pct(out.bust_rate), l: 'Bust rate', h: 'Share of runs that lost the bankroll entirely.', tone: out.bust_rate > 0.05 ? 'neg' : '' },
-                { v: (out.expected_roi > 0 ? '+' : '') + out.expected_roi.toFixed(1) + '%', l: 'Expected ROI', h: 'Return on total amount staked.', tone: out.expected_roi > 0 ? 'pos' : 'neg' },
                 { v: pct(out.avg_max_drawdown), l: 'Avg max drawdown', h: 'Typical worst peak-to-trough fall along the way.', tone: out.avg_max_drawdown > 0.3 ? 'neg' : '' }
             ];
+            // ROI and bankroll growth are different numbers and were being
+            // shown as one. The tile read "Expected ROI — return on total
+            // amount staked" while carrying (final − start) / start, which at
+            // the defaults is more than double the real figure: 55% at −110 is
+            // +5.0% per unit staked, and the tile said +10.7%. Both are worth
+            // knowing, so both are shown, each under its own name.
+            var growth = out.bankroll_growth_pct != null ? out.bankroll_growth_pct : out.expected_roi;
+            if (growth != null) {
+                kpis.push({
+                    v: (growth > 0 ? '+' : '') + Number(growth).toFixed(1) + '%',
+                    l: 'Bankroll growth', tone: growth > 0 ? 'pos' : 'neg',
+                    h: 'How much the roll itself grew, start to finish. Larger than ROI because the same money is staked over and over.'
+                });
+            }
+            if (out.roi_on_turnover_pct != null) {
+                kpis.push({
+                    v: (out.roi_on_turnover_pct > 0 ? '+' : '') + Number(out.roi_on_turnover_pct).toFixed(1) + '%',
+                    l: 'ROI per $ staked', tone: out.roi_on_turnover_pct > 0 ? 'pos' : 'neg',
+                    h: 'Profit as a share of everything put through — the ROI a record is judged on.'
+                });
+            }
             $('simResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>Simulation results</h2></div>'
+                // "flat" alone reads as a fixed dollar stake. It is a fixed
+                // FRACTION of the current bankroll, so it compounds — a
+                // different strategy with a different variance profile.
                 + '<p class="note-s" style="margin-top:0">' + esc((params.strategy || strategy).replace('_', ' '))
-                + ' staking · ' + fmtInt(params.num_simulations) + ' simulated runs · '
+                + (params.stake_pct != null
+                    ? ' staking at ' + esc((params.stake_pct * 100).toFixed(params.stake_pct * 100 % 1 ? 1 : 0))
+                        + '% of the running bankroll'
+                    : ' staking')
+                + ' · ' + fmtInt(params.num_simulations) + ' simulated runs · '
                 + esc(pct(winProb)) + ' assumed win rate at ' + esc(odds > 0 ? '+' + odds : odds) + '</p>'
                 + '<div class="kpis-lg" style="margin-top:11px">' + kpis.map(function (k) {
                     return '<div class="kpi-lg"><div class="kpi-v' + (k.tone ? ' is-' + k.tone : '') + '">' + esc(k.v)
@@ -2734,6 +2800,97 @@
 
     if (window.api) boot();
     else window.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+<script>
+/*
+ * Installable-app registration. Separate from the tool's own IIFE because
+ * nothing here may ever be able to stop the tool from booting: the whole block
+ * is guarded, and a browser without service workers simply keeps the ordinary
+ * web page it already had.
+ *
+ * Registered after `load` so it never competes with the first paint or with
+ * the report the user came here to run.
+ */
+(function () {
+    if (!('serviceWorker' in navigator)) return;
+    // Only over HTTPS (and localhost, which the platform already exempts).
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/betlegend-pro/sw.js', { scope: '/betlegend-pro/' })
+            .then(function (reg) {
+                // A new build should not wait for every tab to be closed, but it
+                // must not swap the page out from under someone mid-report
+                // either. So: take over as soon as a waiting worker appears,
+                // and let the CONTROLLER change be what reloads — which only
+                // happens once, on the next navigation this page makes.
+                function offerUpdate(worker) {
+                    if (!worker) return;
+                    worker.addEventListener('statechange', function () {
+                        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                            worker.postMessage('blp-skip-waiting');
+                        }
+                    });
+                }
+                offerUpdate(reg.waiting);
+                reg.addEventListener('updatefound', function () { offerUpdate(reg.installing); });
+            })
+            .catch(function () { /* an uninstallable page is still a working page */ });
+
+        var reloading = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (reloading) return;
+            reloading = true;
+            location.reload();
+        });
+    });
+
+    // Install affordance. The prompt is deferred rather than fired on arrival:
+    // an install dialog nobody asked for, on a page whose job is to answer a
+    // question, is an interruption. The button only appears once the browser
+    // has confirmed the page is installable, so it is never a dead control on
+    // a platform that cannot install (iOS Safari, where Add to Home Screen is
+    // a menu item the site is not allowed to trigger).
+    var deferred = null;
+
+    function installButton() {
+        var host = document.getElementById('blpConsole');
+        return host && host.shadowRoot ? host.shadowRoot.getElementById('installBtn') : null;
+    }
+
+    window.addEventListener('beforeinstallprompt', function (ev) {
+        ev.preventDefault();
+        deferred = ev;
+        // The tool mounts asynchronously, so the button may not exist yet.
+        var tries = 0;
+        (function reveal() {
+            var btn = installButton();
+            if (!btn) {
+                if (tries++ < 40) setTimeout(reveal, 250);
+                return;
+            }
+            // Already running as the installed app: nothing to install.
+            if (window.matchMedia('(display-mode: standalone)').matches) return;
+            btn.hidden = false;
+            btn.addEventListener('click', function () {
+                if (!deferred) return;
+                btn.disabled = true;
+                deferred.prompt();
+                deferred.userChoice.then(function (choice) {
+                    if (choice && choice.outcome === 'accepted') btn.hidden = true;
+                    else btn.disabled = false;
+                    deferred = null;
+                });
+            }, { once: false });
+        })();
+    });
+
+    window.addEventListener('appinstalled', function () {
+        deferred = null;
+        var btn = installButton();
+        if (btn) btn.hidden = true;
+    });
 })();
 </script>
 </body>
