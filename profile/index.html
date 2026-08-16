@@ -6561,10 +6561,21 @@
             if (!Number.isFinite(n) || n === 0) return 'N/A';
             return (n > 0 ? '+' : '') + Math.round(n);
         };
+        /* FALLBACK ONLY (2026-08-16). These tiles belong to tmrxRenderRedesign,
+           which fills them from the canonical /api/users/:username/metrics
+           summary -- the same numbers the feed, the leaderboard and the
+           directory read. This function recomputes them in the browser from the
+           fetched pick rows, and its risked-units math is not identical to the
+           server's, so it was repainting the ribbon's ROI as +0.68% over the
+           canonical +0.71% on the very same page. It now writes a tile only
+           while that tile is still an unfilled placeholder, so a profile whose
+           metrics call never lands still shows a record, and a profile whose
+           metrics call succeeds shows exactly one ROI. */
         const setBoth = function(baseId, text, signed) {
             [baseId, baseId + 'Top'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (!el) return;
+                if (!el.classList.contains('is-placeholder')) return;
                 el.textContent = text;
                 el.classList.remove('is-placeholder');
                 el.classList.toggle('is-pos', signed != null && signed > 0);
@@ -8018,15 +8029,23 @@
             if (!Number.isFinite(x) || x === 0) return '—';
             return (x > 0 ? '+' : '') + Math.round(x);
         };
+        /* Writes the tile AND its `...Top` twin. Several ribbon values are
+           rendered twice on this page (once per tab layout). Filling only one
+           of the pair left the twin showing whatever the browser-side
+           recomputation in renderCoreHandicapperStatsFromPicks had put there --
+           on 2026-08-16 that was ROI +0.68% beside the canonical +0.71%. The
+           canonical /metrics summary now owns both copies. */
         const setVal = (id, text, signed) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.textContent = text;
-            el.classList.remove('is-placeholder');
-            if (signed != null) {
-                el.classList.toggle('is-pos', signed > 0);
-                el.classList.toggle('is-neg', signed < 0);
-            }
+            [id, id + 'Top'].forEach((elementId) => {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                el.textContent = text;
+                el.classList.remove('is-placeholder');
+                if (signed != null) {
+                    el.classList.toggle('is-pos', signed > 0);
+                    el.classList.toggle('is-neg', signed < 0);
+                }
+            });
         };
 
         if (s.total_picks > 0) {
