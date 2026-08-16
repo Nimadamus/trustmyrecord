@@ -34,18 +34,32 @@ function getAvatarHtml(item, className) {
     return '<div class="' + className + '">' + esc((display || '?')[0].toUpperCase()) + '</div>';
 }
 
+/* LIFETIME record only. Every field read here is attached by the backend from
+   services/canonicalUserStats.js -- the same module the profile page reads --
+   so a card's record is the profile's record by construction.
+
+   Never read a per-batch field here. `batch_net_units` is the units from ONE
+   day's grading run; rendering it on this line is what produced
+   "Current overall record: 326-284-8, +3.02u" against a profile showing
+   +13.07u on 2026-08-16. */
 function getRecordText(item) {
-    const raw = item.record || item.public_record || item.user_record;
-    if (raw) return String(raw);
-    const wins = item.wins ?? item.user_wins;
-    const losses = item.losses ?? item.user_losses;
-    const pushes = item.pushes ?? item.user_pushes;
-    const units = item.net_units ?? item.user_net_units ?? item.units_profit;
+    const wins = item.record_wins ?? item.wins ?? item.user_wins;
+    const losses = item.record_losses ?? item.losses ?? item.user_losses;
+    const pushes = item.record_pushes ?? item.pushes ?? item.user_pushes;
+    const units = item.net_units ?? item.user_net_units;
     const winRate = item.win_rate ?? item.user_win_rate;
     if (wins != null || losses != null || pushes != null) {
         const record = pushes != null && Number(pushes) > 0 ? [wins || 0, losses || 0, pushes || 0].join('-') : [wins || 0, losses || 0].join('-');
-        const unitsNum = Number(units || 0);
-        return record + ', ' + (unitsNum >= 0 ? '+' : '') + unitsNum.toFixed(2) + 'u' + (winRate != null ? ', ' + Number(winRate).toFixed(1) + '%' : '');
+        const parts = [record];
+        /* Units and win rate are omitted rather than defaulted to 0 when the
+           payload does not carry them -- a fabricated "+0.00u" beside a real
+           record is exactly the kind of quiet disagreement this fix removes. */
+        if (units != null) {
+            const unitsNum = Number(units);
+            parts.push((unitsNum >= 0 ? '+' : '') + unitsNum.toFixed(2) + 'u');
+        }
+        if (winRate != null) parts.push(Number(winRate).toFixed(1) + '%');
+        return parts.join(', ');
     }
     return 'public record pending';
 }
@@ -556,11 +570,18 @@ function normalizePublicPick(item) {
         graded_at: item.graded_at || item.grade_verified_at,
         created_at: item.graded_at || item.grade_verified_at || item.created_at || item.locked_at,
         pick_count: activityCount || undefined,
-        wins: item.record_wins != null ? item.record_wins : item.wins,
-        losses: item.record_losses != null ? item.record_losses : item.losses,
-        pushes: item.record_pushes != null ? item.record_pushes : item.pushes,
-        net_units: item.net_units != null ? item.net_units : item.user_net_units,
+        /* Lifetime record, straight from the canonical fields the backend
+           attaches. record_* wins over wins/losses/pushes because on a pick row
+           those bare names can be this batch's counts. */
+        record_wins: item.record_wins != null ? item.record_wins : item.wins,
+        record_losses: item.record_losses != null ? item.record_losses : item.losses,
+        record_pushes: item.record_pushes != null ? item.record_pushes : item.pushes,
+        net_units: item.net_units,
+        roi: item.roi,
         win_rate: item.win_rate,
+        total_public_graded: item.total_public_graded,
+        /* This batch only. Kept separate so it can never reach getRecordText. */
+        batch_net_units: item.batch_net_units,
         wins_count: item.wins_count,
         losses_count: item.losses_count,
         pushes_count: item.pushes_count,
@@ -579,15 +600,21 @@ function buildUserMapFromFeed(items) {
     (items || []).forEach(item => {
         const username = getUsername(item);
         if (!username || out[username]) return;
+        /* Lifetime fields ONLY. This used to fall back to wins_count /
+           losses_count / pushes_count -- this batch's outcomes -- whenever a
+           row had no record_*, which then propagated a single day's results
+           across every card that author had in the timeline. */
         out[username] = {
             avatar_url: item.avatar_url,
             favorite_sports: Array.isArray(item.favorite_sports) ? item.favorite_sports : undefined,
             verification_status: item.verification_status,
-            wins: item.record_wins != null ? item.record_wins : item.wins_count,
-            losses: item.record_losses != null ? item.record_losses : item.losses_count,
-            pushes: item.record_pushes != null ? item.record_pushes : item.pushes_count,
+            record_wins: item.record_wins,
+            record_losses: item.record_losses,
+            record_pushes: item.record_pushes,
             net_units: item.net_units,
-            win_rate: item.win_rate
+            roi: item.roi,
+            win_rate: item.win_rate,
+            total_public_graded: item.total_public_graded
         };
     });
     return out;
@@ -604,11 +631,13 @@ function attachUserRecord(item, user) {
         avatar_url: keep(item.avatar_url, user.avatar_url),
         verification_status: keep(item.verification_status, user.verification_status),
         primary_sport: keep(item.primary_sport, Array.isArray(user.favorite_sports) ? user.favorite_sports[0] : null),
-        wins: keep(item.wins, user.wins),
-        losses: keep(item.losses, user.losses),
-        pushes: keep(item.pushes, user.pushes),
+        record_wins: keep(item.record_wins, user.record_wins),
+        record_losses: keep(item.record_losses, user.record_losses),
+        record_pushes: keep(item.record_pushes, user.record_pushes),
         net_units: keep(item.net_units, user.net_units),
-        win_rate: keep(item.win_rate, user.win_rate)
+        roi: keep(item.roi, user.roi),
+        win_rate: keep(item.win_rate, user.win_rate),
+        total_public_graded: keep(item.total_public_graded, user.total_public_graded)
     };
 }
 
@@ -872,10 +901,14 @@ async function loadTopCappers() {
     const el = document.getElementById('topCappersList');
     if (!el) return;
     try {
-        const data = await api.request('/users?limit=10');
-        const users = (data.users || []).filter(isRealPublicFeedUser).filter(u => Number(u.total_picks || 0) > 0);
+        /* The canonical ranked leaderboard, not the directory list re-sorted in
+           the browser. /users?limit=10 returns the ten most PROLIFIC members;
+           sorting those by units produced a "Top Cappers" order that disagreed
+           with /leaderboards/ and with the rank printed on a profile. This is
+           the same endpoint and the same ordering the leaderboard page uses. */
+        const data = await api.request('/users/leaderboard?sortBy=net_units&limit=10');
+        const users = (data.leaderboard || data.users || []).filter(isRealPublicFeedUser);
         if (users.length) {
-            users.sort((a, b) => Number(b.net_units || 0) - Number(a.net_units || 0));
             el.innerHTML = users.slice(0, 3).map(u => {
                 const units = Number(u.net_units || 0);
                 const sign = units >= 0 ? '+' : '';

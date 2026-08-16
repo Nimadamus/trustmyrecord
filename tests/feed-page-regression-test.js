@@ -61,4 +61,33 @@ assert(override.includes('TrustMyRecord does not substitute fake feed posts'), '
 assert(override.includes('Public graded picks will surface here as real records update. Pending pick details stay private.'), 'feed trending empty state must keep pending privacy copy');
 assert(social.includes('TrustMyRecord does not substitute fake feed posts'), 'base feed script must keep no-fake fallback copy');
 
+// ---- Stat single-source lock (2026-08-16) ---------------------------------
+// /feed/ showed "Current overall record: 326-284-8, +3.02u" for BetLegend while
+// his profile showed +13.07u. The record was lifetime; the units were that
+// day's grading batch, shipped under the same `net_units` name. Every number
+// on this page now comes from the canonical fields the backend attaches from
+// services/canonicalUserStats.js -- the module the profile page reads.
+const recordTextStart = override.indexOf('function getRecordText(item) {');
+assert(recordTextStart !== -1, 'getRecordText is missing');
+const recordTextBody = override.slice(recordTextStart, override.indexOf('\n}', recordTextStart));
+assert(recordTextBody.includes('item.record_wins'), 'getRecordText must read the canonical lifetime record_wins field');
+assert(!recordTextBody.includes('batch_net_units'), 'getRecordText must never read a per-batch units field');
+assert(!recordTextBody.includes('wins_count'), 'getRecordText must never read a per-batch outcome count');
+assert(
+  override.includes('batch_net_units: item.batch_net_units'),
+  'the per-day grading batch must be carried under batch_net_units, never merged into net_units'
+);
+assert(
+  !/wins: item\.record_wins != null \? item\.record_wins : item\.wins_count/.test(override),
+  'the per-author record map must not fall back to this batch\'s wins_count as a lifetime record'
+);
+assert(
+  override.includes("api.request('/users/leaderboard?sortBy=net_units&limit=10')"),
+  'Top Cappers must read the canonical ranked leaderboard, not a client-sorted directory slice'
+);
+assert(
+  social.includes('const wr = Number(u.win_rate || 0);'),
+  'the Your Record sidebar must use the API win rate, never recompute one with a different denominator'
+);
+
 console.log('Feed page regression test passed.');

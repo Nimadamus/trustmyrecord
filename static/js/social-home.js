@@ -95,8 +95,12 @@ async function loadSidebarStats(user) {
             const data = await api.request(`/users/${user.username}`);
             const u = data.user || {};
             const wins = u.wins || 0, losses = u.losses || 0, pushes = u.pushes || 0;
-            const total = wins + losses + pushes;
-            const wr = total > 0 ? (wins / total * 100) : 0;
+            /* Read the win rate the API sends; never recompute it here. This
+               used to divide by wins+losses+pushes while the profile divides by
+               wins+losses, so the two disagreed for anyone with pushes. A
+               compact widget may show fewer decimals -- it must not show a
+               different number. */
+            const wr = Number(u.win_rate || 0);
             document.getElementById('sidebarMyStats').innerHTML = `
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;color:var(--text-secondary);">
                     <div><span style="font-weight:700;color:var(--text-primary);">${u.total_picks || 0}</span> picks</div>
