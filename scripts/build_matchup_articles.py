@@ -1250,6 +1250,30 @@ def display_date(value):
     return shifted.date() if shifted else None
 
 
+def archive_day(article):
+    """Which square on the calendar this article belongs to.
+
+    `featured_on` — the day it WAS the Matchup of the Day — not published_at.
+    For every article written on its own morning the two agree, which is why the
+    distinction was invisible until the first backfill: a piece previewing the
+    August 12 game, written from August 12 research but published on the 17th,
+    belongs on the 12th. Keyed off published_at it would land on the 17th, on top
+    of that day's own article, and one of the two would vanish from the archive.
+
+    published_at stays honest about when the article went live and remains what
+    feeds datePublished. These are two different facts and the calendar wants the
+    other one.
+
+    featured_on arrives as a DATE at midnight UTC. It is deliberately not put
+    through the display timezone: shifting midnight UTC into Pacific moves it to
+    the previous day, which is the same off-by-one this function exists to stop.
+    """
+    featured = parse_iso(article.get("featured_on"))
+    if featured:
+        return featured.date()
+    return display_date(article.get("published_at"))
+
+
 def month_key(value):
     return "%04d-%02d" % (value.year, value.month)
 
@@ -1276,7 +1300,7 @@ def calendar_html(articles, today):
     """One grid per month. Days that published link to that day's own URL."""
     by_day = {}
     for a in articles:                      # newest first; first writer wins
-        day = display_date(a.get("published_at"))
+        day = archive_day(a)
         if day and day not in by_day:
             by_day[day] = a
     if not by_day:
@@ -1359,8 +1383,12 @@ def by_month_html(articles):
     archive, and it is where the descriptive internal links live."""
     groups = []
     seen = {}
-    for a in articles:                      # already newest first
-        day = display_date(a.get("published_at"))
+    # Re-sorted rather than trusting the caller's order: a backfilled day arrives
+    # with a much later published_at and would otherwise sit at the top of its
+    # month above days that came after it.
+    for a in sorted(articles, key=lambda x: (archive_day(x) or dt.date.min,
+                                             x.get("id") or 0), reverse=True):
+        day = archive_day(a)
         if not day:
             continue
         key = month_key(day)
@@ -1457,7 +1485,18 @@ def main():
                 sys.exit("ABORT: article %s is missing %s" % (a.get("id"), field))
 
     # Newest first, so "previous" walks backwards through the archive.
-    ordered = sorted(articles, key=lambda a: (a.get("published_at") or "", a.get("id") or 0), reverse=True)
+    #
+    # Sorted by the day each piece COVERS (archive_day), not the moment it went
+    # live. Identical for anything written on its own morning; the two only
+    # diverge for a backfilled day, and there the reader's "previous matchup"
+    # plainly means the previous day's game, not whatever happened to be
+    # published before it. published_at breaks ties.
+    ordered = sorted(
+        articles,
+        key=lambda a: (archive_day(a) or dt.date.min,
+                       a.get("published_at") or "",
+                       a.get("id") or 0),
+        reverse=True)
 
     # ---- render every page into memory before touching the tree -------------
     rendered = {}

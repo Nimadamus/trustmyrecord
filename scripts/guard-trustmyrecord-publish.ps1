@@ -24,6 +24,18 @@ $ForbiddenPathTerms = @(
     ".codex-stage"
 )
 
+# PowerShell decodes a native command's stdout with [Console]::OutputEncoding,
+# which under Task Scheduler is the OEM codepage, not UTF-8. Without this an em
+# dash, a curly quote or an accented player name is destroyed at the moment of
+# capture and no amount of care downstream can recover it. Wrapped because a host
+# with no console attached throws on the assignment, and a script must not die
+# trying to protect itself.
+try {
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
+} catch { }
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+
 function Fail($Message) {
     throw "[publish guard] $Message"
 }

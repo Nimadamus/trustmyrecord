@@ -85,6 +85,8 @@ function fixture(day, n) {
     og_image_url: 'https://trustmyrecord.com/static/og/matchups/g1000.png',
     hero_image_url: '/static/media/matchups/g1000-hero.svg',
     hero_image_alt: 'Calendar probe cover',
+    // featured_on is a DATE at midnight UTC, exactly as the API serves it.
+    featured_on: `${day.iso}T00:00:00.000Z`,
     published_at: at(day),
     content_modified_at: at(day),
     body_json: [{ module: 'probe', heading: 'Probe',
@@ -99,6 +101,7 @@ function fixture(day, n) {
 const DAYS = {
   old:       shiftDays(TODAY, -70),
   mid:       shiftDays(TODAY, -35),
+  gap:       shiftDays(TODAY, -20),
   yesterday: shiftDays(TODAY, -1),
   today:     TODAY,
 };
@@ -260,6 +263,39 @@ try {
   } else {
     bad(`today: ${todayCells2.length} today marker(s), linked=${todayCells2[0] && todayCells2[0].startsWith('<a')}`);
   }
+
+  /* ---- 2b. a BACKFILL lands on the day it covers ----------------------- */
+  /* The case that exposed the whole design: a piece previewing an older game,
+     written from that day's research but published today. Keyed off
+     published_at it would land on today's square, on top of today's own
+     article, and one of the two would disappear from the archive. It belongs on
+     its own day, and published_at must stay honest about when it went live. */
+  const BACKFILL = {
+    ...fixture(DAYS.gap, 5),
+    featured_on: `${DAYS.gap.iso}T00:00:00.000Z`,
+    published_at: at(DAYS.today),          // published today...
+    content_modified_at: at(DAYS.today),
+  };
+  const filled = bake([BACKFILL, TODAY_ARTICLE, ...HISTORY], 'backfill');
+  const cal3 = calendarOf(filled);
+  const sq3 = squares(cal3);
+
+  const onGap = sq3.find((s) => s.month === key(DAYS.gap) && s.day === DAYS.gap.d);
+  if (onGap && onGap.href === `/matchup-of-the-day/${BACKFILL.slug}/`) {
+    ok(`backfill: lands on ${DAYS.gap.iso}, the day it covers`);
+  } else {
+    bad(`backfill: expected it on ${DAYS.gap.iso}, found ${onGap ? onGap.href : 'NOTHING'}`);
+  }
+
+  const stillToday = sq3.find((s) => s.month === key(DAYS.today) && s.day === DAYS.today.d);
+  if (stillToday && stillToday.href === `/matchup-of-the-day/${TODAY_ARTICLE.slug}/`) {
+    ok("backfill: today's square still belongs to today's article");
+  } else {
+    bad(`backfill: today's square was taken over by ${stillToday ? stillToday.href : 'NOTHING'}`);
+  }
+
+  if (sq3.length === sq2.length + 1) ok('backfill: exactly one square was added');
+  else bad(`backfill: ${sq3.length - sq2.length} squares added, expected 1`);
 
   /* ---- 3. the archive is never hidden from search ---------------------- */
   if (!/noindex/i.test(after)) ok('the hub is not noindexed');
