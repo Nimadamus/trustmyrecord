@@ -51,32 +51,53 @@ for (const [id, what] of SKELETON_SLOTS) {
     `#${id} (${what}) has a baked number in it — that number WILL go stale: ${shown}`);
 }
 
-/* ---------- 2. the capper card ships as a skeleton ------------------------- */
-const capper = /<!--MK:homeCapper-->([\s\S]*?)<!--\/MK:homeCapper-->/.exec(html);
-assert.ok(capper, 'index.html lost the <!--MK:homeCapper--> region');
-assert.ok(/class="bd is-skel"/.test(capper[1]),
-  'the Capper of the Week card must ship in its skeleton state (class="bd is-skel")');
-for (const needle of ['tracked picks', 'win rate', 'avg odds']) {
-  assert.ok(!capper[1].includes(needle),
-    `the capper card has a baked "${needle}" sentence — it must be a skeleton`);
+/* ---------- 2. the hero card ships as a skeleton --------------------------- */
+// The <!--MK:homeCapper--> region held the Capper of the Week card until
+// 2026-08-16 and now holds the LIVE COMPETITION module. The marker name is kept
+// so the prerender anchor (scripts/prerender_home_snapshot.cjs) and the edge
+// renderer keep pointing at the same region; what it contains changed, the rule
+// that it must ship EMPTY did not.
+const spotRegion = /<!--MK:homeCapper-->([\s\S]*?)<!--\/MK:homeCapper-->/.exec(html);
+assert.ok(spotRegion, 'index.html lost the <!--MK:homeCapper--> region');
+assert.ok(/class="bd is-skel"/.test(spotRegion[1]),
+  'the hero card must ship in its skeleton state (class="bd is-skel")');
+
+/* ---------- 3. no competitor, number or event is baked into the card ------- */
+// The card names real members and prints their real units. A baked row would be
+// a WRONG member with a WRONG number on the front page — the same class of bug
+// as the stale counts above, with somebody's name attached.
+// The permanent headline is copy, not a statistic: it is the same sentence on
+// every load and cannot go stale, so it is the one thing in here that is baked.
+// Everything else in the region must read empty.
+const rowText = spotRegion[1]
+  .replace(/<div class="comp-title">[\s\S]*?<\/div>/, '')
+  .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+assert.strictEqual(rowText, '',
+  `the competition card has baked content — every row must be a skeleton: ${rowText}`);
+assert.ok(/<div class="comp-title">The TMR race never stops<\/div>/.test(spotRegion[1]),
+  'the permanent LIVE COMPETITION headline is missing from the card');
+for (const needle of ['comp-nm" href', 'data-val=', 'comp-ago', 'comp-dl']) {
+  assert.ok(!spotRegion[1].includes(needle),
+    `the competition card ships a rendered "${needle}" — rows must arrive from the API, never from the markup`);
 }
+// The footer counts ship as a placeholder for the same reason.
+const compFoot = /<span class="comp-foot">([\s\S]*?)<\/span>/.exec(html);
+assert.ok(compFoot, 'index.html lost the competition card footer (.comp-foot)');
+assert.ok(/class="sk"/.test(compFoot[1]) && !/\d/.test(compFoot[1].replace(/<[^>]*>/g, '')),
+  `the competition footer has a baked count — it must be a skeleton: ${compFoot[1]}`);
 
-/* ---------- 3. the two pick counts on the capper card cannot disagree ------ */
-// Both come from card.user.total_picks, in the client AND at the edge. If one
-// of them is ever fed from a different field they will drift apart again.
-const FT_SENTENCE = "num(u.total_picks) + ' picks, every one locked pre-game'";
-assert.ok(js.includes(FT_SENTENCE),
-  'tmr-home-live.js must write the capper footer count from u.total_picks');
-assert.ok(js.includes("num(u.total_picks) + ' tracked picks'"),
-  'tmr-home-live.js must write the capper sub-line count from u.total_picks');
-assert.ok(worker.includes('${num(u.total_picks)} picks, every one locked pre-game'),
-  'worker.mjs must write the capper footer count from u.total_picks');
-assert.ok(worker.includes('${num(u.total_picks)} tracked picks'),
-  'worker.mjs must write the capper sub-line count from u.total_picks');
-
-/* ---------- 4. the footer count is not baked ------------------------------- */
-assert.ok(!/\d[\d,]* picks, every one locked pre-game/.test(html),
-  'the capper card footer has a baked pick count — this is the "353 vs 196" bug');
+/* ---------- 4. client and edge render the card from ONE payload shape ------ */
+// Both write the footer sentence from footer.competitors / footer.verified_picks
+// and both build rows through compRowHtml. If either drifts, the edge paints one
+// thing and the script repaints another — a visible swap on load.
+assert.ok(js.includes("' competitors · '") && js.includes("' verified picks · standings update live'"),
+  'tmr-home-live.js must write the competition footer sentence from the payload footer');
+assert.ok(worker.includes('competitors · ') && worker.includes('verified picks · standings update live'),
+  'worker.mjs must write the same competition footer sentence as the client');
+for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
+  assert.ok(src.includes('compRowHtml'),
+    `${name} must build competition rows through compRowHtml so the two stay byte-identical`);
+}
 
 /* ---------- 5. the hero eyebrow and the stripe read the SAME source -------- */
 assert.ok(js.includes("setText(document.getElementById('tmrEyebrowPicks'), picksText)"),
@@ -155,8 +176,8 @@ assert.ok(worker.includes("const HOME_PATHS = new Set(['/', '/index.html'])"),
   'worker.mjs must re-check the pathname itself, not trust the route config alone');
 
 /* ---------- 7. no placeholder may shimmer forever ------------------------- */
-assert.ok(js.includes('function capperSettled()'),
-  'tmr-home-live.js must settle the capper card skeleton on the failure path too');
+assert.ok(js.includes('function compSettled()'),
+  'tmr-home-live.js must settle the competition card skeleton on the failure path too');
 assert.ok(js.includes('function statsSettled()'),
   'tmr-home-live.js must resolve leftover stat placeholders as soon as the stats ' +
   'requests settle, rather than leaving them shimmering until a timer fires');
@@ -175,5 +196,5 @@ assert.ok(!js.slice(sweepStart, sweepEnd).includes('tmrEyebrowPicks'),
 
 console.log(
   `homepage no-baked-stats lock passed (${SKELETON_SLOTS.length} stat slots, ` +
-  'capper card, worker routes)'
+  'live-competition card, worker routes)'
 );

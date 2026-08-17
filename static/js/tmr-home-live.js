@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = 'e35d55c55f24';
+  var BUILD = '23f80ebca04f';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -776,108 +776,381 @@
     }).join('');
   }
 
-  /* ---------- 4. CAPPER OF THE WEEK ---------------------------------------
-     Editorially designated. The complete card payload (record, units, ROI,
-     win rate, avg odds, streak, last graded picks) now arrives server-
-     assembled — from the SAME canonical sources his profile page reads — in
-     one response (home-bootstrap or /users/capper-of-week `card`), replacing
-     the old 4-request client waterfall that left this card blank for seconds
-     on a busy backend. If no capper is designated or the payload is missing,
-     the prerendered/baked markup is left exactly as-is. */
-  /* The card ships as a skeleton (see index.html). Clear the skeleton state once
-     the payload has been written, or — when there is no payload — replace every
-     remaining placeholder with an honest dash so nothing shimmers forever. The
-     card's box is unchanged either way. */
-  function capperSettled() {
-    var spot = el('.spot'); if (!spot) return;
-    var bd = el('.spot .bd');
-    if (bd) { bd.classList.remove('is-skel'); bd.setAttribute('aria-busy', 'false'); }
-    /* Anything the payload did not fill is still a placeholder. Dash it — never
-       leave a permanent shimmer, and never invent a value. */
-    spot.querySelectorAll('.sub2 .sk, .g3 b .sk, .ft span .sk, .lb .sk, .avbox .sk, .nmrow b .sk')
-      .forEach(function (n) {
-        var host = n.parentNode;
-        if (host && host.querySelectorAll('.sk').length === 1) host.textContent = '—';
-        else n.remove();
-      });
-    if (spot.querySelector('.spark .sk')) sparkFallback();
+  /* ---------- 4. LIVE COMPETITION -----------------------------------------
+     The hero's right-hand card. Replaced the Capper of the Week spotlight on
+     2026-08-16: TMR is a standing competition, and the card now says so by
+     rotating through several live reads of it — units, the live ticker, hot
+     streaks, ROI, today, this week.
+
+     Every value comes from /api/users/competition (or the `competition` block
+     of home-bootstrap), which builds each view from real graded picks and real
+     standings movement. This file renders what it is handed and nothing else:
+     it never invents a competitor, a number, a rank change or an event, and a
+     view the backend left out of `views` — because there was not enough real
+     data for it right now — simply is not in the rotation. That is the
+     "fall back to another real view" rule, and it is enforced on the server so
+     the client has nothing to fabricate with.
+
+     Geometry: the card's height NEVER changes as views rotate. The stage is a
+     fixed box (see .comp-stage in tmr-home-v2.css) and views are absolutely
+     positioned layers inside it, so the outgoing and incoming views overlap
+     rather than one pushing the other. Nothing here writes a height. ------- */
+
+  /* Dwell per view, and the transition budget inside it. The progress rule is
+     driven by the same constant, so the bar always finishes exactly when the
+     next view starts — a bar that lies about the timing is worse than none. */
+  var COMP_DWELL_MS = 5200;
+  var COMP_SWAP_MS = 340;
+  /* The count-up. Long enough to read as a number settling, short enough that
+     the value is legible for most of the dwell. */
+  var COMP_COUNT_MS = 720;
+
+  var comp = {
+    views: [],          // real views, server-ordered
+    i: 0,               // index of the view on screen
+    timer: null,
+    paused: false,
+    started: false,
+    reduced: false,
+    refresh: null,      // slow re-ask, so "standings update live" is literal
+    asked: false,       // the standalone endpoint is tried once, never in a loop
+  };
+  try {
+    comp.reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  } catch (e) {}
+
+  /* Elapsed-time stamp for ticker rows. Tighter than timeAgo() above, which is
+     tuned for a card with room for "23 min ago"; here the stamp shares a line
+     with the event itself. */
+  function compAgo(ts) {
+    if (!ts) return '';
+    var s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (s < 0) s = 0;
+    if (s < 45) return 'now';
+    if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm';
+    if (s < 86400) return Math.floor(s / 3600) + 'h';
+    return Math.floor(s / 86400) + 'd';
   }
 
-  function applyCapper(card) {
+  /* A competitor with no avatar gets initials, not a request that 404s into
+     initials. The homepage has been bitten before by an <img> whose onerror
+     raced the edge bake and rewrote the card after first paint; there is no
+     reason to fire that request when the payload already says there is no
+     avatar. Kept identical in workers/home-ssr/worker.mjs. */
+  function compAvatar(c) {
+    if (!c) return '<span class="comp-avl"></span>';
+    // The fallback markup inside the onerror attribute is entity-encoded rather
+    // than written with raw angle brackets. Both parse to the same JS string,
+    // but only one of them is BYTE-identical to what the edge renderer emits,
+    // and byte-identical is the contract between the two (see
+    // tests/homepage-live-competition-lock-test.js, which diffs them).
+    if (c.avatar_url) return '<img class="comp-av" src="' + esc(c.avatar_url) + '" alt="" ' +
+      'onerror="this.outerHTML=\'&lt;span class=&quot;comp-avl&quot;&gt;' + initials(c.username) + '&lt;/span&gt;\'">';
+    return '<span class="comp-avl">' + initials(c.username) + '</span>';
+  }
+
+  /* The movement chip. `delta` is positions gained against the same standings
+     as they stood 24 hours ago; 0 means genuinely unchanged, and null means
+     this competitor had no graded record 24 hours ago to compare against. */
+  function compDelta(row) {
+    if (row.is_new) return '<span class="comp-dl nw">NEW</span>';
+    var d = row.delta;
+    if (d == null) return '';
+    if (d > 0) return '<span class="comp-dl up">&#9650;' + d + '</span>';
+    if (d < 0) return '<span class="comp-dl dn">&#9660;' + Math.abs(d) + '</span>';
+    return '<span class="comp-dl fl">&mdash;</span>';
+  }
+
+  var COMP_ICON = { win: 'W', loss: 'L', lock: '&#128274;', streak: '&#128293;', up: '&#9650;' };
+
+  function compRowHtml(view, row, i) {
+    var c = row.competitor || {};
+    var href = c.href || (c.username ? '/u/' + encodeURIComponent(c.username) + '/' : '/handicappers/');
+    if (view.kind === 'ticker') {
+      return '<div class="comp-row">' +
+        '<span class="comp-ic ' + esc(row.icon || 'lock') + '">' + (COMP_ICON[row.icon] || '&bull;') + '</span>' +
+        '<span class="comp-tx"><a class="comp-nm-i" href="' + esc(href) + '"><b>' + esc(c.username || '') + '</b></a> ' + esc(row.text || '') + '</span>' +
+        '<span class="comp-ago">' + esc(compAgo(row.at)) + '</span>' +
+      '</div>';
+    }
+    /* data-to / data-from drive the count-up. The element is rendered with its
+       FINAL text first so a visitor with JS animation suppressed, or a frame
+       dropped mid-swap, still reads the true number. */
+    var neg = num(row.value) < 0;
+    return '<div class="comp-row' + (i === 0 ? ' r1' : '') + '">' +
+      '<span class="comp-rk">' + (row.rank || i + 1) + '</span>' +
+      compAvatar(c) +
+      '<span class="comp-id">' +
+        '<a class="comp-nm" href="' + esc(href) + '">' + esc(c.username || '') + '</a>' +
+        '<span class="comp-meta">' + esc(row.meta || '') + '</span>' +
+      '</span>' +
+      '<span class="comp-val">' +
+        '<span class="comp-num ' + (neg ? 'neg' : 'pos') + '" data-val="' + esc(String(row.value)) + '" ' +
+          'data-text="' + esc(row.value_text || '') + '">' + esc(row.value_text || '') + '</span>' +
+        compDelta(row) +
+      '</span>' +
+    '</div>';
+  }
+
+  /* Count-up. Animates only the DIGITS inside the already-correct final string,
+     so the prefix/suffix ("+", "u", "%", "W") can never be animated into
+     something that was not in the payload, and the last frame is exactly the
+     server's own text. */
+  function compCountUp(view, host) {
+    // The server says which views have a value worth counting: a streak's "W5"
+    // would spend most of the animation reading "W0", which is a different and
+    // wrong claim. Continuous quantities (units, ROI) count; counts do not.
+    if (comp.reduced || view.animate_value === false) return;
+    // A hidden or occluded tab gets throttled or paused rAF. Starting a count
+    // there would park a real competitor's units at 0.00 for as long as the
+    // throttle lasts, which is a wrong number on screen — the one failure this
+    // card is not allowed to have. Don't start; the true value is already in
+    // the DOM.
+    if (document.hidden) return;
+    host.querySelectorAll('.comp-num').forEach(function (n) {
+      var finalText = n.getAttribute('data-text') || n.textContent;
+      var target = parseFloat(n.getAttribute('data-val'));
+      if (!isFinite(target)) return;
+      var m = /-?\d[\d,]*(\.\d+)?/.exec(finalText);
+      if (!m) return;
+      var decimals = m[1] ? m[1].length - 1 : 0;
+      var head = finalText.slice(0, m.index);
+      var tail = finalText.slice(m.index + m[0].length);
+      var magnitude = Math.abs(target);
+      var t0 = 0;
+      var done = false;
+      var framesRan = false;
+      function finish() { if (!done) { done = true; n.textContent = finalText; } }
+      function frame(ts) {
+        if (done) return;
+        framesRan = true;
+        if (!t0) t0 = ts;
+        var p = Math.min(1, (ts - t0) / COMP_COUNT_MS);
+        // easeOutCubic: fast start, long settle — the broadcast feel.
+        var e = 1 - Math.pow(1 - p, 3);
+        if (p >= 1) { finish(); return; }
+        n.textContent = head + (magnitude * e).toFixed(decimals) + tail;
+        requestAnimationFrame(frame);
+      }
+      n.textContent = head + (0).toFixed(decimals) + tail;
+      requestAnimationFrame(frame);
+      /* Two wall-clock guards, because a count that has stalled is a WRONG
+         NUMBER on screen, not a missing animation.
+
+         rAF can be throttled to 1fps or stopped outright — a backgrounded tab,
+         an occluded or minimised window, battery saver. If that happens the
+         count would park a real competitor's units at 0.00 for as long as the
+         throttle lasts. So: if no frame has run one frame-time in, the browser
+         is not animating and the true value goes back immediately (measured in
+         an occluded window: without this it sat at +0.00u for 860ms). The
+         second guard is the ordinary finish, for a run that starts and then
+         stops partway. */
+      setTimeout(function () { if (!framesRan) finish(); }, 120);
+      setTimeout(finish, COMP_COUNT_MS + 140);
+    });
+  }
+
+  function compRestartProgress() {
+    var bar = el('.spot.comp .comp-prog'); if (!bar) return;
+    bar.classList.remove('run');
+    bar.style.setProperty('--comp-dwell', COMP_DWELL_MS + 'ms');
+    // Force a reflow so the animation restarts from 0 on every view.
+    void bar.offsetWidth;
+    if (comp.views.length > 1) bar.classList.add('run');
+  }
+
+  function compFlash() {
+    if (comp.reduced) return;
+    var f = el('.spot.comp .comp-flash'); if (!f) return;
+    f.classList.remove('go');
+    void f.offsetWidth;
+    f.classList.add('go');
+  }
+
+  /* Paint one view. The outgoing layer is kept in the DOM for the length of the
+     cross-fade and then removed — two layers, never three, and the stage's
+     height is fixed either way. */
+  function compRender(view, animate) {
+    var stage = el('.spot.comp .comp-stage'); if (!stage || !view) return;
+    var cat = el('.spot.comp .comp-cat');
+    var note = el('.spot.comp .comp-note');
+
+    var next = document.createElement('div');
+    next.className = 'comp-view' + (view.kind === 'ticker' ? ' tick' : '');
+    next.innerHTML = (view.rows || []).map(function (r, i) { return compRowHtml(view, r, i); }).join('');
+
+    var prev = stage.querySelector('.comp-view');
+    stage.appendChild(next);
+    // Two frames: one to get `next` into the layout tree, one to start the
+    // animation, so the browser cannot collapse the two states into no
+    // transition at all.
+    requestAnimationFrame(function () {
+      // The category line changes in the SAME frame the rows do. Written before
+      // this point it named the incoming view over the outgoing view's rows for
+      // a frame, which is the one thing a card like this must never do.
+      if (cat) setText(cat, view.label || '');
+      if (note) setText(note, view.note || '');
+      next.classList.add('is-on');
+      if (animate && !comp.reduced) {
+        next.classList.add('is-in');
+        /* Take the class back off once the animation's time is up. `is-in`
+           carries animation-fill-mode:both, which is what holds the staggered
+           rows in their start state until their delay elapses — and which, on
+           a compositor that is not running animations at all (occluded window,
+           heavy tab), would hold the whole view at opacity 0 forever. The
+           outgoing layer is removed on a timer, so that stall showed as an
+           EMPTY card. Timers keep running when animations do not, so this is
+           the guarantee that the rows are visible either way. */
+        setTimeout(function () { next.classList.remove('is-in'); }, COMP_SWAP_MS + 320);
+      }
+      if (prev) {
+        prev.classList.remove('is-on');
+        prev.classList.add('is-off');
+        setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); },
+          comp.reduced ? 0 : COMP_SWAP_MS);
+      }
+      compCountUp(view, next);
+    });
+
+    if (animate) compFlash();
+    compRestartProgress();
+  }
+
+  function compAdvance() {
+    if (!comp.views.length) return;
+    comp.i = (comp.i + 1) % comp.views.length;
+    compRender(comp.views[comp.i], true);
+  }
+
+  function compSchedule() {
+    if (comp.timer) { clearInterval(comp.timer); comp.timer = null; }
+    if (comp.views.length < 2) return;
+    comp.timer = setInterval(function () {
+      // Never rotate into a tab nobody is looking at: the visitor would come
+      // back mid-view with the progress rule already spent.
+      if (comp.paused || document.hidden) return;
+      compAdvance();
+    }, COMP_DWELL_MS);
+  }
+
+  /* Hover holds the current view. Someone reading a row — or about to click a
+     competitor's name — should not have it swapped out from under them. */
+  function compBindPause() {
+    var card = el('.spot.comp'); if (!card || card.dataset.compBound) return;
+    card.dataset.compBound = '1';
+    var hold = function () { comp.paused = true; var b = el('.spot.comp .comp-prog'); if (b) b.classList.remove('run'); };
+    var go = function () { comp.paused = false; compRestartProgress(); };
+    card.addEventListener('mouseenter', hold);
+    card.addEventListener('mouseleave', go);
+    card.addEventListener('focusin', hold);
+    card.addEventListener('focusout', go);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { var b = el('.spot.comp .comp-prog'); if (b) b.classList.remove('run'); }
+      else if (!comp.paused) compRestartProgress();
+    });
+  }
+
+  /* No payload, or a payload with no view that had enough real data: leave the
+     card's box exactly as it is and say so, rather than shimmer forever or
+     print numbers nobody can stand behind. */
+  function compSettled() {
+    var bd = el('.spot.comp .bd'); if (!bd) return;
+    bd.classList.remove('is-skel');
+    bd.setAttribute('aria-busy', 'false');
+    if (!comp.views.length) {
+      var stage = el('.spot.comp .comp-stage');
+      if (stage && !stage.querySelector('.comp-row:not(.is-skel) .comp-nm[href]')) {
+        stage.querySelectorAll('.sk').forEach(function (n) {
+          var host = n.parentNode;
+          if (host && host.querySelectorAll('.sk').length === 1) host.textContent = '—';
+          else n.remove();
+        });
+      }
+      var cat = el('.spot.comp .comp-cat');
+      if (cat && cat.querySelector('.sk')) setText(cat, 'Standings');
+      var note = el('.spot.comp .comp-note');
+      if (note && note.querySelector('.sk')) setText(note, 'Temporarily unavailable');
+    }
+    var foot = el('.spot.comp .comp-foot');
+    if (foot && foot.querySelector('.sk')) setText(foot, 'Standings update live');
+  }
+
+  function applyCompetition(data) {
+    /* home-bootstrap is one aggregate served from a shared cache; a build of it
+       that predates this module simply has no `competition` key. Ask the
+       standalone endpoint rather than settling the card to dashes — this is the
+       window where a frontend deploy has landed and the backend's is still
+       rolling, and it is the difference between a card that fills a second late
+       and a card that says "unavailable" on the front page. */
+    if (!data || !Array.isArray(data.views)) { competitionOnly(); return; }
     try {
-      var username = card && card.username; if (!username) return;
-      var spot = el('.spot'); if (!spot) return;
+      var views = data.views.filter(function (v) {
+        return v && Array.isArray(v.rows) && v.rows.length;
+      });
 
-      var nm = el('.spot .nmrow b', document);
-      if (nm) { setText(nm, username);
-        var pl = nm.closest('.nmrow'); if (pl && !pl.dataset.linked) { pl.dataset.linked = '1';
-          nm.outerHTML = '<a href="/profile/?user=' + encodeURIComponent(username) + '"><b>' + esc(username) + '</b></a>'; } }
-      var fullProfile = el('.spot .hd a'); if (fullProfile) fullProfile.href = '/u/' + encodeURIComponent(username) + '/';
-      var ledger = el('.spot .ft a:not(#tmrCapperBuy)'); if (ledger) ledger.href = '/u/' + encodeURIComponent(username) + '/';
-      // Buy-picks link follows the featured capper to their marketplace storefront.
-      var buy = el('#tmrCapperBuy'); if (buy) buy.href = '/marketplace/seller/?u=' + encodeURIComponent(username);
-      var av = el('.spot .avbox'); if (av) setText(av, initials(username));
+      compFooter(data.footer);
 
-      var u = card.user; if (!u) return;
-      var cells = spot.querySelectorAll('.g3 b');
-      if (cells.length >= 3) {
-        var W = u.wins, L = u.losses, P = num(u.pushes);
-        setText(cells[0], (W == null || L == null) ? num(u.total_picks) + ' picks' : (W + '-' + L + (P ? '-' + P : '')));
-        setText(cells[1], sign(num(u.net_units))); cells[1].className = 'num ' + (num(u.net_units) >= 0 ? 'pos' : 'neg');
-        setText(cells[2], num(u.roi).toFixed(1) + '%'); cells[2].className = 'num ' + (num(u.roi) >= 0 ? 'pos' : 'neg');
-      }
-      var ft = el('.spot .ft span'); if (ft) setText(ft, num(u.total_picks) + ' picks, every one locked pre-game');
-
-      var s = card.summary || {};
-      var winRate = num(s.win_rate);
-      var avgOdds = Math.round(num(s.avg_odds));
-      var streak = num(u.current_streak);
-      var streakTxt = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'no active streak';
-      var sub2 = el('.spot .sub2');
-      if (sub2) setText(sub2, (u.favorite_sports && u.favorite_sports.length
-        ? u.favorite_sports.join(', ') : 'All sports') + ' · ' + num(u.total_picks) + ' tracked picks' +
-        ' · ' + winRate.toFixed(1) + '% win rate · ' + (avgOdds > 0 ? '+' : '') + avgOdds + ' avg odds · ' + streakTxt);
-
-      var picks = card.recent_graded || [];
-      var sp = el('.spot .spark');
-      if (sp) {
-        if (!picks.length) { sparkFallback(); }
-        else {
-          var mx = Math.max.apply(null, picks.map(function (p) { return Math.abs(num(p.result_units)) || 1; })) || 1;
-          var html = picks.map(function (p) {
-            var v = num(p.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
-            return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
-          }).join('');
-          if (sp.innerHTML !== html) sp.innerHTML = html;
-          var lb = el('.spot .lb');
-          if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
-            var lbHtml = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>';
-            if (lb.innerHTML !== lbHtml) lb.innerHTML = lbHtml; }
-        }
-      }
+      if (!views.length) return;
+      comp.views = views;
+      comp.i = 0;
+      comp.started = true;
+      compRender(views[0], false);
+      compBindPause();
+      compSchedule();
+      if (!comp.refresh) comp.refresh = setInterval(compRefresh, COMP_REFRESH_MS);
     } finally {
-      capperSettled();
+      compSettled();
       lwReveal('tmr-lw-spot');
     }
   }
 
-  /* Fallback when home-bootstrap is unavailable: one request to the (also
-     server-assembled) capper-of-week endpoint. */
-  function capperOfWeek() {
-    j('/users/capper-of-week', 8000).then(function (d) {
-      if (d && d.card) { applyCapper(d.card); return; }
-      capperSettled();
-      lwReveal('tmr-lw-spot');
+  /* The footer says "standings update live". That has to be true inside an open
+     tab, not only across reloads: a pick graded while somebody is reading the
+     homepage moves the units table, and the card would otherwise sit on a
+     snapshot from whenever the page loaded. So re-ask on a slow cadence — the
+     same idea as the MLB ticker's 90s refresh a few pixels above.
+
+     The new payload replaces the data, never the view on screen: the rotation
+     keeps its own timing and picks the fresh rows up on its next tick, so a
+     refresh is invisible unless something actually changed. */
+  var COMP_REFRESH_MS = 120000;
+
+  function compRefresh() {
+    if (document.hidden) return;              // nothing to refresh for nobody
+    j('/users/competition', 8000).then(function (d) {
+      var views = (d && Array.isArray(d.views)) ? d.views.filter(function (v) {
+        return v && Array.isArray(v.rows) && v.rows.length;
+      }) : [];
+      if (!views.length) return;              // a failed refresh changes nothing
+      comp.views = views;
+      if (comp.i >= views.length) comp.i = 0;
+      compFooter(d.footer);
     });
   }
 
-  /* Keep the sparkline's reserved 50px box — emptying .sparkwrap collapsed the
-     card by ~68px and dragged the whole hero with it. */
-  function sparkFallback() {
-    var lb = el('.spot .lb');
-    if (lb) lb.innerHTML = '<span>Recent picks</span><span>Data unavailable</span>';
-    var sp = el('.spot .spark');
-    if (sp) sp.innerHTML = '';
+  function compFooter(f) {
+    var foot = el('.spot.comp .comp-foot');
+    if (!foot || !f || f.competitors == null || f.verified_picks == null) return;
+    // Always en-US, for the same reason the stats stripe is: the baked snapshot
+    // and the edge injection both format it that way, and a locale-dependent
+    // rewrite of an unchanged number is a visible swap.
+    setText(foot, num(f.competitors).toLocaleString('en-US') + ' competitors · ' +
+      num(f.verified_picks).toLocaleString('en-US') + ' verified picks · standings update live');
+  }
+
+  /* Fallback when home-bootstrap is unavailable: one request to the standalone
+     competition endpoint, which serves the identical payload. */
+  function competitionOnly() {
+    // One attempt, ever. applyCompetition calls back here when it is handed a
+    // payload without views, so an endpoint that keeps answering without them
+    // would otherwise bounce between the two forever.
+    if (comp.asked) { compSettled(); lwReveal('tmr-lw-spot'); return; }
+    comp.asked = true;
+    j('/users/competition', 8000).then(function (d) {
+      if (d && Array.isArray(d.views)) { applyCompetition(d); return; }
+      compSettled();
+      lwReveal('tmr-lw-spot');
+    });
   }
 
   /* ---------- 5. SPORTS TALK --------------------------------------------- */
@@ -1043,13 +1316,13 @@
       if (rows.length) leaderboard(rows);
       lwReveal('tmr-lw-b2');
 
-      applyCapper(d.capper);
+      applyCompetition(d.competition);
     });
   }
 
   /* Legacy per-endpoint path, kept verbatim as the bootstrap fallback. */
   function legacyBoot() {
-    capperOfWeek();
+    competitionOnly();
     // Three requests feed the stats stripe; the counter fires when the last of
     // them has settled. Whatever they did not fill gets an honest dash then,
     // rather than shimmering until the 12s backstop.
@@ -1134,7 +1407,7 @@
     document.querySelectorAll('#tmrEyebrowPicks, .bridge .s b').forEach(function (b) {
       if (b.querySelector('.sk') || !b.textContent.trim()) b.textContent = '—';
     });
-    capperSettled();
+    compSettled();
     /* The ticker's own deadline. integritySweep only writes the honest message
        once tickerSettled is true, which never happens if the request neither
        resolves nor rejects. This is the backstop for that: a lane that is still

@@ -235,6 +235,71 @@ class NthHtmlCell {
   element(el) { if (this.i++ === this.index && this.html != null) el.setInnerContent(this.html, { html: true }); }
 }
 
+/* ---- live competition markup ----------------------------------------------
+   A port of compRowHtml() / compDelta() / compAvatar() in
+   static/js/tmr-home-live.js. The two MUST produce identical markup: the page
+   script re-renders the same first view a moment after the edge paints it, and
+   any difference between them would flicker a value that did not change.
+   Keep them in lockstep. ---------------------------------------------------- */
+const COMP_ICON = { win: 'W', loss: 'L', lock: '&#128274;', streak: '&#128293;', up: '&#9650;' };
+
+function compAgo(ts) {
+  if (!ts) return '';
+  let s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 0) s = 0;
+  if (s < 45) return 'now';
+  if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm';
+  if (s < 86400) return Math.floor(s / 3600) + 'h';
+  return Math.floor(s / 86400) + 'd';
+}
+
+/* A competitor with no avatar gets initials, not a request that 404s into
+   initials. The homepage has been bitten before by an <img> whose onerror
+   raced the edge bake and rewrote the card after first paint; there is no
+   reason to fire that request when the payload already says there is no
+   avatar. */
+function compAvatar(c) {
+  if (!c) return '<span class="comp-avl"></span>';
+  if (c.avatar_url) return `<img class="comp-av" src="${esc(c.avatar_url)}" alt="" ` +
+    `onerror="this.outerHTML='&lt;span class=&quot;comp-avl&quot;&gt;${initials(c.username)}&lt;/span&gt;'">`;
+  return `<span class="comp-avl">${initials(c.username)}</span>`;
+}
+
+function compDelta(row) {
+  if (row.is_new) return '<span class="comp-dl nw">NEW</span>';
+  const d = row.delta;
+  if (d == null) return '';
+  if (d > 0) return `<span class="comp-dl up">&#9650;${d}</span>`;
+  if (d < 0) return `<span class="comp-dl dn">&#9660;${Math.abs(d)}</span>`;
+  return '<span class="comp-dl fl">&mdash;</span>';
+}
+
+function compRowHtml(view, row, i) {
+  const c = row.competitor || {};
+  const href = c.href || (c.username ? `/u/${encodeURIComponent(c.username)}/` : '/handicappers/');
+  if (view.kind === 'ticker') {
+    return '<div class="comp-row">' +
+      `<span class="comp-ic ${esc(row.icon || 'lock')}">${COMP_ICON[row.icon] || '&bull;'}</span>` +
+      `<span class="comp-tx"><a class="comp-nm-i" href="${esc(href)}"><b>${esc(c.username || '')}</b></a> ${esc(row.text || '')}</span>` +
+      `<span class="comp-ago">${esc(compAgo(row.at))}</span>` +
+    '</div>';
+  }
+  const neg = num(row.value) < 0;
+  return `<div class="comp-row${i === 0 ? ' r1' : ''}">` +
+    `<span class="comp-rk">${row.rank || i + 1}</span>` +
+    compAvatar(c) +
+    '<span class="comp-id">' +
+      `<a class="comp-nm" href="${esc(href)}">${esc(c.username || '')}</a>` +
+      `<span class="comp-meta">${esc(row.meta || '')}</span>` +
+    '</span>' +
+    '<span class="comp-val">' +
+      `<span class="comp-num ${neg ? 'neg' : 'pos'}" data-val="${esc(String(row.value))}" ` +
+        `data-text="${esc(row.value_text || '')}">${esc(row.value_text || '')}</span>` +
+      compDelta(row) +
+    '</span>' +
+  '</div>';
+}
+
 /* ---- ticker markup ---------------------------------------------------------
    A byte-for-byte port of renderTicker() in static/js/tmr-home-live.js. The two
    MUST produce identical markup: the page JS re-renders the same slate 90s later
@@ -498,55 +563,38 @@ function buildRewriter(data, slate) {
     rw.on('.explore .ei .badge2', new NthHtmlCell(2, `<span class="bl"></span>${esc(eligible)} public records`));
   }
 
-  const card = data.capper;
-  const u = card && card.user;
-  if (card && card.username && u) {
-    const username = card.username;
-    const profileHref = `/u/${encodeURIComponent(username)}/`;
+  /* ---- LIVE COMPETITION card (replaced Capper of the Week, 2026-08-16) -----
+     The card rotates through several views in the browser. The edge paints the
+     FIRST one — the server's own ordering, so it is the same view tmr-home-live
+     .js starts on and there is no swap when the script takes over. Rows are
+     built the same way compRowHtml() builds them; keep the two in lockstep.
 
-    rw.on('.spot .bd', new SettleCell());
-    rw.on('.spot .avbox', new TextCell(initials(username)));
-    rw.on('.spot .nmrow b', new TextCell(username));
-    rw.on('.spot .nmrow a', new HrefCell(`/profile/?user=${encodeURIComponent(username)}`));
-    rw.on('.spot .hd a', new HrefCell(profileHref));
-    rw.on('.spot .ft a:not(#tmrCapperBuy)', new HrefCell(profileHref));
-    // Buy-picks link follows the featured capper to their marketplace storefront
-    // (keep in lockstep with tmr-home-live.js applyCapper).
-    rw.on('#tmrCapperBuy', new HrefCell(`/marketplace/seller/?u=${encodeURIComponent(username)}`));
+     If the competition payload is missing or every view was dropped for lack of
+     real data, nothing is injected and the card's skeleton stays for the page
+     JS to settle honestly. The edge never invents a standing. */
+  const competition = data.competition;
+  const compViews = (competition && Array.isArray(competition.views))
+    ? competition.views.filter((v) => v && Array.isArray(v.rows) && v.rows.length)
+    : [];
+  const compFooter = competition && competition.footer;
 
-    const W = u.wins, L = u.losses, P = num(u.pushes);
-    const netUnits = num(u.net_units), roi = num(u.roi);
-    rw.on('.spot .g3 b', new SequencedCells([
-      { text: (W == null || L == null) ? `${num(u.total_picks)} picks` : `${W}-${L}${P ? '-' + P : ''}` },
-      { text: sign(netUnits), className: `num ${netUnits >= 0 ? 'pos' : 'neg'}` },
-      { text: `${roi.toFixed(1)}%`, className: `num ${roi >= 0 ? 'pos' : 'neg'}` },
-    ]));
-    rw.on('.spot .ft span:not(.ftlinks)', new TextCell(`${num(u.total_picks)} picks, every one locked pre-game`));
-
-    const s = card.summary || {};
-    const winRate = num(s.win_rate);
-    const avgOdds = Math.round(num(s.avg_odds));
-    const streak = num(u.current_streak);
-    const streakTxt = streak > 0 ? `W${streak}` : streak < 0 ? `L${Math.abs(streak)}` : 'no active streak';
-    const sports = (u.favorite_sports && u.favorite_sports.length) ? u.favorite_sports.join(', ') : 'All sports';
-    rw.on('.spot .sub2', new TextCell(
-      `${sports} · ${num(u.total_picks)} tracked picks · ${winRate.toFixed(1)}% win rate · ${avgOdds > 0 ? '+' : ''}${avgOdds} avg odds · ${streakTxt}`
+  if (compFooter && compFooter.competitors != null && compFooter.verified_picks != null) {
+    rw.on('.spot .comp-foot', new TextCell(
+      `${num(compFooter.competitors).toLocaleString('en-US')} competitors · ` +
+      `${num(compFooter.verified_picks).toLocaleString('en-US')} verified picks · standings update live`
     ));
+  }
 
-    const picks = card.recent_graded || [];
-    if (picks.length) {
-      const mx = Math.max(...picks.map((p) => Math.abs(num(p.result_units)) || 1)) || 1;
-      const bars = picks.map((p) => {
-        const v = num(p.result_units);
-        const h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
-        return `<i class="${v < 0 ? 'dn' : ''}" style="height:${h}%"></i>`;
-      }).join('');
-      rw.on('.spot .spark', new HtmlCell(bars));
-      const wCount = picks.filter((p) => /won/i.test(p.status)).length;
-      rw.on('.spot .lb', new HtmlCell(
-        `<span>Last ${picks.length} graded picks</span><span>${wCount}W &middot; ${picks.length - wCount}L</span>`
-      ));
-    }
+  if (compViews.length) {
+    const view = compViews[0];
+    rw.on('.spot .bd', new SettleCell());
+    rw.on('.spot .comp-cat', new TextCell(view.label || ''));
+    rw.on('.spot .comp-note', new TextCell(view.note || ''));
+    rw.on('.spot .comp-stage', new HtmlCell(
+      `<div class="comp-view is-on${view.kind === 'ticker' ? ' tick' : ''}">` +
+      view.rows.map((r, i) => compRowHtml(view, r, i)).join('') +
+      '</div>'
+    ));
   }
 
   return rw;

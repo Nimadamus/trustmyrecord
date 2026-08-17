@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="e35d55c55f24">
+<html lang="en" data-tmr-build="23f80ebca04f">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -278,21 +278,17 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 /* The empty/unavailable message keeps the same reserved lane height. */
 .gm.is-msg{min-height:64px;justify-content:center}
 
-/* The sub-line wraps to two lines for a real capper's sports list. Reserve both
-   from the start, so a shorter capper — or a dash on the failure path — cannot
-   pull the card up under the hero. */
-.spot .sub2{min-height:3em}
 /* Fixed slot for the eyebrow figure: the skeleton and the number it becomes
    then occupy the same width, and the pill around them never re-flows. */
 #tmrEyebrowPicks{display:inline-block;min-width:44px}
 
-/* Capper card: identity, splits, footer count and sparkline all arrive with
-   the same payload, so the whole card is one skeleton until it does. */
-.spot .bd.is-skel .avbox .sk{height:16px}
-.spot .sub2 .sk{height:11px;margin-top:5px}
-.spark .sk{display:block;flex:1;height:auto;min-width:0;border-radius:2px 2px 0 0;
-  background:linear-gradient(90deg,rgba(190,215,235,.10) 0%,rgba(190,215,235,.24) 50%,rgba(190,215,235,.10) 100%);
-  background-size:250% 100%}
+/* Live-competition card: every row of every view arrives with one payload, so
+   the whole body is one skeleton until it does. The skeleton bars sit in boxes
+   that are already the size the real values need, so nothing moves on arrival. */
+.spot.comp .comp-nm .sk{height:12px}
+.spot.comp .comp-meta .sk{height:10px}
+.spot.comp .comp-rk .sk{height:11px}
+.spot.comp .bd.is-skel .comp-avl{background:linear-gradient(140deg,rgba(190,215,235,.34),rgba(190,215,235,.18))}
 
 @media (max-width:640px){
   /* One full-width skeleton card: five 230px cards would be clipped mid-card. */
@@ -338,23 +334,204 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .spot .hd{padding:15px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
 .spot .hd b{font-size:12.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
 .spot .bd{padding:22px 24px 20px}
-.spot .who{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-.spot .who .avbox{width:66px;height:66px;border-radius:12px;background:linear-gradient(140deg,var(--brand),var(--brand-dk));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px;flex:0 0 auto}
-.spot .nmrow{display:flex;align-items:center;gap:11px}
-.spot .who b{font-size:27px;font-weight:900;letter-spacing:-.035em;line-height:1.1}
-.spot .sub2{display:block;font-size:14.5px;color:var(--muted);font-weight:600;margin-top:5px}
 .vchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;background:var(--brand-soft);color:var(--brand-dk);font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(12,148,140,.28)}
-.spot .g3{display:grid;grid-template-columns:minmax(max-content,1.15fr) minmax(0,1fr) minmax(0,1fr);border:1px solid var(--edge);border-radius:8px;overflow:hidden}
-.spot .g3>div{padding:18px 18px;border-right:1px solid var(--line);background:var(--panel-2);min-width:0}
-.spot .g3>div:last-child{border-right:none}
-.spot .g3 b{display:block;font-size:26px;font-weight:900;letter-spacing:-.04em;line-height:1.1;white-space:nowrap}.spot .g3>div:first-child{padding-left:14px;padding-right:12px}.spot .g3>div:first-child b{font-size:clamp(17px,1.42vw,26px);letter-spacing:-.03em}
-.spot .g3 span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.sparkwrap{margin-top:18px}
-.sparkwrap .lb{display:flex;justify-content:space-between;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
-.spark{display:flex;align-items:flex-end;gap:4px;height:50px}
-.spark i{flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--brand-lt),var(--brand));display:block}
-.spark i.dn{background:#EFC3BE}
 .spot .ft{padding:15px 24px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);font-weight:600}
+
+/* ---------------------------------------------------------------------------
+   LIVE COMPETITION MODULE  (hero right-hand card, replaced Capper of the Week
+   on 2026-08-16 at Nima's direction)
+   -----------------------------------------------------------------------------
+   Same shell as the card it replaced -- same white panel, same gold rail, same
+   .hd / .bd / .ft rows, same 520px column -- so the hero's balance, spacing and
+   shadow treatment are untouched. Only the body changed, from one designated
+   capper to a rotating read of the live standings.
+
+   The one hard geometric rule here: the card's HEIGHT MUST NOT CHANGE when the
+   view rotates. Six views with different row content in a card that is
+   vertically centred in the hero grid would bounce the whole column every four
+   seconds. So .comp-stage is a fixed box and the views are absolutely
+   positioned layers inside it -- the outgoing and incoming views overlap during
+   the transition instead of one pushing the other. Nothing in the body is in
+   normal flow except the title, the category line and the progress rule, all of
+   which are fixed-height by construction.
+   --------------------------------------------------------------------------- */
+.spot.comp .hd{gap:14px}
+.spot.comp .hd b{white-space:nowrap}
+.spot.comp .hd a{white-space:nowrap}
+.spot.comp .bd{padding:20px 24px 18px;display:flex;flex-direction:column}
+/* The permanent header line. Never rotates, never animates.
+   Barlow Condensed, the hero's own display face, so the card answers the H1
+   across the grid in the same voice. It is a <div>, not a heading: this is
+   display copy on a card, and adding an <h2> to the homepage would change the
+   document outline for a purely visual line.
+   nowrap is load-bearing — a wrapped title would be the one thing in this card
+   that can change its height, which is exactly what the fixed stage below
+   exists to prevent. The metric-compatible fallback faces at the top of this
+   file mean the pre-webfont frame occupies the same width, so it cannot wrap
+   on the way in either. */
+.comp-title{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:31px;font-weight:900;letter-spacing:.006em;line-height:1.03;text-transform:uppercase;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden}
+.comp-sub{display:flex;align-items:baseline;gap:9px;margin-top:9px;height:17px;min-width:0}
+.comp-cat{font-size:12px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--brand-dk);white-space:nowrap;flex:0 0 auto}
+.comp-note{font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.comp-note::before{content:'·';margin-right:8px;color:var(--line-2)}
+
+/* The live pulse next to LIVE COMPETITION. A slow breath, not a blink: the
+   dot never fully disappears, so it reads as a status light rather than an
+   alert. */
+.spot.comp .hd b .bl{width:7px;height:7px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 0 rgba(12,148,140,.45);animation:compPulse 2.4s ease-out infinite;flex:0 0 auto}
+@keyframes compPulse{
+  0%{box-shadow:0 0 0 0 rgba(12,148,140,.42);opacity:1}
+  70%{box-shadow:0 0 0 7px rgba(12,148,140,0);opacity:.72}
+  100%{box-shadow:0 0 0 0 rgba(12,148,140,0);opacity:1}
+}
+
+/* The rotating stage. Height is fixed here and nowhere else. */
+.comp-stage{position:relative;margin-top:13px;height:187px;overflow:hidden}
+.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);opacity:0;pointer-events:none}
+.comp-view.is-on{opacity:1;pointer-events:auto}
+/* Outgoing: falls back and dims rather than sliding away, so two layers never
+   read as two competing lists. */
+.comp-view.is-off{opacity:0;transform:translateY(-6px) scale(.995);transition:opacity .26s ease,transform .26s ease}
+.comp-view.is-in{animation:compViewIn .34s cubic-bezier(.22,.68,.35,1) both}
+@keyframes compViewIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+/* One standings row. */
+.comp-row{display:grid;grid-template-columns:22px 34px minmax(0,1fr) auto;align-items:center;gap:11px;min-width:0;border-top:1px solid var(--line)}
+.comp-view .comp-row:first-child{border-top:none}
+.comp-view.is-in .comp-row{animation:compRowIn .38s cubic-bezier(.22,.68,.35,1) both}
+.comp-view.is-in .comp-row:nth-child(1){animation-delay:.02s}
+.comp-view.is-in .comp-row:nth-child(2){animation-delay:.08s}
+.comp-view.is-in .comp-row:nth-child(3){animation-delay:.14s}
+@keyframes compRowIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+
+.comp-rk{font-size:14px;font-weight:900;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.comp-row.r1 .comp-rk{color:var(--gold)}
+.comp-av,.comp-avl{width:34px;height:34px;border-radius:8px;flex:0 0 auto;display:block;object-fit:cover}
+.comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.comp-id{min-width:0}
+.comp-nm{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+a.comp-nm:hover{color:var(--brand-dk)}
+.comp-meta{display:block;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;line-height:1.2}
+.comp-val{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
+.comp-num{font-size:19px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.comp-num.pos{color:var(--green)}
+.comp-num.neg{color:var(--red)}
+
+/* Rank movement. The arrow is real -- it is this competitor's position now
+   against the same table as it stood 24 hours ago (see the backend service).
+   It nudges into place once and then holds; it does not loop. */
+.comp-dl{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:900;line-height:1;padding:3px 5px;border-radius:4px;font-variant-numeric:tabular-nums}
+.comp-dl.up{color:var(--green);background:var(--green-soft)}
+.comp-dl.dn{color:var(--red);background:var(--red-soft)}
+.comp-dl.fl{color:var(--muted);background:transparent;padding-left:2px;padding-right:2px}
+.comp-dl.nw{color:var(--gold);background:var(--gold-soft);letter-spacing:.06em}
+.comp-view.is-in .comp-dl.up{animation:compArrowUp .5s .34s cubic-bezier(.22,.68,.35,1) both}
+.comp-view.is-in .comp-dl.dn{animation:compArrowDn .5s .34s cubic-bezier(.22,.68,.35,1) both}
+@keyframes compArrowUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes compArrowDn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+/* Ticker rows: events, not standings, so no rank column and the line runs the
+   full width with the elapsed time pinned right. */
+.comp-view.tick .comp-row{grid-template-columns:26px minmax(0,1fr) auto;gap:10px}
+.comp-ic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex:0 0 auto;line-height:1}
+.comp-ic.win{background:var(--brand-soft);color:var(--brand-dk)}
+.comp-ic.loss{background:var(--red-soft);color:var(--red)}
+.comp-ic.lock{background:var(--panel-3);color:var(--ink-2)}
+.comp-ic.streak{background:var(--gold-soft);color:var(--gold)}
+.comp-ic.up{background:var(--brand-soft);color:var(--brand-dk)}
+.comp-tx{min-width:0;font-size:13.5px;font-weight:600;color:var(--ink-2);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.comp-tx b{font-weight:800;color:var(--ink)}
+/* The competitor's name inside a ticker line is a link like the one in a
+   standings row, and has to look and behave like one. */
+a.comp-nm-i:hover b{color:var(--brand-dk)}
+.comp-ago{font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* The dwell indicator: a 2px rule under the stage that fills across the time
+   left on the current view. Deliberately the quietest thing on the card. */
+.comp-prog{position:relative;height:2px;margin-top:14px;border-radius:2px;background:var(--line);overflow:hidden;flex:0 0 auto}
+.comp-prog i{position:absolute;inset:0;display:block;transform-origin:left center;transform:scaleX(0);background:linear-gradient(90deg,var(--brand),var(--brand-lt));border-radius:2px}
+.comp-prog.run i{animation:compProg linear forwards;animation-duration:var(--comp-dwell,5200ms)}
+@keyframes compProg{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* The category flash. One pass of light across the card body when the dataset
+   changes -- the broadcast "cut" -- and nothing else. It sits above the rows
+   and below nothing, is 420ms long, and is never on screen otherwise. */
+.spot.comp .bd{position:relative;overflow:hidden}
+.comp-flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(100deg,rgba(34,210,192,0) 34%,rgba(34,210,192,.16) 50%,rgba(255,201,60,.13) 58%,rgba(34,210,192,0) 74%);transform:translateX(-38%)}
+.comp-flash.go{animation:compFlash .42s cubic-bezier(.4,0,.2,1) both}
+@keyframes compFlash{
+  0%{opacity:0;transform:translateX(-38%)}
+  22%{opacity:1}
+  100%{opacity:0;transform:translateX(38%)}
+}
+
+/* Skeleton state: the card ships empty and is filled by live data only. The
+   boxes are already the right size, so nothing moves when the values land. */
+.spot.comp .bd.is-skel .comp-prog i{transform:scaleX(0)}
+.spot.comp .bd.is-skel .comp-view{opacity:1}
+
+/* The two-line min-height is the no-CLS reservation: the skeleton bar is one
+   line and the real sentence is two, so without it the card grew 13px the
+   moment the payload landed and took the vertically-centred hero column with
+   it. Measured 416.92px -> 430.42px before this line existed.
+/* Footer. The count sentence and the CTA together are wider than 520px at any
+   size either is readable at, so the sentence takes the two lines it needs and
+   the CTA stays on one — clamped at two so a longer future sentence cannot
+   grow the card. The stage height above is set against this footer's height,
+   which is why it is fixed here rather than left to the content. */
+.spot.comp .ft{gap:16px;align-items:center}
+.comp-foot{flex:1 1 auto;min-width:0;font-size:12.5px;line-height:1.32;min-height:2.64em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.spot.comp .ft .ftlinks{flex:0 0 auto}
+.spot.comp .ft .ftlinks a{white-space:nowrap}
+
+/* Motion policy. Everything above is decoration on top of information that is
+   already on the page, so a visitor who asked for less motion loses nothing:
+   the rotation still happens (that is the content), it just cuts instead of
+   animating, and the dwell bar stops sweeping. */
+@media (prefers-reduced-motion: reduce){
+  .comp-view.is-in,.comp-view.is-in .comp-row,.comp-view.is-in .comp-dl,
+  .comp-flash.go,.comp-prog.run i,.spot.comp .hd b .bl{animation:none!important}
+  .comp-view.is-off{transition:none}
+  .comp-prog.run i{transform:scaleX(1)}
+  .spot.comp .hd b .bl{box-shadow:0 0 0 3px rgba(12,148,140,.18)}
+}
+
+/* Narrow tiers. The rank column and the avatar are the first things to go:
+   the name, the number and the movement are what the row is FOR. Heights stay
+   put -- .comp-stage is re-declared per tier, never left to the content. */
+@media (max-width:1399px){
+  .comp-title{font-size:28px}
+  .comp-stage{height:181px}
+}
+@media (max-width:1024px){
+  .comp-stage{height:176px}
+}
+@media (max-width:520px){
+  /* The qualifier note is the first thing to go: ellipsised mid-word
+     ("25+ graded pi…") it reads as a bug, and the category name above the
+     rows already says what the view is. */
+  .comp-note{display:none}
+  .spot.comp .hd a{font-size:12px!important}
+  .spot.comp .bd{padding:18px 18px 16px}
+  .comp-title{font-size:25px}
+  .comp-row{grid-template-columns:18px 30px minmax(0,1fr) auto;gap:9px}
+  .comp-av,.comp-avl{width:30px;height:30px;border-radius:7px}
+  .comp-nm{font-size:15px}
+  .comp-num{font-size:17px}
+  .comp-view.tick .comp-row{grid-template-columns:24px minmax(0,1fr) auto;gap:9px}
+  .comp-tx{font-size:12.5px}
+  .comp-stage{height:172px}
+  .spot.comp .ft{flex-direction:column;align-items:flex-start;gap:9px}
+}
+/* Below ~380px the record/pick-count meta and the elapsed stamp are the first
+   things that would start to collide with the number. Drop them rather than
+   let two strings share one line. */
+@media (max-width:379px){
+  .comp-title{font-size:21px}
+  .comp-meta{display:none}
+  .comp-ago{display:none}
+  .comp-stage{height:160px}
+}
 
 /* ---------- BRIDGE (dark -> light connector) ---------- */
 .bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0;width:100%}
@@ -623,17 +800,12 @@ box-shadow:none !important;color:#7f8ea6 !important}
 @media(max-width:410px){
   .bridge .s span{line-height:1.5;min-height:3em;min-height:2lh}
 }
-/* Capper-card meta line, same failure as the bridge labels one level down.
-   ".spot .sub2" already reserves 3em (2 lines), but at 390-411px the meta line
-   needs 4 lines in the fallback face and only 3 once Inter loads, so the card
-   - and the hero around it - collapsed by one line (-21.7px) on font load.
-   At <=360px both faces need 4 lines and at >=412px both need 3, so this band
-   is the only one that straddles the wrap boundary. Reserving 4 lines there
-   keeps the first-paint height, which is the taller of the two, and min-height
-   can only reserve, never clip. */
-@media(max-width:410px){
-  .spot .sub2{line-height:1.5;min-height:6em;min-height:4lh}
-}
+/* The card the ".spot .sub2" font-load reservation protected (the Capper of the
+   Week meta line) is gone; the live-competition body that replaced it has no
+   wrapping prose at all. Every string in it is a single clipped line inside a
+   fixed-height .comp-stage, so there is no wrap boundary left to straddle and
+   nothing to reserve: the card's height is the same in the fallback face as it
+   is once Inter lands. */
 
 /* ===================================================== TMR GAME FILE TICKER ==
    The one game with a published Game File keeps its existing ticker card and
@@ -1191,23 +1363,30 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
       </div>
     </div>
 
-    <aside class="spot">
+    <!-- LIVE COMPETITION. Replaced the Capper of the Week card 2026-08-16 on
+         Nima's instruction. Same .spot shell, same 520px column, same rail /
+         head / body / foot rows: only the body's content changed. The body
+         rotates through several views of the live standings and is filled by
+         tmr-home-live.js (or injected at the edge by workers/home-ssr) from
+         /api/users/competition; every value in it is real graded-pick data,
+         and a view without enough real data is not in the payload at all. -->
+    <aside class="spot comp">
       <div class="rail"></div>
-      <div class="hd"><b>&#9733; Capper of the week</b><a class="tlink" style="font-size:13px" href="/handicappers/">Full profile &rarr;</a></div>
+      <div class="hd"><b><span class="bl"></span>Live competition</b><a class="tlink" style="font-size:13px" href="/handicappers/">Full standings &rarr;</a></div>
       <!--MK:homeCapper--><div class="bd is-skel" aria-busy="true">
-        <div class="who"><span class="avbox"><i class="sk" style="width:34px"></i></span>
-          <span><span class="nmrow" data-linked="1"><a href="/handicappers/"><b><i class="sk" style="width:132px"></i></b></a><span class="vchip">Verified</span></span><span class="sub2"><i class="sk" style="width:100%"></i><i class="sk" style="width:62%"></i></span></span></div>
-        <div class="g3">
-          <div><b class="num"><i class="sk" style="width:92px"></i></b><span>Record</span></div>
-          <div><b class="num"><i class="sk" style="width:78px"></i></b><span>Units</span></div>
-          <div><b class="num"><i class="sk" style="width:64px"></i></b><span>ROI</span></div>
+        <span class="comp-flash" aria-hidden="true"></span>
+        <div class="comp-title">The TMR race never stops</div>
+        <div class="comp-sub"><span class="comp-cat"><i class="sk" style="width:96px"></i></span><span class="comp-note"><i class="sk" style="width:118px"></i></span></div>
+        <div class="comp-stage" role="region" aria-live="polite" aria-atomic="true" aria-label="Live TMR competition standings">
+          <div class="comp-view is-on">
+            <div class="comp-row r1"><span class="comp-rk"><i class="sk" style="width:11px"></i></span><span class="comp-avl"></span><span class="comp-id"><span class="comp-nm"><i class="sk" style="width:118px"></i></span><span class="comp-meta"><i class="sk" style="width:146px"></i></span></span><span class="comp-val"><i class="sk" style="width:74px;height:17px"></i></span></div>
+            <div class="comp-row"><span class="comp-rk"><i class="sk" style="width:11px"></i></span><span class="comp-avl"></span><span class="comp-id"><span class="comp-nm"><i class="sk" style="width:96px"></i></span><span class="comp-meta"><i class="sk" style="width:132px"></i></span></span><span class="comp-val"><i class="sk" style="width:68px;height:17px"></i></span></div>
+            <div class="comp-row"><span class="comp-rk"><i class="sk" style="width:11px"></i></span><span class="comp-avl"></span><span class="comp-id"><span class="comp-nm"><i class="sk" style="width:110px"></i></span><span class="comp-meta"><i class="sk" style="width:124px"></i></span></span><span class="comp-val"><i class="sk" style="width:66px;height:17px"></i></span></div>
+          </div>
         </div>
-        <div class="sparkwrap">
-          <div class="lb"><span><i class="sk" style="width:128px"></i></span><span><i class="sk" style="width:58px"></i></span></div>
-          <div class="spark"><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i><i class="sk" style="height:56%"></i></div>
-        </div>
+        <div class="comp-prog" aria-hidden="true"><i></i></div>
       </div><!--/MK:homeCapper-->
-      <div class="ft"><span><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:13px" id="tmrCapperBuy" href="/marketplace/">Buy picks &rarr;</a><a class="tlink" style="font-size:13px" href="/handicappers/">View ledger &rarr;</a></span></div>
+      <div class="ft"><span class="comp-foot"><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:13px" href="/register/">Enter the competition &rarr;</a></span></div>
     </aside>
   </div></div>
 
@@ -1386,7 +1565,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.e35d55c55f24.js"></script>
+<script src="/static/js/tmr-home-live.23f80ebca04f.js"></script>
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->

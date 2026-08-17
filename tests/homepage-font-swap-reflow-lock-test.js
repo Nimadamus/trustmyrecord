@@ -68,24 +68,33 @@ if (bridge) {
   );
 }
 
-// ---- capper-card meta line ---------------------------------------------
-const spot = blockFor('.spot .sub2');
-check('a media block reserves height for .spot .sub2', !!spot);
-if (spot) {
-  check(
-    'the capper reservation covers the 390-411px band that straddles the wrap',
-    spot.bp >= 400 && spot.bp <= 430,
-    `breakpoint is ${spot.bp}px; both faces agree at <=360px and at >=412px`
-  );
-  check(
-    'it reserves four meta lines, with an em fallback',
-    /\.spot \.sub2\{[^}]*min-height:\s*6em[^}]*min-height:\s*4lh/.test(spot.body),
-    `block body: ${spot.body.trim().slice(0, 160)}`
-  );
-}
+// ---- hero right-hand card ----------------------------------------------
+// The wrapping meta line this section used to guard (.spot .sub2, the Capper of
+// the Week card) no longer exists: the LIVE COMPETITION module that replaced it
+// on 2026-08-16 has no wrapping prose at all. It is immune to the font swap by
+// construction instead of by reservation, and these two rules are what make
+// that true — so they are what is locked now.
+check(
+  'the competition headline can never re-wrap on font load',
+  /\.comp-title\{[^}]*white-space:nowrap/.test(html),
+  'the headline is the only multi-word display string in the card; if it may ' +
+  'wrap, the card changes height when Barlow Condensed replaces the fallback'
+);
+check(
+  'the rotating stage is a fixed height, not a content height',
+  /\.comp-stage\{[^}]*height:\s*\d+px/.test(html),
+  'row content must never set the card height — not on font load, and not when ' +
+  'the view rotates'
+);
+check(
+  'every row string is clipped to one line rather than allowed to wrap',
+  /\.comp-nm\{[^}]*white-space:nowrap/.test(html) &&
+  /\.comp-meta\{[^}]*white-space:nowrap/.test(html) &&
+  /\.comp-num\{[^}]*white-space:nowrap/.test(html)
+);
 
 // ---- reservations must never clip --------------------------------------
-for (const [sel, body] of [['.bridge .s span', bridge && bridge.body], ['.spot .sub2', spot && spot.body]]) {
+for (const [sel, body] of [['.bridge .s span', bridge && bridge.body]]) {
   if (!body) continue;
   const rule = body.match(new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}'));
   check(
@@ -102,14 +111,15 @@ check(
   'the approved desktop label rule must not gain a min-height'
 );
 check(
-  'the base .spot .sub2 rule is unchanged',
-  html.includes('.spot .sub2{display:block;font-size:14.5px;color:var(--muted);font-weight:600;margin-top:5px}'),
-  'the approved desktop meta-line rule must not gain a min-height'
+  'the competition footer sentence reserves both of its lines',
+  /\.comp-foot\{[^}]*min-height:\s*2\.64em/.test(html),
+  'the skeleton bar is one line and the real sentence is two; without the ' +
+  'reservation the card grows when the payload lands'
 );
 
 console.log(
   failed
     ? `\nhomepage font-swap reflow lock FAILED (${failed} check${failed === 1 ? '' : 's'})`
-    : '\nhomepage font-swap reflow lock passed (11 checks)'
+    : '\nhomepage font-swap reflow lock passed (12 checks)'
 );
 process.exit(failed ? 1 : 0);
