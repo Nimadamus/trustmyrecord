@@ -459,11 +459,13 @@
                 || /_h2h$/.test(market);
             if (isMoneyline) return '-';
             if (isTotal) {
-                var totalLine = fmtLine(Math.abs(n)).replace(/^\+/, '');
-                var selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
-                if (/\bover\b/.test(selection)) return 'O ' + totalLine;
-                if (/\bunder\b/.test(selection)) return 'U ' + totalLine;
-                return totalLine;
+                /* Line column is the NUMBER only. No plus sign, and no O/U
+                   prefix -- both are forbidden by the Pending Picks Display
+                   Rules in DEVELOPMENT_RULES.md, and the side is already shown
+                   in the Pick column. Only this local fallback still prefixed
+                   them, so the rule held in the browser (window.TMR path) and
+                   broke the moment pick-display-format.js was slow or blocked. */
+                return fmtLine(Math.abs(n)).replace(/^\+/, '');
             }
             if (isSpread) return fmtLine(n);
             return fmtLine(n).replace(/^\+/, '');

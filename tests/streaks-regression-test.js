@@ -13,7 +13,10 @@ assert(source.includes("if (status === 'push') continue;"), 'pushes must remain 
 assert(source.includes('pick && pick.graded_at'), 'streak ordering must prefer graded_at');
 assert(source.includes('pick && pick.locked_at'), 'streak ordering must keep locked_at fallback');
 assert(!profile.includes('Pushes reset streaks.'), 'profile copy must not claim pushes reset streaks');
-assert(profile.includes('Pushes are tracked but skipped for W/L streaks.'), 'profile copy must explain push-neutral streak behavior');
+/* Copy reworded (guard updated 2026-08-16): the profile now says
+   "Pushes don't break a streak." under Streaks & Rolling Form. Same promise,
+   fewer words -- assert the promise, not the old sentence. */
+assert(/Pushes (don'|do not )?t? ?break a streak\.|Pushes are tracked but skipped for W\/L streaks\./.test(profile), 'profile copy must explain push-neutral streak behavior');
 
 const { calculateStreaks, formatStreak } = require('../static/js/streaks.js');
 

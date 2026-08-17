@@ -159,11 +159,31 @@ class StatsEngine {
         }, 0);
     }
 
+    /* Mirrors the server's canonical risked-units ladder
+       (services/canonicalUserStats.js -> riskUnitsSql), so a number this engine
+       shows can never disagree with the record the API returns. The single-sided
+       branches below were missing: a ticket carrying only to_win_units (or only
+       risk_units) with no stake_mode fell through to the ambiguous case and
+       priced at ZERO, which silently dropped that pick's loss from client-side
+       units and ROI while the server counted it in full. */
     getStakeValues(pick) {
         const risk = Number(pick && pick.risk_units);
         const toWin = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
+        const oddsForDerivation = Number(pick && (pick.odds || pick.price || pick.odds_snapshot || -110));
         if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
             return { riskUnits: risk, toWinUnits: toWin };
+        }
+        if (Number.isFinite(risk) && risk > 0 && Number.isFinite(oddsForDerivation) && oddsForDerivation !== 0) {
+            return {
+                riskUnits: risk,
+                toWinUnits: oddsForDerivation < 0 ? risk * 100 / Math.abs(oddsForDerivation) : risk * oddsForDerivation / 100,
+            };
+        }
+        if (Number.isFinite(toWin) && toWin > 0 && Number.isFinite(oddsForDerivation) && oddsForDerivation !== 0) {
+            return {
+                riskUnits: oddsForDerivation < 0 ? toWin * Math.abs(oddsForDerivation) / 100 : toWin * 100 / oddsForDerivation,
+                toWinUnits: toWin,
+            };
         }
         const modeRaw = String(pick && (pick.stake_mode || pick.units_mode) || '').toLowerCase();
         const mode = modeRaw === 'to_win' || modeRaw === 'towin' ? 'to_win' : modeRaw === 'risk' ? 'risk' : '';
@@ -361,14 +381,22 @@ class StatsEngine {
             }
         }
 
-        // Pushes are graded but ignored for current W/L streaks.
-        const latest = graded[graded.length - 1];
-        if (latest && latest.status !== 'push' && latest.status !== 'pushed') {
+        /* Pushes are graded but NEUTRAL for the current W/L streak: they never
+           reset it and they never end it. This used to read graded[last]
+           directly, so a push as the most recent settled pick reported "no
+           streak" while the server (statsAggregator.calculateStreakFromOrdered-
+           Statuses and CURRENT_STREAK_SUBQUERY, both of which filter to
+           won/lost) still reported the run. Trailing pushes are skipped. */
+        const isPush = (status) => status === 'push' || status === 'pushed';
+        let latestIndex = graded.length - 1;
+        while (latestIndex >= 0 && isPush(graded[latestIndex].status)) latestIndex--;
+        const latest = latestIndex >= 0 ? graded[latestIndex] : null;
+        if (latest) {
             currentType = latest.status === 'won' ? 'win' : 'loss';
             currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = graded.length - 2; i >= 0; i--) {
+            for (let i = latestIndex - 1; i >= 0; i--) {
                 const status = graded[i].status;
-                if (status === 'push' || status === 'pushed') continue;
+                if (isPush(status)) continue;
                 if (status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }

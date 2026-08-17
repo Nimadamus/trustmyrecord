@@ -6521,18 +6521,30 @@
         return 0;
     }
 
+    /* The ledger view is kept for the picks table and for the header's
+       "stats have arrived" gate, but it NO LONGER overwrites the canonical
+       record the API returned (2026-08-16). It used to assign wins, losses,
+       pushes, win_rate, net_units and roi straight onto profileData from
+       computeCoreLedgerStatsFromPicks, whose risked-units math is not identical
+       to the server's -- that is how the same page ended up able to report two
+       different ROIs. Canonical values (services/canonicalUserStats.js, via
+       /api/users/:username) win; a ledger number is written only where the API
+       gave us nothing, so a profile whose stats call was thin still renders. */
     function applyVerifiedLedgerStatsToProfile(picks) {
         if (!profileData) return null;
         const stats = computeCoreLedgerStatsFromPicks(picks);
         profileData.__ledgerStats = stats;
-        profileData.graded_picks = stats.graded;
-        profileData.total_picks = stats.graded;
-        profileData.wins = stats.wins;
-        profileData.losses = stats.losses;
-        profileData.pushes = stats.pushes;
-        profileData.win_rate = stats.decisions ? stats.winRate : null;
-        profileData.net_units = stats.netUnits;
-        profileData.roi = stats.graded ? stats.roi : null;
+        const fillIfMissing = function(key, value) {
+            if (profileData[key] == null || profileData[key] === '') profileData[key] = value;
+        };
+        fillIfMissing('graded_picks', stats.graded);
+        fillIfMissing('total_picks', stats.graded);
+        fillIfMissing('wins', stats.wins);
+        fillIfMissing('losses', stats.losses);
+        fillIfMissing('pushes', stats.pushes);
+        fillIfMissing('win_rate', stats.decisions ? stats.winRate : null);
+        fillIfMissing('net_units', stats.netUnits);
+        fillIfMissing('roi', stats.graded ? stats.roi : null);
         return stats;
     }
 
@@ -10529,17 +10541,29 @@
         const pendingProfilePicks = Number(p.pending_picks || p.pending || 0);
         const totalPicks = Number(p.total_locked_picks || p.locked_picks || (gradedProfilePicks + pendingProfilePicks) || 0);
         const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
-        const winsValue = ledgerStats ? ledgerStats.wins : Number(p.wins || 0);
-        const lossesValue = ledgerStats ? ledgerStats.losses : Number(p.losses || 0);
-        const pushesValue = ledgerStats ? ledgerStats.pushes : Number(p.pushes || 0);
+        /* Canonical first, ledger only as a fallback (2026-08-16). These used to
+           read ledgerStats whenever it existed, which meant the header rendered
+           a browser recomputation while the stats ribbon below rendered the
+           API's canonical numbers. Same page, two ROIs. The loading gates below
+           are unchanged -- ledgerStats still signals "the pick list has landed",
+           it just no longer supplies the number. */
+        const preferCanonical = (canonical, ledgerValue) => {
+            const n = Number(canonical);
+            if (canonical != null && canonical !== '' && Number.isFinite(n)) return n;
+            return Number(ledgerValue || 0);
+        };
+        const winsValue = preferCanonical(p.wins, ledgerStats ? ledgerStats.wins : 0);
+        const lossesValue = preferCanonical(p.losses, ledgerStats ? ledgerStats.losses : 0);
+        const pushesValue = preferCanonical(p.pushes, ledgerStats ? ledgerStats.pushes : 0);
         const canShowRecordStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
         const recordText = canShowRecordStats ? (winsValue + '-' + lossesValue + '-' + pushesValue) : (statsLoadError ? 'Unavailable' : 'Loading...');
         const winLossSample = winsValue + lossesValue;
-        const derivedWinRate = ledgerStats ? ledgerStats.winRate : Number(p.win_rate || (winLossSample > 0
-            ? (Number(p.wins || 0) / (Number(p.wins || 0) + Number(p.losses || 0))) * 100
-            : 0));
-        const roiValue = ledgerStats ? ledgerStats.roi : Number(p.roi || 0);
-        const netUnitsValue = ledgerStats ? ledgerStats.netUnits : Number(p.net_units || 0);
+        const derivedWinRate = preferCanonical(
+            p.win_rate,
+            ledgerStats ? ledgerStats.winRate : (winLossSample > 0 ? (winsValue / winLossSample) * 100 : 0)
+        );
+        const roiValue = preferCanonical(p.roi, ledgerStats ? ledgerStats.roi : 0);
+        const netUnitsValue = preferCanonical(p.net_units, ledgerStats ? ledgerStats.netUnits : 0);
         const canShowFinancialStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
         const signedClass = (value) => value > 0 ? ' is-positive' : value < 0 ? ' is-negative' : ' is-neutral';
         const fmtSigned = (value, suffix, decimals) => (value > 0 ? '+' : '') + value.toFixed(decimals == null ? 1 : decimals) + (suffix || '');
@@ -10720,7 +10744,12 @@
 
         el.innerHTML = '<div class="profile-info">' +
             '<div class="profile-identity-row">' +
-            '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
+            /* avatar_url and the display name are user-supplied, so both are
+               escaped before they go into attributes. A refactor had dropped the
+               escaping that profile-source-regression-test was written to hold;
+               rendering is byte-identical for a legitimate URL. loading/decoding
+               keep the header avatar off the lazy path -- it is above the fold. */
+            '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">' : letter) + '</div>' +
             '<div class="profile-identity-copy">' +
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
             '<div class="profile-name">' + name + '</div>' +

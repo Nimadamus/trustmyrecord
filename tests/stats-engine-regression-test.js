@@ -11,9 +11,14 @@ const source = fs.readFileSync(path.join(root, 'static', 'js', 'stats-engine.js'
 assert(source.includes('class StatsEngine'), 'StatsEngine class must remain defined');
 assert(source.includes("const pendingPicks = picks.filter(p => p.status === 'pending');"), 'pending picks must remain explicitly counted');
 assert(source.includes("const gradedPicks = picks.filter(p => p.status !== 'pending');"), 'graded picks must continue excluding pending picks');
-assert(source.includes('const stored = Number(pick && pick.result_units);'), 'stored result_units must remain the first source for settled units');
-assert(source.includes('actualRiskUnits(pick)'), 'risk-unit calculator must remain');
-assert(source.includes('toWinUnits(pick)'), 'to-win-unit calculator must remain');
+/* Rewritten 2026-08-16: the engine was refactored from free actualRiskUnits()/
+   toWinUnits() helpers into getStakeValues(pick) -> { riskUnits, toWinUnits },
+   and the stored-units check is now inline instead of a `const stored`. The
+   invariant is unchanged and is what these assert: a settled pick uses the
+   STORED result_units first, and only falls back to stake math. */
+assert(source.includes('if (pick && pick.result_units != null && !Number.isNaN(Number(pick.result_units))) return Number(pick.result_units);'), 'stored result_units must remain the first source for settled units');
+assert(source.includes('getStakeValues(pick)'), 'stake calculator must remain');
+assert(source.includes('toWinUnits:'), 'to-win units must remain part of the stake result');
 
 const storage = new Map();
 const sandbox = {
@@ -36,12 +41,41 @@ const sandbox = {
 const exported = vm.runInNewContext(`${source}\n({ StatsEngine, statsEngine });`, sandbox);
 const engine = new exported.StatsEngine();
 
-assert.strictEqual(engine.actualRiskUnits({ risk_units: 2, odds_snapshot: 150 }), 2, 'risk mode uses explicit risk_units');
-assert.strictEqual(engine.toWinUnits({ risk_units: 2, odds_snapshot: 150 }), 3, 'positive odds to-win derives from risk');
-assert.strictEqual(engine.actualRiskUnits({ to_win_units: 2, odds_snapshot: -150 }), 3, 'negative odds risk derives from to-win units');
-assert.strictEqual(engine.toWinUnits({ to_win_units: 2, odds_snapshot: -150 }), 2, 'to-win mode uses explicit to_win_units');
-assert.strictEqual(engine.pickResultUnits({ status: 'won', result_units: 4.25, risk_units: 1, odds_snapshot: 200 }), 4.25, 'stored result_units wins over recalculation');
-assert.strictEqual(engine.pickResultUnits({ status: 'pending', result_units: 99, risk_units: 1, odds_snapshot: 200 }), 99, 'stored units remain readable for direct audit calls');
+/* Rewritten 2026-08-16 to the engine's current API. actualRiskUnits(),
+   toWinUnits() and pickResultUnits() were folded into getStakeValues(pick) ->
+   { riskUnits, toWinUnits } and calculatePickNet(). The stake math itself is
+   unchanged, EXCEPT that an ambiguous ticket (a stake with no stake_mode) is no
+   longer guessed at -- it returns zeros and flags the pick for review. That
+   hardening is asserted below rather than asserted away. */
+const explicitBoth = engine.getStakeValues({ risk_units: 2, to_win_units: 3, odds_snapshot: 150 });
+assert.strictEqual(explicitBoth.riskUnits, 2, 'explicit risk_units is used as-is');
+assert.strictEqual(explicitBoth.toWinUnits, 3, 'explicit to_win_units is used as-is');
+
+/* Server parity: these single-sided tickets are exactly what riskUnitsSql
+   derives on the backend, so the client must derive them too. */
+const riskOnly = engine.getStakeValues({ risk_units: 2, odds_snapshot: 150 });
+assert.strictEqual(riskOnly.riskUnits, 2, 'risk-only ticket risks the declared units');
+assert.strictEqual(riskOnly.toWinUnits, 3, 'positive odds to-win derives from risk');
+const toWinOnly = engine.getStakeValues({ to_win_units: 2, odds_snapshot: -150 });
+assert.strictEqual(toWinOnly.riskUnits, 3, 'negative odds risk derives from to-win units');
+assert.strictEqual(toWinOnly.toWinUnits, 2, 'to-win-only ticket wins the declared units');
+
+const riskMode = engine.getStakeValues({ stake_mode: 'risk', units: 2, odds_snapshot: 150 });
+assert.strictEqual(riskMode.riskUnits, 2, 'risk mode risks the declared units');
+assert.strictEqual(riskMode.toWinUnits, 3, 'positive odds to-win derives from risk');
+
+const toWinMode = engine.getStakeValues({ stake_mode: 'to_win', units: 2, odds_snapshot: -150 });
+assert.strictEqual(toWinMode.riskUnits, 3, 'negative odds risk derives from to-win units');
+assert.strictEqual(toWinMode.toWinUnits, 2, 'to-win mode wins the declared units');
+
+const ambiguous = { units: 2, odds_snapshot: 150 };  // stake only: genuinely ambiguous
+const ambiguousStake = engine.getStakeValues(ambiguous);
+assert.strictEqual(ambiguousStake.riskUnits, 0, 'a ticket with no stake_mode is never guessed at');
+assert.strictEqual(ambiguousStake.toWinUnits, 0, 'a ticket with no stake_mode is never guessed at');
+assert.strictEqual(ambiguous.stake_review_required, true, 'an ambiguous ticket is flagged for review instead of being priced');
+
+assert.strictEqual(engine.calculatePickNet({ status: 'won', result_units: 4.25, risk_units: 1, to_win_units: 2, odds_snapshot: 200 }), 4.25, 'stored result_units wins over recalculation');
+assert.strictEqual(engine.calculatePickNet({ status: 'pending', result_units: 99, risk_units: 1, to_win_units: 2, odds_snapshot: 200 }), 99, 'stored units remain readable for direct audit calls');
 
 const picks = [
   {
