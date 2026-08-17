@@ -428,7 +428,13 @@
         return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
     }
 
-    fetch('/api/tmr-coin/market', { headers: { Accept: 'application/json' } })
+    // The static site and the API are different origins, so this has to be absolute.
+    // Same base the other 100-odd frontend callers use; window.CONFIG wins if the page
+    // ever starts loading config.js.
+    var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
+        || 'https://trustmyrecord-api.onrender.com/api';
+
+    fetch(API + '/tmr-coin/market', { headers: { Accept: 'application/json' } })
         .then(function (r) { return r.json(); })
         .then(function (m) {
             if (!m || m.live !== true) {
@@ -467,7 +473,7 @@
         });
 
     // Treasury holdings come from the supply endpoint, which reads the chain directly.
-    fetch('/api/tmr-coin/supply', { headers: { Accept: 'application/json' } })
+    fetch(API + '/tmr-coin/supply', { headers: { Accept: 'application/json' } })
         .then(function (r) { return r.json(); })
         .then(function (s) {
             var cell = document.getElementById('tcoin-supply-treasury');
