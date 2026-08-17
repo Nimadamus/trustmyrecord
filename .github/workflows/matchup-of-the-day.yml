@@ -1,29 +1,31 @@
 name: Matchup of the Day
 
-# Publishes one new Matchup of the Day, every day, and bakes it into the site.
+# Publishes one new Matchup of the Day and bakes it into the site.
 #
-# WHY THE SCHEDULER LIVES HERE AND NOT IN THE BACKEND
-# The API server runs on Render behind a load balancer, so an in-process cron
-# would fire once per instance and two instances would both try to be today's
-# writer. (The generator holds a Postgres advisory lock and would survive that,
-# but a scheduler you cannot see the history of is a scheduler that can stop
-# without anyone noticing.) A workflow run is a visible, dated, re-runnable
-# record of every attempt — which is exactly what a daily feature needs.
+# MANUAL ONLY. This is the backup writer, not the daily one.
 #
-# THREE ATTEMPTS, and they are not a retry loop:
-#   14:00 UTC (07:00 PT) the main run, before the earliest first pitch.
-#   17:00 UTC (10:00 PT) catches the mornings when a probable starter had not
-#                        been posted yet at 07:00 — the generator refuses to
-#                        write a pitching preview around a TBD.
-#   21:00 UTC (14:00 PT) last chance before the evening slate starts.
-# The endpoint is idempotent: once a day has an article, later runs return it
-# and change nothing.
+# The daily scheduler is the Windows task "TMR Matchup of the Day" (07:00 PT,
+# C:\Users\Nima\motd-runner\run_motd.cmd). That is not an accident of history:
+# this workflow writes the prose through the metered Anthropic API, and the
+# runner writes it with a Claude Code subscription, so the daily job does not
+# stop the day a credit balance runs out — which is exactly how 2026-08-11 was
+# lost before the runner existed.
+#
+# The three crons this file used to carry (14:00/17:00/21:00 UTC) were removed
+# on 2026-08-17 (Nima's call). They had failed every run since 2026-08-11
+# because the repo has no TMR_ADMIN_TOKEN secret, and had they authenticated
+# they would have been worse than failing: a 14:00 UTC run races the Windows
+# task for the same 07:00 PT slot, and the loser is whichever process did not
+# claim the day first. A run that claims the day and then dies on an API credit
+# balance leaves the ledger row at 'claimed' and no article published, which is
+# the exact failure the runner was built to end.
+#
+# Dispatch it by hand when the Windows machine is off or the runner is broken,
+# after adding TMR_ADMIN_TOKEN to the repo secrets and confirming the Anthropic
+# key has credit. The endpoint is idempotent: once a day has an article, later
+# runs return it and change nothing.
 
 on:
-  schedule:
-    - cron: '0 14 * * *'
-    - cron: '0 17 * * *'
-    - cron: '0 21 * * *'
   workflow_dispatch:
     inputs:
       date:
@@ -135,6 +137,9 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Game File permanence + hub reset guards
         run: node tests/matchup-hub-reset-test.js
+
+      - name: Archive calendar permanence
+        run: node tests/matchup-calendar-test.js
 
       - name: SEO indexability regression
         run: node tests/seo-indexability-regression-test.js

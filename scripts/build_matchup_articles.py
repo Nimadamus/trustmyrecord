@@ -52,6 +52,7 @@ Idempotent: re-running replaces content between <!--MK:key--> markers.
 """
 
 import argparse
+import calendar as cal
 import datetime as dt
 import html
 import json
@@ -1153,6 +1154,7 @@ TEMPLATE = """<!DOCTYPE html>
     <nav class="gf-foot" aria-label="More Game Files">
       <p>{prevnext}</p>
       <p><a href="/matchup-of-the-day/">Every Matchup of the Day</a> &middot;
+         <a href="/matchup-of-the-day/#calendar">Browse the archive by date</a> &middot;
          <a href="/matchups/">The earlier Game File archive</a></p>
     </nav>
   </div>
@@ -1218,6 +1220,171 @@ def card_html(article, lead=False):
             esc(href), esc(matchup),
             esc(article.get("dek") or article.get("meta_description") or ""),
             esc(sport_label), esc(human_date(article.get("published_at")))))
+
+
+# ================================================================= calendar ==
+#
+# The archive is the point of this feature: a Matchup of the Day that replaced
+# yesterday's would be a widget, not a publication. The calendar is how a reader
+# actually reaches into it — pick a date, land on that day's permanent URL.
+#
+# It is baked, not fetched. Every month grid and every day link is in the HTML
+# the crawler receives, and the script below only decides which month is on
+# screen. With JS off the reader gets every month stacked, which is a worse
+# experience and a complete one; there is no state where a control exists and
+# does nothing.
+
+MONTH_ABBR = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+DOW_ABBR = ("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+
+
+def display_date(value):
+    """The date a reader sees on the article, not the UTC instant.
+
+    An article published at 07:00 PT carries a UTC timestamp on the following
+    date for seven months of the year. Keying the calendar off the raw UTC date
+    would put a third of the archive on the wrong square, one day late, and the
+    square the reader clicked on would open a different day's piece."""
+    shifted = to_display(value)
+    return shifted.date() if shifted else None
+
+
+def month_key(value):
+    return "%04d-%02d" % (value.year, value.month)
+
+
+def month_label(year, month):
+    return "%s %d" % (MONTHS[month - 1], year)
+
+
+def months_between(first, last):
+    """Every month from `first` to `last` inclusive.
+
+    Months with nothing published are included on purpose: prev/next has to walk
+    a continuous strip or an off-season gap silently teleports the reader across
+    it, and a month that published nothing is a true fact about the archive."""
+    span = []
+    year, month = first.year, first.month
+    while (year, month) <= (last.year, last.month):
+        span.append((year, month))
+        year, month = (year + 1, 1) if month == 12 else (year, month + 1)
+    return span
+
+
+def calendar_html(articles, today):
+    """One grid per month. Days that published link to that day's own URL."""
+    by_day = {}
+    for a in articles:                      # newest first; first writer wins
+        day = display_date(a.get("published_at"))
+        if day and day not in by_day:
+            by_day[day] = a
+    if not by_day:
+        return ('<p class="gf-empty">The calendar fills in as Matchups of the '
+                'Day publish.</p>')
+
+    span = months_between(min(by_day), max(max(by_day), today))
+    open_key = month_key(today if (today.year, today.month) in span else max(by_day))
+
+    blocks = []
+    for i, (year, month) in enumerate(span):
+        key = "%04d-%02d" % (year, month)
+        first_weekday, days_in_month = cal.monthrange(year, month)
+        # monthrange counts from Monday; the grid starts on Sunday.
+        pad = (first_weekday + 1) % 7
+
+        cells = ['<span class="gf-cal-dow" aria-hidden="true">%s</span>' % d
+                 for d in DOW_ABBR]
+        cells += ['<span class="gf-cal-pad" aria-hidden="true"></span>'] * pad
+
+        for number in range(1, days_in_month + 1):
+            day = dt.date(year, month, number)
+            article = by_day.get(day)
+            classes = ["gf-cal-day"]
+            if day == today:
+                classes.append("gf-cal-day--today")
+            if article:
+                classes.append("gf-cal-day--has")
+                cells.append(
+                    '<a class="%s" href="%s" aria-label="%s %d: %s vs. %s">'
+                    '<span class="gf-cal-n">%d</span></a>' % (
+                        " ".join(classes), esc(article_href(article)),
+                        MONTH_ABBR[month - 1], number,
+                        esc(article["away_team"]), esc(article["home_team"]),
+                        number))
+            else:
+                cells.append(
+                    '<span class="%s"><span class="gf-cal-n">%d</span></span>' % (
+                        " ".join(classes), number))
+
+        if i > 0:
+            prev_year, prev_month = span[i - 1]
+            nav_prev = ('<a class="gf-cal-nav" href="#cal-%04d-%02d" '
+                        'data-gf-cal-go="%04d-%02d" rel="prev">&larr;&nbsp;%s</a>' % (
+                            prev_year, prev_month, prev_year, prev_month,
+                            MONTH_ABBR[prev_month - 1]))
+        else:
+            nav_prev = ('<span class="gf-cal-nav gf-cal-nav--off" '
+                        'aria-hidden="true">&larr;</span>')
+
+        if i + 1 < len(span):
+            next_year, next_month = span[i + 1]
+            nav_next = ('<a class="gf-cal-nav" href="#cal-%04d-%02d" '
+                        'data-gf-cal-go="%04d-%02d" rel="next">%s&nbsp;&rarr;</a>' % (
+                            next_year, next_month, next_year, next_month,
+                            MONTH_ABBR[next_month - 1]))
+        else:
+            nav_next = ('<span class="gf-cal-nav gf-cal-nav--off" '
+                        'aria-hidden="true">&rarr;</span>')
+
+        blocks.append(
+            '<div class="gf-cal-month" id="cal-%s" data-month="%s">'
+            '<div class="gf-cal-bar">%s<h3 class="gf-cal-title">%s</h3>%s</div>'
+            '<div class="gf-cal-grid">%s</div>'
+            '</div>' % (key, key, nav_prev, esc(month_label(year, month)),
+                        nav_next, "".join(cells)))
+
+    return ('<div class="gf-cal" data-gf-cal data-current="%s">%s</div>'
+            '<p class="gf-cal-key">'
+            '<span class="gf-cal-key-i gf-cal-key-i--has"></span>Published'
+            '<span class="gf-cal-key-i gf-cal-key-i--today"></span>Today'
+            '</p>' % (open_key, "".join(blocks)))
+
+
+def by_month_html(articles):
+    """The calendar's plain-text twin: every article as a dated line.
+
+    A grid of numbers is quick to scan and tells you nothing about what is on
+    the other side of a square. This list is the readable index of the same
+    archive, and it is where the descriptive internal links live."""
+    groups = []
+    seen = {}
+    for a in articles:                      # already newest first
+        day = display_date(a.get("published_at"))
+        if not day:
+            continue
+        key = month_key(day)
+        if key not in seen:
+            seen[key] = []
+            groups.append((day.year, day.month, key))
+        seen[key].append((day, a))
+
+    if not groups:
+        return ('<p class="gf-empty">The dated index starts with our first '
+                'Matchup of the Day.</p>')
+
+    out = []
+    for year, month, key in groups:
+        rows = "".join(
+            '<li><span class="gf-mo-d">%s %d</span>'
+            '<a href="%s">%s</a></li>' % (
+                MONTH_ABBR[day.month - 1], day.day, esc(article_href(a)),
+                esc(a.get("title") or "%s vs. %s" % (a["away_team"], a["home_team"])))
+            for day, a in seen[key])
+        out.append('<div class="gf-mo"><h3 class="gf-mo-h">%s</h3>'
+                   '<ul class="gf-mo-list">%s</ul></div>' % (
+                       esc(month_label(year, month)), rows))
+    return "".join(out)
 
 
 def itemlist_jsonld(articles, list_url, name):
@@ -1390,6 +1557,15 @@ def main():
                               "".join(card_html(a) for a in motd_rest[:40]) or
                               '<p class="gf-empty">The archive starts with our first '
                               'Matchup of the Day.</p>', motd_path)
+        # The calendar and the dated index are both built from `daily`, so a day
+        # that is on the calendar is a day that has an article; there is no
+        # second source of truth to drift out of step with the archive.
+        today_local = (to_display(dt.datetime.now(dt.timezone.utc).isoformat())
+                       or dt.datetime.now(dt.timezone.utc)).date()
+        text = replace_marker(text, "motdCalendar",
+                              calendar_html(daily, today_local), motd_path)
+        text = replace_marker(text, "motdByMonth",
+                              by_month_html(daily), motd_path)
         text = replace_marker(text, "motdItemList",
                               itemlist_jsonld(daily, SITE + "/matchup-of-the-day/",
                                               "TMR Matchup of the Day"), motd_path)

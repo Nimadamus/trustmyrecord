@@ -547,6 +547,115 @@ body.tmr-ds .gf-sample {
   background: transparent; color: var(--muted); border: 1px solid var(--line-2);
 }
 
+/* ================================================= ARCHIVE CALENDAR (hub) = */
+/* Built out of the same panel/line/brand tokens as the cards above it, so the
+   calendar reads as another block of the hub rather than a widget dropped on
+   top of it. Nothing here is themed independently. */
+
+body.tmr-ds .gf-hub-acts { margin: 16px 0 0; }
+body.tmr-ds .gf-calbtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--panel); color: var(--ink) !important;
+  font-size: 13.5px; font-weight: 700; text-decoration: none;
+}
+body.tmr-ds .gf-calbtn:hover { border-color: var(--brand); color: var(--brand) !important; }
+body.tmr-ds .gf-calbtn-i { flex: none; color: var(--brand); }
+
+/* Capped, not full-bleed. Stretched across the 1000px hub column the seven
+   squares become 130px tiles and the month stops reading as a month. */
+body.tmr-ds .gf-cal {
+  max-width: 470px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px 16px; margin: 0 0 12px;
+}
+body.tmr-ds .gf-cal-month + .gf-cal-month { margin-top: 22px; }
+body.tmr-ds .gf-cal-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 0 0 12px;
+}
+body.tmr-ds .gf-cal-title {
+  font-size: 16px; font-weight: 800; color: var(--ink); margin: 0;
+  text-align: center; flex: 1 1 auto;
+}
+body.tmr-ds .gf-cal-nav {
+  flex: none; min-width: 62px; text-align: center;
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 5px;
+  font-size: 12.5px; font-weight: 700; text-decoration: none; color: var(--ink-2) !important;
+}
+body.tmr-ds .gf-cal-nav:hover { border-color: var(--brand); color: var(--brand) !important; }
+body.tmr-ds .gf-cal-nav--off { opacity: .32; }
+
+body.tmr-ds .gf-cal-grid {
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
+}
+body.tmr-ds .gf-cal-dow {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); text-align: center; padding: 0 0 4px;
+}
+body.tmr-ds .gf-cal-day {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1 / 1; border-radius: 5px;
+  border: 1px solid transparent; font-size: 13.5px; font-weight: 600;
+  color: var(--muted); text-decoration: none;
+}
+/* A day with no article is not a link and must not look like one. The dot is
+   the affordance: tinted panels alone are too quiet to read as "clickable" at
+   this size, and colour on its own would be the only cue. */
+body.tmr-ds .gf-cal-day--has {
+  background: var(--panel-2); border-color: var(--line-2);
+  color: var(--ink) !important; font-weight: 800;
+}
+body.tmr-ds .gf-cal-day--has::after {
+  content: ""; position: absolute; left: 50%; bottom: 6px;
+  width: 4px; height: 4px; margin-left: -2px; border-radius: 50%;
+  background: var(--brand);
+}
+body.tmr-ds .gf-cal-day--has:hover {
+  border-color: var(--brand); color: var(--brand) !important;
+}
+/* Today is marked whether or not it has published yet: a reader checking at
+   06:00 should be able to see that the square exists and is still empty. */
+body.tmr-ds .gf-cal-day--today {
+  box-shadow: inset 0 0 0 2px var(--brand);
+  color: var(--ink);
+}
+body.tmr-ds .gf-cal-key {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  font-size: 11.5px; color: var(--muted); margin: 0 0 26px;
+}
+body.tmr-ds .gf-cal-key-i {
+  display: inline-block; width: 13px; height: 13px; border-radius: 3px;
+  background: var(--panel-2); border: 1px solid var(--line-2);
+}
+body.tmr-ds .gf-cal-key-i--has { background: var(--brand); border-color: var(--brand); }
+body.tmr-ds .gf-cal-key-i--today { background: transparent; box-shadow: inset 0 0 0 2px var(--brand); }
+body.tmr-ds .gf-cal-key-i + .gf-cal-key-i { margin-left: 12px; }
+
+/* --------------------------------------------- the dated index (list view) */
+body.tmr-ds .gf-mo-head {
+  font-size: 15px; font-weight: 800; color: var(--ink);
+  margin: 24px 0 12px; padding-bottom: 7px; border-bottom: 1px solid var(--line);
+}
+body.tmr-ds .gf-mo + .gf-mo { margin-top: 18px; }
+body.tmr-ds .gf-mo-h {
+  font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 8px;
+}
+body.tmr-ds .gf-mo-list { list-style: none; margin: 0; padding: 0; }
+body.tmr-ds .gf-mo-list li {
+  display: flex; gap: 12px; align-items: baseline;
+  padding: 7px 0; border-bottom: 1px solid var(--line);
+  font-size: 14.5px; line-height: 1.45;
+}
+body.tmr-ds .gf-mo-list li:last-child { border-bottom: 0; }
+body.tmr-ds .gf-mo-d {
+  flex: none; width: 52px; font-size: 12px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--muted);
+}
+body.tmr-ds .gf-mo-list a { font-weight: 600; }
+
 /* /about/research/ prose */
 body.tmr-ds .gf-prose p { color: var(--ink-2); font-size: 16.5px; line-height: 1.62; margin: 0 0 12px; max-width: 70ch; }
 body.tmr-ds .gf-prose h3 { font-size: 16px; margin: 18px 0 8px; color: var(--ink); }
@@ -625,4 +734,14 @@ body.tmr-ds .gf-sect .gf-call-t     { font-size: 10px; margin: 0 0 9px; color: v
   body.tmr-ds .gf-sect[data-mark]::before { font-size: 110px; opacity: .012; }
   body.tmr-ds .gf-tlg { min-width: 66px; }
   body.tmr-ds .gf-form-who { min-width: 100%; }
+
+  /* The calendar keeps all seven columns at every width — a month grid that
+     reflows to fewer columns stops being a month. It shrinks instead. */
+  body.tmr-ds .gf-cal { padding: 12px 10px 14px; }
+  body.tmr-ds .gf-cal-grid { gap: 3px; }
+  body.tmr-ds .gf-cal-day { font-size: 12.5px; border-radius: 4px; }
+  body.tmr-ds .gf-cal-title { font-size: 15px; }
+  body.tmr-ds .gf-cal-nav { min-width: 0; padding: 6px 8px; font-size: 12px; }
+  body.tmr-ds .gf-mo-list li { flex-wrap: wrap; gap: 2px 10px; }
+  body.tmr-ds .gf-mo-d { width: auto; }
 }
