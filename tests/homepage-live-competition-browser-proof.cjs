@@ -83,6 +83,11 @@ async function readCard(page) {
   const page = await context.newPage();
 
   const consoleErrors = [];
+  /* A bare "Failed to load resource: 404" from the console names nothing, which
+     makes the failure unactionable. Record the URL that actually failed. */
+  const failedRequests = [];
+  page.on('response', (r) => { if (r.status() >= 400) failedRequests.push(`${r.status()} ${r.url()}`); });
+  page.on('requestfailed', (r) => failedRequests.push(`failed ${r.url()}`));
   page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   page.on('pageerror', (e) => consoleErrors.push('pageerror: ' + e.message));
 
@@ -95,11 +100,15 @@ async function readCard(page) {
   await page.waitForSelector('.spot.comp .bd:not(.is-skel)', { timeout: 30000 });
 
   /* ---- 1. the payload is the source of every row ------------------------- */
+  /* Same-origin only on the local preview server, which proxies /api. Against
+     production the API is a different host, and probing the site's own origin
+     for it would 404 into this run's own failed-request list. */
   const api = await page.evaluate(async () => {
-    const r = await fetch('/api/users/competition').catch(() => null);
-    if (r && r.ok) return r.json();
-    const b = await fetch('https://trustmyrecord-api.onrender.com/api/users/competition').then((x) => x.json());
-    return b;
+    const local = ['127.0.0.1', 'localhost'].includes(location.hostname);
+    const url = local ? '/api/users/competition'
+      : 'https://trustmyrecord-api.onrender.com/api/users/competition';
+    const r = await fetch(url).catch(() => null);
+    return r && r.ok ? r.json() : null;
   }).catch(() => null);
 
   check(api && Array.isArray(api.views) && api.views.length >= 2,
@@ -168,7 +177,10 @@ async function readCard(page) {
      load-time snapshot or the current one. */
   const footNow = await page.evaluate(async () => {
     const foot = (document.querySelector('.comp-foot') || {}).textContent || '';
-    const r = await fetch('/api/users/competition').catch(() => null);
+    const local = ['127.0.0.1', 'localhost'].includes(location.hostname);
+    const url = local ? '/api/users/competition'
+      : 'https://trustmyrecord-api.onrender.com/api/users/competition';
+    const r = await fetch(url).catch(() => null);
     const live = r && r.ok ? await r.json() : null;
     return { foot: foot.trim(), live: live && live.footer };
   });
@@ -222,7 +234,27 @@ async function readCard(page) {
   check(rmCats.size >= 2, 'card stopped rotating under prefers-reduced-motion; the rotation is content, not decoration');
   check(rmHeights.size === 1, `card height moved under prefers-reduced-motion: ${[...rmHeights].join(', ')}px`);
 
-  check(consoleErrors.length === 0, `console errors: ${consoleErrors.slice(0, 4).join(' | ')}`);
+  /* Avatar images are the one request on this card allowed to 404: the payload
+     hands over whatever avatar_url the profile has, and a member can delete the
+     image behind it at any moment. The card renders initials in its place, which
+     is the designed behaviour, not a defect. Anything ELSE failing is. */
+  const EXPECTED_FAILURES = [
+    // A member can delete the image behind their avatar_url at any moment; the
+    // card renders initials in its place, which is the designed behaviour.
+    /\/api\/users\/\d+\/avatar/,
+    // Analytics is blocked in a clean automation profile and is not this card.
+    /google-analytics\.com|googletagmanager\.com/,
+    // The LIVE ON TMR strip holds an SSE connection open; closing the page
+    // aborts it, which surfaces here as a failed request every single run.
+    /\/api\/activity\/stream/,
+  ];
+  const realFailures = failedRequests.filter((u) => !EXPECTED_FAILURES.some((re) => re.test(u)));
+  check(realFailures.length === 0, `failed requests: ${realFailures.slice(0, 4).join(' | ')}`);
+  const unexplained = consoleErrors.filter((m) => !/Failed to load resource/.test(m));
+  check(unexplained.length === 0, `console errors: ${unexplained.slice(0, 4).join(' | ')}`);
+  if (failedRequests.length !== realFailures.length) {
+    console.log(`  note: ${failedRequests.length - realFailures.length} expected failure(s) ignored (avatars/analytics/SSE)`);
+  }
 
   await browser.close();
 

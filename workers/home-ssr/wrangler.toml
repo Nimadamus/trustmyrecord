@@ -3,9 +3,10 @@ main = "worker.mjs"
 compatibility_date = "2026-07-01"
 workers_dev = false
 
-# The worker injects CURRENT site stats + the Capper of the Week card into the
-# baked homepage HTML at request time (fail-open on any error), so the first
-# meaningful paint is accurate with zero client-side swap.
+# The worker injects CURRENT site stats + the first view of the LIVE COMPETITION
+# card (which replaced Capper of the Week on 2026-08-16) into the baked homepage
+# HTML at request time (fail-open on any error), so the first meaningful paint is
+# accurate with zero client-side swap.
 #
 # The routes are WILDCARDS, and the worker's own isHomepage() guard decides what
 # it actually rewrites. This is deliberate: a wildcard-free route such as
