@@ -2592,6 +2592,21 @@
                         </div>
                       </div>
 
+                      <div class="tmrx-section" id="tmrxTeamMarketSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Team Splits</div>
+                            <div class="tmrx-section-sub">What you actually bet on each club, market by market. Moneyline, spread and team totals sit with the club named on the ticket, and team totals are split by side because an Over and an Under on the same club are opposite opinions. Game totals and player props name no club, so they count for both teams in the game; that is why the Picks column across teams adds up to more than your pick count.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableTeamMarketTop">
+                            <thead><tr><th>Team</th><th>League</th><th>Market</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="8">No team split rows yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
                       <div class="tmrx-section" id="tmrxPropTypeSection" hidden>
                         <div class="tmrx-section-head">
                           <div>
@@ -13381,7 +13396,7 @@
        record - it renders what the aggregator already counted. */
     const TMRX_DEPTH_CATEGORIES = [
         'home_away', 'side_total', 'prop_type', 'bet_timing',
-        'daypart', 'opponent', 'line_number', 'month', 'season'
+        'daypart', 'opponent', 'line_number', 'month', 'season', 'team_market'
     ];
     const TMRX_DEPTH_LABELS = {
         home: 'Home side', away: 'Away side',
@@ -13392,7 +13407,10 @@
         strikeouts: 'Strikeouts', hits_allowed: 'Hits allowed', pitcher_walks: 'Walks',
         earned_runs: 'Earned runs', outs: 'Outs recorded', hits: 'Hits',
         total_bases: 'Total bases', rbi: 'RBI', runs: 'Runs', home_runs: 'Home runs',
-        spread: 'Spread', total: 'Total', team_total: 'Team total', first_five: 'First five'
+        spread: 'Spread', total: 'Total', team_total: 'Team total', first_five: 'First five',
+        moneyline: 'Moneyline', player_props: 'Player props',
+        team_total_over: 'Team total Over', team_total_under: 'Team total Under',
+        game_total_over: 'Game total Over', game_total_under: 'Game total Under'
     };
     /* Bet timing reads as a sequence, not a leaderboard - keep it in clock
        order however the buckets happen to sort by net units. */
@@ -13492,6 +13510,65 @@
         return true;
     }
 
+    /* Team splits arrive flat as `sport|Team|market`. They are grouped so every
+       market for one club sits together instead of clubs interleaving by net
+       units, clubs ordered by how much was bet on them, and the markets inside
+       a club held in a fixed reading order rather than sorted by result. */
+    const TMRX_TEAM_MARKET_ORDER = ['moneyline', 'spread', 'team_total_over',
+        'team_total_under', 'game_total_over', 'game_total_under',
+        'first_five', 'player_props'];
+    const TMRX_TEAM_MARKET_LIMIT = 12;
+
+    function tmrxRenderTeamMarket(rows) {
+        const table = document.getElementById('tmrxTableTeamMarketTop');
+        const section = document.getElementById('tmrxTeamMarketSection');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) return;
+
+        const clubs = new Map();
+        list.forEach(function (row) {
+            const parts = String(row.bucket || '').split('|');
+            if (parts.length < 3) return;
+            const key = parts[0] + '|' + parts[1];
+            const entry = clubs.get(key) ||
+                { sportKey: parts[0], team: parts[1], picks: 0, markets: [] };
+            entry.picks += Number(row.total_picks) || 0;
+            entry.markets.push({ market: parts.slice(2).join('|'), row: row });
+            clubs.set(key, entry);
+        });
+
+        const ordered = Array.from(clubs.values())
+            .sort(function (a, b) { return b.picks - a.picks; })
+            .slice(0, TMRX_TEAM_MARKET_LIMIT);
+        if (!ordered.length) return;
+
+        const html = [];
+        ordered.forEach(function (entry) {
+            entry.markets.sort(function (a, b) {
+                const ai = TMRX_TEAM_MARKET_ORDER.indexOf(a.market);
+                const bi = TMRX_TEAM_MARKET_ORDER.indexOf(b.market);
+                return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+            });
+            const sport = tmrxSportParts(entry.sportKey);
+            entry.markets.forEach(function (item, i) {
+                /* The club is named once per group; its remaining market rows
+                   sit under it, so the block reads as one team. */
+                const head = i === 0
+                    ? '<td class="name">' + tmrxTeamLogoHtml(entry.team) +
+                      escapeHtml(entry.team) + '</td>' +
+                      '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                    : '<td class="name"></td><td class="league"></td>';
+                html.push(tmrxDepthRow(item.row, [head,
+                    '<td>' + escapeHtml(tmrxDepthLabel(item.market)) + '</td>']));
+            });
+        });
+        tbody.innerHTML = html.join('');
+        if (section) section.hidden = false;
+    }
+
     /* `sport_key|value` buckets: the team panel's own encoding, reused so a
        club or a number never merges across leagues. */
     function tmrxSplitScoped(bucket) {
@@ -13554,6 +13631,8 @@
                 ];
             }
         });
+
+        tmrxRenderTeamMarket(byCategory.team_market);
 
         tmrxRenderDepthTable('tmrxTableLineNumberTop', 'tmrxLineNumberSection', byCategory.line_number, {
             limit: 25,
