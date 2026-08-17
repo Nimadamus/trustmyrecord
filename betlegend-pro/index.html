@@ -77,7 +77,7 @@
         <article class="blp-feature">
             <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg></div>
             <h3>Matchup Report</h3>
-            <p>Two teams, one market, your exact line. Get both sides' record at that number, your situational filters applied to each team independently, and a verdict with the confidence and sample size stated up front.</p>
+            <p>Two teams, one market, your exact line. Get both sides' record at that number, your situational filters applied to each team independently, and a verdict with the confidence and sample size stated up front. Ask a team total at any number to see how often that side cleared it and how its scoring is actually distributed; enter the price you are being offered and the report adds the win rate that price needs to break even, the gap to the historical rate, and the expected value per unit at that gap.</p>
         </article>
         <article class="blp-feature">
             <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg></div>
@@ -223,7 +223,7 @@
         <span>Payments handled by Stripe · card details never touch TrustMyRecord</span>
     </p>
     <p class="blp-paynote" id="freeTierNote">
-        <span>Not ready to buy? You get one free report every day, and TMR Coin covers any extras.</span>
+        <span>Not ready to buy? You get one free report every day, and 5 TMR Coin covers each one after that.</span>
     </p>
 
     <!-- ===================================================== trust -->
@@ -246,7 +246,7 @@
         </article>
         <article class="blp-trust-item">
             <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-            <div><h3>No outcome is promised</h3><p>A verdict is a read on historical support at a price. It is not a prediction, and past splits do not carry forward.</p></div>
+            <div><h3>No outcome is promised</h3><p>A verdict is a read on historical support at a price. It is not a prediction, and past splits do not carry forward. Where the report shows an edge or an expected value, that is arithmetic comparing what already happened against the price you typed in, not a forecast of the next game, and it is only worth as much as the sample size printed beside it.</p></div>
         </article>
     </section>
 
@@ -260,7 +260,7 @@
         <details class="blp-sec"><summary>How current is it?</summary><div class="blp-sec-body"><p>The dataset covers completed, graded games and is refreshed on a schedule. It is a historical research tool, not a live odds feed — it will not price tonight's game for you.</p></div></details>
         <details class="blp-sec"><summary>What's the difference between the plans?</summary><div class="blp-sec-body"><p>Nothing but the billing. Monthly, annual and lifetime all unlock the same unlimited access to all four tools and the full report library. Annual is the cheapest per month; lifetime is a single payment offered during launch.</p></div></details>
         <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account — you keep access until the end of the period you already paid for, and are not billed again. Lifetime has no recurring billing, so there is nothing to cancel.</p></div></details>
-        <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: you get one free report every day, and beyond that you can keep running reports with coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
+        <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: you get one free report every day, and beyond that each report costs 5 TMR Coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
         <details class="blp-sec"><summary>Is this gambling?</summary><div class="blp-sec-body"><p>No. TrustMyRecord is not a sportsbook, no real money is wagered here, and BetLegend Pro is an analysis tool. If betting has stopped being fun, <a href="https://www.ncpgambling.org/help-treatment/" rel="noopener" target="_blank">help is available</a>.</p></div></details>
     </section>
 
@@ -388,7 +388,7 @@
                         + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
                 } else if (e && e.status === 503) {
                     err.innerHTML = '<span>' + esc((data && data.error) || 'Checkout isn\'t open yet.')
-                        + ' In the meantime you still get a free report every day, and TMR Coin covers the rest.</span>'
+                        + ' In the meantime you still get a free report every day, and 5 TMR Coin covers each one after that.</span>'
                         + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
                 } else {
                     err.innerHTML = '<span>' + esc((data && data.error) || 'Could not start checkout. Nothing was charged — try again.') + '</span>';
