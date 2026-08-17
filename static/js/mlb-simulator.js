@@ -5607,7 +5607,28 @@
                 return state.backendProjectionStatus;
             })
             .catch(function (error) {
-                state.backendProjectionStatus = { checked: true, available: false, reason: 'request_failed', missingEnv: [], gameId: boardGame.id, detail: error && error.message || 'Backend projection request failed.' };
+                // BACKEND_PROJECTION_404_20260817: this route is not deployed
+                // on the API (every /mlb-simulator/mlb/projection/... path
+                // returns 404, including the bare base path), so the check
+                // failed on every run and the readout printed the raw status:
+                // "Backend live projection UNAVAILABLE: HTTP 404". The
+                // simulator computes entirely client-side and never needed it,
+                // so an absent route is "not offered here", not a fault -- and
+                // a bare HTTP code is developer output, not a user-facing
+                // sentence. The call is left in place so this lights up on its
+                // own if the endpoint is ever shipped.
+                var msg = (error && error.message) || '';
+                var absent = /404/.test(msg);
+                state.backendProjectionStatus = {
+                    checked: true,
+                    available: false,
+                    reason: absent ? 'not_deployed' : 'request_failed',
+                    missingEnv: [],
+                    gameId: boardGame.id,
+                    detail: absent
+                        ? 'Not offered on this deployment. The simulation above is computed in full without it.'
+                        : 'The backend projection service did not respond. The simulation above is computed in full without it.'
+                };
                 state.liveInputs = liveInputsForContext(state.activeLiveContext);
                 state.dataMode = verifiedLiveInputs().length ? 'live' : 'baseline';
                 renderDataModeStatus();
