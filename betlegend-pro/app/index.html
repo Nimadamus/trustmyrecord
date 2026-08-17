@@ -719,6 +719,15 @@
     var COST = { cost: 5, freeAvailable: false, resetsAt: null, balance: 0 };
     var submitButtons = [];
     var SUBMIT_BLOCKED = false;
+    // BLOCK_REASON_20260817: refreshStatus works out WHICH of three states is
+    // blocking (frozen wallet / ineligible account / today's allowance spent)
+    // and used to put that reason on the button title only. syncSetup then
+    // printed a single hardcoded sentence in the run bar for all three, so an
+    // account that was merely ineligible was told "Today's free report is
+    // used" while the API was still returning freeAvailable:true and the
+    // header two inches above said "1 of 1 free reports left today". Keeping
+    // the reason here lets both surfaces state the same, true thing.
+    var SUBMIT_BLOCKED_REASON = '';
 
     function costLabel() {
         if (ACCESS.entitled) return '· Included';
@@ -846,6 +855,11 @@
             var allowanceSpent = !ACCESS.entitled && !COST.freeAvailable && s.balance < COST.cost;
             var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible || allowanceSpent);
             SUBMIT_BLOCKED = blocked;
+            SUBMIT_BLOCKED_REASON = !blocked ? '' : (s.isFrozen
+                ? 'Your TMR Coin wallet is frozen, so a paid report cannot run.'
+                : allowanceSpent
+                    ? 'Today’s free report is used. A plan (or TMR Coin) is needed to run another one today.'
+                    : 'This account is not eligible to run a coin-billed report.');
             submitButtons.forEach(function (b) {
                 // Account state may only ever ADD a reason to disable; a form
                 // that has already gated its own button keeps it disabled.
@@ -1757,7 +1771,11 @@
             mSubmit.setAttribute('title', errEl.hidden
                 ? 'Choose a sport and two different teams to continue.'
                 : (errEl.textContent || '').trim());
-        } else if (!SUBMIT_BLOCKED) {
+        } else if (SUBMIT_BLOCKED) {
+            // Ready to run, blocked by account state: say which state. Without
+            // this branch the title kept whatever the previous pass left on it.
+            mSubmit.setAttribute('title', SUBMIT_BLOCKED_REASON);
+        } else {
             mSubmit.removeAttribute('title');
         }
 
@@ -1771,7 +1789,7 @@
         if (!ready) {
             summary.innerHTML = err ? esc(err) : 'Choose a sport and two different teams to continue.';
         } else if (SUBMIT_BLOCKED) {
-            summary.textContent = 'Today’s free report is used. A plan (or TMR Coin) is needed to run another one today.';
+            summary.textContent = SUBMIT_BLOCKED_REASON || 'This report cannot run on this account right now.';
         } else {
             var joiner = mVenue.value === 'all' ? ' and ' : (mVenue.value === 'away' ? ' at ' : ' vs ');
             summary.innerHTML = '<strong>' + esc(away) + esc(joiner) + esc(home) + '</strong> · '
@@ -2332,7 +2350,16 @@
                     ? Math.round((h2h.avg_scored + h2h.avg_allowed) * 10) / 10
                     : avgTotal(h2h.games))
                 + '</strong></div>'
-                + '</div>' + thinNote(h2h) + '</section>' : '';
+                + '</div>'
+                // H2H_DENOMINATOR_20260817: the card prints "Meetings" from
+                // games_in_dataset (every meeting on file) while the record,
+                // ATS, O/U and averages beside it are computed on the most
+                // recent slice the payload carries -- 485 sitting next to
+                // figures that add to 250. The server explains exactly that in
+                // h2h.note, and the renderer was dropping the field, so the
+                // reader saw two denominators and no way to tell.
+                + (h2h.note ? '<p class="note-s">' + esc(h2h.note) + '</p>' : '')
+                + thinNote(h2h) + '</section>' : '';
 
         // Answer first: the result card leads, the methodology card (what was
         // searched, how the sample narrowed, coverage) follows as evidence.

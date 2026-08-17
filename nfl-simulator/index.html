@@ -791,7 +791,13 @@ function renderResult(out,d){
     `<div class="legend"><span><i style="background:${col(hAbbr)}"></i>${esc(hAbbr)} ${pct(homeWP)}</span><span><i style="background:${col(aAbbr)}"></i>${esc(aAbbr)} ${pct(awayWP)}</span></div>`));
   charts.appendChild(chartCard('Projected points by team',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
   if(p.distributions&&p.distributions.margin&&p.distributions.margin.length){
-    const mMarkers=[{x:0,label:'tie',color:'#8ea1ba'},{x:p.median_margin,label:'median',color:'#34d399'}];
+    // MARKER_COLLISION_20260817: both markers were always drawn, so on a
+    // typical game where the median margin is a point or two off zero the
+    // two labels overlapped and read as one string, e.g. "tie median".
+    // Label the median only when it is far enough from the tie line to be
+    // legible; the marker itself still draws either way.
+    const mMarkers=[{x:0,label:'tie',color:'#8ea1ba'},
+                    {x:p.median_margin,label:(Math.abs(p.median_margin)>=3?'median':''),color:'#34d399'}];
     charts.appendChild(chartCard('Margin of victory (home − away)',svgBars(p.distributions.margin,{color:col(homeWP>=awayWP?hAbbr:aAbbr),markers:mMarkers,aria:'margin distribution'}),
       `<div class="legend"><span>5th–95th pct: ${nz(p.percentiles.margin.p05)} … ${nz(p.percentiles.margin.p95)}</span></div>`));
   }
@@ -818,6 +824,24 @@ function renderResult(out,d){
   const meta=el('div','disc');
   meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · <b>${fmtN(d.meta.simulations)}</b> simulations · calibration: ${esc(d.meta.calibration)} · roster data as of ${esc(d.meta.data_freshness)}${d.meta.roster_stale?' · <span class="pill warn">roster data may be stale</span>':''}. ${esc(d.disclaimer)}`;
   out.appendChild(meta);
+
+  /* HISTORICAL_ROSTER_20260817. Picking an earlier season changes the SCHEDULE
+     but not the squads: the model always runs current projected rosters, so a
+     2024 fixture is simulated with the 2026 teams. Measured 2026-08-17,
+     simulating 2024 week 1 Baltimore at Kansas City fielded Ja'Kobi Lane,
+     Elijah Sarratt, Matthew Hibner and Durham Smythe, all verified on the 2026
+     Ravens and none on the 2024 team. The card already carries the real final
+     and a "historical" badge, which invites exactly the wrong reading.
+     Era-correct rosters would need a historical roster source this tool does
+     not have, so the honest move is to say plainly what the run actually was.
+     Stated next to the result rather than in the fine print, because the fine
+     print is where "roster data as of" already sat unread. */
+  if(g && g.status==='historical'){
+    const note=el('div','disc');
+    note.style.marginTop='6px';
+    note.innerHTML='<b>This is a what-if, not a replay.</b> Selecting an earlier season changes the schedule, not the squads: the matchup above was simulated with current projected rosters, not the rosters those teams actually fielded that year. The real final is shown for reference only.';
+    out.appendChild(note);
+  }
 }
 
 /* ============================ tabs ============================ */

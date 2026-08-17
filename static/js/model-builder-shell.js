@@ -11,7 +11,13 @@
     baseball_mlb: 'MLB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League',
     icehockey_nhl: 'NHL', americanfootball_nfl: 'NFL', basketball_ncaab: 'NCAAB',
     basketball_wnba: 'WNBA', soccer_fifa_world_cup: 'World Cup', soccer_epl: 'Premier League',
-    soccer_intl_friendly: 'Intl Friendlies', tennis: 'Tennis'
+    soccer_intl_friendly: 'Intl Friendlies', tennis: 'Tennis',
+    // Present in the graded ledger and previously unlabelled, so the picker
+    // printed the raw database key at the user.
+    soccer_argentina_liga_profesional: 'Argentine Primera',
+    soccer_conmebol_sudamericana: 'Copa Sudamericana',
+    soccer_netherlands_eredivisie: 'Eredivisie',
+    soccer_nwsl: 'NWSL'
   };
   var MARKET_LABELS = {
     h2h: 'Moneyline', spreads: 'Spread / run line', totals: 'Total', team_totals: 'Team total',
@@ -30,8 +36,25 @@
     return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
-  function sportLabel(k) { return SPORT_LABELS[k] || k; }
-  function marketLabel(k) { return MARKET_LABELS[k] || k; }
+  // A key with no entry above used to render verbatim, e.g.
+  // "soccer_argentina_liga_profesional (3 graded)". Falling back to a
+  // title-cased form keeps a newly added league readable the day it appears
+  // rather than the day someone notices.
+  function sportLabel(k) {
+    if (SPORT_LABELS[k]) return SPORT_LABELS[k];
+    return String(k || '')
+      .replace(/^(soccer|basketball|americanfootball|icehockey|baseball)_/, '')
+      .replace(/_/g, ' ')
+      .replace(/\w/g, function (c) { return c.toUpperCase(); });
+  }
+  // Same fallback as sportLabel: an unlabelled market key printed verbatim,
+  // which is how "first_five_totals" sat in the picker beside "F5 total".
+  // That particular pair is now folded server-side, but the guard stays so the
+  // next new market never shows a raw key either.
+  function marketLabel(k) {
+    if (MARKET_LABELS[k]) return MARKET_LABELS[k];
+    return String(k || '').replace(/_/g, ' ').replace(/\w/g, function (c) { return c.toUpperCase(); });
+  }
   function num(v) { return (v === null || v === undefined || v === '') ? null : Number(v); }
   function fmtOdds(o) { if (o == null) return '-'; return o > 0 ? '+' + o : String(o); }
   function fmtUnits(u) { if (u == null) return '-'; return (u > 0 ? '+' : '') + Number(u).toFixed(2) + 'u'; }

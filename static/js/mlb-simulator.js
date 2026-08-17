@@ -1605,9 +1605,25 @@
         if (pitcher.verified) return 'Verified on the selected team active roster.';
         return 'Starter list is for simulation selection and may not reflect today\'s confirmed starter.';
     }
+    // W_L_FROM_NOTE_20260817: the old pattern was /(\d+\s*-\s*\d+)/, which
+    // matches ANY two numbers around a hyphen anywhere in the note -- including
+    // a date. The emergency-fallback note reads "...static profile (regenerated
+    // 2026-08-04)...", so every starter in both dropdowns rendered as
+    // "Name, W-L 2026-08" whenever the live roster feed dropped.
+    //
+    // Two guards: a win-loss pair is at most three digits a side (no pitcher
+    // has 1,000 of either), and it must not be immediately followed by another
+    // "-digits", which is what distinguishes 2026-08-04 from 12-7.
     function pitcherRecord(pitcher) {
-        var match = String(pitcher && pitcher.note ? pitcher.note : '').match(/(\d+\s*-\s*\d+)/);
-        return match ? match[1].replace(/\s+/g, '') : null;
+        // Remove ISO dates BEFORE looking for a record. Matching around them
+        // is not enough: in "2026-08-04" the trailing "08-04" is itself a
+        // valid-looking pair, and a lookbehind would fix it at the cost of
+        // older Safari. Stripping is exact and portable.
+        var text = String(pitcher && pitcher.note ? pitcher.note : '')
+            .replace(/\d{4}-\d{1,2}-\d{1,2}/g, ' ')
+            .replace(/\d{4}-\d{1,2}/g, ' ');
+        var match = text.match(/(\d{1,3})\s*-\s*(\d{1,3})(?!\s*-\s*\d)/);
+        return match ? match[1] + '-' + match[2] : null;
     }
     // PITCHER_RATES_20260622: derive real WHIP + K-BB% from cached statsapi
     // season pitching splits. Returns nulls when stats are absent so labels
@@ -6473,7 +6489,7 @@
         var freshness = lineupFreshnessNote(players && players.lineupStatus);
         var freshnessHtml = freshness ? '<p class="player-source-note lineup-freshness-note">' + escapeHtml(freshness) + '</p>' : '';
         return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' + freshnessHtml +
-            '<p class="bx-mode-legend">Rate columns: <strong>AVG/OBP/SLG/OPS</strong> are <strong>this simulated game only</strong>. <strong>SEA AVG/SEA OPS</strong> are the player\'s real season-to-date figures. The two are never blended.</p>' +
+            '<p class="bx-mode-legend">Rate columns: <strong>AVG/OBP/SLG/OPS</strong> are <strong>this simulated game only</strong>. <strong>SEA AVG/SEA OPS</strong> are real season-to-date numbers <strong>against the handedness of the opposing starter</strong>, which is why they differ from an overall season line. The two are never blended.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table bx-bat-table"><thead>' + batterTableHead(true) + '</thead><tbody>' + batterTableRows(players.batters, true) + '</tbody></table></div></section>';
     }
     function pitchingTableSection(team, players, isWinner, margin, ctx, foldStaff) {
