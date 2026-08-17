@@ -1024,3 +1024,56 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
         overscroll-behavior: contain;
     }
 }
+
+/* ---------------------------------------------------------- team total
+   The input panel sits with the conditions but reads as a separate act:
+   conditions narrow the sample, this asks a question of it. Kept visually
+   quieter than the condition list so it never looks like another filter. */
+.ttgrid {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    align-items: end;
+}
+.ttfield { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ttfield label {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+.ttfield .ttopt {
+    font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--ink-3);
+    opacity: .8;
+}
+.ttfield select, .ttfield input {
+    width: 100%; min-width: 0; padding: 7px 9px;
+    border: 1px solid var(--line-2); border-radius: var(--r-m);
+    background: var(--card); color: var(--ink);
+    font: inherit; font-size: 14px; font-variant-numeric: tabular-nums;
+}
+.ttfield input:focus-visible, .ttfield select:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+}
+#ttErr { color: var(--warn-ink); }
+
+/* Result card. The historical rate is the answer, so it leads at display
+   size; break even and EV are the comparison and sit beside it. Edge and EV
+   are the only figures that carry a judgement, so they are the only ones
+   tinted, and both tint from the same win/loss pair the games table uses. */
+.tt-lead { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.tt-sub { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tt-dist {
+    display: grid; gap: 1px; margin-top: 10px;
+    background: var(--line); border: 1px solid var(--line);
+    border-radius: var(--r-m); overflow: hidden;
+    grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+}
+.tt-dist div { background: var(--card); padding: 6px 4px; text-align: center; }
+.tt-dist b {
+    display: block; font-size: 13px; font-weight: 700;
+    font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.tt-dist span {
+    display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+.tt-dist div.is-line { background: var(--accent-soft); }
+.tt-dist div.is-line b, .tt-dist div.is-line span { color: var(--accent-2); }

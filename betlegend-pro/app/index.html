@@ -389,6 +389,58 @@
                             </div>
                         </section>
 
+                        <!-- TEAM TOTAL. Deliberately NOT in the condition picker
+                             above. Everything there narrows the sample; this asks a
+                             question OF whatever sample survived. Filtering on the
+                             outcome you are asking about would answer 100% every
+                             time, which is why it lives in its own panel and says so.
+                             No book team-total line exists in this dataset and none
+                             is estimated: the rate is counted from real final scores,
+                             and the only price involved is the one typed here. -->
+                        <section class="card" id="ttCard" hidden>
+                            <div class="card-head">
+                                <div class="ftools">
+                                    <h2>Team total</h2>
+                                    <span class="meta" id="ttState">Off</span>
+                                    <span class="spacer"></span>
+                                    <button class="linkbtn" id="ttClear" type="button" hidden>Clear</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="note-s">How often one side cleared a number, in whatever sample your
+                                conditions leave. This does not narrow the report &mdash; it reads it.
+                                Add a price and it also works out the break even that price demands.</p>
+                                <div class="ttgrid">
+                                    <div class="ttfield">
+                                        <label for="ttTeam">Team</label>
+                                        <select id="ttTeam">
+                                            <option value="">Off</option>
+                                            <option value="team_1">&mdash;</option>
+                                            <option value="team_2">&mdash;</option>
+                                        </select>
+                                    </div>
+                                    <div class="ttfield">
+                                        <label for="ttSide">Side</label>
+                                        <select id="ttSide">
+                                            <option value="under">Under</option>
+                                            <option value="over">Over</option>
+                                        </select>
+                                    </div>
+                                    <div class="ttfield">
+                                        <label for="ttLine">Line</label>
+                                        <input id="ttLine" type="number" step="0.5" min="0" max="60"
+                                               inputmode="decimal" placeholder="3.5">
+                                    </div>
+                                    <div class="ttfield">
+                                        <label for="ttOdds">Price <span class="ttopt">optional</span></label>
+                                        <input id="ttOdds" type="number" step="1"
+                                               inputmode="numeric" placeholder="-110">
+                                    </div>
+                                </div>
+                                <p class="note-s" id="ttErr" hidden></p>
+                            </div>
+                        </section>
+
                         <div class="runbar">
                             <p class="runsum" id="runSummary">Choose a sport and two different teams to continue.</p>
                             <button class="run" id="mSubmit" type="submit">
@@ -840,6 +892,9 @@
     var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome'), mVenue = $('mVenue');
     var mTimeframe = $('mTimeframe'), mDateFrom = $('mDateFrom'), mDateTo = $('mDateTo');
     var mLimit = $('mLimit');
+    var ttCard = $('ttCard'), ttTeam = $('ttTeam'), ttSide = $('ttSide');
+    var ttLine = $('ttLine'), ttOdds = $('ttOdds'), ttErr = $('ttErr');
+    var ttState = $('ttState'), ttClear = $('ttClear');
     // This sport's measured database era, carried on the filter library the
     // panel already fetches. Every year the period selector offers comes from
     // here, so it can never list a season the database does not hold.
@@ -1673,6 +1728,7 @@
         $('addCondHint').hidden = bothPicked;
         if (!bothPicked && !$('condMenu').hidden) openCondMenu(false);
         paintOrient();
+        syncTeamTotal();
         if (away && home && away === home) err = 'The away team and the home team must be two different teams.';
         if (!err && mTimeframe.value === 'custom') {
             if (!mDateFrom.value && !mDateTo.value) err = 'Enter a from date, a to date, or both.';
@@ -1684,7 +1740,9 @@
         errEl.textContent = err;
         errEl.hidden = !err;
 
-        var ready = !!away && !!home && away !== home && !err;
+        // A malformed team-total price would be rejected by the endpoint after
+        // the run had already been billed, so it blocks the button here.
+        var ready = !!away && !!home && away !== home && !err && !teamTotalError();
         // The marker is what survives a status refresh; the disabled property
         // alone does not.
         if (ready) mSubmit.removeAttribute('data-incomplete');
@@ -2199,6 +2257,60 @@
             + receiptRow(res)
             + '</section>';
 
+        // TEAM TOTAL. Rendered only when the caller asked; there is no empty
+        // state, because a card that says "no team total" is noise on the 95%
+        // of reports that never asked for one.
+        var tt = (d.matchup_summary && d.matchup_summary.team_total) || null;
+        var ttBlock = '';
+        if (tt) {
+            var pr = tt.pricing;
+            var evTone = pr ? (pr.ev_per_unit > 0 ? ' is-pos' : (pr.ev_per_unit < 0 ? ' is-neg' : '')) : '';
+            var edgeTone = pr ? (pr.edge_pts > 0 ? ' is-pos' : (pr.edge_pts < 0 ? ' is-neg' : '')) : '';
+            var signed1 = function (v) { return (v > 0 ? '+' : '') + v; };
+            // The distribution strip, centred on the line that was asked
+            // about so the reader can see the neighbouring numbers too.
+            var dist = (d.matchup_summary.scoring
+                && (tt.team === d.team_1
+                    ? d.matchup_summary.scoring.distribution_team_1
+                    : d.matchup_summary.scoring.distribution_team_2)) || null;
+            var strip = '';
+            if (dist && dist.cumulative && dist.cumulative.length) {
+                strip = '<div class="tt-dist">' + dist.cumulative.map(function (c) {
+                    var on = Math.abs(c.line - tt.line) < 0.01;
+                    var pctv = tt.side === 'under' ? c.under_pct : c.over_pct;
+                    return '<div class="' + (on ? 'is-line' : '') + '">'
+                        + '<b>' + pctv + '%</b>'
+                        + '<span>' + (tt.side === 'under' ? 'u' : 'o') + c.line + '</span></div>';
+                }).join('') + '</div>'
+                + '<p class="note-s">Share of the same qualifying games at every number the sample reaches.</p>';
+            }
+            ttBlock = '<section class="rcard is-answer"><div class="rcard-head">'
+                + '<h3>Team total &mdash; ' + esc(tt.team) + ' ' + esc(tt.side) + ' ' + esc(tt.line) + '</h3>'
+                + '<span class="range">Read from the qualifying sample, not a filter on it</span></div>'
+                + '<div class="kpis">'
+                + '<div class="kpi"><span>Historical</span><strong class="tt-lead">'
+                    + (tt.hit_pct == null ? DASH : tt.hit_pct + '%') + '</strong>'
+                    + '<em class="tt-sub">' + esc(tt.record) + ' &middot; '
+                    + fmtInt(tt.decided_games) + ' decided</em></div>'
+                + (pr
+                    ? '<div class="kpi"><span>Break even</span><strong>' + pr.break_even_pct + '%</strong>'
+                        + '<em class="tt-sub">at ' + (pr.odds > 0 ? '+' : '') + esc(pr.odds) + '</em></div>'
+                      + '<div class="kpi"><span>Edge</span><strong class="kpi-v' + edgeTone + '">'
+                        + signed1(pr.edge_pts) + ' pts</strong>'
+                        + '<em class="tt-sub">historical minus break even</em></div>'
+                      + '<div class="kpi"><span>EV per 1u</span><strong class="kpi-v' + evTone + '">'
+                        + signed1(pr.ev_per_unit) + 'u</strong>'
+                        + '<em class="tt-sub">over ' + fmtInt(pr.ev_denominator_games) + ' graded</em></div>'
+                    : '')
+                + '</div>'
+                + strip
+                + '<p class="note-s">' + esc(tt.basis) + '</p>'
+                + (tt.pricing_unavailable_reason
+                    ? '<p class="note-s">' + esc(tt.pricing_unavailable_reason) + '</p>' : '')
+                + (pr ? '<p class="note-s">' + esc(pr.note) + '</p>' : '')
+                + '</section>';
+        }
+
         var h2h = d.head_to_head;
         var h2hBlock = h2h
             ? '<section class="rcard"><div class="rcard-head"><h3>Head-to-head</h3>'
@@ -2224,7 +2336,7 @@
 
         // Answer first: the result card leads, the methodology card (what was
         // searched, how the sample narrowed, coverage) follows as evidence.
-        return matchupSummary(d) + head + meetingsTable(d) + h2hBlock
+        return matchupSummary(d) + head + ttBlock + meetingsTable(d) + h2hBlock
             + '<p class="method">Every record, average and percentage above is the plain arithmetic of the '
             + 'qualifying meetings, computed from BetLegend Pro’s graded-game database. Every game listed '
             + 'is a meeting between these two teams; games against any other opponent are never included. '
@@ -2277,8 +2389,79 @@
         }
         var chosen = filterPayload();
         Object.keys(chosen).forEach(function (k) { body[k] = chosen[k]; });
+        var tt = teamTotalPayload();
+        if (tt) body.team_total = tt;
         return body;
     }
+
+    /* ------------------------------------------------------- team total */
+
+    // Off unless a team AND a line are both set. A line with no team, or a
+    // team with no line, is an incomplete thought rather than a default, and
+    // guessing either one would answer a question nobody asked.
+    function teamTotalPayload() {
+        if (!ttTeam.value) return null;
+        var line = parseFloat(ttLine.value);
+        if (!isFinite(line)) return null;
+        var out = { team: ttTeam.value, side: ttSide.value, line: line };
+        var odds = parseFloat(ttOdds.value);
+        if (isFinite(odds)) out.odds = odds;
+        return out;
+    }
+
+    function teamTotalError() {
+        if (!ttTeam.value) return '';
+        var line = parseFloat(ttLine.value);
+        if (ttLine.value !== '' && !isFinite(line)) return 'Enter a number for the line.';
+        if (isFinite(line) && Math.round(line * 2) !== line * 2) {
+            return 'Line must be a whole or half number, such as 3.5 or 4.';
+        }
+        if (isFinite(line) && (line < 0 || line > 60)) return 'Line must be between 0 and 60.';
+        var odds = parseFloat(ttOdds.value);
+        if (ttOdds.value !== '' && !isFinite(odds)) return 'Enter a number for the price, such as -110.';
+        // A book never prices anything between -99 and +99; a number in that
+        // gap is a typo (110 meant as -110) and silently pricing it would
+        // hand back an EV built on a line that does not exist.
+        if (isFinite(odds) && odds > -100 && odds < 100) {
+            return 'That is not a valid American price. Use -110 or +150, not ' + ttOdds.value + '.';
+        }
+        return '';
+    }
+
+    // The two team options are the actual teams, so the control reads
+    // "Colorado Rockies / under / 3.5" instead of "team_1 / under / 3.5".
+    function syncTeamTotal() {
+        var haveBoth = !!(mAway.value && mHome.value && mAway.value !== mHome.value);
+        ttCard.hidden = !haveBoth;
+        if (!haveBoth) return;
+        ttTeam.options[1].textContent = mAway.value;
+        ttTeam.options[2].textContent = mHome.value;
+
+        var err = teamTotalError();
+        ttErr.textContent = err;
+        ttErr.hidden = !err;
+
+        var tt = teamTotalPayload();
+        ttClear.hidden = !ttTeam.value;
+        if (!ttTeam.value) {
+            ttState.textContent = 'Off';
+        } else if (!tt) {
+            ttState.textContent = 'Enter a line';
+        } else {
+            var who = tt.team === 'team_1' ? mAway.value : mHome.value;
+            ttState.textContent = who + ' ' + tt.side + ' ' + tt.line
+                + (tt.odds != null ? ' at ' + (tt.odds > 0 ? '+' : '') + tt.odds : '');
+        }
+    }
+
+    [ttTeam, ttSide, ttLine, ttOdds].forEach(function (el) {
+        el.addEventListener('change', function () { syncTeamTotal(); syncSetup(); });
+        el.addEventListener('input', function () { syncTeamTotal(); syncSetup(); });
+    });
+    ttClear.addEventListener('click', function () {
+        ttTeam.value = ''; ttLine.value = ''; ttOdds.value = ''; ttSide.value = 'under';
+        syncTeamTotal(); syncSetup();
+    });
 
     $('matchupForm').addEventListener('submit', async function (ev) {
         ev.preventDefault();
