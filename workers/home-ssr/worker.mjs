@@ -220,6 +220,31 @@ class SettleCell {
   }
 }
 
+/* Adds a class to an element without disturbing the ones already on it. */
+class AccentCell {
+  constructor(className) { this.className = className; }
+  element(el) {
+    const have = (el.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+    if (!have.includes(this.className)) have.push(this.className);
+    el.setAttribute('class', have.join(' '));
+    /* The page script reads data-accent to know which class to swap OFF before
+       it applies the next one. Without it the edge's accent would stick and the
+       card would end up wearing two. */
+    el.setAttribute('data-accent', this.className);
+  }
+}
+
+/* href and text in ONE handler: two handlers on the same selector each get the
+   element, but the second one's setInnerContent would run against an element
+   the first has already emitted. */
+class CtaCell {
+  constructor(href, label) { this.href = href; this.label = label; }
+  element(el) {
+    if (this.href) el.setAttribute('href', this.href);
+    if (this.label != null) el.setInnerContent(String(this.label));
+  }
+}
+
 class AttrCell {
   constructor(attrs) { this.attrs = attrs; }
   element(el) { for (const [k, v] of Object.entries(this.attrs)) el.setAttribute(k, v); }
@@ -241,18 +266,6 @@ class NthHtmlCell {
    script re-renders the same first view a moment after the edge paints it, and
    any difference between them would flicker a value that did not change.
    Keep them in lockstep. ---------------------------------------------------- */
-const COMP_ICON = { win: 'W', loss: 'L', lock: '&#128274;', streak: '&#128293;', up: '&#9650;' };
-
-function compAgo(ts) {
-  if (!ts) return '';
-  let s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-  if (s < 0) s = 0;
-  if (s < 45) return 'now';
-  if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm';
-  if (s < 86400) return Math.floor(s / 3600) + 'h';
-  return Math.floor(s / 86400) + 'd';
-}
-
 /* A competitor with no avatar gets initials, not a request that 404s into
    initials. The homepage has been bitten before by an <img> whose onerror
    raced the edge bake and rewrote the card after first paint; there is no
@@ -274,17 +287,15 @@ function compDelta(row) {
   return '<span class="comp-dl fl">&mdash;</span>';
 }
 
+/* Every one of the eight views renders through this one template, so a
+   sportsbook standing and a trivia standing are the same object on screen and
+   only the numbers mean different things. `tone` decides the primary value's
+   colour: 'signed' where green and red carry real meaning, 'neutral' for a
+   points or post count, where green would assert a profit the number is not. */
 function compRowHtml(view, row, i) {
   const c = row.competitor || {};
   const href = c.href || (c.username ? `/u/${encodeURIComponent(c.username)}/` : '/handicappers/');
-  if (view.kind === 'ticker') {
-    return '<div class="comp-row">' +
-      `<span class="comp-ic ${esc(row.icon || 'lock')}">${COMP_ICON[row.icon] || '&bull;'}</span>` +
-      `<span class="comp-tx"><a class="comp-nm-i" href="${esc(href)}"><b>${esc(c.username || '')}</b></a> ${esc(row.text || '')}</span>` +
-      `<span class="comp-ago">${esc(compAgo(row.at))}</span>` +
-    '</div>';
-  }
-  const neg = num(row.value) < 0;
+  const tone = view.tone === 'signed' ? (num(row.value) < 0 ? 'neg' : 'pos') : 'flat';
   return `<div class="comp-row${i === 0 ? ' r1' : ''}">` +
     `<span class="comp-rk">${row.rank || i + 1}</span>` +
     compAvatar(c) +
@@ -293,8 +304,7 @@ function compRowHtml(view, row, i) {
       `<span class="comp-meta">${esc(row.meta || '')}</span>` +
     '</span>' +
     '<span class="comp-val">' +
-      `<span class="comp-num ${neg ? 'neg' : 'pos'}" data-val="${esc(String(row.value))}" ` +
-        `data-text="${esc(row.value_text || '')}">${esc(row.value_text || '')}</span>` +
+      `<span class="comp-num ${tone}">${esc(row.value_text || '')}</span>` +
       compDelta(row) +
     '</span>' +
   '</div>';
@@ -590,8 +600,19 @@ function buildRewriter(data, slate) {
     rw.on('.spot .bd', new SettleCell());
     rw.on('.spot .comp-cat', new TextCell(view.label || ''));
     rw.on('.spot .comp-note', new TextCell(view.note || ''));
+    /* The section accent, painted at the edge for the same reason the rows are:
+       the page script applies the identical class a moment later, and if the
+       first paint carried the default accent the label would visibly change
+       colour on load. */
+    rw.on('aside.spot', new AccentCell(`comp-acc-${view.section || 'sportsbook'}`));
+    /* The footer CTA belongs to the view being painted. The destination comes
+       from the payload (services/homeCompetition's CTA map), never from a
+       second table in here that could drift out of step with it. */
+    if (view.cta && view.cta.href && view.cta.label) {
+      rw.on('.spot .comp-cta', new CtaCell(view.cta.href, `${view.cta.label} →`));
+    }
     rw.on('.spot .comp-stage', new HtmlCell(
-      `<div class="comp-view is-on${view.kind === 'ticker' ? ' tick' : ''}">` +
+      '<div class="comp-view is-on">' +
       view.rows.map((r, i) => compRowHtml(view, r, i)).join('') +
       '</div>'
     ));

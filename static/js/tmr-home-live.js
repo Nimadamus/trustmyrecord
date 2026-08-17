@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '23f80ebca04f';
+  var BUILD = '2efd259ce977';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -801,9 +801,13 @@
      next view starts — a bar that lies about the timing is worse than none. */
   var COMP_DWELL_MS = 5200;
   var COMP_SWAP_MS = 340;
-  /* The count-up. Long enough to read as a number settling, short enough that
-     the value is legible for most of the dwell. */
-  var COMP_COUNT_MS = 720;
+
+  /* There is deliberately NO count-up on this card (removed 2026-08-17, Nima).
+     A rolling counter has to display numbers the payload never contained on its
+     way to the one it did — and once the card started ranking trivia points and
+     forum posts alongside units, those intermediate values stopped reading as a
+     figure settling and started reading as somebody's real score being wrong.
+     A player with 28,511 points is shown 28,511 points, from the first frame. */
 
   var comp = {
     views: [],          // real views, server-ordered
@@ -819,18 +823,6 @@
     comp.reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   } catch (e) {}
 
-  /* Elapsed-time stamp for ticker rows. Tighter than timeAgo() above, which is
-     tuned for a card with room for "23 min ago"; here the stamp shares a line
-     with the event itself. */
-  function compAgo(ts) {
-    if (!ts) return '';
-    var s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-    if (s < 0) s = 0;
-    if (s < 45) return 'now';
-    if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm';
-    if (s < 86400) return Math.floor(s / 3600) + 'h';
-    return Math.floor(s / 86400) + 'd';
-  }
 
   /* A competitor with no avatar gets initials, not a request that 404s into
      initials. The homepage has been bitten before by an <img> whose onerror
@@ -861,22 +853,18 @@
     return '<span class="comp-dl fl">&mdash;</span>';
   }
 
-  var COMP_ICON = { win: 'W', loss: 'L', lock: '&#128274;', streak: '&#128293;', up: '&#9650;' };
+  /* Every one of the eight views renders through this one template, so a
+     sportsbook standing and a trivia standing are the same object on screen and
+     only the numbers mean different things.
 
+     `tone` decides the primary value's colour. 'signed' is a units or ROI
+     figure, where green and red carry real meaning. 'neutral' is a points or
+     post count, where colouring it green would assert a profit the number is
+     not. Trivia points are not units. */
   function compRowHtml(view, row, i) {
     var c = row.competitor || {};
     var href = c.href || (c.username ? '/u/' + encodeURIComponent(c.username) + '/' : '/handicappers/');
-    if (view.kind === 'ticker') {
-      return '<div class="comp-row">' +
-        '<span class="comp-ic ' + esc(row.icon || 'lock') + '">' + (COMP_ICON[row.icon] || '&bull;') + '</span>' +
-        '<span class="comp-tx"><a class="comp-nm-i" href="' + esc(href) + '"><b>' + esc(c.username || '') + '</b></a> ' + esc(row.text || '') + '</span>' +
-        '<span class="comp-ago">' + esc(compAgo(row.at)) + '</span>' +
-      '</div>';
-    }
-    /* data-to / data-from drive the count-up. The element is rendered with its
-       FINAL text first so a visitor with JS animation suppressed, or a frame
-       dropped mid-swap, still reads the true number. */
-    var neg = num(row.value) < 0;
+    var tone = view.tone === 'signed' ? (num(row.value) < 0 ? 'neg' : 'pos') : 'flat';
     return '<div class="comp-row' + (i === 0 ? ' r1' : '') + '">' +
       '<span class="comp-rk">' + (row.rank || i + 1) + '</span>' +
       compAvatar(c) +
@@ -885,70 +873,12 @@
         '<span class="comp-meta">' + esc(row.meta || '') + '</span>' +
       '</span>' +
       '<span class="comp-val">' +
-        '<span class="comp-num ' + (neg ? 'neg' : 'pos') + '" data-val="' + esc(String(row.value)) + '" ' +
-          'data-text="' + esc(row.value_text || '') + '">' + esc(row.value_text || '') + '</span>' +
+        '<span class="comp-num ' + tone + '">' + esc(row.value_text || '') + '</span>' +
         compDelta(row) +
       '</span>' +
     '</div>';
   }
 
-  /* Count-up. Animates only the DIGITS inside the already-correct final string,
-     so the prefix/suffix ("+", "u", "%", "W") can never be animated into
-     something that was not in the payload, and the last frame is exactly the
-     server's own text. */
-  function compCountUp(view, host) {
-    // The server says which views have a value worth counting: a streak's "W5"
-    // would spend most of the animation reading "W0", which is a different and
-    // wrong claim. Continuous quantities (units, ROI) count; counts do not.
-    if (comp.reduced || view.animate_value === false) return;
-    // A hidden or occluded tab gets throttled or paused rAF. Starting a count
-    // there would park a real competitor's units at 0.00 for as long as the
-    // throttle lasts, which is a wrong number on screen — the one failure this
-    // card is not allowed to have. Don't start; the true value is already in
-    // the DOM.
-    if (document.hidden) return;
-    host.querySelectorAll('.comp-num').forEach(function (n) {
-      var finalText = n.getAttribute('data-text') || n.textContent;
-      var target = parseFloat(n.getAttribute('data-val'));
-      if (!isFinite(target)) return;
-      var m = /-?\d[\d,]*(\.\d+)?/.exec(finalText);
-      if (!m) return;
-      var decimals = m[1] ? m[1].length - 1 : 0;
-      var head = finalText.slice(0, m.index);
-      var tail = finalText.slice(m.index + m[0].length);
-      var magnitude = Math.abs(target);
-      var t0 = 0;
-      var done = false;
-      var framesRan = false;
-      function finish() { if (!done) { done = true; n.textContent = finalText; } }
-      function frame(ts) {
-        if (done) return;
-        framesRan = true;
-        if (!t0) t0 = ts;
-        var p = Math.min(1, (ts - t0) / COMP_COUNT_MS);
-        // easeOutCubic: fast start, long settle — the broadcast feel.
-        var e = 1 - Math.pow(1 - p, 3);
-        if (p >= 1) { finish(); return; }
-        n.textContent = head + (magnitude * e).toFixed(decimals) + tail;
-        requestAnimationFrame(frame);
-      }
-      n.textContent = head + (0).toFixed(decimals) + tail;
-      requestAnimationFrame(frame);
-      /* Two wall-clock guards, because a count that has stalled is a WRONG
-         NUMBER on screen, not a missing animation.
-
-         rAF can be throttled to 1fps or stopped outright — a backgrounded tab,
-         an occluded or minimised window, battery saver. If that happens the
-         count would park a real competitor's units at 0.00 for as long as the
-         throttle lasts. So: if no frame has run one frame-time in, the browser
-         is not animating and the true value goes back immediately (measured in
-         an occluded window: without this it sat at +0.00u for 860ms). The
-         second guard is the ordinary finish, for a run that starts and then
-         stops partway. */
-      setTimeout(function () { if (!framesRan) finish(); }, 120);
-      setTimeout(finish, COMP_COUNT_MS + 140);
-    });
-  }
 
   function compRestartProgress() {
     var bar = el('.spot.comp .comp-prog'); if (!bar) return;
@@ -974,9 +904,10 @@
     var stage = el('.spot.comp .comp-stage'); if (!stage || !view) return;
     var cat = el('.spot.comp .comp-cat');
     var note = el('.spot.comp .comp-note');
+    var card = el('.spot.comp');
 
     var next = document.createElement('div');
-    next.className = 'comp-view' + (view.kind === 'ticker' ? ' tick' : '');
+    next.className = 'comp-view';
     next.innerHTML = (view.rows || []).map(function (r, i) { return compRowHtml(view, r, i); }).join('');
 
     var prev = stage.querySelector('.comp-view');
@@ -990,6 +921,29 @@
       // a frame, which is the one thing a card like this must never do.
       if (cat) setText(cat, view.label || '');
       if (note) setText(note, view.note || '');
+      /* The accent follows the SECTION, not the view: all four sportsbook
+         boards share one colour so the card does not strobe through a palette
+         while it rotates, and trivia / polls / forum each get their own. One
+         class on the card, so the label, the leader's rank numeral and the
+         dwell rule move together. */
+      if (card) {
+        var accent = 'comp-acc-' + (view.section || 'sportsbook');
+        if (card.dataset.accent !== accent) {
+          if (card.dataset.accent) card.classList.remove(card.dataset.accent);
+          card.classList.add(accent);
+          card.dataset.accent = accent;
+        }
+      }
+      /* The footer CTA points at the board the visitor is looking at. The
+         server sends the destination with the view (services/homeCompetition
+         CTA map) so a category can never be added here with a link that 404s;
+         a view with no cta leaves the last real one in place rather than
+         emptying the link. */
+      var cta = el('.spot.comp .comp-cta');
+      if (cta && view.cta && view.cta.href && view.cta.label) {
+        if (cta.getAttribute('href') !== view.cta.href) cta.setAttribute('href', view.cta.href);
+        setText(cta, view.cta.label + ' →');
+      }
       next.classList.add('is-on');
       if (animate && !comp.reduced) {
         next.classList.add('is-in');
@@ -1009,7 +963,6 @@
         setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); },
           comp.reduced ? 0 : COMP_SWAP_MS);
       }
-      compCountUp(view, next);
     });
 
     if (animate) compFlash();

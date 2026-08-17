@@ -3,20 +3,26 @@
  * LIVE COMPETITION CARD — static contract lock.
  *
  * The hero's right-hand card stopped being a spotlight on one designated
- * capper on 2026-08-16 and became a rotating read of the live standings. Two
- * properties of that card are not allowed to regress, and neither of them is
- * visible in a screenshot:
+ * capper on 2026-08-16, and on 2026-08-17 it stopped being only about picks: it
+ * rotates through eight standings drawn from the sportsbook, trivia, the polls
+ * and the forum. Three properties are not allowed to regress, and none of them
+ * is visible in a screenshot:
  *
- *   1. NOTHING IS INVENTED. Every competitor, number, streak, movement and
- *      event on the card comes from the API. There is no sample data, no demo
- *      username and no filler event anywhere in the client, the edge renderer
- *      or the markup — and a view the backend could not fill with real data is
- *      absent from the payload rather than padded, so there is nothing for the
- *      client to pad with either.
+ *   1. NOTHING IS INVENTED. Every competitor and every number on the card comes
+ *      from the API. There is no sample data, no demo username and no hard-coded
+ *      view anywhere in the client, the edge renderer or the markup — and a
+ *      category the backend could not fill with three real rows is absent from
+ *      the payload rather than padded, so there is nothing for the client to pad
+ *      with either. Nor is any number animated: a rolling counter would display
+ *      values the payload never contained.
  *
  *   2. THE CARD DOES NOT CHANGE HEIGHT. It sits in a vertically-centred hero
  *      grid; a card that grew or shrank as its view rotated would move the
  *      whole column every few seconds.
+ *
+ *   3. THE ACCENT, THE LABEL AND THE CTA FOLLOW THE SECTION. A visitor reading
+ *      TRIVIA LEADERS must be one click from the trivia board, not from the
+ *      handicapper standings — and both renderers must agree on which.
  *
  * Live behaviour (the rotation itself, the transitions, every breakpoint) is
  * proved in a real browser by tests/homepage-live-competition-browser-proof.cjs.
@@ -44,8 +50,15 @@ ok(/<div class="hd"><b><span class="bl"><\/span>Live competition<\/b>/.test(html
   'the card header must be the permanent "LIVE COMPETITION" line with its live dot');
 ok(html.includes('<div class="comp-title">The TMR race never stops</div>'),
   'the permanent "THE TMR RACE NEVER STOPS" headline is missing');
-ok(/Enter the competition/.test(html), 'the footer CTA must read "Enter the competition"');
 ok(/class="comp-foot"/.test(html), 'the footer count line (.comp-foot) is missing');
+// Two CTAs, and neither may go missing. The header one converts (sign up); the
+// footer one follows the category on screen to that section's own board, so a
+// visitor reading TRIVIA LEADERS is one click from the trivia leaderboard
+// rather than from the handicapper standings.
+ok(/<div class="hd">[\s\S]*?href="\/register\/">Enter the competition/.test(html),
+  'the card header must carry the "Enter the competition" signup CTA');
+ok(/<a class="tlink comp-cta"[^>]*href="\/handicappers\/">Full standings/.test(html),
+  'the footer must ship the contextual CTA (.comp-cta) defaulted to the first view\'s destination');
 
 /* ---------- 2. no fabricated data, anywhere ------------------------------- */
 // The old homepage shipped demo handles (moneylinemike, sharpaction, ...) as
@@ -105,16 +118,20 @@ for (const tier of compTiers) {
     `the ${width}px tier resizes the card's contents without restating .comp-stage's height`);
 }
 
-/* ---------- 5. no number may be left mid-animation ------------------------ */
-// The count-up writes a partial value into a slot that holds a real
-// competitor's units. If requestAnimationFrame stalls (backgrounded tab,
-// occluded window) that partial value is simply WRONG, so there are two
-// wall-clock guards that put the payload's own string back.
-ok(js.includes('data-text="'), 'the count-up must carry the final string on the element it animates');
-ok(/if \(!framesRan\) finish\(\);/.test(js),
-  'a stalled requestAnimationFrame must restore the real value immediately');
-ok(/setTimeout\(finish, COMP_COUNT_MS \+ \d+\)/.test(js),
-  'the count-up needs a wall-clock backstop that lands on the payload value');
+/* ---------- 5. no number is ever animated ---------------------------------- */
+// There is no count-up (removed 2026-08-17, Nima). A rolling counter has to
+// display values the payload never contained on its way to the one it did, and
+// once the card started ranking trivia points and forum posts alongside units
+// those intermediate values stopped reading as a figure settling and started
+// reading as somebody's real score being wrong. A player with 28,511 points is
+// shown 28,511 points, in the first frame they appear.
+for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
+  ok(!/compCountUp|COMP_COUNT_MS/.test(src), `${name} still has count-up machinery`);
+  ok(!/data-val=|data-text=/.test(src),
+    `${name} still emits the count-up's data attributes on a value element`);
+}
+ok(!/\.comp-num[^{]*\{[^}]*transition/.test(css),
+  'the primary value must not transition between two numbers');
 ok(/setTimeout\(function \(\) \{ next\.classList\.remove\('is-in'\); \}/.test(js),
   "the incoming layer's animation class must be removed on a timer — its fill-mode " +
   'holds the whole view at opacity 0 on a compositor that is not animating');
@@ -128,7 +145,7 @@ ok(js.includes('if (comp.paused || document.hidden) return;'),
   'the rotation must not advance in a hidden tab or while the card is being read');
 
 /* ---------- 7. client and edge produce the same markup -------------------- */
-for (const fn of ['compRowHtml', 'compDelta', 'compAvatar', 'compAgo']) {
+for (const fn of ['compRowHtml', 'compDelta', 'compAvatar']) {
   ok(js.includes('function ' + fn) || js.includes(fn + ' ='),
     `tmr-home-live.js is missing ${fn}`);
   ok(worker.includes('function ' + fn), `workers/home-ssr/worker.mjs is missing ${fn}`);
@@ -167,16 +184,17 @@ function lift(source, names) {
   return new Function([PRELUDE, ...parts, 'return compRowHtml;'].join('\n'))();
 }
 
-const LIFT = ['compAgo', 'compAvatar', 'compDelta', 'compRowHtml'];
+const LIFT = ['compAvatar', 'compDelta', 'compRowHtml'];
 const clientRow = lift(js, LIFT);
 const edgeRow = lift(worker, LIFT);
 
 const FIXTURES = [
-  [{ kind: 'standings' }, { rank: 1, competitor: { id: 7, username: 'a_user', avatar_url: null, href: '/u/a_user/' }, value: 93.31, value_text: '+93.31u', meta: '187-128-3 · 318 picks', delta: 2, is_new: false }, 0],
-  [{ kind: 'standings' }, { rank: 2, competitor: { id: 8, username: 'b user', avatar_url: 'https://x/y.png', href: '/u/b%20user/' }, value: -4.5, value_text: '−4.50u', meta: '1-2', delta: -1, is_new: false }, 1],
-  [{ kind: 'standings' }, { rank: 3, competitor: { username: "o'brien", avatar_url: null, href: "/u/o'brien/" }, value: 0, value_text: 'W5', meta: '8-2 last 10', delta: null, is_new: true }, 2],
-  [{ kind: 'ticker' }, { kind: 'result', icon: 'win', competitor: { username: 'c<user>', avatar_url: null, href: '/u/c/' }, text: 'won SF -2.5 · +1.00u', at: '2026-08-16T23:15:48.659Z' }, 0],
-  [{ kind: 'ticker' }, { kind: 'lock', icon: 'lock', competitor: { username: 'd_user', avatar_url: null, href: '/u/d_user/' }, text: 'locked 3 NFL picks', at: '2026-08-16T21:00:00.000Z' }, 1],
+  [{ tone: 'signed' }, { rank: 1, competitor: { id: 7, username: 'a_user', avatar_url: null, href: '/u/a_user/' }, value: 93.31, value_text: '+93.31u', meta: '187-128-3 · 318 picks', delta: 2, is_new: false }, 0],
+  [{ tone: 'signed' }, { rank: 2, competitor: { id: 8, username: 'b user', avatar_url: 'https://x/y.png', href: '/u/b%20user/' }, value: -4.5, value_text: '−4.50u', meta: '1-2', delta: -1, is_new: false }, 1],
+  [{ tone: 'signed' }, { rank: 3, competitor: { username: "o'brien", avatar_url: null, href: "/u/o'brien/" }, value: 0.01, value_text: '+0.01u', meta: '1-0', delta: null, is_new: true }, 2],
+  // A points or post count is 'neutral': never coloured as a profit.
+  [{ tone: 'neutral' }, { rank: 1, competitor: { id: 9, username: 'c<user>', avatar_url: null, href: '/u/c/' }, value: 28511, value_text: '28,511 pts', meta: '91/134 correct · 67.9%', delta: null, is_new: false }, 0],
+  [{ tone: 'neutral' }, { rank: 2, competitor: { id: 10, username: 'd_user', avatar_url: null, href: '/u/d_user/' }, value: 69, value_text: '69 posts', meta: '51 threads · 18 replies', delta: null, is_new: false }, 1],
 ];
 for (const [view, row, i] of FIXTURES) {
   const a = clientRow(view, row, i);
@@ -184,5 +202,35 @@ for (const [view, row, i] of FIXTURES) {
   ok(a === b, 'tmr-home-live.js and workers/home-ssr/worker.mjs render this row differently:'
     + `\n  client: ${a}\n  edge:   ${b}`);
 }
+
+/* ---------- 9. the card advertises more than the sportsbook --------------- */
+// The whole point of the 2026-08-17 change: a visitor landing mid-rotation
+// should be able to tell that trivia, polls and the forum are competitions too.
+// That only works if the accent, the category label and the CTA all follow the
+// SECTION the payload names.
+for (const section of ['trivia', 'polls', 'forum', 'community']) {
+  ok(css.includes(`.spot.comp.comp-acc-${section} .comp-cat`),
+    `no accent colour is defined for the ${section} section`);
+}
+ok(/\.spot\.comp \.comp-cat\{color:var\(--brand-dk\)\}/.test(css),
+  'the sportsbook boards must share the default accent, or the card strobes through a palette');
+ok(js.includes("'comp-acc-' + (view.section || 'sportsbook')"),
+  'tmr-home-live.js must apply the accent from view.section');
+ok(worker.includes('new AccentCell(`comp-acc-${view.section'),
+  'the edge must paint the same accent, or the label changes colour on load');
+// The CTA destination comes from the payload, never from a table in the client
+// that could drift out of step with the backend's.
+ok(js.includes('view.cta && view.cta.href && view.cta.label'),
+  'the footer CTA must be driven by view.cta from the payload');
+ok(worker.includes('new CtaCell(view.cta.href'),
+  'the edge must paint the same contextual CTA as the client');
+for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
+  ok(!/\/leaderboards\/#trivia|\/leaderboards\/#polls/.test(src),
+    `${name} hard-codes a CTA destination — those live in the backend's CTA map only`);
+}
+// A points count must never be coloured like a profit.
+ok(css.includes('.comp-num.flat{'), 'no neutral tone is defined for a points or post count');
+ok(js.includes("view.tone === 'signed'") && worker.includes("view.tone === 'signed'"),
+  'both renderers must colour the value from view.tone');
 
 console.log(`homepage live-competition lock passed (${checks} checks)`);

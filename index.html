@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="23f80ebca04f">
+<html lang="en" data-tmr-build="2efd259ce977">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -416,6 +416,34 @@ a.comp-nm:hover{color:var(--brand-dk)}
 .comp-num{font-size:19px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
 .comp-num.pos{color:var(--green)}
 .comp-num.neg{color:var(--red)}
+/* A points or post count is not a profit. Trivia points, poll points, forum
+   posts and a win-streak length are rendered in ink, not in green — the sign
+   colours are reserved for the boards where a sign is a real claim. */
+.comp-num.flat{color:var(--ink)}
+
+/* ---- section accents -----------------------------------------------------
+   The card rotates through four different parts of the site, so the category
+   label, the leader's rank numeral and the dwell rule take that section's
+   colour. Deliberately small: three coloured details, from the palette the
+   homepage already uses, with the white card, the gold rail and every other
+   value unchanged. The four sportsbook boards share ONE accent so the card
+   does not strobe through a palette while it rotates. */
+.spot.comp .comp-cat{color:var(--brand-dk)}
+.spot.comp .comp-row.r1 .comp-rk{color:var(--gold)}
+.spot.comp.comp-acc-trivia .comp-cat{color:var(--gold)}
+.spot.comp.comp-acc-trivia .comp-prog i{background:linear-gradient(90deg,var(--gold),var(--gold-b))}
+.spot.comp.comp-acc-polls .comp-cat{color:var(--green)}
+.spot.comp.comp-acc-polls .comp-prog i{background:linear-gradient(90deg,var(--green),#3FBF7F)}
+.spot.comp.comp-acc-forum .comp-cat{color:var(--ink-2)}
+.spot.comp.comp-acc-forum .comp-prog i{background:linear-gradient(90deg,var(--ink-2),var(--line-2))}
+/* Most-followed and award winners are community standings like the forum board
+   is, so they share its accent rather than adding a fifth colour to a card that
+   is meant to stay one object. */
+.spot.comp.comp-acc-community .comp-cat{color:var(--ink-2)}
+.spot.comp.comp-acc-community .comp-prog i{background:linear-gradient(90deg,var(--ink-2),var(--line-2))}
+/* The label swaps colour on the same beat the rows swap, so the change reads
+   as one cut rather than two events. */
+.spot.comp .comp-cat,.spot.comp .comp-prog i{transition:color .3s ease,background .3s ease}
 
 /* Rank movement. The arrow is real -- it is this competitor's position now
    against the same table as it stood 24 hours ago (see the backend service).
@@ -430,21 +458,6 @@ a.comp-nm:hover{color:var(--brand-dk)}
 @keyframes compArrowUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes compArrowDn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
-/* Ticker rows: events, not standings, so no rank column and the line runs the
-   full width with the elapsed time pinned right. */
-.comp-view.tick .comp-row{grid-template-columns:26px minmax(0,1fr) auto;gap:10px}
-.comp-ic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex:0 0 auto;line-height:1}
-.comp-ic.win{background:var(--brand-soft);color:var(--brand-dk)}
-.comp-ic.loss{background:var(--red-soft);color:var(--red)}
-.comp-ic.lock{background:var(--panel-3);color:var(--ink-2)}
-.comp-ic.streak{background:var(--gold-soft);color:var(--gold)}
-.comp-ic.up{background:var(--brand-soft);color:var(--brand-dk)}
-.comp-tx{min-width:0;font-size:13.5px;font-weight:600;color:var(--ink-2);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.comp-tx b{font-weight:800;color:var(--ink)}
-/* The competitor's name inside a ticker line is a link like the one in a
-   standings row, and has to look and behave like one. */
-a.comp-nm-i:hover b{color:var(--brand-dk)}
-.comp-ago{font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* The dwell indicator: a 2px rule under the stage that fills across the time
    left on the current view. Deliberately the quietest thing on the card. */
@@ -518,8 +531,6 @@ a.comp-nm-i:hover b{color:var(--brand-dk)}
   .comp-av,.comp-avl{width:30px;height:30px;border-radius:7px}
   .comp-nm{font-size:15px}
   .comp-num{font-size:17px}
-  .comp-view.tick .comp-row{grid-template-columns:24px minmax(0,1fr) auto;gap:9px}
-  .comp-tx{font-size:12.5px}
   .comp-stage{height:172px}
   .spot.comp .ft{flex-direction:column;align-items:flex-start;gap:9px}
 }
@@ -529,7 +540,6 @@ a.comp-nm-i:hover b{color:var(--brand-dk)}
 @media (max-width:379px){
   .comp-title{font-size:21px}
   .comp-meta{display:none}
-  .comp-ago{display:none}
   .comp-stage{height:160px}
 }
 
@@ -1372,7 +1382,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
          and a view without enough real data is not in the payload at all. -->
     <aside class="spot comp">
       <div class="rail"></div>
-      <div class="hd"><b><span class="bl"></span>Live competition</b><a class="tlink" style="font-size:13px" href="/handicappers/">Full standings &rarr;</a></div>
+      <div class="hd"><b><span class="bl"></span>Live competition</b><a class="tlink" style="font-size:13px" href="/register/">Enter the competition &rarr;</a></div>
       <!--MK:homeCapper--><div class="bd is-skel" aria-busy="true">
         <span class="comp-flash" aria-hidden="true"></span>
         <div class="comp-title">The TMR race never stops</div>
@@ -1386,7 +1396,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
         </div>
         <div class="comp-prog" aria-hidden="true"><i></i></div>
       </div><!--/MK:homeCapper-->
-      <div class="ft"><span class="comp-foot"><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink" style="font-size:13px" href="/register/">Enter the competition &rarr;</a></span></div>
+      <div class="ft"><span class="comp-foot"><i class="sk" style="width:257px"></i></span><span class="ftlinks" style="display:flex;gap:14px"><a class="tlink comp-cta" style="font-size:13px" href="/handicappers/">Full standings &rarr;</a></span></div>
     </aside>
   </div></div>
 
@@ -1565,7 +1575,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.23f80ebca04f.js"></script>
+<script src="/static/js/tmr-home-live.2efd259ce977.js"></script>
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->

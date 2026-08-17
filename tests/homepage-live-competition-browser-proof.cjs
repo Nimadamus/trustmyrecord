@@ -52,6 +52,10 @@ async function readCard(page) {
       cardBox: box(card),
       stageH: stage.getBoundingClientRect().height,
       category: (document.querySelector('.comp-cat') || {}).textContent?.trim() || '',
+      accent: card.dataset.accent || '',
+      ctaLabel: (document.querySelector('.comp-cta') || {}).textContent?.trim() || '',
+      ctaHref: (document.querySelector('.comp-cta') || {}).getAttribute?.('href') || '',
+      headerCta: (document.querySelector('.spot .hd a') || {}).textContent?.trim() || '',
       note: (document.querySelector('.comp-note') || {}).textContent?.trim() || '',
       headline: (title || {}).textContent?.trim() || '',
       headerLabel: (document.querySelector('.spot .hd b') || {}).textContent?.trim() || '',
@@ -62,9 +66,7 @@ async function readCard(page) {
         text: r.textContent.replace(/\s+/g, ' ').trim(),
         name: (r.querySelector('.comp-nm, .comp-tx b') || {}).textContent?.trim() || '',
         value: (r.querySelector('.comp-num') || {}).textContent?.trim() || '',
-        // What the SERVER handed us, independent of where the count-up
-        // animation happens to be at the instant of the sample.
-        valueFinal: (r.querySelector('.comp-num') || {}).getAttribute?.('data-text') || '',
+        tone: (r.querySelector('.comp-num') || {}).className || '',
         clipped: r.scrollWidth > r.clientWidth + 1,
         box: box(r),
       })),
@@ -127,7 +129,8 @@ async function readCard(page) {
   /* ---- 2. rotation, and a card height that does not move ----------------- */
   const seen = [];
   const heights = new Set();
-  for (let i = 0; i < 8; i += 1) {
+  const ROUNDS = 2 + 2 * ((api && api.views ? api.views.length : 4));
+  for (let i = 0; i < ROUNDS; i += 1) {
     const c = await readCard(page);
     check(c && !c.skeleton, 'card is still in its skeleton state after the payload landed');
     if (c) {
@@ -142,25 +145,69 @@ async function readCard(page) {
         check(apiNames.has(r.name), `"${r.name}" is on the card but not in the API payload — the card must never render a name it was not handed`);
       });
       c.rows.forEach((r) => {
-        if (!r.valueFinal) return;
-        check(apiValues.has(r.valueFinal), `value "${r.valueFinal}" is on the card but not in the API payload`);
+        if (!r.value) return;
+        check(apiValues.has(r.value), `value "${r.value}" is on the card but not in the API payload`);
       });
     }
     await page.waitForTimeout(Math.round(DWELL_MS / 2));
   }
 
-  /* The count-up must land on the server's own string, every time. A number
-     that animates and then stops short is a wrong number on the homepage, and
-     it is the exact failure a throttled requestAnimationFrame produces. */
+  /* No number is animated any more, so the value on screen is the payload's own
+     string from the first frame. Sampling immediately after a swap and again a
+     beat later must give the SAME string — anything else means something is
+     interpolating a real member's score. */
+  const early = await readCard(page);
   await page.waitForTimeout(1400);
-  const settled = await readCard(page);
-  (settled ? settled.rows : []).forEach((r, n) => {
-    if (!r.valueFinal) return;
-    check(r.value === r.valueFinal,
-      `row ${n + 1} settled on "${r.value}" but the payload says "${r.valueFinal}" — the count-up did not finish`);
-  });
+  const later = await readCard(page);
+  if (early && later && early.category === later.category) {
+    early.rows.forEach((r, n) => {
+      const other = later.rows[n];
+      check(other && r.value === other.value,
+        `row ${n + 1} of "${early.category}" read "${r.value}" and then "${other && other.value}" — nothing may animate a score`);
+    });
+  }
 
   check(seen.length >= 2, `card showed ${seen.length} distinct view(s) over ~20s; it must rotate`);
+
+  /* ---- 2b. every category is labelled, accented and linked --------------- */
+  /* The 2026-08-17 change is only real if the card visibly changes SECTION, not
+     just numbers. Each view the payload ships must be reachable in the rotation
+     with the accent and the CTA its section calls for. */
+  const SECTION_CTA = {
+    sportsbook: { label: 'Full standings', href: '/handicappers/' },
+    trivia: { label: 'Trivia leaderboard', href: '/leaderboards/#trivia' },
+    polls: { label: 'Poll leaderboard', href: '/leaderboards/#polls' },
+    forum: { label: 'Join the discussion', href: '/forum/' },
+    community: { label: 'Browse members', href: '/handicappers/' },
+  };
+  const byLabel = new Map();
+  (api && api.views ? api.views : []).forEach((v) => byLabel.set(v.label, v));
+  const sectionsSeen = new Set();
+  for (const c of seen) {
+    const v = byLabel.get(c.category);
+    check(!!v, `the card showed a category "${c.category}" that is not in the payload`);
+    if (!v) continue;
+    sectionsSeen.add(v.section);
+    check(c.accent === `comp-acc-${v.section}`,
+      `"${c.category}" is a ${v.section} board but the card wore accent "${c.accent}"`);
+    const want = SECTION_CTA[v.section];
+    check(want && c.ctaHref === want.href,
+      `"${c.category}" links to "${c.ctaHref}"; a ${v.section} board must link to ${want && want.href}`);
+    check(want && c.ctaLabel.replace(/\s*→$/, '') === want.label,
+      `"${c.category}" CTA reads "${c.ctaLabel}", expected "${want && want.label}"`);
+    check(/enter the competition/i.test(c.headerCta),
+      `the header CTA reads "${c.headerCta}"; the signup path must not be lost`);
+    check((v.note || '').length > 0 && c.note === v.note,
+      `"${c.category}" does not say what it ranks (note is "${c.note}")`);
+    // A points or post count must not be coloured as a profit.
+    if (v.tone === 'neutral') {
+      c.rows.forEach((r) => check(String(r.tone).split(/\s+/).includes('flat'),
+        `"${c.category}" is a neutral board but a value carries "${r.tone}" — only units and ROI are green/red`));
+    }
+  }
+  const paletteSections = new Set((api && api.views ? api.views : []).map((v) => v.section));
+  check(paletteSections.size >= 3,
+    `the payload only covers ${paletteSections.size} section(s); the card is meant to advertise the whole site`);
   check(heights.size === 1, `card height changed while rotating: ${[...heights].join(', ')}px — it must be identical on every view`);
 
   /* ---- 3. the permanent header and footer -------------------------------- */
@@ -169,7 +216,13 @@ async function readCard(page) {
   check(/the tmr race never stops/i.test(first.headline || ''), `headline is "${first.headline}", expected THE TMR RACE NEVER STOPS`);
   check(/competitors/.test(first.footer || '') && /verified picks/.test(first.footer || '') && /standings update live/.test(first.footer || ''),
     `footer reads "${first.footer}"`);
-  check(/enter the competition/i.test(first.cta || ''), `CTA reads "${first.cta}"`);
+  /* The signup CTA moved to the card header on 2026-08-17; the FOOTER link is
+   now contextual and follows the category on screen (checked per view in
+   section 2b above). */
+  check(/enter the competition/i.test(first.headerCta || ''),
+    `header CTA reads "${first.headerCta}", expected "Enter the competition"`);
+  check((first.ctaHref || '').length > 0 && (first.ctaLabel || '').length > 0,
+    'the footer contextual CTA is empty');
   /* Read the footer and the API in the same breath. These counts are live —
      a pick graded between the page load and this assertion legitimately moves
      the site-wide total — so comparing a footer painted at load against an API
