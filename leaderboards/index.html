@@ -1392,8 +1392,17 @@
                     : Array.isArray(data && data.users) ? data.users
                     : [];
 
+                // NET_UNITS_FILTER_20260817: this carried a SECOND copy of the
+                // `units > 0` gate that the API had in its eligibility CTE, so
+                // removing it server-side changed nothing here -- the board
+                // still rendered 5 rows, all positive, out of the 10 (5 of them
+                // negative) the endpoint now returns. Both had to go. The page
+                // says "Public results only, no disappearing losses" and
+                // "Climb transparent leaderboards where losing picks can't be
+                // hidden"; a losing record sorts to the bottom on its own and
+                // does not need removing to keep the top meaningful.
                 fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
-                    return entry.username && entry.totalPicks >= 5 && entry.units > 0;
+                    return entry.username && entry.totalPicks >= 5;
                 });
 
                 const totalEligibleHandicappers = Number(data && data.total_eligible_handicappers);
