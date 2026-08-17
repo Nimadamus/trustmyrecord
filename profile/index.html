@@ -10321,12 +10321,23 @@
                open a page whose totals disagree with the row that was clicked, so
                the link is offered only when every graded pick in the bucket shares
                a single market_type. Otherwise the label stays plain text. */
-            const marketTypes = id === 'capTableMarket'
-                ? [...new Set(bucketRows.filter(isCapGraded)
+            const bucketMarketTypes = id === 'capTableMarket'
+                ? bucketRows.filter(isCapGraded)
                     .map(p => String((p && p.market_type) || '').toLowerCase())
-                    .filter(Boolean))]
+                    .filter(Boolean)
                 : [];
-            const marketHref = marketTypes.length === 1 ? buildProfileMarketUrl(marketTypes[0]) : '';
+            /* The ledger carries both spellings of some markets (team_total and
+               team_totals), which the API's canonicalMarketType treats as one
+               and the same - /stats/markets/team-total and /team-totals return
+               byte-identical payloads. Tolerating a trailing plural here keeps a
+               genuinely single-market bucket linkable. It is an identifier
+               alias, not a second stats calculation, and the drilldown's own
+               reconciliation block re-proves the agreement on every request. */
+            const marketIdentity = (t) => t.replace(/s$/, '');
+            const marketTypes = [...new Set(bucketMarketTypes.map(marketIdentity))];
+            const marketHref = marketTypes.length === 1
+                ? buildProfileMarketUrl(bucketMarketTypes[0])
+                : '';
             const categoryLabel = sportKey
                 ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
                 : marketHref

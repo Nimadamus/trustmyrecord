@@ -22,7 +22,9 @@ const drilldownHtml = fs.readFileSync(path.join(root, 'profile-market.html'), 'u
 assert.match(profileHtml, /function marketSlug\(value\)[\s\S]{0,400}replace\(\/\[\^a-z0-9\]\+\/g, '-'\)/, 'profile page includes market slug normalization');
 assert.match(profileHtml, /function buildProfileMarketUrl\(marketType\)/, 'profile page builds drilldown URLs');
 assert.match(profileHtml, /'\/profile-market\.html\?user=' \+ encodeURIComponent\(user\)\s*\+\s*'&market=' \+ encodeURIComponent\(marketSlug\(marketType\)\)/, 'drilldown URL carries user and slugged market');
-assert.match(profileHtml, /const marketHref = marketTypes\.length === 1 \? buildProfileMarketUrl\(marketTypes\[0\]\) : '';/, 'a link is only offered for a single-market-type bucket');
+assert.match(profileHtml, /const marketTypes = \[\.\.\.new Set\(bucketMarketTypes\.map\(marketIdentity\)\)\];/, 'bucket market types are compared on a single identity');
+assert.match(profileHtml, /const marketHref = marketTypes\.length === 1/, 'a link is only offered for a single-market-type bucket');
+assert.match(profileHtml, /const marketIdentity = \(t\) => t\.replace\(\/s\$\/, ''\);/, 'singular/plural spellings of one market count as one market');
 assert.match(profileHtml, /id === 'capTableMarket'/, 'drilldown links are scoped to the market table');
 assert.match(profileHtml, /View the ' \+ escapeHtml\(label\) \+ ' market breakdown/, 'the market label links to its breakdown');
 assert.match(profileHtml, /profile-sport-view-indicator">View Breakdown</, 'the View Breakdown affordance is rendered');
