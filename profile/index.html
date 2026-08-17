@@ -10311,12 +10311,27 @@
             return;
         }
         const body = buckets.map(([label, pred]) => {
-            const s = calcCapStats(rows.filter(p => pred(p)));
+            const bucketRows = rows.filter(p => pred(p));
+            const s = calcCapStats(bucketRows);
             const sportKeys = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab', NCAAF: 'americanfootball_ncaaf' };
             const sportKey = id === 'capTableSport' ? sportKeys[label] : '';
+            /* Market drilldown link. A bucket here is coarser than a market type
+               (the Spread bucket holds spreads, f5_spreads and alt_spreads), while
+               the drilldown reports ONE market type. Linking a coarse bucket would
+               open a page whose totals disagree with the row that was clicked, so
+               the link is offered only when every graded pick in the bucket shares
+               a single market_type. Otherwise the label stays plain text. */
+            const marketTypes = id === 'capTableMarket'
+                ? [...new Set(bucketRows.filter(isCapGraded)
+                    .map(p => String((p && p.market_type) || '').toLowerCase())
+                    .filter(Boolean))]
+                : [];
+            const marketHref = marketTypes.length === 1 ? buildProfileMarketUrl(marketTypes[0]) : '';
             const categoryLabel = sportKey
                 ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
-                : escapeHtml(label);
+                : marketHref
+                    ? '<a class="profile-sport-filter-link" href="' + escapeHtml(marketHref) + '" title="View the ' + escapeHtml(label) + ' market breakdown">' + escapeHtml(label) + '<span class="profile-sport-view-indicator">View Breakdown</span></a>'
+                    : escapeHtml(label);
             return '<tr><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
         }).join('');
         el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
@@ -13981,6 +13996,28 @@
         if (!raw) return '';
         const key = raw.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
         return SPORT_QUERY_ALIASES[key] || raw;
+    }
+
+    /* Market drilldown navigation (restored 2026-08-16). profile-market.html has
+       always existed and is linked from the Performance by Market Type table;
+       the two helpers that built its URL were dropped in a refactor, orphaning
+       the page. Slug form ("team-totals") is what the API's canonicalMarketType
+       normalizer accepts, same as before. */
+    function marketSlug(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/&/g, 'and')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function buildProfileMarketUrl(marketType) {
+        const user = (profileData && profileData.username) || profileUsername
+            || new URLSearchParams(window.location.search || '').get('user') || '';
+        if (!user || !marketType) return '';
+        return '/profile-market.html?user=' + encodeURIComponent(user)
+            + '&market=' + encodeURIComponent(marketSlug(marketType));
     }
 
     function buildProfileSportFilterUrl(sportKey) {

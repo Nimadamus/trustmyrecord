@@ -436,15 +436,32 @@ check('the page writes nothing', () => {
     'the daily card issues a write request');
 });
 
-check('the browser clock is never used for a day decision', () => {
-  const js = read('static/js/today-card.js');
-  // Strip comments first: the file explains this rule in prose, and a naive
-  // scan flags its own documentation.
-  const code = js
+/* Comment stripping must normalise line endings FIRST. today-card.js ships
+   CRLF, and JS `.` does not match a carriage return, so `/\/\/.*$/` matched
+   nothing on a CRLF line: the strip was a silent no-op and this guard was
+   reading the file's own prose. It failed on the sentence "Never Date dot now"
+   written in a comment, while a real browser-clock call would have slipped past
+   on any line that also carried a `//`. Fixed 2026-08-16. */
+function executableCode(relativePath) {
+  return read(relativePath)
+    .replace(/\r\n/g, '\n')
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n');
+}
+
+check('the comment stripper actually strips (CRLF regression)', () => {
+  const raw = read('static/js/today-card.js');
+  assert.ok(/\r\n/.test(raw), 'fixture assumption: this file ships CRLF');
+  const code = executableCode('static/js/today-card.js');
+  assert.ok(!/from a server response body/.test(code),
+    'comments are surviving the strip, so this guard is scanning prose, not code');
+});
+
+check('the browser clock is never used for a day decision', () => {
+  const code = executableCode('static/js/today-card.js');
   assert.ok(!/Date\.now\(\)/.test(code), 'Date.now() would trust the browser clock');
   assert.ok(!/new Date\(\)/.test(code), 'new Date() with no argument would trust the browser clock');
+  assert.ok(!/getTimezoneOffset/.test(code), 'getTimezoneOffset would trust the browser timezone');
   // The HTTP Date header is NOT usable: it is not CORS-safelisted, and the API
   // is a different origin, so headers.get('date') is null in the browser
   // (confirmed against production - only cache-control, content-type, expires
@@ -453,6 +470,42 @@ check('the browser clock is never used for a day decision', () => {
   assert.ok(/h\.timestamp/.test(code), 'the server timestamp is not being taken from the body');
   assert.ok(!/headers\.get\(['"]date['"]\)/.test(code),
     'still reading the HTTP Date header, which is always null cross-origin');
+});
+
+/* The rule above is "no browser clock". This is the other half: the day an
+   instant belongs to is the ET calendar day, on both sides of DST, whatever
+   timezone the viewer's machine is in. Executed, not text-scanned. */
+check('a day decision lands on the ET calendar day, through both DST offsets', () => {
+  assert.strictEqual(L.SITE_TZ, 'America/New_York', 'the site day boundary is ET');
+
+  // EDT (UTC-4): 03:30Z on the 17th is still 23:30 on the 16th in New York.
+  assert.strictEqual(L.etDay(Date.parse('2026-08-17T03:30:00Z')), '2026-08-16');
+  assert.strictEqual(L.etDay(Date.parse('2026-08-17T04:00:00Z')), '2026-08-17');
+  // EST (UTC-5): the same boundary sits an hour later in UTC.
+  assert.strictEqual(L.etDay(Date.parse('2026-01-15T04:30:00Z')), '2026-01-14');
+  assert.strictEqual(L.etDay(Date.parse('2026-01-15T05:00:00Z')), '2026-01-15');
+
+  // UTC midnight is NOT the boundary. That is the bug this guards against.
+  assert.notStrictEqual(L.etDay(Date.parse('2026-08-17T00:00:00Z')), '2026-08-17');
+
+  assert.strictEqual(
+    L.sameEtDay(Date.parse('2026-08-17T03:00:00Z'), Date.parse('2026-08-16T14:00:00Z')), true,
+    'two instants inside the same ET day are the same day'
+  );
+  assert.strictEqual(
+    L.sameEtDay(Date.parse('2026-08-17T05:00:00Z'), Date.parse('2026-08-16T14:00:00Z')), false,
+    'instants either side of the ET boundary are different days'
+  );
+});
+
+check('an unknown instant is never treated as a day', () => {
+  assert.strictEqual(L.etDay(null), null);
+  assert.strictEqual(L.etDay(undefined), null);
+  assert.strictEqual(L.etDay(NaN), null);
+  // "unknown" must not collapse into "same day" - that would show a member a
+  // false "you already played today".
+  assert.strictEqual(L.sameEtDay(null, null), false);
+  assert.strictEqual(L.sameEtDay(Date.parse('2026-08-17T03:00:00Z'), null), false);
 });
 
 check('the day-sensitive modules wait for the server clock', () => {
