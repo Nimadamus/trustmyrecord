@@ -162,10 +162,11 @@
         <div id="tcoin-reserve-state" class="tcoin-state is-loading">Reading the reserve position&hellip;</div>
         <div id="tcoin-reserve-body" class="tcoin-hidden">
             <div class="tcoin-metrics">
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Earned balances held by members</div><div class="tcoin-metric-val" id="r-liability">&hellip;</div><div class="tcoin-metric-sub">internal TMR owed</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens reserved against it</div><div class="tcoin-metric-val" id="r-reserved">&hellip;</div><div class="tcoin-metric-sub">one for one</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens reserved</div><div class="tcoin-metric-val" id="r-reserved">&hellip;</div><div class="tcoin-metric-sub">one set aside for each TMR earned</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens in total</div><div class="tcoin-metric-val" id="r-treasury">&hellip;</div><div class="tcoin-metric-sub">read from Base</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Reserve cover</div><div class="tcoin-metric-val" id="r-ratio">&hellip;</div><div class="tcoin-metric-sub">treasury tokens per TMR earned</div></div>
             </div>
+            <div class="tcoin-metric-sub" style="margin-top:10px;">The reserve report counts every active account of type real, which is a slightly wider scope than the participation figures above, so the two member balance totals differ by a small amount. Both are computed rather than stored, and neither is rounded to flatter the other.</div>
             <div class="tcoin-verify-banner">A reserve is a designation of tokens, not a dollar guarantee, and blockchain withdrawal is not active, so an earned balance cannot be sent to an outside wallet or sold today.</div>
         </div>
     </section>
@@ -373,9 +374,9 @@
 
     // --- reserve ------------------------------------------------------------
     get('/tmr-coin/reserve').then(function (r) {
-        set('r-liability', num(r.liability && r.liability.user_balances) + ' TMR');
         set('r-reserved', num(r.reserve && r.reserve.reserved) + ' TMR');
         set('r-treasury', num(r.treasury && r.treasury.onchain_tmr) + ' TMR');
+        set('r-ratio', r.reserve && r.reserve.reserve_ratio ? num(r.reserve.reserve_ratio) + 'x' : 'not computed');
         hide('tcoin-reserve-state');
         show('tcoin-reserve-body');
     }).catch(function () {
