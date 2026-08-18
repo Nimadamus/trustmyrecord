@@ -36,6 +36,27 @@
 
   (function () {
     var DEST = '/?utm_source=x&utm_medium=dm&utm_campaign=invite';
+
+    // Record first touch here, in the SAME first party key and shape that
+    // static/js/analytics.js captureFirstTouch() uses. This page has to do it
+    // itself because the homepage does not load analytics.js, so a visitor sent
+    // from here would otherwise reach /register with the utm params long gone
+    // and get attributed to an internal referrer instead of this campaign.
+    // First touch wins, exactly like analytics.js: never overwrite an existing
+    // value, so a returning visitor keeps their original source.
+    try {
+      if (!localStorage.getItem('tmr_first_touch')) {
+        localStorage.setItem('tmr_first_touch', JSON.stringify({
+          referrer: (document.referrer || '').slice(0, 500),
+          landing: '/x/',
+          ts: new Date().toISOString(),
+          utm_source: 'x',
+          utm_medium: 'dm',
+          utm_campaign: 'invite'
+        }));
+      }
+    } catch (e) { /* storage unavailable */ }
+
     var went = false;
     function go() {
       if (went) return;
