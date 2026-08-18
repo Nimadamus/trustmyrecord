@@ -128,6 +128,31 @@ test.describe('TMR Challenge, live', () => {
     expect(await section.boundingBox(), 'a hidden section must take up no space').toBeNull();
   });
 
+  test('the hub is reachable from the sitewide nav, without displacing the old one',
+    async ({ page }) => {
+      await page.goto('/leaderboards/');
+      // The nav is rendered by tmr-ds-nav.js, which is on the content-hashed filename system.
+      // Editing the source alone ships nothing, so this asserts what a visitor actually gets:
+      // a link in the nav, on a page that has nothing to do with challenges.
+      const link = page.locator('a[href="/tmr-challenges/"]');
+      await expect(link).toHaveCount(1, { timeout: 30000 });
+      await expect(link).toHaveText('TMR Challenges');
+
+      // The older challenge system keeps its own entry. Both run side by side, so a nav change
+      // that quietly retired the working feature would be a regression, not a cleanup.
+      await expect(page.locator('a[href="/challenges/"]').first()).toBeAttached();
+
+      // It lives inside the Compete dropdown as a menuitem, so it is correctly not visible
+      // until that menu is opened. Open it the way a visitor does, then follow it -- clicking
+      // blind would only prove the markup exists, not that anybody can get there.
+      await expect(link).toHaveAttribute('role', 'menuitem');
+      await page.getByRole('button', { name: /Compete/i }).first().click();
+      await expect(link).toBeVisible();
+      await link.click();
+      await page.waitForURL('**/tmr-challenges/**');
+      await expect(page.locator('h1')).toHaveText('TMR Challenges');
+    });
+
   test('no regression: profiles, picks, Earn, contests and the existing challenges still serve',
     async ({ page, request }) => {
       // The live challenge system keeps its own API and must be untouched by the new namespace.
