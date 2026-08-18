@@ -32,7 +32,21 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-V5MCVXS2HE');
+  // Declare the campaign on THIS pageview, not just on the homepage we redirect to.
+  // GA4 fixes a session's traffic source when the session starts, and the session
+  // starts HERE, on /x, arriving from t.co with no utm in the address bar. Without
+  // this the whole campaign would be attributed to t.co / referral and be
+  // indistinguishable from ordinary tweet clicks, which is the exact thing /x
+  // exists to separate. page_location is set to the campaign form of this url so
+  // GA4 parses it as a normal campaign landing, and the campaign_* fields are sent
+  // as well so attribution does not depend on url parsing alone.
+  gtag('config', 'G-V5MCVXS2HE', {
+    page_location: window.location.origin
+      + '/x/?utm_source=x&utm_medium=dm&utm_campaign=invite',
+    campaign_source: 'x',
+    campaign_medium: 'dm',
+    campaign_name: 'invite'
+  });
 
   (function () {
     var DEST = '/?utm_source=x&utm_medium=dm&utm_campaign=invite';
