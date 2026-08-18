@@ -2534,7 +2534,7 @@
                       <div class="tmrx-section" id="tmrxVenueSideSection" hidden>
                         <div class="tmrx-grid-2">
                           <div>
-                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Home vs Away</div><div class="tmrx-section-sub">Which side of the venue the pick was on. Team totals count too, on the club they name. Game totals and player props name no club, so they are excluded.</div></div></div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Home vs Away</div><div class="tmrx-section-sub">Only picks that back one specific club: moneylines (full game and first five), spreads, run lines, puck lines and team totals. The side is read by matching the club named in the pick to the game's home and away teams. Excluded: full game totals, first five and first inning totals, player props, futures, and any pick whose game carries no confirmed team names.</div></div></div>
                             <div class="tmrx-table-shell">
                               <table class="tmrx-table" id="tmrxTableHomeAwayTop">
                                 <thead><tr><th>Side</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -2551,6 +2551,18 @@
                               </table>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      <!-- Home vs Away, split by league. Same qualifying picks as
+                           the panel above, so these rows sum back to it exactly. -->
+                      <div class="tmrx-section" id="tmrxHomeAwaySportSection" hidden>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Home vs Away by Sport</div><div class="tmrx-section-sub">The same qualifying picks as above, split by league. Only leagues with qualifying picks appear.</div></div></div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableHomeAwaySport">
+                            <thead><tr><th>Sport</th><th>Side</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="7">No home/away rows yet.</td></tr></tbody>
+                          </table>
                         </div>
                       </div>
 
@@ -13395,7 +13407,7 @@
        stays hidden rather than showing an empty shell. Nothing here computes a
        record - it renders what the aggregator already counted. */
     const TMRX_DEPTH_CATEGORIES = [
-        'home_away', 'side_total', 'prop_type', 'bet_timing',
+        'home_away', 'home_away_sport', 'side_total', 'prop_type', 'bet_timing',
         'daypart', 'opponent', 'line_number', 'month', 'season', 'team_market'
     ];
     const TMRX_DEPTH_LABELS = {
@@ -13579,6 +13591,57 @@
             : { sportKey: raw.slice(0, sep), rest: raw.slice(sep + 1) };
     }
 
+    /* Home/away split by league. Buckets arrive flat as `sport_key|home` and
+       `sport_key|away`; they are grouped so both sides of one league sit
+       together, leagues ordered by how many qualifying picks they hold, and the
+       sides held in a fixed home then away order rather than sorted by result.
+       Nothing is recomputed here: these are the aggregator's own counts, and a
+       league with no qualifying pick simply has no row. */
+    function tmrxRenderHomeAwaySport(rows) {
+        const table = document.getElementById('tmrxTableHomeAwaySport');
+        const section = document.getElementById('tmrxHomeAwaySportSection');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) return;
+
+        const leagues = new Map();
+        list.forEach(function (row) {
+            const parts = tmrxSplitScoped(row.bucket);
+            const side = String(parts.rest || '').toLowerCase();
+            if (side !== 'home' && side !== 'away') return;
+            const entry = leagues.get(parts.sportKey) ||
+                { sportKey: parts.sportKey, picks: 0, sides: [] };
+            entry.picks += Number(row.total_picks) || 0;
+            entry.sides.push({ side: side, row: row });
+            leagues.set(parts.sportKey, entry);
+        });
+
+        const ordered = Array.from(leagues.values())
+            .sort(function (a, b) { return b.picks - a.picks; });
+        if (!ordered.length) return;
+
+        const html = [];
+        ordered.forEach(function (entry) {
+            entry.sides.sort(function (a, b) {
+                return (a.side === 'home' ? 0 : 1) - (b.side === 'home' ? 0 : 1);
+            });
+            const sport = tmrxSportParts(entry.sportKey);
+            entry.sides.forEach(function (item, i) {
+                /* The league is named once per group; its second side sits
+                   under it, so the block reads as one league. */
+                const head = i === 0
+                    ? '<td class="name">' + escapeHtml(sport[1]) + '</td>'
+                    : '<td class="name"></td>';
+                html.push(tmrxDepthRow(item.row, [head,
+                    '<td>' + escapeHtml(tmrxDepthLabel(item.side)) + '</td>']));
+            });
+        });
+        tbody.innerHTML = html.join('');
+        if (section) section.hidden = false;
+    }
+
     async function loadDepthBreakdowns() {
         if (!profileUsername || !api || typeof api.request !== 'function') return;
         let rows = [];
@@ -13607,6 +13670,7 @@
             { order: TMRX_DEPTH_ORDER.side_total, labelCells: plain(tmrxDepthLabel) });
         const venueSection = document.getElementById('tmrxVenueSideSection');
         if (venueSection && (venue || sides)) venueSection.hidden = false;
+        tmrxRenderHomeAwaySport(byCategory.home_away_sport);
 
         const timing = tmrxRenderDepthTable('tmrxTableBetTimingTop', null, byCategory.bet_timing,
             { order: TMRX_DEPTH_ORDER.bet_timing, labelCells: plain(tmrxDepthLabel) });
