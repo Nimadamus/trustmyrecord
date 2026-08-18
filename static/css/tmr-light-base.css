@@ -451,8 +451,20 @@ body.tmr-light .tmr-cta-primary {
 body.tmr-light .tmr-cta-primary:hover {
   background:#07736D !important;
   border-color:#07736D !important;
-  /* Same reason as the block above: without this the label is invisible on
-     hover, because a blanket link-hover rule paints it #07736D too. */
+}
+
+/* THE LABEL USED TO VANISH ON HOVER.
+   `body.tmr-light a:not(.sportsbook-sports-nav a):hover{color:#07736D}` is a
+   blanket link rule, and #07736D is exactly the hover background of a primary
+   button, so the text and its background became the same colour: 1.00:1.
+   That rule scores (0,3,3), which beats the obvious fix at (0,3,2), so the
+   class is repeated deliberately to reach (0,4,2). It looks odd on purpose;
+   removing the repetition silently reintroduces the invisible label. */
+body.tmr-light a.tmr-cta-primary.tmr-cta-primary:hover,
+body.tmr-light a.btn-primary.btn-primary:hover,
+body.tmr-light a.button-primary.button-primary:hover,
+body.tmr-light a.cta-primary.cta-primary:hover,
+body.tmr-light a.tmr-btn-primary.tmr-btn-primary:hover {
   color:#FFFFFF !important;
 }
 body.tmr-light .tmr-cta-secondary {
