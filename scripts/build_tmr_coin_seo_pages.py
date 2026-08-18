@@ -417,7 +417,7 @@ def build_head(template_head, page):
     # pages outside this workstream. #077A42 is 4.93:1 and reads the same.
     contrast_override = (
         '    <style>' + chr(10)
-        + '        .ss-compare .yes { color: #077A42; }' + chr(10)
+        + '        table.ss-compare .yes { color: #077A42; }' + chr(10)
         + '    </style>' + chr(10)
         + '</head>'
     )
