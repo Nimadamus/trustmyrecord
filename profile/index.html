@@ -2558,7 +2558,7 @@
                            than printing an empty shell. ======================== -->
                       <div class="tmrx-section" id="tmrxVenueSideSection" hidden>
                         <div class="tmrx-grid-2">
-                          <div>
+                          <div id="tmrxHomeAwayHalf" hidden>
                             <div class="tmrx-section-head"><div><div class="tmrx-section-title">Home vs Away</div><div class="tmrx-section-sub">Only picks that back one specific club: moneylines (full game and first five), spreads, run lines, puck lines and team totals. The side is read by matching the club named in the pick to the game's home and away teams. Excluded: full game totals, first five and first inning totals, player props, futures, and any pick whose game carries no confirmed team names.</div></div></div>
                             <div class="tmrx-table-shell">
                               <table class="tmrx-table" id="tmrxTableHomeAwayTop">
@@ -2567,7 +2567,7 @@
                               </table>
                             </div>
                           </div>
-                          <div>
+                          <div id="tmrxSideTotalHalf" hidden>
                             <div class="tmrx-section-head"><div><div class="tmrx-section-title">Over vs Under</div><div class="tmrx-section-sub">Every total played, full game and team totals alike.</div></div></div>
                             <div class="tmrx-table-shell">
                               <table class="tmrx-table" id="tmrxTableSideTotalTop">
@@ -13738,6 +13738,14 @@
         const sides = tmrxRenderDepthTable('tmrxTableSideTotalTop', null, byCategory.side_total,
             { order: TMRX_DEPTH_ORDER.side_total, labelCells: plain(tmrxDepthLabel) });
         const venueSection = document.getElementById('tmrxVenueSideSection');
+        /* Each half follows its own data. Over/Under rows used to unhide the
+           whole section, which left a member with no qualifying venue picks
+           reading an empty Home vs Away table under a paragraph explaining a
+           split they do not have. */
+        const venueHalf = document.getElementById('tmrxHomeAwayHalf');
+        if (venueHalf) venueHalf.hidden = !venue;
+        const sideHalf = document.getElementById('tmrxSideTotalHalf');
+        if (sideHalf) sideHalf.hidden = !sides;
         if (venueSection && (venue || sides)) venueSection.hidden = false;
         tmrxRenderHomeAwaySport(byCategory.home_away_sport);
 
@@ -15482,6 +15490,8 @@
       @media (max-width: 560px) { .tmrx-pagination button { min-width: 32px; padding: 6px 8px; font-size: 12px; } }
 
       .tmrx-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      /* When one of the two halves hides itself, the survivor takes the row. */
+      #tmrxVenueSideSection .tmrx-grid-2:has(> [hidden]) { grid-template-columns: 1fr; }
 
       .tmrx-equity-wrap { padding: 6px 14px 14px; }
       .tmrx-equity-svg { width: 100%; height: 220px; display: block; }
