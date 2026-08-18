@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/tmr-coin/transparency/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Coin Transparency | TrustMyRecord</title>
+    <meta name="description" content="Live TMR Coin figures read from Base and from the TrustMyRecord ledger: price, liquidity, supply, holders, transfers, and what members earned and spent. Including the numbers that are zero.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="TMR Coin Transparency">
+    <meta property="og:description" content="Live figures read from Base and from the ledger: price, liquidity, supply, holders, transfers and member activity. Including the numbers that are zero.">
+    <meta property="og:url" content="https://trustmyrecord.com/tmr-coin/transparency/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta property="og:image" content="https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="TMR Coin Transparency">
+    <meta name="twitter:description" content="Live figures read from Base and from the ledger, including the numbers that are zero.">
+    <meta name="twitter:image" content="https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-512.png">
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://trustmyrecord.com/tmr-coin/transparency/",
+      "url": "https://trustmyrecord.com/tmr-coin/transparency/",
+      "name": "TMR Coin Transparency",
+      "description": "Live TMR Coin figures read from Base and from the TrustMyRecord ledger on every page load: price, liquidity, supply, holders, transfers and member activity, together with a plain statement of what is live now and what is not.",
+      "isPartOf": { "@id": "https://trustmyrecord.com/#website" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/" },
+        { "@type": "ListItem", "position": 2, "name": "TMR Coin", "item": "https://trustmyrecord.com/tmr-coin/" },
+        { "@type": "ListItem", "position": 3, "name": "Transparency", "item": "https://trustmyrecord.com/tmr-coin/transparency/" }
+      ]
+    }
+  ]
+}
+    </script>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=d8996d47717b">
+    <script defer src="/static/js/tmr-sitewide.js?v=cd692fa67cfc"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .tcoin-hero{display:flex;align-items:center;gap:14px;}
+        .tcoin-hero img{width:52px;height:52px;flex:0 0 52px;}
+        .tcoin-live-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(16,96,107,0.10);border:1px solid rgba(16,96,107,.40);color:#0C4F58;font-family:'Barlow',sans-serif;font-weight:800;font-size:12px;letter-spacing:.9px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:9px;}
+        .tcoin-live-dot{width:7px;height:7px;border-radius:50%;background:#12A594;}
+        .tcoin-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:#D2DEEA;border:1px solid #D2DEEA;border-radius:10px;overflow:hidden;margin-top:12px;}
+        .tcoin-metric{background:#fff;padding:14px 16px;}
+        .tcoin-metric-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--tmrp-text-muted);margin-bottom:4px;}
+        .tcoin-metric-val{font-family:'Barlow',sans-serif;font-weight:800;font-size:1.3rem;color:var(--tmrp-text-primary);font-variant-numeric:tabular-nums;line-height:1.15;}
+        .tcoin-metric-sub{font-size:12px;color:var(--tmrp-text-muted);margin-top:3px;line-height:1.45;}
+        .tcoin-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:8px;}
+        .tcoin-info-item{background:rgba(7,24,42,0.02);border:1px solid var(--tmrp-glass-border);border-radius:10px;padding:14px 16px;}
+        .tcoin-info-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--tmrp-text-muted);margin-bottom:6px;}
+        .tcoin-info-value{font-size:14.5px;color:var(--tmrp-text-primary);font-weight:700;overflow-wrap:break-word;}
+        .tcoin-info-value.tcoin-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:600;font-size:13px;word-break:break-all;}
+        .tcoin-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
+        .tcoin-state{padding:14px 16px;border-radius:10px;font-size:14px;font-weight:600;line-height:1.6;margin-top:12px;}
+        .tcoin-state.is-loading{background:rgba(7,24,42,0.03);border:1px solid #D2DEEA;color:var(--tmrp-text-secondary);}
+        .tcoin-state.is-down{background:rgba(151,54,44,0.07);border:1px solid rgba(151,54,44,.35);color:#7C2D24;}
+        .tcoin-depth{margin-top:14px;padding:14px 16px;background:rgba(151,54,44,0.06);border:1px solid rgba(151,54,44,.30);border-radius:10px;font-size:14px;line-height:1.6;color:var(--tmrp-text-primary);font-weight:600;}
+        .tcoin-verify-banner{background:rgba(185,133,5,0.08);border:1px solid rgba(185,133,5,.30);border-radius:10px;padding:14px 16px;margin-top:16px;color:var(--tmrp-text-primary);font-weight:700;font-size:14px;line-height:1.6;}
+        .tcoin-three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px;}
+        .tcoin-col{border:1px solid #D2DEEA;border-radius:10px;padding:16px 18px;background:rgba(7,24,42,0.02);}
+        .tcoin-col h3{font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;margin:0 0 4px;color:var(--tmrp-text-primary);}
+        .tcoin-col .tcoin-col-tag{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;margin-bottom:10px;display:block;}
+        .tcoin-col.is-live{border-color:rgba(16,96,107,.35);background:rgba(16,96,107,.05);}
+        .tcoin-col.is-live .tcoin-col-tag{color:#0C4F58;}
+        .tcoin-col.is-building .tcoin-col-tag{color:var(--tmrp-neon-gold,#B98505);}
+        .tcoin-col.is-maybe .tcoin-col-tag{color:var(--tmrp-text-muted);}
+        .tcoin-col ul{margin:0;padding-left:18px;}
+        .tcoin-col li{font-size:14px;line-height:1.55;color:var(--tmrp-text-secondary);margin-bottom:6px;}
+        .tcoin-risk-list{list-style:none;padding:0;margin:14px 0 0;}
+        .tcoin-risk-list li{padding:10px 0 10px 26px;position:relative;font-size:14.5px;line-height:1.6;color:var(--tmrp-text-secondary);border-bottom:1px solid #D2DEEA;}
+        .tcoin-risk-list li:last-child{border-bottom:none;}
+        .tcoin-risk-list li::before{content:'\26A0';position:absolute;left:0;color:var(--tmrp-neon-gold);}
+        .tcoin-sub{font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;margin:20px 0 2px;color:var(--tmrp-text-primary);}
+        .tcoin-hidden{display:none;}
+        @media (max-width: 860px){ .tcoin-three{grid-template-columns:1fr;} }
+        @media (max-width: 560px){ .tcoin-info-grid{grid-template-columns:1fr;} .tcoin-metrics{grid-template-columns:1fr 1fr;} }
+    </style>
+    <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
+    <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=5ad8d0aa2c15">
+</head>
+<body class="tmr-polished-page tmr-light">
+
+<main class="tmr-shell">
+    <header class="tmr-page-header">
+        <div class="tcoin-hero">
+            <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="TMR Coin" aria-hidden="true">
+            <div>
+                <span class="tcoin-live-badge"><span class="tcoin-live-dot"></span>Read live</span>
+                <h1 class="tmr-h1">TMR Coin Transparency</h1>
+                <p class="tmr-page-sub">Every figure on this page is read from Base and from the TrustMyRecord ledger when you load it. Nothing is typed in by hand and nothing is cached into a claim. That includes the numbers that are zero.</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Market</h2>
+        <p>Price and liquidity come from the Uniswap v3 pool on Base. If the pool cannot be read, this panel shows nothing at all rather than a stale price.</p>
+        <div id="tcoin-market-state" class="tcoin-state is-loading">Reading the pool on Base&hellip;</div>
+        <div id="tcoin-market-body" class="tcoin-hidden">
+            <div class="tcoin-metrics">
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Price</div><div class="tcoin-metric-val" id="m-price">&hellip;</div><div class="tcoin-metric-sub" id="m-price-sub">per TMR</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Pool liquidity</div><div class="tcoin-metric-val" id="m-tvl">&hellip;</div><div class="tcoin-metric-sub" id="m-tvl-sub">both sides</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Cash side of the pool</div><div class="tcoin-metric-val" id="m-cash">&hellip;</div><div class="tcoin-metric-sub">the most that can come out</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Fully diluted value</div><div class="tcoin-metric-val" id="m-fdv">&hellip;</div><div class="tcoin-metric-sub">price times total supply</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Tradable supply</div><div class="tcoin-metric-val" id="m-liquid">&hellip;</div><div class="tcoin-metric-sub" id="m-liquid-sub">sitting in the pool</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Liquidity custody</div><div class="tcoin-metric-val" id="m-lock">&hellip;</div><div class="tcoin-metric-sub" id="m-lock-sub">&nbsp;</div></div>
+            </div>
+            <div class="tcoin-depth" id="m-depth"></div>
+            <div class="tcoin-links" id="m-links"></div>
+        </div>
+    </section>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Participation</h2>
+        <p>A price tells you what a market looks like. It tells you nothing about whether anybody is in it. These are the participation figures, published whatever they say.</p>
+        <h3 class="tcoin-sub">On chain, on Base</h3>
+        <div id="tcoin-chain-state" class="tcoin-state is-loading">Reading the transfer history&hellip;</div>
+        <div id="tcoin-chain-body" class="tcoin-hidden">
+            <div class="tcoin-metrics">
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Wallets holding TMR</div><div class="tcoin-metric-val" id="c-holders">&hellip;</div><div class="tcoin-metric-sub">any balance above zero</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Holders excluding us</div><div class="tcoin-metric-val" id="c-external">&hellip;</div><div class="tcoin-metric-sub">not the treasury, not the pool</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Transfers, all time</div><div class="tcoin-metric-val" id="c-transfers">&hellip;</div><div class="tcoin-metric-sub" id="c-last">&nbsp;</div></div>
+            </div>
+        </div>
+        <h3 class="tcoin-sub">On TrustMyRecord</h3>
+        <div id="tcoin-site-state" class="tcoin-state is-loading">Reading the ledger&hellip;</div>
+        <div id="tcoin-site-body" class="tcoin-hidden">
+            <div class="tcoin-metrics">
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Members holding TMR</div><div class="tcoin-metric-val" id="s-holders">&hellip;</div><div class="tcoin-metric-sub" id="s-balance">&nbsp;</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Payouts earned</div><div class="tcoin-metric-val" id="s-payouts">&hellip;</div><div class="tcoin-metric-sub" id="s-earned">&nbsp;</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Spent on features</div><div class="tcoin-metric-val" id="s-spent">&hellip;</div><div class="tcoin-metric-sub">spending destroys the TMR spent</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Tips between members</div><div class="tcoin-metric-val" id="s-tips">&hellip;</div><div class="tcoin-metric-sub" id="s-tips-sub">&nbsp;</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Challenges</div><div class="tcoin-metric-val" id="s-challenges">&hellip;</div><div class="tcoin-metric-sub" id="s-challenges-sub">member versus member</div></div>
+            </div>
+            <div class="tcoin-metric-sub" id="s-scope" style="margin-top:10px;"></div>
+        </div>
+    </section>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Supply And Reserve</h2>
+        <div id="tcoin-supply-state" class="tcoin-state is-loading">Reading supply from Base&hellip;</div>
+        <div id="tcoin-supply-body" class="tcoin-hidden">
+            <div class="tcoin-metrics">
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Total supply</div><div class="tcoin-metric-val" id="p-total">&hellip;</div><div class="tcoin-metric-sub">fixed, no mint function</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Held by the treasury</div><div class="tcoin-metric-val" id="p-treasury">&hellip;</div><div class="tcoin-metric-sub">never distributed to anyone</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Circulating</div><div class="tcoin-metric-val" id="p-circ">&hellip;</div><div class="tcoin-metric-sub">total minus treasury</div></div>
+            </div>
+        </div>
+        <div id="tcoin-reserve-state" class="tcoin-state is-loading">Reading the reserve position&hellip;</div>
+        <div id="tcoin-reserve-body" class="tcoin-hidden">
+            <div class="tcoin-metrics">
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Earned balances held by members</div><div class="tcoin-metric-val" id="r-liability">&hellip;</div><div class="tcoin-metric-sub">internal TMR owed</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens reserved against it</div><div class="tcoin-metric-val" id="r-reserved">&hellip;</div><div class="tcoin-metric-sub">one for one</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens in total</div><div class="tcoin-metric-val" id="r-treasury">&hellip;</div><div class="tcoin-metric-sub">read from Base</div></div>
+            </div>
+            <div class="tcoin-verify-banner">A reserve is a designation of tokens, not a dollar guarantee, and blockchain withdrawal is not active, so an earned balance cannot be sent to an outside wallet or sold today.</div>
+        </div>
+    </section>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Contract</h2>
+        <div class="tcoin-info-grid">
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Contract address</div><div class="tcoin-info-value tcoin-mono">0x522ddf023d0E2Cab5cB05660573165301519AE9e</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Network</div><div class="tcoin-info-value">Base, chain ID 8453</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Symbol and decimals</div><div class="tcoin-info-value">TMR, 18</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Deployed</div><div class="tcoin-info-value">26 July 2026, block 49142844</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Source code</div><div class="tcoin-info-value">Published and verified, exact match</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Mint, owner, pause, blacklist, tax, proxy</div><div class="tcoin-info-value">None of them exist</div></div>
+        </div>
+        <div class="tcoin-links">
+            <a class="tmr-cta-secondary" href="https://basescan.org/token/0x522ddf023d0E2Cab5cB05660573165301519AE9e" target="_blank" rel="noopener">Token on Basescan &rarr;</a>
+            <a class="tmr-cta-secondary" href="https://repo.sourcify.dev/8453/0x522ddf023d0E2Cab5cB05660573165301519AE9e" target="_blank" rel="noopener">Verified source &rarr;</a>
+            <a class="tmr-cta-secondary" href="https://github.com/Nimadamus/tmr-coin" target="_blank" rel="noopener">Deployed source on GitHub &rarr;</a>
+            <a class="tmr-cta-secondary" href="/tokenlist.json" target="_blank" rel="noopener">Token list JSON &rarr;</a>
+        </div>
+    </section>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Official Surfaces, And What Is Not Ours</h2>
+        <p>These are the only places TMR Coin information comes from. Anything else claiming to speak for TMR Coin is not us.</p>
+        <div class="tcoin-info-grid">
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Website</div><div class="tcoin-info-value"><a href="https://trustmyrecord.com/tmr-coin/">trustmyrecord.com/tmr-coin/</a></div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Contact</div><div class="tcoin-info-value"><a href="mailto:contact@trustmyrecord.com">contact@trustmyrecord.com</a></div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Source repository</div><div class="tcoin-info-value"><a href="https://github.com/Nimadamus/tmr-coin" target="_blank" rel="noopener">github.com/Nimadamus/tmr-coin</a></div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Chat groups</div><div class="tcoin-info-value">None exist yet</div></div>
+        </div>
+        <ul class="tcoin-risk-list">
+            <li><strong>There is no official TMR Coin Telegram, Discord or chat group.</strong> If you were invited to one, it is not run by us.</li>
+            <li><strong>Nobody from TrustMyRecord will DM you an offer</strong>, ask you to connect a wallet to the site, ask for a seed phrase, or ask you to send funds.</li>
+            <li><strong>Check the contract address on this page every time.</strong> Fake tokens reuse real names and logos.</li>
+        </ul>
+    </section>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Live Now, Building, And Not Started</h2>
+        <div class="tcoin-three">
+            <div class="tcoin-col is-live">
+                <span class="tcoin-col-tag">Live now</span>
+                <h3>Running today</h3>
+                <ul>
+                    <li>Fixed supply token on Base with no privileged functions</li>
+                    <li>Public Uniswap v3 market anyone can trade without us</li>
+                    <li>Earning from graded picks, predictions, trivia and forum activity</li>
+                    <li>Spending on reports, badges, flair and tipping</li>
+                    <li>These public endpoints, read on request</li>
+                </ul>
+            </div>
+            <div class="tcoin-col is-building">
+                <span class="tcoin-col-tag">Building</span>
+                <h3>Work in progress</h3>
+                <ul>
+                    <li>Member versus member challenges, built and awaiting real use</li>
+                    <li>Deeper liquidity, funded from platform revenue as it arrives</li>
+                    <li>More reasons to spend TMR inside the platform</li>
+                </ul>
+            </div>
+            <div class="tcoin-col is-maybe">
+                <span class="tcoin-col-tag">Not started</span>
+                <h3>Not promised</h3>
+                <ul>
+                    <li>Withdrawal or redemption between a site balance and a wallet</li>
+                    <li>Partner platforms using TMR as their competition unit</li>
+                    <li>Exchange or tracker listings, which are their decision and not ours</li>
+                </ul>
+            </div>
+        </div>
+        <p style="margin-top:14px;">Nothing in the second or third column is a commitment or a date, and none of it is a reason to buy anything. Prices are volatile and you can lose everything you put in.</p>
+        <div class="tcoin-links">
+            <a class="tmr-cta-secondary" href="/tmr-coin/">TMR Coin page &rarr;</a>
+            <a class="tmr-cta-secondary" href="/tmr-coin/partners/">For partners &rarr;</a>
+            <a class="tmr-cta-secondary" href="/tmr-coin/press/">Press kit &rarr;</a>
+        </div>
+    </section>
+</main>
+
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script>
+(function () {
+    // The static site and the API are different origins, so a relative /api path
+    // 404s here. Absolute, always.
+    var API = 'https://trustmyrecord-api.onrender.com/api';
+
+    function show(id) { var el = document.getElementById(id); if (el) el.classList.remove('tcoin-hidden'); }
+    function hide(id) { var el = document.getElementById(id); if (el) el.classList.add('tcoin-hidden'); }
+    function set(id, text, sub) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text;
+        if (sub !== undefined) { var s = document.getElementById(id + '-sub'); if (s) s.textContent = sub; }
+    }
+    function down(stateId, message) {
+        var el = document.getElementById(stateId);
+        if (!el) return;
+        el.className = 'tcoin-state is-down';
+        el.textContent = message;
+    }
+    function num(n, digits) {
+        if (n === null || n === undefined || isNaN(n)) return null;
+        return Number(n).toLocaleString('en-US', { maximumFractionDigits: digits === undefined ? 0 : digits });
+    }
+    function usd(n) {
+        if (n === null || n === undefined || isNaN(n)) return null;
+        if (n > 0 && n < 0.01) return '$' + Number(n).toFixed(8).replace(/0+$/, '');
+        return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+    function get(path) {
+        return fetch(API + path, { headers: { Accept: 'application/json' } }).then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        });
+    }
+
+    // --- market -------------------------------------------------------------
+    get('/tmr-coin/market').then(function (m) {
+        if (!m || m.live !== true) throw new Error('not live');
+        set('m-price', usd(m.price_usd), 'per TMR');
+        set('m-tvl', usd(m.tvl_usd), num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
+        set('m-cash', usd(m.pool_weth_usd));
+        set('m-fdv', usd(m.fdv_usd));
+        set('m-liquid', num(m.liquid_supply), Number(m.liquid_supply_percent).toFixed(3) + '% of supply');
+        set('m-lock', m.liquidity_locked ? 'Locked' : 'Not locked', m.liquidity_custody || '');
+        var depth = document.getElementById('m-depth');
+        if (depth) depth.textContent = m.depth_warning || '';
+        var links = document.getElementById('m-links');
+        if (links && m.links) {
+            var defs = [['trade', 'Trade on Uniswap'], ['chart', 'Live chart'], ['pool_explorer', 'Pool on Basescan']];
+            defs.forEach(function (d) {
+                if (!m.links[d[0]]) return;
+                var a = document.createElement('a');
+                a.className = 'tmr-cta-secondary';
+                a.href = m.links[d[0]];
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = d[1] + ' →';
+                links.appendChild(a);
+            });
+        }
+        hide('tcoin-market-state');
+        show('tcoin-market-body');
+    }).catch(function () {
+        down('tcoin-market-state', 'The pool on Base could not be read right now, so no price or liquidity figure is shown. Nothing here is cached, so a stale number is never displayed instead.');
+    });
+
+    // --- participation ------------------------------------------------------
+    get('/tmr-coin/activity').then(function (a) {
+        var c = a && a.on_chain;
+        if (c && c.live === true) {
+            set('c-holders', num(c.holders_total));
+            set('c-external', num(c.external_holders));
+            set('c-transfers', num(c.transfers_total));
+            var last = document.getElementById('c-last');
+            if (last) {
+                last.textContent = c.last_transfer_at
+                    ? 'last transfer ' + new Date(c.last_transfer_at).toISOString().slice(0, 10)
+                    : 'no transfer yet';
+            }
+            hide('tcoin-chain-state');
+            show('tcoin-chain-body');
+        } else {
+            down('tcoin-chain-state', (c && c.reason)
+                || 'The transfer history has not been read to the chain head yet, so no holder or transfer count is shown.');
+        }
+
+        var s = a && a.on_site;
+        if (s) {
+            set('s-holders', num(s.members.holding_tmr));
+            var bal = document.getElementById('s-balance');
+            if (bal) bal.textContent = num(s.members.total_balance_tmr) + ' TMR held between them';
+            set('s-payouts', num(s.earning.payouts_all_time));
+            var earned = document.getElementById('s-earned');
+            if (earned) earned.textContent = num(s.earning.tmr_all_time) + ' TMR earned by members';
+            set('s-spent', num(s.spending.tmr_spent) + ' TMR');
+            set('s-tips', num(s.tipping.tips_sent));
+            var tsub = document.getElementById('s-tips-sub');
+            if (tsub) tsub.textContent = num(s.tipping.tmr_tipped) + ' TMR tipped';
+            set('s-challenges', num(s.challenges.created));
+            var csub = document.getElementById('s-challenges-sub');
+            if (csub) csub.textContent = s.challenges.created ? num(s.challenges.tmr_staked) + ' TMR staked' : 'built, no real use yet';
+            var scope = document.getElementById('s-scope');
+            if (scope) scope.textContent = s.scope || '';
+            hide('tcoin-site-state');
+            show('tcoin-site-body');
+        } else {
+            down('tcoin-site-state', 'Member activity could not be read right now, so nothing is shown.');
+        }
+    }).catch(function () {
+        down('tcoin-chain-state', 'On-chain participation could not be read right now, so no holder or transfer count is shown.');
+        down('tcoin-site-state', 'Member activity could not be read right now, so nothing is shown.');
+    });
+
+    // --- supply -------------------------------------------------------------
+    get('/tmr-coin/supply').then(function (s) {
+        set('p-total', num(s.total_supply));
+        set('p-treasury', num(s.treasury_balance));
+        set('p-circ', num(s.circulating));
+        hide('tcoin-supply-state');
+        show('tcoin-supply-body');
+    }).catch(function () {
+        down('tcoin-supply-state', 'Supply could not be read from Base right now, so nothing is shown.');
+    });
+
+    // --- reserve ------------------------------------------------------------
+    get('/tmr-coin/reserve').then(function (r) {
+        set('r-liability', num(r.liability && r.liability.user_balances) + ' TMR');
+        set('r-reserved', num(r.reserve && r.reserve.reserved) + ' TMR');
+        set('r-treasury', num(r.treasury && r.treasury.onchain_tmr) + ' TMR');
+        hide('tcoin-reserve-state');
+        show('tcoin-reserve-body');
+    }).catch(function () {
+        down('tcoin-reserve-state', 'The reserve position could not be computed right now, so nothing is shown.');
+    });
+}());
+</script>
+</body>
+</html>
