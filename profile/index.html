@@ -28,6 +28,10 @@
            straight-line write would run before they exist. Re-run once the
            head has parsed. */
         var applyMeta=function(){
+          /* A /u/<name>/ bake restores its own, richer head via
+             window.__TMR_PROFILE_SEO (tmr-profile-hydrate.js). That copy is
+             built from the member's actual record, so it always wins here. */
+          if(window.__TMR_PROFILE_SEO) return;
           function set(sel,attr,val){var e=document.querySelector(sel); if(e) e.setAttribute(attr,val);}
           set('meta[name="description"]','content',ds);
           set('meta[property="og:title"]','content',u+' - Verified Sports Betting Record | TrustMyRecord');
