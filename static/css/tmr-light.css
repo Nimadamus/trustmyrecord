@@ -852,7 +852,10 @@ body.tmr-light .tmr-btn-primary:hover,
 body.tmr-light button.primary:hover {
   background:#07736D;
   border-color:#07736D;
-  color:#FFFFFF;
+  /* !important because the blanket `a:hover{color:#07736D !important}` above
+     otherwise repaints the label the exact colour of its own hover background,
+     which made a primary button's text vanish on hover. */
+  color:#FFFFFF !important;
 }
 body.tmr-light .btn-secondary,
 body.tmr-light .button-secondary,
@@ -886,6 +889,9 @@ body.tmr-light .tmr-cta-primary {
 body.tmr-light .tmr-cta-primary:hover {
   background:#07736D !important;
   border-color:#07736D !important;
+  /* Same reason as the block above: without this the label is invisible on
+     hover, because a blanket link-hover rule paints it #07736D too. */
+  color:#FFFFFF !important;
 }
 body.tmr-light .tmr-cta-secondary {
   background:#FFFFFF !important;
