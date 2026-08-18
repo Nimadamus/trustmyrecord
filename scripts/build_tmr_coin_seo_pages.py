@@ -70,7 +70,7 @@ def cluster_for(slug):
 PAGES = [
     {
         'slug': 'sports-community-coin',
-        'title': 'Sports Community Coin | What It Is and How TMR Coin Works | TrustMyRecord',
+        'title': 'Sports Community Coin | What It Is and Why Picks Communities Need One | TrustMyRecord',
         'description': 'A sports community coin is a shared unit a picks community earns, spends and competes with. Here is what TMR Coin does on TrustMyRecord, what is live today, and what is not.',
         'og_title': 'Sports Community Coin | TrustMyRecord',
         'og_description': 'What a sports community coin actually is, and what TMR Coin does on TrustMyRecord today.',
@@ -411,6 +411,18 @@ def build_head(template_head, page):
             ]},
         ],
     }
+    # Contrast. The shared SEO shell paints .yes at #0A8B4E, which is 3.96:1 on
+    # the comparison table's tinted cell and fails WCAG AA. Overridden here for
+    # these pages rather than in the shell, because the shell is shared with
+    # pages outside this workstream. #077A42 is 4.93:1 and reads the same.
+    contrast_override = (
+        '    <style>' + chr(10)
+        + '        .ss-compare .yes { color: #077A42; }' + chr(10)
+        + '    </style>' + chr(10)
+        + '</head>'
+    )
+    head = head.replace('</head>', contrast_override, 1)
+
     head = re.sub(r'<script type="application/ld\+json">.*?</script>',
                   '<script type="application/ld+json">\n%s\n    </script>'
                   % json.dumps(schema, indent=2, ensure_ascii=False),

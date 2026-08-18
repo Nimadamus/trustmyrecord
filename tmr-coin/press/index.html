@@ -61,7 +61,7 @@
         .tcoin-copy{position:relative;background:rgba(7,24,42,0.03);border:1px solid #D2DEEA;border-radius:10px;padding:14px 16px;margin-top:12px;}
         .tcoin-copy p{margin:0;font-size:14.5px;line-height:1.65;color:var(--tmrp-text-primary);}
         .tcoin-copy-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;}
-        .tcoin-copy-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:var(--tmrp-text-muted);}
+        .tcoin-copy-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:#55697F;}
         .tcoin-copy-btn{flex-shrink:0;background:#fff;border:1px solid var(--tmrp-glass-border);color:var(--tmrp-text-primary);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-radius:7px;cursor:pointer;}
         .tcoin-copy-btn:hover{border-color:var(--tmrp-neon-cyan);}
         .tcoin-copy-btn[data-copied="1"]{border-color:var(--tmrp-neon-gold);color:var(--tmrp-neon-gold);}
@@ -83,6 +83,11 @@
         .tcoin-col.is-no{border-color:rgba(151,54,44,.30);background:rgba(151,54,44,.05);}
         @media (max-width: 700px){ .tcoin-two{grid-template-columns:1fr;} }
         @media (max-width: 560px){ .tcoin-info-grid{grid-template-columns:1fr;} }
+            /* Contrast: the shared primary CTA is white on #0C948C, which is 3.73:1
+           and fails WCAG AA for 15px text. Darkened here rather than site-wide,
+           because a global button change belongs to a design pass, not to this
+           one. #0A7D76 is 4.99:1 and visually indistinguishable. */
+        .tmr-shell .tmr-cta-primary{background:#0A7D76;border-color:#0A7D76;}
     </style>
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
     <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
