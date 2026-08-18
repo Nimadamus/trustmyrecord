@@ -25,6 +25,7 @@
         ["/contests/justbet-mlb/", "Contest"],
         ["/arena/", "Arena"],
         ["/challenges/", "Challenges"],
+        ["/tmr-match/", "TMR Match"],
         ["/trivia/", "Trivia"],
         ["/polls/", "Polls"]
     ];

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Match | TrustMyRecord</title>
+    <meta name="description" content="Post a sports offer in TMR Coin and let other members take the other side. Offers can be taken in full or in part, and every match is held in escrow until the result is in.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/tmr-match/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
+    <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=cd692fa67cfc"></script>
+    <style>
+        /* Bind to the sitewide design tokens rather than declaring a second palette.
+           An earlier version of this page hardcoded a light theme, and because the site
+           renders dark it produced white cards with near invisible text. Fallbacks match
+           the tokens so the page still stands up if the stylesheet fails to load. */
+        :root {
+            --page-bg: var(--tmr-bg, #080d12);
+            --panel:   var(--tmr-panel, rgba(14,20,27,0.94));
+            --panel-2: var(--tmr-panel-2, rgba(18,26,34,0.90));
+            --line:    var(--tmr-line, rgba(148,163,184,0.18));
+            --text:    var(--tmr-text, #f8fafc);
+            --muted:   var(--tmr-muted, #9aa8bc);
+            --gold:    var(--tmr-gold, #e4b95b);
+            --teal:    var(--tmr-teal, #2dd4bf);
+            --stop:    var(--tmr-red, #ef4444);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin:0; min-height:100vh;
+            background: var(--page-bg);
+            color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .mk-page { width:min(1080px, calc(100% - 32px)); margin:0 auto; padding:112px 0 56px; }
+        .mk-head { display:flex; align-items:flex-end; justify-content:space-between; gap:22px; margin-bottom:18px; flex-wrap:wrap; }
+        .mk-kicker { margin:0 0 10px; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+        h1 { margin:0; font-family:Barlow, Inter, sans-serif; font-size:clamp(34px,5vw,56px); line-height:.95; }
+        .mk-subtitle { margin:12px 0 0; max-width:680px; color:var(--muted); font-size:14.5px; line-height:1.55; }
+        h2 { font-family:Barlow, Inter, sans-serif; font-size:22px; margin:30px 0 12px; }
+
+        .btn { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 15px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; text-decoration:none; }
+        .btn:disabled { opacity:.45; cursor:not-allowed; }
+        .btn.primary { background:var(--teal); border-color:var(--teal); color:#06231f; }
+        .btn.danger { border-color:rgba(188,55,46,.4); color:var(--stop); }
+        .btn.sm { min-height:34px; padding:0 11px; font-size:12px; }
+
+        .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin:20px 0 8px; }
+        .card { border:1px solid var(--line); border-radius:10px; padding:20px; background:var(--panel); }
+        .card .lbl { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+        .card .val { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:34px; line-height:1; }
+        .card .sub { margin-top:8px; color:var(--muted); font-size:12.5px; line-height:1.5; }
+
+        .tabs { display:flex; gap:6px; flex-wrap:wrap; margin:26px 0 14px; border-bottom:1px solid var(--line); }
+        .tab { appearance:none; border:0; background:none; font-family:inherit; font-weight:800; font-size:13px; color:var(--muted); padding:10px 12px; border-bottom:3px solid transparent; cursor:pointer; }
+        .tab[aria-selected="true"] { color:var(--text); border-bottom-color:var(--gold); }
+        .tab .count { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:rgba(148,163,184,0.16); font-size:11px; }
+
+        .list { display:grid; gap:12px; }
+        .offer { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:16px 18px; display:grid; gap:14px; }
+        .offer-top { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+        .offer-what { flex:1 1 300px; min-width:0; }
+        .offer-what strong { font-size:16px; display:block; }
+        .offer-meta { color:var(--muted); font-size:12.5px; margin-top:5px; line-height:1.5; }
+        .offer-size { text-align:right; white-space:nowrap; }
+        .offer-size .big { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:26px; line-height:1; }
+        .offer-size .of { color:var(--muted); font-size:12px; margin-top:4px; }
+        .offer-acts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+        .bar { height:6px; border-radius:999px; background:rgba(148,163,184,0.16); overflow:hidden; }
+        .bar span { display:block; height:100%; background:var(--teal); }
+
+        .side { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:1px solid; }
+        .side.for { background:rgba(45,212,191,0.14); border-color:rgba(45,212,191,0.40); color:var(--teal); }
+        .side.against { background:rgba(228,185,91,0.14); border-color:rgba(228,185,91,0.40); color:var(--gold); }
+        .pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:1px solid var(--line); background:rgba(148,163,184,0.12); color:var(--muted); }
+        .pill.open, .pill.accepted { background:rgba(45,212,191,0.14); border-color:rgba(45,212,191,0.40); color:var(--teal); }
+        .pill.partially_filled { background:rgba(228,185,91,0.14); border-color:rgba(228,185,91,0.40); color:var(--gold); }
+        .pill.cancelled, .pill.expired { background:rgba(239,68,68,0.14); border-color:rgba(239,68,68,0.40); color:var(--stop); }
+
+        .take { border-top:1px solid var(--line); padding-top:12px; display:grid; gap:9px; }
+        .take-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+        .take .field { display:grid; gap:6px; }
+        .take label { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+        .take input { font-family:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel-2); color:var(--text); width:130px; }
+        .confirm { font-size:13px; line-height:1.5; color:var(--text); font-weight:600; }
+        .confirm b { font-weight:800; }
+
+        .ladder { display:grid; gap:8px; }
+        .rung { display:flex; align-items:center; gap:12px; font-size:13px; }
+        .rung .lbl { min-width:190px; font-weight:700; }
+        .rung-game { font-weight:600; font-size:11.5px; color:var(--muted); }
+        .rung .track { flex:1; height:22px; border-radius:6px; background:rgba(148,163,184,0.14); overflow:hidden; position:relative; }
+        .rung .fillbar { height:100%; background:linear-gradient(90deg, var(--teal), rgba(45,212,191,0.45)); }
+        .rung .amt { min-width:96px; text-align:right; font-weight:800; white-space:nowrap; }
+
+        .empty { border:1px dashed var(--line); border-radius:10px; padding:26px; text-align:center; color:var(--muted); font-size:13.5px; background:var(--panel); }
+        .empty strong { display:block; color:var(--text); font-size:15px; margin-bottom:6px; }
+        .note { color:var(--muted); font-size:12.5px; line-height:1.6; margin-top:14px; }
+
+        form.create { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:20px; display:grid; gap:14px; }
+        .field { display:grid; gap:6px; }
+        .field label { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+        .field input, .field select { font-family:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel-2); color:var(--text); }
+        .field .hint { font-size:12px; color:var(--muted); }
+        .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+
+        .msg { border-radius:8px; padding:12px 14px; font-size:13px; font-weight:600; margin-bottom:12px; }
+        .msg.err { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.40); color:#fca5a5; }
+        .msg.ok { background:rgba(45,212,191,0.12); border:1px solid rgba(45,212,191,0.40); color:var(--teal); }
+
+        table.hist { width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); font-size:13px; }
+        table.hist th, table.hist td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); }
+        table.hist th { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+        .wrap { overflow-x:auto; }
+        [hidden] { display:none !important; }
+
+        @media (max-width: 560px) {
+            .offer-size { text-align:left; }
+            .rung .lbl { min-width:110px; }
+            .rung .amt { min-width:70px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="mk-page">
+        <div class="mk-head">
+            <div>
+                <p class="mk-kicker">Player to player</p>
+                <h1>TMR Match</h1>
+                <p class="mk-subtitle">Post the bet you actually want and let someone take the other side. You choose the game, the pick and the price, and put up TMR to back it. Other members can take all of your offer or just part of it, and whatever nobody takes stays yours.</p>
+            </div>
+            <div><a class="btn" href="/wallet/earn/">Earn TMR</a></div>
+        </div>
+
+        <div id="loadState" class="empty">Loading the market...</div>
+        <div id="errState" class="msg err" hidden></div>
+
+        <div id="mkBody" hidden>
+            <div class="cards">
+                <div class="card">
+                    <div class="lbl">Offers open now</div>
+                    <div class="val" id="cOpen">0</div>
+                    <div class="sub">Waiting for someone to take the other side.</div>
+                </div>
+                <div class="card">
+                    <div class="lbl">TMR available to take</div>
+                    <div class="val" id="cAvail">0</div>
+                    <div class="sub">Added up across every open offer.</div>
+                </div>
+                <div class="card" id="balCard" hidden>
+                    <div class="lbl">Your spendable TMR</div>
+                    <div class="val" id="cBal">0</div>
+                    <div class="sub">Posting an offer holds this TMR until it is taken or you withdraw it.</div>
+                </div>
+            </div>
+
+            <div id="signedOutNote" class="empty" hidden style="margin-top:16px;">
+                <strong>You are browsing as a guest</strong>
+                Anyone can read the market. <a class="btn sm" href="/login/">Sign in</a> to post an offer or take one.
+            </div>
+
+            <div class="tabs" role="tablist">
+                <button class="tab" role="tab" data-tab="market" aria-selected="true">Market<span class="count" id="nMarket">0</span></button>
+                <button class="tab" role="tab" data-tab="depth" aria-selected="false">Where the money is</button>
+                <button class="tab" role="tab" data-tab="mine" aria-selected="false">My offers<span class="count" id="nMine">0</span></button>
+                <button class="tab" role="tab" data-tab="positions" aria-selected="false">My matches<span class="count" id="nPos">0</span></button>
+                <button class="tab" role="tab" data-tab="create" aria-selected="false">Post an offer</button>
+            </div>
+
+            <div id="panelMsg" class="msg" hidden></div>
+
+            <section id="panel-market">
+                <p class="note" style="margin:0 0 14px;">Taking an offer puts up the TMR you enter, and the same amount comes out of theirs. Both sides are held until the game settles, and you can take part of an offer rather than all of it.</p>
+                <div class="list" id="listMarket"></div>
+                <div class="empty" id="emptyMarket" hidden>
+                    <strong>Nothing on the board yet</strong>
+                    Be the first to post an offer and name your price.
+                </div>
+            </section>
+
+            <section id="panel-depth" hidden>
+                <p class="note" style="margin-top:0;">How much TMR is sitting behind each pick and price. Longer bars mean more money waiting to be taken.</p>
+                <div class="ladder" id="ladder"></div>
+                <div class="empty" id="emptyDepth" hidden>
+                    <strong>No prices to show</strong>
+                    Once offers are posted, this is where you see how deep the market is.
+                </div>
+            </section>
+
+            <section id="panel-mine" hidden>
+                <div class="list" id="listMine"></div>
+                <div class="empty" id="emptyMine" hidden>
+                    <strong>You have no offers up</strong>
+                    Post one and it shows here until it is taken or you withdraw it.
+                </div>
+            </section>
+
+            <section id="panel-positions" hidden>
+                <div class="list" id="listPositions"></div>
+                <div class="empty" id="emptyPositions" hidden>
+                    <strong>No matches yet</strong>
+                    When you take an offer, or somebody takes yours, it appears here.
+                </div>
+            </section>
+
+            <section id="panel-create" hidden>
+                <form class="create" id="createForm" novalidate>
+                    <div class="grid2">
+                        <div class="field">
+                            <label for="fEvent">Game</label>
+                            <input id="fEvent" name="event" placeholder="Giants at Dodgers" required>
+                            <span class="hint">Which game this is about.</span>
+                        </div>
+                        <div class="field">
+                            <label for="fSport">Sport</label>
+                            <select id="fSport" name="sport">
+                                <option>MLB</option><option>NFL</option><option>NBA</option>
+                                <option>NHL</option><option>NCAAF</option><option>NCAAB</option><option>Soccer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid2">
+                        <div class="field">
+                            <label for="fMarket">Bet type</label>
+                            <select id="fMarket" name="market">
+                                <option value="moneyline">Moneyline</option>
+                                <option value="spread">Spread</option>
+                                <option value="total">Total</option>
+                                <option value="prop">Prop</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="fSelection">Your pick</label>
+                            <input id="fSelection" name="selection" placeholder="Giants -1.5" required>
+                            <span class="hint">Exactly what you are backing.</span>
+                        </div>
+                    </div>
+                    <div class="grid2">
+                        <div class="field">
+                            <label for="fSide">You are</label>
+                            <select id="fSide" name="side">
+                                <option value="for">Backing this pick</option>
+                                <option value="against">Betting against it</option>
+                            </select>
+                            <span class="hint">Whoever takes your offer gets the other side.</span>
+                        </div>
+                        <div class="field">
+                            <label for="fPrice">Price (American odds)</label>
+                            <input id="fPrice" name="price" type="number" step="5" placeholder="-110" required>
+                            <span class="hint">Use 100 or more, or -100 or less.</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="fQty">How much TMR are you putting up?</label>
+                        <input id="fQty" name="quantity" type="number" min="10" step="1" placeholder="100" required>
+                        <span class="hint" id="qtyHint">This is held as soon as you post, so anyone taking your offer knows it is funded.</span>
+                    </div>
+                    <div>
+                        <button class="btn primary" id="createBtn" type="submit">Post this offer</button>
+                        <span class="note" style="margin-left:10px;">Nothing moves until somebody takes it.</span>
+                    </div>
+                </form>
+            </section>
+
+            <p class="note" id="footNote"></p>
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+    <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
+    <script>
+    (function () {
+        var isLoggedIn = typeof isUserLoggedIn === 'function'
+            ? isUserLoggedIn()
+            : (!!localStorage.getItem('accessToken') || !!localStorage.getItem('token'));
+
+        var loadState = document.getElementById('loadState');
+        var errState = document.getElementById('errState');
+        var body = document.getElementById('mkBody');
+        var panelMsg = document.getElementById('panelMsg');
+
+        function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+        function num(v) { return Number(v || 0).toLocaleString('en-US'); }
+        function when(v) { return v ? new Date(v).toLocaleString() : ''; }
+        function priceLabel(p) { var n = Number(p); return n > 0 ? '+' + n : String(n); }
+
+        function say(kind, text) {
+            panelMsg.className = 'msg ' + kind;
+            panelMsg.textContent = text;
+            panelMsg.hidden = false;
+            panelMsg.scrollIntoView({ block: 'nearest' });
+        }
+        function clearSay() { panelMsg.hidden = true; }
+
+        var state = { me: null, meta: null, offers: [], mine: [], fills: [], depth: [], balance: null };
+
+        /**
+         * Say what an offer IS in one line a bettor reads without translating. "for" and
+         * "against" are how the database stores it; nobody should ever see those words.
+         */
+        function offerHeadline(o) {
+            var verb = o.side === 'for' ? 'Backing' : 'Against';
+            return verb + ' ' + o.selection;
+        }
+        function takerLine(o) {
+            return o.side === 'for'
+                ? 'You would be betting against ' + o.selection
+                : 'You would be backing ' + o.selection;
+        }
+
+        function offerCard(o, opts) {
+            opts = opts || {};
+            var remaining = Number(o.remaining != null ? o.remaining : (o.quantity - o.filled_quantity));
+            var quantity = Number(o.quantity);
+            var filled = quantity - remaining;
+            var pctFilled = quantity ? Math.round((filled / quantity) * 100) : 0;
+            var mine = state.me && Number(o.maker_id) === Number(state.me);
+
+            var html = ''
+                + '<div class="offer" data-id="' + o.id + '">'
+                + '  <div class="offer-top">'
+                + '    <div class="offer-what">'
+                + '      <strong>' + esc(offerHeadline(o)) + ' <span class="side ' + esc(o.side) + '">' + (o.side === 'for' ? 'backing' : 'against') + '</span></strong>'
+                + '      <div class="offer-meta">'
+                + '        ' + esc(o.event_label || o.event_ref) + ' &middot; ' + esc(o.market) + ' &middot; price ' + esc(priceLabel(o.price_american))
+                + '        <br>' + (mine ? 'Your offer' : 'Posted by ' + esc(o.maker_username || 'a member'))
+                + '        &middot; ' + esc(when(o.created_at))
+                + (o.status && o.status !== 'open' ? ' &middot; <span class="pill ' + esc(o.status) + '">' + esc(String(o.status).replace(/_/g, ' ')) + '</span>' : '')
+                + '      </div>'
+                + '    </div>'
+                + '    <div class="offer-size">'
+                + '      <div class="big">' + num(remaining) + ' TMR</div>'
+                + '      <div class="of">left of ' + num(quantity) + ' TMR' + (filled ? ' &middot; ' + num(filled) + ' taken' : '') + '</div>'
+                + '    </div>'
+                + '  </div>'
+                + '  <div class="bar"><span style="width:' + pctFilled + '%"></span></div>';
+
+            if (opts.canTake && !mine && remaining > 0) {
+                html += ''
+                    + '  <div class="take">'
+                    + '    <div class="confirm">' + esc(takerLine(o)) + '</div>'
+                    + '    <div class="take-row">'
+                    + '      <div class="field"><label for="q' + o.id + '">TMR to take</label>'
+                    + '        <input id="q' + o.id + '" type="number" min="1" max="' + remaining + '" value="' + remaining + '" data-qty="' + o.id + '"></div>'
+                    + '      <button class="btn primary" data-take="' + o.id + '">Take this offer</button>'
+                    + '      <button class="btn sm" data-all="' + o.id + '">All of it</button>'
+                    + '    </div>'
+                    + '  </div>';
+            }
+            if (opts.canCancel && mine && ['open', 'partially_filled'].indexOf(o.status) >= 0) {
+                html += ''
+                    + '  <div class="take"><div class="take-row">'
+                    + '    <button class="btn danger" data-cancel="' + o.id + '">Withdraw the ' + num(remaining) + ' TMR nobody took</button>'
+                    + (filled ? '<span class="note" style="margin:0;">The ' + num(filled) + ' TMR already taken stays matched.</span>' : '')
+                    + '  </div></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function positionCard(f) {
+            var role = f.my_role === 'maker' ? 'You posted this' : 'You took this';
+            var side = f.my_role === 'maker' ? f.maker_side : (f.maker_side === 'for' ? 'against' : 'for');
+            var pick = (side === 'for' ? 'Backing ' : 'Against ') + f.selection;
+            return ''
+                + '<div class="offer" data-fill="' + f.id + '">'
+                + '  <div class="offer-top">'
+                + '    <div class="offer-what">'
+                + '      <strong>' + esc(pick) + '</strong>'
+                + '      <div class="offer-meta">' + esc(f.event_label || '') + ' &middot; ' + esc(f.market || '')
+                + '        &middot; price ' + esc(priceLabel(f.price_american))
+                + '        <br>' + esc(role) + ' &middot; ' + esc(when(f.created_at))
+                + '        &middot; <span class="pill ' + esc(f.challenge_status || '') + '">' + esc(String(f.challenge_status || '').replace(/_/g, ' ')) + '</span>'
+                + '      </div>'
+                + '    </div>'
+                + '    <div class="offer-size"><div class="big">' + num(f.quantity) + ' TMR</div>'
+                + '      <div class="of">at risk</div></div>'
+                + '  </div>'
+                + '  <div class="offer-acts">'
+                + '    <a class="btn sm" href="/tmr-challenges/?id=' + encodeURIComponent(f.challenge_id) + '">See the match</a>'
+                + '  </div>'
+                + '</div>';
+        }
+
+        function renderLadder() {
+            var el = document.getElementById('ladder');
+            var empty = document.getElementById('emptyDepth');
+            var rows = state.depth || [];
+            if (!rows.length) { el.innerHTML = ''; empty.hidden = false; return; }
+            empty.hidden = true;
+            var max = rows.reduce(function (m, r) { return Math.max(m, Number(r.available)); }, 0) || 1;
+            el.innerHTML = rows.map(function (r) {
+                var pct = Math.max(4, Math.round((Number(r.available) / max) * 100));
+                var label = (r.side === 'for' ? 'Backing ' : 'Against ') + r.selection + ' ' + priceLabel(r.price_american);
+                var game = r.event_label ? '<div class="rung-game">' + esc(r.event_label) + '</div>' : '';
+                return '<div class="rung"><div class="lbl">' + game + esc(label) + '</div>'
+                    + '<div class="track"><div class="fillbar" style="width:' + pct + '%"></div></div>'
+                    + '<div class="amt">' + num(r.available) + ' TMR</div></div>';
+            }).join('');
+        }
+
+        function render() {
+            var market = state.offers.filter(function (o) { return Number(o.remaining) > 0; });
+            document.getElementById('cOpen').textContent = num(market.length);
+            document.getElementById('cAvail').textContent = num(
+                market.reduce(function (s, o) { return s + Number(o.remaining); }, 0));
+            document.getElementById('nMarket').textContent = num(market.length);
+            document.getElementById('nMine').textContent = num(state.mine.length);
+            document.getElementById('nPos').textContent = num(state.fills.length);
+
+            var lm = document.getElementById('listMarket');
+            lm.innerHTML = market.map(function (o) { return offerCard(o, { canTake: isLoggedIn }); }).join('');
+            document.getElementById('emptyMarket').hidden = market.length > 0;
+
+            var lmine = document.getElementById('listMine');
+            lmine.innerHTML = state.mine.map(function (o) { return offerCard(o, { canCancel: true }); }).join('');
+            document.getElementById('emptyMine').hidden = state.mine.length > 0;
+
+            var lp = document.getElementById('listPositions');
+            lp.innerHTML = state.fills.map(positionCard).join('');
+            document.getElementById('emptyPositions').hidden = state.fills.length > 0;
+
+            renderLadder();
+
+            document.getElementById('footNote').textContent =
+                'TMR Match is the internal competition market. Offers and matches are settled in TMR held on TrustMyRecord. '
+                + 'There is no fee on a match, and nothing here is redeemable outside the site.';
+        }
+
+        // --- actions -----------------------------------------------------------
+
+        /** One in-flight write at a time. A double click must never post twice. */
+        var busy = false;
+        function guard(btn, fn) {
+            if (busy) return;
+            busy = true;
+            if (btn) btn.disabled = true;
+            var restore = function () { busy = false; if (btn) btn.disabled = false; };
+            return fn().then(restore, function (e) { restore(); throw e; });
+        }
+
+        function apiErr(e) {
+            return (e && (e.message || e.error)) || 'Something went wrong. Please try again.';
+        }
+
+        function takeOffer(id, qty, btn) {
+            clearSay();
+            return guard(btn, function () {
+                return window.api.request('/tmr-match/' + id + '/take', { method: 'POST', body: { quantity: qty } })
+                    .then(function (r) {
+                        say('ok', 'Matched ' + num(r.filled) + ' TMR. '
+                            + (Number(r.remaining) > 0 ? num(r.remaining) + ' TMR is still open on that offer.' : 'That offer is now fully taken.'));
+                        return refresh();
+                    })
+                    .catch(function (e) { say('err', apiErr(e)); });
+            });
+        }
+
+        function cancelOffer(id, btn) {
+            clearSay();
+            return guard(btn, function () {
+                return window.api.request('/tmr-match/' + id + '/cancel', { method: 'POST', body: {} })
+                    .then(function (r) {
+                        say('ok', 'Withdrawn. ' + num(r.returned) + ' TMR is back in your balance'
+                            + (Number(r.kept_filled) > 0 ? ', and the ' + num(r.kept_filled) + ' TMR already taken stays matched.' : '.'));
+                        return refresh();
+                    })
+                    .catch(function (e) { say('err', apiErr(e)); });
+            });
+        }
+
+        document.addEventListener('click', function (ev) {
+            var t = ev.target.closest('[data-take],[data-cancel],[data-all]');
+            if (!t) return;
+            ev.preventDefault();
+            if (t.hasAttribute('data-all')) {
+                var input = document.querySelector('[data-qty="' + t.getAttribute('data-all') + '"]');
+                if (input) input.value = input.max;
+                return;
+            }
+            if (t.hasAttribute('data-take')) {
+                var id = t.getAttribute('data-take');
+                var q = document.querySelector('[data-qty="' + id + '"]');
+                var qty = Number(q && q.value);
+                if (!qty || qty <= 0) { say('err', 'Enter how much TMR you want to take.'); return; }
+                takeOffer(id, qty, t);
+                return;
+            }
+            cancelOffer(t.getAttribute('data-cancel'), t);
+        });
+
+        var form = document.getElementById('createForm');
+        if (form) {
+            form.addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                clearSay();
+                var btn = document.getElementById('createBtn');
+                var qty = Number(document.getElementById('fQty').value);
+                var price = Number(document.getElementById('fPrice').value);
+                var event = document.getElementById('fEvent').value.trim();
+                var selection = document.getElementById('fSelection').value.trim();
+
+                if (!event) return say('err', 'Which game is this offer about?');
+                if (!selection) return say('err', 'Say what you are backing.');
+                var min = (state.meta && state.meta.min_quantity) || 10;
+                if (!qty || qty < min) return say('err', 'The smallest offer is ' + min + ' TMR.');
+                if (state.balance != null && qty > state.balance) {
+                    return say('err', 'You have ' + num(state.balance) + ' TMR spendable, so you cannot put up ' + num(qty) + '.');
+                }
+                if (!price || (price > -100 && price < 100)) {
+                    return say('err', 'Use American odds of 100 or more, or -100 or less.');
+                }
+
+                guard(btn, function () {
+                    return window.api.request('/tmr-match/', {
+                        method: 'POST',
+                        body: {
+                            sport: document.getElementById('fSport').value,
+                            event_ref: event.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                            event_label: event,
+                            market: document.getElementById('fMarket').value,
+                            selection: selection,
+                            side: document.getElementById('fSide').value,
+                            price_american: price,
+                            quantity: qty,
+                        },
+                    }).then(function () {
+                        say('ok', 'Your offer is up. ' + num(qty) + ' TMR is held until somebody takes it or you withdraw it.');
+                        form.reset();
+                        showTab('mine');
+                        return refresh();
+                    }).catch(function (e) { say('err', apiErr(e)); });
+                });
+            });
+        }
+
+        // --- tabs --------------------------------------------------------------
+
+        function showTab(name) {
+            ['market', 'depth', 'mine', 'positions', 'create'].forEach(function (n) {
+                var panel = document.getElementById('panel-' + n);
+                if (panel) panel.hidden = n !== name;
+                var tab = document.querySelector('.tab[data-tab="' + n + '"]');
+                if (tab) tab.setAttribute('aria-selected', String(n === name));
+            });
+        }
+        document.querySelectorAll('.tab').forEach(function (tab) {
+            tab.addEventListener('click', function () { showTab(tab.getAttribute('data-tab')); });
+        });
+        ['mine', 'positions', 'create'].forEach(function (n) {
+            var tab = document.querySelector('.tab[data-tab="' + n + '"]');
+            if (tab && !isLoggedIn) tab.hidden = true;
+        });
+
+        // --- load --------------------------------------------------------------
+
+        function refresh() {
+            var reads = [
+                window.api.request('/tmr-match/offers'),
+                window.api.request('/tmr-match/depth'),
+            ];
+            if (isLoggedIn) {
+                reads.push(window.api.request('/tmr-match/mine'));
+                reads.push(window.api.request('/tmr-match/fills'));
+            }
+            return Promise.all(reads.map(function (p) { return p.catch(function () { return null; }); }))
+                .then(function (res) {
+                    state.offers = (res[0] && res[0].offers) || [];
+                    state.depth = (res[1] && res[1].depth) || [];
+                    state.mine = (res[2] && res[2].offers) || [];
+                    state.fills = (res[3] && res[3].fills) || [];
+                    render();
+                });
+        }
+
+        // Same endpoints the Challenge page uses, so identity and balance are read one way
+        // across the site rather than two. A signed out visitor calls neither and still
+        // gets the whole market.
+        Promise.all([
+            window.api.request('/tmr-match/meta').catch(function () { return null; }),
+            isLoggedIn ? window.api.request('/auth/me').catch(function () { return null; }) : Promise.resolve(null),
+            isLoggedIn ? window.api.request('/coins/balance').catch(function () { return null; }) : Promise.resolve(null),
+        ]).then(function (res) {
+            state.meta = res[0];
+            var me = res[1] && (res[1].user || res[1]);
+            state.me = me && me.id;
+            var wallet = res[2] && (res[2].wallet || res[2]);
+            if (wallet) {
+                state.balance = Number(wallet.balance || 0);
+                document.getElementById('cBal').textContent = num(state.balance);
+                document.getElementById('balCard').hidden = false;
+            }
+            if (!isLoggedIn) document.getElementById('signedOutNote').hidden = false;
+            return refresh();
+        }).then(function () {
+            loadState.hidden = true;
+            body.hidden = false;
+        }).catch(function (e) {
+            loadState.hidden = true;
+            errState.textContent = 'The market could not be loaded right now. ' + apiErr(e);
+            errState.hidden = false;
+        });
+    })();
+    </script>
+</body>
+</html>
