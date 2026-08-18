@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustMyRecord</title>
+<!--
+  X DM CAMPAIGN ATTRIBUTION PATH (added 2026-08-17)
+
+  Purpose: the X invite DMs link to trustmyrecord.com/x so campaign traffic can be
+  measured as a GROUP. This page records the visit, then hands the visitor straight
+  into the normal homepage. It is not a landing page and shows no content of its own.
+
+  How attribution works, using mechanisms the site already had:
+    * we redirect to /?utm_source=x&utm_medium=dm&utm_campaign=invite
+    * static/js/analytics.js captureFirstTouch() stores those params in the
+      first party key tmr_first_touch, first touch wins
+    * register/index.html already reads tmr_first_touch and sends the existing
+      GA4 account_created event with source = utm_source, so signups from this
+      campaign report as source "x" with no change to the signup flow
+    * GA4 also attributes the session natively from the same utm params
+
+  Deliberately NOT done:
+    * no per handle or per person identifiers, the DM carries no unique link
+    * no cookies or storage written here beyond what analytics.js already writes
+    * no query string in the DM itself, the visitor only ever types/sees /x
+    * no separate landing experience, this redirects immediately
+    * no change to homepage analytics, the homepage keeps its own config
+-->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-V5MCVXS2HE');
+
+  (function () {
+    var DEST = '/?utm_source=x&utm_medium=dm&utm_campaign=invite';
+    var went = false;
+    function go() {
+      if (went) return;
+      went = true;
+      // replace, not assign, so Back does not bounce the visitor through here again
+      window.location.replace(DEST);
+    }
+    // count the campaign click, then move on as soon as it is recorded
+    try {
+      gtag('event', 'x_dm_campaign_click', {
+        campaign_source: 'x',
+        campaign_medium: 'dm',
+        campaign_name: 'invite',
+        event_callback: go
+      });
+    } catch (e) {}
+    // never let a blocked or slow tag strand the visitor
+    setTimeout(go, 1200);
+  })();
+</script>
+<noscript><meta http-equiv="refresh" content="0; url=/?utm_source=x&utm_medium=dm&utm_campaign=invite"></noscript>
+</head>
+<body>
+<p>Taking you to TrustMyRecord. <a href="/?utm_source=x&utm_medium=dm&utm_campaign=invite">Continue</a>.</p>
+</body>
+</html>
