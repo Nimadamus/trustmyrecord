@@ -205,6 +205,9 @@
 
         /* ---------- exchange layout: board + a standing bet slip ---------- */
         #mk .xwrap { display:grid; grid-template-columns:minmax(0,1fr) 292px; gap:12px; align-items:start; }
+        /* With nothing takeable on the board a slip is furniture, so the board takes
+           the whole width instead of sitting next to an empty panel. */
+        #mk .xwrap.xwrap--solo { grid-template-columns:minmax(0,1fr); }
         @media (max-width: 1100px) { #mk .xwrap { grid-template-columns:minmax(0,1fr); } }
 
         /* sport filter rail, the way a book puts leagues across the top */
@@ -1010,6 +1013,14 @@
             // The column header is about reading a populated board. With nothing on it
             // it would be labelling empty space.
             document.getElementById('marketHead').hidden = shown.length === 0;
+            // The slip only belongs on screen when there is a price it could load.
+            var takeable = isLoggedIn && shown.some(function (o) {
+                return !(state.me && Number(o.maker_id) === Number(state.me)) && Number(o.remaining) > 0;
+            });
+            var showSlip = takeable || openSlipId != null;
+            slip.hidden = !showSlip;
+            var xw = document.querySelector('#panel-market .xwrap');
+            if (xw) xw.classList.toggle('xwrap--solo', !showSlip);
             document.getElementById('sportBar').hidden = market.length === 0;
             // A slip left open on an offer that is gone would take a bet that no longer
             // exists, so it closes itself when its offer leaves the board.
