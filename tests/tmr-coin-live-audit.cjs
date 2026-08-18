@@ -172,18 +172,11 @@ async function main() {
           return out.slice(0, 400);
         });
 
-        // KNOWN AND DOCUMENTED, not silently ignored.
-        //
-        // The primary call to action is white on #0C948C, which is 3.73:1 and
-        // fails AA for its 15px text. That colour is a design-of-record set with
-        // !important in static/css/tmr-light-base.css ("a primary action is
-        // solid teal with white ink"), so changing it is a design-system
-        // decision affecting every page on the site, not a fix belonging to the
-        // TMR Coin pages. The one-line change that would clear it is
-        // #0C948C -> #0A7D76, which measures 4.99:1 and is visually
-        // indistinguishable. Recorded here so the audit stays a usable gate and
-        // the finding does not get lost.
-        const KNOWN_CONTRAST = [/tmr-cta-primary/];
+        // The primary CTA used to be listed here as a known exception: white on
+        // #0C948C is 3.73:1 and the colour was called a design of record. It was
+        // fixed sitewide on 2026-08-18 (#0A7D76, 4.99:1, hover 5.70:1), so the
+        // exception list is empty and every failure below is a real one.
+        const KNOWN_CONTRAST = [];
 
         const bad = [];
         for (const s of samples) {
