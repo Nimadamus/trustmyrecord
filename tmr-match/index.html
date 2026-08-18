@@ -15,272 +15,708 @@
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=cd692fa67cfc"></script>
     <style>
-        /* Bind to the sitewide design tokens rather than declaring a second palette.
-           An earlier version of this page hardcoded a light theme, and because the site
-           renders dark it produced white cards with near invisible text. Fallbacks match
-           the tokens so the page still stands up if the stylesheet fails to load. */
-        :root {
-            --page-bg: var(--tmr-bg, #080d12);
-            --panel:   var(--tmr-panel, rgba(14,20,27,0.94));
-            --panel-2: var(--tmr-panel-2, rgba(18,26,34,0.90));
-            --line:    var(--tmr-line, rgba(148,163,184,0.18));
-            --text:    var(--tmr-text, #f8fafc);
-            --muted:   var(--tmr-muted, #9aa8bc);
-            --gold:    var(--tmr-gold, #e4b95b);
-            --teal:    var(--tmr-teal, #2dd4bf);
-            --stop:    var(--tmr-red, #ef4444);
+        /* -------------------------------------------------------------------
+           TMR Match — light exchange surface.
+
+           The sitewide shell renders dark and styles bare buttons, inputs and
+           `main` under `body.tmr-site-shell` (specificity 0,1,1 and 0,2,1). The
+           nav and footer stay exactly as they are; only the page body goes
+           light. Every rule below is scoped to `#mk` so it outranks the shell
+           without !important, the one exception being the body background,
+           which the shell itself sets !important.
+
+           Values are the approved light tokens from tmr-ds.css, written out
+           literally rather than through var() fallbacks. An earlier version of
+           this page inherited the dark tokens and produced invisible text;
+           hardcoding the light ramp is what stops that happening again.
+           ------------------------------------------------------------------- */
+        html body, html body.tmr-site-shell {
+            background: #F4F7FA !important;
+            color: #07182A;
+            /* Chrome's font boosting inflated the slip's 10px labels to 15px on a
+               390px viewport. The board is a data surface; its type stays where it
+               is set. */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
-        * { box-sizing: border-box; }
-        body {
-            margin:0; min-height:100vh;
-            background: var(--page-bg);
-            color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        /* The shell paints a fixed dark grid over the whole viewport. On a light
+           page it reads as dirt, so this page turns it off. */
+        html body.tmr-site-shell::before { display: none !important; }
+        #mk {
+            /* light ramp */
+            --page:#F4F7FA; --panel:#FFFFFF; --panel-2:#F6F9FC; --panel-3:#EDF3F9;
+            --ink:#07182A; --ink-2:#2E4459; --muted:#5E7590;
+            --line:#D9E3ED; --line-2:#C2D2E0;
+            --brand:#0C948C; --brand-dk:#07736D; --brand-lt:#22D2C0; --brand-soft:#E4F5F3;
+            --gold:#B98505; --gold-soft:#FBF1D8;
+            --green:#0A8B4E; --red:#BC372E; --red-soft:#FAE9E7;
+            --navy:#08192B;
+            --r:10px; --r-sm:7px;
+            --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+            --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 26px rgba(7,24,42,.10);
+
+            width:min(1240px, calc(100% - 32px));
+            max-width:1240px;
+            margin:0 auto;
+            padding:18px 0 34px;
+            color:var(--ink);
+            font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
-        .mk-page { width:min(1080px, calc(100% - 32px)); margin:0 auto; padding:112px 0 56px; }
-        .mk-head { display:flex; align-items:flex-end; justify-content:space-between; gap:22px; margin-bottom:18px; flex-wrap:wrap; }
-        .mk-kicker { margin:0 0 10px; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
-        h1 { margin:0; font-family:Barlow, Inter, sans-serif; font-size:clamp(34px,5vw,56px); line-height:.95; }
-        .mk-subtitle { margin:12px 0 0; max-width:680px; color:var(--muted); font-size:14.5px; line-height:1.55; }
-        h2 { font-family:Barlow, Inter, sans-serif; font-size:22px; margin:30px 0 12px; }
+        #mk *, #mk *::before, #mk *::after { box-sizing:border-box; }
 
-        .btn { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 15px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; text-decoration:none; }
-        .btn:disabled { opacity:.45; cursor:not-allowed; }
-        .btn.primary { background:var(--teal); border-color:var(--teal); color:#06231f; }
-        .btn.danger { border-color:rgba(188,55,46,.4); color:var(--stop); }
-        .btn.sm { min-height:34px; padding:0 11px; font-size:12px; }
+        /* ---------- header: one compact band, CTA on the right ---------- */
+        #mk .mk-head {
+            display:flex; align-items:center; justify-content:space-between;
+            gap:14px; flex-wrap:wrap; margin:0 0 8px;
+        }
+        #mk .mk-head h1 {
+            margin:0; font-family:Barlow, Inter, sans-serif; font-weight:800;
+            font-size:22px; line-height:1.1; letter-spacing:-.01em; color:var(--ink);
+        }
+        #mk .mk-head .lede { margin:2px 0 0; color:var(--muted); font-size:12px; line-height:1.4; }
+        #mk .mk-head .lede b { color:var(--ink-2); font-weight:700; }
+        #mk .mk-acts { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
 
-        .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin:20px 0 8px; }
-        .card { border:1px solid var(--line); border-radius:10px; padding:20px; background:var(--panel); }
-        .card .lbl { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-        .card .val { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:34px; line-height:1; }
-        .card .sub { margin-top:8px; color:var(--muted); font-size:12.5px; line-height:1.5; }
+        /* The description sits in the page copy, not in a hero. Three tight columns
+           so a full explanation costs about six lines of height rather than a screen,
+           and it folds away entirely on a phone. */
+        #mk .intro {
+            border:1px solid var(--line); background:var(--panel); border-radius:var(--r-sm);
+            margin:0 0 10px; box-shadow:var(--sh);
+        }
+        #mk .intro > summary {
+            cursor:pointer; list-style:none; padding:7px 12px; font-size:10px; font-weight:800;
+            letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+            display:flex; align-items:center; justify-content:space-between; gap:8px;
+        }
+        #mk .intro > summary::-webkit-details-marker { display:none; }
+        #mk .intro > summary::after {
+            content:""; flex:0 0 auto; width:6px; height:6px; margin-bottom:2px; opacity:.65;
+            border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg);
+        }
+        #mk .intro[open] > summary { border-bottom:1px solid var(--line); }
+        #mk .intro[open] > summary::after { transform:rotate(225deg); margin-bottom:-2px; }
+        #mk .intro-body {
+            padding:9px 12px 10px;
+            columns:4; column-gap:20px; column-rule:1px solid var(--line);
+        }
+        #mk .intro-body p { margin:0 0 6px; font-size:11.5px; line-height:1.5; color:var(--ink-2); break-inside:avoid; }
+        #mk .intro-body p:last-child { margin-bottom:0; }
+        #mk .intro-body b { color:var(--ink); font-weight:700; }
+        @media (max-width: 1180px) { #mk .intro-body { columns:3; } }
+        @media (max-width: 900px)  { #mk .intro-body { columns:2; } }
 
-        .tabs { display:flex; gap:6px; flex-wrap:wrap; margin:26px 0 14px; border-bottom:1px solid var(--line); }
-        .tab { appearance:none; border:0; background:none; font-family:inherit; font-weight:800; font-size:13px; color:var(--muted); padding:10px 12px; border-bottom:3px solid transparent; cursor:pointer; }
-        .tab[aria-selected="true"] { color:var(--text); border-bottom-color:var(--gold); }
-        .tab .count { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:rgba(148,163,184,0.16); font-size:11px; }
+        /* ---------- buttons ---------- */
+        #mk .mkb {
+            display:inline-flex; align-items:center; justify-content:center; gap:7px;
+            min-height:32px; padding:0 12px; border-radius:var(--r-sm);
+            border:1px solid var(--line-2); background:var(--panel); color:var(--ink);
+            font-family:inherit; font-weight:700; font-size:12.5px; line-height:1;
+            cursor:pointer; text-decoration:none; white-space:nowrap;
+            box-shadow:0 1px 1px rgba(7,24,42,.04); transition:background .12s, border-color .12s, box-shadow .12s, color .12s;
+        }
+        #mk .mkb:hover { background:var(--panel-2); border-color:var(--line-2); transform:none; }
+        #mk .mkb:disabled { opacity:.45; cursor:not-allowed; }
+        #mk .mkb.mkb-primary, #mk button.mkb.mkb-primary[type="submit"] {
+            background:var(--brand); border-color:var(--brand); color:#fff;
+            box-shadow:0 1px 2px rgba(7,115,109,.28), 0 6px 16px rgba(12,148,140,.20);
+        }
+        #mk .mkb.mkb-primary:hover { background:var(--brand-dk); border-color:var(--brand-dk); color:#fff; }
+        #mk .mkb.danger { border-color:rgba(188,55,46,.34); color:var(--red); background:var(--panel); }
+        #mk .mkb.danger:hover { background:var(--red-soft); }
+        #mk .mkb.sm { min-height:28px; padding:0 10px; font-size:11.5px; }
+        #mk .mkb.cta { min-height:34px; padding:0 15px; font-size:12.5px; }
 
-        .list { display:grid; gap:12px; }
-        .offer { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:16px 18px; display:grid; gap:14px; }
-        .offer-top { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
-        .offer-what { flex:1 1 300px; min-width:0; }
-        .offer-what strong { font-size:16px; display:block; }
-        .offer-meta { color:var(--muted); font-size:12.5px; margin-top:5px; line-height:1.5; }
-        .offer-size { text-align:right; white-space:nowrap; }
-        .offer-size .big { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:26px; line-height:1; }
-        .offer-size .of { color:var(--muted); font-size:12px; margin-top:4px; }
-        .offer-acts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        /* ---------- stats strip: one row, three numbers ---------- */
+        #mk .strip {
+            display:flex; align-items:stretch; flex-wrap:wrap;
+            background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+            box-shadow:var(--sh); margin:0 0 10px; overflow:hidden;
+        }
+        #mk .mk-stat {
+            display:flex; align-items:center; gap:8px; padding:7px 13px;
+            border-right:1px solid var(--line); min-width:0; flex:1 1 0;
+        }
+        #mk .mk-stat:last-of-type { border-right:0; }
+        #mk .mk-stat .ico {
+            flex:0 0 22px; height:22px; border-radius:6px; display:inline-flex;
+            align-items:center; justify-content:center; background:var(--brand-soft); color:var(--brand-dk);
+        }
+        #mk .mk-stat.gold .ico { background:var(--gold-soft); color:var(--gold); }
+        #mk .mk-stat.navy .ico { background:#E7EEF6; color:var(--navy); }
+        #mk .mk-stat .k { font-size:10px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); display:block; }
+        #mk .mk-stat .v { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:15px; line-height:1.2; color:var(--ink); display:block; }
+        #mk .mk-stat .v small { font-size:10.5px; font-weight:700; color:var(--muted); margin-left:3px; letter-spacing:.02em; }
+        #mk .strip-tail { margin-left:auto; display:flex; align-items:center; gap:12px; padding:7px 13px; }
+        #mk .strip-tail a { color:var(--brand-dk); font-size:11.5px; font-weight:700; text-decoration:none; }
+        #mk .strip-tail a:hover { text-decoration:underline; }
 
-        .bar { height:6px; border-radius:999px; background:rgba(148,163,184,0.16); overflow:hidden; }
-        .bar span { display:block; height:100%; background:var(--teal); }
+        /* ---------- notices ---------- */
+        #mk .notice {
+            display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+            border:1px solid var(--line); border-left:3px solid var(--brand);
+            background:var(--panel); border-radius:var(--r-sm); padding:8px 12px;
+            font-size:12px; color:var(--ink-2); margin:0 0 10px; box-shadow:var(--sh);
+        }
+        #mk .notice b { color:var(--ink); }
+        #mk .msg { border-radius:var(--r-sm); padding:8px 12px; font-size:12px; font-weight:600; margin:0 0 9px; }
+        #mk .msg.err { background:var(--red-soft); border:1px solid rgba(188,55,46,.30); color:#8E2A23; }
+        #mk .msg.ok { background:var(--brand-soft); border:1px solid rgba(12,148,140,.32); color:var(--brand-dk); }
+        /* Loading shows the shape of the board it is about to fill, rather than a
+           line of text on an empty page. */
+        #mk .skel { padding:0; overflow:hidden; }
+        #mk .skel .skel-head { height:29px; background:var(--panel-2); border-bottom:1px solid var(--line); }
+        #mk .skel .skel-row { height:46px; border-bottom:1px solid var(--line); background:
+            linear-gradient(90deg, var(--panel) 0%, var(--panel-2) 45%, var(--panel) 90%);
+            background-size:220% 100%; animation:mkskel 1.15s linear infinite; }
+        #mk .skel .skel-row:last-child { border-bottom:0; }
+        #mk .skel .skel-row:nth-child(3) { animation-delay:.12s; }
+        #mk .skel .skel-row:nth-child(4) { animation-delay:.24s; }
+        #mk .skel .skel-row:nth-child(5) { animation-delay:.36s; }
+        @keyframes mkskel { from { background-position:120% 0; } to { background-position:-120% 0; } }
+        @media (prefers-reduced-motion: reduce) { #mk .skel .skel-row { animation:none; } }
 
-        .side { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:1px solid; }
-        .side.for { background:rgba(45,212,191,0.14); border-color:rgba(45,212,191,0.40); color:var(--teal); }
-        .side.against { background:rgba(228,185,91,0.14); border-color:rgba(228,185,91,0.40); color:var(--gold); }
-        .pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:1px solid var(--line); background:rgba(148,163,184,0.12); color:var(--muted); }
-        .pill.open, .pill.accepted { background:rgba(45,212,191,0.14); border-color:rgba(45,212,191,0.40); color:var(--teal); }
-        .pill.partially_filled { background:rgba(228,185,91,0.14); border-color:rgba(228,185,91,0.40); color:var(--gold); }
-        .pill.cancelled, .pill.expired { background:rgba(239,68,68,0.14); border-color:rgba(239,68,68,0.40); color:var(--stop); }
+        /* ---------- tabs: segmented control, the CTA is not a tab ---------- */
+        #mk .tabsrow { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 8px; }
+        #mk .mk-tabs {
+            display:inline-flex; gap:2px; padding:2px; border-radius:7px;
+            background:var(--panel-3); border:1px solid var(--line); flex-wrap:wrap;
+        }
+        #mk .mk-tab {
+            appearance:none; border:1px solid transparent; background:none; border-radius:7px;
+            font-family:inherit; font-weight:700; font-size:12px; color:var(--ink-2);
+            padding:5px 11px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+            transition:background .12s, color .12s, box-shadow .12s;
+        }
+        #mk .mk-tab:hover { color:var(--ink); transform:none; }
+        #mk .mk-tab[aria-selected="true"] {
+            background:var(--panel); color:var(--ink); border-color:var(--line);
+            box-shadow:0 1px 2px rgba(7,24,42,.08);
+        }
+        #mk .mk-tab .count {
+            display:inline-block; min-width:17px; text-align:center; padding:0 5px; border-radius:999px;
+            background:rgba(94,117,144,.16); color:var(--ink-2); font-size:10.5px; font-weight:800;
+        }
+        #mk .mk-tab[aria-selected="true"] .count { background:var(--brand-soft); color:var(--brand-dk); }
+        /* the CTA carries .mk-tab for behaviour only — it must never look like one */
+        #mk .mkb.mk-tab { border-radius:var(--r-sm); }
+        #mk .mkb.mk-tab[aria-selected="true"] { background:var(--brand-dk); border-color:var(--brand-dk); color:#fff; box-shadow:none; }
+        #mk .mk-tabs-note { color:var(--muted); font-size:11.5px; }
 
-        .take { border-top:1px solid var(--line); padding-top:12px; display:grid; gap:9px; }
-        .take-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
-        .take .field { display:grid; gap:6px; }
-        .take label { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-        .take input { font-family:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel-2); color:var(--text); width:130px; }
-        .confirm { font-size:13px; line-height:1.5; color:var(--text); font-weight:600; }
-        .confirm b { font-weight:800; }
+        /* ---------- exchange layout: board + a standing bet slip ---------- */
+        #mk .xwrap { display:grid; grid-template-columns:minmax(0,1fr) 292px; gap:12px; align-items:start; }
+        @media (max-width: 1100px) { #mk .xwrap { grid-template-columns:minmax(0,1fr); } }
 
-        .ladder { display:grid; gap:8px; }
-        .rung { display:flex; align-items:center; gap:12px; font-size:13px; }
-        .rung .lbl { min-width:190px; font-weight:700; }
-        .rung-game { font-weight:600; font-size:11.5px; color:var(--muted); }
-        .rung .track { flex:1; height:22px; border-radius:6px; background:rgba(148,163,184,0.14); overflow:hidden; position:relative; }
-        .rung .fillbar { height:100%; background:linear-gradient(90deg, var(--teal), rgba(45,212,191,0.45)); }
-        .rung .amt { min-width:96px; text-align:right; font-weight:800; white-space:nowrap; }
+        /* sport filter rail, the way a book puts leagues across the top */
+        #mk .sportbar {
+            display:flex; align-items:center; gap:2px; padding:5px 8px; overflow-x:auto;
+            background:var(--panel-2); border-bottom:1px solid var(--line);
+        }
+        #mk .sp {
+            appearance:none; border:1px solid transparent; background:none; border-radius:5px;
+            font-family:inherit; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+            color:var(--muted); padding:4px 9px; cursor:pointer; white-space:nowrap;
+        }
+        #mk .sp:hover { color:var(--ink); background:rgba(94,117,144,.10); transform:none; }
+        #mk .sp[aria-pressed="true"] { background:var(--navy); border-color:var(--navy); color:#fff; }
+        #mk .sp .n { opacity:.65; margin-left:5px; font-weight:700; }
 
-        .empty { border:1px dashed var(--line); border-radius:10px; padding:26px; text-align:center; color:var(--muted); font-size:13.5px; background:var(--panel); }
-        .empty strong { display:block; color:var(--text); font-size:15px; margin-bottom:6px; }
-        .howto { text-align:left; padding:26px 24px; }
-        .howto strong { font-size:17px; margin-bottom:10px; }
-        .howto-lede { margin:0 0 16px; color:var(--muted); font-size:13.5px; line-height:1.6; max-width:640px; }
-        .howto-steps { list-style:none; margin:0 0 18px; padding:0; display:grid; gap:11px; }
-        .howto-steps li { display:flex; gap:11px; align-items:flex-start; color:var(--text); font-size:13.5px; line-height:1.5; }
-        .howto-steps span { flex:0 0 22px; height:22px; border-radius:999px; background:rgba(45,212,191,0.16); color:var(--teal); font-weight:800; font-size:12px; display:inline-flex; align-items:center; justify-content:center; }
-        .howto-cta { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-        .note { color:var(--muted); font-size:12.5px; line-height:1.6; margin-top:14px; }
+        /* one event, one block — offers sit under the game they belong to */
+        #mk .gh {
+            display:flex; align-items:center; gap:8px; padding:5px 12px;
+            background:var(--panel-3); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+        }
+        #mk .gh .lg {
+            font-size:9.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+            background:var(--navy); color:#fff; border-radius:3px; padding:2px 5px;
+        }
+        #mk .gh .ev { font-size:12px; font-weight:700; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        #mk .gh .meta { margin-left:auto; font-size:10.5px; font-weight:700; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
 
-        form.create { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:20px; display:grid; gap:14px; }
-        .field { display:grid; gap:6px; }
-        .field label { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-        .field input, .field select { font-family:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel-2); color:var(--text); }
-        .field .hint { font-size:12px; color:var(--muted); }
-        .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+        /* ---------- market board ---------- */
+        #mk .board { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--sh); overflow:hidden; }
+        #mk .board-head {
+            display:grid; align-items:center; gap:12px; padding:6px 12px;
+            grid-template-columns:minmax(0,1fr) 124px 66px 140px 112px;
+            background:var(--panel-2); border-bottom:1px solid var(--line);
+            font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+        }
+        #mk .board-head .r { text-align:right; }
+        #mk .row { border-bottom:1px solid var(--line); }
+        #mk .row:last-child { border-bottom:0; }
+        #mk .row-main {
+            display:grid; align-items:center; gap:12px; padding:7px 12px;
+            grid-template-columns:minmax(0,1fr) 124px 66px 140px 112px;
+        }
+        #mk .row:hover { background:var(--panel-2); }
+        #mk .c-pick { min-width:0; }
+        #mk .c-pick .pick { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+        #mk .c-pick .pick b { font-size:13px; font-weight:700; color:var(--ink); }
+        #mk .c-pick .sub { margin-top:1px; color:var(--muted); font-size:11px; line-height:1.35; }
+        #mk .c-pick .sub .dot { opacity:.5; margin:0 5px; }
+        #mk .c-who { display:flex; align-items:center; gap:6px; min-width:0; font-size:11.5px; color:var(--ink-2); font-weight:600; }
+        #mk .c-who .av {
+            flex:0 0 19px; width:19px; height:19px; border-radius:50%; background:var(--navy); color:#fff;
+            display:inline-flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:800; text-transform:uppercase;
+        }
+        #mk .c-who span.nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        #mk .c-price {
+            text-align:right; font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:14px; color:var(--ink);
+            font-variant-numeric:tabular-nums;
+        }
+        #mk .c-size { text-align:right; }
+        #mk .c-size .big { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:14px; color:var(--ink); font-variant-numeric:tabular-nums; }
+        #mk .c-size .of { color:var(--muted); font-size:10.5px; margin-top:1px; }
+        #mk .c-size .bar { height:3px; border-radius:999px; background:rgba(94,117,144,.18); overflow:hidden; margin-top:4px; }
+        #mk .c-size .bar span { display:block; height:100%; background:var(--brand); }
+        #mk .c-act { display:flex; justify-content:flex-end; align-items:center; gap:7px; flex-wrap:wrap; }
 
-        .msg { border-radius:8px; padding:12px 14px; font-size:13px; font-weight:600; margin-bottom:12px; }
-        .msg.err { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.40); color:#fca5a5; }
-        .msg.ok { background:rgba(45,212,191,0.12); border:1px solid rgba(45,212,191,0.40); color:var(--teal); }
+        /* the price button is the whole interaction, like a back/lay cell */
+        #mk .px {
+            appearance:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+            width:100%; min-height:38px; padding:4px 6px; cursor:pointer;
+            border:1px solid rgba(12,148,140,.45); border-radius:var(--r-sm);
+            background:var(--brand-soft); color:var(--brand-dk);
+            font-family:inherit; transition:background .12s, border-color .12s, box-shadow .12s;
+        }
+        #mk .px:hover { background:#D2EEEB; border-color:var(--brand); box-shadow:0 1px 3px rgba(7,115,109,.18); transform:none; }
+        #mk .px[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+        #mk .px .pxv { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:15px; line-height:1; font-variant-numeric:tabular-nums; }
+        #mk .px .pxa { font-size:9.5px; font-weight:700; letter-spacing:.03em; opacity:.85; font-variant-numeric:tabular-nums; }
+        #mk .px-dead {
+            display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+            min-height:38px; border:1px dashed var(--line-2); border-radius:var(--r-sm); color:var(--muted);
+            font-size:9.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+        }
 
-        table.hist { width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); font-size:13px; }
-        table.hist th, table.hist td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); }
-        table.hist th { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
-        .wrap { overflow-x:auto; }
-        [hidden] { display:none !important; }
+        /* ---------- bet slip ---------- */
+        #mk .slip {
+            background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+            box-shadow:var(--sh); position:sticky; top:88px; overflow:hidden;
+        }
+        #mk .slip-head {
+            display:flex; align-items:center; justify-content:space-between; gap:8px;
+            padding:7px 11px; background:var(--navy); color:#fff;
+            font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+        }
+        #mk .slip-x { appearance:none; border:0; background:none; color:#fff; opacity:.7; font-size:15px; line-height:1; cursor:pointer; padding:0 2px; }
+        #mk .slip-x:hover { opacity:1; transform:none; }
+        #mk .slip-empty { padding:16px 12px; color:var(--muted); font-size:11.5px; line-height:1.5; text-align:center; }
+        #mk .slip-body { padding:10px 11px 11px; display:grid; gap:9px; }
+        #mk .slip-pick { font-size:13px; font-weight:800; color:var(--ink); line-height:1.25; }
+        #mk .slip-ev { font-size:10.5px; color:var(--muted); margin-top:2px; }
+        #mk .slip-line {
+            display:flex; align-items:center; justify-content:space-between; gap:8px;
+            font-size:11.5px; color:var(--ink-2); border-top:1px solid var(--line); padding-top:6px;
+        }
+        #mk .slip-line b { font-family:Barlow, Inter, sans-serif; font-size:13px; color:var(--ink); font-variant-numeric:tabular-nums; }
+        #mk .slip-chips { display:flex; gap:4px; }
+        #mk .stk {
+            flex:1 1 0; appearance:none; border:1px solid var(--line-2); background:var(--panel-2); color:var(--ink-2);
+            border-radius:5px; font-family:inherit; font-size:10.5px; font-weight:800; padding:5px 0; cursor:pointer;
+        }
+        #mk .stk:hover { background:var(--panel-3); color:var(--ink); transform:none; }
+        #mk .slip-go { display:grid; gap:6px; }
+        #mk .slip-go .mkb { width:100%; }
+        #mk .slip-note { font-size:10px; color:var(--muted); line-height:1.45; }
+        @media (max-width: 1100px) {
+            #mk .slip { position:fixed; left:0; right:0; bottom:0; top:auto; z-index:60; border-radius:10px 10px 0 0;
+                        box-shadow:0 -8px 30px rgba(7,24,42,.20); border-bottom:0; }
+            #mk .slip.is-idle { display:none; }
+        }
 
-        @media (max-width: 560px) {
-            .offer-size { text-align:left; }
-            .rung .lbl { min-width:110px; }
-            .rung .amt { min-width:70px; }
+        #mk .side { display:inline-block; padding:1px 6px; border-radius:4px; font-size:9.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border:1px solid; }
+        #mk .side.for { background:var(--brand-soft); border-color:rgba(12,148,140,.34); color:var(--brand-dk); }
+        #mk .side.against { background:var(--gold-soft); border-color:rgba(185,133,5,.34); color:var(--gold); }
+        #mk .pill { display:inline-block; padding:1px 6px; border-radius:4px; font-size:9.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; border:1px solid var(--line-2); background:var(--panel-2); color:var(--muted); }
+        #mk .pill.open, #mk .pill.accepted { background:var(--brand-soft); border-color:rgba(12,148,140,.34); color:var(--brand-dk); }
+        #mk .pill.partially_filled { background:var(--gold-soft); border-color:rgba(185,133,5,.34); color:var(--gold); }
+        #mk .pill.cancelled, #mk .pill.expired { background:var(--red-soft); border-color:rgba(188,55,46,.30); color:var(--red); }
+
+        /* the take controls live in a drawer, so an open board of twenty offers is
+           twenty readable lines rather than twenty forms */
+        #mk .take { border-top:1px dashed var(--line-2); background:var(--panel-2); padding:9px 12px; display:grid; gap:7px; }
+        #mk .take-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+        #mk .take .field { display:grid; gap:5px; }
+        #mk .take label { font-size:9.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+        #mk .confirm { font-size:12px; line-height:1.45; color:var(--ink-2); font-weight:600; }
+        #mk .confirm b { color:var(--ink); font-weight:800; }
+
+        #mk input, #mk select {
+            font-family:inherit; font-size:12.5px; min-height:32px; padding:6px 9px;
+            border:1px solid var(--line-2); border-radius:var(--r-sm);
+            background:var(--panel); color:var(--ink); width:100%; outline:none;
+        }
+        #mk .take input { width:112px; }
+        #mk input:focus, #mk select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(12,148,140,.14); }
+        #mk input::placeholder { color:#9AAEC2; }
+
+        /* ---------- depth ladder ---------- */
+        #mk .ladder { display:grid; gap:5px; padding:10px 12px; }
+        #mk .rung { display:flex; align-items:center; gap:10px; font-size:12px; }
+        #mk .rung .lbl { min-width:190px; font-weight:700; color:var(--ink); }
+        #mk .rung-game { font-weight:600; font-size:10px; color:var(--muted); }
+        #mk .rung .track { flex:1; height:14px; border-radius:4px; background:var(--panel-3); overflow:hidden; }
+        #mk .rung .fillbar { height:100%; background:linear-gradient(90deg, var(--brand), var(--brand-lt)); }
+        #mk .rung .amt { min-width:86px; text-align:right; font-weight:800; white-space:nowrap; font-variant-numeric:tabular-nums; }
+
+        /* ---------- empty states: compact, with the explainer folded away ---------- */
+        #mk .empty { padding:20px 16px; text-align:center; }
+        #mk .empty .eico {
+            width:30px; height:30px; margin:0 auto 8px; border-radius:8px; background:var(--brand-soft);
+            color:var(--brand-dk); display:flex; align-items:center; justify-content:center;
+        }
+        #mk .empty strong { display:block; color:var(--ink); font-size:13.5px; font-weight:800; }
+        #mk .empty p { margin:4px 0 0; color:var(--muted); font-size:12px; line-height:1.45; }
+        #mk .empty-cta { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-top:11px; }
+        #mk details.howto { border-top:1px solid var(--line); background:var(--panel-2); }
+        #mk details.howto > summary {
+            cursor:pointer; list-style:none; padding:8px 12px; font-size:11.5px; font-weight:700;
+            color:var(--brand-dk); display:flex; align-items:center; gap:7px;
+        }
+        #mk details.howto > summary::-webkit-details-marker { display:none; }
+        #mk details.howto > summary::after { content:"\203A"; transform:rotate(90deg); font-size:15px; line-height:1; opacity:.7; }
+        #mk details.howto[open] > summary::after { transform:rotate(-90deg); }
+        #mk .howto-body { padding:0 12px 12px; }
+        #mk .howto-steps { list-style:none; margin:0; padding:0; display:grid; gap:7px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+        #mk .howto-steps li { display:flex; gap:7px; align-items:flex-start; color:var(--ink-2); font-size:11.5px; line-height:1.45; }
+        #mk .howto-steps span.n {
+            flex:0 0 17px; height:17px; border-radius:999px; background:var(--brand-soft); color:var(--brand-dk);
+            font-weight:800; font-size:10px; display:inline-flex; align-items:center; justify-content:center;
+        }
+
+        /* ---------- create form ---------- */
+        #mk form.create { padding:12px; display:grid; gap:10px; }
+        #mk .field { display:grid; gap:5px; min-width:0; }
+        #mk .field label { font-size:9.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+        #mk .field .hint { font-size:10.5px; color:var(--muted); }
+        #mk .grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+        #mk .form-foot { display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:10px; }
+        #mk .form-foot .hint { font-size:11px; color:var(--muted); }
+
+        #mk .board-note { color:var(--muted); font-size:11.5px; line-height:1.45; padding:7px 12px; border-bottom:1px solid var(--line); background:var(--panel-2); margin:0; }
+        #mk .foot { color:var(--muted); font-size:11px; line-height:1.55; margin:12px 2px 0; max-width:900px; }
+        #mk [hidden] { display:none !important; }
+
+        /* The shell forces heading and paragraph colour with !important for its dark
+           ramp (`.tmr-site-shell h1`, `.tmr-site-shell p`). On a light page those
+           declarations have to be answered in kind, and only for this page's own
+           elements. */
+        #mk h1 {
+            color:var(--ink) !important;
+            font-family:Barlow, Inter, sans-serif !important;
+            font-size:22px !important; line-height:1.1 !important; letter-spacing:-.01em !important;
+        }
+        #mk p, #mk li, #mk label, #mk td, #mk th { color:inherit !important; }
+        #mk .lede, #mk .board-note, #mk .mk-tabs-note, #mk .foot, #mk .empty p, #mk .hint,
+        #mk .field .hint, #mk .form-foot .hint { color:var(--muted) !important; }
+        #mk .lede b { color:var(--ink-2) !important; }
+        #mk .empty strong, #mk .confirm b { color:var(--ink) !important; }
+        #mk .confirm { color:var(--ink-2) !important; }
+        #mk .howto-steps li { color:var(--ink-2) !important; }
+        /* `.tmr-site-shell input/select` is !important too, and it is the dark ramp. */
+        #mk input, #mk select {
+            border-radius:var(--r-sm) !important;
+            border:1px solid var(--line-2) !important;
+            background:var(--panel) !important;
+            color:var(--ink) !important;
+            box-shadow:none !important;
+        }
+        #mk input:focus, #mk select:focus {
+            border-color:var(--brand) !important;
+            box-shadow:0 0 0 3px rgba(12,148,140,.14) !important;
+        }
+        #mk input::placeholder { color:#9AAEC2 !important; }
+
+        /* Under 768px the shell also forces `p, li, label { font-size:0.95rem !important }`,
+           which blew every 10px label on this board up to 15px. The board's type scale is
+           part of it being readable at a glance, so it is restated in kind. */
+        #mk .lede { font-size:12px !important; }
+        #mk .intro-body p { font-size:11.5px !important; }
+        #mk .mk-tabs-note, #mk .board-note, #mk .howto-steps li { font-size:11.5px !important; }
+        #mk .foot, #mk .slip-note { font-size:10px !important; }
+        #mk .foot { font-size:11px !important; }
+        #mk .empty p { font-size:12px !important; }
+        #mk .field label, #mk .take label { font-size:9.5px !important; }
+        #mk .field .hint, #mk .form-foot .hint { font-size:10.5px !important; }
+        #mk .confirm { font-size:12px !important; }
+
+        /* ---------- responsive ---------- */
+        @media (max-width: 1020px) {
+            #mk .board-head, #mk .row-main { grid-template-columns:minmax(0,1fr) 108px 70px 132px 112px; gap:10px; }
+        }
+        @media (max-width: 860px) {
+            #mk { padding-top:18px; }
+            #mk .board-head { display:none; }
+            #mk .row-main { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"pick size" "who act"; row-gap:10px; }
+            #mk .c-pick { grid-area:pick; }
+            #mk .c-size { grid-area:size; }
+            #mk .c-who  { grid-area:who; }
+            #mk .c-act  { grid-area:act; }
+            #mk .c-price { display:none; }
+            #mk .rung .lbl { min-width:120px; }
+            #mk .rung .amt { min-width:74px; }
+        }
+        @media (max-width: 620px) {
+            #mk .mk-head { align-items:flex-start; }
+            #mk .mk-acts { width:100%; }
+            #mk .mk-acts .mkb { flex:1 1 auto; }
+            /* Three numbers stay on one line on a phone. Stacking them turned the
+               strip into three quarters of the first screen. */
+            #mk .mk-stat { flex-direction:column; align-items:flex-start; gap:2px; padding:9px 11px; }
+            #mk .mk-stat .ico { display:none; }
+            #mk .mk-stat .k { font-size:9.5px; letter-spacing:.05em; }
+            #mk .mk-stat .v { font-size:16px; }
+            #mk .mk-stat .v small { font-size:10px; }
+            #mk .strip-tail, #mk .mk-tabs-note, #mk .board-note { display:none; }
+            #mk .mk-tabs { width:100%; flex-wrap:nowrap; overflow-x:auto; }
+            #mk .mk-tab { flex:0 0 auto; }
+            #mk .mk-head h1 { font-size:19px !important; }
+            #mk .lede { font-size:11.5px; }
+            #mk .intro-body { columns:1; padding:8px 11px 9px; }
+            #mk .c-pick .when { display:none; }
+            /* 16px is the threshold under which a phone browser zooms on focus. */
+            #mk .slip input { font-size:16px !important; }
+            #mk .slip-body { padding:8px 10px 10px; gap:7px; }
+            #mk .slip-pick { font-size:12.5px; }
+            #mk .slip-note { font-size:9.5px !important; }
+            #mk .stk { padding:6px 0; }
         }
     </style>
 </head>
 <body>
-    <main class="mk-page">
+    <main id="mk" class="mk-page">
         <div class="mk-head">
-            <div>
-                <p class="mk-kicker">Player to player</p>
+            <div class="mk-id">
                 <h1>TMR Match</h1>
-                <p class="mk-subtitle">Post the bet you actually want and let someone take the other side. You choose the game, the pick and the price, and put up TMR to back it. Other members can take all of your offer or just part of it, and whatever nobody takes stays yours.</p>
+                <p class="lede">Player-to-player betting with <b>TMR</b>, priced by members instead of a book.</p>
             </div>
-            <div><a class="btn" href="/wallet/earn/">Earn TMR</a></div>
+            <div class="mk-acts">
+                <a class="mkb" href="/wallet/earn/">Earn TMR</a>
+                <button class="mkb mkb-primary cta mk-tab mk-tab-cta" role="tab" data-tab="create" aria-selected="false" id="ctaPost">Post an Offer</button>
+                <a class="mkb mkb-primary cta" href="/login/" id="ctaSignIn" hidden>Sign in to post</a>
+            </div>
         </div>
 
-        <div id="loadState" class="empty">Loading the market...</div>
+        <details class="intro" id="mkIntro" open>
+            <summary>What TMR Match is</summary>
+            <div class="intro-body">
+                <p><b>A peer-to-peer betting board.</b> You post the bet you want — game, market, selection, price in American odds and the TMR you are putting up — and it sits there until a member takes the other side. No house, no book setting the number.</p>
+                <p><b>Taken in full or in part.</b> Post 500 TMR, a taker wants 200, the other 300 stays open. Your TMR is held at post time, so every offer on the board is funded, and anything nobody takes comes back when you withdraw it.</p>
+                <p><b>Held in escrow</b> once matched, until the game settles, then paid in full to the winner. <b>No fee on a match</b> and no juice past the price the two of you agreed. Pushes and postponed games return both sides.</p>
+                <p><b>Where the money is</b> shows the TMR sitting behind each pick and price, so you can read which side the board is leaning on before you post. Everything settles in TMR held on TrustMyRecord and is not redeemable off site.</p>
+            </div>
+        </details>
+
+        <div id="loadState" class="board skel" role="status" aria-busy="true" aria-label="Loading the market">
+            <div class="skel-head"></div>
+            <div class="skel-row"></div>
+            <div class="skel-row"></div>
+            <div class="skel-row"></div>
+            <div class="skel-row"></div>
+        </div>
         <div id="errState" class="msg err" hidden></div>
 
         <div id="mkBody" hidden>
-            <div class="cards">
-                <div class="card">
-                    <div class="lbl">Offers open now</div>
-                    <div class="val" id="cOpen">0</div>
-                    <div class="sub">Waiting for someone to take the other side.</div>
+            <div class="strip">
+                <div class="mk-stat">
+                    <span class="ico" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 6-7"/><path d="M14 8h6v6"/></svg>
+                    </span>
+                    <span>
+                        <span class="k">Open offers</span>
+                        <span class="v" id="cOpen">0</span>
+                    </span>
                 </div>
-                <div class="card">
-                    <div class="lbl">TMR available to take</div>
-                    <div class="val" id="cAvail">0</div>
-                    <div class="sub">Added up across every open offer.</div>
+                <div class="mk-stat gold">
+                    <span class="ico" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.6 9.8h4.1a1.9 1.9 0 010 3.8H9.6"/></svg>
+                    </span>
+                    <span>
+                        <span class="k">Available to take</span>
+                        <span class="v"><span id="cAvail">0</span><small>TMR</small></span>
+                    </span>
                 </div>
-                <div class="card" id="balCard" hidden>
-                    <div class="lbl">Your spendable TMR</div>
-                    <div class="val" id="cBal">0</div>
-                    <div class="sub">Posting an offer holds this TMR until it is taken or you withdraw it.</div>
+                <div class="mk-stat navy" id="balCard" hidden>
+                    <span class="ico" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A2.5 2.5 0 015.5 5H18a2 2 0 012 2v1"/><path d="M3 7.5V17a2 2 0 002 2h14a2 2 0 002-2v-7H6.5A3.5 3.5 0 013 7.5z"/><circle cx="16.5" cy="13.5" r="1.1" fill="currentColor" stroke="none"/></svg>
+                    </span>
+                    <span>
+                        <span class="k">Your balance</span>
+                        <span class="v"><span id="cBal">0</span><small>TMR</small></span>
+                    </span>
+                </div>
+                <div class="strip-tail">
+                    <a href="/tmr-coin/">What is TMR?</a>
                 </div>
             </div>
 
-            <div id="signedOutNote" class="empty" hidden style="margin-top:16px;">
-                <strong>You are browsing as a guest</strong>
-                Anyone can read the market. <a class="btn sm" href="/login/">Sign in</a> to post an offer or take one.
+            <div id="signedOutNote" class="notice" hidden>
+                <span><b>You are browsing as a guest.</b> Anyone can read the market.</span>
+                <a class="mkb sm" href="/login/">Sign in</a>
             </div>
 
-            <div class="tabs" role="tablist">
-                <button class="tab" role="tab" data-tab="market" aria-selected="true">Market<span class="count" id="nMarket">0</span></button>
-                <button class="tab" role="tab" data-tab="depth" aria-selected="false">Where the money is</button>
-                <button class="tab" role="tab" data-tab="mine" aria-selected="false">My offers<span class="count" id="nMine">0</span></button>
-                <button class="tab" role="tab" data-tab="positions" aria-selected="false">My matches<span class="count" id="nPos">0</span></button>
-                <button class="tab" role="tab" data-tab="create" aria-selected="false">Post an offer</button>
+            <div class="tabsrow">
+                <div class="mk-tabs" role="tablist">
+                    <button class="mk-tab" role="tab" data-tab="market" aria-selected="true">Market<span class="count" id="nMarket">0</span></button>
+                    <button class="mk-tab" role="tab" data-tab="depth" aria-selected="false">Where the money is</button>
+                    <button class="mk-tab" role="tab" data-tab="mine" aria-selected="false">My offers<span class="count" id="nMine">0</span></button>
+                    <button class="mk-tab" role="tab" data-tab="positions" aria-selected="false">My matches<span class="count" id="nPos">0</span></button>
+                </div>
+                <p class="mk-tabs-note">No fee on a match. Both sides are held until the game settles.</p>
             </div>
 
             <div id="panelMsg" class="msg" hidden></div>
 
             <section id="panel-market">
-                <p class="note" id="marketLede" style="margin:0 0 14px;" hidden>Taking an offer puts up the TMR you enter, and the same amount comes out of theirs. Both sides are held until the game settles, and you can take part of an offer rather than all of it.</p>
-                <div class="list" id="listMarket"></div>
-                <div class="empty howto" id="emptyMarket" hidden>
-                    <strong>No offers on the board yet</strong>
-                    <p class="howto-lede">TMR Match lets you post the bet you actually want and wait for someone to take the other side. You set the pick and the price, so you are not stuck with a number a book chose for you.</p>
-                    <ol class="howto-steps">
-                        <li><span>1</span> Post an offer with your pick, your price and how much TMR you are putting up.</li>
-                        <li><span>2</span> Another member takes it, all at once or a piece at a time.</li>
-                        <li><span>3</span> Both sides are held until the game settles, then the winner is paid. No fee.</li>
-                    </ol>
-                    <div class="howto-cta" id="emptyCta"></div>
+              <div class="xwrap">
+                <div class="board">
+                    <div class="sportbar" id="sportBar" hidden></div>
+                    <div class="board-head" id="marketHead" hidden>
+                        <div>Selection</div>
+                        <div>Posted by</div>
+                        <div class="r">Price</div>
+                        <div class="r">Offered</div>
+                        <div class="r">Take</div>
+                    </div>
+                    <div class="list" id="listMarket"></div>
+                    <div class="empty" id="boardError" hidden>
+                        <div class="eico" aria-hidden="true" style="background:var(--red-soft);color:var(--red);">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9"/></svg>
+                        </div>
+                        <strong>The board could not be loaded</strong>
+                        <p>Your TMR and any offers you have up are unaffected.</p>
+                        <div class="empty-cta"><button class="mkb" type="button" data-retry>Try again</button></div>
+                    </div>
+                    <div class="empty" id="emptyFilter" hidden>
+                        <strong>Nothing open in this league</strong>
+                        <p>Clear the filter to see the rest of the board.</p>
+                    </div>
+                    <div class="empty" id="emptyMarket" hidden>
+                        <div class="eico" aria-hidden="true">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V9M10 18V5M16 18v-6M22 18H2"/></svg>
+                        </div>
+                        <strong>No open offers yet</strong>
+                        <p>Be the first member to create a TMR Match.</p>
+                        <div class="empty-cta" id="emptyCta"></div>
+                    </div>
+                    <details class="howto">
+                        <summary>How TMR Match works</summary>
+                        <div class="howto-body">
+                            <ol class="howto-steps">
+                                <li><span class="n">1</span> Post an offer with your pick, your price and how much TMR you are putting up.</li>
+                                <li><span class="n">2</span> Another member takes it, all at once or a piece at a time.</li>
+                                <li><span class="n">3</span> Both sides are held until the game settles, then the winner is paid. No fee.</li>
+                            </ol>
+                        </div>
+                    </details>
                 </div>
+
+                <aside class="slip is-idle" id="slip">
+                    <div class="slip-head">
+                        <span id="slipTitle">Bet slip</span>
+                        <button class="slip-x" type="button" data-slip-close aria-label="Close the slip">&times;</button>
+                    </div>
+                    <div class="slip-empty" id="slipEmpty">Pick a price on the board and it loads here.</div>
+                    <div class="slip-body" id="slipBody" hidden></div>
+                </aside>
+              </div>
             </section>
 
             <section id="panel-depth" hidden>
-                <p class="note" style="margin-top:0;">How much TMR is sitting behind each pick and price. Longer bars mean more money waiting to be taken.</p>
-                <div class="ladder" id="ladder"></div>
-                <div class="empty" id="emptyDepth" hidden>
-                    <strong>No prices to show</strong>
-                    Once offers are posted, this is where you see how deep the market is.
+                <div class="board">
+                    <p class="board-note">How much TMR is sitting behind each pick and price. Longer bars mean more money waiting to be taken.</p>
+                    <div class="ladder" id="ladder"></div>
+                    <div class="empty" id="emptyDepth" hidden>
+                        <strong>No prices to show</strong>
+                        <p>Once offers are posted, this is where you see how deep the market is.</p>
+                    </div>
                 </div>
             </section>
 
             <section id="panel-mine" hidden>
-                <div class="list" id="listMine"></div>
-                <div class="empty" id="emptyMine" hidden>
-                    <strong>You have no offers up</strong>
-                    Post one and it shows here until it is taken or you withdraw it.
+                <div class="board">
+                    <div class="list" id="listMine"></div>
+                    <div class="empty" id="emptyMine" hidden>
+                        <strong>You have no offers up</strong>
+                        <p>Post one and it shows here until it is taken or you withdraw it.</p>
+                        <div class="empty-cta"><button class="mkb mkb-primary mk-tab" role="tab" data-tab="create" aria-selected="false">Post an offer</button></div>
+                    </div>
                 </div>
             </section>
 
             <section id="panel-positions" hidden>
-                <div class="list" id="listPositions"></div>
-                <div class="empty" id="emptyPositions" hidden>
-                    <strong>No matches yet</strong>
-                    When you take an offer, or somebody takes yours, it appears here.
+                <div class="board">
+                    <div class="list" id="listPositions"></div>
+                    <div class="empty" id="emptyPositions" hidden>
+                        <strong>No matches yet</strong>
+                        <p>When you take an offer, or somebody takes yours, it appears here.</p>
+                    </div>
                 </div>
             </section>
 
             <section id="panel-create" hidden>
-                <form class="create" id="createForm" novalidate>
-                    <div class="grid2">
-                        <div class="field">
-                            <label for="fEvent">Game</label>
-                            <input id="fEvent" name="event" placeholder="Giants at Dodgers" required>
-                            <span class="hint">Which game this is about.</span>
+                <div class="board">
+                    <form class="create" id="createForm" novalidate>
+                        <div class="grid3">
+                            <div class="field">
+                                <label for="fEvent">Game</label>
+                                <input id="fEvent" name="event" placeholder="Giants at Dodgers" required>
+                                <span class="hint">Which game this is about.</span>
+                            </div>
+                            <div class="field">
+                                <label for="fSport">Sport</label>
+                                <select id="fSport" name="sport">
+                                    <option>MLB</option><option>NFL</option><option>NBA</option>
+                                    <option>NHL</option><option>NCAAF</option><option>NCAAB</option><option>Soccer</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="fMarket">Bet type</label>
+                                <select id="fMarket" name="market">
+                                    <option value="moneyline">Moneyline</option>
+                                    <option value="spread">Spread</option>
+                                    <option value="total">Total</option>
+                                    <option value="prop">Prop</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="fSport">Sport</label>
-                            <select id="fSport" name="sport">
-                                <option>MLB</option><option>NFL</option><option>NBA</option>
-                                <option>NHL</option><option>NCAAF</option><option>NCAAB</option><option>Soccer</option>
-                            </select>
+                        <div class="grid3">
+                            <div class="field">
+                                <label for="fSelection">Your pick</label>
+                                <input id="fSelection" name="selection" placeholder="Giants -1.5" required>
+                                <span class="hint">Exactly what you are backing.</span>
+                            </div>
+                            <div class="field">
+                                <label for="fSide">You are</label>
+                                <select id="fSide" name="side">
+                                    <option value="for">Backing this pick</option>
+                                    <option value="against">Betting against it</option>
+                                </select>
+                                <span class="hint">Whoever takes your offer gets the other side.</span>
+                            </div>
+                            <div class="field">
+                                <label for="fPrice">Price (American odds)</label>
+                                <input id="fPrice" name="price" type="number" step="5" placeholder="-110" required>
+                                <span class="hint">Use 100 or more, or -100 or less.</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="grid2">
-                        <div class="field">
-                            <label for="fMarket">Bet type</label>
-                            <select id="fMarket" name="market">
-                                <option value="moneyline">Moneyline</option>
-                                <option value="spread">Spread</option>
-                                <option value="total">Total</option>
-                                <option value="prop">Prop</option>
-                            </select>
+                        <div class="grid3">
+                            <div class="field">
+                                <label for="fQty">How much TMR are you putting up?</label>
+                                <input id="fQty" name="quantity" type="number" min="10" step="1" placeholder="100" required>
+                                <span class="hint" id="qtyHint">This is held as soon as you post, so anyone taking your offer knows it is funded.</span>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="fSelection">Your pick</label>
-                            <input id="fSelection" name="selection" placeholder="Giants -1.5" required>
-                            <span class="hint">Exactly what you are backing.</span>
+                        <div class="form-foot">
+                            <button class="mkb mkb-primary" id="createBtn" type="submit">Post this offer</button>
+                            <span class="hint">Nothing moves until somebody takes it.</span>
                         </div>
-                    </div>
-                    <div class="grid2">
-                        <div class="field">
-                            <label for="fSide">You are</label>
-                            <select id="fSide" name="side">
-                                <option value="for">Backing this pick</option>
-                                <option value="against">Betting against it</option>
-                            </select>
-                            <span class="hint">Whoever takes your offer gets the other side.</span>
-                        </div>
-                        <div class="field">
-                            <label for="fPrice">Price (American odds)</label>
-                            <input id="fPrice" name="price" type="number" step="5" placeholder="-110" required>
-                            <span class="hint">Use 100 or more, or -100 or less.</span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label for="fQty">How much TMR are you putting up?</label>
-                        <input id="fQty" name="quantity" type="number" min="10" step="1" placeholder="100" required>
-                        <span class="hint" id="qtyHint">This is held as soon as you post, so anyone taking your offer knows it is funded.</span>
-                    </div>
-                    <div>
-                        <button class="btn primary" id="createBtn" type="submit">Post this offer</button>
-                        <span class="note" style="margin-left:10px;">Nothing moves until somebody takes it.</span>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </section>
 
-            <p class="note" id="footNote"></p>
+            <p class="foot" id="footNote"></p>
         </div>
     </main>
 
@@ -291,6 +727,11 @@
         var isLoggedIn = typeof isUserLoggedIn === 'function'
             ? isUserLoggedIn()
             : (!!localStorage.getItem('accessToken') || !!localStorage.getItem('token'));
+
+        // A four paragraph explainer is worth its height on a desktop board and is not
+        // on a 390px phone, where it would push the market a full screen down.
+        var introEl = document.getElementById('mkIntro');
+        if (introEl && window.matchMedia('(max-width: 700px)').matches) introEl.open = false;
 
         var loadState = document.getElementById('loadState');
         var errState = document.getElementById('errState');
@@ -305,6 +746,7 @@
         function num(v) { return Number(v || 0).toLocaleString('en-US'); }
         function when(v) { return v ? new Date(v).toLocaleString() : ''; }
         function priceLabel(p) { var n = Number(p); return n > 0 ? '+' + n : String(n); }
+        function initial(name) { return String(name || '?').trim().charAt(0) || '?'; }
 
         function say(kind, text) {
             panelMsg.className = 'msg ' + kind;
@@ -314,7 +756,7 @@
         }
         function clearSay() { panelMsg.hidden = true; }
 
-        var state = { me: null, meta: null, offers: [], mine: [], fills: [], depth: [], balance: null };
+        var state = { me: null, meta: null, offers: [], mine: [], fills: [], depth: [], balance: null, sport: 'all', readFailed: false };
 
         /**
          * Say what an offer IS in one line a bettor reads without translating. "for" and
@@ -330,6 +772,10 @@
                 : 'You would be backing ' + o.selection;
         }
 
+        /**
+         * One market row, laid out on the same grid as the column header so a full board
+         * scans like an exchange rather than a stack of cards.
+         */
         function offerCard(o, opts) {
             opts = opts || {};
             var remaining = Number(o.remaining != null ? o.remaining : (o.quantity - o.filled_quantity));
@@ -337,44 +783,51 @@
             var filled = quantity - remaining;
             var pctFilled = quantity ? Math.round((filled / quantity) * 100) : 0;
             var mine = state.me && Number(o.maker_id) === Number(state.me);
+            var who = mine ? 'You' : (o.maker_username || 'a member');
+            var status = (o.status && o.status !== 'open')
+                ? ' <span class="pill ' + esc(o.status) + '">' + esc(String(o.status).replace(/_/g, ' ')) + '</span>'
+                : '';
+            var canTake = !!opts.canTake && !mine && remaining > 0;
+            var canCancel = !!opts.canCancel && mine && ['open', 'partially_filled'].indexOf(o.status) >= 0;
 
             var html = ''
-                + '<div class="offer" data-id="' + o.id + '">'
-                + '  <div class="offer-top">'
-                + '    <div class="offer-what">'
-                + '      <strong>' + esc(offerHeadline(o)) + ' <span class="side ' + esc(o.side) + '">' + (o.side === 'for' ? 'backing' : 'against') + '</span></strong>'
-                + '      <div class="offer-meta">'
-                + '        ' + esc(o.event_label || o.event_ref) + ' &middot; ' + esc(o.market) + ' &middot; price ' + esc(priceLabel(o.price_american))
-                + '        <br>' + (mine ? 'Your offer' : 'Posted by ' + esc(o.maker_username || 'a member'))
-                + '        &middot; ' + esc(when(o.created_at))
-                + (o.status && o.status !== 'open' ? ' &middot; <span class="pill ' + esc(o.status) + '">' + esc(String(o.status).replace(/_/g, ' ')) + '</span>' : '')
+                + '<div class="row" data-id="' + o.id + '">'
+                + '  <div class="row-main">'
+                + '    <div class="c-pick">'
+                + '      <div class="pick"><b>' + esc(offerHeadline(o)) + '</b>'
+                + '        <span class="side ' + esc(o.side) + '">' + (o.side === 'for' ? 'backing' : 'against') + '</span>' + status
                 + '      </div>'
+                + '      <div class="sub">' + (o.sport ? esc(o.sport) + '<span class="dot">&middot;</span>' : '')
+                + esc(o.event_label || o.event_ref) + '<span class="dot">&middot;</span>' + esc(o.market)
+                + '<span class="when"><span class="dot">&middot;</span>' + esc(when(o.created_at)) + '</span></div>'
                 + '    </div>'
-                + '    <div class="offer-size">'
-                + '      <div class="big">' + num(remaining) + ' TMR</div>'
-                + '      <div class="of">left of ' + num(quantity) + ' TMR' + (filled ? ' &middot; ' + num(filled) + ' taken' : '') + '</div>'
+                + '    <div class="c-who"><span class="av">' + esc(initial(who)) + '</span><span class="nm">' + esc(who) + '</span></div>'
+                + '    <div class="c-price">' + esc(priceLabel(o.price_american)) + '</div>'
+                + '    <div class="c-size">'
+                + '      <div class="big">' + num(remaining) + '</div>'
+                + '      <div class="of">of ' + num(quantity) + ' TMR' + (filled ? ' &middot; ' + num(filled) + ' taken' : '') + '</div>'
+                + '      <div class="bar"><span style="width:' + pctFilled + '%"></span></div>'
                 + '    </div>'
-                + '  </div>'
-                + '  <div class="bar"><span style="width:' + pctFilled + '%"></span></div>';
+                + '    <div class="c-act">';
 
-            if (opts.canTake && !mine && remaining > 0) {
-                html += ''
-                    + '  <div class="take">'
-                    + '    <div class="confirm">' + esc(takerLine(o)) + '</div>'
-                    + '    <div class="take-row">'
-                    + '      <div class="field"><label for="q' + o.id + '">TMR to take</label>'
-                    + '        <input id="q' + o.id + '" type="number" min="1" max="' + remaining + '" value="' + remaining + '" data-qty="' + o.id + '"></div>'
-                    + '      <button class="btn primary" data-take="' + o.id + '">Take this offer</button>'
-                    + '      <button class="btn sm" data-all="' + o.id + '">All of it</button>'
-                    + '    </div>'
-                    + '  </div>';
+            if (canTake) {
+                // The whole interaction is one price cell, the way a book's board works.
+                html += '<button class="px" type="button" data-open="' + o.id + '" aria-pressed="false">'
+                    + '<span class="pxv">TAKE</span><span class="pxa">' + num(remaining) + ' TMR</span></button>';
+            } else if (canCancel) {
+                html += '<button class="mkb danger sm" data-cancel="' + o.id + '">Withdraw</button>';
+            } else if (mine) {
+                html += '<span class="px-dead">Your offer</span>';
+            } else if (!opts.canTake && !opts.canCancel) {
+                html += '<a class="px" href="/login/"><span class="pxv">TAKE</span><span class="pxa">Sign in</span></a>';
             }
-            if (opts.canCancel && mine && ['open', 'partially_filled'].indexOf(o.status) >= 0) {
-                html += ''
-                    + '  <div class="take"><div class="take-row">'
-                    + '    <button class="btn danger" data-cancel="' + o.id + '">Withdraw the ' + num(remaining) + ' TMR nobody took</button>'
-                    + (filled ? '<span class="note" style="margin:0;">The ' + num(filled) + ' TMR already taken stays matched.</span>' : '')
-                    + '  </div></div>';
+
+            html += ''
+                + '    </div>'
+                + '  </div>';
+
+            if (canCancel && filled) {
+                html += '<div class="take"><div class="confirm">Withdrawing returns the <b>' + num(remaining) + ' TMR</b> nobody took. The ' + num(filled) + ' TMR already taken stays matched.</div></div>';
             }
             html += '</div>';
             return html;
@@ -384,24 +837,92 @@
             var role = f.my_role === 'maker' ? 'You posted this' : 'You took this';
             var side = f.my_role === 'maker' ? f.maker_side : (f.maker_side === 'for' ? 'against' : 'for');
             var pick = (side === 'for' ? 'Backing ' : 'Against ') + f.selection;
+            var status = String(f.challenge_status || '');
             return ''
-                + '<div class="offer" data-fill="' + f.id + '">'
-                + '  <div class="offer-top">'
-                + '    <div class="offer-what">'
-                + '      <strong>' + esc(pick) + '</strong>'
-                + '      <div class="offer-meta">' + esc(f.event_label || '') + ' &middot; ' + esc(f.market || '')
-                + '        &middot; price ' + esc(priceLabel(f.price_american))
-                + '        <br>' + esc(role) + ' &middot; ' + esc(when(f.created_at))
-                + '        &middot; <span class="pill ' + esc(f.challenge_status || '') + '">' + esc(String(f.challenge_status || '').replace(/_/g, ' ')) + '</span>'
+                + '<div class="row" data-fill="' + f.id + '">'
+                + '  <div class="row-main">'
+                + '    <div class="c-pick">'
+                + '      <div class="pick"><b>' + esc(pick) + '</b>'
+                + (status ? '<span class="pill ' + esc(status) + '">' + esc(status.replace(/_/g, ' ')) + '</span>' : '')
                 + '      </div>'
+                + '      <div class="sub">' + esc(f.event_label || '') + '<span class="dot">&middot;</span>' + esc(f.market || '')
+                + '<span class="when"><span class="dot">&middot;</span>' + esc(when(f.created_at)) + '</span></div>'
                 + '    </div>'
-                + '    <div class="offer-size"><div class="big">' + num(f.quantity) + ' TMR</div>'
-                + '      <div class="of">at risk</div></div>'
-                + '  </div>'
-                + '  <div class="offer-acts">'
-                + '    <a class="btn sm" href="/tmr-challenges/?id=' + encodeURIComponent(f.challenge_id) + '">See the match</a>'
+                + '    <div class="c-who"><span class="av">' + (f.my_role === 'maker' ? 'P' : 'T') + '</span><span class="nm">' + esc(role) + '</span></div>'
+                + '    <div class="c-price">' + esc(priceLabel(f.price_american)) + '</div>'
+                + '    <div class="c-size"><div class="big">' + num(f.quantity) + '</div><div class="of">TMR at risk</div></div>'
+                + '    <div class="c-act"><a class="mkb sm" href="/tmr-challenges/?id=' + encodeURIComponent(f.challenge_id) + '">See the match</a></div>'
                 + '  </div>'
                 + '</div>';
+        }
+
+        // --- bet slip ----------------------------------------------------------
+        // One standing ticket instead of a form inside every row. It holds the same
+        // data-qty / data-take / data-all hooks the click handler already knows.
+        var slip = document.getElementById('slip');
+        var slipEmpty = document.getElementById('slipEmpty');
+        var slipBody = document.getElementById('slipBody');
+        var slipTitle = document.getElementById('slipTitle');
+        var openSlipId = null;
+
+        function findOffer(id) {
+            var all = (state.offers || []).concat(state.mine || []);
+            for (var i = 0; i < all.length; i++) {
+                if (String(all[i].id) === String(id)) return all[i];
+            }
+            return null;
+        }
+
+        function markPriceButtons() {
+            document.querySelectorAll('[data-open]').forEach(function (b) {
+                b.setAttribute('aria-pressed', String(String(b.getAttribute('data-open')) === String(openSlipId)));
+            });
+        }
+
+        function closeSlip() {
+            openSlipId = null;
+            slipBody.hidden = true;
+            slipBody.innerHTML = '';
+            slipEmpty.hidden = false;
+            slipTitle.textContent = 'Bet slip';
+            slip.classList.add('is-idle');
+            markPriceButtons();
+        }
+
+        function openSlip(id) {
+            var o = findOffer(id);
+            if (!o) return;
+            var remaining = Number(o.remaining != null ? o.remaining : (o.quantity - o.filled_quantity));
+            openSlipId = o.id;
+            slipTitle.textContent = 'Take this offer';
+            slipEmpty.hidden = true;
+            slip.classList.remove('is-idle');
+            slipBody.hidden = false;
+            slipBody.innerHTML = ''
+                + '<div>'
+                + '  <div class="slip-pick">' + esc(takerLine(o)) + '</div>'
+                + '  <div class="slip-ev">' + (o.sport ? esc(o.sport) + ' &middot; ' : '') + esc(o.event_label || o.event_ref)
+                + '    &middot; ' + esc(o.market) + '</div>'
+                + '</div>'
+                + '<div class="slip-line"><span>Price</span><b>' + esc(priceLabel(o.price_american)) + '</b></div>'
+                + '<div class="slip-line"><span>Open on this offer</span><b>' + num(remaining) + ' TMR</b></div>'
+                + '<div class="field">'
+                + '  <label for="slipQty">TMR to take</label>'
+                + '  <input id="slipQty" type="number" min="1" max="' + remaining + '" value="' + remaining + '" data-qty="' + o.id + '">'
+                + '</div>'
+                + '<div class="slip-chips">'
+                + '  <button class="stk" type="button" data-stake="25">25</button>'
+                + '  <button class="stk" type="button" data-stake="100">100</button>'
+                + '  <button class="stk" type="button" data-stake="250">250</button>'
+                + '  <button class="stk" type="button" data-all="' + o.id + '">Max</button>'
+                + '</div>'
+                + '<div class="slip-go">'
+                + '  <button class="mkb mkb-primary" data-take="' + o.id + '">Confirm take</button>'
+                + '</div>'
+                + '<p class="slip-note">You put up the TMR you enter and the same amount comes out of theirs. Both sides are held until the game settles. No fee.</p>';
+            markPriceButtons();
+            var f = document.getElementById('slipQty');
+            if (f) f.focus();
         }
 
         function renderLadder() {
@@ -421,6 +942,51 @@
             }).join('');
         }
 
+        /**
+         * A board reads by game, not by a flat list of picks, so offers are grouped
+         * under the event they belong to the way a book groups a slate.
+         */
+        function groupedBoard(list) {
+            var order = [];
+            var groups = {};
+            list.forEach(function (o) {
+                var key = (o.sport || 'Other') + '|' + (o.event_label || o.event_ref || 'Other');
+                if (!groups[key]) { groups[key] = []; order.push(key); }
+                groups[key].push(o);
+            });
+            return order.map(function (key) {
+                var rows = groups[key];
+                var sport = key.split('|')[0];
+                var open = rows.reduce(function (t, o) { return t + Number(o.remaining); }, 0);
+                return ''
+                    + '<div class="gh">'
+                    + '  <span class="lg">' + esc(sport) + '</span>'
+                    + '  <span class="ev">' + esc(rows[0].event_label || rows[0].event_ref) + '</span>'
+                    + '  <span class="meta">' + rows.length + (rows.length === 1 ? ' offer' : ' offers')
+                    + '    &middot; ' + num(open) + ' TMR open</span>'
+                    + '</div>'
+                    + rows.map(function (o) { return offerCard(o, { canTake: isLoggedIn }); }).join('');
+            }).join('');
+        }
+
+        function renderSportBar(market) {
+            var bar = document.getElementById('sportBar');
+            var counts = {};
+            market.forEach(function (o) {
+                var k = String(o.sport || 'Other');
+                counts[k] = (counts[k] || 0) + 1;
+            });
+            var keys = Object.keys(counts).sort();
+            if (state.sport !== 'all' && keys.indexOf(state.sport) < 0) state.sport = 'all';
+            var html = '<button class="sp" type="button" data-sport="all" aria-pressed="'
+                + (state.sport === 'all') + '">All<span class="n">' + market.length + '</span></button>';
+            html += keys.map(function (k) {
+                return '<button class="sp" type="button" data-sport="' + esc(k) + '" aria-pressed="'
+                    + (state.sport === k) + '">' + esc(k) + '<span class="n">' + counts[k] + '</span></button>';
+            }).join('');
+            bar.innerHTML = html;
+        }
+
         function render() {
             var market = state.offers.filter(function (o) { return Number(o.remaining) > 0; });
             document.getElementById('cOpen').textContent = num(market.length);
@@ -430,21 +996,34 @@
             document.getElementById('nMine').textContent = num(state.mine.length);
             document.getElementById('nPos').textContent = num(state.fills.length);
 
+            renderSportBar(market);
+            var shown = state.sport === 'all'
+                ? market
+                : market.filter(function (o) { return String(o.sport || 'Other') === state.sport; });
+
             var lm = document.getElementById('listMarket');
-            lm.innerHTML = market.map(function (o) { return offerCard(o, { canTake: isLoggedIn }); }).join('');
-            document.getElementById('emptyMarket').hidden = market.length > 0;
-            // The explainer is about TAKING an offer. With an empty board there is nothing
-            // to take, so it would be answering a question nobody has yet.
-            document.getElementById('marketLede').hidden = market.length === 0;
+            lm.innerHTML = groupedBoard(shown);
+            // A failed read and an empty board look identical unless we say so.
+            document.getElementById('boardError').hidden = !state.readFailed;
+            document.getElementById('emptyMarket').hidden = state.readFailed || market.length > 0;
+            document.getElementById('emptyFilter').hidden = !(market.length > 0 && shown.length === 0);
+            // The column header is about reading a populated board. With nothing on it
+            // it would be labelling empty space.
+            document.getElementById('marketHead').hidden = shown.length === 0;
+            document.getElementById('sportBar').hidden = market.length === 0;
+            // A slip left open on an offer that is gone would take a bet that no longer
+            // exists, so it closes itself when its offer leaves the board.
+            if (openSlipId != null && !findOffer(openSlipId)) closeSlip();
+            else markPriceButtons();
             // A guest cannot post, so "be the first to post" is the wrong ask for them.
             var cta = document.getElementById('emptyCta');
             if (cta && !cta.dataset.done) {
                 cta.dataset.done = '1';
                 cta.innerHTML = isLoggedIn
-                    ? '<button class="btn primary" id="emptyPost">Post the first offer</button>'
-                      + '<a class="btn" href="/wallet/earn/">Earn TMR first</a>'
-                    : '<a class="btn primary" href="/login/">Sign in to post the first offer</a>'
-                      + '<a class="btn" href="/tmr-coin/">What is TMR?</a>';
+                    ? '<button class="mkb mkb-primary" id="emptyPost">Post the first offer</button>'
+                      + '<a class="mkb" href="/wallet/earn/">Earn TMR first</a>'
+                    : '<a class="mkb mkb-primary" href="/login/">Sign in to post the first offer</a>'
+                      + '<a class="mkb" href="/tmr-coin/">What is TMR?</a>';
                 var b = document.getElementById('emptyPost');
                 if (b) b.addEventListener('click', function () { showTab('create'); });
             }
@@ -487,6 +1066,7 @@
                     .then(function (r) {
                         say('ok', 'Matched ' + num(r.filled) + ' TMR. '
                             + (Number(r.remaining) > 0 ? num(r.remaining) + ' TMR is still open on that offer.' : 'That offer is now fully taken.'));
+                        closeSlip();
                         return refresh();
                     })
                     .catch(function (e) { say('err', apiErr(e)); });
@@ -507,9 +1087,36 @@
         }
 
         document.addEventListener('click', function (ev) {
-            var t = ev.target.closest('[data-take],[data-cancel],[data-all]');
+            var t = ev.target.closest('[data-take],[data-cancel],[data-all],[data-open],[data-sport],[data-stake],[data-slip-close]');
             if (!t) return;
             ev.preventDefault();
+            if (t.hasAttribute('data-slip-close')) { closeSlip(); return; }
+            if (t.hasAttribute('data-retry')) {
+                t.disabled = true;
+                refresh().then(function () { t.disabled = false; });
+                return;
+            }
+            if (t.hasAttribute('data-sport')) {
+                state.sport = t.getAttribute('data-sport');
+                render();
+                return;
+            }
+            if (t.hasAttribute('data-open')) {
+                // Clicking a price loads the slip; clicking the same price closes it.
+                var oid = t.getAttribute('data-open');
+                if (String(openSlipId) === String(oid)) closeSlip();
+                else openSlip(oid);
+                return;
+            }
+            if (t.hasAttribute('data-stake')) {
+                var si = document.getElementById('slipQty');
+                if (si) {
+                    var want = Number(t.getAttribute('data-stake'));
+                    var cap = Number(si.max);
+                    si.value = String(cap && want > cap ? cap : want);
+                }
+                return;
+            }
             if (t.hasAttribute('data-all')) {
                 var input = document.querySelector('[data-qty="' + t.getAttribute('data-all') + '"]');
                 if (input) input.value = input.max;
@@ -574,20 +1181,28 @@
         // --- tabs --------------------------------------------------------------
 
         function showTab(name) {
+            if (name !== 'market') closeSlip();
             ['market', 'depth', 'mine', 'positions', 'create'].forEach(function (n) {
                 var panel = document.getElementById('panel-' + n);
                 if (panel) panel.hidden = n !== name;
-                var tab = document.querySelector('.tab[data-tab="' + n + '"]');
-                if (tab) tab.setAttribute('aria-selected', String(n === name));
+                // More than one control can point at the same panel now (the header CTA
+                // and the empty-state button both open "create"), so update all of them.
+                document.querySelectorAll('.mk-tab[data-tab="' + n + '"]').forEach(function (tab) {
+                    tab.setAttribute('aria-selected', String(n === name));
+                });
             });
         }
-        document.querySelectorAll('.tab').forEach(function (tab) {
+        document.querySelectorAll('.mk-tab').forEach(function (tab) {
             tab.addEventListener('click', function () { showTab(tab.getAttribute('data-tab')); });
         });
+        // The Post an Offer CTA is a create tab wearing a button. A guest cannot post,
+        // so it swaps for a sign-in link rather than leaving a hole in the header.
         ['mine', 'positions', 'create'].forEach(function (n) {
-            var tab = document.querySelector('.tab[data-tab="' + n + '"]');
-            if (tab && !isLoggedIn) tab.hidden = true;
+            document.querySelectorAll('.mk-tab[data-tab="' + n + '"]').forEach(function (tab) {
+                if (!isLoggedIn) tab.hidden = true;
+            });
         });
+        if (!isLoggedIn) document.getElementById('ctaSignIn').hidden = false;
 
         // --- load --------------------------------------------------------------
 
@@ -602,6 +1217,7 @@
             }
             return Promise.all(reads.map(function (p) { return p.catch(function () { return null; }); }))
                 .then(function (res) {
+                    state.readFailed = res[0] == null;
                     state.offers = (res[0] && res[0].offers) || [];
                     state.depth = (res[1] && res[1].depth) || [];
                     state.mine = (res[2] && res[2].offers) || [];
