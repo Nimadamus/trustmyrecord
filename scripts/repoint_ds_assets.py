@@ -19,6 +19,7 @@ collapsed onto the hashed filename too -- in HTML and in the JS loaders that bui
 script URLs at runtime -- so one asset never ships under two different URLs.
 """
 import json
+import os
 import pathlib
 import re
 
@@ -49,10 +50,17 @@ for src, url in MANIFEST.items():
 
 
 def targets():
-    for path in ROOT.rglob("*.html"):
-        if SKIP_DIRS & set(path.parts):
-            continue
-        yield path
+    # os.walk with in-place pruning, NOT rglob. rglob descends into every directory and only
+    # then hands each path to the SKIP_DIRS filter, so it walked into node_modules -- where a
+    # recursive trustmyrecord-verification/node_modules/trustmyrecord-verification/... chain
+    # eventually exceeded the Windows path limit and raised WinError 3 mid-run. That left the
+    # repo HALF repointed: some pages on the new hash, most on the old, which is worse than not
+    # having run at all. Pruning stops the descent before it starts.
+    for dirpath, dirnames, filenames in os.walk(ROOT):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for name in filenames:
+            if name.endswith(".html"):
+                yield pathlib.Path(dirpath) / name
     for rel in JS_LOADERS:
         p = ROOT / rel
         if p.is_file():
