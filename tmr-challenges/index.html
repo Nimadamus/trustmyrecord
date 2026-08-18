@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Challenges | TrustMyRecord</title>
+    <meta name="description" content="Challenge another member head to head, stake TMR Coin, and settle on the result. Both stakes are held until the challenge is decided.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/tmr-challenges/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
+    <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=a46586bedd8f"></script>
+    <style>
+        :root { --page-bg:#F4F7FA; --panel:#FFFFFF; --line:#D2DEEA; --text:#07182A; --muted:#2E4459; --gold:#B98505; --teal:#0C7A72; --stop:#BC372E; }
+        * { box-sizing: border-box; }
+        body {
+            margin:0; min-height:100vh;
+            background: radial-gradient(circle at 14% 0%, rgba(185,133,5,0.1), transparent 30%), linear-gradient(180deg,#FFFFFF 0%, var(--page-bg) 44%, #F4F7FA 100%);
+            color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .ch-page { width:min(1080px, calc(100% - 32px)); margin:0 auto; padding:112px 0 56px; }
+        .ch-head { display:flex; align-items:flex-end; justify-content:space-between; gap:22px; margin-bottom:18px; flex-wrap:wrap; }
+        .ch-kicker { margin:0 0 10px; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+        h1 { margin:0; font-family:Barlow, Inter, sans-serif; font-size:clamp(34px,5vw,56px); line-height:.95; }
+        .ch-subtitle { margin:12px 0 0; max-width:660px; color:var(--muted); font-size:14.5px; line-height:1.55; }
+        h2 { font-family:Barlow, Inter, sans-serif; font-size:22px; margin:30px 0 12px; }
+
+        .btn { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 15px; border-radius:8px; border:1px solid rgba(12,148,140,.28); color:#07182A; background:#FFF; text-decoration:none; font-weight:800; font-size:13px; cursor:pointer; font-family:inherit; }
+        .btn:disabled { opacity:.45; cursor:not-allowed; }
+        .btn.primary { background:var(--teal); border-color:var(--teal); color:#FFF; }
+        .btn.danger { border-color:rgba(188,55,46,.4); color:var(--stop); }
+        .btn.sm { min-height:34px; padding:0 11px; font-size:12px; }
+
+        .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0 8px; }
+        .card { border:1px solid var(--line); border-radius:10px; padding:20px; background:var(--panel); }
+        .card .lbl { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+        .card .val { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:34px; line-height:1; }
+        .card .sub { margin-top:8px; color:var(--muted); font-size:12.5px; line-height:1.5; }
+
+        .tabs { display:flex; gap:6px; flex-wrap:wrap; margin:26px 0 14px; border-bottom:1px solid var(--line); }
+        .tab { appearance:none; border:0; background:none; font-family:inherit; font-weight:800; font-size:13px; color:var(--muted); padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent; }
+        .tab[aria-selected="true"] { color:var(--text); border-bottom-color:var(--gold); }
+        .tab .count { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:#EEF3F8; font-size:11px; }
+
+        .list { display:grid; gap:12px; }
+        .row { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:16px 18px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+        .row .who { flex:1 1 260px; min-width:0; }
+        .row .who strong { font-size:15px; }
+        .row .meta { color:var(--muted); font-size:12.5px; margin-top:4px; }
+        .row .stake { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:22px; white-space:nowrap; }
+        .row .acts { display:flex; gap:8px; flex-wrap:wrap; }
+
+        .pill { display:inline-block; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border:1px solid var(--line); background:#EEF3F8; color:var(--muted); }
+        .pill.pending { background:#FFF6E2; border-color:#F0DCA8; color:#7A5A05; }
+        .pill.accepted, .pill.awaiting_settlement { background:#E6F4F2; border-color:#A9D9D3; color:#0A5F59; }
+        .pill.settled { background:#E8F0FB; border-color:#B6CCEA; color:#20456F; }
+        .pill.declined, .pill.cancelled, .pill.expired, .pill.voided { background:#F7E9E8; border-color:#E6BDB9; color:#8B2C24; }
+
+        .empty { border:1px dashed var(--line); border-radius:10px; padding:26px; text-align:center; color:var(--muted); font-size:13.5px; background:rgba(255,255,255,.5); }
+        .note { color:var(--muted); font-size:12.5px; line-height:1.6; margin-top:14px; }
+
+        form.create { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:20px; display:grid; gap:14px; }
+        .field { display:grid; gap:6px; }
+        .field label { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+        .field input, .field select, .field textarea { font-family:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#FFF; color:var(--text); }
+        .field .hint { font-size:12px; color:var(--muted); }
+        .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+
+        .msg { border-radius:8px; padding:12px 14px; font-size:13px; font-weight:600; }
+        .msg.err { background:#F7E9E8; border:1px solid #E6BDB9; color:#8B2C24; }
+        .msg.ok { background:#E6F4F2; border:1px solid #A9D9D3; color:#0A5F59; }
+
+        table.hist { width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); font-size:13px; }
+        table.hist th, table.hist td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); }
+        table.hist th { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+        .wrap { overflow-x:auto; }
+        [hidden] { display:none !important; }
+    </style>
+</head>
+<body>
+    <main class="ch-page">
+        <div class="ch-head">
+            <div>
+                <p class="ch-kicker">Head to head</p>
+                <h1>TMR Challenges</h1>
+                <p class="ch-subtitle">Back yourself against another member. Both stakes are held the moment a challenge is accepted, the terms are locked, and the pot goes to whoever is right. There is no rake.</p>
+            </div>
+            <div><a class="btn" href="/wallet/earn/">Earn TMR</a></div>
+        </div>
+
+        <div id="loadState" class="empty">Loading challenges...</div>
+        <div id="errState" class="msg err" hidden></div>
+        <div id="signedOut" class="empty" hidden>
+            Sign in to issue a challenge or take one. <a class="btn sm" href="/login/">Sign in</a>
+        </div>
+
+        <div id="chBody" hidden>
+            <section class="cards">
+                <div class="card">
+                    <div class="lbl">Your balance</div>
+                    <div class="val" id="balVal">-</div>
+                    <div class="sub" id="balSub">TMR available to stake</div>
+                </div>
+                <div class="card">
+                    <div class="lbl">Record</div>
+                    <div class="val" id="recVal">-</div>
+                    <div class="sub" id="recSub">settled challenges</div>
+                </div>
+                <div class="card">
+                    <div class="lbl">Net TMR</div>
+                    <div class="val" id="netVal">-</div>
+                    <div class="sub" id="netSub">from settled challenges</div>
+                </div>
+                <div class="card">
+                    <div class="lbl">Held in escrow</div>
+                    <div class="val" id="escVal">-</div>
+                    <div class="sub" id="escSub">staked on live challenges</div>
+                </div>
+            </section>
+
+            <div class="tabs" role="tablist">
+                <button class="tab" role="tab" data-tab="open" aria-selected="true">Open board <span class="count" id="cOpen">0</span></button>
+                <button class="tab" role="tab" data-tab="incoming" aria-selected="false">Incoming <span class="count" id="cIncoming">0</span></button>
+                <button class="tab" role="tab" data-tab="active" aria-selected="false">Active <span class="count" id="cActive">0</span></button>
+                <button class="tab" role="tab" data-tab="completed" aria-selected="false">Completed <span class="count" id="cCompleted">0</span></button>
+                <button class="tab" role="tab" data-tab="create" aria-selected="false">Issue a challenge</button>
+            </div>
+
+            <div id="panelMsg" class="msg" hidden></div>
+
+            <section id="panel-open" class="panel">
+                <div class="list" id="listOpen"></div>
+                <div class="empty" id="emptyOpen" hidden>Nobody has posted an open challenge yet. Issue one and it shows up here for anyone to take.</div>
+            </section>
+
+            <section id="panel-incoming" class="panel" hidden>
+                <div class="list" id="listIncoming"></div>
+                <div class="empty" id="emptyIncoming" hidden>No challenges are waiting on you.</div>
+            </section>
+
+            <section id="panel-active" class="panel" hidden>
+                <div class="list" id="listActive"></div>
+                <div class="empty" id="emptyActive" hidden>Nothing live. A challenge lands here once both sides are in.</div>
+            </section>
+
+            <section id="panel-completed" class="panel" hidden>
+                <div class="list" id="listCompleted"></div>
+                <div class="empty" id="emptyCompleted" hidden>Nothing settled yet.</div>
+            </section>
+
+            <section id="panel-create" class="panel" hidden>
+                <form class="create" id="createForm">
+                    <div class="grid2">
+                        <div class="field">
+                            <label for="fFormat">Format</label>
+                            <select id="fFormat" required></select>
+                            <span class="hint" id="formatHint"></span>
+                        </div>
+                        <div class="field">
+                            <label for="fStake">Stake in TMR</label>
+                            <input id="fStake" type="number" min="10" step="1" value="25" required>
+                            <span class="hint" id="stakeHint"></span>
+                        </div>
+                    </div>
+                    <div class="grid2">
+                        <div class="field">
+                            <label for="fOpponent">Opponent</label>
+                            <input id="fOpponent" type="text" placeholder="Leave blank to post it openly" autocomplete="off">
+                            <span class="hint">A username sends it to that member only. Blank posts it on the open board for anyone to take.</span>
+                        </div>
+                        <div class="field">
+                            <label for="fExpires">Offer expires</label>
+                            <input id="fExpires" type="datetime-local" required>
+                            <span class="hint">If nobody takes it by then, the offer lapses and no TMR moves.</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="fTerms">Terms</label>
+                        <textarea id="fTerms" rows="3" placeholder="What exactly decides this challenge" required></textarea>
+                        <span class="hint">These are hashed the moment somebody accepts, so they cannot be changed afterwards.</span>
+                    </div>
+                    <div class="field">
+                        <label for="fMessage">Message (optional)</label>
+                        <input id="fMessage" type="text" maxlength="200" placeholder="Say something to your opponent">
+                    </div>
+                    <div>
+                        <button class="btn primary" type="submit" id="createBtn">Issue challenge</button>
+                    </div>
+                    <p class="note" id="createNote"></p>
+                </form>
+            </section>
+
+            <section id="detail" hidden>
+                <h2 id="dTitle">Challenge</h2>
+                <div class="card" id="dCard"></div>
+                <h2>History</h2>
+                <div class="wrap">
+                    <table class="hist">
+                        <thead><tr><th>When</th><th>Event</th><th>From</th><th>To</th></tr></thead>
+                        <tbody id="dHistory"></tbody>
+                    </table>
+                </div>
+                <p class="note"><a class="btn sm" href="/tmr-challenges/">Back to all challenges</a></p>
+            </section>
+
+            <p class="note" id="footNote"></p>
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+    <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
+    <script>
+    (function () {
+        var isLoggedIn = typeof isUserLoggedIn === 'function'
+            ? isUserLoggedIn()
+            : (!!localStorage.getItem('accessToken') || !!localStorage.getItem('token'));
+
+        var loadState = document.getElementById('loadState');
+        var errState = document.getElementById('errState');
+        var signedOut = document.getElementById('signedOut');
+        var body = document.getElementById('chBody');
+        var panelMsg = document.getElementById('panelMsg');
+
+        function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+        function num(v) { return Number(v || 0).toLocaleString('en-US'); }
+        function when(v) { return v ? new Date(v).toLocaleString() : ''; }
+
+        if (!isLoggedIn) {
+            loadState.hidden = true;
+            signedOut.hidden = false;
+            return;
+        }
+
+        var state = { me: null, meta: null, open: [], mine: [], incoming: [], stats: null };
+        var detailId = new URLSearchParams(location.search).get('id');
+
+        function say(kind, text) {
+            panelMsg.className = 'msg ' + kind;
+            panelMsg.textContent = text;
+            panelMsg.hidden = false;
+        }
+        function clearSay() { panelMsg.hidden = true; }
+
+        // --- rendering ---------------------------------------------------------
+
+        function opponentLabel(c) {
+            var mine = Number(c.challenger_id) === Number(state.me);
+            if (mine) return c.opponent_username ? 'vs ' + c.opponent_username : 'open to anyone';
+            return 'from ' + (c.challenger_username || 'a member');
+        }
+
+        /**
+         * Where this challenge stands on settlement, in a sentence. A member should never have
+         * to work out from a status pill whether their TMR is coming back, sitting in escrow or
+         * already paid, so every state says so plainly, including the ones that pay nobody.
+         */
+        function settlementLine(c) {
+            if (c.dispute_status === 'open') return 'disputed, nothing pays out until it is resolved';
+            switch (c.status) {
+                case 'pending': return 'nothing staked yet';
+                case 'accepted': return 'both stakes held in escrow';
+                case 'awaiting_settlement': return 'waiting on the result';
+                case 'settled':
+                    if (c.outcome === 'push') return 'push, both stakes refunded';
+                    if (c.outcome === 'void') return 'voided, both stakes refunded';
+                    return 'settled, pot paid to the winner';
+                case 'declined': return 'declined, no TMR moved';
+                case 'cancelled': return 'cancelled, every stake refunded';
+                case 'expired': return 'expired unanswered, no TMR moved';
+                case 'voided': return 'voided, every stake refunded';
+                default: return String(c.status).replace(/_/g, ' ');
+            }
+        }
+
+        function formatLabel(key) {
+            if (!state.meta) return key;
+            var f = state.meta.formats.filter(function (x) { return x.key === key; })[0];
+            return f ? f.label : key;
+        }
+
+        function rowFor(c, actions) {
+            var el = document.createElement('div');
+            el.className = 'row';
+            el.setAttribute('data-id', c.id);
+            el.setAttribute('data-status', c.status);
+            var terms = (c.terms && (c.terms.note || c.terms.description)) || '';
+            el.innerHTML =
+                '<div class="who">' +
+                    '<span class="pill ' + esc(c.status) + '">' + esc(c.status.replace(/_/g, ' ')) + '</span> ' +
+                    '<strong>' + esc(formatLabel(c.format)) + '</strong>' +
+                    '<div class="meta">' + esc(opponentLabel(c)) +
+                        (terms ? ' &middot; ' + esc(terms) : '') +
+                        (c.expires_at && c.status === 'pending' ? ' &middot; expires ' + esc(when(c.expires_at)) : '') +
+                        ' &middot; ' + esc(settlementLine(c)) +
+                    '</div>' +
+                '</div>' +
+                '<div class="stake">' + num(c.stake) + ' TMR</div>' +
+                '<div class="acts"></div>';
+            var acts = el.querySelector('.acts');
+            (actions || []).forEach(function (a) {
+                var b = document.createElement('button');
+                b.className = 'btn sm' + (a.kind ? ' ' + a.kind : '');
+                b.type = 'button';
+                b.textContent = a.label;
+                b.addEventListener('click', function () { a.run(b, c); });
+                acts.appendChild(b);
+            });
+            var view = document.createElement('a');
+            view.className = 'btn sm';
+            view.href = '/tmr-challenges/?id=' + encodeURIComponent(c.id);
+            view.textContent = 'View';
+            acts.appendChild(view);
+            return el;
+        }
+
+        /**
+         * Raising a dispute. Kept as its own action because it is the only one that needs
+         * something from the member, and because a disputed challenge stops paying out
+         * automatically -- that consequence is stated before they commit to it.
+         */
+        function disputeAction(btn, c) {
+            clearSay();
+            var reason = window.prompt(
+                'What is wrong with this challenge? While a dispute is open the pot stays in '
+                + 'escrow and nothing pays out automatically.');
+            if (reason === null) return;
+            reason = String(reason).trim();
+            if (!reason) { say('err', 'A dispute needs a reason.'); return; }
+            btn.disabled = true;
+            var was = btn.textContent;
+            btn.textContent = 'Sending...';
+            window.api.request('/tmr-challenges/' + c.id + '/dispute',
+                { method: 'POST', body: { reason: reason } })
+                .then(function () {
+                    say('ok', 'Dispute raised. The pot stays in escrow until it is resolved.');
+                    return refresh();
+                })
+                .catch(function (e) {
+                    btn.disabled = false;
+                    btn.textContent = was;
+                    say('err', (e && e.message) || 'That dispute was not raised.');
+                });
+        }
+
+        function act(path, label) {
+            return function (btn, c) {
+                clearSay();
+                btn.disabled = true;
+                var was = btn.textContent;
+                btn.textContent = 'Working...';
+                window.api.request('/tmr-challenges/' + c.id + path, { method: 'POST', body: {} })
+                    .then(function () { say('ok', label); return refresh(); })
+                    .catch(function (e) {
+                        btn.disabled = false;
+                        btn.textContent = was;
+                        say('err', (e && e.message) || 'That did not go through.');
+                    });
+            };
+        }
+
+        function fill(listId, emptyId, rows) {
+            var list = document.getElementById(listId);
+            var empty = document.getElementById(emptyId);
+            list.innerHTML = '';
+            if (!rows.length) { empty.hidden = false; return; }
+            empty.hidden = true;
+            rows.forEach(function (el) { list.appendChild(el); });
+        }
+
+        function render() {
+            var meId = Number(state.me);
+
+            fill('listOpen', 'emptyOpen', state.open.map(function (c) {
+                return rowFor(c, [{ label: 'Take it', kind: 'primary', run: act('/accept', 'You took that challenge. Both stakes are now held.') }]);
+            }));
+
+            fill('listIncoming', 'emptyIncoming', state.incoming.map(function (c) {
+                return rowFor(c, [
+                    { label: 'Accept', kind: 'primary', run: act('/accept', 'Accepted. Both stakes are now held.') },
+                    { label: 'Decline', kind: 'danger', run: act('/decline', 'Declined. No TMR moved.') },
+                ]);
+            }));
+
+            var active = state.mine.filter(function (c) {
+                return c.status === 'pending' || c.status === 'accepted' || c.status === 'awaiting_settlement';
+            });
+            fill('listActive', 'emptyActive', active.map(function (c) {
+                var actions = [];
+                // Cancelling is the issuer backing out. It refunds both sides in full, so it is
+                // offered while a challenge is still pending or accepted but never after that.
+                if (Number(c.challenger_id) === meId && (c.status === 'pending' || c.status === 'accepted')) {
+                    actions.push({ label: 'Cancel', kind: 'danger', run: act('/cancel', 'Cancelled. Every stake was refunded.') });
+                }
+                // Only once there is money at stake and only while it is still unresolved.
+                // Disputing a pending offer would mean disputing something nobody agreed to.
+                if (['accepted', 'awaiting_settlement'].indexOf(c.status) >= 0 && c.dispute_status !== 'open') {
+                    actions.push({ label: 'Dispute', run: disputeAction });
+                }
+                return rowFor(c, actions);
+            }));
+
+            var done = state.mine.filter(function (c) {
+                return ['settled', 'declined', 'cancelled', 'expired', 'voided'].indexOf(c.status) >= 0;
+            });
+            fill('listCompleted', 'emptyCompleted', done.map(function (c) { return rowFor(c, []); }));
+
+            document.getElementById('cOpen').textContent = state.open.length;
+            document.getElementById('cIncoming').textContent = state.incoming.length;
+            document.getElementById('cActive').textContent = active.length;
+            document.getElementById('cCompleted').textContent = done.length;
+
+            var s = state.stats || {};
+            document.getElementById('recVal').textContent = s.record || '0-0';
+            document.getElementById('recSub').textContent =
+                num(s.active || 0) + ' live, ' + num(s.pending || 0) + ' waiting on an answer';
+            var net = Number(s.tmr_net || 0);
+            document.getElementById('netVal').textContent = (net >= 0 ? '+' : '') + num(net);
+            document.getElementById('netSub').textContent =
+                num(s.tmr_won || 0) + ' won against ' + num(s.tmr_staked || 0) + ' staked';
+
+            // What is currently locked up: my own stake on every challenge that has been accepted
+            // and not yet settled. Read off the rows rather than asked for, so it cannot disagree
+            // with the list sitting directly underneath it.
+            var held = state.mine.reduce(function (t, c) {
+                return t + (['accepted', 'awaiting_settlement'].indexOf(c.status) >= 0 ? Number(c.stake || 0) : 0);
+            }, 0);
+            document.getElementById('escVal').textContent = num(held);
+        }
+
+        // --- detail ------------------------------------------------------------
+
+        function renderDetail(c) {
+            document.querySelector('.tabs').hidden = true;
+            Array.prototype.forEach.call(document.querySelectorAll('.panel'), function (p) { p.hidden = true; });
+            document.getElementById('detail').hidden = false;
+
+            document.getElementById('dTitle').textContent = formatLabel(c.format);
+            var pot = Number(c.escrow_total || 0);
+            var intact = c.terms_intact;
+            document.getElementById('dCard').innerHTML =
+                '<div><span class="pill ' + esc(c.status) + '">' + esc(c.status.replace(/_/g, ' ')) + '</span></div>' +
+                '<p class="sub" style="margin-top:12px">' +
+                    esc(c.challenger_username || 'a member') + ' staked ' + num(c.stake) + ' TMR' +
+                    (c.opponent_username ? ' against ' + esc(c.opponent_username) : ', open to anyone') +
+                    (pot ? '. The pot is ' + num(pot) + ' TMR, held in escrow (' + esc(c.escrow_state) + ').' : '.') +
+                '</p>' +
+                (c.message ? '<p class="sub">Message: ' + esc(c.message) + '</p>' : '') +
+                '<p class="sub">Terms: ' + esc(JSON.stringify(c.terms || {})) + '</p>' +
+                // A terms hash that no longer matches the stored terms means somebody edited them
+                // after acceptance. Saying so out loud is the entire point of storing the hash.
+                '<p class="sub">' + (c.terms_hash
+                    ? (intact ? 'Terms are locked and unchanged since acceptance.'
+                              : 'WARNING: these terms no longer match the hash recorded at acceptance.')
+                    : 'Terms are not locked yet. They lock the moment somebody accepts.') + '</p>' +
+                (c.outcome ? '<p class="sub">Outcome: ' + esc(c.outcome) +
+                    (c.winner_id ? ' (winner user ' + esc(c.winner_id) + ')' : '') +
+                    (c.result_source ? ', decided by ' + esc(c.result_source) : '') + '</p>' : '') +
+                '<p class="sub">Settlement: ' + esc(settlementLine(c)) + '</p>' +
+                (c.dispute_status === 'open'
+                    ? '<p class="sub">Dispute: ' + esc(c.dispute_reason || 'raised')
+                        + (c.disputed_at ? ' (' + esc(when(c.disputed_at)) + ')' : '') + '</p>'
+                    : '') +
+                '<div id="dActs" style="margin-top:14px"></div>';
+
+            var dActs = document.getElementById('dActs');
+            var meD = Number(state.me);
+            var participant = Number(c.challenger_id) === meD || Number(c.opponent_id) === meD;
+            if (participant && ['accepted', 'awaiting_settlement'].indexOf(c.status) >= 0
+                && c.dispute_status !== 'open') {
+                var db = document.createElement('button');
+                db.className = 'btn sm';
+                db.type = 'button';
+                db.textContent = 'Dispute';
+                db.addEventListener('click', function () { disputeAction(db, c); });
+                dActs.appendChild(db);
+            }
+
+            var tb = document.getElementById('dHistory');
+            tb.innerHTML = '';
+            (c.history || []).forEach(function (h) {
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + esc(when(h.created_at)) + '</td>' +
+                    '<td>' + esc(String(h.event_type).replace(/_/g, ' ')) + '</td>' +
+                    '<td>' + esc(h.from_status || '') + '</td>' +
+                    '<td>' + esc(h.to_status || '') + '</td>';
+                tb.appendChild(tr);
+            });
+        }
+
+        // --- create ------------------------------------------------------------
+
+        function setupCreate() {
+            var sel = document.getElementById('fFormat');
+            state.meta.formats.forEach(function (f) {
+                var o = document.createElement('option');
+                o.value = f.key;
+                o.textContent = f.label;
+                sel.appendChild(o);
+            });
+            function hint() {
+                var f = state.meta.formats.filter(function (x) { return x.key === sel.value; })[0] || {};
+                document.getElementById('formatHint').textContent =
+                    'Decided by ' + String(f.result_source || '').replace(/_/g, ' ') +
+                    (f.needs_event ? '. This format needs a specific event.' : '.');
+            }
+            sel.addEventListener('change', hint);
+            hint();
+
+            var bal = Number((state.wallet && state.wallet.balance) || 0);
+            var ceiling = Math.floor(bal * state.meta.max_stake_fraction);
+            document.getElementById('stakeHint').textContent =
+                'Minimum ' + num(state.meta.min_stake) + ' TMR. You can stake up to ' + num(ceiling) +
+                ' TMR, which is a quarter of your balance, so one challenge can never clear you out.';
+            document.getElementById('createNote').textContent =
+                'The rake is ' + state.meta.rake_bps + ' basis points. The site takes nothing from the pot.';
+
+            var d = new Date(Date.now() + 24 * 3600 * 1000);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            document.getElementById('fExpires').value = d.toISOString().slice(0, 16);
+
+            document.getElementById('createForm').addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                clearSay();
+                var btn = document.getElementById('createBtn');
+                btn.disabled = true;
+                var opponent = document.getElementById('fOpponent').value.trim();
+                var payload = {
+                    format: sel.value,
+                    stake: Number(document.getElementById('fStake').value),
+                    expires_at: new Date(document.getElementById('fExpires').value).toISOString(),
+                    terms: { note: document.getElementById('fTerms').value.trim() },
+                    message: document.getElementById('fMessage').value.trim() || null,
+                };
+                if (opponent) payload.opponent_username = opponent;
+
+                window.api.request('/tmr-challenges', { method: 'POST', body: payload })
+                    .then(function () {
+                    say('ok', 'Challenge issued. Nothing is staked until somebody accepts.');
+                    document.getElementById('fTerms').value = '';
+                    btn.disabled = false;
+                    return refresh().then(function () { selectTab(opponent ? 'active' : 'open'); });
+                }).catch(function (e) {
+                    btn.disabled = false;
+                    say('err', (e && e.message) || 'That challenge was not created.');
+                });
+            });
+        }
+
+        // --- tabs --------------------------------------------------------------
+
+        function selectTab(name) {
+            Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+                t.setAttribute('aria-selected', String(t.dataset.tab === name));
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('.panel'), function (p) {
+                p.hidden = p.id !== 'panel-' + name;
+            });
+        }
+        Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+            t.addEventListener('click', function () { clearSay(); selectTab(t.dataset.tab); });
+        });
+
+        // --- load --------------------------------------------------------------
+
+        function refresh() {
+            return Promise.all([
+                window.api.request('/tmr-challenges/open'),
+                window.api.request('/tmr-challenges/mine'),
+                window.api.request('/tmr-challenges/incoming'),
+                window.api.request('/tmr-challenges/stats'),
+            ]).then(function (r) {
+                state.open = r[0].challenges || [];
+                state.mine = r[1].challenges || [];
+                state.incoming = r[2].challenges || [];
+                state.stats = r[3] || {};
+                render();
+            });
+        }
+
+        Promise.all([
+            window.api.request('/auth/me'),
+            window.api.request('/tmr-challenges/meta'),
+            window.api.request('/coins/balance').catch(function () { return null; })
+        ]).then(function (r) {
+            var me = r[0] && (r[0].user || r[0]);
+            state.me = me && me.id;
+            state.meta = r[1];
+            state.wallet = r[2] && (r[2].wallet || r[2]);
+
+            var bal = Number((state.wallet && state.wallet.balance) || 0);
+            document.getElementById('balVal').textContent = num(bal) + ' TMR';
+
+            setupCreate();
+            document.getElementById('footNote').textContent =
+                'Stakes are held in escrow from the moment a challenge is accepted, and a challenge '
+                + 'cannot settle twice. TMR earned here stays on TrustMyRecord: withdrawal to the '
+                + 'blockchain is not live.';
+
+            if (detailId) {
+                return window.api.request('/tmr-challenges/' + encodeURIComponent(detailId))
+                    .then(function (c) {
+                        loadState.hidden = true;
+                        body.hidden = false;
+                        renderDetail(c);
+                    });
+            }
+            return refresh().then(function () {
+                loadState.hidden = true;
+                body.hidden = false;
+            });
+        }).catch(function (e) {
+            loadState.hidden = true;
+            errState.hidden = false;
+            errState.textContent = (e && e.message) || 'Challenges could not be loaded right now.';
+        });
+    })();
+    </script>
+</body>
+</html>

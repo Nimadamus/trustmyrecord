@@ -2289,6 +2289,31 @@
                         </div>
                       </div>
 
+                      <!-- ===== HEAD TO HEAD CHALLENGES =====
+                           Deliberately its own section and never folded into the verified
+                           record above. Beating another member in a challenge says nothing
+                           about whether this capper picks winners, and merging the two would
+                           let a trivia run inflate a handicapping record. Filled by
+                           loadChallengeRecord(); hidden entirely for a member who has never
+                           taken one, rather than showing a wall of zeroes. -->
+                      <div class="tmrx-section tmrx-challenges" id="tmrxChallengeSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Head to Head Challenges</div>
+                            <div class="tmrx-section-sub">TMR staked against other members. Separate from the verified pick record.</div>
+                          </div>
+                          <a class="tmrw-cta" href="/tmr-challenges/">Challenge Board <span aria-hidden="true">&rarr;</span></a>
+                        </div>
+                        <div class="tmrx-grid">
+                          <div class="tmrx-cell"><div class="tmrx-label">Record</div><div class="tmrx-value" id="tmrxChRecord">&mdash;</div><div class="tmrx-sub" id="tmrxChRecordSub">W-L-P &middot; settled</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">TMR won</div><div class="tmrx-value" id="tmrxChWon">&mdash;</div><div class="tmrx-sub">profit on wins</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">TMR lost</div><div class="tmrx-value" id="tmrxChLost">&mdash;</div><div class="tmrx-sub">staked and beaten</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Net TMR</div><div class="tmrx-value" id="tmrxChNet">&mdash;</div><div class="tmrx-sub" id="tmrxChNetSub">from settled challenges</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Active</div><div class="tmrx-value" id="tmrxChActive">&mdash;</div><div class="tmrx-sub" id="tmrxChActiveSub">live right now</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Completed</div><div class="tmrx-value" id="tmrxChCompleted">&mdash;</div><div class="tmrx-sub">settled challenges</div></div>
+                        </div>
+                      </div>
+
                       <div class="tmrx-section">
                         <div class="tmrx-section-head">
                           <div>
@@ -7217,6 +7242,7 @@
             loadAdvancedMetrics(profileData.username || profileUsername || '');
             loadPollPoints(profileData.username || profileUsername || '');
             loadCommunityActivity(profileData.username || profileUsername || '');
+            loadChallengeRecord(profileData.username || profileUsername || '');
             loadForumActivity(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
@@ -7535,6 +7561,49 @@
     // counts by permanent account id (forum vs feed kept separate; deleted /
     // hidden / auto pick-share / bot content excluded server-side). No activity
     // renders as clean zeros, never a fake number and never a big empty card.
+    /**
+     * Head to head challenge record. Public: a signed out visitor sees the same figures the
+     * member does, because a challenge record is a public claim.
+     *
+     * The section stays hidden unless the member has actually taken a challenge. A row of
+     * zeroes on every profile would read as a dead feature, and worse, would imply a record
+     * exists where none does.
+     */
+    async function loadChallengeRecord(username) {
+        var section = document.getElementById('tmrxChallengeSection');
+        if (!section || !username) return;
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var setText = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+        var num = function (v) { return (Number(v) || 0).toLocaleString('en-US'); };
+        try {
+            var resp = await fetch(apiBase + '/api/tmr-challenges/stats/by-username/' + encodeURIComponent(username),
+                { headers: { Accept: 'application/json' } });
+            if (!resp.ok) return;
+            var s = await resp.json();
+            if (!s || !Number(s.total)) return;
+
+            setText('tmrxChRecord', s.record || '0-0');
+            setText('tmrxChRecordSub', s.win_rate == null
+                ? 'no challenge has been decided yet'
+                : s.win_rate + '% of decided challenges won');
+            setText('tmrxChWon', num(s.tmr_won) + ' TMR');
+            setText('tmrxChLost', num(s.tmr_lost) + ' TMR');
+            var net = Number(s.tmr_net) || 0;
+            setText('tmrxChNet', (net > 0 ? '+' : '') + num(net) + ' TMR');
+            setText('tmrxChActive', num(s.active));
+            // Pending offers are not active challenges: nothing is staked until one is
+            // accepted, so they are named separately rather than counted in.
+            setText('tmrxChActiveSub', Number(s.tmr_in_escrow)
+                ? num(s.tmr_in_escrow) + ' TMR held in escrow'
+                : (Number(s.pending) ? num(s.pending) + ' offer(s) awaiting an answer' : 'live right now'));
+            setText('tmrxChCompleted', num(s.completed));
+            section.hidden = false;
+        } catch (e) {
+            // A profile must still render without this. Staying hidden is the honest failure:
+            // it says nothing rather than reporting a record of zero.
+        }
+    }
+
     async function loadCommunityActivity(username) {
         var section = document.getElementById('communityActivity');
         if (!section || !username) return;
