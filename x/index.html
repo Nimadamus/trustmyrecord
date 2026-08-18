@@ -91,7 +91,28 @@
     setTimeout(go, 1200);
   })();
 </script>
-<noscript><meta http-equiv="refresh" content="0; url=/?utm_source=x&utm_medium=dm&utm_campaign=invite"></noscript>
+<!--
+  CANONICAL AND THE NO-JS FALLBACK (added 2026-08-18)
+
+  This page had no canonical, which failed the permanent SEO gate: a meta
+  refresh stub must carry a canonical that agrees with its refresh target,
+  and must never be noindex. It was the only failure in the whole suite.
+
+  The canonical points at the clean homepage rather than the campaign URL.
+  Canonicalising to /?utm_source=x... would ask search engines to index a
+  tracking-tagged address as the page of record, which is the opposite of
+  what a canonical is for. So the no-JS refresh drops the utm params too,
+  and the two agree on the clean homepage.
+
+  ATTRIBUTION IS UNAFFECTED. Everything that measures this campaign is
+  JavaScript: the gtag config above with campaign_source/medium/name, the
+  tmr_first_touch write below, and the window.location.replace to the utm
+  destination. A visitor with JS disabled runs none of it and produces no
+  GA4 hit at all, so the utm params in this noscript fallback could never
+  have been recorded by anything. Nothing measurable is lost.
+-->
+<link rel="canonical" href="https://trustmyrecord.com/">
+<noscript><meta http-equiv="refresh" content="0; url=/"></noscript>
 </head>
 <body>
 <p>Taking you to TrustMyRecord. <a href="/?utm_source=x&utm_medium=dm&utm_campaign=invite">Continue</a>.</p>
