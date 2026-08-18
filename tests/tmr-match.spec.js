@@ -131,6 +131,14 @@ test.describe('TMR Match', () => {
     await expect(page.locator('#mkBody')).toBeVisible({ timeout: 30000 });
     await expect(page.locator('#signedOutNote')).toBeVisible();
     await expect(page.locator('#signedOutNote')).toContainText('Sign in');
+    // With an empty board this is the whole first impression, so the guest must be asked
+    // to do something they CAN do. "Be the first to post" was the wrong ask: they cannot.
+    if (await page.locator('#emptyMarket').isVisible()) {
+      await expect(page.locator('#emptyCta')).toContainText('Sign in to post the first offer');
+      await expect(page.locator('#emptyMarket')).toContainText('Another member takes it');
+      await expect(page.locator('#marketLede'), 'no explainer about taking when there is nothing to take')
+        .toBeHidden();
+    }
     // The market is public; the things that move money are not even rendered.
     await expect(page.locator('[data-take]')).toHaveCount(0);
     await expect(page.locator('.tab[data-tab="create"]')).toBeHidden();

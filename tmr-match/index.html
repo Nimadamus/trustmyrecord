@@ -100,6 +100,13 @@
 
         .empty { border:1px dashed var(--line); border-radius:10px; padding:26px; text-align:center; color:var(--muted); font-size:13.5px; background:var(--panel); }
         .empty strong { display:block; color:var(--text); font-size:15px; margin-bottom:6px; }
+        .howto { text-align:left; padding:26px 24px; }
+        .howto strong { font-size:17px; margin-bottom:10px; }
+        .howto-lede { margin:0 0 16px; color:var(--muted); font-size:13.5px; line-height:1.6; max-width:640px; }
+        .howto-steps { list-style:none; margin:0 0 18px; padding:0; display:grid; gap:11px; }
+        .howto-steps li { display:flex; gap:11px; align-items:flex-start; color:var(--text); font-size:13.5px; line-height:1.5; }
+        .howto-steps span { flex:0 0 22px; height:22px; border-radius:999px; background:rgba(45,212,191,0.16); color:var(--teal); font-weight:800; font-size:12px; display:inline-flex; align-items:center; justify-content:center; }
+        .howto-cta { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
         .note { color:var(--muted); font-size:12.5px; line-height:1.6; margin-top:14px; }
 
         form.create { border:1px solid var(--line); border-radius:10px; background:var(--panel); padding:20px; display:grid; gap:14px; }
@@ -175,11 +182,17 @@
             <div id="panelMsg" class="msg" hidden></div>
 
             <section id="panel-market">
-                <p class="note" style="margin:0 0 14px;">Taking an offer puts up the TMR you enter, and the same amount comes out of theirs. Both sides are held until the game settles, and you can take part of an offer rather than all of it.</p>
+                <p class="note" id="marketLede" style="margin:0 0 14px;" hidden>Taking an offer puts up the TMR you enter, and the same amount comes out of theirs. Both sides are held until the game settles, and you can take part of an offer rather than all of it.</p>
                 <div class="list" id="listMarket"></div>
-                <div class="empty" id="emptyMarket" hidden>
-                    <strong>Nothing on the board yet</strong>
-                    Be the first to post an offer and name your price.
+                <div class="empty howto" id="emptyMarket" hidden>
+                    <strong>No offers on the board yet</strong>
+                    <p class="howto-lede">TMR Match lets you post the bet you actually want and wait for someone to take the other side. You set the pick and the price, so you are not stuck with a number a book chose for you.</p>
+                    <ol class="howto-steps">
+                        <li><span>1</span> Post an offer with your pick, your price and how much TMR you are putting up.</li>
+                        <li><span>2</span> Another member takes it, all at once or a piece at a time.</li>
+                        <li><span>3</span> Both sides are held until the game settles, then the winner is paid. No fee.</li>
+                    </ol>
+                    <div class="howto-cta" id="emptyCta"></div>
                 </div>
             </section>
 
@@ -420,6 +433,21 @@
             var lm = document.getElementById('listMarket');
             lm.innerHTML = market.map(function (o) { return offerCard(o, { canTake: isLoggedIn }); }).join('');
             document.getElementById('emptyMarket').hidden = market.length > 0;
+            // The explainer is about TAKING an offer. With an empty board there is nothing
+            // to take, so it would be answering a question nobody has yet.
+            document.getElementById('marketLede').hidden = market.length === 0;
+            // A guest cannot post, so "be the first to post" is the wrong ask for them.
+            var cta = document.getElementById('emptyCta');
+            if (cta && !cta.dataset.done) {
+                cta.dataset.done = '1';
+                cta.innerHTML = isLoggedIn
+                    ? '<button class="btn primary" id="emptyPost">Post the first offer</button>'
+                      + '<a class="btn" href="/wallet/earn/">Earn TMR first</a>'
+                    : '<a class="btn primary" href="/login/">Sign in to post the first offer</a>'
+                      + '<a class="btn" href="/tmr-coin/">What is TMR?</a>';
+                var b = document.getElementById('emptyPost');
+                if (b) b.addEventListener('click', function () { showTab('create'); });
+            }
 
             var lmine = document.getElementById('listMine');
             lmine.innerHTML = state.mine.map(function (o) { return offerCard(o, { canCancel: true }); }).join('');
