@@ -836,8 +836,12 @@ body.tmr-light .button-primary,
 body.tmr-light .cta-primary,
 body.tmr-light .tmr-btn-primary,
 body.tmr-light button.primary {
-  background:#0C948C;
-  border:1px solid #0C948C;
+  /* #0C948C behind white text measures 3.73:1, which fails WCAG AA for button
+     text at 15px. #0A7D76 is the same hue two steps darker and measures 4.99:1.
+     Only the FILL moved: the brand token, links, gradients and focus rings are
+     untouched, so the identity is unchanged. */
+  background:#0A7D76;
+  border:1px solid #0A7D76;
   color:#FFFFFF;
   border-radius:7px;
 }
@@ -873,9 +877,10 @@ body.tmr-light .tmr-btn-outline:hover {
    black ink. Re-anchored on hue alone that lands on a mid blue with black text;
    the design of record says a primary action is solid teal with white ink. */
 body.tmr-light .tmr-cta-primary {
-  background:#0C948C !important;
+  /* Same AA correction as the button block above: 3.73:1 -> 4.99:1. */
+  background:#0A7D76 !important;
   color:#FFFFFF !important;
-  border:1px solid #0C948C !important;
+  border:1px solid #0A7D76 !important;
   border-radius:7px !important;
 }
 body.tmr-light .tmr-cta-primary:hover {
