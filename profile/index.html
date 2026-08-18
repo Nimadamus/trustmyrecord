@@ -16,6 +16,26 @@
         var url='https://trustmyrecord.com/u/'+encodeURIComponent(u)+'/';
         var c=document.querySelector('link[rel="canonical"]'); if(c) c.href=url;
         var og=document.querySelector('meta[property="og:url"]'); if(og) og.setAttribute('content',url);
+        /* SOFT404_20260818: without this every ?user= view rendered the same
+           "Profile | TrustMyRecord" title and the same generic description, and
+           6 of the 10 ?user= URLs Search Console had crawled came back "Soft
+           404". The canonical above already consolidates them onto /u/<name>/;
+           a member-specific title/description stops the duplicate looking like
+           an empty generic page while Google works that out. */
+        document.title = u + ' - Verified Sports Betting Record, ROI & Public Picks | TrustMyRecord';
+        var ds = u + "'s verified TrustMyRecord betting record: graded picks, units, ROI, win percentage and public performance history.";
+        /* These four tags are declared BELOW this script in the head, so a
+           straight-line write would run before they exist. Re-run once the
+           head has parsed. */
+        var applyMeta=function(){
+          function set(sel,attr,val){var e=document.querySelector(sel); if(e) e.setAttribute(attr,val);}
+          set('meta[name="description"]','content',ds);
+          set('meta[property="og:title"]','content',u+' - Verified Sports Betting Record | TrustMyRecord');
+          set('meta[property="og:description"]','content',ds);
+          set('meta[name="twitter:title"]','content',u+' - Verified Sports Betting Record | TrustMyRecord');
+        };
+        applyMeta();
+        if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',applyMeta);}
       }catch(e){}
     })();
     </script>
@@ -215,6 +235,7 @@
 
         .profile-info { flex: 1; }
         .profile-name {
+            margin-top: 0;
             font-family: 'Barlow', 'Inter', sans-serif;
             font-size: clamp(1.8rem, 3vw, 2.5rem);
             font-weight: 800;
@@ -10874,7 +10895,13 @@
             '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">' : letter) + '</div>' +
             '<div class="profile-identity-copy">' +
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
-            '<div class="profile-name">' + name + '</div>' +
+            // SOFT404_20260818: this is the profile document's only page-level
+            // heading. It shipped as a <div>, so every /u/<name>/ and
+            // /profile/?user=<name> rendered with NO <h1> at all -- half of what
+            // put the /u/ family under "Soft 404" in Search Console. Styling is
+            // class-based and unchanged; .profile-name now carries margin-top:0
+            // so the h1 UA margin cannot shift the header.
+            '<h1 class="profile-name">' + name + '</h1>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
             (p.is_admin ? '<div><span class="profile-admin-badge">ADMIN</span></div>' : (p.is_moderator ? '<div><span class="profile-admin-badge">MOD</span></div>' : '')) +
             (p.has_early_access_badge ? '<div><span class="profile-early-access-badge">🪙 TMR Early Access</span></div>' : '') +

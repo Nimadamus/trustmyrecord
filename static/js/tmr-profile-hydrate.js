@@ -449,6 +449,108 @@
   });
   }
 
+  /* SOFT404_20260818 -- carry the baked SEO head across the document.write swap.
+     ---------------------------------------------------------------------------
+     document.open()/write() below replaces the WHOLE document, <head> included,
+     so the baked per-member <title>, description, robots, og/twitter tags and
+     ProfilePage JSON-LD were thrown away and replaced by the /profile/ shell's
+     generic ones. Every /u/ URL therefore RENDERED as the identical
+     "Profile | TrustMyRecord" / "View user profile, verified pick record..."
+     document, with no <h1> at all. Google indexes the rendered page, so it saw
+     one generic page repeated at every member address: of the 19 /u/ URLs it had
+     crawled by 2026-08-18, 12 were filed "Soft 404", 2 "Crawled - currently not
+     indexed", and only 5 were indexed. The canonical survived only by accident,
+     because the shell rewrites it from location.
+
+     tmr-forum-thread-hydrate.js and tmr-forum-cat-hydrate.js already snapshot and
+     restore their SEO head across the same kind of swap; the profile swap simply
+     never got it. Do NOT ship this swap without the restore. */
+  function safeJson(v) {
+    return JSON.stringify(v).replace(/</g, '\u003c').replace(/-->/g, '--\u003e');
+  }
+  function headAttr(tag, matchAttr, matchVal, want) {
+    var n = document.head.getElementsByTagName(tag);
+    for (var i = 0; i < n.length; i++) {
+      if ((n[i].getAttribute(matchAttr) || '') === matchVal) return n[i].getAttribute(want);
+    }
+    return null;
+  }
+  function headPrefixed(attr, prefix) {
+    var out = [], n = document.head.getElementsByTagName('meta');
+    for (var i = 0; i < n.length; i++) {
+      var k = n[i].getAttribute(attr), v = n[i].getAttribute('content');
+      if (k && v && k.indexOf(prefix) === 0) out.push([k, v]);
+    }
+    return out;
+  }
+  var bakedSeo = {
+    title: document.title,
+    desc: headAttr('meta', 'name', 'description', 'content'),
+    canonical: headAttr('link', 'rel', 'canonical', 'href'),
+    robots: headAttr('meta', 'name', 'robots', 'content') || 'index, follow',
+    og: headPrefixed('property', 'og:'),
+    tw: headPrefixed('name', 'twitter:'),
+    ld: (function () {
+      var out = [], n = document.head.getElementsByTagName('script');
+      for (var i = 0; i < n.length; i++) {
+        if (n[i].type === 'application/ld+json') out.push(n[i].textContent);
+      }
+      return out;
+    }()),
+    h1: (function () {
+      var h = document.querySelector('h1');
+      return h ? (h.textContent || '').trim() : '';
+    }())
+  };
+
+  /* Serialised into the swapped document and run at the END of its <head>, so the
+     shell's own generic title/description/JSON-LD have been parsed and can be
+     overwritten. Must reference nothing outside window.__TMR_PROFILE_SEO, and
+     must contain no closing script tag. */
+  function restoreBakedSeo() {
+    var s = window.__TMR_PROFILE_SEO;
+    if (!s) return;
+    var H = document.head;
+    function meta(attr, key, val) {
+      if (!val) return;
+      var el = null, n = H.getElementsByTagName('meta');
+      for (var i = 0; i < n.length; i++) {
+        if (n[i].getAttribute(attr) === key) { el = n[i]; break; }
+      }
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); H.appendChild(el); }
+      el.setAttribute('content', val);
+    }
+    if (s.title) document.title = s.title;
+    var canon = null, links = H.getElementsByTagName('link');
+    for (var i = 0; i < links.length; i++) {
+      if ((links[i].getAttribute('rel') || '') === 'canonical') { canon = links[i]; break; }
+    }
+    if (!canon) {
+      canon = document.createElement('link');
+      canon.setAttribute('rel', 'canonical');
+      H.appendChild(canon);
+    }
+    if (s.canonical) canon.setAttribute('href', s.canonical);
+    meta('name', 'robots', s.robots);
+    meta('name', 'description', s.desc);
+    for (var j = 0; j < s.og.length; j++) meta('property', s.og[j][0], s.og[j][1]);
+    for (var k = 0; k < s.tw.length; k++) meta('name', s.tw[k][0], s.tw[k][1]);
+    if (s.ld && s.ld.length) {
+      var scripts = H.getElementsByTagName('script'), drop = [], x;
+      for (x = 0; x < scripts.length; x++) {
+        if (scripts[x].type === 'application/ld+json') drop.push(scripts[x]);
+      }
+      for (x = 0; x < drop.length; x++) drop[x].parentNode.removeChild(drop[x]);
+      for (x = 0; x < s.ld.length; x++) {
+        var tag = document.createElement('script');
+        tag.type = 'application/ld+json';
+        tag.textContent = s.ld[x];
+        H.appendChild(tag);
+      }
+    }
+  }
+  var SEO_RESTORE = '<scr' + 'ipt>(' + restoreBakedSeo.toString() + ')();</scr' + 'ipt>';
+
   // ---------- full-profile swap: load the real /profile/ app at this URL ----------
   function swapToFullProfile() {
     /* The baked page starts this fetch inline in <head> (build_profile_pages.py),
@@ -469,7 +571,10 @@
         // Guarantee the app knows which user to load even before it parses the
         // /u/ path (globals also persist across document.open, this is belt+braces).
         html = html.replace(/<head>/i, '<head><script>window.__TMR_PROFILE_USERNAME=' +
-          JSON.stringify(un) + ';<\/script>');
+          JSON.stringify(un) + ';window.__TMR_PROFILE_SEO=' + safeJson(bakedSeo) + ';<\/script>');
+        // SOFT404_20260818: reinstate this member's title/description/robots/og/JSON-LD.
+        if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, SEO_RESTORE + '</head>');
+        else html += SEO_RESTORE;
         clearTimeout(revealFailSafe);
         /* document.open()/write() replaces the DOM but NOT the JavaScript realm:
            every global, timer and pending promise from this document stays alive
@@ -484,6 +589,23 @@
         document.open();
         document.write(html);
         document.close();
+
+        /* The shell renders the member's name into #profileHeader as the page's
+           only <h1> (profile/index.html, .profile-name). Until that async render
+           lands the swapped document has no <h1> at all -- the second half of the
+           SOFT404_20260818 signal. Reassert the baked name only if the app has not
+           produced a heading of its own. */
+        var setH1 = function () {
+          if (document.querySelector('h1')) return;
+          var host = document.getElementById('profileHeader');
+          if (!host || !bakedSeo.h1) return;
+          var h = document.createElement('h1');
+          h.className = 'profile-name';
+          h.textContent = bakedSeo.h1;
+          host.insertBefore(h, host.firstChild);
+        };
+        setTimeout(setH1, 1500);
+        setTimeout(setH1, 4000);
       });
   }
 
