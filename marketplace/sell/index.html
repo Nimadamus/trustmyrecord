@@ -111,7 +111,14 @@
         .publish-confirm { background:rgba(10,139,78,0.09); border:1px solid rgba(10,139,78,.28); border-radius:12px; padding:14px 16px; margin-bottom:14px; font-size:13.5px; color:#07182A; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
         .publish-confirm b { color:var(--green); }
         @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
-    </style>
+    .pkg-tmr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.22)}
+.pkg-tmr-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9aa8ba;cursor:pointer}
+.pkg-tmr-price{display:flex;align-items:center;gap:6px;margin-top:7px}
+.pkg-tmr-price input{width:110px}
+.pkg-tmr-price span{font-size:12px;color:#9aa8ba;font-weight:600}
+.pkg-tmr-split{margin-top:7px;font-size:12px;color:#9aa8ba;line-height:1.7}
+.pkg-tmr-split b{color:#4ade80}
+</style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
 </head>
@@ -184,6 +191,8 @@
         const l = byType[pk.type];
         const on = Boolean(l && l.status === 'published');
         const price = l ? (l.price_cents / 100).toFixed(2) : '';
+        const tmrOn = Boolean(l && l.accepts_tmr);
+        const tmrPrice = l && l.price_tmr != null ? String(l.price_tmr) : '';
         const status = !l ? '' : l.status === 'published' ? '<span class="pkg-status live">Live</span>' : '<span class="pkg-status draft">' + esc(l.status) + '</span>';
         return '<div class="pkg' + (on ? ' on' : '') + '" id="pkg-' + pk.type + '">' +
             '<div class="pkg-head"><span class="pkg-name">' + pk.name + '</span><span class="pkg-dur">' + pk.dur + '</span></div>' +
@@ -193,10 +202,44 @@
             '</label>' +
             '<div class="pkg-price"><span>$</span><input type="number" step="0.01" min="1" placeholder="' + pk.ph + '" data-price="' + pk.type + '" value="' + price + '"></div>' +
             '<div class="pkg-keep" data-keep="' + pk.type + '"></div>' +
+            /* TMR pricing. Opt-in per package and off by default: an existing cash
+               listing must never start accepting TMR because a column appeared. */
+            '<div class="pkg-tmr">' +
+                '<label class="pkg-tmr-row"><input type="checkbox" data-tmr-accept="' + pk.type + '"' + (tmrOn ? ' checked' : '') + '>' +
+                '<span>Also accept TMR</span></label>' +
+                '<div class="pkg-tmr-price"><input type="number" step="1" min="10" placeholder="1000" data-tmr-price="' + pk.type + '" value="' + tmrPrice + '"><span>TMR</span></div>' +
+                '<div class="pkg-tmr-split" data-tmr-split="' + pk.type + '"></div>' +
+            '</div>' +
             (status ? '<div style="margin-top:6px;">' + status + '</div>' : '') +
             '<div class="pkg-err" data-err="' + pk.type + '"></div>' +
             '<div class="pkg-help">' + esc(PKG_HELP[pk.type] || '') + '</div>' +
         '</div>';
+    }
+
+    // 5% is read from the API on save; this preview uses the same default the
+    // server uses so the seller is never shown a number the server disagrees with.
+    var TMR_FEE_BPS = 500;
+    function renderTmrSplit(type) {
+        const el = app.querySelector('[data-tmr-split="' + type + '"]');
+        const on = app.querySelector('[data-tmr-accept="' + type + '"]');
+        const inp = app.querySelector('[data-tmr-price="' + type + '"]');
+        if (!el || !on || !inp) return;
+        if (!on.checked) { el.textContent = ''; return; }
+        const p = parseInt(inp.value, 10);
+        if (!p || p < 10) { el.textContent = 'Enter a TMR price of at least 10.'; return; }
+        const fee = Math.floor(p * TMR_FEE_BPS / 10000);
+        el.innerHTML = 'Listing price ' + p.toLocaleString() + ' TMR<br>' +
+            'Platform fee (' + (TMR_FEE_BPS / 100) + '%) &minus;' + fee.toLocaleString() + ' TMR<br>' +
+            'You receive <b>' + (p - fee).toLocaleString() + ' TMR</b>';
+    }
+    function wireTmrInputs() {
+        app.querySelectorAll('[data-tmr-accept]').forEach(function (c) {
+            c.onchange = function () { renderTmrSplit(c.getAttribute('data-tmr-accept')); };
+            renderTmrSplit(c.getAttribute('data-tmr-accept'));
+        });
+        app.querySelectorAll('[data-tmr-price]').forEach(function (i) {
+            i.oninput = function () { renderTmrSplit(i.getAttribute('data-tmr-price')); };
+        });
     }
 
     function renderRules() {
@@ -403,6 +446,7 @@
                 if (chk.checked) { const p = app.querySelector('[data-price="' + pk.type + '"]'); if (p && !p.value) p.focus(); }
             });
         });
+        wireTmrInputs();
         const saveBtn = document.getElementById('saveListingBtn');
         if (saveBtn) saveBtn.addEventListener('click', async function () {
             const label = saveBtn.textContent;
@@ -427,6 +471,31 @@
                         if (elig.eligible) {
                             const p = await api.request('/marketplace/me/listing/publish', { method: 'POST', body: { product_type: pk.type } });
                             if (p && p.error) throw new Error(p.error);
+                        }
+                        // TMR price rides along with the same Save. It is a separate
+                        // endpoint because it is a separate payment rail, and a failure
+                        // here must not lose the cash listing the seller just saved --
+                        // hence its own try/catch rather than throwing into the outer one.
+                        try {
+                            const acceptEl = app.querySelector('[data-tmr-accept="' + pk.type + '"]');
+                            const tmrEl = app.querySelector('[data-tmr-price="' + pk.type + '"]');
+                            const wantsTmr = Boolean(acceptEl && acceptEl.checked);
+                            const tmrVal = tmrEl ? parseInt(tmrEl.value, 10) : NaN;
+                            const fresh = await api.request('/marketplace/me/listing');
+                            const row = (Array.isArray(fresh) ? fresh : (fresh && fresh.listings) || [])
+                                .find(function (x) { return x.product_type === pk.type; });
+                            if (row && row.id) {
+                                if (wantsTmr && tmrVal >= 10) {
+                                    const t = await api.request('/marketplace/tmr/listings/' + row.id + '/price',
+                                        { method: 'PATCH', body: { priceTmr: tmrVal, acceptsTmr: true } });
+                                    if (t && t.feeBps) TMR_FEE_BPS = t.feeBps;
+                                } else if (!wantsTmr && row.accepts_tmr) {
+                                    await api.request('/marketplace/tmr/listings/' + row.id + '/price',
+                                        { method: 'PATCH', body: { acceptsTmr: false } });
+                                }
+                            }
+                        } catch (tmrErr) {
+                            if (errSlot) errSlot.textContent = 'Saved, but the TMR price did not update: ' + (tmrErr.message || 'error');
                         }
                         savedCount++;
                     } else if (existing && existing.status === 'published') {
