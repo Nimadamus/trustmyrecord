@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TMR notification toast harness</title>
+<!--
+  Isolation harness for static/js/notifications.js.
+
+  It loads the REAL notifications engine against a scripted window.api, so the
+  toast/badge/401 behaviour is exercised exactly as it ships, without booting
+  the whole site or touching a backend. The suite that drives it is
+  tests/notification-toasts.spec.js.
+
+  window.__TEST controls the feed:
+    feed        -> the notifications array the next poll returns
+    unreadCount -> the count the next poll returns
+    failWith    -> if set, the next poll rejects with { status: <n> }
+    calls       -> incremented per poll
+    marked      -> notification ids passed to markNotificationRead
+-->
+<style>
+  body { margin: 0; background: #0b0e14; color: #e6edf3;
+         font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px; }
+  #notificationsBtn { background: #1b2130; color: #e6edf3; border: 1px solid #2a3040;
+                      border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+  #notifBadge { display: none; background: #ef4444; color: #fff; border-radius: 999px;
+                padding: 0 6px; font-size: 12px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <button id="notificationsBtn" type="button">Alerts<span id="notifBadge"></span></button>
+</header>
+
+<script>
+  // Fast tunables so the suite never waits on a real 30s backoff or a 20s poll.
+  window.TMR_NOTIF_POLL_VISIBLE_MS = 300;
+  window.TMR_NOTIF_POLL_HIDDEN_MS = 1000;
+  window.TMR_NOTIF_AUTH_BACKOFF_MS = [400, 500, 600, 700];
+
+  window.__TEST = {
+    feed: [],
+    unreadCount: 0,
+    failWith: null,
+    calls: 0,
+    marked: [],
+    loggedIn: true
+  };
+
+  window.api = {
+    ready: Promise.resolve(),
+    token: 'harness-access-token',
+    refreshToken: 'harness-refresh-token',
+    loadTokens: function () {},
+    isLoggedIn: function () { return !!window.__TEST.loggedIn; },
+    getNotifications: async function () {
+      window.__TEST.calls += 1;
+      if (window.__TEST.failWith) {
+        const err = new Error('harness auth failure');
+        err.status = window.__TEST.failWith;
+        throw err;
+      }
+      return {
+        notifications: window.__TEST.feed.slice(),
+        unreadCount: window.__TEST.unreadCount
+      };
+    },
+    markNotificationRead: async function (id) {
+      window.__TEST.marked.push(String(id));
+      // Mirrored into storage so a click-through assertion survives the
+      // navigation the click triggers.
+      try {
+        var prior = JSON.parse(localStorage.getItem('__harness_marked') || '[]');
+        prior.push(String(id));
+        localStorage.setItem('__harness_marked', JSON.stringify(prior));
+      } catch (e) {}
+      return { ok: true };
+    },
+    markAllNotificationsRead: async function () { return { ok: true }; }
+  };
+</script>
+<script src="/static/js/notifications.js?v=1c720503491a"></script>
+</body>
+</html>

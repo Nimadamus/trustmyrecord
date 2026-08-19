@@ -2,10 +2,36 @@
 // Uses backend API (window.api from backend-api.js)
 // Include config.js and backend-api.js BEFORE this script on every page.
 
-const TMR_NOTIF_POLL_INTERVAL = 60000; // 60 seconds
+// Cadence. A flat 60s meant a graded pick could sit unseen for a minute even
+// with the tab in front of you, which is what made the bell feel dead. Poll
+// briskly only while the tab is actually visible, back off hard when it is not,
+// and fetch immediately on the way back. Two small indexed queries per poll.
+// Overridable so the regression suite can drive the same code paths without
+// sitting through real backoffs; production never sets these globals.
+function _notifTunable(name, fallback) {
+    try {
+        const v = window[name];
+        if (typeof fallback === 'number') return typeof v === 'number' && v > 0 ? v : fallback;
+        return Array.isArray(v) && v.length ? v : fallback;
+    } catch (e) { return fallback; }
+}
+
+const TMR_NOTIF_POLL_VISIBLE_MS = _notifTunable('TMR_NOTIF_POLL_VISIBLE_MS', 20000);
+const TMR_NOTIF_POLL_HIDDEN_MS = _notifTunable('TMR_NOTIF_POLL_HIDDEN_MS', 120000);
+
+// A 401 here is recoverable -- backend-api.js refreshes the access token on the
+// next request -- so it must pause, not kill. Backoff caps so a genuinely dead
+// session cannot spin.
+const TMR_NOTIF_AUTH_BACKOFF_MS = _notifTunable('TMR_NOTIF_AUTH_BACKOFF_MS', [30000, 60000, 120000, 300000]);
+
 let _notifPollTimer = null;
+let _notifPollIntervalMs = null;
 let _notifCache = { notifications: [], unreadCount: 0 };
 let _notifAuthListenerBound = false; // declared before initNotifications IIFE (TDZ fix)
+let _notifAuthFailures = 0;
+let _notifPauseUntil = 0;
+let _notifAuthWarned = false;
+let _notifVisibilityBound = false;
 
 function hasBackendNotificationSession() {
     if (!window.api || typeof api.isLoggedIn !== 'function') return false;
@@ -32,6 +58,30 @@ function stopNotificationsPolling() {
         clearInterval(_notifPollTimer);
         _notifPollTimer = null;
     }
+    _notifPollIntervalMs = null;
+}
+
+// Run the timer at the cadence the current tab state deserves, replacing it only
+// when the cadence actually changes so visibilitychange churn cannot orphan it.
+function startNotificationsPolling() {
+    const wanted = (typeof document !== 'undefined' && document.hidden)
+        ? TMR_NOTIF_POLL_HIDDEN_MS
+        : TMR_NOTIF_POLL_VISIBLE_MS;
+    if (_notifPollTimer && _notifPollIntervalMs === wanted) return;
+    stopNotificationsPolling();
+    _notifPollIntervalMs = wanted;
+    _notifPollTimer = setInterval(fetchNotifications, wanted);
+}
+
+function bindNotificationVisibility() {
+    if (_notifVisibilityBound || typeof document === 'undefined') return;
+    _notifVisibilityBound = true;
+    document.addEventListener('visibilitychange', function () {
+        if (!_notifPollTimer && !_notifPauseUntil) return;
+        startNotificationsPolling();
+        // Coming back to the tab is the moment the user expects to be current.
+        if (!document.hidden) fetchNotifications();
+    });
 }
 
 
@@ -80,13 +130,18 @@ async function refreshNotificationSession() {
     const loggedIn = hasBackendNotificationSession() &&
         (!window.auth || typeof auth.isLoggedIn !== 'function' || hasFrontendAuthSession());
     if (loggedIn) {
+        // A fresh session invalidates any auth backoff from the previous one.
+        _notifAuthFailures = 0;
+        _notifPauseUntil = 0;
+        _notifAuthWarned = false;
+        bindNotificationVisibility();
         await fetchNotifications();
-        if (!_notifPollTimer) {
-            _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
-        }
+        startNotificationsPolling();
     } else {
         stopNotificationsPolling();
+        _notifPauseUntil = 0;
         updateNotifBadge(0);
+        clearNotificationToasts();
     }
 }
 
@@ -336,16 +391,28 @@ function addNotificationDropdown() {
 async function fetchNotifications() {
     // Backend API is mandatory
     if (!window.api || typeof api.getNotifications !== 'function') return;
-    
+
     // Check if user is logged in via API
     if (!hasBackendNotificationSession()) return;
+
+    // Paused after an auth failure. The timer keeps running so the very next
+    // tick after the backoff expires picks the session back up on its own.
+    if (_notifPauseUntil && Date.now() < _notifPauseUntil) return;
 
     try {
         const data = await api.getNotifications({ limit: 20 });
         _notifCache.notifications = data.notifications || [];
         _notifCache.unreadCount = Number(data.unreadCount ?? data.unread_count ?? 0);
-        
+
+        // Recovered.
+        if (_notifAuthFailures || _notifPauseUntil) {
+            _notifAuthFailures = 0;
+            _notifPauseUntil = 0;
+            _notifAuthWarned = false;
+        }
+
         updateNotifBadge(_notifCache.unreadCount);
+        maybeToastNewNotifications(_notifCache.notifications);
 
         // If the dropdown is currently visible, re-render
         const dropdown = document.getElementById('notificationsDropdown');
@@ -354,8 +421,22 @@ async function fetchNotifications() {
         }
     } catch (err) {
         if (err && (err.status === 401 || err.status === 403)) {
-            stopNotificationsPolling();
+            // AUTH_PAUSE_20260819: this used to call stopNotificationsPolling(),
+            // which killed the bell for the rest of the page's life -- badge
+            // stuck at 0, no alert (including a graded pick) ever arriving again
+            // until a full reload. backend-api.js refreshes the access token on
+            // the next request, and the codebase deliberately never auto-logs a
+            // user out, so a 401 is a pause, not a death. Back off, keep the
+            // timer, recover silently on the first success.
+            _notifPauseUntil = Date.now() + TMR_NOTIF_AUTH_BACKOFF_MS[
+                Math.min(_notifAuthFailures, TMR_NOTIF_AUTH_BACKOFF_MS.length - 1)
+            ];
+            _notifAuthFailures += 1;
             updateNotifBadge(0);
+            if (!_notifAuthWarned) {
+                _notifAuthWarned = true; // once per outage, not once per tick
+                console.warn('[Notifications] Session not accepted; pausing polling until it refreshes.');
+            }
             return;
         }
         console.error('[Notifications] Fetch error:', err);
@@ -768,3 +849,351 @@ window.toggleNotifications = toggleNotificationsDropdown;
 window.markAllRead = markAllNotificationsRead;
 window.markAllNotificationsRead = markAllNotificationsRead;
 window.filterNotifications = filterNotifications;
+
+/* =====================================================================
+   GRADED-PICK TOASTS (2026-08-19)
+   ---------------------------------------------------------------------
+   The alerts were always being created -- production had 45 graded-pick
+   rows on 08-19 and BetLegend was sitting on 10 unread -- but nothing on
+   the page ever announced one. No toast, no sound, no title change, no
+   push. The only surface was a number on the bell you had to happen to
+   look at, refreshed by a silent 60s poll. That is why graded picks read
+   as "we never got notified".
+
+   Rules this obeys:
+     * The BELL stays authoritative. A toast never marks anything read and
+       never touches the unread count; it is a second view of a row that is
+       already in the list.
+     * Old unread alerts are NEVER replayed as new. The first poll in a
+       fresh browser seeds the seen-set silently, so a week-old backlog
+       cannot blast you on your next visit.
+     * One toast per notification id, ever, across reloads (localStorage).
+     * At most MAX_VISIBLE real toasts; the rest collapse into one summary
+       row so ten picks grading at once cannot bury the page.
+   ===================================================================== */
+
+const TMR_TOAST_TYPES = ['pick_won', 'pick_lost', 'pick_pushed', 'pick_graded'];
+const TMR_TOAST_SEEN_KEY = 'tmr_toasted_notification_ids';
+const TMR_TOAST_SEEDED_KEY = 'tmr_toast_seeded_v1';
+const TMR_TOAST_SEEN_CAP = 300;
+const TMR_TOAST_MAX_VISIBLE = 3;
+const TMR_TOAST_TTL_MS = 9000;
+
+const _toastTimers = new Map();
+
+function toastStore() {
+    try {
+        return window.localStorage;
+    } catch (e) {
+        return null; // private mode / blocked storage: degrade to no toasts
+    }
+}
+
+function readToastedIds() {
+    const store = toastStore();
+    if (!store) return null;
+    try {
+        const raw = JSON.parse(store.getItem(TMR_TOAST_SEEN_KEY) || '[]');
+        return Array.isArray(raw) ? raw.map(String) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function writeToastedIds(ids) {
+    const store = toastStore();
+    if (!store) return;
+    try {
+        store.setItem(TMR_TOAST_SEEN_KEY, JSON.stringify(ids.slice(-TMR_TOAST_SEEN_CAP)));
+    } catch (e) { /* quota / blocked: toasts simply repeat less reliably */ }
+}
+
+function isToastableNotification(n) {
+    if (!n) return false;
+    if (n.is_read) return false; // already dealt with; the bell still lists it
+    return TMR_TOAST_TYPES.indexOf(String(n.type || '').toLowerCase()) !== -1;
+}
+
+/* Decide what deserves a toast, then show it. Returns the ids toasted so the
+   regression suite can assert on the decision, not on the DOM. */
+function maybeToastNewNotifications(notifications) {
+    const list = Array.isArray(notifications) ? notifications : [];
+    const store = toastStore();
+    if (!store) return [];
+
+    const seen = readToastedIds();
+    if (seen === null) return [];
+    const seenSet = new Set(seen);
+
+    // First run in this browser: adopt everything currently on the server as
+    // already-seen and stay silent. Without this, opening the site after a week
+    // away would fire a toast for every unread alert in the backlog.
+    let seeded = false;
+    try { seeded = store.getItem(TMR_TOAST_SEEDED_KEY) === '1'; } catch (e) { seeded = false; }
+    if (!seeded) {
+        const allIds = list.map(function (n) { return String(n.id); });
+        writeToastedIds(seen.concat(allIds.filter(function (id) { return !seenSet.has(id); })));
+        try { store.setItem(TMR_TOAST_SEEDED_KEY, '1'); } catch (e) {}
+        return [];
+    }
+
+    const fresh = list.filter(function (n) {
+        return isToastableNotification(n) && !seenSet.has(String(n.id));
+    });
+    if (!fresh.length) return [];
+
+    // Oldest first so the newest ends up nearest the user.
+    fresh.sort(function (a, b) {
+        return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+    });
+
+    const toastedIds = fresh.map(function (n) { return String(n.id); });
+    writeToastedIds(seen.concat(toastedIds));
+
+    const shown = fresh.slice(-TMR_TOAST_MAX_VISIBLE);
+    const hidden = fresh.length - shown.length;
+    shown.forEach(function (n) { showNotificationToast(n); });
+    if (hidden > 0) showNotificationToastSummary(hidden);
+
+    return toastedIds;
+}
+
+function ensureToastContainer() {
+    let host = document.getElementById('tmrNotifToasts');
+    if (host) return host;
+    if (!document.body) return null;
+
+    injectToastStyles();
+    host = document.createElement('div');
+    host.id = 'tmrNotifToasts';
+    host.className = 'tmr-toast-host';
+    // polite, not assertive: a graded pick is news, not an emergency, and
+    // assertive would interrupt a screen reader mid-sentence.
+    host.setAttribute('role', 'status');
+    host.setAttribute('aria-live', 'polite');
+    host.setAttribute('aria-atomic', 'false');
+    document.body.appendChild(host);
+    return host;
+}
+
+function injectToastStyles() {
+    if (document.getElementById('tmrNotifToastStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'tmrNotifToastStyles';
+    // Under the nav on desktop, above the thumb on mobile. z-index sits below
+    // modal/dialog layers so a toast can never trap a control.
+    style.textContent = [
+        '.tmr-toast-host{position:fixed;top:76px;right:16px;z-index:9990;',
+        'display:flex;flex-direction:column;gap:10px;width:min(360px,calc(100vw - 32px));',
+        'pointer-events:none;}',
+        '.tmr-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:12px;',
+        'background:#141821;color:#f2f5f9;border:1px solid #2a3040;border-left:4px solid #6b7280;',
+        'border-radius:12px;padding:12px 14px;box-shadow:0 10px 28px rgba(0,0,0,.45);',
+        'font:500 14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;',
+        'cursor:pointer;opacity:0;transform:translateY(-8px);',
+        'transition:opacity .22s ease,transform .22s ease;}',
+        '.tmr-toast.is-in{opacity:1;transform:translateY(0);}',
+        '.tmr-toast.is-out{opacity:0;transform:translateY(-8px);}',
+        '.tmr-toast--win{border-left-color:#22c55e;}',
+        '.tmr-toast--loss{border-left-color:#ef4444;}',
+        '.tmr-toast--push{border-left-color:#eab308;}',
+        '.tmr-toast--summary{border-left-color:#3b82f6;}',
+        '.tmr-toast__icon{flex:0 0 auto;width:22px;height:22px;margin-top:1px;}',
+        '.tmr-toast__icon svg{width:22px;height:22px;fill:none;stroke-width:2;',
+        'stroke-linecap:round;stroke-linejoin:round;}',
+        '.tmr-toast--win .tmr-toast__icon svg{stroke:#22c55e;}',
+        '.tmr-toast--loss .tmr-toast__icon svg{stroke:#ef4444;}',
+        '.tmr-toast--push .tmr-toast__icon svg{stroke:#eab308;}',
+        '.tmr-toast--summary .tmr-toast__icon svg{stroke:#3b82f6;}',
+        '.tmr-toast__body{flex:1 1 auto;min-width:0;}',
+        '.tmr-toast__title{font-weight:700;font-size:14px;margin:0 0 2px;letter-spacing:.01em;}',
+        '.tmr-toast--win .tmr-toast__title{color:#4ade80;}',
+        '.tmr-toast--loss .tmr-toast__title{color:#f87171;}',
+        '.tmr-toast--push .tmr-toast__title{color:#facc15;}',
+        '.tmr-toast__text{margin:0;font-size:14px;color:#cbd3e1;overflow-wrap:anywhere;}',
+        '.tmr-toast__meta{margin:4px 0 0;font-size:13px;color:#94a3b8;}',
+        // 32px box, 44px effective touch target via the negative margin, so the
+        // dismiss control is reachable on mobile without a giant button.
+        '.tmr-toast__close{flex:0 0 auto;width:32px;height:32px;margin:-4px -6px -4px 0;',
+        'display:flex;align-items:center;justify-content:center;background:transparent;',
+        'border:0;border-radius:8px;color:#94a3b8;font-size:20px;line-height:1;cursor:pointer;}',
+        '.tmr-toast__close:hover{background:rgba(255,255,255,.08);color:#f2f5f9;}',
+        '.tmr-toast__close:focus-visible{outline:2px solid #60a5fa;outline-offset:2px;}',
+        '@media (max-width:640px){',
+        '.tmr-toast-host{top:auto;bottom:16px;right:12px;left:12px;width:auto;}',
+        '.tmr-toast{padding:12px;}',
+        '}',
+        '@media (prefers-reduced-motion:reduce){',
+        '.tmr-toast{transition:none;transform:none;}',
+        '.tmr-toast.is-out{opacity:0;}',
+        '}'
+    ].join('');
+    document.head.appendChild(style);
+}
+
+const TMR_TOAST_SVG = {
+    win: '<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>',
+    loss: '<svg viewBox="0 0 24 24"><path d="M15 9l-6 6M9 9l6 6"/><circle cx="12" cy="12" r="9"/></svg>',
+    push: '<svg viewBox="0 0 24 24"><path d="M8 12h8"/><circle cx="12" cy="12" r="9"/></svg>',
+    summary: '<svg viewBox="0 0 24 24"><path d="M6 8h12M6 12h12M6 16h8"/></svg>'
+};
+
+function toastVariant(type) {
+    const t = String(type || '').toLowerCase();
+    if (t === 'pick_won') return 'win';
+    if (t === 'pick_lost') return 'loss';
+    if (t === 'pick_pushed') return 'push';
+    return 'summary';
+}
+
+function toastTitle(variant) {
+    if (variant === 'win') return 'Pick won';
+    if (variant === 'loss') return 'Pick lost';
+    if (variant === 'push') return 'Pick pushed';
+    return 'Pick graded';
+}
+
+/* The server message already reads "Your pick was graded: WON (+1.20u)". The
+   toast headline says won/lost on its own, so strip that prefix and keep the
+   part that carries the units. */
+function toastDetailText(notification) {
+    const raw = coerceSafeNotifText(notification);
+    const trimmed = String(raw || '').replace(/^Your pick was graded:\s*/i, '').trim();
+    return trimmed || 'Your pick was graded.';
+}
+
+function toastMetaText(notification) {
+    const bits = [];
+    const sel = notification.selection || notification.pick_selection;
+    const market = notification.market_type || notification.market;
+    const game = notification.game_label || notification.matchup;
+    if (sel) bits.push(String(sel));
+    if (game) bits.push(String(game));
+    else if (market) bits.push(String(market).replace(/_/g, ' '));
+    return bits.join(' · ');
+}
+
+function showNotificationToast(notification) {
+    const host = ensureToastContainer();
+    if (!host) return null;
+
+    const variant = toastVariant(notification.type);
+    const el = document.createElement('div');
+    el.className = 'tmr-toast tmr-toast--' + variant;
+    el.setAttribute('data-notif-id', String(notification.id));
+    el.setAttribute('data-variant', variant);
+
+    const meta = toastMetaText(notification);
+    el.innerHTML =
+        '<div class="tmr-toast__icon" aria-hidden="true">' + TMR_TOAST_SVG[variant] + '</div>' +
+        '<div class="tmr-toast__body">' +
+            '<p class="tmr-toast__title">' + escapeHtml(toastTitle(variant)) + '</p>' +
+            '<p class="tmr-toast__text">' + highlightResult(escapeHtml(toastDetailText(notification)), notification.type) + '</p>' +
+            (meta ? '<p class="tmr-toast__meta">' + escapeHtml(meta) + '</p>' : '') +
+        '</div>' +
+        '<button type="button" class="tmr-toast__close" aria-label="Dismiss notification">×</button>';
+
+    // Dismiss removes the toast ONLY. The row stays unread in the bell, which is
+    // the authoritative surface -- dismissing a popup is not reading it.
+    el.querySelector('.tmr-toast__close').addEventListener('click', function (e) {
+        e.stopPropagation();
+        dismissNotificationToast(el);
+    });
+
+    // Body click: same destination as the bell row, and that path marks it read.
+    el.addEventListener('click', function () {
+        dismissNotificationToast(el);
+        try { handleNotifClick(String(notification.id)); } catch (err) {}
+    });
+
+    // Hovering means the user is reading it; do not yank it away mid-sentence.
+    el.addEventListener('mouseenter', function () { clearToastTimer(el); });
+    el.addEventListener('mouseleave', function () { armToastTimer(el); });
+
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('is-in'); });
+    armToastTimer(el);
+    return el;
+}
+
+function showNotificationToastSummary(count) {
+    const host = ensureToastContainer();
+    if (!host) return null;
+    const el = document.createElement('div');
+    el.className = 'tmr-toast tmr-toast--summary';
+    el.setAttribute('data-notif-summary', String(count));
+    el.innerHTML =
+        '<div class="tmr-toast__icon" aria-hidden="true">' + TMR_TOAST_SVG.summary + '</div>' +
+        '<div class="tmr-toast__body">' +
+            '<p class="tmr-toast__title">' + count + ' more pick' + (count === 1 ? '' : 's') + ' graded</p>' +
+            '<p class="tmr-toast__text">Open your alerts to see them all.</p>' +
+        '</div>' +
+        '<button type="button" class="tmr-toast__close" aria-label="Dismiss notification">×</button>';
+
+    el.querySelector('.tmr-toast__close').addEventListener('click', function (e) {
+        e.stopPropagation();
+        dismissNotificationToast(el);
+    });
+    el.addEventListener('click', function () {
+        dismissNotificationToast(el);
+        const bell = getNotificationTrigger();
+        if (bell) bell.click();
+        else window.location.href = '/notifications/';
+    });
+    el.addEventListener('mouseenter', function () { clearToastTimer(el); });
+    el.addEventListener('mouseleave', function () { armToastTimer(el); });
+
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('is-in'); });
+    armToastTimer(el);
+    return el;
+}
+
+function armToastTimer(el) {
+    clearToastTimer(el);
+    _toastTimers.set(el, setTimeout(function () { dismissNotificationToast(el); }, TMR_TOAST_TTL_MS));
+}
+
+function clearToastTimer(el) {
+    const t = _toastTimers.get(el);
+    if (t) { clearTimeout(t); _toastTimers.delete(el); }
+}
+
+function dismissNotificationToast(el) {
+    if (!el || !el.parentNode) return;
+    clearToastTimer(el);
+    el.classList.remove('is-in');
+    el.classList.add('is-out');
+    setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+    }, 220);
+}
+
+function clearNotificationToasts() {
+    const host = document.getElementById('tmrNotifToasts');
+    if (!host) return;
+    Array.prototype.slice.call(host.children).forEach(function (el) {
+        clearToastTimer(el);
+        if (el.parentNode) el.parentNode.removeChild(el);
+    });
+}
+
+// Exposed for tests/notification-toast-test.js, the Playwright spec, and manual
+// verification from the console.
+if (typeof window !== 'undefined') {
+    window.tmrNotifications = window.tmrNotifications || {};
+    window.tmrNotifications.maybeToastNewNotifications = maybeToastNewNotifications;
+    window.tmrNotifications.showNotificationToast = showNotificationToast;
+    window.tmrNotifications.dismissNotificationToast = dismissNotificationToast;
+    window.tmrNotifications.clearNotificationToasts = clearNotificationToasts;
+    window.tmrNotifications.fetchNotifications = fetchNotifications;
+    window.tmrNotifications.getState = function () {
+        return {
+            unreadCount: _notifCache.unreadCount,
+            authFailures: _notifAuthFailures,
+            pauseUntil: _notifPauseUntil,
+            polling: !!_notifPollTimer,
+            intervalMs: _notifPollIntervalMs
+        };
+    };
+}
