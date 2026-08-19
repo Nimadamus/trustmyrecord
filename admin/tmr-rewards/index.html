@@ -274,8 +274,30 @@
         el('previewOut').innerHTML = '<span class="bandmsg">Loading…</span>';
         try {
             var d = await req('/preview?period=' + state.period + (force ? '&force=1' : ''));
+            // Allocated vs payable. A category with no qualifying entrant pays nothing,
+            // so the pool advertised to members and the pool that would actually be
+            // awarded can differ a lot. Showing only the per-category rows hid that.
+            var alloc = 0, payable = 0, dead = [];
+            d.results.forEach(function (c) {
+                alloc += Number(c.pot || 0);
+                if (c.winners && c.winners.length) payable += Number(c.pot || 0);
+                else dead.push((c.label || c.category) + ' (' + n(c.pot) + ')');
+            });
+            var unclaimed = alloc - payable;
+            var pct = alloc ? Math.round((unclaimed / alloc) * 100) : 0;
             var html = '<div class="bandmsg" style="margin-bottom:10px;">Period ' + d.period +
                 ' · settled=' + d.settled + ' · applied=' + d.applied + '</div>';
+            html += '<div class="grid" style="margin-bottom:12px;">' +
+                '<div class="stat"><div class="k">Allocated</div><div class="v">' + n(alloc) + '</div></div>' +
+                '<div class="stat green"><div class="k">Would pay</div><div class="v">' + n(payable) + '</div></div>' +
+                '<div class="stat ' + (unclaimed ? 'amber' : '') + '"><div class="k">Unclaimed</div><div class="v">' +
+                    n(unclaimed) + '</div></div>' +
+                '</div>';
+            if (dead.length) {
+                html += '<div class="note" style="margin-top:0;">' + pct + '% of the pool would go unawarded. ' +
+                    'No qualifying entrant in: ' + dead.join(', ') + '. ' +
+                    'Either the qualifying bar is above what members actually do, or nothing feeds that category yet.</div>';
+            }
             html += d.results.map(function (c) {
                 var head = '<div style="margin:12px 0 6px;"><strong>' + (c.label || c.category) +
                     '</strong> <span class="bandmsg">pot ' + n(c.pot) + ' TMR' +
