@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your TMR Account | TrustMyRecord</title>
+<link rel="canonical" href="https://trustmyrecord.com/wallet/account/">
+<meta name="description" content="Your TMR account on TrustMyRecord. Balance, activity, transaction history, linked Base wallet, and official TMR Coin token information.">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="/static/css/tmr-ds.css">
+<style>
+:root{
+  --acct-bg:#070c14; --acct-panel:#0c131f; --acct-panel2:#111a28; --acct-line:rgba(148,163,184,.16);
+  --acct-text:#f6f9fc; --acct-muted:#93a3b8; --acct-teal:#2dd4bf; --acct-gold:#f5c542;
+  --acct-green:#4ade80; --acct-red:#f87171; --acct-blue:#60a5fa;
+}
+.acct{max-width:1080px;margin:0 auto;padding:26px 16px 72px;color:var(--acct-text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.acct h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
+.acct .lede{color:var(--acct-muted);font-size:13.5px;margin:0 0 22px}
+.acct-card{background:var(--acct-panel);border:1px solid var(--acct-line);border-radius:14px;padding:18px;margin-bottom:16px}
+.acct-card h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--acct-muted);margin:0 0 14px;font-weight:600}
+
+/* hero */
+.hero{background:linear-gradient(150deg,#0d1a26 0%,#0c131f 62%);border:1px solid rgba(45,212,191,.22)}
+.hero .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--acct-teal);font-weight:600}
+.hero .amt{font-size:46px;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:6px 0 2px;
+  font-variant-numeric:tabular-nums}
+.hero .amt small{font-size:18px;font-weight:600;color:var(--acct-muted);margin-left:7px;letter-spacing:0}
+.hero .fiat{font-size:13px;color:var(--acct-muted)}
+.hero-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:18px}
+.hero-split .b{background:rgba(255,255,255,.035);border:1px solid var(--acct-line);border-radius:10px;padding:11px 13px}
+.hero-split .b .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--acct-muted)}
+.hero-split .b .v{font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px}
+.tile{background:var(--acct-panel2);border:1px solid var(--acct-line);border-radius:11px;padding:13px}
+.tile .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--acct-muted)}
+.tile .v{font-size:20px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.tile.pos .v{color:var(--acct-green)} .tile.neg .v{color:var(--acct-red)}
+.tile.gold .v{color:var(--acct-gold)} .tile.blue .v{color:var(--acct-blue)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--acct-line)}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--acct-muted);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.amt-in{color:var(--acct-green)} .amt-out{color:var(--acct-red)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;border:1px solid var(--acct-line);color:var(--acct-muted)}
+.tag.live{color:var(--acct-green);border-color:rgba(74,222,128,.36)}
+.tag.soon{color:var(--acct-gold);border-color:rgba(245,197,66,.36)}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font-size:13px;align-items:baseline}
+.kv dt{color:var(--acct-muted)} .kv dd{margin:0;word-break:break-all;font-variant-numeric:tabular-nums}
+.kv dd a{color:var(--acct-blue);text-decoration:none} .kv dd a:hover{text-decoration:underline}
+
+.btn{background:var(--acct-teal);color:#04141a;border:0;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--acct-text);border:1px solid var(--acct-line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.note{font-size:12.5px;color:var(--acct-muted);line-height:1.65;margin-top:12px}
+.warn{background:rgba(245,197,66,.07);border:1px solid rgba(245,197,66,.26);border-radius:10px;padding:11px 13px;font-size:12.5px;color:#f0dca8;line-height:1.6}
+#acctMsg{font-size:13px;min-height:18px;margin-bottom:12px}
+.skel{color:var(--acct-muted);font-size:13px}
+@media(max-width:620px){.hero .amt{font-size:36px}}
+</style>
+</head>
+<body>
+<div id="tmr-nav-root"></div>
+
+<main class="acct">
+  <h1>Your TMR Account</h1>
+  <p class="lede">TMR Coin is a fixed supply cryptocurrency on the Base network. TrustMyRecord holds your TMR for you so activity on the site is instant and costs no network fees.</p>
+  <div id="acctMsg"></div>
+
+  <section class="acct-card hero">
+    <div class="lab">TMR Balance</div>
+    <div class="amt" id="hBalance">—<small>TMR</small></div>
+    <div class="fiat" id="hFiat"></div>
+    <div class="hero-split">
+      <div class="b"><div class="k">Available</div><div class="v" id="hAvail">—</div></div>
+      <div class="b"><div class="k">Pending</div><div class="v" id="hPending">—</div></div>
+      <div class="b"><div class="k">In play</div><div class="v" id="hInPlay">—</div></div>
+      <div class="b"><div class="k">Withdrawal pending</div><div class="v" id="hWdPending">—</div></div>
+    </div>
+  </section>
+
+  <section class="acct-card">
+    <h2>Activity</h2>
+    <div class="grid" id="activityGrid"><div class="skel">Loading…</div></div>
+  </section>
+
+  <section class="acct-card">
+    <h2>Your Base wallet</h2>
+    <div id="walletBox"><div class="skel">Loading…</div></div>
+    <div class="note" id="walletNote"></div>
+  </section>
+
+  <section class="acct-card">
+    <h2>Transaction history</h2>
+    <div class="scroll">
+      <table id="txTable">
+        <thead><tr><th>Date</th><th>Type</th><th>Details</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead>
+        <tbody><tr><td colspan="5" class="skel">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="btnMore">Load more</button></div>
+  </section>
+
+  <section class="acct-card">
+    <h2>TMR Coin</h2>
+    <dl class="kv" id="tokenKv"><dt>Loading…</dt><dd></dd></dl>
+    <div id="marketWarn" style="margin-top:14px"></div>
+  </section>
+</main>
+
+<script src="/static/js/config.js"></script>
+<script src="/static/js/backend-api.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (v) { return Number(v || 0).toLocaleString(); };
+  function say(t, err) { var m = $('acctMsg'); m.textContent = t || ''; m.style.color = err ? 'var(--acct-red)' : 'var(--acct-muted)'; }
+
+  var state = { account: null, oldestTxId: null, done: false };
+
+  function usd(tmr, price) {
+    if (!price || !tmr) return '';
+    var v = tmr * price;
+    if (v < 0.01) return '';
+    return '≈ $' + v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  async function loadAccount() {
+    var d = await window.api.request('/wallet/account');
+    state.account = d;
+    var b = d.balance, a = d.activity, price = d.market && d.market.price_usd;
+
+    $('hBalance').innerHTML = fmt(b.total) + '<small>TMR</small>';
+    $('hFiat').textContent = usd(b.total, price);
+    $('hAvail').textContent = fmt(b.available);
+    $('hPending').textContent = fmt(b.pending);
+    $('hInPlay').textContent = fmt(b.inPlay);
+    $('hWdPending').textContent = fmt(a.withdrawalPending);
+
+    $('activityGrid').innerHTML = [
+      ['TMR earned', a.earned, 'pos'],
+      ['Marketplace earnings', a.marketplaceEarnings, 'gold'],
+      ['Contest winnings', a.contestWinnings, 'gold'],
+      ['TMR received', a.received, 'pos'],
+      ['TMR sent', a.sent, ''],
+      ['TMR spent', a.spent, ''],
+      ['TMR withdrawn', a.withdrawn, 'blue'],
+      ['Transactions', a.transactionCount, '']
+    ].map(function (t) {
+      return '<div class="tile ' + t[2] + '"><div class="k">' + t[0] + '</div><div class="v">' + fmt(t[1]) + '</div></div>';
+    }).join('');
+
+    renderWallet(d);
+    renderToken(d);
+  }
+
+  function renderWallet(d) {
+    var w = d.wallet, soon = d.features && d.features.withdrawal !== 'live';
+    if (w) {
+      $('walletBox').innerHTML =
+        '<dl class="kv"><dt>Address</dt><dd><a href="' + w.explorerUrl + '" target="_blank" rel="noopener">' + w.address + '</a></dd>' +
+        '<dt>Network</dt><dd>Base</dd>' +
+        '<dt>Linked</dt><dd>' + new Date(w.linkedAt).toLocaleDateString() + '</dd></dl>' +
+        '<div class="row" style="margin-top:13px"><button class="btn ghost" id="btnRelink">Change wallet</button>' +
+        '<button class="btn" id="btnWithdraw" disabled>Withdraw TMR</button>' +
+        (soon ? '<span class="tag soon">Withdrawal activating</span>' : '') + '</div>';
+    } else {
+      $('walletBox').innerHTML =
+        '<p style="margin:0 0 12px;font-size:13.5px;color:var(--acct-muted)">No wallet linked yet. Linking a wallet you control is the first step to moving TMR out of TrustMyRecord.</p>' +
+        '<div class="row"><button class="btn" id="btnLink">Link a Base wallet</button>' +
+        (soon ? '<span class="tag soon">Withdrawal activating</span>' : '') + '</div>';
+    }
+    var link = $('btnLink') || $('btnRelink');
+    if (link) link.onclick = linkWallet;
+    $('walletNote').textContent = soon
+      ? 'Moving TMR to your own wallet is being activated. Your TMR is held for you here in the meantime, and you can spend it anywhere on TrustMyRecord today.'
+      : 'You can move TMR from TrustMyRecord to the wallet above at any time.';
+  }
+
+  function renderToken(d) {
+    var t = d.token, m = d.market;
+    var rows = [
+      ['Token', t.name + ' (' + t.symbol + ')'],
+      ['Network', 'Base'],
+      ['Contract', '<a href="' + t.explorerUrl + '" target="_blank" rel="noopener">' + t.contract + '</a>'],
+      ['Maximum supply', Number(t.maxSupply).toLocaleString() + ' TMR (fixed, no new TMR can be created)']
+    ];
+    if (m && m.price_usd) {
+      rows.push(['Market price', '$' + Number(m.price_usd).toFixed(8) + ' per TMR']);
+      rows.push(['Traded on', (m.dex || 'Uniswap') + ' — <a href="' + t.tradeUrl + '" target="_blank" rel="noopener">view market</a>']);
+    }
+    $('tokenKv').innerHTML = rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('');
+    $('marketWarn').innerHTML = (m && m.depth_warning)
+      ? '<div class="warn"><strong>About the market price.</strong> ' + m.depth_warning + '</div>' : '';
+  }
+
+  var TYPE_LABEL = {
+    reward: 'Reward', admin_adjustment: 'Adjustment', admin_grant: 'Grant',
+    tip_received: 'Tip received', tip_sent: 'Tip sent',
+    transfer_received: 'Received', transfer_sent: 'Sent',
+    marketplace_sale: 'Marketplace sale', marketplace_purchase: 'Marketplace purchase',
+    contest_prize: 'Contest prize', challenge_stake: 'Challenge stake',
+    challenge_win: 'Challenge win', challenge_refund: 'Challenge refund',
+    redemption: 'Redemption', reversed: 'Reversed', withdrawal: 'Withdrawal'
+  };
+
+  async function loadTx(more) {
+    var q = '/wallet/transactions?limit=25' + (more && state.oldestTxId ? '&before=' + state.oldestTxId : '');
+    var d = await window.api.request(q);
+    var rows = d.transactions || d.items || d.rows || [];
+    var tb = $('txTable').querySelector('tbody');
+    if (!more) tb.innerHTML = '';
+    if (!rows.length && !more) { tb.innerHTML = '<tr><td colspan="5" class="skel">No transactions yet.</td></tr>'; $('btnMore').style.display = 'none'; return; }
+    rows.forEach(function (t) {
+      var amt = Number(t.amount);
+      var label = t.friendly_type || TYPE_LABEL[t.entry_type] || t.entry_type;
+      var detail = t.description || t.admin_note || '';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + new Date(t.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) + '</td>' +
+        '<td>' + label + '</td>' +
+        '<td style="color:var(--acct-muted)">' + detail + '</td>' +
+        '<td class="num ' + (amt >= 0 ? 'amt-in' : 'amt-out') + '">' + (amt >= 0 ? '+' : '') + fmt(amt) + '</td>' +
+        '<td class="num">' + fmt(t.balance_after) + '</td>';
+      tb.appendChild(tr);
+      state.oldestTxId = t.id;
+    });
+    if (rows.length < 25) { state.done = true; $('btnMore').style.display = 'none'; }
+  }
+
+  async function linkWallet() {
+    if (!window.ethereum) {
+      say('No Base-compatible wallet detected in this browser. Install a wallet such as MetaMask or Coinbase Wallet, then try again.', true);
+      return;
+    }
+    try {
+      say('Waiting for your wallet…');
+      var accts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      var address = accts[0];
+      var n = await window.api.request('/tmr-coin/link-wallet/nonce', { method: 'POST', body: JSON.stringify({ address: address }) });
+      var message = n.message || n.nonce;
+      var signature = await window.ethereum.request({ method: 'personal_sign', params: [message, address] });
+      await window.api.request('/tmr-coin/link-wallet', { method: 'POST', body: JSON.stringify({ address: address, message: message, signature: signature }) });
+      say('Wallet linked.');
+      await loadAccount();
+    } catch (e) {
+      say(e && e.message ? e.message : 'Could not link that wallet.', true);
+    }
+  }
+
+  $('btnMore').onclick = function () { loadTx(true).catch(function (e) { say(e.message, true); }); };
+
+  (async function init() {
+    try { await loadAccount(); await loadTx(false); }
+    catch (e) {
+      if (String(e && e.message).match(/401|unauth/i)) {
+        say('Sign in to view your TMR account.', true);
+      } else { say(e && e.message ? e.message : String(e), true); }
+    }
+  })();
+})();
+</script>
+<script src="/static/js/tmr-ds-nav.js" defer></script>
+</body>
+</html>
