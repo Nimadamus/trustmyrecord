@@ -888,6 +888,45 @@ def render_article(article, provenance, neighbours):
             "itemListElement": breadcrumb_items(article, sport, sport_label, matchup),
         },
     ]
+
+    # SportsEvent, added 2026-08-19.
+    #
+    # The Article node describes the WRITING; it says nothing about the fixture
+    # the writing is about. Every one of these pages is a preview of a specific,
+    # dated, located game between two named clubs, and that is a thing
+    # schema.org has a type for. Emitting it gives search engines the fixture as
+    # data rather than as prose to be guessed at, and it is the honest
+    # description of the page.
+    #
+    # It is emitted only when the facts that make an event an event are all
+    # present and real - both clubs, and a first pitch we actually hold. A
+    # SportsEvent with an invented startDate would be worse than none, so a
+    # missing game_time_utc means the node is simply left out. The venue is
+    # optional and included when known.
+    event_start = parse_iso(article.get("game_time_utc"))
+    if event_start and article.get("away_team") and article.get("home_team"):
+        event = {
+            "@type": "SportsEvent",
+            "@id": url + "#event",
+            "name": "%s at %s" % (article["away_team"], article["home_team"]),
+            "startDate": event_start.isoformat(),
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "sport": sport_label,
+            "url": url,
+            "description": article.get("dek") or article.get("meta_description") or "",
+            "awayTeam": {"@type": "SportsTeam", "name": article["away_team"]},
+            "homeTeam": {"@type": "SportsTeam", "name": article["home_team"]},
+            "competitor": [
+                {"@type": "SportsTeam", "name": article["away_team"]},
+                {"@type": "SportsTeam", "name": article["home_team"]},
+            ],
+        }
+        if article.get("venue_name"):
+            event["location"] = {"@type": "Place", "name": article["venue_name"]}
+        graph.append(event)
+        graph[0]["about"] = {"@id": url + "#event"}
+
     graph[0] = {k: v for k, v in graph[0].items() if v is not None}
     jsonld = json.dumps({"@context": "https://schema.org", "@graph": graph},
                         indent=2, ensure_ascii=False)
