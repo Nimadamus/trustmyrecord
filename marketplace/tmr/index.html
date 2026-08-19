@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buy and Sell Picks with TMR | TrustMyRecord</title>
+<link rel="canonical" href="https://trustmyrecord.com/marketplace/tmr/">
+<meta name="description" content="Buy handicapper picks with TMR Coin on TrustMyRecord, and price your own listings in TMR. Fees shown up front on both sides.">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="/static/css/tmr-ds.css">
+<style>
+:root{
+  --mk-bg:#070c14; --mk-panel:#0c131f; --mk-panel2:#111a28; --mk-line:rgba(148,163,184,.16);
+  --mk-text:#f6f9fc; --mk-muted:#93a3b8; --mk-teal:#2dd4bf; --mk-gold:#f5c542;
+  --mk-green:#4ade80; --mk-red:#f87171; --mk-blue:#60a5fa;
+}
+.mk{max-width:1020px;margin:0 auto;padding:26px 16px 72px;color:var(--mk-text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.mk h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
+.mk .lede{color:var(--mk-muted);font-size:13.5px;margin:0 0 20px}
+.mk-card{background:var(--mk-panel);border:1px solid var(--mk-line);border-radius:14px;padding:18px;margin-bottom:16px}
+.mk-card h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mk-muted);margin:0 0 14px;font-weight:600}
+
+.balbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+  background:linear-gradient(150deg,#0d1a26 0%,#0c131f 62%);border:1px solid rgba(45,212,191,.22);
+  border-radius:14px;padding:15px 18px;margin-bottom:16px}
+.balbar .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mk-teal);font-weight:600}
+.balbar .v{font-size:27px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.balbar a{color:var(--mk-blue);font-size:13px;text-decoration:none}
+.balbar a:hover{text-decoration:underline}
+
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{background:transparent;border:1px solid var(--mk-line);color:var(--mk-muted);
+  border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--mk-teal);color:#04141a;border-color:var(--mk-teal)}
+
+.listing{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;
+  background:var(--mk-panel2);border:1px solid var(--mk-line);border-radius:11px;padding:14px;margin-bottom:10px}
+.listing .t{font-size:14.5px;font-weight:600}
+.listing .s{font-size:12px;color:var(--mk-muted);margin-top:2px}
+.listing .p{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.listing .p small{font-size:12px;color:var(--mk-muted);font-weight:600;margin-left:4px}
+
+/* the fee breakdown, shown on BOTH sides. never collapsed, never hidden. */
+.split{background:var(--mk-panel2);border:1px solid var(--mk-line);border-radius:10px;padding:13px;margin-top:12px}
+.split .r{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0}
+.split .r span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.split .r.total{border-top:1px solid var(--mk-line);margin-top:5px;padding-top:9px;font-size:15px}
+.split .r.total span:last-child{color:var(--mk-green);font-size:17px;font-weight:800}
+.split .r.fee span:last-child{color:var(--mk-gold)}
+.split .r.short span:last-child{color:var(--mk-red)}
+
+.btn{background:var(--mk-teal);color:#04141a;border:0;border-radius:9px;padding:10px 18px;font-weight:700;font-size:13.5px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--mk-text);border:1px solid var(--mk-line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:10.5px;color:var(--mk-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+input{background:var(--mk-panel2);border:1px solid var(--mk-line);color:var(--mk-text);
+  border-radius:8px;padding:9px 11px;font-size:14px;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:var(--mk-muted);line-height:1.65;margin-top:12px}
+.warn{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.28);border-radius:10px;
+  padding:12px 14px;font-size:13px;color:#fbc4c4;line-height:1.6;margin-top:12px}
+.warn a{color:var(--mk-teal)}
+#mkMsg{font-size:13px;min-height:18px;margin-bottom:12px}
+.skel{color:var(--mk-muted);font-size:13px}
+.empty{text-align:center;padding:26px 16px}
+.empty .eh{font-size:17px;font-weight:700;margin-bottom:7px}
+.empty p{color:var(--mk-muted);font-size:13.5px;max-width:460px;margin:0 auto 16px;line-height:1.65}
+.empty .row{justify-content:center}
+.empty .btn{text-decoration:none;display:inline-block}
+
+/* confirmation, always explicit -- never a one-click charge */
+.modal{position:fixed;inset:0;background:rgba(3,7,12,.76);display:none;align-items:center;justify-content:center;padding:18px;z-index:70}
+.modal.on{display:flex}
+.modal .box{background:var(--mk-panel);border:1px solid var(--mk-line);border-radius:15px;padding:22px;max-width:430px;width:100%}
+.modal h3{margin:0 0 4px;font-size:18px}
+.modal .sub{color:var(--mk-muted);font-size:13px;margin:0 0 14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--mk-line)}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mk-muted);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div id="tmr-nav-root"></div>
+
+<main class="mk">
+  <h1>Picks for TMR</h1>
+  <p class="lede">Buy handicapper picks with TMR Coin, or price your own listings in TMR. The platform fee is shown up front to both sides.</p>
+
+  <div class="balbar">
+    <div><div class="k">Your TMR balance</div><div class="v" id="balVal">—</div></div>
+    <a href="/wallet/account/">View your TMR account &rarr;</a>
+  </div>
+
+  <div id="mkMsg"></div>
+
+  <div class="tabs">
+    <button id="tabBuy" class="on">Buy picks</button>
+    <button id="tabSell">Sell picks</button>
+  </div>
+
+  <!-- ============ BUY ============ -->
+  <section id="paneBuy">
+    <div class="mk-card">
+      <h2>Listings priced in TMR</h2>
+      <div id="listings"><div class="skel">Loading…</div></div>
+    </div>
+    <div class="mk-card">
+      <h2>Your purchases</h2>
+      <div class="scroll"><table id="purchTable">
+        <thead><tr><th>Date</th><th>Listing</th><th>Seller</th><th class="num">Paid</th><th>Access</th></tr></thead>
+        <tbody><tr><td colspan="5" class="skel">Loading…</td></tr></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ SELL ============ -->
+  <section id="paneSell" style="display:none">
+    <div class="mk-card">
+      <h2>Price a listing in TMR</h2>
+      <div id="myListings"><div class="skel">Loading…</div></div>
+      <div class="note">Set a TMR price and buyers can pay from their TMR balance. You keep your existing cash price alongside it.</div>
+    </div>
+    <div class="mk-card">
+      <h2>Your TMR earnings</h2>
+      <div id="earnGrid"><div class="skel">Loading…</div></div>
+      <div class="scroll" style="margin-top:14px"><table id="salesTable">
+        <thead><tr><th>Date</th><th>Listing</th><th>Buyer</th><th class="num">Price</th><th class="num">Fee</th><th class="num">You received</th></tr></thead>
+        <tbody><tr><td colspan="6" class="skel">Loading…</td></tr></tbody>
+      </table></div>
+    </div>
+  </section>
+</main>
+
+<!-- explicit purchase confirmation -->
+<div class="modal" id="confirmModal">
+  <div class="box">
+    <h3 id="cmTitle">Confirm purchase</h3>
+    <p class="sub" id="cmSub"></p>
+    <div class="split" id="cmSplit"></div>
+    <div id="cmWarn"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost" id="cmCancel">Cancel</button>
+      <button class="btn" id="cmConfirm">Confirm and pay</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/config.js"></script>
+<script src="/static/js/backend-api.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (v) { return Number(v || 0).toLocaleString(); };
+  function say(t, err) { var m = $('mkMsg'); m.textContent = t || ''; m.style.color = err ? 'var(--mk-red)' : 'var(--mk-green)'; }
+
+  var state = { balance: 0, feeBps: 500, pending: null, key: null, busy: false };
+
+  function req(p, o) { return window.api.request(p, o); }
+
+  async function loadBalance() {
+    var d = await req('/wallet/account');
+    state.balance = d.balance.total;
+    $('balVal').textContent = fmt(state.balance) + ' TMR';
+  }
+
+  // ---------------------------------------------------------------- buy side
+  async function loadListings() {
+    var d = await req('/marketplace/tmr/listings').catch(function () { return { listings: [] }; });
+    var rows = d.listings || [];
+    if (!rows.length) {
+      // An empty marketplace should still look deliberate and offer both sides
+      // somewhere to go, rather than an empty table.
+      $('listings').innerHTML =
+        '<div class="empty">' +
+        '<div class="eh">No TMR-priced picks are available yet</div>' +
+        '<p>Sellers are just starting to price listings in TMR. When they do, they show up here ' +
+        'and you can pay straight from your TMR balance.</p>' +
+        '<div class="row">' +
+        '<button class="btn" id="emptySell">Sell your picks for TMR</button>' +
+        '<a class="btn ghost" href="/marketplace/">Browse the cash marketplace</a>' +
+        '<a class="btn ghost" href="/wallet/earn/">Ways to earn TMR</a>' +
+        '</div></div>';
+      var es = $('emptySell');
+      if (es) es.onclick = function () { $('tabSell').click(); };
+      return;
+    }
+    $('listings').innerHTML = rows.map(function (l) {
+      return '<div class="listing"><div><div class="t">' + (l.title || 'Picks') + '</div>' +
+        '<div class="s">' + (l.seller || 'Seller') + ' &middot; ' + (l.product_type || '').replace(/_/g, ' ') + '</div></div>' +
+        '<div style="display:flex;gap:12px;align-items:center">' +
+        '<div class="p">' + fmt(l.price_tmr) + '<small>TMR</small></div>' +
+        '<button class="btn" data-buy="' + l.id + '">Buy</button></div></div>';
+    }).join('');
+    Array.prototype.forEach.call($('listings').querySelectorAll('[data-buy]'), function (b) {
+      b.onclick = function () { openConfirm(Number(b.getAttribute('data-buy'))); };
+    });
+  }
+
+  async function openConfirm(listingId) {
+    say('');
+    var q;
+    try { q = await req('/marketplace/tmr/quote/' + listingId); }
+    catch (e) { return say(e.message || 'Could not price that listing.', true); }
+
+    state.pending = q;
+    // One idempotency key per checkout, reused on every retry. This is what makes
+    // a double click, a refresh or a flaky connection resolve to ONE order.
+    state.key = (window.crypto && window.crypto.randomUUID)
+      ? window.crypto.randomUUID()
+      : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+
+    $('cmTitle').textContent = 'Confirm purchase';
+    $('cmSub').textContent = q.title || 'Picks listing';
+    $('cmSplit').innerHTML =
+      '<div class="r"><span>Price</span><span>' + fmt(q.priceTmr) + ' TMR</span></div>' +
+      '<div class="r"><span>Your balance</span><span>' + fmt(q.buyerBalance) + ' TMR</span></div>' +
+      '<div class="r total"><span>Balance after purchase</span><span>' + fmt(q.balanceAfter) + ' TMR</span></div>';
+
+    if (!q.sufficient) {
+      $('cmWarn').innerHTML = '<div class="warn">You need <strong>' + fmt(q.shortfall) +
+        ' more TMR</strong> for this. You can earn TMR by competing on TrustMyRecord, or receive it from another member. ' +
+        '<a href="/wallet/earn/">Ways to earn TMR &rarr;</a></div>';
+      $('cmConfirm').disabled = true;
+    } else {
+      $('cmWarn').innerHTML = '';
+      $('cmConfirm').disabled = false;
+    }
+    $('confirmModal').classList.add('on');
+  }
+
+  async function doPurchase() {
+    if (state.busy || !state.pending) return;
+    state.busy = true;
+    $('cmConfirm').disabled = true;
+    $('cmConfirm').textContent = 'Paying…';
+    try {
+      var r = await req('/marketplace/tmr/purchase', {
+        method: 'POST',
+        body: JSON.stringify({ listingId: state.pending.listingId, idempotencyKey: state.key })
+      });
+      $('confirmModal').classList.remove('on');
+      say(r.replay ? 'You already own this. Nothing was charged again.'
+                   : 'Purchase complete. ' + fmt(r.priceTmr) + ' TMR paid.');
+      await Promise.all([loadBalance(), loadListings(), loadPurchases()]);
+    } catch (e) {
+      var msg = e && e.message ? e.message : 'That purchase did not go through.';
+      say(msg + ' Nothing was charged.', true);
+      $('confirmModal').classList.remove('on');
+    } finally {
+      state.busy = false;
+      $('cmConfirm').textContent = 'Confirm and pay';
+      $('cmConfirm').disabled = false;
+    }
+  }
+
+  async function loadPurchases() {
+    var d = await req('/marketplace/tmr/purchases').catch(function () { return { purchases: [] }; });
+    var tb = $('purchTable').querySelector('tbody');
+    if (!d.purchases.length) { tb.innerHTML = '<tr><td colspan="5" class="skel">No TMR purchases yet.</td></tr>'; return; }
+    tb.innerHTML = d.purchases.map(function (p) {
+      return '<tr><td>' + (p.paid_at ? new Date(p.paid_at).toLocaleDateString() : '—') + '</td>' +
+        '<td>' + (p.title || 'Listing') + '</td><td>' + (p.seller || '—') + '</td>' +
+        '<td class="num">' + fmt(p.price_tmr) + ' TMR</td>' +
+        '<td>' + (p.entitlement_status === 'active' ? 'Active' : (p.entitlement_status || '—')) + '</td></tr>';
+    }).join('');
+  }
+
+  // --------------------------------------------------------------- sell side
+  async function loadMyListings() {
+    var d = await req('/marketplace/tmr/my-listings').catch(function () { return { listings: [] }; });
+    var rows = d.listings || [];
+    if (!rows.length) {
+      $('myListings').innerHTML =
+        '<div class="empty"><div class="eh">You have no listings yet</div>' +
+        '<p>Create a listing first, then come back here to set a TMR price on it.</p>' +
+        '<div class="row"><a class="btn" href="/marketplace/sell/">Create a listing</a></div></div>';
+      return;
+    }
+    $('myListings').innerHTML = rows.map(function (l) {
+      var price = l.price_tmr || '';
+      return '<div class="listing" data-listing="' + l.id + '" style="display:block">' +
+        '<div class="t">' + (l.title || 'Listing') + '</div>' +
+        '<div class="s">' + (l.product_type || '').replace(/_/g, ' ') + ' &middot; ' + l.status + '</div>' +
+        '<div class="row"><div class="field"><label>Price in TMR</label>' +
+        '<input type="number" min="10" step="1" class="lp" value="' + price + '" placeholder="e.g. 1000" style="width:150px"></div>' +
+        '<button class="btn ghost lsave">Save price</button>' +
+        (l.accepts_tmr ? '<button class="btn ghost lclear">Stop accepting TMR</button>' : '') +
+        '</div><div class="split lsplit"></div></div>';
+    }).join('');
+
+    Array.prototype.forEach.call($('myListings').querySelectorAll('[data-listing]'), function (row) {
+      var id = row.getAttribute('data-listing');
+      var input = row.querySelector('.lp');
+      var render = function () {
+        var p = parseInt(input.value, 10);
+        if (!p || p < 10) { row.querySelector('.lsplit').innerHTML =
+          '<div class="r"><span>Enter a price of at least 10 TMR</span><span></span></div>'; return; }
+        var fee = Math.floor(p * state.feeBps / 10000);
+        row.querySelector('.lsplit').innerHTML =
+          '<div class="r"><span>Listing price</span><span>' + fmt(p) + ' TMR</span></div>' +
+          '<div class="r fee"><span>Platform fee (' + (state.feeBps / 100) + '%)</span><span>&minus;' + fmt(fee) + ' TMR</span></div>' +
+          '<div class="r total"><span>You receive</span><span>' + fmt(p - fee) + ' TMR</span></div>';
+      };
+      input.oninput = render; render();
+
+      row.querySelector('.lsave').onclick = async function () {
+        var p = parseInt(input.value, 10);
+        try {
+          await req('/marketplace/tmr/listings/' + id + '/price',
+            { method: 'PATCH', body: JSON.stringify({ priceTmr: p, acceptsTmr: true }) });
+          say('Price saved. Buyers can now pay ' + fmt(p) + ' TMR.');
+          await loadMyListings();
+        } catch (e) { say(e.message || 'Could not save that price.', true); }
+      };
+      var clear = row.querySelector('.lclear');
+      if (clear) clear.onclick = async function () {
+        try {
+          await req('/marketplace/tmr/listings/' + id + '/price',
+            { method: 'PATCH', body: JSON.stringify({ acceptsTmr: false }) });
+          say('This listing no longer accepts TMR.');
+          await loadMyListings();
+        } catch (e) { say(e.message || 'Could not update that listing.', true); }
+      };
+    });
+  }
+
+  async function loadEarnings() {
+    var d = await req('/marketplace/tmr/earnings').catch(function () { return { gross: 0, fees: 0, net: 0, sales: [] }; });
+    $('earnGrid').innerHTML =
+      '<div class="split">' +
+      '<div class="r"><span>Gross sales</span><span>' + fmt(d.gross) + ' TMR</span></div>' +
+      '<div class="r fee"><span>Platform fees</span><span>&minus;' + fmt(d.fees) + ' TMR</span></div>' +
+      '<div class="r total"><span>Net TMR earned</span><span>' + fmt(d.net) + ' TMR</span></div></div>';
+    var tb = $('salesTable').querySelector('tbody');
+    if (!d.sales || !d.sales.length) { tb.innerHTML = '<tr><td colspan="6" class="skel">No TMR sales yet.</td></tr>'; return; }
+    tb.innerHTML = d.sales.map(function (s) {
+      return '<tr><td>' + (s.paid_at ? new Date(s.paid_at).toLocaleDateString() : '—') + '</td>' +
+        '<td>' + (s.title || 'Listing') + '</td><td>' + (s.buyer || '—') + '</td>' +
+        '<td class="num">' + fmt(s.price_tmr) + '</td>' +
+        '<td class="num">' + fmt(s.platform_fee_tmr) + '</td>' +
+        '<td class="num">' + fmt(s.seller_net_tmr) + '</td></tr>';
+    }).join('');
+  }
+
+  // ------------------------------------------------------------------- wiring
+  $('tabBuy').onclick = function () {
+    $('tabBuy').classList.add('on'); $('tabSell').classList.remove('on');
+    $('paneBuy').style.display = ''; $('paneSell').style.display = 'none';
+  };
+  $('tabSell').onclick = function () {
+    $('tabSell').classList.add('on'); $('tabBuy').classList.remove('on');
+    $('paneSell').style.display = ''; $('paneBuy').style.display = 'none';
+    loadMyListings(); loadEarnings();
+  };
+  $('cmCancel').onclick = function () { $('confirmModal').classList.remove('on'); };
+  $('cmConfirm').onclick = doPurchase;
+  $('confirmModal').onclick = function (e) { if (e.target === $('confirmModal')) $('confirmModal').classList.remove('on'); };
+
+  (async function init() {
+    try {
+      await loadBalance();
+      await Promise.all([loadListings(), loadPurchases()]);
+    } catch (e) {
+      if (String(e && e.message).match(/401|unauth/i)) say('Sign in to buy or sell picks with TMR.', true);
+      else say(e && e.message ? e.message : String(e), true);
+    }
+  })();
+})();
+</script>
+<script src="/static/js/tmr-ds-nav.js" defer></script>
+</body>
+</html>
