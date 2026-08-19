@@ -82,6 +82,24 @@
     </div>
 
     <div class="panel">
+        <h2>Pending awards</h2>
+        <div class="scroll"><table id="pendTable"><thead><tr>
+            <th>Period</th><th>Category</th><th>Winner</th><th class="num">Rank</th>
+            <th class="num">Metric</th><th class="num">Sample</th><th class="num">TMR</th>
+            <th>Status</th><th>Computed</th>
+        </tr></thead><tbody><tr><td colspan="9">Loading&hellip;</td></tr></tbody></table></div>
+        <div class="row" style="margin-top:12px;">
+            <input id="payPeriod" size="12" placeholder="YYYY-MM-01">
+            <button class="ghost" id="btnPayPending">Release pending awards</button>
+            <span class="bandmsg" id="pendTotal"></span>
+        </div>
+        <div class="note">Computed automatically each day for the previous month, once every pick in it
+        has a final grade. Nothing is paid until released here, and releasing asks you to retype the
+        period first. Each payout reserves against the monthly cap and carries an idempotency key, so a
+        repeated release cannot pay a winner twice.</div>
+    </div>
+
+    <div class="panel">
         <h2>Winner preview</h2>
         <div class="row" style="margin-bottom:12px;">
             <button class="ghost" id="btnPreview">Preview this period</button>
@@ -229,6 +247,29 @@
         });
     }
 
+    async function loadPending() {
+        var d = await req('/awards/pending');
+        var tb = el('pendTable').querySelector('tbody');
+        el('pendTotal').textContent = d.count
+            ? d.count + ' award(s) awaiting release, ' + n(d.total_tmr) + ' TMR total'
+            : '';
+        if (!d.pending.length) {
+            tb.innerHTML = '<tr><td colspan="9" class="bandmsg">No awards are waiting for release.</td></tr>';
+            return;
+        }
+        tb.innerHTML = d.pending.map(function (a) {
+            return '<tr><td>' + String(a.period).slice(0, 10) + '</td>' +
+                '<td>' + a.category_key + '</td>' +
+                '<td>' + (a.username || ('#' + a.user_id)) + '</td>' +
+                '<td class="num">' + a.rank + '</td>' +
+                '<td class="num">' + (a.metric_value == null ? '&mdash;' : a.metric_value) + '</td>' +
+                '<td class="num">' + n(a.sample_size) + '</td>' +
+                '<td class="num">' + n(a.tmr_awarded) + '</td>' +
+                '<td><span class="pill">pending</span></td>' +
+                '<td>' + new Date(a.computed_at).toLocaleString() + '</td></tr>';
+        }).join('');
+    }
+
     async function preview(force) {
         el('previewOut').innerHTML = '<span class="bandmsg">Loading…</span>';
         try {
@@ -270,11 +311,22 @@
             say('Status set to ' + el('fStatus').value); await loadDashboard();
         } catch (e) { say(e.message || String(e), 'err'); }
     };
+    el('btnPayPending').onclick = async function () {
+        var p = (el('payPeriod').value || '').trim();
+        if (!p) { say('Type the period you are releasing, e.g. 2026-08-01.', 'err'); return; }
+        if (!window.confirm('Release all pending awards for ' + p + '? This issues real TMR.')) return;
+        try {
+            // confirm must echo the period back; the API refuses otherwise.
+            var r = await req('/awards/pay', { method: 'POST', body: JSON.stringify({ period: p, confirm: p }) });
+            say('Released ' + r.paid + ' award(s), ' + n(r.total_tmr) + ' TMR' + (r.failed ? ' (' + r.failed + ' failed)' : ''));
+            await Promise.all([loadPending(), loadDashboard()]);
+        } catch (e) { say(e.message || String(e), 'err'); }
+    };
     el('btnPreview').onclick = function () { preview(false); };
     el('btnPreviewForce').onclick = function () { preview(true); };
 
     (async function init() {
-        try { await loadDashboard(); await loadCategories(); }
+        try { await loadDashboard(); await loadCategories(); await loadPending(); }
         catch (e) { say(e.message || String(e), 'err'); }
     })();
 })();
