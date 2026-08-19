@@ -234,6 +234,12 @@ console.log('\nnoindex allowlist');
   // not a shrug — see SEO_INDEXING_PROTOCOL.md section 2.
   const ALLOW_NOINDEX = new Set([
     SITE + '/admin/tmr-economy/',
+    // Admin-only reward program control screen (monthly TMR budget, award
+    // categories, winner preview). Same private, login-gated surface as the
+    // economy console above: linked from nowhere public, useless without an
+    // admin session, and its content is internal treasury figures. Added
+    // deliberately, per SEO_INDEXING_PROTOCOL.md section 2.
+    SITE + '/admin/tmr-rewards/',
     SITE + '/betlegend-pro/app/',
     // The service worker's offline fallback for the page above. Same private,
     // per-account surface, and it is not a page anyone navigates to: it is

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Rewards Control | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#2dd4bf; --gold:#facc15; --red:#f87171; --green:#4ade80; --amber:#fb923c; }
+        * { box-sizing: border-box; }
+        body { margin:0; background:var(--bg); color:var(--text); font-family:Inter, system-ui, sans-serif; }
+        .wrap { max-width:1180px; margin:0 auto; padding:24px 16px 64px; }
+        h1 { font-size:22px; margin:0 0 4px; }
+        .sub { color:var(--muted); font-size:13px; margin:0 0 20px; }
+        .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+        .panel h2 { font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 12px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+        .stat { background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px; }
+        .stat .k { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+        .stat .v { font-size:20px; font-weight:700; margin-top:4px; }
+        .gold .v { color:var(--gold); } .cyan .v { color:var(--cyan); }
+        .green .v { color:var(--green); } .red .v { color:var(--red); } .amber .v { color:var(--amber); }
+        .bar { height:10px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); overflow:hidden; margin:10px 0 6px; }
+        .bar > i { display:block; height:100%; background:var(--cyan); }
+        .bar.notice > i { background:var(--gold); } .bar.warning > i { background:var(--amber); }
+        .bar.critical > i, .bar.exhausted > i { background:var(--red); }
+        .bandmsg { font-size:12px; color:var(--muted); }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
+        th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+        td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+        .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); }
+        .pill.on { color:var(--green); border-color:rgba(74,222,128,.4); }
+        .pill.off { color:var(--muted); }
+        .scroll { overflow-x:auto; }
+        input, select { background:var(--panel2); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:7px 9px; font-size:13px; }
+        button { background:var(--cyan); color:#04121a; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+        button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+        .row { display:flex; flex-wrap:wrap; gap:10px; align-items:end; }
+        .field { display:flex; flex-direction:column; gap:4px; }
+        .field label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+        #msg { font-size:13px; margin-bottom:12px; min-height:18px; }
+        .note { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.6; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>TMR Rewards Control</h1>
+    <p class="sub">Monthly community reward pool. The global budget does not scale with user count.</p>
+    <div id="msg"></div>
+
+    <div class="panel">
+        <h2>This month's budget</h2>
+        <div class="grid" id="budgetGrid"></div>
+        <div class="bar" id="bar"><i style="width:0%"></i></div>
+        <div class="bandmsg" id="band"></div>
+        <div class="note" id="capNote"></div>
+    </div>
+
+    <div class="panel">
+        <h2>Configure budget</h2>
+        <div class="row">
+            <div class="field"><label>Period</label><input id="fPeriod" size="11" placeholder="YYYY-MM-01"></div>
+            <div class="field"><label>USD target</label><input id="fUsd" type="number" step="1" min="0" style="width:100px"></div>
+            <div class="field"><label>Reference price USD</label><input id="fPrice" type="number" step="0.000001" min="0" style="width:140px"></div>
+            <div class="field"><label>Hard cap TMR</label><input id="fCap" type="number" step="1" min="0" style="width:120px"></div>
+            <button id="btnSave">Save budget</button>
+            <select id="fStatus"><option value="open">open</option><option value="paused">paused</option><option value="closed">closed</option></select>
+            <button class="ghost" id="btnStatus">Set status</button>
+        </div>
+        <div class="note">The reference price is stored per period with its source and timestamp. Thin-liquidity market pricing is never used unless it falls inside the configured floor/ceiling band. A budget cannot be lowered below what has already been awarded.</div>
+    </div>
+
+    <div class="panel">
+        <h2>Award categories</h2>
+        <div class="scroll"><table id="catTable"><thead><tr>
+            <th>Category</th><th class="num">Allocation</th><th class="num">Prize TMR</th>
+            <th class="num">Winners</th><th class="num">Min sample</th><th>Tie rule</th><th>Status</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+        <div class="note" id="allocNote"></div>
+    </div>
+
+    <div class="panel">
+        <h2>Winner preview</h2>
+        <div class="row" style="margin-bottom:12px;">
+            <button class="ghost" id="btnPreview">Preview this period</button>
+            <button class="ghost" id="btnPreviewForce">Preview (ignore settled gate)</button>
+        </div>
+        <div id="previewOut"></div>
+        <div class="note">Preview never pays. A period is only payable once every pick inside it has a final grade.</div>
+    </div>
+
+    <div class="panel">
+        <h2>Previous months</h2>
+        <div class="scroll"><table id="histTable"><thead><tr>
+            <th>Period</th><th class="num">USD</th><th class="num">Ref price</th><th>Source</th>
+            <th class="num">Authorized</th><th class="num">Awarded</th><th class="num">Winners</th><th>Status</th>
+        </tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="panel">
+        <h2>Lifetime</h2>
+        <div class="grid" id="lifeGrid"></div>
+    </div>
+</div>
+
+<script src="/static/js/config.js"></script>
+<script src="/static/js/backend-api.js"></script>
+<script>
+(function () {
+    function el(id) { return document.getElementById(id); }
+    function req(path, options) { return window.api.request('/admin/rewards' + path, options); }
+    function n(v) { return Number(v || 0).toLocaleString(); }
+    function say(text, cls) { var m = el('msg'); m.textContent = text || ''; m.style.color = cls === 'err' ? 'var(--red)' : 'var(--green)'; }
+
+    var BANDS = {
+        ok: 'Under 50% of the monthly budget used.',
+        notice: '50% of the monthly budget used.',
+        warning: '75% used. Remaining prizes will shrink.',
+        critical: '90% used. Close to the cap.',
+        exhausted: 'Budget exhausted. No further treasury rewards can be issued until the next period or an explicit budget increase.'
+    };
+
+    var state = { period: null, categories: [] };
+
+    async function loadDashboard() {
+        var d = await req('/dashboard' + (state.period ? '?period=' + state.period : ''));
+        var b = d.budget;
+        state.period = d.period;
+
+        if (!b.configured) {
+            el('budgetGrid').innerHTML = '<div class="stat"><div class="k">Status</div><div class="v">Not configured</div></div>';
+            el('band').textContent = 'No budget exists for ' + d.period + '.';
+            return d;
+        }
+
+        el('budgetGrid').innerHTML = [
+            ['USD target', '$' + b.usdTarget, 'gold'],
+            ['Reference price', '$' + b.referencePriceUsd + ' (' + b.priceSource + ')', ''],
+            ['TMR available', n(b.authorizedTmr), 'cyan'],
+            ['TMR awarded', n(b.awardedTmr), ''],
+            ['TMR remaining', n(b.remainingTmr), 'green'],
+            ['USD-equivalent awarded', '$' + d.usdAwarded, ''],
+            ['Projected month-end', d.projectedMonthEndTmr === null ? '—' : n(d.projectedMonthEndTmr), 'amber'],
+            ['Budget status', b.status, b.status === 'open' ? 'green' : 'red']
+        ].map(function (r) {
+            return '<div class="stat ' + r[2] + '"><div class="k">' + r[0] + '</div><div class="v">' + r[1] + '</div></div>';
+        }).join('');
+
+        var pct = Math.min(100, b.consumedPct);
+        var bar = el('bar');
+        bar.className = 'bar ' + b.warningBand;
+        bar.firstElementChild.style.width = pct + '%';
+        el('band').textContent = b.consumedPct + '% consumed — ' + (BANDS[b.warningBand] || '');
+        el('capNote').textContent =
+            'Hard cap for this period: ' + n(b.hardCapTmr) + ' TMR. Absolute ceiling no configuration can exceed: ' +
+            n(d.absoluteMonthlyCeiling) + ' TMR. The budget is global — it does not rise when more members register.';
+
+        el('fPeriod').value = d.period;
+        el('fUsd').value = b.usdTarget;
+        el('fPrice').value = b.referencePriceUsd;
+        el('fCap').value = b.hardCapTmr;
+        el('fStatus').value = b.status;
+
+        el('histTable').querySelector('tbody').innerHTML = d.history.map(function (h) {
+            return '<tr><td>' + h.period.slice(0, 10) + '</td><td class="num">$' + (h.usd_target_cents / 100) +
+                '</td><td class="num">$' + Number(h.reference_price_usd) + '</td><td>' + h.price_source +
+                '</td><td class="num">' + n(h.authorized_tmr) + '</td><td class="num">' + n(h.awarded_tmr) +
+                '</td><td class="num">' + n(h.winners) + '</td><td>' + h.status + '</td></tr>';
+        }).join('') || '<tr><td colspan="8">No periods yet.</td></tr>';
+
+        el('lifeGrid').innerHTML = [
+            ['Lifetime TMR rewards issued', n(d.lifetime.tmr), 'gold'],
+            ['Awards paid', n(d.lifetime.awards), ''],
+            ['Distinct recipients', n(d.lifetime.recipients), '']
+        ].map(function (r) {
+            return '<div class="stat ' + r[2] + '"><div class="k">' + r[0] + '</div><div class="v">' + r[1] + '</div></div>';
+        }).join('');
+        return d;
+    }
+
+    async function loadCategories() {
+        var d = await req('/categories');
+        state.categories = d.categories;
+        var budgetTmr = 0;
+        try { budgetTmr = (await req('/dashboard?period=' + state.period)).budget.authorizedTmr || 0; } catch (e) {}
+
+        el('catTable').querySelector('tbody').innerHTML = d.categories.map(function (c) {
+            var prize = c.fixed_tmr !== null && c.fixed_tmr !== undefined
+                ? Number(c.fixed_tmr)
+                : Math.floor(budgetTmr * Number(c.allocation_bps) / 10000);
+            return '<tr data-key="' + c.category_key + '">' +
+                '<td>' + c.label + '<br><span style="color:var(--muted);font-size:11px;">' + c.category_key + ' · ' + c.metric + '</span></td>' +
+                '<td class="num"><input class="cAlloc" type="number" min="0" max="10000" step="50" value="' + c.allocation_bps + '" style="width:78px"> bps</td>' +
+                '<td class="num">' + n(prize) + '</td>' +
+                '<td class="num"><input class="cWin" type="number" min="1" step="1" value="' + c.winners_count + '" style="width:54px"></td>' +
+                '<td class="num"><input class="cMin" type="number" min="0" step="1" value="' + c.min_participation + '" style="width:54px"></td>' +
+                '<td><select class="cTie">' + ['split', 'all', 'earliest', 'none'].map(function (t) {
+                    return '<option' + (t === c.tie_rule ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></td>' +
+                '<td><span class="pill ' + (c.is_active ? 'on' : 'off') + '">' + (c.is_active ? 'active' : 'inactive') + '</span></td>' +
+                '<td><button class="ghost cSave">Save</button> <button class="ghost cTog">' + (c.is_active ? 'Disable' : 'Enable') + '</button></td>' +
+                '</tr>';
+        }).join('');
+
+        el('allocNote').textContent = 'Total allocation ' + d.totalAllocationBps + ' bps (' +
+            (d.totalAllocationBps / 100) + '%). ' + (d.balanced ? 'Balanced.' : 'Must equal 100% before a period is paid.') +
+            ' Every field here is data — changing next month’s prizes needs no deploy.';
+
+        el('catTable').querySelectorAll('tr[data-key]').forEach(function (tr) {
+            var key = tr.getAttribute('data-key');
+            tr.querySelector('.cSave').onclick = async function () {
+                try {
+                    await req('/categories/' + encodeURIComponent(key), { method: 'PATCH', body: JSON.stringify({
+                        allocation_bps: parseInt(tr.querySelector('.cAlloc').value, 10),
+                        winners_count: parseInt(tr.querySelector('.cWin').value, 10),
+                        min_participation: parseInt(tr.querySelector('.cMin').value, 10),
+                        tie_rule: tr.querySelector('.cTie').value }) });
+                    say('Saved ' + key); await loadCategories();
+                } catch (e) { say(e.message || String(e), 'err'); }
+            };
+            tr.querySelector('.cTog').onclick = async function () {
+                var cur = state.categories.find(function (c) { return c.category_key === key; });
+                try {
+                    await req('/categories/' + encodeURIComponent(key), { method: 'PATCH', body: JSON.stringify({ is_active: !cur.is_active }) });
+                    say((cur.is_active ? 'Disabled ' : 'Enabled ') + key); await loadCategories();
+                } catch (e) { say(e.message || String(e), 'err'); }
+            };
+        });
+    }
+
+    async function preview(force) {
+        el('previewOut').innerHTML = '<span class="bandmsg">Loading…</span>';
+        try {
+            var d = await req('/preview?period=' + state.period + (force ? '&force=1' : ''));
+            var html = '<div class="bandmsg" style="margin-bottom:10px;">Period ' + d.period +
+                ' · settled=' + d.settled + ' · applied=' + d.applied + '</div>';
+            html += d.results.map(function (c) {
+                var head = '<div style="margin:12px 0 6px;"><strong>' + (c.label || c.category) +
+                    '</strong> <span class="bandmsg">pot ' + n(c.pot) + ' TMR' +
+                    (c.min_sample != null ? ', min sample ' + c.min_sample : '') + '</span></div>';
+                if (!c.winners.length) return head + '<div class="bandmsg">' + (c.note || 'no winners') + '</div>';
+                return head + '<div class="scroll"><table><thead><tr><th>User</th><th class="num">Rank</th>' +
+                    '<th class="num">Metric</th><th class="num">Sample</th><th class="num">TMR</th></tr></thead><tbody>' +
+                    c.winners.map(function (w) {
+                        return '<tr><td>#' + w.user_id + '</td><td class="num">' + w.rank + '</td><td class="num">' +
+                            w.metric_value + '</td><td class="num">' + n(w.sample_size) + '</td><td class="num">' + n(w.tmr) + '</td></tr>';
+                    }).join('') + '</tbody></table></div>';
+            }).join('');
+            el('previewOut').innerHTML = html;
+        } catch (e) {
+            el('previewOut').innerHTML = '<div class="bandmsg" style="color:var(--amber)">' + (e.message || String(e)) + '</div>';
+        }
+    }
+
+    el('btnSave').onclick = async function () {
+        try {
+            await req('/budget', { method: 'POST', body: JSON.stringify({
+                period: el('fPeriod').value || undefined,
+                usdTargetCents: Math.round(parseFloat(el('fUsd').value) * 100),
+                adminPriceUsd: parseFloat(el('fPrice').value),
+                hardCapTmr: parseInt(el('fCap').value, 10) }) });
+            say('Budget saved'); state.period = el('fPeriod').value || state.period;
+            await loadDashboard(); await loadCategories();
+        } catch (e) { say(e.message || String(e), 'err'); }
+    };
+    el('btnStatus').onclick = async function () {
+        try {
+            await req('/budget/status', { method: 'POST', body: JSON.stringify({ period: state.period, status: el('fStatus').value }) });
+            say('Status set to ' + el('fStatus').value); await loadDashboard();
+        } catch (e) { say(e.message || String(e), 'err'); }
+    };
+    el('btnPreview').onclick = function () { preview(false); };
+    el('btnPreviewForce').onclick = function () { preview(true); };
+
+    (async function init() {
+        try { await loadDashboard(); await loadCategories(); }
+        catch (e) { say(e.message || String(e), 'err'); }
+    })();
+})();
+</script>
+</body>
+</html>
