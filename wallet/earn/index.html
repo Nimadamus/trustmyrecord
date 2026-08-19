@@ -120,6 +120,10 @@
 
             <div class="notice" id="withdrawalNotice" data-testid="earn-withdrawal-notice">&mdash;</div>
 
+            <h2>Monthly prizes</h2>
+            <p class="section-sub" id="prizeSub">The competition pool for this month. Prizes are paid in TMR after the month settles.</p>
+            <div class="opps" id="prizeGrid" data-testid="earn-monthly-prizes"></div>
+
             <h2>Ways to earn TMR</h2>
             <p class="section-sub" id="oppSectionSub">Every rule on the platform, including the ones not currently paying out and why.</p>
             <div class="opps" id="oppGrid" data-testid="earn-opportunities"></div>
@@ -174,6 +178,39 @@
             if (l.weekly) parts.push(l.weekly + ' per week');
             if (l.lifetime) parts.push(l.lifetime + ' lifetime');
             return parts.length ? 'Limit: ' + parts.join(', ') : 'No limit configured';
+        }
+
+        function renderMonthlyPrizes(mp) {
+            var grid = document.getElementById('prizeGrid');
+            var sub = document.getElementById('prizeSub');
+            if (!grid) return;
+            grid.innerHTML = '';
+            if (!mp || !mp.prizes || !mp.prizes.length) {
+                if (sub) sub.textContent = 'No competition prizes are configured for this month yet.';
+                return;
+            }
+            var total = mp.prizes.reduce(function (a, p) { return a + Number(p.prize_tmr || 0); }, 0);
+            if (sub) {
+                sub.textContent = mp.live
+                    ? total.toLocaleString() + ' TMR in prizes this month. Paid in TMR after the month settles.'
+                    : 'This month’s prizes are not open yet.';
+            }
+            mp.prizes.forEach(function (p) {
+                var el = document.createElement('div');
+                el.className = 'opp';
+                el.setAttribute('data-status', mp.live ? 'active' : 'paused');
+                el.setAttribute('data-prize', p.key);
+                el.innerHTML =
+                    '<span class="pill ' + (mp.live ? 'active' : 'paused') + '">' +
+                        (mp.live ? 'Open now' : 'Not open') + '</span>' +
+                    '<div class="opp-coins">' + Number(p.prize_tmr).toLocaleString() + ' TMR</div>' +
+                    '<div class="opp-label">' + esc(p.label) + '</div>' +
+                    '<div class="opp-why">' +
+                        (Number(p.winners) > 1 ? esc(String(p.winners)) + ' winners' : 'Top spot') +
+                        (p.minimum_to_qualify ? ' &middot; needs ' + esc(String(p.minimum_to_qualify)) + ' to qualify' : '') +
+                    '</div>';
+                grid.appendChild(el);
+            });
         }
 
         function renderOpportunities(opps) {
@@ -243,6 +280,7 @@
             document.getElementById('withdrawalNotice').innerHTML =
                 esc(s.withdrawal.message) + ' <a href="' + esc(s.withdrawal.learn_more) + '">Read more</a>.';
 
+            renderMonthlyPrizes(s.monthly_prizes);
             renderOpportunities(s.opportunities || []);
             renderHistory(hist && (hist.entries || hist.history || hist.transactions));
 
