@@ -16,8 +16,13 @@ name: Matchup of the Day watchdog
 
 on:
   schedule:
-    # 23:30 UTC = 16:30 PT — after all three publish attempts, before the
-    # evening slate is over, so a missed day can still be recovered by hand.
+    # 15:15 UTC = 08:15 PT — the EARLY alarm. The publisher runs from 04:30 PT
+    # and retries hourly, so by 08:15 a healthy day has been live for hours and
+    # an unhealthy one still has the whole morning left to be rescued before
+    # first pitch. Shouting only in the evening meant every bad day was already
+    # a lost day by the time anybody heard about it.
+    - cron: '15 15 * * *'
+    # 23:30 UTC = 16:30 PT — the backstop, before the evening slate is over.
     - cron: '30 23 * * *'
   workflow_dispatch:
 
@@ -66,6 +71,55 @@ jobs:
 
           echo "::notice::Today's Matchup of the Day is live: $URL"
 
+      # "Published" is what the DATABASE thinks. The reader gets a static page
+      # off a CDN, and every step between those two facts can fail on its own:
+      # a bake that did not run, a push that did not land, a deploy that did
+      # not finish, an article that fell out of the sitemap or off the hub.
+      # None of those show up in the API's answer, so the watchdog also has to
+      # look at the page the way a crawler does.
+      - name: And whether the public page is actually right
+        id: page
+        env:
+          URL: ${{ steps.check.outputs.url }}
+        run: |
+          set -euo pipefail
+          SITE=https://trustmyrecord.com
+          FAULTS=""
+          note() { FAULTS="$FAULTS $1"; echo "::warning::$1"; }
+
+          CODE=$(curl -sS -o /tmp/page.html -w '%{http_code}' --max-time 60 "$URL")
+          [ "$CODE" = "200" ] || note "the article returned HTTP $CODE."
+
+          grep -qi '<title>[^<]\{15,\}</title>' /tmp/page.html \
+            || note "the article has no real <title>."
+          grep -qi "rel=[\"']canonical[\"'][^>]*href=[\"']$URL[\"']" /tmp/page.html \
+            || note "the article is not self-canonical."
+          if grep -qi 'name=["'"'"']robots["'"'"'][^>]*noindex' /tmp/page.html; then
+            note "the article carries a noindex."
+          fi
+          grep -q '"@type": *"SportsEvent"' /tmp/page.html \
+            || note "the article has no SportsEvent schema."
+
+          curl -sS --max-time 60 "$SITE/sitemap.xml" -o /tmp/sitemap.xml
+          grep -q "<loc>$URL</loc>" /tmp/sitemap.xml \
+            || note "the article is not in sitemap.xml."
+
+          curl -sS --max-time 60 "$SITE/matchup-of-the-day/" -o /tmp/hub.html
+          PATHONLY=${URL#https://trustmyrecord.com}
+          grep -q "$PATHONLY" /tmp/hub.html \
+            || note "the article is not linked from the archive hub."
+
+          curl -sS --max-time 60 "$SITE/robots.txt" -o /tmp/robots.txt
+          grep -qi '^Sitemap:' /tmp/robots.txt \
+            || note "robots.txt no longer advertises the sitemap."
+
+          if [ -n "$FAULTS" ]; then
+            echo "problem=Today's article is published but the public page is wrong:$FAULTS" >> "$GITHUB_OUTPUT"
+            echo "::error::Today's article is published but the public page is wrong:$FAULTS"
+            exit 1
+          fi
+          echo "::notice::The public page passes every check."
+
       # An email from a failed run is easy to miss twice; an open issue is not.
       # Reuses one issue rather than opening a new one per day, so a week-long
       # outage is one thread rather than seven.
@@ -79,6 +133,7 @@ jobs:
               `The daily watchdog failed on ${new Date().toISOString().slice(0, 10)}.`,
               '',
               `- ${{ toJSON(steps.check.outputs.problem) }}`,
+              `- ${{ toJSON(steps.page.outputs.problem) }}`,
               `- Today's article: ${{ toJSON(steps.check.outputs.url) }}`,
               `- Days with no run recorded: ${{ toJSON(steps.check.outputs.missing) }}`,
               '',
