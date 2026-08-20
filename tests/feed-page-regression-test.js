@@ -25,7 +25,7 @@ assert((html + override + social).includes('Pick details hidden until eligible f
   '/static/js/auth-persistent.js',
   '/static/js/social-home.js',
   '/static/js/feed-ui-overrides.js',
-  '/static/js/tmr-sitewide.js'
+  '/static/js/tmr-sitewide.js?v=38214e1a9ed5'
 ].forEach((script) => {
   assert(html.includes(script), `${script} include is missing`);
 });

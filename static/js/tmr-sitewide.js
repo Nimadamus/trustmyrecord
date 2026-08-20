@@ -9,6 +9,13 @@
     // of Sportsbook rather than a new permanent top-level item.
     const sportsbookMenuRoutes = [
         ["/sportsbook/", "Make Picks"],
+        // Matchup of the Day joined this dropdown 2026-08-20. tmr-ds-nav.js has
+        // carried it since 2026-08-11, but the ~340 pages that still load THIS
+        // script showed a two-item Sportsbook menu, so the daily article had no
+        // nav entry point on any of them. /today/ (not the hub) for the same
+        // reason as in tmr-ds-nav.js: it is a stable address that hands off to
+        // the day's article, and the article's own URL changes daily.
+        ["/matchup-of-the-day/today/", "Matchup of the Day"],
         ["/handicapping/", "Handicapping Hub"]
     ];
     // Kept in sync with static/js/tmr-ds-nav.js's route tables so every page

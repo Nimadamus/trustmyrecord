@@ -60,7 +60,7 @@ test('the deployed notifications.js carries the toast engine', async ({ request 
 });
 
 test('the sitewide loader points at the deployed build', async ({ request }) => {
-  const res = await request.get(SITE + '/static/js/tmr-sitewide.js?cb=' + Date.now());
+  const res = await request.get(SITE + '/static/js/tmr-sitewide.js?v=38214e1a9ed5?cb=' + Date.now());
   const body = await res.text();
   const tag = (body.match(/notifications\.js\?v=([0-9a-z]+)/) || [])[1];
   expect(tag).toBeTruthy();
