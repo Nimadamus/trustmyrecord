@@ -197,6 +197,15 @@ input::placeholder{color:var(--muted2)}
 .empty .eh{font-size:18px;font-weight:800;margin-bottom:7px}
 .empty p{color:var(--muted);font-size:13.5px;max-width:520px;margin:0 auto 16px;line-height:1.65}
 .empty .row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+/* zero-inventory explainer: the board has to teach the one thing that fills it */
+.howto{max-width:640px;margin:26px auto 0;text-align:left;border-top:1px solid var(--line);padding-top:20px}
+.howto .hh{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);font-weight:800;margin-bottom:12px;text-align:center}
+.howto ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.howto li{font-size:13.5px;line-height:1.6;color:var(--muted)}
+.howto li strong{color:var(--text)}
+.howto a{color:var(--teal);font-weight:700}
+.howto a:hover{text-decoration:underline}
+.howto .hf{font-size:12.5px;color:var(--muted2);line-height:1.6;margin-top:14px;text-align:center}
 .empty .btn{display:inline-block;text-decoration:none}
 .errbox{background:var(--red-soft);border:1px solid rgba(188,55,46,.3);border-radius:var(--r);padding:16px 18px;
   display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -712,6 +721,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
 
   function renderBuy() {
     var box = $('listings');
+    // Live settings, with the documented defaults as a fallback so an empty
+    // board still states the real fee rather than a blank.
+    var feeBps = (market.data && market.data.feeBps) || 500;
+    var minPrice = (market.data && market.data.minPrice) || 10;
     if (market.status === 'loading') {
       $('toolbar').hidden = true; $('resline').hidden = true; $('featured').innerHTML = '';
       box.innerHTML = skeletonCards(6);
@@ -734,6 +747,22 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
           '<button class="btn" id="emptySell">Sell your picks for TMR</button>' +
           '<a class="btn ghost" href="/marketplace/">Browse the cash marketplace</a>' +
           '<a class="btn ghost" href="/wallet/earn/">Ways to earn TMR</a>' +
+        '</div>' +
+        // An empty board still has to answer "so how does anything get here?".
+        // Every number below is the live setting from /market, not a guess.
+        '<div class="howto"><div class="hh">How a listing reaches this board</div>' +
+          '<ol>' +
+            '<li><strong>Run a listing on the marketplace.</strong> Pick the product &mdash; a single pick, ' +
+              'or a day, weekly or monthly pass &mdash; and write the title and description. ' +
+              '<a href="/marketplace/sell/">Create one &rarr;</a></li>' +
+            '<li><strong>Put a TMR price on it</strong> in the Sell tab here. Minimum ' + fmt(minPrice) +
+              ' TMR. Your cash price is untouched; one listing can take both rails.</li>' +
+            '<li><strong>It appears here immediately</strong>, carrying your graded record, your ROI and ' +
+              'your last ten results. Buyers pay from their TMR balance and you keep ' +
+              (100 - feeBps / 100) + '% after the ' + (feeBps / 100) + '% platform fee.</li>' +
+          '</ol>' +
+          '<p class="hf">Only members with a public, graded record can sell. That is the whole point ' +
+            'of the board: nothing here is a screenshot.</p>' +
         '</div></div>';
       var es = $('emptySell'); if (es) es.onclick = function () { switchTab('sell'); };
       return;
