@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get TMR Coin | TrustMyRecord</title>
+    <meta name="description" content="What TMR Coin does on TrustMyRecord, how much you can earn, and how buying will work when it opens. Honest figures, no promises about value.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/wallet/get-tmr/">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
+    <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=8b5629191219"></script>
+    <style>
+        :root { --page-bg:#F4F7FA; --panel:#FFFFFF; --line:#D2DEEA; --text:#07182A; --muted:#2E4459; --gold:#B98505; --teal:#0C7A72; --stop:#BC372E; }
+        * { box-sizing: border-box; }
+        body {
+            margin:0; min-height:100vh;
+            background: radial-gradient(circle at 14% 0%, rgba(185,133,5,0.1), transparent 30%), linear-gradient(180deg,#FFFFFF 0%, var(--page-bg) 44%, #F4F7FA 100%);
+            color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .gt-page { width:min(1020px, calc(100% - 32px)); margin:0 auto; padding:112px 0 64px; }
+        .gt-kicker { margin:0 0 10px; color:var(--gold); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+        h1 { margin:0 0 10px; font-family:Barlow, Inter, sans-serif; font-size:clamp(30px,4.6vw,44px); line-height:1.08; }
+        .gt-lede { margin:0 0 30px; color:var(--muted); font-size:16px; line-height:1.7; max-width:66ch; }
+        .gt-card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:20px; }
+        .gt-card h2 { margin:0 0 6px; font-family:Barlow, Inter, sans-serif; font-size:21px; }
+        .gt-card .sub { margin:0 0 16px; color:var(--muted); font-size:14px; line-height:1.65; }
+        .gt-uses { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+        .gt-use { border:1px solid var(--line); border-radius:11px; padding:14px; background:#FBFDFF; }
+        .gt-use .amt { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:19px; color:var(--gold); }
+        .gt-use strong { display:block; margin:3px 0 4px; font-size:14.5px; }
+        .gt-use span { color:var(--muted); font-size:13px; line-height:1.6; }
+        .gt-bal { display:flex; gap:26px; flex-wrap:wrap; align-items:baseline; margin-bottom:8px; }
+        .gt-bal .big { font-family:Barlow, Inter, sans-serif; font-size:36px; font-weight:800; }
+        .gt-bal .big small { font-size:14px; font-weight:700; color:var(--muted); margin-left:6px; }
+        .gt-reach { margin:12px 0 0; padding:0; list-style:none; }
+        .gt-reach li { padding:7px 0; border-top:1px solid var(--line); font-size:14px; display:flex; justify-content:space-between; gap:14px; }
+        .gt-reach li:first-child { border-top:0; }
+        .gt-reach .no { color:var(--stop); font-weight:700; }
+        .gt-reach .yes { color:var(--teal); font-weight:700; }
+        .gt-two { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+        @media (max-width:760px){ .gt-two { grid-template-columns:1fr; } }
+        .gt-tag { display:inline-block; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:4px 9px; border-radius:999px; margin-bottom:9px; }
+        .gt-tag.live { background:rgba(12,122,114,.12); color:var(--teal); }
+        .gt-tag.soon { background:rgba(46,68,89,.12); color:var(--muted); }
+        .gt-notice { border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:0 10px 10px 0; background:#FFFCF4; padding:14px 16px; font-size:13.5px; line-height:1.7; color:var(--muted); }
+        .gt-calc { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin:14px 0; }
+        .gt-calc label { font-size:12.5px; font-weight:700; display:block; margin-bottom:5px; }
+        .gt-calc input, .gt-calc select { padding:9px 11px; border:1px solid var(--line); border-radius:9px; font:inherit; font-size:14px; }
+        .gt-calc input { width:140px; }
+        .gt-out { font-size:14px; line-height:1.8; }
+        .gt-out .price { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:24px; }
+        .gt-btn { padding:11px 18px; border-radius:10px; border:1px solid var(--line); background:#EFF3F8; color:var(--muted); font:inherit; font-weight:700; font-size:14px; cursor:not-allowed; }
+        .gt-basis { margin:12px 0 0; padding:0; list-style:none; font-size:13px; color:var(--muted); }
+        .gt-basis li { padding:9px 0; border-top:1px solid var(--line); line-height:1.65; }
+        .gt-msg { font-size:13.5px; color:var(--muted); }
+        table.gt-orders { width:100%; border-collapse:collapse; font-size:13.5px; }
+        table.gt-orders th, table.gt-orders td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+        table.gt-orders th { font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    </style>
+</head>
+<body>
+<main class="gt-page">
+    <p class="gt-kicker">TMR Coin</p>
+    <h1>What TMR is for, and how you get it</h1>
+    <p class="gt-lede">TMR is the currency of competition on TrustMyRecord. Before anything else, here is
+        what it actually does on the site, and what your balance can reach today. No claims about what
+        TMR is worth appear on this page, because we cannot honestly make any.</p>
+
+    <section class="gt-card">
+        <h2>What TMR does here</h2>
+        <p class="sub">Every one of these is live now.</p>
+        <div class="gt-uses" id="uses"></div>
+    </section>
+
+    <section class="gt-card">
+        <h2>Where you stand</h2>
+        <p class="sub" id="balSub">Loading your balance…</p>
+        <div class="gt-bal"><div class="big" id="balVal">—<small>TMR</small></div></div>
+        <ul class="gt-reach" id="reach"></ul>
+    </section>
+
+    <section class="gt-two">
+        <div class="gt-card">
+            <span class="gt-tag live">Live now</span>
+            <h2>Earn it</h2>
+            <p class="sub">Earning is deliberately small. It is how you show you are good, not how you
+                fund an account.</p>
+            <ul class="gt-reach">
+                <li><span>Signing up</span><span class="yes">25 TMR, once</span></li>
+                <li><span>Your first sportsbook pick</span><span class="yes">10 TMR, once</span></li>
+                <li><span>Your first forum thread</span><span class="yes">5 TMR, once</span></li>
+                <li><span>Monthly competitions</span><span class="yes">shared prize pool</span></li>
+                <li><span>Tips from other members</span><span class="yes">any amount</span></li>
+            </ul>
+            <p class="sub" style="margin-top:14px;">That is <strong>40 TMR</strong> in total from the
+                one-off rewards. The daily repeating rewards were retired so TMR would stop being given
+                away. <a href="/wallet/earn/">See your earning history →</a></p>
+        </div>
+
+        <div class="gt-card">
+            <span class="gt-tag soon" id="buyTag">Not open yet</span>
+            <h2>Buy it</h2>
+            <p class="sub" id="buySub">Buying TMR is built but not switched on. You can see exactly what
+                it would cost; nothing can be charged.</p>
+            <div class="gt-calc">
+                <div>
+                    <label for="amt">Amount of TMR</label>
+                    <input id="amt" type="number" min="100" step="100" value="5000">
+                </div>
+                <div>
+                    <label for="basis">Priced using</label>
+                    <select id="basis"></select>
+                </div>
+                <button class="gt-btn" id="buyBtn" disabled>Not available yet</button>
+            </div>
+            <div class="gt-out" id="calcOut"></div>
+            <ul class="gt-basis" id="basisNotes"></ul>
+        </div>
+    </section>
+
+    <section class="gt-card">
+        <h2>About the numbers above</h2>
+        <div class="gt-notice" id="disclosure">Loading pricing disclosure…</div>
+    </section>
+
+    <section class="gt-card" id="ordersCard" hidden>
+        <h2>Your TMR orders</h2>
+        <p class="sub">Orders you have started. While buying is switched off, an order records a held
+            price and nothing more.</p>
+        <table class="gt-orders"><thead><tr>
+            <th>Reference</th><th>Amount</th><th>Status</th><th>Created</th>
+        </tr></thead><tbody id="ordersBody"></tbody></table>
+    </section>
+
+    <p class="gt-msg" id="msg"></p>
+</main>
+
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var n = function (v) { return Number(v || 0).toLocaleString(); };
+    var money = function (cents) { return '$' + (Number(cents || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
+    // What TMR buys. Fixed here rather than fetched because these are the live
+    // catalogue prices and the page must render them even signed out.
+    var USES = [
+        { amt: '5', title: 'BetLegend Pro reports', body: 'Run extra matchup reports at 5 TMR each, after the free one each day.' },
+        { amt: '500', title: 'Early access badge', body: 'A profile badge marking you as an early TMR participant.' },
+        { amt: '1,500', title: 'Custom forum flair', body: 'Choose a custom colour and title for your forum posts.' },
+        { amt: '3,000', title: 'Priority support', body: 'Jump the support queue for 30 days.' },
+        { amt: 'Varies', title: 'Picks from other members', body: 'Buy a seller’s picks with TMR where they have priced them in TMR.' },
+        { amt: 'Any', title: 'Tip someone', body: 'Send TMR to a member whose post or pick deserved it.' }
+    ];
+    $('uses').innerHTML = USES.map(function (u) {
+        return '<div class="gt-use"><div class="amt">' + esc(u.amt) + '</div><strong>' +
+               esc(u.title) + '</strong><span>' + esc(u.body) + '</span></div>';
+    }).join('');
+
+    var state = { prices: [], enabled: false, min: 100, max: 1000000 };
+
+    function renderCalc() {
+        var amt = Number($('amt').value || 0);
+        var basis = $('basis').value;
+        var p = state.prices.filter(function (x) { return x.basis === basis; })[0];
+        if (!p || !amt) { $('calcOut').innerHTML = ''; return; }
+        var cents = Math.round(amt * p.unitPriceUsd * 100);
+        var warn = '';
+        if (amt < state.min) warn = 'The smallest order is ' + n(state.min) + ' TMR.';
+        else if (amt > state.max) warn = 'The largest order is ' + n(state.max) + ' TMR.';
+        $('calcOut').innerHTML =
+            '<div class="price">' + money(cents) + '</div>' +
+            '<div>' + n(amt) + ' TMR at the ' + esc(p.basis) + ' rate.</div>' +
+            (warn ? '<div style="color:var(--stop);font-weight:700;margin-top:6px;">' + esc(warn) + '</div>' : '');
+    }
+
+    function renderBasisNotes() {
+        $('basisNotes').innerHTML = state.prices.map(function (p) {
+            return '<li><strong>' + esc(p.basis) + '</strong> — ' + esc(p.what) + ' ' + esc(p.caveat) + '</li>';
+        }).join('');
+    }
+
+    function reach(balance) {
+        var items = [
+            { label: 'A BetLegend Pro report', cost: 5 },
+            { label: 'Early access badge', cost: 500 },
+            { label: 'Custom forum flair', cost: 1500 },
+            { label: 'Priority support', cost: 3000 }
+        ];
+        $('reach').innerHTML = items.map(function (i) {
+            var can = balance >= i.cost;
+            return '<li><span>' + esc(i.label) + ' (' + n(i.cost) + ' TMR)</span><span class="' +
+                   (can ? 'yes">within reach' : 'no">' + n(i.cost - balance) + ' TMR short') + '</span></li>';
+        }).join('');
+    }
+
+    fetch('/api/tmr/acquire/status').then(function (r) { return r.json(); }).then(function (d) {
+        state.prices = d.prices || [];
+        state.enabled = !!d.enabled;
+        state.min = d.minTmr || 100;
+        state.max = d.maxTmr || 1000000;
+        $('amt').min = state.min;
+
+        $('basis').innerHTML = state.prices.map(function (p) {
+            return '<option value="' + esc(p.basis) + '">' + esc(p.basis) + '</option>';
+        }).join('');
+        renderBasisNotes();
+        renderCalc();
+
+        $('disclosure').innerHTML = esc(d.priceDisclosure || '') +
+            (state.prices.length > 1
+                ? ' Both bases are shown side by side for that reason.'
+                : '');
+
+        if (state.enabled) {
+            $('buyTag').textContent = 'Open';
+            $('buyTag').className = 'gt-tag live';
+            $('buyBtn').disabled = false;
+            $('buyBtn').textContent = 'Continue';
+            $('buyBtn').style.cursor = 'pointer';
+            $('buySub').textContent = 'Choose an amount and continue to checkout.';
+        }
+    }).catch(function () {
+        $('disclosure').textContent = 'Pricing information is unavailable right now.';
+    });
+
+    $('amt').addEventListener('input', renderCalc);
+    $('basis').addEventListener('change', renderCalc);
+
+    // Signed-in extras. A signed-out visitor still gets the whole page above.
+    function loadAccount() {
+        if (!window.api || !window.api.request) return;
+        window.api.request('/wallet/account').then(function (d) {
+            var bal = Number((d.balance && d.balance.total) || 0);
+            $('balVal').innerHTML = n(bal) + '<small>TMR</small>';
+            $('balSub').textContent = 'This is what you hold now, and what it reaches.';
+            reach(bal);
+        }).catch(function () {
+            $('balSub').innerHTML = '<a href="/login/">Sign in</a> to see your balance and what it reaches.';
+            $('balVal').innerHTML = '&mdash;<small>TMR</small>';
+            reach(0);
+        });
+
+        window.api.request('/tmr/acquire/orders').then(function (d) {
+            var rows = (d && d.orders) || [];
+            if (!rows.length) return;
+            $('ordersCard').hidden = false;
+            $('ordersBody').innerHTML = rows.map(function (o) {
+                return '<tr><td>' + esc(o.order_ref) + '</td><td>' + n(o.tmr_amount) +
+                       ' TMR</td><td>' + esc(o.status) + '</td><td>' +
+                       esc(new Date(o.created_at).toLocaleDateString()) + '</td></tr>';
+            }).join('');
+        }).catch(function () { /* no orders, or signed out */ });
+    }
+
+    if (window.api && window.api.request) loadAccount();
+    else window.addEventListener('load', loadAccount);
+})();
+</script>
+</body>
+</html>
