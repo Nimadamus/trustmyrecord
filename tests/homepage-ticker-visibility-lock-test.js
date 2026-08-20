@@ -40,9 +40,14 @@ const HTML_REQUIRED = [
   // slate that landed grew the strip by 40px and shoved the entire hero down.
   // It ships dimensionally identical skeleton cards instead, and the lane
   // reserves a card's full height from the first frame.
+  // UPDATED 2026-08-20: a card now carries two recent-form lines under the
+  // matchup, so a real card is 117px and the reservation moved with it. The
+  // rule being locked is unchanged: the skeleton box and the card box are the
+  // same box, whatever that box currently measures.
   'class="gm is-skel"',
-  '.ticker-games,.ticker-track,.ticker-page{min-height:76px}',
-  '.gm.is-skel{width:230px;height:76px',
+  '.ticker-games,.ticker-track,.ticker-page{min-height:117px}',
+  '.gm.is-skel{width:236px;height:117px',
+
   'role="status">Loading today&rsquo;s MLB slate&hellip;</span>',
 ];
 for (const needle of HTML_REQUIRED) {

@@ -343,6 +343,18 @@ function pitcherLine(g) {
   return `<span class="gm-sp">${esc(short(g.away_pitcher))} vs ${esc(short(g.home_pitcher))}</span>`;
 }
 
+/* Recent form, one line per club - the byte-for-byte port of formLine() in
+   static/js/tmr-home-live.js. Keep the two in lockstep. */
+function formLine(f, side) {
+  if (!f || !f.text) return '';
+  const abbr = f.team_abbr || '';
+  const rest = abbr && f.text.indexOf(`${abbr}:`) === 0
+    ? f.text.slice(abbr.length + 1).replace(/^\s+/, '') : f.text;
+  return `<span class="gm-fm gm-fm--${side}" title="` +
+    `${esc(`Last ${f.sample} games · ${f.period}`)}">` +
+    `${abbr ? `<i class="ab">${esc(abbr)}</i>` : ''}${esc(rest)}</span>`;
+}
+
 function tickerHtml(games) {
   return games.map((g) => {
     const dh = g.game_label ? `<em class="gm-dh">${esc(g.game_label)}</em>` : '';
@@ -355,7 +367,8 @@ function tickerHtml(games) {
         `<span class="t">${logoImg(g.home_logo)}${esc(g.home)}</span>` +
         statusChip(g) + dh +
       '</span>' +
-      pitcherLine(g);
+      pitcherLine(g) +
+      formLine(g.away_form, 'away') + formLine(g.home_form, 'home');
     if (g.trend && g.trend.text) {
       html += `<span class="gm-tr" data-href="${esc(g.trend.href || '')}" title="` +
         `${esc(`Sample ${g.trend.sample} games · ${g.trend.period}`)}">` +

@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '2efd259ce977';
+  var BUILD = 'a1ca68afa2cf';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -145,6 +145,21 @@
       return p.length < 2 ? n : p[0].charAt(0) + '. ' + p.slice(1).join(' ');
     };
     return '<span class="gm-sp">' + esc(short(g.away_pitcher)) + ' vs ' + esc(short(g.home_pitcher)) + '</span>';
+  }
+
+  /* Recent form, one line per club, under the matchup (Nima, 2026-08-20). The
+     backend sends the club's own last-10 record, streak, run averages and its
+     home/road split, already worded, with the sample and the exact date range
+     alongside for the tooltip. Missing => the line is not drawn; the card never
+     carries a placeholder. */
+  function formLine(f, side) {
+    if (!f || !f.text) return '';
+    var abbr = f.team_abbr || '';
+    var rest = abbr && f.text.indexOf(abbr + ':') === 0
+      ? f.text.slice(abbr.length + 1).replace(/^\s+/, '') : f.text;
+    return '<span class="gm-fm gm-fm--' + side + '" title="' +
+      esc('Last ' + f.sample + ' games · ' + f.period) + '">' +
+      (abbr ? '<i class="ab">' + esc(abbr) + '</i>' : '') + esc(rest) + '</span>';
   }
 
   /* The ticker is a permanent fixture of the homepage: it reports loading, empty
@@ -424,7 +439,8 @@
           '<span class="t">' + logoImg(g.home_logo) + esc(g.home) + '</span>' +
           statusChip(g) + dh +
         '</span>' +
-        pitcherLine(g);
+        pitcherLine(g) +
+        formLine(g.away_form, 'away') + formLine(g.home_form, 'home');
       /* A trend renders only when the engine verified one, and carries its exact
          sample size and period. No trend => nothing. Never placeholder text. */
       if (g.trend && g.trend.text) {
