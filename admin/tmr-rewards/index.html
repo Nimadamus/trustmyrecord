@@ -53,6 +53,7 @@
     <div class="panel">
         <h2>This month's budget</h2>
         <div class="grid" id="budgetGrid"></div>
+        <div id="marketReality"></div>
         <div class="bar" id="bar"><i style="width:0%"></i></div>
         <div class="bandmsg" id="band"></div>
         <div class="note" id="capNote"></div>
@@ -159,12 +160,30 @@
             ['TMR available', n(b.authorizedTmr), 'cyan'],
             ['TMR awarded', n(b.awardedTmr), ''],
             ['TMR remaining', n(b.remainingTmr), 'green'],
-            ['USD-equivalent awarded', '$' + d.usdAwarded, ''],
+            ['Awarded, at reference price', '$' + d.usdAwarded, ''],
             ['Projected month-end', d.projectedMonthEndTmr === null ? '—' : n(d.projectedMonthEndTmr), 'amber'],
             ['Budget status', b.status, b.status === 'open' ? 'green' : 'red']
         ].map(function (r) {
             return '<div class="stat ' + r[2] + '"><div class="k">' + r[0] + '</div><div class="v">' + r[1] + '</div></div>';
         }).join('');
+
+        // The reference price sizes the pool; it is not what TMR trades at.
+        // Showing only reference dollars makes the month look far richer than
+        // the market says it is, so both numbers and the gap are stated here.
+        var mr = d.marketReality;
+        el('marketReality').innerHTML = !mr ? '' :
+            '<div class="note" style="margin-top:10px">' +
+            '<strong>Reference price is an accounting unit, not a valuation.</strong><br>' +
+            'Reference <strong>$' + mr.referencePriceUsd + '</strong> per TMR &middot; ' +
+            'market <strong>$' + Number(mr.marketPriceUsd).toFixed(8) + '</strong> per TMR' +
+            (mr.multiple ? ' &middot; reference is <strong>' + mr.multiple + 'x</strong> the market' : '') +
+            '<br>This month authorises ' + n(mr.authorizedTmr) + ' TMR: ' +
+            '<strong>$' + mr.authorizedAtReferenceUsd + '</strong> at the reference price, ' +
+            '<strong>$' + mr.authorizedAtMarketUsd + '</strong> at the market price.' +
+            (mr.depthWarning ? '<br>' + mr.depthWarning : '') +
+            (mr.liquidityLocked ? '' : '<br>Liquidity is not locked.') +
+            '<br>' + mr.note +
+            '</div>';
 
         var pct = Math.min(100, b.consumedPct);
         var bar = el('bar');
