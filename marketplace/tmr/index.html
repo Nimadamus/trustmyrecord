@@ -52,11 +52,11 @@ body{background:
 a{color:inherit;text-decoration:none}
 .mk{max-width:1180px;margin:0 auto;padding:26px 20px 72px}
 /* An AUTHOR `display` rule beats the UA stylesheet's `[hidden]{display:none}`
-   whatever the specificity, so `.toolbar{display:flex}` kept the filter bar on
+   whatever the specificity, so `.mktoolbar{display:flex}` kept the filter bar on
    screen after renderBuy() had set hidden=true -- an empty filter bar sitting
    above the "no listings yet" empty state. Scoping the hidden rule to `.mk`
    lifts it to (0,2,0) and puts the attribute back in charge. */
-.mk [hidden]{display:none}
+.mk [hidden]{display:none !important}
 
 /* ---- header ------------------------------------------------------------- */
 .mk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
@@ -82,35 +82,35 @@ a{color:inherit;text-decoration:none}
 .metric .s{font-size:11.5px;color:var(--muted2);margin-top:3px}
 
 /* ---- tabs --------------------------------------------------------------- */
-.tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0}
-.tabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);
+.mktabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0}
+.mktabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);
   padding:9px 4px;margin-right:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-.tabs button:hover{color:var(--text)}
-.tabs button.on{color:var(--teal);border-bottom-color:var(--teal)}
-.tabs .cnt{display:inline-block;background:var(--panel3);color:var(--muted);border-radius:999px;
+.mktabs button:hover{color:var(--text)}
+.mktabs button.on{color:var(--teal);border-bottom-color:var(--teal)}
+.mktabs .cnt{display:inline-block;background:var(--panel3);color:var(--muted);border-radius:999px;
   font-size:10.5px;font-weight:800;padding:1px 7px;margin-left:6px;vertical-align:1px}
 
 /* SPECIFICITY NOTE (2026-08-19).
    tmr-sitewide.js adds `tmr-site-shell` to the body element at runtime, and
    tmr-sitewide.css then styles BARE ELEMENTS through it:
      body.tmr-site-shell input, textarea, select { width:100%; ... }
-   That selector is (0,1,2). A page rule like `.toolbar select` is (0,1,1) and
+   That selector is (0,1,2). A page rule like `.mktoolbar select` is (0,1,1) and
    LOSES, which is why every filter control rendered full width and stacked.
    Prefixing the page's element-targeting rules with `.mk` lifts them to (0,2,1)
    so the page's own layout wins. Class-only rules are unaffected and are left
    exactly as they were. */
 /* ---- filter toolbar ----------------------------------------------------- */
-.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);
+.mktoolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);
   border-radius:var(--r);padding:11px 13px;margin-bottom:14px;box-shadow:var(--sh)}
-.mk .toolbar .grow{flex:1 1 220px;min-width:180px}
+.mk .mktoolbar .grow{flex:1 1 220px;min-width:180px}
 .mk input,.mk select,.mk textarea{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:var(--r-sm);
   padding:8px 11px;font-size:13.5px;font-family:inherit;width:100%}
 input:focus,select:focus{outline:2px solid var(--teal-soft);border-color:var(--teal)}
 input::placeholder{color:var(--muted2)}
-.mk .toolbar select{width:auto;min-width:130px;cursor:pointer}
-.toolbar .price{display:flex;align-items:center;gap:6px}
-.mk .toolbar .price input{width:88px;font-family:'JetBrains Mono',monospace}
-.toolbar .price span{font-size:12px;color:var(--muted2);font-weight:600}
+.mk .mktoolbar select{width:auto;min-width:130px;cursor:pointer}
+.mktoolbar .price{display:flex;align-items:center;gap:6px}
+.mk .mktoolbar .price input{width:88px;font-family:'JetBrains Mono',monospace}
+.mktoolbar .price span{font-size:12px;color:var(--muted2);font-weight:600}
 .resline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
   font-size:12.5px;color:var(--muted2);margin:0 2px 12px;font-weight:600}
 .linkbtn{background:none;border:0;color:var(--teal);font-weight:700;cursor:pointer;font-size:12.5px;font-family:inherit}
@@ -296,9 +296,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
   .mk{padding:18px 14px 60px}
   .grid{grid-template-columns:1fr}
   .rec{grid-template-columns:repeat(2,1fr)}
-  .toolbar{padding:10px}
-  .toolbar select,.toolbar .grow{width:100%;flex:1 1 100%}
-  .toolbar .price{width:100%} .toolbar .price input{flex:1}
+  .mktoolbar{padding:10px}
+  .mktoolbar select,.mktoolbar .grow{width:100%;flex:1 1 100%}
+  .mktoolbar .price{width:100%} .mktoolbar .price input{flex:1}
   .balchip{width:100%;justify-content:space-between}
 }
 </style>
@@ -323,7 +323,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
 
   <div class="metrics" id="metrics"></div>
 
-  <div class="tabs">
+  <div class="mktabs">
     <button id="tabBuy" class="on">Buy picks<span class="cnt" id="cBuy">&mdash;</span></button>
     <button id="tabPurch">Your purchases<span class="cnt" id="cPurch">&mdash;</span></button>
     <button id="tabSell">Sell picks<span class="cnt" id="cSell">&mdash;</span></button>
@@ -333,7 +333,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
 
   <!-- ================= BUY ================= -->
   <section id="paneBuy">
-    <div class="toolbar" id="toolbar" hidden>
+    <div class="mktoolbar" id="toolbar" hidden>
       <div class="grow"><input type="search" id="fSearch" placeholder="Search listings, sellers or sports"></div>
       <select id="fSport"><option value="">All sports</option></select>
       <select id="fType"><option value="">All bet types</option></select>
