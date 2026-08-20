@@ -5,144 +5,370 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buy and Sell Picks with TMR | TrustMyRecord</title>
 <link rel="canonical" href="https://trustmyrecord.com/marketplace/tmr/">
-<meta name="description" content="Buy handicapper picks with TMR Coin on TrustMyRecord, and price your own listings in TMR. Fees shown up front on both sides.">
+<meta name="description" content="Buy handicapper picks with TMR Coin on TrustMyRecord. Every seller carries a verified, graded record: win rate, ROI, units and sport splits, shown on the card before you pay.">
+<meta name="keywords" content="buy sports picks with TMR, TMR coin marketplace, verified handicapper picks, sell picks for TMR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://trustmyrecord.com/marketplace/tmr/">
+<meta property="og:title" content="Picks for TMR | TrustMyRecord">
+<meta property="og:description" content="Buy picks with TMR Coin from handicappers whose records are graded and public. Judge the seller without leaving the page.">
 <link rel="icon" type="image/png" href="/static/favicon.png">
-<link rel="stylesheet" href="/static/css/tmr-ds.css?v=f85a4f83fb7b">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
+<script defer src="/static/js/tmr-sitewide.js?v=8b5629191219"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
+/* -----------------------------------------------------------------------------
+   /marketplace/tmr/ — the TMR-priced picks marketplace.
+
+   Palette and type are the same light workspace tokens the cash marketplace at
+   /marketplace/ uses, so the two rails read as one product rather than two
+   different sites. Density is deliberately tighter than the old page: the whole
+   point of this marketplace is that the seller's graded record is visible on the
+   card, and a record you have to scroll past three empty panels to reach may as
+   well not be there.
+   -------------------------------------------------------------------------- */
 :root{
-  --mk-bg:#070c14; --mk-panel:#0c131f; --mk-panel2:#111a28; --mk-line:rgba(148,163,184,.16);
-  --mk-text:#f6f9fc; --mk-muted:#93a3b8; --mk-teal:#2dd4bf; --mk-gold:#f5c542;
-  --mk-green:#4ade80; --mk-red:#f87171; --mk-blue:#60a5fa;
+  --bg:#FFFFFF; --panel:#FFFFFF; --panel2:#F6F9FC; --panel3:#EDF3F9;
+  --line:#D2DEEA; --line2:#B7C8DA;
+  --text:#07182A; --muted:#2E4459; --muted2:#5E7590;
+  --teal:#0C948C; --teal-dk:#07736D; --teal-soft:#DEF4F2;
+  --amber:#B98505; --amber-soft:#FBF1D8;
+  --green:#0A8B4E; --green-soft:#DFF3E8;
+  --red:#BC372E; --red-soft:#FAE9E7;
+  --blue:#1E5BBF; --blue-soft:#E3ECFB;
+  --violet:#5940AE; --violet-soft:#EBE7F9;
+  --r:10px; --r-sm:7px;
+  --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+  --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
 }
-.mk{max-width:1020px;margin:0 auto;padding:26px 16px 72px;color:var(--mk-text);
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-.mk h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
-.mk .lede{color:var(--mk-muted);font-size:13.5px;margin:0 0 20px}
-.mk-card{background:var(--mk-panel);border:1px solid var(--mk-line);border-radius:14px;padding:18px;margin-bottom:16px}
-.mk-card h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mk-muted);margin:0 0 14px;font-weight:600}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:
+    radial-gradient(circle at 10% -10%, rgba(12,148,140,.08), transparent 30%),
+    radial-gradient(circle at 95% -10%, rgba(30,91,191,.08), transparent 30%),
+    #FFFFFF;
+  color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+a{color:inherit;text-decoration:none}
+.mk{max-width:1180px;margin:0 auto;padding:26px 20px 72px}
+/* An AUTHOR `display` rule beats the UA stylesheet's `[hidden]{display:none}`
+   whatever the specificity, so `.toolbar{display:flex}` kept the filter bar on
+   screen after renderBuy() had set hidden=true -- an empty filter bar sitting
+   above the "no listings yet" empty state. Scoping the hidden rule to `.mk`
+   lifts it to (0,2,0) and puts the attribute back in charge. */
+.mk [hidden]{display:none}
 
-.balbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
-  background:linear-gradient(150deg,#0d1a26 0%,#0c131f 62%);border:1px solid rgba(45,212,191,.22);
-  border-radius:14px;padding:15px 18px;margin-bottom:16px}
-.balbar .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mk-teal);font-weight:600}
-.balbar .v{font-size:27px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
-.balbar a{color:var(--mk-blue);font-size:13px;text-decoration:none}
-.balbar a:hover{text-decoration:underline}
+/* ---- header ------------------------------------------------------------- */
+.mk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.mk-head h1{font-family:'Barlow Condensed',Inter,sans-serif;font-weight:900;text-transform:uppercase;
+  font-size:clamp(28px,3.6vw,40px);letter-spacing:-.5px;line-height:1}
+.mk-head h1 .accent{color:var(--teal)}
+.lede{color:var(--muted);font-size:14px;max-width:640px;line-height:1.6}
 
-.tabs{display:flex;gap:8px;margin-bottom:16px}
-.tabs button{background:transparent;border:1px solid var(--mk-line);color:var(--mk-muted);
-  border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}
-.tabs button.on{background:var(--mk-teal);color:#04141a;border-color:var(--mk-teal)}
+.balchip{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:10px 16px;box-shadow:var(--sh)}
+.balchip .k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);font-weight:700}
+.balchip .v{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:800;line-height:1.15;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.balchip .v.dim{color:var(--muted2)}
+.balchip a{color:var(--teal);font-size:12.5px;font-weight:700;white-space:nowrap}
+.balchip a:hover{text-decoration:underline}
 
-.listing{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;
-  background:var(--mk-panel2);border:1px solid var(--mk-line);border-radius:11px;padding:14px;margin-bottom:10px}
-.listing .t{font-size:14.5px;font-weight:600}
-.listing .s{font-size:12px;color:var(--mk-muted);margin-top:2px}
-.listing .p{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.listing .p small{font-size:12px;color:var(--mk-muted);font-weight:600;margin-left:4px}
+/* ---- summary metrics ---------------------------------------------------- */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0 16px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh)}
+.metric .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);font-weight:700;margin-bottom:4px}
+.metric .v{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.metric .s{font-size:11.5px;color:var(--muted2);margin-top:3px}
 
-/* the fee breakdown, shown on BOTH sides. never collapsed, never hidden. */
-.split{background:var(--mk-panel2);border:1px solid var(--mk-line);border-radius:10px;padding:13px;margin-top:12px}
-.split .r{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0}
-.split .r span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
-.split .r.total{border-top:1px solid var(--mk-line);margin-top:5px;padding-top:9px;font-size:15px}
-.split .r.total span:last-child{color:var(--mk-green);font-size:17px;font-weight:800}
-.split .r.fee span:last-child{color:var(--mk-gold)}
-.split .r.short span:last-child{color:var(--mk-red)}
+/* ---- tabs --------------------------------------------------------------- */
+.tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0}
+.tabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  padding:9px 4px;margin-right:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.tabs button:hover{color:var(--text)}
+.tabs button.on{color:var(--teal);border-bottom-color:var(--teal)}
+.tabs .cnt{display:inline-block;background:var(--panel3);color:var(--muted);border-radius:999px;
+  font-size:10.5px;font-weight:800;padding:1px 7px;margin-left:6px;vertical-align:1px}
 
-.btn{background:var(--mk-teal);color:#04141a;border:0;border-radius:9px;padding:10px 18px;font-weight:700;font-size:13.5px;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--mk-text);border:1px solid var(--mk-line)}
+/* SPECIFICITY NOTE (2026-08-19).
+   tmr-sitewide.js adds `tmr-site-shell` to the body element at runtime, and
+   tmr-sitewide.css then styles BARE ELEMENTS through it:
+     body.tmr-site-shell input, textarea, select { width:100%; ... }
+   That selector is (0,1,2). A page rule like `.toolbar select` is (0,1,1) and
+   LOSES, which is why every filter control rendered full width and stacked.
+   Prefixing the page's element-targeting rules with `.mk` lifts them to (0,2,1)
+   so the page's own layout wins. Class-only rules are unaffected and are left
+   exactly as they were. */
+/* ---- filter toolbar ----------------------------------------------------- */
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:11px 13px;margin-bottom:14px;box-shadow:var(--sh)}
+.mk .toolbar .grow{flex:1 1 220px;min-width:180px}
+.mk input,.mk select,.mk textarea{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:var(--r-sm);
+  padding:8px 11px;font-size:13.5px;font-family:inherit;width:100%}
+input:focus,select:focus{outline:2px solid var(--teal-soft);border-color:var(--teal)}
+input::placeholder{color:var(--muted2)}
+.mk .toolbar select{width:auto;min-width:130px;cursor:pointer}
+.toolbar .price{display:flex;align-items:center;gap:6px}
+.mk .toolbar .price input{width:88px;font-family:'JetBrains Mono',monospace}
+.toolbar .price span{font-size:12px;color:var(--muted2);font-weight:600}
+.resline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  font-size:12.5px;color:var(--muted2);margin:0 2px 12px;font-weight:600}
+.linkbtn{background:none;border:0;color:var(--teal);font-weight:700;cursor:pointer;font-size:12.5px;font-family:inherit}
+.linkbtn:hover{text-decoration:underline}
+
+/* ---- listing grid ------------------------------------------------------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
+  display:flex;flex-direction:column;overflow:hidden;transition:box-shadow .15s,transform .15s}
+.card:hover{box-shadow:var(--sh-up)}
+
+/* seller block — the trust surface, and the first thing on the card */
+.slr{display:flex;gap:10px;align-items:center;padding:13px 14px 11px;border-bottom:1px solid var(--line)}
+.av{width:38px;height:38px;border-radius:50%;object-fit:cover;background:var(--panel3);flex:none;
+  border:1px solid var(--line)}
+.av.ph{display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted2);font-size:15px}
+.slr .nm{font-size:14.5px;font-weight:800;line-height:1.2;display:flex;align-items:center;gap:5px}
+.slr .nm:hover{color:var(--teal)}
+.slr .sub{font-size:11.5px;color:var(--muted2);margin-top:2px}
+.vbadge{display:inline-flex;align-items:center;gap:3px;background:var(--teal-soft);color:var(--teal-dk);
+  border-radius:999px;font-size:9.5px;font-weight:800;padding:2px 7px;text-transform:uppercase;letter-spacing:.05em}
+.vbadge.grey{background:var(--panel3);color:var(--muted2)}
+
+/* verified record strip */
+.rec{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.rec .c{background:var(--panel2);padding:9px 8px;text-align:center}
+.rec .c .k{font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);font-weight:800}
+.rec .c .v{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.rec .c .v.pos{color:var(--green)} .rec .c .v.neg{color:var(--red)}
+.norec{padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--line);
+  font-size:12px;color:var(--muted2);line-height:1.5}
+
+/* form dots + sport chips */
+.mid{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
+.formrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.formrow .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);font-weight:800}
+.dots{display:flex;gap:3px}
+.dot{width:15px;height:15px;border-radius:4px;font-size:9px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;color:#fff}
+.dot.w{background:var(--green)} .dot.l{background:var(--red)} .dot.p{background:var(--muted2)}
+.formrow .net{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.net.pos{color:var(--green)} .net.neg{color:var(--red)}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 9px;font-size:11px;
+  font-weight:700;color:var(--muted);white-space:nowrap}
+.chip b{font-family:'JetBrains Mono',monospace;font-weight:800}
+.chip.pos b{color:var(--green)} .chip.neg b{color:var(--red)}
+.chip.tag{background:var(--blue-soft);border-color:transparent;color:var(--blue)}
+
+/* listing body */
+.body{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:7px}
+.body .ttl{font-size:15px;font-weight:800;line-height:1.3}
+.body .desc{font-size:12.5px;color:var(--muted);line-height:1.55}
+.ptype{display:inline-block;background:var(--violet-soft);color:var(--violet);border-radius:var(--r-sm);
+  font-size:10px;font-weight:800;padding:3px 8px;text-transform:uppercase;letter-spacing:.05em}
+.meta{font-size:11.5px;color:var(--muted2);display:flex;gap:10px;flex-wrap:wrap}
+
+/* price + buy */
+.foot{border-top:1px solid var(--line);background:var(--panel2);padding:12px 14px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.price .v{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.price .v small{font-size:11.5px;color:var(--muted2);font-weight:700;margin-left:4px}
+.price .s{font-size:10.5px;color:var(--muted2);margin-top:3px}
+
+.btn{background:var(--teal);color:#fff;border:0;border-radius:var(--r-sm);padding:9px 17px;font-weight:800;
+  font-size:13.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:hover{background:var(--teal-dk)}
+.btn.ghost{background:var(--panel);color:var(--text);border:1px solid var(--line2)}
+.btn.ghost:hover{background:var(--panel2)}
+.btn.sm{padding:6px 12px;font-size:12.5px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:12px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:10.5px;color:var(--mk-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-input{background:var(--mk-panel2);border:1px solid var(--mk-line);color:var(--mk-text);
-  border-radius:8px;padding:9px 11px;font-size:14px;font-variant-numeric:tabular-nums}
-.note{font-size:12.5px;color:var(--mk-muted);line-height:1.65;margin-top:12px}
-.warn{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.28);border-radius:10px;
-  padding:12px 14px;font-size:13px;color:#fbc4c4;line-height:1.6;margin-top:12px}
-.warn a{color:var(--mk-teal)}
-#mkMsg{font-size:13px;min-height:18px;margin-bottom:12px}
-.skel{color:var(--mk-muted);font-size:13px}
-.empty{text-align:center;padding:26px 16px}
-.empty .eh{font-size:17px;font-weight:700;margin-bottom:7px}
-.empty p{color:var(--mk-muted);font-size:13.5px;max-width:460px;margin:0 auto 16px;line-height:1.65}
-.empty .row{justify-content:center}
-.empty .btn{text-decoration:none;display:inline-block}
+.btn.danger{background:var(--red)} .btn.danger:hover{background:#9c2c25}
 
-/* confirmation, always explicit -- never a one-click charge */
-.modal{position:fixed;inset:0;background:rgba(3,7,12,.76);display:none;align-items:center;justify-content:center;padding:18px;z-index:70}
+/* ---- skeletons ---------------------------------------------------------- */
+@keyframes shim{0%{background-position:-380px 0}100%{background-position:380px 0}}
+.sk{background:linear-gradient(90deg,#EDF3F9 25%,#F6F9FC 50%,#EDF3F9 75%);background-size:760px 100%;
+  animation:shim 1.15s linear infinite;border-radius:5px;display:block}
+.skcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:0;overflow:hidden;box-shadow:var(--sh)}
+.skcard .p{padding:13px 14px;border-bottom:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+
+/* ---- states ------------------------------------------------------------- */
+.empty{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:38px 22px;text-align:center;box-shadow:var(--sh)}
+.empty .eh{font-size:18px;font-weight:800;margin-bottom:7px}
+.empty p{color:var(--muted);font-size:13.5px;max-width:520px;margin:0 auto 16px;line-height:1.65}
+.empty .row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.empty .btn{display:inline-block;text-decoration:none}
+.errbox{background:var(--red-soft);border:1px solid rgba(188,55,46,.3);border-radius:var(--r);padding:16px 18px;
+  display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.errbox .t{font-weight:800;font-size:14px;color:#8d2820} .errbox .d{font-size:12.5px;color:var(--muted);margin-top:3px}
+.notice{background:var(--amber-soft);border:1px solid rgba(185,133,5,.28);border-radius:var(--r);
+  padding:11px 14px;font-size:13px;color:#6d4e02;line-height:1.6;margin-bottom:14px}
+.notice a{color:var(--teal-dk);font-weight:800;text-decoration:underline}
+#mkMsg{font-size:13.5px;font-weight:700;margin-bottom:12px}
+#mkMsg:empty{margin:0}
+.ok{color:var(--green)} .bad{color:var(--red)}
+
+/* ---- panels / tables ---------------------------------------------------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+.panel h2{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin:0 0 12px;font-weight:800}
+.panel h2 .n{color:var(--teal)}
+.mk table{width:100%;border-collapse:collapse;font-size:13px}
+.mk th,.mk td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-weight:800;
+  background:var(--panel2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pill{display:inline-block;border-radius:999px;font-size:10px;font-weight:800;padding:2.5px 9px;
+  text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.pill.on{background:var(--green-soft);color:var(--green)}
+.pill.off{background:var(--panel3);color:var(--muted2)}
+.pill.warn{background:var(--amber-soft);color:var(--amber)}
+.pill.bad{background:var(--red-soft);color:var(--red)}
+
+/* seller listing editor */
+.lrow{border:1px solid var(--line);border-radius:var(--r);padding:13px;margin-bottom:10px;background:var(--panel2)}
+.lrow .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.lrow .t{font-size:14.5px;font-weight:800}
+.lrow .s{font-size:11.5px;color:var(--muted2);margin-top:3px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.lrow .ed{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;margin-top:11px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:9.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.field input{width:140px;font-family:'JetBrains Mono',monospace}
+.split{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;margin-top:10px}
+.split .r{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;gap:12px}
+.split .r span:last-child{font-variant-numeric:tabular-nums;font-weight:700;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.split .r.total{border-top:1px solid var(--line);margin-top:5px;padding-top:9px;font-size:14px;font-weight:800}
+.split .r.total span:last-child{color:var(--green);font-size:16px;font-weight:800}
+.split .r.fee span:last-child{color:var(--amber)}
+.split .r.muted span{color:var(--muted2)}
+.split .r.short span:last-child{color:var(--red)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.tile{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px}
+.tile .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-weight:800}
+.tile .v{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.tile .v.pos{color:var(--green)} .tile .v.fee{color:var(--amber)}
+
+/* ---- modal -------------------------------------------------------------- */
+.modal{position:fixed;inset:0;background:rgba(7,24,42,.55);display:none;align-items:center;justify-content:center;
+  padding:18px;z-index:120;overflow-y:auto}
 .modal.on{display:flex}
-.modal .box{background:var(--mk-panel);border:1px solid var(--mk-line);border-radius:15px;padding:22px;max-width:430px;width:100%}
-.modal h3{margin:0 0 4px;font-size:18px}
-.modal .sub{color:var(--mk-muted);font-size:13px;margin:0 0 14px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--mk-line)}
-th{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mk-muted);font-weight:600}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-.scroll{overflow-x:auto}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:0;max-width:470px;
+  width:100%;box-shadow:var(--sh-up);max-height:92vh;display:flex;flex-direction:column}
+.modal .bhead{padding:17px 19px 13px;border-bottom:1px solid var(--line)}
+.modal .bhead h3{margin:0 0 3px;font-size:18px;font-weight:800}
+.modal .bhead .sub{color:var(--muted2);font-size:12.5px}
+.modal .bbody{padding:16px 19px;overflow-y:auto;flex:1}
+.modal .bfoot{padding:13px 19px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;
+  background:var(--panel2);flex-wrap:wrap}
+.get{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;margin-top:12px}
+.get .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-weight:800;margin-bottom:5px}
+.get ul{margin:0;padding-left:17px;font-size:12.5px;color:var(--muted);line-height:1.65}
+.warn{background:var(--red-soft);border:1px solid rgba(188,55,46,.28);border-radius:var(--r-sm);padding:12px 13px;
+  font-size:12.5px;color:#8d2820;line-height:1.6;margin-top:12px}
+.warn a{color:var(--teal-dk);font-weight:800;text-decoration:underline}
+.picksel{margin-top:12px}
+.picksel .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-weight:800;margin-bottom:6px}
+.pk{border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;margin-bottom:6px;cursor:pointer;
+  display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--panel)}
+.pk:hover{border-color:var(--line2)}
+.pk.sel{border-color:var(--teal);background:var(--teal-soft)}
+.pk .m{font-size:13px;font-weight:700} .pk .d{font-size:11px;color:var(--muted2);margin-top:2px}
+.success{text-align:center;padding:8px 0 4px}
+.success .ic{width:46px;height:46px;border-radius:50%;background:var(--green-soft);color:var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 11px}
+.reveal{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;margin-top:12px;
+  font-size:12.5px;line-height:1.6;text-align:left}
+.reveal .pkline{padding:7px 0;border-bottom:1px solid var(--line)}
+.reveal .pkline:last-child{border-bottom:0}
+.reveal .sel{font-weight:800;font-size:13.5px}
+
+@media (max-width:620px){
+  .mk{padding:18px 14px 60px}
+  .grid{grid-template-columns:1fr}
+  .rec{grid-template-columns:repeat(2,1fr)}
+  .toolbar{padding:10px}
+  .toolbar select,.toolbar .grow{width:100%;flex:1 1 100%}
+  .toolbar .price{width:100%} .toolbar .price input{flex:1}
+  .balchip{width:100%;justify-content:space-between}
+}
 </style>
 </head>
-<body>
-<div id="tmr-nav-root"></div>
+<body class="tmr-light">
 
 <main class="mk">
-  <h1>Picks for TMR</h1>
-  <p class="lede">Buy handicapper picks with TMR Coin, or price your own listings in TMR. The platform fee is shown up front to both sides.</p>
+  <div class="mk-head">
+    <div>
+      <h1>Picks for <span class="accent">TMR</span></h1>
+      <p class="lede">Buy handicapper picks with TMR Coin. Every seller here is graded by TrustMyRecord, so the
+        record on the card is the record &mdash; not a screenshot.</p>
+    </div>
+    <div class="balchip">
+      <div>
+        <div class="k">Your TMR balance</div>
+        <div class="v dim" id="balVal">&mdash;</div>
+      </div>
+      <a href="/wallet/account/">Wallet &rarr;</a>
+    </div>
+  </div>
 
-  <div class="balbar">
-    <div><div class="k">Your TMR balance</div><div class="v" id="balVal">—</div></div>
-    <a href="/wallet/account/">View your TMR account &rarr;</a>
+  <div class="metrics" id="metrics"></div>
+
+  <div class="tabs">
+    <button id="tabBuy" class="on">Buy picks<span class="cnt" id="cBuy">&mdash;</span></button>
+    <button id="tabPurch">Your purchases<span class="cnt" id="cPurch">&mdash;</span></button>
+    <button id="tabSell">Sell picks<span class="cnt" id="cSell">&mdash;</span></button>
   </div>
 
   <div id="mkMsg"></div>
 
-  <div class="tabs">
-    <button id="tabBuy" class="on">Buy picks</button>
-    <button id="tabSell">Sell picks</button>
-  </div>
-
-  <!-- ============ BUY ============ -->
+  <!-- ================= BUY ================= -->
   <section id="paneBuy">
-    <div class="mk-card">
-      <h2>Listings priced in TMR</h2>
-      <div id="listings"><div class="skel">Loading…</div></div>
+    <div class="toolbar" id="toolbar" hidden>
+      <div class="grow"><input type="search" id="fSearch" placeholder="Search listings, sellers or sports"></div>
+      <select id="fSport"><option value="">All sports</option></select>
+      <select id="fType"><option value="">All bet types</option></select>
+      <select id="fSeller"><option value="">All sellers</option></select>
+      <div class="price">
+        <input type="number" id="fMin" placeholder="Min" min="0" aria-label="Minimum price in TMR">
+        <span>to</span>
+        <input type="number" id="fMax" placeholder="Max" min="0" aria-label="Maximum price in TMR">
+      </div>
+      <select id="fSort">
+        <option value="new">Newest</option>
+        <option value="record">Best verified record</option>
+        <option value="roi">Highest ROI</option>
+        <option value="units">Most units won</option>
+        <option value="popular">Most popular</option>
+        <option value="cheap">Lowest price</option>
+        <option value="rich">Highest price</option>
+      </select>
     </div>
-    <div class="mk-card">
-      <h2>Your purchases</h2>
-      <div class="scroll"><table id="purchTable">
-        <thead><tr><th>Date</th><th>Listing</th><th>Seller</th><th class="num">Paid</th><th>Access</th></tr></thead>
-        <tbody><tr><td colspan="5" class="skel">Loading…</td></tr></tbody>
-      </table></div>
+    <div class="resline" id="resline" hidden>
+      <span id="resCount"></span>
+      <button class="linkbtn" id="clearF">Clear filters</button>
     </div>
+    <div id="featured"></div>
+    <div id="listings"></div>
   </section>
 
-  <!-- ============ SELL ============ -->
-  <section id="paneSell" style="display:none">
-    <div class="mk-card">
-      <h2>Price a listing in TMR</h2>
-      <div id="myListings"><div class="skel">Loading…</div></div>
-      <div class="note">Set a TMR price and buyers can pay from their TMR balance. You keep your existing cash price alongside it.</div>
-    </div>
-    <div class="mk-card">
-      <h2>Your TMR earnings</h2>
-      <div id="earnGrid"><div class="skel">Loading…</div></div>
-      <div class="scroll" style="margin-top:14px"><table id="salesTable">
-        <thead><tr><th>Date</th><th>Listing</th><th>Buyer</th><th class="num">Price</th><th class="num">Fee</th><th class="num">You received</th></tr></thead>
-        <tbody><tr><td colspan="6" class="skel">Loading…</td></tr></tbody>
-      </table></div>
-    </div>
+  <!-- ================= PURCHASES ================= -->
+  <section id="panePurch" hidden>
+    <div id="purchWrap"></div>
+  </section>
+
+  <!-- ================= SELL ================= -->
+  <section id="paneSell" hidden>
+    <div id="sellWrap"></div>
   </section>
 </main>
 
-<!-- explicit purchase confirmation -->
-<div class="modal" id="confirmModal">
+<!-- explicit purchase confirmation. never a one-click charge. -->
+<div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
   <div class="box">
-    <h3 id="cmTitle">Confirm purchase</h3>
-    <p class="sub" id="cmSub"></p>
-    <div class="split" id="cmSplit"></div>
-    <div id="cmWarn"></div>
-    <div class="row" style="justify-content:flex-end">
+    <div class="bhead"><h3 id="cmTitle">Confirm purchase</h3><p class="sub" id="cmSub"></p></div>
+    <div class="bbody" id="cmBody"></div>
+    <div class="bfoot" id="cmFoot">
       <button class="btn ghost" id="cmCancel">Cancel</button>
       <button class="btn" id="cmConfirm">Confirm and pay</button>
     </div>
@@ -153,224 +379,889 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
 <script>
 (function () {
+  'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (v) { return Number(v || 0).toLocaleString(); };
-  function say(t, err) { var m = $('mkMsg'); m.textContent = t || ''; m.style.color = err ? 'var(--mk-red)' : 'var(--mk-green)'; }
-
-  var state = { balance: 0, feeBps: 500, pending: null, key: null, busy: false };
-
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  };
+  var signed = function (n, d) {
+    var v = Number(n || 0);
+    return (v > 0 ? '+' : '') + v.toFixed(d == null ? 2 : d);
+  };
+  var cls = function (n) { return Number(n) > 0 ? 'pos' : (Number(n) < 0 ? 'neg' : ''); };
   function req(p, o) { return window.api.request(p, o); }
-
-  async function loadBalance() {
-    var d = await req('/wallet/account');
-    state.balance = d.balance.total;
-    $('balVal').textContent = fmt(state.balance) + ' TMR';
+  function say(t, bad) {
+    var m = $('mkMsg');
+    m.textContent = t || '';
+    m.className = bad ? 'bad' : 'ok';
+  }
+  function dt(v) {
+    if (!v) return '—';
+    var d = new Date(v);
+    return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function dtime(v) {
+    if (!v) return '—';
+    var d = new Date(v);
+    return isNaN(d) ? '—' : d.toLocaleString(undefined,
+      { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function authed() {
+    // backend-api.js exposes isLoggedIn(), and it only reflects localStorage
+    // once loadTokens() has run -- so call that first rather than trusting a
+    // field that is still null on a cold page.
+    try {
+      if (!window.api) return false;
+      if (window.api.loadTokens) window.api.loadTokens();
+      return !!(window.api.isLoggedIn && window.api.isLoggedIn());
+    } catch (e) { return false; }
   }
 
-  // ---------------------------------------------------------------- buy side
-  async function loadListings() {
-    var d = await req('/marketplace/tmr/listings').catch(function () { return { listings: [] }; });
-    var rows = d.listings || [];
-    if (!rows.length) {
-      // An empty marketplace should still look deliberate and offer both sides
-      // somewhere to go, rather than an empty table.
-      $('listings').innerHTML =
-        '<div class="empty">' +
-        '<div class="eh">No TMR-priced picks are available yet</div>' +
-        '<p>Sellers are just starting to price listings in TMR. When they do, they show up here ' +
-        'and you can pay straight from your TMR balance.</p>' +
-        '<div class="row">' +
-        '<button class="btn" id="emptySell">Sell your picks for TMR</button>' +
-        '<a class="btn ghost" href="/marketplace/">Browse the cash marketplace</a>' +
-        '<a class="btn ghost" href="/wallet/earn/">Ways to earn TMR</a>' +
-        '</div></div>';
-      var es = $('emptySell');
-      if (es) es.onclick = function () { $('tabSell').click(); };
+  // Two INDEPENDENT slices of state. The marketplace renders off `market`; the
+  // account chips render off `me`. Neither one waits for the other, and a
+  // failure in `me` never takes the marketplace down with it.
+  var market = { status: 'loading', data: null, error: null };
+  var me = { status: authed() ? 'loading' : 'anon', data: null, error: null };
+  var filters = { q: '', sport: '', type: '', seller: '', min: '', max: '', sort: 'new' };
+  var pending = null;   // the checkout in flight
+  var busy = false;
+  var tab = 'buy';
+
+  // ------------------------------------------------------------------ skeletons
+  function skeletonCards(n) {
+    var one =
+      '<div class="skcard">' +
+        '<div class="p" style="display:flex;gap:10px;align-items:center">' +
+          '<span class="sk" style="width:38px;height:38px;border-radius:50%"></span>' +
+          '<span style="flex:1"><span class="sk" style="width:52%;height:13px"></span>' +
+          '<span class="sk" style="width:34%;height:10px;margin-top:6px"></span></span></div>' +
+        '<div class="p" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' +
+          '<span class="sk" style="height:30px"></span><span class="sk" style="height:30px"></span>' +
+          '<span class="sk" style="height:30px"></span><span class="sk" style="height:30px"></span></div>' +
+        '<div class="p" style="border-bottom:0">' +
+          '<span class="sk" style="width:72%;height:14px"></span>' +
+          '<span class="sk" style="width:92%;height:10px;margin-top:8px"></span>' +
+          '<span class="sk" style="width:60%;height:10px;margin-top:6px"></span></div>' +
+        '<div class="p" style="border-bottom:0;display:flex;justify-content:space-between;align-items:center">' +
+          '<span class="sk" style="width:96px;height:22px"></span>' +
+          '<span class="sk" style="width:74px;height:32px;border-radius:7px"></span></div>' +
+      '</div>';
+    return '<div class="grid">' + new Array(n + 1).join(one) + '</div>';
+  }
+  function skeletonRows(cols, rows) {
+    var out = '';
+    for (var r = 0; r < rows; r++) {
+      out += '<tr>';
+      for (var c = 0; c < cols; c++) out += '<td><span class="sk" style="height:12px"></span></td>';
+      out += '</tr>';
+    }
+    return out;
+  }
+  function errorBox(what, msg, retryId) {
+    return '<div class="errbox"><div><div class="t">' + esc(what) + '</div>' +
+      '<div class="d">' + esc(msg || 'Something went wrong.') + '</div></div>' +
+      '<button class="btn sm" id="' + retryId + '">Try again</button></div>';
+  }
+
+  // ------------------------------------------------------------------- loaders
+  function loadMarket() {
+    market.status = 'loading';
+    renderBuy();
+    return req('/marketplace/tmr/market').then(function (d) {
+      market.status = 'ready'; market.data = d; market.error = null;
+      buildFacets(d.facets);
+      renderMetrics(); renderBuy(); renderCounts();
+    }).catch(function (e) {
+      market.status = 'error';
+      market.error = (e && e.message) || 'Could not reach the marketplace.';
+      renderMetrics(); renderBuy(); renderCounts();
+    });
+  }
+
+  function loadMe() {
+    if (!authed()) { me.status = 'anon'; renderAccount(); return Promise.resolve(); }
+    me.status = 'loading'; renderAccount();
+    return req('/marketplace/tmr/me').then(function (d) {
+      me.status = 'ready'; me.data = d; me.error = null;
+      renderAccount(); renderCounts();
+      if (tab === 'purchases') renderPurchases();
+      if (tab === 'sell') renderSell();
+      renderBuy();
+    }).catch(function (e) {
+      // 401 means the session lapsed, which is a sign-in prompt, not an error.
+      var m = String((e && e.message) || e);
+      me.status = /401|unauth|token/i.test(m) ? 'anon' : 'error';
+      me.error = m;
+      renderAccount(); renderCounts();
+      if (tab === 'purchases') renderPurchases();
+      if (tab === 'sell') renderSell();
+    });
+  }
+
+  // ------------------------------------------------------------------ rendering
+  function renderAccount() {
+    var el = $('balVal');
+    if (me.status === 'ready') {
+      el.textContent = fmt(me.data.balance.total) + ' TMR';
+      el.className = 'v';
+    } else if (me.status === 'loading') {
+      el.innerHTML = '<span class="sk" style="width:92px;height:19px"></span>';
+      el.className = 'v';
+    } else if (me.status === 'anon') {
+      el.innerHTML = '<a href="/login/?redirect=/marketplace/tmr/" style="font-size:14px">Sign in</a>';
+      el.className = 'v dim';
+    } else {
+      el.textContent = 'Unavailable';
+      el.className = 'v dim';
+    }
+  }
+
+  function renderMetrics() {
+    var g = $('metrics');
+    if (market.status === 'loading') {
+      g.innerHTML = new Array(6).join(
+        '<div class="metric"><span class="sk" style="width:60%;height:9px"></span>' +
+        '<span class="sk" style="width:50%;height:20px;margin-top:7px"></span></div>');
       return;
     }
-    $('listings').innerHTML = rows.map(function (l) {
-      return '<div class="listing"><div><div class="t">' + (l.title || 'Picks') + '</div>' +
-        '<div class="s">' + (l.seller || 'Seller') + ' &middot; ' + (l.product_type || '').replace(/_/g, ' ') + '</div></div>' +
-        '<div style="display:flex;gap:12px;align-items:center">' +
-        '<div class="p">' + fmt(l.price_tmr) + '<small>TMR</small></div>' +
-        '<button class="btn" data-buy="' + l.id + '">Buy</button></div></div>';
+    if (market.status !== 'ready') { g.innerHTML = ''; return; }
+    var s = market.data.summary;
+    if (!s.listings) { g.innerHTML = ''; return; }
+    var tiles = [
+      ['Listings', fmt(s.listings), 'priced in TMR'],
+      ['Sellers', fmt(s.sellers), 'with public records'],
+      ['Graded picks', fmt(s.total_graded_picks), 'behind these sellers'],
+      ['From', fmt(s.lowest_price) + ' TMR', 'lowest listing'],
+      ['Typical', fmt(s.median_price) + ' TMR', 'median price'],
+    ];
+    if (s.sold_all_time) tiles.push(['Sold', fmt(s.sold_all_time), 'all time in TMR']);
+    g.innerHTML = tiles.map(function (t) {
+      return '<div class="metric"><div class="k">' + t[0] + '</div><div class="v">' + t[1] +
+        '</div><div class="s">' + t[2] + '</div></div>';
     }).join('');
-    Array.prototype.forEach.call($('listings').querySelectorAll('[data-buy]'), function (b) {
+  }
+
+  function renderCounts() {
+    $('cBuy').textContent = market.status === 'ready' ? String(visible().length) : '—';
+    $('cPurch').textContent = me.status === 'ready' ? String(me.data.purchases.length) : '—';
+    $('cSell').textContent = me.status === 'ready' ? String(me.data.seller.listings.length) : '—';
+  }
+
+  function buildFacets(f) {
+    var fill = function (sel, rows, labeler) {
+      var keep = sel.value;
+      sel.innerHTML = sel.options[0].outerHTML +
+        rows.map(function (r) {
+          return '<option value="' + esc(r.value) + '">' + esc(labeler(r)) + ' (' + r.count + ')</option>';
+        }).join('');
+      sel.value = keep;
+    };
+    fill($('fSport'), f.sports, function (r) { return r.value; });
+    fill($('fType'), f.product_types, function (r) { return r.label; });
+    fill($('fSeller'), f.sellers, function (r) { return r.value; });
+  }
+
+  // The whole filter/sort pass. Runs client-side against the one board payload,
+  // so changing a filter is instant and costs no request.
+  function visible() {
+    if (market.status !== 'ready') return [];
+    var mine = me.status === 'ready' && me.data.seller.listings.length
+      ? me.data.seller.listings.map(function (l) { return Number(l.id); }) : [];
+    var rows = market.data.listings.filter(function (l) {
+      // Never offer someone their own listing. The server refuses a self
+      // purchase anyway; showing a Buy button that cannot work is worse.
+      if (mine.indexOf(l.id) !== -1) return false;
+      if (filters.sport && l.sports.indexOf(filters.sport) === -1) return false;
+      if (filters.type && l.product_type !== filters.type) return false;
+      if (filters.seller && l.seller.username !== filters.seller) return false;
+      if (filters.min !== '' && l.price_tmr < Number(filters.min)) return false;
+      if (filters.max !== '' && l.price_tmr > Number(filters.max)) return false;
+      if (filters.q) {
+        var hay = [l.title, l.description, l.seller.username, l.product_label]
+          .concat(l.sports).join(' ').toLowerCase();
+        if (hay.indexOf(filters.q.toLowerCase()) === -1) return false;
+      }
+      return true;
+    });
+    var st = filters.sort;
+    rows.sort(function (a, b) {
+      var sa = a.seller.stats, sb = b.seller.stats;
+      if (st === 'cheap') return a.price_tmr - b.price_tmr;
+      if (st === 'rich') return b.price_tmr - a.price_tmr;
+      if (st === 'popular') return b.sold_count - a.sold_count || sb.graded_picks - sa.graded_picks;
+      if (st === 'roi') return sb.roi - sa.roi;
+      if (st === 'units') return sb.net_units - sa.net_units;
+      if (st === 'record') {
+        // Sample size is part of "best record". A 3-0 is not a better record
+        // than 326-284-8; ranking on win rate alone would say it is.
+        var score = function (s) { return s.graded_picks ? s.win_rate * Math.log10(s.graded_picks + 1) : -1; };
+        return score(sb) - score(sa);
+      }
+      return new Date(b.created_at) - new Date(a.created_at) || b.id - a.id;
+    });
+    return rows;
+  }
+
+  function recordStrip(s) {
+    if (!s.has_verified_record) {
+      return '<div class="norec">No graded picks yet. This seller has not built a verified record on ' +
+        'TrustMyRecord, so there is nothing to judge them on.</div>';
+    }
+    var st = s.stats;
+    return '<div class="rec">' +
+      '<div class="c"><div class="k">Record</div><div class="v">' + esc(st.record) + '</div></div>' +
+      '<div class="c"><div class="k">Win rate</div><div class="v">' + st.win_rate.toFixed(1) + '%</div></div>' +
+      '<div class="c"><div class="k">Units</div><div class="v ' + cls(st.net_units) + '">' + signed(st.net_units) + '</div></div>' +
+      '<div class="c"><div class="k">ROI</div><div class="v ' + cls(st.roi) + '">' + signed(st.roi, 1) + '%</div></div>' +
+      '</div>';
+  }
+
+  function formRow(s) {
+    var f = s.recent_form_summary;
+    if (!f) return '';
+    var dots = s.recent_form.slice(0, 10).map(function (p) {
+      var k = p.status === 'won' ? 'w' : (p.status === 'lost' ? 'l' : 'p');
+      var ch = k === 'w' ? 'W' : (k === 'l' ? 'L' : 'P');
+      return '<span class="dot ' + k + '" title="' + ch + ' ' + signed(p.units) + 'u">' + ch + '</span>';
+    }).join('');
+    return '<div class="formrow"><span class="lbl">Last ' + f.count + '</span>' +
+      '<span class="dots">' + dots + '</span>' +
+      '<span class="net ' + cls(f.net_units) + '">' + signed(f.net_units) + 'u</span></div>';
+  }
+
+  function sportChips(s) {
+    if (!s.sports.length) return '';
+    return '<div class="chips">' + s.sports.map(function (sp) {
+      return '<span class="chip ' + cls(sp.roi) + '">' + esc(sp.sport) + ' <b>' + esc(sp.record) +
+        '</b> &middot; <b>' + signed(sp.roi, 1) + '%</b></span>';
+    }).join('') + '</div>';
+  }
+
+  function avatar(s) {
+    if (s.avatar_url) {
+      return '<img class="av" src="' + esc(s.avatar_url) + '" alt="" loading="lazy" ' +
+        'onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),' +
+        '{className:\'av ph\',textContent:' + JSON.stringify(String(s.username || '?').charAt(0).toUpperCase()) + '}))">';
+    }
+    return '<div class="av ph">' + esc(String(s.username || '?').charAt(0).toUpperCase()) + '</div>';
+  }
+
+  function listingCard(l) {
+    var s = l.seller;
+    var fee = Math.floor(l.price_tmr * (market.data.feeBps || 500) / 10000);
+    var soldTxt = l.sold_count ? l.sold_count + (l.sold_count === 1 ? ' sale' : ' sales') + ' in TMR' : '';
+    var invTxt = l.product_type === 'single_pick'
+      ? (l.available_pick_count ? l.available_pick_count + ' pick' + (l.available_pick_count === 1 ? '' : 's') + ' available now'
+                                : 'No open picks right now')
+      : '';
+    var canBuy = l.product_type !== 'single_pick' || l.available_pick_count > 0;
+
+    return '<div class="card">' +
+      '<div class="slr">' + avatar(s) +
+        '<div style="flex:1;min-width:0">' +
+          '<a class="nm" href="' + esc(s.profile_url) + '">' + esc(s.username) +
+            (s.has_verified_record ? '<span class="vbadge">Verified record</span>'
+                                   : '<span class="vbadge grey">Unproven</span>') + '</a>' +
+          '<div class="sub">' + (s.has_verified_record
+              ? fmt(s.stats.graded_picks) + ' graded picks &middot; ' + esc(s.profile_url.replace(/\/$/, ''))
+              : 'New seller') + '</div>' +
+        '</div>' +
+      '</div>' +
+      recordStrip(s) +
+      '<div class="mid">' + formRow(s) + sportChips(s) + '</div>' +
+      '<div class="body">' +
+        '<div><span class="ptype">' + esc(l.product_label) + '</span></div>' +
+        '<div class="ttl">' + esc(l.title || 'Picks listing') + '</div>' +
+        (l.description ? '<div class="desc">' + esc(l.description) + '</div>' : '') +
+        (l.sports.length ? '<div class="chips">' + l.sports.map(function (sp) {
+            return '<span class="chip tag">' + esc(sp) + '</span>'; }).join('') + '</div>' : '') +
+        '<div class="meta">' +
+          (invTxt ? '<span>' + esc(invTxt) + '</span>' : '') +
+          (soldTxt ? '<span>' + esc(soldTxt) + '</span>' : '') +
+          '<span>Listed ' + dt(l.created_at) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="foot">' +
+        '<div class="price"><div class="v">' + fmt(l.price_tmr) + '<small>TMR</small></div>' +
+          '<div class="s">You pay ' + fmt(l.price_tmr) + ' &middot; seller keeps ' + fmt(l.price_tmr - fee) +
+          ' after the ' + ((market.data.feeBps || 500) / 100) + '% fee</div></div>' +
+        '<button class="btn" data-buy="' + l.id + '"' + (canBuy ? '' : ' disabled') + '>' +
+          (canBuy ? 'Buy' : 'Nothing to sell') + '</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function featuredBlock(rows) {
+    // "Top sellers" is the seller with the strongest VERIFIED record on the
+    // board, never a paid slot and never a hand-picked list.
+    if (market.status !== 'ready' || rows.length < 3) { $('featured').innerHTML = ''; return; }
+    var top = market.data.sellers.filter(function (s) { return s.has_verified_record && s.stats.graded_picks >= 20; })
+      .sort(function (a, b) { return b.stats.net_units - a.stats.net_units; }).slice(0, 3);
+    if (!top.length) { $('featured').innerHTML = ''; return; }
+    $('featured').innerHTML = '<div class="panel" style="padding:13px 15px"><h2>Top verified sellers <span class="n">by units won</span></h2>' +
+      '<div class="chips">' + top.map(function (s) {
+        return '<a class="chip" href="' + esc(s.profile_url) + '" style="padding:6px 12px;font-size:12.5px">' +
+          esc(s.username) + ' &middot; <b>' + esc(s.stats.record) + '</b> &middot; <b class="' + cls(s.stats.net_units) +
+          '" style="color:' + (s.stats.net_units >= 0 ? 'var(--green)' : 'var(--red)') + '">' +
+          signed(s.stats.net_units) + 'u</b></a>';
+      }).join('') + '</div></div>';
+  }
+
+  function renderBuy() {
+    var box = $('listings');
+    if (market.status === 'loading') {
+      $('toolbar').hidden = true; $('resline').hidden = true; $('featured').innerHTML = '';
+      box.innerHTML = skeletonCards(6);
+      return;
+    }
+    if (market.status === 'error') {
+      $('toolbar').hidden = true; $('resline').hidden = true; $('featured').innerHTML = '';
+      box.innerHTML = errorBox('The marketplace did not load', market.error, 'retryMarket');
+      $('retryMarket').onclick = loadMarket;
+      return;
+    }
+    var all = market.data.listings;
+    if (!all.length) {
+      $('toolbar').hidden = true; $('resline').hidden = true; $('featured').innerHTML = '';
+      box.innerHTML =
+        '<div class="empty"><div class="eh">No picks are priced in TMR yet</div>' +
+        '<p>Sellers are only just starting to price listings in TMR. When one does it appears here and you can pay ' +
+        'straight from your balance &mdash; with the seller\'s full graded record on the card.</p>' +
+        '<div class="row">' +
+          '<button class="btn" id="emptySell">Sell your picks for TMR</button>' +
+          '<a class="btn ghost" href="/marketplace/">Browse the cash marketplace</a>' +
+          '<a class="btn ghost" href="/wallet/earn/">Ways to earn TMR</a>' +
+        '</div></div>';
+      var es = $('emptySell'); if (es) es.onclick = function () { switchTab('sell'); };
+      return;
+    }
+
+    $('toolbar').hidden = false;
+    var rows = visible();
+    featuredBlock(all);
+    $('resline').hidden = false;
+    $('resCount').textContent = rows.length === all.length
+      ? all.length + (all.length === 1 ? ' listing' : ' listings')
+      : rows.length + ' of ' + all.length + ' listings';
+
+    if (!rows.length) {
+      box.innerHTML = '<div class="empty"><div class="eh">Nothing matches those filters</div>' +
+        '<p>There are ' + all.length + ' listings on the board. Widen the price range or clear a filter to see them.</p>' +
+        '<div class="row"><button class="btn" id="clearF2">Clear filters</button></div></div>';
+      $('clearF2').onclick = clearFilters;
+      return;
+    }
+    box.innerHTML = '<div class="grid">' + rows.map(listingCard).join('') + '</div>';
+    Array.prototype.forEach.call(box.querySelectorAll('[data-buy]'), function (b) {
       b.onclick = function () { openConfirm(Number(b.getAttribute('data-buy'))); };
     });
   }
 
-  async function openConfirm(listingId) {
-    say('');
-    var q;
-    try { q = await req('/marketplace/tmr/quote/' + listingId); }
-    catch (e) { return say(e.message || 'Could not price that listing.', true); }
-
-    state.pending = q;
-    // One idempotency key per checkout, reused on every retry. This is what makes
-    // a double click, a refresh or a flaky connection resolve to ONE order.
-    state.key = (window.crypto && window.crypto.randomUUID)
-      ? window.crypto.randomUUID()
-      : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
-
-    $('cmTitle').textContent = 'Confirm purchase';
-    $('cmSub').textContent = q.title || 'Picks listing';
-    $('cmSplit').innerHTML =
-      '<div class="r"><span>Price</span><span>' + fmt(q.priceTmr) + ' TMR</span></div>' +
-      '<div class="r"><span>Your balance</span><span>' + fmt(q.buyerBalance) + ' TMR</span></div>' +
-      '<div class="r total"><span>Balance after purchase</span><span>' + fmt(q.balanceAfter) + ' TMR</span></div>';
-
-    if (!q.sufficient) {
-      $('cmWarn').innerHTML = '<div class="warn">You need <strong>' + fmt(q.shortfall) +
-        ' more TMR</strong> for this. You can earn TMR by competing on TrustMyRecord, or receive it from another member. ' +
-        '<a href="/wallet/earn/">Ways to earn TMR &rarr;</a></div>';
-      $('cmConfirm').disabled = true;
-    } else {
-      $('cmWarn').innerHTML = '';
-      $('cmConfirm').disabled = false;
-    }
-    $('confirmModal').classList.add('on');
+  // -------------------------------------------------------------- purchases tab
+  function accessPill(p) {
+    if (p.order_status === 'refunded') return '<span class="pill bad">Refunded</span>';
+    if (p.access === 'active') return '<span class="pill on">Active</span>';
+    if (p.access === 'expired') return '<span class="pill off">Expired</span>';
+    if (p.access === 'revoked') return '<span class="pill bad">Revoked</span>';
+    return '<span class="pill off">' + esc(p.access || '—') + '</span>';
+  }
+  function resultCell(p) {
+    if (!p.pick_id) return '<span style="color:var(--muted2)">—</span>';
+    if (!p.settled) return '<span class="pill warn">Pending</span>';
+    var k = p.pick_status === 'won' ? 'on' : (p.pick_status === 'lost' ? 'bad' : 'off');
+    return '<span class="pill ' + k + '">' + esc(p.pick_status) + '</span> ' +
+      '<span class="' + cls(p.result_units) + '" style="font-family:\'JetBrains Mono\',monospace;font-weight:800;' +
+      'color:' + (Number(p.result_units) >= 0 ? 'var(--green)' : 'var(--red)') + '">' + signed(p.result_units) + 'u</span>';
   }
 
-  async function doPurchase() {
-    if (state.busy || !state.pending) return;
-    state.busy = true;
-    $('cmConfirm').disabled = true;
-    $('cmConfirm').textContent = 'Paying…';
-    try {
-      var r = await req('/marketplace/tmr/purchase', {
-        method: 'POST',
-        body: JSON.stringify({ listingId: state.pending.listingId, idempotencyKey: state.key })
-      });
-      $('confirmModal').classList.remove('on');
-      say(r.replay ? 'You already own this. Nothing was charged again.'
-                   : 'Purchase complete. ' + fmt(r.priceTmr) + ' TMR paid.');
-      await Promise.all([loadBalance(), loadListings(), loadPurchases()]);
-    } catch (e) {
-      var msg = e && e.message ? e.message : 'That purchase did not go through.';
-      say(msg + ' Nothing was charged.', true);
-      $('confirmModal').classList.remove('on');
-    } finally {
-      state.busy = false;
-      $('cmConfirm').textContent = 'Confirm and pay';
-      $('cmConfirm').disabled = false;
-    }
-  }
-
-  async function loadPurchases() {
-    var d = await req('/marketplace/tmr/purchases').catch(function () { return { purchases: [] }; });
-    var tb = $('purchTable').querySelector('tbody');
-    if (!d.purchases.length) { tb.innerHTML = '<tr><td colspan="5" class="skel">No TMR purchases yet.</td></tr>'; return; }
-    tb.innerHTML = d.purchases.map(function (p) {
-      return '<tr><td>' + (p.paid_at ? new Date(p.paid_at).toLocaleDateString() : '—') + '</td>' +
-        '<td>' + (p.title || 'Listing') + '</td><td>' + (p.seller || '—') + '</td>' +
-        '<td class="num">' + fmt(p.price_tmr) + ' TMR</td>' +
-        '<td>' + (p.entitlement_status === 'active' ? 'Active' : (p.entitlement_status || '—')) + '</td></tr>';
-    }).join('');
-  }
-
-  // --------------------------------------------------------------- sell side
-  async function loadMyListings() {
-    var d = await req('/marketplace/tmr/my-listings').catch(function () { return { listings: [] }; });
-    var rows = d.listings || [];
-    if (!rows.length) {
-      $('myListings').innerHTML =
-        '<div class="empty"><div class="eh">You have no listings yet</div>' +
-        '<p>Create a listing first, then come back here to set a TMR price on it.</p>' +
-        '<div class="row"><a class="btn" href="/marketplace/sell/">Create a listing</a></div></div>';
+  function renderPurchases() {
+    var w = $('purchWrap');
+    if (me.status === 'anon') {
+      w.innerHTML = '<div class="empty"><div class="eh">Sign in to see your purchases</div>' +
+        '<p>Your TMR purchases, the picks they unlocked and how each one settled all live behind your account.</p>' +
+        '<div class="row"><a class="btn" href="/login/?redirect=/marketplace/tmr/">Sign in</a></div></div>';
       return;
     }
-    $('myListings').innerHTML = rows.map(function (l) {
-      var price = l.price_tmr || '';
-      return '<div class="listing" data-listing="' + l.id + '" style="display:block">' +
-        '<div class="t">' + (l.title || 'Listing') + '</div>' +
-        '<div class="s">' + (l.product_type || '').replace(/_/g, ' ') + ' &middot; ' + l.status + '</div>' +
-        '<div class="row"><div class="field"><label>Price in TMR</label>' +
-        '<input type="number" min="10" step="1" class="lp" value="' + price + '" placeholder="e.g. 1000" style="width:150px"></div>' +
-        '<button class="btn ghost lsave">Save price</button>' +
-        (l.accepts_tmr ? '<button class="btn ghost lclear">Stop accepting TMR</button>' : '') +
-        '</div><div class="split lsplit"></div></div>';
-    }).join('');
+    if (me.status === 'loading') {
+      w.innerHTML = '<div class="panel"><h2>Your purchases</h2><div class="scroll"><table>' +
+        '<thead><tr><th>Date</th><th>Listing</th><th>Seller</th><th class="num">Paid</th>' +
+        '<th>Event</th><th>Access</th><th>Result</th><th></th></tr></thead><tbody>' +
+        skeletonRows(8, 4) + '</tbody></table></div></div>';
+      return;
+    }
+    if (me.status === 'error') {
+      w.innerHTML = errorBox('Your purchases did not load', me.error, 'retryMe1');
+      $('retryMe1').onclick = loadMe;
+      return;
+    }
+    var rows = me.data.purchases;
+    if (!rows.length) {
+      w.innerHTML = '<div class="empty"><div class="eh">No TMR purchases yet</div>' +
+        '<p>When you buy a listing with TMR it lands here with the seller, what you paid, the event, ' +
+        'and the result once it settles.</p>' +
+        '<div class="row"><button class="btn" id="goBuy">Browse the marketplace</button>' +
+        '<a class="btn ghost" href="/wallet/earn/">Ways to earn TMR</a></div></div>';
+      $('goBuy').onclick = function () { switchTab('buy'); };
+      return;
+    }
+    w.innerHTML = '<div class="panel"><h2>Your purchases <span class="n">' + rows.length + '</span></h2>' +
+      '<div class="scroll"><table><thead><tr>' +
+      '<th>Date</th><th>Listing</th><th>Seller</th><th class="num">Paid</th>' +
+      '<th>Event</th><th>Access</th><th>Result</th><th></th></tr></thead><tbody>' +
+      rows.map(function (p) {
+        var ev = p.matchup
+          ? esc(p.matchup) + '<div style="font-size:11px;color:var(--muted2)">' + dtime(p.commence_time) + '</div>'
+          : (p.expires_at ? 'All picks in the pass window<div style="font-size:11px;color:var(--muted2)">until ' +
+              dtime(p.expires_at) + '</div>' : '<span style="color:var(--muted2)">—</span>');
+        var canReveal = p.access === 'active' && p.order_status !== 'refunded';
+        return '<tr>' +
+          '<td>' + dt(p.paid_at) + '</td>' +
+          '<td><strong>' + esc(p.title || 'Listing') + '</strong>' +
+            '<div style="font-size:11px;color:var(--muted2)">' + esc(p.product_type || '').replace(/_/g, ' ') + '</div></td>' +
+          '<td><a href="/u/' + encodeURIComponent(p.seller || '') + '/" style="color:var(--teal);font-weight:700">' +
+            esc(p.seller || '—') + '</a></td>' +
+          '<td class="num">' + fmt(p.price_tmr) + '</td>' +
+          '<td>' + ev + '</td>' +
+          '<td>' + accessPill(p) + '</td>' +
+          '<td>' + resultCell(p) + '</td>' +
+          '<td>' + (canReveal
+            ? '<button class="btn sm ghost" data-reveal="' + p.id + '">View</button>'
+            : '') + '</td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div></div>';
 
-    Array.prototype.forEach.call($('myListings').querySelectorAll('[data-listing]'), function (row) {
-      var id = row.getAttribute('data-listing');
-      var input = row.querySelector('.lp');
-      var render = function () {
-        var p = parseInt(input.value, 10);
-        if (!p || p < 10) { row.querySelector('.lsplit').innerHTML =
-          '<div class="r"><span>Enter a price of at least 10 TMR</span><span></span></div>'; return; }
-        var fee = Math.floor(p * state.feeBps / 10000);
-        row.querySelector('.lsplit').innerHTML =
-          '<div class="r"><span>Listing price</span><span>' + fmt(p) + ' TMR</span></div>' +
-          '<div class="r fee"><span>Platform fee (' + (state.feeBps / 100) + '%)</span><span>&minus;' + fmt(fee) + ' TMR</span></div>' +
-          '<div class="r total"><span>You receive</span><span>' + fmt(p - fee) + ' TMR</span></div>';
-      };
-      input.oninput = render; render();
-
-      row.querySelector('.lsave').onclick = async function () {
-        var p = parseInt(input.value, 10);
-        try {
-          await req('/marketplace/tmr/listings/' + id + '/price',
-            { method: 'PATCH', body: JSON.stringify({ priceTmr: p, acceptsTmr: true }) });
-          say('Price saved. Buyers can now pay ' + fmt(p) + ' TMR.');
-          await loadMyListings();
-        } catch (e) { say(e.message || 'Could not save that price.', true); }
-      };
-      var clear = row.querySelector('.lclear');
-      if (clear) clear.onclick = async function () {
-        try {
-          await req('/marketplace/tmr/listings/' + id + '/price',
-            { method: 'PATCH', body: JSON.stringify({ acceptsTmr: false }) });
-          say('This listing no longer accepts TMR.');
-          await loadMyListings();
-        } catch (e) { say(e.message || 'Could not update that listing.', true); }
+    Array.prototype.forEach.call(w.querySelectorAll('[data-reveal]'), function (b) {
+      b.onclick = function () {
+        var p = rows.filter(function (x) { return String(x.id) === b.getAttribute('data-reveal'); })[0];
+        if (p) revealPurchase(p, b);
       };
     });
   }
 
-  async function loadEarnings() {
-    var d = await req('/marketplace/tmr/earnings').catch(function () { return { gross: 0, fees: 0, net: 0, sales: [] }; });
-    $('earnGrid').innerHTML =
-      '<div class="split">' +
-      '<div class="r"><span>Gross sales</span><span>' + fmt(d.gross) + ' TMR</span></div>' +
-      '<div class="r fee"><span>Platform fees</span><span>&minus;' + fmt(d.fees) + ' TMR</span></div>' +
-      '<div class="r total"><span>Net TMR earned</span><span>' + fmt(d.net) + ' TMR</span></div></div>';
-    var tb = $('salesTable').querySelector('tbody');
-    if (!d.sales || !d.sales.length) { tb.innerHTML = '<tr><td colspan="6" class="skel">No TMR sales yet.</td></tr>'; return; }
-    tb.innerHTML = d.sales.map(function (s) {
-      return '<tr><td>' + (s.paid_at ? new Date(s.paid_at).toLocaleDateString() : '—') + '</td>' +
-        '<td>' + (s.title || 'Listing') + '</td><td>' + (s.buyer || '—') + '</td>' +
-        '<td class="num">' + fmt(s.price_tmr) + '</td>' +
-        '<td class="num">' + fmt(s.platform_fee_tmr) + '</td>' +
-        '<td class="num">' + fmt(s.seller_net_tmr) + '</td></tr>';
-    }).join('');
+  function revealPurchase(p, btn) {
+    btn.disabled = true; btn.textContent = 'Loading…';
+    var call = p.pick_id
+      ? req('/marketplace/purchased-picks/' + p.pick_id)
+      : req('/marketplace/passes/' + p.public_id + '/picks');
+    call.then(function (d) {
+      var picks = d.picks || (d.pick ? [d.pick] : []);
+      openInfo('What you bought', esc(p.title || 'Listing') + ' · ' + esc(p.seller || ''),
+        picks.length
+          ? '<div class="reveal">' + picks.map(function (k) {
+              return '<div class="pkline"><div class="sel">' + esc(k.selection || '—') +
+                (k.line != null ? ' ' + esc(k.line) : '') +
+                (k.odds != null ? ' <span style="color:var(--muted2)">(' + esc(k.odds) + ')</span>' : '') + '</div>' +
+                '<div style="font-size:11.5px;color:var(--muted2)">' +
+                esc((k.away_team || '') + ' @ ' + (k.home_team || '')) + ' · ' + dtime(k.commence_time) +
+                (k.units != null ? ' · ' + k.units + 'u' : '') + '</div></div>';
+            }).join('') + '</div>'
+          : '<div class="reveal">This pass covers games starting inside its window. Nothing has been posted for it yet.</div>');
+    }).catch(function (e) {
+      openInfo('Could not open that purchase', '', '<div class="warn">' + esc((e && e.message) || 'Try again shortly.') + '</div>');
+    }).then(function () { btn.disabled = false; btn.textContent = 'View'; });
   }
 
-  // ------------------------------------------------------------------- wiring
-  $('tabBuy').onclick = function () {
-    $('tabBuy').classList.add('on'); $('tabSell').classList.remove('on');
-    $('paneBuy').style.display = ''; $('paneSell').style.display = 'none';
-  };
-  $('tabSell').onclick = function () {
-    $('tabSell').classList.add('on'); $('tabBuy').classList.remove('on');
-    $('paneSell').style.display = ''; $('paneBuy').style.display = 'none';
-    loadMyListings(); loadEarnings();
-  };
-  $('cmCancel').onclick = function () { $('confirmModal').classList.remove('on'); };
-  $('cmConfirm').onclick = doPurchase;
-  $('confirmModal').onclick = function (e) { if (e.target === $('confirmModal')) $('confirmModal').classList.remove('on'); };
-
-  (async function init() {
-    try {
-      await loadBalance();
-      await Promise.all([loadListings(), loadPurchases()]);
-    } catch (e) {
-      if (String(e && e.message).match(/401|unauth/i)) say('Sign in to buy or sell picks with TMR.', true);
-      else say(e && e.message ? e.message : String(e), true);
+  // ------------------------------------------------------------------ sell tab
+  function renderSell() {
+    var w = $('sellWrap');
+    if (me.status === 'anon') {
+      w.innerHTML = '<div class="empty"><div class="eh">Sign in to sell picks for TMR</div>' +
+        '<p>Price any listing you already run in TMR and buyers can pay you straight from their balance.</p>' +
+        '<div class="row"><a class="btn" href="/login/?redirect=/marketplace/tmr/">Sign in</a></div></div>';
+      return;
     }
-  })();
+    if (me.status === 'loading') {
+      w.innerHTML = '<div class="panel"><h2>Your TMR earnings</h2><div class="tiles">' +
+        new Array(5).join('<div class="tile"><span class="sk" style="width:60%;height:9px"></span>' +
+          '<span class="sk" style="width:52%;height:18px;margin-top:7px"></span></div>') + '</div></div>' +
+        '<div class="panel"><h2>Your listings</h2>' +
+        new Array(3).join('<div class="lrow"><span class="sk" style="width:44%;height:14px"></span>' +
+          '<span class="sk" style="width:70%;height:10px;margin-top:8px"></span>' +
+          '<span class="sk" style="width:100%;height:34px;margin-top:12px"></span></div>') + '</div>';
+      return;
+    }
+    if (me.status === 'error') {
+      w.innerHTML = errorBox('Your seller dashboard did not load', me.error, 'retryMe2');
+      $('retryMe2').onclick = loadMe;
+      return;
+    }
+
+    var d = me.data.seller;
+    var e = d.earnings;
+    var feePct = (me.data.feeBps || 500) / 100;
+    var active = d.listings.filter(function (l) { return l.accepts_tmr && l.status === 'published'; });
+    var sold = d.listings.reduce(function (a, l) { return a + Number(l.tmr_sold || 0); }, 0);
+
+    var html = '';
+
+    html += '<div class="panel"><h2>Your TMR earnings</h2><div class="tiles">' +
+      '<div class="tile"><div class="k">Gross sales</div><div class="v">' + fmt(e.gross) + '</div></div>' +
+      '<div class="tile"><div class="k">Platform fees</div><div class="v fee">&minus;' + fmt(e.fees) + '</div></div>' +
+      '<div class="tile"><div class="k">Net TMR earned</div><div class="v pos">' + fmt(e.net) + '</div></div>' +
+      '<div class="tile"><div class="k">Sales</div><div class="v">' + fmt(sold) + '</div></div>' +
+      '<div class="tile"><div class="k">Live in TMR</div><div class="v">' + fmt(active.length) + '</div></div>' +
+      '</div></div>';
+
+    html += '<div class="panel"><h2>Your listings <span class="n">' + d.listings.length + '</span></h2>';
+    if (!d.listings.length) {
+      html += '<div class="empty" style="border:0;box-shadow:none;padding:24px 12px">' +
+        '<div class="eh">You have no listings yet</div>' +
+        '<p>Create a listing on the cash marketplace first, then set a TMR price on it here. ' +
+        'One listing can take both rails.</p>' +
+        '<div class="row"><a class="btn" href="/marketplace/sell/">Create a listing</a></div></div>';
+    } else {
+      html += d.listings.map(function (l) {
+        var live = l.accepts_tmr && l.status === 'published';
+        return '<div class="lrow" data-listing="' + l.id + '">' +
+          '<div class="top"><div>' +
+            '<div class="t">' + esc(l.title || 'Listing') + '</div>' +
+            '<div class="s"><span class="ptype">' + esc(String(l.product_type || '').replace(/_/g, ' ')) + '</span>' +
+              '<span class="pill ' + (l.status === 'published' ? 'on' : 'off') + '">' + esc(l.status) + '</span>' +
+              (live ? '<span class="pill on">Accepting TMR</span>' : '<span class="pill off">Cash only</span>') +
+              '<span>' + fmt(l.tmr_sold) + ' TMR sale' + (Number(l.tmr_sold) === 1 ? '' : 's') + '</span>' +
+              '<span>' + fmt(l.tmr_net) + ' TMR earned</span>' +
+            '</div>' +
+          '</div></div>' +
+          '<div class="ed">' +
+            '<div class="field"><label>Price in TMR</label>' +
+              '<input type="number" min="' + (me.data.minPrice || 10) + '" max="' + (me.data.maxPrice || 1000000) +
+              '" step="1" class="lp" value="' + (l.price_tmr || '') + '" placeholder="e.g. 1000"></div>' +
+            '<button class="btn lsave">' + (live ? 'Update price' : 'Publish in TMR') + '</button>' +
+            (live ? '<button class="btn ghost lclear">Stop accepting TMR</button>' : '') +
+          '</div>' +
+          '<div class="split lsplit"></div>' +
+        '</div>';
+      }).join('');
+    }
+    html += '</div>';
+
+    // Inventory a single_pick listing can actually deliver.
+    html += '<div class="panel"><h2>Picks you can sell right now <span class="n">' + d.sellablePicks.length + '</span></h2>';
+    if (!d.sellablePicks.length) {
+      html += '<p style="font-size:13px;color:var(--muted);line-height:1.6">Nothing open. A pick is sellable while it ' +
+        'is still pending and its game has not started. Single-pick listings sell from this list.</p>';
+    } else {
+      html += '<div class="scroll"><table><thead><tr><th>Event</th><th>Sport</th><th>Market</th>' +
+        '<th class="num">Units</th><th>Starts</th></tr></thead><tbody>' +
+        d.sellablePicks.map(function (p) {
+          return '<tr><td><strong>' + esc(p.matchup || '—') + '</strong></td>' +
+            '<td>' + esc(p.sport || '—') + '</td>' +
+            '<td>' + esc(String(p.market_type || '—').replace(/_/g, ' ')) + '</td>' +
+            '<td class="num">' + (p.units != null ? p.units : '—') + '</td>' +
+            '<td>' + dtime(p.commence_time) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="panel"><h2>TMR sales history <span class="n">' + e.sales.length + '</span></h2>';
+    if (!e.sales.length) {
+      html += '<p style="font-size:13px;color:var(--muted)">No TMR sales yet. Every sale will show here with the ' +
+        'buyer, the price, the ' + feePct + '% platform fee and what you received.</p>';
+    } else {
+      html += '<div class="scroll"><table><thead><tr><th>Date</th><th>Listing</th><th>Buyer</th>' +
+        '<th class="num">Price</th><th class="num">Fee</th><th class="num">You received</th></tr></thead><tbody>' +
+        e.sales.map(function (s) {
+          return '<tr><td>' + dt(s.paid_at) + '</td><td>' + esc(s.title || 'Listing') + '</td>' +
+            '<td>' + esc(s.buyer || '—') + '</td>' +
+            '<td class="num">' + fmt(s.price_tmr) + '</td>' +
+            '<td class="num" style="color:var(--amber)">&minus;' + fmt(s.platform_fee_tmr) + '</td>' +
+            '<td class="num" style="color:var(--green);font-weight:800">' + fmt(s.seller_net_tmr) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    html += '</div>';
+
+    w.innerHTML = html;
+    wireSellEditors(feePct);
+  }
+
+  function wireSellEditors(feePct) {
+    Array.prototype.forEach.call($('sellWrap').querySelectorAll('[data-listing]'), function (row) {
+      var id = row.getAttribute('data-listing');
+      var input = row.querySelector('.lp');
+      var out = row.querySelector('.lsplit');
+      var minP = Number(me.data.minPrice || 10);
+
+      var render = function () {
+        var p = parseInt(input.value, 10);
+        if (!p || p < minP) {
+          out.innerHTML = '<div class="r muted"><span>Enter a price of at least ' + fmt(minP) +
+            ' TMR to publish this on the TMR board.</span><span></span></div>';
+          return;
+        }
+        var fee = Math.floor(p * (me.data.feeBps || 500) / 10000);
+        out.innerHTML =
+          '<div class="r"><span>Buyer pays</span><span>' + fmt(p) + ' TMR</span></div>' +
+          '<div class="r fee"><span>Platform fee (' + feePct + '%)</span><span>&minus;' + fmt(fee) + ' TMR</span></div>' +
+          '<div class="r total"><span>You receive</span><span>' + fmt(p - fee) + ' TMR</span></div>';
+      };
+      input.oninput = render; render();
+
+      row.querySelector('.lsave').onclick = function () {
+        var btn = this;
+        var p = parseInt(input.value, 10);
+        if (!p || p < minP) return say('Set a price of at least ' + fmt(minP) + ' TMR first.', true);
+        btn.disabled = true; btn.textContent = 'Saving…';
+        req('/marketplace/tmr/listings/' + id + '/price',
+          { method: 'PATCH', body: JSON.stringify({ priceTmr: p, acceptsTmr: true }) })
+          .then(function () {
+            say('Price saved. Buyers can pay ' + fmt(p) + ' TMR for this listing.');
+            return Promise.all([loadMe(), loadMarket()]);
+          })
+          .catch(function (e) {
+            say((e && e.message) || 'Could not save that price.', true);
+            btn.disabled = false; btn.textContent = 'Save price';
+          });
+      };
+      var clear = row.querySelector('.lclear');
+      if (clear) clear.onclick = function () {
+        var btn = this;
+        btn.disabled = true; btn.textContent = 'Updating…';
+        req('/marketplace/tmr/listings/' + id + '/price',
+          { method: 'PATCH', body: JSON.stringify({ acceptsTmr: false }) })
+          .then(function () {
+            say('This listing no longer accepts TMR. Its cash price is untouched.');
+            return Promise.all([loadMe(), loadMarket()]);
+          })
+          .catch(function (e) {
+            say((e && e.message) || 'Could not update that listing.', true);
+            btn.disabled = false; btn.textContent = 'Stop accepting TMR';
+          });
+      };
+    });
+  }
+
+  // ------------------------------------------------------------------ buy flow
+  function closeModal() { $('confirmModal').classList.remove('on'); }
+
+  function openInfo(title, sub, bodyHtml) {
+    $('cmTitle').textContent = title;
+    $('cmSub').textContent = sub || '';
+    $('cmBody').innerHTML = bodyHtml;
+    $('cmFoot').innerHTML = '<button class="btn ghost" id="cmClose">Close</button>';
+    $('cmClose').onclick = closeModal;
+    $('confirmModal').classList.add('on');
+  }
+
+  function openConfirm(listingId) {
+    say('');
+    if (!authed()) {
+      openInfo('Sign in to buy', 'Purchases are paid from your TMR balance.',
+        '<p style="font-size:13.5px;color:var(--muted);line-height:1.65">You need an account to hold TMR and to ' +
+        'receive what you buy.</p><div class="get"><a class="btn" href="/login/?redirect=/marketplace/tmr/" ' +
+        'style="text-decoration:none;display:inline-block">Sign in</a></div>');
+      return;
+    }
+    var listing = market.data.listings.filter(function (l) { return l.id === listingId; })[0];
+    if (!listing) return;
+
+    $('cmTitle').textContent = 'Confirm purchase';
+    $('cmSub').textContent = 'Loading price…';
+    $('cmBody').innerHTML = '<span class="sk" style="height:120px"></span>';
+    $('cmFoot').innerHTML = '<button class="btn ghost" id="cmCancel2">Cancel</button>';
+    $('cmCancel2').onclick = closeModal;
+    $('confirmModal').classList.add('on');
+
+    req('/marketplace/tmr/quote/' + listingId).then(function (q) {
+      pending = {
+        quote: q, listing: listing, pickId: null,
+        // One idempotency key per checkout, reused on every retry. This is what
+        // makes a double click, a refresh or a flaky connection resolve to ONE
+        // order rather than two charges.
+        key: (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID()
+             : String(Date.now()) + '-' + Math.random().toString(16).slice(2),
+      };
+      drawConfirm();
+    }).catch(function (e) {
+      openInfo('Could not price that listing', '', '<div class="warn">' +
+        esc((e && e.message) || 'Try again in a moment.') + '</div>');
+    });
+  }
+
+  function drawConfirm() {
+    var q = pending.quote, l = pending.listing, s = l.seller;
+    var fee = q.platformFeeTmr;
+    var needsPick = q.requiresPick;
+    var picks = l.available_picks || [];
+
+    var receives;
+    if (l.product_type === 'single_pick') {
+      receives = '<li>The full selection, line, odds and unit size on the pick you choose</li>' +
+                 '<li>Permanent access to that pick, including after it grades</li>';
+    } else {
+      var hrs = q.accessHours;
+      var window_ = hrs === 24 ? '24 hours' : (hrs === 168 ? '7 days' : (hrs === 720 ? '30 days' : hrs + ' hours'));
+      receives = '<li>Every pick ' + esc(s.username) + ' has live for games starting in the next ' + window_ + '</li>' +
+                 '<li>Full selection, line and odds on each one</li>' +
+                 '<li>Access stays valid for the games inside that window even after it ends</li>';
+    }
+
+    var body =
+      '<div class="split">' +
+        '<div class="r"><span>Listing</span><span style="font-family:inherit;font-weight:800">' +
+          esc(l.title || 'Picks listing') + '</span></div>' +
+        '<div class="r"><span>Seller</span><span style="font-family:inherit;font-weight:800">' +
+          esc(s.username) + (s.has_verified_record ? ' · ' + esc(s.stats.record) : '') + '</span></div>' +
+        '<div class="r"><span>Price</span><span>' + fmt(q.priceTmr) + ' TMR</span></div>' +
+        '<div class="r muted"><span>Platform fee (' + (q.feeBps / 100) + '%, paid by the seller)</span><span>' +
+          fmt(fee) + ' TMR</span></div>' +
+        '<div class="r total"><span>Total you pay</span><span>' + fmt(q.priceTmr) + ' TMR</span></div>' +
+      '</div>' +
+      '<div class="split" style="margin-top:10px">' +
+        '<div class="r"><span>Your balance now</span><span>' + fmt(q.buyerBalance) + ' TMR</span></div>' +
+        // A purchase that cannot happen must never render a negative balance:
+        // nothing is going to be charged, so "-1,897 TMR" states something that
+        // is not true. Show the shortfall, which is the number that matters.
+        (q.sufficient
+          ? '<div class="r"><span>Balance after</span><span>' + fmt(q.balanceAfter) + ' TMR</span></div>'
+          : '<div class="r short"><span>Short by</span><span>' + fmt(q.shortfall) + ' TMR</span></div>') +
+      '</div>' +
+      '<div class="get"><div class="k">What you get</div><ul>' + receives + '</ul></div>';
+
+    if (needsPick) {
+      body += '<div class="picksel"><div class="k">Choose the pick you are buying</div>' +
+        (picks.length
+          ? picks.map(function (p) {
+              return '<div class="pk" data-pick="' + p.pick_id + '">' +
+                '<div><div class="m">' + esc(p.matchup || '—') + '</div>' +
+                '<div class="d">' + esc(p.sport || '') + ' · ' +
+                esc(String(p.market_type || '').replace(/_/g, ' ')) + ' · ' + dtime(p.commence_time) + '</div></div>' +
+                '<div style="font-family:\'JetBrains Mono\',monospace;font-weight:800">' +
+                (p.units != null ? p.units + 'u' : '') + '</div></div>';
+            }).join('')
+          : '<div class="warn">This seller has no open picks right now. Nothing can be bought against this listing ' +
+            'until they post one on a game that has not started.</div>') +
+        '</div>';
+    }
+
+    if (!q.sufficient) {
+      body += '<div class="warn">You need <strong>' + fmt(q.shortfall) + ' more TMR</strong> for this. ' +
+        'TMR is earned by competing on TrustMyRecord, or received from another member. ' +
+        '<a href="/wallet/earn/">Ways to earn TMR &rarr;</a></div>';
+    }
+
+    $('cmSub').textContent = l.product_label + ' from ' + s.username;
+    $('cmBody').innerHTML = body;
+    $('cmFoot').innerHTML =
+      '<button class="btn ghost" id="cmCancel3">Cancel</button>' +
+      '<button class="btn" id="cmConfirm3">Confirm and pay ' + fmt(q.priceTmr) + ' TMR</button>';
+    $('cmCancel3').onclick = closeModal;
+    $('cmConfirm3').onclick = doPurchase;
+
+    var okToBuy = q.sufficient && (!needsPick || picks.length > 0);
+    $('cmConfirm3').disabled = !okToBuy || (needsPick && !pending.pickId);
+
+    Array.prototype.forEach.call($('cmBody').querySelectorAll('[data-pick]'), function (el) {
+      el.onclick = function () {
+        Array.prototype.forEach.call($('cmBody').querySelectorAll('[data-pick]'), function (x) {
+          x.classList.remove('sel');
+        });
+        el.classList.add('sel');
+        pending.pickId = Number(el.getAttribute('data-pick'));
+        $('cmConfirm3').disabled = !q.sufficient;
+      };
+    });
+  }
+
+  function doPurchase() {
+    if (busy || !pending) return;
+    var q = pending.quote;
+    if (q.requiresPick && !pending.pickId) return;
+    busy = true;
+    var btn = $('cmConfirm3');
+    btn.disabled = true; btn.textContent = 'Paying…';
+
+    req('/marketplace/tmr/purchase', {
+      method: 'POST',
+      body: JSON.stringify({
+        listingId: q.listingId,
+        idempotencyKey: pending.key,
+        pickId: pending.pickId || undefined,
+      }),
+    }).then(function (r) {
+      var l = pending.listing;
+      openInfo('Purchase complete', '',
+        '<div class="success"><div class="ic">✓</div>' +
+        '<div style="font-size:15px;font-weight:800;margin-bottom:5px">' +
+          (r.replay ? 'You already owned this' : fmt(r.priceTmr) + ' TMR paid') + '</div>' +
+        '<div style="font-size:13px;color:var(--muted);line-height:1.6">' +
+          (r.replay ? 'Nothing was charged again.'
+                    : esc(l.title || 'Your listing') + ' from ' + esc(l.seller.username) + ' is unlocked.') +
+        '</div>' +
+        (r.expiresAt ? '<div style="font-size:12px;color:var(--muted2);margin-top:7px">Access runs until ' +
+          dtime(r.expiresAt) + '</div>' : '') +
+        '<div class="row" style="display:flex;gap:9px;justify-content:center;margin-top:14px">' +
+          '<button class="btn" id="goPurch">Open your purchases</button></div></div>');
+      $('goPurch').onclick = function () { closeModal(); switchTab('purchases'); };
+      // Balance, purchases and sold counts all just moved.
+      loadMe(); loadMarket();
+    }).catch(function (e) {
+      var msg = (e && e.message) ? e.message : 'That purchase did not go through.';
+      openInfo('Purchase not completed', '',
+        '<div class="warn">' + esc(msg) + ' <strong>Nothing was charged.</strong></div>' +
+        (/more TMR|need \d/i.test(msg)
+          ? '<div class="get"><a class="btn" href="/wallet/earn/" style="text-decoration:none;display:inline-block">' +
+            'Ways to earn TMR</a></div>' : ''));
+    }).then(function () { busy = false; });
+  }
+
+  // -------------------------------------------------------------------- wiring
+  function switchTab(t) {
+    tab = t;
+    $('tabBuy').classList.toggle('on', t === 'buy');
+    $('tabPurch').classList.toggle('on', t === 'purchases');
+    $('tabSell').classList.toggle('on', t === 'sell');
+    $('paneBuy').hidden = t !== 'buy';
+    $('panePurch').hidden = t !== 'purchases';
+    $('paneSell').hidden = t !== 'sell';
+    if (t === 'purchases') renderPurchases();
+    if (t === 'sell') renderSell();
+    if (t === 'buy') renderBuy();
+    if (history.replaceState) history.replaceState(null, '', t === 'buy' ? location.pathname : '#' + t);
+  }
+  $('tabBuy').onclick = function () { switchTab('buy'); };
+  $('tabPurch').onclick = function () { switchTab('purchases'); };
+  $('tabSell').onclick = function () { switchTab('sell'); };
+
+  function clearFilters() {
+    filters = { q: '', sport: '', type: '', seller: '', min: '', max: '', sort: 'new' };
+    $('fSearch').value = ''; $('fSport').value = ''; $('fType').value = '';
+    $('fSeller').value = ''; $('fMin').value = ''; $('fMax').value = ''; $('fSort').value = 'new';
+    renderBuy(); renderCounts();
+  }
+  $('clearF').onclick = clearFilters;
+
+  var debounce;
+  $('fSearch').oninput = function () {
+    clearTimeout(debounce);
+    var v = this.value;
+    debounce = setTimeout(function () { filters.q = v; renderBuy(); renderCounts(); }, 140);
+  };
+  [['fSport', 'sport'], ['fType', 'type'], ['fSeller', 'seller'],
+   ['fMin', 'min'], ['fMax', 'max'], ['fSort', 'sort']].forEach(function (pair) {
+    $(pair[0]).onchange = function () { filters[pair[1]] = this.value; renderBuy(); renderCounts(); };
+  });
+
+  $('cmCancel').onclick = closeModal;
+  $('cmConfirm').onclick = doPurchase;
+  $('confirmModal').onclick = function (e) { if (e.target === $('confirmModal')) closeModal(); };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+  // ---------------------------------------------------------------------- init
+  // TWO INDEPENDENT REQUESTS, FIRED TOGETHER. The marketplace is public, so it
+  // paints as soon as /market lands and never waits on the account call. If
+  // /me is slow or fails, the balance chip degrades on its own and the buy
+  // board is entirely unaffected.
+  renderMetrics(); renderBuy(); renderAccount();
+  loadMarket();
+  loadMe();
+
+  if (location.hash === '#sell') switchTab('sell');
+  else if (location.hash === '#purchases') switchTab('purchases');
 })();
 </script>
-<script src="/static/js/tmr-ds-nav.js?v=b3a8e74d540d" defer></script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
 </body>
 </html>
