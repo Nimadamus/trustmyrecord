@@ -337,6 +337,13 @@
             (justPublished ? '<div class="publish-confirm"><span><b>Published.</b> Your package' + (justPublished > 1 ? 's are' : ' is') + ' now live on the marketplace and your public profile.</span><a class="btn btn-primary" href="' + storefrontUrl + '" target="_blank" rel="noopener">View Public Package &rarr;</a></div>' : '') +
             (anyLive && dash && dash.pending_picks_count === 0 ? '<div class="empty-picks-warn"><span>&#9888;&#65039;</span><span><b>This package has no picks selected.</b> You have 0 pending picks right now, so buyers will see an empty storefront until you lock a new pick in the <a href="/sportsbook/" style="color:var(--cyan);">Sportsbook</a>.</span></div>' : '') +
             '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. Toggle a package ON, set its price, then Save &amp; Publish. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
+            // The TMR rail is opt-in per package and easy to miss: the checkbox
+            // below says what it does but not where the listing ends up.
+            '<p class="hint" style="margin-bottom:12px;">Any package can also be priced in <strong>TMR</strong>. ' +
+            'Tick "Also accept TMR" on a package and set a TMR price (minimum 10) and it appears on ' +
+            '<a href="/marketplace/tmr/">Picks for TMR</a> alongside your verified record, where members pay ' +
+            'straight from their TMR balance. The platform fee there is 5%, not 20%, and your cash price is ' +
+            'untouched &mdash; one package can take both.</p>' +
             '<div class="pkg-group-label">Sell picks one at a time</div>' +
             '<div class="pkg-grid">' + renderPkgCard(PKG[0]) + '</div>' +
             '<div class="pkg-group-label" style="margin-top:14px;">Or sell access passes</div>' +
