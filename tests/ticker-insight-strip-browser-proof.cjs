@@ -320,6 +320,62 @@ function readStrip(page) {
   console.log(`Edge-rendered path: ${ssrMoved}/${ssrBefore.cards.length} cards rotated with the API blocked`);
   await ssrCtx.close();
 
+  /* ---------- 4c. the preview badge survives the strip ----------
+
+     The PREVIEW badge used to earn its place from the card's centering slack and
+     yield on any card dense enough to have none. With the intel strip EVERY card
+     is exactly as tall as its content, so a literal port of that yield rule
+     matched everything and the badge went permanently invisible on production
+     (2026-08-21). The preview card now makes its own room instead.
+
+     Nima's rule from 2026-08-13 is the one under test: the badge must NEVER
+     cover game information. So this checks BOTH that it is visible and that it
+     stops before the team row - and that the card is still the same height as
+     every other card, or the whole row grows to fit it. */
+  const gfCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await gfCtx.route('**/api/nav/mlb-slate*', (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify(slate)
+  }));
+  await gfCtx.route('**/api/matchups/today*', (route) => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, games: [{
+      game_pk: slate.games[2].game_pk, url: '/matchup-of-the-day/proof/',
+      title: 'Proof matchup', angle_label: 'PREVIEW'
+    }] })
+  }));
+  const gfPage = await gfCtx.newPage();
+  await gfPage.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'domcontentloaded' });
+  await gfPage.waitForSelector('.ticker .gm.gm--gf', { timeout: 15000 });
+  await gfPage.waitForTimeout(500);
+  const gf = await gfPage.evaluate(() => {
+    const card = document.querySelector('.ticker .gm.gm--gf');
+    const badge = card.querySelector('.gm-gf');
+    const peer = [...document.querySelectorAll('.ticker .gm:not(.gm--gf):not(.is-skel)')][0];
+    if (!badge) return { hasBadge: false };
+    const b = badge.getBoundingClientRect();
+    const teams = card.querySelector('.gm-top').getBoundingClientRect();
+    const line = card.querySelector('.gm-in-l.is-on b');
+    return {
+      hasBadge: true,
+      visible: b.width > 0 && b.height > 0,
+      text: badge.textContent.trim(),
+      overlapsTeams: b.bottom > teams.top + 0.5,
+      cardH: Math.round(card.getBoundingClientRect().height * 100) / 100,
+      peerH: peer ? Math.round(peer.getBoundingClientRect().height * 100) / 100 : null,
+      stripClipped: line ? line.scrollHeight > line.clientHeight + 1 : false,
+      href: card.getAttribute('href') || ''
+    };
+  });
+  check(gf.hasBadge && gf.visible, 'the preview badge is not visible on the Game File card');
+  check(!gf.overlapsTeams, 'the preview badge covers the team row');
+  check(gf.cardH === gf.peerH,
+    `the preview card is ${gf.cardH}px against ${gf.peerH}px for every other card`);
+  check(!gf.stripClipped, 'the preview card clips its insight');
+  check(/\/matchup-of-the-day\//.test(gf.href), `the preview card does not link to its article: ${gf.href}`);
+  console.log(`Preview card: badge "${gf.text}" visible, clear of the team row, ` +
+    `${gf.cardH}px like its neighbours`);
+  await gfCtx.close();
+
   /* ---------- 5. every width ---------- */
   for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 900 });

@@ -916,11 +916,20 @@ box-shadow:none !important;color:#7f8ea6 !important}
   padding: 1px 4px; border-radius: 999px; line-height: 1;
   pointer-events: none; white-space: nowrap;
 }
-/* When the card also carries the rotating intel strip its content fills the
-   strip's height and the top slack the badge sits in is gone - so the badge
-   yields. The card's tint + pulse still mark the preview game; nothing may
-   overlap the matchup. */
-.ticker .gm.gm--gf:has(.gm-in) .gm-gf { display: none; }
+/* Nima, 2026-08-13: the badge must NEVER cover game information. It used to
+   earn its place from the card's centering slack, and yield on the rare card
+   dense enough to have none.
+
+   With the rotating intel strip EVERY card is exactly as tall as its content,
+   so there is no slack left to sit in and no card left to yield to - ported
+   literally, the yield rule matched everything and the badge went permanently
+   invisible (caught on production 2026-08-21).
+
+   So the preview card makes its own room instead: the same 12px of vertical
+   padding, all of it moved to the top. The card's height does not change - it
+   stays the 89px every other card measures, so the row is still one height -
+   and the badge gets a clear 12px band above the team row. */
+.ticker .gm.gm--gf { padding-top: 12px; padding-bottom: 0; }
 
 /* The pulse: a slow, premium breathing glow (Nima, 2026-08-13). The hard 2s
    border flash existed to compete with the call-out bar below the strip; that
