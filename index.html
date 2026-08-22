@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="5cd3e4a42b7e">
+<html lang="en" data-tmr-build="2638fd33d0e0">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -281,7 +281,12 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   .tk-prev{margin-right:6px}
   .tk-next{margin-left:6px}
   .ticker-page{justify-content:center}
-  .ticker-page>.gm{max-width:100%}
+  /* The card FILLS the lane on a phone rather than sizing to its own content.
+     A content-sized card sat 252px wide inside a 310px lane - slack on both
+     sides, and a skeleton at width:100% that did not match the card it was
+     reserving space for. Filling the lane fixes both and gives the sentence
+     the full measure. */
+  .ticker-page>.gm{flex:1 1 100%;max-width:100%}
   .ticker-page>.gm .gm-sp{max-width:100%;overflow:hidden;text-overflow:ellipsis}
   /* One card fills the lane on a phone, so the strip takes the lane's width
      rather than its desktop fixed width. Three lines fit the narrower measure
@@ -343,6 +348,14 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 @media (max-width:640px){
   /* One full-width skeleton card: five 230px cards would be clipped mid-card. */
   .gm.is-skel{width:100%}
+  /* A phone card is one lane wide, so a 70-character sentence needs three lines
+     where the desktop card needs two, and the card is taller than 89px. The
+     RESERVATION has to move with it or the strip grows when the slate lands -
+     which is what production did at 390px until it was measured there
+     (2026-08-21). This block sits AFTER the base reservation on purpose: both
+     rules have the same specificity, so the later one has to be the override. */
+  .ticker-games,.ticker-track,.ticker-page{min-height:103px}
+  .gm.is-skel{height:103px}
   .gm.is-skel~.gm.is-skel{display:none}
 }
 
@@ -1626,7 +1639,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.5cd3e4a42b7e.js"></script>
+<script src="/static/js/tmr-home-live.2638fd33d0e0.js"></script>
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->

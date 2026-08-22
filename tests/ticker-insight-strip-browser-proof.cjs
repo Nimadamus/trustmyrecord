@@ -121,47 +121,69 @@ function readStrip(page) {
     status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, games: [] })
   }));
 
+  /* Hold the slate at the door long enough to measure the RESERVED box, then let
+     it through and measure the box that replaces it. If those two differ, the
+     strip grows when the games land and shoves the hero down the page - the
+     exact regression the reserved height exists to prevent, and the one a
+     settled-state screenshot can never show.
+
+     Run at BOTH layouts. The phone card is a lane wide and needs three lines
+     where the desktop card needs two, so it is a different height and needs its
+     own reservation; production shipped at 390px with an 89px reservation
+     against a 103px card until this was measured there (2026-08-21). */
+  async function measureArrival(width, height) {
+    const ctx = await browser.newContext({ viewport: { width, height } });
+    let release = null;
+    const gate = new Promise((r) => { release = r; });
+    await ctx.route('**/api/nav/mlb-slate*', async (route) => {
+      await gate;
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(slate) });
+    });
+    const pg = await ctx.newPage();
+    await pg.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'domcontentloaded' });
+    await pg.waitForSelector('.ticker .gm.is-skel', { timeout: 15000 });
+    const before = await pg.evaluate(() => {
+      const sk = document.querySelector('.ticker .gm.is-skel').getBoundingClientRect();
+      const lane = document.querySelector('.ticker-games').getBoundingClientRect();
+      return {
+        skelW: Math.round(sk.width * 100) / 100,
+        skelH: Math.round(sk.height * 100) / 100,
+        laneH: Math.round(lane.height * 100) / 100
+      };
+    });
+    release();
+    await pg.waitForSelector('.ticker .gm-in', { timeout: 15000 });
+    await pg.waitForTimeout(300);
+    const after = await readStrip(pg);
+    await ctx.close();
+    return { width, before, after };
+  }
+
+  for (const [w, h] of [[1440, 1000], [390, 844]]) {
+    const m = await measureArrival(w, h);
+    const cardH = m.after.cards[0].h;
+    /* Width is compared against the NARROWEST real card: a long live status
+       ("Bottom 9th 4-4") widens one card past the strip's fixed width, and the
+       reserved box is meant to match the ordinary card. */
+    const narrowest = Math.min(...m.after.cards.map((c) => c.w));
+    check(m.before.skelH === cardH,
+      `${w}px: the skeleton reserves ${m.before.skelH}px but a real card is ${cardH}px - ` +
+      'the strip changes height when the slate lands');
+    check(m.before.laneH === m.after.laneH,
+      `${w}px: the lane grew when the games arrived: ${m.before.laneH} -> ${m.after.laneH}`);
+    check(Math.abs(m.before.skelW - narrowest) <= 2,
+      `${w}px: the skeleton card is ${m.before.skelW}px but the narrowest real card is ${narrowest}px`);
+    console.log(`Arrival at ${w}px: reserved ${m.before.skelW}x${m.before.skelH}px, ` +
+      `card ${narrowest}x${cardH}px`);
+  }
+
   const page = await context.newPage();
-  /* Hold the slate at the door long enough to measure the RESERVED box, then
-     let it through and measure the box that replaces it. If those two differ,
-     the strip grows when the games land and shoves the hero down the page -
-     the exact regression the reserved height exists to prevent, and the one a
-     settled-state screenshot can never show. */
-  let release = null;
-  const gate = new Promise((r) => { release = r; });
-  await page.route('**/api/nav/mlb-slate*', async (route) => {
-    await gate;
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(slate) });
-  });
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('.ticker .gm.is-skel', { timeout: 15000 });
-  const reserved = await page.evaluate(() => {
-    const s = document.querySelector('.ticker .gm.is-skel');
-    const lane = document.querySelector('.ticker-games');
-    const r = s.getBoundingClientRect();
-    return {
-      skelW: Math.round(r.width * 100) / 100,
-      skelH: Math.round(r.height * 100) / 100,
-      laneH: Math.round(lane.getBoundingClientRect().height * 100) / 100
-    };
-  });
-  release();
   await page.waitForSelector('.ticker .gm-in', { timeout: 15000 });
 
   /* ---------- 1. the card shows one line, and holds the rest ---------- */
   const first = await readStrip(page);
   check(first.cards.length > 0, 'no matchup cards rendered');
-  check(reserved.skelH === first.cards[0].h,
-    `the skeleton reserves ${reserved.skelH}px but a real card is ${first.cards[0].h}px: ` +
-    'the strip changes height when the slate lands');
-  check(reserved.laneH === first.laneH,
-    `the lane grew when the games arrived: ${reserved.laneH} -> ${first.laneH}`);
-  /* Width is compared against the NARROWEST real card, not the first: a long
-     live status ("Bottom 9th 4-4") widens that one card past the strip's fixed
-     width, and the reserved box is meant to match the ordinary card. */
-  const narrowest = Math.min(...first.cards.map((c) => c.w));
-  check(Math.abs(reserved.skelW - narrowest) <= 2,
-    `the skeleton card is ${reserved.skelW}px wide but the narrowest real card is ${narrowest}px`);
   check(first.staleRows === 0,
     `the old form/trend rows are still in the card (${first.staleRows} found)`);
 
@@ -253,6 +275,51 @@ function readStrip(page) {
   check(moved === 0, `${moved} card(s) rotated while the pointer was over the ticker`);
   await page.mouse.move(0, 0);
 
+  /* ---------- 4b. the EDGE-RENDERED path also rotates ----------
+
+     On production the tmr-home-ssr worker injects today's slate into the
+     document, and tmr-home-live.js then ADOPTS that lane and returns without
+     ever calling renderTicker(). The rotation used to be started only at the
+     end of renderTicker(), so on the path almost every real visitor takes, the
+     strip rendered perfectly and then sat on its first insight forever. A
+     stubbed-slate test cannot see this: stubbing the API always takes the fetch
+     path. Caught against the live site on 2026-08-21.
+
+     So: take the lane this run just built, bake it into the document the way the
+     worker does, block the API entirely, and prove it still rotates. */
+  const baked = await page.evaluate(() => {
+    const lane = document.querySelector('.ticker-games');
+    return { html: lane.innerHTML, date: lane.getAttribute('data-slate-date') };
+  });
+
+  const ssrCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  /* Nothing may answer for the slate here. If the card rotates, it is because
+     the adopted markup rotates, not because a fetch quietly re-rendered it. */
+  await ssrCtx.route('**/api/**', (route) => route.abort());
+  await ssrCtx.route(`http://127.0.0.1:${PORT}/`, async (route) => {
+    const res = await route.fetch();
+    let body = await res.text();
+    body = body.replace(
+      /(<div class="ticker-games" data-slate-date=")[^"]*("[^>]*>)[\s\S]*?(<\/div><div class="tkact")/,
+      `$1${baked.date}$2${baked.html}$3`);
+    route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body });
+  });
+  const ssrPage = await ssrCtx.newPage();
+  await ssrPage.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'domcontentloaded' });
+  await ssrPage.waitForSelector('.ticker .gm-in', { timeout: 15000 });
+  const ssrBefore = await readStrip(ssrPage);
+  check(ssrBefore.cards.length > 0, 'edge-rendered lane produced no cards');
+  await ssrPage.waitForTimeout(DWELL_MS + 2500);
+  const ssrAfter = await readStrip(ssrPage);
+  const ssrMoved = ssrBefore.cards.filter((c, i) =>
+    ssrAfter.cards[i] && ssrAfter.cards[i].visible !== c.visible).length;
+  check(ssrMoved > 0,
+    'the edge-rendered strip never rotated: the adopt path does not start the rotation');
+  ssrAfter.cards.forEach((c, i) => check(c.h === ssrBefore.cards[i].h,
+    `${c.teams}: edge-rendered card changed height while rotating`));
+  console.log(`Edge-rendered path: ${ssrMoved}/${ssrBefore.cards.length} cards rotated with the API blocked`);
+  await ssrCtx.close();
+
   /* ---------- 5. every width ---------- */
   for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 900 });
@@ -292,8 +359,6 @@ function readStrip(page) {
   console.log(`\nCards: ${first.cards.length}   lane ${first.laneH}px   card ${first.cards[0].h}px` +
     `   strip ${first.cards[0].stripH}px`);
   console.log(`Worst simultaneous second line: ${worstOverlap} opacity (limit 0.12)`);
-  console.log(`Reserved before the slate landed: ${reserved.skelW}x${reserved.skelH}px ` +
-    `(card ${first.cards[0].w}x${first.cards[0].h}px) - no growth on arrival`);
   console.log(`Insights per card: ${first.cards.map((c) => c.lineCount).join(', ')}`);
   console.log(`\nWhat a card rotates through:\n${sample}`);
   console.log(`\nScreenshots: ${path.relative(ROOT, OUT_DIR)}`);

@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '5cd3e4a42b7e';
+  var BUILD = '2638fd33d0e0';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -735,6 +735,13 @@
       lane.setAttribute('aria-busy', 'false');
       wireTickerControls();
       layoutTicker();
+      /* The edge already painted the cards, so renderTicker() never runs on this
+         path - and renderTicker() is where the rotation used to be started. On
+         production that is the path almost every visitor takes, so the strip
+         rendered correctly and then sat on its first insight forever (caught
+         2026-08-21 against the live site; the fixture proof could not see it
+         because a stubbed slate always takes the fetch path). */
+      startInsightRotate();
       return;
     }
     tickerAdoptChecked = true;
