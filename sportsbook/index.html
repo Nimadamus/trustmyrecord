@@ -13931,6 +13931,16 @@ window.toggleSportFamily = function (family) {
             'Total Points':  { market: 'nhl_points',  stat: 'Points' },
             'Total Assists': { market: 'nhl_assists', stat: 'Assists' },
             'Total Saves':   { market: 'nhl_saves',   stat: 'Saves' }
+        } },
+        // PITCHER_WALKS_20260822: FanDuel's feed (the board's primary props
+        // source) does not hang pitcher walks, so the market never reached the
+        // Player Props tab even though picks + grading have supported
+        // pitcher_walks since GRADING_GAP_FILL_20260607. ESPN's DraftKings
+        // propBets feed carries it as "Total Walks Allowed" (cross-book price
+        // match verified vs Bovada's labeled "Total Pitcher Walks"). MLB is
+        // deliberately limited to this one market so nothing else changes.
+        MLB: { path: 'baseball/mlb', markets: {
+            'Total Walks Allowed': { market: 'pitcher_walks', stat: 'Walks' }
         } }
     };
     window.TMR._espnAthleteNameCache = window.TMR._espnAthleteNameCache || {};
@@ -14232,7 +14242,7 @@ window.toggleSportFamily = function (family) {
                             // the pitcher-strikeouts label regex. Batter props were
                             // rendering display-only purely because their group key was
                             // unrecognized — the data, submit, and grader all support them.
-                            var PICK_STAT = { pitcher_strikeouts: 'Strikeouts', pitcher_outs: 'Outs', pitcher_hits_allowed: 'Hits Allowed', pitcher_walks: 'Walks', pitcher_earned_runs: 'Earned Runs', batter_hits: 'Hits', batter_total_bases: 'Total Bases', batter_rbi: 'RBI', batter_runs: 'Runs', batter_home_runs: 'Home Runs' };
+                            var PICK_STAT = { pitcher_strikeouts: 'Strikeouts', pitcher_outs: 'Outs', pitcher_hits_allowed: 'Hits Allowed', pitcher_walks: 'Walks', pitcher_earned_runs: 'Earned Runs', batter_hits: 'Hits', batter_total_bases: 'Total Bases', batter_rbi: 'RBI', batter_runs: 'Runs', batter_home_runs: 'Home Runs', wnba_points: 'Points', wnba_rebounds: 'Rebounds', wnba_assists: 'Assists', wnba_threes: 'Threes' };
                             if (PICK_STAT[mt]) { mk._pick_market = mt; mk._player = player; mk._stat = PICK_STAT[mt]; mk._group = b.label || PICK_STAT[mt]; }
                             return mk;
                         })
@@ -14250,7 +14260,7 @@ window.toggleSportFamily = function (family) {
             var stillHere = function () { return rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props'; };
             if (games.length) renderPropGames(games);
             else rowsEl.innerHTML = emptyState(sport, emptyMsg || 'No player props posted right now. Check back when lines are up.', 'closed');
-            if ((sport === 'NBA' || sport === 'NHL') && typeof window.TMR.fetchEspnPlayerProps === 'function') {
+            if ((sport === 'NBA' || sport === 'NHL' || sport === 'MLB') && typeof window.TMR.fetchEspnPlayerProps === 'function') {
                 window.TMR.fetchEspnPlayerProps(sport, games.slice(), function (merged, addedCount) {
                     if (addedCount > 0 && stillHere()) renderPropGames(merged);
                 });
