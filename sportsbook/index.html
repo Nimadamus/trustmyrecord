@@ -2017,6 +2017,10 @@
             displayText = 'Over ' + (line || '?');
         } else if (betType === 'under') {
             displayText = 'Under ' + (line || '?');
+        } else if (betType === 'roundsover') {
+            displayText = 'Over ' + (line || '?') + ' Rounds';
+        } else if (betType === 'roundsunder') {
+            displayText = 'Under ' + (line || '?') + ' Rounds';
         } else if (betType === 'teamover') {
             displayText = (pick.team || '?') + ' Over ' + (line || '?');
         } else if (betType === 'teamunder') {
@@ -2199,7 +2203,7 @@
                     f5spread: 'f5_spread', f5ml: 'f5_moneyline', f5over: 'f5_totals', f5under: 'f5_totals'
                 };
                 var rawTeamForSlip = String(team || '').replace(/\s+(Over|Under)\s*$/i, '').trim();
-                var teamForSlip = (betType === 'over' || betType === 'under' || betType === 'f5over' || betType === 'f5under')
+                var teamForSlip = (betType === 'over' || betType === 'under' || betType === 'f5over' || betType === 'f5under' || betType === 'roundsover' || betType === 'roundsunder')
                     ? (awayTeam || homeTeam || '') : rawTeamForSlip;
                 window.TMR._ttPopulateSlip({
                     gameIndex: gameIndex,
@@ -2417,12 +2421,12 @@
             return;
         }
 
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firstinningover: 'first_inning_totals', firstinningunder: 'first_inning_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
+        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', roundsover: 'mma_total_rounds', roundsunder: 'mma_total_rounds', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firstinningover: 'first_inning_totals', firstinningunder: 'first_inning_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine line snapshot (spread number or total number, null for ML/F5ML)
         var lineSnapshot = null;
-        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under' || betType === 'f5teamover' || betType === 'f5teamunder' || betType === 'firstinningover' || betType === 'firstinningunder') {
+        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'roundsover' || betType === 'roundsunder' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under' || betType === 'f5teamover' || betType === 'f5teamunder' || betType === 'firstinningover' || betType === 'firstinningunder') {
             lineSnapshot = parseFloat(finalLine) || null;
         }
 
@@ -2438,6 +2442,11 @@
             selection = _line ? ('Over ' + _line) : 'Over';
         } else if (betType === 'under' || betType === 'f5under' || betType === 'firstinningunder') {
             selection = _line ? ('Under ' + _line) : 'Under';
+        } else if (betType === 'roundsover' || betType === 'roundsunder') {
+            // UFC_ROUNDS_20260822: "Over 2.5 Rounds". The side has to lead the
+            // string — the grader and the database trigger both decide Over vs
+            // Under by reading it out of the selection.
+            selection = (betType === 'roundsover' ? 'Over' : 'Under') + (_line ? ' ' + _line : '') + ' Rounds';
         } else if (betType === 'teamover' || betType === 'f5teamover') {
             teamTotalSide = 'over';
             selection = (rawTeam + ' Over' + (_line ? ' ' + _line : '')).trim();
@@ -11527,6 +11536,11 @@ window.toggleSportFamily = function (family) {
         } catch (e) {}
     }
 
+    // Sports whose rows are a single bout rather than two teams.
+    function isFightSport(sport) { return sport === 'UFC' || sport === 'PFL'; }
+    window.TMR = window.TMR || {};
+    window.TMR.isFightSport = isFightSport;
+
     function renderRow(game, gameIndex, sport) {
         var book = pickFirstBookmaker(game);
         var home = game.home_team || game.homeTeam || (game.teams && game.teams.home) || '';
@@ -11571,7 +11585,8 @@ window.toggleSportFamily = function (family) {
                 awayMlBtn = oddsButton('ML', awayMl ? fmtPrice(awayMl.price) : null, awayMl ? { gameIndex: gi, betType: 'ml', team: away, line: '', odds: awayMl.price, awayTeam: away, homeTeam: home } : null);
                 homeMlBtn = oddsButton('ML', homeMl ? fmtPrice(homeMl.price) : null, homeMl ? { gameIndex: gi, betType: 'ml', team: home, line: '', odds: homeMl.price, awayTeam: away, homeTeam: home } : null);
             }
-            var totalM = findMarket(book, 'totals');
+            // A fight has no game total; its over/under is on rounds.
+            var totalM = findMarket(book, isFightSport(sport) ? 'mma_total_rounds' : 'totals');
             if (totalM && totalM.outcomes && totalM.outcomes.length >= 2) {
                 var over = null, under = null;
                 for (var i = 0; i < totalM.outcomes.length; i++) {
@@ -11583,8 +11598,10 @@ window.toggleSportFamily = function (family) {
                 if (!under) under = totalM.outcomes[1];
                 var overLine = (over && over.point != null) ? 'O ' + over.point : 'O —';
                 var underLine = (under && under.point != null) ? 'U ' + under.point : 'U —';
-                overBtn = oddsButton(overLine, over ? fmtPrice(over.price) : null, over ? { gameIndex: gi, betType: 'over', team: 'Over', line: over.point, odds: over.price, awayTeam: away, homeTeam: home } : null);
-                underBtn = oddsButton(underLine, under ? fmtPrice(under.price) : null, under ? { gameIndex: gi, betType: 'under', team: 'Under', line: under.point, odds: under.price, awayTeam: away, homeTeam: home } : null);
+                var overType = isFightSport(sport) ? 'roundsover' : 'over';
+                var underType = isFightSport(sport) ? 'roundsunder' : 'under';
+                overBtn = oddsButton(overLine, over ? fmtPrice(over.price) : null, over ? { gameIndex: gi, betType: overType, team: 'Over', line: over.point, odds: over.price, awayTeam: away, homeTeam: home } : null);
+                underBtn = oddsButton(underLine, under ? fmtPrice(under.price) : null, under ? { gameIndex: gi, betType: underType, team: 'Under', line: under.point, odds: under.price, awayTeam: away, homeTeam: home } : null);
             }
         }
 
@@ -11607,6 +11624,31 @@ window.toggleSportFamily = function (family) {
         var homeTeamCell = homeExtraHtml
             ? '<div class="team-cell">' + homeLogo + '<span class="sb-team-stack"><b>' + (home || 'Home') + '</b>' + homeExtraHtml + '</span></div>'
             : '<div class="team-cell">' + homeLogo + '<b>' + (home || 'Home') + '</b></div>';
+
+        // UFC_20260822: a fight is priced on the winner and on how long it
+        // lasts. Reusing the four-column team layout left permanently blank
+        // Spread and Total columns on every bout, so MMA gets the two-market
+        // card the team-totals board already uses.
+        if (isFightSport(sport)) {
+            return '<article class="sportsbook-game-card sportsbook-game-card--two-market-cols">' +
+                '<div class="game-meta-row">' + (whenText || '&nbsp;') + '</div>' +
+                '<div class="market-grid-row market-header-row">' +
+                    '<div class="market-header-cell">Fight</div>' +
+                    '<div class="market-header-cell">Moneyline</div>' +
+                    '<div class="market-header-cell">Total Rounds</div>' +
+                '</div>' +
+                '<div class="market-grid-row team-market-row away-team-row">' +
+                    awayTeamCell +
+                    '<div class="odds-cell">' + awayMlBtn + '</div>' +
+                    '<div class="odds-cell">' + overBtn + '</div>' +
+                '</div>' +
+                '<div class="market-grid-row team-market-row home-team-row">' +
+                    homeTeamCell +
+                    '<div class="odds-cell">' + homeMlBtn + '</div>' +
+                    '<div class="odds-cell">' + underBtn + '</div>' +
+                '</div>' +
+            '</article>';
+        }
 
         return '<article class="sportsbook-game-card">' +
             '<div class="game-meta-row">' + (whenText || '&nbsp;') + '</div>' +
