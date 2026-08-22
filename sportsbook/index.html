@@ -38,6 +38,8 @@
         'NBA': 'basketball_nba',
         'NBASummer': 'basketball_nba_summer',
         'WNBA': 'basketball_wnba',
+        'UFC': 'mma_ufc',
+        'UFC': 'mma_ufc',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
         'NPB': 'baseball_npb',
@@ -2447,7 +2449,7 @@
         }
 
         // Build pick object
-        var sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'NPB': 'baseball_npb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
+        var sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'UFC': 'mma_ufc', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'NPB': 'baseball_npb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
         var user = null;
         try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
         if (!user) {
@@ -2740,7 +2742,7 @@
             statsBar.innerHTML = s;
         }
 
-        var sportDisplayMap = { 'baseball_npb': 'Japan NPB', 'basketball_nba': 'NBA', 'basketball_nba_summer': 'NBA Summer League', 'basketball_wnba': 'WNBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA' };
+        var sportDisplayMap = { 'baseball_npb': 'Japan NPB', 'basketball_nba': 'NBA', 'basketball_nba_summer': 'NBA Summer League', 'basketball_wnba': 'WNBA', 'mma_ufc': 'UFC', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA' };
         var formatPickDisplay = (window.TMR && window.TMR.formatPickDisplay) || function(pick) {
             var selection = String(pick.selection || 'Pick').trim();
             var market = String(pick.market_type || '').toLowerCase();
@@ -10401,6 +10403,7 @@
             <button type="button" data-sportsbook-tab="sport" data-sport="NFL" onclick="window.TMR.setSport('NFL')">NFL</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="MLB" onclick="window.TMR.setSport('MLB')">MLB</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="WNBA" onclick="window.TMR.setSport('WNBA')">WNBA</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="UFC" onclick="window.TMR.setSport('UFC')">UFC</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="NCAAB" onclick="window.TMR.setSport('NCAAB')">NCAAB</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="NCAAF" onclick="window.TMR.setSport('NCAAF')">NCAAF</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="Soccer" onclick="window.TMR.setSport('Soccer'); window.toggleSportFamily && window.toggleSportFamily('soccer');">Soccer</button>
@@ -10537,6 +10540,7 @@
                     <div class="sport-more-pop" role="menu">
                         <button type="button" role="menuitem" onclick="event.stopPropagation();window.toggleSportFamily && window.toggleSportFamily('tennis');">Tennis</button>
                         <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('WNBA');">WNBA</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('UFC');">UFC</button>
                         <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('MMA');">MMA</button>
                         <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('Boxing');">Boxing</button>
                         <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('Golf');">Golf</button>
@@ -10603,6 +10607,9 @@
                         <button class="sportsbook-rail-board" data-sport="Tennis" type="button" onclick="window.TMR.setSport('Tennis'); window.toggleSportFamily && window.toggleSportFamily('tennis');">
                             <span class="sportsbook-rail-board-main"><b>Tennis</b><small><i></i> ATP · WTA</small></span>
                             <span class="sportsbook-rail-board-count">Group</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="UFC" type="button" onclick="window.TMR.setSport('UFC')">
+                            <span class="sportsbook-rail-board-main"><b>UFC</b><small><i></i> Mixed Martial Arts</small></span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="WNBA" type="button" onclick="window.TMR.setSport('WNBA')">
                             <span class="sportsbook-rail-board-main"><b>WNBA</b><small><i></i> Pro Basketball</small></span>
@@ -11155,6 +11162,7 @@ window.toggleSportFamily = function (family) {
         Soccer: { kicker: 'Soccer Board', title: 'Soccer · League Boards',   tagline: 'Pick a league from the rail to load matchups.',                 cols: ['3-Way', 'Moneyline', 'Goal Total'] },
         Tennis: { kicker: 'Tennis Board', title: 'Tennis · Tour Boards',     tagline: 'Pick a tour from the rail to load matchups.',                   cols: ['Set Spread', 'Match Winner', 'Game Total'] },
         WNBA:   { kicker: 'WNBA Board',   title: 'WNBA · Game Board',        tagline: 'Pro basketball matchups. Tap any line to add it to your slip.', cols: ['Spread', 'Moneyline', 'Total'] },
+        UFC:    { kicker: 'UFC Board',    title: 'UFC · Fight Board',        tagline: 'Every fight on the card. Tap a fighter to add them to your slip.', cols: ['Moneyline'] },
         Consensus: { kicker: 'Consensus', title: 'Consensus Picks',           tagline: 'Aggregated picks from loaded user records.',                    cols: ['Spread', 'Moneyline', 'Total'] },
         // Sports without a live odds feed yet. Headers render cleanly; the
         // board short-circuits to a professional "no data yet" empty state
@@ -11736,6 +11744,10 @@ window.toggleSportFamily = function (family) {
         // to the empty state below; alt/props tabs are intentionally omitted so
         // users don't see dead extra tabs.
         'WNBA':  [{k:'full',label:'Game Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        // UFC_20260822: a fight is priced moneyline only. No halves, no team
+        // totals, no alt lines, no player props — every one of those tabs would
+        // be permanently empty, so UFC deliberately gets the single tab.
+        'UFC':   [{k:'full',label:'Fight Lines'}],
         'MMA':   [{k:'full',label:'Fights'}],
         'Boxing':[{k:'full',label:'Fights'}],
         'Golf':  [{k:'full',label:'Tournament'}],
@@ -24442,7 +24454,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
-            const sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'NPB': 'baseball_npb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
+            const sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'UFC': 'mma_ufc', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'NPB': 'baseball_npb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
             const user = window.auth.getCurrentUser();
 
             const newPick = {
@@ -26448,7 +26460,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const sportDisplayMap = {
         'basketball_nba': 'NBA', 'basketball_nba_summer': 'NBA Summer League', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL',
-        'baseball_mlb': 'MLB', 'baseball_npb': 'Japan NPB', 'basketball_wnba': 'WNBA', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA'
+        'baseball_mlb': 'MLB', 'baseball_npb': 'Japan NPB', 'basketball_wnba': 'WNBA', 'mma_ufc': 'UFC', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA'
     };
 
     function loadMyPicks(tab = 'pending') {
@@ -34546,6 +34558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             { id: 'NCAAB',  label: 'NCAAB',       hasFeed: true },
             { id: 'NCAAF',  label: 'NCAAF',       hasFeed: true },
             { id: 'WNBA',   label: 'WNBA',        hasFeed: true },
+            { id: 'UFC',    label: 'UFC',         hasFeed: true },
             { id: 'Soccer', label: 'Soccer',      hasFeed: true,  groupOpen: 'soccer' },
             { id: 'Tennis', label: 'Tennis',      hasFeed: true,  groupOpen: 'tennis' },
             { id: 'MMA',    label: 'UFC / MMA',   hasFeed: false },
@@ -34611,7 +34624,7 @@ document.addEventListener('DOMContentLoaded', function() {
             rail.setAttribute('data-sport-catalog', 'v1');
             var subBySport = {
                 NBA: 'Pro Basketball', NBASummer: 'Summer League', NHL: 'Hockey', NFL: 'Pro Football', MLB: 'Baseball', NPB: 'Baseball · Japan',
-                NCAAB: 'College Basketball', NCAAF: 'College Football', WNBA: 'Pro Basketball',
+                NCAAB: 'College Basketball', NCAAF: 'College Football', WNBA: 'Pro Basketball', UFC: 'Mixed Martial Arts',
                 Soccer: 'Leagues', Tennis: 'ATP · WTA', MMA: 'UFC · Bellator · PFL',
                 Boxing: 'Pro Boxing', Golf: 'PGA · LIV · Majors', NASCAR: 'Cup Series', F1: 'Formula 1'
             };
