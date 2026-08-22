@@ -12156,6 +12156,16 @@ window.toggleSportFamily = function (family) {
     // (Soccer/Tennis don't carry per-team totals on our feed.)
     var TT_SUPPORTED_SPORTS = { NBA: 1, NBASummer: 1, WNBA: 1, NCAAB: 1, NFL: 1, NCAAF: 1, NHL: 1, MLB: 1, NPB: 1, Soccer: 1, Tennis: 1, MLS: 1, UCL: 1, LaLiga: 1, SerieA: 1, Bundesliga: 1, Ligue1: 1, ATP: 1, WTA: 1 };
 
+    // MMA_BOARD_SOURCE_20260822: which sports read their game board from the
+    // backend rather than a direct browser call to ESPN. This used to be
+    // TT_SUPPORTED_SPORTS doing double duty, which quietly meant "no team
+    // totals" also meant "no backend board". UFC and PFL have no team totals
+    // and must never claim any, but their fights only exist on the backend —
+    // ESPN cannot be called from the page at all (no CORS header), so the
+    // fallback could only ever render an empty board.
+    var BACKEND_BOARD_SPORTS = Object.assign({ UFC: 1, PFL: 1 }, TT_SUPPORTED_SPORTS);
+    window.TMR.BACKEND_BOARD_SPORTS = BACKEND_BOARD_SPORTS;
+
     function _ttApiBase() {
         if (window.api && window.api.baseUrl) return window.api.baseUrl;
         if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) return window.CONFIG.api.baseUrl;
@@ -14332,7 +14342,7 @@ window.toggleSportFamily = function (family) {
         // SOURCE 1: Backend (Action Network → DraftKings, includes today's
         // games even when ESPN's default scoreboard is stuck on yesterday's).
         // SOURCE 2: ESPN scoreboard direct, only used if backend has 0 games.
-        if (TT_SUPPORTED_SPORTS[sport]) {
+        if (BACKEND_BOARD_SPORTS[sport]) {
             fetchBackendBoard(sportKey, 20, 9000)
                 .then(function (payload) {
                     if (rows.getAttribute('data-sport') !== sport) return;
