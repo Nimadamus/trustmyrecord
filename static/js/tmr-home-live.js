@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = 'a1ca68afa2cf';
+  var BUILD = '5cd3e4a42b7e';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -96,6 +96,12 @@
   var SLATE_TIMEOUT_MS = 10000;
   var TICKER_REFRESH_MS = 90 * 1000;   // pitching changes, PPDs, live status, finals
   var TICKER_ROTATE_MS = 7000;         // dwell time on each group before advancing
+  /* Nima asked for "around 4-6 seconds"; 5s reads one 70-character sentence at a
+     comfortable pace with time left to look away and back. The per-card offset
+     below matters more than the interval: without it every card on the row flips
+     in unison and the strip becomes the noisy ticker this replaced. */
+  var INSIGHT_ROTATE_MS = 5000;
+  var INSIGHT_STAGGER_MS = 900;
   var tickerTimer = null;
   var tickerSlateDate = null;
   /* True once a slate request has come back (with games, empty, or failed). Until
@@ -147,19 +153,47 @@
     return '<span class="gm-sp">' + esc(short(g.away_pitcher)) + ' vs ' + esc(short(g.home_pitcher)) + '</span>';
   }
 
-  /* Recent form, one line per club, under the matchup (Nima, 2026-08-20). The
-     backend sends the club's own last-10 record, streak, run averages and its
-     home/road split, already worded, with the sample and the exact date range
-     alongside for the tooltip. Missing => the line is not drawn; the card never
-     carries a placeholder. */
-  function formLine(f, side) {
-    if (!f || !f.text) return '';
-    var abbr = f.team_abbr || '';
-    var rest = abbr && f.text.indexOf(abbr + ':') === 0
-      ? f.text.slice(abbr.length + 1).replace(/^\s+/, '') : f.text;
-    return '<span class="gm-fm gm-fm--' + side + '" title="' +
-      esc('Last ' + f.sample + ' games · ' + f.period) + '">' +
-      (abbr ? '<i class="ab">' + esc(abbr) + '</i>' : '') + esc(rest) + '</span>';
+  /* ---------------------------------------------------------- INTEL STRIP
+
+     Nima, 2026-08-21: the card used to stack the pitchers, BOTH clubs' form
+     lines and a trend, all permanently visible, and it read as clutter. It now
+     shows the matchup plus ONE fact at a time, rotating through the backend's
+     game.insights[] every INSIGHT_ROTATE_MS.
+
+     Two rules the markup exists to enforce:
+       * the strip is a FIXED height whatever it holds, so a card never grows or
+         shrinks as it rotates and the hero below never moves;
+       * every line is rendered up front and only revealed in turn. Nothing is
+         built during the rotation, so a slow frame can never leave the slot
+         empty - the same failure that left the live-competition card blank when
+         a stalled rAF ate its only write.
+
+     insights[] is a generic contract - { category, group, text, sample, period,
+     href } - so an NFL or NBA row can fill the same strip later with no change
+     here. */
+  function insightStrip(g) {
+    var list = (g && g.insights) || [];
+    if (!list.length) return '';
+    var lines = '';
+    for (var i = 0; i < list.length; i++) {
+      var ins = list[i] || {};
+      if (!ins.text) continue;
+      var meta = ins.sample
+        ? 'Sample ' + ins.sample + (ins.period ? ' · ' + ins.period : '')
+        : (ins.period || '');
+      lines += '<span class="gm-in-l' + (i === 0 ? ' is-on' : '') + '"' +
+        ' data-cat="' + esc(ins.category || '') + '"' +
+        ' data-href="' + esc(ins.href || '') + '"' +
+        (meta ? ' title="' + esc(meta) + '"' : '') + '>' +
+        '<i class="ts" aria-hidden="true"></i>' +
+        '<b>' + esc(ins.text) + '</b>' +
+        '</span>';
+    }
+    if (!lines) return '';
+    /* aria-live is deliberately OFF: a screen reader must not be interrupted
+       every few seconds by a strip nobody asked to hear. The whole set is in the
+       DOM, so all of it is reachable by reading the card. */
+    return '<span class="gm-in" data-i="0">' + lines + '</span>';
   }
 
   /* The ticker is a permanent fixture of the homepage: it reports loading, empty
@@ -440,14 +474,11 @@
           statusChip(g) + dh +
         '</span>' +
         pitcherLine(g) +
-        formLine(g.away_form, 'away') + formLine(g.home_form, 'home');
-      /* A trend renders only when the engine verified one, and carries its exact
-         sample size and period. No trend => nothing. Never placeholder text. */
-      if (g.trend && g.trend.text) {
-        html += '<span class="gm-tr" data-href="' + esc(g.trend.href || '') + '" title="' +
-          esc('Sample ' + g.trend.sample + ' games · ' + g.trend.period) + '">' +
-          '<span class="ts" aria-hidden="true"></span>' + esc(g.trend.text) + '</span>';
-      }
+        /* The club form lines and the standalone trend row are GONE from the
+           card. Nothing was lost: the backend folds both into insights[], where
+           they compete with the player, pitching and standings facts for the
+           same rotating slot instead of each owning a permanent row. */
+        insightStrip(g);
       html += '</a>';
     });
 
@@ -472,9 +503,11 @@
     lane.setAttribute('data-slate-date', payload.slate_date || '');
     lane.setAttribute('aria-busy', 'false');
 
-    /* Clicking the trend goes to TrendSpotter; the rest of the card goes to the
-       Handicapping Hub page for that specific game. */
-    lane.querySelectorAll('.gm-tr[data-href]').forEach(function (n) {
+    /* An insight that carries its own href (today, only the TrendSpotter one)
+       takes the click; every other part of the card goes to the Handicapping Hub
+       page for that specific game. */
+    lane.querySelectorAll('.gm-in-l[data-href]').forEach(function (n) {
+      if (!n.getAttribute('data-href')) return;
       n.addEventListener('click', function (ev) {
         var href = n.getAttribute('data-href');
         if (!href) return;
@@ -486,6 +519,7 @@
     applyGameFile();
     wireTickerControls();
     layoutTicker();
+    startInsightRotate();
   }
 
   /* Split the single measuring row into groups that each fit the viewport width,
@@ -592,6 +626,62 @@
 
   function stopTickerRotate() {
     if (tkRotTimer) { clearInterval(tkRotTimer); tkRotTimer = null; }
+  }
+
+  /* ------------------------------------------------- INTEL STRIP ROTATION
+
+     One timer for the whole strip, not one per card. Each card holds its own
+     index and its own phase, so they advance on different beats off a single
+     tick; N cards used to mean N intervals drifting against each other, and a
+     row of eight cards flipping at once is exactly the noise this replaced.
+
+     Paused with the rest of the ticker (hover, focus, hidden tab) so a visitor
+     reading a line can finish it. */
+  var inRotTimer = null;
+  var inRotTick = 0;
+
+  function insightAdvance(strip) {
+    var lines = strip.querySelectorAll('.gm-in-l');
+    if (lines.length < 2) return;
+    var i = parseInt(strip.getAttribute('data-i'), 10) || 0;
+    var next = (i + 1) % lines.length;
+    /* is-out then is-on: the outgoing line fades down and out while the incoming
+       one fades up into the same box. Both are absolutely positioned, so the
+       card's height is the box's height and never the text's. */
+    lines[i].classList.remove('is-on');
+    lines[i].classList.add('is-out');
+    lines[next].classList.remove('is-out');
+    lines[next].classList.add('is-on');
+    strip.setAttribute('data-i', String(next));
+  }
+
+  function startInsightRotate() {
+    stopInsightRotate();
+    var strips = document.querySelectorAll('.ticker .gm-in');
+    if (!strips.length) return;
+    /* Nothing to rotate if every card landed a single insight. */
+    var any = false;
+    for (var i = 0; i < strips.length; i++) {
+      if (strips[i].querySelectorAll('.gm-in-l').length > 1) { any = true; break; }
+    }
+    if (!any) return;
+    /* The tick is the stagger, not the dwell: each card fires once every
+       INSIGHT_ROTATE_MS but on its own offset within that window. */
+    var step = Math.max(200, INSIGHT_STAGGER_MS);
+    var every = Math.max(1, Math.round(INSIGHT_ROTATE_MS / step));
+    inRotTick = 0;
+    inRotTimer = setInterval(function () {
+      if (tkPaused || document.hidden) return;
+      var all = document.querySelectorAll('.ticker .gm-in');
+      for (var n = 0; n < all.length; n++) {
+        if (inRotTick % every === (n % every)) insightAdvance(all[n]);
+      }
+      inRotTick += 1;
+    }, step);
+  }
+
+  function stopInsightRotate() {
+    if (inRotTimer) { clearInterval(inRotTimer); inRotTimer = null; }
   }
 
   /* Hover-pause, prev/next clicks and resize re-layout are wired once. */

@@ -343,16 +343,33 @@ function pitcherLine(g) {
   return `<span class="gm-sp">${esc(short(g.away_pitcher))} vs ${esc(short(g.home_pitcher))}</span>`;
 }
 
-/* Recent form, one line per club - the byte-for-byte port of formLine() in
-   static/js/tmr-home-live.js. Keep the two in lockstep. */
-function formLine(f, side) {
-  if (!f || !f.text) return '';
-  const abbr = f.team_abbr || '';
-  const rest = abbr && f.text.indexOf(`${abbr}:`) === 0
-    ? f.text.slice(abbr.length + 1).replace(/^\s+/, '') : f.text;
-  return `<span class="gm-fm gm-fm--${side}" title="` +
-    `${esc(`Last ${f.sample} games · ${f.period}`)}">` +
-    `${abbr ? `<i class="ab">${esc(abbr)}</i>` : ''}${esc(rest)}</span>`;
+/* The rotating intel strip - the byte-for-byte port of insightStrip() in
+   static/js/tmr-home-live.js. Keep the two in lockstep: the edge markup and the
+   client markup must be identical or the first client render visibly reflows
+   what the edge already painted.
+
+   Every line ships in the HTML, so the edge response already carries all of the
+   card's intel for a crawler even though only the first line is visible. */
+function insightStrip(g) {
+  const list = (g && g.insights) || [];
+  if (!list.length) return '';
+  let lines = '';
+  for (let i = 0; i < list.length; i++) {
+    const ins = list[i] || {};
+    if (!ins.text) continue;
+    const meta = ins.sample
+      ? `Sample ${ins.sample}${ins.period ? ` · ${ins.period}` : ''}`
+      : (ins.period || '');
+    lines += `<span class="gm-in-l${i === 0 ? ' is-on' : ''}"` +
+      ` data-cat="${esc(ins.category || '')}"` +
+      ` data-href="${esc(ins.href || '')}"` +
+      `${meta ? ` title="${esc(meta)}"` : ''}>` +
+      '<i class="ts" aria-hidden="true"></i>' +
+      `<b>${esc(ins.text)}</b>` +
+      '</span>';
+  }
+  if (!lines) return '';
+  return `<span class="gm-in" data-i="0">${lines}</span>`;
 }
 
 function tickerHtml(games) {
@@ -368,12 +385,9 @@ function tickerHtml(games) {
         statusChip(g) + dh +
       '</span>' +
       pitcherLine(g) +
-      formLine(g.away_form, 'away') + formLine(g.home_form, 'home');
-    if (g.trend && g.trend.text) {
-      html += `<span class="gm-tr" data-href="${esc(g.trend.href || '')}" title="` +
-        `${esc(`Sample ${g.trend.sample} games · ${g.trend.period}`)}">` +
-        `<span class="ts" aria-hidden="true"></span>${esc(g.trend.text)}</span>`;
-    }
+      /* The form rows and the standalone trend row are gone from the card; the
+         backend folds both into insights[] (Nima, 2026-08-21). */
+      insightStrip(g);
     return html + '</a>';
   }).join('');
 }
