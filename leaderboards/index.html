@@ -1080,9 +1080,16 @@
             return parsed <= 1 && parsed >= 0 ? parsed * 100 : parsed;
         }
 
+        // Two decimals, matching BOTH the API (net_units and roi are rounded to
+        // 2dp in services/canonicalUserStats.js) and the prerendered table this
+        // hydrates over (scripts/prerender_directory.py units_u/roi_pct).
+        // toFixed(1) meant the crawlable first paint read "+86.71u / +2.34%" and
+        // then visibly changed to "+86.7u / +2.3%" the moment live data landed,
+        // and it flattened genuinely different records into one printed number:
+        // BetLegend's +0.68% MLB ROI and a +0.74% ROI both rendered "+0.7%".
         function signed(value, suffix) {
             const parsed = num(value);
-            return (parsed >= 0 ? '+' : '') + parsed.toFixed(1) + (suffix || '');
+            return (parsed >= 0 ? '+' : '') + parsed.toFixed(2) + (suffix || '');
         }
 
         function timeAgo(value) {
@@ -1402,6 +1409,11 @@
                 ? entries.length + ' of ' + denominator + ' cappers match your filters'
                 : entries.length + ' cappers';
             if (!entries.length) {
+                // Empty the table, do not just hide it. Hiding left the PREVIOUS
+                // scope's rows sitting in the DOM behind the empty state, where
+                // a crawler, a screen reader or an assertion still reads MLB
+                // cappers under an "No ranked NBA handicappers" heading.
+                body.innerHTML = '';
                 wrap.style.display = 'none';
                 state.style.display = 'block';
                 setStateAsEmpty(state, emptyStateHtml(emptyBoardState()));
