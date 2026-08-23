@@ -837,7 +837,15 @@
                                 </select>
                             </div>
                         </div>
-                        <p class="filters-foot">Sorts that need data the platform does not yet expose for a given capper keep that capper visible and show a placeholder cell instead of fabricating a number.</p>
+                        <!-- LEADERBOARD_SPORT_FILTER_20260823: this used to
+                             describe a placeholder cell the board has never
+                             rendered. Every column is populated from the API and
+                             every sort is a real server ordering, so the note
+                             states the two rules that actually decide who
+                             appears. setFilterFoot() rewrites it from the live
+                             response, so the numbers here can never drift from
+                             the ones the query used. -->
+                        <p class="filters-foot" id="filtersFoot">Ranked handicappers need at least the minimum graded picks you select, plus a graded pick in the last 30 days. Choosing a sport recalculates every record, unit, ROI and streak from that sport's picks only.</p>
                     </div>
 
                     <div class="card">
@@ -1493,6 +1501,21 @@
             return currentSportLabel();
         }
 
+        // The stated rules, written from the response that actually produced the
+        // rows below them. Hardcoded copy is how "5 graded picks" survived on
+        // this page for months next to a control offering seven thresholds.
+        function setFilterFoot() {
+            const foot = document.getElementById('filtersFoot');
+            if (!foot || !boardMeta || boardMeta.failed) return;
+            const label = currentSportLabel();
+            foot.textContent = 'Ranked handicappers need at least ' + boardMeta.minPicks
+                + ' graded ' + (label ? label + ' ' : '') + 'picks, plus a graded '
+                + (label ? label + ' ' : '') + 'pick in the last ' + boardMeta.activeDays + ' days.'
+                + (label
+                    ? ' Every record, unit, ROI and streak below is computed from ' + label + ' picks only.'
+                    : ' Choosing a sport recalculates every record, unit, ROI and streak from that sport alone.');
+        }
+
         function setRailScope(sportLabel) {
             const streak = document.getElementById('streakRailScope');
             const volume = document.getElementById('volumeRailScope');
@@ -1715,6 +1738,7 @@
                 // (services/canonicalStreak.js), the same definition the
                 // profile page prints.
                 setRailScope(scopeLabelForRails());
+                setFilterFoot();
                 renderStreakRail(fullLeaderboard
                     .filter(function(entry) { return entry.streak > 0; })
                     .sort(function(a, b) { return b.streak - a.streak; })
