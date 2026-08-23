@@ -162,6 +162,25 @@ body.tmr-ds, body.tmr-ds-shell {
 .mm-crumb a { color: var(--mm-teal); text-decoration: none; font-weight: 600; }
 .mm-crumb a:hover { text-decoration: underline; }
 .mm-crumb span[aria-hidden] { opacity: 0.5; margin: 0 6px; }
+/* RESERVE THE SECOND LINE where the trail can wrap.
+
+   Measured live 2026-08-23: /handicapping/mlb/odds/ has the shortest trail of
+   the set, and at exactly 390px it fitted on one line in the metric fallback
+   and wrapped to two when Inter arrived, moving the whole page down 21px for
+   0.30 CLS. The fallback is matched on prose metrics, and a 45 character string
+   that is half chevrons sits close enough to the boundary to tip over it.
+
+   Reserving the taller state is the fix this repo already uses on the homepage
+   hero (see tests/homepage-font-swap-reflow-lock-test.js): first paint and
+   final paint then occupy the same box. min-height only ever reserves, so it
+   cannot clip a trail that needs the space anyway.
+
+   The bound is 400px on purpose. Every trail in this set already wraps at 360
+   and 390, where this is a no-op, and none of them wraps at 414, where the
+   reservation would only add a blank line. */
+@media (max-width: 400px) {
+  .mm-crumb { min-height: 3.2em; }
+}
 
 /* ---- hero ---------------------------------------------------------------- */
 .mm-hero {
