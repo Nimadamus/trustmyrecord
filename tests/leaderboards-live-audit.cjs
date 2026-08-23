@@ -36,9 +36,24 @@ function check(name, ok, detail) {
 }
 
 const apiStatuses = [];
+// This suite makes ~90 API calls. The production Postgres is a 256 MB Render
+// instance whose pool is deliberately small (see config/database.js, sized after
+// six OOM kills in July), and firing them back to back saturates it: a run on
+// 2026-08-23 drew four 500s from /trivia/leaderboard that were the DATABASE
+// under load, not the route. The page handled them correctly, showing its
+// failed-request state, which then failed assertions about the table. A test
+// that degrades the service it is measuring is measuring itself.
+const API_GAP_MS = 250;
+let lastApiAt = 0;
+async function throttle() {
+  const wait = API_GAP_MS - (Date.now() - lastApiAt);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastApiAt = Date.now();
+}
 async function api(path) {
   let lastStatus = 0;
   for (let attempt = 1; attempt <= 4; attempt++) {
+    await throttle();
     const r = await fetch(API + path);
     lastStatus = r.status;
     apiStatuses.push(path + ' ' + r.status);
