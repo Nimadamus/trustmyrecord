@@ -535,6 +535,36 @@
                         <span class="status-tag"><span class="pulse"></span> Registration Open</span>
                     </div>
 
+                    <!-- Closing notice: entrant count comes from the live registrations API so the
+                         number of remaining spots never goes stale between deploys. -->
+                    <div id="tmr-closing-notice" style="display:none;margin-top:14px;padding:12px 16px;border:1px solid rgba(185,133,5,.35);border-radius:10px;background:linear-gradient(180deg,#FFFBEF,#FFFFFF);font-size:.95rem;color:#5A4300;font-weight:600;">
+                        <span id="tmr-closing-text"></span>
+                    </div>
+                    <script>
+                    (function(){
+                        var CAP = 20;
+                        fetch('https://trustmyrecord-api.onrender.com/api/contests/justbet-mlb/registrations')
+                            .then(function(r){ return r.ok ? r.json() : null; })
+                            .then(function(j){
+                                if (!j || typeof j.count !== 'number') return;
+                                var left = CAP - j.count;
+                                var box = document.getElementById('tmr-closing-notice');
+                                var txt = document.getElementById('tmr-closing-text');
+                                if (!box || !txt) return;
+                                if (left > 0) {
+                                    txt.innerHTML = '<b>Registration is closing up.</b> The contest starts as soon as we reach ' + CAP +
+                                        ' entrants. We are looking for <b>' + left + ' more ' + (left === 1 ? 'person' : 'people') +
+                                        '</b>. First place ' + '$1,500, second $750, third $250.';
+                                } else {
+                                    txt.innerHTML = '<b>Registration is full.</b> ' + CAP + ' entrants are in and the contest is starting. ' +
+                                        'First place $1,500, second $750, third $250.';
+                                }
+                                box.style.display = 'block';
+                            })
+                            .catch(function(){ /* leave the notice hidden if the count cannot be read */ });
+                    })();
+                    </script>
+
                     <div class="hero-meta">
                         <span><b>Format:</b> 50 MLB picks per entrant</span>
                         <span><b>Reveal:</b> Each pick unlocks at first pitch</span>
