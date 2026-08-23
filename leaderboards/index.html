@@ -970,9 +970,9 @@
                             <ul>
                                 <li><b>Scored:</b> only single-choice and multi-select prediction polls that have been resolved with an official answer count toward accuracy.</li>
                                 <li><b>Single-choice:</b> correct if you picked the winning option.</li>
-                                <li><b>Multi-select:</b> correct only on an exact match of the winning set &mdash; picking part of it, or adding an extra wrong option, is incorrect. No partial credit.</li>
+                                <li><b>Multi-select:</b> correct only on an exact match of the winning set. Picking part of it, or adding an extra wrong option, is incorrect. No partial credit.</li>
                                 <li><b>Excluded:</b> opinion polls, surveys, canceled polls, and polls that are still open or were never resolved never affect accuracy.</li>
-                                <li><b>Poll Points</b> are whatever you actually earned from resolved, scored polls (including per-question quiz-game bonuses) &mdash; never mixed with TMR Coin, signup, or referral rewards.</li>
+                                <li><b>Poll Points</b> are whatever you actually earned from resolved, scored polls (including per-question quiz-game bonuses). They are never mixed with TMR Coin, signup, or referral rewards.</li>
                                 <li><b>Prediction Accuracy</b> = Correct Predictions &divide; Scored Predictions.</li>
                                 <li>You need at least 5 scored predictions before you're ranked by accuracy.</li>
                             </ul>
@@ -2014,7 +2014,7 @@
                     accCell = '--';
                 } else if (!qualified) {
                     // "1/1 -- 100%" style fraction, not a bare qualifying-looking percentage.
-                    accCell = '<span class="qual-frac">' + correct + '/' + scored + ' &mdash; </span>' + num(entry.prediction_accuracy).toFixed(1) + '%'
+                    accCell = '<span class="qual-frac">' + correct + '/' + scored + ', </span>' + num(entry.prediction_accuracy).toFixed(1) + '%'
                         + '<div class="not-qualified">Not yet qualified for accuracy ranking</div>';
                 } else {
                     accCell = num(entry.prediction_accuracy).toFixed(1) + '%';
@@ -2218,7 +2218,7 @@
                     title: isAuthed ? 'No head-to-head battles yet' : 'Sign in to see head-to-head battles',
                     body: isAuthed
                         ? 'Pick a rival, lock the same game window, and let the public record decide. Winners post here automatically.'
-                        : 'Handicapper challenges are personal head-to-head matchups — sign in to load yours, or start your first one.',
+                        : 'Handicapper challenges are personal head-to-head matchups. Sign in to load yours, or start your first one.',
                     ctas: isAuthed
                         ? [{ label: 'Start Handicapper Challenge', href: '/arena/?challenge=new', primary: true }]
                         : [{ label: 'Sign In', href: '/login/', primary: true }, { label: 'Browse Cappers', href: '#handicappers' }]
