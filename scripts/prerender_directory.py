@@ -362,8 +362,18 @@ def collect_leaderboard_view():
     collapsed to the qualified handful when loadHandicappers() applied the
     page's own rule (totalPicks >= 5 && net units > 0 from /users/leaderboard).
     Mirror that pipeline instead so the baked table and hydrated table match
-    row-for-row."""
-    d = get(f"{API}/users/leaderboard?sortBy=net_units&limit=100")
+    row-for-row.
+
+    LEADERBOARD_SPORT_FILTER_20260823: the mirror had drifted twice over. The
+    page's default minimum-picks control reads "5 picks" and now sends
+    minPicks=5 to the API, so the bake has to ask for the same board -- the
+    bare URL here defaulted to the API's own minPicks=20 and baked 20-pick
+    rows under a 5-pick control. And the `net_units > 0` filter below was a
+    leftover of a rule the page deleted in NET_UNITS_FILTER_20260817: the
+    hydrated board has shown losing records since, while this still baked
+    winners only, so the first paint visibly reshuffled on hydrate. The page
+    applies NO client-side row filter any more; neither does this."""
+    d = get(f"{API}/users/leaderboard?sortBy=net_units&limit=100&minPicks=5")
     entries = d.get("leaderboard", []) if isinstance(d, dict) else []
     total_eligible = d.get("total_eligible_handicappers") if isinstance(d, dict) else None
     rows = []
@@ -382,8 +392,10 @@ def collect_leaderboard_view():
             "current_streak": int(num(u.get("current_streak"))),
             "last_pick_at": u.get("last_pick_at") or "",
         }
-        # loadHandicappers() visibility rule + default sampleFilter ('5')
-        if r["username"] and r["total_picks"] >= 5 and r["net_units"] > 0:
+        # loadHandicappers() visibility rule: a username, and nothing else.
+        # Eligibility (minimum graded picks + recent activity) is the API's,
+        # and is already applied to every row it returned.
+        if r["username"]:
             rows.append(r)
     rows.sort(key=lambda r: r["net_units"], reverse=True)  # default sort 'units'
     try:

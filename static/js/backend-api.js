@@ -520,13 +520,36 @@ class TrustMyRecordAPI {
         return this.request(`/users` + `?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
     }
 
+    // LEADERBOARD_SPORT_FILTER_20260823: `sport` and `minPicks` are the two
+    // parameters that decide WHICH rows exist and WHAT their numbers mean, so
+    // they belong on the request, not in a caller's post-filter. /leaderboards/
+    // used to fetch one unscoped board and try to narrow it in the browser
+    // against a `sport` field this endpoint has never returned; every sport
+    // selection emptied the board. `sport` was already supported here and
+    // simply never sent. `minPicks` was not expressible at all, so a page whose
+    // control read "5 picks" silently got the API default of 20.
+    // Values are URL-encoded: a sport label can carry a space ("NBA Summer
+    // League") and an unencoded one truncated the query string.
     async getLeaderboard(options = {}, legacyOptions = {}) {
         const normalizedOptions = typeof options === 'string'
             ? { ...legacyOptions, sortBy: options }
             : (options || {});
-        const { sport, sortBy = 'net_units', limit = 50 } = normalizedOptions;
-        let url = `/users/leaderboard?sortBy=${sortBy}&limit=${limit}`;
-        if (sport) url += `&sport=${sport}`;
+        const { sport, sortBy = 'net_units', limit = 50, minPicks } = normalizedOptions;
+        let url = `/users/leaderboard?sortBy=${encodeURIComponent(sortBy)}&limit=${encodeURIComponent(limit)}`;
+        if (sport) url += `&sport=${encodeURIComponent(sport)}`;
+        if (minPicks != null && minPicks !== '') url += `&minPicks=${encodeURIComponent(minPicks)}`;
+        return this.request(url);
+    }
+
+    // The sports the leaderboard can actually answer for, with each one's
+    // ranked-capper count at `minPicks`. Feeds the Sport dropdown so it can
+    // never again offer a sport with no records behind it (NCAAB, NCAAF and UFC
+    // were offered for months with zero graded public picks each) nor omit one
+    // that has them (Tennis, WNBA).
+    async getLeaderboardSports(options = {}) {
+        const { minPicks } = options || {};
+        let url = '/users/leaderboard/sports';
+        if (minPicks != null && minPicks !== '') url += `?minPicks=${encodeURIComponent(minPicks)}`;
         return this.request(url);
     }
 

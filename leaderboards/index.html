@@ -790,17 +790,28 @@
                             </div>
                             <div class="field">
                                 <label for="sportFilter">Sport</label>
+                                <!-- LEADERBOARD_SPORT_FILTER_20260823: replaced at
+                                     runtime by loadSportOptions() from
+                                     /api/users/leaderboard/sports, which reports
+                                     the sports that actually have public graded
+                                     picks plus each one's ranked count. This
+                                     static list is only the pre-JS / failed-fetch
+                                     fallback, so it holds the sports that had
+                                     records when the page was built and NOT the
+                                     old hardcoded NCAAB / NCAAF / UFC options,
+                                     which have never had a single graded public
+                                     pick and could only ever render an empty
+                                     board. Values are sportCatalog group ids. -->
                                 <select id="sportFilter">
                                     <option value="all">All sports</option>
-                                    <option value="NFL">NFL</option>
-                                    <option value="NBA">NBA</option>
-                                    <option value="NBA Summer League">NBA Summer League</option>
-                                    <option value="MLB">MLB</option>
-                                    <option value="NHL">NHL</option>
-                                    <option value="NCAAB">NCAAB</option>
-                                    <option value="NCAAF">NCAAF</option>
-                                    <option value="Soccer">Soccer</option>
-                                    <option value="UFC">UFC</option>
+                                    <option value="mlb" data-label="MLB">MLB</option>
+                                    <option value="soccer" data-label="Soccer">Soccer</option>
+                                    <option value="tennis" data-label="Tennis">Tennis</option>
+                                    <option value="wnba" data-label="WNBA">WNBA</option>
+                                    <option value="nba" data-label="NBA">NBA</option>
+                                    <option value="nhl" data-label="NHL">NHL</option>
+                                    <option value="nfl" data-label="NFL">NFL</option>
+                                    <option value="nba_summer" data-label="NBA Summer League">NBA Summer League</option>
                                 </select>
                             </div>
                             <div class="field">
@@ -860,13 +871,13 @@
 
                 <aside style="display:grid;gap:14px;">
                     <div class="card" style="margin-bottom:0;">
-                        <div class="card-head"><div><h2>Hot streaks</h2><p>Current heaters from the live board.</p></div></div>
+                        <div class="card-head"><div><h2>Hot streaks</h2><p id="streakRailScope">Current heaters from the live board.</p></div></div>
                         <div id="streakRail" class="rail-list">
                             <div class="loading">Loading streak leaders...</div>
                         </div>
                     </div>
                     <div class="card" style="margin-bottom:0;">
-                        <div class="card-head"><div><h2>Sample-size leaders</h2><p>High-volume records with real sample.</p></div></div>
+                        <div class="card-head"><div><h2>Sample-size leaders</h2><p id="volumeRailScope">High-volume records with real sample.</p></div></div>
                         <div id="volumeRail" class="rail-list">
                             <div class="loading">Loading volume leaders...</div>
                         </div>
@@ -1036,7 +1047,7 @@
     </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-    <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
+    <script src="/static/js/backend-api.js?v=3cbc527ee17a"></script>
 <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
     <script>
@@ -1157,6 +1168,76 @@
         let filteredLeaderboard = [];
         let totalEligibleHandicappersCount = null;
 
+        /* ---------------------------------------------------------------
+         * LEADERBOARD_SPORT_FILTER_20260823 -- the board's scope is SERVER
+         * side, and this is the only place that decides it.
+         *
+         * What was broken: this page fetched ONE unscoped leaderboard
+         * (/users/leaderboard?sortBy=net_units&limit=100) and then filtered
+         * it in the browser with
+         *     String(entry.sport || '').toLowerCase() === sport.toLowerCase()
+         * against a `sport` field that endpoint has never returned. Every
+         * comparison was '' === 'mlb', so picking ANY sport emptied the board
+         * while the hero still read 46 handicapping records. Measured
+         * 2026-08-23: MLB had 2,897 graded public picks from 71 members and
+         * 13 board-eligible cappers, and the page rendered zero of them.
+         *
+         * A sport board is also not the same NUMBERS as the overall board --
+         * MoneyMakers is 310-164-2 overall and 257-142-2 in MLB -- so it can
+         * never be produced by hiding rows from an overall payload. The
+         * server aggregates the record, the units, the ROI, the win rate, the
+         * pick count AND the streak from that sport's picks only.
+         *
+         * Minimum picks is server side for the same reason: the API defaults
+         * to 20 graded picks, so the "5 picks" the control claimed was never
+         * what the board was showing. It is a real query parameter now.
+         *
+         * Search stays client side -- it narrows rows already in hand and must
+         * not cost a round trip per keystroke.
+         * --------------------------------------------------------------- */
+        const BOARD_LIMIT = 100;
+        // UI sort value -> the sortBy the API orders by. Every option in
+        // #sortFilter must appear here; an unmapped value would silently be
+        // served ROI-ordered, which is the exact bug MAIN_LEADERBOARD_SORT_SQL
+        // was introduced to end on the server side.
+        const SORT_TO_API = {
+            units: 'net_units',
+            roi: 'roi',
+            winRate: 'win_rate',
+            totalPicks: 'sample_size',
+            streak: 'current_streak'
+        };
+        // Metadata from the last SUCCESSFUL board response. renderLeaderboard()
+        // reads it to explain an empty board instead of printing one generic
+        // "no ranked handicappers yet" for six different situations.
+        let boardMeta = null;
+        // Monotonic request id. Changing sport twice quickly used to be a race
+        // between two in-flight fetches; a response whose id is no longer the
+        // latest is dropped rather than painted over the newer one.
+        let boardRequestSeq = 0;
+        let sportOptionsLoaded = false;
+
+        function currentFilters() {
+            const sportEl = document.getElementById('sportFilter');
+            const sortEl = document.getElementById('sortFilter');
+            const sampleEl = document.getElementById('sampleFilter');
+            const searchEl = document.getElementById('capperSearch');
+            return {
+                search: String(searchEl && searchEl.value || '').trim().toLowerCase(),
+                sport: String(sportEl && sportEl.value || 'all'),
+                sort: String(sortEl && sortEl.value || 'units'),
+                minPicks: Math.max(1, num(sampleEl && sampleEl.value) || 5)
+            };
+        }
+
+        function currentSportLabel() {
+            const sportEl = document.getElementById('sportFilter');
+            if (!sportEl || sportEl.value === 'all') return '';
+            if (boardMeta && boardMeta.sport && boardMeta.sport.label) return boardMeta.sport.label;
+            const opt = sportEl.options[sportEl.selectedIndex];
+            return opt ? String(opt.getAttribute('data-label') || opt.textContent || '').trim() : sportEl.value;
+        }
+
         // PROFILE_SHARE_OWNER_ONLY_20260722: reads the sitewide session record
         // written by auth.js. Synchronous on purpose - rows render before any
         // /auth/me round trip would resolve, and a logged-out visitor simply
@@ -1201,10 +1282,103 @@
                 username: username,
                 displayName: entry.display_name || entry.displayName || username,
                 avatarUrl: entry.avatar_url || entry.avatarUrl || '',
-                sport: entry.sport || entry.primary_sport || 'All',
+                // Rows carry no sport of their own: the WHOLE payload is scoped
+                // to one sport (or to none). The label comes from the scope the
+                // server confirms in `boardMeta`, never from a per-row guess --
+                // guessing is what made 'All' look like a real value and hid
+                // the missing filter for months.
+                sport: entry.sport || entry.primary_sport || '',
                 wins: wins, losses: losses, pushes: pushes,
                 totalPicks: totalPicks,
                 roi: roi, units: units, winRate: winRate, streak: streak
+            };
+        }
+
+        /* An empty board has SIX different causes and they are not the same
+         * message. The old page printed one generic "No ranked handicappers
+         * yet" for all of them, which is how a broken sport filter went
+         * unnoticed: a failed query and a genuinely empty sport looked
+         * identical to the member. Nothing here is allowed to run before a
+         * board response has been recorded in `boardMeta` -- the empty state
+         * describes a query that actually happened. */
+        function emptyBoardState() {
+            const filters = currentFilters();
+            const sportLabel = currentSportLabel();
+
+            if (boardMeta && boardMeta.failed) {
+                return {
+                    icon: '!',
+                    title: 'Leaderboard temporarily unavailable',
+                    body: 'We could not load handicapper records right now. This is not an empty board, it is a failed request. Try again in a moment.',
+                    ctas: []
+                };
+            }
+
+            // Search is applied on top of rows the server already returned, so
+            // a hit count of zero here means the search, not the sport.
+            if (filters.search && boardMeta && boardMeta.rowCount > 0) {
+                return {
+                    icon: '?',
+                    title: 'No capper matches that search',
+                    body: 'Nothing on the ' + (sportLabel || 'overall') + ' board matches "' + filters.search + '". '
+                        + boardMeta.rowCount + ' ranked ' + (boardMeta.rowCount === 1 ? 'capper is' : 'cappers are')
+                        + ' listed here without it. Clear the search or hit Reset to see them.',
+                    ctas: [{ label: 'Browse All Handicappers', href: '/handicappers/', primary: true }]
+                };
+            }
+
+            if (boardMeta && boardMeta.sport && !boardMeta.sport.known) {
+                return {
+                    icon: '!',
+                    title: 'Unrecognised sport',
+                    body: 'We do not track a sport called "' + boardMeta.sport.requested + '". Pick a sport from the list, which only ever offers sports that have public graded picks behind them.',
+                    ctas: [{ label: 'Browse All Handicappers', href: '/handicappers/', primary: true }]
+                };
+            }
+
+            // The sport exists and we queried it correctly -- nobody has ever
+            // posted a public graded pick in it.
+            if (sportLabel && boardMeta && boardMeta.scopeEligible === 0) {
+                return {
+                    icon: '★',
+                    title: 'No ' + sportLabel + ' records yet',
+                    body: 'Nobody has settled a public ' + sportLabel + ' pick on TrustMyRecord yet. Lock one and you are the first name on this board.',
+                    ctas: [
+                        { label: 'Lock A ' + sportLabel + ' Pick', href: '/sportsbook/', primary: true },
+                        { label: 'Browse All Handicappers', href: '/handicappers/' }
+                    ]
+                };
+            }
+
+            // The sport HAS records; none of them clear the two board gates.
+            // Say which gate, with the real numbers, so this never reads like a
+            // failure.
+            if (sportLabel && boardMeta && boardMeta.scopeEligible > 0) {
+                return {
+                    icon: '★',
+                    title: 'No ranked ' + sportLabel + ' handicappers right now',
+                    body: boardMeta.scopeEligible + ' ' + (boardMeta.scopeEligible === 1 ? 'member has' : 'members have')
+                        + ' posted graded ' + sportLabel + ' picks, but none currently hold both '
+                        + filters.minPicks + '+ graded ' + sportLabel + ' picks and a graded pick in the last '
+                        + boardMeta.activeDays + ' days. Lower the minimum picks filter, or check back when the '
+                        + sportLabel + ' season is running.',
+                    ctas: [
+                        { label: 'Browse All Handicappers', href: '/handicappers/', primary: true },
+                        { label: 'Lock A Pick', href: '/sportsbook/' }
+                    ]
+                };
+            }
+
+            return {
+                icon: '★',
+                title: 'No ranked handicappers yet',
+                body: 'Lock graded picks to build a public record. Ranked handicappers need '
+                    + filters.minPicks + '+ graded picks and a graded pick in the last '
+                    + ((boardMeta && boardMeta.activeDays) || 30) + ' days.',
+                ctas: [
+                    { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
+                    { label: 'Invite A Rival', href: '/arena/' }
+                ]
             };
         }
 
@@ -1214,29 +1388,32 @@
             const body = document.getElementById('leaderboardBody');
             const count = document.getElementById('resultCount');
 
-            // When the ranked/filtered view is a subset of the platform total,
-            // say so explicitly -- never let this chip read like a platform
-            // count when it's actually a filtered one.
-            count.textContent = (Number.isFinite(totalEligibleHandicappersCount) && totalEligibleHandicappersCount > entries.length)
-                ? entries.length + ' of ' + totalEligibleHandicappersCount + ' cappers match your filters'
+            // When the ranked/filtered view is a subset of the total, say so
+            // explicitly -- never let this chip read like a platform count when
+            // it's actually a filtered one. The denominator is the CURRENT
+            // SCOPE's total: on the MLB board it is the 43 members who have
+            // posted a graded MLB pick, not the 46 who have posted one in any
+            // sport. Comparing an MLB numerator against a platform-wide
+            // denominator is what produced the "0 of 46" the audit started from.
+            const denominator = boardMeta && Number.isFinite(boardMeta.scopeEligible)
+                ? boardMeta.scopeEligible
+                : totalEligibleHandicappersCount;
+            count.textContent = (Number.isFinite(denominator) && denominator > entries.length)
+                ? entries.length + ' of ' + denominator + ' cappers match your filters'
                 : entries.length + ' cappers';
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
-                setStateAsEmpty(state, emptyStateHtml({
-                    icon: '★',
-                    title: 'No ranked handicappers yet',
-                    body: 'Lock graded picks to build a public record. Ranked handicappers require 5 graded picks, recent graded activity, and positive net units.',
-                    ctas: [
-                        { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
-                        { label: 'Invite A Rival', href: '/arena/' }
-                    ]
-                }));
+                setStateAsEmpty(state, emptyStateHtml(emptyBoardState()));
                 return;
             }
 
             state.style.display = 'none';
             wrap.style.display = '';
+            // ONE scope label for the whole table, from the scope the server
+            // confirmed it queried. Every row on this board is the same sport
+            // by construction, so a per-row value could only ever be a guess.
+            const scopeLabel = currentSportLabel() || 'All sports';
             body.innerHTML = entries.map(function(entry, index) {
                 const rankClass = rankClassFor(index);
                 const record = entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : '');
@@ -1247,7 +1424,7 @@
                     + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl)
                     +     '<div class="person-meta">'
                     +       '<a class="person-name" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
-                    +       '<span class="person-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + streakLabel + '</span>'
+                    +       '<span class="person-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(scopeLabel) + ' • streak ' + streakLabel + '</span>'
                     +     '</div></div></td>'
                     + '<td class="' + statClass(entry.winRate - 50) + '">' + record + '</td>'
                     + '<td class="' + statClass(entry.roi) + '">' + signed(entry.roi, '%') + '</td>'
@@ -1290,6 +1467,25 @@
                     + '<span class="badge">W' + entry.streak + ' current run</span>'
                     + '</a>';
             }).join('');
+        }
+
+        function scopeLabelForRails() {
+            return currentSportLabel();
+        }
+
+        function setRailScope(sportLabel) {
+            const streak = document.getElementById('streakRailScope');
+            const volume = document.getElementById('volumeRailScope');
+            if (streak) {
+                streak.textContent = sportLabel
+                    ? 'Current ' + sportLabel + ' heaters, from ' + sportLabel + ' picks only.'
+                    : 'Current heaters from the live board.';
+            }
+            if (volume) {
+                volume.textContent = sportLabel
+                    ? 'Biggest ' + sportLabel + ' samples on the board.'
+                    : 'High-volume records with real sample.';
+            }
         }
 
         function renderVolumeRail(entries) {
@@ -1348,30 +1544,30 @@
             setCount('handicappers', total);
         }
 
+        /* Search + display order over the rows the server already scoped. Sport
+         * and minimum picks are NOT applied here -- they change WHICH rows and
+         * WHICH numbers the server computes, so they go back to the API. */
         function applyHandicapperFilters() {
-            const search = String(document.getElementById('capperSearch').value || '').trim().toLowerCase();
-            const sport = document.getElementById('sportFilter').value;
-            const sort = document.getElementById('sortFilter').value;
-            const minSample = num(document.getElementById('sampleFilter').value);
+            const filters = currentFilters();
 
             filteredLeaderboard = fullLeaderboard.filter(function(entry) {
-                const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
-                const matchesSport = sport === 'all' || String(entry.sport || '').toLowerCase() === String(sport).toLowerCase();
-                return matchesSearch && matchesSport && entry.totalPicks >= minSample;
+                if (!filters.search) return true;
+                return entry.username.toLowerCase().indexOf(filters.search) !== -1
+                    || entry.displayName.toLowerCase().indexOf(filters.search) !== -1;
             });
 
             filteredLeaderboard.sort(function(a, b) {
-                if (sort === 'units') return b.units - a.units;
-                if (sort === 'winRate') return b.winRate - a.winRate;
-                if (sort === 'totalPicks') return b.totalPicks - a.totalPicks;
-                if (sort === 'streak') return b.streak - a.streak;
+                if (filters.sort === 'units') return b.units - a.units;
+                if (filters.sort === 'winRate') return b.winRate - a.winRate;
+                if (filters.sort === 'totalPicks') return b.totalPicks - a.totalPicks;
+                if (filters.sort === 'streak') return b.streak - a.streak;
                 return b.roi - a.roi;
             });
 
             renderLeaderboard(filteredLeaderboard);
             trackHub('handicapper_filters_applied', {
-                search_query: search || '', sport: sport, sort_by: sort,
-                min_sample: minSample, visible_count: filteredLeaderboard.length
+                search_query: filters.search || '', sport: filters.sport, sort_by: filters.sort,
+                min_sample: filters.minPicks, visible_count: filteredLeaderboard.length
             });
         }
 
@@ -1380,13 +1576,65 @@
             document.getElementById('sportFilter').value = 'all';
             document.getElementById('sortFilter').value = 'units';
             document.getElementById('sampleFilter').value = '5';
-            applyHandicapperFilters();
+            // Reset changes the SCOPE back to the default board, so it has to go
+            // back to the server. Re-sorting the sport-scoped rows already in
+            // memory would leave a "reset" board still showing one sport's
+            // numbers under an "All sports" label.
+            return loadHandicappers();
+        }
+
+        /* The Sport options are data, not a hand-written list. The old hardcoded
+         * nine offered NCAAB, NCAAF and UFC -- none of which has ever had a
+         * single graded public pick here, so they could only ever return an
+         * empty board -- while omitting Tennis and WNBA, which both have live
+         * records. An option that cannot return a row is indistinguishable from
+         * a broken query, which is the failure this audit began with. */
+        async function loadSportOptions(minPicks) {
+            const select = document.getElementById('sportFilter');
+            if (!select) return;
+            const previous = select.value;
+            try {
+                const data = await window.api.getLeaderboardSports({ minPicks: minPicks });
+                const sports = (data && Array.isArray(data.sports)) ? data.sports : [];
+                if (!sports.length) return; // keep whatever is on screen; never blank the control
+                const options = ['<option value="all">All sports</option>'];
+                sports.forEach(function(sport) {
+                    const ranked = num(sport.ranked_cappers);
+                    options.push('<option value="' + escapeHtml(sport.id) + '" data-label="' + escapeHtml(sport.label) + '">'
+                        + escapeHtml(sport.label) + ' (' + ranked + ')</option>');
+                });
+                select.innerHTML = options.join('');
+                // Keep the member's selection across a minimum-picks change. If
+                // the sport dropped out of the catalog entirely, fall back to
+                // the full board rather than leaving a dead value selected.
+                select.value = previous;
+                if (!select.value) select.value = 'all';
+                sportOptionsLoaded = true;
+            } catch (error) {
+                // A failed catalog fetch must not take the board with it: the
+                // hardcoded options stay in place and the board still loads.
+                sportOptionsLoaded = false;
+            }
         }
 
         async function loadHandicappers() {
             const state = document.getElementById('leaderboardState');
+            const filters = currentFilters();
+            const seq = ++boardRequestSeq;
+
             try {
-                const data = await window.api.getLeaderboard({ sortBy: 'net_units', limit: 100 });
+                const data = await window.api.getLeaderboard({
+                    sport: (filters.sport && filters.sport !== 'all') ? filters.sport : '',
+                    sortBy: SORT_TO_API[filters.sort] || 'net_units',
+                    limit: BOARD_LIMIT,
+                    minPicks: filters.minPicks
+                });
+                // A stale response from a filter the member has already moved
+                // off must never paint. Without this, flipping sport twice in
+                // quick succession left whichever request finished last on
+                // screen, which is not necessarily the one that is selected.
+                if (seq !== boardRequestSeq) return;
+
                 const rawEntries = Array.isArray(data) ? data
                     : Array.isArray(data && data.leaderboard) ? data.leaderboard
                     : Array.isArray(data && data.users) ? data.users
@@ -1401,13 +1649,43 @@
                 // "Climb transparent leaderboards where losing picks can't be
                 // hidden"; a losing record sorts to the bottom on its own and
                 // does not need removing to keep the top meaningful.
+                //
+                // The hardcoded five-pick floor that used to sit here is gone
+                // for the same class of reason: it was a THIRD copy of the
+                // minimum-picks rule, so raising the control to 20 or 50 was
+                // enforced by the API while lowering it was silently overridden
+                // right here. One threshold, in one place, chosen by the member.
                 fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
-                    return entry.username && entry.totalPicks >= 5;
+                    return !!entry.username;
                 });
 
                 const totalEligibleHandicappers = Number(data && data.total_eligible_handicappers);
+                const scopeEligible = Number(data && data.scope_eligible_handicappers);
                 totalEligibleHandicappersCount = Number.isFinite(totalEligibleHandicappers) ? totalEligibleHandicappers : null;
+                boardMeta = {
+                    failed: false,
+                    rowCount: fullLeaderboard.length,
+                    scopeEligible: Number.isFinite(scopeEligible) ? scopeEligible : null,
+                    sport: (data && data.sport) || null,
+                    minPicks: num(data && data.min_picks) || filters.minPicks,
+                    activeDays: num(data && data.active_days) || 30
+                };
+
+                // The hero card stays the PLATFORM total on every scope. It
+                // answers "how many handicapping records does TrustMyRecord
+                // hold", which does not change because a sport is selected; the
+                // chip above the table is what reports the scoped count.
                 setQuickStats(fullLeaderboard, totalEligibleHandicappers);
+                // Both rails follow the loaded scope, so the streaks and the
+                // volume leaders beside an MLB board are MLB streaks and MLB
+                // volume -- the same rows, the same numbers, the same sport as
+                // the table they sit next to. The scope is named in the card
+                // subtitle so a sport-scoped streak can never be mistaken for
+                // an overall one; the streak itself is the canonical,
+                // settlement-ordered run over that sport's graded picks
+                // (services/canonicalStreak.js), the same definition the
+                // profile page prints.
+                setRailScope(scopeLabelForRails());
                 renderStreakRail(fullLeaderboard
                     .filter(function(entry) { return entry.streak > 0; })
                     .sort(function(a, b) { return b.streak - a.streak; })
@@ -1421,14 +1699,14 @@
                 // <head>) that was hiding the prerendered table.
                 document.documentElement.classList.remove('tmr-lw-lb');
             } catch (error) {
+                if (seq !== boardRequestSeq) return;
+                boardMeta = { failed: true, rowCount: 0, scopeEligible: null, sport: null, minPicks: filters.minPicks, activeDays: 30 };
+                fullLeaderboard = [];
+                filteredLeaderboard = [];
                 document.documentElement.classList.remove('tmr-lw-lb');
+                document.getElementById('leaderboardWrap').style.display = 'none';
                 state.style.display = 'block';
-                setStateAsEmpty(state, emptyStateHtml({
-                    icon: '!',
-                    title: 'Leaderboard temporarily unavailable',
-                    body: 'We could not load handicapper records right now. Try again in a moment.',
-                    ctas: []
-                }));
+                setStateAsEmpty(state, emptyStateHtml(emptyBoardState()));
                 document.getElementById('streakRail').innerHTML = '<div class="empty">Streak data unavailable.</div>';
                 document.getElementById('volumeRail').innerHTML = '<div class="empty">Volume data unavailable.</div>';
             }
@@ -1898,10 +2176,33 @@
         }
 
         function bindHandicapperFilters() {
-            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener(id === 'capperSearch' ? 'input' : 'change', applyHandicapperFilters);
+            // Search narrows rows already in hand -- client side, no round trip
+            // per keystroke.
+            const search = document.getElementById('capperSearch');
+            if (search) search.addEventListener('input', applyHandicapperFilters);
+
+            // Sport and minimum picks change the SCOPE: which rows exist and
+            // what their numbers mean. Both go back to the server.
+            const sportEl = document.getElementById('sportFilter');
+            if (sportEl) sportEl.addEventListener('change', function() { loadHandicappers(); });
+
+            const sampleEl = document.getElementById('sampleFilter');
+            if (sampleEl) sampleEl.addEventListener('change', function() {
+                // The per-sport ranked counts in the dropdown are computed at a
+                // threshold, so they move with it. Refresh them alongside the
+                // board rather than leaving "MLB (12)" beside a 5-pick board.
+                loadSportOptions(currentFilters().minPicks);
+                loadHandicappers();
+            });
+
+            const sortEl = document.getElementById('sortFilter');
+            if (sortEl) sortEl.addEventListener('change', function() {
+                // Sorting is instant on the rows in hand. It only needs the
+                // server when the payload was capped at BOARD_LIMIT, because a
+                // different sort would then select a different top slice --
+                // re-sorting a truncated page would rank the wrong hundred.
+                applyHandicapperFilters();
+                if (fullLeaderboard.length >= BOARD_LIMIT) loadHandicappers();
             });
         }
 
@@ -1934,6 +2235,7 @@
             // re-run on open and re-drive the same setCount(), so nothing diverges.
             await Promise.all([
                 loadHandicappers(),
+                loadSportOptions(currentFilters().minPicks),
                 loadOnlineChallenges(),
                 primeCounts()
             ]);
