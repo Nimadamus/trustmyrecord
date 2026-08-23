@@ -48,6 +48,31 @@ async function api(path) {
   throw new Error(path + ' -> ' + lastStatus);
 }
 
+async function readTab(page, ids) {
+  return page.evaluate((sel) => {
+    const txt = (id) => { const el = document.getElementById(id); return el ? el.textContent.trim() : ''; };
+    const shown = (id) => { const el = document.getElementById(id); return !!el && el.style.display !== 'none'; };
+    const stateOf = (id) => {
+      const el = document.getElementById(id);
+      if (!el || el.style.display === 'none') return { title: '', body: '' };
+      return {
+        title: (el.querySelector('h3') || {}).textContent || '',
+        body: (el.querySelector('p') || {}).textContent || '',
+      };
+    };
+    return {
+      rows: Array.from(document.querySelectorAll('#' + sel.body + ' tr')).map((tr) =>
+        Array.from(tr.querySelectorAll('td')).map((td) => td.textContent.trim())),
+      names: Array.from(document.querySelectorAll('#' + sel.body + ' .person-name')).map((a) => a.textContent.trim()),
+      visible: shown(sel.wrap),
+      state: stateOf(sel.state),
+      subcount: sel.subcount ? txt(sel.subcount) : '',
+      hero: txt(sel.hero),
+      tab: txt(sel.tab),
+    };
+  }, ids);
+}
+
 async function readBoard(page) {
   return page.evaluate(() => {
     const rows = Array.from(document.querySelectorAll('#leaderboardBody tr')).map((tr) => {
@@ -106,8 +131,15 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
   const page = await ctx.newPage();
   const consoleErrors = [];
-  page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
-  page.on('pageerror', (e) => consoleErrors.push('pageerror: ' + e.message));
+  // Section 13 aborts requests ON PURPOSE to prove a failed fetch is not
+  // rendered as an empty board. The browser logs those aborts, and they are the
+  // test working, not the page misbehaving -- so they are collected separately
+  // and never counted against the console-health check.
+  let injectingFaults = false;
+  const injectedErrors = [];
+  const sink = (text) => (injectingFaults ? injectedErrors : consoleErrors).push(text);
+  page.on('console', (m) => { if (m.type() === 'error') sink(m.text()); });
+  page.on('pageerror', (e) => sink('pageerror: ' + e.message));
 
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
   // Wait for HYDRATION, not just for rows. The page ships a prerendered table
@@ -441,10 +473,119 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
       (b.rows.length === 0) === b.chip.startsWith('0 '), b.chip);
   }
 
+  // ---- 13. the other four tabs ----------------------------------------------
+  // The handicapper board was one of five tabs. The rest carried the same two
+  // faults the audit began with: a thrown fetch rendered as a reassuring empty
+  // state, and a period-filtered subset reported as a platform total.
+  console.log('\n[13] Trivia / Polls / Online / H2H tabs');
+
+  const TRIVIA = { body: 'triviaBody', wrap: 'triviaWrap', state: 'triviaState', subcount: 'triviaResultCount', hero: 'qsTrivia', tab: 'tabCountTrivia' };
+  const POLLS = { body: 'pollsBody', wrap: 'pollsWrap', state: 'pollsState', subcount: 'pollsResultCount', hero: 'qsPolls', tab: 'tabCountPolls' };
+
+  const settleTab = async (ids, want, tries = 60) => {
+    let last = await readTab(page, ids);
+    for (let i = 0; i < tries && !want(last); i++) {
+      await page.waitForTimeout(250);
+      last = await readTab(page, ids);
+    }
+    return last;
+  };
+
+  await page.click('.lb-tab[data-tab="trivia"]');
+  const triviaAll = await api('/trivia/leaderboard?period=all&limit=50');
+  let t = await settleTab(TRIVIA, (x) => x.rows.length === triviaAll.leaderboard.length && x.rows.length > 0);
+  check('trivia board renders every row the API returns',
+    t.rows.length === triviaAll.leaderboard.length, t.rows.length + ' vs ' + triviaAll.leaderboard.length);
+  check('trivia hero equals the all-time player count, and the tab badge agrees',
+    t.hero === String(triviaAll.leaderboard.length) && t.tab === t.hero, t.hero + '/' + t.tab);
+
+  // The Categories column had no field behind it and printed "--" for every
+  // player on every period, since the table shipped.
+  const catCol = t.rows.map((r) => r[5]);
+  check('the Categories column carries real numbers, not "--" on every row',
+    catCol.length > 0 && catCol.some((c) => /^[0-9]+$/.test(c)) && !catCol.every((c) => c === '--'),
+    catCol.join(','));
+  check('each rendered Categories cell equals the API categories_played',
+    triviaAll.leaderboard.every((r, i) => !t.rows[i] || t.rows[i][5] === String(r.categories_played)),
+    triviaAll.leaderboard.map((r) => r.categories_played).join(','));
+
+  // The period filter must move the TABLE without moving the platform metric.
+  const heroBefore = t.hero;
+  await page.selectOption('#triviaPeriod', 'week');
+  const triviaWeek = await api('/trivia/leaderboard?period=week&limit=50');
+  t = await settleTab(TRIVIA, (x) => x.rows.length === triviaWeek.leaderboard.length);
+  check('trivia period filter narrows the table',
+    t.rows.length === triviaWeek.leaderboard.length && triviaWeek.leaderboard.length < triviaAll.leaderboard.length,
+    t.rows.length + ' vs all-time ' + triviaAll.leaderboard.length);
+  check('a 7-day view does NOT rewrite the all-time hero card or tab badge',
+    t.hero === heroBefore && t.tab === heroBefore, t.hero + ' was ' + heroBefore);
+  check('the filtered count is reported separately, and names its period',
+    t.subcount.includes(String(triviaWeek.leaderboard.length)) && /last 7 days/i.test(t.subcount), t.subcount);
+  await page.selectOption('#triviaPeriod', 'all');
+  await settleTab(TRIVIA, (x) => x.rows.length === triviaAll.leaderboard.length);
+
+  await page.click('.lb-tab[data-tab="polls"]');
+  const pollsAll = await api('/polls/leaderboard?period=all&limit=50');
+  let pl = await settleTab(POLLS, (x) => x.rows.length === pollsAll.leaderboard.length && x.rows.length > 0);
+  check('poll board renders every row the API returns',
+    pl.rows.length === pollsAll.leaderboard.length, pl.rows.length + ' vs ' + pollsAll.leaderboard.length);
+  check('poll subcount names its period when one is applied', pl.subcount.includes(String(pollsAll.leaderboard.length)), pl.subcount);
+
+  // A failed request must not read as an empty board. Block the endpoint and
+  // confirm the page says the request failed rather than "no leaders yet".
+  injectingFaults = true;
+  await page.route('**/api/trivia/leaderboard**', (r) => r.abort());
+  await page.click('.lb-tab[data-tab="trivia"]');
+  await page.selectOption('#triviaPeriod', 'month');
+  t = await settleTab(TRIVIA, (x) => !!x.state.title);
+  check('a failed trivia request says so instead of "No trivia leaders yet"',
+    /could not load/i.test(t.state.title) && !/no trivia leaders/i.test(t.state.title), t.state.title);
+  check('the failure state does not claim the data does not exist',
+    /not the same as there being nothing here/i.test(t.state.body), t.state.body);
+  check('a failed request leaves the hero count alone rather than publishing 0',
+    t.hero === heroBefore && t.hero !== '0', t.hero + ' was ' + heroBefore);
+  check('a failed request clears the stale rows instead of hiding them',
+    t.rows.length === 0, 'rows=' + t.rows.length);
+  await page.unroute('**/api/trivia/leaderboard**');
+
+  await page.route('**/api/polls/leaderboard**', (r) => r.abort());
+  await page.click('.lb-tab[data-tab="polls"]');
+  await page.selectOption('#pollsPeriod', 'week');
+  pl = await settleTab(POLLS, (x) => !!x.state.title);
+  check('a failed poll request says so instead of "No poll leaders yet"',
+    /could not load/i.test(pl.state.title) && !/no poll leaders/i.test(pl.state.title), pl.state.title);
+  await page.unroute('**/api/polls/leaderboard**');
+  injectingFaults = false;
+  check('the deliberate failures did surface as errors (the injection worked)',
+    injectedErrors.length > 0, 'injected=' + injectedErrors.length);
+
+  // ---- 14. list payloads stay light -----------------------------------------
+  // DEVELOPMENT_RULES.md bans inline base64 avatars in list payloads. It was
+  // enforced on /users/leaderboard and nowhere else: trivia was 348 KB for 8
+  // rows and polls 353 KB for 10, on a page that fetches trivia on EVERY load
+  // just to print a number on a hero card.
+  console.log('\n[14] List payloads carry no inline base64 avatars');
+  for (const path of [
+    '/trivia/leaderboard?period=all&limit=100',
+    '/trivia/leaderboard?period=week&limit=50',
+    '/trivia/leaderboard/creators?limit=8',
+    '/polls/leaderboard?period=all&limit=50',
+    '/polls/active?limit=50',
+    '/users/leaderboard?sortBy=net_units&limit=100&minPicks=5',
+  ]) {
+    const text = await fetch(API + path).then((r) => r.text());
+    const kb = text.length / 1024;
+    check(path + ' ships no base64 blobs (' + kb.toFixed(1) + ' KB)',
+      !text.includes('data:image') && kb < 64,
+      kb.toFixed(1) + ' KB, blobs=' + (text.match(/data:image/g) || []).length);
+  }
+
+  await page.click('.lb-tab[data-tab="handicappers"]');
+
   // ---- 12. console health ----------------------------------------------------
   console.log('\n[12] Console');
-  check('no JS errors across the whole run', consoleErrors.length === 0,
-    consoleErrors.slice(0, 5).join(' | '));
+  check('no JS errors across the whole run, excluding the deliberate ones',
+    consoleErrors.length === 0, consoleErrors.slice(0, 5).join(' | '));
 
   // Final screenshot of the reported failure case, now working.
   await setFilters(page, { sport: 'mlb', minPicks: '5', sort: 'units', search: '' });
