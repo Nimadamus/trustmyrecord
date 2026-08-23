@@ -923,6 +923,14 @@
                             <a class="mini-link" href="/polls-trivia/">Play Trivia</a>
                         </div>
                     </div>
+                    <!-- The period-filtered row count, the same way the Polls
+                         tab reports it. The hero card and the tab badge are the
+                         ALL-TIME player count and must not move when this
+                         tab's period filter does; before this existed,
+                         renderTriviaLeaderboard() drove the hero card off
+                         whatever the filter returned, so picking "Last 7 days"
+                         rewrote "TRIVIA PLAYERS" from 8 to 6. -->
+                    <p id="triviaResultCount" class="lb-subcount"></p>
                     <div id="triviaState" class="loading">Loading trivia leaderboard...</div>
                     <div id="triviaWrap" class="table-wrap" style="display:none;">
                         <table>
@@ -1146,6 +1154,34 @@
                 + '<p>' + escapeHtml(opts.body) + '</p>'
                 + (ctas ? '<div class="cta-row">' + ctas + '</div>' : '')
                 + '</div>';
+        }
+
+        /* A FAILED REQUEST IS NOT AN EMPTY BOARD.
+         *
+         * Every tab on this page used to answer a thrown fetch with
+         * render([]), which paints "No trivia leaders yet" / "No poll leaders
+         * yet" / "Nothing live right now". A member reading that has been told
+         * something false: not that the data is missing, but that it does not
+         * exist. It is also how the sport filter's total failure went unnoticed
+         * for months on the tab next door -- an empty state is indistinguishable
+         * from a broken query unless the page says which one it is. */
+        function tabFailureState(what) {
+            return emptyStateHtml({
+                icon: '!',
+                title: 'Could not load the ' + what,
+                body: 'The request failed, which is not the same as there being nothing here. Reload in a moment and it should come back.',
+                ctas: []
+            });
+        }
+
+        /* " (last 7 days)" for a period-scoped count or empty state, so a
+         * filtered result is never read as an all-time one. */
+        function periodSuffix(selectId) {
+            const el = document.getElementById(selectId);
+            if (!el || el.value === 'all') return '';
+            const opt = el.options[el.selectedIndex];
+            const label = opt ? String(opt.textContent || '').trim().toLowerCase() : '';
+            return label ? ' (' + label + ')' : '';
         }
 
         function setStateAsEmpty(stateEl, html) {
@@ -1821,18 +1857,29 @@
         /* =========================================================
          * TRIVIA LEADERBOARD
          * ========================================================= */
-        function renderTriviaLeaderboard(entries) {
+        function renderTriviaLeaderboard(entries, failed) {
             const state = document.getElementById('triviaState');
             const wrap = document.getElementById('triviaWrap');
             const body = document.getElementById('triviaBody');
-            setCount('trivia', entries.length);
+            const resultCount = document.getElementById('triviaResultCount');
+            // NOT setCount(). The hero card and the tab badge are the ALL-TIME
+            // trivia player count; this table is whatever the period filter
+            // returned. Driving the platform metric from here meant picking
+            // "Last 7 days" rewrote "TRIVIA PLAYERS" from 8 to 6 -- a filtered
+            // subset reported as the platform total, the same mistake the
+            // handicapper card carries a comment warning about.
+            if (resultCount) {
+                resultCount.textContent = (!entries.length || failed) ? ''
+                    : entries.length + ' Ranked Player' + (entries.length === 1 ? '' : 's') + periodSuffix('triviaPeriod');
+            }
 
             if (!entries.length) {
+                body.innerHTML = '';
                 wrap.style.display = 'none';
                 state.style.display = 'block';
-                setStateAsEmpty(state, emptyStateHtml({
+                setStateAsEmpty(state, failed ? tabFailureState('trivia leaderboard') : emptyStateHtml({
                     icon: '?',
-                    title: 'No trivia leaders yet',
+                    title: 'No trivia leaders yet' + periodSuffix('triviaPeriod'),
                     body: 'Play trivia to claim the top spot. Every correct answer adds points to your public profile and ranks you on this board.',
                     ctas: [
                         { label: 'Play Trivia Now', href: '/polls-trivia/', primary: true },
@@ -1865,10 +1912,12 @@
             }).join('');
         }
 
-        function renderTriviaCreators(entries) {
+        function renderTriviaCreators(entries, failed) {
             const rail = document.getElementById('triviaCreatorRail');
             if (!entries.length) {
-                rail.innerHTML = '<div class="empty">No question creators yet. Submit a trivia question to claim this list.</div>';
+                rail.innerHTML = failed
+                    ? '<div class="empty">Could not load question creators. The request failed; this is not an empty list.</div>'
+                    : '<div class="empty">No question creators yet. Submit a trivia question to claim this list.</div>';
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
@@ -1882,9 +1931,16 @@
             }).join('');
         }
 
+        // Period changes are two in-flight requests; the later selection has to
+        // win regardless of which response lands first. Same guard the
+        // handicapper board uses.
+        let triviaRequestSeq = 0;
+        let pollsRequestSeq = 0;
+
         async function loadTrivia() {
             const period = document.getElementById('triviaPeriod').value;
             const state = document.getElementById('triviaState');
+            const seq = ++triviaRequestSeq;
             state.style.display = 'block';
             state.className = 'loading';
             state.textContent = 'Loading trivia leaderboard...';
@@ -1892,25 +1948,33 @@
 
             try {
                 const data = await window.api.request('/trivia/leaderboard?period=' + encodeURIComponent(period) + '&limit=50');
+                if (seq !== triviaRequestSeq) return;
                 const entries = Array.isArray(data && data.leaderboard) ? data.leaderboard : [];
-                renderTriviaLeaderboard(entries);
+                renderTriviaLeaderboard(entries, false);
+                // The hero card and tab badge are the ALL-TIME player count.
+                // Only the all-time view is entitled to write them; a 7-day
+                // view reports its own number in the subcount above the table.
+                if (period === 'all') setCount('trivia', entries.length);
             } catch (error) {
-                renderTriviaLeaderboard([]);
+                if (seq !== triviaRequestSeq) return;
+                renderTriviaLeaderboard([], true);
             }
 
             try {
                 const creatorsData = await window.api.request('/trivia/leaderboard/creators?limit=8');
+                if (seq !== triviaRequestSeq) return;
                 const creators = Array.isArray(creatorsData && creatorsData.leaderboard) ? creatorsData.leaderboard : [];
-                renderTriviaCreators(creators);
+                renderTriviaCreators(creators, false);
             } catch (error) {
-                renderTriviaCreators([]);
+                if (seq !== triviaRequestSeq) return;
+                renderTriviaCreators([], true);
             }
         }
 
         /* =========================================================
          * POLL LEADERBOARD
          * ========================================================= */
-        function renderPollLeaderboard(entries) {
+        function renderPollLeaderboard(entries, failed) {
             const state = document.getElementById('pollsState');
             const wrap = document.getElementById('pollsWrap');
             const body = document.getElementById('pollsBody');
@@ -1922,12 +1986,13 @@
             // (here) never get confused for the same number.
 
             if (!entries.length) {
+                body.innerHTML = '';
                 wrap.style.display = 'none';
                 state.style.display = 'block';
                 if (resultCount) resultCount.textContent = '';
-                setStateAsEmpty(state, emptyStateHtml({
+                setStateAsEmpty(state, failed ? tabFailureState('poll leaderboard') : emptyStateHtml({
                     icon: '◎',
-                    title: 'No poll leaders yet',
+                    title: 'No poll leaders yet' + periodSuffix('pollsPeriod'),
                     body: 'Create a poll and get the crowd involved. Votes on resolved polls earn points and rank players on this board.',
                     ctas: [
                         { label: 'Create A Poll', href: '/polls/', primary: true },
@@ -1938,7 +2003,7 @@
             }
             state.style.display = 'none';
             wrap.style.display = '';
-            if (resultCount) resultCount.textContent = entries.length + ' Ranked Participant' + (entries.length === 1 ? '' : 's');
+            if (resultCount) resultCount.textContent = entries.length + ' Ranked Participant' + (entries.length === 1 ? '' : 's') + periodSuffix('pollsPeriod');
             body.innerHTML = entries.map(function(entry, index) {
                 const scored = num(entry.scored_predictions);
                 const correct = num(entry.correct_predictions);
@@ -1975,6 +2040,7 @@
         async function loadPolls() {
             const period = document.getElementById('pollsPeriod').value;
             const state = document.getElementById('pollsState');
+            const seq = ++pollsRequestSeq;
             state.style.display = 'block';
             state.className = 'loading';
             state.textContent = 'Loading poll leaderboard...';
@@ -1982,21 +2048,26 @@
 
             try {
                 const data = await window.api.request('/polls/leaderboard?period=' + encodeURIComponent(period) + '&limit=50');
+                if (seq !== pollsRequestSeq) return;
                 const entries = Array.isArray(data && data.leaderboard) ? data.leaderboard : [];
-                renderPollLeaderboard(entries);
+                renderPollLeaderboard(entries, false);
             } catch (error) {
-                renderPollLeaderboard([]);
+                if (seq !== pollsRequestSeq) return;
+                renderPollLeaderboard([], true);
             }
 
-            // Active polls quick stat
+            // Active polls quick stat. Independent of the period filter above --
+            // it counts polls open RIGHT NOW, so it is never rewritten from a
+            // period-scoped response. A failed request leaves the primed count
+            // where it is rather than overwriting a real number with a zero
+            // that would read as "no polls are running".
             try {
                 const active = await window.api.request('/polls/active?limit=50');
+                if (seq !== pollsRequestSeq) return;
                 const list = Array.isArray(active && active.polls) ? active.polls
                     : Array.isArray(active) ? active : [];
                 setCount('polls', list.length);
-            } catch (error) {
-                setCount('polls', 0);
-            }
+            } catch (error) { /* keep the primed value */ }
         }
 
         /* =========================================================
@@ -2006,13 +2077,13 @@
             return entry.title || entry.game_title || entry.game_slug || entry.game || 'Open challenge';
         }
 
-        function renderOpenChallenges(entries) {
+        function renderOpenChallenges(entries, failed) {
             const state = document.getElementById('onlineOpenState');
             const wrap = document.getElementById('onlineOpenWrap');
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
-                setStateAsEmpty(state, emptyStateHtml({
+                setStateAsEmpty(state, failed ? tabFailureState('open challenges') : emptyStateHtml({
                     icon: '+',
                     title: 'No active challenges yet',
                     body: 'Start the first one. Pick a game like MLB The Show, Madden, NBA 2K, or a trivia battle, name a stake, and an opponent shows up.',
@@ -2038,13 +2109,13 @@
             }).join('');
         }
 
-        function renderActiveChallenges(entries) {
+        function renderActiveChallenges(entries, failed) {
             const state = document.getElementById('onlineActiveState');
             const wrap = document.getElementById('onlineActiveWrap');
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
-                setStateAsEmpty(state, emptyStateHtml({
+                setStateAsEmpty(state, failed ? tabFailureState('live challenges') : emptyStateHtml({
                     icon: '◇',
                     title: 'Nothing live right now',
                     body: 'Active matchups appear here once someone accepts an open challenge.',
@@ -2065,13 +2136,13 @@
             }).join('');
         }
 
-        function renderCompletedChallenges(entries) {
+        function renderCompletedChallenges(entries, failed) {
             const state = document.getElementById('onlineCompletedState');
             const wrap = document.getElementById('onlineCompletedWrap');
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
-                setStateAsEmpty(state, emptyStateHtml({
+                setStateAsEmpty(state, failed ? tabFailureState('completed challenges') : emptyStateHtml({
                     icon: '★',
                     title: 'No winners yet',
                     body: 'Completed challenges show up here with the verified winner.',
@@ -2114,29 +2185,35 @@
 
                 setCount('online', countByStatus(all, ONLINE_LIVE_STATUSES));
             } catch (error) {
-                renderOpenChallenges([]);
-                renderActiveChallenges([]);
-                renderCompletedChallenges([]);
-                setCount('online', 0);
+                // Not "nothing live right now" -- the request failed. Saying
+                // the arena is quiet when we simply could not ask is the same
+                // lie the other four tabs were telling, and setCount(0) would
+                // publish it to the hero card as well.
+                renderOpenChallenges([], true);
+                renderActiveChallenges([], true);
+                renderCompletedChallenges([], true);
             }
         }
 
         /* =========================================================
          * HANDICAPPER CHALLENGES (head-to-head)
          * ========================================================= */
-        function renderH2H(entries) {
+        function renderH2H(entries, failed) {
             const state = document.getElementById('h2hState');
             const wrap = document.getElementById('h2hWrap');
             const body = document.getElementById('h2hBody');
             // Count only currently-active head-to-heads; the table still lists all
             // (including completed) but completed/cancelled must not inflate the badge.
-            setCount('h2h', countByStatus(entries, H2H_ACTIVE_STATUSES));
+            // A failed request has no idea how many head-to-heads are active,
+            // so it must not publish one. The primed count stands.
+            if (!failed) setCount('h2h', countByStatus(entries, H2H_ACTIVE_STATUSES));
 
             if (!entries.length) {
+                body.innerHTML = '';
                 wrap.style.display = 'none';
                 state.style.display = 'block';
                 const isAuthed = window.api && typeof window.api.isAuthenticated === 'function' ? window.api.isAuthenticated() : !!localStorage.getItem('tmr_token');
-                setStateAsEmpty(state, emptyStateHtml({
+                setStateAsEmpty(state, failed ? tabFailureState('handicapper challenges') : emptyStateHtml({
                     icon: 'VS',
                     title: isAuthed ? 'No head-to-head battles yet' : 'Sign in to see head-to-head battles',
                     body: isAuthed
@@ -2190,13 +2267,13 @@
         }
 
         async function loadH2H() {
-            if (!isSignedIn()) { renderH2H([]); return; }
+            if (!isSignedIn()) { renderH2H([], false); return; }
             try {
                 const data = await window.api.request('/challenges?limit=50');
                 const entries = Array.isArray(data && data.challenges) ? data.challenges : [];
-                renderH2H(entries);
+                renderH2H(entries, false);
             } catch (error) {
-                renderH2H([]);
+                renderH2H([], true);
             }
         }
 
@@ -2210,13 +2287,18 @@
          * loader uses, so opening a tab cannot change the number.
          * ========================================================= */
         async function primeCounts() {
+            // A failed count is NOT a count of zero. Every one of these used to
+            // answer a thrown request with setCount(metric, 0), publishing "0
+            // TRIVIA PLAYERS" to the hero card and the tab badge on a bad
+            // network. Leaving the value alone keeps the last real number the
+            // prerender baked, which is stale at worst; a zero is wrong.
             const jobs = [
                 // Trivia players = unique users on the all-time trivia leaderboard.
                 (async function() {
                     try {
                         const d = await window.api.request('/trivia/leaderboard?period=all&limit=100');
                         setCount('trivia', (d && Array.isArray(d.leaderboard) ? d.leaderboard : []).length);
-                    } catch (e) { setCount('trivia', 0); }
+                    } catch (e) { /* a failed count is not a count of zero */ }
                 })(),
                 // Active polls = currently open, published, non-expired top-level polls.
                 (async function() {
@@ -2224,7 +2306,7 @@
                         const d = await window.api.request('/polls/active?limit=100');
                         const l = Array.isArray(d && d.polls) ? d.polls : (Array.isArray(d) ? d : []);
                         setCount('polls', l.length);
-                    } catch (e) { setCount('polls', 0); }
+                    } catch (e) { /* a failed count is not a count of zero */ }
                 })(),
                 // Handicapper challenges = currently active head-to-heads, and the
                 // endpoint is auth-only. This used to fire regardless and lean on
@@ -2238,7 +2320,7 @@
                         const d = await window.api.request('/challenges?limit=100');
                         const entries = Array.isArray(d && d.challenges) ? d.challenges : [];
                         setCount('h2h', countByStatus(entries, H2H_ACTIVE_STATUSES));
-                    } catch (e) { setCount('h2h', 0); }
+                    } catch (e) { /* a failed count is not a count of zero */ }
                 })()
             ];
             await Promise.all(jobs);
