@@ -385,6 +385,39 @@
                     <div style="font-size:13px;line-height:1.55;color:var(--muted);">TrustMyRecord allows only <strong style="color:var(--text);">one account per person and one account per household</strong>. No exceptions. Duplicate accounts will be deleted. Confirmed duplicate or related household accounts are deleted, removed from contests, permanently banned, and voided from leaderboards, prizes, verified records, and contest results. <a href="/rules/" style="color:var(--cyan);font-weight:700;" target="_blank" rel="noopener">Read the Platform Rules</a>.</div>
                 </div>
 
+                <!--
+                  SIGNUP_HARDENING_20260823: honeypot.
+
+                  Invisible to people, invisible to screen readers, and outside
+                  the tab order, so no human can ever put anything in it. A
+                  form-filling script walks the DOM and fills every input it
+                  finds, which is the entire point.
+
+                  Deliberately NOT display:none and NOT visibility:hidden --
+                  the better bots skip fields hidden that way. Off-canvas with
+                  zero opacity looks like a real field to a script.
+
+                  The name is 'company_website' rather than anything containing
+                  'hp' or 'honeypot' for the same reason. Backend counterpart:
+                  utils/signupGuards.js HONEYPOT_FIELD.
+                -->
+                <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
+                    <label for="company_website">Company website</label>
+                    <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off">
+                </div>
+
+                <!--
+                  SIGNUP_HARDENING_20260823: Cloudflare Turnstile.
+
+                  Managed mode, which is invisible for essentially every real
+                  visitor: it resolves in the background and only escalates to
+                  a visible interaction for traffic that already looks
+                  automated. Rendered only when a site key is configured (see
+                  TMR_TURNSTILE_SITEKEY below), so the page behaves exactly as
+                  it does today until the widget is provisioned.
+                -->
+                <div id="turnstileMount" class="field" style="display:none;margin-bottom:14px;"></div>
+
                 <div id="message" class="message"></div>
                 <button id="submitBtn" class="submit" type="submit">CREATE ACCOUNT</button>
                 <p style="margin:12px 0 0;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;">By creating an account you agree to the <a href="/rules/" style="color:var(--text);font-weight:700;" target="_blank" rel="noopener">Platform Rules</a> and <a href="/terms/" style="color:var(--text);font-weight:700;" target="_blank" rel="noopener">Terms of Service</a>, including one account per person and one account per household.</p>
@@ -469,6 +502,47 @@
         </div>
     </div>
 
+    <!--
+      SIGNUP_HARDENING_20260823: bot-guard client wiring.
+
+      Three signals, none of which a legitimate visitor ever notices:
+        1. formLoadedAt   - stamped now, sent as an elapsed millisecond count.
+        2. company_website - honeypot input rendered above.
+        3. Turnstile      - loaded ONLY when a site key is configured.
+
+      TO TURN TURNSTILE ON: create a Turnstile widget in the Cloudflare
+      dashboard for trustmyrecord.com in "Managed" mode, then replace the empty
+      string below with its site key (the site key is public, it belongs in
+      client HTML). Set TURNSTILE_SECRET_KEY on the trustmyrecord-api service
+      at the same time, and TURNSTILE_ENFORCE=true once the observed pass rate
+      in signup_telemetry looks right. Leaving it empty is a safe no-op: the
+      widget never loads, no token is sent, and the API records
+      turnstile_status='not_configured' and lets the signup through.
+    -->
+    <script>
+        window.TMR_TURNSTILE_SITEKEY = '';
+        window.TMR_FORM_LOADED_AT = Date.now();
+        (function loadTurnstile() {
+            var siteKey = window.TMR_TURNSTILE_SITEKEY;
+            if (!siteKey) return;
+            var mount = document.getElementById('turnstileMount');
+            if (!mount) return;
+            mount.style.display = '';
+            mount.className = 'cf-turnstile';
+            mount.setAttribute('data-sitekey', siteKey);
+            // Managed/invisible: no checkbox unless Cloudflare decides the
+            // visitor needs one. The token lands in a hidden input named
+            // cf-turnstile-response inside this container.
+            mount.setAttribute('data-appearance', 'interaction-only');
+            mount.setAttribute('data-action', 'signup');
+            mount.setAttribute('data-retry', 'auto');
+            var s = document.createElement('script');
+            s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+            s.async = true;
+            s.defer = true;
+            document.head.appendChild(s);
+        })();
+    </script>
     <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
     <script src="/static/js/backend-api.js?v=0c7db839b982"></script>
     <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
@@ -557,7 +631,34 @@
                     var signupSource = null;
                     try { signupSource = JSON.parse(localStorage.getItem('tmr_first_touch')); } catch (error) {}
                     var heardAbout = (document.getElementById('heardAboutValue').value || '').trim() || undefined;
-                    const data = await window.api.register({ username, email, password, headline, favoriteSports, favoriteTeams, signupSource, heardAbout });
+
+                    // SIGNUP_HARDENING_20260823: bot-guard fields. All three
+                    // are additive -- an older cached copy of this page that
+                    // sends none of them still registers normally, because the
+                    // API treats each as optional.
+                    var honeypotEl = document.getElementById('company_website');
+                    var companyWebsite = honeypotEl ? honeypotEl.value : '';
+                    var formFillMs = window.TMR_FORM_LOADED_AT
+                        ? (Date.now() - window.TMR_FORM_LOADED_AT)
+                        : undefined;
+                    var turnstileToken;
+                    try {
+                        // Cloudflare writes the solved token into a hidden
+                        // input named cf-turnstile-response inside the widget.
+                        var tsInput = document.querySelector('[name="cf-turnstile-response"]');
+                        turnstileToken = (tsInput && tsInput.value) || undefined;
+                        if (!turnstileToken && window.turnstile && typeof window.turnstile.getResponse === 'function') {
+                            turnstileToken = window.turnstile.getResponse() || undefined;
+                        }
+                    } catch (error) {}
+
+                    const data = await window.api.register({
+                        username, email, password, headline, favoriteSports, favoriteTeams,
+                        signupSource, heardAbout,
+                        company_website: companyWebsite,
+                        formFillMs: formFillMs,
+                        turnstileToken: turnstileToken
+                    });
                     try {
                         if (window.TMRAnalytics) {
                             window.TMRAnalytics.signUpCompleted({
@@ -655,6 +756,15 @@
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'CREATE ACCOUNT';
+                    // SIGNUP_HARDENING_20260823: a Turnstile token is single
+                    // use. Without this reset, a user who corrects a typo and
+                    // resubmits would send a spent token and be refused for a
+                    // reason that has nothing to do with what they fixed.
+                    try {
+                        if (window.turnstile && typeof window.turnstile.reset === 'function') {
+                            window.turnstile.reset();
+                        }
+                    } catch (error) {}
                 }
             });
         })();
