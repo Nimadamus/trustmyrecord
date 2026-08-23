@@ -826,8 +826,19 @@
                             </div>
                             <div class="field">
                                 <label for="sampleFilter">Minimum picks</label>
+                                <!-- LEADERBOARD_SPORT_FILTER_20260823: 1 and 3
+                                     added because 5 was a floor with nothing
+                                     under it. NFL holds two verified records
+                                     graded nine days ago and neither capper has
+                                     three NFL picks, so at a floor of 5 that
+                                     board could not be reached at ALL, and the
+                                     empty state's "lower the minimum picks
+                                     filter" was advice the control could not
+                                     take. The default is still 5. -->
                                 <select id="sampleFilter">
-                                    <option value="5">5 picks</option>
+                                    <option value="1">1 pick</option>
+                                    <option value="3">3 picks</option>
+                                    <option value="5" selected>5 picks</option>
                                     <option value="10">10 picks</option>
                                     <option value="20">20 picks</option>
                                     <option value="25">25 picks</option>
@@ -1211,6 +1222,10 @@
          * not cost a round trip per keystroke.
          * --------------------------------------------------------------- */
         const BOARD_LIMIT = 100;
+        // Lowest value #sampleFilter offers. The empty state tells members to
+        // lower the threshold, so it has to know where the bottom is, and must
+        // not say it when they are already standing on it.
+        const MIN_PICKS_FLOOR = 1;
         // UI sort value -> the sortBy the API orders by. Every option in
         // #sortFilter must appear here; an unmapped value would silently be
         // served ROI-ordered, which is the exact bug MAIN_LEADERBOARD_SORT_SQL
@@ -1377,14 +1392,22 @@
             // Say which gate, with the real numbers, so this never reads like a
             // failure.
             if (sportLabel && boardMeta && boardMeta.scopeEligible > 0) {
+                // Name the gate that is actually excluding them, and only offer
+                // an action the controls can take. The minimum-picks floor is 1,
+                // so "lower the filter" is real advice when the member is not
+                // already there, and is not offered when they are.
+                const atFloor = filters.minPicks <= MIN_PICKS_FLOOR;
                 return {
                     icon: '★',
-                    title: 'No ranked ' + sportLabel + ' handicappers right now',
+                    title: 'No ranked ' + sportLabel + ' handicappers at this threshold',
                     body: boardMeta.scopeEligible + ' ' + (boardMeta.scopeEligible === 1 ? 'member has' : 'members have')
-                        + ' posted graded ' + sportLabel + ' picks, but none currently hold both '
-                        + filters.minPicks + '+ graded ' + sportLabel + ' picks and a graded pick in the last '
-                        + boardMeta.activeDays + ' days. Lower the minimum picks filter, or check back when the '
-                        + sportLabel + ' season is running.',
+                        + ' posted graded ' + sportLabel + ' picks, but none hold both '
+                        + filters.minPicks + '+ of them and a graded ' + sportLabel + ' pick in '
+                        + activityWindowPhrase(sportLabel) + '. '
+                        + (atFloor
+                            ? 'That is the whole ' + sportLabel + ' record on the site so far.'
+                            : 'Drop the minimum picks filter to ' + MIN_PICKS_FLOOR + ' to see every '
+                              + sportLabel + ' record we hold.'),
                     ctas: [
                         { label: 'Browse All Handicappers', href: '/handicappers/', primary: true },
                         { label: 'Lock A Pick', href: '/sportsbook/' }
@@ -1396,8 +1419,8 @@
                 icon: '★',
                 title: 'No ranked handicappers yet',
                 body: 'Lock graded picks to build a public record. Ranked handicappers need '
-                    + filters.minPicks + '+ graded picks and a graded pick in the last '
-                    + ((boardMeta && boardMeta.activeDays) || 30) + ' days.',
+                    + filters.minPicks + '+ graded picks and a graded pick in '
+                    + activityWindowPhrase('') + '.',
                 ctas: [
                     { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
                     { label: 'Invite A Rival', href: '/arena/' }
@@ -1501,6 +1524,28 @@
             return currentSportLabel();
         }
 
+        function longDate(value) {
+            const date = new Date(value);
+            if (!value || isNaN(date.getTime())) return '';
+            return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // How the activity window reads for the loaded scope. On a live board it
+        // is "the last 30 days". On an out-of-season sport the window is
+        // anchored to that sport's OWN last graded pick, so it has to name the
+        // date: NBA has not graded a pick since June, and a board that measured
+        // recency against the wall clock reported zero ranked NBA handicappers
+        // while the platform held twelve verified NBA records.
+        function activityWindowPhrase(label) {
+            if (!boardMeta) return 'the last 30 days';
+            if (boardMeta.inSeason || !boardMeta.lastGradedAt) {
+                return 'the last ' + boardMeta.activeDays + ' days';
+            }
+            const on = longDate(boardMeta.lastGradedAt);
+            return 'the ' + boardMeta.activeDays + ' days to ' + on
+                + ', when ' + (label || 'this board') + ' last had action';
+        }
+
         // The stated rules, written from the response that actually produced the
         // rows below them. Hardcoded copy is how "5 graded picks" survived on
         // this page for months next to a control offering seven thresholds.
@@ -1508,12 +1553,16 @@
             const foot = document.getElementById('filtersFoot');
             if (!foot || !boardMeta || boardMeta.failed) return;
             const label = currentSportLabel();
-            foot.textContent = 'Ranked handicappers need at least ' + boardMeta.minPicks
-                + ' graded ' + (label ? label + ' ' : '') + 'picks, plus a graded '
-                + (label ? label + ' ' : '') + 'pick in the last ' + boardMeta.activeDays + ' days.'
-                + (label
-                    ? ' Every record, unit, ROI and streak below is computed from ' + label + ' picks only.'
-                    : ' Choosing a sport recalculates every record, unit, ROI and streak from that sport alone.');
+            const of = label ? label + ' ' : '';
+            let text = 'Ranked handicappers need at least ' + boardMeta.minPicks + ' graded ' + of
+                + 'picks, plus a graded ' + of + 'pick in ' + activityWindowPhrase(label) + '.';
+            if (label && boardMeta.lastGradedAt && !boardMeta.inSeason) {
+                text += ' ' + label + ' is between seasons, so this is the standing from its last run of play.';
+            }
+            text += label
+                ? ' Every record, unit, ROI and streak below is computed from ' + label + ' picks only.'
+                : ' Choosing a sport recalculates every record, unit, ROI and streak from that sport alone.';
+            foot.textContent = text;
         }
 
         function setRailScope(sportLabel) {
@@ -1720,7 +1769,11 @@
                     scopeEligible: Number.isFinite(scopeEligible) ? scopeEligible : null,
                     sport: (data && data.sport) || null,
                     minPicks: num(data && data.min_picks) || filters.minPicks,
-                    activeDays: num(data && data.active_days) || 30
+                    activeDays: num(data && data.active_days) || 30,
+                    // The scope's own clock: the date the activity window is
+                    // anchored to, and whether that scope is currently playing.
+                    lastGradedAt: (data && data.scope_last_graded_at) || null,
+                    inSeason: !(data && data.scope_in_season === false)
                 };
 
                 // The hero card stays the PLATFORM total on every scope. It
