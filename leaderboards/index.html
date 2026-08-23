@@ -1237,10 +1237,18 @@
             };
         }
 
+        // The label the rows on screen are ENTITLED to. It comes from the scope
+        // the server says it answered, not from the dropdown: those two can
+        // disagree for a moment (loadSportOptions() rebuilds the control while a
+        // board request is in flight), and when they do, the rows are the
+        // authority. Reading the dropdown first is what once printed MLB rows
+        // under an "All sports" label.
         function currentSportLabel() {
+            if (boardMeta && !boardMeta.failed) {
+                return boardMeta.sport && boardMeta.sport.label ? boardMeta.sport.label : '';
+            }
             const sportEl = document.getElementById('sportFilter');
             if (!sportEl || sportEl.value === 'all') return '';
-            if (boardMeta && boardMeta.sport && boardMeta.sport.label) return boardMeta.sport.label;
             const opt = sportEl.options[sportEl.selectedIndex];
             return opt ? String(opt.getAttribute('data-label') || opt.textContent || '').trim() : sportEl.value;
         }
@@ -1604,7 +1612,6 @@
         async function loadSportOptions(minPicks) {
             const select = document.getElementById('sportFilter');
             if (!select) return;
-            const previous = select.value;
             try {
                 const data = await window.api.getLeaderboardSports({ minPicks: minPicks });
                 const sports = (data && Array.isArray(data.sports)) ? data.sports : [];
@@ -1615,12 +1622,22 @@
                     options.push('<option value="' + escapeHtml(sport.id) + '" data-label="' + escapeHtml(sport.label) + '">'
                         + escapeHtml(sport.label) + ' (' + ranked + ')</option>');
                 });
+                // Read the selection HERE, after the await, not before it.
+                // Captured before the round trip, it was whatever was selected
+                // when the fetch started -- so a member who picked MLB while the
+                // catalog was still loading had the control silently snapped
+                // back to All sports underneath a board that had already gone
+                // to MLB.
+                const selected = select.value;
                 select.innerHTML = options.join('');
-                // Keep the member's selection across a minimum-picks change. If
-                // the sport dropped out of the catalog entirely, fall back to
-                // the full board rather than leaving a dead value selected.
-                select.value = previous;
-                if (!select.value) select.value = 'all';
+                select.value = selected;
+                // The sport is no longer in the catalog (its last graded pick
+                // aged out). Fall back to the full board rather than leaving a
+                // dead value selected, and reload so the table matches.
+                if (!select.value) {
+                    select.value = 'all';
+                    if (selected && selected !== 'all') loadHandicappers();
+                }
                 sportOptionsLoaded = true;
             } catch (error) {
                 // A failed catalog fetch must not take the board with it: the
