@@ -89,6 +89,37 @@
     var todayBtn = document.getElementById("hh-today");
     var slateTitle = document.getElementById("hh-slate-title");
 
+    /* Permanent matchup pages, added 2026-08-23. Every scheduled game now has a
+       crawlable URL of its own, baked by scripts/build_mlb_matchup_pages.py.
+       This table is the URL contract and MUST stay byte-identical to TEAMS in
+       that script: once a game has been published at a slug it keeps that slug
+       forever, so a nickname is never re-derived from a team name that MLB can
+       rename (the Athletics dropped their city, Cleveland changed nickname).
+       A team missing from the table yields no link rather than a guessed one
+       that would 404. */
+    var TEAM_SLUG = {
+        "arizona diamondbacks":"diamondbacks","atlanta braves":"braves","baltimore orioles":"orioles",
+        "boston red sox":"red-sox","chicago cubs":"cubs","chicago white sox":"white-sox",
+        "cincinnati reds":"reds","cleveland guardians":"guardians","colorado rockies":"rockies",
+        "detroit tigers":"tigers","houston astros":"astros","kansas city royals":"royals",
+        "los angeles angels":"angels","los angeles dodgers":"dodgers","miami marlins":"marlins",
+        "milwaukee brewers":"brewers","minnesota twins":"twins","new york mets":"mets",
+        "new york yankees":"yankees","athletics":"athletics","oakland athletics":"athletics",
+        "philadelphia phillies":"phillies","pittsburgh pirates":"pirates","san diego padres":"padres",
+        "san francisco giants":"giants","seattle mariners":"mariners","st louis cardinals":"cardinals",
+        "tampa bay rays":"rays","texas rangers":"rangers","toronto blue jays":"blue-jays",
+        "washington nationals":"nationals"
+    };
+    /** The permanent page for a game, or "" when we cannot name it exactly. */
+    function matchupHref(game) {
+        var a = TEAM_SLUG[norm(game.away_team)], h = TEAM_SLUG[norm(game.home_team)];
+        if (!a || !h) return "";
+        var d = slateDateET(game.commence_time);
+        if (!d) return "";
+        var n = Number(game.doubleheader_game_number);
+        return "/handicapping/mlb/" + a + "-vs-" + h + "-" + d + (n > 1 ? "-game-" + n : "") + "/";
+    }
+
     /** Today's MLB slate date = the current calendar date in America/New_York,
         matching how each game's slate date is derived in slateDateET(). */
     function todayET() {
@@ -1481,7 +1512,21 @@
         if (cached) paintTop(game, node, cached);
         else node.querySelector("[data-hhctop]").innerHTML = hhcTopHtml(game, null);
 
-        var shareHref = location.pathname + "#game-" + encodeURIComponent(game.id);
+        /* The permanent page for this game, if we can name it exactly. It goes
+           FIRST in the action row and it is a real <a href>, not a button, so it
+           is a crawlable link out of the hub and a middle-click opens it. When
+           the slug cannot be built the row is left exactly as it was. */
+        var pageHref = matchupHref(game);
+        var actions = node.querySelector(".hh-actions");
+        if (pageHref && actions) {
+            var full = document.createElement("a");
+            full.className = "hh-btn hh-btn--ghost";
+            full.href = pageHref;
+            full.textContent = "Full Matchup Page";
+            actions.insertBefore(full, actions.firstChild);
+        }
+
+        var shareHref = pageHref || (location.pathname + "#game-" + encodeURIComponent(game.id));
         var share = node.querySelector("[data-share]");
         share.setAttribute("data-href", shareHref);
         share.addEventListener("click", function () {

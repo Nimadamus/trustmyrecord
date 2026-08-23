@@ -50,6 +50,14 @@
        article and hands off to it; the hub keeps its own footer and Explore
        entries, where an archive is what a reader is actually after. */
     ['/matchup-of-the-day/today/', 'Matchup of the Day'],
+    /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
+       sport whose research hub is actually built, so every member who picked
+       'Handicapping Hub' from this menu landed on a page whose only real
+       destination was one more click away. This is that click, removed. The
+       chooser stays: it is where the other leagues appear as they ship. Named
+       for what the page is rather than for the product, because that is what a
+       member is looking for in this menu. */
+    ['/handicapping/mlb/', 'MLB Matchups Today'],
     ['/handicapping/', 'Handicapping Hub']
   ];
   var HANDICAPPERS = [
@@ -104,6 +112,10 @@
     ['/nfl-simulator/', 'NFL Simulator'],
     ['/trendspotter/', 'TrendSpotter'],
     ['/betlegend-pro/', 'BetLegend Pro'],
+    /* Sits directly under the MLB simulators on purpose: a member who came to
+       this menu for MLB should see the daily board in the same cluster as the
+       tools that model it, not have to go through the sport chooser. */
+    ['/handicapping/mlb/', 'MLB Matchups Today'],
     ['/handicapping/', 'Handicapping Hub'],
     ['/tmr-coin/', 'TMR Coin']
   ];
@@ -128,6 +140,7 @@
          changed, and it is linked from the new hub — but the sitewide nav entry
          belongs to the thing that publishes every day, not to the archive. */
       ['/matchup-of-the-day/', 'Matchup of the Day'],
+      ['/handicapping/mlb/', 'MLB Matchups'],
       ['/leaderboards/', 'Leaderboards'],
       ['/handicappers/', 'Browse Handicappers'],
       ['/verified-handicapper-records/', 'Verified Records'],
