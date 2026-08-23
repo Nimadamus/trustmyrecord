@@ -1,0 +1,94 @@
+name: MLB Matchup Pages
+
+# Bakes the permanent MLB matchup pages, the crawlable slate block on
+# /handicapping/mlb/, the three daily views, and the sitemap block.
+#
+# WHY A SEPARATE JOB, AND NOT A STEP INSIDE THE PRERENDER CRON
+# The prerender cron is fail-closed by design: a failure anywhere before its
+# commit step throws away everything that run produced. Folding the MLB bake in
+# would mean a bad homepage-highlights check silently leaves the MLB slate a day
+# stale, which is the exact shape of the ?v= drift that produced
+# static-asset-versions.yml. This job does one thing and nothing it depends on
+# can fail for an unrelated reason.
+#
+# CADENCE. Four times a day, all of them before or around first pitch on the East
+# coast, because that is when the page is worth reading and when the probables
+# and the lines actually change:
+#   11:10 UTC ( 7:10 AM ET) probables are posted, yesterday's finals are in
+#   15:10 UTC (11:10 AM ET) the board is priced for the day games
+#   19:10 UTC ( 3:10 PM ET) the board is priced for the evening games
+#   23:10 UTC ( 7:10 PM ET) last refresh before the late slate
+# Deliberately NOT on the half hour: the prerender cron runs at :00 and :30 and
+# two jobs committing to main in the same minute is a push race, not redundancy.
+#
+# Commits made with GITHUB_TOKEN do not trigger `on: push` workflows, so this
+# cannot loop. It commits only when the bake actually changed something.
+
+on:
+  schedule:
+    - cron: '10 11,15,19,23 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Single slate date to bake (YYYY-MM-DD). Blank = yesterday, today, tomorrow.'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mlb-matchup-pages
+  cancel-in-progress: false
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Bake the MLB matchup pages and the hub slate block
+        # The script is fail-closed: it renders every page into memory first and
+        # writes nothing at all if the schedule cannot be read or any page fails
+        # to render, so a provider blip leaves yesterday's good bake live rather
+        # than replacing it with a half-empty one.
+        run: |
+          if [ -n "${{ inputs.date }}" ]; then
+            python scripts/build_mlb_matchup_pages.py --date "${{ inputs.date }}"
+          else
+            python scripts/build_mlb_matchup_pages.py
+          fi
+
+      - name: Keep the cross-links into the hub in place
+        run: python scripts/add_mlb_hub_crosslinks.py
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # THE GATES. Both run BEFORE the commit step, never after: a gate that runs
+      # after the push is decorative. If either fails the bake is discarded and
+      # the last good pages stay live.
+      - name: Gate - MLB matchup page contract
+        run: node tests/mlb-matchup-pages-contract-test.js
+
+      - name: Gate - site-wide SEO indexability
+        run: node tests/seo-indexability-regression-test.js
+
+      - name: Commit only if the bake changed something
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "MLB pages already match today's data."
+          else
+            git config user.name "tmr-mlb-pages-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(mlb): bake matchup pages + crawlable slate [skip ci]"
+            git push origin HEAD:main
+            git show --stat --oneline HEAD
+          fi
