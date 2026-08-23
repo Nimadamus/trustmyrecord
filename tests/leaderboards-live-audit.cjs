@@ -73,6 +73,8 @@ async function readBoard(page) {
       sportOptions: Array.from(document.querySelectorAll('#sportFilter option')).map((o) => o.value + '|' + o.textContent.trim()),
       streakRail: Array.from(document.querySelectorAll('#streakRail .rail-item')).map((a) => a.textContent.trim()),
       streakScope: (document.getElementById('streakRailScope') || {}).textContent || '',
+      filtersFoot: (document.getElementById('filtersFoot') || {}).textContent || '',
+      sampleOptions: Array.from(document.querySelectorAll('#sampleFilter option')).map((o) => o.value),
       volumeScope: (document.getElementById('volumeRailScope') || {}).textContent || '',
       volumeRail: Array.from(document.querySelectorAll('#volumeRail .rail-item')).map((a) => a.textContent.trim()),
     };
@@ -108,7 +110,18 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
   page.on('pageerror', (e) => consoleErrors.push('pageerror: ' + e.message));
 
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
+  // Wait for HYDRATION, not just for rows. The page ships a prerendered table
+  // (scripts/prerender_directory.py bakes it so the board is crawlable and
+  // paints instantly), so "some rows exist" is true before any live data has
+  // landed. Reading then compares the bake against the API and reports a
+  // difference that is only a moment old. `tmr-lw-lb` is the page's own
+  // live-wait gate, dropped on first live paint; the sport catalog arrives on
+  // its own request, so wait for a counted option too.
   await page.waitForFunction(() => window.api && document.getElementById('sportFilter'), null, { timeout: 30000 });
+  await page.waitForFunction(
+    () => !document.documentElement.classList.contains('tmr-lw-lb')
+      && /\(\d+\)/.test(document.getElementById('sportFilter').textContent || ''),
+    null, { timeout: 30000 });
 
   // ---- 1. default board -----------------------------------------------------
   console.log('\n[1] Default board (All sports, 5 picks, Net units)');
@@ -266,6 +279,62 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
     }
   }
 
+  // ---- 6b. no sport with a record is unreachable ----------------------------
+  // The user-visible promise this whole audit exists to keep: if the platform
+  // holds a graded public record in a sport, some setting of the two controls
+  // must be able to show it. NBA and NHL failed this for months -- 12 and 6
+  // verified records rendering a blank board in every configuration -- because
+  // recency was measured against the wall clock and both leagues are out of
+  // season. NFL failed it because the minimum-picks control had a floor of 5
+  // and neither NFL capper holds three picks.
+  console.log('\n[6b] Every sport that holds a record can be reached');
+  check('the minimum-picks control goes below 5', b.sampleOptions.includes('1') && b.sampleOptions.includes('3'),
+    b.sampleOptions.join(','));
+  const unreachable = [];
+  const reachable = [];
+  for (const sport of apiSports.sports) {
+    if (!sport.total_cappers) continue;
+    let best = null;
+    for (const min of ['1', '3', '5', '10', '20']) {
+      const r = await api('/users/leaderboard?sortBy=net_units&limit=100&minPicks=' + min
+        + '&sport=' + encodeURIComponent(sport.id));
+      if (r.leaderboard.length) { best = { min, rows: r.leaderboard.length }; break; }
+    }
+    if (best) reachable.push(sport.label + ' @' + best.min + '=' + best.rows);
+    else unreachable.push(sport.label + ' (' + sport.total_cappers + ' cappers, 0 rows at every threshold)');
+  }
+  check('every sport holding a graded record renders rows at some threshold',
+    unreachable.length === 0, unreachable.join(' | '));
+  console.log('        reachable: ' + reachable.join(', '));
+
+  // The two the user reported as wrongly blank, asserted by name in the UI.
+  for (const [id, label] of [['nba', 'NBA'], ['nhl', 'NHL']]) {
+    const expected = await api('/users/leaderboard?sortBy=net_units&limit=100&minPicks=5&sport=' + id);
+    await setFilters(page, { sport: id, minPicks: '5' });
+    const seen = await settle(page, (s) => s.rows.length === expected.leaderboard.length
+      && s.rows.length > 0 && s.rows.every((r) => r.sub.includes(label)));
+    check(label + ' is no longer blank: renders ' + expected.leaderboard.length + ' ranked cappers',
+      seen.rows.length === expected.leaderboard.length && seen.rows.length > 0,
+      'rows=' + seen.rows.length);
+    check(label + ' board names the season it is the standing from',
+      /between seasons/.test(seen.filtersFoot) && /\d{4}/.test(seen.filtersFoot), seen.filtersFoot);
+    check(label + ' dropdown count matches the rows it opens',
+      (seen.sportOptions.find((o) => o.startsWith(id + '|')) || '').includes('(' + expected.leaderboard.length + ')'),
+      seen.sportOptions.find((o) => o.startsWith(id + '|')));
+  }
+
+  // NFL: legitimately empty at 5 picks, reachable at 1, and the empty state
+  // must not tell a member to lower a filter they are already at the bottom of.
+  const nflFloor = await api('/users/leaderboard?sortBy=net_units&limit=100&minPicks=1&sport=nfl');
+  await setFilters(page, { sport: 'nfl', minPicks: '5' });
+  let nfl = await settle(page, (s) => s.rows.length === 0 && s.emptyTitle.includes('NFL'));
+  check('NFL at 5 picks explains the volume gate and points at the floor',
+    /minimum picks filter to 1|Drop the minimum picks/.test(nfl.emptyBody), nfl.emptyBody);
+  await setFilters(page, { minPicks: '1' });
+  nfl = await settle(page, (s) => s.rows.length === nflFloor.leaderboard.length && s.rows.length > 0);
+  check('NFL at 1 pick shows the records the site holds (' + nflFloor.leaderboard.length + ')',
+    nfl.rows.length === nflFloor.leaderboard.length && nfl.rows.length > 0, 'rows=' + nfl.rows.length);
+
   // ---- 7. search + sport together -------------------------------------------
   console.log('\n[7] Search combined with a sport');
   await setFilters(page, { sport: 'mlb', minPicks: '5', search: '' });
@@ -332,6 +401,8 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
     mlbWinStreaks.every((r, i) => b.streakRail[i].includes('W' + r.current_streak)),
     b.streakRail.join(' | '));
   check('streak rail names its scope', b.streakScope.includes('MLB'), b.streakScope);
+  check('an in-season board does not claim to be a finished season',
+    !/between seasons/.test(b.filtersFoot) && /last 30 days/.test(b.filtersFoot), b.filtersFoot);
   const mlbVolume = apiMlb.leaderboard.slice().sort((a, c) => c.total_picks - a.total_picks).slice(0, 4);
   check('volume rail follows the same scope',
     mlbVolume.every((r, i) => b.volumeRail[i] && b.volumeRail[i].includes(r.username)),
