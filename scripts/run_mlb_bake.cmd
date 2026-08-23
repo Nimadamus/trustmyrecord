@@ -5,7 +5,7 @@ REM Same order as the workflow: rebase, bake, cross-links, BOTH gates, then comm
 REM Fail closed: any non-zero exit stops before the commit and leaves the last good bake live.
 setlocal
 cd /d C:\Users\BL\tmrfe3-mlb-hub || exit /b 1
-set LOG=C:\Users\BL\tmrfe3-mlb-hub\_mlb_bake.log
+set LOG=C:\Users\BL\_mlb_bake.log
 echo ---- %DATE% %TIME% >> "%LOG%"
 
 git fetch origin -q                                     || goto :fail
