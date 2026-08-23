@@ -9551,6 +9551,38 @@
     function capStatus(p) { return normalizeStatus(p && p.status); }
     function isCapGraded(p) { return ['won','lost','push'].includes(capStatus(p)); }
     function capDateMs(p) { return new Date((p && (p.locked_at || p.created_at || p.graded_at)) || 0).getTime(); }
+    // Canonical streak chronology, ported from services/canonicalStreak.js.
+    // capDateMs() above is SUBMISSION time and must never order a streak: this
+    // panel's picks arrive without locked_at, so it fell back to created_at, and
+    // a slate submitted in one click shares one timestamp -- the "streak" was
+    // really insertion order. The canonical key is settlement time (graded_at)
+    // clamped into [commence_time, commence_time + 6h], so timely grading orders
+    // by when the result landed while a late regrade cannot jump an old game to
+    // the top of the run. Keep this in step with the backend module.
+    var CAP_STREAK_CLAMP_MS = 6 * 3600 * 1000;
+    function capMs(v) { var n = v ? new Date(v).getTime() : NaN; return isFinite(n) ? n : null; }
+    function capStreakOrderMs(p) {
+        p = p || {};
+        var start = capMs(p.commence_time);
+        if (start === null) start = capMs(p.locked_at);
+        if (start === null) start = capMs(p.graded_at);
+        if (start === null) start = capMs(p.created_at);
+        var settled = capMs(p.graded_at);
+        if (start === null) return settled;
+        if (settled === null) return start;
+        return Math.max(start, Math.min(settled, start + CAP_STREAK_CLAMP_MS));
+    }
+    // Oldest to newest, ties by pick id ascending -- identical to the backend's
+    // ORDER BY, so the client can never disagree about "most recent".
+    function capStreakSortAsc(rows) {
+        return (rows || []).slice().sort(function (a, b) {
+            var ta = capStreakOrderMs(a), tb = capStreakOrderMs(b);
+            if (ta === null && tb === null) return Number(a.id || 0) - Number(b.id || 0);
+            if (ta === null) return 1;
+            if (tb === null) return -1;
+            return (ta - tb) || (Number(a.id || 0) - Number(b.id || 0));
+        });
+    }
     function capOdds(p) { return Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds)); }
     function capUnits(p) { const n = Number(p && p.units); return Number.isFinite(n) ? n : 0; }
     function capPL(p) { const n = Number(p && p.result_units); return Number.isFinite(n) ? n : 0; }
@@ -9630,10 +9662,11 @@
         return american > 0 ? '+' + american : String(american);
     }
     function computeBestStreak(rows) {
-        const chrono = (rows || []).slice().sort((a, b) => capDateMs(a) - capDateMs(b));
+        const chrono = capStreakSortAsc(rows);
         let cur = 0, best = 0;
         for (const p of chrono) {
             const s = capStatus(p);
+            // Pushes are neutral: they neither extend nor reset a run.
             if (s === 'won') { cur++; if (cur > best) best = cur; }
             else if (s === 'lost') { cur = 0; }
         }
@@ -9683,11 +9716,11 @@
             const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
             const bestStreak = computeBestStreak(rows);
             const currentStreak = (function () {
-                const chrono = rows.slice().sort((a, b) => capDateMs(b) - capDateMs(a));
+                const chrono = capStreakSortAsc(rows).reverse(); // newest first
                 let n = 0, last = '';
                 for (const p of chrono) {
                     const s = capStatus(p);
-                    if (s !== 'won' && s !== 'lost') continue;
+                    if (s !== 'won' && s !== 'lost') continue; // pushes neutral
                     if (!last) last = s;
                     if (s === last) n++; else break;
                 }
