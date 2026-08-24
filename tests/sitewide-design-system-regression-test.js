@@ -9,6 +9,28 @@ const css = fs.readFileSync(path.join(root, 'static', 'css', 'tmr-sitewide.css')
 const pagePolish = fs.readFileSync(path.join(root, 'static', 'css', 'tmr-page-polish.css'), 'utf8');
 const nav = fs.readFileSync(path.join(root, 'static', 'js', 'tmr-sitewide.js'), 'utf8');
 const productSystem = fs.readFileSync(path.join(root, 'TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md'), 'utf8');
+/* Several shared primitives moved OUT of tmr-sitewide.css and into these two.
+   tmr-light.css is referenced by ~130 pages, so for the question "does this
+   vocabulary still exist anywhere in the shared system" all three count. */
+const lightCss = fs.readFileSync(path.join(root, 'static', 'css', 'tmr-light.css'), 'utf8');
+const allSystemCss = css + pagePolish + lightCss;
+
+/* Every page in the repo, walked once and cached, for the orphan check below. */
+const SKIP_DIRS = new Set(['node_modules', '.git', 'artifacts', 'tests', 'workers']);
+const htmlFiles = [];
+(function walk(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith('.') || SKIP_DIRS.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full);
+    else if (entry.name.endsWith('.html')) htmlFiles.push(full);
+  }
+})(root);
+const _cache = new Map();
+const readHtml = (f) => {
+  if (!_cache.has(f)) _cache.set(f, fs.readFileSync(f, 'utf8'));
+  return _cache.get(f);
+};
 
 for (const token of [
   '--tmr-app-bg',
@@ -27,22 +49,192 @@ for (const token of [
   assert(css.includes(token), `sitewide design token missing: ${token}`);
 }
 
-for (const selector of [
+/* ---------------------------------------------------------------------------
+   WHAT THE SHARED SYSTEM ACTUALLY PROVIDES
+   -----------------------------------------------------------------------------
+   This file used to assert 97 selectors and 57 CSS treatments, all against
+   tmr-sitewide.css. It had NEVER passed. The commit that added this test
+   (2ee02be91, "Add TrustMyRecord regression lock gate") deleted 1245 lines from
+   that stylesheet in the same commit, taking the whole primitives layer with it
+   - cards, modals, form fields, pagination, metrics, feed rows, breadcrumbs,
+   badges, alerts, skeletons, stack/cluster/grid.
+
+   Checked both directions on 2026-08-24 before changing anything:
+     * 80 of the 97 selectors exist in NONE of the three sitewide stylesheets;
+     * 47 of the 57 treatment assertions fail;
+     * and none of that vocabulary appears in any HTML in this repo.
+   The layer was abandoned whole, markup and CSS together, so no page renders
+   unstyled. Re-adding 1245 lines of CSS that nothing selects would put dead
+   rules back onto ~140 pages, which is worse than the gap.
+
+   So this file now asserts what the system genuinely ships, and the abandoned
+   half is guarded the OTHER way round (see RETIRED_PRIMITIVES): it fails if any
+   of it reappears in markup with no styles behind it. That is a real guarantee.
+   The old blanket assertion could never reach its second line. */
+const LIVE_SELECTORS = [
   'body.tmr-site-shell',
   '.tmr-global-nav',
   '.tmr-global-nav__brand',
   '.tmr-global-nav__button--primary',
   '.tmr-empty',
   '.tmr-empty__icon',
+  '.tmr-cap-card',
+  '.tmr-pick-table',
+  '.tmr-sport-tag--mlb',
+  '.tmr-sport-tag--nhl',
+  '@media (max-width: 860px)',
+  '@media (max-width: 720px)',
+];
+for (const selector of LIVE_SELECTORS) {
+  assert(css.includes(selector), `sitewide design selector missing: ${selector}`);
+}
+
+/* Moved out of tmr-sitewide.css but still real - page-polish and light carry
+   them, and tmr-light.css is on ~130 pages. Asserted against the whole system
+   rather than one file, so a future move does not fail this for the wrong
+   reason. */
+const RELOCATED_SELECTORS = [
   '.tmr-empty-state',
   '.tmr-loading-state',
   '.tmr-spinner',
+  '.tmr-page-head',
+  '.tmr-tab',
+];
+for (const selector of RELOCATED_SELECTORS) {
+  assert(allSystemCss.includes(selector),
+    `design selector missing from every sitewide stylesheet: ${selector}`);
+}
+
+assert(css.includes('linear-gradient') && css.includes('rgba(45, 212, 191'), 'sitewide design system must keep dark premium accent treatments');
+assert(css.includes('body.tmr-site-shell .btn-primary') && css.includes('body.tmr-site-shell button[type="submit"]'), 'sitewide primary button styles must remain');
+assert(css.includes('body.tmr-site-shell input') && css.includes('body.tmr-site-shell select') && css.includes('body.tmr-site-shell textarea'), 'sitewide form control styles must remain');
+assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
+assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
+assert(css.includes('body.tmr-site-shell table') && css.includes('body.tmr-site-shell th') && css.includes('body.tmr-site-shell td'), 'sitewide table styles must remain');
+assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
+
+for (const selector of [
+  'body.tmr-polished-page',
+  'body.tmr-polished-page::before',
+  '.tmr-shell',
+  '.tmr-page-header',
+  '.tmr-h1',
+  '.tmr-h2',
+  '.tmr-glass',
+  '.tmr-cta-primary',
+  '.tmr-cta-secondary',
+  '.tmr-empty-state',
+  '.tmr-input',
+  '.tmr-textarea',
+  '.tmr-select',
+  '@media (max-width: 720px)'
+]) {
+  assert(pagePolish.includes(selector), `page polish selector missing: ${selector}`);
+}
+
+assert(pagePolish.includes('linear-gradient(135deg, var(--tmrp-neon-cyan), var(--tmrp-neon-purple))'), 'page polish premium gradient treatment must remain');
+assert(pagePolish.includes('backdrop-filter: blur(20px) saturate(140%)'), 'page polish glass card treatment must remain');
+assert(pagePolish.includes('border-color: var(--tmrp-neon-cyan)') && pagePolish.includes('background: rgba(0, 255, 255, 0.04)'), 'page polish form focus treatment must remain');
+
+for (const required of [
+  'tmr-global-nav',
+  'tmr-global-nav__brand',
+  'buildLoggedOutActions',
+  'buildLoggedInActions',
+  'data-tmr-route',
+]) {
+  assert(nav.includes(required), `sitewide navigation source missing ${required}`);
+}
+
+/* Chrome is served two ways and this list must say which. Four of the pages
+   originally asserted here (index, polls, leaderboards, handicappers) migrated
+   to the design-system nav and legitimately no longer load tmr-sitewide.*;
+   asserting the legacy pair against them has been failing ever since. Every
+   page is still asserted - each against the chrome it actually uses - so a page
+   silently losing its nav is still caught. */
+const LEGACY_SHELL_PAGES = [
+  'sportsbook/index.html',
+  'profile/index.html',
+  'arena/index.html',
+  'feed/index.html',
+  'marketplace/index.html',
+  'about/index.html',
+  'contact/index.html',
+  'report-bug/index.html',
+  'privacy/index.html',
+  'terms/index.html',
+];
+for (const page of LEGACY_SHELL_PAGES) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  assert(/tmr-sitewide\.css\?v=/.test(html), `${page} must load cache-busted sitewide CSS`);
+  assert(/tmr-sitewide\.js\?v=/.test(html), `${page} must load cache-busted sitewide nav JS`);
+}
+
+const DS_SHELL_PAGES = [
+  'index.html',
+  'polls/index.html',
+  'leaderboards/index.html',
+  'handicappers/index.html',
+];
+for (const page of DS_SHELL_PAGES) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  assert(/tmr-ds-nav\.[0-9a-f]{12}\.js/.test(html),
+    `${page} must load the content-hashed design-system nav`);
+  assert(/tmr-ds\.[0-9a-f]{12}\.css/.test(html),
+    `${page} must load the content-hashed design-system stylesheet`);
+}
+
+for (const page of [
+  'about/index.html',
+  'contact/index.html',
+  'report-bug/index.html',
+  'privacy/index.html',
+  'terms/index.html',
+]) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  assert(/tmr-page-polish\.css\?v=/.test(html), `${page} must load cache-busted page polish CSS`);
+  /* Match the CLASS, not the whole attribute. These pages later gained a second
+     class (`tmr-polished-page tmr-light`), which an exact-string check reads as
+     "opted out" while the page is in fact opted in. */
+  assert(/<body[^>]*\bclass="[^"]*\btmr-polished-page\b/.test(html),
+    `${page} must opt into the polished page shell`);
+}
+
+for (const section of [
+  'Design Bible',
+  'Phase 2: Shared Design System Cleanup',
+  'Buttons',
+  'Cards',
+  'Forms',
+  'Tables',
+  'Empty States',
+  'Mobile Layouts',
+]) {
+  assert(productSystem.includes(section), `product upgrade system missing ${section}`);
+}
+
+console.log('sitewide design system regression test passed');
+
+/* ---------------------------------------------------------------------------
+   THE RETIRED VOCABULARY
+   -----------------------------------------------------------------------------
+   Deleted by 2ee02be91 and never re-homed. Nothing styles these and nothing
+   uses them, which is the ONLY reason their absence is acceptable. Listed here
+   rather than deleted from the test so the record survives, and guarded in the
+   direction that can still catch a real defect: if one reappears in MARKUP
+   while still having no CSS anywhere, that page renders unstyled and this
+   fails.
+
+   A page is allowed to own the class outright - /embed/ is the standing
+   example, a self-contained widget that defines .tmr-card, .tmr-grid and
+   .tmr-avatar in its own inline <style>. Those are styled, just not by the
+   shared system, so page-local CSS counts. */
+const RETIRED_PRIMITIVES = [
   '.tmr-skeleton',
   '.tmr-skeleton-line',
   '.tmr-skeleton-block',
   '.tmr-skeleton-avatar',
   '.tmr-table-wrap',
-  '.tmr-page-head',
   '.tmr-page-title',
   '.tmr-page-subtitle',
   '.tmr-stack',
@@ -79,7 +271,6 @@ for (const selector of [
   '.tmr-price-stack',
   '.tmr-price-stack__label',
   '.tmr-segmented',
-  '.tmr-tab',
   '.tmr-filter-bar',
   '.tmr-filter-chip',
   '.tmr-modal-backdrop',
@@ -119,148 +310,22 @@ for (const selector of [
   '.tmr-status',
   '.tmr-result-chip',
   '.tmr-alert',
-  '.tmr-cap-card',
-  '.tmr-pick-table',
-  '.tmr-sport-tag--mlb',
-  '.tmr-sport-tag--nhl',
-  '@media (max-width: 860px)',
-  '@media (max-width: 720px)',
-]) {
-  assert(css.includes(selector), `sitewide design selector missing: ${selector}`);
+];
+const orphaned = [];
+for (const selector of RETIRED_PRIMITIVES) {
+  if (allSystemCss.includes(selector)) continue;           // quietly came back: fine
+  const cls = selector.slice(1);
+  const usedIn = new RegExp('class="[^"]*\\b' + cls + '\\b');
+  const stylesItself = new RegExp('\\.' + cls + '\\s*[,{]');
+  const broken = htmlFiles.filter((f) => {
+    const html = readHtml(f);
+    return usedIn.test(html) && !stylesItself.test(html);
+  });
+  if (broken.length) {
+    orphaned.push(`${selector} used by ${broken.length} page(s) with no CSS anywhere `
+      + `(e.g. ${path.relative(root, broken[0])})`);
+  }
 }
-
-assert(css.includes('linear-gradient') && css.includes('rgba(45, 212, 191'), 'sitewide design system must keep dark premium accent treatments');
-assert(css.includes('body.tmr-site-shell .btn-primary') && css.includes('body.tmr-site-shell button[type="submit"]'), 'sitewide primary button styles must remain');
-assert(css.includes('body.tmr-site-shell input') && css.includes('body.tmr-site-shell select') && css.includes('body.tmr-site-shell textarea'), 'sitewide form control styles must remain');
-assert(css.includes('body.tmr-site-shell select') && css.includes('appearance: none') && css.includes('padding-right: 38px'), 'sitewide select controls must remain branded');
-assert(css.includes(':focus-visible') && css.includes('outline-offset: 3px'), 'sitewide keyboard focus ring must remain visible');
-assert(css.includes('[aria-disabled="true"]') && css.includes('cursor: not-allowed'), 'sitewide disabled control treatment must remain');
-assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
-assert(css.includes('.tmr-page-head') && css.includes('.tmr-page-title') && css.includes('.tmr-page-subtitle'), 'sitewide page title primitives must remain');
-assert(css.includes('.tmr-grid') && css.includes('repeat(auto-fit') && css.includes('minmax(min(100%, 260px), 1fr)'), 'sitewide responsive grid primitive must remain');
-assert(css.includes('.tmr-card--soft') && css.includes('.tmr-card--accent') && css.includes('var(--tmr-card-pad)'), 'sitewide card primitives must remain');
-assert(css.includes('.tmr-card__head') && css.includes('.tmr-card__foot') && css.includes('justify-content: space-between'), 'sitewide card header/footer primitives must remain');
-assert(css.includes('.tmr-divider--strong') && css.includes('.tmr-divider-label::before') && css.includes('.tmr-divider-label::after'), 'sitewide divider primitives must remain');
-assert(css.includes('.tmr-avatar img') && css.includes('object-fit: cover') && css.includes('.tmr-avatar--lg'), 'sitewide avatar primitives must remain');
-assert(css.includes('.tmr-identity') && css.includes('.tmr-identity__body') && css.includes('overflow-wrap: anywhere'), 'sitewide identity primitive must remain wrap-safe');
-assert(css.includes('.tmr-form-grid') && css.includes('minmax(min(100%, 220px), 1fr)') && css.includes('.tmr-field--full'), 'sitewide form grid primitives must remain responsive');
-assert(css.includes('.tmr-field[data-invalid="true"] input') && css.includes('.tmr-field__error') && css.includes('rgba(239, 68, 68'), 'sitewide form field error state must remain');
-assert(css.includes('.tmr-stepper') && css.includes('.tmr-step[aria-current="step"]') && css.includes('.tmr-step.is-complete .tmr-step__index'), 'sitewide stepper primitives must remain');
-assert(css.includes('.tmr-progress__bar') && css.includes('--tmr-progress-value') && css.includes('linear-gradient(90deg, var(--tmr-accent)'), 'sitewide progress primitive must remain');
-assert(css.includes('.tmr-odds--positive') && css.includes('.tmr-odds--negative') && css.includes('font-variant-numeric: tabular-nums'), 'sitewide odds primitives must remain readable');
-assert(css.includes('.tmr-unit.is-positive') && css.includes('.tmr-unit.is-negative') && css.includes('.tmr-price-stack__label'), 'sitewide unit and price stack primitives must remain');
-assert(css.includes('.tmr-cluster') && css.includes('flex-wrap: wrap') && css.includes('.tmr-stack'), 'sitewide stack and cluster layout primitives must remain');
-assert(css.includes('.tmr-segmented') && css.includes('.tmr-filter-bar') && css.includes('.tmr-tab.is-active') && css.includes('.tmr-filter-chip[aria-pressed="true"]'), 'sitewide segmented tab/filter primitives must remain');
-assert(css.includes('.tmr-tab[aria-selected="true"]') && css.includes('white-space: nowrap'), 'sitewide tab active state and wrapping protection must remain');
-assert(css.includes('.tmr-modal-backdrop.is-open') && css.includes('.tmr-modal-backdrop[aria-hidden="false"]'), 'sitewide modal open states must remain');
-assert(css.includes('.tmr-modal__head') && css.includes('.tmr-modal__body') && css.includes('.tmr-modal__actions'), 'sitewide modal structure primitives must remain');
-assert(css.includes('grid-template-rows: auto minmax(0, 1fr) auto') && css.includes('max-height: min(86vh, 820px)'), 'sitewide modal sizing must remain responsive');
-assert(css.includes('.tmr-menu__item--danger') && css.includes('.tmr-menu__item[aria-current="page"]'), 'sitewide menu states must remain');
-assert(css.includes('min-width: min(260px, calc(100vw - 32px))') && css.includes('max-width: min(360px, calc(100vw - 32px))'), 'sitewide menu responsive sizing must remain');
-assert(css.includes('.tmr-tooltip[data-tooltip]::after') && css.includes('content: attr(data-tooltip)') && css.includes('.tmr-tooltip:focus-within[data-tooltip]::after'), 'sitewide tooltip primitive must remain accessible');
-assert(css.includes('.tmr-help-text') && css.includes('.tmr-sr-only') && css.includes('clip: rect(0, 0, 0, 0)'), 'sitewide help text and screen-reader utility must remain');
-assert(css.includes('.tmr-pagination__controls') && css.includes('.tmr-page-button[aria-current="page"]'), 'sitewide pagination active state must remain');
-assert(css.includes('.tmr-page-button[aria-disabled="true"]') && css.includes('.tmr-count-summary'), 'sitewide pagination disabled state and count summary must remain');
-assert(css.includes('.tmr-metric-grid') && css.includes('minmax(min(100%, 150px), 1fr)') && css.includes('.tmr-metric-value'), 'sitewide metric grid primitive must remain responsive');
-assert(css.includes('font-variant-numeric: tabular-nums') && css.includes('.tmr-metric-value.is-positive') && css.includes('.tmr-metric-value.is-negative'), 'sitewide metric value states must remain readable');
-assert(css.includes('.tmr-feed-item') && css.includes('grid-template-columns: auto minmax(0, 1fr)') && css.includes('.tmr-feed-text'), 'sitewide feed/list item primitive must remain');
-assert(css.includes('@media (max-width: 520px)') && css.includes('.tmr-feed-avatar') && css.includes('overflow-wrap: anywhere'), 'sitewide feed/list primitive must stay mobile-safe');
-assert(css.includes('.tmr-action-bar') && css.includes('.tmr-action-group') && css.includes('.tmr-action-link[aria-pressed="true"]'), 'sitewide action bar primitives must remain');
-assert(css.includes('.tmr-action-link--primary') && css.includes('.tmr-action-link--danger') && css.includes('white-space: nowrap'), 'sitewide action link variants must remain readable');
-assert(css.includes('.tmr-breadcrumb') && css.includes('.tmr-breadcrumb__current') && css.includes('.tmr-breadcrumb__sep'), 'sitewide breadcrumb primitive must remain');
-assert(css.includes('.tmr-breadcrumb a:focus-visible') && css.includes('overflow-wrap: anywhere'), 'sitewide breadcrumb links must remain accessible and wrap-safe');
-assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
-assert(css.includes('.tmr-badge--verified') && css.includes('.tmr-status--private') && css.includes('.tmr-result-chip--win') && css.includes('.tmr-result-chip--loss'), 'sitewide badge/status/result primitives must remain');
-assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
-assert(css.includes('body.tmr-site-shell table') && css.includes('body.tmr-site-shell th') && css.includes('body.tmr-site-shell td'), 'sitewide table styles must remain');
-assert(css.includes('body.tmr-site-shell .tmr-table-wrap') && css.includes('overflow-x: auto'), 'sitewide table wrapper must keep responsive scrolling');
-assert(css.includes('font-variant-numeric: tabular-nums') && css.includes('td[data-type="number"]'), 'sitewide numeric table alignment must remain');
-assert(css.includes('body.tmr-site-shell tbody tr:hover td') && css.includes('rgba(45, 212, 191, 0.035)'), 'sitewide table row hover treatment must remain branded');
-assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
-assert(css.includes('body.tmr-site-shell .tmr-empty-state') && css.includes('body.tmr-site-shell .tmr-loading-state'), 'legacy live empty/loading state variants must remain styled');
-assert(css.includes('@keyframes tmr-spin') && css.includes('border-top-color: var(--tmr-accent)'), 'sitewide loading spinner style must remain branded');
-assert(css.includes('@keyframes tmr-skeleton-shimmer') && css.includes('.tmr-skeleton-stack') && css.includes('prefers-reduced-motion: reduce'), 'sitewide skeleton loading primitives must remain');
-assert(css.includes('background-size: 220% 100%') && css.includes('.tmr-skeleton-line--short'), 'sitewide skeleton shimmer and variants must remain');
-assert(css.includes('.tmr-alert--success') && css.includes('.tmr-alert--warning') && css.includes('.tmr-alert--danger') && css.includes('.tmr-alert--info'), 'sitewide alert variants must remain');
-assert(css.includes('body.tmr-site-shell .verify-success') && css.includes('body.tmr-site-shell .verify-error') && css.includes('body.tmr-site-shell .message.error'), 'legacy live message classes must remain styled');
-
-for (const selector of [
-  'body.tmr-polished-page',
-  'body.tmr-polished-page::before',
-  '.tmr-shell',
-  '.tmr-page-header',
-  '.tmr-h1',
-  '.tmr-h2',
-  '.tmr-glass',
-  '.tmr-cta-primary',
-  '.tmr-cta-secondary',
-  '.tmr-empty-state',
-  '.tmr-input',
-  '.tmr-textarea',
-  '.tmr-select',
-  '@media (max-width: 720px)'
-]) {
-  assert(pagePolish.includes(selector), `page polish selector missing: ${selector}`);
-}
-
-assert(pagePolish.includes('linear-gradient(135deg, var(--tmrp-neon-cyan), var(--tmrp-neon-purple))'), 'page polish premium gradient treatment must remain');
-assert(pagePolish.includes('backdrop-filter: blur(20px) saturate(140%)'), 'page polish glass card treatment must remain');
-assert(pagePolish.includes('border-color: var(--tmrp-neon-cyan)') && pagePolish.includes('background: rgba(0, 255, 255, 0.04)'), 'page polish form focus treatment must remain');
-
-for (const required of [
-  'tmr-global-nav',
-  'tmr-global-nav__brand',
-  'buildLoggedOutActions',
-  'buildLoggedInActions',
-  'data-tmr-route',
-]) {
-  assert(nav.includes(required), `sitewide navigation source missing ${required}`);
-}
-
-for (const page of [
-  'index.html',
-  'sportsbook/index.html',
-  'profile/index.html',
-  'polls/index.html',
-  'arena/index.html',
-  'leaderboards/index.html',
-  'handicappers/index.html',
-  'feed/index.html',
-  'marketplace/index.html',
-  'about/index.html',
-  'contact/index.html',
-  'report-bug/index.html',
-  'privacy/index.html',
-  'terms/index.html',
-]) {
-  const html = fs.readFileSync(path.join(root, page), 'utf8');
-  assert(/tmr-sitewide\.css\?v=/.test(html), `${page} must load cache-busted sitewide CSS`);
-  assert(/tmr-sitewide\.js\?v=/.test(html), `${page} must load cache-busted sitewide nav JS`);
-}
-
-for (const page of [
-  'about/index.html',
-  'contact/index.html',
-  'report-bug/index.html',
-  'privacy/index.html',
-  'terms/index.html',
-]) {
-  const html = fs.readFileSync(path.join(root, page), 'utf8');
-  assert(/tmr-page-polish\.css\?v=/.test(html), `${page} must load cache-busted page polish CSS`);
-  assert(html.includes('body class="tmr-polished-page"'), `${page} must opt into the polished page shell`);
-}
-
-for (const section of [
-  'Design Bible',
-  'Phase 2: Shared Design System Cleanup',
-  'Buttons',
-  'Cards',
-  'Forms',
-  'Tables',
-  'Empty States',
-  'Mobile Layouts',
-]) {
-  assert(productSystem.includes(section), `product upgrade system missing ${section}`);
-}
-
-console.log('sitewide design system regression test passed');
+assert(orphaned.length === 0,
+  'retired primitives are being used in markup with no styles behind them:\n  '
+  + orphaned.join('\n  '));
