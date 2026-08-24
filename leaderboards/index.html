@@ -789,6 +789,28 @@
                                 <input id="capperSearch" type="text" placeholder="@username or display name">
                             </div>
                             <div class="field">
+                                <label for="boardFilter">Board</label>
+                                <!-- SCOPED_BOARDS_20260824: the all-time board
+                                     is 20+ graded picks and a year of history,
+                                     so a member who joined last week is ranked
+                                     against accounts with 600 graded picks. The
+                                     rookie and period boards are the SAME
+                                     eligible set narrowed by join date or
+                                     grading window (/users/leaderboard/scoped),
+                                     not a second definition of a record.
+                                     Measured before shipping: rookie 15,
+                                     this week 14, this month 24, against 15 on
+                                     the all-time board. -->
+                                <select id="boardFilter">
+                                    <option value="all-time" selected>All time</option>
+                                    <option value="week">This week</option>
+                                    <option value="month">This month</option>
+                                    <option value="season">This season</option>
+                                    <option value="rookie">New members</option>
+                                    <option value="rookie-month">New members, this month</option>
+                                </select>
+                            </div>
+                            <div class="field">
                                 <label for="sportFilter">Sport</label>
                                 <!-- LEADERBOARD_SPORT_FILTER_20260823: replaced at
                                      runtime by loadSportOptions() from
@@ -1266,6 +1288,16 @@
         // #sortFilter must appear here; an unmapped value would silently be
         // served ROI-ordered, which is the exact bug MAIN_LEADERBOARD_SORT_SQL
         // was introduced to end on the server side.
+        // UI board value -> the scope the API is asked for. `all-time` is
+        // deliberately absent: it means "use the untouched /leaderboard
+        // endpoint", which is what a missing entry resolves to.
+        const BOARD_TO_SCOPE = {
+            week: { period: 'week' },
+            month: { period: 'month' },
+            season: { period: 'season' },
+            rookie: { cohort: 'rookie' },
+            'rookie-month': { cohort: 'rookie', period: 'month' }
+        };
         const SORT_TO_API = {
             units: 'net_units',
             roi: 'roi',
@@ -1288,10 +1320,12 @@
             const sortEl = document.getElementById('sortFilter');
             const sampleEl = document.getElementById('sampleFilter');
             const searchEl = document.getElementById('capperSearch');
+            const boardEl = document.getElementById('boardFilter');
             return {
                 search: String(searchEl && searchEl.value || '').trim().toLowerCase(),
                 sport: String(sportEl && sportEl.value || 'all'),
                 sort: String(sortEl && sortEl.value || 'units'),
+                board: String(boardEl && boardEl.value || 'all-time'),
                 minPicks: Math.max(1, num(sampleEl && sampleEl.value) || 5)
             };
         }
@@ -1704,6 +1738,8 @@
             document.getElementById('sportFilter').value = 'all';
             document.getElementById('sortFilter').value = 'units';
             document.getElementById('sampleFilter').value = '5';
+            const boardReset = document.getElementById('boardFilter');
+            if (boardReset) boardReset.value = 'all-time';
             // Reset changes the SCOPE back to the default board, so it has to go
             // back to the server. Re-sorting the sport-scoped rows already in
             // memory would leave a "reset" board still showing one sport's
@@ -1760,12 +1796,23 @@
             const seq = ++boardRequestSeq;
 
             try {
-                const data = await window.api.getLeaderboard({
+                // SCOPED_BOARDS_20260824: one request either way. The
+                // all-time board keeps its own endpoint untouched; a scoped
+                // board is the same eligible set narrowed by cohort and/or
+                // grading window. BOARD_TO_SCOPE is the only place that
+                // mapping lives, so an option that is not in it cannot
+                // silently fall through to a different board than the one
+                // selected -- the same failure SORT_TO_API exists to prevent.
+                const scope = BOARD_TO_SCOPE[filters.board];
+                const query = {
                     sport: (filters.sport && filters.sport !== 'all') ? filters.sport : '',
                     sortBy: SORT_TO_API[filters.sort] || 'net_units',
                     limit: BOARD_LIMIT,
                     minPicks: filters.minPicks
-                });
+                };
+                const data = scope
+                    ? await window.api.getScopedLeaderboard({ ...query, ...scope })
+                    : await window.api.getLeaderboard(query);
                 // A stale response from a filter the member has already moved
                 // off must never paint. Without this, flipping sport twice in
                 // quick succession left whichever request finished last on
@@ -2382,6 +2429,11 @@
                 loadSportOptions(currentFilters().minPicks);
                 loadHandicappers();
             });
+
+            // A board change is always a new server query: the eligible set
+            // itself differs, so there is nothing in hand to re-sort.
+            const boardEl = document.getElementById('boardFilter');
+            if (boardEl) boardEl.addEventListener('change', function() { loadHandicappers(); });
 
             const sortEl = document.getElementById('sortFilter');
             if (sortEl) sortEl.addEventListener('change', function() {

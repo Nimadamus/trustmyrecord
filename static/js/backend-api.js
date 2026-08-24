@@ -541,6 +541,20 @@ class TrustMyRecordAPI {
         return this.request(url);
     }
 
+    // A board a NEW member can win. Same eligible set as getLeaderboard above,
+    // narrowed by cohort (rookie = joined in the last 30 days) and/or period
+    // (week/month/season = picks graded in that window). The all-time board is
+    // untouched; this is a separate endpoint on purpose.
+    async getScopedLeaderboard(options = {}) {
+        const { cohort, period, sport, sortBy = 'net_units', limit = 50, minPicks } = options || {};
+        let url = `/users/leaderboard/scoped?sortBy=${encodeURIComponent(sortBy)}&limit=${encodeURIComponent(limit)}`;
+        if (cohort) url += `&cohort=${encodeURIComponent(cohort)}`;
+        if (period) url += `&period=${encodeURIComponent(period)}`;
+        if (sport) url += `&sport=${encodeURIComponent(sport)}`;
+        if (minPicks != null && minPicks !== '') url += `&minPicks=${encodeURIComponent(minPicks)}`;
+        return this.request(url);
+    }
+
     // The sports the leaderboard can actually answer for, with each one's
     // ranked-capper count at `minPicks`. Feeds the Sport dropdown so it can
     // never again offer a sport with no records behind it (NCAAB, NCAAF and UFC

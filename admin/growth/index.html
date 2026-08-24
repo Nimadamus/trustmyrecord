@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Growth Dashboard | TrustMyRecord</title>
+  <!-- index, follow to match the rest of the admin surface (/admin/ and
+       /activation/, the existing internal diagnostics page). The owner rule is
+       never noindex anything; the noindex allowlist in
+       tests/seo-indexability-regression-test.js is a deliberate decision per
+       SEO_INDEXING_PROTOCOL.md section 2, not something to expand in passing.
+       Nothing here is exposed without an admin token: the page renders empty
+       for anyone who is not signed in as an admin. -->
+  <meta name="robots" content="index, follow">
+  <link rel="stylesheet" href="/static/css/style.css?v=a98213a1dfa6">
+  <style>
+    /* Same chrome as /admin/ — this is an internal ops page, not a redesign. */
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0b1117; color: #e8eef5; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.2; letter-spacing: 0; }
+    h2 { margin: 0 0 4px; font-size: 16px; }
+    .muted { color: #9bacbd; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .panel { background: #121a23; border: 1px solid #263546; border-radius: 8px; padding: 14px; }
+    .stat { min-height: 76px; }
+    .stat .label { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    .stat .value { margin-top: 8px; font-size: 24px; font-weight: 750; }
+    .stat .sub { margin-top: 4px; color: #9bacbd; font-size: 12px; }
+    .ok { color: #4ade80; }
+    .bad { color: #fb7185; }
+    .warn { color: #fbbf24; }
+    button { border: 1px solid #3b5066; background: #1a2633; color: #f4f7fb; border-radius: 7px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+    button.primary { background: #d9a441; border-color: #d9a441; color: #111827; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    input, select { background: #0d141c; border: 1px solid #304155; border-radius: 7px; color: #e8eef5; padding: 10px 12px; }
+    input.token { width: min(520px, 100%); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; border-bottom: 1px solid #243242; padding: 10px 8px; vertical-align: top; }
+    th { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .bar { position: relative; background: #0d141c; border: 1px solid #243242; border-radius: 5px; height: 22px; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #0d9488, #22d3ee); }
+    .spark { display: flex; align-items: flex-end; gap: 2px; height: 60px; }
+    .spark i { flex: 1 1 0; background: #0d9488; min-height: 1px; border-radius: 2px 2px 0 0; }
+    .spark i.b { background: #d9a441; }
+    @media (max-width: 900px) { .grid, .grid5, .two { grid-template-columns: 1fr; } .top { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <h1>Growth Dashboard</h1>
+        <div class="muted" id="updated">Waiting for report...</div>
+      </div>
+      <div class="actions">
+        <label class="muted" for="windowDays">Cohort window</label>
+        <select id="windowDays">
+          <option value="30">30 days</option>
+          <option value="90" selected>90 days</option>
+          <option value="180">180 days</option>
+          <option value="365">All time (365d)</option>
+        </select>
+        <button id="refreshBtn">Refresh</button>
+        <button class="primary" id="freshBtn">Bypass Cache</button>
+      </div>
+    </div>
+
+    <section class="panel" style="margin-bottom:12px">
+      <div class="actions">
+        <input id="adminToken" class="token" type="password" autocomplete="off" placeholder="Optional ADMIN_TOKEN. Founder login token is used automatically when available.">
+        <button id="saveTokenBtn">Save Token</button>
+        <a href="/admin/" style="color:#e8eef5;">&larr; Admin</a>
+      </div>
+      <div class="muted" style="margin-top:8px">Read-only. Every figure is derived from tables that already exist; this page writes nothing.</div>
+    </section>
+
+    <!-- ---------------------------------------------------------- headline -->
+    <section class="grid5">
+      <div class="panel stat"><div class="label">Members</div><div class="value" id="mMembers">-</div><div class="sub" id="mMembersSub">real accounts only</div></div>
+      <div class="panel stat"><div class="label">New (30d)</div><div class="value" id="mNew30">-</div><div class="sub" id="mNew7">-</div></div>
+      <div class="panel stat"><div class="label">First pick &le;24h</div><div class="value" id="mAct24">-</div><div class="sub" id="mAct72">-</div></div>
+      <div class="panel stat"><div class="label">Active last 7d</div><div class="value" id="mActive7">-</div><div class="sub" id="mActive30">-</div></div>
+      <div class="panel stat"><div class="label">Total picks</div><div class="value" id="mPicks">-</div><div class="sub">last 30 days</div></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel stat"><div class="label">D1 retention</div><div class="value" id="mD1">-</div><div class="sub" id="mD1Sub">-</div></div>
+      <div class="panel stat"><div class="label">D7 retention</div><div class="value" id="mD7">-</div><div class="sub" id="mD7Sub">-</div></div>
+      <div class="panel stat"><div class="label">D30 retention</div><div class="value" id="mD30">-</div><div class="sub" id="mD30Sub">-</div></div>
+      <div class="panel stat"><div class="label">Never active</div><div class="value" id="mNever">-</div><div class="sub">no activity of any kind</div></div>
+    </section>
+    <div class="muted" id="retDef" style="margin:-6px 0 16px"></div>
+
+    <!-- ------------------------------------------------------------- funnel -->
+    <section class="panel" style="margin-bottom:12px">
+      <h2>Activation funnel</h2>
+      <div class="muted" id="funnelWindow">-</div>
+      <div style="overflow:auto;margin-top:10px">
+        <table>
+          <thead><tr><th>Stage</th><th class="num">Members</th><th class="num">% of registered</th><th class="num">Lost from previous</th><th class="num">Kept from previous</th><th style="width:30%">Share</th></tr></thead>
+          <tbody id="funnelRows"><tr><td colspan="6" class="muted">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="two" style="margin-bottom:12px">
+      <div class="panel">
+        <h2>Activation speed</h2>
+        <div class="muted">If members do not lock a pick in their first session they almost never do it later. This is the number that decides whether nurture emails or first-session prompts are the lever.</div>
+        <div style="overflow:auto;margin-top:10px">
+          <table><tbody id="speedRows"><tr><td class="muted">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Pick progression (all time)</h2>
+        <div class="muted">Every rung is a subset of the one above it.</div>
+        <div style="overflow:auto;margin-top:10px">
+          <table>
+            <thead><tr><th>Rung</th><th class="num">Members</th><th class="num">Kept from previous rung</th></tr></thead>
+            <tbody id="ladderRows"><tr><td colspan="3" class="muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- feature -->
+    <section class="panel" style="margin-bottom:12px">
+      <h2>Feature reach</h2>
+      <div class="muted">How many real members have EVER used each feature. The bottom of this table is where the connective work pays off.</div>
+      <div style="overflow:auto;margin-top:10px">
+        <table>
+          <thead><tr><th>Feature</th><th class="num">Ever used</th><th class="num">Never used</th><th class="num">Reach</th><th style="width:35%">Share</th></tr></thead>
+          <tbody id="reachRows"><tr><td colspan="5" class="muted">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="two" style="margin-bottom:12px">
+      <div class="panel">
+        <h2>Signups &amp; first picks</h2>
+        <div class="muted" id="seriesLabel">-</div>
+        <div class="spark" id="sparkSignups" style="margin-top:12px"></div>
+        <div class="muted" style="margin-top:6px">Teal = signups. Gold = first picks.</div>
+      </div>
+      <div class="panel">
+        <h2>Acquisition (first touch at signup)</h2>
+        <div class="muted" id="acqCoverage">-</div>
+        <div style="overflow:auto;margin-top:10px">
+          <table>
+            <thead><tr><th>utm_source</th><th>Referrer</th><th class="num">Signups</th><th class="num">With a pick</th></tr></thead>
+            <tbody id="acqRows"><tr><td colspan="4" class="muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="muted" id="acqNote" style="margin-top:8px"></div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------- tracking health -->
+    <section class="panel">
+      <h2>Tracking health</h2>
+      <div class="muted">Proof that each capture layer is still receiving rows, rather than an assumption that it is.</div>
+      <div style="overflow:auto;margin-top:10px">
+        <table>
+          <thead><tr><th>Store</th><th class="num">Rows</th><th>Last write</th><th class="num">Age (h)</th><th>Status</th></tr></thead>
+          <tbody id="healthRows"><tr><td colspan="5" class="muted">Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="muted" id="observerCoverage" style="margin-top:10px"></div>
+    </section>
+  </main>
+
+  <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+  <script>
+    const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const tokenInput = document.getElementById('adminToken');
+    tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
+
+    function authHeaders() {
+      const headers = { 'content-type': 'application/json' };
+      const adminToken = tokenInput.value.trim();
+      const bearer = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+      if (adminToken) headers['x-admin-token'] = adminToken;
+      if (bearer) headers.Authorization = 'Bearer ' + bearer;
+      return headers;
+    }
+
+    async function request(path) {
+      const response = await fetch(API_BASE + path, { headers: authHeaders() });
+      const text = await response.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch (_) { data = { raw: text }; }
+      if (!response.ok) throw new Error((data && data.error) || ('HTTP ' + response.status));
+      return data;
+    }
+
+    const n = (v) => (v === null || v === undefined ? '-' : Number(v).toLocaleString());
+    const p = (v) => (v === null || v === undefined ? '-' : Number(v).toFixed(1) + '%');
+    function bar(value) {
+      const w = Math.max(0, Math.min(100, Number(value) || 0));
+      return '<div class="bar"><span style="width:' + w + '%"></span></div>';
+    }
+    function esc(s) {
+      return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function when(value) {
+      if (!value) return '-';
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+    }
+
+    function renderHeadline(r) {
+      const c = r.census;
+      const speed = r.drop_offs.activation_speed;
+      const ret = r.retention;
+      document.getElementById('mMembers').textContent = n(c.members);
+      document.getElementById('mMembersSub').textContent = n(c.accounts_total) + ' accounts incl. bots/test/deleted';
+      document.getElementById('mNew30').textContent = n(c.new_30d);
+      document.getElementById('mNew7').textContent = n(c.new_7d) + ' in the last 7 days';
+      document.getElementById('mAct24').textContent = p(speed.pct_24h);
+      document.getElementById('mAct72').textContent = p(speed.pct_72h) + ' within 72h';
+      document.getElementById('mActive7').textContent = n(ret.counts.active_last_7d);
+      document.getElementById('mActive30').textContent = n(ret.counts.active_last_30d) + ' in the last 30 days';
+
+      const picks30 = (r.daily || []).reduce((sum, d) => sum + (Number(d.picks) || 0), 0);
+      document.getElementById('mPicks').textContent = n(picks30);
+
+      document.getElementById('mD1').textContent = p(ret.rates.d1);
+      document.getElementById('mD1Sub').textContent = n(ret.counts.d1_returned) + ' of ' + n(ret.counts.d1_eligible) + ' eligible';
+      document.getElementById('mD7').textContent = p(ret.rates.d7);
+      document.getElementById('mD7Sub').textContent = n(ret.counts.d7_returned) + ' of ' + n(ret.counts.d7_eligible) + ' eligible';
+      document.getElementById('mD30').textContent = p(ret.rates.d30);
+      document.getElementById('mD30Sub').textContent = n(ret.counts.d30_returned) + ' of ' + n(ret.counts.d30_eligible) + ' eligible';
+      document.getElementById('mNever').textContent = n(ret.counts.never_active);
+      document.getElementById('retDef').textContent = ret.definition;
+    }
+
+    function renderFunnel(r) {
+      document.getElementById('funnelWindow').textContent =
+        'Signup cohort: last ' + r.drop_offs.window_days + ' days (' + n(r.drop_offs.funnel[0].members) + ' members).';
+      document.getElementById('funnelRows').innerHTML = r.drop_offs.funnel.map((f) =>
+        '<tr><td>' + esc(f.stage) + '</td>'
+        + '<td class="num">' + n(f.members) + '</td>'
+        + '<td class="num">' + p(f.pct_of_registered) + '</td>'
+        + '<td class="num' + (f.lost_from_previous > 0 ? ' bad' : '') + '">' + n(f.lost_from_previous) + '</td>'
+        + '<td class="num">' + (f.pct_kept_from_previous === null ? '-' : p(f.pct_kept_from_previous)) + '</td>'
+        + '<td>' + bar(f.pct_of_registered) + '</td></tr>').join('');
+
+      const s = r.drop_offs.activation_speed;
+      document.getElementById('speedRows').innerHTML = [
+        ['Registered', n(s.registered)],
+        ['First pick within 24h', n(s.first_pick_within_24h) + ' (' + p(s.pct_24h) + ')'],
+        ['First pick within 72h', n(s.first_pick_within_72h) + ' (' + p(s.pct_72h) + ')'],
+        ['First pick ever', n(s.first_pick_ever)],
+        ['Of everyone who ever activated, share who did it in 24h', p(s.pct_of_activators_who_did_it_in_24h)],
+      ].map((row) => '<tr><td>' + esc(row[0]) + '</td><td class="num">' + row[1] + '</td></tr>').join('');
+
+      const L = r.pick_ladder_all_time;
+      const rungs = [
+        ['1 pick', L.counts.pick_1, null],
+        ['2 picks', L.counts.pick_2, L.rates.pick_2_of_pick_1],
+        ['5 picks', L.counts.pick_5, L.rates.pick_5_of_pick_2],
+        ['10 picks', L.counts.pick_10, L.rates.pick_10_of_pick_5],
+        ['25 picks', L.counts.pick_25, L.rates.pick_25_of_pick_10],
+        ['50 picks', L.counts.pick_50, L.rates.pick_50_of_pick_25],
+        ['100 picks', L.counts.pick_100, L.rates.pick_100_of_pick_50],
+      ];
+      document.getElementById('ladderRows').innerHTML = rungs.map((row) =>
+        '<tr><td>' + esc(row[0]) + '</td><td class="num">' + n(row[1]) + '</td><td class="num">' + (row[2] === null ? '-' : p(row[2])) + '</td></tr>').join('');
+    }
+
+    function renderReach(r) {
+      document.getElementById('reachRows').innerHTML = r.drop_offs.unreached_features.map((f) =>
+        '<tr><td>' + esc(f.feature) + '</td>'
+        + '<td class="num">' + n(f.used) + '</td>'
+        + '<td class="num' + (f.reach_pct !== null && f.reach_pct < 15 ? ' bad' : '') + '">' + n(f.never_used) + '</td>'
+        + '<td class="num">' + p(f.reach_pct) + '</td>'
+        + '<td>' + bar(f.reach_pct) + '</td></tr>').join('');
+    }
+
+    function renderSeries(r) {
+      const days = r.daily || [];
+      if (!days.length) return;
+      const max = Math.max(1, ...days.map((d) => Math.max(Number(d.signups) || 0, Number(d.first_picks) || 0)));
+      document.getElementById('seriesLabel').textContent = days.length + ' days, Eastern.';
+      document.getElementById('sparkSignups').innerHTML = days.map((d) => {
+        const s = Math.round(((Number(d.signups) || 0) / max) * 100);
+        const f = Math.round(((Number(d.first_picks) || 0) / max) * 100);
+        return '<i style="height:' + s + '%" title="' + esc(d.day) + ': ' + n(d.signups) + ' signups"></i>'
+             + '<i class="b" style="height:' + f + '%" title="' + esc(d.day) + ': ' + n(d.first_picks) + ' first picks"></i>';
+      }).join('');
+    }
+
+    function renderAcquisition(r) {
+      const a = r.acquisition;
+      document.getElementById('acqCoverage').textContent =
+        n(a.coverage.with_signup_source) + ' of ' + n(a.coverage.members) + ' recent signups carry first-touch attribution; '
+        + n(a.coverage.with_heard_about) + ' answered "how did you hear about us".';
+      document.getElementById('acqRows').innerHTML = a.by_source.length
+        ? a.by_source.map((row) =>
+            '<tr><td>' + esc(row.utm_source) + '</td><td>' + esc(row.referrer_host) + '</td>'
+            + '<td class="num">' + n(row.signups) + '</td><td class="num">' + n(row.with_pick) + '</td></tr>').join('')
+        : '<tr><td colspan="4" class="muted">No attributed signups in this window.</td></tr>';
+      document.getElementById('acqNote').textContent = a.note;
+    }
+
+    function renderHealth(h) {
+      document.getElementById('healthRows').innerHTML = h.stores.map((s) => {
+        const stale = s.age_hours !== null && s.age_hours > 48;
+        const cls = !s.ok ? 'bad' : (stale ? 'warn' : 'ok');
+        const label = !s.ok ? (s.error ? 'ERROR' : 'EMPTY') : (stale ? 'STALE' : 'OK');
+        return '<tr><td>' + esc(s.store) + '</td><td class="num">' + n(s.rows) + '</td><td>' + when(s.last_at) + '</td>'
+          + '<td class="num">' + (s.age_hours === null ? '-' : s.age_hours) + '</td>'
+          + '<td class="' + cls + '">' + label + (s.error ? ' — ' + esc(s.error) : '') + '</td></tr>';
+      }).join('');
+      const oc = h.observer_coverage || {};
+      document.getElementById('observerCoverage').textContent = oc.error
+        ? 'Observer coverage unavailable: ' + oc.error
+        : 'Participation observer coverage since ' + when(oc.capture_since) + ': '
+          + n(oc.logged_by_observer) + ' of ' + n(oc.pick_makers_since_capture)
+          + ' pick makers logged (' + p(oc.coverage_pct) + '). Below 100% means the observer is missing a route.';
+    }
+
+    let busy = false;
+    async function load(fresh) {
+      if (busy) return;
+      busy = true;
+      document.getElementById('updated').textContent = 'Loading...';
+      try {
+        const windowDays = document.getElementById('windowDays').value;
+        const report = await request('/admin/growth/report?window_days=' + windowDays + (fresh ? '&fresh=1' : ''));
+        renderHeadline(report);
+        renderFunnel(report);
+        renderReach(report);
+        renderSeries(report);
+        renderAcquisition(report);
+        renderHealth(report.tracking_health);
+        document.getElementById('updated').textContent =
+          'Generated ' + when(report.generated_at) + (report.cached ? ' (cached ' + report.cache_age_s + 's)' : ' (fresh)') + ' — build ' + report.build;
+      } catch (err) {
+        document.getElementById('updated').innerHTML = '<span class="bad">' + esc(err.message) + '</span>';
+      } finally {
+        busy = false;
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => load(false));
+    document.getElementById('freshBtn').addEventListener('click', () => load(true));
+    document.getElementById('windowDays').addEventListener('change', () => load(false));
+    document.getElementById('saveTokenBtn').addEventListener('click', () => {
+      localStorage.setItem('tmr_admin_token', tokenInput.value.trim());
+      load(false);
+    });
+    load(false);
+  </script>
+</body>
+</html>
