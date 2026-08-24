@@ -49,12 +49,16 @@ const HTML_REQUIRED = [
   'class="gm is-skel"',
   // Scaled 1.2x for the 2026-08-23 homepage size restore (89px -> 107px,
   // 284px -> 341px), then a further 1.25x for the 2026-08-24 pass
-  // (107px -> 134px, 341px -> 426px, rounded to whole pixels); the ratio to
-  // the card's own dimensions is unchanged. The mobile card (103px, inside a
-  // max-width:640px block) is untouched by design — that scale-up was
-  // desktop-only.
+  // (107px -> 134px, rounded to whole pixels). The skeleton WIDTH is 454px,
+  // not the plain 341*1.25=426: the real card's width comes from .gm-in
+  // (406px, stated once) plus .gm's own padding+border (48px), after
+  // .gm .gm-top{width:100%} was added same-day to stop .gm-top's
+  // font-dependent content width occasionally exceeding .gm-in's and
+  // re-flowing the card mid-rotation (bl-86, ticker-insight-strip-browser-proof).
+  // The mobile card (103px, inside a max-width:640px block) is untouched by
+  // design — that scale-up was desktop-only.
   '.ticker-games,.ticker-track,.ticker-page{min-height:134px}',
-  '.gm.is-skel{width:426px;height:134px',
+  '.gm.is-skel{width:454px;height:134px',
 
   'role="status">Loading today&rsquo;s MLB slate&hellip;</span>',
 ];
