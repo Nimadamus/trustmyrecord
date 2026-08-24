@@ -108,8 +108,9 @@ for (const [sel, body] of [['.bridge .s span', bridge && bridge.body]]) {
 check(
   'the base .bridge .s span rule is unchanged (desktop keeps one-line labels)',
   // Scaled 1.2x for the 2026-08-23 homepage size restore (11.5px -> 14px,
-  // 6px -> 7px, rounded to whole pixels).
-  html.includes('.bridge .s span{display:block;font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:7px}'),
+  // 6px -> 7px), then a further 1.25x for the 2026-08-24 pass (14px -> 18px,
+  // 7px -> 9px, rounded to whole pixels).
+  html.includes('.bridge .s span{display:block;font-size:18px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:9px}'),
   'the approved desktop label rule must not gain a min-height'
 );
 check(

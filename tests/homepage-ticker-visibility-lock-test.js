@@ -48,11 +48,13 @@ const HTML_REQUIRED = [
   // the card box are the same box, whatever that box currently measures.
   'class="gm is-skel"',
   // Scaled 1.2x for the 2026-08-23 homepage size restore (89px -> 107px,
-  // 284px -> 341px, rounded to whole pixels); the ratio to the card's own
-  // dimensions is unchanged. The mobile card (103px, inside a max-width:640px
-  // block) is untouched by design — that scale-up was desktop-only.
-  '.ticker-games,.ticker-track,.ticker-page{min-height:107px}',
-  '.gm.is-skel{width:341px;height:107px',
+  // 284px -> 341px), then a further 1.25x for the 2026-08-24 pass
+  // (107px -> 134px, 341px -> 426px, rounded to whole pixels); the ratio to
+  // the card's own dimensions is unchanged. The mobile card (103px, inside a
+  // max-width:640px block) is untouched by design — that scale-up was
+  // desktop-only.
+  '.ticker-games,.ticker-track,.ticker-page{min-height:134px}',
+  '.gm.is-skel{width:426px;height:134px',
 
   'role="status">Loading today&rsquo;s MLB slate&hellip;</span>',
 ];

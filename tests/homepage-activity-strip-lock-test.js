@@ -45,26 +45,27 @@ assert.ok(laneAt > -1 && stripAt > laneAt && nextAt > stripAt,
   'so it occupies the unused right-hand space without displacing either');
 
 /* ---------- 2. it can only ever give width back ---------------------------- */
-// Scaled 1.2x for the 2026-08-23 homepage size restore (288px -> 346px,
-// rounded to whole pixels). The media-query breakpoints themselves (1179px,
-// 1439px) are viewport widths and stay exactly as approved.
-assert.ok(/\.tkact\{flex:0 0 auto;width:346px/.test(html),
+// Scaled 1.2x for the 2026-08-23 homepage size restore, then a further 1.25x
+// for the 2026-08-24 pass (346px -> 433px, rounded to whole pixels). The
+// media-query breakpoints themselves (1179px, 1439px) are viewport widths and
+// stay exactly as approved.
+assert.ok(/\.tkact\{flex:0 0 auto;width:433px/.test(html),
   'the strip must be a fixed-width, non-growing flex item (flex:0 0 auto). ' +
   'A growing strip would take width from the games lane after the cards have ' +
   'already been paged into it.');
 assert.ok(!/\.tkact\{[^}]*flex:1/.test(html), 'the strip must never flex-grow into the games lane');
 
 /* ---------- 3. it keeps the lane height exactly --------------------------- */
-assert.ok(/\.tkact\{[^}]*height:91px/.test(html),
-  'the strip must be exactly the 91px lane height a matchup card reserves, or ' +
+assert.ok(/\.tkact\{[^}]*height:114px/.test(html),
+  'the strip must be exactly the 114px lane height a matchup card reserves, or ' +
   'it changes the height of the ticker and moves the hero');
-assert.ok(/\.tkact-slot\{[^}]*height:48px/.test(html),
+assert.ok(/\.tkact-slot\{[^}]*height:60px/.test(html),
   'the rotating item needs a fixed slot: a taller item must not grow the row');
 
 /* ---------- 4. it leaves the row before the ticker suffers ---------------- */
 assert.ok(/@media \(max-width:1179px\)\{\.tkact\{display:none\}\}/.test(html),
   'below 1180px the row belongs to the sports ticker alone');
-assert.ok(/@media \(max-width:1439px\)\{[\s\S]{0,200}\.tkact\{width:300px/.test(html),
+assert.ok(/@media \(max-width:1439px\)\{[\s\S]{0,200}\.tkact\{width:375px/.test(html),
   'the strip must narrow before it disappears, giving the lane width back in stages');
 
 /* ---------- 5. one line, truncated, never wrapped ------------------------- */
