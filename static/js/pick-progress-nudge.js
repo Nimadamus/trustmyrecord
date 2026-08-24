@@ -145,6 +145,14 @@
             '#' + ELEMENT_ID + ' .tmr-fp-reminder__close{background:transparent !important;border:0 !important;',
             'box-shadow:none !important;color:#7f8ea6 !important;}',
             '.tmr-fp-reminder__close:hover{color:#e2e8f0 !important;}',
+            '.tmr-fp-reminder--light{background:#FFFFFF;background-image:none;border-color:#D2DEEA;color:#2E4459;',
+            'box-shadow:0 1px 2px rgba(7,24,42,0.04);}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__icon{background:rgba(12,148,140,0.12);color:#0C948C;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__text strong{color:#07182A;}',
+            '#' + ELEMENT_ID + '.tmr-fp-reminder--light .tmr-fp-reminder__close{color:#6B7C8F !important;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__close:hover{color:#07182A !important;}',
+            '#' + ELEMENT_ID + '.tmr-fp-reminder--light .tmr-fp-btn--primary{background:#0C948C !important;',
+            'color:#FFFFFF !important;box-shadow:0 1px 2px rgba(7,24,42,0.10) !important;}',
             '@media(max-width:640px){.tmr-fp-reminder{margin:10px 12px;}.tmr-fp-reminder .tmr-fp-btn{flex:1 1 100%;}}'
         ].join('');
         var style = document.createElement('style');
@@ -234,12 +242,31 @@
         var spot = placement();
         if (!spot || !spot.parent) return;
 
+        /* THEME_MATCH_20260824: same rule as first-pick-onboarding.js. This
+           strip lands on /today/, /polls/ and /forum/, which are light pages,
+           and the shared .tmr-fp-reminder is styled for the homepage's dark
+           band. Ask the surface, not a page list. */
+        var light = (function (node) {
+            try {
+                var el = node;
+                for (var hops = 0; el && hops < 6; hops++, el = el.parentElement) {
+                    var bg = window.getComputedStyle(el).backgroundColor;
+                    var m = bg && bg.match(/rgba?\(([^)]+)\)/);
+                    if (!m) continue;
+                    var parts = m[1].split(',').map(function (x) { return parseFloat(x); });
+                    if (parts.length > 3 && parts[3] < 0.5) continue;
+                    return ((0.299 * parts[0] + 0.587 * parts[1] + 0.114 * parts[2]) / 255) > 0.6;
+                }
+            } catch (e) {}
+            return false;
+        })(spot.parent);
+
         var picks = progress.picks || {};
         var gateKey = progress.next_gate.key;
 
         var bar = document.createElement('div');
         bar.id = ELEMENT_ID;
-        bar.className = 'tmr-fp-reminder';
+        bar.className = 'tmr-fp-reminder' + (light ? ' tmr-fp-reminder--light' : '');
         bar.setAttribute('role', 'status');
         bar.innerHTML =
             '<span class="tmr-fp-reminder__icon" aria-hidden="true">&#9673;</span>' +

@@ -259,6 +259,36 @@ test('confirmation is set from the server answer, never from localStorage', () =
   assert.ok(/status/.test(context), 'set inside the status handler, not the optimistic path');
 });
 
+/* --------------------------------------------- it looks like the page it is on */
+
+test('the strip matches a light surface instead of forcing the homepage dark', () => {
+  // The strip was built for the homepage, where it sits in the dark band under
+  // the nav. /welcome/, /today/, /polls/, /forum/ and /trivia/ are light pages,
+  // and a dark navy bar with a cyan border reads as a foreign component there.
+  for (const [label, src] of [['onboarding', ONBOARDING], ['nudge', NUDGE],
+                              ['poll bridge', read('static/js/poll-pick-bridge.js')]]) {
+    assert.ok(/tmr-fp-reminder--light/.test(src), label + ' has no light variant');
+    assert.ok(/luminance|0\.299/.test(src), label + ' does not read the surface');
+  }
+});
+
+test('the light palette is the one the light pages already use', () => {
+  // Same values /welcome/ uses for .wc-step and .wc-act, so the strip reads as
+  // part of the page rather than as something bolted on.
+  const welcome = read('welcome/index.html');
+  for (const token of ['#D2DEEA', '#07182A', '#0C948C']) {
+    assert.ok(welcome.includes(token), token + ' is not a real page token');
+    assert.ok(ONBOARDING.includes(token), token + ' missing from the strip variant');
+  }
+});
+
+test('an unreadable surface keeps the original dark strip', () => {
+  // Failing to parse a colour must not shift the homepage's approved baseline.
+  const fn = ONBOARDING.slice(ONBOARDING.indexOf('function surfaceIsLight'));
+  const NL = String.fromCharCode(10);
+  assert.match(fn.slice(0, fn.indexOf('}' + NL + NL)), /return false;/);
+});
+
 /* ------------------------------------------------------------- no layout */
 
 test('no new markup, styles or sections were added to /welcome/', () => {

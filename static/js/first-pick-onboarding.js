@@ -285,6 +285,25 @@
             'box-shadow:none !important;color:#7f8ea6 !important;}',
             '.tmr-fp-reminder__close:hover{color:#e2e8f0 !important;}',
             '@media(max-width:640px){.tmr-fp-reminder{margin:10px 12px;}.tmr-fp-reminder .tmr-fp-btn{flex:1 1 100%;}}',
+            /* LIGHT SURFACES (THEME_MATCH_20260824)
+               The strip was built for the homepage, where it sits in the dark
+               band between the nav and the hero. /welcome/, /today/, /polls/,
+               /forum/ and /trivia/ are light pages, and a dark navy bar with a
+               cyan border reads as a foreign component on them. These values
+               are the ones those pages already use for their own cards and
+               buttons - white surface, #D2DEEA hairline, #07182A text, #0C948C
+               teal action - so the strip looks like part of the page instead
+               of like something bolted on. Applied by surfaceIsLight() at
+               render time; the dark original is untouched. */
+            '.tmr-fp-reminder--light{background:#FFFFFF;background-image:none;border-color:#D2DEEA;color:#2E4459;',
+            'box-shadow:0 1px 2px rgba(7,24,42,0.04);}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__icon{background:rgba(12,148,140,0.12);color:#0C948C;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__text strong{color:#07182A;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__close{color:#6B7C8F;}',
+            '#tmr-fp-reminder.tmr-fp-reminder--light .tmr-fp-reminder__close{color:#6B7C8F !important;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__close:hover{color:#07182A !important;}',
+            '#tmr-fp-reminder.tmr-fp-reminder--light .tmr-fp-btn--primary{background:#0C948C !important;',
+            'color:#FFFFFF !important;box-shadow:0 1px 2px rgba(7,24,42,0.10) !important;}',
             /* confirmation modal */
             '.tmr-fp-modal{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;',
             'padding:20px;background:rgba(2,6,12,0.78);backdrop-filter:blur(4px);}',
@@ -483,6 +502,34 @@
         return { parent: document.body, before: document.body.firstChild };
     }
 
+    /**
+     * Is the surface this strip is about to sit on a LIGHT one?
+     *
+     * Read from the real computed background rather than a page allowlist, so
+     * a page that changes theme, or a new page that adopts the strip, gets the
+     * right variant without anyone remembering to update a list. Walks up from
+     * the insertion point until it finds an opaque colour, because the strip's
+     * own parent is usually transparent.
+     *
+     * Unknown means dark: that is the original appearance, and the homepage's
+     * approved baseline must not shift because a colour could not be parsed.
+     */
+    function surfaceIsLight(node) {
+        try {
+            var el = node;
+            for (var hops = 0; el && hops < 6; hops++, el = el.parentElement) {
+                var bg = window.getComputedStyle(el).backgroundColor;
+                var m = bg && bg.match(/rgba?\(([^)]+)\)/);
+                if (!m) continue;
+                var parts = m[1].split(',').map(function (x) { return parseFloat(x); });
+                if (parts.length > 3 && parts[3] < 0.5) continue;   // see-through, keep walking
+                var luminance = (0.299 * parts[0] + 0.587 * parts[1] + 0.114 * parts[2]) / 255;
+                return luminance > 0.6;
+            }
+        } catch (e) {}
+        return false;
+    }
+
     function renderReminder() {
         var bar = document.getElementById('tmr-fp-reminder');
 
@@ -508,7 +555,8 @@
 
             bar = document.createElement('div');
             bar.id = 'tmr-fp-reminder';
-            bar.className = 'tmr-fp-reminder';
+            bar.className = 'tmr-fp-reminder' +
+                (surfaceIsLight(placement.parent) ? ' tmr-fp-reminder--light' : '');
             bar.setAttribute('role', 'status');
             bar.innerHTML =
                 '<span class="tmr-fp-reminder__icon" aria-hidden="true">&#9673;</span>' +
