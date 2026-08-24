@@ -290,6 +290,28 @@ against the second-pick conversion, which is why those events carry the gate and
 
 ---
 
+## Why /admin/growth/ is noindex
+
+The standing site rule is **never noindex a public TMR page**, enforced by the allowlist in
+`tests/seo-indexability-regression-test.js`. `/admin/growth/` is an authorised exception, granted
+explicitly by the site owner on 2026-08-24.
+
+It qualifies on exactly the grounds `SEO_INDEXING_PROTOCOL.md` section 2 already carves out for
+`/admin/tmr-economy/` and `/admin/tmr-rewards/`: the page is linked only from `/admin/`, it is
+useless without an admin session, and every figure it renders is internal membership and conversion
+data — member counts, activation rates, retention brackets, per-feature reach. There is nothing on
+it a search result should ever show.
+
+**The exception is this one route and nothing else.** It is not a precedent for noindexing public
+pages, and it is not a licence to widen the allowlist. Anything public stays indexable.
+
+The page shipped briefly as `index, follow` (frontend `61206753c`) because the SEO regression test
+rejected the `noindex` and expanding a governed allowlist was not something to do unasked. The owner
+then authorised it directly, so the page carries `noindex, nofollow` and the URL is on the
+allowlist.
+
+---
+
 ## Notes for whoever picks this up
 
 - Both branches are `growth-program`. Nothing is pushed. Pushing the backend to `master` auto-deploys.

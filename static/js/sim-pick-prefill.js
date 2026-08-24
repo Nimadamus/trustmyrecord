@@ -118,6 +118,13 @@
     // Which board to open. Written by the simulator that created the intent
     // (MLB Simulator -> 'MLB', NFL Simulator -> 'NFL'); older intents that
     // predate the field are MLB by definition.
+    /* POLL_PICK_BRIDGE_20260824: the same intent record is now also written by
+       static/js/poll-pick-bridge.js after a poll vote, so the banner has to say
+       where the preselection came from. Everything else in this file is
+       unchanged: same matching, same board price, same no-submit guarantee. */
+    var ORIGIN_LABEL = (intent.source === 'poll')
+        ? 'From your poll vote: '
+        : 'From your simulation: ';
     var INTENT_SPORT = (intent.sport && /^[A-Z]{2,5}$/.test(intent.sport)) ? intent.sport : 'MLB';
     function attempt() {
         tries++;
@@ -154,7 +161,7 @@
         }
         if (price != null && typeof window.selectGameBet === 'function') {
             window.selectGameBet(idx, 'ml', intent.pick_team, '', String(price), game.away_team, game.home_team);
-            showBanner('From your simulation: ' + intent.pick_team + ' ML is pre-selected. Set your units and confirm to lock it — nothing is submitted until you do.', true);
+            showBanner(ORIGIN_LABEL + intent.pick_team + ' ML is pre-selected. Set your units and confirm to lock it — nothing is submitted until you do.', true);
         } else {
             showBanner('Your simulated pick (' + intent.pick_team + ') is ready — moneyline price is loading. Select it on the board to confirm; nothing is submitted automatically.', false);
         }

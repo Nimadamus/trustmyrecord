@@ -5,14 +5,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Growth Dashboard | TrustMyRecord</title>
-  <!-- index, follow to match the rest of the admin surface (/admin/ and
-       /activation/, the existing internal diagnostics page). The owner rule is
-       never noindex anything; the noindex allowlist in
-       tests/seo-indexability-regression-test.js is a deliberate decision per
-       SEO_INDEXING_PROTOCOL.md section 2, not something to expand in passing.
-       Nothing here is exposed without an admin token: the page renders empty
-       for anyone who is not signed in as an admin. -->
-  <meta name="robots" content="index, follow">
+  <!-- Private, login-gated admin surface: linked only from /admin/, useless
+       without an admin session, and every figure it renders is internal
+       membership and conversion data. noindex authorised as an explicit,
+       single-route exception by the site owner on 2026-08-24 and allowlisted in
+       tests/seo-indexability-regression-test.js. The general rule stands:
+       public TMR pages are never noindex. See docs/GROWTH_PROGRAM.md. -->
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/static/css/style.css?v=a98213a1dfa6">
   <style>
     /* Same chrome as /admin/ — this is an internal ops page, not a redesign. */

@@ -2854,6 +2854,11 @@
             renderPollDetail();
             loadSection({ force: true });
             loadStats(); refreshTabCounts();
+            // POLL_PICK_BRIDGE_20260824: a vote is already a prediction. Ask the
+            // server whether this one maps cleanly onto a lockable game and, if
+            // it does, offer the ordinary sportsbook flow. Renders nothing for
+            // opinion/trivia/prop/total polls. Never creates a pick.
+            try { if (window.TMRPollPickBridge) window.TMRPollPickBridge.offer(state.currentPollId); } catch (e) {}
         } catch(err) {
             console.error('submitVote', err);
             showToast(err && err.message ? err.message : 'Could not submit vote.', 'error');
@@ -4282,5 +4287,6 @@
     </script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=71768fc80d61"></script>
+  <script defer src="/static/js/poll-pick-bridge.js?v=917d9f7be82c"></script>
 </body>
 </html>

@@ -240,6 +240,15 @@ console.log('\nnoindex allowlist');
     // admin session, and its content is internal treasury figures. Added
     // deliberately, per SEO_INDEXING_PROTOCOL.md section 2.
     SITE + '/admin/tmr-rewards/',
+    // Admin-only growth dashboard (activation funnel, retention brackets,
+    // feature reach, tracking health). Same private, login-gated surface as the
+    // two consoles above: linked only from /admin/, useless without an admin
+    // session, and every figure it renders is internal membership and
+    // conversion data. Authorised as an explicit exception by the site owner on
+    // 2026-08-24 — see docs/GROWTH_PROGRAM.md "Why /admin/growth/ is noindex".
+    // This exception covers this one admin route and nothing else: public TMR
+    // pages are never noindex.
+    SITE + '/admin/growth/',
     SITE + '/betlegend-pro/app/',
     // The service worker's offline fallback for the page above. Same private,
     // per-account surface, and it is not a page anyone navigates to: it is
