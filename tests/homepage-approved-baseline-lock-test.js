@@ -40,11 +40,11 @@ const REQUIRED = [
   // hero shell is a flex column filling the viewport below the injected nav,
   // so .bridge (margin-top:auto below) always lands flush on the hero's
   // bottom edge regardless of viewport height or content height
-  '.hero{position:relative;overflow:hidden;padding:0 0 0;display:flex;flex-direction:column;',
+  '.hero{position:relative;overflow:hidden;padding:12px 0 0;display:flex;flex-direction:column;',
   'min-height:calc(100vh - var(--header-height));',
   'min-height:calc(100dvh - var(--header-height));',
   'min-height:calc(100svh - var(--header-height));',
-  '.hero-in{position:relative;z-index:3;flex:1;display:flex;align-items:center}',
+  '.hero-in{position:relative;z-index:3;flex:1;display:flex;align-items:flex-start}',
   // runtime correction: nav is injected by tmr-ds-nav.js at runtime, so the
   // static fallback above must be replaced with the actual measured
   // value once nav+ticker have rendered
@@ -64,13 +64,13 @@ const REQUIRED = [
   // arrives just stops being 60% wider and two lines taller.
   // font-size held at 77px (not the page's further 1.25x pass) for the same
   // wrap-headroom reason as the column width above; margin still scaled.
-  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:56px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:8px 0 8px}",
+  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:68px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:20px 0 16px}",
   // The fallback faces themselves, and the tuned ratios. Measured, not guessed
   // — see tests/hero-fallback-width-sweep.cjs.
   "@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');",
   "size-adjust:78.8%;ascent-override:126.9%;descent-override:25.4%;line-gap-override:0%}",
   "size-adjust:70.8%;ascent-override:141.2%;descent-override:28.2%;line-gap-override:0%}",
-  '.hero .cta{display:flex;align-items:center;gap:28px;margin-top:10px;flex-wrap:wrap}',
+  '.hero .cta{display:flex;align-items:center;gap:39px;margin-top:22px;flex-wrap:wrap}',
   // Hero right-hand card (.spot) — approved shell. The card's CONTENTS were
   // replaced on 2026-08-16 at Nima's instruction (Capper of the Week -> LIVE
   // COMPETITION), so the rules that described the old card's identity block,
@@ -80,17 +80,17 @@ const REQUIRED = [
   // keeps the new card the same height on every view it rotates through.
   '.spot{background:var(--panel);border-radius:18px;',
   '.spot .rail{height:6px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}',
-  '.spot .hd{padding:14px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}',
+  '.spot .hd{padding:18px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}',
   '.spot .bd{padding:33px 36px 30px}',
-  '.spot.comp .bd{padding:16px 36px 14px;display:flex;flex-direction:column}',
+  '.spot.comp .bd{padding:22px 36px 20px;display:flex;flex-direction:column}',
   // The fixed stage is what stops the card changing height as the view
   // rotates, which would bounce the whole vertically-centred hero column.
-  '.comp-stage{position:relative;margin-top:10px;height:170px;overflow:hidden}',
+  '.comp-stage{position:relative;margin-top:16px;height:186px;overflow:hidden}',
   '.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);',
   // Two-line reservation for the footer sentence. Without it the card grew
   // 13px when the payload replaced the one-line skeleton bar.
   'min-height:2.64em;',
-  '.spot .ft{padding:14px 36px;',
+  '.spot .ft{padding:16px 36px;',
   // white stats stripe (bridge) — pushed to the hero's bottom edge by
   // margin-top:auto inside the flex column (NOT a fixed offset); full-width,
   // no side margins, no rounded card (owner-requested 2026-08-01)
