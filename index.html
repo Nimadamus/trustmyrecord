@@ -418,14 +418,17 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    .spot card's own internal type/padding, bridge stats, nav, below-the-fold
    sections) scaled cleanly to 1.25x with no such ceiling. */
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 624px;gap:86px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:15px;padding:10px 24px;border-radius:1499px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.eyebrow{display:inline-flex;align-items:center;gap:15px;padding:10px 24px;border-radius:1499px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:17px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:10px;height:10px;border-radius:50%;background:var(--brand-lt)}
-.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:67px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}
+.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:62px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}
 .hero h1.hh em{font-style:normal;color:var(--brand-lt)}
-.hero p.sub{color:#B7CEE4;font-size:25px;line-height:1.6;max-width:900px;font-weight:450}
+.hero p.sub{color:#B7CEE4;font-size:23px;line-height:1.6;max-width:900px;font-weight:450}
 .hero .cta{display:flex;align-items:center;gap:39px;margin-top:32px;flex-wrap:wrap}
-.hero .cta .btn.lg{height:73px;font-size:23px}
-.hero .cta .tlink{font-size:21px}
+.hero .cta .btn.lg{height:68px;font-size:21px}
+.hero .cta .tlink{font-size:20px}
+.spot.comp .hd b{font-size:17px}
+.spot.comp .ft{font-size:19px}
+.spot.comp .vchip{font-size:17px}
 
 /* verified-record card */
 .spot{background:var(--panel);border-radius:18px;box-shadow:0 9px 24px rgba(2,12,22,.22), 0 39px 84px rgba(2,12,22,.26);overflow:hidden}
@@ -468,10 +471,10 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    exists to prevent. The metric-compatible fallback faces at the top of this
    file mean the pre-webfont frame occupies the same width, so it cannot wrap
    on the way in either. */
-.comp-title{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:46px;font-weight:900;letter-spacing:.006em;line-height:1.03;text-transform:uppercase;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden}
+.comp-title{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:41px;font-weight:900;letter-spacing:.006em;line-height:1.03;text-transform:uppercase;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden}
 .comp-sub{display:flex;align-items:baseline;gap:14px;margin-top:14px;height:25px;min-width:0}
 .comp-cat{font-size:18px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--brand-dk);white-space:nowrap;flex:0 0 auto}
-.comp-note{font-size:19px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.comp-note{font-size:17px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .comp-note::before{content:'·';margin-right:13px;color:var(--line-2)}
 
 /* The live pulse next to LIVE COMPETITION. A slow breath, not a blink: the
@@ -485,7 +488,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 }
 
 /* The rotating stage. Height is fixed here and nowhere else. */
-.comp-stage{position:relative;margin-top:20px;height:220px;overflow:hidden}
+.comp-stage{position:relative;margin-top:20px;height:200px;overflow:hidden}
 .comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);opacity:0;pointer-events:none}
 .comp-view.is-on{opacity:1;pointer-events:auto}
 /* Outgoing: falls back and dims rather than sliding away, so two layers never
@@ -495,7 +498,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 @keyframes compViewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
 /* One standings row. */
-.comp-row{display:grid;grid-template-columns:33px 51px minmax(0,1fr) auto;align-items:center;gap:16px;min-width:0;border-top:1px solid var(--line)}
+.comp-row{display:grid;grid-template-columns:30px 46px minmax(0,1fr) auto;align-items:center;gap:16px;min-width:0;border-top:1px solid var(--line)}
 .comp-view .comp-row:first-child{border-top:none}
 .comp-view.is-in .comp-row{animation:compRowIn .38s cubic-bezier(.22,.68,.35,1) both}
 .comp-view.is-in .comp-row:nth-child(1){animation-delay:.02s}
@@ -503,16 +506,16 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .comp-view.is-in .comp-row:nth-child(3){animation-delay:.14s}
 @keyframes compRowIn{from{opacity:0;transform:translateX(15px)}to{opacity:1;transform:none}}
 
-.comp-rk{font-size:21px;font-weight:900;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.comp-rk{font-size:19px;font-weight:900;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .comp-row.r1 .comp-rk{color:var(--gold)}
-.comp-av,.comp-avl{width:51px;height:51px;border-radius:13px;flex:0 0 auto;display:block;object-fit:cover}
-.comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.comp-av,.comp-avl{width:46px;height:46px;border-radius:13px;flex:0 0 auto;display:block;object-fit:cover}
+.comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
 .comp-id{min-width:0}
-.comp-nm{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.comp-nm{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
 a.comp-nm:hover{color:var(--brand-dk)}
-.comp-meta{display:block;font-size:16px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;line-height:1.2}
+.comp-meta{display:block;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;line-height:1.2}
 .comp-val{display:flex;align-items:center;justify-content:flex-end;gap:13px;flex:0 0 auto}
-.comp-num{font-size:29px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.comp-num{font-size:26px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
 .comp-num.pos{color:var(--green)}
 .comp-num.neg{color:var(--red)}
 /* A points or post count is not a profit. Trivia points, poll points, forum
@@ -592,7 +595,7 @@ a.comp-nm:hover{color:var(--brand-dk)}
    grow the card. The stage height above is set against this footer's height,
    which is why it is fixed here rather than left to the content. */
 .spot.comp .ft{gap:24px;align-items:center}
-.comp-foot{flex:1 1 auto;min-width:0;font-size:17px;line-height:1.32;min-height:2.64em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.comp-foot{flex:1 1 auto;min-width:0;font-size:16px;line-height:1.32;min-height:2.64em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .spot.comp .ft .ftlinks{flex:0 0 auto}
 .spot.comp .ft .ftlinks a{white-space:nowrap}
 
@@ -613,10 +616,10 @@ a.comp-nm:hover{color:var(--brand-dk)}
    put -- .comp-stage is re-declared per tier, never left to the content. */
 @media (max-width:1399px){
   .comp-title{font-size:43px}
-  .comp-stage{height:218px}
+  .comp-stage{height:198px}
 }
 @media (max-width:1024px){
-  .comp-stage{height:216px}
+  .comp-stage{height:196px}
 }
 @media (max-width:520px){
   /* The qualifier note is the first thing to go: ellipsised mid-word

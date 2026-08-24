@@ -64,7 +64,7 @@ const REQUIRED = [
   // arrives just stops being 60% wider and two lines taller.
   // font-size held at 77px (not the page's further 1.25x pass) for the same
   // wrap-headroom reason as the column width above; margin still scaled.
-  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:67px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}",
+  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:62px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}",
   // The fallback faces themselves, and the tuned ratios. Measured, not guessed
   // — see tests/hero-fallback-width-sweep.cjs.
   "@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');",
@@ -85,7 +85,7 @@ const REQUIRED = [
   '.spot.comp .bd{padding:30px 36px 28px;display:flex;flex-direction:column}',
   // The fixed stage is what stops the card changing height as the view
   // rotates, which would bounce the whole vertically-centred hero column.
-  '.comp-stage{position:relative;margin-top:20px;height:220px;overflow:hidden}',
+  '.comp-stage{position:relative;margin-top:20px;height:200px;overflow:hidden}',
   '.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);',
   // Two-line reservation for the footer sentence. Without it the card grew
   // 13px when the payload replaced the one-line skeleton bar.
