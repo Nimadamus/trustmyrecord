@@ -25,7 +25,9 @@
     const handicappersMenuRoutes = [
         ["/handicappers/", "Find Handicappers"],
         ["/leaderboards/", "Leaderboards"],
-        ["/marketplace/", "Buy Picks"],
+        // One marketplace, two payment methods (Cash / TMR Coin tabs), kept in
+        // sync with static/js/tmr-ds-nav.js.
+        ["/marketplace/", "Pick Marketplace"],
         ["/marketplace/sell/", "Sell Your Picks"]
     ];
     const competeMenuRoutes = [
@@ -1084,7 +1086,7 @@
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>
                                 <a href="/forum/"><strong>Forums</strong><span>Hardcore discussion threads</span></a>
-                                <a href="/marketplace/"><strong>Sell Your Picks</strong><span>Buy and sell picks</span></a>
+                                <a href="/marketplace/"><strong>Pick Marketplace</strong><span>Buy picks with cash or TMR Coin</span></a>
                             </div>
                         </div>
                         <div class="tmr-search-section" id="tmrSearchResults" hidden></div>
@@ -1343,7 +1345,7 @@
                         <a href="/sportsbook/">Sportsbook</a>
                         <a href="/tmr-coin/">TMR Coin</a>
                         <a href="/my-record/">My Record</a>
-                        <a href="/marketplace/">Sell Your Picks</a>
+                        <a href="/marketplace/">Pick Marketplace</a>
                         <a href="/premium/">Premium</a>
                     </div>
                 </div>

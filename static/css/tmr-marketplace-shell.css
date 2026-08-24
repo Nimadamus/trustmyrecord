@@ -1,0 +1,62 @@
+/* ============================================================
+   TMR — Pick Marketplace shell.
+
+   ONE marketplace, two payment methods. Every /marketplace/* page renders this
+   identical header and section nav, so a member is never in doubt about which
+   marketplace they are standing in: there is only one, and Cash and TMR Coin
+   are two ways to pay inside it.
+
+   Self-contained tokens (--mpx-*). The five marketplace pages each declare
+   their own --panel/--line/--muted with different values, and this component
+   has to look identical on all of them, so it borrows none of them.
+   ============================================================ */
+.mpx {
+  --mpx-bg:#FFFFFF; --mpx-panel:#FFFFFF; --mpx-panel2:#F4F7FA;
+  --mpx-line:#D2DEEA; --mpx-text:#07182A; --mpx-muted:#2E4459;
+  --mpx-teal:#0C948C; --mpx-amber:#B98505; --mpx-green:#0A8B4E;
+  font-family:'Inter',system-ui,sans-serif; color:var(--mpx-text);
+  margin:0 0 20px;
+}
+.mpx *, .mpx *::before, .mpx *::after { box-sizing:border-box; }
+.mpx a { color:inherit; text-decoration:none; }
+
+.mpx-top { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+.mpx-title { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase;
+  font-size:clamp(28px,4vw,42px); letter-spacing:-.5px; line-height:1; margin:0; color:var(--mpx-text); }
+.mpx-title .mpx-accent { color:var(--mpx-teal); }
+.mpx-sub { color:var(--mpx-muted); font-size:13.5px; line-height:1.55; margin:7px 0 0; max-width:660px; }
+.mpx-sub b { color:var(--mpx-text); font-weight:700; }
+
+/* Section nav: BUY PICKS / SELL PICKS, each with its own tab row. */
+.mpx-nav { border:1px solid var(--mpx-line); border-radius:14px; background:var(--mpx-panel); overflow:hidden; }
+.mpx-row { display:flex; align-items:center; gap:10px; padding:9px 12px; flex-wrap:wrap; }
+.mpx-row + .mpx-row { border-top:1px solid var(--mpx-line); }
+.mpx-row-label { font:800 10.5px/1 'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--mpx-muted); min-width:74px; }
+.mpx-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+.mpx-tab { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px;
+  border:1px solid var(--mpx-line); background:var(--mpx-panel2); color:var(--mpx-text);
+  font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s; white-space:nowrap; }
+.mpx-tab:hover { border-color:var(--mpx-teal); }
+.mpx-tab[aria-current="page"], .mpx-tab.is-on {
+  background:var(--mpx-teal); border-color:var(--mpx-teal); color:#FFFFFF; }
+.mpx-tab .mpx-cnt { font:700 10.5px/1 'JetBrains Mono',monospace; opacity:.75; }
+.mpx-tab .mpx-ico { font-size:12px; }
+
+/* Fee strip. Both rates, side by side, always. */
+.mpx-fees { margin-top:14px; border:1px solid var(--mpx-line); border-radius:14px; background:var(--mpx-panel); padding:14px 16px; }
+.mpx-fees h3 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase;
+  font-size:15px; letter-spacing:.02em; margin:0 0 9px; color:var(--mpx-text); }
+.mpx-fee-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; }
+.mpx-fee { background:var(--mpx-panel2); border:1px solid var(--mpx-line); border-radius:11px; padding:11px 13px; }
+.mpx-fee-h { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:5px; }
+.mpx-fee-n { font-weight:800; font-size:13.5px; }
+.mpx-fee-v { font:800 16px/1 'JetBrains Mono',monospace; color:var(--mpx-teal); }
+.mpx-fee p { color:var(--mpx-muted); font-size:12px; line-height:1.55; margin:0; }
+.mpx-fee-why { color:var(--mpx-muted); font-size:12px; line-height:1.6; margin:9px 0 0; }
+.mpx-fee-why b { color:var(--mpx-text); }
+
+@media (max-width:640px) {
+  .mpx-row { align-items:flex-start; }
+  .mpx-row-label { min-width:0; width:100%; }
+}

@@ -8,7 +8,7 @@
     <meta name="description" content="Buy picks from a verified TrustMyRecord handicapper. Inspect the seller's full public record before purchasing.">
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
-    <script defer src="/static/js/tmr-sitewide.js?v=9a29bce9b4e0"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=561253cba90b"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -76,11 +76,15 @@
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=5369acad7f75">
 </head>
 <body class="tmr-light">
 
 <main class="mp-shell">
-    <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
+    <!-- A storefront is a view INTO the one marketplace, so it carries the
+         same header and section nav as every other marketplace page. -->
+    <div class="mpx" data-mp-tab="cash"
+         data-mp-sub="One seller's packages. Each one shows every price it accepts, so you pay in cash or in TMR Coin from the same card."></div>
     <div id="content"><div class="mp-empty">Loading storefront…</div></div>
 </main>
 
@@ -108,6 +112,7 @@
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
 <script src="/static/js/backend-api.js?v=3cbc527ee17a"></script>
+<script src="/static/js/tmr-marketplace-shell.js?v=664f679454c5"></script>
 <script>
 (function () {
     const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
@@ -168,14 +173,21 @@
         listings.map(function (x) {
             return '<div class="pkg">' +
                 '<div class="pkg-head"><span class="pkg-name">' + esc(x.product_label || x.title) + '</span><span class="pkg-dur">' + (DUR[x.product_type] || '') + '</span></div>' +
-                '<div class="pkg-price">' + money(x.price_cents, x.currency) + '<small>' + (PER[x.product_type] || 'one-time') + '</small></div>' +
+                // One package, both prices. The seller sets them on the same
+                // listing, so the buyer sees both here and chooses how to pay.
+                '<div class="pkg-price">' + money(x.price_cents, x.currency) +
+                    (x.accepts_tmr && x.price_tmr ? '<small style="color:#0C948C;font-weight:700;">or ' + Number(x.price_tmr).toLocaleString() + ' TMR</small>' : '') +
+                    '<small>' + (PER[x.product_type] || 'one-time') + '</small></div>' +
                 (store.marketplace_enabled && x.product_type !== 'single_pick'
                     ? '<button class="btn btn-primary" data-buy-listing="' + x.id + '">Buy ' + esc(x.product_label || '') + '</button>'
                     : x.product_type === 'single_pick' ? '<a class="btn btn-outline" href="#picks">Pick from the board &darr;</a>' : '') +
+                (x.accepts_tmr && x.price_tmr
+                    ? '<a class="btn btn-outline" style="margin-top:7px;" href="/marketplace/tmr/?listing=' + encodeURIComponent(x.id) + '">Pay ' + Number(x.price_tmr).toLocaleString() + ' TMR instead</a>'
+                    : '') +
             '</div>';
         }).join('') +
         '</div>' +
-        '<p class="terms-note">Single picks reveal one selection; passes reveal every pick this seller has for games starting inside your access window. Everything unlocks in your <a href="/marketplace/purchases/">purchases dashboard</a> after payment confirms. 20% of each sale is TrustMyRecord\'s platform commission; 80% goes to the seller. No refunds after reveal except as described in the <a href="/marketplace/terms/">refund policy</a>. Results are never guaranteed.</p></div>';
+        '<p class="terms-note">Single picks reveal one selection; passes reveal every pick this seller has for games starting inside your access window. Everything unlocks in your <a href="/marketplace/purchases/">purchases dashboard</a> after payment confirms, whichever way you paid. TrustMyRecord\'s commission is 20% on a cash sale and 5% on a TMR Coin sale, because a card sale carries processing, payouts and chargebacks and a TMR sale is a ledger transfer; the seller keeps the rest either way. No refunds after reveal except as described in the <a href="/marketplace/terms/">refund policy</a>. Results are never guaranteed.</p></div>';
 
         html += '<h3 class="sec" id="picks">Picks Available Right Now (' + store.picks_for_sale.length + ')</h3>';
         if (!store.marketplace_enabled) {

@@ -3,24 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buy and Sell Picks with TMR | TrustMyRecord</title>
+<title>TMR Coin Marketplace | Pick Marketplace | TrustMyRecord</title>
 <link rel="canonical" href="https://trustmyrecord.com/marketplace/tmr/">
-<meta name="description" content="Buy handicapper picks with TMR Coin on TrustMyRecord. Every seller carries a verified, graded record: win rate, ROI, units and sport splits, shown on the card before you pay.">
+<meta name="description" content="The TMR Coin tab of the TrustMyRecord Pick Marketplace. The same verified handicapper listings as the cash tab, paid for from your TMR balance, each carrying a graded record: win rate, ROI, units and sport splits, before you pay.">
 <meta name="keywords" content="buy sports picks with TMR, TMR coin marketplace, verified handicapper picks, sell picks for TMR">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://trustmyrecord.com/marketplace/tmr/">
-<meta property="og:title" content="Picks for TMR | TrustMyRecord">
+<meta property="og:title" content="TMR Coin Marketplace | TrustMyRecord">
 <meta property="og:description" content="Buy picks with TMR Coin from handicappers whose records are graded and public. Judge the seller without leaving the page.">
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
-<script defer src="/static/js/tmr-sitewide.js?v=9a29bce9b4e0"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=561253cba90b"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 /* -----------------------------------------------------------------------------
-   /marketplace/tmr/ — the TMR-priced picks marketplace.
+   /marketplace/tmr/ — the TMR COIN TAB of the one Pick Marketplace.
+
+   NOT a second marketplace. The listings here are marketplace_listings rows
+   that carry a price_tmr as well as a price_cents; the cash tab at
+   /marketplace/ shows the same rows priced the other way. The shared header
+   and section nav come from static/js/tmr-marketplace-shell.js, and purchases
+   and selling live in ONE place each for both payment methods.
 
    Palette and type are the same light workspace tokens the cash marketplace at
    /marketplace/ uses, so the two rails read as one product rather than two
@@ -301,16 +307,28 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
   .mktoolbar .price{width:100%} .mktoolbar .price input{flex:1}
   .balchip{width:100%;justify-content:space-between}
 }
+  /* The TMR Coin tab of the Pick Marketplace, not a marketplace of its own. */
+  .mk-context { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    border:1px solid #D2DEEA; border-left:3px solid #0C948C; border-radius:12px;
+    background:#F4F7FA; padding:11px 14px; margin:0 0 18px; font-size:13px; color:#2E4459; line-height:1.55; }
+  .mk-context b { color:#07182A; }
+  .mk-context a { color:#0C948C; font-weight:700; }
 </style>
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=5369acad7f75">
 </head>
 <body class="tmr-light">
 
 <main class="mk">
+  <!-- The ONE marketplace header and section nav. This page is the TMR Coin
+       tab of it: same listings, same sellers, paid for from a TMR balance. -->
+  <div class="mpx" data-mp-tab="tmr"
+       data-mp-sub="You are on the <b>TMR Coin</b> tab. These are the same listings as the Cash tab &mdash; the ones whose sellers have also set a TMR price. Every seller here is graded by TrustMyRecord, so the record on the card is the record, not a screenshot."></div>
+
   <div class="mk-head">
     <div>
-      <h1>Picks for <span class="accent">TMR</span></h1>
-      <p class="lede">Buy handicapper picks with TMR Coin. Every seller here is graded by TrustMyRecord, so the
-        record on the card is the record &mdash; not a screenshot.</p>
+      <div class="mk-context"><span>&#9678;</span><span><b>Paying with TMR Coin.</b>
+        The platform fee on a TMR sale is 5%. Prefer to pay by card?
+        <a href="/marketplace/?pay=cash">Switch to the Cash tab</a> &mdash; many of these packages take both.</span></div>
     </div>
     <div class="balchip">
       <div>
@@ -323,11 +341,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
 
   <div class="metrics" id="metrics"></div>
 
-  <div class="mktabs">
-    <button id="tabBuy" class="on">Buy picks<span class="cnt" id="cBuy">&mdash;</span></button>
-    <button id="tabPurch">Your purchases<span class="cnt" id="cPurch">&mdash;</span></button>
-    <button id="tabSell">Sell picks<span class="cnt" id="cSell">&mdash;</span></button>
-  </div>
+  <!-- The Buy / Your purchases / Sell picks tab bar that used to live here is
+       gone. It was the thing that made this page read as a second, independent
+       marketplace. Purchases and selling are ONE place each now, shared by both
+       payment methods, and both are in the section nav above:
+         purchases -> /marketplace/purchases/   selling -> /marketplace/sell/
+       The panes below are kept, hidden, only so an old #purchases / #sell link
+       still resolves; the init block redirects those to the real pages. -->
 
   <div id="mkMsg"></div>
 
@@ -386,6 +406,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
 <script src="/static/js/backend-api.js?v=3cbc527ee17a"></script>
+<script src="/static/js/tmr-marketplace-shell.js?v=664f679454c5"></script>
 <script>
 (function () {
   'use strict';
@@ -554,9 +575,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
   }
 
   function renderCounts() {
-    $('cBuy').textContent = market.status === 'ready' ? String(visible().length) : '—';
-    $('cPurch').textContent = me.status === 'ready' ? String(me.data.purchases.length) : '—';
-    $('cSell').textContent = me.status === 'ready' ? String(me.data.seller.listings.length) : '—';
+    // The tab counters now live on the shared marketplace nav, so this page
+    // reports into that rather than owning a tab strip of its own.
+    var sh = window.TMRMarketplaceShell;
+    if (!sh) return;
+    sh.setCount('tmr', market.status === 'ready' ? visible().length : '');
+    sh.setCount('purchases', me.status === 'ready' ? me.data.purchases.length : '');
+    sh.setCount('listings', me.status === 'ready' ? me.data.seller.listings.length : '');
   }
 
   function buildFacets(f) {
@@ -744,8 +769,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
         '<p>Sellers are only just starting to price listings in TMR. When one does it appears here and you can pay ' +
         'straight from your balance &mdash; with the seller\'s full graded record on the card.</p>' +
         '<div class="row">' +
-          '<button class="btn" id="emptySell">Sell your picks for TMR</button>' +
-          '<a class="btn ghost" href="/marketplace/">Browse the cash marketplace</a>' +
+          '<a class="btn" href="/marketplace/sell/#pricing">Put a TMR price on your listing</a>' +
+          '<a class="btn ghost" href="/marketplace/?pay=cash">See the same marketplace in cash</a>' +
           '<a class="btn ghost" href="/wallet/earn/">Ways to earn TMR</a>' +
         '</div>' +
         // An empty board still has to answer "so how does anything get here?".
@@ -755,8 +780,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
             '<li><strong>Run a listing on the marketplace.</strong> Pick the product &mdash; a single pick, ' +
               'or a day, weekly or monthly pass &mdash; and write the title and description. ' +
               '<a href="/marketplace/sell/">Create one &rarr;</a></li>' +
-            '<li><strong>Put a TMR price on it</strong> in the Sell tab here. Minimum ' + fmt(minPrice) +
-              ' TMR. Your cash price is untouched; one listing can take both rails.</li>' +
+            '<li><strong>Put a TMR price on the same listing</strong> in ' +
+              '<a href="/marketplace/sell/#pricing">Pricing</a>. Minimum ' + fmt(minPrice) +
+              ' TMR. Your cash price is untouched: one listing, two prices, and buyers pay with ' +
+              'whichever they hold.</li>' +
             '<li><strong>It appears here immediately</strong>, carrying your graded record, your ROI and ' +
               'your last ten results. Buyers pay from their TMR balance and you keep ' +
               (100 - feeBps / 100) + '% after the ' + (feeBps / 100) + '% platform fee.</li>' +
@@ -764,7 +791,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
           '<p class="hf">Only members with a public, graded record can sell. That is the whole point ' +
             'of the board: nothing here is a screenshot.</p>' +
         '</div></div>';
-      var es = $('emptySell'); if (es) es.onclick = function () { switchTab('sell'); };
+      // "Sell your picks for TMR" used to open a Sell tab on this page. There is
+      // one listing editor now, so it is a link to it rather than a second one.
       return;
     }
 
@@ -1239,9 +1267,6 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
   // -------------------------------------------------------------------- wiring
   function switchTab(t) {
     tab = t;
-    $('tabBuy').classList.toggle('on', t === 'buy');
-    $('tabPurch').classList.toggle('on', t === 'purchases');
-    $('tabSell').classList.toggle('on', t === 'sell');
     $('paneBuy').hidden = t !== 'buy';
     $('panePurch').hidden = t !== 'purchases';
     $('paneSell').hidden = t !== 'sell';
@@ -1250,9 +1275,6 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
     if (t === 'buy') renderBuy();
     if (history.replaceState) history.replaceState(null, '', t === 'buy' ? location.pathname : '#' + t);
   }
-  $('tabBuy').onclick = function () { switchTab('buy'); };
-  $('tabPurch').onclick = function () { switchTab('purchases'); };
-  $('tabSell').onclick = function () { switchTab('sell'); };
 
   function clearFilters() {
     filters = { q: '', sport: '', type: '', seller: '', min: '', max: '', sort: 'new' };
@@ -1287,8 +1309,32 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Je
   loadMarket();
   loadMe();
 
-  if (location.hash === '#sell') switchTab('sell');
-  else if (location.hash === '#purchases') switchTab('purchases');
+  /* Old deep links, sent to the one place each of those things now lives.
+     Purchases and selling are not per-payment-method any more. */
+  if (location.hash === '#sell') location.replace('/marketplace/sell/#pricing');
+  else if (location.hash === '#purchases') location.replace('/marketplace/purchases/?pay=tmr');
+
+  /* ?listing=<id> arrives from the TMR Coin tab of /marketplace/. Open that
+     listing's purchase confirmation directly, so a buyer who clicked "Buy with
+     TMR" on the unified board lands on the thing they clicked and not on a
+     board they have to search again. */
+  var wantListing = Number(new URLSearchParams(location.search).get('listing') || 0);
+  if (wantListing) {
+    var tries = 0;
+    var focusListing = function () {
+      if (market.status !== 'ready') {
+        if (tries++ < 40) return setTimeout(focusListing, 150);
+        return;
+      }
+      var btn = document.querySelector('[data-buy="' + wantListing + '"]');
+      if (btn) {
+        var card = btn.closest ? btn.closest('.card') : null;
+        if (card) card.scrollIntoView({ block: 'center' });
+        if (!btn.disabled) openConfirm(wantListing);
+      }
+    };
+    focusListing();
+  }
 })();
 </script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>

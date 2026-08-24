@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://trustmyrecord.com/marketplace/sell/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sell Your Picks | Seller Setup & Dashboard | TrustMyRecord</title>
-    <meta name="description" content="Become a verified pick seller on TrustMyRecord. Clear eligibility with your public record, connect Stripe payouts, set your price, and open your storefront.">
+    <title>Sell Picks | Listings, Pricing, Sales &amp; Payouts | TrustMyRecord</title>
+    <meta name="description" content="Sell picks on TrustMyRecord. One listing per package, priced in cash and in TMR Coin at the same time. Clear eligibility with your public record, connect Stripe payouts, set both prices, and open your storefront.">
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <!-- Global nav: same canonical component as the homepage (tmr-ds-nav.js).
          tmr-sitewide.css/js dropped — the two nav systems cannot coexist. -->
@@ -111,23 +111,35 @@
         .publish-confirm { background:rgba(10,139,78,0.09); border:1px solid rgba(10,139,78,.28); border-radius:12px; padding:14px 16px; margin-bottom:14px; font-size:13.5px; color:#07182A; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
         .publish-confirm b { color:var(--green); }
         @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
-    .pkg-tmr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.22)}
-.pkg-tmr-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9aa8ba;cursor:pointer}
+    .pkg-tmr{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.pkg-tmr-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700;cursor:pointer}
 .pkg-tmr-price{display:flex;align-items:center;gap:6px;margin-top:7px}
-.pkg-tmr-price input{width:110px}
-.pkg-tmr-price span{font-size:12px;color:#9aa8ba;font-weight:600}
-.pkg-tmr-split{margin-top:7px;font-size:12px;color:#9aa8ba;line-height:1.7}
-.pkg-tmr-split b{color:#4ade80}
+.pkg-tmr-price input{width:110px;background:#FFFFFF;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;font-family:'JetBrains Mono',monospace}
+.pkg-tmr-price span{font-size:12px;color:var(--muted);font-weight:600}
+.pkg-tmr-split{margin-top:7px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.pkg-tmr-split b{color:var(--green);font-family:'JetBrains Mono',monospace}
+.price-pair{display:grid;grid-template-columns:1fr;gap:0}
+.fee-side{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:10px 0 4px}
+.fee-card{background:#F4F7FA;border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+.fee-card .h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
+.fee-card .n{font-weight:800;font-size:13px}
+.fee-card .v{font:800 16px/1 'JetBrains Mono',monospace;color:var(--teal)}
+.fee-card p{color:var(--muted);font-size:11.5px;line-height:1.55;margin:0}
 </style>
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=5369acad7f75">
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
 </head>
 <body class="mp-sell-page tmr-ds">
 
 <main class="mp-shell">
-    <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
-    <h1>Sell Your <span class="accent">Picks</span></h1>
-    <p class="lede">Open a storefront attached to your verified record. Choose which packages to sell, single picks or day, weekly, and monthly passes, and set your own price on each. You connect your own Stripe account, so buyers pay you directly and payouts go straight to your bank. TrustMyRecord keeps a 20% platform commission on every sale and you keep the rest.</p>
+    <!-- The ONE marketplace header and section nav. Selling is a section of the
+         Pick Marketplace, not a separate product, and there is one listing
+         editor for both payment methods. -->
+    <div class="mpx" data-mp-tab="listings"
+         data-mp-sub="Sell picks from your verified record. You create <b>one listing per package</b> and put <b>both prices</b> on it &mdash; cash and TMR Coin &mdash; so buyers pay with whichever they hold. There is no second store to run."></div>
+    <h1 style="font-size:24px;margin-bottom:8px;">Sell <span class="accent">Picks</span></h1>
+    <p class="lede">Open a storefront attached to your verified record. Choose which packages to sell, single picks or day, weekly, and monthly passes, and price each one. You connect your own Stripe account for cash sales, so buyers pay you directly and payouts go straight to your bank; TMR Coin sales settle straight into your TMR balance. What TrustMyRecord keeps depends on how the buyer paid, and both rates are shown in <a href="#pricing" style="color:var(--cyan);">Pricing</a>.</p>
     <div id="app"><div class="panel" style="color:var(--muted);">Loading…</div></div>
 
     <section class="panel" style="margin-top:24px;" aria-label="How selling picks works">
@@ -142,10 +154,12 @@
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
 <script src="/static/js/backend-api.js?v=3cbc527ee17a"></script>
+<script src="/static/js/tmr-marketplace-shell.js?v=664f679454c5"></script>
 <script>
 (function () {
     const app = document.getElementById('app');
     let elig = null, listing = null, listings = [], byType = {}, dash = null, status = null, mpStatus = null, justPublished = 0;
+    let tmrMe = null;
 
     const PKG = [
         { type: 'single_pick',   name: 'Single Pick',  dur: '1 PICK', ph: '20.00' },
@@ -216,9 +230,27 @@
         '</div>';
     }
 
-    // 5% is read from the API on save; this preview uses the same default the
-    // server uses so the seller is never shown a number the server disagrees with.
+    /* Both commission rates. Seeded with the shipped settings so every preview
+       on this page is correct on first paint, then re-read from
+       /marketplace/status, which is the single place BOTH rates come from. A
+       seller must never be shown a number the server disagrees with. */
     var TMR_FEE_BPS = 500;
+    var CASH_FEE_BPS = 2000;
+    function applyFeeRates(st) {
+        if (!st) return;
+        var pm = st.payment_methods || {};
+        if (pm.cash && pm.cash.fee_bps != null) CASH_FEE_BPS = Number(pm.cash.fee_bps);
+        else if (st.platform_fee_bps != null) CASH_FEE_BPS = Number(st.platform_fee_bps);
+        if (pm.tmr && pm.tmr.fee_bps != null) TMR_FEE_BPS = Number(pm.tmr.fee_bps);
+        else if (st.tmr_platform_fee_bps != null) TMR_FEE_BPS = Number(st.tmr_platform_fee_bps);
+    }
+    function pctLabel(bps) { return (bps / 100).toFixed(bps % 100 ? 2 : 0) + '%'; }
+    function paintFeeCards() {
+        var c = app.querySelector('[data-sell-fee="cash"]');
+        var t = app.querySelector('[data-sell-fee="tmr"]');
+        if (c) c.textContent = pctLabel(CASH_FEE_BPS);
+        if (t) t.textContent = pctLabel(TMR_FEE_BPS);
+    }
     function renderTmrSplit(type) {
         const el = app.querySelector('[data-tmr-split="' + type + '"]');
         const on = app.querySelector('[data-tmr-accept="' + type + '"]');
@@ -262,14 +294,14 @@
         }
         let label, target, cta;
         if (!elig.rules.seller_agreement_accepted) {
-            label = 'Next: accept the Seller Agreement'; target = '#step2'; cta = 'Go to Step 2';
+            label = 'Next: accept the Seller Agreement'; target = '#step2'; cta = 'Seller Agreement';
         } else if (st !== 'complete') {
-            if (!elig.can_start_onboarding) { label = 'Next: finish the eligibility items in Step 1'; target = '#step1'; cta = 'Go to Step 1'; }
-            else { label = 'Next: connect your Stripe account'; target = '#step3'; cta = 'Go to Step 3'; }
+            if (!elig.can_start_onboarding) { label = 'Next: finish the eligibility items'; target = '#step1'; cta = 'Eligibility'; }
+            else { label = 'Next: connect your Stripe account'; target = '#payouts'; cta = 'Payout Settings'; }
         } else if (!anyLive) {
-            label = 'Next: set your prices and publish a package'; target = '#step4'; cta = 'Go to Step 4';
+            label = 'Next: price a package and publish it'; target = '#pricing'; cta = 'Pricing';
         } else {
-            return '<div class="next-action next-green"><b>Your storefront is live.</b> Manage packages and pricing in Step 4 below.</div>';
+            return '<div class="next-action next-green"><b>Your storefront is live.</b> Manage your listings and both prices in <a href="#listings" style="color:var(--cyan);">My Listings</a> below.</div>';
         }
         return '<div class="next-action"><b>' + label + '</b><a class="btn btn-primary" href="' + target + '">' + cta + '</a></div>';
     }
@@ -304,7 +336,7 @@
 
         // Step 3: connect the seller's OWN Stripe account (Connect Standard OAuth)
         const st = elig.onboarding_status;
-        html += '<div class="panel" id="step3"><h2><span class="step-num">3</span> Your Stripe Account ' +
+        html += '<div class="panel" id="step3"><a id="payouts"></a><h2><span class="step-num">3</span> Stripe &amp; Payout Settings ' +
             (st === 'complete' ? '<span class="status-pill pill-green">Connected</span>' :
              st === 'in_progress' ? '<span class="status-pill pill-amber">Finishing Setup</span>' :
              '<span class="status-pill pill-amber">Not Connected</span>') + '</h2>' +
@@ -332,18 +364,28 @@
         // Step 4: packages — seller picks which to offer and prices each one
         const anyLive = listings.some(function (l) { return l.status === 'published'; });
         const storefrontUrl = '/marketplace/seller/?u=' + encodeURIComponent((window.auth && window.auth.user && window.auth.user.username) || (dash && dash._username) || '');
-        html += '<div class="panel" id="step4"><h2><span class="step-num">4</span> Your Packages ' +
+        html += '<div class="panel" id="step4"><a id="listings"></a><a id="editor"></a><h2><span class="step-num">4</span> My Listings ' +
             (anyLive ? '<span class="status-pill pill-green">Live</span>' : listings.length ? '<span class="status-pill pill-amber">Draft</span>' : '') + '</h2>' +
             (justPublished ? '<div class="publish-confirm"><span><b>Published.</b> Your package' + (justPublished > 1 ? 's are' : ' is') + ' now live on the marketplace and your public profile.</span><a class="btn btn-primary" href="' + storefrontUrl + '" target="_blank" rel="noopener">View Public Package &rarr;</a></div>' : '') +
             (anyLive && dash && dash.pending_picks_count === 0 ? '<div class="empty-picks-warn"><span>&#9888;&#65039;</span><span><b>This package has no picks selected.</b> You have 0 pending picks right now, so buyers will see an empty storefront until you lock a new pick in the <a href="/sportsbook/" style="color:var(--cyan);">Sportsbook</a>.</span></div>' : '') +
-            '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. Toggle a package ON, set its price, then Save &amp; Publish. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
-            // The TMR rail is opt-in per package and easy to miss: the checkbox
-            // below says what it does but not where the listing ends up.
-            '<p class="hint" style="margin-bottom:12px;">Any package can also be priced in <strong>TMR</strong>. ' +
-            'Tick "Also accept TMR" on a package and set a TMR price (minimum 10) and it appears on ' +
-            '<a href="/marketplace/tmr/">Picks for TMR</a> alongside your verified record, where members pay ' +
-            'straight from their TMR balance. The platform fee there is 5%, not 20%, and your cash price is ' +
-            'untouched &mdash; one package can take both.</p>' +
+            '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. Toggle a package ON, set its prices, then Save &amp; Publish.</p>' +
+            // ONE LISTING, TWO PRICES. This used to read as a hand-off to a
+            // second marketplace ("it appears on Picks for TMR"), which is what
+            // made sellers think they were running two stores. It is one
+            // listing with a second price on it.
+            '<p class="hint" style="margin-bottom:12px;"><strong>Each package takes two prices.</strong> ' +
+            'Set a cash price, and tick "Also accept TMR" to put a TMR Coin price on the same package. ' +
+            'A package priced at $10 and 100 TMR is one listing that shows on both the ' +
+            '<a href="/marketplace/?pay=cash">Cash</a> and <a href="/marketplace/?pay=tmr">TMR Coin</a> tabs ' +
+            'of the marketplace, and the buyer picks how to pay. Leave the TMR box unticked and the package ' +
+            'is simply cash only.</p>' +
+            '<div id="pricing" class="fee-side">' +
+              '<div class="fee-card"><div class="h"><span class="n">Cash sale</span><span class="v" data-sell-fee="cash">20%</span></div>' +
+                '<p>Card payment into your own Stripe account. The commission is taken as a Stripe application fee at the sale; Stripe pays the rest to your bank on its own schedule.</p></div>' +
+              '<div class="fee-card"><div class="h"><span class="n">TMR Coin sale</span><span class="v" data-sell-fee="tmr">5%</span></div>' +
+                '<p>Paid from the buyer\'s TMR balance. The commission comes off on the TMR ledger and the balance lands in your wallet immediately.</p></div>' +
+            '</div>' +
+            '<p class="hint" style="margin-bottom:12px;">The two rates differ because the two sales cost different amounts to run: a cash sale carries card processing, bank payouts, refunds and chargebacks; a TMR sale is a ledger transfer with none of that attached. The rate that applies is shown to the buyer before they pay, either way.</p>' +
             '<div class="pkg-group-label">Sell picks one at a time</div>' +
             '<div class="pkg-grid">' + renderPkgCard(PKG[0]) + '</div>' +
             '<div class="pkg-group-label" style="margin-top:14px;">Or sell access passes</div>' +
@@ -357,18 +399,20 @@
                 '<button class="btn btn-primary" id="saveListingBtn">Save &amp; Publish Packages</button>' +
                 (listings.length ? '<a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent((window.auth && window.auth.user && window.auth.user.username) || (dash && dash._username) || '') + '" id="previewLink">Preview Storefront</a>' : '') +
             '</div>' +
-            (!elig.eligible ? '<p class="hint">Packages save as drafts now and publish automatically once every eligibility item in step 1 is green.</p>' : '') +
+            (!elig.eligible ? '<p class="hint">Packages save as drafts now and publish automatically once every eligibility item above is green.</p>' : '') +
         '</div>';
 
         // Dashboard
         if (dash) {
             const t = dash.totals || {};
-            html += '<div class="panel"><h2>Seller Dashboard</h2>' +
+            html += '<div class="panel" id="sales"><h2>Sales</h2>' +
             '<div class="stat-row">' +
                 '<div class="stat"><b>' + (t.completed_orders || 0) + '</b><span>Completed Sales</span></div>' +
                 '<div class="stat"><b class="mono">' + money(t.gross_cents) + '</b><span>Gross Sales</span></div>' +
-                '<div class="stat"><b class="mono">' + money(t.platform_fee_cents) + '</b><span>TMR 20% Commission</span></div>' +
-                '<div class="stat"><b class="mono">' + money(t.seller_gross_cents) + '</b><span>Your 80% Gross*</span></div>' +
+                // "TMR 20% Commission" meant TrustMyRecord's commission, but TMR is also the
+            // name of the coin, so on a page that now shows both it read as a TMR Coin fee.
+            '<div class="stat"><b class="mono">' + money(t.platform_fee_cents) + '</b><span>Platform Commission</span></div>' +
+                '<div class="stat"><b class="mono">' + money(t.seller_gross_cents) + '</b><span>Your Gross Share*</span></div>' +
                 '<div class="stat"><b class="mono">' + money(dash.refunds ? dash.refunds.refunded_cents : 0) + '</b><span>Refunded</span></div>' +
                 '<div class="stat"><b>' + (t.disputed_orders || 0) + '</b><span>Disputes</span></div>' +
             '</div>' +
@@ -378,18 +422,45 @@
             '<p class="hint">*Gross allocation before any Stripe processing/payout costs, refunds, chargebacks, or taxes. Stripe pays out on its own schedule; manage payout details in your Stripe Express dashboard.</p>';
 
             if (dash.recent_orders && dash.recent_orders.length) {
-                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Orders</h2><div class="tblwrap"><table><thead><tr><th>Date</th><th>Buyer</th><th>Package</th><th>Status</th><th>Price</th><th>Your 80%</th></tr></thead><tbody>' +
+                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Cash Orders</h2><div class="tblwrap"><table><thead><tr><th>Date</th><th>Buyer</th><th>Package</th><th>Status</th><th>Price</th><th>Your Share</th></tr></thead><tbody>' +
                 dash.recent_orders.map(function (o) {
                     return '<tr><td>' + new Date(o.created_at).toLocaleDateString() + '</td><td>@' + esc(o.buyer_username) + '</td><td>' + esc(String(o.product_type || '').replace(/_/g,' ')) + '</td><td>' + esc(o.status) + '</td><td class="mono">' + money(o.price_cents, o.currency) + '</td><td class="mono">' + money(o.seller_gross_cents, o.currency) + '</td></tr>';
                 }).join('') + '</tbody></table></div>';
             } else {
-                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Orders</h2><div style="text-align:center;color:var(--muted);padding:32px 18px;border:1px dashed var(--line);border-radius:13px;font-size:13.5px;">No orders yet.</div>';
+                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Cash Orders</h2><div style="text-align:center;color:var(--muted);padding:32px 18px;border:1px dashed var(--line);border-radius:13px;font-size:13.5px;">No cash orders yet.</div>';
             }
+            html += renderTmrSales();
             html += '</div>';
+        } else {
+            // The cash dashboard failed or the seller has no Stripe side yet.
+            // TMR sales are still their sales, so they still get a Sales section.
+            const tmrOnly = renderTmrSales();
+            if (tmrOnly) html += '<div class="panel" id="sales"><h2>Sales</h2>' + tmrOnly + '</div>';
         }
 
         app.innerHTML = html;
+        paintFeeCards();
         bind();
+    }
+
+    /* TMR sales, rendered into the same Sales section as the cash ones. There is
+       one seller history here, not one per payment method. */
+    function renderTmrSales() {
+        if (!tmrMe) return '';
+        const e = tmrMe.earnings || {};
+        const sales = e.sales_rows || tmrMe.sales || [];
+        let out = '<h2 style="margin-top:22px;font-size:17px;">TMR Coin Sales</h2>' +
+            '<div class="stat-row">' +
+                '<div class="stat"><b>' + (tmrMe.salesCount || 0) + '</b><span>TMR Sales</span></div>' +
+                '<div class="stat"><b class="mono">' + Number(e.gross || 0).toLocaleString() + '</b><span>Gross TMR</span></div>' +
+                '<div class="stat"><b class="mono">' + Number(e.fees || 0).toLocaleString() + '</b><span>Commission (' + pctLabel(TMR_FEE_BPS) + ')</span></div>' +
+                '<div class="stat"><b class="mono">' + Number(e.net || 0).toLocaleString() + '</b><span>Net TMR To You</span></div>' +
+            '</div>' +
+            '<p class="hint">TMR from a sale lands in your <a href="/wallet/account/" style="color:var(--cyan);">wallet</a> the moment the buyer confirms. No payout schedule and no Stripe involved.</p>';
+        if (!(tmrMe.salesCount || 0)) {
+            out += '<p class="hint">No TMR sales yet. A package only appears on the TMR Coin tab of the marketplace once it carries a TMR price &mdash; set one in <a href="#pricing" style="color:var(--cyan);">Pricing</a>.</p>';
+        }
+        return out;
     }
 
     function updateKeepLine(type) {
@@ -397,7 +468,8 @@
         const keep = app.querySelector('[data-keep="' + type + '"]');
         if (!input || !keep) return;
         const v = Math.round(parseFloat(input.value || '0') * 100);
-        keep.innerHTML = v > 0 ? 'You keep <b>' + money(v - Math.round(v * 0.20)) + '</b> &middot; TMR 20% ' + money(Math.round(v * 0.20)) : '';
+        const feeRate = CASH_FEE_BPS / 10000;
+        keep.innerHTML = v > 0 ? 'You keep <b>' + money(v - Math.round(v * feeRate)) + '</b> &middot; commission ' + money(Math.round(v * feeRate)) : '';
     }
 
     function bind() {
@@ -470,39 +542,54 @@
                 const existing = byType[pk.type];
                 try {
                     if (offered) {
-                        if (!cents) { if (errSlot) errSlot.textContent = 'Set a price first.'; failedCount++; continue; }
+                        if (!cents) { if (errSlot) errSlot.textContent = 'Set a cash price first.'; failedCount++; continue; }
+                        /* ONE LISTING, ONE SAVE, BOTH PRICES. The cash price and
+                           the TMR price go up in the same PUT because they are two
+                           prices on one product. */
+                        const acceptEl = app.querySelector('[data-tmr-accept="' + pk.type + '"]');
+                        const tmrEl = app.querySelector('[data-tmr-price="' + pk.type + '"]');
+                        const wantsTmr = Boolean(acceptEl && acceptEl.checked);
+                        const tmrVal = tmrEl ? parseInt(tmrEl.value, 10) : NaN;
+                        if (wantsTmr && !(tmrVal >= 10)) {
+                            if (errSlot) errSlot.textContent = 'Set a TMR price of at least 10, or untick "Also accept TMR".';
+                            failedCount++; continue;
+                        }
                         const out = await api.request('/marketplace/me/listing', { method: 'PUT', body: {
                             product_type: pk.type, title: pk.name, description: desc, price_cents: cents, sports: sports,
+                            accepts_tmr: wantsTmr, price_tmr: wantsTmr ? tmrVal : null,
                         } });
                         if (out && out.error) throw new Error(out.error);
                         if (elig.eligible) {
                             const p = await api.request('/marketplace/me/listing/publish', { method: 'POST', body: { product_type: pk.type } });
                             if (p && p.error) throw new Error(p.error);
                         }
-                        // TMR price rides along with the same Save. It is a separate
-                        // endpoint because it is a separate payment rail, and a failure
-                        // here must not lose the cash listing the seller just saved --
-                        // hence its own try/catch rather than throwing into the outer one.
-                        try {
-                            const acceptEl = app.querySelector('[data-tmr-accept="' + pk.type + '"]');
-                            const tmrEl = app.querySelector('[data-tmr-price="' + pk.type + '"]');
-                            const wantsTmr = Boolean(acceptEl && acceptEl.checked);
-                            const tmrVal = tmrEl ? parseInt(tmrEl.value, 10) : NaN;
-                            const fresh = await api.request('/marketplace/me/listing');
-                            const row = (Array.isArray(fresh) ? fresh : (fresh && fresh.listings) || [])
-                                .find(function (x) { return x.product_type === pk.type; });
-                            if (row && row.id) {
-                                if (wantsTmr && tmrVal >= 10) {
-                                    const t = await api.request('/marketplace/tmr/listings/' + row.id + '/price',
-                                        { method: 'PATCH', body: { priceTmr: tmrVal, acceptsTmr: true } });
-                                    if (t && t.feeBps) TMR_FEE_BPS = t.feeBps;
-                                } else if (!wantsTmr && row.accepts_tmr) {
-                                    await api.request('/marketplace/tmr/listings/' + row.id + '/price',
-                                        { method: 'PATCH', body: { acceptsTmr: false } });
+                        /* An API that has not been deployed yet ignores the two TMR
+                           fields and answers with the listing unchanged. Detect that
+                           from the response and finish the job on the TMR endpoint,
+                           so a save is never half-applied across a deploy boundary.
+                           Its own try/catch: a TMR failure must not lose the cash
+                           listing that has already been written. */
+                        const saved = out && out.listing;
+                        const tmrLanded = saved && Boolean(saved.accepts_tmr) === wantsTmr
+                            && (!wantsTmr || Number(saved.price_tmr) === tmrVal);
+                        if (!tmrLanded) {
+                            try {
+                                const fresh = await api.request('/marketplace/me/listing');
+                                const row = (Array.isArray(fresh) ? fresh : (fresh && fresh.listings) || [])
+                                    .find(function (x) { return x.product_type === pk.type; });
+                                if (row && row.id) {
+                                    if (wantsTmr) {
+                                        const t = await api.request('/marketplace/tmr/listings/' + row.id + '/price',
+                                            { method: 'PATCH', body: { priceTmr: tmrVal, acceptsTmr: true } });
+                                        if (t && t.feeBps) TMR_FEE_BPS = t.feeBps;
+                                    } else if (row.accepts_tmr) {
+                                        await api.request('/marketplace/tmr/listings/' + row.id + '/price',
+                                            { method: 'PATCH', body: { acceptsTmr: false } });
+                                    }
                                 }
+                            } catch (tmrErr) {
+                                if (errSlot) errSlot.textContent = 'Cash price saved, but the TMR price did not update: ' + (tmrErr.message || 'error');
                             }
-                        } catch (tmrErr) {
-                            if (errSlot) errSlot.textContent = 'Saved, but the TMR price did not update: ' + (tmrErr.message || 'error');
                         }
                         savedCount++;
                     } else if (existing && existing.status === 'published') {
@@ -538,6 +625,14 @@
             elig = await api.request('/marketplace/me/eligibility');
         } catch (e) { renderLoggedOut(); return; }
         try { mpStatus = await api.request('/marketplace/status'); } catch (e) { mpStatus = null; }
+        applyFeeRates(mpStatus);
+        // TMR sales belong in Sales with the cash ones: one seller, one history,
+        // two payment methods. A failure here must never block the page.
+        try {
+            const t = await api.request('/marketplace/tmr/me');
+            tmrMe = t && t.seller ? t.seller : null;
+            if (t && t.feeBps) TMR_FEE_BPS = Number(t.feeBps);
+        } catch (e) { tmrMe = null; }
         try {
             const l = await api.request('/marketplace/me/listing');
             listing = l && l.listing;
@@ -570,6 +665,6 @@
 </script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
-<script src="/static/js/tmr-ds-nav.6a5aef783912.js"></script>
+<script src="/static/js/tmr-ds-nav.e149da02c0ac.js"></script>
 </body>
 </html>
