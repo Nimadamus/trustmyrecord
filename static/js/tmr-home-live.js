@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '923e1232ace0';
+  var BUILD = 'ea5fc844765b';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -919,7 +919,7 @@
     var ranked = users.filter(function (u) { return num(u.total_picks) > 0; })
                       .sort(function (a, b) { return num(b.net_units) - num(a.net_units); });
     if (!ranked.length) return;
-    body.innerHTML = ranked.slice(0, 8).map(function (u, i) {
+    body.innerHTML = ranked.slice(0, 10).map(function (u, i) {
       var rk = i < 3 ? 'rk g' + (i + 1) : 'rk';
       var w = u.wins != null ? u.wins + '-' + u.losses + (num(u.pushes) ? '-' + u.pushes : '') : num(u.total_picks) + ' picks';
       return '<div class="lbr"><span class="' + rk + '">' + (i + 1) + '</span>' +
@@ -1455,7 +1455,7 @@
       statsDone();
     });
 
-    j('/users/leaderboard?sortBy=net_units&limit=8', 8000).then(function (d) {
+    j('/users/leaderboard?sortBy=net_units&limit=10', 8000).then(function (d) {
       if (!d) { statsDone(); lwReveal('tmr-lw-b2'); return; }
       var rows = d.leaderboard || [];
       if (rows.length) leaderboard(rows);
