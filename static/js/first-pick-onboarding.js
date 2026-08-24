@@ -502,6 +502,19 @@
         return { parent: document.body, before: document.body.firstChild };
     }
 
+    /* The homepage and /profile/ are LOCKED DARK SURFACES.
+       The strip there sits in the dark band between the nav and the hero, but
+       that band is a SIBLING element - the strip's own ancestors are the light
+       page background, so walking up reads "light" and would have repainted
+       the homepage strip white. Verified in production: the detector returns
+       true on "/". The homepage escaped only because its inline early-paint
+       block hardcodes the class, and relying on that is one refactor away from
+       a regression. These two paths are excluded outright. */
+    function lockedDarkSurface() {
+        var p = (window.location.pathname || '').toLowerCase();
+        return p === '/' || p === '/index.html' || p.indexOf('/profile/') === 0;
+    }
+
     /**
      * Is the surface this strip is about to sit on a LIGHT one?
      *
@@ -515,6 +528,7 @@
      * approved baseline must not shift because a colour could not be parsed.
      */
     function surfaceIsLight(node) {
+        if (lockedDarkSurface()) return false;
         try {
             var el = node;
             for (var hops = 0; el && hops < 6; hops++, el = el.parentElement) {

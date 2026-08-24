@@ -164,6 +164,11 @@
         /* THEME_MATCH_20260824: /polls/ is a light page and the shared strip is
            styled for the homepage's dark band. Match the surface. */
         var light = (function (node) {
+            /* Locked dark surfaces: the homepage's dark band is a SIBLING of
+               the strip, so walking up reads the light page background and
+               would repaint it. /profile/ is dark throughout. */
+            var path = (window.location.pathname || '').toLowerCase();
+            if (path === '/' || path === '/index.html' || path.indexOf('/profile/') === 0) return false;
             try {
                 var el = node;
                 for (var hops = 0; el && hops < 6; hops++, el = el.parentElement) {

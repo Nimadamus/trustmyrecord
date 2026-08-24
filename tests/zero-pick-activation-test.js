@@ -272,6 +272,23 @@ test('the strip matches a light surface instead of forcing the homepage dark', (
   }
 });
 
+test('the homepage and /profile/ can never take the light variant', () => {
+  // Verified in production: the luminance walk returns TRUE on "/", because the
+  // dark band the strip sits in is a SIBLING of the strip, not an ancestor -
+  // the ancestors are the light page background. Without an explicit guard the
+  // homepage strip would have been repainted white.
+  for (const [label, src] of [['onboarding', ONBOARDING], ['nudge', NUDGE],
+                              ['poll bridge', read('static/js/poll-pick-bridge.js')]]) {
+    assert.ok(/index\.html/.test(src) && /\/profile\//.test(src),
+      label + ' does not exclude the locked dark surfaces');
+  }
+  assert.ok(/function lockedDarkSurface/.test(ONBOARDING));
+  // The guard must run BEFORE any colour is read.
+  const fn = ONBOARDING.slice(ONBOARDING.indexOf('function surfaceIsLight'));
+  const head = fn.slice(0, fn.indexOf('getComputedStyle'));
+  assert.ok(/lockedDarkSurface\(\)/.test(head), 'the guard must short-circuit first');
+});
+
 test('the light palette is the one the light pages already use', () => {
   // Same values /welcome/ uses for .wc-step and .wc-act, so the strip reads as
   // part of the page rather than as something bolted on.
