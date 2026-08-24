@@ -12,104 +12,106 @@
     <meta property="og:title" content="Pick Marketplace | TrustMyRecord">
     <meta property="og:description" content="Buy picks from handicappers with fully transparent, verified records. Inspect the ledger before you pay.">
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
-    <script defer src="/static/js/tmr-sitewide.js?v=561253cba90b"></script>
+    <!-- Global nav: the same canonical component the homepage uses
+         (tmr-ds.css + tmr-ds-nav.js). tmr-sitewide.css/js and tmr-light.css
+         dropped: the two nav systems cannot coexist, and one marketplace
+         cannot have two headers. -->
+    <link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
+        :root, body.tmr-ds.mp-browse-page, body.tmr-ds.tmr-ds--dark.mp-browse-page {
             --bg: #FFFFFF; --panel: #FFFFFF; --panel2: #F6F9FC;
             --line: #D2DEEA; --text: #07182A; --muted: #2E4459;
             --teal: #0C948C; --cyan: #0C948C; --amber: #B98505; --green: #0A8B4E; --red: #BC372E;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
+        body.mp-browse-page {
             background: radial-gradient(circle at 10% -10%, rgba(12,148,140,0.08), transparent 30%),
                         radial-gradient(circle at 95% -10%, rgba(30,91,191,0.08), transparent 30%),
                         linear-gradient(180deg,#FFFFFF 0%,#FFFFFF 100%);
             color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh;
         }
-        a { color: inherit; text-decoration: none; }
-        .mp-shell { max-width: 1180px; margin: 0 auto; padding: 28px 24px 70px; }
-        .mp-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
-        .mp-head h1 {
+        body.mp-browse-page a { color: inherit; text-decoration: none; }
+        body.mp-browse-page .mp-shell { max-width: 1180px; margin: 0 auto; padding: 28px 24px 70px; }
+        body.mp-browse-page .mp-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+        body.mp-browse-page .mp-head h1 {
             font-family: 'Barlow Condensed','Inter',sans-serif; font-weight: 900; text-transform: uppercase;
             font-size: clamp(30px,4vw,44px); letter-spacing: -.5px; line-height: 1;
         }
-        .mp-head h1 .accent { background: linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .mp-head p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 640px; line-height: 1.55; }
-        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; border: 1px solid transparent; transition: .15s; font-family: inherit; }
-        .btn-primary { background: linear-gradient(135deg,var(--teal),var(--cyan)); color: #04111a; }
-        .btn-primary:hover { transform: translateY(-1px); }
-        .btn-outline { background: rgba(7,24,42,0.02); color: var(--text); border-color: var(--line); }
-        .btn-outline:hover { border-color: var(--cyan); }
-        .mp-banner {
+        body.mp-browse-page .mp-head h1 .accent { background: linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        body.mp-browse-page .mp-head p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 640px; line-height: 1.55; }
+        body.mp-browse-page .btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; border: 1px solid transparent; transition: .15s; font-family: inherit; }
+        body.mp-browse-page .btn-primary { background: linear-gradient(135deg,var(--teal),var(--cyan)); color: #04111a; }
+        body.mp-browse-page .btn-primary:hover { transform: translateY(-1px); }
+        body.mp-browse-page .btn-outline { background: rgba(7,24,42,0.02); color: var(--text); border-color: var(--line); }
+        body.mp-browse-page .btn-outline:hover { border-color: var(--cyan); }
+        body.mp-browse-page .mp-banner {
             margin: 14px 0 18px; border: 1px solid rgba(185,133,5,.30); background: rgba(185,133,5,0.08);
             color: #B98505; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.5; display: none;
         }
         /* Controls */
-        .mp-controls {
+        body.mp-browse-page .mp-controls {
             display: grid; grid-template-columns: minmax(180px,1.4fr) repeat(4, minmax(110px,1fr)) auto;
             gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 18px;
         }
-        .mp-controls input, .mp-controls select {
+        body.mp-browse-page .mp-controls input, body.mp-browse-page .mp-controls select {
             width: 100%; background: #F4F7FA; border: 1px solid var(--line); border-radius: 9px;
             color: var(--text); padding: 9px 11px; font-size: 13px; font-family: inherit;
         }
-        .mp-controls input:focus, .mp-controls select:focus { outline: none; border-color: var(--cyan); }
-        .mp-check { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); white-space: nowrap; padding: 0 4px; }
+        body.mp-browse-page .mp-controls input:focus, body.mp-browse-page .mp-controls select:focus { outline: none; border-color: var(--cyan); }
+        body.mp-browse-page .mp-check { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); white-space: nowrap; padding: 0 4px; }
         /* Cards */
-        .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 14px; }
-        .sell-card { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s; }
-        .sell-card:hover { border-color: rgba(12,148,140,.28); }
-        .sc-top { display: flex; align-items: center; gap: 12px; }
-        .sc-ava { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #F6F9FC; border: 1px solid var(--line); }
-        .sc-name { font-weight: 800; font-size: 15.5px; display: flex; align-items: center; gap: 6px; }
-        .sc-user { color: var(--muted); font-size: 12.5px; }
-        .sc-verified { color: var(--cyan); font-size: 13px; }
-        .sc-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
-        .sc-stat { background: #F4F7FA; border: 1px solid var(--line); border-radius: 9px; padding: 8px 6px; text-align: center; }
-        .sc-stat b { display: block; font-family: 'JetBrains Mono',monospace; font-size: 14px; }
-        .sc-stat span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-        .pos { color: var(--green); } .neg { color: var(--red); }
-        .sc-desc { color: #07182A; font-size: 13px; line-height: 1.5; min-height: 38px; }
-        .sc-sports { display: flex; gap: 5px; flex-wrap: wrap; }
-        .sc-chip { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan); background: rgba(12,148,140,0.09); border: 1px solid rgba(12,148,140,.28); padding: 3px 8px; border-radius: 999px; }
-        .sc-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
-        .sc-price { font-family: 'JetBrains Mono',monospace; font-weight: 800; font-size: 19px; }
-        .sc-price small { color: var(--muted); font-size: 10.5px; font-weight: 500; display: block; }
-        .mp-empty { text-align: center; color: var(--muted); padding: 60px 20px; border: 1px dashed var(--line); border-radius: 14px; font-size: 14px; line-height: 1.7; }
+        body.mp-browse-page .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 14px; }
+        body.mp-browse-page .sell-card { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s; }
+        body.mp-browse-page .sell-card:hover { border-color: rgba(12,148,140,.28); }
+        body.mp-browse-page .sc-top { display: flex; align-items: center; gap: 12px; }
+        body.mp-browse-page .sc-ava { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #F6F9FC; border: 1px solid var(--line); }
+        body.mp-browse-page .sc-name { font-weight: 800; font-size: 15.5px; display: flex; align-items: center; gap: 6px; }
+        body.mp-browse-page .sc-user { color: var(--muted); font-size: 12.5px; }
+        body.mp-browse-page .sc-verified { color: var(--cyan); font-size: 13px; }
+        body.mp-browse-page .sc-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+        body.mp-browse-page .sc-stat { background: #F4F7FA; border: 1px solid var(--line); border-radius: 9px; padding: 8px 6px; text-align: center; }
+        body.mp-browse-page .sc-stat b { display: block; font-family: 'JetBrains Mono',monospace; font-size: 14px; }
+        body.mp-browse-page .sc-stat span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+        body.mp-browse-page .pos { color: var(--green); } body.mp-browse-page .neg { color: var(--red); }
+        body.mp-browse-page .sc-desc { color: #07182A; font-size: 13px; line-height: 1.5; min-height: 38px; }
+        body.mp-browse-page .sc-sports { display: flex; gap: 5px; flex-wrap: wrap; }
+        body.mp-browse-page .sc-chip { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan); background: rgba(12,148,140,0.09); border: 1px solid rgba(12,148,140,.28); padding: 3px 8px; border-radius: 999px; }
+        body.mp-browse-page .sc-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        body.mp-browse-page .sc-price { font-family: 'JetBrains Mono',monospace; font-weight: 800; font-size: 19px; }
+        body.mp-browse-page .sc-price small { color: var(--muted); font-size: 10.5px; font-weight: 500; display: block; }
+        body.mp-browse-page .mp-empty { text-align: center; color: var(--muted); padding: 60px 20px; border: 1px dashed var(--line); border-radius: 14px; font-size: 14px; line-height: 1.7; }
         /* Rules */
-        .mp-rules { margin-top: 34px; background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 22px; }
-        .mp-rules h2 { font-family: 'Barlow Condensed','Inter',sans-serif; font-weight: 900; text-transform: uppercase; font-size: 24px; margin-bottom: 12px; }
-        .mp-rules ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 10px 22px; }
-        .mp-rules li { color: #07182A; font-size: 13.5px; line-height: 1.55; padding-left: 18px; position: relative; }
-        .mp-rules li::before { content: "•"; color: var(--teal); position: absolute; left: 2px; }
-        .mp-rules .fine { margin-top: 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
-        .mp-rules a { color: var(--cyan); }
+        body.mp-browse-page .mp-rules { margin-top: 34px; background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 22px; }
+        body.mp-browse-page .mp-rules h2 { font-family: 'Barlow Condensed','Inter',sans-serif; font-weight: 900; text-transform: uppercase; font-size: 24px; margin-bottom: 12px; }
+        body.mp-browse-page .mp-rules ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 10px 22px; }
+        body.mp-browse-page .mp-rules li { color: #07182A; font-size: 13.5px; line-height: 1.55; padding-left: 18px; position: relative; }
+        body.mp-browse-page .mp-rules li::before { content: "•"; color: var(--teal); position: absolute; left: 2px; }
+        body.mp-browse-page .mp-rules .fine { margin-top: 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+        body.mp-browse-page .mp-rules a { color: var(--cyan); }
         /* TMR Coin board — same card language as the cash board, because it is
            the same marketplace with a different price on the same listing. */
-        .tmr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 14px; }
-        .tmr-controls { display: grid; grid-template-columns: minmax(180px,1.6fr) minmax(120px,1fr) minmax(120px,1fr) minmax(130px,1fr); gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 18px; }
-        .tmr-controls input, .tmr-controls select { width: 100%; background: #F4F7FA; border: 1px solid var(--line); border-radius: 9px; color: var(--text); padding: 9px 11px; font-size: 13px; font-family: inherit; }
-        .tmr-controls input:focus, .tmr-controls select:focus { outline: none; border-color: var(--cyan); }
-        .sc-price .alt { display: block; font-family: 'Inter', sans-serif; font-size: 11.5px; font-weight: 700; color: var(--teal); margin-top: 2px; }
-        .sc-pay { display: inline-flex; align-items: center; gap: 5px; font: 700 10px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; border: 1px solid rgba(12,148,140,.28); background: rgba(12,148,140,0.09); color: var(--teal); }
-        .mp-note { color: var(--muted); font-size: 12.5px; line-height: 1.6; margin: -6px 0 16px; }
-        .mp-note a { color: var(--cyan); }
-        @media (max-width: 900px) { .mp-controls { grid-template-columns: 1fr 1fr; } .tmr-controls { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 560px) { .mp-shell { padding: 20px 14px 56px; } .mp-controls, .tmr-controls { grid-template-columns: 1fr; } }
+        body.mp-browse-page .tmr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 14px; }
+        body.mp-browse-page .tmr-controls { display: grid; grid-template-columns: minmax(180px,1.6fr) minmax(120px,1fr) minmax(120px,1fr) minmax(130px,1fr); gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 18px; }
+        body.mp-browse-page .tmr-controls input, body.mp-browse-page .tmr-controls select { width: 100%; background: #F4F7FA; border: 1px solid var(--line); border-radius: 9px; color: var(--text); padding: 9px 11px; font-size: 13px; font-family: inherit; }
+        body.mp-browse-page .tmr-controls input:focus, body.mp-browse-page .tmr-controls select:focus { outline: none; border-color: var(--cyan); }
+        body.mp-browse-page .sc-price .alt { display: block; font-family: 'Inter', sans-serif; font-size: 11.5px; font-weight: 700; color: var(--teal); margin-top: 2px; }
+        body.mp-browse-page .sc-pay { display: inline-flex; align-items: center; gap: 5px; font: 700 10px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; border: 1px solid rgba(12,148,140,.28); background: rgba(12,148,140,0.09); color: var(--teal); }
+        body.mp-browse-page .mp-note { color: var(--muted); font-size: 12.5px; line-height: 1.6; margin: -6px 0 16px; }
+        body.mp-browse-page .mp-note a { color: var(--cyan); }
+        @media (max-width: 900px) { body.mp-browse-page .mp-controls { grid-template-columns: 1fr 1fr; } body.mp-browse-page .tmr-controls { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 560px) { body.mp-browse-page .mp-shell { padding: 20px 14px 56px; } body.mp-browse-page .mp-controls, body.mp-browse-page .tmr-controls { grid-template-columns: 1fr; } }
     </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Pick Marketplace", "item": "https://trustmyrecord.com/marketplace/"}]}
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
-<link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
-<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=5369acad7f75">
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=2518dee34f97">
 </head>
-<body class="tmr-light">
+<body class="mp-browse-page tmr-ds">
 
 <main class="mp-shell">
     <!-- The one marketplace header + section nav, shared by every /marketplace/
@@ -471,5 +473,7 @@
 })();
 </script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.e149da02c0ac.js"></script>
 </body>
 </html>

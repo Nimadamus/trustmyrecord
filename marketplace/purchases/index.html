@@ -7,62 +7,64 @@
     <title>My Purchased Picks | Pick Marketplace | TrustMyRecord</title>
     <meta name="description" content="Your purchased picks on TrustMyRecord: revealed selections, order history, payment status, and receipts.">
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
-    <script defer src="/static/js/tmr-sitewide.js?v=561253cba90b"></script>
+    <!-- Global nav: the same canonical component the homepage uses
+         (tmr-ds.css + tmr-ds-nav.js). tmr-sitewide.css/js and tmr-light.css
+         dropped: the two nav systems cannot coexist, and one marketplace
+         cannot have two headers. -->
+    <link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
+        :root, body.tmr-ds.mp-purchases-page, body.tmr-ds.tmr-ds--dark.mp-purchases-page {
             --bg:#FFFFFF; --panel:#FFFFFF; --line:#D2DEEA;
             --text:#07182A; --muted:#2E4459; --teal:#0C948C; --cyan:#0C948C;
             --amber:#B98505; --green:#0A8B4E; --red:#BC372E;
         }
         * { box-sizing:border-box; margin:0; padding:0; }
-        body { background:linear-gradient(180deg,#FFFFFF,#FFFFFF); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
-        a { color:inherit; text-decoration:none; }
-        .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
-        .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
-        .crumb a { color:var(--cyan); }
-        h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(28px,4vw,40px); letter-spacing:-.5px; margin-bottom:18px; }
-        h1 .accent { background:linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-        .notice { border-radius:12px; padding:13px 16px; font-size:13.5px; line-height:1.55; margin-bottom:16px; display:none; }
-        .notice-wait { border:1px solid rgba(185,133,5,.30); background:rgba(185,133,5,0.08); color:#B98505; }
-        .notice-ok { border:1px solid rgba(10,139,78,.28); background:rgba(10,139,78,0.08); color:#07182A; }
-        .order { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:11px; }
-        .o-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-        .o-ava { width:40px; height:40px; border-radius:50%; object-fit:cover; background:#F6F9FC; border:1px solid var(--line); }
-        .o-name { font-weight:800; font-size:14.5px; }
-        .o-meta { color:var(--muted); font-size:12px; margin-top:2px; }
-        .o-right { margin-left:auto; text-align:right; }
-        .o-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:16px; }
-        .status-pill { display:inline-flex; padding:4px 10px; border-radius:999px; font:700 10.5px/1 'JetBrains Mono',monospace; letter-spacing:.09em; text-transform:uppercase; margin-top:4px; }
-        .pill-green { background:rgba(10,139,78,0.1); border:1px solid rgba(10,139,78,.28); color:var(--green); }
-        .pill-amber { background:rgba(185,133,5,0.1); border:1px solid rgba(185,133,5,.30); color:var(--amber); }
-        .pill-red { background:rgba(188,55,46,0.1); border:1px solid rgba(188,55,46,.28); color:var(--red); }
-        .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:9px; font-weight:800; font-size:12.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
-        .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
-        .btn-outline { background:rgba(7,24,42,0.02); color:var(--text); border-color:var(--line); }
-        .reveal { margin-top:12px; border-top:1px dashed #D2DEEA; padding-top:12px; display:none; }
-        .rv-sel { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; font-size:22px; text-transform:uppercase; }
-        .rv-line { color:#07182A; font-size:13px; margin-top:4px; }
-        .rv-grade { margin-top:6px; font-size:13px; font-weight:800; }
-        .mp-empty { text-align:center; color:var(--muted); padding:52px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
-        .mp-empty a { color:var(--cyan); }
-        @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } .o-right { text-align:left; margin-left:0; width:100%; } }
+        body.mp-purchases-page { background:linear-gradient(180deg,#FFFFFF,#FFFFFF); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        body.mp-purchases-page a { color:inherit; text-decoration:none; }
+        body.mp-purchases-page .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
+        body.mp-purchases-page .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+        body.mp-purchases-page .crumb a { color:var(--cyan); }
+        body.mp-purchases-page h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(28px,4vw,40px); letter-spacing:-.5px; margin-bottom:18px; }
+        body.mp-purchases-page h1 .accent { background:linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        body.mp-purchases-page .notice { border-radius:12px; padding:13px 16px; font-size:13.5px; line-height:1.55; margin-bottom:16px; display:none; }
+        body.mp-purchases-page .notice-wait { border:1px solid rgba(185,133,5,.30); background:rgba(185,133,5,0.08); color:#B98505; }
+        body.mp-purchases-page .notice-ok { border:1px solid rgba(10,139,78,.28); background:rgba(10,139,78,0.08); color:#07182A; }
+        body.mp-purchases-page .order { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:11px; }
+        body.mp-purchases-page .o-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        body.mp-purchases-page .o-ava { width:40px; height:40px; border-radius:50%; object-fit:cover; background:#F6F9FC; border:1px solid var(--line); }
+        body.mp-purchases-page .o-name { font-weight:800; font-size:14.5px; }
+        body.mp-purchases-page .o-meta { color:var(--muted); font-size:12px; margin-top:2px; }
+        body.mp-purchases-page .o-right { margin-left:auto; text-align:right; }
+        body.mp-purchases-page .o-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:16px; }
+        body.mp-purchases-page .status-pill { display:inline-flex; padding:4px 10px; border-radius:999px; font:700 10.5px/1 'JetBrains Mono',monospace; letter-spacing:.09em; text-transform:uppercase; margin-top:4px; }
+        body.mp-purchases-page .pill-green { background:rgba(10,139,78,0.1); border:1px solid rgba(10,139,78,.28); color:var(--green); }
+        body.mp-purchases-page .pill-amber { background:rgba(185,133,5,0.1); border:1px solid rgba(185,133,5,.30); color:var(--amber); }
+        body.mp-purchases-page .pill-red { background:rgba(188,55,46,0.1); border:1px solid rgba(188,55,46,.28); color:var(--red); }
+        body.mp-purchases-page .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:9px; font-weight:800; font-size:12.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
+        body.mp-purchases-page .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
+        body.mp-purchases-page .btn-outline { background:rgba(7,24,42,0.02); color:var(--text); border-color:var(--line); }
+        body.mp-purchases-page .reveal { margin-top:12px; border-top:1px dashed #D2DEEA; padding-top:12px; display:none; }
+        body.mp-purchases-page .rv-sel { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; font-size:22px; text-transform:uppercase; }
+        body.mp-purchases-page .rv-line { color:#07182A; font-size:13px; margin-top:4px; }
+        body.mp-purchases-page .rv-grade { margin-top:6px; font-size:13px; font-weight:800; }
+        body.mp-purchases-page .mp-empty { text-align:center; color:var(--muted); padding:52px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
+        body.mp-purchases-page .mp-empty a { color:var(--cyan); }
+        @media (max-width:560px) { body.mp-purchases-page .mp-shell { padding:20px 14px 56px; } body.mp-purchases-page .o-right { text-align:left; margin-left:0; width:100%; } }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
-<link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
-<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=5369acad7f75">
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=2518dee34f97">
 <style>
-    .pay-filter { display:flex; gap:7px; flex-wrap:wrap; margin:0 0 16px; }
-    .pay-filter button { padding:7px 13px; border-radius:999px; border:1px solid var(--line); background:#F4F7FA; color:var(--text); font:700 13px/1 Inter,system-ui,sans-serif; cursor:pointer; }
-    .pay-filter button.on { background:#0C948C; border-color:#0C948C; color:#fff; }
-    .o-price .paylbl { display:block; font:700 10px/1 "JetBrains Mono",monospace; letter-spacing:.08em; text-transform:uppercase; color:#2E4459; margin-top:4px; }
+    body.mp-purchases-page .pay-filter { display:flex; gap:7px; flex-wrap:wrap; margin:0 0 16px; }
+    body.mp-purchases-page .pay-filter button { padding:7px 13px; border-radius:999px; border:1px solid var(--line); background:#F4F7FA; color:var(--text); font:700 13px/1 Inter,system-ui,sans-serif; cursor:pointer; }
+    body.mp-purchases-page .pay-filter button.on { background:#0C948C; border-color:#0C948C; color:#fff; }
+    body.mp-purchases-page .o-price .paylbl { display:block; font:700 10px/1 "JetBrains Mono",monospace; letter-spacing:.08em; text-transform:uppercase; color:#2E4459; margin-top:4px; }
 </style>
 </head>
-<body class="tmr-light">
+<body class="mp-purchases-page tmr-ds">
 
 <main class="mp-shell">
     <!-- One marketplace, one purchase history. Cash orders and TMR Coin
@@ -251,5 +253,7 @@
 })();
 </script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.e149da02c0ac.js"></script>
 </body>
 </html>

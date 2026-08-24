@@ -7,78 +7,80 @@
     <title>Seller Storefront | Pick Marketplace | TrustMyRecord</title>
     <meta name="description" content="Buy picks from a verified TrustMyRecord handicapper. Inspect the seller's full public record before purchasing.">
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=3a1a5506205a">
-    <script defer src="/static/js/tmr-sitewide.js?v=561253cba90b"></script>
+    <!-- Global nav: the same canonical component the homepage uses
+         (tmr-ds.css + tmr-ds-nav.js). tmr-sitewide.css/js and tmr-light.css
+         dropped: the two nav systems cannot coexist, and one marketplace
+         cannot have two headers. -->
+    <link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
+        :root, body.tmr-ds.mp-storefront-page, body.tmr-ds.tmr-ds--dark.mp-storefront-page {
             --bg:#FFFFFF; --panel:#FFFFFF; --line:#D2DEEA;
             --text:#07182A; --muted:#2E4459; --teal:#0C948C; --cyan:#0C948C;
             --amber:#B98505; --green:#0A8B4E; --red:#BC372E;
         }
         * { box-sizing:border-box; margin:0; padding:0; }
-        body { background:linear-gradient(180deg,#FFFFFF,#FFFFFF); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
-        a { color:inherit; text-decoration:none; }
-        .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
-        .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
-        .crumb a { color:var(--cyan); }
-        .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 18px; border-radius:10px; font-weight:800; font-size:13.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
-        .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
-        .btn-primary:hover { transform:translateY(-1px); }
-        .btn-primary:disabled { opacity:.55; cursor:not-allowed; transform:none; }
-        .btn-outline { background:rgba(7,24,42,0.02); color:var(--text); border-color:var(--line); }
-        .panel { background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px; margin-bottom:16px; }
-        .sf-top { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-        .sf-ava { width:72px; height:72px; border-radius:50%; object-fit:cover; background:#F6F9FC; border:1px solid var(--line); }
-        .sf-name { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; font-size:30px; text-transform:uppercase; letter-spacing:-.3px; line-height:1; display:flex; align-items:center; gap:8px; }
-        .sf-verified { color:var(--cyan); font-size:20px; }
-        .sf-user { color:var(--muted); font-size:13px; margin-top:4px; }
-        .sf-user a { color:var(--cyan); }
-        .sf-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(105px,1fr)); gap:8px; margin-top:16px; }
-        .sf-stat { background:#F4F7FA; border:1px solid var(--line); border-radius:10px; padding:11px 8px; text-align:center; }
-        .sf-stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:17px; }
-        .sf-stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
-        .pos { color:var(--green); } .neg { color:var(--red); }
-        .offer h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:22px; }
-        .offer-desc { color:#07182A; font-size:13.5px; line-height:1.55; margin:6px 0 12px; max-width:640px; }
-        .pkg-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
-        .pkg { background:#F4F7FA; border:1px solid var(--line); border-radius:11px; padding:13px; display:flex; flex-direction:column; gap:8px; transition:border-color .15s; }
-        .pkg:hover { border-color:rgba(12,148,140,.28); }
-        .pkg-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-        .pkg-name { font-weight:800; font-size:13px; }
-        .pkg-dur { font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:var(--cyan); background:rgba(12,148,140,0.09); border:1px solid rgba(12,148,140,.28); padding:3px 7px; border-radius:999px; white-space:nowrap; }
-        .pkg-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:21px; }
-        .pkg-price small { color:var(--muted); font-size:10.5px; font-weight:500; display:block; margin-top:2px; }
-        .pkg .btn { width:100%; padding:9px 12px; font-size:12.5px; margin-top:auto; }
-        .terms-note { color:var(--muted); font-size:12px; line-height:1.6; margin-top:12px; }
-        .terms-note a { color:var(--cyan); }
-        h3.sec { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:20px; margin:22px 0 10px; }
-        .pick-row { background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:14px 16px; display:flex; align-items:center; gap:14px; margin-bottom:9px; flex-wrap:wrap; }
-        .pr-lock { width:38px; height:38px; border-radius:10px; background:rgba(185,133,5,0.1); border:1px solid rgba(185,133,5,.30); display:flex; align-items:center; justify-content:center; color:var(--amber); font-size:16px; flex:none; }
-        .pr-main { flex:1; min-width:200px; }
-        .pr-game { font-weight:700; font-size:14.5px; }
-        .pr-meta { color:var(--muted); font-size:12px; margin-top:3px; }
-        .pr-meta b { color:#07182A; font-weight:600; }
-        .mp-empty { text-align:center; color:var(--muted); padding:40px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
-        .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#F6F9FC; border:1px solid var(--line); color:var(--text); padding:12px 18px; border-radius:11px; font-size:13.5px; display:none; z-index:60; max-width:92vw; }
+        body.mp-storefront-page { background:linear-gradient(180deg,#FFFFFF,#FFFFFF); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        body.mp-storefront-page a { color:inherit; text-decoration:none; }
+        body.mp-storefront-page .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
+        body.mp-storefront-page .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+        body.mp-storefront-page .crumb a { color:var(--cyan); }
+        body.mp-storefront-page .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 18px; border-radius:10px; font-weight:800; font-size:13.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
+        body.mp-storefront-page .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
+        body.mp-storefront-page .btn-primary:hover { transform:translateY(-1px); }
+        body.mp-storefront-page .btn-primary:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+        body.mp-storefront-page .btn-outline { background:rgba(7,24,42,0.02); color:var(--text); border-color:var(--line); }
+        body.mp-storefront-page .panel { background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px; margin-bottom:16px; }
+        body.mp-storefront-page .sf-top { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+        body.mp-storefront-page .sf-ava { width:72px; height:72px; border-radius:50%; object-fit:cover; background:#F6F9FC; border:1px solid var(--line); }
+        body.mp-storefront-page .sf-name { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; font-size:30px; text-transform:uppercase; letter-spacing:-.3px; line-height:1; display:flex; align-items:center; gap:8px; }
+        body.mp-storefront-page .sf-verified { color:var(--cyan); font-size:20px; }
+        body.mp-storefront-page .sf-user { color:var(--muted); font-size:13px; margin-top:4px; }
+        body.mp-storefront-page .sf-user a { color:var(--cyan); }
+        body.mp-storefront-page .sf-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(105px,1fr)); gap:8px; margin-top:16px; }
+        body.mp-storefront-page .sf-stat { background:#F4F7FA; border:1px solid var(--line); border-radius:10px; padding:11px 8px; text-align:center; }
+        body.mp-storefront-page .sf-stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:17px; }
+        body.mp-storefront-page .sf-stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+        body.mp-storefront-page .pos { color:var(--green); } body.mp-storefront-page .neg { color:var(--red); }
+        body.mp-storefront-page .offer h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:22px; }
+        body.mp-storefront-page .offer-desc { color:#07182A; font-size:13.5px; line-height:1.55; margin:6px 0 12px; max-width:640px; }
+        body.mp-storefront-page .pkg-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+        body.mp-storefront-page .pkg { background:#F4F7FA; border:1px solid var(--line); border-radius:11px; padding:13px; display:flex; flex-direction:column; gap:8px; transition:border-color .15s; }
+        body.mp-storefront-page .pkg:hover { border-color:rgba(12,148,140,.28); }
+        body.mp-storefront-page .pkg-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        body.mp-storefront-page .pkg-name { font-weight:800; font-size:13px; }
+        body.mp-storefront-page .pkg-dur { font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:var(--cyan); background:rgba(12,148,140,0.09); border:1px solid rgba(12,148,140,.28); padding:3px 7px; border-radius:999px; white-space:nowrap; }
+        body.mp-storefront-page .pkg-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:21px; }
+        body.mp-storefront-page .pkg-price small { color:var(--muted); font-size:10.5px; font-weight:500; display:block; margin-top:2px; }
+        body.mp-storefront-page .pkg .btn { width:100%; padding:9px 12px; font-size:12.5px; margin-top:auto; }
+        body.mp-storefront-page .terms-note { color:var(--muted); font-size:12px; line-height:1.6; margin-top:12px; }
+        body.mp-storefront-page .terms-note a { color:var(--cyan); }
+        body.mp-storefront-page h3.sec { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:20px; margin:22px 0 10px; }
+        body.mp-storefront-page .pick-row { background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:14px 16px; display:flex; align-items:center; gap:14px; margin-bottom:9px; flex-wrap:wrap; }
+        body.mp-storefront-page .pr-lock { width:38px; height:38px; border-radius:10px; background:rgba(185,133,5,0.1); border:1px solid rgba(185,133,5,.30); display:flex; align-items:center; justify-content:center; color:var(--amber); font-size:16px; flex:none; }
+        body.mp-storefront-page .pr-main { flex:1; min-width:200px; }
+        body.mp-storefront-page .pr-game { font-weight:700; font-size:14.5px; }
+        body.mp-storefront-page .pr-meta { color:var(--muted); font-size:12px; margin-top:3px; }
+        body.mp-storefront-page .pr-meta b { color:#07182A; font-weight:600; }
+        body.mp-storefront-page .mp-empty { text-align:center; color:var(--muted); padding:40px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
+        body.mp-storefront-page .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#F6F9FC; border:1px solid var(--line); color:var(--text); padding:12px 18px; border-radius:11px; font-size:13.5px; display:none; z-index:60; max-width:92vw; }
         /* modal */
-        .modal-back { position:fixed; inset:0; background:#F4F7FA; display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
-        .modal { background:#FFFFFF; border:1px solid var(--line); border-radius:16px; max-width:560px; width:100%; max-height:86vh; display:flex; flex-direction:column; }
-        .modal-head { padding:16px 20px; border-bottom:1px solid var(--line); font-weight:800; font-size:16px; }
-        .modal-body { padding:16px 20px; overflow-y:auto; color:#07182A; font-size:13px; line-height:1.65; }
-        .modal-body h4 { color:var(--text); margin:12px 0 4px; font-size:13.5px; }
-        .modal-foot { padding:14px 20px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
-        .modal-foot label { font-size:12.5px; color:var(--muted); display:flex; gap:7px; align-items:center; margin-right:auto; }
-        @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } .offer-price { text-align:left; } }
+        body.mp-storefront-page .modal-back { position:fixed; inset:0; background:#F4F7FA; display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+        body.mp-storefront-page .modal { background:#FFFFFF; border:1px solid var(--line); border-radius:16px; max-width:560px; width:100%; max-height:86vh; display:flex; flex-direction:column; }
+        body.mp-storefront-page .modal-head { padding:16px 20px; border-bottom:1px solid var(--line); font-weight:800; font-size:16px; }
+        body.mp-storefront-page .modal-body { padding:16px 20px; overflow-y:auto; color:#07182A; font-size:13px; line-height:1.65; }
+        body.mp-storefront-page .modal-body h4 { color:var(--text); margin:12px 0 4px; font-size:13.5px; }
+        body.mp-storefront-page .modal-foot { padding:14px 20px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
+        body.mp-storefront-page .modal-foot label { font-size:12.5px; color:var(--muted); display:flex; gap:7px; align-items:center; margin-right:auto; }
+        @media (max-width:560px) { body.mp-storefront-page .mp-shell { padding:20px 14px 56px; } body.mp-storefront-page .offer-price { text-align:left; } }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
-<link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
-<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=5369acad7f75">
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=2518dee34f97">
 </head>
-<body class="tmr-light">
+<body class="mp-storefront-page tmr-ds">
 
 <main class="mp-shell">
     <!-- A storefront is a view INTO the one marketplace, so it carries the
@@ -271,5 +273,7 @@
 })();
 </script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.e149da02c0ac.js"></script>
 </body>
 </html>
