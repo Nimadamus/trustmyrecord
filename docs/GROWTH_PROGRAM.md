@@ -312,6 +312,35 @@ allowlist.
 
 ---
 
+## The poll bridge, and why game totals rarely fire
+
+The Poll to Pick bridge converts a poll vote into an ordinary verified pick. It supports two poll
+metrics: `winner` (maps onto h2h) and `game_total` (maps onto totals, behind a strict exact-line gate).
+
+**The exact-line gate is working correctly and almost never passes.** Measured on production
+2026-08-24: every one of the 78 `game_total` options ever generated is hardcoded to **8.5**, while the
+live board ranges 6.5 to 11 and only **1 of 22** upcoming games sits at 8.5. Replaying the gate over
+all 78 polls against the live board: **zero pass**. All three currently active totals polls were
+refused (8.5 against boards of 7, 9 and 7).
+
+The gate is not the problem. **The quiz generator writing a fixed 8.5 instead of the market's real
+total is the problem.** If the generator wrote the board's line, essentially every `game_total` poll
+would qualify, which is the roughly 4x exposure increase originally estimated. That is a generator
+change and has not been made.
+
+Volume for context, last 14 days: `player_stat` 108, `game_total` 24, `winner` 19. So totals are 1.26x
+winner in raw volume, not 4x, and after the gate they contribute close to nothing until the generator
+is fixed.
+
+### Reverse direction, deliberately not built
+
+Surfacing "TMR community: 62% Cubs" on the sportsbook board is documented and **not implemented**. The
+board has `game-meta-row` and `board-meta-chip` slots that could carry it, and `/consensus/` exists.
+It is deferred because the priority is 0 picks to Pick #1, not more informational UI, and because a
+poll-to-game lookup would be needed on every board row.
+
+---
+
 ## Notes for whoever picks this up
 
 - Both branches are `growth-program`. Nothing is pushed. Pushing the backend to `master` auto-deploys.
