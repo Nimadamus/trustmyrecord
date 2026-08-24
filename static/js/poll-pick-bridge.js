@@ -34,7 +34,9 @@
  * Analytics (GA4 + dataLayer):
  *   poll_pick_bridge_shown    { poll_id, sport, zero_pick_member }
  *   poll_pick_bridge_declined { poll_id }
- *   poll_pick_bridge_clicked  { poll_id, sport, zero_pick_member, pick_team }
+ *   poll_pick_bridge_clicked  { poll_id, sport, zero_pick_member, pick_team, line }
+ * Every event carries poll_type ('winner' | 'game_total') and market so the one
+ * funnel can be split by poll type instead of being duplicated.
  *
  * Two entry points, because the site has two voting paths: offer() for a single
  * poll (submitVote), and offerFirstEligible() for the daily quiz, which submits
@@ -141,9 +143,13 @@
         ensureStyles();
 
         var intent = answer.intent || {};
+        /* poll_type rides the SAME funnel rather than starting a second one, so
+           winner and game_total can be compared inside one conversion rate. */
         var facts = {
             poll_id: answer.poll_id,
             sport: intent.sport || 'MLB',
+            poll_type: intent.poll_type || answer.poll_type || 'winner',
+            market: intent.market || 'ml',
             zero_pick_member: isZeroPick === null ? 'unknown' : String(!!isZeroPick),
         };
 
@@ -158,9 +164,14 @@
             '<button type="button" class="tmr-fp-reminder__close" aria-label="No thanks">&times;</button>';
 
         /* textContent for everything server-derived — a team name is data. */
+        /* What the member actually chose, in their own terms. A totals poll has
+           no team, so the sentence names the side and the line instead. */
+        var choice = intent.pick_team
+            ? intent.pick_team
+            : (intent.side || '') + ' ' + (intent.line == null ? '' : intent.line);
         bar.querySelector('strong').textContent = 'Put this prediction on your verified record.';
         bar.querySelector('.tmr-pb-rest').textContent =
-            'You picked ' + intent.pick_team + '. Lock it as a real pick and it grades itself.';
+            'You picked ' + String(choice).trim() + '. Lock it as a real pick and it grades itself.';
         var cta = bar.querySelector('#tmr-pb-cta');
         cta.textContent = isZeroPick ? 'Start My Record' : 'Lock This Pick';
 
@@ -171,24 +182,33 @@
             /* Write the intent the existing prefill script consumes, then hand
                over to the ordinary sportsbook flow. Nothing is submitted here. */
             try {
+                /* Written verbatim from the server's answer. This file invents
+                   no line, no side and no team: whatever the exact-line gate
+                   approved is what the prefill receives. */
                 localStorage.setItem(INTENT_KEY, JSON.stringify({
                     sport: intent.sport || 'MLB',
                     source: 'poll',
                     poll_id: answer.poll_id,
+                    poll_type: intent.poll_type || 'winner',
+                    market: intent.market || 'ml',
                     pick_team: intent.pick_team,
+                    side: intent.side,
+                    line: intent.line,
+                    odds: intent.odds,
                     home_team_name: intent.home_team_name,
                     away_team_name: intent.away_team_name,
+                    board_game_id: intent.board_game_id,
                     ts: Date.now()
                 }));
             } catch (e) {
                 log('could not store intent', e && e.message);
             }
-            track('poll_pick_bridge_clicked', Object.assign({ pick_team: intent.pick_team }, facts));
+            track('poll_pick_bridge_clicked', Object.assign({ pick_team: intent.pick_team || null, line: intent.line == null ? null : intent.line }, facts));
             navigate('/sportsbook/?simpick=1');
         });
 
         bar.querySelector('.tmr-fp-reminder__close').addEventListener('click', function () {
-            track('poll_pick_bridge_declined', { poll_id: answer.poll_id });
+            track('poll_pick_bridge_declined', facts);
             remove();
         });
     }
@@ -215,7 +235,10 @@
         return ready.then(function () {
             return window.api.request('/polls/' + encodeURIComponent(pollId) + '/pick-bridge');
         }).then(function (answer) {
-            if (!answer || !answer.eligible || !answer.intent || !answer.intent.pick_team) {
+            var hasChoice = answer && answer.intent && (answer.intent.pick_team ||
+                ((answer.intent.market === 'over' || answer.intent.market === 'under') &&
+                 answer.intent.line != null));
+            if (!answer || !answer.eligible || !hasChoice) {
                 log('not convertible:', (answer && answer.reason) || 'no answer');
                 return false;
             }

@@ -248,6 +248,111 @@ test('an empty answer list asks nothing at all', async () => {
   assert.strictEqual(calls, 0);
 });
 
+/* ------------------------------------------------- game_total conversions */
+
+const TOTAL_ELIGIBLE = {
+  eligible: true, poll_id: 854, option_id: 1786, poll_type: 'game_total', line: 8.5,
+  intent: { sport: 'MLB', source: 'poll', poll_type: 'game_total', market: 'over',
+            side: 'Over', line: 8.5, odds: -110,
+            home_team_name: 'Miami Marlins', away_team_name: 'Boston Red Sox',
+            board_game_id: 'an_baseball_mlb_294210' },
+};
+
+test('a totals conversion names the side and the line, not a team', async () => {
+  const r = await run({ bridge: TOTAL_ELIGIBLE });
+  assert.ok(r.strip);
+  assert.match(r.text(), /You picked Over 8\.5/);
+});
+
+test('Under stays Under all the way into the handoff', async () => {
+  const under = JSON.parse(JSON.stringify(TOTAL_ELIGIBLE));
+  under.intent.market = 'under';
+  under.intent.side = 'Under';
+  under.intent.odds = -105;
+  const r = await run({ bridge: under });
+  assert.match(r.text(), /You picked Under 8\.5/);
+  r.doc.getElementById('tmr-pb-cta').dispatchEvent(new r.win.Event('click'));
+  const i = r.intent();
+  assert.strictEqual(i.market, 'under');
+  assert.strictEqual(i.side, 'Under');
+  assert.strictEqual(i.line, 8.5);
+  assert.strictEqual(i.pick_team, undefined, 'a total has no team');
+});
+
+test('Over stays Over, and the line and board game id survive the handoff', async () => {
+  const r = await run({ bridge: TOTAL_ELIGIBLE });
+  r.doc.getElementById('tmr-pb-cta').dispatchEvent(new r.win.Event('click'));
+  const i = r.intent();
+  assert.strictEqual(i.market, 'over');
+  assert.strictEqual(i.side, 'Over');
+  assert.strictEqual(i.line, 8.5);
+  assert.strictEqual(i.odds, -110);
+  assert.strictEqual(i.board_game_id, 'an_baseball_mlb_294210');
+  assert.strictEqual(i.poll_type, 'game_total');
+  assert.strictEqual(r.nav(), '/sportsbook/?simpick=1');
+});
+
+test('the client never invents a line the server did not approve', async () => {
+  const noLine = JSON.parse(JSON.stringify(TOTAL_ELIGIBLE));
+  delete noLine.intent.line;
+  const r = await run({ bridge: noLine });
+  assert.strictEqual(r.strip, null, 'a totals answer without a line is not renderable');
+  assert.strictEqual(r.intent(), null);
+});
+
+test('a line-mismatch refusal renders nothing', async () => {
+  const r = await run({ bridge: { eligible: false, reason: 'poll_line_differs_from_board_line',
+                                  poll_line: 8.5, board_line: 9 } });
+  assert.strictEqual(r.strip, null);
+  assert.strictEqual(r.intent(), null);
+});
+
+test('a stale board refusal renders nothing', async () => {
+  const r = await run({ bridge: { eligible: false, reason: 'board_snapshot_stale' } });
+  assert.strictEqual(r.strip, null);
+});
+
+test('analytics split winner from game_total inside one funnel', async () => {
+  const w = await run({ bridge: ELIGIBLE });
+  const wShown = w.events.find((e) => e.name === 'poll_pick_bridge_shown');
+  assert.strictEqual(wShown.params.poll_type, 'winner');
+  assert.strictEqual(wShown.params.market, 'ml');
+
+  const t = await run({ bridge: TOTAL_ELIGIBLE });
+  const tShown = t.events.find((e) => e.name === 'poll_pick_bridge_shown');
+  assert.strictEqual(tShown.params.poll_type, 'game_total');
+  assert.strictEqual(tShown.params.market, 'over');
+  t.doc.getElementById('tmr-pb-cta').dispatchEvent(new t.win.Event('click'));
+  const clicked = t.events.find((e) => e.name === 'poll_pick_bridge_clicked');
+  assert.strictEqual(clicked.params.poll_type, 'game_total');
+  assert.strictEqual(clicked.params.line, 8.5);
+});
+
+test('the prefill script honours a totals intent and re-checks the line itself', () => {
+  assert.ok(/totalsAtLine/.test(PREFILL), 'prefill must read the board total');
+  assert.ok(/IS_TOTAL/.test(PREFILL), 'prefill must branch on a totals intent');
+  assert.ok(/has moved from/.test(PREFILL), 'a moved line must be reported, not quoted');
+  assert.ok(/intent\.side/.test(PREFILL) && /intent\.line/.test(PREFILL));
+  assert.ok(!/method:\s*'POST'/.test(PREFILL), 'prefill still never POSTs');
+});
+
+test('a repeated click cannot write two different intents', async () => {
+  const r = await run({ bridge: TOTAL_ELIGIBLE });
+  const cta = r.doc.getElementById('tmr-pb-cta');
+  cta.dispatchEvent(new r.win.Event('click'));
+  const first = r.win.localStorage.getItem('tmr_sim_pick_intent');
+  cta.dispatchEvent(new r.win.Event('click'));
+  cta.dispatchEvent(new r.win.Event('click'));
+  const after = JSON.parse(r.win.localStorage.getItem('tmr_sim_pick_intent'));
+  const before = JSON.parse(first);
+  assert.strictEqual(after.market, before.market);
+  assert.strictEqual(after.line, before.line);
+  assert.strictEqual(after.board_game_id, before.board_game_id);
+  // One key, one record: repeated clicks overwrite rather than accumulate, and
+  // the prefill clears it after a successful submit.
+  assert.strictEqual(Object.keys(r.win.localStorage).filter((k) => k.indexOf('pick_intent') !== -1).length, 1);
+});
+
 /* --------------------------------------------------------------- hygiene */
 
 test('declining removes the strip and records why', async () => {

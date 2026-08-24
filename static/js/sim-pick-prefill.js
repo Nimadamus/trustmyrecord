@@ -23,7 +23,12 @@
     try {
         intent = JSON.parse(localStorage.getItem(KEY) || 'null');
     } catch (e) { intent = null; }
-    if (!intent || !intent.pick_team || (Date.now() - (intent.ts || 0)) > TTL_MS) {
+    /* POLL_TOTALS_20260824: a game-total intent names a side and a line rather
+       than a team, so the guard can no longer require pick_team. Everything
+       else about the record is unchanged. */
+    var IS_TOTAL = !!intent && (intent.market === 'over' || intent.market === 'under') &&
+                   intent.line != null && isFinite(Number(intent.line));
+    if (!intent || (!intent.pick_team && !IS_TOTAL) || (Date.now() - (intent.ts || 0)) > TTL_MS) {
         try { localStorage.removeItem(KEY); } catch (e) { }
         return;
     }
@@ -87,6 +92,42 @@
         return null;
     }
 
+    /**
+     * The board's own totals market for this game, at EXACTLY the line the
+     * intent carries.
+     *
+     * This is a SECOND exact-line check, deliberately. The server compared the
+     * poll against the persisted board snapshot; by the time the member arrives
+     * the live board may have moved off that number, and quoting the old one
+     * would be the drift the whole feature exists to avoid. A different line
+     * here means no preselection.
+     */
+    function totalsAtLine(game, wantLine, side) {
+        var books = (game && game.bookmakers) || [];
+        var want = Number(wantLine);
+        for (var b = 0; b < books.length; b++) {
+            var markets = books[b].markets || [];
+            for (var m = 0; m < markets.length; m++) {
+                if (markets[m].key !== 'totals') continue;
+                var outs = markets[m].outcomes || [];
+                var over = null, under = null;
+                for (var o = 0; o < outs.length; o++) {
+                    var nm = (outs[o].name || '').toLowerCase();
+                    if (nm === 'over') over = outs[o];
+                    else if (nm === 'under') under = outs[o];
+                }
+                if (!over || !under) continue;
+                if (over.point == null || under.point == null) continue;
+                if (Number(over.point) !== Number(under.point)) continue;
+                if (Number(over.point) !== want) return { moved: Number(over.point) };
+                var chosen = (side === 'Over') ? over : under;
+                if (chosen.price == null || !isFinite(Number(chosen.price))) continue;
+                return { line: want, price: Number(chosen.price) };
+            }
+        }
+        return null;
+    }
+
     /* Watch for a successful pick submission while the intent is active, then
        emit the funnel event and clear the intent. Observes the same
        window.api.request bridge the sportsbook submit path uses; read-only. */
@@ -139,7 +180,7 @@
         }
         if (!games || !games.length) {
             if (tries < 100) { setTimeout(attempt, 400); return; }   // ~40s window for slow API
-            showBanner('Your simulated pick (' + intent.pick_team + ' ML) is saved — the game board has not loaded it yet. Find the matchup below to place it.', false);
+            showBanner('Your pick (' + (intent.pick_team ? intent.pick_team + ' ML' : (intent.side || '') + ' ' + (intent.line || '')) + ') is saved — the game board has not loaded it yet. Find the matchup below to place it.', false);
             return;
         }
         armSubmitObserver();
@@ -149,6 +190,25 @@
             return;
         }
         var game = games[idx];
+
+        if (IS_TOTAL) {
+            var side = (intent.market === 'over') ? 'Over' : 'Under';
+            var found = totalsAtLine(game, intent.line, side);
+            if (found && found.price != null && typeof window.selectGameBet === 'function') {
+                window.selectGameBet(idx, intent.market, side, String(found.line),
+                                     String(found.price), game.away_team, game.home_team);
+                showBanner(ORIGIN_LABEL + side + ' ' + found.line +
+                    ' is pre-selected. Set your units and confirm to lock it — nothing is submitted until you do.', true);
+            } else if (found && found.moved != null) {
+                showBanner('The total for this game has moved from ' + intent.line + ' to ' + found.moved +
+                    ' since you voted, so nothing was pre-selected. Pick the line you want below.', false);
+            } else {
+                showBanner('Your poll pick (' + side + ' ' + intent.line +
+                    ') is ready — the total is still loading. Select it on the board to confirm; nothing is submitted automatically.', false);
+            }
+            return;
+        }
+
         var price = mlPriceFor(game, intent.pick_team);
         if (price == null) {
             var teams = [game.away_team, game.home_team];
