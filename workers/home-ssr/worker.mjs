@@ -386,7 +386,11 @@ function insightStrip(g) {
       ` data-href="${esc(ins.href || '')}"` +
       `${meta ? ` title="${esc(meta)}"` : ''}>` +
       '<i class="ts" aria-hidden="true"></i>' +
-      `<b>${esc(ins.text)}</b>` +
+      /* THE BOTTOM LINE FORMAT (Nima, 2026-08-24): full team name, colon,
+         fact. Byte-for-byte the same join as tmr-home-live.js - the client
+         ADOPTS this markup and returns early, so any difference here is a
+         difference nobody would ever see reported. */
+      `<b>${ins.team_label ? esc(ins.team_label) + ': ' : ''}${esc(ins.text)}</b>` +
       '</span>';
   }
   if (!lines) return '';

@@ -106,6 +106,12 @@ const pregame = games.filter((g) => g.insight_mode !== 'postgame' && (g.insights
 if (!finals.length) failures.push('fixture contains no postgame card - parity is untested for FINAL games');
 if (!pregame.length) failures.push('fixture contains no pregame card - parity is untested for the pregame strip');
 
+/* THE BOTTOM LINE LABEL. The client and the worker each join `team_label` to
+   the text themselves, so a fixture carrying no labels would compare two
+   renderers that are both drawing nothing and call it agreement. */
+const labelled = games.reduce((n, g) => n + (g.insights || []).filter((i) => i.team_label).length, 0);
+if (!labelled) failures.push('fixture carries no team_label - the "Team Name: fact" join is untested');
+
 if (failures.length) {
   console.log(`ticker edge/client parity FAILED (${failures.length}):`);
   failures.forEach((f) => console.log(`  - ${f}`));
@@ -113,4 +119,4 @@ if (failures.length) {
 }
 
 console.log(`ticker edge/client parity passed (${compared} comparisons across ${games.length} cards: `
-  + `${finals.length} postgame, ${pregame.length} pregame)`);
+  + `${finals.length} postgame, ${pregame.length} pregame, ${labelled} labelled)`);

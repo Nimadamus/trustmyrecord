@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = 'cc2795321e99';
+  var BUILD = 'adda6284733a';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -211,7 +211,14 @@
         ' data-href="' + esc(ins.href || '') + '"' +
         (meta ? ' title="' + esc(meta) + '"' : '') + '>' +
         '<i class="ts" aria-hidden="true"></i>' +
-        '<b>' + esc(ins.text) + '</b>' +
+        /* THE BOTTOM LINE FORMAT (Nima, 2026-08-24): the team's full name, a
+           colon, then the fact. The API supplies `team_label` only for lines
+           that belong to ONE side - a "Raiders 22, Texans 20" header names
+           both and gets none - so the join is unconditional here and the
+           decision lives in services/postgame/teamPrefix.js. Kept inside the
+           same <b> so this needs no CSS and cannot disturb the locked
+           homepage metrics. */
+        '<b>' + (ins.team_label ? esc(ins.team_label) + ': ' : '') + esc(ins.text) + '</b>' +
         '</span>';
     }
     if (!lines) return '';
