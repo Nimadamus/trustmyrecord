@@ -57,7 +57,10 @@
         viewed: false,
         started: false,
         submitted: false,
-        abandonSent: false
+        abandonSent: false,
+        /* True only once /picks/activation-status has actually said this member
+           has no picks. Nothing may be counted as an impression before that. */
+        confirmed: false
     };
 
     // ---------------------------------------------------------------- utils
@@ -529,14 +532,26 @@
             if (bar.parentNode) bar.parentNode.removeChild(bar);
         });
 
-        if (!state.viewed) {
-            state.viewed = true;
-            setSessionFlag('viewed', true);
-            track('sportsbook_onboarding_viewed', {
-                surface: isSportsbook() ? 'sportsbook_reminder' : 'sitewide_reminder',
-                has_picks: 'no'
-            });
-        }
+        maybeTrackReminderView();
+    }
+
+    /* IMPRESSION ONLY ONCE THE SERVER HAS CONFIRMED (ZERO_PICK_COVERAGE_20260824)
+       The strip is painted optimistically from LS_REMINDER_DUE so it cannot
+       shove the page down a second later. That optimism can be WRONG: a member
+       who was zero-pick, got the flag, then locked a pick elsewhere still
+       carries a stale flag until their next page load corrects it. Counting
+       that paint as an impression would inflate the funnel precisely among the
+       members who converted, which is the worst place to add noise. So the
+       event waits for the server's answer, and the paint does not. */
+    function maybeTrackReminderView() {
+        if (state.viewed || !state.confirmed) return;
+        if (!document.getElementById('tmr-fp-reminder')) return;
+        state.viewed = true;
+        setSessionFlag('viewed', true);
+        track('sportsbook_onboarding_viewed', {
+            surface: isSportsbook() ? 'sportsbook_reminder' : 'sitewide_reminder',
+            has_picks: 'no'
+        });
     }
 
     function removeReminder() {
@@ -780,11 +795,16 @@
                 localStorage.setItem(LS_REMINDER_DUE, '1');
             } catch (e) {}
             state.eligible = true;
+            state.confirmed = true;
             var flags = sessionFlags();
             state.viewed = !!flags.viewed;
             state.started = !!flags.started;
 
             renderForEligibleUser();
+            /* The strip may already be on screen from the optimistic paint, in
+               which case renderReminder() will not run again - count it now
+               that the answer has arrived. */
+            maybeTrackReminderView();
             if (state.onSportsbook) instrumentSportsbook();
 
             window.addEventListener('pagehide', markAbandoned);

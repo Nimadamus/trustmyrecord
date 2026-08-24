@@ -232,6 +232,33 @@ test('a treatment that cannot apply reports itself as control', async () => {
   assert.strictEqual(events.find((e) => e.name === 'welcome_arm_assigned').params.arm, 'control');
 });
 
+/* ------------------------------------------ impressions must be truthful */
+
+test('an impression is only counted after the server confirms zero picks', () => {
+  // The strip paints optimistically from a cached flag so it cannot shove the
+  // page down. A member who has since activated still carries that flag until
+  // their next load corrects it, and counting that paint would inflate the
+  // funnel among exactly the members who converted.
+  assert.ok(/state\.confirmed/.test(ONBOARDING), 'a confirmation flag must exist');
+  assert.ok(/function maybeTrackReminderView/.test(ONBOARDING));
+  const fn = ONBOARDING.slice(ONBOARDING.indexOf('function maybeTrackReminderView'));
+  const body = fn.slice(0, fn.indexOf(String.fromCharCode(10) + '    }'));
+  assert.ok(/if \(state\.viewed \|\| !state\.confirmed\) return;/.test(body),
+    'the impression must bail when unconfirmed');
+  assert.ok(/getElementById\('tmr-fp-reminder'\)/.test(body),
+    'and bail when nothing is actually on screen');
+  // No other path may fire the event.
+  const fires = (ONBOARDING.match(/track\('sportsbook_onboarding_viewed'/g) || []).length;
+  assert.strictEqual(fires, 2, 'exactly two: the sportsbook panel and the confirmed strip');
+});
+
+test('confirmation is set from the server answer, never from localStorage', () => {
+  const idx = ONBOARDING.indexOf('state.confirmed = true');
+  assert.ok(idx > 0, 'confirmation must be set somewhere');
+  const context = ONBOARDING.slice(Math.max(0, idx - 600), idx);
+  assert.ok(/status/.test(context), 'set inside the status handler, not the optimistic path');
+});
+
 /* ------------------------------------------------------------- no layout */
 
 test('no new markup, styles or sections were added to /welcome/', () => {
