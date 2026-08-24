@@ -363,7 +363,10 @@ const POSTGAME_DWELL_STEPS = 5;
 const INSIGHT_ROTATE_MS = 5000;
 
 function postgameDwell(g) {
-  const pk = parseInt(g && g.game_pk, 10);
+  /* MLB cards are keyed by game_pk; ESPN cards carry espn_event_id instead.
+     Lockstep with postgameDwell() in tmr-home-live.js. */
+  const raw = (g && g.game_pk) != null ? g.game_pk : (g && g.espn_event_id);
+  const pk = parseInt(raw, 10);
   const n = Number.isFinite(pk) ? Math.abs(pk) : 0;
   return POSTGAME_DWELL_MIN_MS + (n % POSTGAME_DWELL_STEPS) * POSTGAME_DWELL_STEP_MS;
 }
@@ -413,20 +416,29 @@ function tickerHtml(games) {
   }).join('');
 }
 
-/* The NFL row - a byte-for-byte port of the client's nfl_games loop, same
-   lockstep rule as tickerHtml above. No data-game-pk: the MLB preview
-   treatment must never attach to a football card. */
-function nflTickerHtml(games) {
+/* The ESPN rows (football, basketball, hockey) - a byte-for-byte port of the
+   client's espnRows loop, same lockstep rule as tickerHtml above. No
+   data-game-pk: the MLB preview treatment must never attach to one of these.
+
+   The recap strip is rendered here too. It was missing from the football row,
+   so a finished game arrived carrying insights and the card discarded them. */
+function espnTickerHtml(games, key) {
   return (games || []).map((g) => (
-    '<a class="gm gm--nfl" data-sport="nfl"' +
+    `<a class="gm gm--${key}" data-sport="${key}"` +
     ` href="${esc(g.href || '/sportsbook/')}">` +
     '<span class="gm-top">' +
       `<span class="t">${logoImg(g.away_logo)}${esc(g.away)}</span>` +
       `<span class="t">${logoImg(g.home_logo)}${esc(g.home)}</span>` +
       statusChip(g) +
     '</span>' +
+    insightStrip(g) +
     '</a>'
   )).join('');
+}
+
+/* Kept as a named wrapper so nothing that referenced it has to change. */
+function nflTickerHtml(games) {
+  return espnTickerHtml(games, 'nfl');
 }
 
 /* The slate is Pacific-dated. A payload that raced across the rollover — or one
@@ -582,13 +594,19 @@ function buildRewriter(data, slate) {
      Cards from EITHER sport count - an MLB outage must not cost the NFL row its
      first paint (2026-08-15). */
   if (slate && slateIsToday(slate) &&
-      (((slate.games && slate.games.length) || 0) || ((slate.nfl_games && slate.nfl_games.length) || 0))) {
+      (((slate.games && slate.games.length) || 0)
+        || ((slate.nfl_games && slate.nfl_games.length) || 0)
+        || ((slate.nba_games && slate.nba_games.length) || 0)
+        || ((slate.nhl_games && slate.nhl_games.length) || 0))) {
     rw.on('.ticker .ticker-games', new AttrCell({
       'data-slate-date': slate.slate_date,
       'aria-busy': 'false',
     }));
     rw.on('.ticker .ticker-games', new HtmlCell(
-      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games || [])}${nflTickerHtml(slate.nfl_games)}</div></div>`
+      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games || [])}`
+      + `${espnTickerHtml(slate.nfl_games, 'nfl')}`
+      + `${espnTickerHtml(slate.nba_games, 'nba')}`
+      + `${espnTickerHtml(slate.nhl_games, 'nhl')}</div></div>`
     ));
   }
 

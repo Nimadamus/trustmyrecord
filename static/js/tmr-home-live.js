@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = 'ea5fc844765b';
+  var BUILD = 'cc2795321e99';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -115,9 +115,13 @@
   var INSIGHT_TICK_MS = 1000;
 
   function postgameDwell(g) {
-    var pk = parseInt(g && g.game_pk, 10);
-    if (!isFinite(pk)) pk = 0;
-    return POSTGAME_DWELL_MIN_MS + (Math.abs(pk) % POSTGAME_DWELL_STEPS) * POSTGAME_DWELL_STEP_MS;
+    /* MLB cards are keyed by game_pk; ESPN cards (football, basketball, hockey)
+       have none and carry espn_event_id instead. Without the fallback every
+       ESPN card seeded on NaN, landed on the same dwell and flipped in unison,
+       which is the exact noise the per-card offset exists to prevent. */
+    var seed = parseInt((g && g.game_pk) != null ? g.game_pk : (g && g.espn_event_id), 10);
+    if (!isFinite(seed)) seed = 0;
+    return POSTGAME_DWELL_MIN_MS + (Math.abs(seed) % POSTGAME_DWELL_STEPS) * POSTGAME_DWELL_STEP_MS;
   }
   var tickerTimer = null;
   var tickerSlateDate = null;
@@ -473,13 +477,21 @@
        neither sport produced a card (2026-08-15: an MLB Stats API outage was
        taking the football row down with it). */
     var nflGames = (payload && payload.nfl_games) || [];
-    if (!payload || (payload.ok === false && !nflGames.length)) {
+    /* Basketball and hockey ride the same contract as football and arrive empty
+       out of season, so the rows simply do not render until the season does. */
+    var espnRows = [
+      { key: 'nfl', games: nflGames },
+      { key: 'nba', games: (payload && payload.nba_games) || [] },
+      { key: 'nhl', games: (payload && payload.nhl_games) || [] }
+    ];
+    var otherGames = espnRows.reduce(function (n, r) { return n + r.games.length; }, 0);
+    if (!payload || (payload.ok === false && !otherGames)) {
       laneMsg(lane, UNAVAILABLE_TEXT, '');
       return;
     }
     lastSlate = payload;
     var games = payload.games || [];
-    if (!games.length && !nflGames.length) {
+    if (!games.length && !otherGames) {
       laneMsg(lane, 'No MLB games scheduled today', payload.slate_date || '');
       return;
     }
@@ -512,15 +524,21 @@
        sports in a group - and carry the weekday in the chip because most NFL
        games are not today's. No data-game-pk: the MLB preview treatment can
        never attach to them. */
-    nflGames.forEach(function (g) {
-      html += '<a class="gm gm--nfl" data-sport="nfl"' +
-        ' href="' + esc(g.href || '/sportsbook/') + '">' +
-        '<span class="gm-top">' +
-          '<span class="t">' + logoImg(g.away_logo) + esc(g.away) + '</span>' +
-          '<span class="t">' + logoImg(g.home_logo) + esc(g.home) + '</span>' +
-          statusChip(g) +
-        '</span>' +
-      '</a>';
+    espnRows.forEach(function (row) {
+      row.games.forEach(function (g) {
+        html += '<a class="gm gm--' + row.key + '" data-sport="' + row.key + '"' +
+          ' href="' + esc(g.href || '/sportsbook/') + '">' +
+          '<span class="gm-top">' +
+            '<span class="t">' + logoImg(g.away_logo) + esc(g.away) + '</span>' +
+            '<span class="t">' + logoImg(g.home_logo) + esc(g.home) + '</span>' +
+            statusChip(g) +
+          '</span>' +
+          /* The recap. Without this the backend was sending insights for every
+             finished football game and the card threw them away, which is the
+             whole reason the postgame work existed. */
+          insightStrip(g);
+        html += '</a>';
+      });
     });
     /* Render every card into one measuring row inside the track, then split into
        width-fitted groups. Cards are never dropped, duplicated or reordered here. */
