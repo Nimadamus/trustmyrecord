@@ -1610,7 +1610,13 @@
     // Single-question polls matching every active filter, in view order.
     function visiblePolls(all) {
         var q = state.q;
-        var list = (all || []).filter(function(p) { return !isQuiz(p); });
+        // Quizzes ARE polls. Dropping them here while the hero counter counted
+        // them is what made the page contradict itself: "2 LIVE POLLS" over
+        // "Showing 0 open polls". Every view keeps the same eligibility now --
+        // open, ending, most-voted, my-votes and closed all list the quizzes
+        // they count. A quiz parent carries no options of its own, so its card
+        // resolves to the open/final-results link via voteBodyHtml.
+        var list = (all || []).slice();
         // The closed feed is already narrowed server-side (resolved / canceled /
         // deadline passed) — re-filtering here would drop canceled polls whose
         // deadline has not arrived yet.
@@ -2153,7 +2159,15 @@
         var s = state.stats;
         var openEl = document.getElementById('statOpen');
         var votesEl = document.getElementById('statVotesToday');
-        var openN = (s && s.active_polls != null) ? parseInt(s.active_polls) : (state.openAll ? state.openAll.length : null);
+        // Counted from the SAME rows the board renders, so the hero number and
+        // the grid can never disagree again. Read the ACTIVE cache, not
+        // state.openAll -- on the closed tab openAll holds closed rows and the
+        // hero would drop to 0 while two polls are still live. The server stat
+        // stays as the pre-load placeholder; its own eligibility rules were the
+        // source of the "2 LIVE POLLS / 0 open polls" contradiction.
+        var openRows = state.cache.active;
+        var openN = openRows ? openRows.filter(isActiveOpen).length
+                 : ((s && s.active_polls != null) ? parseInt(s.active_polls) : null);
         if (openEl) openEl.innerHTML = '<span class="pl-dot"></span>' + (openN == null ? '&mdash;' : openN);
         if (votesEl) votesEl.textContent = (s && s.votes_today != null) ? parseInt(s.votes_today) : '—';
         renderYouLine();
@@ -2228,7 +2242,9 @@
         if (state.q) quizzes = quizzes.filter(function(p) { return matchesQuery(p, state.q); });
         renderQuizBand(quizzes);
 
-        renderResultLine(list.length, quizzes.length);
+        // The grid now lists the quizzes in every view, so the old "N quizzes
+        // below" hint would report the same polls a second time.
+        renderResultLine(list.length, 0);
         updateChipCounts(polls);
         animateBars(document.body);
         if (window.TMRUsernames && window.TMRUsernames.decorate) { try { window.TMRUsernames.decorate(document.getElementById('pollsSection')); } catch (e) {} }
