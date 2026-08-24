@@ -17,7 +17,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '2638fd33d0e0';
+  var BUILD = '923e1232ace0';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -102,6 +102,23 @@
      in unison and the strip becomes the noisy ticker this replaced. */
   var INSIGHT_ROTATE_MS = 5000;
   var INSIGHT_STAGGER_MS = 900;
+  /* FINAL games rotate a postgame recap instead of pregame intel (Nima,
+     2026-08-23). Those lines are denser - a decisions line, a home run, a
+     standings implication - and asked to hold "roughly 10 to 20 seconds", so
+     each final card draws its own dwell inside that band off its game_pk. Five
+     distinct values, so two finals side by side never flip together. */
+  var POSTGAME_DWELL_MIN_MS = 11000;
+  var POSTGAME_DWELL_STEP_MS = 2000;
+  var POSTGAME_DWELL_STEPS = 5;
+  /* The rotation runs off one 1s heartbeat and per-card countdowns, so cards
+     with different dwells can share a single timer. */
+  var INSIGHT_TICK_MS = 1000;
+
+  function postgameDwell(g) {
+    var pk = parseInt(g && g.game_pk, 10);
+    if (!isFinite(pk)) pk = 0;
+    return POSTGAME_DWELL_MIN_MS + (Math.abs(pk) % POSTGAME_DWELL_STEPS) * POSTGAME_DWELL_STEP_MS;
+  }
   var tickerTimer = null;
   var tickerSlateDate = null;
   /* True once a slate request has come back (with games, empty, or failed). Until
@@ -143,8 +160,12 @@
     return '<span class="st is-' + esc(s) + '">' + esc(text) + '</span>';
   }
 
-  /* Probable pitchers render ONLY when the league has officially posted both. */
+  /* Probable pitchers render ONLY when the league has officially posted both,
+     and only while they are still probable. Once the game is FINAL the strip
+     carries the real decisions (WP/LP/SV), so a probables line under it would
+     be the one stale thing on a finished card. */
   function pitcherLine(g) {
+    if (g.status === 'final') return '';
     if (!g.away_pitcher || !g.home_pitcher) return '';
     var short = function (n) {
       var p = String(n).trim().split(/\s+/);
@@ -190,10 +211,14 @@
         '</span>';
     }
     if (!lines) return '';
+    var post = g.insight_mode === 'postgame';
     /* aria-live is deliberately OFF: a screen reader must not be interrupted
        every few seconds by a strip nobody asked to hear. The whole set is in the
        DOM, so all of it is reachable by reading the card. */
-    return '<span class="gm-in" data-i="0">' + lines + '</span>';
+    return '<span class="gm-in' + (post ? ' is-post' : '') + '" data-i="0"' +
+      ' data-mode="' + (post ? 'postgame' : 'pregame') + '"' +
+      ' data-dwell="' + (post ? postgameDwell(g) : INSIGHT_ROTATE_MS) + '">' +
+      lines + '</span>';
   }
 
   /* The ticker is a permanent fixture of the homepage: it reports loading, empty
@@ -655,6 +680,14 @@
     strip.setAttribute('data-i', String(next));
   }
 
+  /* A card's own dwell, in milliseconds. Pregame cards all share
+     INSIGHT_ROTATE_MS; a FINAL card carries its own value in data-dwell so the
+     denser postgame lines get the 10 to 20 seconds they need to be read. */
+  function stripDwell(strip) {
+    var d = parseInt(strip.getAttribute('data-dwell'), 10);
+    return isFinite(d) && d >= INSIGHT_TICK_MS ? d : INSIGHT_ROTATE_MS;
+  }
+
   function startInsightRotate() {
     stopInsightRotate();
     var strips = document.querySelectorAll('.ticker .gm-in');
@@ -665,19 +698,27 @@
       if (strips[i].querySelectorAll('.gm-in-l').length > 1) { any = true; break; }
     }
     if (!any) return;
-    /* The tick is the stagger, not the dwell: each card fires once every
-       INSIGHT_ROTATE_MS but on its own offset within that window. */
-    var step = Math.max(200, INSIGHT_STAGGER_MS);
-    var every = Math.max(1, Math.round(INSIGHT_ROTATE_MS / step));
+    /* ONE heartbeat, N countdowns. Each card holds its remaining time in
+       data-left and advances when that reaches zero, so a 5s pregame card and a
+       17s postgame card can sit side by side off the same timer. The first
+       countdown is seeded with a per-card offset, which is what stops a row of
+       eight cards flipping in unison. */
     inRotTick = 0;
     inRotTimer = setInterval(function () {
       if (tkPaused || document.hidden) return;
       var all = document.querySelectorAll('.ticker .gm-in');
       for (var n = 0; n < all.length; n++) {
-        if (inRotTick % every === (n % every)) insightAdvance(all[n]);
+        var strip = all[n];
+        if (strip.querySelectorAll('.gm-in-l').length < 2) continue;
+        var left = parseInt(strip.getAttribute('data-left'), 10);
+        if (!isFinite(left)) left = stripDwell(strip) + (n % 5) * INSIGHT_TICK_MS;
+        left -= INSIGHT_TICK_MS;
+        if (left > 0) { strip.setAttribute('data-left', String(left)); continue; }
+        insightAdvance(strip);
+        strip.setAttribute('data-left', String(stripDwell(strip)));
       }
       inRotTick += 1;
-    }, step);
+    }, INSIGHT_TICK_MS);
   }
 
   function stopInsightRotate() {

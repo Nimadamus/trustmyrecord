@@ -32,11 +32,11 @@ const REQUIRED = [
   // from the first frame, so the honest fallback is 95px of ticker. Shipping
   // the old number laid the hero out 52px too tall until JS corrected it,
   // which dropped the stats stripe and everything under it into place.
-  '--header-height:165px;',
+  '--header-height:198px;',
   // hero shell is a flex column filling the viewport below the injected nav,
   // so .bridge (margin-top:auto below) always lands flush on the hero's
   // bottom edge regardless of viewport height or content height
-  '.hero{position:relative;overflow:hidden;padding:28px 0 0;display:flex;flex-direction:column;',
+  '.hero{position:relative;overflow:hidden;padding:34px 0 0;display:flex;flex-direction:column;',
   'min-height:calc(100vh - var(--header-height));',
   'min-height:calc(100dvh - var(--header-height));',
   'min-height:calc(100svh - var(--header-height));',
@@ -46,7 +46,7 @@ const REQUIRED = [
   // value once nav+ticker have rendered
   "var top = Math.round(hero.getBoundingClientRect().top + window.scrollY);",
   "document.documentElement.style.setProperty('--header-height', top + 'px');",
-  '.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}',
+  '.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 624px;gap:86px;align-items:center}',
   // The typeface, size, weight, case, tracking and margins are the approved
   // ones and are locked below exactly as before. What sits between 'Barlow
   // Condensed' and Inter now is a chain of metric-compatible FALLBACK faces —
@@ -54,13 +54,13 @@ const REQUIRED = [
   // loads, re-declared with size-adjust so they occupy Barlow Condensed's
   // width. Nothing about the rendered headline changes; the frame before it
   // arrives just stops being 60% wider and two lines taller.
-  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}",
+  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:77px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:22px 0 19px}",
   // The fallback faces themselves, and the tuned ratios. Measured, not guessed
   // — see tests/hero-fallback-width-sweep.cjs.
   "@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');",
   "size-adjust:78.8%;ascent-override:126.9%;descent-override:25.4%;line-gap-override:0%}",
   "size-adjust:70.8%;ascent-override:141.2%;descent-override:28.2%;line-gap-override:0%}",
-  '.hero .cta{display:flex;align-items:center;gap:26px;margin-top:24px;flex-wrap:wrap}',
+  '.hero .cta{display:flex;align-items:center;gap:31px;margin-top:29px;flex-wrap:wrap}',
   // Hero right-hand card (.spot) — approved shell. The card's CONTENTS were
   // replaced on 2026-08-16 at Nima's instruction (Capper of the Week -> LIVE
   // COMPETITION), so the rules that described the old card's identity block,
@@ -68,30 +68,30 @@ const REQUIRED = [
   // gold rail, and the head/body/foot rows that give the card its footprint in
   // the hero grid — is unchanged and stays locked here, plus the geometry that
   // keeps the new card the same height on every view it rotates through.
-  '.spot{background:var(--panel);border-radius:12px;',
-  '.spot .rail{height:4px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}',
-  '.spot .hd{padding:15px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}',
-  '.spot .bd{padding:22px 24px 20px}',
-  '.spot.comp .bd{padding:20px 24px 18px;display:flex;flex-direction:column}',
+  '.spot{background:var(--panel);border-radius:14px;',
+  '.spot .rail{height:5px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}',
+  '.spot .hd{padding:18px 29px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}',
+  '.spot .bd{padding:26px 29px 24px}',
+  '.spot.comp .bd{padding:24px 29px 22px;display:flex;flex-direction:column}',
   // The fixed stage is what stops the card changing height as the view
   // rotates, which would bounce the whole vertically-centred hero column.
   // Measured against the card it replaced: 429.09px then, 430.42px now.
-  '.comp-stage{position:relative;margin-top:13px;height:187px;overflow:hidden}',
+  '.comp-stage{position:relative;margin-top:16px;height:224px;overflow:hidden}',
   '.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);',
   // Two-line reservation for the footer sentence. Without it the card grew
   // 13px when the payload replaced the one-line skeleton bar.
   'min-height:2.64em;',
-  '.spot .ft{padding:15px 24px;',
+  '.spot .ft{padding:18px 29px;',
   // white stats stripe (bridge) — pushed to the hero's bottom edge by
   // margin-top:auto inside the flex column (NOT a fixed offset); full-width,
   // no side margins, no rounded card (owner-requested 2026-08-01)
   '.bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0;width:100%}',
-  '.bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 28px}',
+  '.bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 34px}',
   '<div class="bridge"',
   '<div class="bridge-in"',
   // responsive breakpoints — approved values
-  '.hero-grid{grid-template-columns:minmax(0,1fr) 460px;gap:48px}',
-  '.hero-grid{grid-template-columns:1fr;gap:40px}',
+  '.hero-grid{grid-template-columns:minmax(0,1fr) 552px;gap:58px}',
+  '.hero-grid{grid-template-columns:1fr;gap:48px}',
   '.bridge-in{grid-template-columns:repeat(2,1fr)',
 ];
 

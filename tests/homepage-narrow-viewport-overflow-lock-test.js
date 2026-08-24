@@ -79,14 +79,18 @@ if (block) {
 }
 
 // The default (wide) rules must be left alone.
+// Scaled 1.2x for the 2026-08-23 homepage size restore (44px -> 53px,
+// 32px -> 38px, rounded to whole pixels); the narrow-phone override above
+// still pins .wrap and this button back to their pre-scale values, which is
+// what keeps the 320px arithmetic above unchanged.
 check(
-  '.final keeps its approved 44px padding at full width',
-  /\.final\{[^}]*padding:44px 44px/.test(html),
+  '.final keeps its approved 53px padding at full width',
+  /\.final\{[^}]*padding:53px 53px/.test(html),
   'the narrow fix must not change the approved desktop panel'
 );
 check(
-  '.btn.lg keeps its approved 0 32px padding at full width',
-  /\.btn\.lg\{[^}]*padding:0 32px/.test(html),
+  '.btn.lg keeps its approved 0 38px padding at full width',
+  /\.btn\.lg\{[^}]*padding:0 38px/.test(html),
   'the narrow fix must be scoped to the media query only'
 );
 

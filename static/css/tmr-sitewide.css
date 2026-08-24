@@ -80,6 +80,18 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
     --tmr-danger: #ef4444;
     --tmr-page-max: 1440px;
     --tmr-page-pad: clamp(16px, 2.4vw, 34px);
+    /* Shared spacing vocabulary. Added by "Add shared layout primitives"
+       (7438ecdfc) and deleted again by "Add TrustMyRecord regression lock gate"
+       (2ee02be91) - the same commit that added the test asserting they exist,
+       so tests/sitewide-design-system-regression-test.js has failed on a clean
+       checkout ever since. Restored here rather than dropped from the test:
+       these four are the spacing half of the token set the design system
+       documents, and a page that wants them should find them defined. Nothing
+       references them today, so this is additive and changes no pixel. */
+    --tmr-gap-sm: 10px;
+    --tmr-gap-md: 16px;
+    --tmr-gap-lg: 24px;
+    --tmr-card-pad: clamp(16px, 2vw, 24px);
     --tmr-radius-sm: 8px;
     --tmr-radius-md: 12px;
     --tmr-radius-lg: 16px;

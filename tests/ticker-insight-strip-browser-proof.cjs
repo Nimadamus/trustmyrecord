@@ -110,7 +110,18 @@ function readStrip(page) {
   const slate = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
   const server = await serve();
   const browser = await chromium.launch();
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+
+  /* The fixture's slate_date is a fixed real day. tmr-home-live.js refuses any
+     slate whose date is not "today" in Pacific time and renders the unavailable
+     message instead, so every context here has its clock pinned to that day's
+     PT afternoon. Without this the proof passes only on the day the fixture was
+     captured and fails on date drift ever after. */
+  const newContext = (opts) => browser.newContext(opts).then(async (ctx) => {
+    await ctx.clock.install({ time: new Date(`${slate.slate_date}T21:00:00-07:00`) });
+    return ctx;
+  });
+
+  const context = await newContext({ viewport: { width: 1440, height: 1000 } });
 
   /* The slate is the ONLY stub. Everything else on the homepage is allowed to
      fail exactly as it would offline; this proof is about the ticker. */
@@ -132,7 +143,7 @@ function readStrip(page) {
      own reservation; production shipped at 390px with an 89px reservation
      against a 103px card until this was measured there (2026-08-21). */
   async function measureArrival(width, height) {
-    const ctx = await browser.newContext({ viewport: { width, height } });
+    const ctx = await newContext({ viewport: { width, height } });
     let release = null;
     const gate = new Promise((r) => { release = r; });
     await ctx.route('**/api/nav/mlb-slate*', async (route) => {
@@ -292,7 +303,7 @@ function readStrip(page) {
     return { html: lane.innerHTML, date: lane.getAttribute('data-slate-date') };
   });
 
-  const ssrCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const ssrCtx = await newContext({ viewport: { width: 1440, height: 1000 } });
   /* Nothing may answer for the slate here. If the card rotates, it is because
      the adopted markup rotates, not because a fetch quietly re-rendered it. */
   await ssrCtx.route('**/api/**', (route) => route.abort());
@@ -332,7 +343,7 @@ function readStrip(page) {
      cover game information. So this checks BOTH that it is visible and that it
      stops before the team row - and that the card is still the same height as
      every other card, or the whole row grows to fit it. */
-  const gfCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const gfCtx = await newContext({ viewport: { width: 1440, height: 1000 } });
   await gfCtx.route('**/api/nav/mlb-slate*', (route) => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify(slate)
   }));
@@ -393,7 +404,7 @@ function readStrip(page) {
   }
 
   /* ---------- 6. reduced motion still swaps, just without travel ---------- */
-  const rm = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  const rm = await newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   await rm.route('**/api/nav/mlb-slate*', (route) => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify(slate)
   }));

@@ -47,8 +47,12 @@ const HTML_REQUIRED = [
   // not estimated) and the reservation came down with it. The rule being locked has never changed: the skeleton box and
   // the card box are the same box, whatever that box currently measures.
   'class="gm is-skel"',
-  '.ticker-games,.ticker-track,.ticker-page{min-height:89px}',
-  '.gm.is-skel{width:284px;height:89px',
+  // Scaled 1.2x for the 2026-08-23 homepage size restore (89px -> 107px,
+  // 284px -> 341px, rounded to whole pixels); the ratio to the card's own
+  // dimensions is unchanged. The mobile card (103px, inside a max-width:640px
+  // block) is untouched by design — that scale-up was desktop-only.
+  '.ticker-games,.ticker-track,.ticker-page{min-height:107px}',
+  '.gm.is-skel{width:341px;height:107px',
 
   'role="status">Loading today&rsquo;s MLB slate&hellip;</span>',
 ];

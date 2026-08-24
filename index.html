@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="2638fd33d0e0">
+<html lang="en" data-tmr-build="923e1232ace0">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -100,9 +100,9 @@
   --red:#BC372E; --red-soft:#FAE9E7;
   --violet:#5940AE; --violet-soft:#EBE7F9;
   --blue:#1E5BBF; --blue-soft:#E3ECFB;
-  --r:10px; --r-sm:7px;
-  --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
-  --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
+  --r:12px; --r-sm:8px;
+  --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 10px rgba(7,24,42,.05);
+  --sh-up:0 1px 2px rgba(7,24,42,.07), 0 12px 36px rgba(7,24,42,.10);
   /* First-paint fallback for the chrome above .hero, which .hero subtracts from
      the viewport. 113px was nav(70) + a 43px ticker — the height the strip had
      when it showed a single line of "Loading today's MLB slate…". A real
@@ -111,75 +111,75 @@
      hero was laid out 52px too tall until the runtime measurement corrected it,
      which moved the stats stripe and everything below it. The inline script at
      the foot of index.html keeps this in sync afterwards. */
-  --header-height:165px;
+  --header-height:198px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{font-family:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:19px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
 img{display:block;max-width:100%}
-.wrap{max-width:1720px;margin:0 auto;padding:0 28px}
+.wrap{max-width:2064px;margin:0 auto;padding:0 34px}
 .num{font-variant-numeric:tabular-nums;letter-spacing:-.015em}
 .pos{color:var(--green);font-weight:800}
 .neg{color:var(--red);font-weight:800}
 
 /* ---------- NAV ---------- */
 .nav{background:var(--navy);position:sticky;top:0;z-index:60;border-bottom:1px solid rgba(255,255,255,.09)}
-.nav-in{max-width:1720px;margin:0 auto;padding:0 28px;height:70px;display:flex;align-items:center;gap:34px}
-.logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:950;font-size:22px;letter-spacing:-.035em;line-height:1}
-.logo .mk{width:31px;height:36px;display:grid;place-items:center;color:#37D6C1;font-weight:950;font-size:16px;border:2px solid #37D6C1;clip-path:polygon(50% 0,100% 15%,90% 78%,50% 100%,10% 78%,0 15%);filter:drop-shadow(0 0 14px rgba(55,214,193,.24))}
+.nav-in{max-width:2064px;margin:0 auto;padding:0 34px;height:84px;display:flex;align-items:center;gap:41px}
+.logo{display:flex;align-items:center;gap:11px;color:#fff;font-weight:950;font-size:26px;letter-spacing:-.035em;line-height:1}
+.logo .mk{width:37px;height:43px;display:grid;place-items:center;color:#37D6C1;font-weight:950;font-size:19px;border:2px solid #37D6C1;clip-path:polygon(50% 0,100% 15%,90% 78%,50% 100%,10% 78%,0 15%);filter:drop-shadow(0 0 17px rgba(55,214,193,.24))}
 .logo em{font-style:normal;color:var(--brand-lt);letter-spacing:inherit}
-.mainnav{display:flex;align-items:center;gap:30px;height:70px;margin-left:auto}
-.mainnav a{color:#AEC6DC;font-size:15.5px;font-weight:700;height:70px;display:flex;align-items:center;border-bottom:3px solid transparent}
+.mainnav{display:flex;align-items:center;gap:36px;height:84px;margin-left:auto}
+.mainnav a{color:#AEC6DC;font-size:19px;font-weight:700;height:84px;display:flex;align-items:center;border-bottom:4px solid transparent}
 .mainnav a:hover{color:#fff}
 .mainnav a.on{color:#fff;border-bottom-color:var(--brand-lt)}
-.mainnav .nd{position:relative;height:70px}
-.mainnav .nd-btn{color:#AEC6DC;font-size:15.5px;font-weight:700;height:70px;display:flex;align-items:center;border:0;border-bottom:3px solid transparent;background:none;padding:0;cursor:pointer;font-family:inherit}
+.mainnav .nd{position:relative;height:84px}
+.mainnav .nd-btn{color:#AEC6DC;font-size:19px;font-weight:700;height:84px;display:flex;align-items:center;border:0;border-bottom:4px solid transparent;background:none;padding:0;cursor:pointer;font-family:inherit}
 .mainnav .nd-btn:hover{color:#fff}
 .mainnav .nd-btn.on,.mainnav .nd.is-open .nd-btn{color:#fff;border-bottom-color:var(--brand-lt)}
-.mainnav .nd-btn::after{content:'';width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:8px;margin-top:-5px;transition:transform .15s}
+.mainnav .nd-btn::after{content:'';width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:10px;margin-top:-6px;transition:transform .15s}
 .mainnav .nd.is-open .nd-btn::after{transform:rotate(-135deg);margin-top:1px}
-.mainnav a:focus-visible,.mainnav .nd-btn:focus-visible{outline:2px solid var(--brand-lt);outline-offset:-2px;border-radius:3px}
-.nd-menu{display:none;position:absolute;top:100%;left:0;min-width:230px;background:var(--navy-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px;box-shadow:0 14px 30px rgba(0,0,0,.4);flex-direction:column;gap:2px;z-index:70}
+.mainnav a:focus-visible,.mainnav .nd-btn:focus-visible{outline:2px solid var(--brand-lt);outline-offset:-2px;border-radius:4px}
+.nd-menu{display:none;position:absolute;top:100%;left:0;min-width:276px;background:var(--navy-2);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px;box-shadow:0 17px 36px rgba(0,0,0,.4);flex-direction:column;gap:2px;z-index:70}
 .nd.is-open .nd-menu{display:flex}
-.nd-menu a{color:#AEC6DC;font-size:14.5px;font-weight:600;padding:10px 12px;border-radius:7px;white-space:nowrap;height:auto}
+.nd-menu a{color:#AEC6DC;font-size:17px;font-weight:600;padding:12px 14px;border-radius:8px;white-space:nowrap;height:auto}
 .nd-menu a:hover,.nd-menu a:focus-visible{background:rgba(255,255,255,.09);color:#fff;outline:none}
-.nav-right{margin-left:auto;display:flex;align-items:center;gap:16px}
-.nav-right .login{color:#AEC6DC;font-size:15.5px;font-weight:700}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:19px}
+.nav-right .login{color:#AEC6DC;font-size:19px;font-weight:700}
 .nav-right .login:hover{color:#fff}
-.nav-toggle{display:none;flex:0 0 auto;width:38px;height:38px;border:0;background:transparent;cursor:pointer;padding:0;align-items:center;justify-content:center;flex-direction:column;gap:5px}
-.nav-toggle span{display:block;width:22px;height:2px;background:#DFEBF6;border-radius:2px;transition:.2s}
-.nav.is-open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-toggle{display:none;flex:0 0 auto;width:46px;height:46px;border:0;background:transparent;cursor:pointer;padding:0;align-items:center;justify-content:center;flex-direction:column;gap:6px}
+.nav-toggle span{display:block;width:26px;height:2px;background:#DFEBF6;border-radius:2px;transition:.2s}
+.nav.is-open .nav-toggle span:nth-child(1){transform:translateY(8px) rotate(45deg)}
 .nav.is-open .nav-toggle span:nth-child(2){opacity:0}
-.nav.is-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-@media (max-width:1450px){.nav-in{gap:18px;padding:0 18px}.mainnav{gap:16px}.v2nav-name{max-width:70px}}
+.nav.is-open .nav-toggle span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+@media (max-width:1450px){.nav-in{gap:22px;padding:0 22px}.mainnav{gap:19px}.v2nav-name{max-width:84px}}
 @media (max-width:1200px){
-  .nav-in{gap:10px;padding:0 12px}
-  .logo{font-size:17px;gap:6px}
-  .logo .mk{width:26px;height:30px;font-size:14px}
-  .mainnav{display:none;position:absolute;top:70px;left:0;right:0;flex-direction:column;height:auto;gap:0;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.09);box-shadow:0 14px 30px rgba(0,0,0,.35)}
+  .nav-in{gap:12px;padding:0 14px}
+  .logo{font-size:20px;gap:7px}
+  .logo .mk{width:31px;height:36px;font-size:17px}
+  .mainnav{display:none;position:absolute;top:84px;left:0;right:0;flex-direction:column;height:auto;gap:0;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.09);box-shadow:0 17px 36px rgba(0,0,0,.35)}
   .nav.is-open .mainnav{display:flex}
-  .mainnav a{height:52px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);border-left:3px solid transparent}
+  .mainnav a{height:62px;padding:0 24px;border-bottom:1px solid rgba(255,255,255,.06);border-left:4px solid transparent}
   .mainnav a.on{border-left-color:var(--brand-lt);border-bottom-color:rgba(255,255,255,.06)}
-  .nav-toggle{display:flex;width:34px;height:34px}
+  .nav-toggle{display:flex;width:41px;height:41px}
   .mainnav .nd{height:auto}
-  .mainnav .nd-btn{width:100%;height:52px;padding:0 20px;border-left:3px solid transparent}
+  .mainnav .nd-btn{width:100%;height:62px;padding:0 24px;border-left:4px solid transparent}
   .mainnav .nd.is-open .nd-btn{border-left-color:var(--brand-lt);border-bottom-color:rgba(255,255,255,.06)}
-  .nd-menu{position:static;display:none;min-width:0;background:rgba(0,0,0,.18);border:0;border-radius:0;box-shadow:none;padding:0 0 6px}
+  .nd-menu{position:static;display:none;min-width:0;background:rgba(0,0,0,.18);border:0;border-radius:0;box-shadow:none;padding:0 0 7px}
   .nd.is-open .nd-menu{display:flex}
-  .nd-menu a{height:44px;padding:0 36px;border-radius:0;display:flex;align-items:center}
+  .nd-menu a{height:53px;padding:0 43px;border-radius:0;display:flex;align-items:center}
 }
 @media (max-width:400px){
   .nav-right .login{display:none}
 }
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:46px;padding:0 24px;border-radius:var(--r-sm);font-size:15.5px;font-weight:800;cursor:pointer;border:1.5px solid var(--line-2);background:var(--panel);color:var(--ink-2);white-space:nowrap;transition:.15s;letter-spacing:-.012em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:11px;height:55px;padding:0 29px;border-radius:var(--r-sm);font-size:19px;font-weight:800;cursor:pointer;border:2px solid var(--line-2);background:var(--panel);color:var(--ink-2);white-space:nowrap;transition:.15s;letter-spacing:-.012em}
 .btn:hover{border-color:var(--brand);color:var(--brand-dk)}
-.btn.p{background:linear-gradient(180deg,#13B0A5,#0A8A83);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(12,148,140,.32)}
+.btn.p{background:linear-gradient(180deg,#13B0A5,#0A8A83);color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(12,148,140,.32)}
 .btn.p:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
 .btn.d{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.32)}
 .btn.d:hover{background:rgba(255,255,255,.2);border-color:#fff}
-.btn.sm{height:38px;padding:0 16px;font-size:14.5px}
-.btn.lg{height:54px;padding:0 32px;font-size:17px}
-.tlink{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:800;color:var(--brand-dk)}
+.btn.sm{height:46px;padding:0 19px;font-size:17px}
+.btn.lg{height:65px;padding:0 38px;font-size:20px}
+.tlink{display:inline-flex;align-items:center;gap:8px;font-size:18px;font-weight:800;color:var(--brand-dk)}
 .tlink:hover{color:var(--brand)}
 .tlink.dk{color:#7FEBDC}
 
@@ -190,14 +190,14 @@ img{display:block;max-width:100%}
    .ticker-games is the fixed-width viewport (overflow hidden); .ticker-track holds one
    full-width .ticker-page per group and slides horizontally between them. This keeps
    the strip exactly one row tall so the page never grows and never overflows sideways. */
-.ticker-in{max-width:1720px;margin:0 auto;padding:9px 28px;display:flex;align-items:stretch;gap:0;
+.ticker-in{max-width:2064px;margin:0 auto;padding:11px 34px;display:flex;align-items:stretch;gap:0;
   overflow:hidden}
 .ticker-games{flex:1 1 auto;min-width:0;position:relative;overflow:hidden}
 .ticker-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);will-change:transform}
-.ticker-page{flex:0 0 100%;width:100%;min-width:0;display:flex;align-items:stretch;gap:12px}
-.tk-nav{flex:0 0 auto;align-self:center;width:26px;height:26px;display:flex;align-items:center;
+.ticker-page{flex:0 0 100%;width:100%;min-width:0;display:flex;align-items:stretch;gap:14px}
+.tk-nav{flex:0 0 auto;align-self:center;width:31px;height:31px;display:flex;align-items:center;
   justify-content:center;padding:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
-  border-radius:6px;color:#9FBCD6;font-size:15px;line-height:1;cursor:pointer;
+  border-radius:7px;color:#9FBCD6;font-size:18px;line-height:1;cursor:pointer;
   transition:background .15s ease,border-color .15s ease,color .15s ease}
 .tk-nav:hover{background:rgba(34,210,192,.12);border-color:rgba(34,210,192,.34);color:#fff}
 /* The arrows keep their 26px box even while hidden. tmr-home-live.js sets
@@ -211,20 +211,27 @@ img{display:block;max-width:100%}
    measured (30/30 production, 30/30 local). display must be restated
    because the UA sheet gives [hidden] display:none. */
 .tk-nav:disabled,.tk-nav[hidden]{display:flex;visibility:hidden}
-.tk-prev{margin-right:10px}
-.tk-next{margin-left:10px}
-.tlbl{align-self:center;display:flex;align-items:center;gap:9px;color:var(--brand-lt);font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;height:24px;flex:0 0 auto;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.14)}
-.tlbl .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt);box-shadow:0 0 0 4px rgba(34,210,192,.2)}
+.tk-prev{margin-right:12px}
+.tk-next{margin-left:12px}
+.tlbl{align-self:center;display:flex;align-items:center;gap:11px;color:var(--brand-lt);font-size:14px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;height:29px;flex:0 0 auto;padding-right:22px;margin-right:22px;border-right:1px solid rgba(255,255,255,.14)}
+.tlbl .bl{width:8px;height:8px;border-radius:50%;background:var(--brand-lt);box-shadow:0 0 0 5px rgba(34,210,192,.2)}
 a.gm{text-decoration:none}
-.gm{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:6px 15px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);white-space:nowrap;scroll-snap-align:start;transition:background .15s ease,border-color .15s ease}
+.gm{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:7px 18px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);white-space:nowrap;scroll-snap-align:start;transition:background .15s ease,border-color .15s ease}
 a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
-.gm .gm-top{display:flex;align-items:center;gap:12px}
-.gm .t{display:flex;align-items:center;gap:7px;color:#DFEBF6;font-size:14.5px;font-weight:700}
-.gm .t img{width:21px;height:21px}
-.gm .sc{color:#fff;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
-.gm .st{color:#7593B1;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding-left:6px;margin-left:auto}
+.gm .gm-top{display:flex;align-items:center;gap:14px}
+.gm .t{display:flex;align-items:center;gap:8px;color:#DFEBF6;font-size:17px;font-weight:700}
+.gm .t img{width:25px;height:25px}
+.gm .sc{color:#fff;font-weight:900;font-size:19px;font-variant-numeric:tabular-nums}
+.gm .st{color:#7593B1;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding-left:7px;margin-left:auto}
 .gm .st.on{color:var(--brand-lt)}
-.gm .gm-sp{color:rgba(220,235,245,.70);font-size:11.5px;font-weight:600;letter-spacing:.005em;opacity:1}
+/* max-width pins the card's width to the intel strip's fixed 302px and never to
+   this line. The probables string is nowrap and its width depends on the FONT,
+   so once the 1.2x scale (2026-08-23) made it wider than the strip it became
+   the widest child, and the card resized by ~4.5px the moment Inter replaced
+   the metric fallback - the card visibly re-flowing mid-rotation. The strip is
+   the element with a stated width; everything else in the card defers to it. */
+.gm .gm-sp{color:rgba(220,235,245,.70);font-size:14px;font-weight:600;letter-spacing:.005em;opacity:1;
+  max-width:302px;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- ROTATING INTEL STRIP (Nima, 2026-08-21) -------------------------
    Replaces the two permanent recent-form rows and the permanent trend row. The
@@ -239,11 +246,11 @@ a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
    The width is fixed for the same reason: these sentences run to about seventy
    characters and vary a lot, and a content-sized card would jump from 240px to
    440px as it rotated. */
-.gm .gm-in{position:relative;display:block;width:252px;height:30px;overflow:hidden}
-.gm .gm-in-l{position:absolute;inset:0;display:flex;align-items:flex-start;gap:6px;
-  color:#A9C6DE;font-size:11.5px;font-weight:600;letter-spacing:.005em;line-height:1.3;
+.gm .gm-in{position:relative;display:block;width:302px;height:36px;overflow:hidden}
+.gm .gm-in-l{position:absolute;inset:0;display:flex;align-items:flex-start;gap:7px;
+  color:#A9C6DE;font-size:14px;font-weight:600;letter-spacing:.005em;line-height:1.3;
   white-space:normal;
-  opacity:0;transform:translateY(5px);pointer-events:none;
+  opacity:0;transform:translateY(6px);pointer-events:none;
   /* The OUTGOING timing. Kept short and undelayed so the line that is leaving
      is gone before the next one arrives: a symmetric crossfade left both
      sentences readable on top of each other for a fifth of a second, which is
@@ -254,10 +261,10 @@ a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
   transition:opacity .3s ease .2s,transform .3s ease .2s}
 /* The outgoing line leaves the way the incoming one arrives, so the pair reads
    as one slot changing rather than two elements crossfading. */
-.gm .gm-in-l.is-out{opacity:0;transform:translateY(-5px)}
+.gm .gm-in-l.is-out{opacity:0;transform:translateY(-6px)}
 .gm .gm-in-l>b{font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   overflow:hidden;font-variant-numeric:tabular-nums}
-.gm .gm-in-l .ts{flex:0 0 auto;width:6px;height:6px;margin-top:4px;border-radius:50%;
+.gm .gm-in-l .ts{flex:0 0 auto;width:7px;height:7px;margin-top:5px;border-radius:50%;
   background:var(--brand-lt);opacity:.85}
 /* A line that links somewhere (today only the TrendSpotter one) says so on
    hover; the rest of the card keeps its own destination. */
@@ -293,6 +300,24 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
      without the sentence being cut. */
   .ticker-page>.gm .gm-in{width:100%;height:44px}
   .ticker-page>.gm .gm-in-l>b{-webkit-line-clamp:3}
+  /* THE PHONE CARD KEEPS ITS PRE-SCALE METRICS (2026-08-23).
+     The 1.2x homepage size restore was a DESKTOP change, but the card's type,
+     padding and logo sizes are UNGUARDED base rules, so they reached this
+     viewport too and grew the phone card from 103px to 114.5px - against the
+     103px reservation the block below still makes. That is exactly the "strip
+     grows when the slate lands" defect the reservation exists to prevent, and
+     it is what production shipped at 390px in August. Pinning the handful of
+     base rules that drive the card's HEIGHT back to their approved values here
+     keeps the phone card byte-identical to what it was, so the reservation
+     underneath stays honest. */
+  .ticker-page>.gm{gap:3px;padding:6px 15px}
+  .ticker-page>.gm .gm-top{gap:12px}
+  .ticker-page>.gm .t{font-size:14.5px;gap:7px}
+  .ticker-page>.gm .t img{width:21px;height:21px}
+  .ticker-page>.gm .st{font-size:12px}
+  .ticker-page>.gm .gm-sp{font-size:11.5px}
+  .ticker-page>.gm .gm-in-l{font-size:11.5px;gap:6px}
+  .ticker-page>.gm .gm-in-l .ts{width:6px;height:6px;margin-top:4px}
 }
 
 /* ---------- LOADING SKELETONS ----------------------------------------------
@@ -308,7 +333,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    which the placeholder never exceeds — and the swap therefore moves nothing.
    Rule: a skeleton, never a stale number. -------------------------------- */
 @keyframes tmr-sk{0%{background-position:150% 0}100%{background-position:-50% 0}}
-.sk{display:inline-block;vertical-align:baseline;height:.72em;min-width:14px;border-radius:4px;
+.sk{display:inline-block;vertical-align:baseline;height:.72em;min-width:17px;border-radius:5px;
   background:linear-gradient(90deg,rgba(190,215,235,.10) 0%,rgba(190,215,235,.24) 50%,rgba(190,215,235,.10) 100%);
   background-size:250% 100%;animation:tmr-sk 1.3s linear infinite}
 /* The stats stripe is the one light surface inside the dark hero. */
@@ -324,25 +349,25 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    1440px. It was 117px while the card also
    carried two recent-form rows and a trend row; those are now one rotating
    line, and the reserved height came down with them. */
-.ticker-games,.ticker-track,.ticker-page{min-height:89px}
-.gm.is-skel{width:284px;height:89px;justify-content:center;gap:6px;pointer-events:none;cursor:default}
-.gm.is-skel .sk{display:block;height:12px}
-.gm.is-skel .sk.a{width:150px;height:16px}
-.gm.is-skel .sk.b{width:112px}
-.gm.is-skel .sk.c{width:200px}
+.ticker-games,.ticker-track,.ticker-page{min-height:107px}
+.gm.is-skel{width:341px;height:107px;justify-content:center;gap:7px;pointer-events:none;cursor:default}
+.gm.is-skel .sk{display:block;height:14px}
+.gm.is-skel .sk.a{width:180px;height:19px}
+.gm.is-skel .sk.b{width:134px}
+.gm.is-skel .sk.c{width:240px}
 /* The empty/unavailable message keeps the same reserved lane height. */
-.gm.is-msg{min-height:64px;justify-content:center}
+.gm.is-msg{min-height:77px;justify-content:center}
 
 /* Fixed slot for the eyebrow figure: the skeleton and the number it becomes
    then occupy the same width, and the pill around them never re-flows. */
-#tmrEyebrowPicks{display:inline-block;min-width:44px}
+#tmrEyebrowPicks{display:inline-block;min-width:53px}
 
 /* Live-competition card: every row of every view arrives with one payload, so
    the whole body is one skeleton until it does. The skeleton bars sit in boxes
    that are already the size the real values need, so nothing moves on arrival. */
-.spot.comp .comp-nm .sk{height:12px}
-.spot.comp .comp-meta .sk{height:10px}
-.spot.comp .comp-rk .sk{height:11px}
+.spot.comp .comp-nm .sk{height:14px}
+.spot.comp .comp-meta .sk{height:12px}
+.spot.comp .comp-rk .sk{height:13px}
 .spot.comp .bd.is-skel .comp-avl{background:linear-gradient(140deg,rgba(190,215,235,.34),rgba(190,215,235,.18))}
 
 @media (max-width:640px){
@@ -369,36 +394,36 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    Enforced by tests/homepage-approved-baseline-lock-test.js (every push) and
    the homepage geometry checks in tests/regression-lock.spec.js.
    ============================================================================ */
-.hero{position:relative;overflow:hidden;padding:28px 0 0;display:flex;flex-direction:column;
+.hero{position:relative;overflow:hidden;padding:34px 0 0;display:flex;flex-direction:column;
   min-height:calc(100vh - var(--header-height));
   min-height:calc(100dvh - var(--header-height));
   min-height:calc(100svh - var(--header-height));
   background:
   radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
   linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 62%, var(--navy-3) 100%)}
-.hero .grain{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(110deg,rgba(255,255,255,.028) 0 1.5px,transparent 1.5px 24px)}
+.hero .grain{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(110deg,rgba(255,255,255,.028) 0 2px,transparent 2px 29px)}
 /* Nima 2026-08-14: the breadcrumb bar above the ticker was removed, which
    made the hero 72px taller. With the block top-anchored all of that
    became dead space above the stats stripe ("too much empty space"), so
    the block sits centred in the hero's free height instead. */
 .hero-in{position:relative;z-index:3;flex:1;display:flex;align-items:center}
 .hero-in>.wrap{width:100%}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-.eyebrow .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt)}
-.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 624px;gap:86px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;padding:8px 19px;border-radius:1199px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:16px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.eyebrow .bl{width:8px;height:8px;border-radius:50%;background:var(--brand-lt)}
+.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:77px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:22px 0 19px}
 .hero h1.hh em{font-style:normal;color:var(--brand-lt)}
-.hero p.sub{color:#B7CEE4;font-size:18px;line-height:1.6;max-width:600px;font-weight:450}
-.hero .cta{display:flex;align-items:center;gap:26px;margin-top:24px;flex-wrap:wrap}
+.hero p.sub{color:#B7CEE4;font-size:22px;line-height:1.6;max-width:720px;font-weight:450}
+.hero .cta{display:flex;align-items:center;gap:31px;margin-top:29px;flex-wrap:wrap}
 
 /* verified-record card */
-.spot{background:var(--panel);border-radius:12px;box-shadow:0 6px 16px rgba(2,12,22,.22), 0 26px 56px rgba(2,12,22,.26);overflow:hidden}
-.spot .rail{height:4px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}
-.spot .hd{padding:15px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
-.spot .hd b{font-size:12.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px}
-.spot .bd{padding:22px 24px 20px}
-.vchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;background:var(--brand-soft);color:var(--brand-dk);font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(12,148,140,.28)}
-.spot .ft{padding:15px 24px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);font-weight:600}
+.spot{background:var(--panel);border-radius:14px;box-shadow:0 7px 19px rgba(2,12,22,.22), 0 31px 67px rgba(2,12,22,.26);overflow:hidden}
+.spot .rail{height:5px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}
+.spot .hd{padding:18px 29px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.spot .hd b{font-size:15px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px}
+.spot .bd{padding:26px 29px 24px}
+.vchip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;background:var(--brand-soft);color:var(--brand-dk);font-size:14px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(12,148,140,.28)}
+.spot .ft{padding:18px 29px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:17px;color:var(--muted);font-weight:600}
 
 /* ---------------------------------------------------------------------------
    LIVE COMPETITION MODULE  (hero right-hand card, replaced Capper of the Week
@@ -418,10 +443,10 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    normal flow except the title, the category line and the progress rule, all of
    which are fixed-height by construction.
    --------------------------------------------------------------------------- */
-.spot.comp .hd{gap:14px}
+.spot.comp .hd{gap:17px}
 .spot.comp .hd b{white-space:nowrap}
 .spot.comp .hd a{white-space:nowrap}
-.spot.comp .bd{padding:20px 24px 18px;display:flex;flex-direction:column}
+.spot.comp .bd{padding:24px 29px 22px;display:flex;flex-direction:column}
 /* The permanent header line. Never rotates, never animates.
    Barlow Condensed, the hero's own display face, so the card answers the H1
    across the grid in the same voice. It is a <div>, not a heading: this is
@@ -432,51 +457,51 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    exists to prevent. The metric-compatible fallback faces at the top of this
    file mean the pre-webfont frame occupies the same width, so it cannot wrap
    on the way in either. */
-.comp-title{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:31px;font-weight:900;letter-spacing:.006em;line-height:1.03;text-transform:uppercase;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden}
-.comp-sub{display:flex;align-items:baseline;gap:9px;margin-top:9px;height:17px;min-width:0}
-.comp-cat{font-size:12px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--brand-dk);white-space:nowrap;flex:0 0 auto}
-.comp-note{font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.comp-note::before{content:'·';margin-right:8px;color:var(--line-2)}
+.comp-title{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:37px;font-weight:900;letter-spacing:.006em;line-height:1.03;text-transform:uppercase;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden}
+.comp-sub{display:flex;align-items:baseline;gap:11px;margin-top:11px;height:20px;min-width:0}
+.comp-cat{font-size:14px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--brand-dk);white-space:nowrap;flex:0 0 auto}
+.comp-note{font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.comp-note::before{content:'·';margin-right:10px;color:var(--line-2)}
 
 /* The live pulse next to LIVE COMPETITION. A slow breath, not a blink: the
    dot never fully disappears, so it reads as a status light rather than an
    alert. */
-.spot.comp .hd b .bl{width:7px;height:7px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 0 rgba(12,148,140,.45);animation:compPulse 2.4s ease-out infinite;flex:0 0 auto}
+.spot.comp .hd b .bl{width:8px;height:8px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 0 rgba(12,148,140,.45);animation:compPulse 2.4s ease-out infinite;flex:0 0 auto}
 @keyframes compPulse{
   0%{box-shadow:0 0 0 0 rgba(12,148,140,.42);opacity:1}
-  70%{box-shadow:0 0 0 7px rgba(12,148,140,0);opacity:.72}
+  70%{box-shadow:0 0 0 8px rgba(12,148,140,0);opacity:.72}
   100%{box-shadow:0 0 0 0 rgba(12,148,140,0);opacity:1}
 }
 
 /* The rotating stage. Height is fixed here and nowhere else. */
-.comp-stage{position:relative;margin-top:13px;height:187px;overflow:hidden}
+.comp-stage{position:relative;margin-top:16px;height:224px;overflow:hidden}
 .comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);opacity:0;pointer-events:none}
 .comp-view.is-on{opacity:1;pointer-events:auto}
 /* Outgoing: falls back and dims rather than sliding away, so two layers never
    read as two competing lists. */
-.comp-view.is-off{opacity:0;transform:translateY(-6px) scale(.995);transition:opacity .26s ease,transform .26s ease}
+.comp-view.is-off{opacity:0;transform:translateY(-7px) scale(.995);transition:opacity .26s ease,transform .26s ease}
 .comp-view.is-in{animation:compViewIn .34s cubic-bezier(.22,.68,.35,1) both}
-@keyframes compViewIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes compViewIn{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
 
 /* One standings row. */
-.comp-row{display:grid;grid-template-columns:22px 34px minmax(0,1fr) auto;align-items:center;gap:11px;min-width:0;border-top:1px solid var(--line)}
+.comp-row{display:grid;grid-template-columns:26px 41px minmax(0,1fr) auto;align-items:center;gap:13px;min-width:0;border-top:1px solid var(--line)}
 .comp-view .comp-row:first-child{border-top:none}
 .comp-view.is-in .comp-row{animation:compRowIn .38s cubic-bezier(.22,.68,.35,1) both}
 .comp-view.is-in .comp-row:nth-child(1){animation-delay:.02s}
 .comp-view.is-in .comp-row:nth-child(2){animation-delay:.08s}
 .comp-view.is-in .comp-row:nth-child(3){animation-delay:.14s}
-@keyframes compRowIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+@keyframes compRowIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
 
-.comp-rk{font-size:14px;font-weight:900;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.comp-rk{font-size:17px;font-weight:900;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .comp-row.r1 .comp-rk{color:var(--gold)}
-.comp-av,.comp-avl{width:34px;height:34px;border-radius:8px;flex:0 0 auto;display:block;object-fit:cover}
-.comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.comp-av,.comp-avl{width:41px;height:41px;border-radius:10px;flex:0 0 auto;display:block;object-fit:cover}
+.comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
 .comp-id{min-width:0}
-.comp-nm{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.comp-nm{display:block;font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
 a.comp-nm:hover{color:var(--brand-dk)}
-.comp-meta{display:block;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;line-height:1.2}
-.comp-val{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
-.comp-num{font-size:19px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.comp-meta{display:block;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px;line-height:1.2}
+.comp-val{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:0 0 auto}
+.comp-num{font-size:23px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
 .comp-num.pos{color:var(--green)}
 .comp-num.neg{color:var(--red)}
 /* A points or post count is not a profit. Trivia points, poll points, forum
@@ -511,20 +536,20 @@ a.comp-nm:hover{color:var(--brand-dk)}
 /* Rank movement. The arrow is real -- it is this competitor's position now
    against the same table as it stood 24 hours ago (see the backend service).
    It nudges into place once and then holds; it does not loop. */
-.comp-dl{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:900;line-height:1;padding:3px 5px;border-radius:4px;font-variant-numeric:tabular-nums}
+.comp-dl{display:inline-flex;align-items:center;gap:2px;font-size:13px;font-weight:900;line-height:1;padding:4px 6px;border-radius:5px;font-variant-numeric:tabular-nums}
 .comp-dl.up{color:var(--green);background:var(--green-soft)}
 .comp-dl.dn{color:var(--red);background:var(--red-soft)}
 .comp-dl.fl{color:var(--muted);background:transparent;padding-left:2px;padding-right:2px}
 .comp-dl.nw{color:var(--gold);background:var(--gold-soft);letter-spacing:.06em}
 .comp-view.is-in .comp-dl.up{animation:compArrowUp .5s .34s cubic-bezier(.22,.68,.35,1) both}
 .comp-view.is-in .comp-dl.dn{animation:compArrowDn .5s .34s cubic-bezier(.22,.68,.35,1) both}
-@keyframes compArrowUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-@keyframes compArrowDn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes compArrowUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes compArrowDn{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
 
 
 /* The dwell indicator: a 2px rule under the stage that fills across the time
    left on the current view. Deliberately the quietest thing on the card. */
-.comp-prog{position:relative;height:2px;margin-top:14px;border-radius:2px;background:var(--line);overflow:hidden;flex:0 0 auto}
+.comp-prog{position:relative;height:2px;margin-top:17px;border-radius:2px;background:var(--line);overflow:hidden;flex:0 0 auto}
 .comp-prog i{position:absolute;inset:0;display:block;transform-origin:left center;transform:scaleX(0);background:linear-gradient(90deg,var(--brand),var(--brand-lt));border-radius:2px}
 .comp-prog.run i{animation:compProg linear forwards;animation-duration:var(--comp-dwell,5200ms)}
 @keyframes compProg{from{transform:scaleX(0)}to{transform:scaleX(1)}}
@@ -555,8 +580,8 @@ a.comp-nm:hover{color:var(--brand-dk)}
    the CTA stays on one — clamped at two so a longer future sentence cannot
    grow the card. The stage height above is set against this footer's height,
    which is why it is fixed here rather than left to the content. */
-.spot.comp .ft{gap:16px;align-items:center}
-.comp-foot{flex:1 1 auto;min-width:0;font-size:12.5px;line-height:1.32;min-height:2.64em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.spot.comp .ft{gap:19px;align-items:center}
+.comp-foot{flex:1 1 auto;min-width:0;font-size:15px;line-height:1.32;min-height:2.64em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .spot.comp .ft .ftlinks{flex:0 0 auto}
 .spot.comp .ft .ftlinks a{white-space:nowrap}
 
@@ -569,18 +594,18 @@ a.comp-nm:hover{color:var(--brand-dk)}
   .comp-flash.go,.comp-prog.run i,.spot.comp .hd b .bl{animation:none!important}
   .comp-view.is-off{transition:none}
   .comp-prog.run i{transform:scaleX(1)}
-  .spot.comp .hd b .bl{box-shadow:0 0 0 3px rgba(12,148,140,.18)}
+  .spot.comp .hd b .bl{box-shadow:0 0 0 4px rgba(12,148,140,.18)}
 }
 
 /* Narrow tiers. The rank column and the avatar are the first things to go:
    the name, the number and the movement are what the row is FOR. Heights stay
    put -- .comp-stage is re-declared per tier, never left to the content. */
 @media (max-width:1399px){
-  .comp-title{font-size:28px}
-  .comp-stage{height:181px}
+  .comp-title{font-size:34px}
+  .comp-stage{height:217px}
 }
 @media (max-width:1024px){
-  .comp-stage{height:176px}
+  .comp-stage{height:211px}
 }
 @media (max-width:520px){
   /* The qualifier note is the first thing to go: ellipsised mid-word
@@ -608,50 +633,50 @@ a.comp-nm:hover{color:var(--brand-dk)}
 
 /* ---------- BRIDGE (dark -> light connector) ---------- */
 .bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0;width:100%}
-.bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 28px}
-.bridge .s{padding:14px 22px;border-right:1px solid var(--line)}
-.bridge .s b{display:block;font-size:26px;font-weight:900;letter-spacing:-.04em;line-height:1.08}
+.bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 34px}
+.bridge .s{padding:17px 26px;border-right:1px solid var(--line)}
+.bridge .s b{display:block;font-size:31px;font-weight:900;letter-spacing:-.04em;line-height:1.08}
 .bridge .s b.t{color:var(--brand-dk)}
-.bridge .s span{display:block;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.bridge .cta-cell{display:flex;align-items:center;gap:18px;padding:14px 22px;background:var(--panel-2)}
-.bridge .cta-cell p{font-size:14px;color:var(--muted);font-weight:600;max-width:210px;line-height:1.45}
+.bridge .s span{display:block;font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:7px}
+.bridge .cta-cell{display:flex;align-items:center;gap:22px;padding:17px 26px;background:var(--panel-2)}
+.bridge .cta-cell p{font-size:17px;color:var(--muted);font-weight:600;max-width:252px;line-height:1.45}
 
 /* ---------- SECTIONS ---------- */
-.dash{padding-top:48px}
-.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 18px;flex-wrap:wrap}
-.sec-head h2{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:36px;font-weight:900;letter-spacing:.006em;line-height:1;display:flex;align-items:center;gap:13px;color:var(--ink)}
-.sec-head h2::before{content:"";width:6px;height:30px;border-radius:2px;background:linear-gradient(180deg,var(--brand-lt),var(--brand))}
-.sec-head p{color:var(--muted);font-size:15.5px;margin-top:9px;font-weight:500;padding-left:19px}
+.dash{padding-top:58px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:29px;margin:0 0 22px;flex-wrap:wrap}
+.sec-head h2{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:43px;font-weight:900;letter-spacing:.006em;line-height:1;display:flex;align-items:center;gap:16px;color:var(--ink)}
+.sec-head h2::before{content:"";width:7px;height:36px;border-radius:2px;background:linear-gradient(180deg,var(--brand-lt),var(--brand))}
+.sec-head p{color:var(--muted);font-size:19px;margin-top:11px;font-weight:500;padding-left:23px}
 
-.board{display:grid;grid-template-columns:minmax(0,1.72fr) minmax(0,1.04fr) minmax(0,1.04fr);gap:20px;align-items:stretch}
+.board{display:grid;grid-template-columns:minmax(0,1.72fr) minmax(0,1.04fr) minmax(0,1.04fr);gap:24px;align-items:stretch}
 .card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
-.chd{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 24px;border-bottom:2px solid var(--panel-3);flex:0 0 auto}
-.chd h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:25px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:11px;line-height:1}
-.chd h3 .pulse{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px var(--green-soft)}
-.chd .cnt{color:var(--muted);font-size:13.5px;font-weight:700}
+.chd{display:flex;align-items:center;justify-content:space-between;gap:17px;padding:22px 29px;border-bottom:2px solid var(--panel-3);flex:0 0 auto}
+.chd h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:30px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:13px;line-height:1}
+.chd h3 .pulse{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 0 6px var(--green-soft)}
+.chd .cnt{color:var(--muted);font-size:16px;font-weight:700}
 .card .body{flex:1}
-.card .foot{border-top:1px solid var(--line);background:var(--panel-2);padding:15px 24px;text-align:center;flex:0 0 auto}
-.card .foot a{font-size:15px;font-weight:800;color:var(--brand-dk)}
-.tabs{display:flex;gap:4px}
-.tab{padding:7px 14px;border-radius:6px;font-size:14px;font-weight:800;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:inherit}
+.card .foot{border-top:1px solid var(--line);background:var(--panel-2);padding:18px 29px;text-align:center;flex:0 0 auto}
+.card .foot a{font-size:18px;font-weight:800;color:var(--brand-dk)}
+.tabs{display:flex;gap:5px}
+.tab{padding:8px 17px;border-radius:7px;font-size:17px;font-weight:800;color:var(--muted);background:transparent;border:none;cursor:pointer;font-family:inherit}
 .tab.on{background:var(--brand-soft);color:var(--brand-dk)}
 
 /* picks */
-.pk{display:flex;gap:18px;padding:21px 24px;border-bottom:1px solid var(--line);align-items:center}
+.pk{display:flex;gap:22px;padding:25px 29px;border-bottom:1px solid var(--line);align-items:center}
 .pk:last-child{border-bottom:none}
 .pk:hover{background:var(--panel-2)}
-.pk .logo2{width:58px;height:58px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:8px}
+.pk .logo2{width:70px;height:70px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:10px}
 .pk .logo2 img{width:100%;height:100%;object-fit:contain}
 .pk .bd{flex:1;min-width:0}
-.pk .who{display:flex;align-items:center;gap:9px;font-size:14.5px;color:var(--muted);font-weight:600}
-.pk .who .ava{width:26px;height:26px;border-radius:6px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line)}
-.pk .who .avl{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:900;flex:0 0 auto}
-.pk .who b{color:var(--ink);font-weight:800;font-size:16px}
-.pk .ln{display:block;font-size:22px;font-weight:900;letter-spacing:-.038em;margin:7px 0 7px;line-height:1.16}
-.pk .mt{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);font-weight:600;flex-wrap:wrap}
-.lgchip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:4px;background:var(--panel-3);color:var(--ink-2);font-size:11px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
-.pk .rt{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:9px;flex:0 0 auto}
-.badge{padding:5px 13px;border-radius:5px;font-size:11.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+.pk .who{display:flex;align-items:center;gap:11px;font-size:17px;color:var(--muted);font-weight:600}
+.pk .who .ava{width:31px;height:31px;border-radius:7px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line)}
+.pk .who .avl{width:31px;height:31px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;flex:0 0 auto}
+.pk .who b{color:var(--ink);font-weight:800;font-size:19px}
+.pk .ln{display:block;font-size:26px;font-weight:900;letter-spacing:-.038em;margin:8px 0 8px;line-height:1.16}
+.pk .mt{display:flex;align-items:center;gap:11px;font-size:16px;color:var(--muted);font-weight:600;flex-wrap:wrap}
+.lgchip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:5px;background:var(--panel-3);color:var(--ink-2);font-size:13px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.pk .rt{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:11px;flex:0 0 auto}
+.badge{padding:6px 16px;border-radius:6px;font-size:14px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
 .badge.w{background:var(--green-soft);color:var(--green);border:1px solid rgba(10,139,78,.22)}
 .badge.l{background:var(--red-soft);color:var(--red);border:1px solid rgba(188,55,46,.22)}
 .badge.p{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(185,133,5,.28)}
@@ -659,138 +684,138 @@ a.comp-nm:hover{color:var(--brand-dk)}
    token a push fell through to .badge.p and the card printed PENDING on a bet
    that had already been decided (Dodgers -1, 2026-08-11). */
 .badge.d{background:var(--panel-3);color:var(--muted);border:1px solid var(--line-2)}
-.pk .rt .u{font-size:20px;font-weight:900;letter-spacing:-.038em}
+.pk .rt .u{font-size:24px;font-weight:900;letter-spacing:-.038em}
 
 /* leaderboard */
-.lbr{display:flex;align-items:center;gap:15px;padding:18px 24px;border-bottom:1px solid var(--line)}
+.lbr{display:flex;align-items:center;gap:18px;padding:22px 29px;border-bottom:1px solid var(--line)}
 .lbr:last-child{border-bottom:none}
 .lbr:hover{background:var(--panel-2)}
-.rk{width:34px;height:34px;border-radius:7px;background:var(--panel-3);color:var(--ink-2);font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.rk{width:41px;height:41px;border-radius:8px;background:var(--panel-3);color:var(--ink-2);font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .rk.g1{background:linear-gradient(150deg,#FFD766,#DFA100);color:#3E2C00}
 .rk.g2{background:linear-gradient(150deg,#E1E9F2,#AFC0D3);color:#26384B}
 .rk.g3{background:linear-gradient(150deg,#EBC095,#BE8447);color:#3F2408}
-.ava{width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line)}
-.avl{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14.5px;flex:0 0 auto}
+.ava{width:50px;height:50px;border-radius:11px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line)}
+.avl{width:50px;height:50px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:17px;flex:0 0 auto}
 .c1{background:linear-gradient(140deg,#0C948C,#07736D)}.c2{background:linear-gradient(140deg,#3877D2,#1B4A9B)}
 .c3{background:linear-gradient(140deg,#BE7229,#925218)}.c4{background:linear-gradient(140deg,#C54B69,#96324C)}
 .c5{background:linear-gradient(140deg,#6947C2,#4A2C9C)}.c6{background:linear-gradient(140deg,#388B58,#24643E)}
 .lbr .nm{flex:1;min-width:0}
-.lbr .nm b{display:block;font-size:17.5px;font-weight:800;letter-spacing:-.028em}
-.lbr .nm span{display:block;font-size:13.5px;color:var(--muted);font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
+.lbr .nm b{display:block;font-size:21px;font-weight:800;letter-spacing:-.028em}
+.lbr .nm span{display:block;font-size:16px;color:var(--muted);font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
 .lbr .un{text-align:right;flex:0 0 auto}
-.lbr .un b{display:block;font-size:19px;font-weight:900;letter-spacing:-.04em}
-.lbr .un span{display:block;font-size:13px;color:var(--muted);font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.lbr .un b{display:block;font-size:23px;font-weight:900;letter-spacing:-.04em}
+.lbr .un span{display:block;font-size:16px;color:var(--muted);font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
 
 /* forum */
-.fr{padding:19px 24px;border-bottom:1px solid var(--line);display:flex;gap:15px}
+.fr{padding:23px 29px;border-bottom:1px solid var(--line);display:flex;gap:18px}
 .fr:last-child{border-bottom:none}
 .fr:hover{background:var(--panel-2)}
 .fr .fb{min-width:0;flex:1}
-.cat{display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.cat{display:inline-block;padding:4px 11px;border-radius:5px;font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
 .cat.mlb{background:var(--blue-soft);color:var(--blue)}
 .cat.soc{background:var(--green-soft);color:var(--green)}
 .cat.str{background:var(--violet-soft);color:var(--violet)}
-.fr .ft2{font-size:17px;font-weight:800;line-height:1.34;letter-spacing:-.027em}
-.fr .fm{font-size:13.5px;color:var(--muted);margin-top:7px;font-weight:600}
+.fr .ft2{font-size:20px;font-weight:800;line-height:1.34;letter-spacing:-.027em}
+.fr .fm{font-size:16px;color:var(--muted);margin-top:8px;font-weight:600}
 
 /* ---------- COMPETE ROW ---------- */
-.compete{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:20px;align-items:stretch}
+.compete{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:24px;align-items:stretch}
 .ccard{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
 .ccard.feat{background:linear-gradient(155deg,var(--navy),var(--navy-3));border-color:transparent;box-shadow:var(--sh-up)}
-.cch{display:flex;align-items:center;gap:12px;padding:17px 22px;border-bottom:1px solid var(--line)}
+.cch{display:flex;align-items:center;gap:14px;padding:20px 26px;border-bottom:1px solid var(--line)}
 .ccard.feat .cch{border-bottom-color:rgba(255,255,255,.13)}
-.cch .ic{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
-.cch h4{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:26px;font-weight:900;letter-spacing:.008em;line-height:1}
+.cch .ic{width:48px;height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 auto}
+.cch h4{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:31px;font-weight:900;letter-spacing:.008em;line-height:1}
 .ccard.feat .cch h4{color:#fff}
 .ccard.feat .cch h4 em{font-style:normal;color:var(--gold-b)}
-.cch .st{margin-left:auto;font-size:11.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;padding:4px 10px;border-radius:4px;background:var(--green-soft);color:var(--green)}
+.cch .st{margin-left:auto;font-size:14px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;padding:5px 12px;border-radius:5px;background:var(--green-soft);color:var(--green)}
 .ccard.feat .cch .st{background:rgba(255,201,60,.16);color:var(--gold-b)}
-.cbody{padding:22px;display:flex;flex-direction:column;flex:1}
-.ccard p{font-size:15px;line-height:1.6;color:var(--ink-2);font-weight:500}
+.cbody{padding:26px;display:flex;flex-direction:column;flex:1}
+.ccard p{font-size:18px;line-height:1.6;color:var(--ink-2);font-weight:500}
 .ccard.feat p{color:#B4CDE3}
 .grow{flex:1}
-.kv{display:flex;gap:26px;margin:20px 0 22px;flex-wrap:wrap}
-.kv .k b{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em;color:#fff}
+.kv{display:flex;gap:31px;margin:24px 0 26px;flex-wrap:wrap}
+.kv .k b{display:block;font-size:29px;font-weight:900;letter-spacing:-.04em;color:#fff}
 .kv .k b.g{color:var(--gold-b)}
-.kv .k span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8FAECB;margin-top:5px}
-.mrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;margin-bottom:9px}
-.mrow .mav{width:32px;height:32px;border-radius:7px;object-fit:cover;border:1px solid var(--line);flex:0 0 auto}
-.mrow .mavl{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:900;flex:0 0 auto}
+.kv .k span{display:block;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8FAECB;margin-top:6px}
+.mrow{display:flex;align-items:center;gap:14px;padding:14px 17px;border:1px solid var(--line);border-radius:10px;margin-bottom:11px}
+.mrow .mav{width:38px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--line);flex:0 0 auto}
+.mrow .mavl{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:900;flex:0 0 auto}
 .mrow .mt2{flex:1;min-width:0}
-.mrow .mt2 b{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.02em}
-.mrow .mt2 span{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:1px}
-.mrow .go{font-size:12.5px;font-weight:900;color:var(--brand-dk);text-transform:uppercase;letter-spacing:.06em}
-.crow{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:600;color:#C3D8EC;padding:7px 0}
-.crow i{width:20px;height:20px;border-radius:50%;background:rgba(34,210,192,.18);color:var(--brand-lt);display:flex;align-items:center;justify-content:center;font-size:11px;font-style:normal;font-weight:900;flex:0 0 auto}
-.pollq{font-size:17px;font-weight:800;margin-bottom:6px;line-height:1.38;letter-spacing:-.027em}
-.pollmeta{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:16px}
-.pbar{margin-bottom:13px}
-.pbar .r{display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:6px}
+.mrow .mt2 b{display:block;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.mrow .mt2 span{display:block;font-size:15px;color:var(--muted);font-weight:600;margin-top:1px}
+.mrow .go{font-size:15px;font-weight:900;color:var(--brand-dk);text-transform:uppercase;letter-spacing:.06em}
+.crow{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:600;color:#C3D8EC;padding:8px 0}
+.crow i{width:24px;height:24px;border-radius:50%;background:rgba(34,210,192,.18);color:var(--brand-lt);display:flex;align-items:center;justify-content:center;font-size:13px;font-style:normal;font-weight:900;flex:0 0 auto}
+.pollq{font-size:20px;font-weight:800;margin-bottom:7px;line-height:1.38;letter-spacing:-.027em}
+.pollmeta{font-size:16px;color:var(--muted);font-weight:600;margin-bottom:19px}
+.pbar{margin-bottom:16px}
+.pbar .r{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-bottom:7px}
 .pbar .r b{font-weight:800}
-.pbar .tr{height:9px;border-radius:99px;background:var(--panel-3);overflow:hidden}
-.pbar .tr i{display:block;height:9px;border-radius:99px}
+.pbar .tr{height:11px;border-radius:119px;background:var(--panel-3);overflow:hidden}
+.pbar .tr i{display:block;height:11px;border-radius:119px}
 
 /* ---------- PLATFORM STRIP ---------- */
-.explore{margin-top:20px;background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
-.explore .eh{padding:18px 24px;border-bottom:2px solid var(--panel-3);display:flex;align-items:center;justify-content:space-between;gap:16px}
-.explore .eh h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:26px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:12px}
-.explore .eh h3::before{content:"";width:5px;height:22px;border-radius:2px;background:linear-gradient(180deg,var(--brand-lt),var(--brand))}
+.explore{margin-top:24px;background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.explore .eh{padding:22px 29px;border-bottom:2px solid var(--panel-3);display:flex;align-items:center;justify-content:space-between;gap:19px}
+.explore .eh h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:31px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:14px}
+.explore .eh h3::before{content:"";width:6px;height:26px;border-radius:2px;background:linear-gradient(180deg,var(--brand-lt),var(--brand))}
 .egrid{display:grid;grid-template-columns:repeat(4,1fr)}
-.ei{padding:24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
+.ei{padding:29px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:11px}
 .ei:last-child{border-right:none}
 .ei:hover{background:var(--panel-2)}
-.ei .top{display:flex;align-items:center;gap:12px}
-.ei .ic2{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
-.ei h5{font-size:18px;font-weight:900;letter-spacing:-.03em}
-.ei .badge2{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:900;letter-spacing:.03em;color:var(--ink);background:var(--panel-3);padding:4px 10px;border-radius:4px;width:fit-content}
-.ei .badge2 .bl{width:7px;height:7px;border-radius:50%;background:var(--green)}
-.ei p{font-size:14.5px;color:var(--ink-2);line-height:1.55;font-weight:500}
-.ei .go2{font-size:14px;font-weight:800;color:var(--brand-dk);margin-top:2px}
+.ei .top{display:flex;align-items:center;gap:14px}
+.ei .ic2{width:50px;height:50px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 auto}
+.ei h5{font-size:22px;font-weight:900;letter-spacing:-.03em}
+.ei .badge2{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:900;letter-spacing:.03em;color:var(--ink);background:var(--panel-3);padding:5px 12px;border-radius:5px;width:fit-content}
+.ei .badge2 .bl{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.ei p{font-size:17px;color:var(--ink-2);line-height:1.55;font-weight:500}
+.ei .go2{font-size:17px;font-weight:800;color:var(--brand-dk);margin-top:2px}
 
 /* ---------- FINAL ---------- */
-.final{margin-top:20px;border-radius:var(--r);background:linear-gradient(150deg,var(--navy),var(--navy-2));padding:44px 44px;display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap;box-shadow:var(--sh-up)}
-.final h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:38px;font-weight:900;line-height:1;color:#fff;letter-spacing:.006em}
+.final{margin-top:24px;border-radius:var(--r);background:linear-gradient(150deg,var(--navy),var(--navy-2));padding:53px 53px;display:flex;align-items:center;justify-content:space-between;gap:43px;flex-wrap:wrap;box-shadow:var(--sh-up)}
+.final h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:46px;font-weight:900;line-height:1;color:#fff;letter-spacing:.006em}
 body.tmr-ds .final h3{color:#fff}
-.final p{color:#A9C3DA;font-size:16px;margin-top:11px;line-height:1.55}
-footer{margin-top:52px;background:var(--navy);color:#93AEC7;padding:32px 0}
-footer .in{max-width:1720px;margin:0 auto;padding:0 28px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:14.5px}
-footer .in>span:last-child{display:flex;flex-wrap:wrap;gap:6px 0;min-width:0}
-footer a{margin-right:22px;color:#93AEC7}
+.final p{color:#A9C3DA;font-size:19px;margin-top:13px;line-height:1.55}
+footer{margin-top:62px;background:var(--navy);color:#93AEC7;padding:38px 0}
+footer .in{max-width:2064px;margin:0 auto;padding:0 34px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:17px}
+footer .in>span:last-child{display:flex;flex-wrap:wrap;gap:7px 0;min-width:0}
+footer a{margin-right:26px;color:#93AEC7}
 footer a:hover{color:#fff}
 
 @media(max-width:1400px){
-  .hero-grid{grid-template-columns:minmax(0,1fr) 460px;gap:48px}
+  .hero-grid{grid-template-columns:minmax(0,1fr) 552px;gap:58px}
   .board{grid-template-columns:1fr}
   .compete{grid-template-columns:1fr}
   .bridge-in{grid-template-columns:repeat(2,1fr)}
   .bridge .cta-cell{grid-column:1/-1}
   .egrid{grid-template-columns:repeat(2,1fr)}
-  .hero h1.hh{font-size:54px}
+  .hero h1.hh{font-size:65px}
 }
 @media(max-width:1180px){
-  .hero-grid{grid-template-columns:1fr;gap:40px}
-  .hero h1.hh{font-size:50px}
+  .hero-grid{grid-template-columns:1fr;gap:48px}
+  .hero h1.hh{font-size:60px}
 }
 
 
 
 /* ---- logged-in nav state (added; approved nav layout unchanged) ---- */
-.v2nav-user{display:inline-flex;align-items:center;gap:9px;color:#fff;font-weight:700;font-size:14.5px;text-decoration:none}
+.v2nav-user{display:inline-flex;align-items:center;gap:11px;color:#fff;font-weight:700;font-size:17px;text-decoration:none}
 .v2nav-user:hover{color:#7FEBDC}
-.v2nav-ava{width:30px;height:30px;border-radius:8px;object-fit:cover;display:block;border:1px solid rgba(255,255,255,.25)}
-.v2nav-avl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#22D2C0,#0C948C);color:#04211F;font-weight:900;font-size:11.5px}
-.v2nav-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.v2nav-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:9px;color:#AEC6DC;border:1px solid rgba(255,255,255,.18)}
+.v2nav-ava{width:36px;height:36px;border-radius:10px;object-fit:cover;display:block;border:1px solid rgba(255,255,255,.25)}
+.v2nav-avl{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#22D2C0,#0C948C);color:#04211F;font-weight:900;font-size:14px}
+.v2nav-name{max-width:156px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2nav-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:43px;height:43px;border-radius:11px;color:#AEC6DC;border:1px solid rgba(255,255,255,.18)}
 .v2nav-bell:hover{color:#fff;border-color:rgba(255,255,255,.4)}
-.v2nav-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#E5484D;color:#fff;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.v2nav-badge{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:1199px;background:#E5484D;color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center}
 .v2nav-badge[hidden]{display:none}
-.v2nav-coins{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;color:#F5D98B;background:rgba(245,217,139,.14);font-weight:600;font-size:14.5px;line-height:1;white-space:nowrap;text-decoration:none}
-.v2nav-coins-icon{display:block;width:22px;height:22px;flex:0 0 auto}
+.v2nav-coins{display:inline-flex;align-items:center;gap:7px;height:41px;padding:0 14px;border-radius:1199px;color:#F5D98B;background:rgba(245,217,139,.14);font-weight:600;font-size:17px;line-height:1;white-space:nowrap;text-decoration:none}
+.v2nav-coins-icon{display:block;width:26px;height:26px;flex:0 0 auto}
 .v2nav-coins #navCoinBalance{display:inline-block;line-height:1}
 .v2nav-coins:hover{background:rgba(245,217,139,.24)}
 .v2nav-coins.is-frozen{color:#AEC6DC;background:rgba(255,255,255,.08)}
 .v2nav-coins[hidden]{display:none}
-.loading{padding:22px 24px;color:#5E7590;font-size:14.5px;font-weight:600}
+.loading{padding:26px 29px;color:#5E7590;font-size:17px;font-weight:600}
 @media(max-width:760px){.v2nav-name{display:none}}
 
 
@@ -821,26 +846,41 @@ footer a:hover{color:#fff}
    metric-compatible Inter stack, so the strip does not re-wrap when the real
    Inter arrives. Barlow is not loaded on this page, so the button's original
    `Barlow,Inter` resolved to Inter anyway and looks the same. ---- */
-.tmr-fp-reminder{position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-max-width:1180px;margin:12px auto;padding:11px 44px 11px 15px;border-radius:12px;
+.tmr-fp-reminder{position:relative;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+max-width:1416px;margin:14px auto;padding:13px 53px 13px 18px;border-radius:14px;
 background:linear-gradient(90deg,rgba(0,110,124,0.30),rgba(10,17,24,0.97));
 border:1px solid rgba(0,255,255,0.26);color:#dbe6f3;font:600 0.92rem/1.4 var(--font,Inter,sans-serif)}
-.tmr-fp-reminder__icon{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:flex;
-align-items:center;justify-content:center;background:rgba(0,255,255,0.14);color:#67e8f9;font-size:14px}
-.tmr-fp-reminder__text{flex:1 1 200px}
+.tmr-fp-reminder__icon{flex:0 0 auto;width:36px;height:36px;border-radius:11px;display:flex;
+align-items:center;justify-content:center;background:rgba(0,255,255,0.14);color:#67e8f9;font-size:17px}
+.tmr-fp-reminder__text{flex:1 1 240px}
 .tmr-fp-reminder__text strong{color:#f8fafc;font-weight:800}
-.tmr-fp-reminder .tmr-fp-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
-padding:9px 16px;border-radius:11px;font:800 0.85rem/1 var(--font,Inter,sans-serif);letter-spacing:.02em;cursor:pointer;
+.tmr-fp-reminder .tmr-fp-btn{display:inline-flex;align-items:center;justify-content:center;gap:11px;
+padding:11px 19px;border-radius:13px;font:800 0.85rem/1 var(--font,Inter,sans-serif);letter-spacing:.02em;cursor:pointer;
 border:1px solid transparent;text-decoration:none;transition:transform .14s ease,box-shadow .14s ease}
 #tmr-fp-reminder .tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#67e8f9) !important;
-color:#04111a !important;box-shadow:0 12px 30px rgba(0,255,255,0.24) !important;text-decoration:none !important}
-.tmr-fp-reminder__close{position:absolute;top:8px;right:10px;background:transparent;border:0;
-color:#7f8ea6;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px}
+color:#04111a !important;box-shadow:0 14px 36px rgba(0,255,255,0.24) !important;text-decoration:none !important}
+.tmr-fp-reminder__close{position:absolute;top:10px;right:12px;background:transparent;border:0;
+color:#7f8ea6;font-size:22px;line-height:1;cursor:pointer;padding:5px 7px}
 #tmr-fp-reminder .tmr-fp-reminder__close{background:transparent !important;border:0 !important;
 box-shadow:none !important;color:#7f8ea6 !important}
 .tmr-fp-reminder__close:hover{color:#e2e8f0 !important}
 @media(max-width:640px){.tmr-fp-reminder{margin:10px 12px}.tmr-fp-reminder .tmr-fp-btn{flex:1 1 100%}}
 
+
+/* PHONES KEEP THE PRE-SCALE PAGE GUTTER AND CLOSING CTA (2026-08-23).
+   The 1.2x size restore was a DESKTOP change, but .wrap's gutter and .btn.lg's
+   type are unguarded base rules, so they reached phones too: the closing CTA
+   went from 250px to 296px of min-content inside a panel that had only got
+   ~20px wider, and the document scrolled sideways at 360px. Restoring these
+   three on phones keeps every viewport under 640px rendering exactly what it
+   rendered before the scale, which is what was asked for - the size complaint
+   was about the desktop homepage, measured at browser zoom. The 340px block
+   below still applies its own tighter numbers on top of these. */
+@media(max-width:640px){
+  .wrap{padding:0 28px}
+  .final{padding:44px 44px}
+  .btn.lg{height:54px;padding:0 32px;font-size:17px}
+}
 
 /* Very narrow phones: .final's 44px side padding leaves a 176px content box at
    320px, but .btn.lg is white-space:nowrap with 0 32px padding, so its
@@ -848,10 +888,22 @@ box-shadow:none !important;color:#7f8ea6 !important}
    both the navy panel and the viewport (2px horizontal page overflow).
    Originally landed in commit f013ded8 as a hand-edit of the generated <style>
    block in index.html, where the next build_home_critical.py run deleted it.
-   It lives here now because this file is the source that block is built from. */
+   It lives here now because this file is the source that block is built from.
+
+   2026-08-23 homepage 1.2x scale: .wrap's gutter and .btn.lg's font-size are
+   both UNGUARDED rules, so the desktop scale-up reached this 320px viewport
+   too - the wider gutter alone cost 11px of content box, and the bigger CTA
+   text cost another 37px of min-content width, reopening the exact overflow
+   this block exists to close. Nima's ask was a DESKTOP size restore ("check
+   desktop responsiveness... common laptop screen widths"), not a change to
+   phones, so this block pins .wrap and the CTA font back to their pre-scale
+   values here. Every other narrow-phone media block in this file already sets
+   its own sizes outright rather than inheriting the desktop scale, so this is
+   the one place that needed a new override, not a pattern to repeat. */
 @media(max-width:340px){
+  .wrap{padding:0 28px}
   .final{padding:36px 22px}
-  .final .btn.lg{width:100%;padding:0 14px}
+  .final .btn.lg{width:100%;padding:0 14px;font-size:17px}
 }
 
 /* Bridge stat labels: reserve two lines up front on phones.
@@ -896,7 +948,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
   background: rgba(34, 210, 192, .085);
   border-color: rgba(34, 210, 192, .38);
   /* Left accent: inset, so it does not add the 3px a border would. */
-  box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0);
+  box-shadow: inset 4px 0 0 0 var(--brand-lt, #22D2C0);
 }
 .ticker a.gm.gm--gf:hover {
   background: rgba(34, 210, 192, .16);
@@ -908,12 +960,12 @@ box-shadow:none !important;color:#7f8ea6 !important}
    pitcher line. It now lives in the card's top padding + centering slack, above
    the team row, as a small quiet pill - matchup first, preview second. */
 .ticker .gm.gm--gf .gm-gf {
-  position: absolute; top: 1px; right: 8px;
-  font-size: 7px; font-weight: 800; letter-spacing: .12em;
+  position: absolute; top: 1px; right: 10px;
+  font-size: 8px; font-weight: 800; letter-spacing: .12em;
   color: var(--brand-lt, #22D2C0);
   background: rgba(6, 35, 31, .55);
   border: 1px solid rgba(34, 210, 192, .40);
-  padding: 1px 4px; border-radius: 999px; line-height: 1;
+  padding: 1px 5px; border-radius: 1199px; line-height: 1;
   pointer-events: none; white-space: nowrap;
 }
 /* Nima, 2026-08-13: the badge must NEVER cover game information. It used to
@@ -929,7 +981,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
    padding, all of it moved to the top. The card's height does not change - it
    stays the 89px every other card measures, so the row is still one height -
    and the badge gets a clear 12px band above the team row. */
-.ticker .gm.gm--gf { padding-top: 12px; padding-bottom: 0; }
+.ticker .gm.gm--gf { padding-top: 14px; padding-bottom: 0; }
 
 /* The pulse: a slow, premium breathing glow (Nima, 2026-08-13). The hard 2s
    border flash existed to compete with the call-out bar below the strip; that
@@ -941,12 +993,12 @@ box-shadow:none !important;color:#7f8ea6 !important}
    strip's height and every card's x and width are untouched, which is what the
    layout assertions in tests/ticker-gamefile-feature-test.js check. */
 @keyframes tmrGfPulse {
-  0%, 100% { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
+  0%, 100% { box-shadow: inset 4px 0 0 0 var(--brand-lt, #22D2C0),
                          0 0 0 0 rgba(34, 210, 192, 0);
              border-color: rgba(34, 210, 192, .40);
              background: rgba(34, 210, 192, .09); }
-  50%      { box-shadow: inset 3px 0 0 0 var(--brand-lt, #22D2C0),
-                         0 0 10px 2px rgba(34, 210, 192, .38);
+  50%      { box-shadow: inset 4px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 12px 2px rgba(34, 210, 192, .38);
              border-color: rgba(34, 210, 192, .85);
              background: rgba(34, 210, 192, .18); }
 }
@@ -983,15 +1035,15 @@ box-shadow:none !important;color:#7f8ea6 !important}
    1100px it leaves the row entirely — the sports ticker is the thing that must
    survive every breakpoint.
    --------------------------------------------------------------------------- */
-.tkact{flex:0 0 auto;width:288px;min-width:0;align-self:center;height:76px;
-  display:flex;flex-direction:column;justify-content:center;gap:6px;
-  padding-left:18px;margin-left:18px;border-left:1px solid rgba(255,255,255,.14)}
+.tkact{flex:0 0 auto;width:346px;min-width:0;align-self:center;height:91px;
+  display:flex;flex-direction:column;justify-content:center;gap:7px;
+  padding-left:22px;margin-left:22px;border-left:1px solid rgba(255,255,255,.14)}
 /* The failure state is "not there", never an empty labelled box or a spinner
    that spins forever. Applied by tmr-activity-feed.js; the lane simply gets
    the width back. */
 .tkact[hidden]{display:none}
 
-.tkact-lbl{display:flex;align-items:center;gap:7px;color:var(--brand-lt);font-size:10px;
+.tkact-lbl{display:flex;align-items:center;gap:8px;color:var(--brand-lt);font-size:12px;
   font-weight:900;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;line-height:1;
   opacity:1;transition:opacity .24s ease}
 /* Until the first real event lands there is nothing to label. The box still
@@ -1004,15 +1056,15 @@ box-shadow:none !important;color:#7f8ea6 !important}
    column to divide. Colour only, so the 1px still occupies its place and the
    games lane is measured against the final geometry from the first frame. */
 .tkact:not(.is-ready){border-left-color:transparent}
-.tkact-lbl .bl{width:6px;height:6px;border-radius:50%;background:var(--brand-lt);
-  box-shadow:0 0 0 3px rgba(34,210,192,.2)}
+.tkact-lbl .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt);
+  box-shadow:0 0 0 4px rgba(34,210,192,.2)}
 
 /* Fixed slot: the item inside it changes every few seconds and must never
    change the height of the ticker row while it does. */
-.tkact-slot{position:relative;min-width:0;height:40px}
+.tkact-slot{position:relative;min-width:0;height:48px}
 
-.tkact-item{position:absolute;inset:0;display:flex;align-items:center;gap:9px;min-width:0;
-  text-decoration:none;color:inherit;border-radius:7px;
+.tkact-item{position:absolute;inset:0;display:flex;align-items:center;gap:11px;min-width:0;
+  text-decoration:none;color:inherit;border-radius:8px;
   opacity:1;transform:translateY(0);
   transition:opacity .24s ease,transform .24s ease,background-color .15s ease}
 a.tkact-item{cursor:pointer}
@@ -1021,37 +1073,37 @@ a.tkact-item:hover .tkact-who b{color:#fff}
 a.tkact-item:hover .tkact-act{color:rgba(235,245,250,.92)}
 a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset:2px}
 /* Entering below, leaving above: a few pixels of travel, no bounce, no flash. */
-.tkact-item.is-in{opacity:0;transform:translateY(5px)}
-.tkact-item.is-out{opacity:0;transform:translateY(-5px)}
+.tkact-item.is-in{opacity:0;transform:translateY(6px)}
+.tkact-item.is-out{opacity:0;transform:translateY(-6px)}
 
-.tkact-av{flex:0 0 auto;width:30px;height:30px;border-radius:8px;overflow:hidden;
+.tkact-av{flex:0 0 auto;width:36px;height:36px;border-radius:10px;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);
-  color:#9FBCD6;font-size:11px;font-weight:900;letter-spacing:.02em}
+  color:#9FBCD6;font-size:13px;font-weight:900;letter-spacing:.02em}
 .tkact-av img{width:100%;height:100%;object-fit:cover;display:block}
 
 .tkact-txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
-.tkact-who{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px;line-height:1.15}
+.tkact-who{display:flex;align-items:center;gap:7px;min-width:0;font-size:15px;line-height:1.15}
 .tkact-who b{color:#DFEBF6;font-weight:800;letter-spacing:-.005em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;transition:color .15s ease}
 /* Favourite-team badge: personality, not branding. A 13px mark and a three
    letter abbreviation, both of which simply do not render when the visitor has
    not set a team. */
-.tkact-team{flex:0 0 auto;display:flex;align-items:center;gap:4px;color:#7593B1;
-  font-size:10px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
+.tkact-team{flex:0 0 auto;display:flex;align-items:center;gap:5px;color:#7593B1;
+  font-size:12px;font-weight:800;letter-spacing:.06em;white-space:nowrap}
 .tkact-team::before{content:"·";color:#4E6E8C;font-weight:700}
 /* Half of these marks are dark (the Steelers helmet, the Raiders shield) and a
    13px dark logo on the #050F1B ticker is a smudge. The faintest disc behind it
    is enough to separate it from the surface, and it matches the avatar tile's
    treatment rather than introducing a new one. */
-.tkact-team img{width:13px;height:13px;object-fit:contain;display:block;
+.tkact-team img{width:16px;height:16px;object-fit:contain;display:block;
   background:rgba(255,255,255,.10);border-radius:50%;padding:1px;box-sizing:content-box}
 .tkact-abbr{font-style:normal}
-.tkact-ago{flex:0 0 auto;margin-left:auto;padding-left:8px;color:#6F8CA8;font-size:10.5px;
+.tkact-ago{flex:0 0 auto;margin-left:auto;padding-left:10px;color:#6F8CA8;font-size:13px;
   font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
 /* One line, always. A 90-character thread title truncates here rather than
    wrapping the row and pushing the hero down. */
-.tkact-act{color:#9FBCD6;font-size:11.5px;font-weight:600;line-height:1.2;
+.tkact-act{color:#9FBCD6;font-size:14px;font-weight:600;line-height:1.2;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;transition:color .15s ease}
 
 /* Narrower desktops: give the games lane its width back first, and let the
@@ -1061,7 +1113,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
   /* The divider keeps the 18px the [TODAY] label uses on the other end of the
      row, so the two column rules read as one system; only the inner padding
      gives way. */
-  .tkact{width:250px;padding-left:16px;margin-left:18px}
+  .tkact{width:300px;padding-left:19px;margin-left:22px}
   .tkact-abbr{display:none}
 }
 /* Below this the row belongs to the sports ticker alone. */
@@ -1205,6 +1257,129 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
     gap: 6px;
     padding: 0 12px;
     width: auto;
+  }
+</style>
+<style id="tmrHomeScaleCss">
+  /* ---------------------------------------------------------------------------
+     HOMEPAGE SCALE - THE SHARED NAV (Nima, 2026-08-23)
+     -----------------------------------------------------------------------------
+     The homepage's own critical CSS above has been resized so that at 100%
+     browser zoom it presents at the size it used to reach at about 120%. The
+     nav is not the homepage's CSS: tmr-ds-nav.js injects it and tmr-ds.css
+     (content-hashed, 153 other pages) styles it, so the nav is brought up to
+     match HERE, on this page only, and nothing else in the design system moves.
+
+     Why a variable and not flat numbers. The nav bar is width-critical: signed
+     in it is six links plus a coin pill, a bell, My Record, an avatar and a
+     name, and tmr-ds.css carries a measured ladder of compressions that keeps
+     that row on ONE line down to 1220px, below which it becomes the sheet. A
+     flat 1.18 would eat that whole budget and wrap the row at 1280 and 1366,
+     which is the exact defect the ladder exists to prevent.
+
+     So the scale RAMPS with the width that pays for it: 1 at 1220px, where the
+     ladder is already at full compression and the bar has ~24px of air, up to
+     1.18 at 1440px and above, where the measured slack is there to spend. In
+     between it is linear. Below 1220px the sheet takes over and the scale is 1
+     by construction, so the mobile nav is byte-for-byte what it is on every
+     other page.
+     --------------------------------------------------------------------------- */
+  body.tmr-ds{
+    --home-nav-scale:1;
+    /* The content wrap was scaled with the rest of the homepage; the nav and
+       footer follow it so the three stay on the same gutters. */
+    --wrap:2064px;
+    --gutter:33.6px;
+  }
+  @media (min-width:1220px){
+    body.tmr-ds{
+      /* (100vw - 1220px) is a LENGTH; dividing by the 220px span before
+         multiplying by the unitless 0.18 keeps every term a plain number, which
+         is what clamp() needs when its other two bounds (1, 1.18) are numbers.
+         `* 0.000818` in place of `/ 220px * 0.18` looks equivalent arithmetic
+         but adds a number to a length, an invalid calc() - the custom property
+         then resolves to nothing, and every rule that reads it silently
+         inherits instead of scaling. */
+      --home-nav-scale:clamp(1, 1 + (100vw - 1220px) / 220px * 0.18, 1.18);
+    }
+  }
+  @media (min-width:1220px){
+    body.tmr-ds{
+      --nav-h:calc(70px * var(--home-nav-scale));
+      --nav-edge:calc(26px * var(--home-nav-scale));
+    }
+    body.tmr-ds .ds-nav-in{gap:calc(30px * var(--home-nav-scale))}
+    body.tmr-ds .ds-nav-panel{gap:calc(30px * var(--home-nav-scale))}
+
+    body.tmr-ds .ds-nav .ds-logo{gap:calc(9px * var(--home-nav-scale))}
+    body.tmr-ds .ds-nav .ds-logo .mk{
+      width:calc(34px * var(--home-nav-scale));
+      height:calc(34px * var(--home-nav-scale));
+      border-radius:calc(8px * var(--home-nav-scale));
+      font-size:calc(22px * var(--home-nav-scale));
+    }
+    body.tmr-ds .ds-nav .ds-logo .wd{font-size:calc(21px * var(--home-nav-scale))}
+
+    body.tmr-ds .ds-navitem,
+    body.tmr-ds .ds-mainnav a,
+    body.tmr-ds .ds-menu>button{
+      font-size:calc(15px * var(--home-nav-scale));
+      padding:calc(8px * var(--home-nav-scale)) calc(11px * var(--home-nav-scale));
+      border-radius:calc(9px * var(--home-nav-scale));
+      gap:calc(6px * var(--home-nav-scale));
+    }
+    body.tmr-ds .ds-mainnav{column-gap:calc(14px * var(--home-nav-scale))}
+    body.tmr-ds .ds-menu-panel a{font-size:calc(14.5px * var(--home-nav-scale))}
+
+    body.tmr-ds .ds-nav-right{gap:calc(10px * var(--home-nav-scale))}
+    body.tmr-ds .ds-nav-right .login{font-size:calc(15px * var(--home-nav-scale))}
+    body.tmr-ds .ds-nav-right .ds-btn.sm{
+      height:calc(36px * var(--home-nav-scale));
+      padding:0 calc(15px * var(--home-nav-scale));
+      font-size:calc(14px * var(--home-nav-scale));
+    }
+
+    /* The signed-in cluster. Same ramp, so the avatar, the bell and the coin
+       pill stay on the one optical line the bar is built around. */
+    body.tmr-ds .v2nav-menu>.v2nav-user{font-size:calc(14.5px * var(--home-nav-scale))}
+    body.tmr-ds .v2nav-ava,
+    body.tmr-ds .v2nav-avl{
+      width:calc(32px * var(--home-nav-scale));
+      height:calc(32px * var(--home-nav-scale));
+    }
+    body.tmr-ds .v2nav-avl{font-size:calc(12.5px * var(--home-nav-scale))}
+    body.tmr-ds .v2nav-bell{
+      width:calc(34px * var(--home-nav-scale));
+      height:calc(34px * var(--home-nav-scale));
+    }
+    body.tmr-ds .v2nav-coins{
+      height:calc(34px * var(--home-nav-scale));
+      font-size:calc(13.5px * var(--home-nav-scale));
+      padding:0 calc(12px * var(--home-nav-scale));
+    }
+    body.tmr-ds .v2nav-coins-icon{
+      width:calc(18px * var(--home-nav-scale));
+      height:calc(18px * var(--home-nav-scale));
+    }
+  }
+  /* The ladder in tmr-ds.css hands the signed-in bar its compressions between
+     1220 and 1560. The homepage bar is larger than the bar those numbers were
+     measured against, so the SAME compressions are held on for longer here:
+     the band runs to 1840 instead of 1560, and the name is dropped up to 1610
+     instead of 1365. Nothing new is introduced - these are that ladder's own
+     values, applied over the widths this page's scale needs them. */
+  @media (min-width:1561px) and (max-width:1840px){
+    body.tmr-ds .ds-nav-in{gap:calc(22px * var(--home-nav-scale))}
+    body.tmr-ds .ds-nav-panel{gap:calc(22px * var(--home-nav-scale))}
+    body.tmr-ds .ds-mainnav a,
+    body.tmr-ds .ds-menu>button{
+      padding:calc(8px * var(--home-nav-scale)) calc(9px * var(--home-nav-scale));
+    }
+    body.tmr-ds .ds-nav-panel:has(.v2nav-menu) .ds-mainnav{
+      column-gap:clamp(2px, (100vw - 1680px) / 12, calc(14px * var(--home-nav-scale)));
+    }
+  }
+  @media (min-width:1366px) and (max-width:1610px){
+    body.tmr-ds .ds-nav-panel:has(.v2nav-menu) .v2nav-name{display:none}
   }
 </style>
 <script>document.documentElement.className += ' tmr-lw-b1 tmr-lw-b2 tmr-lw-b3';</script>
@@ -1648,7 +1823,7 @@ a.tkact-item:focus-visible{outline:2px solid rgba(34,210,192,.55);outline-offset
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.2638fd33d0e0.js"></script>
+<script src="/static/js/tmr-home-live.923e1232ace0.js"></script>
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->

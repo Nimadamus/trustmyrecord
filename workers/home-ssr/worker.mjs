@@ -334,7 +334,11 @@ function statusChip(g) {
   return `<span class="st is-${esc(s)}">${esc(text)}</span>`;
 }
 
+/* Probables are a PREGAME element: a FINAL card carries the real decisions in
+   its strip, so the probables line under it would be the one stale thing on a
+   finished card. Lockstep with pitcherLine() in tmr-home-live.js. */
 function pitcherLine(g) {
+  if (g.status === 'final') return '';
   if (!g.away_pitcher || !g.home_pitcher) return '';
   const short = (n) => {
     const p = String(n).trim().split(/\s+/);
@@ -350,6 +354,20 @@ function pitcherLine(g) {
 
    Every line ships in the HTML, so the edge response already carries all of the
    card's intel for a crawler even though only the first line is visible. */
+/* Lockstep with postgameDwell() in tmr-home-live.js. A FINAL card rotates a
+   denser postgame recap and holds each line 11 to 19 seconds, drawn off its own
+   game_pk so two finals side by side never flip together. */
+const POSTGAME_DWELL_MIN_MS = 11000;
+const POSTGAME_DWELL_STEP_MS = 2000;
+const POSTGAME_DWELL_STEPS = 5;
+const INSIGHT_ROTATE_MS = 5000;
+
+function postgameDwell(g) {
+  const pk = parseInt(g && g.game_pk, 10);
+  const n = Number.isFinite(pk) ? Math.abs(pk) : 0;
+  return POSTGAME_DWELL_MIN_MS + (n % POSTGAME_DWELL_STEPS) * POSTGAME_DWELL_STEP_MS;
+}
+
 function insightStrip(g) {
   const list = (g && g.insights) || [];
   if (!list.length) return '';
@@ -369,7 +387,10 @@ function insightStrip(g) {
       '</span>';
   }
   if (!lines) return '';
-  return `<span class="gm-in" data-i="0">${lines}</span>`;
+  const post = g.insight_mode === 'postgame';
+  return `<span class="gm-in${post ? ' is-post' : ''}" data-i="0"` +
+    ` data-mode="${post ? 'postgame' : 'pregame'}"` +
+    ` data-dwell="${post ? postgameDwell(g) : INSIGHT_ROTATE_MS}">${lines}</span>`;
 }
 
 function tickerHtml(games) {
