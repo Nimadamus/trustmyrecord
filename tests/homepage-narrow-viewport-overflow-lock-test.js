@@ -81,12 +81,14 @@ if (block) {
 // The default (wide) rules must be left alone.
 // Scaled 1.2x for the 2026-08-23 homepage size restore (44px -> 53px,
 // 32px -> 38px), then a further 1.25x for the 2026-08-24 pass (53px -> 66px,
-// 38px -> 48px, rounded to whole pixels); the narrow-phone override above
-// still pins .wrap and this button back to their pre-scale values, which is
-// what keeps the 320px arithmetic above unchanged.
+// 38px -> 48px). The owner-approved top-anchored hero pass later trimmed
+// .final's padding again, 66px -> 59px; .btn.lg is unchanged at 0 48px.
+// The narrow-phone override above still pins .wrap, .final and this button to
+// their pre-scale values, which is what keeps the 320px arithmetic - the check
+// this file actually exists for - unchanged and passing.
 check(
-  '.final keeps its approved 66px padding at full width',
-  /\.final\{[^}]*padding:66px 66px/.test(html),
+  '.final keeps its approved 59px padding at full width',
+  /\.final\{[^}]*padding:59px 59px/.test(html),
   'the narrow fix must not change the approved desktop panel'
 );
 check(
