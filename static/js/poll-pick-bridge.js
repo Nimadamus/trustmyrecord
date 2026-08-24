@@ -35,6 +35,12 @@
  *   poll_pick_bridge_shown    { poll_id, sport, zero_pick_member }
  *   poll_pick_bridge_declined { poll_id }
  *   poll_pick_bridge_clicked  { poll_id, sport, zero_pick_member, pick_team }
+ *
+ * Two entry points, because the site has two voting paths: offer() for a single
+ * poll (submitVote), and offerFirstEligible() for the daily quiz, which submits
+ * every child answer in one request (submitGameVote). The quiz is where the
+ * convertible "Who wins" questions actually live, so wiring only the first
+ * would have shipped a feature that never fires.
  * The completion half is already emitted by sim-pick-prefill.js as
  * simulator_pick_submitted / simulator_verified_pick_created, which carry
  * source:'poll' for intents written here — so vote → shown → clicked → locked
@@ -50,6 +56,10 @@
        record, not a new mechanism. */
     var INTENT_KEY = 'tmr_sim_pick_intent';
     var ELEMENT_ID = 'tmr-poll-bridge';
+    /* A daily quiz runs to ten questions. Asking about every one of them after
+       a single submission would be ten requests to learn one answer, so the
+       walk stops early. */
+    var MAX_QUIZ_LOOKUPS = 12;
 
     /* One seam, so the handoff can be asserted in a test without jsdom
        refusing to navigate. Production behaviour is a plain location change. */
@@ -221,8 +231,36 @@
         });
     }
 
+    /**
+     * The daily quiz submits every answer at once, so the convertible question
+     * is one of several children rather than the poll the member is "on".
+     * Asks each in turn and offers the FIRST that is convertible.
+     *
+     * Almost every child is a prop or a total and refuses immediately, so this
+     * is a short walk in practice; it is capped anyway so a long quiz cannot
+     * turn one submission into a burst of requests. Sequential on purpose —
+     * the first eligible answer wins and the rest are never asked.
+     *
+     * @param {Array<number|string>} pollIds child poll ids, in display order
+     * @param {Element} [mountEl]
+     */
+    function offerFirstEligible(pollIds, mountEl) {
+        var ids = (pollIds || []).filter(Boolean).slice(0, MAX_QUIZ_LOOKUPS);
+        if (!ids.length) return Promise.resolve(false);
+        var i = 0;
+        function next() {
+            if (i >= ids.length) return Promise.resolve(false);
+            var id = ids[i++];
+            return offer(id, mountEl).then(function (shown) {
+                return shown ? true : next();
+            });
+        }
+        return next();
+    }
+
     window.TMRPollPickBridge = {
         offer: offer,
+        offerFirstEligible: offerFirstEligible,
         remove: remove,
         INTENT_KEY: INTENT_KEY,
         /* Test seam only. Overriding this in production would break the

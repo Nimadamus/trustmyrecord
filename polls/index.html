@@ -3326,6 +3326,18 @@
             if (res && res.game) { state.currentGame = res.game; renderGame(); }
             else { await openPoll(state.currentPollId); }
             loadSection();
+            // POLL_PICK_BRIDGE_20260824: the convertible "Who wins" questions
+            // live inside the daily quiz, which submits every answer at once,
+            // so the offer has to be made against the children rather than the
+            // parent. Offers the first convertible one; renders nothing when
+            // every question is a prop, a total or an opinion.
+            try {
+                if (window.TMRPollPickBridge) {
+                    window.TMRPollPickBridge.offerFirstEligible(
+                        answers.map(function (a) { return a.question_id; })
+                    );
+                }
+            } catch (e) {}
         } catch(err) {
             console.error('submitGameVote', err);
             showToast(err && err.message ? err.message : 'Could not submit picks.', 'error');

@@ -197,6 +197,57 @@ test('the prefill script still submits nothing on its own', () => {
   assert.ok(/selectGameBet/.test(PREFILL), 'it preselects through the normal bridge');
 });
 
+/* ------------------------------------------- the daily quiz entry point */
+
+test('a quiz offers the first convertible question and stops asking', async () => {
+  const answers = { 855: { eligible: false, reason: 'metric_not_convertible' },
+                    856: { eligible: false, reason: 'metric_not_convertible' },
+                    857: ELIGIBLE,
+                    858: ELIGIBLE };
+  const asked = [];
+  const dom = new JSDOM('<!doctype html><html><body><main><div id="pollDetail"></div></main></body></html>',
+    { url: 'https://trustmyrecord.com/polls/', runScripts: 'outside-only' });
+  const win = dom.window;
+  win.api = { ready: Promise.resolve(), request(p) {
+    const m = p.match(/polls\/(\d+)\/pick-bridge/);
+    if (m) { asked.push(Number(m[1])); return Promise.resolve(answers[m[1]]); }
+    return Promise.resolve({ picks: { total: 3 } });
+  } };
+  win.gtag = () => {};
+  win.eval(SCRIPT);
+  win.TMRPollPickBridge._setNavigate(() => {});
+  const shown = await win.TMRPollPickBridge.offerFirstEligible([855, 856, 857, 858]);
+  await new Promise((r) => setImmediate(r));
+  assert.strictEqual(shown, true);
+  assert.deepStrictEqual(asked, [855, 856, 857], 'must stop at the first eligible, not ask 858');
+  assert.strictEqual(win.document.querySelectorAll('#tmr-poll-bridge').length, 1);
+});
+
+test('a quiz of nothing but props renders nothing', async () => {
+  const dom = new JSDOM('<!doctype html><html><body><main><div id="pollDetail"></div></main></body></html>',
+    { url: 'https://trustmyrecord.com/polls/', runScripts: 'outside-only' });
+  const win = dom.window;
+  win.api = { ready: Promise.resolve(),
+    request: () => Promise.resolve({ eligible: false, reason: 'metric_not_convertible' }) };
+  win.gtag = () => {};
+  win.eval(SCRIPT);
+  const shown = await win.TMRPollPickBridge.offerFirstEligible([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.strictEqual(shown, false);
+  assert.strictEqual(win.document.getElementById('tmr-poll-bridge'), null);
+});
+
+test('an empty answer list asks nothing at all', async () => {
+  const dom = new JSDOM('<!doctype html><html><body><main></main></body></html>',
+    { url: 'https://trustmyrecord.com/polls/', runScripts: 'outside-only' });
+  const win = dom.window;
+  let calls = 0;
+  win.api = { ready: Promise.resolve(), request: () => { calls += 1; return Promise.resolve({}); } };
+  win.gtag = () => {};
+  win.eval(SCRIPT);
+  assert.strictEqual(await win.TMRPollPickBridge.offerFirstEligible([]), false);
+  assert.strictEqual(calls, 0);
+});
+
 /* --------------------------------------------------------------- hygiene */
 
 test('declining removes the strip and records why', async () => {
