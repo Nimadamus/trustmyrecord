@@ -64,13 +64,13 @@ const REQUIRED = [
   // arrives just stops being 60% wider and two lines taller.
   // font-size held at 77px (not the page's further 1.25x pass) for the same
   // wrap-headroom reason as the column width above; margin still scaled.
-  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:77px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:28px 0 24px}",
+  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:70px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}",
   // The fallback faces themselves, and the tuned ratios. Measured, not guessed
   // — see tests/hero-fallback-width-sweep.cjs.
   "@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');",
   "size-adjust:78.8%;ascent-override:126.9%;descent-override:25.4%;line-gap-override:0%}",
   "size-adjust:70.8%;ascent-override:141.2%;descent-override:28.2%;line-gap-override:0%}",
-  '.hero .cta{display:flex;align-items:center;gap:39px;margin-top:36px;flex-wrap:wrap}',
+  '.hero .cta{display:flex;align-items:center;gap:39px;margin-top:32px;flex-wrap:wrap}',
   // Hero right-hand card (.spot) — approved shell. The card's CONTENTS were
   // replaced on 2026-08-16 at Nima's instruction (Capper of the Week -> LIVE
   // COMPETITION), so the rules that described the old card's identity block,
