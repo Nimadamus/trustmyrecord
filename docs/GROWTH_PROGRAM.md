@@ -312,25 +312,34 @@ allowlist.
 
 ---
 
-## The poll bridge, and why game totals rarely fire
+## The poll bridge, and the 8.5 that made totals unconvertible
 
 The Poll to Pick bridge converts a poll vote into an ordinary verified pick. It supports two poll
 metrics: `winner` (maps onto h2h) and `game_total` (maps onto totals, behind a strict exact-line gate).
 
-**The exact-line gate is working correctly and almost never passes.** Measured on production
-2026-08-24: every one of the 78 `game_total` options ever generated is hardcoded to **8.5**, while the
-live board ranges 6.5 to 11 and only **1 of 22** upcoming games sits at 8.5. Replaying the gate over
-all 78 polls against the live board: **zero pass**. All three currently active totals polls were
-refused (8.5 against boards of 7, 9 and 7).
+**The generator used to publish a hardcoded 8.5 for every MLB game total** (`mlbQuizBot.gameQuestion`,
+`const line = 8.5`). Measured 2026-08-24: all 78 `game_total` options ever created were 8.5, while the
+live board ranged 6.5 to 11 and only 1 of 22 upcoming games sat at 8.5. Replaying the exact-line gate
+over all 78: **zero passed**. The gate was correct; the generated number was fiction.
 
-The gate is not the problem. **The quiz generator writing a fixed 8.5 instead of the market's real
-total is the problem.** If the generator wrote the board's line, essentially every `game_total` poll
-would qualify, which is the roughly 4x exposure increase originally estimated. That is a generator
-change and has not been made.
+**Fixed 2026-08-24** (backend `e7340cf`). `attachBoardTotals` reuses the bridge's own board reader —
+`readBoardSnapshot`, `findBoardGame`, `boardTotalsFor` — so the generator and the bridge read the same
+board through the same code and cannot disagree. A game with no board row, an ambiguous matchup, no
+totals market or an unusable number gets the **winner question instead**; nothing is manufactured.
 
-Volume for context, last 14 days: `player_stat` 108, `game_total` 24, `winner` 19. So totals are 1.26x
-winner in raw volume, not 4x, and after the gate they contribute close to nothing until the generator
-is fixed.
+Replayed on the live board after the fix: **24 of 25** upcoming games get a real total, and all 24 would
+pass the gate at that instant. Distribution: 7.5 ×7, 8 ×5, 7 ×4, 9 ×3, 11 ×2, 6.5 ×2, 8.5 ×1.
+
+Two things worth remembering:
+
+- **Whole totals push.** `ouRanges` used `ceil`/`floor`, which made BOTH buckets true at a whole line —
+  a push graded as a win. Over 7 is now 8+, Under 7 is 6 or fewer, and exactly 7 matches neither, which
+  is how `pollAutoGrade` already voids a question (`VOID_NO_OPTION`). No new grading logic.
+- **The bridge gate is unchanged and still required.** A poll generated at 7.5 against a board that has
+  since moved to 8 stays refused. Generation-time accuracy and conversion-time integrity are separate
+  jobs.
+
+Volume, last 14 days: `player_stat` 108, `game_total` 24, `winner` 19.
 
 ### Reverse direction, deliberately not built
 
