@@ -394,7 +394,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    Enforced by tests/homepage-approved-baseline-lock-test.js (every push) and
    the homepage geometry checks in tests/regression-lock.spec.js.
    ============================================================================ */
-.hero{position:relative;overflow:hidden;padding:12px 0 0;display:flex;flex-direction:column;
+.hero{position:relative;overflow:hidden;padding:0 0 0;display:flex;flex-direction:column;
   min-height:calc(100vh - var(--header-height));
   min-height:calc(100dvh - var(--header-height));
   min-height:calc(100svh - var(--header-height));
@@ -420,20 +420,19 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 624px;gap:86px;align-items:center}
 .eyebrow{display:inline-flex;align-items:center;gap:15px;padding:10px 24px;border-radius:1499px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:20px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:10px;height:10px;border-radius:50%;background:var(--brand-lt)}
-.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:68px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:20px 0 16px}
+.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:77px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:28px 0 24px}
 .hero h1.hh em{font-style:normal;color:var(--brand-lt)}
-.hero p.sub{color:#B7CEE4;font-size:26px;line-height:1.5;max-width:900px;font-weight:450}
-.hero .cta{display:flex;align-items:center;gap:39px;margin-top:22px;flex-wrap:wrap}
-.hero .cta .btn.lg{height:72px}
+.hero p.sub{color:#B7CEE4;font-size:28px;line-height:1.6;max-width:900px;font-weight:450}
+.hero .cta{display:flex;align-items:center;gap:39px;margin-top:36px;flex-wrap:wrap}
 
 /* verified-record card */
 .spot{background:var(--panel);border-radius:18px;box-shadow:0 9px 24px rgba(2,12,22,.22), 0 39px 84px rgba(2,12,22,.26);overflow:hidden}
 .spot .rail{height:6px;background:linear-gradient(90deg,var(--gold-b),var(--brand-lt))}
-.spot .hd{padding:18px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.spot .hd{padding:23px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
 .spot .hd b{font-size:19px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:13px}
 .spot .bd{padding:33px 36px 30px}
 .vchip{display:inline-flex;align-items:center;gap:8px;padding:6px 15px;border-radius:8px;background:var(--brand-soft);color:var(--brand-dk);font-size:18px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(12,148,140,.28)}
-.spot .ft{padding:16px 36px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:21px;color:var(--muted);font-weight:600}
+.spot .ft{padding:23px 36px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:21px;color:var(--muted);font-weight:600}
 
 /* ---------------------------------------------------------------------------
    LIVE COMPETITION MODULE  (hero right-hand card, replaced Capper of the Week
@@ -456,7 +455,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .spot.comp .hd{gap:21px}
 .spot.comp .hd b{white-space:nowrap}
 .spot.comp .hd a{white-space:nowrap}
-.spot.comp .bd{padding:22px 36px 20px;display:flex;flex-direction:column}
+.spot.comp .bd{padding:30px 36px 28px;display:flex;flex-direction:column}
 /* The permanent header line. Never rotates, never animates.
    Barlow Condensed, the hero's own display face, so the card answers the H1
    across the grid in the same voice. It is a <div>, not a heading: this is
@@ -484,7 +483,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 }
 
 /* The rotating stage. Height is fixed here and nowhere else. */
-.comp-stage{position:relative;margin-top:16px;height:186px;overflow:hidden}
+.comp-stage{position:relative;margin-top:20px;height:220px;overflow:hidden}
 .comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);opacity:0;pointer-events:none}
 .comp-view.is-on{opacity:1;pointer-events:auto}
 /* Outgoing: falls back and dims rather than sliding away, so two layers never
@@ -612,10 +611,10 @@ a.comp-nm:hover{color:var(--brand-dk)}
    put -- .comp-stage is re-declared per tier, never left to the content. */
 @media (max-width:1399px){
   .comp-title{font-size:43px}
-  .comp-stage{height:184px}
+  .comp-stage{height:218px}
 }
 @media (max-width:1024px){
-  .comp-stage{height:182px}
+  .comp-stage{height:216px}
 }
 @media (max-width:520px){
   /* The qualifier note is the first thing to go: ellipsised mid-word
