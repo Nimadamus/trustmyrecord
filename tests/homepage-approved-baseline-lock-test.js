@@ -64,7 +64,7 @@ const REQUIRED = [
   // arrives just stops being 60% wider and two lines taller.
   // font-size held at 77px (not the page's further 1.25x pass) for the same
   // wrap-headroom reason as the column width above; margin still scaled.
-  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:70px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}",
+  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:67px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}",
   // The fallback faces themselves, and the tuned ratios. Measured, not guessed
   // — see tests/hero-fallback-width-sweep.cjs.
   "@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');",
