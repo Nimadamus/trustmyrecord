@@ -158,7 +158,10 @@ check('skip is plain HTML and works without JavaScript', () => {
 });
 
 check('every CTA has a real href even before JavaScript runs', () => {
-  ['href="/polls/"', 'href="/trivia/"', 'href="/sportsbook/?first_pick=1"'].forEach((h) => {
+  // ZERO_PICK_COVERAGE_20260824: the board CTA dropped ?first_pick=1. Nothing
+  // ever read that parameter, and /sportsbook/ already opens the in-season
+  // board with live odds via sportsbook-default-board.js.
+  ['href="/polls/"', 'href="/trivia/"', 'href="/sportsbook/"'].forEach((h) => {
     assert.ok(html.includes(h), 'missing pre-rendered CTA target ' + h);
   });
 });

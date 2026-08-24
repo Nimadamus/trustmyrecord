@@ -46,8 +46,8 @@ const ok = (name, cond, detail) => {
 // the homepage and a different one everywhere else.
 const SHARED = [
   '<span class="tmr-fp-reminder__icon" aria-hidden="true">&#9673;</span>',
-  '<span class="tmr-fp-reminder__text"><strong>Your record is waiting.</strong> Submit your first pick.</span>',
-  '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/?first_pick=1">Go to Sportsbook</a>',
+  '<span class="tmr-fp-reminder__text"><strong>Start your verified record.</strong> Lock your first pick.</span>',
+  '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/">Go to Sportsbook</a>',
   '<button type="button" class="tmr-fp-reminder__close" aria-label="Dismiss reminder">&times;</button>',
 ];
 SHARED.forEach((frag) => {

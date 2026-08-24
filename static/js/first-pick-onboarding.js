@@ -4,11 +4,25 @@
  * Turns a fresh registration into an active pick maker instead of dropping
  * them on a generic page.
  *
- *   /register/  -> redirects to /sportsbook/?first_pick=1
+ *   /register/  -> /welcome/ since WELCOME_20260809 (it used to come straight
+ *                  here to /sportsbook/?first_pick=1). ?first_pick=1 is a dead
+ *                  marker: nothing reads it, so the CTAs below just link to
+ *                  /sportsbook/, where sportsbook-default-board.js already
+ *                  opens the in-season board with live odds.
  *   /sportsbook/ -> welcome panel + 3-step progress + CTA that scrolls to the
  *                   board and highlights the pick-entry area
  *   first lock  -> "Your first pick is locked" confirmation modal
- *   other pages -> small "Your record is waiting" reminder strip
+ *   other pages -> small "Start your verified record" reminder strip
+ *
+ * WHERE THIS RUNS (ZERO_PICK_COVERAGE_20260824)
+ *
+ * Home, /sportsbook/, /profile/, and now /today/, /polls/, /forum/, /trivia/
+ * and /welcome/. Before that widening, members with 1+ picks were prompted on
+ * five surfaces by pick-progress-nudge.js while members with ZERO picks were
+ * prompted on three, and not on the page registration actually lands them on.
+ * The two scripts are complementary and never both render: this one owns 0
+ * picks, that one owns 1 or more, and neither shows anything at 2+ except its
+ * own later rungs.
  *
  * Eligibility is decided by the BACKEND (GET /api/picks/activation-status),
  * never by localStorage alone, so:
@@ -119,9 +133,52 @@
     // when the answer cannot be determined (never guess "eligible" on error —
     // an existing user must not be shown a new-user prompt because the API
     // hiccuped).
+    /* ZERO_PICK_COVERAGE_20260824: /today/ and /welcome/ deliberately do not
+       load backend-api.js, so window.api is undefined there and this file used
+       to no-op on the two surfaces that matter most - the page registration
+       lands on, and the daily dashboard. This is the same plain-fetch fallback
+       welcome-checklist.js already uses on that page: same base URL resolution,
+       same token keys, same 6s timeout. It is used ONLY when window.api is
+       absent, so every page that has the real client keeps using it. */
+    var PLAIN_API_BASE = (window.TMR_API_BASE || window.API_BASE_URL ||
+        'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+    var PLAIN_TIMEOUT_MS = 6000;
+
+    function plainToken() {
+        try {
+            return localStorage.getItem('trustmyrecord_token') ||
+                   localStorage.getItem('tmr_token') ||
+                   localStorage.getItem('accessToken') ||
+                   localStorage.getItem('access_token') || '';
+        } catch (e) { return ''; }
+    }
+
+    function plainGet(path) {
+        var t = plainToken();
+        if (!t) return Promise.reject(new Error('no token'));
+        var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+        var timer = setTimeout(function () { try { ctrl && ctrl.abort(); } catch (e) {} }, PLAIN_TIMEOUT_MS);
+        return fetch(PLAIN_API_BASE + '/api' + path, {
+            signal: ctrl ? ctrl.signal : undefined,
+            headers: { Authorization: 'Bearer ' + t }
+        }).then(function (r) {
+            clearTimeout(timer);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }).catch(function (e) { clearTimeout(timer); throw e; });
+    }
+
     function fetchActivationStatus(attempt) {
         attempt = attempt || 1;
-        if (!window.api || typeof window.api.request !== 'function') return Promise.resolve(null);
+        if (!window.api || typeof window.api.request !== 'function') {
+            return plainGet('/picks/activation-status').then(function (data) {
+                if (!data || typeof data.hasPicks !== 'boolean') return null;
+                return data;
+            }).catch(function (err) {
+                log('activation-status (plain) failed', (err && err.message) || err);
+                return null;
+            });
+        }
         var ready = window.api.ready && typeof window.api.ready.then === 'function'
             ? window.api.ready.catch(function () {})
             : Promise.resolve();
@@ -452,10 +509,10 @@
             bar.setAttribute('role', 'status');
             bar.innerHTML =
                 '<span class="tmr-fp-reminder__icon" aria-hidden="true">&#9673;</span>' +
-                '<span class="tmr-fp-reminder__text"><strong>Your record is waiting.</strong> Submit your first pick.</span>' +
+                '<span class="tmr-fp-reminder__text"><strong>Start your verified record.</strong> Lock your first pick.</span>' +
                 (isSportsbook()
                     ? '<button type="button" class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta">Choose a Game</button>'
-                    : '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/?first_pick=1">Go to Sportsbook</a>') +
+                    : '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/">Go to Sportsbook</a>') +
                 '<button type="button" class="tmr-fp-reminder__close" aria-label="Dismiss reminder">&times;</button>';
 
             placement.parent.insertBefore(bar, placement.before || null);
