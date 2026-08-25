@@ -1,3 +1,9 @@
+/* Republished 2026-08-25 under a new content hash. The previous name was
+   requested once before GitHub Pages had published it, and Cloudflare cached
+   that 404 for four hours against a URL the homepage had already started
+   asking for - so the whole file was missing from a page that otherwise
+   looked fine. Never fetch a hashed asset by its plain URL until the origin
+   is serving it; a cache-busting query is free. */
 /* =============================================================================
    TrustMyRecord homepage — live production data binding
    Fills the approved v2 layout from real API data only. Never invents values:
