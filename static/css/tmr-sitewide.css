@@ -5350,3 +5350,19 @@ html body.tmr-site-shell .tmr-global-nav__bell .tmr-global-nav__bell-badge:empty
         margin-left: auto !important;
     }
 }
+
+/* .feed-tabs is a TAB STRIP, not a card, and it must not be caught by the
+   blanket overflow:hidden the card lists above apply to .tmr-site-shell
+   panels. Measured 2026-08-25 at 390px: the strip content is 923px wide in a
+   346px box, so "Milestones", "Following" and the tabs after them were clipped
+   with no way to reach them. It scrolls instead - the same pattern the
+   handicappers, profile and polls strips already use. Placed last so it beats
+   the card rules it ties with, and !important because the second of those
+   lists carries !important itself. */
+body.tmr-site-shell .feed-tabs{
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+body.tmr-site-shell .feed-tabs::-webkit-scrollbar{display:none}
