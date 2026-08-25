@@ -13780,7 +13780,11 @@
       .ca-hl-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
       .ca-hl-body { margin-top: 6px; font-size: 13px; font-weight: 700; color: #e7edf6; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
       .ca-hl-meta { margin-top: 7px; font-size: 11px; color: #8391a7; font-weight: 700; }
-      @media (max-width: 760px) { .ca-highlights { grid-template-columns: 1fr; } }
+      /* minmax(0,1fr), not 1fr: the bare track took its minimum from the card's
+         min-content, so on a 390px phone .ca-hl stayed 580px inside a 360px
+         column and .tmrx-section's overflow:hidden cut 219px of the Most
+         Recent Thread card away with no way to reach it (2026-08-25). */
+      @media (max-width: 760px) { .ca-highlights { grid-template-columns: minmax(0, 1fr); } }
 
       /* ---- Forum Activity section ----
          A stacked card list, deliberately not a .tmrx-table: tables here are
