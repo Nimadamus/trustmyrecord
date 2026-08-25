@@ -113,6 +113,41 @@ assert.ok(!/lane\.innerHTML\s*=\s*''/.test(js),
 assert.ok(js.includes('data-game-pk="'),
   'ticker cards must carry data-game-pk so both halves of a doubleheader stay distinct');
 
+/* ---------- 5b. a page must outlive the longest line on it ------------------ */
+/* The page rotation and the per-card dwell are two numbers in two places that
+   have to be read together: if a card can hold a line for longer than its page
+   stays on screen, the slowest cards are GUARANTEED to be slid away mid
+   sentence and that line is never read in full. This shipped broken once - the
+   band was raised to 14-22s while the page stayed on 18s - and the comment
+   above it claimed the invariant held. Hence a test rather than a comment. */
+/* Plain indexOf, no regex: a backslash class written through a shell heredoc
+   has arrived here halved more than once, and a pattern that silently matches
+   nothing turns this whole check into a test that always passes. */
+const numOf = (name) => {
+  const marker = 'var ' + name + ' = ';
+  const at = js.indexOf(marker);
+  assert.ok(at !== -1, 'cannot find ' + name + ' in tmr-home-live.js');
+  const n = parseInt(js.slice(at + marker.length), 10);
+  assert.ok(Number.isFinite(n), name + ' is not a number in tmr-home-live.js');
+  return n;
+};
+const rotate = numOf('TICKER_ROTATE_MS');
+const maxDwell = numOf('POSTGAME_DWELL_MIN_MS')
+  + (numOf('POSTGAME_DWELL_STEPS') - 1) * numOf('POSTGAME_DWELL_STEP_MS');
+assert.ok(rotate >= maxDwell,
+  'TICKER_ROTATE_MS (' + rotate + 'ms) is shorter than the longest card dwell ('
+  + maxDwell + 'ms) - the slowest cards get carried off screen mid-line');
+
+/* ---------- 5c. hidden pages must not burn their lines ---------------------- */
+/* Pages are slid sideways, so every card stays in the DOM and a naive
+   document-wide query counts down cards nobody can see. */
+assert.ok(js.includes('var all = visibleStrips();'),
+  'the insight countdown is not scoped to the visible page - cards on pages that '
+  + 'are slid off screen advance their lines with nobody watching');
+assert.ok(js.includes('resetVisibleDwell();'),
+  'a page sliding into view does not restart its cards - the line on screen '
+  + 'inherits whatever was left of the last countdown instead of a full dwell');
+
 /* ---------- 6. the document and its hashed JS twin are the same build ---------- */
 const buildAttr = /data-tmr-build="([0-9a-f]{12})"/.exec(html);
 assert.ok(buildAttr, 'index.html is missing data-tmr-build');

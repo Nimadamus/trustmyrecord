@@ -394,10 +394,16 @@ function insightStrip(g) {
       '</span>';
   }
   if (!lines) return '';
+  /* Lockstep with insightStrip() in tmr-home-live.js: a LIVE card carries the
+     same dense lines a final does, so it gets the same dwell. If these two
+     disagree the card visibly re-times the moment the client script takes over,
+     which is exactly what the edge/client parity test exists to catch. */
   const post = g.insight_mode === 'postgame';
-  return `<span class="gm-in${post ? ' is-post' : ''}" data-i="0"` +
-    ` data-mode="${post ? 'postgame' : 'pregame'}"` +
-    ` data-dwell="${post ? postgameDwell(g) : INSIGHT_ROTATE_MS}">${lines}</span>`;
+  const live = g.insight_mode === 'live';
+  const dense = post || live;
+  return `<span class="gm-in${dense ? ' is-post' : ''}" data-i="0"` +
+    ` data-mode="${post ? 'postgame' : live ? 'live' : 'pregame'}"` +
+    ` data-dwell="${dense ? postgameDwell(g) : INSIGHT_ROTATE_MS}">${lines}</span>`;
 }
 
 function tickerHtml(games) {

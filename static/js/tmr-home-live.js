@@ -108,7 +108,12 @@
      highlights each up a few seconds longer. 18s on a group of cards - a card
      is on screen comfortably longer than its longest highlight dwell, so a
      line always finishes and usually advances before the group comes round. */
-  var TICKER_ROTATE_MS = 18000;        // dwell time on each group before advancing
+  /* 24s, and the number is NOT free-floating: it has to clear the top of the
+     postgame dwell band below (22s). At 18s it did not, so the two slowest
+     cards on the row were guaranteed to be carried off screen mid-line - the
+     comment above claimed the opposite and was simply wrong. A page now
+     outlives its longest highlight with room to spare. */
+  var TICKER_ROTATE_MS = 24000;        // dwell time on each group before advancing
   /* PREGAME lines. Originally "around 4-6 seconds" (Nima, 2026-08-14); he asked
      on 2026-08-24 for every timing to sit a few seconds longer, so 8s. The
      per-card offset below still matters more than the interval: without it
@@ -241,12 +246,21 @@
     }
     if (!lines) return '';
     var post = g.insight_mode === 'postgame';
+    /* A LIVE CARD IS READ LIKE A FINAL ONE. Live games now carry the same dense
+       highlight lines finals do - a full pitching line, a batting line, an
+       ejection - and those were still rotating on the 8s PREGAME beat, which is
+       the beat meant for "the total sits at 8.5". A stat line cannot be read in
+       eight seconds. It gets the postgame dwell because it is postgame-shaped
+       text; `post` still decides the MARKUP, so data-mode keeps telling the
+       truth about which mode the card is in. */
+    var live = g.insight_mode === 'live';
+    var dense = post || live;
     /* aria-live is deliberately OFF: a screen reader must not be interrupted
        every few seconds by a strip nobody asked to hear. The whole set is in the
        DOM, so all of it is reachable by reading the card. */
-    return '<span class="gm-in' + (post ? ' is-post' : '') + '" data-i="0"' +
-      ' data-mode="' + (post ? 'postgame' : 'pregame') + '"' +
-      ' data-dwell="' + (post ? postgameDwell(g) : INSIGHT_ROTATE_MS) + '">' +
+    return '<span class="gm-in' + (dense ? ' is-post' : '') + '" data-i="0"' +
+      ' data-mode="' + (post ? 'postgame' : live ? 'live' : 'pregame') + '"' +
+      ' data-dwell="' + (dense ? postgameDwell(g) : INSIGHT_ROTATE_MS) + '">' +
       lines + '</span>';
   }
 
@@ -652,6 +666,7 @@
     var lane = el('.ticker .ticker-games'); if (!lane) return;
     var track = lane.querySelector('.ticker-track'); if (!track) return;
     track.style.transform = 'translateX(-' + (tkPageIndex * 100) + '%)';
+    resetVisibleDwell();
     /* The lane label names the visible row: "Today" for the MLB slate, "NFL"
        for the football row (those games are mostly later in the week, so
        calling them Today would be wrong). Text node only - the dot and the
@@ -731,6 +746,25 @@
     return isFinite(d) && d >= INSIGHT_TICK_MS ? d : INSIGHT_ROTATE_MS;
   }
 
+  /* The cards on the page currently slid into view. Falls back to the whole
+     strip if the pager markup is not there, so a single-page row behaves
+     exactly as it did before. */
+  function visibleStrips() {
+    var lane = el('.ticker .ticker-games');
+    var track = lane && lane.querySelector('.ticker-track');
+    var page = track && track.children[tkPageIndex];
+    return (page || document).querySelectorAll('.gm-in');
+  }
+
+  /* A LINE STARTS ITS CLOCK WHEN IT BECOMES READABLE, not when it was drawn.
+     Called as a page slides in: the countdown is cleared so each card gives its
+     current line a full dwell in front of the reader instead of inheriting
+     whatever fraction was left over from the last time round. */
+  function resetVisibleDwell() {
+    var strips = visibleStrips();
+    for (var i = 0; i < strips.length; i++) strips[i].removeAttribute('data-left');
+  }
+
   function startInsightRotate() {
     stopInsightRotate();
     var strips = document.querySelectorAll('.ticker .gm-in');
@@ -749,7 +783,13 @@
     inRotTick = 0;
     inRotTimer = setInterval(function () {
       if (tkPaused || document.hidden) return;
-      var all = document.querySelectorAll('.ticker .gm-in');
+      /* ONLY THE PAGE THAT IS ON SCREEN. The pages are slid sideways with a
+         transform, so every card in the row stays in the DOM and matched this
+         query - which meant a card sitting on page two counted down and
+         advanced its lines with nobody watching. Over a couple of rotations a
+         reader could arrive to find the good line already spent, and the whole
+         point of writing ninety-odd of them is that they get READ. */
+      var all = visibleStrips();
       for (var n = 0; n < all.length; n++) {
         var strip = all[n];
         if (strip.querySelectorAll('.gm-in-l').length < 2) continue;

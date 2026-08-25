@@ -102,9 +102,29 @@ games.forEach((g) => {
 /* The fixture has to actually exercise both modes, or this test passes by
    covering nothing. */
 const finals = games.filter((g) => g.insight_mode === 'postgame');
-const pregame = games.filter((g) => g.insight_mode !== 'postgame' && (g.insights || []).length);
+/* 'live' is excluded explicitly: it is not a pregame card and counting it as
+   one would let the pregame guard below pass on a fixture that has no pregame
+   card in it at all. */
+const pregame = games.filter((g) => g.insight_mode !== 'postgame'
+  && g.insight_mode !== 'live' && (g.insights || []).length);
 if (!finals.length) failures.push('fixture contains no postgame card - parity is untested for FINAL games');
 if (!pregame.length) failures.push('fixture contains no pregame card - parity is untested for the pregame strip');
+/* A LIVE card takes its own branch in insightStrip - it is postgame-shaped text
+   on a game still being played, so it draws the postgame dwell while its
+   data-mode still reads "live". That branch exists in two files and this is the
+   only thing that checks they agree. */
+const liveCards = games.filter((g) => g.insight_mode === 'live');
+if (!liveCards.length) failures.push('fixture contains no live card - parity is untested for in-progress games');
+liveCards.forEach((g) => {
+  const html = client.insightStrip(g);
+  if (html.indexOf('data-mode="live"') === -1) {
+    failures.push(`live card ${g.away}@${g.home} does not report data-mode="live"`);
+  }
+  const dwell = Number((/data-dwell="(\d+)"/.exec(html) || [])[1]);
+  if (dwell !== client.postgameDwell(g)) {
+    failures.push(`live card ${g.away}@${g.home} rotates on ${dwell}ms, not the postgame dwell - a stat line cannot be read on the pregame beat`);
+  }
+});
 
 /* THE BOTTOM LINE LABEL. The client and the worker each join `team_label` to
    the text themselves, so a fixture carrying no labels would compare two
@@ -119,4 +139,4 @@ if (failures.length) {
 }
 
 console.log(`ticker edge/client parity passed (${compared} comparisons across ${games.length} cards: `
-  + `${finals.length} postgame, ${pregame.length} pregame, ${labelled} labelled)`);
+  + `${finals.length} postgame, ${liveCards.length} live, ${pregame.length} pregame, ${labelled} labelled)`);
