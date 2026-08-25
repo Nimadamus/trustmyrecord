@@ -84,6 +84,17 @@
         .hgw-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
         .hgw-table th, .hgw-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #D2DEEA; color: var(--tmrp-text-secondary); }
         .hgw-table th { color: var(--tmrp-text-primary); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+        /* tmr-sitewide.css puts min-width:640px on every table inside
+           .tmr-site-shell, which is right for data tables that sit in a scroll
+           wrapper and wrong for these, which have none: at 390px the table stayed
+           640px wide and the last column ran off the screen. These are three
+           columns of prose, so the cells wrap rather than the table scrolling -
+           swiping sideways to read a definition is worse than a narrow column
+           (2026-08-25). */
+        @media (max-width: 640px) {
+          .hgw-table { table-layout: fixed !important; min-width: 0 !important; width: 100% !important; }
+          .hgw-table th, .hgw-table td { padding: 8px 9px; font-size: 12.5px; overflow-wrap: anywhere; }
+        }
         .hgw-formula { background: rgba(7,24,42,0.02); border: 1px solid #D2DEEA; border-radius: 10px; padding: 14px 16px; margin-top: 12px; font-family: monospace; font-size: 13.5px; color: var(--tmrp-text-primary); line-height: 1.8; overflow-x: auto; }
         .hgw-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
     </style>

@@ -3553,3 +3553,18 @@ select.pitcher-select option {
     .rm-block h5 { color: #cdd7ee; }
     .bx-sub-row td, .bx-sub-row th { color: #9aa6c0; }
 }
+
+/* Simulator hero on a phone (2026-08-25). The @media(max-width:920px) step at
+   line ~2179 lowers .sim-hero h1 to clamp(40px,15vw,64px), but a later
+   unconditioned rule re-declares it as clamp(56px,8vw,116px) and wins on source
+   order, so the floor stayed 56px at every width. Measured at 390px: "MLB
+   Simulator Season Mode" ran to three lines and "My Saved Simulations" to two.
+   Restated here, last in the file, so the phone step actually applies. */
+@media (max-width: 640px) {
+    .sim-hero h1,
+    .mlb-simulator-page .sim-hero h1 {
+        font-size: clamp(28px, 9vw, 38px);
+        line-height: 1.02;
+    }
+    .sim-subtitle { font-size: 15px; }
+}

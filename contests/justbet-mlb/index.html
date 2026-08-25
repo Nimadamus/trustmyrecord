@@ -270,9 +270,12 @@
             letter-spacing: 0.04em;
         }
         @media (max-width: 720px) {
-            .hero-grid{ grid-template-columns: 1fr; }
+            /* minmax(0,1fr), not 1fr: a bare 1fr track takes its minimum from the
+               item's min-content, so these cards stayed 484-688px wide inside a
+               336px column on a 390px phone and ran off the screen (2026-08-25). */
+            .hero-grid{ grid-template-columns: minmax(0, 1fr); }
 
-            .signup-banner{ grid-template-columns: 1fr; }
+            .signup-banner{ grid-template-columns: minmax(0, 1fr); }
             .cta-primary { width: 100%; justify-content: center; }
         }
 
@@ -388,7 +391,7 @@
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 16px;
         }
-        @media (max-width: 860px) { .reg-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 860px) { .reg-grid { grid-template-columns: minmax(0, 1fr); } }
         .reg-card {
             border: 1px solid var(--line);
             background: var(--panel-2);
@@ -480,6 +483,12 @@
             border-radius: 12px;
             overflow: hidden;
         }
+        /* tmr-sitewide.css puts min-width:640px on every table inside
+           .tmr-site-shell. That is right for the data tables that sit in a scroll
+           wrapper and wrong for this signup board, which has none: at 390px the
+           table stayed 640px inside a 266px card and ran off the screen. The
+           board scrolls sideways on its own instead (2026-08-25). */
+        .reg-board { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .reg-board table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
         .reg-board th, .reg-board td {
             text-align: left;
