@@ -662,9 +662,30 @@
     startTickerRotate();
   }
 
-  function applyTickerPage() {
+  /* THE PAGE THAT IS LEAVING TURNS ITS CARDS OVER ONE MORE TIME.
+
+     A card is only on screen for the slice of the carousel its own page
+     gets - one page in four means three quarters of the loop spent frozen on
+     whichever line it was showing when it slid off. Without this, a reader
+     who waits for a row of finals to come back round is shown the line they
+     already read, and a ten line recap needs the best part of an hour to be
+     seen. Advancing on the way OUT costs nothing (nobody is reading a page
+     that is sliding away) and means every visit opens on something new. */
+  function advanceLeavingPage(track, fromIndex) {
+    var page = track && track.children[fromIndex];
+    if (!page || !page.querySelectorAll) return;
+    var strips = page.querySelectorAll('.gm-in');
+    for (var i = 0; i < strips.length; i++) {
+      if (strips[i].querySelectorAll('.gm-in-l').length < 2) continue;
+      insightAdvance(strips[i]);
+      strips[i].removeAttribute('data-left');
+    }
+  }
+
+  function applyTickerPage(fromIndex) {
     var lane = el('.ticker .ticker-games'); if (!lane) return;
     var track = lane.querySelector('.ticker-track'); if (!track) return;
+    if (fromIndex != null && fromIndex !== tkPageIndex) advanceLeavingPage(track, fromIndex);
     track.style.transform = 'translateX(-' + (tkPageIndex * 100) + '%)';
     resetVisibleDwell();
     /* The lane label names the visible row: "Today" for the MLB slate, "NFL"
@@ -683,8 +704,9 @@
 
   function goTicker(delta) {
     if (tkPageCount <= 1) return;
+    var leaving = tkPageIndex;
     tkPageIndex = (tkPageIndex + delta + tkPageCount) % tkPageCount;
-    applyTickerPage();
+    applyTickerPage(leaving);
     updateTickerNav();
     startTickerRotate();          // manual move resets the dwell timer
   }
@@ -696,19 +718,28 @@
     if (next) next.hidden = !show;
   }
 
+  /* A CHAIN OF TIMEOUTS RATHER THAN ONE INTERVAL, so a paused row does not
+     bank elapsed time and jump two pages the moment the reader leaves it. The
+     window itself is unchanged: a page still holds the row for
+     TICKER_ROTATE_MS. */
   function startTickerRotate() {
     stopTickerRotate();
     if (tkPageCount <= 1) return;
-    tkRotTimer = setInterval(function () {
-      if (tkPaused || document.hidden) return;
-      tkPageIndex = (tkPageIndex + 1) % tkPageCount;
-      applyTickerPage();
-      updateTickerNav();
-    }, TICKER_ROTATE_MS);
+    var step = function () {
+      tkRotTimer = setTimeout(function () {
+        if (tkPaused || document.hidden) { step(); return; }
+        var leaving = tkPageIndex;
+        tkPageIndex = (tkPageIndex + 1) % tkPageCount;
+        applyTickerPage(leaving);
+        updateTickerNav();
+        step();
+      }, TICKER_ROTATE_MS);
+    };
+    step();
   }
 
   function stopTickerRotate() {
-    if (tkRotTimer) { clearInterval(tkRotTimer); tkRotTimer = null; }
+    if (tkRotTimer) { clearTimeout(tkRotTimer); tkRotTimer = null; }
   }
 
   /* ------------------------------------------------- INTEL STRIP ROTATION
@@ -740,10 +771,27 @@
 
   /* A card's own dwell, in milliseconds. Pregame cards all share
      INSIGHT_ROTATE_MS; a FINAL card carries its own value in data-dwell so the
-     denser postgame lines get the 10 to 20 seconds they need to be read. */
+     denser postgame lines get the seconds they need to be read.
+
+     BUT A LINE ONLY COUNTS WHILE ITS CARD IS ON SCREEN. When the row pages,
+     a card is up for TICKER_ROTATE_MS and no longer, so a 22s line inside a
+     24s window means the reader is shown exactly ONE of the ten highlights
+     that were written for that game - and if the per-card stagger pushed the
+     first countdown past 24s, not even one. That is the defect Nima reported
+     on 2026-08-25 ("Colorado-Washington shows only WP/LP"), and it is why
+     the dwell is capped at HALF the window here: two lines per visit, each
+     still inside the ten-to-twenty-second band, instead of one line forever.
+     A row that fits on a single page never pages, never truncates, and keeps
+     the full 14-22s. */
+  function pagedDwellCap() {
+    return Math.floor((TICKER_ROTATE_MS - INSIGHT_TICK_MS) / 2);
+  }
+
   function stripDwell(strip) {
     var d = parseInt(strip.getAttribute('data-dwell'), 10);
-    return isFinite(d) && d >= INSIGHT_TICK_MS ? d : INSIGHT_ROTATE_MS;
+    if (!isFinite(d) || d < INSIGHT_TICK_MS) d = INSIGHT_ROTATE_MS;
+    if (tkPageCount > 1) d = Math.min(d, pagedDwellCap());
+    return Math.max(d, INSIGHT_TICK_MS);
   }
 
   /* The cards on the page currently slid into view. Falls back to the whole
@@ -794,7 +842,18 @@
         var strip = all[n];
         if (strip.querySelectorAll('.gm-in-l').length < 2) continue;
         var left = parseInt(strip.getAttribute('data-left'), 10);
-        if (!isFinite(left)) left = stripDwell(strip) + (n % 5) * INSIGHT_TICK_MS;
+        if (!isFinite(left)) {
+          /* The stagger is what keeps a row of cards from flipping in unison,
+             but it is not worth a card never turning over at all: on a paged
+             row it is trimmed to whatever the page window can still afford. */
+          var dwell = stripDwell(strip);
+          var stagger = (n % 5) * INSIGHT_TICK_MS;
+          if (tkPageCount > 1) {
+            var room = TICKER_ROTATE_MS - INSIGHT_TICK_MS - dwell * 2;
+            if (stagger > room) stagger = room > 0 ? room : 0;
+          }
+          left = dwell + stagger;
+        }
         left -= INSIGHT_TICK_MS;
         if (left > 0) { strip.setAttribute('data-left', String(left)); continue; }
         insightAdvance(strip);

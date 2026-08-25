@@ -12,7 +12,7 @@
     "test:unit": "node scripts/verify-regression.js --static-only",
     "test:security": "node tests/recursion-retry-guard-test.js && node ../trustmyrecord-backend/tests/cors-origin-guard-test.js && node ../trustmyrecord-backend/tests/auth-bruteforce-guard-test.js && node ../trustmyrecord-backend/tests/profile-self-view-gate-test.js && node ../trustmyrecord-backend/tests/arena-challenge-detail-privacy-test.js && node ../trustmyrecord-backend/tests/official-pick-isolation-regression-test.js && node ../trustmyrecord-backend/tests/disputed-pick-soft-delete-test.js && node ../trustmyrecord-backend/tests/gaming-favorite-teams-selfheal-test.js",
     "test:e2e": "playwright test --config=playwright.regression.config.cjs",
-    "test:homepage": "node tests/homepage-approved-baseline-lock-test.js && node tests/homepage-ticker-visibility-lock-test.js && node tests/homepage-no-baked-stats-lock-test.js && node tests/homepage-narrow-viewport-overflow-lock-test.js && node tests/homepage-font-swap-reflow-lock-test.js && node tests/homepage-reminder-strip-lock-test.js && node tests/homepage-activity-strip-lock-test.js && node tests/homepage-live-competition-lock-test.js && node tests/ticker-edge-client-parity-test.js && node tests/postgame-edge-worker-production-proof.cjs && node ../trustmyrecord-backend/tests/home-competition-integrity-test.js",
+    "test:homepage": "node tests/homepage-approved-baseline-lock-test.js && node tests/homepage-ticker-visibility-lock-test.js && node tests/homepage-no-baked-stats-lock-test.js && node tests/homepage-narrow-viewport-overflow-lock-test.js && node tests/homepage-font-swap-reflow-lock-test.js && node tests/homepage-reminder-strip-lock-test.js && node tests/homepage-activity-strip-lock-test.js && node tests/homepage-live-competition-lock-test.js && node tests/ticker-edge-client-parity-test.js && node tests/postgame-edge-worker-production-proof.cjs && node tests/postgame-ticker-browser-proof.cjs && node tests/postgame-ticker-rotation-starvation-test.cjs && node ../trustmyrecord-backend/tests/home-competition-integrity-test.js",
     "test:profile-boot": "node tests/profile-boot-single-declaration-test.js",
     "test:profile-streak": "node tests/profile-streak-single-source-test.js",
     "test:simgate": "node tests/sim-auth-gate-wiring-test.js",
@@ -30,7 +30,8 @@
     "test:blp-e2e": "playwright test --config=playwright.blp.config.cjs",
     "test:blp-live": "playwright test --config=playwright.blp-live.config.cjs",
     "test:notification-toasts": "playwright test --config=playwright.notifications.config.cjs",
-    "verify:notification-toasts-live": "playwright test --config=playwright.notifications-live.config.cjs"
+    "verify:notification-toasts-live": "playwright test --config=playwright.notifications-live.config.cjs",
+    "test:postgame-ticker": "node tests/postgame-ticker-browser-proof.cjs && node tests/postgame-ticker-rotation-starvation-test.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

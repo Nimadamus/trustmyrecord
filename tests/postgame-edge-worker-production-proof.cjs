@@ -171,7 +171,15 @@ function serve(html) {
           const on = lines.filter((l) => l.classList.contains('is-on'));
           const b = on[0] && on[0].querySelector('b');
           const r = c.getBoundingClientRect();
+          const track = document.querySelector('.ticker .ticker-track');
+          const pages = track ? [...track.children] : [];
+          const m = track ? (track.style.transform || '').match(/-?\d+/) : null;
+          const pageEl = c.closest('.ticker-page');
           return {
+            key: c.getAttribute('data-game-pk')
+              || [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@'),
+            onPage: pageEl ? pages.indexOf(pageEl) : -1,
+            shownPage: m ? Math.abs(Number(m[0])) / 100 : 0,
             teams: [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@'),
             final: /is-final/.test((c.querySelector('.st') || {}).className || ''),
             mode: s && s.getAttribute('data-mode'),
@@ -202,11 +210,17 @@ function serve(html) {
     fin.forEach((c) => {
       check(c.mode === 'postgame', `${label} ${c.teams}: mode=${c.mode}, expected postgame`);
       check(!c.probables, `${label} ${c.teams}: stale probables line still under a FINAL game`);
-      check(c.n >= 5 && c.n <= 6, `${label} ${c.teams}: ${c.n} items, expected 5-6`);
+      /* The loop grew from six to ten on 2026-08-24 so a game has something else
+         to say when the rotation comes back to it. */
+      check(c.n >= 5 && c.n <= 10, `${label} ${c.teams}: ${c.n} items, expected 5-10`);
       check(c.onCat === 'decisions', `${label} ${c.teams}: first line is ${c.onCat}, expected decisions`);
       check(/^WP: .+/.test(c.onText), `${label} ${c.teams}: decisions line reads "${c.onText}"`);
-      check(c.dwell >= 10000 && c.dwell <= 20000,
-        `${label} ${c.teams}: dwell ${c.dwell}ms outside the 10-20s band`);
+      /* 14-22s since 2026-08-24, when the lines got denser. On a PAGED row the
+         effective dwell is capped again at runtime so a card turns over more
+         than once before its page slides away - a property of the clock in
+         tmr-home-live.js, not of this attribute. */
+      check(c.dwell >= 14000 && c.dwell <= 22000,
+        `${label} ${c.teams}: dwell ${c.dwell}ms outside the 14-22s band`);
       check(c.dwell !== 5000, `${label} ${c.teams}: stale 5s pregame dwell on a FINAL card`);
       check(!c.clipped, `${label} ${c.teams}: visible line is clipped`);
       check(new Set(c.texts).size === c.texts.length, `${label} ${c.teams}: duplicate line text`);
@@ -238,11 +252,22 @@ function serve(html) {
     /* Rotation actually advances, and lands on a DIFFERENT real sentence. */
     const target = fin[0];
     if (target) {
+      /* BRING IT ON SCREEN FIRST. Cards on a page that is slid off deliberately
+         do not count down, and the arrows are dispatched rather than clicked
+         because hovering the ticker pauses the very rotation being measured. */
+      for (let hop = 0; hop < 12; hop += 1) {
+        const now = (await read()).cards.find((c) => c.key === target.key);
+        if (!now || now.onPage === now.shownPage) break;
+        await page.dispatchEvent('.ticker .tk-next', 'click');
+        await page.waitForTimeout(30);
+      }
       await ctx.clock.runFor(target.dwell + 6000);
       await page.waitForTimeout(60);
       const after = await read();
-      const same = after.cards.find((c) => c.teams === target.teams);
-      check(!!same && same.onIdx === 1,
+      const same = after.cards.find((c) => c.key === target.key);
+      /* ADVANCED, not advanced-to-exactly-one: a long jump may legitimately
+         land further down the list. Standing still is the failure. */
+      check(!!same && same.onIdx > 0,
         `${label} ${target.teams}: did not advance after ${target.dwell}ms (idx ${same && same.onIdx})`);
       check(!!same && same.onText && same.onText !== target.onText,
         `${label} ${target.teams}: visible sentence did not change`);
