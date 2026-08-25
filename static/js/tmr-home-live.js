@@ -713,17 +713,45 @@
      whichever line it was showing when it slid off. Without this, a reader
      who waits for a row of finals to come back round is shown the line they
      already read, and a ten line recap needs the best part of an hour to be
-     seen. Advancing on the way OUT costs nothing (nobody is reading a page
-     that is sliding away) and means every visit opens on something new. */
+     seen. Advancing on the way OUT costs nothing and means every visit opens on
+     something new.
+
+     WHEN THE SLIDE HAS ACTUALLY FINISHED, not on a guess at how long it takes.
+     The track animates transform for half a second, so turning the line over as
+     the page leaves showed the reader a new sentence and swept it away before it
+     could be read - the "flashing too fast" Nima has objected to from the start.
+     Measured: with a 560ms timer the card was STILL inside the lane when it
+     flipped, and a reader got that line for half a second.
+
+     `transitionend` is the only thing that knows when the page is genuinely
+     gone. The timer stays as a fallback for the cases where no transition runs
+     at all - reduced motion, a hidden tab, a browser that drops the event - and
+     is set well clear of the animation. */
+  var TICKER_SLIDE_MS = 500;
   function advanceLeavingPage(track, fromIndex) {
     var page = track && track.children[fromIndex];
     if (!page || !page.querySelectorAll) return;
-    var strips = page.querySelectorAll('.gm-in');
-    for (var i = 0; i < strips.length; i++) {
-      if (strips[i].querySelectorAll('.gm-in-l').length < 2) continue;
-      insightAdvance(strips[i]);
-      strips[i].removeAttribute('data-left');
-    }
+    var done = false;
+    var flip = function () {
+      if (done) return;
+      done = true;
+      track.removeEventListener('transitionend', onEnd);
+      /* The page may have come back in the meantime - a reader on the arrows
+         outruns the animation - and turning over what is on screen is the very
+         thing this exists to avoid. */
+      if (track.children[tkPageIndex] === page) return;
+      var strips = page.querySelectorAll('.gm-in');
+      for (var i = 0; i < strips.length; i++) {
+        if (strips[i].querySelectorAll('.gm-in-l').length < 2) continue;
+        insightAdvance(strips[i]);
+        strips[i].removeAttribute('data-left');
+      }
+    };
+    var onEnd = function (ev) {
+      if (!ev || ev.target !== track || ev.propertyName === 'transform') flip();
+    };
+    track.addEventListener('transitionend', onEnd);
+    setTimeout(flip, TICKER_SLIDE_MS + 400);
   }
 
   function applyTickerPage(fromIndex) {
