@@ -50,7 +50,8 @@ for (const page of ZERO_PICK_SURFACES) {
 }
 
 test('the 1+ pick nudge is never loaded twice either', () => {
-  for (const page of ['index.html', 'profile/index.html', 'today/index.html', 'polls/index.html', 'forum/index.html']) {
+  for (const page of ['index.html', 'profile/index.html', 'today/index.html', 'polls/index.html',
+                      'forum/index.html', 'mlb-simulator/index.html', 'nfl-simulator/index.html']) {
     const hits = (read(page).match(/pick-progress-nudge\.js/g) || []).length;
     assert.strictEqual(hits, 1, page);
   }
@@ -354,6 +355,37 @@ test('the simulator pick prefill is untouched', () => {
   assert.ok(/tmr_sim_pick_intent/.test(prefill));
   assert.ok(/simpick/.test(prefill));
   assert.ok(!/method:\s*'POST'/.test(prefill), 'still never submits');
+});
+
+/* ------------------------------- the ladder is complete on the simulators */
+
+test('both simulator pages carry the whole ladder, each script once', () => {
+  for (const page of ['mlb-simulator/index.html', 'nfl-simulator/index.html']) {
+    const html = read(page);
+    const zero = (html.match(/<script[^>]+src="[^"]*first-pick-onboarding[^"]*"/g) || []).length;
+    const two = (html.match(/<script[^>]+src="[^"]*pick-progress-nudge[^"]*"/g) || []).length;
+    assert.strictEqual(zero, 1, page + ' zero-pick script');
+    assert.strictEqual(two, 1, page + ' pick-two nudge');
+  }
+});
+
+test('the nudge stands down for the MLB panel exactly as the zero-pick strip does', () => {
+  // A member on one pick reads "Make Pick #2" and "Make Your Official
+  // Prediction" as the same ask. The panel's CTA sits with the result they
+  // just produced, so it wins.
+  assert.ok(/function competingPickCta/.test(NUDGE));
+  assert.ok(/#simcConversionPanel a\[href\^="\/sportsbook\/"\]/.test(NUDGE));
+  const render = NUDGE.slice(NUDGE.indexOf('function render('));
+  assert.ok(/competingPickCta\(\)/.test(render.slice(0, 400)), 'render must check first');
+  assert.ok(/standDownWhenAnotherCtaAppears/.test(NUDGE), 'and retire a visible one');
+  assert.ok(/MutationObserver/.test(NUDGE));
+});
+
+test('the simulator pages are not in the nudge suppression list', () => {
+  // The nudge suppresses pages where the member is already picking. A
+  // simulator is not one of those, so the ladder must actually run there.
+  const list = NUDGE.slice(NUDGE.indexOf('SUPPRESSED_PATHS'), NUDGE.indexOf('function log'));
+  assert.ok(!/simulator/.test(list), 'simulators must not be suppressed');
 });
 
 /* ------------------------------------------------------------- no layout */

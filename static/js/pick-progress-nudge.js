@@ -92,6 +92,37 @@
         try { localStorage.setItem(key, value); } catch (e) {}
     }
 
+    /* ANOTHER COMPONENT ALREADY OWNS THIS SCREEN'S PICK CTA
+       (SIM_ACTIVATION_20260825)
+
+       Same rule first-pick-onboarding.js follows, and for the same reason. The
+       MLB simulator's post-result panel renders "Make Your Official Prediction"
+       pointing at the board as soon as a run finishes. For a member on one
+       pick that is the same ask as this strip's "Make Pick #2", so showing
+       both is two prompts for one action. The panel's CTA sits with the result
+       they just produced, so it wins and this stands down.
+
+       Before a run there is no competing CTA, so the strip still appears. The
+       NFL simulator has no such panel and is unaffected. */
+    function competingPickCta() {
+        try {
+            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]');
+        } catch (e) { return false; }
+    }
+
+    /* The panel is built asynchronously after a simulation run. Retire an
+       already-visible strip when it arrives; one observer, then disconnect. */
+    function standDownWhenAnotherCtaAppears() {
+        if (typeof MutationObserver !== 'function' || !document.body) return;
+        var observer = new MutationObserver(function () {
+            if (!competingPickCta()) return;
+            observer.disconnect();
+            remove();
+            log('another pick CTA rendered on this page - nudge retired');
+        });
+        try { observer.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+    }
+
     function suppressedPath() {
         var path = (window.location.pathname || '').toLowerCase();
         for (var i = 0; i < SUPPRESSED_PATHS.length; i++) {
@@ -235,6 +266,10 @@
 
     function render(progress) {
         if (document.getElementById(ELEMENT_ID)) return;
+        if (competingPickCta()) {
+            log('another pick CTA already on screen - not rendering the nudge');
+            return;
+        }
         var msg = messageFor(progress);
         if (!msg) return;
 
@@ -326,6 +361,7 @@
             if (data.picks.total < 1) return;      // zero-pick members belong to the other script
             if (!data.next_gate) return;           // every gate reached
             render(data);
+            standDownWhenAnotherCtaAppears();
         }).catch(function (err) {
             log('my-progress failed', (err && err.message) || err);
         });
