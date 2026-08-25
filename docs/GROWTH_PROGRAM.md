@@ -290,6 +290,172 @@ against the second-pick conversion, which is why those events carry the gate and
 
 ---
 
+# MEASUREMENT-MODE CHECKPOINT — 2026-08-25
+
+Everything below was deployed on 2026-08-24/25. **Read this before building anything: every item
+here already exists in production.** Nothing in this list should be rebuilt, duplicated or
+redesigned. The program is in measurement mode; the next step is reading data, not shipping.
+
+## 1. Baselines to beat (historical, pre-change)
+
+| Metric | Value | Sample |
+|---|---|---|
+| First pick within 24h, 90-day cohort | **27.8%** | 27 of 97 |
+| First pick ever, 90-day cohort | 29.9% | 29 of 97 |
+| Of everyone who ever activated, share who did it in 24h | **93.1%** | — |
+| Reached `/welcome/` route | **29%** within 24h | 15 of 51 (60d) |
+| Simulator-gate route | **13%** within 24h | 4 of 32 (60d) |
+| Registration → any measurable action, 24h | **37%** | 31 of 83 (60d); 52 did nothing |
+| Retention D1 / D7 / D30 | 14.2% / 14.4% / 23.2% | calendar-day brackets, ET |
+| Members (real) | 119–121 | of ~907 accounts |
+
+Activation is decided in the first session: median time to Pick #1 among converters is **4.5
+minutes**, and of 74 zero-pick members only **1** ever returned on a later day.
+
+## 2. Everything now deployed
+
+| Thing | Where it lives | State |
+|---|---|---|
+| Growth dashboard | `services/growthMetrics.js`, `routes/adminGrowth.js`, `/admin/growth/` | live, admin-only, noindex |
+| Pick #1 → #2 progression | `GET /api/participation/my-progress`, `static/js/pick-progress-nudge.js` | live |
+| Rookie / weekly / monthly / season boards | `GET /api/users/leaderboard/scoped`, Board select on `/leaderboards/` | live; `/leaderboard` untouched |
+| Poll → Pick, `winner` | `services/pollPickBridge.js`, `GET /api/polls/:id/pick-bridge` | live |
+| Poll → Pick, `game_total` | same service, strict exact-line gate | live |
+| Real-market total generation | `services/mlbQuizBot.js` attachBoardTotals() | live; **not yet exercised** (quiz posts 5am ET) |
+| Zero-pick strip surfaces | `first-pick-onboarding.js` on `/`, `/sportsbook/`, `/profile/`, `/welcome/`, `/today/`, `/polls/`, `/forum/`, `/trivia/`, `/mlb-simulator/`, `/nfl-simulator/` | live |
+| `/welcome/` control vs treatment | `static/js/welcome-checklist.js` | live, 50/50, pinned |
+| `/welcome/` + `/today/` analytics | one `analytics.js` tag each | live |
+| Simulator zero-pick strip | both simulator pages | live |
+| Simulator Pick #2 support | `pick-progress-nudge.js` on both simulator pages | live |
+| Surface / cta_location dimensions | all three strips | live |
+| Sportsbook activation-arrival event | `first-pick-onboarding.js` emitActivationArrival() | live |
+| Poll → Pick stand-down | both generic strips yield to `#tmr-poll-bridge` | live |
+
+## 3. Measurement start times (UTC) — historical vs post-change must stay separable
+
+| Change | Start |
+|---|---|
+| Growth dashboard page | 2026-08-24T18:25:16Z |
+| Pick #1 → #2 progression | 2026-08-24T18:31:17Z |
+| Scoped leaderboards | 2026-08-24T18:38:14Z |
+| Growth metrics API | 2026-08-24T19:09:42Z |
+| Poll → Pick (winner) | 2026-08-24T21:01:11Z |
+| Poll → Pick frontend + quiz wiring | 2026-08-24T21:03:56Z / 21:10:47Z |
+| Poll → Pick (game_total) | 2026-08-24T21:24:06Z |
+| **Real-total poll generation** | 2026-08-24T21:59:35Z |
+| **Expanded zero-pick strip + /welcome/ experiment** | 2026-08-24T22:42:27Z |
+| **Corrected analytics coverage** (/welcome/, /today/) | 2026-08-25T01:09:39Z |
+| **Simulator activation strip** | 2026-08-25T01:24:52Z |
+| **Simulator Pick #2 progression** | 2026-08-25T01:41:26Z |
+| **Arrival event + surface + stand-down** | 2026-08-25T02:06:19Z |
+
+Client-side events before 2026-08-25T01:09:39Z never left the browser on `/welcome/` and `/today/`
+— those pages had no analytics at all. Do not attempt to reconstruct them.
+
+## 4. Event chains as currently implemented
+
+**Welcome**
+`welcome_arm_assigned {arm}` → `welcome_viewed {arm}` → `sportsbook_onboarding_viewed {surface:'welcome', cta_location, has_picks}`
+→ `welcome_action_clicked {action:'pick', arm}` → `activation_pick_flow_arrival {source:'welcome_checklist', cta_location:'welcome_board_row', from_surface:'welcome', arm}`
+→ `first_pick_started` → **Pick #1 server-side** (`picks` table).
+
+**Simulator**
+signup attribution `users.signup_source.landing` (`/mlb-simulator/`, `/nfl-simulator/`) → `sportsbook_onboarding_viewed {surface:'mlb_simulator'|'nfl_simulator'}`
+→ `first_pick_cta_clicked {cta_location:'reminder_strip', surface}` → `activation_pick_flow_arrival {source:'first_pick_strip', from_surface}`
+→ `first_pick_started` → **Pick #1 server-side**.
+
+**Poll → Pick**
+`poll_pick_bridge_shown {poll_id, poll_type, market, sport, zero_pick_member, surface:'polls', cta_location}`
+→ `poll_pick_bridge_clicked {+ line, pick_team}` → `activation_pick_flow_arrival {source:'poll', poll_type, from_surface:'polls'}`
+→ normal `/sportsbook/?simpick=1` prefill → `simulator_pick_submitted` / `simulator_verified_pick_created {source:'poll'}` → **verified pick server-side**.
+
+**Pick #2**
+`pick_progress_nudge_viewed|_clicked|_declined {gate, picks_total, picks_graded, surface, cta_location}`,
+handoff `{source:'pick_progress_strip', gate}`.
+
+## 5. Surface values — do not collapse these back
+
+`homepage`, `welcome`, `today`, `polls`, `forum`, `trivia`, `mlb_simulator`, `nfl_simulator`,
+plus `sportsbook`, `profile`, and `other`. The old single `sitewide_reminder` value made the new
+coverage impossible to compare page by page; it is gone from every event.
+
+`cta_location` values: `reminder_strip`, `sportsbook_onboarding_panel`, `sportsbook_reminder`,
+`pick_progress_strip`, `poll_pick_bridge`, `welcome_board_row`.
+
+## 6. Intentional behaviour — verify before "fixing"
+
+- **0 picks** → "Start your verified record" (`first-pick-onboarding.js`)
+- **1 pick** → "Make Pick #2" (`pick-progress-nudge.js`)
+- **5 picks** → progress toward the 10-pick milestone — **pre-existing**, from the `milestone_10`
+  gate added 2026-08-24T18:31, not introduced by the simulator work
+- **2+ picks with every gate reached** → nothing
+- **MLB simulator conversion CTA wins** over both generic prompts when its panel is present
+- **Poll → Pick CTA wins** over the generic Pick #2 prompt when its strip is present
+- Resulting picks always go through the **normal verified-pick flow** — no parallel submit path
+- **Pick #1 creation is server-side truth**; no client event claims a pick was created
+- **No second leaderboard, poll, pick or onboarding system may be created**
+
+## 7. Accepted limitations — not bugs, do not spend time here
+
+1. Client-side GA4 totals require GA4 UI/API access and are not queryable from a terminal.
+2. A generic nudge impression may fire before the Poll → Pick strip replaces it. The strip genuinely
+   was on screen, so the impression is honest; click-through on `/polls/` will read low for it.
+3. Activation-arrival attribution is `sessionStorage`-scoped and misses new-tab or unusual
+   navigation cases.
+
+## 8. How to pull the next measurement report
+
+**Use `/admin/growth/`. Do not build another dashboard.** It already renders the funnel, activation
+speed, the pick ladder, feature reach, acquisition and tracking health, from a 5-minute cache.
+The same data is available as JSON at `GET /api/admin/growth/report?window_days=N` with an
+`x-admin-token` header, or an `account_type='admin'` bearer token.
+
+Server-side, per measurement start — one query, bind the start timestamp as `$1`:
+
+```sql
+WITH m AS (
+  SELECT u.* FROM users u
+   WHERE u.deleted_at IS NULL
+     AND COALESCE(u.is_official_bot,false) = false
+     AND COALESCE(u.is_internal_test,false) = false
+     AND LOWER(COALESCE(u.account_type,'real')) NOT IN ('admin','test','bot','banned')
+     AND u.username !~* '^qa[_-]'
+)
+SELECT
+  COUNT(*) FILTER (WHERE created_at >= $1) AS registrations,
+  COUNT(*) FILTER (WHERE created_at >= $1 AND EXISTS (
+     SELECT 1 FROM picks p WHERE p.user_id = m.id AND p.deleted_at IS NULL
+       AND p.created_at < m.created_at + INTERVAL '24 hours')) AS pick1_24h,
+  COUNT(*) FILTER (WHERE created_at >= $1
+       AND COALESCE(signup_source->>'landing','') ~* 'simulator') AS sim_registrations,
+  COUNT(*) FILTER (WHERE created_at >= $1
+       AND COALESCE(signup_source->>'landing','') ~* 'simulator' AND EXISTS (
+     SELECT 1 FROM picks p WHERE p.user_id = m.id AND p.deleted_at IS NULL
+       AND p.created_at < m.created_at + INTERVAL '24 hours')) AS sim_pick1_24h,
+  COUNT(*) FILTER (WHERE created_at >= $1 AND (
+     SELECT COUNT(*) FROM picks p WHERE p.user_id = m.id AND p.deleted_at IS NULL) >= 2) AS reached_pick2
+FROM m;
+```
+
+Poll-originated verified picks: the resulting rows are ordinary picks with no poll marker in the
+`picks` table by design, so attribution lives in GA4 via `simulator_verified_pick_created
+{source:'poll'}`.
+
+**GA4 REQUIRED** for: `/welcome/` control vs treatment exposures, all CTA impressions and clicks,
+`activation_pick_flow_arrival`, `first_pick_started`, poll-bridge shown/clicked, and
+poll-originated pick attribution. Split by `arm`, `surface`, `cta_location`, `poll_type`. There is
+no server-side copy of these and one must not be built.
+
+## 9. Sample-size rule
+
+Do not declare a winner from a handful of users. For `/welcome/` control vs treatment, simulator
+activation and Poll → Pick, report raw counts as they accumulate and judge on **first pick within
+24h**, effect size against sample size, downstream Pick #2 behaviour, and any obvious regression.
+**Clicks alone do not decide anything.** As of 2026-08-25T02:00Z there had been **0 registrations**
+since the analytics fix, so every post-change conversion figure starts empty.
+
+---
+
 ## Why /admin/growth/ is noindex
 
 The standing site rule is **never noindex a public TMR page**, enforced by the allowlist in
