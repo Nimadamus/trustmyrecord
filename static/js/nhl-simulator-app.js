@@ -453,6 +453,185 @@
     return box;
   }
 
+  var PROP_KEYS = {
+    main: { id: 'shots', label: 'Shots' },
+    line: { id: 'points', label: 'A point', value: 1 },
+    second: { id: 'goals', label: 'G' },
+    third: { id: 'assists', label: 'A' },
+  };
+
+  /**
+   * The win-probability line, drawn from the game that was played.
+   *
+   * Every point is a state the simulation actually reached. Labelled at both
+   * ends and at the extremes rather than everywhere, because a line with a
+   * number on every point is a table pretending to be a chart.
+   */
+  function winProbChart(d) {
+    var pts = d.result.win_probability_track || [];
+    var wrap = el('div');
+    if (pts.length < 3) return wrap;
+
+    var W = 720, H = 200, PAD = 34;
+    var svg = S.svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'wpchart',
+      role: 'img', 'aria-label':
+        'Win probability for ' + d.matchup.home.name + ' through the simulated game, '
+        + 'starting at ' + Math.round(pts[0].home_win_probability * 100)
+        + ' per cent and ending at ' + Math.round(pts[pts.length - 1].home_win_probability * 100) + ' per cent.' });
+
+    var xOf = function (i) { return PAD + (i / (pts.length - 1)) * (W - PAD * 2); };
+    var yOf = function (p) { return PAD + (1 - p) * (H - PAD * 2); };
+
+    // The even line, so a reader can see which side of it the game sat on.
+    svg.appendChild(S.svgEl('line', { x1: PAD, x2: W - PAD, y1: yOf(0.5), y2: yOf(0.5),
+      class: 'wp-even' }));
+
+    var dpath = '';
+    for (var i = 0; i < pts.length; i += 1) {
+      dpath += (i ? ' L ' : 'M ') + xOf(i).toFixed(1) + ' ' + yOf(pts[i].home_win_probability).toFixed(1);
+    }
+    svg.appendChild(S.svgEl('path', { d: dpath, class: 'wp-line' }));
+
+    [[PAD, yOf(1), '100%'], [PAD, yOf(0.5), '50%'], [PAD, yOf(0), '0%']].forEach(function (t) {
+      var lab = S.svgEl('text', { x: t[0] - 6, y: t[1] + 4, class: 'wp-axis', 'text-anchor': 'end' });
+      lab.textContent = t[2];
+      svg.appendChild(lab);
+    });
+
+    wrap.appendChild(svg);
+    wrap.appendChild(el('div', 'disc',
+      'The chance ' + d.matchup.home.name + ' wins, at each point of the simulated game shown above. '
+      + 'Computed from the score and the time left with the same spread the projection uses, '
+      + 'not fitted to the result afterwards.'));
+    return wrap;
+  }
+
+  /**
+   * Player distributions. A mean is the least useful true thing you can say
+   * about a player's night, so these lead with the range and the chance of
+   * clearing a line.
+   */
+  function propsPanel(d) {
+    var pd = d.result.player_distributions;
+    var wrap = el('div');
+    if (!pd) {
+      wrap.appendChild(el('div', 'disc',
+        'Player ranges are computed by replaying the whole game many times. '
+        + 'Run a simulation with them enabled to see them.'));
+      return wrap;
+    }
+    var key = PROP_KEYS;
+    ['away', 'home'].forEach(function (side) {
+      var rows = pd[side] || [];
+      if (!rows.length) return;
+      wrap.appendChild(el('div', 'sechead', d.matchup[side].name));
+      wrap.appendChild(S.table([
+        { h: 'Player', fmt: function (r) { return r.name; } },
+        { h: key.main.label, fmt: function (r) { return r.stats[key.main.id].median; },
+          title: 'Median across the replays' },
+        { h: 'Range', fmt: function (r) {
+          var s2 = r.stats[key.main.id];
+          return s2.p10 + ' \u2013 ' + s2.p90;
+        }, title: 'Tenth to ninetieth percentile' },
+        { h: key.line.label, fmt: function (r) {
+          var at = r.stats[key.main.id].at_least || [];
+          var hit = at.filter(function (x) { return x.line === key.line.value; })[0];
+          return hit ? (hit.share * 100).toFixed(0) + '%' : '\u2014';
+        } },
+        { h: key.second.label, fmt: function (r) { return r.stats[key.second.id].median; } },
+        { h: key.third.label, fmt: function (r) { return r.stats[key.third.id].median; } },
+      ], rows));
+    });
+    wrap.appendChild(el('div', 'disc',
+      'From ' + pd.runs + ' complete replays of this matchup. These are not fitted curves: '
+      + 'the replays where a player had a big night are the same replays where his team scored a lot, '
+      + 'so the numbers move together the way they do in a real game.'));
+    return wrap;
+  }
+
+  /** What the projection is resting on. */
+  function sensitivityPanel(d) {
+    var s2 = d.projection.sensitivity;
+    var wrap = el('div');
+    if (!s2 || !s2.inputs || !s2.inputs.length) return wrap;
+    wrap.appendChild(S.table([
+      { h: 'If this is wrong', fmt: function (r) { return r.input; } },
+      { h: 'By', fmt: function (r) { return r.moved_by; } },
+      { h: 'Score moves', fmt: function (r) { return r.margin_swing.toFixed(1); } },
+      { h: 'Win chance moves', fmt: function (r) { return (r.win_probability_swing * 100).toFixed(1) + ' pts'; } },
+      { h: 'Changes the pick', fmt: function (r) { return r.flips_the_pick ? 'Yes' : 'No'; } },
+    ], s2.inputs));
+    wrap.appendChild(el('div', 'disc', s2.note));
+    return wrap;
+  }
+
+  /**
+   * Share and print.
+   *
+   * The page already rewrites its own address as a simulation runs, seed
+   * included, so a shared link reproduces the exact game rather than a fresh
+   * one -- that is the whole reason the seed is in the URL. This just makes that
+   * reachable without asking a reader to know it.
+   *
+   * Print opens every tab first. A reader holding paper cannot click a tab, so a
+   * printed report that contains only whichever one happened to be open is not a
+   * report.
+   */
+  function resultBar(app, d) {
+    var bar = el('div', 'resultbar');
+
+    var share = el('button', 'btn ghost', 'Copy link to this simulation');
+    share.type = 'button';
+    var said = el('span', 'copied', '');
+    share.addEventListener('click', function () {
+      var url = window.location.href;
+      var done = function () {
+        said.textContent = 'Link copied. It reproduces this exact simulation.';
+        share.setAttribute('aria-live', 'polite');
+      };
+      if (window.navigator && window.navigator.clipboard) {
+        window.navigator.clipboard.writeText(url).then(done, function () {
+          said.textContent = url;
+        });
+      } else {
+        said.textContent = url;
+      }
+    });
+
+    var print = el('button', 'btn ghost', 'Print or save as PDF');
+    print.type = 'button';
+    print.addEventListener('click', function () {
+      var host = S.$('#result');
+      var bars = host ? S.$$('.tabs', host) : [];
+      bars.forEach(function (barEl) {
+        var buttons = S.$$('button', barEl);
+        var body = barEl.nextSibling;
+        if (!body || buttons.length < 2) return;
+        // Render every tab into the flow, each under its own heading, so the
+        // printed page carries the whole result.
+        var holder = el('div', 'printonly');
+        buttons.forEach(function (b) {
+          if (b.classList.contains('on')) return;
+          var section = el('div');
+          section.appendChild(el('div', 'sechead', b.textContent));
+          b.click();
+          var clone = body.cloneNode(true);
+          section.appendChild(clone);
+          holder.appendChild(section);
+        });
+        // Put the originally-open tab back for the person still at the screen.
+        if (buttons[0]) buttons[0].click();
+        barEl.parentNode.appendChild(holder);
+      });
+      window.setTimeout(function () { window.print(); }, 120);
+    });
+
+    bar.appendChild(share);
+    bar.appendChild(print);
+    bar.appendChild(said);
+    return bar;
+  }
+
   function render(app, d, box) {
     var p = d.projection;
     var away = d.matchup.away;
@@ -462,6 +641,8 @@
 
     var fresh = freshnessNotice(d);
     if (fresh) box.appendChild(fresh);
+
+    box.appendChild(resultBar(app, d));
 
     box.appendChild(S.matchupHeader(
       away, home,
@@ -524,6 +705,15 @@
       } },
       { id: 'scores', label: 'Likely scores', build: function (node) {
         node.appendChild(commonScores(d));
+      } },
+      { id: 'wp', label: 'Win probability', build: function (node) {
+        node.appendChild(winProbChart(d));
+      } },
+      { id: 'props', label: 'Player ranges', build: function (node) {
+        node.appendChild(propsPanel(d));
+      } },
+      { id: 'sens', label: 'What it rests on', build: function (node) {
+        node.appendChild(sensitivityPanel(d));
       } },
       { id: 'team', label: 'Team stats', build: function (node) { node.appendChild(teamStats(d)); } },
       { id: 'why', label: 'Why the model moved', build: function (node) {

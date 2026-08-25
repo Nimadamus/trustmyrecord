@@ -303,3 +303,28 @@ input[type=date]{background:var(--bg2);border:1px solid var(--line);border-radiu
 .freshness strong{font-weight:750;letter-spacing:-.01em}
 .freshness.ageing{border-left-color:#d8a23a}
 .freshness.stale{border-left-color:#d9534f}
+
+/* Win-probability line. Deliberately sparse: one line, one reference at even,
+   labels at the ends rather than on every point. */
+.wpchart{width:100%;height:auto;display:block;margin:2px 0 4px}
+.wp-line{fill:none;stroke:var(--accent);stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round}
+.wp-even{stroke:var(--line);stroke-width:1;stroke-dasharray:4 4}
+.wp-axis{fill:var(--dim);font-size:11px}
+
+/* Share and print controls sit with the result, not with the setup. */
+.resultbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.resultbar .btn{padding:8px 14px;font-size:.85rem}
+.copied{color:var(--dim);font-size:.8rem}
+
+/* A printed report is a document, not a screenshot of an app: the controls,
+   the navigation and the tab bar are not part of it, and every tab's content
+   is, because a reader with paper cannot click. */
+@media print{
+  .setup,.modebar,.tabs,#prerun,.tmr-nav,nav,footer,.foot,.resultbar,.linkhub{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  .panel{border:1px solid #ccc!important;break-inside:avoid;page-break-inside:avoid;background:#fff!important}
+  .mh{break-inside:avoid}
+  table{font-size:11px}
+  .disc{color:#444!important}
+  a[href]:after{content:""}
+}
