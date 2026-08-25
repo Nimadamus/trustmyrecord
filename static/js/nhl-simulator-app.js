@@ -434,12 +434,34 @@
     return wrap;
   }
 
+  /**
+   * A notice, but only when there is something to notice.
+   *
+   * When the season snapshot is current this says nothing at all, because a
+   * banner that is always on the page is furniture and stops being read. When
+   * the data has aged past a couple of days it says so plainly, in the same
+   * place, every time. The one thing this must never do is let a confident
+   * scoreline imply a roster that has moved on.
+   */
+  function freshnessNotice(d) {
+    var f = d.meta && d.meta.data_freshness;
+    if (!f || f.is_current) return null;
+    var box = el('div', 'freshness ' + (f.status === 'stale' ? 'stale' : 'ageing'));
+    box.setAttribute('role', 'status');
+    box.appendChild(el('strong', '', f.status === 'stale' ? 'Out of date' : 'Ageing data'));
+    box.appendChild(el('span', '', ' ' + f.label));
+    return box;
+  }
+
   function render(app, d, box) {
     var p = d.projection;
     var away = d.matchup.away;
     var home = d.matchup.home;
     var decided = d.result.decided_in === 'regulation' ? 'Final'
       : (d.result.decided_in === 'overtime' ? 'Final in overtime' : 'Final in a shootout');
+
+    var fresh = freshnessNotice(d);
+    if (fresh) box.appendChild(fresh);
 
     box.appendChild(S.matchupHeader(
       away, home,

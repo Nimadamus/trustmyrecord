@@ -294,3 +294,12 @@ input[type=date]{background:var(--bg2);border:1px solid var(--line);border-radiu
 #accuracyBody .chartgrid{grid-template-columns:repeat(auto-fit,minmax(240px,340px));justify-content:start}
 #accuracyBody .kpis{margin-top:4px}
 #accuracyBody p.dim{margin-top:12px;max-width:70ch}
+
+/* Data-age notice. Present only when the snapshot has aged; see
+   services/simFreshness.js for the thresholds and the wording. */
+.freshness{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;
+  border:1px solid var(--line);border-left-width:4px;border-radius:8px;
+  padding:10px 14px;margin:0 0 14px;font-size:.86rem;line-height:1.5;color:var(--ink)}
+.freshness strong{font-weight:750;letter-spacing:-.01em}
+.freshness.ageing{border-left-color:#d8a23a}
+.freshness.stale{border-left-color:#d9534f}
