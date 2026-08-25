@@ -70,7 +70,7 @@
         if (document.querySelector('link[data-contest-promo-modal]')) return;
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = '/static/css/contest-promo-modal.css?v=f9caf641143e';
+        link.href = '/static/css/contest-promo-modal.css?v=8e4bc7946ed7';
         link.setAttribute('data-contest-promo-modal', '1');
         document.head.appendChild(link);
     }
