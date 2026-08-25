@@ -1,0 +1,993 @@
+/**
+ * TrustMyRecord — New-User First-Pick Activation Flow
+ * ---------------------------------------------------
+ * Turns a fresh registration into an active pick maker instead of dropping
+ * them on a generic page.
+ *
+ *   /register/  -> /welcome/ since WELCOME_20260809 (it used to come straight
+ *                  here to /sportsbook/?first_pick=1). ?first_pick=1 is a dead
+ *                  marker: nothing reads it, so the CTAs below just link to
+ *                  /sportsbook/, where sportsbook-default-board.js already
+ *                  opens the in-season board with live odds.
+ *   /sportsbook/ -> welcome panel + 3-step progress + CTA that scrolls to the
+ *                   board and highlights the pick-entry area
+ *   first lock  -> "Your first pick is locked" confirmation modal
+ *   other pages -> small "Start your verified record" reminder strip
+ *
+ * WHERE THIS RUNS (ZERO_PICK_COVERAGE_20260824)
+ *
+ * Home, /sportsbook/, /profile/, and now /today/, /polls/, /forum/, /trivia/
+ * and /welcome/. Before that widening, members with 1+ picks were prompted on
+ * five surfaces by pick-progress-nudge.js while members with ZERO picks were
+ * prompted on three, and not on the page registration actually lands them on.
+ * The two scripts are complementary and never both render: this one owns 0
+ * picks, that one owns 1 or more, and neither shows anything at 2+ except its
+ * own later rungs.
+ *
+ * Eligibility is decided by the BACKEND (GET /api/picks/activation-status),
+ * never by localStorage alone, so:
+ *   - brand-new accounts AND existing accounts with zero picks see it
+ *   - anyone who has ever submitted a pick never sees it again
+ *   - clearing localStorage cannot resurrect it for an activated user
+ *
+ * Analytics events emitted (GA4 + dataLayer):
+ *   account_created (fired by /register/), sportsbook_onboarding_viewed,
+ *   first_pick_cta_clicked, first_pick_started, first_pick_submitted,
+ *   first_pick_abandoned
+ */
+(function () {
+    'use strict';
+
+    if (window.__tmrFirstPickOnboarding) return;
+    window.__tmrFirstPickOnboarding = true;
+
+    var LS_ACTIVATED = 'tmr_has_posted_pick';   // '1' once the user has any pick
+    var SS_SESSION_FLAGS = 'tmr_fp_session';    // per-tab: viewed/started/collapsed
+    /* '1' while the server has told us this browser's user is NOT activated, so
+       the reminder strip is due. It exists purely so a RETURNING eligible user
+       gets the strip in the first frame instead of watching it drop in after
+       /users/me answers and shove the nav, ticker, hero and capper card down
+       82px. Only ever written from a real server answer — see start(). */
+    var LS_REMINDER_DUE = 'tmr_fp_reminder_due';
+
+    var state = {
+        userId: null,
+        eligible: false,
+        onSportsbook: false,
+        viewed: false,
+        started: false,
+        submitted: false,
+        abandonSent: false,
+        /* True only once /picks/activation-status has actually said this member
+           has no picks. Nothing may be counted as an impression before that. */
+        confirmed: false
+    };
+
+    // ---------------------------------------------------------------- utils
+
+    /* WHICH PAGE IS THIS? (SURFACE_GRANULARITY_20260825)
+       Every non-sportsbook page used to report surface:'sitewide_reminder', so
+       /today/ vs /polls/ vs a simulator were indistinguishable and the new
+       coverage could not be compared page by page. One map, derived from the
+       path, reused by every event this file emits. Unknown paths report
+       'other' rather than guessing. */
+    function surfaceName() {
+        var p = (window.location.pathname || '').toLowerCase();
+        if (p === '/' || p === '/index.html') return 'homepage';
+        if (p.indexOf('/welcome/') === 0) return 'welcome';
+        if (p.indexOf('/today/') === 0) return 'today';
+        if (p.indexOf('/polls/') === 0) return 'polls';
+        if (p.indexOf('/forum/') === 0) return 'forum';
+        if (p.indexOf('/trivia/') === 0) return 'trivia';
+        if (p.indexOf('/mlb-simulator/') === 0) return 'mlb_simulator';
+        if (p.indexOf('/nfl-simulator/') === 0) return 'nfl_simulator';
+        if (p.indexOf('/sportsbook/') === 0) return 'sportsbook';
+        if (p.indexOf('/profile/') === 0) return 'profile';
+        return 'other';
+    }
+
+    /* HANDOFF TO THE PICK FLOW (ARRIVAL_EVENT_20260825)
+       The funnel had no way to tell whether someone who clicked an activation
+       CTA actually reached the board. Written on click, read exactly once on
+       /sportsbook/, then deleted - so a reload or a back button cannot emit a
+       second arrival. sessionStorage, not a query parameter: the strip markup
+       is covered by a homepage lock and does not need to change. */
+    var ARRIVAL_KEY = 'tmr_activation_arrival';
+
+    function markActivationHandoff(details) {
+        try {
+            sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify(Object.assign({
+                surface: surfaceName(), ts: Date.now()
+            }, details || {})));
+        } catch (e) {}
+    }
+
+    function log() {
+        try { console.log.apply(console, ['[TMR FirstPick]'].concat([].slice.call(arguments))); } catch (e) {}
+    }
+
+    function track(eventName, params) {
+        var payload = params || {};
+        try {
+            if (typeof window.gtag === 'function') window.gtag('event', eventName, payload);
+        } catch (e) {}
+        try {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push(Object.assign({ event: eventName }, payload));
+        } catch (e) {}
+        log('event', eventName, payload);
+    }
+    window.tmrFirstPickTrack = track;
+
+    function sessionFlags() {
+        try { return JSON.parse(sessionStorage.getItem(SS_SESSION_FLAGS) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function setSessionFlag(key, value) {
+        try {
+            var f = sessionFlags();
+            f[key] = value;
+            sessionStorage.setItem(SS_SESSION_FLAGS, JSON.stringify(f));
+        } catch (e) {}
+    }
+
+    function isSportsbook() {
+        return /^\/sportsbook\/?$/i.test(window.location.pathname);
+    }
+
+    // NOTE: only used for logging/labels. Eligibility is decided by the
+    // backend response, never by these keys — tmr_current_user has been
+    // observed holding a STALE user after an account switch in the same tab.
+    function getStoredUser() {
+        var candidates = ['trustmyrecord_session', 'tmr_current_user', 'tmr_user'];
+        for (var i = 0; i < candidates.length; i++) {
+            try {
+                var raw = localStorage.getItem(candidates[i]) || sessionStorage.getItem(candidates[i]);
+                if (!raw) continue;
+                var parsed = JSON.parse(raw);
+                var u = parsed && parsed.user ? parsed.user : parsed;
+                if (u && (u.id || u.username)) return u;
+            } catch (e) {}
+        }
+        try {
+            if (window.auth && typeof window.auth.getCurrentUser === 'function') {
+                var au = window.auth.getCurrentUser();
+                if (au && (au.id || au.username)) return au;
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    function hasToken() {
+        try {
+            if (window.api && window.api.token) return true;
+            var keys = ['tmr_token', 'accessToken', 'access_token', 'tmr_access_token',
+                        'trustmyrecord_token', 'token'];
+            for (var i = 0; i < keys.length; i++) {
+                if (localStorage.getItem(keys[i])) return true;
+            }
+            return false;
+        } catch (e) { return false; }
+    }
+
+    // Authoritative eligibility check. Resolves { hasPicks, pickCount } or null
+    // when the answer cannot be determined (never guess "eligible" on error —
+    // an existing user must not be shown a new-user prompt because the API
+    // hiccuped).
+    /* ZERO_PICK_COVERAGE_20260824: /today/ and /welcome/ deliberately do not
+       load backend-api.js, so window.api is undefined there and this file used
+       to no-op on the two surfaces that matter most - the page registration
+       lands on, and the daily dashboard. This is the same plain-fetch fallback
+       welcome-checklist.js already uses on that page: same base URL resolution,
+       same token keys, same 6s timeout. It is used ONLY when window.api is
+       absent, so every page that has the real client keeps using it. */
+    var PLAIN_API_BASE = (window.TMR_API_BASE || window.API_BASE_URL ||
+        'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+    var PLAIN_TIMEOUT_MS = 6000;
+
+    function plainToken() {
+        try {
+            return localStorage.getItem('trustmyrecord_token') ||
+                   localStorage.getItem('tmr_token') ||
+                   localStorage.getItem('accessToken') ||
+                   localStorage.getItem('access_token') || '';
+        } catch (e) { return ''; }
+    }
+
+    function plainGet(path) {
+        var t = plainToken();
+        if (!t) return Promise.reject(new Error('no token'));
+        var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+        var timer = setTimeout(function () { try { ctrl && ctrl.abort(); } catch (e) {} }, PLAIN_TIMEOUT_MS);
+        return fetch(PLAIN_API_BASE + '/api' + path, {
+            signal: ctrl ? ctrl.signal : undefined,
+            headers: { Authorization: 'Bearer ' + t }
+        }).then(function (r) {
+            clearTimeout(timer);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }).catch(function (e) { clearTimeout(timer); throw e; });
+    }
+
+    function fetchActivationStatus(attempt) {
+        attempt = attempt || 1;
+        if (!window.api || typeof window.api.request !== 'function') {
+            return plainGet('/picks/activation-status').then(function (data) {
+                if (!data || typeof data.hasPicks !== 'boolean') return null;
+                return data;
+            }).catch(function (err) {
+                log('activation-status (plain) failed', (err && err.message) || err);
+                return null;
+            });
+        }
+        var ready = window.api.ready && typeof window.api.ready.then === 'function'
+            ? window.api.ready.catch(function () {})
+            : Promise.resolve();
+        return ready.then(function () {
+            return window.api.request('/picks/activation-status');
+        }).then(function (data) {
+            if (!data || typeof data.hasPicks !== 'boolean') return null;
+            return data;
+        }).catch(function (err) {
+            var msg = (err && err.message) || '';
+            log('activation-status failed (attempt ' + attempt + ')', msg);
+            // Busy pages (profile especially) can trip the 120 req/min limit
+            // before this call lands. One delayed retry, then give up quietly.
+            if (attempt < 2 && /too many requests|429|rate/i.test(msg)) {
+                return new Promise(function (resolve) {
+                    setTimeout(function () { resolve(fetchActivationStatus(attempt + 1)); }, 4000);
+                });
+            }
+            return null;
+        });
+    }
+
+    // ----------------------------------------------------------------- CSS
+
+    function injectStyles() {
+        if (document.getElementById('tmr-fp-styles')) return;
+        var css = [
+            '.tmr-fp-panel{position:relative;margin:0 0 20px;padding:22px 24px;border-radius:16px;',
+            'background:linear-gradient(135deg,rgba(0,255,255,0.10) 0%,rgba(10,17,24,0.96) 45%,rgba(10,17,24,0.96) 100%);',
+            'border:1px solid rgba(0,255,255,0.34);box-shadow:0 18px 44px rgba(0,0,0,0.38);color:#e8eef6;}',
+            '.tmr-fp-panel__kicker{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;',
+            'background:rgba(0,255,255,0.12);border:1px solid rgba(0,255,255,0.32);color:#67e8f9;',
+            'font:800 10px/1 Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;}',
+            '.tmr-fp-panel h2{margin:12px 0 0;font-family:Barlow,Inter,sans-serif;font-weight:900;',
+            'font-size:clamp(1.35rem,3vw,1.85rem);line-height:1.15;color:#f8fafc;letter-spacing:-0.01em;}',
+            '.tmr-fp-panel p.tmr-fp-sub{margin:9px 0 0;max-width:640px;color:#a9b8cc;font-size:1rem;line-height:1.55;}',
+            '.tmr-fp-actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:18px;}',
+            '.tmr-fp-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 22px;',
+            'border-radius:11px;font:800 0.95rem/1 Barlow,Inter,sans-serif;letter-spacing:.02em;cursor:pointer;',
+            'border:1px solid transparent;text-decoration:none;transition:transform .14s ease,box-shadow .14s ease;}',
+            '.tmr-fp-btn:hover{transform:translateY(-2px);}',
+            // ID-scoped + !important on purpose: the sportsbook ships
+            // `body button:not(...):not(...) { background: ... !important }`,
+            // which out-specifies any plain class rule and would repaint these
+            // CTAs as flat navy. Only an id in the selector reliably wins.
+            '#tmr-fp-panel .tmr-fp-btn--primary,#tmr-fp-modal .tmr-fp-btn--primary,',
+            '#tmr-fp-reminder .tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#67e8f9) !important;',
+            'color:#04111a !important;box-shadow:0 12px 30px rgba(0,255,255,0.24) !important;text-decoration:none !important;}',
+            '#tmr-fp-panel .tmr-fp-btn--ghost,#tmr-fp-modal .tmr-fp-btn--ghost,',
+            '#tmr-fp-reminder .tmr-fp-btn--ghost{background:rgba(255,255,255,0.05) !important;',
+            'border-color:rgba(255,255,255,0.16) !important;color:#dbe6f3 !important;text-decoration:none !important;}',
+            '.tmr-fp-steps{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;padding-top:18px;',
+            'border-top:1px solid rgba(255,255,255,0.08);}',
+            '.tmr-fp-step{flex:1 1 190px;display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:11px;',
+            'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);}',
+            '.tmr-fp-step__dot{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;',
+            'justify-content:center;font:900 11px/1 Inter,sans-serif;background:rgba(255,255,255,0.08);color:#8ea0bc;',
+            'border:1px solid rgba(255,255,255,0.12);}',
+            '.tmr-fp-step__label{display:block;font:800 9.5px/1 Inter,sans-serif;letter-spacing:.13em;',
+            'text-transform:uppercase;color:#7f8ea6;}',
+            '.tmr-fp-step__name{display:block;margin-top:5px;font:700 13px/1.3 Inter,sans-serif;color:#cbd5e1;}',
+            '.tmr-fp-step--done{border-color:rgba(74,222,128,0.34);background:rgba(74,222,128,0.07);}',
+            '.tmr-fp-step--done .tmr-fp-step__dot{background:#22c55e;border-color:#22c55e;color:#04240f;}',
+            '.tmr-fp-step--done .tmr-fp-step__label{color:#4ade80;}',
+            '.tmr-fp-step--done .tmr-fp-step__name{color:#eafff1;}',
+            '.tmr-fp-step--current{border-color:rgba(0,255,255,0.42);background:rgba(0,255,255,0.08);}',
+            '.tmr-fp-step--current .tmr-fp-step__dot{background:linear-gradient(135deg,#00ffff,#67e8f9);',
+            'border-color:transparent;color:#04111a;}',
+            '.tmr-fp-step--current .tmr-fp-step__label{color:#67e8f9;}',
+            '.tmr-fp-step--current .tmr-fp-step__name{color:#f8fafc;}',
+            '@media(max-width:720px){',
+            '.tmr-fp-panel{padding:18px 16px;border-radius:14px;}',
+            '.tmr-fp-panel p.tmr-fp-sub{font-size:0.94rem;}',
+            '.tmr-fp-actions{gap:9px;}.tmr-fp-btn{flex:1 1 100%;padding:14px 18px;}',
+            '.tmr-fp-steps{gap:8px;}.tmr-fp-step{flex:1 1 100%;}',
+            '}',
+            /* highlight pulse on the pick-entry area */
+            '.tmr-fp-highlight{position:relative;border-radius:14px;',
+            'animation:tmrFpPulse 1.15s ease-in-out 3;outline:2px solid rgba(0,255,255,0.75);outline-offset:5px;}',
+            '@keyframes tmrFpPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,255,0.34);}',
+            '50%{box-shadow:0 0 0 12px rgba(0,255,255,0);}}',
+            '@media(prefers-reduced-motion:reduce){.tmr-fp-highlight{animation:none;}}',
+            /* small reminder strip */
+            '.tmr-fp-reminder{position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;',
+            'max-width:1180px;margin:12px auto;padding:11px 44px 11px 15px;border-radius:12px;',
+            'background:linear-gradient(90deg,rgba(0,110,124,0.30),rgba(10,17,24,0.97));',
+            // var(--font) so the homepage's metric-compatible Inter fallback
+            // applies and the strip cannot re-wrap when the real Inter lands.
+            // Pages without the design-system tokens fall back to plain Inter,
+            // which is what this always was. Kept identical to the ported copy
+            // in static/css/tmr-home-v2.css.
+            'border:1px solid rgba(0,255,255,0.26);color:#dbe6f3;font:600 0.92rem/1.4 var(--font,Inter,sans-serif);}',
+            '.tmr-fp-reminder__icon{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:flex;',
+            'align-items:center;justify-content:center;background:rgba(0,255,255,0.14);color:#67e8f9;font-size:14px;}',
+            '.tmr-fp-reminder__text{flex:1 1 200px;}',
+            '.tmr-fp-reminder__text strong{color:#f8fafc;font-weight:800;}',
+            '.tmr-fp-reminder .tmr-fp-btn{padding:9px 16px;font:800 0.85rem/1 var(--font,Inter,sans-serif);}',
+            '.tmr-fp-reminder__close{position:absolute;top:8px;right:10px;background:transparent;border:0;',
+            'color:#7f8ea6;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;}',
+            '#tmr-fp-reminder .tmr-fp-reminder__close{background:transparent !important;border:0 !important;',
+            'box-shadow:none !important;color:#7f8ea6 !important;}',
+            '.tmr-fp-reminder__close:hover{color:#e2e8f0 !important;}',
+            '@media(max-width:640px){.tmr-fp-reminder{margin:10px 12px;}.tmr-fp-reminder .tmr-fp-btn{flex:1 1 100%;}}',
+            /* LIGHT SURFACES (THEME_MATCH_20260824)
+               The strip was built for the homepage, where it sits in the dark
+               band between the nav and the hero. /welcome/, /today/, /polls/,
+               /forum/ and /trivia/ are light pages, and a dark navy bar with a
+               cyan border reads as a foreign component on them. These values
+               are the ones those pages already use for their own cards and
+               buttons - white surface, #D2DEEA hairline, #07182A text, #0C948C
+               teal action - so the strip looks like part of the page instead
+               of like something bolted on. Applied by surfaceIsLight() at
+               render time; the dark original is untouched. */
+            '.tmr-fp-reminder--light{background:#FFFFFF;background-image:none;border-color:#D2DEEA;color:#2E4459;',
+            'box-shadow:0 1px 2px rgba(7,24,42,0.04);}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__icon{background:rgba(12,148,140,0.12);color:#0C948C;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__text strong{color:#07182A;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__close{color:#6B7C8F;}',
+            '#tmr-fp-reminder.tmr-fp-reminder--light .tmr-fp-reminder__close{color:#6B7C8F !important;}',
+            '.tmr-fp-reminder--light .tmr-fp-reminder__close:hover{color:#07182A !important;}',
+            '#tmr-fp-reminder.tmr-fp-reminder--light .tmr-fp-btn--primary{background:#0C948C !important;',
+            'color:#FFFFFF !important;box-shadow:0 1px 2px rgba(7,24,42,0.10) !important;}',
+            /* confirmation modal */
+            '.tmr-fp-modal{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;',
+            'padding:20px;background:rgba(2,6,12,0.78);backdrop-filter:blur(4px);}',
+            '.tmr-fp-modal__box{width:100%;max-width:470px;max-height:92vh;overflow-y:auto;padding:28px 26px;',
+            'border-radius:18px;background:linear-gradient(160deg,rgba(16,26,36,0.99),rgba(8,12,18,0.99));',
+            'border:1px solid rgba(74,222,128,0.34);box-shadow:0 30px 80px rgba(0,0,0,0.62);text-align:center;color:#e8eef6;}',
+            '.tmr-fp-modal__seal{width:58px;height:58px;margin:0 auto 14px;border-radius:50%;display:flex;',
+            'align-items:center;justify-content:center;background:rgba(74,222,128,0.14);',
+            'border:1px solid rgba(74,222,128,0.42);color:#4ade80;font-size:26px;}',
+            '.tmr-fp-modal__box h3{margin:0;font-family:Barlow,Inter,sans-serif;font-weight:900;font-size:1.5rem;color:#f8fafc;}',
+            '.tmr-fp-modal__box p{margin:11px 0 0;color:#a9b8cc;font-size:0.97rem;line-height:1.55;}',
+            '.tmr-fp-modal__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;}',
+            '.tmr-fp-modal__actions .tmr-fp-btn{flex:1 1 170px;}',
+            '@media(max-width:520px){.tmr-fp-modal__box{padding:24px 18px;}',
+            '.tmr-fp-modal__actions .tmr-fp-btn{flex:1 1 100%;}}'
+        ].join('');
+        var style = document.createElement('style');
+        style.id = 'tmr-fp-styles';
+        style.textContent = css;
+        (document.head || document.documentElement).appendChild(style);
+    }
+
+    // -------------------------------------------------------- sportsbook UI
+
+    function stepMarkup(label, name, status) {
+        var mod = status === 'done' ? ' tmr-fp-step--done' : (status === 'current' ? ' tmr-fp-step--current' : '');
+        var dot = status === 'done' ? '&#10003;' : (status === 'current' ? '2' : '3');
+        return '<div class="tmr-fp-step' + mod + '">' +
+               '<span class="tmr-fp-step__dot">' + dot + '</span>' +
+               '<span><span class="tmr-fp-step__label">' + label + '</span>' +
+               '<span class="tmr-fp-step__name">' + name + '</span></span></div>';
+    }
+
+    function findPanelMount() {
+        return document.querySelector('.picks-container-modern') ||
+               document.getElementById('picks') ||
+               document.querySelector('main');
+    }
+
+    function renderPanel() {
+        if (document.getElementById('tmr-fp-panel')) return;
+        var mount = findPanelMount();
+        if (!mount) return;
+
+        var panel = document.createElement('section');
+        panel.id = 'tmr-fp-panel';
+        panel.className = 'tmr-fp-panel';
+        panel.setAttribute('aria-label', 'Welcome to TrustMyRecord — submit your first pick');
+        panel.innerHTML =
+            '<span class="tmr-fp-panel__kicker">New here</span>' +
+            '<h2>Welcome to TrustMyRecord</h2>' +
+            '<p class="tmr-fp-sub">Your record starts with your first locked pick. Choose a game below to get started.</p>' +
+            '<div class="tmr-fp-actions">' +
+                '<button type="button" class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-cta-primary">Submit My First Pick</button>' +
+                '<button type="button" class="tmr-fp-btn tmr-fp-btn--ghost" id="tmr-fp-cta-secondary">Explore Sportsbook</button>' +
+            '</div>' +
+            '<div class="tmr-fp-steps" role="list" aria-label="First pick progress">' +
+                stepMarkup('Step 1', 'Create account', 'done') +
+                stepMarkup('Step 2', 'Submit first pick', 'current') +
+                stepMarkup('Step 3', 'Build your verified record', 'upcoming') +
+            '</div>';
+
+        // Sit above the logged-out prompt / page header, at the very top of the board.
+        mount.insertBefore(panel, mount.firstChild);
+
+        document.getElementById('tmr-fp-cta-primary').addEventListener('click', function () {
+            track('first_pick_cta_clicked', { cta_location: 'sportsbook_onboarding_panel', cta: 'submit_my_first_pick', surface: surfaceName() });
+            goToGames();
+        });
+        document.getElementById('tmr-fp-cta-secondary').addEventListener('click', function () {
+            track('first_pick_cta_clicked', { cta_location: 'sportsbook_onboarding_panel', cta: 'explore_sportsbook', surface: surfaceName() });
+            collapsePanelToReminder();
+        });
+
+        if (!state.viewed) {
+            state.viewed = true;
+            setSessionFlag('viewed', true);
+            track('sportsbook_onboarding_viewed', { surface: surfaceName(), cta_location: 'sportsbook_onboarding_panel', has_picks: 'no' });
+        }
+    }
+
+    function removePanel() {
+        var p = document.getElementById('tmr-fp-panel');
+        if (p && p.parentNode) p.parentNode.removeChild(p);
+    }
+
+    // The pick-entry area: the live odds board in the lobby, falling back to
+    // the step-flow games list if the lobby board is not mounted.
+    function findGamesArea() {
+        var candidates = [
+            document.querySelector('.sportsbook-board-shell'),
+            document.getElementById('lobbyBoardRows'),
+            document.getElementById('gamesListSection'),
+            document.getElementById('gamesListContainer'),
+            document.getElementById('sportSelection')
+        ];
+        for (var i = 0; i < candidates.length; i++) {
+            var el = candidates[i];
+            if (el && el.offsetParent !== null) return el;
+        }
+        return candidates.find(function (el) { return !!el; }) || null;
+    }
+
+    function boardHasGames() {
+        var body = document.getElementById('lobbyBoardRows');
+        if (body && body.querySelector('.sportsbook-game-card')) return true;
+        var list = document.getElementById('gamesListContainer');
+        return !!(list && list.querySelector('.games-board-wrap, .sportsbook-game-card'));
+    }
+
+    // The lobby defaults to NBA, which is empty for most of the year. Telling a
+    // brand-new user to "choose a game below" and then showing them an empty
+    // board is the whole failure this flow exists to fix, so probe the boards
+    // and switch to one that actually has games today.
+    function ensureBoardWithGames() {
+        if (boardHasGames()) return Promise.resolve(false);
+        if (!window.api || !window.api.baseUrl) return Promise.resolve(false);
+
+        var order = ['MLB', 'WNBA', 'NBASummer', 'NFL', 'NCAAF', 'NHL', 'NCAAB', 'NBA', 'Soccer'];
+        var keyMap = (window.TMR && window.TMR.sportKeyMap) || {};
+        var probes = order
+            .filter(function (s) { return !!keyMap[s]; })
+            .map(function (sport) {
+                return fetch(window.api.baseUrl + '/games/board/' + encodeURIComponent(keyMap[sport]) + '?limit=5')
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (j) {
+                        return { sport: sport, count: (j && Array.isArray(j.games)) ? j.games.length : 0 };
+                    })
+                    .catch(function () { return { sport: sport, count: 0 }; });
+            });
+
+        return Promise.all(probes).then(function (results) {
+            var bySport = {};
+            results.forEach(function (r) { bySport[r.sport] = r.count; });
+            var chosen = null;
+            for (var i = 0; i < order.length; i++) {
+                if (bySport[order[i]] > 0) { chosen = order[i]; break; }
+            }
+            if (!chosen) return false;
+            var btn = document.querySelector('.sportsbook-rail-board[data-sport="' + chosen + '"]');
+            if (btn) { btn.click(); }
+            else if (typeof window.__tmrSelectSportBoard === 'function') { window.__tmrSelectSportBoard(chosen); }
+            else if (typeof window.TMR.setSport === 'function') { window.TMR.setSport(chosen); }
+            else { return false; }
+            log('switched board to ' + chosen + ' (' + bySport[chosen] + ' games)');
+            // Give the board a moment to paint before we scroll to it.
+            return new Promise(function (resolve) { setTimeout(function () { resolve(true); }, 900); });
+        }).catch(function () { return false; });
+    }
+
+    function scrollAndHighlight() {
+        var target = findGamesArea();
+        if (!target) return;
+        var highlightEl = target.closest ? (target.closest('.sportsbook-board-shell') || target) : target;
+        try {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {
+            target.scrollIntoView();
+        }
+        highlightEl.classList.add('tmr-fp-highlight');
+        setTimeout(function () { highlightEl.classList.remove('tmr-fp-highlight'); }, 4200);
+    }
+
+    function goToGames() {
+        scrollAndHighlight();
+        ensureBoardWithGames().then(function (switched) {
+            if (switched) scrollAndHighlight();
+        });
+    }
+
+    function collapsePanelToReminder() {
+        setSessionFlag('collapsed', true);
+        removePanel();
+        renderReminder({ inline: true });
+    }
+
+    // ---------------------------------------------------------- reminder UI
+
+    // Where the small reminder strip goes. On pages without a <main> (the
+    // legacy homepage) it must land AFTER the sitewide nav, not above it.
+    function reminderPlacement() {
+        if (isSportsbook()) {
+            var sb = findPanelMount();
+            if (sb) return { parent: sb, before: sb.firstChild };
+        }
+        var main = document.querySelector('main');
+        if (main) return { parent: main, before: main.firstChild };
+        var nav = document.querySelector('nav.tmr-global-nav') || document.querySelector('body > nav, body > header');
+        if (nav && nav.parentNode) return { parent: nav.parentNode, before: nav.nextSibling };
+        /* The design-system nav is injected at runtime, so on an early call it
+           is not in the document yet. The homepage holds its place with
+           #tmrNavReserve; anchoring to that puts the strip below the nav from
+           the first frame instead of above it. */
+        var reserve = document.getElementById('tmrNavReserve');
+        if (reserve && reserve.parentNode) return { parent: reserve.parentNode, before: reserve.nextSibling };
+        return { parent: document.body, before: document.body.firstChild };
+    }
+
+    /* The homepage and /profile/ are LOCKED DARK SURFACES.
+       The strip there sits in the dark band between the nav and the hero, but
+       that band is a SIBLING element - the strip's own ancestors are the light
+       page background, so walking up reads "light" and would have repainted
+       the homepage strip white. Verified in production: the detector returns
+       true on "/". The homepage escaped only because its inline early-paint
+       block hardcodes the class, and relying on that is one refactor away from
+       a regression. These two paths are excluded outright. */
+    function lockedDarkSurface() {
+        var p = (window.location.pathname || '').toLowerCase();
+        return p === '/' || p === '/index.html' || p.indexOf('/profile/') === 0;
+    }
+
+    /**
+     * Is the surface this strip is about to sit on a LIGHT one?
+     *
+     * Read from the real computed background rather than a page allowlist, so
+     * a page that changes theme, or a new page that adopts the strip, gets the
+     * right variant without anyone remembering to update a list. Walks up from
+     * the insertion point until it finds an opaque colour, because the strip's
+     * own parent is usually transparent.
+     *
+     * Unknown means dark: that is the original appearance, and the homepage's
+     * approved baseline must not shift because a colour could not be parsed.
+     */
+    function surfaceIsLight(node) {
+        if (lockedDarkSurface()) return false;
+        try {
+            var el = node;
+            for (var hops = 0; el && hops < 6; hops++, el = el.parentElement) {
+                var bg = window.getComputedStyle(el).backgroundColor;
+                var m = bg && bg.match(/rgba?\(([^)]+)\)/);
+                if (!m) continue;
+                var parts = m[1].split(',').map(function (x) { return parseFloat(x); });
+                if (parts.length > 3 && parts[3] < 0.5) continue;   // see-through, keep walking
+                var luminance = (0.299 * parts[0] + 0.587 * parts[1] + 0.114 * parts[2]) / 255;
+                return luminance > 0.6;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    /* ANOTHER COMPONENT ALREADY OWNS THIS SCREEN'S FIRST-PICK CTA
+       (SIM_ACTIVATION_20260825)
+
+       The MLB simulator's own post-result panel
+       (static/js/mlb-simulator-conversion.js) already renders "Make Your
+       Official Prediction" pointing at the board, for logged-in and logged-out
+       visitors alike, as soon as a run finishes. That CTA is BETTER than this
+       strip on that screen: it sits with the result the member just produced.
+       Two prompts for the same action is worse than one good one, so this
+       strip stands down when that panel is present.
+
+       It does NOT stand down before a run: until a result exists there is no
+       competing CTA, and a visitor who never runs a simulation should still be
+       asked. The panel is built asynchronously, hence the observer below.
+
+       The NFL simulator has no such panel, so the strip is the activation path
+       there throughout - which is the point of loading it on both. */
+    function competingFirstPickCta() {
+        try {
+            /* Two components can own the pick CTA on a page this strip runs on.
+               The MLB simulator's post-result panel, which sits with the
+               simulation the member just ran. And the Poll -> Pick strip on
+               /polls/, which names the prediction they just voted for. Both are
+               more specific than "Start your verified record", so both win and
+               this stands down. Neither is modified. */
+            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]')
+                || !!document.getElementById('tmr-poll-bridge');
+        } catch (e) { return false; }
+    }
+
+    /* Watch for that panel appearing after a simulation run and retire the
+       strip when it does. One observer, disconnected as soon as it fires. */
+    function standDownWhenAnotherCtaAppears() {
+        if (typeof MutationObserver !== 'function' || !document.body) return;
+        var observer = new MutationObserver(function () {
+            if (!competingFirstPickCta()) return;
+            observer.disconnect();
+            removeReminder();
+            log('another first-pick CTA rendered on this page - strip retired');
+        });
+        try { observer.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+    }
+
+    function renderReminder() {
+        if (competingFirstPickCta()) {
+            log('another first-pick CTA already on screen - not rendering the strip');
+            return;
+        }
+        var bar = document.getElementById('tmr-fp-reminder');
+
+        /* The homepage paints this strip during parse (see the early block in
+           index.html) so it is in the first frame instead of dropping in a
+           second later and shoving the whole page down. When that has happened
+           the node is already here and only needs its handlers -- rebuilding it
+           would throw away the very thing that avoided the shift. */
+        if (bar) {
+            if (bar.__tmrFpWired) return;
+        } else {
+            /* The early block decided the answer arrived too late to paint
+               without moving content the visitor was already reading. Cache is
+               written, so the next page view shows it during parse. Inserting
+               it here anyway is exactly the bug this is fixing. */
+            var early = window.TMRFirstPickEarly;
+            if (early && early.deferred) {
+                log('reminder deferred to next view (answer lost the race to first paint)');
+                return;
+            }
+            var placement = reminderPlacement();
+            if (!placement || !placement.parent) return;
+
+            bar = document.createElement('div');
+            bar.id = 'tmr-fp-reminder';
+            bar.className = 'tmr-fp-reminder' +
+                (surfaceIsLight(placement.parent) ? ' tmr-fp-reminder--light' : '');
+            bar.setAttribute('role', 'status');
+            bar.innerHTML =
+                '<span class="tmr-fp-reminder__icon" aria-hidden="true">&#9673;</span>' +
+                '<span class="tmr-fp-reminder__text"><strong>Start your verified record.</strong> Lock your first pick.</span>' +
+                (isSportsbook()
+                    ? '<button type="button" class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta">Choose a Game</button>'
+                    : '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-reminder-cta" href="/sportsbook/">Go to Sportsbook</a>') +
+                '<button type="button" class="tmr-fp-reminder__close" aria-label="Dismiss reminder">&times;</button>';
+
+            placement.parent.insertBefore(bar, placement.before || null);
+        }
+        bar.__tmrFpWired = true;
+
+        var cta = document.getElementById('tmr-fp-reminder-cta');
+        cta.addEventListener('click', function () {
+            track('first_pick_cta_clicked', { cta_location: 'reminder_strip', cta: 'go_to_sportsbook', surface: surfaceName() });
+            markActivationHandoff({ source: 'first_pick_strip', cta_location: 'reminder_strip' });
+            if (isSportsbook()) goToGames();
+        });
+        bar.querySelector('.tmr-fp-reminder__close').addEventListener('click', function () {
+            setSessionFlag('reminderClosed', true);
+            if (bar.parentNode) bar.parentNode.removeChild(bar);
+        });
+
+        maybeTrackReminderView();
+    }
+
+    /* IMPRESSION ONLY ONCE THE SERVER HAS CONFIRMED (ZERO_PICK_COVERAGE_20260824)
+       The strip is painted optimistically from LS_REMINDER_DUE so it cannot
+       shove the page down a second later. That optimism can be WRONG: a member
+       who was zero-pick, got the flag, then locked a pick elsewhere still
+       carries a stale flag until their next page load corrects it. Counting
+       that paint as an impression would inflate the funnel precisely among the
+       members who converted, which is the worst place to add noise. So the
+       event waits for the server's answer, and the paint does not. */
+    function maybeTrackReminderView() {
+        if (state.viewed || !state.confirmed) return;
+        if (!document.getElementById('tmr-fp-reminder')) return;
+        state.viewed = true;
+        setSessionFlag('viewed', true);
+        track('sportsbook_onboarding_viewed', {
+            surface: surfaceName(),
+            cta_location: isSportsbook() ? 'sportsbook_reminder' : 'reminder_strip',
+            has_picks: 'no'
+        });
+    }
+
+    function removeReminder() {
+        var b = document.getElementById('tmr-fp-reminder');
+        if (b && b.parentNode) b.parentNode.removeChild(b);
+    }
+
+    // ------------------------------------------------------ confirmation UI
+
+    function showFirstPickModal() {
+        if (document.getElementById('tmr-fp-modal')) return;
+        injectStyles();
+
+        var overlay = document.createElement('div');
+        overlay.id = 'tmr-fp-modal';
+        overlay.className = 'tmr-fp-modal';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-labelledby', 'tmr-fp-modal-title');
+        overlay.innerHTML =
+            '<div class="tmr-fp-modal__box">' +
+                '<div class="tmr-fp-modal__seal" aria-hidden="true">&#10003;</div>' +
+                '<h3 id="tmr-fp-modal-title">Your first pick is locked.</h3>' +
+                '<p>This pick is now part of your permanent verified record and cannot be edited after game time.</p>' +
+                '<div class="tmr-fp-modal__actions">' +
+                    '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-modal-record" href="/my-record/">View My Record</a>' +
+                    '<button type="button" class="tmr-fp-btn tmr-fp-btn--ghost" id="tmr-fp-modal-another">Submit Another Pick</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+
+        function close() {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            document.removeEventListener('keydown', onKey);
+        }
+        function onKey(e) { if (e.key === 'Escape') close(); }
+        document.addEventListener('keydown', onKey);
+
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+        document.getElementById('tmr-fp-modal-another').addEventListener('click', function () {
+            close();
+            if (typeof window.showPickStep === 'function') {
+                try { window.showPickStep('sportSelection'); } catch (e) {}
+            }
+            goToGames();
+        });
+        try { document.getElementById('tmr-fp-modal-record').focus(); } catch (e) {}
+    }
+    window.tmrShowFirstPickModal = showFirstPickModal;
+
+    // ------------------------------------------------------------- funnel
+
+    function markStarted(meta) {
+        if (state.started || !state.eligible || state.submitted) return;
+        state.started = true;
+        setSessionFlag('started', true);
+        track('first_pick_started', meta || {});
+    }
+
+    function markSubmitted(meta) {
+        if (state.submitted) return;
+        state.submitted = true;
+        state.eligible = false;
+
+        // analytics.js has its own first-pick detector on the POST /picks
+        // response. It flips tmr_has_posted_pick to '1' right after it emits,
+        // so if the flag is already set by the time the board reaches its
+        // confirmation step, the event has been sent and we must not repeat it.
+        var alreadySent = false;
+        try { alreadySent = localStorage.getItem(LS_ACTIVATED) === '1'; } catch (e) {}
+        if (window.__tmrFirstPickSubmittedSent) alreadySent = true;
+
+        try { localStorage.setItem(LS_ACTIVATED, '1'); } catch (e) {}
+        setSessionFlag('submitted', true);
+        if (!alreadySent) {
+            window.__tmrFirstPickSubmittedSent = true;
+            track('first_pick_submitted', meta || {});
+        }
+        removePanel();
+        removeReminder();
+        showFirstPickModal();
+    }
+
+    // Abandonment = they were on the sportsbook, saw the prompt, and left
+    // without locking anything. Fired at most once per session, otherwise
+    // every page-to-page navigation would report another abandonment.
+    function markAbandoned() {
+        if (state.abandonSent || state.submitted || !state.eligible || !state.viewed) return;
+        if (!isSportsbook()) return;
+        if (sessionFlags().abandonSent) { state.abandonSent = true; return; }
+        state.abandonSent = true;
+        setSessionFlag('abandonSent', true);
+        track('first_pick_abandoned', {
+            reached_pick_entry: state.started ? 'yes' : 'no',
+            surface: 'sportsbook'
+        });
+    }
+
+    // Wrap the sportsbook's own entry points instead of duplicating their
+    // logic, so the funnel can never disagree with what actually happened.
+    function instrumentSportsbook() {
+        // "started" = user put a selection in the slip.
+        var wrapSelect = function () {
+            if (typeof window.selectGameBet !== 'function' || window.selectGameBet.__tmrFpWrapped) return false;
+            var original = window.selectGameBet;
+            var wrapped = function () {
+                var out = original.apply(this, arguments);
+                try {
+                    var p = window.TMR && window.TMR.currentSelectedPick;
+                    markStarted({
+                        sport: (p && p.sport) || (window.TMR && window.TMR.selectedSport) || 'unknown',
+                        market_type: (p && (p.marketType || p.betType)) || 'unknown'
+                    });
+                } catch (e) {}
+                return out;
+            };
+            wrapped.__tmrFpWrapped = true;
+            window.selectGameBet = wrapped;
+            return true;
+        };
+
+        // "submitted" = the board reached its own success confirmation step.
+        var wrapConfirm = function () {
+            if (typeof window.showPickStep !== 'function' || window.showPickStep.__tmrFpWrapped) return false;
+            var original = window.showPickStep;
+            var wrapped = function (stepId) {
+                var out = original.apply(this, arguments);
+                if (stepId === 'pickConfirmation' && state.eligible) {
+                    try {
+                        var p = window.TMR && window.TMR.currentSelectedPick;
+                        markSubmitted({
+                            sport: (p && p.sport) || (window.TMR && window.TMR.selectedSport) || 'unknown',
+                            pick_type: (p && (p.marketType || p.betType)) || 'unknown'
+                        });
+                    } catch (e) { markSubmitted({}); }
+                }
+                return out;
+            };
+            wrapped.__tmrFpWrapped = true;
+            window.showPickStep = wrapped;
+            return true;
+        };
+
+        wrapSelect();
+        wrapConfirm();
+        // Late-loading sportsbook scripts reassign these globals; keep re-wrapping
+        // for a short window after load so we end up on top of the final version.
+        var tries = 0;
+        var iv = setInterval(function () {
+            wrapSelect();
+            wrapConfirm();
+            if (++tries > 40) clearInterval(iv);
+        }, 500);
+
+        // Backstop: the board also emits tmr:pickLocked on a successful lock.
+        window.addEventListener('tmr:pickLocked', function () {
+            if (state.eligible) markSubmitted({ sport: (window.TMR && window.TMR.selectedSport) || 'unknown' });
+        });
+
+        // Safety net for selection paths that do not route through selectGameBet.
+        var startWatch = setInterval(function () {
+            if (state.started || state.submitted || !state.eligible) { clearInterval(startWatch); return; }
+            try {
+                if (window.TMR && window.TMR.currentSelectedPick) {
+                    markStarted({ sport: window.TMR.selectedSport || 'unknown', market_type: 'unknown' });
+                    clearInterval(startWatch);
+                }
+            } catch (e) {}
+        }, 700);
+    }
+
+    // ---------------------------------------------------------------- boot
+
+    function renderForEligibleUser() {
+        injectStyles();
+        var flags = sessionFlags();
+        if (isSportsbook() && !flags.collapsed) {
+            renderPanel();
+        } else if (!flags.reminderClosed) {
+            renderReminder();
+        }
+    }
+
+    function start() {
+        state.onSportsbook = isSportsbook();
+
+        if (!hasToken()) {
+            log('no authenticated session — onboarding skipped');
+            return;
+        }
+        var user = getStoredUser();
+        state.userId = user ? (user.id || user.username) : null;
+
+        /* Paint the reminder strip NOW if the last server answer said it was
+           due. Waiting for /users/me meant it dropped into the top of the
+           document about a second in and pushed the nav, the ticker, the hero
+           copy, the CTA buttons and the capper card down by its own height —
+           a 0.33 CLS on the homepage for every eligible signed-in visitor.
+           This is not a guess about the user: it only fires on a cached, real
+           server answer, and the fetch below still corrects it either way. The
+           first load in a new browser has no cached answer and still waits. */
+        var early = window.TMRFirstPickEarly;
+        var preRendered = false;
+        try { preRendered = localStorage.getItem(LS_REMINDER_DUE) === '1'; } catch (e) {}
+        /* On the homepage the early block has already done this during parse,
+           which is the only moment it can be done without moving the page. Do
+           not repeat it here. */
+        if (!(early && early.ran) && preRendered && !isSportsbook() && !sessionFlags().reminderClosed) {
+            injectStyles();
+            renderReminder();
+        }
+        if (early && early.ran) injectStyles();
+
+        /* One request, not two: the early block already asked, so adopt its
+           answer rather than putting a second call on the same endpoint. */
+        var statusPromise = (early && early.promise) ? early.promise : fetchActivationStatus();
+
+        statusPromise.then(function (status) {
+            if (!status) {
+                /* Unknown: a 401 after the access token aged out, a Render cold
+                   start, a dropped connection. None of that is evidence about
+                   this user's picks. A strip that came from a real cached
+                   server answer stays put -- tearing it out here shifted the
+                   page on every flaky request and replaced a true message with
+                   nothing. */
+                return;
+            }
+            state.userId = status.userId || state.userId;
+            if (status.hasPicks) {             // existing / activated user -> never show
+                try {
+                    localStorage.setItem(LS_ACTIVATED, '1');
+                    localStorage.removeItem(LS_REMINDER_DUE);
+                } catch (e) {}
+                removePanel();
+                removeReminder();
+                log('user already has ' + status.pickCount + ' pick(s) — onboarding suppressed');
+                return;
+            }
+            try {
+                localStorage.removeItem(LS_ACTIVATED);
+                localStorage.setItem(LS_REMINDER_DUE, '1');
+            } catch (e) {}
+            state.eligible = true;
+            state.confirmed = true;
+            var flags = sessionFlags();
+            state.viewed = !!flags.viewed;
+            state.started = !!flags.started;
+
+            renderForEligibleUser();
+            standDownWhenAnotherCtaAppears();
+            /* The strip may already be on screen from the optimistic paint, in
+               which case renderReminder() will not run again - count it now
+               that the answer has arrived. */
+            maybeTrackReminderView();
+            if (state.onSportsbook) instrumentSportsbook();
+
+            window.addEventListener('pagehide', markAbandoned);
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'hidden') markAbandoned();
+            });
+        });
+    }
+
+    /* ARRIVAL. Emitted on /sportsbook/ only, and ONLY when a handoff record
+       proves the member got here from one of our activation CTAs. An ordinary
+       visit to the board leaves no record and reports nothing. The record is
+       consumed on read, so one legitimate arrival is exactly one event. */
+    function emitActivationArrival() {
+        if (!isSportsbook()) return;
+        var raw = null;
+        try { raw = sessionStorage.getItem(ARRIVAL_KEY); } catch (e) { return; }
+        if (!raw) return;
+        try { sessionStorage.removeItem(ARRIVAL_KEY); } catch (e) {}
+        var d;
+        try { d = JSON.parse(raw); } catch (e) { return; }
+        if (!d || !d.source) return;
+        var payload = { source: d.source, cta_location: d.cta_location || null, from_surface: d.surface || null };
+        if (d.poll_type) payload.poll_type = d.poll_type;
+        if (d.arm) payload.arm = d.arm;
+        if (d.gate) payload.gate = d.gate;
+        track('activation_pick_flow_arrival', payload);
+        log('activation arrival', payload);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { emitActivationArrival(); start(); });
+    } else {
+        emitActivationArrival();
+        start();
+    }
+})();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="ae043a02bc5b">
+<html lang="en" data-tmr-build="0394868abd9b">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1152,6 +1152,214 @@ a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset
   .tkact-lbl{transition:none}
   .tkact-item.is-in,.tkact-item.is-out{opacity:0;transform:none}
 }
+
+
+/* =========================================================== PHONE TIER =====
+   2026-08-25. The homepage was the only page on the site rendering desktop
+   type on a phone. The two size-restore passes (1.2x on 2026-08-23, a further
+   1.25x on 2026-08-24) were DESKTOP asks, but almost every rule they scaled is
+   an UNGUARDED base rule, and this file had no phone tier for the body of the
+   page - only for .wrap, .final, .btn.lg, the ticker and the live-competition
+   card. So a 390px phone inherited the full ~1.5x scale: h1 at 60px, section
+   heads at 54px, card heads at 35px, avatars at 63px. Measured at 390px the
+   document was 11,034px tall against 4,292px on a 1440px desktop, the stats
+   bridge and the platform grid overflowed their own containers, the Live Picks
+   tab strip and the live-competition header link were clipped, and pick rows
+   wrapped to five lines with the result column colliding with the pick.
+   Every other TMR page sits at h1 19-31px on the same viewport, which is what
+   "mobile does not match desktop" meant.
+
+   This block restores the DESIGN on a phone, not the desktop pixel sizes: same
+   hierarchy, same order, same components, sized for a 390px screen and kept
+   compact per the standing rule that TMR pages must not scroll for miles.
+
+   It sits last in the file on purpose. Several rules here have the same
+   specificity as ones in the earlier max-width:640px blocks, so source order is
+   what makes them win. It deliberately does NOT declare .wrap padding,
+   .final padding or .btn.lg sizing: those are pinned by the 640px/340px blocks
+   above and by the narrow-viewport-overflow lock test. Do not add them here.
+   ============================================================================ */
+@media(max-width:640px){
+  /* ---- hero ---- */
+  .eyebrow{font-size:11px;padding:7px 14px;gap:9px;letter-spacing:.05em}
+  .eyebrow .bl{width:7px;height:7px}
+  .hero h1.hh{font-size:36px;line-height:1.02;margin:16px 0 14px}
+  .hero p.sub{font-size:16px;line-height:1.5}
+  .hero .cta{gap:16px;margin-top:20px}
+  .hero .cta .btn.lg{height:54px;font-size:17px}
+  .hero .cta .tlink{font-size:15px}
+  .tlink{font-size:15px}
+  /* A phone button at the desktop 69px/24px is a slab; the .lg variants keep
+     their own pinned heights from the blocks above. */
+  .btn{height:50px;padding:0 20px;font-size:16px;border-radius:12px;border-width:2px}
+
+  /* ---- hero card header: "Enter the competition" was being clipped ----
+     .spot .hd is a nowrap flex row and .spot is overflow:hidden, so once the
+     label grew with the scale the link ran off the card edge. The label gives
+     way (it can shrink and ellipsise); the link never does. */
+  .spot .hd{padding:12px 16px;gap:10px}
+  .spot .hd b,.spot.comp .hd b{font-size:11px;letter-spacing:.06em;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .spot .hd a,.spot.comp .hd a{flex:0 0 auto;white-space:nowrap;font-size:11px!important}
+  .spot .ft,.spot.comp .ft{padding:12px 16px;font-size:13px}
+  .vchip,.spot.comp .vchip{font-size:12px;padding:4px 10px}
+
+  /* ---- stats bridge ----
+     At the desktop gutter (43px) plus cell padding (33px) a 2-column bridge
+     left an 86px content box for a 39px "$2,500", so both cells overflowed the
+     stripe by ~19px. Tightened here rather than by dropping a column, so the
+     four figures still read as one band. */
+  .bridge-in{padding:0 12px}
+  .bridge .s{padding:14px}
+  .bridge .s b{font-size:26px}
+  .bridge .s span{font-size:11px;letter-spacing:.08em;margin-top:5px}
+  /* Two columns: the right-hand cell's divider sits on the panel edge. */
+  .bridge .s:nth-child(2n){border-right:none}
+  .bridge .cta-cell{flex-direction:column;align-items:flex-start;gap:12px;padding:14px}
+  .bridge .cta-cell p{font-size:14px;max-width:none}
+
+  /* ---- section heads ----
+     Side-by-side, the trailing link overhung the viewport by 58px. */
+  .dash{padding-top:32px}
+  .sec-head{flex-direction:column;align-items:flex-start;gap:12px;margin:0 0 16px}
+  .sec-head h2{font-size:27px;gap:11px}
+  .sec-head h2::before{width:6px;height:24px}
+  .sec-head p{font-size:14px;margin-top:7px;padding-left:17px}
+
+  /* ---- board cards ---- */
+  .board{gap:16px}
+  .chd{padding:14px 16px;gap:10px}
+  .chd h3{font-size:22px;gap:10px;white-space:nowrap}
+  .chd h3 .pulse{width:9px;height:9px;box-shadow:0 0 0 5px var(--green-soft)}
+  .chd .cnt{font-size:12px}
+  /* Four sport tabs cannot fit 390px at any readable size, so the strip scrolls
+     inside the card head instead of being clipped by it - the same pattern the
+     handicappers and profile tab strips already use. */
+  .tabs{gap:4px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:6px 12px;font-size:13px;border-radius:7px;white-space:nowrap}
+  .card .foot{padding:13px 16px}
+  .card .foot a{font-size:15px}
+
+  /* ---- live picks ----
+     The row is logo | body | result. At the desktop scale the body's 26px pick
+     line wrapped to four or five lines and the result column sat alongside the
+     wrap, which is what read as the result overlapping the pick. */
+  .pk{gap:12px;padding:13px 14px}
+  .pk .logo2{width:42px;height:42px;border-radius:9px;padding:6px}
+  .pk .who{font-size:11px;gap:7px}
+  .pk .who .ava,.pk .who .avl{width:20px;height:20px;border-radius:5px}
+  .pk .who .avl{font-size:9px}
+  .pk .who b{font-size:13px}
+  .pk .ln{font-size:16px;line-height:1.2;margin:4px 0 5px}
+  .pk .mt{font-size:11px;gap:7px}
+  .lgchip{padding:2px 7px;font-size:10px;border-radius:5px}
+  .pk .rt{gap:6px}
+  .badge{padding:4px 9px;font-size:10px;border-radius:5px}
+  .pk .rt .u{font-size:15px}
+
+  /* ---- leaderboard ----
+     These are the one set of rules that were already responsive, but by
+     container query: on a phone .board is one column, so the card is FULL
+     width, every clamp() lands on its desktop maximum and the row was sized
+     for a 1440px screen. Fixed px here overrides the cqi ceiling. */
+  .lbr{column-gap:10px;padding:12px 14px}
+  .lbr .rk{width:26px;height:26px;font-size:13px;border-radius:7px}
+  .lbr .ava,.lbr .avl{width:32px;height:32px;border-radius:8px}
+  .lbr .avl{font-size:12px}
+  .lbr .nm b{font-size:14px}
+  .lbr .nm span{font-size:11px;margin-top:2px}
+  .lbr .un b{font-size:15px}
+  .lbr .un span{font-size:11px;margin-top:2px}
+
+  /* ---- sports talk ---- */
+  .fr{padding:13px 14px;gap:11px}
+  .fr .ava,.fr .avl{width:36px;height:36px;border-radius:9px}
+  .cat{padding:3px 8px;font-size:10px;border-radius:5px;margin-bottom:7px}
+  .fr .ft2{font-size:15px;line-height:1.3}
+  .fr .fm{font-size:12px;margin-top:5px}
+
+  /* ---- compete row ---- */
+  .compete{gap:16px;margin-top:16px}
+  .cch{padding:13px 16px;gap:11px}
+  .cch .ic{width:36px;height:36px;border-radius:9px;font-size:18px}
+  .cch h4{font-size:23px}
+  .cch .st{padding:4px 9px;font-size:10px;border-radius:5px}
+  .cbody{padding:16px}
+  .ccard p{font-size:14px;line-height:1.55}
+  .kv{gap:18px;margin:16px 0 18px}
+  .kv .k b{font-size:22px}
+  .kv .k span{font-size:10px;margin-top:4px}
+  .crow{font-size:14px;gap:10px;padding:6px 0}
+  .crow i{width:20px;height:20px;font-size:11px}
+  .mrow{padding:11px 13px;gap:11px;border-radius:10px;margin-bottom:9px}
+  .mrow .mav,.mrow .mavl{width:32px;height:32px;border-radius:7px}
+  .mrow .mavl{font-size:12px}
+  .mrow .mt2 b{font-size:14px}
+  .mrow .mt2 span{font-size:12px}
+  .mrow .go{font-size:12px}
+  .pollq{font-size:15px}
+  .pollmeta{font-size:12px;margin-bottom:14px}
+  .pbar{margin-bottom:13px}
+  .pbar .r{font-size:13px}
+  .pbar .tr,.pbar .tr i{height:9px}
+
+  /* ---- platform strip ----
+     Two columns put the cell's own content box at ~150px, so every tile in the
+     grid overhung the panel. One column per tile on a phone. */
+  .explore{margin-top:16px}
+  .explore .eh{padding:13px 16px;gap:8px;flex-direction:column;align-items:flex-start}
+  .explore .eh h3{font-size:23px;gap:11px}
+  .explore .eh h3::before{width:5px;height:20px}
+  .egrid{grid-template-columns:1fr}
+  .ei{padding:16px;gap:9px;border-right:none;border-bottom:1px solid var(--line)}
+  .ei:last-child{border-bottom:none}
+  .ei .ic2{width:36px;height:36px;border-radius:9px;font-size:18px}
+  .ei h5{font-size:17px}
+  .ei .badge2{padding:4px 9px;font-size:11px;border-radius:5px}
+  .ei p{font-size:14px;line-height:1.5}
+  .ei .go2{font-size:14px}
+
+  /* ---- closing CTA + footer (padding stays pinned by the blocks above) ---- */
+  .final{margin-top:16px;gap:18px}
+  .final h3{font-size:26px}
+  .final p{font-size:15px;margin-top:9px}
+  footer{margin-top:36px;padding:26px 0}
+  footer .in{padding:0 20px;gap:14px;font-size:13px}
+  footer a{margin-right:16px}
+}
+
+/* Small phones: the headline is the only thing that still needs to give, and
+   the board type follows it down one more step. */
+@media(max-width:380px){
+  .hero h1.hh{font-size:32px}
+  .hero p.sub{font-size:15px}
+  .sec-head h2{font-size:24px}
+  .chd h3{font-size:20px}
+  .bridge .s b{font-size:23px}
+  .pk .ln{font-size:15px}
+}
+
+/* Tablets and landscape phones (641-1024px). Between the phone tier above and
+   the 1180px desktop step the page is already ONE column (set at 1400px), but
+   every display size was still the desktop's: a 60px headline and 54px section
+   heads over a single 1024px-or-narrower column. This band steps the display
+   type down so the one-column layout reads at the same weight it does on a
+   phone and on a desktop. Type only - no layout, no spacing, no colours - so
+   the approved desktop composition at 1025px and above is untouched. */
+@media(min-width:641px) and (max-width:1024px){
+  .hero h1.hh{font-size:46px}
+  .hero p.sub{font-size:19px}
+  .sec-head h2{font-size:38px}
+  .sec-head h2::before{height:32px}
+  .sec-head p{font-size:18px}
+  .chd h3{font-size:28px}
+  .chd .cnt{font-size:16px}
+  .cch h4,.explore .eh h3{font-size:27px}
+  .bridge .s b{font-size:31px}
+  .bridge .s span{font-size:14px}
+  .final h3{font-size:38px}
+  .final p{font-size:18px}
+}
 </style>
 <!-- END HOME CRITICAL CSS -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -1867,7 +2075,7 @@ a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.ae043a02bc5b.js"></script>
+<script src="/static/js/tmr-home-live.0394868abd9b.js"></script>
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->
@@ -1880,7 +2088,7 @@ a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset
 <script src="/static/js/backend-api.js?v=c1f7d7dd762d"></script>
 <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
 <script src="/static/js/notifications.js?v=395be0dd8cdf"></script>
-<script src="/static/js/first-pick-onboarding.19af50c57c8a.js"></script>
+<script src="/static/js/first-pick-onboarding.ceb09eef6250.js"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=df4043fd5769"></script>
 </body>
 </html>
