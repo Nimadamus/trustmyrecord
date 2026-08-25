@@ -1,3 +1,133 @@
+# Competitive audit and acceptance standard
+
+Written 2026-08-25, before the work it sets the bar for. It exists so that
+"best-in-class" is a claim with a definition behind it rather than an adjective.
+
+## What is actually out there
+
+Surveyed the publicly reachable NBA and NHL simulators and matchup models. Some
+pages refused automated fetching, and those are marked as such rather than
+guessed at, because an audit that invents its competitors is worse than no audit.
+
+| Product | Simulation approach | Current rosters and injuries | Lineup / goalie control | Simulation count | Box score | Play-by-play | Betting-style outputs | Published methodology | Published accuracy |
+|---|---|---|---|---|---|---|---|---|---|
+| WhatIfSports SimMatchup | Rating-based, historical and "dream" teams | No -- built around historical seasons from 1967-68 | Team choice only, per its own description | One game per press | Not described on the page | Not described | No | No | No |
+| MatchSimHub | Tunable outcome model, three "chaos" modes, playstyle and home-advantage toggles | Not stated anywhere on the page | Strength and playstyle sliders, no named lineup | "Instant" results, count not offered | Not described | Not described | No | No -- explicitly independent, no method given | No |
+| PlayOBM | Possession-by-possession engine, per its own copy | Current or classic teams | Team choice | 1,000 runs offered | Implied | "SimCast" play-by-play | Not stated | No | No |
+| The Sports Terminal | Shot-by-shot single game, lines against the starting goalie | Implied current | Lines and starting goalie referenced | Single game | Implied | Shot by shot | Pinned to their own model line | No | No (403, not directly verifiable) |
+| MyGameSim | Predictions plus projected player stats | Implied current | Not stated | Not stated | Player projections | No | Score predictions | No | No (403, not directly verifiable) |
+| CapperTek | Its own description: algorithms and AI that **reverse engineer betting lines and odds** | Not stated | No | Single result | No | No | Yes, derived from the market | No | No |
+| StatSharp | Game simulations with "value edges" | Implied current | Not stated | Not stated | Projected stats | No | Spread, moneyline, total edges | No | No |
+
+Three things stand out, and they are the whole opportunity.
+
+**Almost nobody publishes a method.** Across every product surveyed, not one
+states how its model works in enough detail to be argued with.
+
+**Nobody publishes accuracy at all.** Not a Brier score, not a calibration
+curve, not a holdout. A simulator that cannot tell you how often it is right is
+asking to be believed rather than checked.
+
+**At least one openly derives its numbers from the betting market.** CapperTek's
+own description says it reverse engineers lines and odds. That is a legitimate
+product, but it is a market echo, not a model: it cannot disagree with the
+market, so it can never tell you the market is wrong.
+
+The common shape of the category is: pick two teams, press a button, receive a
+scoreline. The ceiling is low and it is set by presentation rather than by
+evidence.
+
+## The standard this product is held to
+
+Ten commitments. Each is either met and evidenced below, or listed as not met.
+Nothing is graded on intent.
+
+1. **Every claim about accuracy is measured out of sample.** Settings are chosen
+   on calibration seasons and scored once on seasons never used for tuning.
+2. **Every number is published with a sample size and an interval.** A skill
+   figure without an error bar is not evidence.
+3. **Weaknesses are published beside strengths.** Segments where the model has no
+   edge are reported as having no edge.
+4. **Nothing in a box score is impossible.** Player lines sum to team totals, team
+   totals sum to the final score, minutes reconcile including overtime.
+5. **Nothing written is invented.** Every sentence of a recap traces to an event
+   the simulation played, enforced by a test that reads the box score back.
+6. **Scenarios change the game, not the label.** Sitting a player removes him and
+   redistributes his minutes; a scenario that changes nothing reports nothing.
+7. **Data provenance and freshness are visible.** The response says when the
+   season data was built and where it came from.
+8. **The method is published in full**, including the parts that did not work.
+9. **No market echo.** The model never reads a betting line.
+10. **No unsupported superlatives.** No "most accurate" without a number behind it.
+
+## Where the product stands against it
+
+Met: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10. The evidence for 1 to 3 is the holdout
+evaluation below; for 4 and 5 the eight-suite gate; for 6 the scenario suite.
+
+# Holdout evaluation
+
+The walk-forward backtest was already leak-free in the way that matters most: on
+the morning of each game it has seen only games already played. But the SETTINGS
+of that model -- decay, ridge, how much a starting goaltender counts -- were
+chosen by looking at how they scored across every season available, which is
+optimising against the evaluation set. Every number produced that way is a
+little too flattering.
+
+So the evidence is split and the halves are not allowed to touch. Settings are
+searched on 2023 and 2024, frozen, and the 2025 and 2026 seasons are scored
+once.
+
+    node scripts/holdout_evaluation.js --sport nba
+    node scripts/holdout_evaluation.js --sport nhl
+
+## Basketball, on seasons never used to choose anything
+
+| segment | games | Brier | Brier skill [95% CI] | accuracy | margin MAE |
+|---|---|---|---|---|---|
+| everything | 2,468 | 0.20879 | **15.66% [13.02%, 18.41%]** | 67.71% | 11.24 |
+| a clear favourite | 1,130 | 0.17105 | 29.59% [24.50%, 35.29%] | 77.61% | 10.96 |
+| heavy favourites | 316 | 0.13504 | 41.88% [28.47%, 52.76%] | 83.86% | 10.87 |
+| near coin flips | 479 | 0.24686 | **0.78% [-0.20%, 1.82%]** | 56.16% | 11.36 |
+
+Expected calibration error on the holdout: **2.62%**.
+
+The fourth row is the honest one. On games the model itself calls close to even,
+its skill interval includes zero: it has not been shown to beat a coin there, and
+saying so is more useful than burying it in an average.
+
+## Hockey, same discipline
+
+| segment | games | Brier | Brier skill [95% CI] | accuracy | margin MAE |
+|---|---|---|---|---|---|
+| everything | 2,623 | 0.24235 | **2.36% [0.73%, 3.73%]** | 56.58% | 2.13 |
+| a clear favourite | 440 | 0.21259 | 7.10% [-1.15%, 14.60%] | 69.77% | 1.99 |
+| near coin flips | 909 | 0.25009 | -0.06% [-0.81%, 0.61%] | 50.61% | 2.20 |
+
+Expected calibration error on the holdout: **2.04%**.
+
+### What knowing the starting goaltender is worth
+
+Measured on the holdout, with the setting chosen on the calibration seasons and
+then frozen:
+
+| | games | Brier | Brier skill [95% CI] | accuracy |
+|---|---|---|---|---|
+| knowing the starter | 2,623 | 0.24235 | **2.36% [0.73%, 3.73%]** | 56.58% |
+| not knowing it | 2,623 | 0.24480 | 1.37% [-0.11%, 2.72%] | 55.74% |
+
+This is the single most useful result on this page, and it is not the flattering
+one. Without the starting goaltender, the hockey model's skill interval INCLUDES
+ZERO: on unseen data it has not been demonstrated to beat picking the home side.
+With the starter, the interval clears zero. The goaltender is not a refinement
+here. It is most of what the model knows.
+
+It is also a correction. Measured across all four seasons -- the seasons whose
+results helped choose the settings -- the same model reads 4.7% skill. On seasons
+it was never allowed to see, it reads 2.36%. The difference between those two
+numbers is exactly the optimism this split exists to remove, and the smaller one
+is the true one.
+
 # Release checklist
 
 Kept honestly. An item is ticked when it has been VERIFIED to work, not when

@@ -409,6 +409,31 @@
     ], rows);
   }
 
+  /**
+   * The scorelines that actually came up.
+   *
+   * A projected score is an average, and an average is often a result that was
+   * never once played: 114.9 to 106.8 is not a basketball score and 3.14 to 2.71
+   * is not a hockey one. These are the exact finals the simulation produced,
+   * most common first, which is the resolution the game is really decided in.
+   */
+  function commonScores(d) {
+    var list = d.projection.most_common_scores || [];
+    var wrap = el('div');
+    if (!list.length) return wrap;
+    var away = d.matchup.away.abbr;
+    var home = d.matchup.home.abbr;
+    wrap.appendChild(S.table([
+      { h: 'Final', fmt: function (r) { return away + ' ' + r.away + ' \u2013 ' + r.home + ' ' + home; } },
+      { h: 'Share of runs', fmt: function (r) { return (r.share * 100).toFixed(1) + '%'; } },
+      { h: 'Runs', fmt: function (r) { return r.count.toLocaleString(); } },
+    ], list));
+    wrap.appendChild(el('div', 'disc',
+      'Out of ' + d.meta.simulations.toLocaleString() + ' simulated games. '
+      + 'The projected score above is an average of all of them and may itself never have been played.'));
+    return wrap;
+  }
+
   function render(app, d, box) {
     var p = d.projection;
     var away = d.matchup.away;
@@ -474,6 +499,9 @@
       } },
       { id: 'scoring', label: 'Scoring summary', build: function (node) {
         node.appendChild(scoringSummary(d));
+      } },
+      { id: 'scores', label: 'Likely scores', build: function (node) {
+        node.appendChild(commonScores(d));
       } },
       { id: 'team', label: 'Team stats', build: function (node) { node.appendChild(teamStats(d)); } },
       { id: 'why', label: 'Why the model moved', build: function (node) {
