@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NBA Simulator 2026: Simulate Games, Scores &amp; Player Stats | TrustMyRecord</title>
+<meta name="description" content="Simulate any NBA matchup with current rosters and real player usage for a realistic final score, quarter-by-quarter scoring, win probability and a full player box score. Free." />
+<link rel="canonical" href="https://trustmyrecord.com/nba-simulator/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:title" content="NBA Simulator 2026: Simulate Games, Scores &amp; Player Stats" />
+<meta property="og:description" content="Simulate any NBA matchup with current rosters, real rotations, pace and offensive and defensive ratings for a realistic score, win probability and full player box score." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://trustmyrecord.com/nba-simulator/" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NBA Simulator 2026 | TrustMyRecord" />
+<meta name="twitter:description" content="Simulate any NBA matchup with current rosters and real player usage for a realistic score, quarter-by-quarter scoring and a full player box score. A model projection, not betting advice." />
+<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"TrustMyRecord NBA Game Simulator","applicationCategory":"SportsApplication","operatingSystem":"Web","description":"Simulate any NBA matchup using current rosters, real rotation minutes, pace, and opponent-adjusted offensive and defensive ratings. Returns a projected score, a win probability, quarter-by-quarter scoring, and a full reconciled box score with realistic player statistics.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://trustmyrecord.com/nba-simulator/","publisher":{"@type":"Organization","name":"TrustMyRecord","url":"https://trustmyrecord.com/"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://trustmyrecord.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://trustmyrecord.com/tools/"},{"@type":"ListItem","position":3,"name":"NBA Simulator","item":"https://trustmyrecord.com/nba-simulator/"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is the TrustMyRecord NBA Simulator?","acceptedAnswer":{"@type":"Answer","text":"It is a free NBA game simulator that plays out any matchup between two teams. A fast simulation runs thousands of times to produce the win probability, spread and total, and one full possession-by-possession game is played with a real ten-man rotation on the floor to produce the displayed final score, the quarter-by-quarter line, and a complete player box score."}},
+{"@type":"Question","name":"Can I simulate any two NBA teams?","acceptedAnswer":{"@type":"Answer","text":"Yes. Pick any team as the away side and any other team as the home side. You can also set the game on a neutral floor, which removes the home-court adjustment entirely."}},
+{"@type":"Question","name":"Does the NBA simulator use current rosters?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each team dresses a ten-man rotation built from its current roster and each player's real per-minute production, rescaled so the ten of them add to a legal 240 minutes with a 40-minute individual cap. A player listed out is removed from the rotation and his minutes pass to the next player up."}},
+{"@type":"Question","name":"Does it produce a full player box score?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every simulation produces minutes, points, field goals, three-pointers, free throws, offensive and defensive rebounds, assists, steals, blocks, turnovers and fouls for every player who plays. Every team number is the sum of the player lines beneath it, and the team points total is the final score, so the box score reconciles by construction."}},
+{"@type":"Question","name":"How does the simulator handle overtime?","acceptedAnswer":{"@type":"Answer","text":"A tie after four quarters goes to a five-minute overtime, and to another if it is still level. The closing possessions of a close fourth quarter are also played under endgame rules, so a team down five or less hunts three-pointers and a team ahead by five or less is fouled and shoots free throws, which is what makes close games finish like real ones."}},
+{"@type":"Question","name":"Why does the same matchup give a different result each time?","acceptedAnswer":{"@type":"Answer","text":"Because it is a simulation, not a formula. Each run is a fresh random draw from the same model, so the same two teams produce a different score, a different box score and a different hero every time, exactly as real games do. Simulate again to see the range. The link on a result pins that exact run so it can be shared and reproduced."}},
+{"@type":"Question","name":"How many simulations can I run?","acceptedAnswer":{"@type":"Answer","text":"You can run 100, 1,000, 5,000, 10,000, 25,000 or 50,000. The default is 10,000. The win probability, spread and total are averaged across whichever count you choose, and the exact count is shown on every result."}},
+{"@type": "Question", "name": "How accurate is the NBA simulator?", "acceptedAnswer": {"@type": "Answer", "text": "It was scored on 3,701 NBA games across four seasons, and every one of them was projected using only games that had already been played before it, so nothing the model saw had happened yet. It called the winner 66.5% of the time against 54.8% for always picking the home team, its projected margin missed by 11.3 points on average against 12.7 for the league average, and its calibration error was 1.8%, so a stated 70% has been close to a real 70%. Team strength is solved from the results by weighted ridge regression rather than read off points scored and allowed, so a team is measured against the opponents it actually faced. It knows less early in a season, and the published figures show that stage by stage."}},
+{"@type":"Question","name":"Is the NBA simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The NBA game simulator is free to use with no account required. You can simulate any matchup, read the projected score, win probability, player stats and box score, and then track real, verified betting records separately on TrustMyRecord."}}
+]}
+</script>
+<link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=20388cf7f540">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
+<script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
+<script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<script defer src="/static/js/tmr-sim-core.js?v=c93a00bd7ff7"></script>
+<script defer src="/static/js/nba-simulator-app.js?v=95aafb55b766"></script>
+<!-- Shell only: the nav and footer come from the shared design system, the tool
+     keeps its own dark surface. Same hybrid arrangement the NFL simulator uses. -->
+<link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<!-- CLS: the shared header is injected by tmr-ds-nav.js at the end of the body,
+     which pushes the page down after first paint. That shift is worth about 0.15
+     to 0.30 CLS on its own. This reserves the header's height up front and drops
+     the reservation in the SAME frame the real header lands, so the two cancel
+     and nothing visibly moves. tmr-ds-nav.js is not modified. -->
+<div id="dsNavReserve" aria-hidden="true" style="height:70px"></div>
+<script>
+(function () {
+  var r = document.getElementById('dsNavReserve');
+  if (!r) return;
+  var drop = function () { if (r && r.parentNode) { r.parentNode.removeChild(r); r = null; } };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () {
+    if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); }
+  });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  // If the header script never runs, give the space back rather than leaving a gap.
+  window.addEventListener('load', function () {
+    setTimeout(function () { o.disconnect(); drop(); }, 2000);
+  });
+}());
+</script>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>NBA Game Simulator</h1>
+    <p>Simulate any NBA matchup from current rosters and real rotation minutes for a projected score, a win probability, quarter-by-quarter scoring and a full player box score. Tap a game on the upcoming slate, or pick any two teams, choose how many simulations to run, and set the home floor or play it neutral. A model projection, not betting advice.</p>
+  </section>
+
+  <div class="setup" id="setup">
+    <div class="modebar" id="modebar" role="tablist" aria-label="Simulation mode">
+      <button type="button" class="on" data-mode="schedule">Upcoming games</button>
+      <button type="button" data-mode="custom">Custom matchup</button>
+    </div>
+
+    <div id="schedulePane">
+      <div class="slatebar">
+        <span id="slateLabel" class="slatelabel"></span>
+        <label class="fld inline"><span>Date</span><input type="date" id="slateDate"></label>
+      </div>
+      <div class="games" id="games"></div>
+    </div>
+
+    <div id="customPane" hidden>
+      <div class="customwrap">
+        <label class="fld"><span>Away team</span><select id="awayTeam"><option>Loading teams</option></select></label>
+        <div class="vs-chip">at</div>
+        <label class="fld"><span>Home team</span><select id="homeTeam"><option>Loading teams</option></select></label>
+        <div class="fld"><span>&nbsp;</span><button class="btn ghost" type="button" id="swapBtn">Swap</button></div>
+      </div>
+      <div id="extraControls" class="setgrid"></div>
+    </div>
+
+    <div class="setgrid">
+      <div class="fld"><span>Simulations</span>
+      <div class="seg" id="simSeg">
+        <button type="button" data-sims="100">100</button>
+        <button type="button" data-sims="1000">1,000</button>
+        <button type="button" data-sims="5000">5,000</button>
+        <button type="button" class="on" data-sims="10000">10,000</button>
+        <button type="button" data-sims="25000">25,000</button>
+        <button type="button" data-sims="50000">50,000</button>
+      </div>
+      </div>
+      <div class="fld"><span>Venue</span>
+      <div class="seg alt" id="venueSeg">
+        <button type="button" class="on" data-venue="home">Home court</button>
+        <button type="button" data-venue="neutral">Neutral site</button>
+      </div>
+      </div>
+    </div>
+
+    <div class="prerun">
+      <div id="prerun" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+      <div class="runrow">
+        <button class="btn" type="button" id="runBtn">Run simulation</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="panel" id="accuracyPanel">
+    <div class="sechead">Measured accuracy</div>
+    <p class="dim">Scored against every completed regular-season game of two full seasons, projected from the season before each. <a href="#accuracy">What these numbers mean</a></p>
+    <div id="accuracyBody"><div class="state">Loading measured accuracy</div></div>
+  </div>
+
+  <div class="disc">Model projections built on current rosters, plus team strength solved from three seasons of results against the schedule each team actually played. Estimates, not guarantees, and not financial or betting advice.</div>
+</main>
+
+<section class="seo" aria-label="About the NBA Game Simulator">
+  <h2>Simulate any NBA matchup</h2>
+  <p class="lead">The TrustMyRecord NBA game simulator plays out any matchup between two NBA teams and returns a projected final score, a win probability, spread and total ranges, a quarter-by-quarter line, and a full reconciled box score with realistic player statistics. Pick any away team and any home team, choose 100 to 50,000 simulations, and set which team holds the floor or play the game on a neutral court. It runs on current rosters and real per-minute production, with pace, offensive and defensive efficiency, shot profile, rebounding and turnover rates all built in.</p>
+
+  <h2>How the NBA simulator works</h2>
+  <p>Every matchup is scored on the possession scale, which is the only fair way to compare teams that play at different speeds. A team's offensive rating is its points per 100 possessions, its defensive rating is what opponents scored per 100 against it, and the projected pace for a matchup is the league average moved by how far above or below it each side plays. Expected efficiency is then the league average plus this offense's distance from it plus the opposing defense's distance from it.</p>
+  <p>Two passes run on every request. A fast simulation runs the number of times you choose, drawing a possession count and an efficiency shock for both teams, and that is where the win probability, the projected spread and the total range come from. Then one complete game is played out possession by possession with a real ten-man rotation on the floor, and that is where the displayed final score, the quarter-by-quarter line and the box score come from. Both are drawn from the same distribution, so the game you are shown is a genuine member of the range printed above it.</p>
+
+  <h2>Rosters, rotations and minutes</h2>
+  <p>Each team dresses a ten-man rotation built from its current roster. Every player carries his own real per-minute rates for shot volume, three-point rate, free-throw rate, assists, rebounds, steals, blocks, turnovers and fouls, along with his real shooting percentages, so scaling his minutes scales his production honestly instead of inventing a new player. Minutes are rescaled so the ten of them add to a legal 240 with a 40-minute individual cap, and jittered a few minutes either way each game, because real minute loads move from night to night. A player listed out is removed and his minutes pass to the next player up.</p>
+
+  <h2>What the simulation includes</h2>
+  <ul>
+    <li><b>Pace and possessions</b>, so a fast team against a fast team produces a high total and a slow matchup produces a low one.</li>
+    <li><b>Offensive and defensive efficiency</b>, combined additively on the per-100 scale rather than one being assumed to dominate.</li>
+    <li><b>Shot profile</b>: three-point rate, free-throw rate, two-point and three-point accuracy, each set between what the offense normally does and what the defense normally allows.</li>
+    <li><b>Offensive rebounding</b> resolved as a genuine contest between this offense's rebound rate and the opposing defense's, with an offensive board continuing the possession rather than starting a new one.</li>
+    <li><b>Turnovers, steals and blocks</b> credited to named defenders from their own rates.</li>
+    <li><b>Star usage and bench contribution</b>, because who takes the shot is weighted by real shot volume among the five players actually on the floor.</li>
+    <li><b>Fouls and foul trouble</b>, with a sixth foul removing a player for the rest of the game.</li>
+    <li><b>Home court</b>, worth roughly two and a half to three points and removable by setting a neutral floor.</li>
+    <li><b>Endgame and overtime</b>, with the closing possessions of a close fourth quarter played under real endgame rules.</li>
+    <li><b>A fully reconciled box score</b>, where every team number is the sum of the player lines and the points total is the final score.</li>
+  </ul>
+
+  <h2>How to simulate a game</h2>
+  <ol>
+    <li>Pick the <b>away team</b> and the <b>home team</b>. Use <b>Swap</b> to flip who is at home.</li>
+    <li>Set your <b>simulation count</b> and choose <b>home court</b> or a <b>neutral site</b>.</li>
+    <li>Press <b>Run simulation</b> and read the projected score, win probability, spread and total.</li>
+    <li>Open the <b>Box score</b> tab for every player's line, <b>Team stats</b> for the shooting and rebounding comparison, <b>Why the model moved</b> for the drivers in plain language, and <b>Range of outcomes</b> for the percentiles.</li>
+    <li>Press <b>Simulate again</b> for a fresh game between the same two teams. Every run is a new simulation, so the score, the box score and the leading scorer all change.</li>
+  </ol>
+
+  <h2 id="accuracy">How accurate is it?</h2>
+  <p class="lead">Every simulator says it is accurate. This one publishes the number and the method. The model was scored on <b>3,701 NBA games across four seasons</b>, and every one of them was projected using <b>only games that had already been played before it</b>. Nothing it saw had happened yet.</p>
+  <ul>
+    <li>It called the winner <b>66.5%</b> of the time, against <b>54.8%</b> for simply always picking the home team.</li>
+    <li>Its projected margin missed by <b>11.3 points</b> on average, against 12.7 for projecting the league average every time.</li>
+    <li>Its calibration error was <b>1.8%</b>, so a stated 70% has been close to a real 70%.</li>
+  </ul>
+  <p>Team strength is not read off points scored and points allowed. Those numbers do not know who a team played, and a soft schedule flatters them. Instead every team's offence and defence are solved together from the actual results by weighted ridge regression, so a team is measured against the opponents it really faced, recent games count more than old ones, and a team with little evidence is pulled toward the league average automatically. On the same games that fit called five to six more per hundred correctly than the raw season averages it replaced.</p>
+  <p>The win probability is then <b>calibrated</b>, not simply counted. Mapping a projected margin onto a probability is fitted from earlier seasons, never from the season being scored, which is what makes the percentage mean what it says.</p>
+  <p>It knows less at the start of a season, and the measurement says so: over the opening couple of weeks the model is barely better than a coin flip, and it reaches its full edge once a few hundred games have been played. The live figures, including the reliability curve, are on the tool above under <b>Measured accuracy</b>.</p>
+  <h2>Limitations and responsible use</h2>
+  <p>This is a model simulation, not a prediction of a real result, and it is not betting or financial advice. Season ratings are raw rather than schedule-adjusted, so each team's distance from average is deliberately shrunk before it is used. Rest, travel, back-to-backs, in-game injuries, trades made since the last data refresh, and coaching decisions are not modelled. Player plus-minus is weighted by minutes rather than tracked possession by possession, and simulated overtime happens slightly less often than real overtime. A single NBA game carries a lot of variance, which is why every result is shown as a range. Use the output as one research input, then decide for yourself. On TrustMyRecord, simulations are a research tool, while real picks are locked before game time, auto-graded, and counted toward a public, tamper-proof record.</p>
+
+  <hr class="divider" />
+  <h2 id="faq">NBA Simulator FAQ</h2>
+  <div class="faq">
+    <details><summary>What is the TrustMyRecord NBA Simulator?</summary><p>It is a free NBA game simulator that plays out any matchup between two teams. A fast simulation runs thousands of times to produce the win probability, spread and total, and one full possession-by-possession game is played with a real ten-man rotation on the floor to produce the displayed final score, the quarter-by-quarter line, and a complete player box score.</p></details>
+    <details><summary>Can I simulate any two NBA teams?</summary><p>Yes. Pick any team as the away side and any other team as the home side. You can also set the game on a neutral floor, which removes the home-court adjustment entirely.</p></details>
+    <details><summary>Does the NBA simulator use current rosters?</summary><p>Yes. Each team dresses a ten-man rotation built from its current roster and each player's real per-minute production, rescaled so the ten of them add to a legal 240 minutes with a 40-minute individual cap. A player listed out is removed from the rotation and his minutes pass to the next player up.</p></details>
+    <details><summary>Does it produce a full player box score?</summary><p>Yes. Every simulation produces minutes, points, field goals, three-pointers, free throws, offensive and defensive rebounds, assists, steals, blocks, turnovers and fouls for every player who plays. Every team number is the sum of the player lines beneath it, and the team points total is the final score, so the box score reconciles by construction.</p></details>
+    <details><summary>How does the simulator handle overtime?</summary><p>A tie after four quarters goes to a five-minute overtime, and to another if it is still level. The closing possessions of a close fourth quarter are also played under endgame rules, so a team down five or less hunts three-pointers and a team ahead by five or less is fouled and shoots free throws, which is what makes close games finish like real ones.</p></details>
+    <details><summary>Why does the same matchup give a different result each time?</summary><p>Because it is a simulation, not a formula. Each run is a fresh random draw from the same model, so the same two teams produce a different score, a different box score and a different hero every time, exactly as real games do. Simulate again to see the range. The link on a result pins that exact run so it can be shared and reproduced.</p></details>
+    <details><summary>How many simulations can I run?</summary><p>You can run 100, 1,000, 5,000, 10,000, 25,000 or 50,000. The default is 10,000. The win probability, spread and total are averaged across whichever count you choose, and the exact count is shown on every result.</p></details>
+    <details><summary>How accurate is the NBA simulator?</summary><p>It was scored on 3,701 NBA games across four seasons, and every one of them was projected using only games that had already been played before it, so nothing the model saw had happened yet. It called the winner 66.5% of the time against 54.8% for always picking the home team, its projected margin missed by 11.3 points on average against 12.7 for the league average, and its calibration error was 1.8%, so a stated 70% has been close to a real 70%. Team strength is solved from the results by weighted ridge regression rather than read off points scored and allowed, so a team is measured against the opponents it actually faced. It knows less early in a season, and the published figures show that stage by stage.</p></details>
+    <details><summary>Is the NBA simulator free?</summary><p>Yes. The NBA game simulator is free to use with no account required. You can simulate any matchup, read the projected score, win probability, player stats and box score, and then track real, verified betting records separately on TrustMyRecord.</p></details>
+  </div>
+
+  <hr class="divider" />
+  <h2>Popular NBA matchups to simulate</h2>
+  <p>These open the simulator with both teams already selected. Every one of them runs a fresh simulation, so the result is different each time you open it.</p>
+  <div class="linkgrid" id="matchupLinks">
+    <a href="/nba-simulator/lakers-vs-warriors/">Lakers vs Warriors<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/warriors-vs-lakers/">Warriors vs Lakers<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/celtics-vs-knicks/">Celtics vs Knicks<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/knicks-vs-celtics/">Knicks vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/lakers-vs-celtics/">Lakers vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/celtics-vs-lakers/">Celtics vs Lakers<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/thunder-vs-nuggets/">Thunder vs Nuggets<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/nuggets-vs-thunder/">Nuggets vs Thunder<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/heat-vs-knicks/">Heat vs Knicks<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/knicks-vs-heat/">Knicks vs Heat<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/lakers-vs-clippers/">Lakers vs Clippers<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/warriors-vs-celtics/">Warriors vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/76ers-vs-celtics/">76ers vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/bulls-vs-pistons/">Bulls vs Pistons<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/mavericks-vs-suns/">Mavericks vs Suns<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/bucks-vs-celtics/">Bucks vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/cavaliers-vs-celtics/">Cavaliers vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/timberwolves-vs-nuggets/">Timberwolves vs Nuggets<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/knicks-vs-76ers/">Knicks vs 76ers<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/spurs-vs-rockets/">Spurs vs Rockets<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/magic-vs-cavaliers/">Magic vs Cavaliers<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/grizzlies-vs-warriors/">Grizzlies vs Warriors<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/hawks-vs-heat/">Hawks vs Heat<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/pacers-vs-knicks/">Pacers vs Knicks<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/trail-blazers-vs-lakers/">Trail Blazers vs Lakers<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/kings-vs-warriors/">Kings vs Warriors<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/jazz-vs-nuggets/">Jazz vs Nuggets<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/raptors-vs-celtics/">Raptors vs Celtics<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/pelicans-vs-mavericks/">Pelicans vs Mavericks<small>Simulate the matchup</small></a>
+    <a href="/nba-simulator/suns-vs-lakers/">Suns vs Lakers<small>Simulate the matchup</small></a>
+  </div>
+
+  <hr class="divider" />
+  <h2>Related TrustMyRecord tools</h2>
+  <div class="linkgrid">
+    <a href="/nhl-simulator/">NHL Simulator<small>Simulate NHL games and box scores</small></a>
+    <a href="/nfl-simulator/">NFL Simulator<small>Simulate NFL games and box scores</small></a>
+    <a href="/mlb-simulator/">MLB Simulator<small>Simulate MLB games and box scores</small></a>
+    <a href="/sportsbook/">Sportsbook<small>Lock and auto-grade real picks</small></a>
+    <a href="/handicappers/">Handicappers<small>Find verified handicappers</small></a>
+    <a href="/leaderboards/">Leaderboard<small>See the top verified records</small></a>
+    <a href="/trendspotter/">TrendSpotter<small>Scan market and team trends</small></a>
+    <a href="/tools/">All Tools<small>Every TrustMyRecord tool</small></a>
+  </div>
+</section>
+
+<div class="methodwrap wrap">
+  <div class="notecards" id="methodBody" hidden></div>
+</div>
+<div class="foot wrap">
+  TrustMyRecord NBA Simulator &middot; projections update as rosters and availability change &middot;
+  <a href="#" id="methodLink" aria-expanded="false">How the model works</a> &middot;
+  <a href="/nba-simulator/#faq">FAQ</a>
+</div>
+
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.6a5aef783912.js"></script>
+</body>
+</html>

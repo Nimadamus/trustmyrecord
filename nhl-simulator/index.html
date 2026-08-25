@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NHL Simulator 2026: Simulate Games, Scores &amp; Player Stats | TrustMyRecord</title>
+<meta name="description" content="Simulate any NHL matchup with current rosters, real starting goaltenders and special teams for a realistic final score, period-by-period scoring, shots on goal and a full box score. Free." />
+<link rel="canonical" href="https://trustmyrecord.com/nhl-simulator/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:title" content="NHL Simulator 2026: Simulate Games, Scores &amp; Player Stats" />
+<meta property="og:description" content="Simulate any NHL matchup with current rosters, starting goaltenders, power play and penalty kill for a realistic score, shots on goal and a full player box score." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://trustmyrecord.com/nhl-simulator/" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NHL Simulator 2026 | TrustMyRecord" />
+<meta name="twitter:description" content="Simulate any NHL matchup with current rosters and real starting goaltenders for a realistic score, period-by-period scoring and a full box score. A model projection, not betting advice." />
+<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"TrustMyRecord NHL Game Simulator","applicationCategory":"SportsApplication","operatingSystem":"Web","description":"Simulate any NHL matchup using current rosters, real starting goaltenders, shot volume, shooting and save quality, power play and penalty kill. Returns a projected score, a win probability, period-by-period scoring, shots on goal, and a full reconciled box score including goaltender saves and save percentage.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://trustmyrecord.com/nhl-simulator/","publisher":{"@type":"Organization","name":"TrustMyRecord","url":"https://trustmyrecord.com/"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://trustmyrecord.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://trustmyrecord.com/tools/"},{"@type":"ListItem","position":3,"name":"NHL Simulator","item":"https://trustmyrecord.com/nhl-simulator/"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is the TrustMyRecord NHL Simulator?","acceptedAnswer":{"@type":"Answer","text":"It is a free NHL game simulator that plays out any matchup between two teams. A fast simulation runs thousands of times to produce the win probability and the total, and one full game is simulated period by period to produce the displayed final score, the period-by-period line, shots on goal, and a complete box score including both goaltenders."}},
+{"@type":"Question","name":"Can I choose the starting goaltender?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each team starts the goaltender with the most starts on its current roster, and you can start the backup instead from the dropdown. The starter's save percentage bends the opposing goal rate directly, so the choice genuinely changes the projection rather than just changing a name on the page."}},
+{"@type":"Question","name":"Does it simulate power plays and penalties?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each team's minor penalties are drawn from its own penalty rate, and every minor it takes is two penalty minutes for it and one power play for the other side, so power-play opportunities and penalty minutes always agree across the box score. Power plays convert at the shooting team's power-play rate met against the opponent's penalty kill."}},
+{"@type":"Question","name":"How does the simulator handle overtime and shootouts?","acceptedAnswer":{"@type":"Answer","text":"A tie after sixty minutes goes to five minutes of three-on-three, and about four in seven of those are settled there. The rest go to a shootout. The winner is credited a single goal on the scoreboard, which is how the NHL records it, and an overtime winner is also credited as a real goal to a real skater in the box score."}},
+{"@type":"Question","name":"Does it produce shots on goal and goaltender statistics?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every simulation produces shots on goal by period and by skater, goals and assists, power-play goals, penalty minutes, hits and blocked shots, and for each goaltender the shots faced, saves made, goals allowed and save percentage. A goal into an empty net is not charged against the goaltender."}},
+{"@type":"Question","name":"Why does the same matchup give a different result each time?","acceptedAnswer":{"@type":"Answer","text":"Because it is a simulation, not a formula. Each run is a fresh random draw from the same model, so the same two teams produce a different score, different scorers and a different goaltender line every time, exactly as real games do. Simulate again to see the range. The link on a result pins that exact run so it can be shared and reproduced."}},
+{"@type":"Question","name":"Does the simulator model score effects?","acceptedAnswer":{"@type":"Answer","text":"Yes. A team trailing in the third period takes more shots and converts a little better while the team protecting a lead sits back. It is one of the strongest effects in hockey, it is why close games stay close, and it is the reason a realistic share of simulated games reach overtime."}},
+{"@type": "Question", "name": "How accurate is the NHL simulator?", "acceptedAnswer": {"@type": "Answer", "text": "It was scored on 3,946 NHL games across four seasons, each projected using only games that had already been played before it. It called the winner 57.3% of the time against 54.1% for always picking the home team, its projected margin missed by 2.14 goals against 2.24 for the league average, and its calibration error was 1.5%. That is a real edge and a small one. Hockey is the reason: a season of goals for and against is heavily shooting and goaltending luck, so reading team strength off those totals gave almost no predictive power. Solving every team’s offence and defence together from the actual results instead, weighting recent games more, roughly quadrupled the measured edge. It is still small because the sport is genuinely like that."}},
+{"@type":"Question","name":"Is the NHL simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The NHL game simulator is free to use with no account required. You can simulate any matchup, read the projected score, shots on goal, goaltender line and full box score, and then track real, verified betting records separately on TrustMyRecord."}}
+]}
+</script>
+<link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=20388cf7f540">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
+<script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
+<script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<script defer src="/static/js/tmr-sim-core.js?v=c93a00bd7ff7"></script>
+<script defer src="/static/js/nhl-simulator-app.js?v=d71c12ae9168"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.f85a4f83fb7b.css">
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<!-- CLS: the shared header is injected by tmr-ds-nav.js at the end of the body,
+     which pushes the page down after first paint. That shift is worth about 0.15
+     to 0.30 CLS on its own. This reserves the header's height up front and drops
+     the reservation in the SAME frame the real header lands, so the two cancel
+     and nothing visibly moves. tmr-ds-nav.js is not modified. -->
+<div id="dsNavReserve" aria-hidden="true" style="height:70px"></div>
+<script>
+(function () {
+  var r = document.getElementById('dsNavReserve');
+  if (!r) return;
+  var drop = function () { if (r && r.parentNode) { r.parentNode.removeChild(r); r = null; } };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () {
+    if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); }
+  });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  // If the header script never runs, give the space back rather than leaving a gap.
+  window.addEventListener('load', function () {
+    setTimeout(function () { o.disconnect(); drop(); }, 2000);
+  });
+}());
+</script>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>NHL Game Simulator</h1>
+    <p>Simulate any NHL matchup from current rosters and real starting goaltenders for a projected score, period-by-period scoring, shots on goal, special teams and a full player box score. Tap a game on the upcoming slate, or pick any two teams, choose the goaltenders, and set the home ice or play it neutral. A model projection, not betting advice.</p>
+  </section>
+
+  <div class="setup" id="setup">
+    <div class="modebar" id="modebar" role="tablist" aria-label="Simulation mode">
+      <button type="button" class="on" data-mode="schedule">Upcoming games</button>
+      <button type="button" data-mode="custom">Custom matchup</button>
+    </div>
+
+    <div id="schedulePane">
+      <div class="slatebar">
+        <span id="slateLabel" class="slatelabel"></span>
+        <label class="fld inline"><span>Date</span><input type="date" id="slateDate"></label>
+      </div>
+      <div class="games" id="games"></div>
+    </div>
+
+    <div id="customPane" hidden>
+      <div class="customwrap">
+        <label class="fld"><span>Away team</span><select id="awayTeam"><option>Loading teams</option></select></label>
+        <div class="vs-chip">at</div>
+        <label class="fld"><span>Home team</span><select id="homeTeam"><option>Loading teams</option></select></label>
+        <div class="fld"><span>&nbsp;</span><button class="btn ghost" type="button" id="swapBtn">Swap</button></div>
+      </div>
+    </div>
+
+    <div id="extraControls" class="customwrap">
+      <label class="fld"><span>Away goaltender</span><select id="awayGoalie" disabled><option>Pick a team</option></select></label>
+      <label class="fld"><span>Home goaltender</span><select id="homeGoalie" disabled><option>Pick a team</option></select></label>
+    </div>
+
+    <div class="setgrid">
+      <div class="fld"><span>Simulations</span>
+      <div class="seg" id="simSeg">
+        <button type="button" data-sims="100">100</button>
+        <button type="button" data-sims="1000">1,000</button>
+        <button type="button" data-sims="5000">5,000</button>
+        <button type="button" class="on" data-sims="10000">10,000</button>
+        <button type="button" data-sims="25000">25,000</button>
+        <button type="button" data-sims="50000">50,000</button>
+      </div>
+      </div>
+      <div class="fld"><span>Venue</span>
+      <div class="seg alt" id="venueSeg">
+        <button type="button" class="on" data-venue="home">Home ice</button>
+        <button type="button" data-venue="neutral">Neutral site</button>
+      </div>
+      </div>
+    </div>
+
+    <div class="prerun">
+      <div id="prerun" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+      <div class="runrow">
+        <button class="btn" type="button" id="runBtn">Run simulation</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="panel" id="accuracyPanel">
+    <div class="sechead">Measured accuracy</div>
+    <p class="dim">Scored against every completed regular-season game of two full seasons, projected from the season before each. <a href="#accuracy">What these numbers mean</a></p>
+    <div id="accuracyBody"><div class="state">Loading measured accuracy</div></div>
+  </div>
+
+  <div class="disc">Model projections built on current rosters, plus team strength solved from three seasons of results against the schedule each team actually played. Estimates, not guarantees, and not financial or betting advice.</div>
+</main>
+
+<section class="seo" aria-label="About the NHL Game Simulator">
+  <h2>Simulate any NHL matchup</h2>
+  <p class="lead">The TrustMyRecord NHL game simulator plays out any matchup between two NHL teams and returns a projected final score, a win probability, a total range, a period-by-period line with shots on goal, and a full reconciled box score including both goaltenders. Pick any away team and any home team, choose the starting goaltenders, choose 100 to 50,000 simulations, and set the home ice or play the game on neutral ice. It runs on current rosters and last season's real production, with shot volume, shooting and save quality, power play, penalty kill and score effects all built in.</p>
+
+  <h2>How the NHL simulator works</h2>
+  <p>A hockey game is a small number of rare events, so this model is built on shot volume and the rate at which shots become goals rather than on possessions. Each team draws a shot total centred on its own shots-for rate met against the opponent's shots-against rate, with the extra spread real teams show from night to night. Penalties are drawn from each team's real penalty rate, every minor is a power play for the other side, and power plays convert at the shooting team's rate met against the opponent's kill. Whatever scoring is left comes from even-strength shots at a rate solved so the two paths together hit the matchup's expected goals.</p>
+  <p>Two passes run on every request. A fast simulation runs the number of times you choose and produces the win probability, the total range and the puck-line shares. Then one complete game is simulated period by period, and that is where the displayed final score, the period line, the shot counts and the box score come from. Both are drawn from the same model, so the game you are shown is a genuine member of the range printed above it.</p>
+
+  <h2>Goaltending is an input, not a rounding error</h2>
+  <p>Each team starts the goaltender with the most starts on its current roster, and you can start the other one instead. His save percentage bends the opposing goal rate directly, damped because his own season is already partly inside his team's goals-against number, so choosing a hot goalie moves the game by about as much as a goaltender can actually move one. In the box score his saves are the shots he faced less the goals he allowed, his save percentage follows from those two numbers, and a goal into an empty net is not charged against him.</p>
+
+  <h2>What the simulation includes</h2>
+  <ul>
+    <li><b>Shots on goal</b> for each team, by period and by skater, drawn with the extra spread real shot counts carry.</li>
+    <li><b>Goals and assists</b> dealt to named skaters from their real per-sixty rates and ice time, at roughly the real 1.7 assists per goal.</li>
+    <li><b>Power-play opportunities and results</b>, converted against the opposing penalty kill.</li>
+    <li><b>Penalty minutes</b> that always equal twice the other team's power plays, so the two sides of the box score cannot disagree.</li>
+    <li><b>Hits and blocked shots</b> drawn per player from his own rate rather than shared out from a team pool.</li>
+    <li><b>Goaltender saves and save percentage</b> for both starters, with shutouts and empty-net goals handled correctly.</li>
+    <li><b>Team offensive and defensive strength</b> combined so a heavy shot team against a team that gives up shots produces a genuinely busier game.</li>
+    <li><b>Special teams strength</b> on both sides of the puck, and each team's own penalty rate.</li>
+    <li><b>Home ice</b>, worth roughly a quarter of a goal across the two teams and removable by setting neutral ice.</li>
+    <li><b>Score effects in the third</b>, overtime, the shootout, and the empty net.</li>
+  </ul>
+
+  <h2>How to simulate a game</h2>
+  <ol>
+    <li>Pick the <b>away team</b> and the <b>home team</b>. Use <b>Swap</b> to flip who is at home.</li>
+    <li>Choose each <b>starting goaltender</b>, or leave the projected starters in place.</li>
+    <li>Set your <b>simulation count</b> and choose <b>home ice</b> or a <b>neutral site</b>.</li>
+    <li>Press <b>Run simulation</b> and read the projected score, win probability and total.</li>
+    <li>Open the <b>Box score</b> tab for every skater and both goaltenders, <b>Team stats</b> for the shot and special-teams comparison, <b>Why the model moved</b> for the drivers in plain language, and <b>Range of outcomes</b> for the percentiles and puck line.</li>
+    <li>Press <b>Simulate again</b> for a fresh game between the same two teams. Every run is a new simulation, so the score, the scorers and the goaltender lines all change.</li>
+  </ol>
+
+  <h2 id="accuracy">How accurate is it?</h2>
+  <p class="lead">Every simulator says it is accurate. This one publishes the number, the method, and the part that is unflattering. The model was scored on <b>3,946 NHL games across four seasons</b>, each projected using <b>only games that had already been played before it</b>.</p>
+  <ul>
+    <li>It called the winner <b>57.3%</b> of the time, against <b>54.1%</b> for simply always picking the home team.</li>
+    <li>Its projected margin missed by <b>2.14 goals</b> on average, against 2.24 for projecting the league average.</li>
+    <li>Its calibration error was <b>1.5%</b>.</li>
+  </ul>
+  <p>That is a real edge and a small one, and hockey is the reason. A season of goals for and against is heavily shooting and goaltending luck, and very little of it carries. Reading team strength off those totals gave almost no predictive power at all. What is used instead solves every team's offence and defence together from the actual results by weighted ridge regression, weighting recent games more and regressing thin evidence automatically. That change roughly quadrupled the model's measured edge, from almost nothing to something real, and it is still small because the sport is genuinely like that.</p>
+  <p>The win probability is <b>calibrated</b> against earlier seasons rather than simply counted off the simulation, which is what makes a stated 60% a real 60%. The live figures, including the reliability curve, are on the tool above under <b>Measured accuracy</b>. Treat the projection as one input, never as a forecast.</p>
+  <h2>Limitations and responsible use</h2>
+  <p>This is a model simulation, not a prediction of a real result, and it is not betting or financial advice. Season rates are raw rather than schedule-adjusted, so each team's distance from average is deliberately shrunk before it is used. Line combinations, zone starts, quality of competition, back-to-backs, in-game injuries and trades made since the last data refresh are not modelled. Plus-minus is weighted by ice time rather than tracked shift by shift, and simulated overtime happens slightly less often than real overtime. Where a roster spot has no qualifying NHL season behind it, the slot is filled at replacement level and labelled on the page rather than being passed off as real production. Use the output as one research input, then decide for yourself. On TrustMyRecord, simulations are a research tool, while real picks are locked before game time, auto-graded, and counted toward a public, tamper-proof record.</p>
+
+  <hr class="divider" />
+  <h2 id="faq">NHL Simulator FAQ</h2>
+  <div class="faq">
+    <details><summary>What is the TrustMyRecord NHL Simulator?</summary><p>It is a free NHL game simulator that plays out any matchup between two teams. A fast simulation runs thousands of times to produce the win probability and the total, and one full game is simulated period by period to produce the displayed final score, the period-by-period line, shots on goal, and a complete box score including both goaltenders.</p></details>
+    <details><summary>Can I choose the starting goaltender?</summary><p>Yes. Each team starts the goaltender with the most starts on its current roster, and you can start the backup instead from the dropdown. The starter's save percentage bends the opposing goal rate directly, so the choice genuinely changes the projection rather than just changing a name on the page.</p></details>
+    <details><summary>Does it simulate power plays and penalties?</summary><p>Yes. Each team's minor penalties are drawn from its own penalty rate, and every minor it takes is two penalty minutes for it and one power play for the other side, so power-play opportunities and penalty minutes always agree across the box score. Power plays convert at the shooting team's power-play rate met against the opponent's penalty kill.</p></details>
+    <details><summary>How does the simulator handle overtime and shootouts?</summary><p>A tie after sixty minutes goes to five minutes of three-on-three, and about four in seven of those are settled there. The rest go to a shootout. The winner is credited a single goal on the scoreboard, which is how the NHL records it, and an overtime winner is also credited as a real goal to a real skater in the box score.</p></details>
+    <details><summary>Does it produce shots on goal and goaltender statistics?</summary><p>Yes. Every simulation produces shots on goal by period and by skater, goals and assists, power-play goals, penalty minutes, hits and blocked shots, and for each goaltender the shots faced, saves made, goals allowed and save percentage. A goal into an empty net is not charged against the goaltender.</p></details>
+    <details><summary>Why does the same matchup give a different result each time?</summary><p>Because it is a simulation, not a formula. Each run is a fresh random draw from the same model, so the same two teams produce a different score, different scorers and a different goaltender line every time, exactly as real games do. Simulate again to see the range. The link on a result pins that exact run so it can be shared and reproduced.</p></details>
+    <details><summary>Does the simulator model score effects?</summary><p>Yes. A team trailing in the third period takes more shots and converts a little better while the team protecting a lead sits back. It is one of the strongest effects in hockey, it is why close games stay close, and it is the reason a realistic share of simulated games reach overtime.</p></details>
+    <details><summary>How accurate is the NHL simulator?</summary><p>It was scored on 3,946 NHL games across four seasons, each projected using only games that had already been played before it. It called the winner 57.3% of the time against 54.1% for always picking the home team, its projected margin missed by 2.14 goals against 2.24 for the league average, and its calibration error was 1.5%. That is a real edge and a small one. Hockey is the reason: a season of goals for and against is heavily shooting and goaltending luck, so reading team strength off those totals gave almost no predictive power. Solving every team’s offence and defence together from the actual results instead, weighting recent games more, roughly quadrupled the measured edge. It is still small because the sport is genuinely like that.</p></details>
+    <details><summary>Is the NHL simulator free?</summary><p>Yes. The NHL game simulator is free to use with no account required. You can simulate any matchup, read the projected score, shots on goal, goaltender line and full box score, and then track real, verified betting records separately on TrustMyRecord.</p></details>
+  </div>
+
+  <hr class="divider" />
+  <h2>Popular NHL matchups to simulate</h2>
+  <p>These open the simulator with both teams already selected. Every one of them runs a fresh simulation, so the result is different each time you open it.</p>
+  <div class="linkgrid" id="matchupLinks">
+    <a href="/nhl-simulator/rangers-vs-bruins/">Rangers vs Bruins<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/bruins-vs-rangers/">Bruins vs Rangers<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/oilers-vs-flames/">Oilers vs Flames<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/flames-vs-oilers/">Flames vs Oilers<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/maple-leafs-vs-canadiens/">Maple Leafs vs Canadiens<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/canadiens-vs-maple-leafs/">Canadiens vs Maple Leafs<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/avalanche-vs-golden-knights/">Avalanche vs Golden Knights<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/golden-knights-vs-avalanche/">Golden Knights vs Avalanche<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/penguins-vs-flyers/">Penguins vs Flyers<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/flyers-vs-penguins/">Flyers vs Penguins<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/lightning-vs-panthers/">Lightning vs Panthers<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/panthers-vs-lightning/">Panthers vs Lightning<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/red-wings-vs-blackhawks/">Red Wings vs Blackhawks<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/blackhawks-vs-red-wings/">Blackhawks vs Red Wings<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/capitals-vs-penguins/">Capitals vs Penguins<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/rangers-vs-islanders/">Rangers vs Islanders<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/bruins-vs-canadiens/">Bruins vs Canadiens<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/maple-leafs-vs-bruins/">Maple Leafs vs Bruins<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/stars-vs-avalanche/">Stars vs Avalanche<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/blues-vs-blackhawks/">Blues vs Blackhawks<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/canucks-vs-oilers/">Canucks vs Oilers<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/kraken-vs-canucks/">Kraken vs Canucks<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/wild-vs-jets/">Wild vs Jets<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/devils-vs-rangers/">Devils vs Rangers<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/hurricanes-vs-capitals/">Hurricanes vs Capitals<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/predators-vs-blues/">Predators vs Blues<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/kings-vs-ducks/">Kings vs Ducks<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/sharks-vs-kings/">Sharks vs Kings<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/senators-vs-maple-leafs/">Senators vs Maple Leafs<small>Simulate the matchup</small></a>
+    <a href="/nhl-simulator/sabres-vs-bruins/">Sabres vs Bruins<small>Simulate the matchup</small></a>
+  </div>
+
+  <hr class="divider" />
+  <h2>Related TrustMyRecord tools</h2>
+  <div class="linkgrid">
+    <a href="/nba-simulator/">NBA Simulator<small>Simulate NBA games and box scores</small></a>
+    <a href="/nfl-simulator/">NFL Simulator<small>Simulate NFL games and box scores</small></a>
+    <a href="/mlb-simulator/">MLB Simulator<small>Simulate MLB games and box scores</small></a>
+    <a href="/sportsbook/">Sportsbook<small>Lock and auto-grade real picks</small></a>
+    <a href="/handicappers/">Handicappers<small>Find verified handicappers</small></a>
+    <a href="/leaderboards/">Leaderboard<small>See the top verified records</small></a>
+    <a href="/trendspotter/">TrendSpotter<small>Scan market and team trends</small></a>
+    <a href="/tools/">All Tools<small>Every TrustMyRecord tool</small></a>
+  </div>
+</section>
+
+<div class="methodwrap wrap">
+  <div class="notecards" id="methodBody" hidden></div>
+</div>
+<div class="foot wrap">
+  TrustMyRecord NHL Simulator &middot; projections update as rosters and goaltending change &middot;
+  <a href="#" id="methodLink" aria-expanded="false">How the model works</a> &middot;
+  <a href="/nhl-simulator/#faq">FAQ</a>
+</div>
+
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.6a5aef783912.js"></script>
+</body>
+</html>
