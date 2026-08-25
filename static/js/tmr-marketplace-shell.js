@@ -19,7 +19,7 @@
    USAGE
    -----
      <div class="mpx" data-mp-tab="cash" data-mp-fees="1"></div>
-     <link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=d68f65fd0b4b">
+     <link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=2518dee34f97">
      <script src="/static/js/tmr-marketplace-shell.js"></script>
 
    data-mp-tab   which tab is current: cash | tmr | purchases | listings |
