@@ -587,9 +587,47 @@
     });
     /* Render every card into one measuring row inside the track, then split into
        width-fitted groups. Cards are never dropped, duplicated or reordered here. */
+    /* THE NINETY SECOND REFRESH USED TO THROW THE ROTATION AWAY.
+
+       This function replaces the lane's innerHTML, so every card node is
+       destroyed and rebuilt with its FIRST line marked is-on - and it runs
+       every TICKER_REFRESH_MS. Measured against production on 2026-08-25:
+       at t=90s and again at t=180s every card's data-i went back to 0, cards
+       that had reached their third and fourth lines included. A card can
+       therefore never show more than whatever it gets through inside one
+       ninety second window - two lines - however many were written for it.
+       That is the whole of "Colorado-Washington shows only WP/LP", and it
+       sits UNDER the dwell arithmetic: fixing the clock alone got a card to
+       its second line and no further.
+
+       Two defences, in order of cheapness:
+
+       1. IF NOTHING CHANGED, DO NOT REBUILD. The markup is a pure function
+          of the payload, and the payload is identical between most refreshes
+          - the backend's wording is seeded per game so it does not reword
+          itself. Comparing what we are about to write with what is already
+          there costs one string compare and saves the whole repaint (every
+          logo included).
+       2. IF SOMETHING DID CHANGE, CARRY THE ROTATION ACROSS. One score
+          arriving must not send the other fifteen cards back to line one.
+          Each card's visible SENTENCE is remembered and restored by text,
+          not by index, because a changed card can legitimately come back
+          with its lines in a different order. */
+    var sig = (payload.slate_date || '') + '|' + html;
+    if (lane.getAttribute('data-render-sig') === sig
+        && lane.querySelector('.gm:not(.is-skel):not(.is-msg)')) {
+      lane.setAttribute('aria-busy', 'false');
+      /* The DOM is untouched, so the rotation and page timers are still
+         running on the nodes they were started for. */
+      return;
+    }
+    var carried = captureRotation(lane);
+
     lane.innerHTML = '<div class="ticker-track"><div class="ticker-page">' + html + '</div></div>';
     lane.setAttribute('data-slate-date', payload.slate_date || '');
+    lane.setAttribute('data-render-sig', sig);
     lane.setAttribute('aria-busy', 'false');
+    restoreRotation(lane, carried);
 
     /* An insight that carries its own href (today, only the TrendSpotter one)
        takes the click; every other part of the card goes to the Handicapping Hub
@@ -759,6 +797,59 @@
      reading a line can finish it. */
   var inRotTimer = null;
   var inRotTick = 0;
+
+  /* WHICH CARD IS THIS. game_pk keys both halves of a doubleheader apart;
+     the ESPN sports carry no pk, so their two club abbreviations plus the
+     sport identify them - the same pair cannot appear twice in one football,
+     basketball or hockey row. */
+  function cardKey(card) {
+    var pk = card.getAttribute('data-game-pk');
+    if (pk) return 'pk:' + pk;
+    var teams = [];
+    card.querySelectorAll('.gm-top .t').forEach(function (t) { teams.push(t.textContent.trim()); });
+    return (card.getAttribute('data-sport') || 'mlb') + ':' + teams.join('@');
+  }
+
+  /* The sentence each card is showing right now, keyed by game. */
+  function captureRotation(lane) {
+    var out = {};
+    lane.querySelectorAll('.gm').forEach(function (card) {
+      var on = card.querySelector('.gm-in-l.is-on b');
+      if (on) out[cardKey(card)] = on.textContent.trim();
+    });
+    return out;
+  }
+
+  /* Put each card back on the sentence it was showing. Matched on the TEXT:
+     a card whose data changed can come back with its lines reordered, and an
+     index would then restore a different fact than the one the reader was
+     halfway through. A line that is simply gone leaves the card at its
+     first, which is correct - that rotation no longer exists. */
+  function restoreRotation(lane, carried) {
+    if (!carried) return;
+    lane.querySelectorAll('.gm').forEach(function (card) {
+      var want = carried[cardKey(card)];
+      if (!want) return;
+      var strip = card.querySelector('.gm-in');
+      var lines = card.querySelectorAll('.gm-in-l');
+      if (!strip || lines.length < 2) return;
+      for (var i = 0; i < lines.length; i++) {
+        var b = lines[i].querySelector('b');
+        if (!b || b.textContent.trim() !== want) continue;
+        if (i === 0) return;
+        for (var k = 0; k < lines.length; k++) {
+          lines[k].classList.remove('is-on');
+          lines[k].classList.remove('is-out');
+        }
+        lines[i].classList.add('is-on');
+        strip.setAttribute('data-i', String(i));
+        /* A fresh dwell: the reader has had this line for however long the
+           old node lived, but the countdown died with that node. */
+        strip.removeAttribute('data-left');
+        return;
+      }
+    });
+  }
 
   function insightAdvance(strip) {
     var lines = strip.querySelectorAll('.gm-in-l');
