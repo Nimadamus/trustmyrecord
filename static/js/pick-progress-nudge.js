@@ -59,6 +59,32 @@
         '/login/', '/signin/', '/welcome/'
     ];
 
+    /* Same page map first-pick-onboarding.js uses, so both strips report the
+       surface identically. (SURFACE_GRANULARITY_20260825) */
+    function surfaceName() {
+        var p = (window.location.pathname || '').toLowerCase();
+        if (p === '/' || p === '/index.html') return 'homepage';
+        if (p.indexOf('/welcome/') === 0) return 'welcome';
+        if (p.indexOf('/today/') === 0) return 'today';
+        if (p.indexOf('/polls/') === 0) return 'polls';
+        if (p.indexOf('/forum/') === 0) return 'forum';
+        if (p.indexOf('/trivia/') === 0) return 'trivia';
+        if (p.indexOf('/mlb-simulator/') === 0) return 'mlb_simulator';
+        if (p.indexOf('/nfl-simulator/') === 0) return 'nfl_simulator';
+        if (p.indexOf('/sportsbook/') === 0) return 'sportsbook';
+        if (p.indexOf('/profile/') === 0) return 'profile';
+        return 'other';
+    }
+
+    var ARRIVAL_KEY = 'tmr_activation_arrival';
+    function markActivationHandoff(details) {
+        try {
+            sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify(Object.assign({
+                surface: surfaceName(), ts: Date.now()
+            }, details || {})));
+        } catch (e) {}
+    }
+
     function log() {
         try { console.log.apply(console, ['[TMR PickProgress]'].concat([].slice.call(arguments))); } catch (e) {}
     }
@@ -106,7 +132,14 @@
        NFL simulator has no such panel and is unaffected. */
     function competingPickCta() {
         try {
-            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]');
+            /* Two components can own the pick CTA on a page this nudge runs on:
+               the MLB simulator's post-result panel, and the Poll -> Pick strip
+               on /polls/. Both are MORE SPECIFIC than "Make Pick #2" - one sits
+               with the simulation the member just ran, the other names the
+               prediction they just voted for - so both win and this stands
+               down. Neither is modified. */
+            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]')
+                || !!document.getElementById('tmr-poll-bridge');
         } catch (e) { return false; }
     }
 
@@ -117,7 +150,12 @@
         var observer = new MutationObserver(function () {
             if (!competingPickCta()) return;
             observer.disconnect();
-            remove();
+            /* This file has no remove() helper - the earlier version of this
+               observer called one that does not exist here, so it threw
+               instead of retiring the strip and the double prompt survived.
+               Caught by the duplicate-prompt tests. */
+            var bar = document.getElementById(ELEMENT_ID);
+            if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
             log('another pick CTA rendered on this page - nudge retired');
         });
         try { observer.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
@@ -324,11 +362,13 @@
         spot.parent.insertBefore(bar, spot.before || null);
         writeLS(LS_LAST_SHOWN, today());
 
-        var facts = { gate: gateKey, picks_total: picks.total || 0, picks_graded: picks.graded || 0 };
+        var facts = { gate: gateKey, picks_total: picks.total || 0, picks_graded: picks.graded || 0,
+                      surface: surfaceName(), cta_location: 'pick_progress_strip' };
         track('pick_progress_nudge_viewed', facts);
 
         cta.addEventListener('click', function () {
             track('pick_progress_nudge_clicked', facts);
+            markActivationHandoff({ source: 'pick_progress_strip', cta_location: 'pick_progress_strip', gate: gateKey });
         });
         bar.querySelector('.tmr-fp-reminder__close').addEventListener('click', function () {
             writeLS(LS_DISMISSED, today());

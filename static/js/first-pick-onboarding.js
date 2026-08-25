@@ -65,6 +65,43 @@
 
     // ---------------------------------------------------------------- utils
 
+    /* WHICH PAGE IS THIS? (SURFACE_GRANULARITY_20260825)
+       Every non-sportsbook page used to report surface:'sitewide_reminder', so
+       /today/ vs /polls/ vs a simulator were indistinguishable and the new
+       coverage could not be compared page by page. One map, derived from the
+       path, reused by every event this file emits. Unknown paths report
+       'other' rather than guessing. */
+    function surfaceName() {
+        var p = (window.location.pathname || '').toLowerCase();
+        if (p === '/' || p === '/index.html') return 'homepage';
+        if (p.indexOf('/welcome/') === 0) return 'welcome';
+        if (p.indexOf('/today/') === 0) return 'today';
+        if (p.indexOf('/polls/') === 0) return 'polls';
+        if (p.indexOf('/forum/') === 0) return 'forum';
+        if (p.indexOf('/trivia/') === 0) return 'trivia';
+        if (p.indexOf('/mlb-simulator/') === 0) return 'mlb_simulator';
+        if (p.indexOf('/nfl-simulator/') === 0) return 'nfl_simulator';
+        if (p.indexOf('/sportsbook/') === 0) return 'sportsbook';
+        if (p.indexOf('/profile/') === 0) return 'profile';
+        return 'other';
+    }
+
+    /* HANDOFF TO THE PICK FLOW (ARRIVAL_EVENT_20260825)
+       The funnel had no way to tell whether someone who clicked an activation
+       CTA actually reached the board. Written on click, read exactly once on
+       /sportsbook/, then deleted - so a reload or a back button cannot emit a
+       second arrival. sessionStorage, not a query parameter: the strip markup
+       is covered by a homepage lock and does not need to change. */
+    var ARRIVAL_KEY = 'tmr_activation_arrival';
+
+    function markActivationHandoff(details) {
+        try {
+            sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify(Object.assign({
+                surface: surfaceName(), ts: Date.now()
+            }, details || {})));
+        } catch (e) {}
+    }
+
     function log() {
         try { console.log.apply(console, ['[TMR FirstPick]'].concat([].slice.call(arguments))); } catch (e) {}
     }
@@ -370,18 +407,18 @@
         mount.insertBefore(panel, mount.firstChild);
 
         document.getElementById('tmr-fp-cta-primary').addEventListener('click', function () {
-            track('first_pick_cta_clicked', { cta_location: 'sportsbook_onboarding_panel', cta: 'submit_my_first_pick' });
+            track('first_pick_cta_clicked', { cta_location: 'sportsbook_onboarding_panel', cta: 'submit_my_first_pick', surface: surfaceName() });
             goToGames();
         });
         document.getElementById('tmr-fp-cta-secondary').addEventListener('click', function () {
-            track('first_pick_cta_clicked', { cta_location: 'sportsbook_onboarding_panel', cta: 'explore_sportsbook' });
+            track('first_pick_cta_clicked', { cta_location: 'sportsbook_onboarding_panel', cta: 'explore_sportsbook', surface: surfaceName() });
             collapsePanelToReminder();
         });
 
         if (!state.viewed) {
             state.viewed = true;
             setSessionFlag('viewed', true);
-            track('sportsbook_onboarding_viewed', { surface: 'sportsbook_panel', has_picks: 'no' });
+            track('sportsbook_onboarding_viewed', { surface: surfaceName(), cta_location: 'sportsbook_onboarding_panel', has_picks: 'no' });
         }
     }
 
@@ -563,7 +600,14 @@
        there throughout - which is the point of loading it on both. */
     function competingFirstPickCta() {
         try {
-            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]');
+            /* Two components can own the pick CTA on a page this strip runs on.
+               The MLB simulator's post-result panel, which sits with the
+               simulation the member just ran. And the Poll -> Pick strip on
+               /polls/, which names the prediction they just voted for. Both are
+               more specific than "Start your verified record", so both win and
+               this stands down. Neither is modified. */
+            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]')
+                || !!document.getElementById('tmr-poll-bridge');
         } catch (e) { return false; }
     }
 
@@ -626,7 +670,8 @@
 
         var cta = document.getElementById('tmr-fp-reminder-cta');
         cta.addEventListener('click', function () {
-            track('first_pick_cta_clicked', { cta_location: 'reminder_strip', cta: 'go_to_sportsbook' });
+            track('first_pick_cta_clicked', { cta_location: 'reminder_strip', cta: 'go_to_sportsbook', surface: surfaceName() });
+            markActivationHandoff({ source: 'first_pick_strip', cta_location: 'reminder_strip' });
             if (isSportsbook()) goToGames();
         });
         bar.querySelector('.tmr-fp-reminder__close').addEventListener('click', function () {
@@ -651,7 +696,8 @@
         state.viewed = true;
         setSessionFlag('viewed', true);
         track('sportsbook_onboarding_viewed', {
-            surface: isSportsbook() ? 'sportsbook_reminder' : 'sitewide_reminder',
+            surface: surfaceName(),
+            cta_location: isSportsbook() ? 'sportsbook_reminder' : 'reminder_strip',
             has_picks: 'no'
         });
     }
@@ -917,9 +963,31 @@
         });
     }
 
+    /* ARRIVAL. Emitted on /sportsbook/ only, and ONLY when a handoff record
+       proves the member got here from one of our activation CTAs. An ordinary
+       visit to the board leaves no record and reports nothing. The record is
+       consumed on read, so one legitimate arrival is exactly one event. */
+    function emitActivationArrival() {
+        if (!isSportsbook()) return;
+        var raw = null;
+        try { raw = sessionStorage.getItem(ARRIVAL_KEY); } catch (e) { return; }
+        if (!raw) return;
+        try { sessionStorage.removeItem(ARRIVAL_KEY); } catch (e) {}
+        var d;
+        try { d = JSON.parse(raw); } catch (e) { return; }
+        if (!d || !d.source) return;
+        var payload = { source: d.source, cta_location: d.cta_location || null, from_surface: d.surface || null };
+        if (d.poll_type) payload.poll_type = d.poll_type;
+        if (d.arm) payload.arm = d.arm;
+        if (d.gate) payload.gate = d.gate;
+        track('activation_pick_flow_arrival', payload);
+        log('activation arrival', payload);
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
+        document.addEventListener('DOMContentLoaded', function () { emitActivationArrival(); start(); });
     } else {
+        emitActivationArrival();
         start();
     }
 })();

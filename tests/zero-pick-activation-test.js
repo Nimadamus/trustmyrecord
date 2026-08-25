@@ -384,8 +384,80 @@ test('the nudge stands down for the MLB panel exactly as the zero-pick strip doe
 test('the simulator pages are not in the nudge suppression list', () => {
   // The nudge suppresses pages where the member is already picking. A
   // simulator is not one of those, so the ladder must actually run there.
-  const list = NUDGE.slice(NUDGE.indexOf('SUPPRESSED_PATHS'), NUDGE.indexOf('function log'));
+  const start = NUDGE.indexOf('var SUPPRESSED_PATHS = [');
+  const list = NUDGE.slice(start, NUDGE.indexOf('];', start));
   assert.ok(!/simulator/.test(list), 'simulators must not be suppressed');
+});
+
+/* ------------------------------------- analytics defects (2026-08-25) */
+
+const BRIDGE = read('static/js/poll-pick-bridge.js');
+const CHECKLIST2 = read('static/js/welcome-checklist.js');
+
+test('both generic strips stand down for the Poll to Pick CTA', () => {
+  // The poll strip names the prediction the member just voted for, so it is
+  // more specific than either generic prompt and wins on /polls/.
+  for (const [label, src] of [['zero-pick', ONBOARDING], ['pick-two', NUDGE]]) {
+    assert.ok(/tmr-poll-bridge/.test(src), label + ' does not yield to the poll strip');
+  }
+});
+
+test('the nudge observer removes the element it actually owns', () => {
+  // It previously called a remove() helper that does not exist in that file,
+  // so the observer threw and the double prompt survived.
+  const fn = NUDGE.slice(NUDGE.indexOf('function standDownWhenAnotherCtaAppears'));
+  const NL2 = String.fromCharCode(10);
+  const body = fn.slice(0, fn.indexOf(NL2 + '    }'));
+  assert.ok(/getElementById\(ELEMENT_ID\)/.test(body), 'must remove by its own id');
+  assert.ok(!/[^.]remove\(\)/.test(body), 'must not call an undefined remove()');
+});
+
+test('every surface reports its own name, not one collapsed label', () => {
+  for (const [label, src] of [['zero-pick', ONBOARDING], ['pick-two', NUDGE], ['poll bridge', BRIDGE]]) {
+    assert.ok(/function surfaceName/.test(src), label + ' has no surface map');
+    for (const page of ['homepage', 'welcome', 'today', 'polls', 'forum', 'trivia',
+                        'mlb_simulator', 'nfl_simulator']) {
+      assert.ok(src.includes("'" + page + "'"), label + ' cannot report ' + page);
+    }
+  }
+  // It may still be named in the comment that explains why it was replaced;
+  // what must not survive is an event still emitting it.
+  assert.ok(!/surface:\s*isSportsbook\(\)\s*\?[^,]*sitewide_reminder/.test(ONBOARDING),
+    'no event may still emit the collapsed label');
+  assert.ok(!/track\([^)]*sitewide_reminder/.test(ONBOARDING));
+});
+
+test('arrival fires only from a real handoff, and only once', () => {
+  assert.ok(/activation_pick_flow_arrival/.test(ONBOARDING));
+  const fn = ONBOARDING.slice(ONBOARDING.indexOf('function emitActivationArrival'));
+  const NL2 = String.fromCharCode(10);
+  const body = fn.slice(0, fn.indexOf(NL2 + '    }'));
+  assert.ok(/isSportsbook\(\)/.test(body), 'only on the board');
+  assert.ok(/removeItem\(ARRIVAL_KEY\)/.test(body), 'the record must be consumed');
+  assert.ok(/if \(!d \|\| !d\.source\) return;/.test(body), 'no source, no event');
+  assert.ok(/catch/.test(body), 'a malformed record must not throw');
+});
+
+test('every activation CTA leaves a handoff the board can attribute', () => {
+  assert.ok(/markActivationHandoff\(\{ source: 'first_pick_strip'/.test(ONBOARDING));
+  assert.ok(/markActivationHandoff\(\{ source: 'pick_progress_strip'/.test(NUDGE));
+  assert.ok(/markActivationHandoff\(\{ source: 'poll'/.test(BRIDGE));
+  assert.ok(/source: 'welcome_checklist'/.test(CHECKLIST2), 'the welcome board row too');
+  assert.ok(/arm: ARM/.test(CHECKLIST2), 'carrying the experiment arm');
+  // One key, one record: a second click overwrites rather than queues.
+  for (const src of [ONBOARDING, NUDGE, BRIDGE, CHECKLIST2]) {
+    assert.ok(/tmr_activation_arrival/.test(src));
+  }
+});
+
+test('Pick #1 truth stays server-side', () => {
+  // No client event may claim a pick was created.
+  // A comment may reference the completion event these files rely on; what
+  // must not exist is a track() call claiming a pick was created.
+  for (const src of [ONBOARDING, NUDGE, BRIDGE]) {
+    assert.ok(!/track\(\s*['"][a-z_]*pick_created/.test(src),
+      'client must not assert pick creation');
+  }
 });
 
 /* ------------------------------------------------------------- no layout */

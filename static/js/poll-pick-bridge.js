@@ -67,6 +67,32 @@
        refusing to navigate. Production behaviour is a plain location change. */
     var navigate = function (url) { window.location.href = url; };
 
+    /* Same page map first-pick-onboarding.js uses, so both strips report the
+       surface identically. (SURFACE_GRANULARITY_20260825) */
+    function surfaceName() {
+        var p = (window.location.pathname || '').toLowerCase();
+        if (p === '/' || p === '/index.html') return 'homepage';
+        if (p.indexOf('/welcome/') === 0) return 'welcome';
+        if (p.indexOf('/today/') === 0) return 'today';
+        if (p.indexOf('/polls/') === 0) return 'polls';
+        if (p.indexOf('/forum/') === 0) return 'forum';
+        if (p.indexOf('/trivia/') === 0) return 'trivia';
+        if (p.indexOf('/mlb-simulator/') === 0) return 'mlb_simulator';
+        if (p.indexOf('/nfl-simulator/') === 0) return 'nfl_simulator';
+        if (p.indexOf('/sportsbook/') === 0) return 'sportsbook';
+        if (p.indexOf('/profile/') === 0) return 'profile';
+        return 'other';
+    }
+
+    var ARRIVAL_KEY = 'tmr_activation_arrival';
+    function markActivationHandoff(details) {
+        try {
+            sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify(Object.assign({
+                surface: surfaceName(), ts: Date.now()
+            }, details || {})));
+        } catch (e) {}
+    }
+
     function log() {
         try { console.log.apply(console, ['[TMR PollBridge]'].concat([].slice.call(arguments))); } catch (e) {}
     }
@@ -159,6 +185,8 @@
             poll_type: intent.poll_type || answer.poll_type || 'winner',
             market: intent.market || 'ml',
             zero_pick_member: isZeroPick === null ? 'unknown' : String(!!isZeroPick),
+            surface: surfaceName(),
+            cta_location: 'poll_pick_bridge',
         };
 
         /* THEME_MATCH_20260824: /polls/ is a light page and the shared strip is
@@ -234,6 +262,8 @@
                 log('could not store intent', e && e.message);
             }
             track('poll_pick_bridge_clicked', Object.assign({ pick_team: intent.pick_team || null, line: intent.line == null ? null : intent.line }, facts));
+            markActivationHandoff({ source: 'poll', cta_location: 'poll_pick_bridge',
+                                    poll_type: intent.poll_type || answer.poll_type || 'winner' });
             navigate('/sportsbook/?simpick=1');
         });
 

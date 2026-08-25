@@ -285,6 +285,19 @@
       if (!a) return;
       var action = a.getAttribute('data-action');
       track(action === 'skip' ? 'welcome_skipped' : 'welcome_action_clicked', { action: action });
+      /* ARRIVAL_EVENT_20260825: leave the same handoff the activation strips
+         leave, carrying the experiment arm, so /sportsbook/ can report an
+         arrival that is attributable to this page AND to the variant. Only the
+         board row counts as a pick-flow handoff; the quiz and trivia rows go
+         somewhere else entirely. */
+      if (action === 'pick') {
+        try {
+          sessionStorage.setItem('tmr_activation_arrival', JSON.stringify({
+            source: 'welcome_checklist', cta_location: 'welcome_board_row',
+            surface: 'welcome', arm: ARM || null, ts: Date.now()
+          }));
+        } catch (e) {}
+      }
     }, true);
   }
 
