@@ -29,6 +29,10 @@
 .seo-wrap a:hover{text-decoration:underline;}
 .seo-lede{font-size:1.1rem;color:#07182A;}
 .seo-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0;}
+/* A six-column board needs ~640px of min-content, which width:100% cannot shrink
+   below, so on a 390px phone the last columns ran past the card and were cut
+   off. The board scrolls sideways on its own instead (2026-08-25). */
+.seo-board{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .seo-board table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.95rem;}
 .seo-board th,.seo-board td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
 .seo-board th{color:#2E4459;font-weight:700;}
