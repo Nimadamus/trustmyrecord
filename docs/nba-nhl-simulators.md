@@ -120,18 +120,54 @@ Commands that produce the evidence below:
       percentages, impossible minutes, duplicated athletes and out-of-order
       percentiles.
 - [x] MLB simulator box-score test passes; no MLB code was touched.
-- [ ] `tests/mlb-simulator-realism-test.js` fails on HISTORICAL teams (1955
-      Dodgers innings). Pre-existing and unrelated: no MLB file was modified,
-      and the failure is in historical-team box scores.
-- [ ] `test:nba-nhl-trigger-coverage` cannot run here -- it applies schema
-      triggers to a local Postgres that is not available in this environment.
-      Unrelated to these changes.
-- [ ] Lint not run: this repo has no `eslint.config.*`, and ESLint 9 requires
-      one. Not added, because adding a lint configuration was not asked for and
-      would touch the whole repository.
-- [ ] **NOT DEPLOYED.** Both simulators are 404 in production. Deploying means
-      pushing, which has not been asked for, and the working tree also contains
-      another session's uncommitted work that a push would sweep up.
+- [x] **DEPLOYED AND LIVE.** Backend `67a85f5` on master, front end `40b25b1ed`
+      on main. Both simulator pages and all eight public API routes return 200.
+- [x] Production verified in a real browser at 1440x900 and 390x844: teams load
+      from the live API, a simulation runs, and the recap, leaders, box score,
+      quarter or period scoring and the NHL scoring summary all render with no
+      console errors and no failed first-party requests.
+- [x] Sitemap updated only after every one of the sixty-two URLs returned 200,
+      which the script verifies itself before writing. 328 URLs to 394.
+- [x] Both simulators linked from the tools page; they were previously
+      unreachable from anywhere on the site.
+
+### What the first deployment got wrong
+
+The first backend push built cleanly and then crashed on boot with
+`Cannot find module './simSchedule'`. The release files had been chosen by
+searching their contents for the engine module names, which found the engines
+and missed two siblings that do not mention them: the slate route and the
+calibration baseline. The running site was never affected -- the previous build
+stayed live throughout, and Render simply refused to cut over.
+
+The fix was to stop selecting by content and walk the require graph from the two
+route entry points instead. Twelve modules are reachable; every local require now
+resolves inside the commit. That check runs before a push rather than after it.
+
+The production browser check exists for the same reason. The local proof starts
+its own servers, so it cannot see a crashed API, a missing module, a stale
+cache-busting hash or a CORS header. It passed the whole time the site was
+returning 404.
+
+### Genuinely unresolved
+
+- [ ] `tests/nba-nhl-trigger-coverage-test.js` cannot run on this machine. It
+      applies `prevent_pick_mutation()` from schema.sql to a local development
+      database inside a rolled-back transaction, and there is no PostgreSQL here:
+      `pool.connect()` fails with ECONNREFUSED on 127.0.0.1:5432, and the repo
+      has only `.env.example`, no `.env`. Pointing it at the production database
+      would run DDL against live data to satisfy a test, which is not a trade
+      worth making. **To unblock: run a local PostgreSQL, create the
+      `trustmyrecord` database, and set DATABASE_URL.** Not fabricated as a pass.
+- [ ] `tests/mlb-simulator-realism-test.js` fails on historical teams (1955
+      Dodgers innings). Pre-existing and outside this task: no MLB file was
+      modified during this release, and the MLB box-score test passes.
+- [ ] Lint not run: the repository has no `eslint.config.*` and ESLint 9
+      requires one. Adding a lint configuration was not asked for and would
+      touch the whole repository.
+- [ ] Shot location (rim / midrange / three) remains impossible from this data,
+      and the NHL hits-by-ice-time gradient remains a stated residual. Both are
+      written up above.
 
 # NBA and NHL simulators
 
