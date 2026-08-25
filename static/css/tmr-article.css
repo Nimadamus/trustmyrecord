@@ -1175,7 +1175,10 @@ body.tmr-ds .gf-sample { color: var(--ed-faint); font-size: .78rem; }
   body.tmr-ds .ed-team-line { font-size: 12px; }
   body.tmr-ds .gf-bar { grid-template-columns: 1fr minmax(66px, auto) 1fr; gap: 6px; }
   body.tmr-ds .gf-bar-v { font-size: 1.15rem; min-width: 3ch; }
-  body.tmr-ds .gf-bar-k { font-size: 9px; letter-spacing: .06em; }
+  /* 9px was SMALLER than the 10px this label uses on desktop, so the phone
+     got the least readable version of the chart. 11px with tighter tracking
+     occupies about the same width (2026-08-25). */
+  body.tmr-ds .gf-bar-k { font-size: 11px; letter-spacing: .03em; }
   body.tmr-ds .gf-form { grid-template-columns: 1fr auto; }
   body.tmr-ds .gf-form-seq { grid-column: 1 / -1; }
   body.tmr-ds .gf-showcard::before { font-size: 7.5rem; }

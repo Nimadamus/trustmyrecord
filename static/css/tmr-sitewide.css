@@ -5366,3 +5366,36 @@ body.tmr-site-shell .feed-tabs{
   scrollbar-width:none;
 }
 body.tmr-site-shell .feed-tabs::-webkit-scrollbar{display:none}
+
+/* Open mobile menu on the tmr-global-nav pages: left-align the rows.
+   2026-08-25. Every section trigger (.tmr-sportsbook-menu__trigger and the
+   .tmr-community/.tmr-support variants) is justify-content:center, which is
+   right for the desktop horizontal bar and wrong once the panel stacks: in a
+   full-width column the five labels centred at different widths and read as a
+   staircase, with Sportsbook alone left-aligned because its row is display:flex
+   while the other four are display:grid. The ds-nav menu on the rest of the
+   site is a plain left-aligned list, so this makes the two agree.
+   Scoped to the OPEN panel at <=768px, so the desktop bar is untouched. */
+@media (max-width: 768px) {
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel > * {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-sportsbook-menu__trigger,
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-community-menu__trigger,
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-support-menu__trigger {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+    /* The chevron keeps to the far edge instead of hugging the label. */
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-sportsbook-menu__trigger::after,
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-community-menu__trigger::after,
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-support-menu__trigger::after {
+        margin-left: auto !important;
+    }
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel .tmr-global-nav__links a {
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+}
