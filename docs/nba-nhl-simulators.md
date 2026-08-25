@@ -334,14 +334,46 @@ returning 404.
 
 ### Genuinely unresolved
 
-- [ ] `tests/nba-nhl-trigger-coverage-test.js` cannot run on this machine. It
-      applies `prevent_pick_mutation()` from schema.sql to a local development
-      database inside a rolled-back transaction, and there is no PostgreSQL here:
-      `pool.connect()` fails with ECONNREFUSED on 127.0.0.1:5432, and the repo
-      has only `.env.example`, no `.env`. Pointing it at the production database
-      would run DDL against live data to satisfy a test, which is not a trade
-      worth making. **To unblock: run a local PostgreSQL, create the
-      `trustmyrecord` database, and set DATABASE_URL.** Not fabricated as a pass.
+- [x] `tests/nba-nhl-trigger-coverage-test.js` now runs, against a private
+      PostgreSQL that exists only for the length of the run.
+      `scripts/run_trigger_coverage_locally.js` starts a disposable cluster in a
+      temporary directory, applies the committed schema to an empty database and
+      runs the suite. Production is never involved and no DDL touches live data.
+      All three checks pass: an evidence-verified grade is accepted, a misgrade
+      is rejected, and a grade with no box-score evidence is rejected.
+
+      Running it from a genuinely empty database is what made it worth doing,
+      because it found two things that a machine with an existing database would
+      never have shown.
+
+      **The committed schema could not run its own triggers.**
+      `prevent_pick_mutation()` reads `games.score_details` to grade any period,
+      half or set market, and it and several indexes filter picks on
+      `deleted_at`. Both columns were live in production and neither was in
+      `database/schema.sql`. Anyone setting up from the committed schema got a
+      database that failed the moment a trigger fired. Both are now in the file,
+      each with a note saying what reads it, and the runner asserts their
+      presence and reports `SCHEMA INCOMPLETE` rather than quietly patching
+      around a drift that would then go unnoticed again.
+
+      **The runner leaked PostgreSQL.** Cleaning up in a `finally` covers the one
+      ending that was never the problem. Interrupted runs left clusters serving
+      and data directories on disk, and normal completion never cleaned up at
+      all: the embedded server holds the event loop open, so the process printed
+      PASS and then simply sat there. Teardown is now idempotent and reachable
+      from every ending, kills the postmaster through the pid file the cluster
+      itself writes rather than a library handle that may already be gone, sweeps
+      strays started from this repository, and sweeps whatever an earlier run was
+      killed too abruptly to remove. Verified four ways -- normal completion,
+      SIGINT, a failing suite, and `taskkill /F` on the runner alone with the
+      postmaster deliberately orphaned -- ending every time at zero processes,
+      zero listeners and zero temporary directories.
+
+      One honest limit: nothing in a process can clean up after being killed
+      outright, so the abrupt case is covered by the next run's sweep rather than
+      instantly. `process.kill` on Windows terminates rather than signalling, so
+      the SIGINT path is exercised by raising the signal inside the runner's own
+      process, which is the same handler a console Ctrl+C invokes.
 - [ ] `tests/mlb-simulator-realism-test.js` fails on historical teams (1955
       Dodgers innings). Pre-existing and outside this task: no MLB file was
       modified during this release, and the MLB box-score test passes.
