@@ -65,6 +65,59 @@ Nothing is graded on intent.
 Met: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10. The evidence for 1 to 3 is the holdout
 evaluation below; for 4 and 5 the eight-suite gate; for 6 the scenario suite.
 
+# Re-audit against the matrix
+
+Run 2026-08-25, after the work. Same competitors, same columns, our column
+filled in from what is actually live and verifiable rather than from intent.
+
+| capability | typical competitor | TrustMyRecord now |
+|---|---|---|
+| Simulation approach | rating draw or possession loop | possession loop (NBA), shift and event engine (NHL), both with real overtime |
+| Current rosters | historical in some, unstated in most | current season snapshot, age published on every response |
+| Injuries and availability | not offered | modelled, and **measured**: knowing who is out is worth +1.7 points of Brier skill |
+| Starting goalie | referenced by one | selectable, and worth the difference between a model that beats the home side and one that has not been shown to |
+| Player modelling | projected stat lines | full possession/shift attribution reconciling to the final score |
+| Scenario controls | sliders and "chaos" modes | sit a player, cap his minutes, shift the pace, change the goalie -- with the change reported and a no-op reported as nothing |
+| Simulation count | one, or 1,000 | 100 to 50,000 |
+| Box-score depth | not shown by most | complete, audited line by line every release |
+| Play-by-play | two offer it | NHL scoring summary with strength and assists, penalties, three stars |
+| Betting-style outputs | spread/total edges; one reverse-engineers the market | win, spread, puck line, totals, a cover curve across every line, most common scorelines |
+| Uncertainty | none seen | percentiles, score ranges, distributions, and a sensitivity panel saying what the answer rests on |
+| Charts | rare | margin and total distributions, cover curve, win-probability line |
+| Explanations | none seen | plain-language drivers, an event-grounded recap, a published methodology |
+| Mobile | varies | verified at six widths including a browser at 125% |
+| Speed | varies | 1-2ms per simulated game |
+| **Published methodology** | **none found** | full, including what did not work |
+| **Published accuracy** | **none found** | holdout evaluation with intervals, by segment |
+| **Independence of the market** | one explicitly reverse-engineers lines | never reads a betting line |
+
+## Gaps closed since the first audit
+
+Win-probability progression, player prop distributions, sensitivity analysis,
+shareable and printable results, data-freshness labelling, a production health
+check, an accessibility sweep, and an honest holdout evaluation.
+
+## Gaps left open, and why
+
+**Shot location.** Rim, midrange and three cannot be separated from this feed. A
+rim rate would be invented, so there is none.
+
+**NHL hits by ice-time rank.** Still inverted. The fix was built, measured, and
+removed because it cost two per cent of the goal mean.
+
+**Near-even NBA games.** No edge, and now understood: knowing who is out moves
+the knowable games out of that bucket, so what remains is genuinely close. Three
+separate attempts to improve it failed and are recorded.
+
+**Special teams as a rating input.** Would need per-game power-play data the
+feed does not expose without a request per game.
+
+## The standard, re-checked
+
+All ten commitments from the first audit hold. The three that the category does
+not meet at all -- published method, published accuracy, independence from the
+market -- are the three this product is built around.
+
 # Holdout evaluation
 
 The walk-forward backtest was already leak-free in the way that matters most: on
