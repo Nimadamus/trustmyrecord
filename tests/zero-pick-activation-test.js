@@ -36,6 +36,7 @@ const ZERO_PICK_SURFACES = [
   'index.html', 'sportsbook/index.html', 'profile/index.html',
   'today/index.html', 'polls/index.html', 'forum/index.html',
   'trivia/index.html', 'welcome/index.html',
+  'mlb-simulator/index.html', 'nfl-simulator/index.html',
 ];
 
 for (const page of ZERO_PICK_SURFACES) {
@@ -304,6 +305,55 @@ test('an unreadable surface keeps the original dark strip', () => {
   const fn = ONBOARDING.slice(ONBOARDING.indexOf('function surfaceIsLight'));
   const NL = String.fromCharCode(10);
   assert.match(fn.slice(0, fn.indexOf('}' + NL + NL)), /return false;/);
+});
+
+/* -------------------------------------- the simulator surface, and MLB's own CTA */
+
+test('the strip stands down when another first-pick CTA owns the screen', () => {
+  // The MLB simulator's post-result panel already renders "Make Your Official
+  // Prediction" for logged-in AND logged-out visitors, tied to the matchup the
+  // member just simulated. That CTA is better than this generic strip on that
+  // screen, so two prompts for one action is the thing to avoid.
+  assert.ok(/function competingFirstPickCta/.test(ONBOARDING));
+  assert.ok(/#simcConversionPanel a\[href\^="\/sportsbook\/"\]/.test(ONBOARDING),
+    'must key off the real MLB panel CTA');
+  // The render path must consult it.
+  const render = ONBOARDING.slice(ONBOARDING.indexOf('function renderReminder'));
+  assert.ok(/competingFirstPickCta\(\)/.test(render.slice(0, 400)),
+    'renderReminder must check before painting');
+  // And it must retire a strip that is already up when the panel arrives.
+  assert.ok(/standDownWhenAnotherCtaAppears/.test(ONBOARDING));
+  assert.ok(/MutationObserver/.test(ONBOARDING), 'the panel renders asynchronously');
+});
+
+test('the MLB prediction CTA is not removed, only deferred to', () => {
+  const conv = read('static/js/mlb-simulator-conversion.js');
+  assert.ok(/Make Your Official Prediction/.test(conv), 'the existing MLB CTA must survive');
+  assert.ok(/predictionLink\.href = '\/sportsbook\/'/.test(conv));
+  // Nothing in this change may have touched that file.
+  assert.ok(!/tmr-fp-reminder/.test(conv), 'no strip logic leaked into the MLB component');
+});
+
+test('NFL gets the strip as its activation path, with no custom component', () => {
+  const nfl = read('nfl-simulator/index.html');
+  assert.ok(/first-pick-onboarding/.test(nfl), 'NFL must load the shared strip');
+  assert.ok(!/simcConversionPanel/.test(nfl), 'NFL has no competing panel');
+  assert.ok(!/mlb-simulator-conversion/.test(nfl), 'and must not borrow the MLB one');
+});
+
+test('the simulator gate and its resume path are untouched', () => {
+  const gate = read('static/js/sim-auth-gate.js');
+  assert.ok(/simResume/.test(gate), 'resume flag intact');
+  assert.ok(/restoreState/.test(gate) && /runNow/.test(gate), 'restore + auto-run intact');
+  assert.ok(!/first-pick-onboarding|tmr-fp-reminder/.test(gate),
+    'activation logic must not have leaked into the gate');
+});
+
+test('the simulator pick prefill is untouched', () => {
+  const prefill = read('static/js/sim-pick-prefill.js');
+  assert.ok(/tmr_sim_pick_intent/.test(prefill));
+  assert.ok(/simpick/.test(prefill));
+  assert.ok(!/method:\s*'POST'/.test(prefill), 'still never submits');
 });
 
 /* ------------------------------------------------------------- no layout */

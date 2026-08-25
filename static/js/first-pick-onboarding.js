@@ -544,7 +544,47 @@
         return false;
     }
 
+    /* ANOTHER COMPONENT ALREADY OWNS THIS SCREEN'S FIRST-PICK CTA
+       (SIM_ACTIVATION_20260825)
+
+       The MLB simulator's own post-result panel
+       (static/js/mlb-simulator-conversion.js) already renders "Make Your
+       Official Prediction" pointing at the board, for logged-in and logged-out
+       visitors alike, as soon as a run finishes. That CTA is BETTER than this
+       strip on that screen: it sits with the result the member just produced.
+       Two prompts for the same action is worse than one good one, so this
+       strip stands down when that panel is present.
+
+       It does NOT stand down before a run: until a result exists there is no
+       competing CTA, and a visitor who never runs a simulation should still be
+       asked. The panel is built asynchronously, hence the observer below.
+
+       The NFL simulator has no such panel, so the strip is the activation path
+       there throughout - which is the point of loading it on both. */
+    function competingFirstPickCta() {
+        try {
+            return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]');
+        } catch (e) { return false; }
+    }
+
+    /* Watch for that panel appearing after a simulation run and retire the
+       strip when it does. One observer, disconnected as soon as it fires. */
+    function standDownWhenAnotherCtaAppears() {
+        if (typeof MutationObserver !== 'function' || !document.body) return;
+        var observer = new MutationObserver(function () {
+            if (!competingFirstPickCta()) return;
+            observer.disconnect();
+            removeReminder();
+            log('another first-pick CTA rendered on this page - strip retired');
+        });
+        try { observer.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+    }
+
     function renderReminder() {
+        if (competingFirstPickCta()) {
+            log('another first-pick CTA already on screen - not rendering the strip');
+            return;
+        }
         var bar = document.getElementById('tmr-fp-reminder');
 
         /* The homepage paints this strip during parse (see the early block in
@@ -863,6 +903,7 @@
             state.started = !!flags.started;
 
             renderForEligibleUser();
+            standDownWhenAnotherCtaAppears();
             /* The strip may already be on screen from the optimistic paint, in
                which case renderReminder() will not run again - count it now
                that the answer has arrived. */
