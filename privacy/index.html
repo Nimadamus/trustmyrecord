@@ -84,6 +84,19 @@
         .legal-text table { width: 100%; border-collapse: collapse; margin: 16px 0; }
         .legal-text th, .legal-text td { padding: 10px 14px; border: 1px solid var(--border); text-align: left; font-size: 14px; }
         .legal-text th { background: var(--bg-card); color: var(--accent-gold); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* The data table is three columns of prose. Its min-content is ~640px,
+           which width:100% cannot shrink below, so on a 390px phone the last
+           column ran off the screen. table-layout:fixed lets the cells wrap
+           instead - the right answer for prose, where scrolling sideways to
+           read a purpose statement is worse than a narrower column
+           (2026-08-25). */
+        @media (max-width: 640px) {
+          /* tmr-sitewide.css puts min-width:640px on every table inside
+             .tmr-site-shell, which is right for the data tables that sit in a
+             scroll wrapper and wrong for this one, which has none. */
+          .legal-text table { table-layout: fixed !important; min-width: 0 !important; width: 100% !important; }
+          .legal-text th, .legal-text td { padding: 8px 9px; font-size: 12.5px; overflow-wrap: anywhere; }
+        }
     </style>
     <style>
         /* Premium refinement pass */
