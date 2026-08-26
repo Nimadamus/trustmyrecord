@@ -176,8 +176,19 @@ assert.ok(worker.includes("const HOME_PATHS = new Set(['/', '/index.html'])"),
   'worker.mjs must re-check the pathname itself, not trust the route config alone');
 
 /* ---------- 7. no placeholder may shimmer forever ------------------------- */
-assert.ok(js.includes('function compSettled()'),
+// 2026-08-25: compSettled now takes a flag - `exhausted` - because a settle
+// that happens while requests are still in flight must say "Loading standings"
+// and a settle after the last one has failed must say it is unavailable. It
+// must also never write over cached standings that are already on the card.
+assert.ok(js.includes('function compSettled(exhausted)'),
   'tmr-home-live.js must settle the competition card skeleton on the failure path too');
+assert.ok(js.includes('function compPaintCached()') && js.includes('function compCacheWrite('),
+  'the competition card must open on the last standings this browser saw, so a slow ' +
+  'backend cannot put "Temporarily unavailable" on the front page over a table that ' +
+  'has not changed');
+assert.ok(js.includes('function compEmptyState('),
+  'with no cached and no live standings the card must show one deliberate line, not ' +
+  'three rows with an em dash in every cell');
 assert.ok(js.includes('function statsSettled()'),
   'tmr-home-live.js must resolve leftover stat placeholders as soon as the stats ' +
   'requests settle, rather than leaving them shimmering until a timer fires');

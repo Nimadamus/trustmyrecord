@@ -23,7 +23,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '7ad8df34acbc';
+  var BUILD = '6b90014b27db';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -1070,7 +1070,20 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; });
     };
-    slateFetch(false).then(function (payload) {
+    /* THE EARLY REQUEST, IF THE DOCUMENT ALREADY FIRED ONE. index.html fires
+       /nav/mlb-slate during head parse (see EARLY DATA there), which is ~600ms
+       before this file is even parsed. Adopt that answer rather than asking a
+       second time; it is used ONCE and then dropped, so every later refresh is
+       a real request. A missing or failed early promise falls straight through
+       to the same slateFetch this always did. */
+    var firstSlate = null;
+    try {
+      if (window.__tmrEarly && window.__tmrEarly.slate) {
+        firstSlate = window.__tmrEarly.slate;
+        window.__tmrEarly.slate = null;
+      }
+    } catch (e) { firstSlate = null; }
+    (firstSlate || slateFetch(false)).then(function (payload) {
       /* Refuse a response that raced across a date rollover. */
       if (payload && payload.slate_date && payload.slate_date !== slateDatePT()) {
         renderTicker(null); return;
@@ -1239,6 +1252,8 @@
     reduced: false,
     refresh: null,      // slow re-ask, so "standings update live" is literal
     asked: false,       // the standalone endpoint is tried once, never in a loop
+    fromCache: false,   // the rows on screen came out of localStorage
+    fresh: false,       // a live payload has landed this page view
   };
   try {
     comp.reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -1449,26 +1464,106 @@
     });
   }
 
+  /* ---------- LAST GOOD STANDINGS ----------------------------------------
+     Nima, 2026-08-25: "the competition card sometimes appears with STANDINGS -
+     Temporarily unavailable and empty placeholder rows. This makes the homepage
+     look broken."
+
+     It looked broken because the card had exactly two states: the payload, or
+     nothing. Every slow minute the backend had - a cold Render process, a
+     database that took longer than the 8s timeout, a bootstrap build that
+     predated this module - put "Temporarily unavailable" on the front page
+     under a row of em dashes, and the STANDINGS THEMSELVES HAD NOT CHANGED.
+
+     So the last payload that actually rendered is kept, and it is what the card
+     opens on. It is not invented and it is not a placeholder: it is the real
+     table, as it stood when this browser last saw it, and it is replaced the
+     moment a live one arrives. Twelve hours is the ceiling - a standings table
+     older than that is stale enough to be worth a loading state instead.
+
+     Everything here is wrapped: localStorage throws in a private window and in
+     a browser with site data blocked, and the card must boot either way. */
+  var COMP_CACHE_KEY = 'tmrCompStandingsV1';
+  var COMP_CACHE_MAX_MS = 12 * 60 * 60 * 1000;
+
+  function compValidViews(views) {
+    return (Array.isArray(views) ? views : []).filter(function (v) {
+      return v && Array.isArray(v.rows) && v.rows.length;
+    });
+  }
+
+  function compCacheRead() {
+    try {
+      var raw = localStorage.getItem(COMP_CACHE_KEY);
+      if (!raw) return null;
+      var held = JSON.parse(raw);
+      if (!held || typeof held.at !== 'number') return null;
+      if (Date.now() - held.at > COMP_CACHE_MAX_MS) return null;
+      var views = compValidViews(held.views);
+      if (!views.length) return null;
+      return { views: views, footer: held.footer || null };
+    } catch (e) { return null; }
+  }
+
+  function compCacheWrite(views, footer) {
+    try {
+      localStorage.setItem(COMP_CACHE_KEY, JSON.stringify({
+        at: Date.now(), views: views, footer: footer || null
+      }));
+    } catch (e) {}
+  }
+
+  /* Paint the held table before a single request has answered. Runs from boot,
+     so on a return visit the card is a real standings table in the first frame
+     the script touches, and the live payload only ever REPLACES it. */
+  function compPaintCached() {
+    if (comp.started) return false;
+    var held = compCacheRead();
+    if (!held) return false;
+    comp.views = held.views;
+    comp.i = 0;
+    comp.started = true;
+    comp.fromCache = true;
+    compFooter(held.footer);
+    compRender(held.views[0], false);
+    compBindPause();
+    compSchedule();
+    var bd = el('.spot.comp .bd');
+    if (bd) { bd.classList.remove('is-skel'); bd.setAttribute('aria-busy', 'false'); }
+    lwReveal('tmr-lw-spot');
+    return true;
+  }
+
+  /* THE HONEST EMPTY STATE. Nothing cached, nothing live: one deliberate line
+     inside the stage the card already reserves, rather than three standings
+     rows with an em dash where every name and number should be. The stage's
+     height is stated in CSS and is not touched here, so this cannot shift the
+     page on the way in or on the way out. */
+  function compEmptyState(message) {
+    var stage = el('.spot.comp .comp-stage'); if (!stage) return;
+    if (stage.querySelector('.comp-row:not(.is-skel) .comp-nm[href]')) return;
+    stage.innerHTML = '<div class="comp-empty"><span>' + esc(message) + '</span></div>';
+    var cat = el('.spot.comp .comp-cat');
+    if (cat) setText(cat, 'Standings');
+    var note = el('.spot.comp .comp-note');
+    if (note) setText(note, '');
+  }
+
   /* No payload, or a payload with no view that had enough real data: leave the
      card's box exactly as it is and say so, rather than shimmer forever or
      print numbers nobody can stand behind. */
-  function compSettled() {
+  function compSettled(exhausted) {
     var bd = el('.spot.comp .bd'); if (!bd) return;
     bd.classList.remove('is-skel');
     bd.setAttribute('aria-busy', 'false');
+    /* THE CARD ON SCREEN IS NEVER CONTRADICTED. If cached standings are up -
+       or a live payload has landed - a settle is a no-op: the old code dashed
+       the skeletons out and wrote "Temporarily unavailable" over a card that
+       was showing a real table, which is the defect Nima reported. */
     if (!comp.views.length) {
-      var stage = el('.spot.comp .comp-stage');
-      if (stage && !stage.querySelector('.comp-row:not(.is-skel) .comp-nm[href]')) {
-        stage.querySelectorAll('.sk').forEach(function (n) {
-          var host = n.parentNode;
-          if (host && host.querySelectorAll('.sk').length === 1) host.textContent = '—';
-          else n.remove();
-        });
-      }
-      var cat = el('.spot.comp .comp-cat');
-      if (cat && cat.querySelector('.sk')) setText(cat, 'Standings');
-      var note = el('.spot.comp .comp-note');
-      if (note && note.querySelector('.sk')) setText(note, 'Temporarily unavailable');
+      compEmptyState(exhausted
+        ? 'Standings unavailable right now'
+        : 'Loading standings…');
     }
     var foot = el('.spot.comp .comp-foot');
     if (foot && foot.querySelector('.sk')) setText(foot, 'Standings update live');
@@ -1489,10 +1584,30 @@
 
       compFooter(data.footer);
 
+      /* A payload that arrives without views changes NOTHING. Whatever is on
+         the card - cached standings or the skeleton - is left alone, so a
+         half-built bootstrap can never take a good table off the page. */
       if (!views.length) return;
+      comp.fresh = true;
+      compCacheWrite(views, data.footer || null);
+
+      /* Replacing cached rows: swap the DATA, not the view on screen. The
+         rotation is already running and the reader is already reading a row;
+         restarting it at view 0 would visibly jump the card for a payload that
+         is, on nearly every load, the same table it is already showing. The
+         next rotation tick picks the fresh rows up. */
+      if (comp.started && comp.fromCache) {
+        comp.views = views;
+        if (comp.i >= views.length) comp.i = 0;
+        comp.fromCache = false;
+        if (!comp.refresh) comp.refresh = setInterval(compRefresh, COMP_REFRESH_MS);
+        return;
+      }
+
       comp.views = views;
       comp.i = 0;
       comp.started = true;
+      comp.fromCache = false;
       compRender(views[0], false);
       compBindPause();
       compSchedule();
@@ -1521,9 +1636,12 @@
         return v && Array.isArray(v.rows) && v.rows.length;
       }) : [];
       if (!views.length) return;              // a failed refresh changes nothing
+      comp.fresh = true;
       comp.views = views;
       if (comp.i >= views.length) comp.i = 0;
+      comp.fromCache = false;
       compFooter(d.footer);
+      compCacheWrite(views, d.footer || null);
     });
   }
 
@@ -1543,11 +1661,11 @@
     // One attempt, ever. applyCompetition calls back here when it is handed a
     // payload without views, so an endpoint that keeps answering without them
     // would otherwise bounce between the two forever.
-    if (comp.asked) { compSettled(); lwReveal('tmr-lw-spot'); return; }
+    if (comp.asked) { compSettled(true); lwReveal('tmr-lw-spot'); return; }
     comp.asked = true;
     j('/users/competition', 8000).then(function (d) {
       if (d && Array.isArray(d.views)) { applyCompetition(d); return; }
-      compSettled();
+      compSettled(true);
       lwReveal('tmr-lw-spot');
     });
   }
@@ -1683,13 +1801,25 @@
      — the failure mode that used to leave gated regions blank for 7-10s.
      If it fails, the legacy per-endpoint path runs as the fallback. -------- */
   function boot() {
+    /* FIRST, THE TABLE THIS BROWSER ALREADY HAS. Before a request is made, so
+       the competition card is real standings in the first frame rather than a
+       shimmer that may resolve into "Temporarily unavailable". */
+    compPaintCached();
     ticker();
     startTickerRefresh();
     sportsTalk();
     poll();
     arena();
 
-    j('/users/home-bootstrap', 6000).then(function (d) {
+    /* Same adoption as the ticker: index.html fired this during head parse. */
+    var firstBoot = null;
+    try {
+      if (window.__tmrEarly && window.__tmrEarly.bootstrap) {
+        firstBoot = window.__tmrEarly.bootstrap;
+        window.__tmrEarly.bootstrap = null;
+      }
+    } catch (e) { firstBoot = null; }
+    (firstBoot || j('/users/home-bootstrap', 6000)).then(function (d) {
       if (!d) { legacyBoot(); return; }
 
       var m = d.metrics || {};
@@ -1806,7 +1936,7 @@
     document.querySelectorAll('#tmrEyebrowPicks, .bridge .s b').forEach(function (b) {
       if (b.querySelector('.sk') || !b.textContent.trim()) b.textContent = '—';
     });
-    compSettled();
+    compSettled(true);
     /* The ticker's own deadline. integritySweep only writes the honest message
        once tickerSettled is true, which never happens if the request neither
        resolves nor rejects. This is the backstop for that: a lane that is still

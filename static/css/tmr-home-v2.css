@@ -81,7 +81,11 @@
      hero was laid out 52px too tall until the runtime measurement corrected it,
      which moved the stats stripe and everything below it. The inline script at
      the foot of index.html keeps this in sync afterwards. */
-  --header-height:248px;
+  /* 2026-08-25: 231 = nav(78) + ticker(154) at the 0.91 homepage scale at the
+     foot of this file, measured in Chromium at 1440px. It was 248 at the
+     pre-scale sizes. Shipping the old number would lay the hero out 19px
+     too short until the runtime measurement corrected it. */
+  --header-height:231px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:24px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -550,6 +554,16 @@ a.comp-nm:hover{color:var(--brand-dk)}
   100%{opacity:0;transform:translateX(38%)}
 }
 
+/* THE INTENTIONAL EMPTY STATE (Nima, 2026-08-25). One line, centred in the
+   stage the card already reserves, for the case where there is neither a live
+   payload nor a cached table to show. It replaces three standings rows with an
+   em dash in every cell, which read as a broken card rather than an empty one.
+   The stage's height is stated above and is not touched here, so this can
+   neither shift the page on the way in nor on the way out. */
+.comp-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:0 12px}
+.comp-empty span{font-size:17px;font-weight:600;color:var(--muted);line-height:1.4}
+
 /* Skeleton state: the card ships empty and is filled by live data only. The
    boxes are already the right size, so nothing moves when the values land. */
 .spot.comp .bd.is-skel .comp-prog i{transform:scaleX(0)}
@@ -822,6 +836,24 @@ footer a:hover{color:#fff}
 .hero{position:relative;isolation:isolate}
 .hero-bg{
   position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.58;
+  background:
+    linear-gradient(90deg, rgba(3,9,18,.96) 0%, rgba(3,9,18,.78) 37%, rgba(3,9,18,.42) 100%),
+    radial-gradient(circle at 16% 42%, rgba(255,255,255,.12), transparent 9rem),
+    radial-gradient(circle at 44% 32%, rgba(255,255,255,.09), transparent 11rem),
+    url("/static/media/steph-curry-hero.e58e3f673f5a.webp") center / cover no-repeat;
+}
+/* THE ANIMATION IS NOT REMOVED - IT IS SECOND (Nima, 2026-08-25).
+   The motion plate is a 1.21MB WebP and it is a background of an element
+   inside the first viewport, so the browser fetched it at the same
+   priority as everything the hero needs to PAINT. The 46KB still frame
+   above is the same picture at the same crop, so the hero looks right in
+   the first frame; the script at the foot of index.html decodes the
+   motion plate after `load` and adds this class, and the animation starts
+   over the top of an identical still. Nothing about the settled hero
+   changes, and the still stays underneath so a failed or slow decode
+   leaves the hero looking exactly as it does now rather than empty.
+   Background layers only - no geometry, so this can never shift the page. */
+html.tmr-heroanim .hero-bg{
   background:
     linear-gradient(90deg, rgba(3,9,18,.96) 0%, rgba(3,9,18,.78) 37%, rgba(3,9,18,.42) 100%),
     radial-gradient(circle at 16% 42%, rgba(255,255,255,.12), transparent 9rem),
@@ -1329,4 +1361,152 @@ a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset
   .bridge .s span{font-size:14px}
   .final h3{font-size:38px}
   .final p{font-size:18px}
+}
+
+
+/* =========================================================== SCALE 0.91x =====
+   HOMEPAGE SCALE - SLIGHT REDUCTION (Nima, 2026-08-25)
+   -----------------------------------------------------------------------------
+   "The homepage currently feels slightly oversized ... reduce the visual scale
+   of the above-the-fold area by approximately 8-10%, while preserving the
+   existing composition and proportions." Not a redesign: every rule below is
+   the SAME property on the SAME selector as the approved rule it steps down,
+   multiplied by ~0.91 (hero body copy and the ticker by ~0.93, per the brief's
+   per-element percentages). Nothing is moved, removed, restacked or recoloured.
+
+   WHY IT SITS HERE AND NOT IN THE RULES THEMSELVES. The approved values are
+   locked byte-exact by tests/homepage-approved-baseline-lock-test.js, and the
+   1.2x / 1.25x restores are documented against them in the comments above. An
+   override layer keeps that record intact and keeps this one change readable
+   as one change - the same pattern the phone tier at the foot of this file
+   uses, and the reason both sit last: source order is what makes them win.
+
+   DESKTOP ONLY (min-width:1181px). Below that the page is already one column
+   and has its own tier (the 641-1024 display step and the 640px phone tier),
+   which the brief explicitly does not touch. The two desktop bands that
+   re-state hero geometry - 1400px+ and 1181-1399px - are stepped down
+   separately below so neither loses its own composition.
+
+   Line-height, gaps between the four bands (ticker / hero / competition card /
+   stats stripe) and every reserved box are stepped down BY LESS than the type
+   or not at all, so nothing crowds: the four bands separate by MORE at this
+   scale, not less, because the type shrank faster than the padding.
+   ============================================================================ */
+@media (min-width:1181px){
+
+  /* ---- 1. hero headline (-9.7%) and body copy (-6.5%) ---- */
+  .hero h1.hh{font-size:56px;margin:24px 0 25px}
+  .hero p.sub{font-size:21.5px}
+
+  /* ---- 2. hero buttons and the text link beside them (-8.8%) ---- */
+  .hero .cta{gap:36px;margin-top:29px}
+  .hero .cta .btn.lg{height:62px;font-size:19.5px}
+  .hero .cta .tlink{font-size:18.5px}
+
+  /* ---- 3. "N PICKS TRACKED - NOTHING DELETED" badge (-8.8%) ---- */
+  .eyebrow{padding:9px 22px;gap:13px;font-size:15.5px}
+  .eyebrow .bl{width:9px;height:9px}
+
+  /* ---- 4. competition panel: shell, then internals, all ~-9% ----
+     The stage height is the one number that must move WITH the type inside it:
+     it is the fixed box that stops the card changing height as the views
+     rotate (see the LIVE COMPETITION note above), and three rows of smaller
+     type in an unchanged box would simply add slack. */
+  /* THE FOUR BANDS MUST NOT TOUCH (Nima, 2026-08-25). The card is the
+     tallest thing in the hero grid, so the grid row IS the card's height
+     and the card sat flush against the ticker above it. The hero has slack
+     at this scale that it did not have before, so a stated margin on THIS
+     CARD ONLY buys a visible gap on both edges without moving anything
+     else - the left column is shorter than the card and is centred against
+     it, so it does not move at all. */
+  .spot.comp{margin:16px 0}
+  .spot{border-radius:16px}
+  .spot .rail{height:5px}
+  .spot .hd{padding:21px 33px}
+  .spot .hd b{font-size:16.5px;gap:12px}
+  .spot .bd{padding:30px 33px 27px}
+  .spot .ft{padding:21px 33px;font-size:19px}
+  .spot.comp .hd{gap:19px}
+  .spot.comp .hd b{font-size:15.5px}
+  .spot.comp .bd{padding:27px 33px 25px}
+  .spot.comp .ft{font-size:17.5px;gap:22px}
+  .spot.comp .vchip{font-size:15.5px}
+  .vchip{padding:5px 14px;font-size:16.5px;gap:7px}
+  .comp-sub{gap:13px;margin-top:13px;height:23px}
+  .comp-cat{font-size:16.5px}
+  .comp-note{font-size:15.5px}
+  .comp-note::before{margin-right:12px}
+  .comp-row{grid-template-columns:27px 42px minmax(0,1fr) auto;column-gap:15px;padding:4px 0}
+  .comp-rk{font-size:17.5px}
+  .comp-av,.comp-avl{width:42px;height:42px;border-radius:12px}
+  .comp-avl{font-size:15.5px}
+  .comp-nm{font-size:18px}
+  .comp-meta{font-size:14px;margin-top:4px}
+  .comp-val{gap:12px}
+  .comp-num{font-size:23.5px}
+  .comp-dl{font-size:14.5px;padding:4px 7px}
+  .comp-prog{margin-top:19px}
+  .comp-foot{font-size:14.5px}
+  .comp-empty span{font-size:15.5px}
+
+  /* ---- 5. top sports ticker / game cards (-6.5%) ----
+     Held at the shallower end of the brief's 5-8% because this row is the one
+     element on the page whose WIDTH emerges from its content (see the note on
+     .gm-sp above): the strip is the child with a stated width and everything
+     else defers to it, so the strip and the type inside it step down together
+     and the card keeps being sized by the same child it is sized by today. */
+  .ticker-in{padding:13px 43px}
+  .ticker-page{gap:17px}
+  .tlbl{font-size:17px;height:34px;gap:13px;padding-right:26px;margin-right:26px}
+  .tlbl .bl{width:9px;height:9px}
+  .tk-nav{width:37px;height:37px;font-size:21.5px}
+  .gm{padding:8px 21px;gap:5px}
+  .gm .gm-top{gap:17px}
+  .gm .t{font-size:19.5px;gap:9px}
+  .gm .t img{width:29px;height:29px}
+  .gm .sc{font-size:22.5px}
+  .gm .st{font-size:17px}
+  .gm .gm-sp{font-size:17px;max-width:380px}
+  /* .gm-in is the child that STATES the card's width, so the card is only
+     really rescaled here - and .gm-sp's max-width above is the same number
+     on purpose, exactly as the approved pair is today. Height comes down
+     with the type inside it so the two-line box still fits two lines. */
+  .gm .gm-in{width:380px;height:42px}
+  .gm .gm-in-l{font-size:17px;gap:8px}
+  .gm .gm-in-l .ts{width:8px;height:8px;margin-top:6px}
+  /* THE RESERVATION MOVES WITH THE CARD. The lane holds a real matchup card's
+     height from the first frame so a late slate cannot push the hero down; a
+     smaller card against the old 134px box would have re-opened exactly that
+     gap as slack instead. Measured in Chromium at 1440px on this scale:
+     the real card measures 126.75 with the intel strip rendered, so the box
+     is 127 - the same round-up the 134px reservation above is. */
+  .ticker-games,.ticker-track,.ticker-page{min-height:127px}
+  .gm.is-skel{width:424px;height:127px;gap:8px}
+  .gm.is-skel .sk{height:17px}
+  .gm.is-skel .sk.a{width:210px;height:22px}
+  .gm.is-skel .sk.b{width:157px}
+  .gm.is-skel .sk.c{width:280px}
+  .gm.is-msg{min-height:88px}
+
+  /* ---- 6. bottom statistics strip: -9% of vertical height ---- */
+  .bridge .s{padding:19px 33px}
+  .bridge .s b{font-size:36px}
+  .bridge .s span{font-size:16.5px;margin-top:8px}
+  .bridge .cta-cell{padding:19px 33px;gap:26px}
+  .bridge .cta-cell p{font-size:19px}
+}
+
+/* The two desktop bands that carry their own hero geometry, stepped down by the
+   same 0.91 so each keeps its own composition rather than inheriting the
+   other's. Order matters: these follow the block above. */
+@media (min-width:1400px){
+  .hero-grid{grid-template-columns:minmax(0,1fr) 568px;gap:78px}
+  .comp-title{font-size:37px}
+  .comp-stage{margin-top:18px;height:182px}
+}
+@media (min-width:1181px) and (max-width:1399px){
+  .hero h1.hh{font-size:59px}
+  .hero-grid{grid-template-columns:minmax(0,1fr) 502px;gap:53px}
+  .comp-title{font-size:39px}
+  .comp-stage{margin-top:18px;height:180px}
 }

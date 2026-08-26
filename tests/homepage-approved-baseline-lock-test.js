@@ -36,7 +36,14 @@ const REQUIRED = [
   // from the first frame, so the honest fallback is 95px of ticker. Shipping
   // the old number laid the hero out 52px too tall until JS corrected it,
   // which dropped the stats stripe and everything under it into place.
-  '--header-height:248px;',
+  // Updated 2026-08-25 (explicit owner approval, Nima: "reduce the visual scale
+  // of the homepage above-the-fold area by approximately 8-10%"). The approved
+  // rules below are UNCHANGED and still locked byte-exact; the scale is an
+  // override layer at the foot of tmr-home-v2.css, desktop only (min-width
+  // 1181px). This one number is not an override - it is the no-JS fallback for
+  // the chrome the hero subtracts from the viewport, and the chrome itself got
+  // smaller: nav 83->78 and ticker 163->154, measured in Chromium at 1440px.
+  '--header-height:231px;',
   // hero shell is a flex column filling the viewport below the injected nav,
   // so .bridge (margin-top:auto below) always lands flush on the hero's
   // bottom edge regardless of viewport height or content height
