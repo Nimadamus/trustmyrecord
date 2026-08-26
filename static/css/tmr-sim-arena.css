@@ -543,3 +543,13 @@ tr.bench-start td{border-top:2px solid var(--line);}
 #extraControls.reserve-goalies{min-height:66px;}
 @media (max-width:640px){#extraControls.reserve-goalies{min-height:150px;}}
 .prerun{min-height:30px;}
+
+/* THE SLATE, WHICH ARRIVES FROM THE API.
+   On a phone the day's games fill about 970px, and that block appearing after
+   first paint is the single largest shift on the page. Reserved while the
+   container is still EMPTY and released the moment it fills, which is the right
+   way round: the space exists exactly while the content does not. Sized under
+   the full slate on purpose -- a quiet day should not leave a screen of nothing
+   -- so it absorbs most of the movement rather than trading one gap for another. */
+#schedulePane:empty{min-height:260px;}
+@media (max-width:640px){#schedulePane:empty{min-height:520px;}}
