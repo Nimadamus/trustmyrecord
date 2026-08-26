@@ -170,21 +170,20 @@
       footer: footer, sortable: true, sticky: true,
     }));
 
-    // WHAT THIS SHEET DOES NOT DO WELL, said on the sheet.
+    // WHAT THIS SHEET DOES AND DOES NOT MODEL, said on the sheet.
     //
-    // Checked against real box scores by role, every column here matches except
-    // one: hits and penalty minutes for the forwards who play least. Real fourth
-    // lines hit MORE than first lines despite half the ice, and this engine deals
-    // both from ice time, so its checking line comes out light. It is a real
-    // limitation of how those two columns are generated, it is measured, and a
-    // reader looking at a fourth-liner's line deserves to know rather than to
-    // find out later.
+    // Every column here is now checked against real box scores by role and
+    // matches, including hits and penalty minutes for the checking line, which
+    // used to be dealt in proportion to ice time and came out backwards. One
+    // structural gap is left and is worth naming: only two-minute minors are
+    // simulated, so the penalty column has no fighting majors in it and its
+    // longest nights are shorter than a real sheet's.
     wrap.appendChild(el('div', 'disc',
-      'Hits and penalty minutes are dealt from ice time and each man’s own rate. '
-      + 'Measured against real box scores that holds for every role except the forwards '
-      + 'who play least, where real checking lines hit more than their minutes imply and '
-      + 'this simulation gives them about six tenths of a hit fewer a game. Every other '
-      + 'column on this sheet matches its real distribution by role.'));
+      'Every column on this sheet is checked against real box scores by role — '
+      + 'first line, middle, depth and checking line — and matches in average, '
+      + 'spread and the tails. One thing is not modelled: only two-minute minors are '
+      + 'simulated, so no fighting majors appear and the heaviest penalty nights are '
+      + 'shorter than a real sheet’s.'));
 
     wrap.appendChild(goalieTable(side));
 
