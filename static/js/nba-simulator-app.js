@@ -244,6 +244,28 @@
           // lot. Nothing on the page could reach it, so the panel could only
           // report what the feed already knew and never what the visitor wanted
           // to know. This is that control.
+          // A MINUTES RESTRICTION, which is not the same question as sitting a
+          // man. The route has capped minutes and renormalised the rotation to
+          // 240 around the cap as long as it has accepted an out list; nothing
+          // on the page could ask for it. Blank means no restriction.
+          { h: 'Cap MIN', fmt: function (r) {
+            var cur = app.minutes[pair[2]][String(r.id)];
+            var i = document.createElement('input');
+            i.type = 'number';
+            i.min = '0';
+            i.max = '44';
+            i.step = '1';
+            i.className = 'lineinput';
+            i.placeholder = '--';
+            i.value = cur === undefined ? '' : String(cur);
+            i.setAttribute('aria-label', 'Cap minutes for ' + r.name);
+            i.addEventListener('change', function () {
+              var v = i.value === '' ? null : Math.max(0, Math.min(44, parseFloat(i.value)));
+              if (v !== null && !Number.isFinite(v)) return;
+              app.capMinutes(pair[2], r.id, v);
+            });
+            return i;
+          } },
           { h: 'Hold out', fmt: function (r) {
             var b = document.createElement('button');
             b.type = 'button';
@@ -269,14 +291,16 @@
       wrap.appendChild(sp);
     });
     var eff = d.projection && d.projection.scenario_effect;
-    if (eff && (app.scenario.home.length || app.scenario.away.length)) {
+    var anyScenario = app.scenario.home.length || app.scenario.away.length
+      || Object.keys(app.minutes.home).length || Object.keys(app.minutes.away).length;
+    if (eff && anyScenario) {
       var note = el('div', 'pill');
       var ch = eff.change || {};
       var wp = ch.home_win_probability;
-      note.textContent = 'Holding players out moved the projected margin by '
+      note.textContent = 'This scenario moved the projected margin by '
         + S.signed(ch.projected_margin) + ' points and the home win probability by '
         + S.signed(Math.round(wp * 1000) / 10) + ' points. '
-        + 'Everything on this page was recomputed from the shortened rotation.';
+        + 'Everything on this page was recomputed from the rotation you asked for.';
       wrap.appendChild(note);
       var reset = document.createElement('button');
       reset.type = 'button';

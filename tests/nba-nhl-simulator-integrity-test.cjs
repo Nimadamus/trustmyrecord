@@ -123,10 +123,17 @@ async function pageChecks(browser, sport, url) {
         it fresh: it must bring back the same game, not a new one. */
   const shareUrl = page.url();
   assert.ok(/seed=/.test(shareUrl), sport + ' the page never pins a seed in its URL');
-  const finalBefore = await page.evaluate(() => {
-    const t = document.querySelector('#result').textContent;
-    return (t.match(/\d+\s*-\s*\d+/) || [''])[0];
-  });
+  // THE SCORE, from the score elements.
+  //
+  // Scraping the first "number dash number" out of the page text is how this
+  // check quietly stopped checking anything: the provenance line says "Season
+  // 2025-26" and that matched first, so two different games compared equal and
+  // the assertion passed on a string that had nothing to do with either.
+  const readFinal = () => document.querySelector('#result')
+    && [...document.querySelectorAll('#result .mh .pts')].map((n) => n.textContent.trim()).join('-');
+  const finalBefore = await page.evaluate(readFinal);
+  assert.ok(/^\d+-\d+$/.test(finalBefore || ''),
+    sport + ' could not read a final score off the page, got ' + finalBefore);
 
   const page2 = await ctx.newPage();
   await page2.goto(shareUrl, { waitUntil: 'networkidle', timeout: 120000 });
@@ -138,13 +145,26 @@ async function pageChecks(browser, sport, url) {
     null, { timeout: 180000 },
   );
   await page2.waitForTimeout(1000);
-  const finalAfter = await page2.evaluate(() => {
-    const t = document.querySelector('#result').textContent;
-    return (t.match(/\d+\s*-\s*\d+/) || [''])[0];
-  });
+  const finalAfter = await page2.evaluate(readFinal);
   assert.strictEqual(finalAfter, finalBefore,
     sport + ' a shared link came back with a different game (' + finalBefore
     + ' vs ' + finalAfter + ')');
+  // A check that cannot fail is not a check. Load the same link with the seed
+  // changed: it must come back with a different game, or "reproduced" only
+  // means the page ignored the seed.
+  const otherUrl = shareUrl.replace(/seed=\d+/, 'seed=' + (Date.now() % 1900000 + 7));
+  await page2.goto(otherUrl, { waitUntil: 'networkidle', timeout: 120000 });
+  await page2.waitForFunction(
+    () => {
+      const r = document.querySelector('#result');
+      return r && r.textContent.length > 800;
+    },
+    null, { timeout: 180000 },
+  );
+  await page2.waitForTimeout(1000);
+  const finalOther = await page2.evaluate(readFinal);
+  assert.notStrictEqual(finalOther, finalBefore,
+    sport + ' a different seed returned the same game, so the seed does nothing');
   await page2.close();
 
   /* 2. THE PRINTED PAGE. Emulate print and check the controls are gone and the

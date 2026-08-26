@@ -63,6 +63,10 @@
     // feed reported. Ids only, one list per side; the API already accepts them
     // and already recomputes the whole projection around them.
     this.scenario = { home: [], away: [] };
+    // MINUTE CAPS, keyed by player id. A man on a restriction is not out; the
+    // route has taken these as long as it has taken the out list, and nothing
+    // on the page could set one.
+    this.minutes = { home: {}, away: {} };
     this.lastResult = null;
     this.running = false;
   }
@@ -576,10 +580,20 @@
     this.run(seed ? { seed: seed } : {});
   };
 
+  /** Put a player on a minutes restriction, or lift one. */
+  SimApp.prototype.capMinutes = function (side, id, mins) {
+    if (mins === null || mins === undefined || mins === '') delete this.minutes[side][String(id)];
+    else this.minutes[side][String(id)] = mins;
+    var seed = this.lastResult && this.lastResult.meta ? this.lastResult.meta.seed : null;
+    this.run(seed ? { seed: seed } : {});
+  };
+
   SimApp.prototype.clearScenario = function () {
-    if (!this.scenario.home.length && !this.scenario.away.length) return false;
+    var had = this.scenario.home.length || this.scenario.away.length
+      || Object.keys(this.minutes.home).length || Object.keys(this.minutes.away).length;
     this.scenario = { home: [], away: [] };
-    return true;
+    this.minutes = { home: {}, away: {} };
+    return !!had;
   };
 
   SimApp.prototype.currentTeams = function () {
@@ -643,6 +657,12 @@
     }
     if (this.scenario.home.length) params.set('homeOut', this.scenario.home.join(','));
     if (this.scenario.away.length) params.set('awayOut', this.scenario.away.join(','));
+    ['home', 'away'].forEach(function (side) {
+      var caps = self.minutes[side];
+      var keys = Object.keys(caps);
+      if (!keys.length) return;
+      params.set(side + 'Minutes', keys.map(function (k) { return k + ':' + caps[k]; }).join(','));
+    });
     // PLAYER DISTRIBUTIONS ARE ALWAYS ASKED FOR.
     //
     // The API has served these all along and the page has had a tab ready for

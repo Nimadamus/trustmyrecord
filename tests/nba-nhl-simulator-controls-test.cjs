@@ -186,6 +186,46 @@ async function check(browser, sport, url, apiPort) {
   assert.ok(after.reported, sport + ' never reported what holding ' + held + ' out did');
   assert.ok(after.reset, sport + ' offers no way to undo a hold-out');
 
+  /* 3b. A MINUTES RESTRICTION is a different question from sitting a man, and
+         basketball offers it. Cap somebody and the rotation must re-deal the
+         minutes he loses. */
+  if (sport === 'NBA') {
+    const capped = await page.evaluate(() => {
+      const host = document.querySelector('#result .tabs').nextElementSibling;
+      const rows = [...host.querySelectorAll('tbody tr')];
+      const row = rows.find((r) => !r.querySelector('button.outbtn.on')
+        && r.querySelector('input.lineinput'));
+      if (!row) return null;
+      const input = row.querySelector('input.lineinput');
+      const name = row.children[0].textContent.trim();
+      const before = parseFloat(row.children[2].textContent);
+      input.value = '12';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      return { name, before };
+    });
+    assert.ok(capped, 'NBA has no minutes control in ' + availTab);
+    await page.waitForTimeout(4000);
+    await page.waitForFunction(
+      () => {
+        const r = document.querySelector('#result');
+        return r && r.textContent.length > 800;
+      },
+      null, { timeout: 180000 },
+    );
+    await openTab(page, availTab);
+    const nowMin = await page.evaluate((name) => {
+      const host = document.querySelector('#result .tabs').nextElementSibling;
+      const row = [...host.querySelectorAll('tbody tr')]
+        .find((r) => r.children[0].textContent.trim() === name);
+      return row ? parseFloat(row.children[2].textContent) : null;
+    }, capped.name);
+    assert.ok(nowMin !== null, 'NBA lost ' + capped.name + ' after capping his minutes');
+    assert.ok(nowMin <= 12.5,
+      'NBA capped ' + capped.name + ' at 12 and he still plays ' + nowMin);
+    assert.ok(nowMin < capped.before,
+      'NBA capping ' + capped.name + ' did not reduce his minutes');
+  }
+
   /* 4. THE HELD-OUT PLAYER IS ACTUALLY ABSENT from the game that was played. */
   await openTab(page, 'Box score');
   const stillPlayed = await page.evaluate(
