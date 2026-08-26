@@ -2422,11 +2422,26 @@
     var EV_PA_PER_GAME = 38.2;
     var EV_BF_PER_IP = 4.30;
     var EV_SLOT_OPS_MULT = [1.04, 1.08, 1.13, 1.15, 1.05, 0.98, 0.92, 0.86, 0.80];
-    // Home-field run-environment split (Layer 3). Sum is fixed at 0.32 (unchanged
-    // total run environment); the split is tuned so simulated home win % tracks the
-    // real 2025 baseline without inflating the home/away run gap beyond reality.
-    var HOME_FIELD_AWAY_BONUS = -0.02;
-    var HOME_FIELD_HOME_BONUS = 0.34;
+    // Home-field run-environment split (Layer 3).
+    //
+    // The GAP between these two is what produces home-field advantage, and it is
+    // deliberately larger than the real difference in runs scored (about +0.05 a
+    // game across 2024-2026). It has to be: a home club batting last skips the
+    // bottom of the ninth whenever it is already ahead, so it banks wins without
+    // banking the runs, and a pure run-differential model needs a wider run gap
+    // to reproduce the same win rate.
+    //
+    // The SUM is a different question, and it used to be wrong. These summed to
+    // +0.32, described in this comment as leaving the total run environment
+    // unchanged, which is not what adding 0.32 runs to a 8.90-run baseline does.
+    // Every simulated game carried an extra third of a run. Measured against the
+    // league on 2026-08-26: MLB is playing to 8.94 runs a game (8.89 in 2025,
+    // 8.78 in 2024) while the engine's own validator realised 9.44.
+    //
+    // The gap is preserved to the hundredth, so home win rate is untouched; the
+    // pair is simply re-centred on zero so it stops inflating the total.
+    var HOME_FIELD_AWAY_BONUS = -0.19;
+    var HOME_FIELD_HOME_BONUS = 0.17;
     function evNormalize(v) {
         var s = v.bb + v.so + v.hr + v.b3 + v.b2 + v.b1 + v.out;
         if (!(s > 0)) return Object.assign({}, EV_LEAGUE);
@@ -5143,11 +5158,48 @@
             ]
         };
     }
+    /**
+     * League-average reference for the rating axes, measured from the current
+     * team table rather than assumed to be 100.
+     *
+     * The formula below reads every axis as a distance from league average, so
+     * what "league average" is has to be true or every matchup inherits the
+     * error. It was assumed to be 100 and is not: measured 2026-08-26, the
+     * shipped table averages offense 100.27 but runPrevention 98.93, starting
+     * pitching 98.70 and bullpen 98.53. Because the pitching terms enter as
+     * (100 - rating), a table centred below 100 hands EVERY club a drag bonus,
+     * adding about a fifth of a run to every simulated game.
+     *
+     * Measured from the CURRENT table only, deliberately. The classic clubs
+     * average about 110 across the same axes because they are curated great
+     * teams; they are supposed to read as better than a modern average side,
+     * and re-centring on them would erase exactly that.
+     *
+     * Computed once, lazily, so a refreshed table moves the reference with it.
+     */
+    var ratingRefCache = null;
+    function ratingReference() {
+        if (ratingRefCache) return ratingRefCache;
+        var pool = (LOCAL_TEAMS && LOCAL_TEAMS.current) || [];
+        var axes = ['offense', 'runPrevention', 'startingPitching', 'bullpen'];
+        var ref = {};
+        axes.forEach(function (axis) {
+            var vals = [];
+            pool.forEach(function (t) { if (t && isFinite(t[axis])) vals.push(t[axis]); });
+            // A missing or malformed table falls back to the old assumption
+            // rather than to a mean of nothing.
+            ref[axis] = vals.length ? vals.reduce(function (a, b) { return a + b; }, 0) / vals.length : 100;
+        });
+        ratingRefCache = ref;
+        return ref;
+    }
+
     function expectedRunsFor(offenseTeam, defenseTeam, homeBonus) {
-        var offenseLift = (offenseTeam.offense - 100) * 0.05;
-        var starterDrag = (100 - defenseTeam.startingPitching) * 0.025;
-        var bullpenDrag = (100 - defenseTeam.bullpen) * 0.021;
-        var preventionDrag = (100 - defenseTeam.runPrevention) * 0.021;
+        var ref = ratingReference();
+        var offenseLift = (offenseTeam.offense - ref.offense) * 0.05;
+        var starterDrag = (ref.startingPitching - defenseTeam.startingPitching) * 0.025;
+        var bullpenDrag = (ref.bullpen - defenseTeam.bullpen) * 0.021;
+        var preventionDrag = (ref.runPrevention - defenseTeam.runPrevention) * 0.021;
         return clamp(4.45 + offenseLift + starterDrag + bullpenDrag + preventionDrag + homeBonus, 2.0, 9.7);
     }
     function volatilityLabel(value) {

@@ -61,7 +61,12 @@ const MLB = {
   babip: 0.291,                 // gated below via TOL.babip
   maxTeamRunsObserved: 24,      // reference only (real 2025 single-team max)
 };
-const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, homeWin: 3.0, babip: 0.03 };
+// `gameTotal` is deliberately tighter than `total`. Monte-Carlo noise on the
+// 1,680-game end-to-end sweep is about 0.10 runs, so 0.25 is roughly two and a
+// half standard errors: tight enough to catch a real bias, wide enough not to
+// flap. The looser 0.6 would have waved through the +0.55 the engine actually
+// carried.
+const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, gameTotal: 0.25, homeWin: 3.0, babip: 0.03 };
 
 // ---- load the production engine with browser globals stubbed ------------------
 function fakeEl() {
@@ -265,10 +270,22 @@ function main() {
   console.log('  Box-score integrity violations: ' + E.e2eViol + (E.e2eViol ? '  FAIL' : '  PASS'));
   console.log('  Target run total (mean):   ' + r2(E.targetMean));
   console.log('  Realized run total (mean): ' + r2(E.realizedMean) + '  (drift ' + (E.realizedMean >= E.targetMean ? '+' : '') + r2(E.realizedMean - E.targetMean) + ', ' + r1(100 * (E.realizedMean - E.targetMean) / E.targetMean) + '%)');
+  // The run environment itself, against the LEAGUE rather than against the
+  // engine's own expectation.
+  //
+  // Everything above this line compared the plate-appearance engine to the
+  // expected-run model that feeds it, which is a self-consistency check: both
+  // can be wrong together, and on 2026-08-26 both were. The engine was playing
+  // to 9.44 runs a game against a league playing 8.89 (2025) and 8.94 (2026 to
+  // date), and this gate passed it every time because the two halves agreed
+  // with each other. Half a run a game is the difference between an over and
+  // an under on most boards, so it gets a hard check of its own.
+  const env = row('Game total (mean runs)', E.realizedMean, MLB.gameTotalMean, TOL.gameTotal, '');
+  console.log(env.line);
   const hw = row('Home win % (mirror pairs)', E.homeWinPct, MLB.homeWinPct, TOL.homeWin, '%');
   console.log(hw.line + '\n');
 
-  const calMisses = rows.concat(distRows, [hw]).filter(x => x.miss).length;
+  const calMisses = rows.concat(distRows, [env, hw]).filter(x => x.miss).length;
   const integrityClean = !violKeys.length && !E.e2eViol;
   const targetDrift = Math.abs(E.realizedMean - E.targetMean) / E.targetMean;
   console.log('SUMMARY: integrity ' + (integrityClean ? 'CLEAN' : 'FAILED') + ' | calibration misses ' + calMisses + ' | end-to-end target drift ' + r1(100 * targetDrift) + '%');
