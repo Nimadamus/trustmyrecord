@@ -171,6 +171,22 @@
     }));
 
     wrap.appendChild(goalieTable(side));
+
+    // Scratched or injured, named on the sheet where a reader looks for them,
+    // and given no statistical line.
+    var out = side.did_not_play || [];
+    if (out.length) {
+      var dnp = el('div', 'dnp');
+      dnp.appendChild(el('b', '', 'Not dressed: '));
+      out.forEach(function (p, i) {
+        var span = el('span');
+        span.appendChild(el('span', 'tag', p.status === 'scratched' ? 'SCRATCHED' : 'INACTIVE'));
+        span.appendChild(document.createTextNode(p.name + ' (' + p.reason + ')'
+          + (i < out.length - 1 ? ' · ' : '')));
+        dnp.appendChild(span);
+      });
+      wrap.appendChild(dnp);
+    }
     return wrap;
   }
 

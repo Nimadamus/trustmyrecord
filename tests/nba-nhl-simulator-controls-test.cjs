@@ -63,11 +63,20 @@ function startStatic() {
 }
 
 async function openTab(page, label) {
-  await page.evaluate((l) => {
+  // A MISSING TAB MUST FAIL HERE, not three assertions later.
+  //
+  // This used to click nothing and carry on when the label did not exist, so
+  // renaming "Box score" to "Full box score" turned every check that followed
+  // into a check of whichever pane happened to still be open -- and the failure
+  // it eventually produced named the wrong thing entirely.
+  const found = await page.evaluate((l) => {
     const b = [...document.querySelectorAll('#result .tabs button')]
       .find((x) => x.textContent.trim() === l);
-    if (b) b.click();
+    if (!b) return false;
+    b.click();
+    return true;
   }, label);
+  assert.ok(found, 'no section called "' + label + '" on this page');
   await page.waitForTimeout(500);
 }
 
@@ -215,7 +224,7 @@ async function check(browser, sport, url, apiPort) {
     // lists each man's season minutes from the team feed, which a scenario does
     // not touch and never should -- his average is not what changed. What
     // changed is the game, so the game is what gets checked.
-    await openTab(page, 'Box score');
+    await openTab(page, 'Full box score');
     const nowMin = await page.evaluate((name) => {
       const host = document.querySelector('#result .tabs').nextElementSibling;
       const row = [...host.querySelectorAll('tbody tr')]
@@ -231,12 +240,23 @@ async function check(browser, sport, url, apiPort) {
   }
 
   /* 4. THE HELD-OUT PLAYER IS ACTUALLY ABSENT from the game that was played. */
-  await openTab(page, 'Box score');
-  const stillPlayed = await page.evaluate(
-    (name) => document.querySelector('#result .tabs').nextElementSibling.textContent.indexOf(name) >= 0,
-    held,
-  );
-  assert.ok(!stillPlayed, sport + ' held ' + held + ' out and then played him anyway');
+  await openTab(page, 'Full box score');
+  // HE MUST BE OUT OF THE TABLE, AND NAMED AS OUT.
+  //
+  // Searching the whole pane for his name is no longer the question: the box
+  // score now lists the men who did not play, with a reason, so a held-out
+  // player SHOULD appear there. What must not happen is a statistical line.
+  const boxState = await page.evaluate((name) => {
+    const host = document.querySelector('#result .tabs').nextElementSibling;
+    const played = [...host.querySelectorAll('tbody tr')]
+      .some((tr) => tr.children[0].textContent.trim().indexOf(name) === 0);
+    const listedOut = [...host.querySelectorAll('.dnp')]
+      .some((n) => n.textContent.indexOf(name) >= 0);
+    return { played: played, listedOut: listedOut };
+  }, held);
+  assert.ok(!boxState.played, sport + ' held ' + held + ' out and then played him anyway');
+  assert.ok(boxState.listedOut,
+    sport + ' held ' + held + ' out and did not say so anywhere in the box score');
 
   /* 5. SINGLE-GAME MODE plays one game and refuses to invent a projection. */
   await page.evaluate(() => {
@@ -257,7 +277,10 @@ async function check(browser, sport, url, apiPort) {
     assert.ok(single.tabs.indexOf(gone) < 0,
       sport + ' still offers "' + gone + '" off a single game');
   }
-  assert.ok(single.tabs.indexOf('Box score') >= 0, sport + ' single game has no box score tab');
+  assert.ok(single.tabs.indexOf('Full box score') >= 0,
+    sport + ' single game has no box score section');
+  assert.ok(single.tabs.indexOf('Game summary') >= 0,
+    sport + ' single game has no summary section');
   assert.ok(single.hasTable, sport + ' single game produced no table');
   assert.ok(/One game, played out/.test(single.text),
     sport + ' single-game mode does not say it played one game');
