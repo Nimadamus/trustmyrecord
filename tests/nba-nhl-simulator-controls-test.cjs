@@ -198,10 +198,9 @@ async function check(browser, sport, url, apiPort) {
       if (!row) return null;
       const input = row.querySelector('input.lineinput');
       const name = row.children[0].textContent.trim();
-      const before = parseFloat(row.children[2].textContent);
       input.value = '12';
       input.dispatchEvent(new Event('change', { bubbles: true }));
-      return { name, before };
+      return { name };
     });
     assert.ok(capped, 'NBA has no minutes control in ' + availTab);
     await page.waitForTimeout(4000);
@@ -212,18 +211,23 @@ async function check(browser, sport, url, apiPort) {
       },
       null, { timeout: 180000 },
     );
-    await openTab(page, availTab);
+    // THE BOX SCORE IS THE EVIDENCE, not the availability table. That table
+    // lists each man's season minutes from the team feed, which a scenario does
+    // not touch and never should -- his average is not what changed. What
+    // changed is the game, so the game is what gets checked.
+    await openTab(page, 'Box score');
     const nowMin = await page.evaluate((name) => {
       const host = document.querySelector('#result .tabs').nextElementSibling;
       const row = [...host.querySelectorAll('tbody tr')]
-        .find((r) => r.children[0].textContent.trim() === name);
-      return row ? parseFloat(row.children[2].textContent) : null;
+        .find((r) => r.children[0].textContent.trim().indexOf(name) === 0);
+      if (!row) return null;
+      const cells = [...row.children].map((c) => parseFloat(c.textContent));
+      return cells.find((v) => Number.isFinite(v));
     }, capped.name);
-    assert.ok(nowMin !== null, 'NBA lost ' + capped.name + ' after capping his minutes');
-    assert.ok(nowMin <= 12.5,
-      'NBA capped ' + capped.name + ' at 12 and he still plays ' + nowMin);
-    assert.ok(nowMin < capped.before,
-      'NBA capping ' + capped.name + ' did not reduce his minutes');
+    assert.ok(nowMin !== null,
+      'NBA capped ' + capped.name + ' and he vanished from the box score');
+    assert.ok(nowMin <= 12.2,
+      'NBA capped ' + capped.name + ' at 12 and he played ' + nowMin);
   }
 
   /* 4. THE HELD-OUT PLAYER IS ACTUALLY ABSENT from the game that was played. */
