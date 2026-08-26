@@ -69,6 +69,50 @@ async function getJson(url, tries = 5) {
   throw new Error('MLB Stats API unreachable: ' + url + ' (' + (lastErr && lastErr.message) + ')');
 }
 
+// Teams that could not field five active pitchers with a start, and the relief
+// lines that were projected into a starting role, both reported at the end of a
+// run so the correction is never silent.
+const thinRotations = [];
+const relievedRows = [];
+
+// League starter-minus-reliever ERA gap for THIS season, weighted by innings and
+// measured from the pitchers this script already pulls. Relief innings are
+// cheaper than starting innings every season, but by how much moves year to
+// year, so it is measured rather than assumed. Clamped to a sane band so a
+// half-populated early-season sample cannot produce an absurd correction.
+const ROLE_GAP_MIN = 0.35;
+const ROLE_GAP_MAX = 1.40;
+const ROLE_GAP_FALLBACK = 0.70;
+const roleSample = { startIp: 0, startEr: 0, reliefIp: 0, reliefEr: 0 };
+let roleGapCache = null;
+
+function observeForRoleGap(row) {
+  // Earned runs are reconstructed from ERA and IP because the per-role split is
+  // not in this payload; over hundreds of pitchers that is exact enough for a
+  // league-level gap.
+  if (!Number.isFinite(row.era) || !(row.ip > 0)) return;
+  const er = (row.era * row.ip) / 9;
+  // A swing man is neither, so only clear roles inform the gap.
+  if (row.gs >= 10) { roleSample.startIp += row.ip; roleSample.startEr += er; }
+  else if (row.gs === 0) { roleSample.reliefIp += row.ip; roleSample.reliefEr += er; }
+}
+
+function roleGap() {
+  if (roleGapCache != null) return roleGapCache;
+  const { startIp, startEr, reliefIp, reliefEr } = roleSample;
+  // Guarded because this is only meaningful once the whole league has been
+  // read. Calling it mid-sweep once cached a single club's sample as the
+  // league gap, which is how a measured correction turns into a made-up one.
+  if (startIp < 5000 || reliefIp < 5000) {
+    roleGapCache = ROLE_GAP_FALLBACK;
+    return roleGapCache;
+  }
+  const startEra = (startEr * 9) / startIp;
+  const reliefEra = (reliefEr * 9) / reliefIp;
+  roleGapCache = clamp(Number((startEra - reliefEra).toFixed(2)), ROLE_GAP_MIN, ROLE_GAP_MAX);
+  return roleGapCache;
+}
+
 async function rotationFor(abbr) {
   const id = MLB_TEAM_IDS[abbr];
   const roster = await getJson('https://statsapi.mlb.com/api/v1/teams/' + id + '/roster?rosterType=active');
@@ -92,17 +136,45 @@ async function rotationFor(abbr) {
     };
   });
   if (rows.length < ROWS_PER_TEAM) throw new Error(abbr + ' resolved only ' + rows.length + ' pitcher stat rows');
+  rows.forEach(observeForRoleGap);
 
   const starters = rows.filter((r) => r.gs >= 1).sort((a, b) => b.gs - a.gs || b.ip - a.ip);
   const rest = rows.filter((r) => r.gs < 1).sort((a, b) => b.ip - a.ip);
   const picked = starters.concat(rest).slice(0, ROWS_PER_TEAM);
   if (picked.length !== ROWS_PER_TEAM) throw new Error(abbr + ' could not fill ' + ROWS_PER_TEAM + ' rotation rows');
+  if (starters.length < ROWS_PER_TEAM) {
+    thinRotations.push(abbr + ' (' + starters.length + ' active pitchers with a start)');
+  }
 
+  return picked;
+}
+
+/**
+ * Turn one team's picked pitchers into engine rows.
+ *
+ * Split out of rotationFor so it runs AFTER every team has been read: the
+ * relief-to-starting correction is a league measurement, and a league
+ * measurement cannot be taken while the league is still being fetched.
+ */
+function rowsFor(abbr, picked) {
   const taken = new Set();
   return picked.map((row) => {
     // 4.30 is the engine's league-average anchor: a pitcher with no season line
     // gets an exactly average profile rather than an invented one.
-    const era = row.era == null ? 4.30 : row.era;
+    let era = row.era == null ? 4.30 : row.era;
+    // A pitcher who has not started is being listed in a rotation slot only
+    // because his club cannot field five active starters. His relief ERA is not
+    // a starting-role expectation: relievers face a batter once, in short
+    // outings, and the same arm gives up more runs per inning as a starter.
+    // Publishing the raw relief line hands the club an ace it does not have --
+    // measured 2026-08-26, it made a 2.61 relief ERA into a quality of 120,
+    // the best rotation row on that team. The correction is the league's OWN
+    // starter-minus-reliever ERA gap for this season, measured from the same
+    // active rosters this script already reads, never a remembered constant.
+    if (row.gs < 1) {
+      era = Number((era + roleGap()).toFixed(2));
+      relievedRows.push(abbr + ' ' + row.name + ' (' + row.era + ' relief -> ' + era + ' projected starting)');
+    }
     return [slugId(row.name, taken), row.name, qualityFromEra(era), era];
   });
 }
@@ -117,6 +189,35 @@ function renderLiteral(table) {
   return 'var CURRENT_PITCHERS = {\n' + lines.join(',\n') + '\n    };';
 }
 
+/** Today in UTC as YYYY-MM-DD. The engine prints this date to users. */
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Rewrite the two dates the engine SHOWS, and the header comment above the
+ * table.
+ *
+ * Rewriting only the table left these frozen at 2026-08-04 while the data
+ * underneath moved every week, so the one line whose whole job is to say how
+ * old the fallback is was the only line that was wrong.
+ *
+ * Deliberately narrow. Three other occurrences of that date live in a comment
+ * explaining a past parser bug ("2026-08-04" vs "12-7"); those are prose about
+ * a specific historical example and rewriting them would destroy the
+ * explanation.
+ */
+function stampRegenDate(text, date) {
+  let n = 0;
+  const out = text
+    .replace(/(regenerated )\d{4}-\d{2}-\d{2}/g, (m, pre) => { n += 1; return pre + date; })
+    .replace(/(season pitching stats on )\d{4}-\d{2}-\d{2}/g, (m, pre) => { n += 1; return pre + date; });
+  if (n !== 3) {
+    throw new Error('expected to stamp 3 regeneration dates, stamped ' + n + ' - the engine wording moved');
+  }
+  return out;
+}
+
 (async () => {
   const source = fs.readFileSync(ENGINE, 'utf8');
   const start = source.indexOf('var CURRENT_PITCHERS = {');
@@ -124,17 +225,21 @@ function renderLiteral(table) {
   const end = source.indexOf('};', start);
   if (end < 0) throw new Error('CURRENT_PITCHERS block is not terminated');
 
-  const table = {};
+  const picks = {};
   for (const abbr of TEAM_ORDER) {
-    table[abbr] = await rotationFor(abbr);
+    picks[abbr] = await rotationFor(abbr);
     process.stderr.write(abbr + ' ');
     await new Promise((r) => setTimeout(r, 300));
   }
   process.stderr.write('\n');
   // Nothing is written unless all 30 teams came back clean - a partial refresh
   // would silently leave some teams on last week's rotation.
-  const missing = TEAM_ORDER.filter((a) => !table[a] || table[a].length !== ROWS_PER_TEAM);
+  const missing = TEAM_ORDER.filter((a) => !picks[a] || picks[a].length !== ROWS_PER_TEAM);
   if (missing.length) throw new Error('incomplete refresh, refusing to write: ' + missing.join(','));
+
+  // Every team is in hand, so the league gap is now measurable.
+  const table = {};
+  for (const abbr of TEAM_ORDER) table[abbr] = rowsFor(abbr, picks[abbr]);
 
   const literal = renderLiteral(table);
   const current = source.slice(start, end + 2);
@@ -149,13 +254,19 @@ function renderLiteral(table) {
     return !was || !now || was[0] !== now[0];
   });
   console.log('CURRENT_PITCHERS drift on ' + changedTeams.length + ' team(s): ' + changedTeams.join(', '));
+  if (thinRotations.length) {
+    console.log('Fewer than ' + ROWS_PER_TEAM + ' active pitchers with a start: ' + thinRotations.join(', '));
+    console.log('League starter-minus-reliever ERA gap applied: +' + roleGap().toFixed(2));
+    relievedRows.forEach((r) => console.log('  ' + r));
+  }
 
   if (CHECK_ONLY) {
     console.log('--check: not writing.');
     process.exit(1);
   }
 
-  const updated = source.slice(0, start) + literal + source.slice(end + 2);
+  let updated = source.slice(0, start) + literal + source.slice(end + 2);
+  updated = stampRegenDate(updated, today());
   fs.writeFileSync(ENGINE, updated);
   // The C: drive has intermittently written files as all-NULL bytes; never leave
   // a corrupted engine behind for a workflow to commit.
