@@ -1,0 +1,454 @@
+/* =============================================================================
+   TREND SPOTTER — explainer layer
+   -----------------------------------------------------------------------------
+   Loaded after trendspotter.css. The workspace itself is untouched; everything
+   here is the copy that tells a first-time visitor what the tool is, what a
+   result contains, what it refuses to answer, and how it differs from
+   BetLegend Pro.
+
+   Design-system contract: no :root block, no hardcoded colours. Every value
+   comes from tmr-ds.css tokens so the page keeps working in dark surface mode.
+
+   Placement rule: the hero gains one compact row of facts and nothing else.
+   Everything long sits BELOW the result panel, because a visitor who already
+   knows the tool must not have to scroll past an essay to reach it.
+   ============================================================================= */
+
+/* --- hero fact row -------------------------------------------------------- */
+
+.ts-quickfacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-quickfact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.ts-quickfact b {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ts-quickfact--free {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-dk);
+}
+
+.ts-quickfact--free b { color: var(--brand-dk); }
+
+body.ts-page .ts-hero-lead {
+  font-size: clamp(17px, 1.7vw, 21px);
+  line-height: 1.45;
+}
+
+body.ts-page .ts-hero-sub {
+  max-width: 72ch;
+  font-size: 15.5px;
+  line-height: 1.6;
+}
+
+/* --- explainer shell ------------------------------------------------------ */
+
+.ts-explain {
+  margin: 46px 0 0;
+  padding: 40px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.ts-explain + .ts-explain {
+  margin-top: 40px;
+  padding-top: 36px;
+}
+
+.ts-explain-head {
+  max-width: 74ch;
+  margin: 0 0 22px;
+  /* The design-system nav is sticky; anchored jumps must clear it. */
+  scroll-margin-top: calc(var(--nav-h, 70px) + 16px);
+}
+
+.ts-explain-kicker {
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--brand-dk);
+}
+
+body.ts-page .ts-explain-head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.05;
+  letter-spacing: .01em;
+  color: var(--ink);
+}
+
+.ts-explain-head p {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+
+/* --- card grids ----------------------------------------------------------- */
+
+.ts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.ts-grid--two { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+
+.ts-xcard {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius, 14px);
+  background: var(--panel);
+  box-shadow: var(--sh);
+}
+
+.ts-xcard h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ts-xcard p {
+  margin: 9px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.ts-xlist {
+  margin: 13px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.ts-xlist li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.ts-xlist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 9px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand);
+}
+
+.ts-xlist li b { color: var(--ink); font-weight: 700; }
+
+/* --- numbered steps ------------------------------------------------------- */
+
+.ts-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.ts-step {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius, 14px);
+  background: var(--panel);
+  box-shadow: var(--sh);
+}
+
+.ts-step-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: var(--panel);
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.ts-step h3 {
+  margin: 14px 0 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ts-step p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.58;
+  color: var(--ink-2);
+}
+
+/* --- example questions ---------------------------------------------------- */
+
+.ts-questions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.ts-question {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius-sm, 10px);
+  background: var(--panel);
+}
+
+.ts-question-q {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.ts-question p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ts-question small {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* --- limits panel --------------------------------------------------------- */
+
+.ts-limits {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius, 14px);
+  background: var(--panel-2);
+}
+
+/* Each dt and dd pair is wrapped in a div so the grid places the pair as one
+   item. Putting dt and dd straight into a grid made them separate cells and
+   the term drifted away from its definition. */
+.ts-limits dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px 24px;
+}
+
+.ts-limits dt {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ts-limits dd {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* --- comparison ----------------------------------------------------------- */
+
+.ts-compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.ts-compare {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius, 14px);
+  overflow: hidden;
+}
+
+.ts-compare th,
+.ts-compare td {
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+  line-height: 1.5;
+  vertical-align: top;
+  color: var(--ink-2);
+}
+
+.ts-compare thead th {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.ts-compare tbody th {
+  font-weight: 700;
+  color: var(--ink);
+  width: 26%;
+}
+
+.ts-compare tbody tr:last-child th,
+.ts-compare tbody tr:last-child td { border-bottom: 0; }
+
+.ts-compare .is-here {
+  background: var(--brand-soft);
+  color: var(--ink);
+}
+
+.ts-compare thead .is-here { color: var(--brand-dk); }
+
+.ts-crosscta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius, 14px);
+  background: var(--panel-2);
+}
+
+.ts-crosscta p {
+  margin: 0;
+  flex: 1 1 320px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* Scoped under .ts-app: the design system sets link colour at a specificity
+   this rule has to clear, and without it the label was navy text on a navy
+   button, which is to say invisible. */
+.ts-app .ts-crosscta a {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1.5px solid var(--brand);
+  border-radius: var(--ts-radius-sm, 10px);
+  background: var(--brand-soft);
+  color: var(--brand-dk);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ts-app .ts-crosscta a:hover { background: var(--panel); }
+
+/* --- FAQ ------------------------------------------------------------------ */
+
+.ts-faq {
+  display: grid;
+  gap: 10px;
+  max-width: 900px;
+}
+
+.ts-faq details {
+  border: 1px solid var(--line);
+  border-radius: var(--ts-radius-sm, 10px);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.ts-faq summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ts-faq summary::-webkit-details-marker { display: none; }
+
+.ts-faq summary::after {
+  content: "";
+  margin-left: auto;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--brand);
+  border-bottom: 2px solid var(--brand);
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.ts-faq details[open] summary::after { transform: rotate(225deg) translateY(2px); }
+
+.ts-faq summary:hover { background: var(--panel-2); }
+
+.ts-faq-body {
+  padding: 0 18px 16px;
+}
+
+.ts-faq-body p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.ts-faq-body p + p { margin-top: 10px; }
+
+/* --- responsive ----------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .ts-explain { margin-top: 34px; padding-top: 30px; }
+  .ts-explain + .ts-explain { margin-top: 30px; padding-top: 28px; }
+  .ts-quickfacts { gap: 6px; }
+  .ts-quickfact { font-size: 12.5px; padding: 5px 10px; }
+  .ts-crosscta a { width: 100%; justify-content: center; }
+}
