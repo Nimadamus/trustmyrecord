@@ -23,7 +23,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '556440bfe515';
+  var BUILD = '76af722f7d40';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -759,7 +759,17 @@
        Games survive a rebuild; nodes do not. */
     var leaving = [];
     var pcards = page.querySelectorAll('.gm');
-    for (var k = 0; k < pcards.length; k++) leaving.push(cardKey(pcards[k]));
+    for (var k = 0; k < pcards.length; k++) {
+      leaving.push(cardKey(pcards[k]));
+      /* THE SENTENCE THIS CARD IS LEAVING ON, recorded now rather than in the
+         delayed turn below, because the whole point is to survive whatever
+         happens to these nodes in the meantime. The arrival side reads it and
+         heals the card if the turn did not reach it. */
+      var st = pcards[k].querySelector('.gm-in');
+      if (st && st.querySelectorAll('.gm-in-l').length > 1) {
+        st.setAttribute('data-was', st.getAttribute('data-i') || '0');
+      }
+    }
     var done = false;
     var flip = function () {
       if (done) return;
@@ -799,6 +809,7 @@
           insightAdvance(strips[i]);
         }
         strips[i].removeAttribute('data-open');
+        strips[i].removeAttribute('data-was');
         strips[i].removeAttribute('data-left');
       }
     };
@@ -1000,6 +1011,23 @@
   function resetVisibleDwell() {
     var strips = visibleStrips();
     for (var i = 0; i < strips.length; i++) {
+      /* A CARD MUST NEVER COME BACK ON THE SENTENCE IT LEFT ON. The turn on the
+         way out normally guarantees that, but it happens ~900ms after the slide
+         starts and the 90s refresh can rebuild or re-paginate the row inside
+         that window - and a card that ends up on the page the reader is looking
+         at is skipped on purpose. Measured on production over eleven minutes,
+         one return in thirty still repeated. This is the arrival-side floor:
+         the sentence the card left on was stamped as it went, and if it is
+         still showing it, it takes its step here instead. Nothing to see - the
+         page is sliding in and the line cross-fades during the slide. */
+      var was = strips[i].getAttribute('data-was');
+      if (was != null) {
+        if (strips[i].getAttribute('data-i') === was
+            && strips[i].querySelectorAll('.gm-in-l').length > 1) {
+          insightAdvance(strips[i]);
+        }
+        strips[i].removeAttribute('data-was');
+      }
       strips[i].removeAttribute('data-left');
       /* WHICH SENTENCE THIS VISIT OPENED ON. Nima, 2026-08-25: "when they come
          back around it cycles to different highlights." The leaving-page turn
