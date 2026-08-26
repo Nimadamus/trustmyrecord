@@ -846,6 +846,127 @@
     return bar;
   }
 
+  /**
+   * TWO WAYS TO READ THE SAME GAME.
+   *
+   * The analysis view leads with what the model thinks -- the projection, the
+   * ranges, what the answer rests on -- and is the right default for somebody
+   * deciding whether to trust it. The broadcast view leads with what happened:
+   * a scoreboard, then the sheet, in the order and density a sports box score
+   * has used for decades because it is the order people scan in.
+   *
+   * They are the same data. Neither hides anything the other shows, and the
+   * choice is remembered per visitor and carried in the link, so a shared
+   * result opens the way it was sent.
+   */
+  var VIEW_KEY = 'tmr-sim-view';
+
+  function currentView() {
+    try {
+      var q = new URLSearchParams(global.location.search).get('view');
+      if (q === 'box' || q === 'analysis') return q;
+    } catch (e) { /* a URL we cannot read is not a reason to fail */ }
+    try {
+      var v = global.localStorage && global.localStorage.getItem(VIEW_KEY);
+      if (v === 'box' || v === 'analysis') return v;
+    } catch (e) { /* private windows throw on storage; the default is fine */ }
+    return 'analysis';
+  }
+
+  function viewToggle(app) {
+    var wrap = el('div', 'viewtoggle');
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'Results view');
+    var current = currentView();
+    [['analysis', 'TMR analysis', 'Lead with the projection, the ranges and the reasoning'],
+      ['box', 'Broadcast box score', 'Lead with the scoreboard and the full sheet']]
+      .forEach(function (opt) {
+        var b = el('button', opt[0] === current ? 'on' : '', opt[1]);
+        b.type = 'button';
+        b.title = opt[2];
+        b.setAttribute('aria-pressed', opt[0] === current ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          if (currentView() === opt[0]) return;
+          try { global.localStorage.setItem(VIEW_KEY, opt[0]); } catch (e) { /* fine */ }
+          try {
+            var u = new URL(global.location.href);
+            u.searchParams.set('view', opt[0]);
+            global.history.replaceState({}, '', u.toString());
+          } catch (e) { /* fine */ }
+          // Re-render the result already in hand rather than running a new one:
+          // switching how you look at a game must not change the game.
+          if (app.lastResult) app.render(app.lastResult);
+        });
+        wrap.appendChild(b);
+      });
+    return wrap;
+  }
+
+  /**
+   * THE SCOREBOARD, as the top of a broadcast sheet.
+   *
+   * Everything on it is a fact about the game that was played or the data it was
+   * played with: the two clubs and their real records, the final and how it was
+   * reached, the line by period, and how many simulations stood behind the
+   * projection. The winner is emphasised because a scoreboard that does not tell
+   * you who won at a glance has failed at its only job.
+   */
+  function scoreboard(opts) {
+    var wrap = el('div', 'sb');
+
+    var head = el('div', 'sb-head');
+    ['away', 'home'].forEach(function (side, i) {
+      var t = opts[side];
+      var won = opts.winner === side;
+      var cell = el('div', 'sb-team' + (won ? ' won' : ''));
+      var id = el('div', 'sb-id');
+      id.appendChild(crest(t, 44));
+      var names = el('div', 'sb-names');
+      names.appendChild(el('div', 'sb-abbr', t.abbr));
+      names.appendChild(el('div', 'sb-name', t.name));
+      if (opts.records && opts.records[side]) {
+        names.appendChild(el('div', 'sb-rec', opts.records[side]));
+      }
+      id.appendChild(names);
+      cell.appendChild(id);
+      cell.appendChild(el('div', 'sb-score', String(opts.score[side])));
+      wrap.appendChild(cell);
+      if (i === 0) {
+        var mid = el('div', 'sb-mid');
+        mid.appendChild(el('div', 'sb-status', opts.status));
+        if (opts.subStatus) mid.appendChild(el('div', 'sb-sub', opts.subStatus));
+        wrap.appendChild(mid);
+      }
+    });
+    wrap.appendChild(head);
+
+    if (opts.line && opts.line.cols && opts.line.cols.length) {
+      var lw = el('div', 'sb-line');
+      var t2 = el('table');
+      var thead = el('thead');
+      var hr = el('tr');
+      hr.appendChild(el('th', '', ''));
+      opts.line.cols.forEach(function (c) { hr.appendChild(el('th', '', c)); });
+      hr.appendChild(el('th', 'tot', 'T'));
+      thead.appendChild(hr);
+      t2.appendChild(thead);
+      var tb = el('tbody');
+      ['away', 'home'].forEach(function (side) {
+        var tr = el('tr', opts.winner === side ? 'won' : '');
+        tr.appendChild(el('td', 'name', opts[side].abbr));
+        opts.line[side].forEach(function (v) { tr.appendChild(el('td', '', v === null ? '--' : String(v))); });
+        tr.appendChild(el('td', 'tot', String(opts.score[side])));
+        tb.appendChild(tr);
+      });
+      t2.appendChild(tb);
+      lw.appendChild(t2);
+      wrap.appendChild(lw);
+    }
+
+    if (opts.footnote) wrap.appendChild(el('div', 'sb-foot', opts.footnote));
+    return wrap;
+  }
+
   /** Tab bar. `panes` is [{id, label, build(node)}]. */
   function tabs(container, panes) {
     var bar = el('div', 'tabs');
@@ -1223,6 +1344,7 @@
     el: el, $: $, $$: $$, esc: esc, pct: pct, signed: signed,
     tabs: tabs, table: table, matchupHeader: matchupHeader, kpis: kpis,
     overUnder: overUnder, lineInput: lineInput, actionBar: actionBar,
+    viewToggle: viewToggle, currentView: currentView, scoreboard: scoreboard,
     compare: compare, driverCards: driverCards, panel: panel,
     crest: crest, histogram: histogram, curve: curve, chartCard: chartCard, svgEl: svgEl,
     API_HOST: API_HOST,

@@ -738,7 +738,93 @@
     return wrap;
   }
 
+
+  /**
+   * THE BROADCAST VIEW.
+   *
+   * Same game, different order: scoreboard first, then the sheet. Sections are
+   * the ones a box score has -- summary, the full sheet, team comparison,
+   * quarters, leaders, what turned it -- and the analysis panels are still one
+   * click away rather than removed, because hiding the model's reasoning behind
+   * a nicer table would be a worse product, not a better one.
+   */
+  function renderBroadcast(app, d, box) {
+    var away = d.matchup.away;
+    var home = d.matchup.home;
+    var ls = d.result.line_score;
+    var ot = ls.overtime_periods || 0;
+    var winner = d.result.final.home > d.result.final.away ? 'home' : 'away';
+    var rec = function (t) {
+      return t.record ? t.record.wins + '-' + t.record.losses : null;
+    };
+    var cols = ['1', '2', '3', '4'];
+    for (var i = 0; i < ot; i += 1) cols.push(ot === 1 ? 'OT' : 'OT' + (i + 1));
+
+    box.appendChild(S.scoreboard({
+      away: away,
+      home: home,
+      score: { away: d.result.final.away, home: d.result.final.home },
+      records: { away: rec(away), home: rec(home) },
+      winner: winner,
+      status: ot > 0 ? (ot === 1 ? 'Final/OT' : 'Final/' + ot + 'OT') : 'Final',
+      subStatus: 'Simulated · ' + (d.meta.simulations || 0).toLocaleString() + ' runs',
+      line: {
+        cols: cols,
+        away: (ls.quarters.away || []).concat(ls.overtime.away || []),
+        home: (ls.quarters.home || []).concat(ls.overtime.home || []),
+      },
+      footnote: rosterFootnote(d),
+    }));
+
+    box.appendChild(resultBar(app, d));
+
+    var tabsBox = el('div', 'panel');
+    S.tabs(tabsBox, [
+      { id: 'summary', label: 'Game summary', build: function (node) {
+        if (d.recap || d.result.game_flow) {
+          node.appendChild(S.panel('How it played out', recapPanel(d)));
+        }
+        if (d.result.leaders) node.appendChild(S.panel('Game leaders', leadersPanel(d)));
+      } },
+      { id: 'box', label: 'Box score', build: function (node) {
+        d.result.box_score.away.team = away;
+        d.result.box_score.home.team = home;
+        node.appendChild(boxTable(d.result.box_score.away, away.name));
+        var sp = el('div'); sp.style.height = '18px'; node.appendChild(sp);
+        node.appendChild(boxTable(d.result.box_score.home, home.name));
+      } },
+      { id: 'team', label: 'Team stats', build: function (node) { node.appendChild(teamStats(d)); } },
+      { id: 'quarters', label: 'Scoring by quarter', build: function (node) {
+        node.appendChild(lineScore(d));
+      } },
+      { id: 'leaders', label: 'Game leaders', build: function (node) {
+        if (d.result.leaders) node.appendChild(leadersPanel(d));
+      } },
+      { id: 'events', label: 'Important events', build: function (node) {
+        node.appendChild(keyMoments(d));
+      } },
+      { id: 'analysis', label: 'Simulation analysis', build: function (node) {
+        node.appendChild(S.panel('What it rests on', sensitivityPanel(d)));
+        node.appendChild(S.panel('Why the model moved', S.driverCards(d.drivers)));
+      } },
+    ]);
+    box.appendChild(tabsBox);
+  }
+
+  /** The one line that says where the data came from and how old it is. */
+  function rosterFootnote(d) {
+    var r = d.meta && d.meta.roster;
+    var f = d.meta && d.meta.data_freshness;
+    var bits = [];
+    if (f && f.label) bits.push(f.label);
+    if (d.meta && d.meta.data_source) bits.push('Source: ' + d.meta.data_source);
+    if (r && r.starters) bits.push('Starters ' + r.starters);
+    return bits.join(' · ');
+  }
+
   function render(app, d, box) {
+    box.appendChild(S.viewToggle(app));
+    if (S.currentView() === 'box') { renderBroadcast(app, d, box); return; }
     var p = d.projection;
     var away = d.matchup.away;
     var home = d.matchup.home;

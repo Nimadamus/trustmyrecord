@@ -959,7 +959,106 @@
     return wrap;
   }
 
+
+  /** The broadcast view. See the note in the basketball app. */
+  function renderBroadcast(app, d, box) {
+    var away = d.matchup.away;
+    var home = d.matchup.home;
+    var ls = d.result.line_score;
+    var winner = d.result.winner;
+    var decided = d.result.decided_in || 'regulation';
+    var rec = function (t) {
+      return t.record
+        ? t.record.wins + '-' + t.record.losses + '-' + t.record.otLosses
+        : null;
+    };
+    var cols = ['1', '2', '3'];
+    var aw = (ls.periods && ls.periods.away ? ls.periods.away.slice(0, 3) : []);
+    var hm = (ls.periods && ls.periods.home ? ls.periods.home.slice(0, 3) : []);
+    if (decided === 'overtime') {
+      cols.push('OT');
+      aw = aw.concat([ls.overtime_goals ? ls.overtime_goals.away : 0]);
+      hm = hm.concat([ls.overtime_goals ? ls.overtime_goals.home : 0]);
+    } else if (decided === 'shootout') {
+      cols.push('OT', 'SO');
+      aw = aw.concat([0, ls.shootout_goals ? ls.shootout_goals.away : 0]);
+      hm = hm.concat([0, ls.shootout_goals ? ls.shootout_goals.home : 0]);
+    }
+
+    box.appendChild(S.scoreboard({
+      away: away,
+      home: home,
+      score: { away: d.result.final.away, home: d.result.final.home },
+      records: { away: rec(away), home: rec(home) },
+      winner: winner,
+      status: decided === 'regulation' ? 'Final'
+        : (decided === 'overtime' ? 'Final/OT' : 'Final/SO'),
+      subStatus: 'Simulated · ' + (d.meta.simulations || 0).toLocaleString() + ' runs',
+      line: { cols: cols, away: aw, home: hm },
+      footnote: rosterFootnote(d),
+    }));
+
+    box.appendChild(resultBar(app, d));
+
+    var tabsBox = el('div', 'panel');
+    S.tabs(tabsBox, [
+      { id: 'summary', label: 'Game summary', build: function (node) {
+        if (d.recap) node.appendChild(S.panel('How it played out', recapPanel(d)));
+        if (d.result.leaders) node.appendChild(S.panel('Game leaders', leadersPanel(d)));
+      } },
+      { id: 'box', label: 'Box score', build: function (node) {
+        d.result.box_score.away.team = away;
+        d.result.box_score.home.team = home;
+        node.appendChild(skaterTable(d.result.box_score.away, away.name));
+        var sp = el('div'); sp.style.height = '18px'; node.appendChild(sp);
+        node.appendChild(skaterTable(d.result.box_score.home, home.name));
+      } },
+      { id: 'team', label: 'Team stats', build: function (node) { node.appendChild(teamStats(d)); } },
+      { id: 'scoring', label: 'Scoring summary', build: function (node) {
+        node.appendChild(scoringSummary(d));
+      } },
+      { id: 'penalties', label: 'Penalty summary', build: function (node) {
+        node.appendChild(penaltySummary(d));
+      } },
+      { id: 'goalies', label: 'Goaltenders', build: function (node) {
+        ['away', 'home'].forEach(function (k) {
+          var blk = el('div');
+          var hd = el('div', 'teamhead');
+          hd.appendChild(S.crest(d.matchup[k], 26));
+          hd.appendChild(el('div', 'nm', d.matchup[k].name));
+          blk.appendChild(hd);
+          blk.appendChild(goalieTable(d.result.box_score[k]));
+          node.appendChild(blk);
+        });
+      } },
+      { id: 'stars', label: 'Three stars', build: function (node) {
+        node.appendChild(threeStars(d));
+      } },
+      { id: 'events', label: 'Important events', build: function (node) {
+        node.appendChild(importantEvents(d));
+      } },
+      { id: 'analysis', label: 'Simulation analysis', build: function (node) {
+        node.appendChild(S.panel('What it rests on', sensitivityPanel(d)));
+        node.appendChild(S.panel('Why the model moved', S.driverCards(d.drivers)));
+      } },
+    ]);
+    box.appendChild(tabsBox);
+  }
+
+  /** The one line that says where the data came from and how old it is. */
+  function rosterFootnote(d) {
+    var r = d.meta && d.meta.roster;
+    var f = d.meta && d.meta.data_freshness;
+    var bits = [];
+    if (f && f.label) bits.push(f.label);
+    if (d.meta && d.meta.data_source) bits.push('Source: ' + d.meta.data_source);
+    if (r && r.starters) bits.push('Starters ' + r.starters);
+    return bits.join(' · ');
+  }
+
   function render(app, d, box) {
+    box.appendChild(S.viewToggle(app));
+    if (S.currentView() === 'box') { renderBroadcast(app, d, box); return; }
     var p = d.projection;
     var away = d.matchup.away;
     var home = d.matchup.home;

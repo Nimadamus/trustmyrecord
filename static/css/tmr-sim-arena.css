@@ -471,3 +471,61 @@ tr.bench-start td{border-top:2px solid var(--line);}
   th.sortable::after{content:'';}
   .evrow{border-bottom:1px solid #ccc;}
 }
+
+/* --- broadcast view ------------------------------------------------------- */
+/* THE VIEW SWITCH. Two states, and which one you are in has to be obvious
+   without reading both labels. */
+.viewtoggle{display:inline-flex;gap:0;margin:0 0 .9rem;border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;}
+.viewtoggle button{
+  min-height:38px;padding:.45rem 1rem;font:inherit;font-size:.88rem;
+  color:var(--dim);background:transparent;border:0;cursor:pointer;white-space:nowrap;
+}
+.viewtoggle button + button{border-left:1px solid var(--line);}
+.viewtoggle button.on{background:rgba(56,189,248,.14);color:#cdeeff;font-weight:650;}
+.viewtoggle button:hover:not(.on){color:var(--ink);}
+.viewtoggle button:focus-visible{outline:2px solid var(--accent,#38bdf8);outline-offset:-2px;}
+
+/* THE SCOREBOARD. Three columns on a desktop -- away, status, home -- collapsing
+   to a stack on a phone, with the score always the largest thing in its row
+   because that is what the block is for. */
+.sb{border:1px solid var(--line);border-radius:14px;background:var(--card);
+  padding:1rem 1.1rem;margin:0 0 1rem;
+  display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;}
+.sb-team{display:flex;align-items:center;justify-content:space-between;gap:.9rem;min-width:0;}
+.sb-id{display:flex;align-items:center;gap:.7rem;min-width:0;}
+.sb-names{min-width:0;}
+.sb-abbr{font-weight:800;letter-spacing:.02em;font-size:1.02rem;color:var(--ink);}
+.sb-name{font-size:.82rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-rec{font-size:.78rem;color:var(--dim);margin-top:.1rem;}
+.sb-score{font-size:2.5rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
+  color:var(--dim);}
+.sb-team.won .sb-score{color:var(--ink);}
+.sb-team.won .sb-abbr{color:#cdeeff;}
+.sb-mid{text-align:center;padding:0 .5rem;}
+.sb-status{font-weight:750;font-size:.92rem;color:var(--ink);white-space:nowrap;}
+.sb-sub{font-size:.76rem;color:var(--dim);margin-top:.15rem;white-space:nowrap;}
+.sb-line{grid-column:1/-1;margin-top:.35rem;overflow-x:auto;}
+.sb-line table{border-collapse:collapse;font-size:.86rem;}
+.sb-line th,.sb-line td{padding:.3rem .7rem;text-align:right;border:0;
+  font-variant-numeric:tabular-nums;}
+.sb-line th{color:var(--dim);font-weight:600;font-size:.78rem;}
+.sb-line td.name,.sb-line th:first-child{text-align:left;font-weight:700;color:var(--ink);}
+.sb-line tr.won td{color:var(--ink);font-weight:700;}
+.sb-line td,.sb-line th{border-bottom:1px solid var(--line);}
+.sb-line tbody tr:last-child td{border-bottom:0;}
+.sb-line .tot{font-weight:800;color:var(--ink);}
+.sb-foot{grid-column:1/-1;font-size:.76rem;color:var(--dim);border-top:1px solid var(--line);
+  padding-top:.55rem;margin-top:.2rem;}
+
+@media (max-width:640px){
+  .sb{grid-template-columns:1fr;gap:.5rem;padding:.85rem;}
+  .sb-mid{text-align:left;padding:0;display:flex;gap:.6rem;align-items:baseline;}
+  .sb-score{font-size:2.1rem;}
+}
+@media print{
+  .viewtoggle{display:none;}
+  .sb{border:1px solid #ccc;background:#fff;}
+  .sb-score,.sb-abbr,.sb-status{color:#000;}
+  .sb-name,.sb-rec,.sb-sub,.sb-foot{color:#333;}
+}
