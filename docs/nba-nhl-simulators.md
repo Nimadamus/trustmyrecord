@@ -112,6 +112,72 @@ separate attempts to improve it failed and are recorded.
 **Special teams as a rating input.** Would need per-game power-play data the
 feed does not expose without a request per game.
 
+# Distribution realism at player level, and a corrected published figure
+
+## NBA scoring variance: found and fixed at the mechanism
+
+The team-scoring spread was 13.17 against a real 13.62 and the obvious lever had
+quietly stopped working -- team shooting form is clamped to plus or minus twelve
+percent, and above an SD of 0.06 the clamp sets the width rather than the SD.
+
+Decomposing real variance against simulated said the deficit was not in shooting
+at all. Free-throw scoring spread matched exactly, three-point percentage
+matched, field-goal percentage was slightly wide. **Possessions** were short:
+5.78 against a real 6.93. Raising the pace draw to 4.30 lands team scoring on
+13.45 against 13.62 and carries the tails with it -- 20+ margins 23.0% against
+22.8%, 30+ 7.5% against 7.8%, 40+ 1.4% against 1.6% -- with close games and
+overtime unmoved. It changes only the game that is played; the projection is
+drawn separately and is untouched.
+
+## NHL: variance was in the wrong place
+
+Team goal tails were already right (4+ goals 37.6% real and simulated). The
+defect was that the engine carried its variance in conversion rather than in
+volume: the spread of shots a goaltender faces was 5.77 against a real 7.78,
+while shutouts ran high. A shared game-openness draw plus a smaller per-side one,
+paid for by reducing goaltender form, fixes both ends.
+
+**What was refused.** Widening margins through shot volume makes out-shooting
+predict the winner, which real hockey barely does; widening goaltender form
+overshoots shutouts and team-goal spread. Games decided by four or more remain
+around 12.5-13.5% against a real 16.1% and the tolerance has **not** been
+widened -- the specification keeps reporting it and the gate holds a floor so a
+regression is still caught.
+
+## Player distributions, by role
+
+Eighty distributions compared against real box scores by role -- mean, spread,
+p90, p99 -- with roles defined by minutes or ice time on both sides. Basketball
+matches on all forty including the tails. Hockey matches on thirty-eight.
+
+The two it does not: hits and penalty minutes for the forwards who play least.
+Real checking lines hit more than first lines despite half the ice; this engine
+deals both from ice time and each man's own rate. It is now **labelled on the
+box score itself** rather than left for a reader to discover.
+
+## A published accuracy figure, corrected
+
+The site stated an NHL holdout skill of 2.36% [0.73, 3.73]. That came from a
+results cache which was wiped during this work and rebuilt from the provider,
+and on the rebuilt data the same code gives **1.37% [-0.11, 2.72]** -- an
+interval including zero, meaning the model has **not** been shown to beat picking
+the home side on those seasons. Reverting the engine changes gives the identical
+figure, so this is the data the number always rested on. The lower, reproducible
+figure is now published and the page says what an interval containing zero means.
+Basketball is unchanged at 16.06% [13.53, 18.63].
+
+## Confirmed lineups: two of four, and honesty about the rest
+
+Every permitted endpoint was probed. NHL scratches (the league's own API) and NBA
+out/suspended designations (ESPN) are real, free and now read as CONFIRMED.
+Confirmed NBA starters and confirmed NHL starting goaltenders are published by
+**no source this project may legally consume** -- the NHL's goalie "comparison"
+is season leaders, not a lineup. The provider-neutral adapter layer, validation,
+freshness vocabulary and coverage statement are built and exercised by the two
+live adapters; `docs/lineup-providers.md` records the four licensed options, what
+to ask each for, and the five contract terms that decide whether it is worth
+building. No prices are quoted because none are published.
+
 # Realism specification, broadcast view and team pages, 26 August 2026
 
 ## The engines, measured against real seasons
