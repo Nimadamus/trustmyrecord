@@ -529,3 +529,14 @@ tr.bench-start td{border-top:2px solid var(--line);}
   .sb-score,.sb-abbr,.sb-status{color:#000;}
   .sb-name,.sb-rec,.sb-sub,.sb-foot{color:#333;}
 }
+
+/* RESERVE THE CONTROLS THAT ARRIVE LATE.
+   The goaltender pickers are built once the team data lands, which pushes the
+   Run button and everything under it down a frame after first paint. Measured on
+   the live page that growth is 66px on a desktop and 144px on a phone, so the
+   space is held from the start and nothing moves when it is filled. Sized to the
+   settled height rather than guessed, and only where the controls actually
+   appear -- an empty container on a page that has none would just be a gap. */
+#extraControls:not(:empty){min-height:66px;}
+@media (max-width:640px){#extraControls:not(:empty){min-height:144px;}}
+.prerun{min-height:30px;}

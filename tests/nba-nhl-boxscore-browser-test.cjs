@@ -189,6 +189,78 @@ async function check(browser, sport, url) {
       sport + ' sorting ' + scoreCol + ' did not order it: ' + sorted.after.join(','));
   }
 
+  /* 4b. THE BROADCAST VIEW. Same game, different arrangement, and it has to be
+         complete on its own terms: a scoreboard with both records, the final and
+         how it was reached, the line by period, and the sections a box score
+         has. Switching views must not change the game. */
+  const beforeFinal = await page.evaluate(
+    () => [...document.querySelectorAll('#result .mh .pts')].map((n) => n.textContent.trim()).join('-'),
+  );
+  const switched = await page.evaluate(() => {
+    const b = [...document.querySelectorAll('#result .viewtoggle button')]
+      .find((x) => /Broadcast/.test(x.textContent));
+    if (!b) return false;
+    b.click();
+    return true;
+  });
+  assert.ok(switched, sport + ' has no broadcast view control');
+  await page.waitForTimeout(700);
+
+  const bc = await page.evaluate(() => {
+    const sb = document.querySelector('#result .sb');
+    if (!sb) return null;
+    const cells = [...sb.querySelectorAll('.sb-score')].map((n) => n.textContent.trim());
+    return {
+      scores: cells,
+      records: [...sb.querySelectorAll('.sb-rec')].map((n) => n.textContent.trim()),
+      status: (sb.querySelector('.sb-status') || {}).textContent,
+      lineCols: [...sb.querySelectorAll('.sb-line thead th')].map((n) => n.textContent.trim()),
+      lineRows: sb.querySelectorAll('.sb-line tbody tr').length,
+      winnerMarked: sb.querySelectorAll('.sb-team.won').length,
+      foot: (sb.querySelector('.sb-foot') || {}).textContent || '',
+      sections: [...document.querySelectorAll('#result .tabs button')].map((b) => b.textContent.trim()),
+      junk: /\[object |undefined|NaN/.test(sb.textContent),
+    };
+  });
+  assert.ok(bc, sport + ' broadcast view rendered no scoreboard');
+  assert.strictEqual(bc.scores.length, 2, sport + ' scoreboard shows ' + bc.scores.length + ' scores');
+  assert.strictEqual(bc.records.length, 2,
+    sport + ' scoreboard shows ' + bc.records.length + ' records');
+  assert.ok(/^Final/.test(bc.status || ''), sport + ' scoreboard status reads "' + bc.status + '"');
+  assert.strictEqual(bc.winnerMarked, 1, sport + ' scoreboard marks ' + bc.winnerMarked + ' winners');
+  assert.ok(bc.lineRows === 2, sport + ' line score has ' + bc.lineRows + ' rows');
+  assert.ok(bc.lineCols.length >= (sport === 'NBA' ? 6 : 5),
+    sport + ' line score has only ' + bc.lineCols.join(',') );
+  assert.ok(!bc.junk, sport + ' scoreboard contains a stringified object or NaN');
+  assert.ok(/Source:/.test(bc.foot), sport + ' scoreboard does not state its data source');
+
+  const wanted2 = sport === 'NBA'
+    ? ['Game summary', 'Box score', 'Team stats', 'Scoring by quarter', 'Game leaders',
+      'Important events', 'Simulation analysis']
+    : ['Game summary', 'Box score', 'Team stats', 'Scoring summary', 'Penalty summary',
+      'Goaltenders', 'Three stars', 'Important events', 'Simulation analysis'];
+  for (const label of wanted2) {
+    assert.ok(bc.sections.includes(label),
+      sport + ' broadcast view has no "' + label + '" section, only: ' + bc.sections.join(', '));
+  }
+
+  // SWITCHING VIEWS MUST NOT CHANGE THE GAME.
+  const afterFinal = await page.evaluate(() => {
+    const sb = document.querySelector('#result .sb');
+    return [...sb.querySelectorAll('.sb-score')].map((n) => n.textContent.trim()).join('-');
+  });
+  assert.strictEqual(afterFinal, beforeFinal,
+    sport + ' switching to the broadcast view changed the score from '
+    + beforeFinal + ' to ' + afterFinal);
+
+  // Back to analysis for the checks that follow.
+  await page.evaluate(() => {
+    const b = [...document.querySelectorAll('#result .viewtoggle button')]
+      .find((x) => /TMR analysis/.test(x.textContent));
+    if (b) b.click();
+  });
+  await page.waitForTimeout(500);
+
   /* 5. THE PHONE. The name column must stay put while the rest scrolls, or
         every row becomes anonymous the moment a reader looks at a stat. */
   const phone = await browser.newContext({
