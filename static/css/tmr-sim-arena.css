@@ -537,6 +537,9 @@ tr.bench-start td{border-top:2px solid var(--line);}
    space is held from the start and nothing moves when it is filled. Sized to the
    settled height rather than guessed, and only where the controls actually
    appear -- an empty container on a page that has none would just be a gap. */
-#extraControls:not(:empty){min-height:66px;}
-@media (max-width:640px){#extraControls:not(:empty){min-height:144px;}}
+/* Marked on the page that has these controls, so the space exists at first
+   paint. :not(:empty) was wrong here: it only matches once the controls have
+   arrived, which is exactly when the reservation is no longer needed. */
+#extraControls.reserve-goalies{min-height:66px;}
+@media (max-width:640px){#extraControls.reserve-goalies{min-height:150px;}}
 .prerun{min-height:30px;}
