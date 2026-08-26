@@ -112,6 +112,87 @@ separate attempts to improve it failed and are recorded.
 **Special teams as a rating input.** Would need per-game power-play data the
 feed does not expose without a request per game.
 
+# Broadcast box score and self-refreshing rosters, 26 August 2026
+
+## Rosters that maintain themselves
+
+The simulators ran on a snapshot built by hand and committed. Fine on the day,
+wrong a week later: a trade, a signing or an injury moves a player and the model
+keeps using him in the wrong shirt with nothing on the page to say so.
+
+Both sports now rebuild from their own providers every six hours **inside the
+API process on Render**, so it continues whether or not any particular machine
+is on. Verified live: NBA 30 teams / 547 players and NHL 32 teams / 1,266
+players, both `origin: live refresh`, rebuilt on the server minutes after a
+deploy that nobody triggered by hand.
+
+What it refuses is the substance. A refresher that installs whatever came back
+is worse than none, because the failure is silent. Nothing is installed until it
+has been checked against what the sport actually is: the right number of teams, a
+plausible squad for each, a goaltender on every hockey roster, no player on two
+rosters, no duplicate inside one, statistics actually present. A snapshot that
+fails leaves the previous one serving, records the error, and the page keeps
+stating the real age of what it is using.
+
+That design was tested by reality on its first run. The live refresh failed with
+`Cannot find module services/simResults` -- a builder required a file that had
+never been committed, so it worked on the machine it was written on and nowhere
+else. The refresher caught it, installed nothing, kept the committed roster, and
+reported it. A suite now walks the require graph of both builders and fails on
+any link the repository does not carry; run against a clean checkout of what was
+deployed, it reproduces that exact error.
+
+Published rather than implied: `/api/roster/status`, the same block on every
+simulation as `meta.roster`, and the health check now fails on stale data or on
+three consecutive refresh failures. Starters and the starting goaltender are
+labelled **projected**, never confirmed, because no confirmed-lineup feed is
+wired up.
+
+## A box score worth printing
+
+Hockey was missing the columns hockey is read in. Giveaways and takeaways came
+back in the same response as hits and blocked shots and were simply not read.
+Faceoffs are now taken by the men who take draws, one side's wins being the
+other's losses, so the two columns agree and no winger is credited with eighteen
+draws. Added: short-handed goals, shooting percentage, and the goaltender's
+decision -- W, L, OTL or SOL, because a man beaten in regulation and one beaten
+in a shootout did not have the same night.
+
+The shootout winner now appears in the scoring summary as its own line. It
+belongs to no skater and is charged to no goaltender, which is the rule, but
+omitting it meant a reader could count the goals listed and come up one short of
+the final. Penalties carry the infraction and the manpower they produced.
+
+Basketball gained the men who did not play -- inactive, held out, or a coach's
+decision, each with a reason and no statistics -- and the moments that turned the
+game, read off the score after every simulated possession. No play-by-play is
+invented, because the engine simulates possessions rather than plays.
+
+The page is now sections rather than one scroll: game summary first and complete
+on its own, then the full box score, team stats, quarters or periods, leaders,
+scoring and penalty summaries, skaters, goaltenders, three stars, important
+events, player ranges and the analysis. The player name stays put while the rest
+scrolls; every column sorts by click or keyboard; every abbreviation carries its
+meaning. Four actions: run again, change matchup, share, print.
+
+Two defects the numerical checks walked straight past, both found by looking at
+the rendered page: the team row printed `[object HTMLSpanElement]` on every box
+score on the site, and a second pair of buttons duplicated two of the four
+actions under different names.
+
+## What is verified, and how
+
+- **Engine gate, ten suites**, including 240 box scores checked for completeness
+  and reconciliation -- players to team, team to line score, line score to final
+  -- with overtime, shootouts and empty nets each handled by their own rule.
+- **Roster pipeline suite**: nine kinds of broken provider response, all refused,
+  previous roster kept, idempotent, and removing a player from a snapshot proven
+  to stop him appearing in the simulated game.
+- **Browser suite against production**: every section present and populated, the
+  box score reconciled off the rendered cells, sorting proven to reorder, the
+  name column proven to survive a phone, printing proven to expand every section
+  onto white with the controls gone.
+
 # Product completeness audit, 25 August 2026
 
 Run against the LIVE pages rather than the code, because the two had diverged.
