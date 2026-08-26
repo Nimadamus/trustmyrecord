@@ -25,6 +25,16 @@
      paint to render without shifting the page. Opening the API connection here
      removes the DNS + TLS cost from that race. -->
 <link rel="preconnect" href="https://trustmyrecord-api.onrender.com" crossorigin>
+<!-- The hero motion plate, at LOW priority. It is a 1.21MB background inside
+     the first viewport and it must not compete with the 46KB still frame that
+     paints the hero, the font stylesheet or the two data calls below - but it
+     must not be left until after `load` either. Measured on production: the
+     plate is the LARGEST image on the page, so it is the LCP element whenever
+     it appears, and starting it at load+idle moved LCP from ~1.0-1.3s out to
+     ~1.7-2.1s. fetchpriority="low" lets it download alongside everything else
+     without taking bandwidth from it, and the class below flips as soon as the
+     critical content has painted. -->
+<link rel="preload" as="image" fetchpriority="low" href="/static/media/steph-curry-hero-anim.9db12326f950.webp">
 <!-- EARLY DATA (2026-08-25). The two requests that fill the first viewport -
      the MLB/NFL slate behind the ticker and the bootstrap behind the stats
      stripe and the competition card - used to be fired from tmr-home-live.js,
@@ -2327,12 +2337,15 @@ a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset
   function start() {
     try { document.documentElement.classList.add('tmr-heroanim'); } catch (e) {}
   }
-  function idle() {
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(start, { timeout: 1500 });
-    else setTimeout(start, 300);
-  }
-  if (document.readyState === 'complete') idle();
-  else window.addEventListener('load', idle, { once: true });
+  /* ONE FRAME AFTER THE CRITICAL CONTENT HAS PAINTED - not after `load`, and
+     not after an idle callback. The hero headline and the still frame are on
+     screen by the first rAF that follows parsing; everything this defers past
+     is already done by then, and every millisecond later than that is a
+     millisecond added to LCP for no gain (measured, see the preload in
+     <head>). */
+  function soon() { requestAnimationFrame(function () { requestAnimationFrame(start); }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', soon, { once: true });
+  else soon();
 })();
 </script>
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
