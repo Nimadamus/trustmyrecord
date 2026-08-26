@@ -921,7 +921,19 @@
         cols.forEach(function (c, i) {
           var td = el('td', i === 0 ? 'name' : '');
           var v = c.fmt ? c.fmt(opts.footer) : opts.footer[c.k];
-          td.innerHTML = v == null ? '' : '<b>' + String(v) + '</b>';
+          // A COLUMN THAT BUILDS AN ELEMENT BUILDS ONE HERE TOO.
+          //
+          // This stringified whatever the formatter returned, so the player
+          // column -- which returns a span carrying the name and position --
+          // printed the team row as "[object HTMLSpanElement]". Every box score
+          // on the site said it, on the one row summarising the whole team.
+          if (v && v.nodeType) {
+            var b = el('b');
+            b.appendChild(v);
+            td.appendChild(b);
+          } else {
+            td.innerHTML = v == null ? '' : '<b>' + String(v) + '</b>';
+          }
           f.appendChild(td);
         });
         tbody.appendChild(f);

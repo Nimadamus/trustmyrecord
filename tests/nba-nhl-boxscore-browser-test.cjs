@@ -157,6 +157,18 @@ async function check(browser, sport, url) {
     assert.ok(reconciled >= 2,
       sport + ' only reconciled ' + reconciled + ' team tables on screen');
 
+    // NOTHING ON THE SHEET MAY BE A STRINGIFIED OBJECT.
+    //
+    // The team row printed "[object HTMLSpanElement]" on every box score on the
+    // site, because the footer stringified whatever the player column returned
+    // and that column returns an element. It is the sort of thing every
+    // numerical check passes straight over.
+    const junk = await page.evaluate(() => {
+      const host = document.querySelector('#result .tabs').nextElementSibling;
+      return /\[object |undefined|NaN|null/.test(host.textContent);
+    });
+    assert.ok(!junk, sport + ' box score contains a stringified object, NaN or undefined');
+
     /* 4. SORTING A COLUMN ACTUALLY REORDERS IT. */
     const sorted = await page.evaluate((col) => {
       const host = document.querySelector('#result .tabs').nextElementSibling;
