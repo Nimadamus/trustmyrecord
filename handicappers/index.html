@@ -3221,6 +3221,50 @@
         // Background enrichment: pull each member's locked picks AFTER first paint
         // so Sport + Wager Type filters, sport tags, and streaks work — without
         // blocking the initial render. Re-renders the board when done.
+        // One member's enriched history, applied. Shared by the batched path and
+        // the per-member fallback so the two can never drift apart: same
+        // completeness guard, same stats merge, same authoritative streak.
+        function applyEnrichedPicks(member, rawPicks) {
+            if (!Array.isArray(rawPicks) || !rawPicks.length) return false;
+            const pickStats = statsFromPicks(member._user || {}, rawPicks);
+            // A recomputed history with fewer graded picks than the backend
+            // aggregate is incomplete; keep the aggregate stats and leave
+            // rawPicks unset so the next refresh cycle retries the fetch.
+            if (pickStats && Number(pickStats.gradedPicks || 0) < Number((member.stats && member.stats.gradedPicks) || 0)) return false;
+            member.rawPicks = rawPicks;
+            if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
+            // Server streak stays authoritative (same definition as the
+            // profile metrics endpoint) so a featured card never flips
+            // identity when locally recomputed stats land later.
+            const row = featuredRowFor(member);
+            if (row) member.stats.currentStreak = Number(row.current_streak || 0);
+            return true;
+        }
+
+        function needsEnrichment(member) {
+            if (Array.isArray(member.rawPicks) && member.rawPicks.length) return false;
+            return !!Number((member.stats && member.stats.totalPicks) || 0);
+        }
+
+        // Every directory member's settled history in ONE request.
+        // /api/users/directory-picks selects exactly what an anonymous
+        // GET /api/picks?userId= selects (verified row-for-row and
+        // field-for-field against the live API), grouped by user id.
+        async function fetchDirectoryPicksByUser() {
+            const data = await directoryRequest('/users/directory-picks');
+            const byUser = data && data.picks_by_user;
+            if (!byUser || typeof byUser !== 'object') throw new Error('directory-picks payload missing');
+            return byUser;
+        }
+
+        // Background enrichment. This used to call GET /api/picks?userId= once
+        // PER MEMBER at concurrency 2 - 124+ requests on a single visit, with a
+        // four-attempt backoff bolted on because the fan-out tripped the API's
+        // own rate limiter, and each of those requests ran SELECT p.* plus two
+        // correlated COUNT subqueries per row. One visitor could keep the pg
+        // pool busy for minutes and slow every other page on the site. It is
+        // now one batched request; the per-member path is kept verbatim as the
+        // fallback for any member the batch did not cover.
         async function enrichMembersWithPicks(targetMembers) {
             const list = targetMembers || members;
             if (!Array.isArray(list) || !list.length) return;
@@ -3236,28 +3280,35 @@
             // fed by the one-shot /users/featured-stats response and paints all
             // six cards together; enrichment only powers the Sport/Wager
             // filters and sport tags, and re-renders once when fully done.
-            await mapWithConcurrency(ordered, 2, async member => {
-                if (Array.isArray(member.rawPicks) && member.rawPicks.length) return;
-                if (!Number((member.stats && member.stats.totalPicks) || 0)) return;
-                try {
-                    const rawPicks = (await fetchUserPicks(member._user || {}, member.username) || []).map(normalizePickMeta);
-                    if (!rawPicks.length) return;
-                    const pickStats = statsFromPicks(member._user || {}, rawPicks);
-                    // A recomputed history with fewer graded picks than the backend
-                    // aggregate is incomplete; keep the aggregate stats and leave
-                    // rawPicks unset so the next refresh cycle retries the fetch.
-                    if (pickStats && Number(pickStats.gradedPicks || 0) < Number((member.stats && member.stats.gradedPicks) || 0)) return;
-                    member.rawPicks = rawPicks;
-                    if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
-                    // Server streak stays authoritative (same definition as the
-                    // profile metrics endpoint) so a featured card never flips
-                    // identity when locally recomputed stats land later.
-                    const row = featuredRowFor(member);
-                    if (row) member.stats.currentStreak = Number(row.current_streak || 0);
-                } catch (error) {
-                    // Keep aggregate stats if a member's picks fail to load.
-                }
+            let byUser = null;
+            try {
+                byUser = await fetchDirectoryPicksByUser();
+            } catch (error) {
+                console.warn('[Handicappers] Batched directory picks unavailable, falling back to per-member fetch:', error);
+            }
+
+            const leftover = [];
+            ordered.forEach(member => {
+                if (!needsEnrichment(member)) return;
+                const id = (member._user && (member._user.id || member._user.user_id)) || member.id;
+                const rows = byUser && id != null ? byUser[String(id)] : null;
+                if (!Array.isArray(rows) || !rows.length) { leftover.push(member); return; }
+                if (!applyEnrichedPicks(member, rows.map(normalizePickMeta))) leftover.push(member);
             });
+
+            // Fallback only: members the batch had no rows for, or whose batched
+            // history came back short of the backend aggregate. Normally empty.
+            if (leftover.length) {
+                await mapWithConcurrency(leftover, 2, async member => {
+                    if (!needsEnrichment(member)) return;
+                    try {
+                        const rawPicks = (await fetchUserPicks(member._user || {}, member.username) || []).map(normalizePickMeta);
+                        applyEnrichedPicks(member, rawPicks);
+                    } catch (error) {
+                        // Keep aggregate stats if a member's picks fail to load.
+                    }
+                });
+            }
             enrichmentComplete = true;
             fillSports();
             applyFilters();
