@@ -1,0 +1,66 @@
+{
+  "version": "mlb-realism-2026-08-26",
+  "recorded": "2026-08-26",
+  "engine_note": "Recorded straight after the run-environment fix (home-field split re-centred, rating reference measured rather than assumed to be 100).",
+  "sweep": "scripts/validate-mlb-simulator.cjs 20000 40, 1,680 games, about 30,000 half-innings",
+  "why": "The gate grades against real MLB every run, which catches a metric being WRONG. This file catches a metric MOVING: a doubles rate drifting from +0.38 to +0.80 is still a miss either way, and without a recorded starting point nobody can tell the difference between a regression and a gap that was always there.",
+  "real_reference": {
+    "season": "2025 regular season, MLB Stats API",
+    "scorelessHalfInningPct": 72.67,
+    "bigInningPct": 5.65,
+    "runsPerHalfInning": 0.5,
+    "firstInningScorePct": 29.56,
+    "halfInningsPerGame": 17.79,
+    "hitsPerTeam": 8.2588,
+    "doublesPerTeam": 1.5936,
+    "triplesPerTeam": 0.1292,
+    "lobPerTeam": 6.7261,
+    "hbpPerTeam": 0.3967,
+    "gidpPerTeam": 0.6424,
+    "sacFliesPerTeam": 0.2689,
+    "sacBuntsPerTeam": 0.1152,
+    "wildPitchesPerTeam": 0.2942,
+    "ibbPerTeam": 0.1144
+  },
+  "measured": {
+    "gameTotalMean": 8.94,
+    "gameTotalRunToRunSd": 0.16,
+    "gameTotalObserved": [
+      8.77,
+      8.81,
+      8.89,
+      8.94,
+      9.2
+    ],
+    "scorelessHalfInningPct": 72.9,
+    "bigInningPct": 5.8,
+    "runsPerHalfInning": 0.5,
+    "firstInningScorePct": 26.49,
+    "halfInningsPerGame": 17.97,
+    "hitsPerTeam": 8.84,
+    "doublesPerTeam": 1.98,
+    "triplesPerTeam": 0.14,
+    "lobPerTeam": 7.26,
+    "hbpPerTeam": 0.42,
+    "gidpPerTeam": 0.62,
+    "sacFliesPerTeam": 0.16,
+    "sacBuntsPerTeam": 0.1,
+    "wildPitchesPerTeam": 0.34,
+    "ibbPerTeam": 0.0
+  },
+  "open_gaps": [
+    "doubles +0.38 a team a game, about 26% too many",
+    "hits +0.58 and left on base +0.53, the same surplus of baserunners",
+    "strikeouts and walks both run low, so runs are assembled from too much contact",
+    "sac flies -0.11, about 43% too few",
+    "intentional walks never issued: the box-score field exists and is always zero",
+    "first-inning scoring about 3 points light"
+  ],
+  "passing": [
+    "scoreless half-inning rate, within 0.2 points of the league",
+    "3+ run half-inning rate, within 0.2 points",
+    "runs per half-inning, exact to two places",
+    "half-innings per game, so the home ninth is skipped at a realistic rate",
+    "extra-inning rate, shutout rate, blowout rate, run distribution 0 through 7+"
+  ]
+}

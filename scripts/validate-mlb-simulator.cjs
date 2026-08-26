@@ -53,6 +53,34 @@ const MLB = {
   homeWinPct: 54.3,             // home-field edge (mirror-pair isolation)
   // % of team-games scoring exactly k runs (7+ grouped); sums to 100.
   runDist: { 0: 6.8, 1: 11.5, 2: 12.7, 3: 13.8, 4: 13.4, 5: 10.6, 6: 8.5, '7+': 22.7 },
+
+  // ---- inning shape, and the event detail behind the runs --------------------
+  // Same source and season as everything above. The inning figures were folded
+  // over all 43,293 half-innings of the 2025 regular season from the linescore
+  // hydrate; the per-team-game figures are the thirty clubs' season totals over
+  // 4,860 team-games.
+  //
+  // These exist because every metric above this block is a per-GAME aggregate.
+  // A game total of 8.9 runs can be assembled from realistic clustering or from
+  // runs sprinkled evenly across nine innings, and nothing here could tell the
+  // difference. Nor could anything tell whether those runs arrived on the right
+  // mix of events: the same four and a half runs can come from nine hits and
+  // eight strikeouts or from eleven hits and six.
+  scorelessHalfInningPct: 72.67,   // share of half-innings with no run
+  bigInningPct: 5.65,              // share of half-innings scoring 3 or more
+  runsPerHalfInning: 0.5000,
+  firstInningScorePct: 29.56,      // share of first half-innings that score
+  halfInningsPerGame: 17.79,       // 18 minus the bottom ninths never batted
+  hitsPerTeam: 8.2588,
+  doublesPerTeam: 1.5936,
+  triplesPerTeam: 0.1292,
+  lobPerTeam: 6.7261,
+  hbpPerTeam: 0.3967,
+  gidpPerTeam: 0.6424,
+  sacFliesPerTeam: 0.2689,
+  sacBuntsPerTeam: 0.1152,
+  wildPitchesPerTeam: 0.2942,
+  ibbPerTeam: 0.1144,
   // Additional documented 2025 baselines (errors, CS, SB-success, and BABIP are all
   // gated below against measured engine output):
   errorsPerTeam: 0.504,
@@ -61,12 +89,18 @@ const MLB = {
   babip: 0.291,                 // gated below via TOL.babip
   maxTeamRunsObserved: 24,      // reference only (real 2025 single-team max)
 };
-// `gameTotal` is deliberately tighter than `total`. Monte-Carlo noise on the
-// 1,680-game end-to-end sweep is about 0.10 runs, so 0.25 is roughly two and a
-// half standard errors: tight enough to catch a real bias, wide enough not to
-// flap. The looser 0.6 would have waved through the +0.55 the engine actually
-// carried.
-const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, gameTotal: 0.25, homeWin: 3.0, babip: 0.03 };
+// `gameTotal` is deliberately tighter than `total`. Measured across five runs
+// of the 1,680-game sweep the realised mean moved between 8.77 and 9.20, a
+// standard error of about 0.16 -- the sweep is not deterministic, so the first
+// estimate of 0.10 was optimistic and 0.25 flapped. 0.40 is about two and a
+// half of those standard errors: still catches the +0.55 the engine actually
+// carried before 2026-08-26, and does not fail on a quiet day. The looser 0.6
+// would have waved that bias through.
+const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, gameTotal: 0.40, homeWin: 3.0, babip: 0.03,
+  // Inning shape. Tight, because the sweep pools around 13,000 half-innings
+  // and these are the metrics that say whether runs cluster like baseball.
+  scorelessPct: 1.0, bigInningPct: 0.8, runsPerHalf: 0.020, halfInnings: 0.25,
+  hits: 0.35, doubles: 0.20, triples: 0.05, lob: 0.40, small: 0.08 };
 
 // ---- load the production engine with browser globals stubbed ------------------
 function fakeEl() {
@@ -187,6 +221,12 @@ function runEndToEnd(pairs) {
   const teams = SIM.localTeams.current;
   SIM.state.simulationCount = 10; // -> wpSamples 90 per call, keeps it fast
   let homeWins = 0, games = 0, targetSum = 0, realizedSum = 0, e2eViol = 0;
+  // Inning shape and event detail, folded over the same sweep so they cost
+  // nothing extra: every game simulated here already carries a line score and a
+  // per-side summary.
+  let halfInnings = 0, scorelessHalves = 0, bigHalves = 0, halfRuns = 0;
+  let firstHalves = 0, firstScored = 0, teamGames = 0;
+  const ev = { hits: 0, doubles: 0, triples: 0, leftOnBase: 0, hbp: 0, gidp: 0, sacFlies: 0, sacBunts: 0, wildPitches: 0, ibb: 0 };
   // Deterministic, repeatable matchup set: every team hosts/visits a fixed spread
   // of opponents (offsets) in BOTH orientations (mirror pairs isolate home edge),
   // each matchup replicated REPS times so the aggregate drift is reproducible run
@@ -213,9 +253,42 @@ function runEndToEnd(pairs) {
       if (bx.home.runs !== bx.home.innings.reduce((t, x) => t + x, 0)) e2eViol++;
       if (sum(bx.players.home.pitchers, pp => pp.r) !== bx.away.runs) e2eViol++; // home P runs == away runs
       if (sum(bx.players.away.pitchers, pp => pp.r) !== bx.home.runs) e2eViol++;
+
+      ['away', 'home'].forEach((side) => {
+        teamGames++;
+        const ss = bx[side].summaryStats || {};
+        Object.keys(ev).forEach((k) => { ev[k] += Number(ss[k]) || 0; });
+        bx[side].innings.forEach((r, idx) => {
+          halfInnings++;
+          halfRuns += r;
+          if (r === 0) scorelessHalves++;
+          if (r >= 3) bigHalves++;
+          // The bottom of the first is a half-inning like any other; a home club
+          // always bats in it, so no attrition to correct for here.
+          if (idx === 0) { firstHalves++; if (r > 0) firstScored++; }
+        });
+      });
     }
   });
-  return { games, homeWinPct: 100 * homeWins / games, targetMean: targetSum / games, realizedMean: realizedSum / games, e2eViol };
+  const per = (k) => ev[k] / teamGames;
+  return {
+    games, homeWinPct: 100 * homeWins / games,
+    targetMean: targetSum / games, realizedMean: realizedSum / games, e2eViol,
+    inning: {
+      halfInnings,
+      scorelessPct: 100 * scorelessHalves / halfInnings,
+      bigInningPct: 100 * bigHalves / halfInnings,
+      runsPerHalf: halfRuns / halfInnings,
+      firstInningScorePct: 100 * firstScored / firstHalves,
+      halfInningsPerGame: halfInnings / games,
+    },
+    event: {
+      hits: per('hits'), doubles: per('doubles'), triples: per('triples'),
+      lob: per('leftOnBase'), hbp: per('hbp'), gidp: per('gidp'),
+      sacFlies: per('sacFlies'), sacBunts: per('sacBunts'),
+      wildPitches: per('wildPitches'), ibb: per('ibb'),
+    },
+  };
 }
 
 // ---- reporting ----------------------------------------------------------------
@@ -285,7 +358,82 @@ function main() {
   const hw = row('Home win % (mirror pairs)', E.homeWinPct, MLB.homeWinPct, TOL.homeWin, '%');
   console.log(hw.line + '\n');
 
-  const calMisses = rows.concat(distRows, [env, hw]).filter(x => x.miss).length;
+  // ---- TRACK 1c: inning shape, and the events behind the runs ----------------
+  //
+  // Split into two blocks on purpose. The inning block is GATED: it is the test
+  // of whether runs cluster the way baseball's do, and the engine passes it, so
+  // it is held there. The event block is TRACKED and printed with its deltas but
+  // does not fail the run, because three of its rows are known open gaps rather
+  // than regressions, and a gate that is red on arrival gets ignored rather than
+  // fixed. Each is named under the table with its measured size.
+  console.log('TRACK 1c - INNING SHAPE (gated)');
+  console.log('  metric                        current    target     delta   flag');
+  const inn = E.inning;
+  const innRows = [
+    row('Scoreless half-innings %', inn.scorelessPct, MLB.scorelessHalfInningPct, TOL.scorelessPct, '%'),
+    row('3+ run half-innings %', inn.bigInningPct, MLB.bigInningPct, TOL.bigInningPct, '%'),
+    row('Runs per half-inning', inn.runsPerHalf, MLB.runsPerHalfInning, TOL.runsPerHalf, ''),
+    row('Half-innings per game', inn.halfInningsPerGame, MLB.halfInningsPerGame, TOL.halfInnings, ''),
+  ];
+  innRows.forEach(r => console.log(r.line));
+  console.log('  (' + inn.halfInnings.toLocaleString() + ' half-innings folded from the sweep above)');
+
+  console.log('TRACK 1d - TRACKED (measured every run, does not gate)');
+  console.log('  metric                        current    target     delta   flag');
+  const evt = E.event;
+  [
+    ['First-inning scoring %', inn.firstInningScorePct, MLB.firstInningScorePct, 2.0],
+    ['Hits / team', evt.hits, MLB.hitsPerTeam, TOL.hits],
+    ['Doubles / team', evt.doubles, MLB.doublesPerTeam, TOL.doubles],
+    ['Triples / team', evt.triples, MLB.triplesPerTeam, TOL.triples],
+    ['Left on base / team', evt.lob, MLB.lobPerTeam, TOL.lob],
+    ['HBP / team', evt.hbp, MLB.hbpPerTeam, TOL.small],
+    ['GIDP / team', evt.gidp, MLB.gidpPerTeam, TOL.small],
+    ['Sac flies / team', evt.sacFlies, MLB.sacFliesPerTeam, TOL.small],
+    ['Sac bunts / team', evt.sacBunts, MLB.sacBuntsPerTeam, TOL.small],
+    ['Wild pitches / team', evt.wildPitches, MLB.wildPitchesPerTeam, TOL.small],
+    ['Intentional walks / team', evt.ibb, MLB.ibbPerTeam, TOL.small],
+  ].forEach(([label, cur, target, tol]) => console.log(row(label, cur, target, tol, '').line));
+  // Drift against the recorded snapshot. The rows above catch a metric being
+  // WRONG against the league; this catches one MOVING. Without a recorded
+  // starting point a doubles rate that slid from +0.38 to +0.80 looks exactly
+  // like the gap that was always there.
+  try {
+    const snap = require('./mlb-realism-baseline.json');
+    const was = snap.measured || {};
+    const now = {
+      scorelessHalfInningPct: inn.scorelessPct, bigInningPct: inn.bigInningPct,
+      runsPerHalfInning: inn.runsPerHalf, firstInningScorePct: inn.firstInningScorePct,
+      halfInningsPerGame: inn.halfInningsPerGame, gameTotalMean: E.realizedMean,
+      hitsPerTeam: evt.hits, doublesPerTeam: evt.doubles, triplesPerTeam: evt.triples,
+      lobPerTeam: evt.lob, hbpPerTeam: evt.hbp, gidpPerTeam: evt.gidp,
+      sacFliesPerTeam: evt.sacFlies, sacBuntsPerTeam: evt.sacBunts,
+      wildPitchesPerTeam: evt.wildPitches, ibbPerTeam: evt.ibb,
+    };
+    // Percentage metrics move in points, counting metrics in events; a single
+    // threshold for both would either shout at every run or never speak.
+    const moved = Object.keys(now).filter((k) => {
+      const limit = /Pct$/.test(k) ? 2.0 : (k === 'gameTotalMean' ? 0.45 : 0.25);
+      return Number.isFinite(was[k]) && Math.abs(now[k] - was[k]) > limit;
+    });
+    console.log('  vs recorded snapshot (' + snap.version + '): '
+      + (moved.length
+        ? moved.map((k) => k + ' ' + r2(was[k]) + ' -> ' + r2(now[k])).join(', ')
+        : 'nothing moved beyond run-to-run noise'));
+  } catch (e) {
+    console.log('  vs recorded snapshot: none on file (' + e.message + ')');
+  }
+  console.log('');
+  console.log('  KNOWN GAPS, measured 2026-08-26 and open:');
+  console.log('    Doubles +0.41 a team a game (26% too many), hits +0.73, left on base +0.57.');
+  console.log('    Strikeouts and walks both run LOW, so the same runs are being assembled');
+  console.log('    from too much contact and too few three-true-outcome events.');
+  console.log('    Sac flies -0.11 (43% too few). Intentional walks are never issued at all:');
+  console.log('    the field exists on the box score and is always zero.');
+  console.log('    First-inning scoring runs about 2.7 points light across runs.');
+  console.log('');
+
+  const calMisses = rows.concat(distRows, innRows, [env, hw]).filter(x => x.miss).length;
   const integrityClean = !violKeys.length && !E.e2eViol;
   const targetDrift = Math.abs(E.realizedMean - E.targetMean) / E.targetMean;
   console.log('SUMMARY: integrity ' + (integrityClean ? 'CLEAN' : 'FAILED') + ' | calibration misses ' + calMisses + ' | end-to-end target drift ' + r1(100 * targetDrift) + '%');
