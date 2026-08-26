@@ -112,6 +112,64 @@ separate attempts to improve it failed and are recorded.
 **Special teams as a rating input.** Would need per-game power-play data the
 feed does not expose without a request per game.
 
+# NHL model phase, 26 August 2026
+
+## The 1.37% was a missing file, not a regression
+
+The previous round lowered the published hockey holdout to 1.37% and said 2.36%
+no longer reproduced. That was wrong. The backtest cache is gitignored, a clean
+deleted it, and only part was rebuilt: the completed results, not the
+per-goaltender game logs. Without those the starting-goaltender feature cannot
+be built, and the walk-forward **silently skipped the season and scored anyway**
+— measuring a model with no goaltender input, which looked exactly like a
+regression. With the logs restored the same code returns **2.36% [0.73, 3.73]**
+on the same 2,623 games.
+
+A missing feature file now throws and names the script that rebuilds it.
+Scoring a model without an input it is supposed to have is a measurement of
+something else.
+
+## Four-goal margins: found and fixed
+
+The deficit was never a general tail problem. Mean margin was exact (2.19 vs
+2.20), team goal tails were right, five-goal margins were right. The shape was
+wrong in one place: **too many three-goal margins (26.9% vs 23.2%) and too few
+fours (7.4% vs 10.8%)** — a hole between two adjacent values.
+
+It is the empty net. A two-goal lead becomes three when the trailing side pulls,
+which was modelled; a three-goal lead becomes four the same way, and could not,
+because **a side three goals down never pulled at all**. At 45 seconds:
+three-goal margins 22.9% (real 23.2%), four-goal 11.0% (real 10.8%), empty-net
+29.7%, scoring unmoved. Games decided by 4+ now **16.5% vs a real 16.1%**.
+
+Pulling earlier overshoots hard — at four minutes nearly every three becomes a
+four — which is itself the evidence that this is the mechanism.
+
+## Hitting and penalties are roles
+
+Both were dealt in proportion to ice time, giving a right league total and a
+backwards ordering. Real hits per game *rise* as ice time falls (0.91 → 1.06 →
+1.34 → 1.45), a per-minute gradient of nearly five to one. The gradient is now
+applied on top of each player's own rate and renormalised, so it moves hits
+between team-mates and creates none. **All 80 role-level distributions pass**
+and both gate exemptions are removed.
+
+## A rejected experiment, recorded
+
+Discounting a goaltender on the second half of a back-to-back improves the
+calibration seasons cleanly and monotonically (5.54% → 6.11% skill) — what a
+real feature looks like, and what an overfit looks like. Scored once on the
+untouched seasons it made things **worse**: 2.14% [0.41, 3.49] vs 2.36% [0.73,
+3.73]. Not adopted. The search still runs and prints, because a rejected
+experiment nobody can see is one somebody repeats.
+
+Shot-share blending was also rejected: it hurt at every level tested.
+
+## Remaining
+
+Only two-minute minors are simulated, so no fighting majors appear and the
+heaviest penalty nights are shorter than a real sheet's. Named on the box score.
+
 # Distribution realism at player level, and a corrected published figure
 
 ## NBA scoring variance: found and fixed at the mechanism
