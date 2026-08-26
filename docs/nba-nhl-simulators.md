@@ -112,6 +112,58 @@ separate attempts to improve it failed and are recorded.
 **Special teams as a rating input.** Would need per-game power-play data the
 feed does not expose without a request per game.
 
+# NHL feature families exhausted, 26 August 2026
+
+Both remaining defensible families were built, tested on the calibration
+seasons, frozen, scored **once** on the untouched seasons, and **rejected**.
+
+## Shot share — rejected
+
+Flat at best across blends 0.15–0.8 and early-season decays 0–300, monotonically
+worse as it is leaned on. Likely because a goal-based ridge fit with a 220-day
+half-life already spans three seasons and does not need a steadier early signal.
+
+**Honest limit:** true *score-adjusted* shot share cannot be built from the data
+held here — the shots cache records game-level totals with no score state. What
+was tested is opponent-adjusted raw shot share.
+
+## Special teams — rejected
+
+Built properly: per-game PP/PK/penalty rows from the league's own API, every
+figure from a team's *earlier* games only, conversion and kill shrunk toward the
+league in units of opportunities, opportunities as the average of what one side
+draws and what the other gives away.
+
+| | calibration | untouched holdout |
+|---|---|---|
+| baseline | 5.54% skill, ECE 2.57% | **2.36% [0.73, 3.73]**, ECE 2.04% |
+| + special teams | 5.60% skill, ECE 2.11% | 2.20% [0.54, 3.63], ECE 2.39% |
+
+Season-to-date beat every rolling window, exactly as a small-sample rate should.
+It still did not transfer. Six hundredths of a point that reverses out of sample
+is noise, and building it carefully does not make it signal.
+
+## Two silently-empty joins, which is the part worth keeping
+
+The special-teams rows carry the league's game ids; the results carry another
+provider's — an id join matched nothing. The results timestamp games in UTC while
+the league dates them locally — an exact-date join matched a third of a season.
+**Both failed by returning null rather than erroring**, so the feature read as
+"does nothing" rather than "is broken", and the first sweep returned identical
+numbers at every weight. Keyed on the fixture with a day of tolerance: 99.8%.
+
+## Frozen model
+
+Half-life 220, ridge 20, goaltender weight 0.9, nothing else. **2.36%
+[0.73, 3.73]** on 2,623 untouched games — the interval excludes zero.
+
+Segments: clear favourite 7.10% [−1.15, 14.60]; near coin flips −0.06%
+[−0.81, 0.61]; home favoured −1.03% [−9.80, 7.14]. The skill lives in games with
+a clear favourite, and that segment's own interval includes zero on 440 games.
+
+Three features have now been rejected on holdout evidence: shot share, goaltender
+back-to-back, special teams.
+
 # NHL model phase, 26 August 2026
 
 ## The 1.37% was a missing file, not a regression
