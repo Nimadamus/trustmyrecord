@@ -55,6 +55,16 @@
     .headline .q { color: #9bacbd; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
     .headline .a { font-size: 19px; font-weight: 700; margin-top: 6px; line-height: 1.45; }
 
+    /* The 30 day test. Its own colour band so it is not mistaken for the
+       standing economy figures above it: this block is the experiment. */
+    .test { border: 1px solid #3b5066; border-top: 3px solid #0d9488; border-radius: 8px;
+            background: #101922; padding: 16px 18px; margin-bottom: 12px; }
+    .test h2 { font-size: 17px; }
+    .blocked { border-left: 4px solid #fb7185; background: #1d151a; border-radius: 6px;
+               padding: 12px 14px; margin: 12px 0; font-size: 14px; line-height: 1.55; }
+    .blocked b { display: block; margin-bottom: 3px; color: #fb7185; }
+    .ops { font-size: 12px; color: #9bacbd; margin-top: 10px; line-height: 1.55; }
+
     /* Funnel: the width IS the drop-off, so the shape reads before the numbers. */
     .funnel { display: flex; flex-direction: column; gap: 8px; }
     .fstep { display: grid; grid-template-columns: 1fr 92px 74px; gap: 10px; align-items: center; }
@@ -101,6 +111,40 @@
       <div class="q">How many real people want to use TMR?</div>
       <div class="a" id="headline">&hellip;</div>
     </div>
+
+    <!-- ------------------------------------------------------- 30 day test -->
+    <section class="test">
+      <h2>30 day usage test</h2>
+      <div class="muted" style="margin-bottom:10px">Demand is reported twice. The headline row EXCLUDES the operator's own accounts on both sides of a trade, because the only TMR order in the system's history was placed between two of them.</div>
+      <div id="testBlocked"></div>
+      <div class="grid5">
+        <div class="panel stat"><div class="label">Listings taking TMR</div><div class="value" id="tListings">-</div><div class="sub" id="tListingsSub">of published</div></div>
+        <div class="panel stat"><div class="label">Real transactions</div><div class="value" id="tTx">-</div><div class="sub" id="tTxSub">in window</div></div>
+        <div class="panel stat"><div class="label">Unique buyers</div><div class="value" id="tBuyers">-</div><div class="sub" id="tFirst">-</div></div>
+        <div class="panel stat"><div class="label">Repeat buyers</div><div class="value" id="tRepeat">-</div><div class="sub">bought more than once</div></div>
+        <div class="panel stat"><div class="label">Holders who spent</div><div class="value" id="tHolderPct">-</div><div class="sub" id="tHolderSub">-</div></div>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <h2>Money moved</h2>
+          <table><tbody id="testMoney"></tbody></table>
+          <div class="ops" id="testOps"></div>
+        </div>
+        <div class="panel">
+          <h2>Looked, priced, bought</h2>
+          <table><tbody id="testFunnel"></tbody></table>
+          <h2 style="margin-top:14px">Time to first spend</h2>
+          <table><tbody id="testLatency"></tbody></table>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Weekly trend</h2>
+        <table>
+          <thead><tr><th>Week</th><th class="num">Earned</th><th class="num">Spent</th><th class="num">Spenders</th></tr></thead>
+          <tbody id="testWeekly"></tbody>
+        </table>
+      </div>
+    </section>
 
     <!-- ------------------------------------------------------------ funnel -->
     <section class="panel">
@@ -284,6 +328,60 @@
           + row('Tips sent', n(t.tips), t.tips > 0 ? '' : 'bad')
           + row('TMR tipped', n(t.tmr))
           + row('Distinct tippers', n(t.distinct_senders));
+
+        // ------------------------------------------------ 30 day test ----
+        const mt = d.marketplace_test;
+        const inv = mt.inventory, rd = mt.real_demand, cv = mt.conversion, lat = mt.time_to_first_spend;
+
+        document.getElementById('testBlocked').innerHTML = inv.blocking
+          ? '<div class="blocked"><b>The test cannot produce a signal yet</b>' + esc(inv.blocking_note)
+            + ' Everything below is zero by construction, not by result.</div>'
+          : '';
+
+        document.getElementById('tListings').textContent = n(inv.listings_accepting_tmr);
+        document.getElementById('tListings').className = 'value ' + (inv.listings_accepting_tmr > 0 ? 'ok' : 'bad');
+        document.getElementById('tListingsSub').textContent =
+          'of ' + n(inv.published_listings) + ' published · ' + n(inv.sellers_accepting_tmr) + ' seller(s)';
+        document.getElementById('tTx').textContent = n(rd.transactions);
+        document.getElementById('tTxSub').textContent = n(rd.transactions_in_window) + ' in window';
+        document.getElementById('tBuyers').textContent = n(rd.unique_buyers);
+        document.getElementById('tFirst').textContent = n(rd.first_time_buyers_in_window) + ' first-time in window';
+        document.getElementById('tRepeat').textContent = n(rd.repeat_buyers);
+        document.getElementById('tHolderPct').textContent = cv.pct_of_holders_who_spent + '%';
+        document.getElementById('tHolderSub').textContent =
+          n(cv.holders_who_ever_spent) + ' of ' + n(cv.holders) + ' holders';
+
+        document.getElementById('testMoney').innerHTML =
+            row('TMR spent', n(rd.tmr_spent), rd.tmr_spent > 0 ? 'ok' : 'bad')
+          + row('Seller TMR received', n(rd.seller_tmr_received))
+          + row('Platform fees TMR', n(rd.platform_fees_tmr))
+          + row('Average transaction', n(rd.average_transaction_tmr))
+          + row('Sellers paid', n(rd.sellers_paid))
+          + row('Spent in window', n(rd.tmr_spent_in_window));
+
+        document.getElementById('testOps').textContent =
+          esc(mt.operator_note) + ' Including them: ' + n(mt.including_operator_accounts.transactions)
+          + ' transaction(s), ' + n(mt.including_operator_accounts.tmr_spent) + ' TMR, '
+          + n(mt.including_operator_accounts.unique_buyers) + ' buyer(s). Excluded ids: '
+          + mt.operator_accounts_excluded.join(', ') + '.';
+
+        document.getElementById('testFunnel').innerHTML =
+            row('Board impressions', cv.board_impressions === null ? 'not counted' : n(cv.board_impressions))
+          + row('Listing quotes', cv.listing_quotes === null ? 'not counted' : n(cv.listing_quotes))
+          + row('Quote to purchase', cv.quote_to_purchase_pct === null ? '-' : cv.quote_to_purchase_pct + '%')
+          + '<tr><td colspan="2" class="muted">' + esc(cv.funnel_note) + '</td></tr>';
+
+        document.getElementById('testLatency').innerHTML =
+            row('Members who closed the loop', n(lat.members_who_closed_the_loop))
+          + row('Average days', lat.avg_days === null ? '-' : lat.avg_days)
+          + row('Fastest', lat.fastest_days === null ? '-' : lat.fastest_days + ' days')
+          + row('Slowest', lat.slowest_days === null ? '-' : lat.slowest_days + ' days');
+
+        document.getElementById('testWeekly').innerHTML = (mt.weekly || []).length
+          ? mt.weekly.map((w) => '<tr><td>' + esc(w.week) + '</td><td class="num">' + n(w.earned)
+              + '</td><td class="num ' + (w.spent > 0 ? 'ok' : '') + '">' + n(w.spent)
+              + '</td><td class="num">' + n(w.spenders) + '</td></tr>').join('')
+          : '<tr><td colspan="4" class="muted">No ledger activity in the window.</td></tr>';
 
         const c = d.on_chain;
         document.getElementById('chain').innerHTML =

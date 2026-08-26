@@ -117,6 +117,12 @@
 .pkg-tmr-price input{width:110px;background:#FFFFFF;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;font-family:'JetBrains Mono',monospace}
 .pkg-tmr-price span{font-size:12px;color:var(--muted);font-weight:600}
 .pkg-tmr-split{margin-top:7px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.pkg-tmr-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.pkg-tmr-preset{appearance:none;cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);line-height:1.4}
+.pkg-tmr-preset:hover,.pkg-tmr-preset:focus-visible{border-color:var(--green);color:var(--green)}
+.pkg-tmr-preset small{display:block;font-weight:600;opacity:.75;font-size:10px}
+.pkg-tmr-days{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.5}
+.pkg-tmr-days b{color:var(--text)}
 .pkg-tmr-split b{color:var(--green);font-family:'JetBrains Mono',monospace}
 .price-pair{display:grid;grid-template-columns:1fr;gap:0}
 .fee-side{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:10px 0 4px}
@@ -222,6 +228,8 @@
                 '<label class="pkg-tmr-row"><input type="checkbox" data-tmr-accept="' + pk.type + '"' + (tmrOn ? ' checked' : '') + '>' +
                 '<span>Also accept TMR</span></label>' +
                 '<div class="pkg-tmr-price"><input type="number" step="1" min="10" placeholder="1000" data-tmr-price="' + pk.type + '" value="' + tmrPrice + '"><span>TMR</span></div>' +
+                '<div class="pkg-tmr-presets" data-tmr-presets="' + pk.type + '"></div>' +
+                '<div class="pkg-tmr-days" data-tmr-days="' + pk.type + '"></div>' +
                 '<div class="pkg-tmr-split" data-tmr-split="' + pk.type + '"></div>' +
             '</div>' +
             (status ? '<div style="margin-top:6px;">' + status + '</div>' : '') +
@@ -251,6 +259,82 @@
         if (c) c.textContent = pctLabel(CASH_FEE_BPS);
         if (t) t.textContent = pctLabel(TMR_FEE_BPS);
     }
+    /**
+     * What a TMR price is worth, expressed in the only unit that is honestly
+     * available: how long a member has to take part to afford it.
+     *
+     * Deliberately NOT a dollar conversion. TMR has an internal reference rate
+     * and a very thin market price, and using either to suggest a listing price
+     * would tell every seller the coin is pegged to money. Days of
+     * participation is true, it is the number a buyer actually feels, and it
+     * cannot be read as a promise about value.
+     *
+     * DAILY_CEILING comes from GET /api/coins/rewards, so it stays correct when
+     * the reward schedule changes.
+     */
+    var DAILY_CEILING = 13;
+    var TMR_MIN_PRICE = 10;
+
+    function daysToAfford(price) {
+        if (!DAILY_CEILING || !price) return null;
+        return Math.max(1, Math.round((price / DAILY_CEILING) * 10) / 10);
+    }
+    function dayLabel(price) {
+        const d = daysToAfford(price);
+        if (d === null) return '';
+        if (d <= 1.4) return 'about a day';
+        if (d <= 9) return 'about ' + Math.round(d) + ' days';
+        if (d <= 45) return 'about ' + Math.max(1, Math.round(d / 7)) + ' week' + (Math.round(d / 7) === 1 ? '' : 's');
+        return 'about ' + Math.round(d / 30) + ' months';
+    }
+
+    /** Three anchors, in participation time rather than money. */
+    function presetsFor() {
+        const c = DAILY_CEILING || 13;
+        const round5 = (n) => Math.max(TMR_MIN_PRICE, Math.round(n / 5) * 5);
+        return [
+            { tmr: round5(c * 2),  hint: 'a couple of days' },
+            { tmr: round5(c * 5),  hint: 'about a week' },
+            { tmr: round5(c * 14), hint: 'about two weeks' },
+        ];
+    }
+
+    function renderTmrPresets(type) {
+        const el = app.querySelector('[data-tmr-presets="' + type + '"]');
+        const on = app.querySelector('[data-tmr-accept="' + type + '"]');
+        if (!el || !on) return;
+        if (!on.checked) { el.innerHTML = ''; return; }
+        el.innerHTML = presetsFor().map(function (pp) {
+            return '<button type="button" class="pkg-tmr-preset" data-preset="' + type + '" data-preset-value="' + pp.tmr + '">'
+                 + pp.tmr.toLocaleString() + ' TMR<small>' + pp.hint + '</small></button>';
+        }).join('');
+        el.querySelectorAll('[data-preset-value]').forEach(function (b) {
+            b.onclick = function () {
+                const inp = app.querySelector('[data-tmr-price="' + type + '"]');
+                if (!inp) return;
+                inp.value = b.getAttribute('data-preset-value');
+                renderTmrSplit(type);
+            };
+        });
+    }
+
+    function renderTmrDays(type) {
+        const el = app.querySelector('[data-tmr-days="' + type + '"]');
+        const on = app.querySelector('[data-tmr-accept="' + type + '"]');
+        const inp = app.querySelector('[data-tmr-price="' + type + '"]');
+        if (!el || !on || !inp) return;
+        if (!on.checked) { el.innerHTML = ''; return; }
+        const p = parseInt(inp.value, 10);
+        if (!p || p < TMR_MIN_PRICE) {
+            el.innerHTML = 'A member earns at most <b>' + DAILY_CEILING + ' TMR a day</b> by taking part. '
+                         + 'Price this in days of theirs, not in dollars: TMR has no cash value here.';
+            return;
+        }
+        el.innerHTML = 'At ' + p.toLocaleString() + ' TMR a buyer needs <b>' + dayLabel(p)
+                     + '</b> of daily participation to afford this, at the current ' + DAILY_CEILING
+                     + ' TMR a day ceiling.';
+    }
+
     function renderTmrSplit(type) {
         const el = app.querySelector('[data-tmr-split="' + type + '"]');
         const on = app.querySelector('[data-tmr-accept="' + type + '"]');
@@ -263,11 +347,13 @@
         el.innerHTML = 'Listing price ' + p.toLocaleString() + ' TMR<br>' +
             'Platform fee (' + (TMR_FEE_BPS / 100) + '%) &minus;' + fee.toLocaleString() + ' TMR<br>' +
             'You receive <b>' + (p - fee).toLocaleString() + ' TMR</b>';
+        renderTmrDays(type);
     }
     function wireTmrInputs() {
         app.querySelectorAll('[data-tmr-accept]').forEach(function (c) {
-            c.onchange = function () { renderTmrSplit(c.getAttribute('data-tmr-accept')); };
-            renderTmrSplit(c.getAttribute('data-tmr-accept'));
+            const t = c.getAttribute('data-tmr-accept');
+            c.onchange = function () { renderTmrPresets(t); renderTmrSplit(t); renderTmrDays(t); };
+            renderTmrPresets(t); renderTmrSplit(t); renderTmrDays(t);
         });
         app.querySelectorAll('[data-tmr-price]').forEach(function (i) {
             i.oninput = function () { renderTmrSplit(i.getAttribute('data-tmr-price')); };
@@ -626,6 +712,13 @@
         } catch (e) { renderLoggedOut(); return; }
         try { mpStatus = await api.request('/marketplace/status'); } catch (e) { mpStatus = null; }
         applyFeeRates(mpStatus);
+        // The earn ceiling drives the pricing helper. Public endpoint, and a
+        // failure just leaves the sensible default in place.
+        try {
+            const rw = await api.request('/coins/rewards');
+            if (rw && Number(rw.daily_earn_ceiling) > 0) DAILY_CEILING = Number(rw.daily_earn_ceiling);
+        } catch (e) { /* keep the default */ }
+        if (mpStatus && Number(mpStatus.tmr_min_price) > 0) TMR_MIN_PRICE = Number(mpStatus.tmr_min_price);
         // TMR sales belong in Sales with the cash ones: one seller, one history,
         // two payment methods. A failure here must never block the page.
         try {
