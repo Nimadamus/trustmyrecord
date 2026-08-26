@@ -1173,3 +1173,23 @@ body:is(.tmr-ds,.tmr-ds-shell) .tmr-internal-cluster p{font-size:14px;color:var(
   body.tmr-ds .ds-card-body{padding:16px}
   body.tmr-ds .ds-head{padding:24px 0 22px}
 }
+
+/* The nav logo is `flex:none`, so on pages whose wordmark is longer than the
+   usual one (the simulators, the model builder: 244-263px against 184px) the
+   hamburger was pushed off a 320px phone entirely and the whole page scrolled
+   sideways. Letting the logo shrink on phones puts the burger back on screen;
+   on every page whose logo already fits this changes nothing (2026-08-25). */
+@media (max-width: 430px) {
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-nav .ds-logo{
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-nav .ds-logo > *{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-nav-toggle{flex: 0 0 auto}
+}

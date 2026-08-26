@@ -1,7 +1,7 @@
 /* =============================================================================
    TrustMyRecord — INTERNAL LINKING / NAVIGATION HUB  (tmr-linkhub.css)
    -----------------------------------------------------------------------------
-   Styles for the shared components injected by /static/js/tmr-linkhub.js?v=b4e9b31be5d3:
+   Styles for the shared components injected by /static/js/tmr-linkhub.js?v=584c37b51f93:
 
      .tmrlh-crumbs  breadcrumb bar whose FIRST crumb is always a link home
      .tmrlh-related "More on TrustMyRecord" contextual internal-link block
@@ -397,4 +397,17 @@ body.tmr-ds .tmrlh-related h2 {
         grid-template-columns: 1fr;
         gap: 18px;
     }
+}
+
+/* The design-system nav logo is `flex:none`, so on pages whose wordmark is
+   longer than the usual one (the simulators, the model builder: 244-263px
+   against 184px) the hamburger was pushed off a 320px phone entirely and the
+   whole page scrolled sideways. This lives here as well as in tmr-ds.css
+   because those pages are pinned to a content-hashed tmr-ds build, and a hashed
+   file is a frozen snapshot that must not be edited. On pages whose logo
+   already fits, this changes nothing (2026-08-25). */
+@media (max-width: 430px) {
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-nav .ds-logo{flex:0 1 auto;min-width:0;overflow:hidden}
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-nav .ds-logo > *{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-nav-toggle{flex:0 0 auto}
 }
