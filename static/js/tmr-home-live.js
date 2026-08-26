@@ -23,7 +23,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '6b90014b27db';
+  var BUILD = '1cc9cc397827';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -699,11 +699,28 @@
       track.appendChild(pg);
     });
 
+    var wasCount = tkPageCount;
+    var wasIndex = tkPageIndex;
     tkPageCount = pages.length;
     if (tkPageIndex >= tkPageCount) tkPageIndex = 0;
-    applyTickerPage();
+    /* Same page still on screen: keep the countdown of the line that is up. */
+    applyTickerPage(null, wasIndex === tkPageIndex && wasCount === tkPageCount);
     updateTickerNav();
-    startTickerRotate();
+    /* DO NOT RESTART A CAROUSEL THAT IS ALREADY RUNNING.
+       This function is re-entered on every rebuild, and a live slate rebuilds
+       whenever a score moves - which is most 90s refreshes during a night of
+       baseball. startTickerRotate() clears the pending timer and starts a fresh
+       TICKER_ROTATE_MS, so the page on screen kept banking a new full window on
+       top of the time it had already served. Measured on production
+       2026-08-25 over seven minutes: page dwells of 41s and 42s against a 24s
+       window, and with eight one-game pages that stretched a full pass over
+       every game from 192s to nearly four minutes - the last pages in the row
+       (the finals) were seen once where the first were seen three times.
+       The nodes the timer drives are page CONTAINERS, and the index is
+       preserved above, so a running timer is still correct after a rebuild.
+       It only needs (re)starting when there was no carousel or when the number
+       of pages changed under it. */
+    if (!tkRotTimer || wasCount !== tkPageCount) startTickerRotate();
   }
 
   /* THE PAGE THAT IS LEAVING TURNS ITS CARDS OVER ONE MORE TIME.
@@ -744,6 +761,15 @@
       for (var i = 0; i < strips.length; i++) {
         if (strips[i].querySelectorAll('.gm-in-l').length < 2) continue;
         insightAdvance(strips[i]);
+        /* A WHOLE LAP IS NOT A NEW LINE. If this turn has brought the card back
+           to the sentence it opened this visit on, take one more step: the
+           reader is about to see it again and it has to have moved. One extra
+           step only, and never on a card with a single line. */
+        if (strips[i].getAttribute('data-open') != null
+            && strips[i].getAttribute('data-i') === strips[i].getAttribute('data-open')) {
+          insightAdvance(strips[i]);
+        }
+        strips[i].removeAttribute('data-open');
         strips[i].removeAttribute('data-left');
       }
     };
@@ -754,12 +780,21 @@
     setTimeout(flip, TICKER_SLIDE_MS + 400);
   }
 
-  function applyTickerPage(fromIndex) {
+  function applyTickerPage(fromIndex, keepDwell) {
     var lane = el('.ticker .ticker-games'); if (!lane) return;
     var track = lane.querySelector('.ticker-track'); if (!track) return;
     if (fromIndex != null && fromIndex !== tkPageIndex) advanceLeavingPage(track, fromIndex);
     track.style.transform = 'translateX(-' + (tkPageIndex * 100) + '%)';
-    resetVisibleDwell();
+    /* A LINE THE READER IS ALREADY READING KEEPS ITS CLOCK. resetVisibleDwell
+       exists for the page that has just slid IN, so it gets a full dwell in
+       front of somebody rather than the remains of the last time round. A
+       re-layout that leaves the same page on screen is not that: the row was
+       re-split because it changed width (the LIVE ON TMR strip collapsing beside
+       it, a window resize), and restarting the countdown there hands the reader
+       a line that has already been up for ten seconds and then keeps it for
+       another full dwell. Caught by the browser proof: a card sat on line one
+       past 22s because the strip beside it collapsed and reset it. */
+    if (!keepDwell) resetVisibleDwell();
     /* The lane label names the visible row: "Today" for the MLB slate, "NFL"
        for the football row (those games are mostly later in the week, so
        calling them Today would be wrong). Text node only - the dot and the
@@ -935,7 +970,21 @@
      whatever fraction was left over from the last time round. */
   function resetVisibleDwell() {
     var strips = visibleStrips();
-    for (var i = 0; i < strips.length; i++) strips[i].removeAttribute('data-left');
+    for (var i = 0; i < strips.length; i++) {
+      strips[i].removeAttribute('data-left');
+      /* WHICH SENTENCE THIS VISIT OPENED ON. Nima, 2026-08-25: "when they come
+         back around it cycles to different highlights." The leaving-page turn
+         gives every card one extra step, which is normally enough - but the
+         number of steps a card takes inside a visit depends on its own dwell
+         against the page window, and for a card holding exactly THREE lines the
+         cadence lands on a whole lap: two turns while it is up, one on the way
+         out, and it comes back saying the same thing it said last time.
+         Measured on the postgame fixture: 823777 opened twice on "Tristan
+         Peters: 2 for 4 with a homer, RBI and a walk".
+         Remembering the opening index costs one attribute and lets the turn
+         below know when it has gone all the way round. */
+      strips[i].setAttribute('data-open', strips[i].getAttribute('data-i') || '0');
+    }
   }
 
   function startInsightRotate() {
