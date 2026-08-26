@@ -86,7 +86,9 @@ async function runOnce(page) {
 async function check(browser, sport, url, apiPort) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const errors = [];
-  await ctx.addInitScript((p) => { window.TMR_SIM_API_HOST = 'http://127.0.0.1:' + p; }, apiPort);
+  if (apiPort) {
+    await ctx.addInitScript((p) => { window.TMR_SIM_API_HOST = 'http://127.0.0.1:' + p; }, apiPort);
+  }
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(String(e.message)));
   await page.goto(url, { waitUntil: 'networkidle', timeout: 120000 });
@@ -225,17 +227,30 @@ async function check(browser, sport, url, apiPort) {
   await ctx.close();
 }
 
+/**
+ * --production runs the identical checks against the deployed site instead of
+ * local servers. The local run proves the code is right; only this proves the
+ * thing visitors touch is right, and the two have disagreed before -- the local
+ * harness passed for the whole period both pages were returning 404.
+ */
+const PRODUCTION = process.argv.includes('--production');
+
 (async function main() {
-  const api = await startApi();
-  const stat = await startStatic();
+  const api = PRODUCTION ? null : await startApi();
+  const stat = PRODUCTION ? null : await startStatic();
+  const origin = PRODUCTION
+    ? 'https://trustmyrecord.com'
+    : 'http://127.0.0.1:' + stat.port;
+  const apiPort = PRODUCTION ? null : api.port;
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   try {
-    await check(browser, 'NBA', 'http://127.0.0.1:' + stat.port + '/nba-simulator/', api.port);
-    await check(browser, 'NHL', 'http://127.0.0.1:' + stat.port + '/nhl-simulator/', api.port);
+    await check(browser, 'NBA', origin + '/nba-simulator/', apiPort);
+    await check(browser, 'NHL', origin + '/nhl-simulator/', apiPort);
   } finally {
     await browser.close();
-    api.server.close();
-    stat.server.close();
+    if (api) api.server.close();
+    if (stat) stat.server.close();
   }
-  console.log('PASS  every control on both simulators does what it says');
+  console.log('PASS  every control on both simulators does what it says'
+    + (PRODUCTION ? ', in production' : ''));
 }());

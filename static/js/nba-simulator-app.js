@@ -384,11 +384,22 @@
    */
   function freshnessNotice(d) {
     var f = d.meta && d.meta.data_freshness;
-    if (!f || f.is_current) return null;
-    var box = el('div', 'freshness ' + (f.status === 'stale' ? 'stale' : 'ageing'));
+    if (!f) return null;
+    // ALWAYS SAY IT, not only when it is bad news.
+    //
+    // This used to render nothing while the data was current, so in the normal
+    // case a visitor was never told how old the rosters were or where they came
+    // from -- the label only appeared once there was something to apologise for.
+    // A page that states its provenance only when embarrassed has not stated it.
+    var box = el('div', 'freshness ' + (f.is_current ? 'ok' : (f.status === 'stale' ? 'stale' : 'ageing')));
     box.setAttribute('role', 'status');
-    box.appendChild(el('strong', '', f.status === 'stale' ? 'Out of date' : 'Ageing data'));
-    box.appendChild(el('span', '', ' ' + f.label));
+    box.appendChild(el('strong', '',
+      f.is_current ? 'Data' : (f.status === 'stale' ? 'Out of date' : 'Ageing data')));
+    var tail = ' ' + f.label;
+    if (d.meta.data_source) tail += '. Source: ' + d.meta.data_source;
+    if (d.meta.season) tail += '. Season ' + d.meta.season;
+    else if (d.meta.stats_season) tail += '. Stats ' + d.meta.stats_season;
+    box.appendChild(el('span', '', tail + '.'));
     return box;
   }
 

@@ -88,6 +88,59 @@ async function audit(browser, label, url, viewName, viewport, zoom) {
     null, { timeout: 180000 },
   );
 
+  // OPEN THE TABS THAT HOLD CONTROLS.
+  //
+  // The audit used to inspect whatever the result opened on, which is the box
+  // score, so every interactive control added since -- the prop line boxes, the
+  // hold-out and scratch buttons -- went unmeasured at phone width. A control
+  // nobody can hit on a phone is worse than a table nobody can read.
+  for (const label of ['Player ranges', 'Availability', 'Lineups']) {
+    const opened = await page.evaluate((l) => {
+      const b = [...document.querySelectorAll('#result .tabs button')]
+        .find((x) => x.textContent.trim() === l);
+      if (!b) return false;
+      b.click();
+      return true;
+    }, label);
+    if (!opened) continue;
+    await page.waitForTimeout(450);
+
+    const controls = await page.evaluate(() => {
+      const out = [];
+      document.querySelectorAll('#result input, #result select, #result button.outbtn, #result .ghostbtn')
+        .forEach((n) => {
+          if (n.offsetParent === null) return;
+          const r = n.getBoundingClientRect();
+          const cs = getComputedStyle(n);
+          const name = (n.getAttribute('aria-label') || n.textContent || '').trim()
+            || (n.labels && n.labels.length ? n.labels[0].textContent.trim() : '');
+          out.push({
+            tag: n.tagName.toLowerCase() + (n.className ? '.' + String(n.className).split(' ')[0] : ''),
+            h: Math.round(r.height),
+            w: Math.round(r.width),
+            px: parseFloat(cs.fontSize),
+            named: !!name,
+            reachable: n.tabIndex >= 0,
+          });
+        });
+      return out;
+    });
+    for (const c of controls) {
+      if (c.px && c.px < 11) note(where + ' [' + label + ']: ' + c.tag + ' text at ' + c.px + 'px');
+      if (!c.named) note(where + ' [' + label + ']: ' + c.tag + ' has no accessible name');
+      if (!c.reachable) note(where + ' [' + label + ']: ' + c.tag + ' cannot take keyboard focus');
+      if (viewport.width < 500 && c.h && c.h < 30) {
+        note(where + ' [' + label + ']: ' + c.tag + ' is only ' + c.h + 'px tall');
+      }
+    }
+    const wide = await page.evaluate(() => ({
+      doc: document.documentElement.scrollWidth, win: window.innerWidth,
+    }));
+    if (wide.doc > wide.win + 2) {
+      note(where + ' [' + label + ']: the page scrolls sideways (' + wide.doc + ' > ' + wide.win + ')');
+    }
+  }
+
   // 1. NOTHING PUSHES THE PAGE SIDEWAYS. A wide table is allowed to scroll
   //    inside its own box; the document is not.
   const overflow = await page.evaluate(() => ({
