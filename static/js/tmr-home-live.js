@@ -23,7 +23,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '1cc9cc397827';
+  var BUILD = '556440bfe515';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -748,6 +748,18 @@
   function advanceLeavingPage(track, fromIndex) {
     var page = track && track.children[fromIndex];
     if (!page || !page.querySelectorAll) return;
+    /* WHICH GAMES ARE LEAVING, not which NODES. The turn below happens ~900ms
+       after the slide starts, and the 90s refresh can rebuild the whole lane
+       inside that window - at which point these nodes are detached and turning
+       them over moves nothing a reader will ever see. The card then comes back
+       showing exactly the sentence it left on, which is the one thing this
+       function exists to prevent. Measured on production over eight minutes:
+       two of twenty-three returns repeated their opening line, both alongside
+       the short visits a rebuild produces.
+       Games survive a rebuild; nodes do not. */
+    var leaving = [];
+    var pcards = page.querySelectorAll('.gm');
+    for (var k = 0; k < pcards.length; k++) leaving.push(cardKey(pcards[k]));
     var done = false;
     var flip = function () {
       if (done) return;
@@ -757,7 +769,24 @@
          outruns the animation - and turning over what is on screen is the very
          thing this exists to avoid. */
       if (track.children[tkPageIndex] === page) return;
-      var strips = page.querySelectorAll('.gm-in');
+      var live = page.isConnected === false ? null : page;
+      var strips;
+      if (live) {
+        strips = live.querySelectorAll('.gm-in');
+      } else {
+        /* Rebuilt under us: find the same GAMES wherever they are now, and skip
+           any that ended up on the page the reader is looking at. */
+        var lane = el('.ticker .ticker-games');
+        var onNow = track.children[tkPageIndex];
+        var found = [];
+        (lane ? lane.querySelectorAll('.gm') : []).forEach(function (card) {
+          if (leaving.indexOf(cardKey(card)) === -1) return;
+          if (onNow && onNow.contains(card)) return;
+          var strip = card.querySelector('.gm-in');
+          if (strip) found.push(strip);
+        });
+        strips = found;
+      }
       for (var i = 0; i < strips.length; i++) {
         if (strips[i].querySelectorAll('.gm-in-l').length < 2) continue;
         insightAdvance(strips[i]);
