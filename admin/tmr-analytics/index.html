@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TMR Economy Health | TrustMyRecord</title>
+  <!-- Private, login-gated admin surface: linked only from /admin/, useless
+       without an admin session, and every figure it renders is internal member
+       and ledger data. noindex follows the same single-route exception already
+       authorised for /admin/growth/ on 2026-08-24 and allowlisted in
+       tests/seo-indexability-regression-test.js. The general rule stands:
+       public TMR pages are never noindex. -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/static/css/style.css?v=a98213a1dfa6">
+  <style>
+    /* Same chrome as /admin/growth/ - an internal ops page, not a redesign. */
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0b1117; color: #e8eef5; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.2; }
+    h2 { margin: 0 0 4px; font-size: 16px; }
+    .muted { color: #9bacbd; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .panel { background: #121a23; border: 1px solid #263546; border-radius: 8px; padding: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 12px; }
+    .stat { min-height: 76px; }
+    .stat .label { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    .stat .value { margin-top: 8px; font-size: 24px; font-weight: 750; }
+    .stat .sub { margin-top: 4px; color: #9bacbd; font-size: 12px; }
+    .ok { color: #4ade80; }
+    .bad { color: #fb7185; }
+    .warn { color: #fbbf24; }
+    button { border: 1px solid #3b5066; background: #1a2633; color: #f4f7fb; border-radius: 7px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+    button.primary { background: #d9a441; border-color: #d9a441; color: #111827; }
+    input, select { background: #0d141c; border: 1px solid #304155; border-radius: 7px; color: #e8eef5; padding: 10px 12px; }
+    input.token { width: min(520px, 100%); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; border-bottom: 1px solid #243242; padding: 10px 8px; vertical-align: top; }
+    th { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .bar { position: relative; background: #0d141c; border: 1px solid #243242; border-radius: 5px; height: 22px; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #0d9488, #22d3ee); }
+    .spark { display: flex; align-items: flex-end; gap: 2px; height: 70px; }
+    .spark i { flex: 1 1 0; background: #0d9488; min-height: 1px; border-radius: 2px 2px 0 0; }
+    .spark i.b { background: #d9a441; }
+
+    /* The headline. Everything else on this page is context for it, so it gets
+       to look like the answer rather than another tile. */
+    .headline { border: 1px solid #3b5066; border-left: 4px solid #d9a441; background: #141d27;
+                border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+    .headline .q { color: #9bacbd; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    .headline .a { font-size: 19px; font-weight: 700; margin-top: 6px; line-height: 1.45; }
+
+    /* Funnel: the width IS the drop-off, so the shape reads before the numbers. */
+    .funnel { display: flex; flex-direction: column; gap: 8px; }
+    .fstep { display: grid; grid-template-columns: 1fr 92px 74px; gap: 10px; align-items: center; }
+    .ftrack { background: #0d141c; border: 1px solid #243242; border-radius: 5px; height: 30px; position: relative; overflow: hidden; }
+    .ftrack > span { display: block; height: 100%; background: linear-gradient(90deg, #0d9488, #22d3ee); }
+    .ftrack > b { position: absolute; left: 10px; top: 0; line-height: 30px; font-size: 13px; font-weight: 600; }
+    .fcount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 750; }
+    .fpct { text-align: right; color: #9bacbd; font-size: 12px; font-variant-numeric: tabular-nums; }
+    @media (max-width: 900px) { .grid, .grid5, .two { grid-template-columns: 1fr; } .top { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <h1>TMR Economy Health</h1>
+        <div class="muted" id="updated">Waiting for report&hellip;</div>
+      </div>
+      <div class="actions">
+        <label class="muted" for="windowDays">Window</label>
+        <select id="windowDays">
+          <option value="7">7 days</option>
+          <option value="30" selected>30 days</option>
+          <option value="90">90 days</option>
+          <option value="365">365 days</option>
+        </select>
+        <button id="refreshBtn">Refresh</button>
+        <button class="primary" id="freshBtn">Bypass Cache</button>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div class="actions">
+        <input id="adminToken" class="token" type="password" autocomplete="off" placeholder="Optional ADMIN_TOKEN. Founder login token is used automatically when available.">
+        <button id="saveTokenBtn">Save Token</button>
+        <a href="/admin/" style="color:#e8eef5;">&larr; Admin</a>
+        <a href="/admin/tmr-coin/ledger/" style="color:#e8eef5;">Ledger audit</a>
+        <a href="/tmr-coin/leaderboard/" style="color:#e8eef5;">Public leaderboard</a>
+      </div>
+      <div class="muted" style="margin-top:8px">Read-only. Live real members only: deleted accounts, QA fixtures, official bots and automation accounts are all excluded. This page writes nothing.</div>
+    </section>
+
+    <div class="headline">
+      <div class="q">How many real people want to use TMR?</div>
+      <div class="a" id="headline">&hellip;</div>
+    </div>
+
+    <!-- ------------------------------------------------------------ funnel -->
+    <section class="panel">
+      <h2>Earn to spend funnel</h2>
+      <div class="muted" style="margin-bottom:12px">Each step is a count of distinct members and a strict subset of the step above it. The drop between any two is the thing to fix. The last step is the only one that proves TMR is a currency: a member who spends twice chose to do it again knowing what they got the first time.</div>
+      <div class="funnel" id="funnel"></div>
+    </section>
+
+    <!-- ---------------------------------------------------------- headline -->
+    <section class="grid5">
+      <div class="panel stat"><div class="label">Unique spenders</div><div class="value" id="mSpenders">-</div><div class="sub" id="mSpendersSub">all time</div></div>
+      <div class="panel stat"><div class="label">Repeat spenders</div><div class="value" id="mRepeat">-</div><div class="sub">spent more than once</div></div>
+      <div class="panel stat"><div class="label">Velocity</div><div class="value" id="mVelocity">-</div><div class="sub">spend / member float</div></div>
+      <div class="panel stat"><div class="label">Member liability</div><div class="value" id="mLiability">-</div><div class="sub" id="mWallets">-</div></div>
+      <div class="panel stat"><div class="label">New earners</div><div class="value" id="mNewEarners">-</div><div class="sub" id="mEarnersAll">-</div></div>
+    </section>
+
+    <!-- ------------------------------------------------------- issued/spent -->
+    <section class="two">
+      <div class="panel">
+        <h2>Issued against spent</h2>
+        <div class="muted" style="margin-bottom:10px">Earned excludes administrative grants, which are reported separately because they are us moving numbers rather than members earning them.</div>
+        <table>
+          <tbody id="sheet"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Daily flow</h2>
+        <div class="muted" style="margin-bottom:10px">Teal is earned, gold is spent. A gold bar is worth more than any number of teal ones.</div>
+        <div class="spark" id="sparkEarned"></div>
+        <div class="muted" style="margin-top:6px" id="sparkLabel">&nbsp;</div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- sinks -->
+    <section class="two">
+      <div class="panel">
+        <h2>Sinks</h2>
+        <div class="muted" style="margin-bottom:10px">Where spent TMR actually went. An empty table means the currency has nowhere to go.</div>
+        <table>
+          <thead><tr><th>Sink</th><th class="num">Events</th><th class="num">TMR</th><th class="num">Members</th><th class="num">In window</th></tr></thead>
+          <tbody id="sinks"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Surfaces</h2>
+        <div class="muted" style="margin-bottom:10px">Marketplace and tipping, the two live member-to-member surfaces.</div>
+        <table><tbody id="surfaces"></tbody></table>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- on-chain -->
+    <section class="two">
+      <div class="panel">
+        <h2>On-chain</h2>
+        <div class="muted" style="margin-bottom:10px">A separate asset. No conversion exists in either direction, so these figures never add to the ones above.</div>
+        <table><tbody id="chain"></tbody></table>
+      </div>
+      <div class="panel">
+        <h2>Holdings by account class</h2>
+        <div class="muted" style="margin-bottom:10px">Unscoped, so automation and deleted balances are visible here and only here.</div>
+        <table>
+          <thead><tr><th>Class</th><th class="num">Wallets</th><th class="num">Balance</th><th class="num">Share</th></tr></thead>
+          <tbody id="holdings"></tbody>
+        </table>
+        <h2 style="margin-top:14px">Abuse flags</h2>
+        <div id="abuse" class="muted"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+  <script>
+    const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const tokenInput = document.getElementById('adminToken');
+    tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
+
+    function authHeaders() {
+      const headers = { 'content-type': 'application/json' };
+      const adminToken = tokenInput.value.trim();
+      const bearer = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+      if (adminToken) headers['x-admin-token'] = adminToken;
+      if (bearer) headers.Authorization = 'Bearer ' + bearer;
+      return headers;
+    }
+
+    async function request(path) {
+      const response = await fetch(API_BASE + path, { headers: authHeaders() });
+      const text = await response.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch (_) { data = { raw: text }; }
+      if (!response.ok) throw new Error((data && data.error) || ('HTTP ' + response.status));
+      return data;
+    }
+
+    const n = (v) => (v === null || v === undefined ? '-' : Number(v).toLocaleString());
+    const esc = (s) => String(s === null || s === undefined ? '' : s)
+      .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const row = (k, v, cls) => '<tr><th>' + esc(k) + '</th><td class="num ' + (cls || '') + '">' + v + '</td></tr>';
+
+    function renderFunnel(f) {
+      const top = f.steps.length ? Number(f.steps[0].count) || 1 : 1;
+      document.getElementById('funnel').innerHTML = f.steps.map(function (s) {
+        // Width is the share of the WIDEST step, so the collapse is visible at
+        // a glance. of_previous_pct is the drop-off number and is shown as text.
+        const w = Math.max(0.6, Math.min(100, (Number(s.count) / top) * 100));
+        return '<div class="fstep">'
+             + '<div class="ftrack"><span style="width:' + w + '%"></span><b>' + esc(s.label) + '</b></div>'
+             + '<div class="fcount">' + n(s.count) + '</div>'
+             + '<div class="fpct">' + (s.key === 'members' ? '' : Number(s.of_previous_pct).toFixed(1) + '% of prev') + '</div>'
+             + '</div>';
+      }).join('');
+    }
+
+    function renderSpark(daily) {
+      const max = Math.max(1, ...daily.map((d) => Math.max(d.earned, d.spent)));
+      document.getElementById('sparkEarned').innerHTML = daily.map(function (d) {
+        const h = Math.round((Math.max(d.earned, d.spent) / max) * 100);
+        const cls = d.spent > 0 ? ' class="b"' : '';
+        return '<i' + cls + ' style="height:' + Math.max(1, h) + '%" title="'
+             + esc(d.day + ': earned ' + d.earned + ', spent ' + d.spent) + '"></i>';
+      }).join('');
+      const spentDays = daily.filter((d) => d.spent > 0).length;
+      document.getElementById('sparkLabel').textContent =
+        daily.length + ' days, ' + spentDays + ' with any spending at all';
+    }
+
+    async function load(force) {
+      const days = document.getElementById('windowDays').value;
+      document.getElementById('updated').textContent = 'Loading…';
+      try {
+        const d = await request('/admin/coins/analytics?days=' + days + (force ? '&force=1' : ''));
+        document.getElementById('updated').textContent =
+          'Generated ' + new Date(d.generated_at).toLocaleString() + ' · window ' + d.window_days + ' days';
+
+        const f = d.funnel;
+        const head = document.getElementById('headline');
+        head.textContent = f.headline;
+        head.className = 'a ' + (f.unique_spenders_all_time === 0 ? 'bad' : f.repeat_spenders_all_time > 0 ? 'ok' : 'warn');
+        renderFunnel(f);
+
+        document.getElementById('mSpenders').textContent = n(f.unique_spenders_all_time);
+        document.getElementById('mSpendersSub').textContent = n(f.spenders_in_window) + ' in window';
+        document.getElementById('mRepeat').textContent = n(f.repeat_spenders_all_time);
+
+        const b = d.balance_sheet;
+        document.getElementById('mVelocity').textContent = Number(b.velocity_in_window).toFixed(3);
+        document.getElementById('mLiability').textContent = n(b.member_liability_tmr);
+        document.getElementById('mWallets').textContent = n(b.wallets_with_balance) + ' wallets with a balance';
+        document.getElementById('mNewEarners').textContent = n(d.new_earners.in_window);
+        document.getElementById('mEarnersAll').textContent = n(d.new_earners.all_time) + ' earners all time';
+
+        document.getElementById('sheet').innerHTML =
+            row('Earned all time', n(b.earned_all_time))
+          + row('Granted all time', n(b.granted_all_time))
+          + row('Spent all time', n(b.spent_all_time), b.spent_all_time > 0 ? 'ok' : 'bad')
+          + row('Earned in window', n(b.earned_in_window))
+          + row('Spent in window', n(b.spent_in_window), b.spent_in_window > 0 ? 'ok' : 'bad')
+          + row('Net issued in window', n(b.net_issued_in_window))
+          + row('Member liability', n(b.member_liability_tmr))
+          + row('Internal ceiling', n(b.internal_issuance_ceiling))
+          + row('Issued against ceiling', Number(b.ceiling_consumed_pct).toFixed(3) + '%');
+
+        renderSpark(d.daily);
+
+        document.getElementById('sinks').innerHTML = d.sinks.length
+          ? d.sinks.map((s) => '<tr><td>' + esc(s.sink) + '</td><td class="num">' + n(s.events)
+              + '</td><td class="num">' + n(s.tmr) + '</td><td class="num">' + n(s.members)
+              + '</td><td class="num">' + n(s.events_in_window) + '</td></tr>').join('')
+          : '<tr><td colspan="5" class="bad">No sink has ever been used. TMR has nowhere to go.</td></tr>';
+
+        const m = d.surfaces.marketplace, t = d.surfaces.tipping;
+        document.getElementById('surfaces').innerHTML =
+            row('Paid TMR orders', n(m.paid_orders), m.paid_orders > 0 ? '' : 'bad')
+          + row('Gross TMR', n(m.gross_tmr))
+          + row('Platform fees TMR', n(m.platform_fees_tmr))
+          + row('Distinct buyers', n(m.distinct_buyers))
+          + row('Published listings', n(m.published_listings))
+          + row('Listings priced in TMR', n(m.listings_priced_in_tmr), m.listings_priced_in_tmr > 0 ? '' : 'bad')
+          + '<tr><td colspan="2" class="muted">' + esc(m.supply_side_note) + '</td></tr>'
+          + row('Tips sent', n(t.tips), t.tips > 0 ? '' : 'bad')
+          + row('TMR tipped', n(t.tmr))
+          + row('Distinct tippers', n(t.distinct_senders));
+
+        const c = d.on_chain;
+        document.getElementById('chain').innerHTML =
+            row('Holders', n(c.holders))
+          + row('External holders', n(c.external_holders), c.external_holders > 0 ? 'ok' : 'bad')
+          + row('Transfers ever', n(c.transfers))
+          + row('Swaps ever', n(c.swaps_ever), c.swaps_ever > 0 ? 'ok' : 'bad')
+          + row('Price USD', c.price_usd === null ? 'not read' : Number(c.price_usd).toFixed(8))
+          + row('Pool TVL USD', c.tvl_usd === null ? 'not read' : Number(c.tvl_usd).toFixed(2))
+          + row('Pool cash side USD', c.pool_weth_usd === null ? 'not read' : Number(c.pool_weth_usd).toFixed(2))
+          + (c.depth_note ? '<tr><td colspan="2" class="warn">' + esc(c.depth_note) + '</td></tr>' : '');
+
+        document.getElementById('holdings').innerHTML = (d.holdings_by_class || []).map((h) =>
+          '<tr><td>' + esc(h.holder) + '</td><td class="num">' + n(h.wallets)
+          + '</td><td class="num">' + n(h.balance) + '</td><td class="num">' + h.shareOfBalancePct + '%</td></tr>'
+        ).join('') || '<tr><td colspan="4" class="muted">not available</td></tr>';
+
+        document.getElementById('abuse').innerHTML =
+          n(d.abuse.open) + ' open, ' + n(d.abuse.last_7d) + ' raised in the last 7 days, '
+          + n(d.abuse.total) + ' all time.';
+      } catch (err) {
+        document.getElementById('updated').innerHTML =
+          '<span class="bad">' + esc(err.message) + '</span> &mdash; sign in as an admin, or paste an ADMIN_TOKEN above.';
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => load(false));
+    document.getElementById('freshBtn').addEventListener('click', () => load(true));
+    document.getElementById('windowDays').addEventListener('change', () => load(false));
+    document.getElementById('saveTokenBtn').addEventListener('click', function () {
+      localStorage.setItem('tmr_admin_token', tokenInput.value.trim());
+      load(false);
+    });
+    load(false);
+  </script>
+</body>
+</html>

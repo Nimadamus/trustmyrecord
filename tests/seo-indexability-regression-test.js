@@ -249,6 +249,13 @@ console.log('\nnoindex allowlist');
     // This exception covers this one admin route and nothing else: public TMR
     // pages are never noindex.
     SITE + '/admin/growth/',
+    // Admin-only TMR economy health dashboard (earn-to-spend funnel, sinks,
+    // velocity, member liability). Identical surface to the three consoles
+    // above: linked only from /admin/, answers 401 without an admin session,
+    // and every figure is internal member and ledger data. Added under the same
+    // SEO_INDEXING_PROTOCOL.md section 2 carve-out for genuinely private,
+    // gated surfaces. Public TMR pages are still never noindex.
+    SITE + '/admin/tmr-analytics/',
     SITE + '/betlegend-pro/app/',
     // The service worker's offline fallback for the page above. Same private,
     // per-account surface, and it is not a page anyone navigates to: it is
