@@ -112,6 +112,83 @@ separate attempts to improve it failed and are recorded.
 **Special teams as a rating input.** Would need per-game power-play data the
 feed does not expose without a request per game.
 
+# Realism specification, broadcast view and team pages, 26 August 2026
+
+## The engines, measured against real seasons
+
+Everything here checked the simulation against itself. `scripts/realism_spec.js`
+checks it against 1,235 completed NBA games and 1,300 NHL games with full box
+scores, by putting real and simulated games through the same extraction code:
+one shape of record, one function computing every figure, nothing downstream
+knowing which pile it came from. Seventy metrics, each with the real value, the
+simulated value, the difference, the sample size, the real value's confidence
+interval, a tolerance fixed in advance, and whether the row is calibration or
+holdout evidence. **70 of 70 inside tolerance**, and in the release gate.
+
+It found five real defects, each fixed at the mechanism rather than by patching
+the frequency:
+
+- **Basketball scoring was under-dispersed** (team SD 12.28 against a real
+  13.61) and blowouts followed it down (30+ point games 6.0% against 7.8%).
+  Team talent spread was already right, so the missing variance was inside the
+  game. Team form was raised to where the thirty-point share lands exactly and
+  no further -- the spread plateaus at 12.78 however high it goes, a real limit
+  of a memoryless possession loop, recorded rather than forced.
+- **Steals and blocks came from round numbers**: 55% of turnovers credited as
+  steals against a real 61%, with the turnover column already correct.
+- **Hockey margins were too tight** (4+ goal games 12.9% against 16.1%) with
+  goal spread and talent spread both already right. The obvious lever -- easing
+  the comeback push -- fixed margins and broke something better established:
+  out-shooting is close to a coin flip in real hockey, and softening the score
+  effects pushed the simulated version to 56%. So it is done through goaltender
+  form drawn once per game, which widens margins without touching shot counts.
+  Out-shooting still predicts the winner 47% of the time.
+- **A narrative line described an adjustment that was not being made**: it
+  multiplied a standalone constant by the pace, while every shipped matchup runs
+  on the rating fit's own home edge. They disagreed by most of a point.
+- **The comparison itself was flawed twice over**: it simulated a made-up
+  fixture rotation, so the close-game share measured the fixture list as much as
+  the engine; and it judged today's rosters against a four-year-old league,
+  where a correct simulation is *supposed* to disagree by five points a game.
+  It now runs the real schedule, and era-bound levels are reported for context
+  rather than judged.
+
+## Two views of a result
+
+A results page has two audiences wanting opposite things first. **TMR analysis**
+leads with the projection, the ranges and the reasoning. **Broadcast box score**
+leads with a scoreboard -- both clubs with real records, the final and how it
+was reached, the line by period with the winner emphasised, the run count and
+the data source -- then the sheet in box-score order. Neither hides what the
+other shows. The choice is remembered per visitor and carried in the link, and
+switching re-renders the game already in hand: how you look at a game must not
+change the game.
+
+Real win-loss records are published for both sports for the first time. Hockey
+had them in the standings all along and never exposed them; basketball had none,
+and they are now counted from the completed results the rating fit already uses.
+
+## Sixty-two team pages
+
+The hubs answer "NBA game simulator"; the matchup pages answer "Lakers vs
+Celtics simulator". Between them sat a family neither covered. Each team page
+carries that club's real record, its season profile with its rank on every line,
+the rotation or the twelve forwards and six defencemen the simulator dresses
+with real per-game numbers, the projected starting goaltender, who is listed
+out, its matchup pages, and a deep link that opens the simulator with it at
+home. 62 unique titles, 62 unique descriptions, 0 wrong canonicals, all in the
+sitemap after each was checked for a live 200.
+
+## Layout stability
+
+Measured and fixed on the pages this task owns: the goaltender controls and the
+day's slate both arrive from the API after first paint, and the space they need
+is now held while they are absent and released when they fill. Mobile CLS went
+from 0.371 to 0.000-0.004; desktop from 0.149 to roughly 0.10, where the
+residual fluctuates run to run and traces to the shared design-system nav rather
+than to these pages -- the same component leaves the NFL simulator at 0.23 and
+the MLB simulator at 0.43.
+
 # Broadcast box score and self-refreshing rosters, 26 August 2026
 
 ## Rosters that maintain themselves
