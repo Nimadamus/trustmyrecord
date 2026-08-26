@@ -5399,3 +5399,14 @@ body.tmr-site-shell .feed-tabs::-webkit-scrollbar{display:none}
         text-align: left !important;
     }
 }
+
+/* Forum CATEGORY pages (/forum/<slug>/, a different template from the index)
+   render the thread list as a real table. Its auto layout took the width of the
+   longest thread title, so at 320px the table was 302px starting at x=22 and
+   the page could be scrolled sideways by 4px. Fixed layout lets the two count
+   columns keep their widths and hands the rest to the title, which already
+   ellipsises (2026-08-25). */
+@media (max-width: 400px) {
+  .fgroup-table.thread-table{max-width:100%;table-layout:fixed}
+  .fgroup-table.thread-table .flpost-title{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+}
