@@ -785,6 +785,30 @@ function renderResult(out,d){
   k.innerHTML=cards.join('');
   out.appendChild(k);
 
+  /* ---- what kind of game, across every simulation ----
+     A projected score is one number and reads like a prediction. The useful
+     output of ten thousand games is how often they landed in each kind of game,
+     and how often they landed on the two numbers this sport keeps landing on:
+     across 2010-2025, a margin of exactly 3 is 14.5% of regular-season games and
+     3 or 7 together are close to a quarter of them. */
+  if(p.margin_shape){
+    const sh=p.margin_shape;
+    const band=el('div','kpis');
+    band.innerHTML=[
+      `<div class="kpi"><div class="k">One-score game</div><div class="v">${pct(sh.one_score)}</div><div class="s">decided by 8 or less</div></div>`,
+      `<div class="kpi"><div class="k">Blowout</div><div class="v">${pct(sh.blowout)}</div><div class="s">17 points or more</div></div>`,
+      `<div class="kpi"><div class="k">Decided by exactly 3</div><div class="v">${pct(sh.exactly_3)}</div><div class="s">the most common NFL margin</div></div>`,
+      `<div class="kpi"><div class="k">Decided by exactly 7</div><div class="v">${pct(sh.exactly_7)}</div><div class="s">the second most common</div></div>`,
+      sh.tie_in_regulation>0?`<div class="kpi"><div class="k">Tied in regulation</div><div class="v">${pct(sh.tie_in_regulation,2)}</div><div class="s">before overtime</div></div>`:'',
+    ].filter(Boolean).join('');
+    const lead=el('p','muted');
+    lead.style.cssText='margin:16px 0 0;font-size:.86rem';
+    lead.textContent='How the simulations actually landed. A single projected score is the average of '
+      + 'them all; these are the games behind it.';
+    out.appendChild(lead);
+    out.appendChild(band);
+  }
+
   /* ---- charts (from real sim output) ---- */
   const charts=el('div','chartgrid');
   charts.appendChild(chartCard('Win probability',svgWinDonut(homeWP,awayWP,hAbbr,aAbbr),
