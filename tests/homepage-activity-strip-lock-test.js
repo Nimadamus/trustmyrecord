@@ -87,10 +87,20 @@ assert.ok(/@media \(prefers-reduced-motion:reduce\)\{[\s\S]{0,240}\.tkact-item\{
 const JS_REQUIRED = [
   'window.__tmrActivityFeedBooted',        // one instance per document
   'function collapse()',                   // the failure state is "not there"
-  '.catch(function () { collapse(); })',   // a dead endpoint hides the strip
+  'if (++bootTries > BOOT_RETRIES) return collapse();',  // a dead endpoint still
+                                           // hides the strip, after a BOUNDED
+                                           // retry, so one cold Render start
+                                           // does not delete it for the visit
   'seen[ev.id]',                           // an id is shown at most once
   "window.addEventListener('pagehide'",    // no leaked stream or timers
   'stream.close()',
+  /* The strip must keep refreshing where the stream cannot run at all: no
+     EventSource, a `busy` refusal from a backend at its connection cap, or a
+     proxy that swallows text/event-stream. Without these it froze on the
+     backlog it loaded at first paint and stayed frozen for the whole visit. */
+  'function startPolling()',
+  "stream.addEventListener('busy'",
+  'if (!window.EventSource) return startPolling();',
 ];
 for (const needle of JS_REQUIRED) {
   assert.ok(js.includes(needle), 'tmr-activity-feed.js missing safety wiring: ' + needle);
