@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/tmr-coin/leaderboard/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Leaderboard | TrustMyRecord</title>
+    <meta name="description" content="Who is earning, holding and spending TMR on TrustMyRecord. Live from the site ledger: biggest balances, top earners, biggest spenders and the most generous tippers. Site balances, not blockchain wallets.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="TMR Leaderboard">
+    <meta property="og:description" content="Who is earning, holding and spending TMR on TrustMyRecord. Live from the site ledger.">
+    <meta property="og:url" content="https://trustmyrecord.com/tmr-coin/leaderboard/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta property="og:image" content="https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="TMR Leaderboard">
+    <meta name="twitter:description" content="Who is earning, holding and spending TMR on TrustMyRecord.">
+    <meta name="twitter:image" content="https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-512.png">
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://trustmyrecord.com/tmr-coin/leaderboard/",
+      "url": "https://trustmyrecord.com/tmr-coin/leaderboard/",
+      "name": "TMR Leaderboard",
+      "description": "Live rankings of TMR earned, held and spent by TrustMyRecord members. These are balances inside TrustMyRecord, not blockchain wallet holdings: the TMR token on Base has two holding addresses and neither belongs to a member.",
+      "isPartOf": { "@id": "https://trustmyrecord.com/#website" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/" },
+        { "@type": "ListItem", "position": 2, "name": "TMR Coin", "item": "https://trustmyrecord.com/tmr-coin/" },
+        { "@type": "ListItem", "position": 3, "name": "Leaderboard", "item": "https://trustmyrecord.com/tmr-coin/leaderboard/" }
+      ]
+    }
+  ]
+}
+    </script>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=a09d20ff7213">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=d8996d47717b">
+    <script defer src="/static/js/tmr-sitewide.js?v=855935bc54df"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .tlb-hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+        .tlb-hero img{width:64px;height:64px;flex:none;}
+        .tlb-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+            letter-spacing:.06em;text-transform:uppercase;color:#0A7D76;background:#E2F0EE;
+            border:1px solid #0A7D76;border-radius:999px;padding:3px 10px;margin-bottom:8px;}
+        .tlb-dot{width:7px;height:7px;border-radius:50%;background:#0A7D76;}
+
+        /* The distinction this whole page has to keep straight. */
+        .tlb-notice{border-left:3px solid #0A7D76;background:#E2F0EE;padding:13px 16px;
+            border-radius:6px;margin:16px 0 0;font-size:14.5px;line-height:1.6;}
+        .tlb-notice b{display:block;margin-bottom:3px;}
+
+        .tlb-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;}
+        .tlb-tab{appearance:none;cursor:pointer;font:inherit;font-weight:700;font-size:14px;
+            padding:8px 14px;border-radius:999px;border:1px solid var(--line,#d8e0de);
+            background:transparent;color:inherit;}
+        .tlb-tab[aria-selected="true"]{background:#0A7D76;border-color:#0A7D76;color:#fff;}
+        .tlb-tab:focus-visible{outline:2px solid #0A7D76;outline-offset:2px;}
+
+        .tlb-blurb{font-size:14.5px;margin:0 0 14px;}
+        .tlb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+        .tlb-row{display:grid;grid-template-columns:38px 40px 1fr auto;gap:12px;align-items:center;
+            padding:10px 12px;border-radius:8px;}
+        .tlb-row:nth-child(odd){background:rgba(148,163,184,.07);}
+        .tlb-rank{font-weight:800;font-variant-numeric:tabular-nums;text-align:center;opacity:.7;}
+        .tlb-row.is-top .tlb-rank{opacity:1;color:#0A7D76;}
+        .tlb-ava{width:34px;height:34px;border-radius:50%;object-fit:cover;background:rgba(148,163,184,.2);}
+        .tlb-who{min-width:0;}
+        .tlb-name{font-weight:700;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .tlb-user{font-size:12.5px;opacity:.72;}
+        .tlb-val{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;}
+        .tlb-val small{display:block;font-weight:600;font-size:11px;letter-spacing:.06em;
+            text-transform:uppercase;opacity:.6;text-align:right;}
+
+        .tlb-empty{padding:22px 16px;border:1px dashed var(--line,#d8e0de);border-radius:8px;
+            font-size:14.5px;line-height:1.65;}
+        .tlb-state{padding:16px;font-size:14.5px;}
+        .tlb-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+        .tlb-hidden{display:none !important;}
+        .tlb-fine{font-size:13px;opacity:.75;line-height:1.6;}
+        @media (max-width:560px){
+            .tlb-row{grid-template-columns:28px 32px 1fr auto;gap:9px;padding:9px 8px;}
+            .tlb-ava{width:28px;height:28px;}
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=595de7b31fac">
+    <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
+</head>
+<body class="tmr-polished-page tmr-light">
+
+<main class="tmr-shell">
+    <header class="tmr-page-header">
+        <div class="tlb-hero">
+            <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="TMR Coin" aria-hidden="true">
+            <div>
+                <span class="tlb-badge"><span class="tlb-dot"></span>Read live</span>
+                <h1 class="tmr-h1">TMR Leaderboard</h1>
+                <p class="tmr-page-sub">Who is earning TMR, who is holding it, and, the one that actually matters, who is spending it. Read from the TrustMyRecord ledger when you load the page.</p>
+            </div>
+        </div>
+        <div class="tlb-notice">
+            <b>These are balances on TrustMyRecord, not blockchain wallets.</b>
+            TMR you earn here lives in TrustMyRecord's own ledger. The TMR token on Base is a
+            separate asset with exactly two holding addresses, the treasury and the liquidity
+            pool, and neither of them is a member. Nobody on this page holds the token, and a
+            balance here cannot be withdrawn, sold or converted.
+            <a href="/tmr-coin/">How the two fit together</a>.
+        </div>
+    </header>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Rankings</h2>
+        <div class="tlb-tabs" id="tlbTabs" role="tablist" aria-label="Leaderboard categories"></div>
+        <p class="tlb-blurb" id="tlbBlurb"></p>
+        <div class="tlb-state" id="tlbState">Loading the leaderboard&hellip;</div>
+        <ul class="tlb-list tlb-hidden" id="tlbList"></ul>
+        <div class="tlb-empty tlb-hidden" id="tlbEmpty"></div>
+        <p class="tlb-fine" id="tlbScope" style="margin-top:16px;"></p>
+    </section>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Want to be on it?</h2>
+        <p>Earning is deliberately small. It is how you show you are good, not how you fund an
+        account. Sign up, make picks, win them, take part in the trivia and the daily poll, and
+        start a thread worth reading.</p>
+        <div class="tlb-cta">
+            <a class="tmr-cta-primary" href="/wallet/earn/">Ways to earn TMR</a>
+            <a class="tmr-cta-secondary" href="/marketplace/?pay=tmr">Spend TMR on picks</a>
+            <a class="tmr-cta-secondary" href="/wallet/">Your balance and history</a>
+        </div>
+    </section>
+</main>
+
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script>
+(function () {
+    // The static site and the API are different origins, so a relative /api path
+    // 404s here. Absolute, always.
+    var API = 'https://trustmyrecord-api.onrender.com/api';
+
+    var tabsEl  = document.getElementById('tlbTabs');
+    var blurbEl = document.getElementById('tlbBlurb');
+    var stateEl = document.getElementById('tlbState');
+    var listEl  = document.getElementById('tlbList');
+    var emptyEl = document.getElementById('tlbEmpty');
+    var scopeEl = document.getElementById('tlbScope');
+
+    var payload = null;
+    var current = null;
+
+    // What an empty board MEANS, per board. "No data yet" is true but useless;
+    // an empty spenders board is the single most informative thing on this page
+    // and it should say so rather than look broken.
+    var EMPTY = {
+        balance: 'Nobody is holding TMR yet.',
+        earned:  'Nobody has earned TMR yet.',
+        spent:   'Nobody has spent TMR yet. This is the board that decides whether TMR is a currency or a scoreboard, so it is the one to watch. '
+               + '<a href="/marketplace/?pay=tmr">The marketplace</a> is where it gets spent.',
+        tips_given:    'Nobody has tipped yet. You can tip any member for a pick, a call or a post worth reading, straight from your balance.',
+        tips_received: 'Nobody has been tipped yet.'
+    };
+
+    function esc(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
+
+    function unitFor(board) {
+        // The value column label. Never "holdings" and never "wallet": both
+        // would say this is on-chain, which it is not.
+        return board.key === 'spent' ? 'TMR spent'
+             : board.key === 'earned' ? 'TMR earned'
+             : board.key === 'tips_given' ? 'TMR tipped'
+             : board.key === 'tips_received' ? 'TMR received'
+             : 'TMR balance';
+    }
+
+    function renderTabs() {
+        tabsEl.innerHTML = payload.boards.map(function (b) {
+            return '<button class="tlb-tab" role="tab" type="button" id="tab-' + esc(b.key) + '"'
+                 + ' aria-selected="false" data-board="' + esc(b.key) + '">' + esc(b.label) + '</button>';
+        }).join('');
+        Array.prototype.forEach.call(tabsEl.querySelectorAll('[data-board]'), function (btn) {
+            btn.addEventListener('click', function () { select(btn.getAttribute('data-board')); });
+        });
+    }
+
+    function select(key) {
+        var board = null;
+        for (var i = 0; i < payload.boards.length; i++) {
+            if (payload.boards[i].key === key) { board = payload.boards[i]; break; }
+        }
+        if (!board) return;
+        current = key;
+
+        Array.prototype.forEach.call(tabsEl.querySelectorAll('[data-board]'), function (btn) {
+            btn.setAttribute('aria-selected', btn.getAttribute('data-board') === key ? 'true' : 'false');
+        });
+
+        blurbEl.textContent = board.blurb;
+        stateEl.classList.add('tlb-hidden');
+
+        if (board.empty) {
+            listEl.classList.add('tlb-hidden');
+            emptyEl.classList.remove('tlb-hidden');
+            emptyEl.innerHTML = EMPTY[board.key] || 'Nothing here yet.';
+            return;
+        }
+
+        emptyEl.classList.add('tlb-hidden');
+        listEl.classList.remove('tlb-hidden');
+        var unit = unitFor(board);
+        listEl.innerHTML = board.entries.map(function (e) {
+            var value = e[board.value_field];
+            return '<li class="tlb-row' + (e.rank <= 3 ? ' is-top' : '') + '">'
+                 + '<span class="tlb-rank">' + e.rank + '</span>'
+                 + '<img class="tlb-ava" src="' + esc(e.avatar_url || '/static/img/default-avatar.png')
+                 + '" alt="" loading="lazy" onerror="this.style.visibility=&#39;hidden&#39;">'
+                 + '<span class="tlb-who">'
+                 +   '<a class="tlb-name" href="' + esc(e.profile_url) + '">' + esc(e.display_name) + '</a>'
+                 +   '<span class="tlb-user">@' + esc(e.username) + '</span>'
+                 + '</span>'
+                 + '<span class="tlb-val">' + fmt(value) + '<small>' + esc(unit) + '</small></span>'
+                 + '</li>';
+        }).join('');
+    }
+
+    fetch(API + '/coins/leaderboard?limit=15', { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (data) {
+            payload = data;
+            if (!payload.boards || !payload.boards.length) throw new Error('no boards');
+            scopeEl.textContent = payload.scope + ' ' + payload.asset_note;
+            renderTabs();
+            select(payload.boards[0].key);
+        })
+        .catch(function () {
+            stateEl.textContent = 'The leaderboard could not be loaded right now. Nothing is wrong with your balance; please refresh in a moment.';
+        });
+}());
+</script>
+</body>
+</html>
