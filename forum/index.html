@@ -3086,6 +3086,26 @@ body.classic-forum #viewThreads .fgroup-table tr.fgroup-band .fband-txt{height:3
     #tmrForumHeader .tmrfh-right .tmrfh-mainsite{padding:0 9px}
     #tmrForumHeader .tmrfh-right .tmrfh-mainsite .tmrfh-mainsite-txt{display:none}
 }
+
+/* The forum header is one nowrap flex row: the logo block plus the right
+   cluster (Main Site + notification count + Log In + Register + burger) need
+   453px against a 388px content box, so the burger sat 22px past a 320px phone
+   and 52px past a 412px one. iPhone Safari let the whole forum scroll sideways;
+   Android shrank the page to a 464px layout viewport instead. The row is
+   allowed to wrap and the logo block to shrink, so every control keeps its
+   place - nothing is hidden and nothing is dropped (2026-08-25). */
+@media(max-width:760px){
+    #tmrForumHeader .tmrfh-in{flex-wrap:wrap !important;row-gap:6px !important}
+    #tmrForumHeader .tmrfh-in > :first-child{min-width:0 !important;flex:1 1 auto !important}
+    #tmrForumHeader .tmrfh-right{flex:0 0 auto !important;min-width:0 !important;margin-left:auto !important}
+}
+@media(max-width:430px){
+    #tmrForumHeader .tmrfh-right{gap:4px !important}
+    #tmrForumHeader .tmrfh-right .tmrfh-mainsite{margin-right:0 !important;padding:0 7px !important}
+    #tmrForumHeader .tmrfh-authlink{padding:8px 8px !important}
+    #tmrForumHeader .tmrfh-in{padding-left:8px !important;padding-right:8px !important}
+}
+
 </style>
 <div class="tmrfh" id="tmrForumHeader" role="banner">
     <div class="tmrfh-in">
