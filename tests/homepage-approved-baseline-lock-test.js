@@ -86,7 +86,7 @@ const REQUIRED = [
   // The fixed stage is what stops the card changing height as the view
   // rotates, which would bounce the whole vertically-centred hero column.
   '.comp-stage{position:relative;margin-top:20px;height:200px;overflow:hidden}',
-  '.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);',
+  '.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,minmax(0,1fr));',
   // Two-line reservation for the footer sentence. Without it the card grew
   // 13px when the payload replaced the one-line skeleton bar.
   'min-height:2.64em;',

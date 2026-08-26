@@ -459,16 +459,16 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 
 /* The rotating stage. Height is fixed here and nowhere else. */
 .comp-stage{position:relative;margin-top:20px;height:200px;overflow:hidden}
-.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,1fr);opacity:0;pointer-events:none}
+.comp-view{position:absolute;inset:0;display:grid;grid-template-rows:repeat(3,minmax(0,1fr));align-content:stretch;opacity:0;pointer-events:none}
 .comp-view.is-on{opacity:1;pointer-events:auto}
 /* Outgoing: falls back and dims rather than sliding away, so two layers never
    read as two competing lists. */
-.comp-view.is-off{opacity:0;transform:translateY(-9px) scale(.995);transition:opacity .26s ease,transform .26s ease}
+.comp-view.is-off{opacity:0;animation:none;transform:translateY(-9px) scale(.995);transition:opacity .14s linear,transform .26s ease}
 .comp-view.is-in{animation:compViewIn .34s cubic-bezier(.22,.68,.35,1) both}
-@keyframes compViewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes compViewIn{0%{opacity:0;transform:translateY(14px)}46%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:none}}
 
 /* One standings row. */
-.comp-row{display:grid;grid-template-columns:30px 46px minmax(0,1fr) auto;align-items:center;gap:16px;min-width:0;border-top:1px solid var(--line)}
+.comp-row{display:grid;grid-template-columns:30px 46px minmax(0,1fr) auto;align-items:center;column-gap:16px;row-gap:0;min-width:0;min-height:0;padding:4px 0;border-top:1px solid var(--line)}
 .comp-view .comp-row:first-child{border-top:none}
 .comp-view.is-in .comp-row{animation:compRowIn .38s cubic-bezier(.22,.68,.35,1) both}
 .comp-view.is-in .comp-row:nth-child(1){animation-delay:.02s}
@@ -480,11 +480,11 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .comp-row.r1 .comp-rk{color:var(--gold)}
 .comp-av,.comp-avl{width:46px;height:46px;border-radius:13px;flex:0 0 auto;display:block;object-fit:cover}
 .comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
-.comp-id{min-width:0}
-.comp-nm{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.comp-id{min-width:0;max-width:100%;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.comp-nm{display:block;max-width:100%;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
 a.comp-nm:hover{color:var(--brand-dk)}
-.comp-meta{display:block;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;line-height:1.2}
-.comp-val{display:flex;align-items:center;justify-content:flex-end;gap:13px;flex:0 0 auto}
+.comp-meta{display:block;max-width:100%;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;line-height:1.2}
+.comp-val{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:13px;flex:0 0 auto;white-space:nowrap}
 .comp-num{font-size:26px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
 .comp-num.pos{color:var(--green)}
 .comp-num.neg{color:var(--red)}

@@ -23,7 +23,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = 'e4ac1c4843f2';
+  var BUILD = '7ad8df34acbc';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -1331,7 +1331,17 @@
     next.className = 'comp-view';
     next.innerHTML = (view.rows || []).map(function (r, i) { return compRowHtml(view, r, i); }).join('');
 
-    var prev = stage.querySelector('.comp-view');
+    /* Only ever TWO layers: the one on screen and the one arriving. Two renders
+       inside one swap window (a rotation tick landing on top of a re-apply of
+       the payload) used to leave the middle layer behind with `is-on` still on
+       it, and two full standings lists then sat on top of each other in the
+       card. Take the newest layer as the outgoing one and drop anything older
+       on the spot. */
+    var layers = stage.querySelectorAll('.comp-view');
+    for (var s = 0; s < layers.length - 1; s++) {
+      if (layers[s].parentNode) layers[s].parentNode.removeChild(layers[s]);
+    }
+    var prev = layers.length ? layers[layers.length - 1] : null;
     stage.appendChild(next);
     // Two frames: one to get `next` into the layout tree, one to start the
     // animation, so the browser cannot collapse the two states into no
@@ -1379,10 +1389,25 @@
         setTimeout(function () { next.classList.remove('is-in'); }, COMP_SWAP_MS + 320);
       }
       if (prev) {
+        /* `is-in` carries animation-fill-mode:both, and an animation beats the
+           opacity:0 that `is-off` sets. An outgoing layer that was still mid
+           entrance would otherwise stay fully painted for its whole remaining
+           run — the exact double-list frame this swap exists to avoid. */
         prev.classList.remove('is-on');
-        prev.classList.add('is-off');
-        setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); },
-          comp.reduced ? 0 : COMP_SWAP_MS);
+        prev.classList.remove('is-in');
+        /* Only cross-fade when there is something to cross-fade WITH. A render
+           that does not animate (the first real payload landing on the
+           skeleton, or a re-apply of the payload) puts the incoming layer at
+           full opacity in one frame, so an outgoing layer that fades out over
+           its own timeline is simply a second legible list painted on top of
+           the first. Drop it in the same frame instead. */
+        if (!animate || comp.reduced) {
+          if (prev.parentNode) prev.parentNode.removeChild(prev);
+        } else {
+          prev.classList.add('is-off');
+          setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); },
+            COMP_SWAP_MS);
+        }
       }
     });
 
