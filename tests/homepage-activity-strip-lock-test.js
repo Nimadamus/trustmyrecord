@@ -92,6 +92,10 @@ const JS_REQUIRED = [
                                            // retry, so one cold Render start
                                            // does not delete it for the visit
   'seen[ev.id]',                           // an id is shown at most once
+  'seenOld[ev.id]',                        // ...and the id set is TWO generations,
+                                           // never cleared: clearing one set would
+                                           // re-admit the whole current backlog on
+                                           // the next poll and cycle it again
   "window.addEventListener('pagehide'",    // no leaked stream or timers
   'stream.close()',
   /* The strip must keep refreshing where the stream cannot run at all: no
