@@ -4,19 +4,28 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetLegend Pro — Situational Betting Analysis on 130,000+ Graded Games | TrustMyRecord</title>
+    <title>BetLegend Pro: Historical Sports Betting Research Tool | 130,000+ Graded Games</title>
     <meta name="robots" content="index, follow">
-    <meta name="description" content="BetLegend Pro runs any matchup, market and situation against a dataset of 130,000+ graded games and returns a verdict with the sample size behind it. Monthly, annual and lifetime plans.">
+    <meta name="description" content="BetLegend Pro is a historical sports betting database and query engine. Search 130,000+ graded MLB, NBA, NFL and NHL games by matchup, market, line, date range and 86 situational filters, and see the exact games behind every record.">
     <link rel="canonical" href="https://trustmyrecord.com/betlegend-pro/">
-    <meta property="og:title" content="BetLegend Pro — Situational Betting Analysis">
-    <meta property="og:description" content="Run any matchup, market and situation against 130,000+ graded games. Get a verdict, the sample size behind it, and an honest read on whether there is an edge.">
+    <meta name="keywords" content="sports betting research tool, historical sports betting data, sports betting trends database, MLB betting trends, NBA betting trends, NFL betting trends, NHL betting trends, historical matchup data">
+    <meta property="og:title" content="BetLegend Pro: Historical Sports Betting Research Tool">
+    <meta property="og:description" content="Search 130,000+ graded MLB, NBA, NFL and NHL games by matchup, market, line, date range and 86 situational filters. Records, sample sizes, break-even and the exact games behind every result.">
     <meta property="og:url" content="https://trustmyrecord.com/betlegend-pro/">
     <meta property="og:type" content="product">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BetLegend Pro: Historical Sports Betting Research Tool">
+    <meta name="twitter:description" content="A historical betting database and query engine: 130,000+ graded games across MLB, NBA, NFL and NHL, 86 situational filters, and the exact games behind every record.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=a09d20ff7213">
     <link rel="stylesheet" href="/static/css/blp-pro.css?v=b59888ce9501">
+    <!-- Loaded last: this is the product page's own layer. tmr-light.css is
+         deliberately NOT loaded here — it forces near-black !important text
+         colours onto every heading and paragraph, which is what made the dark
+         product cards unreadable. -->
+    <link rel="stylesheet" href="/static/css/blp-landing.css">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=855935bc54df"></script>
     <script type="application/ld+json">
@@ -25,9 +34,19 @@
       "@type": "SoftwareApplication",
       "name": "BetLegend Pro",
       "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Sports betting research and historical data analysis",
       "operatingSystem": "Web",
       "url": "https://trustmyrecord.com/betlegend-pro/",
-      "description": "Situational betting analysis against a dataset of graded games: matchup reports, plain-English handicapping reports, bankroll simulation and team trend search.",
+      "description": "A historical sports betting research engine. Search a database of graded MLB, NBA, NFL and NHL games by matchup, betting market, line, date range and situational filters, and get the record, sample size, break-even percentage and the exact games behind every result.",
+      "featureList": [
+        "Historical matchup search across MLB, NBA, NFL and NHL",
+        "86 situational filters across matchup, market, form, schedule, performance, pitcher, venue and head-to-head",
+        "Filters stackable and applied to each team independently",
+        "Moneyline, spread, total and team-total records with break-even and expected value",
+        "Every qualifying game listed with date, score, closing line and why it qualified",
+        "Plain-English handicapping reports",
+        "Bankroll simulation with flat, half-Kelly and full-Kelly staking"
+      ],
       "offers": [
         { "@type": "Offer", "name": "Monthly", "price": "19.00", "priceCurrency": "USD" },
         { "@type": "Offer", "name": "Annual", "price": "149.00", "priceCurrency": "USD" },
@@ -35,10 +54,58 @@
       ]
     }
     </script>
-    <link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is BetLegend Pro?",
+          "acceptedAnswer": { "@type": "Answer", "text": "BetLegend Pro is a historical sports betting research engine. You pick a matchup, a period and any combination of situational conditions, and it searches a database of graded MLB, NBA, NFL and NHL games for every game that matches, returning the record, the sample size, the market splits and the list of games themselves." }
+        },
+        {
+          "@type": "Question",
+          "name": "How large is the historical betting database?",
+          "acceptedAnswer": { "@type": "Answer", "text": "More than 130,000 graded games across MLB, NBA, NFL and NHL, with source-backed closing moneylines, spreads and totals. The live count is displayed on the page and grows as further games are ingested." }
+        },
+        {
+          "@type": "Question",
+          "name": "What situational filters does BetLegend Pro support?",
+          "acceptedAnswer": { "@type": "Answer", "text": "86 conditions across eight groups: matchup and venue context, betting market and line ranges, recent form and streaks, schedule and rest, season-level performance, starting pitcher and quarterback, venue and weather, and head-to-head. Only the conditions a sport's data can actually answer are offered for that sport." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does BetLegend Pro tell me what to bet?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. It reports what the historical record is for the exact situation you describe, how large the sample is, and how that compares to the break-even at your price. It is research on games that have already been played, not a prediction." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is BetLegend Pro different from a team trends page?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. A trends page shows one prepared split, such as a team's last ten games. BetLegend Pro lets you stack conditions on both teams at once, over any date range, and then shows every individual game behind the number, including the date, final score, closing line and the reason it qualified." }
+        }
+      ]
+    }
+    </script>
 </head>
-<body class="tmr-site-shell tmr-light" data-tmr-route="betlegend-pro">
+<body class="tmr-site-shell" data-tmr-route="betlegend-pro">
 <main class="blp blp-shell">
+
+    <!-- ============================================== sticky access bar -->
+    <!-- Always present, always the same job: put the product one click away
+         from any scroll position. For an entitled account the copy and the
+         button hierarchy change; the button never does. -->
+    <div class="blp-access" id="accessBar">
+        <span class="blp-access-mark" aria-hidden="true">BL</span>
+        <span class="blp-access-text">
+            <span class="blp-access-title" id="accessTitle">BetLegend Pro</span>
+            <p class="blp-access-sub" id="accessSub">Historical betting research across MLB, NBA, NFL and NHL</p>
+        </span>
+        <span class="blp-access-cta">
+            <a class="blp-btn blp-btn--primary blp-btn--lg" href="/betlegend-pro/app/">Open BetLegend Pro <span class="arw" aria-hidden="true">&rarr;</span></a>
+            <a class="blp-btn blp-btn--sm" id="accessSecondary" href="#pricing">Plans</a>
+        </span>
+    </div>
 
     <!-- Post-checkout banners. Rendered by script only when Stripe redirects
          back — the redirect itself is never treated as proof of payment; the
@@ -47,111 +114,726 @@
 
     <!-- ===================================================== hero -->
     <section class="blp-hero">
-        <span class="blp-eyebrow">BetLegend Pro</span>
-        <h1>Know whether the bet is actually supported.</h1>
+        <span class="blp-eyebrow">Historical betting research engine</span>
+        <h1>Turn <span class="hl" id="heroCount">130,000+</span> historical games<br>into answers you can actually use.</h1>
         <p class="blp-hero-sub">
-            BetLegend Pro takes a matchup, a market and a line, checks it against a dataset of
-            130,000+ graded games, and tells you what the record actually is — with the sample
-            size, the break-even, and a straight answer on whether there's an edge.
+            BetLegend Pro is a <strong>historical sports betting research engine</strong>. Take a matchup,
+            a betting market, a line, a date range and any combination of situational conditions, then
+            search the database for every comparable game that has already been played. You get the
+            record, the sample size behind it, the market splits, and the individual games themselves.
         </p>
-        <div class="blp-hero-cta">
-            <a class="blp-btn blp-btn--primary blp-btn--lg" href="#pricing">See plans</a>
-            <a class="blp-btn blp-btn--lg" id="tryBtn" href="/betlegend-pro/app/">Try it free</a>
+
+        <div class="blp-caps">
+            <div class="blp-cap"><span>Search graded <b>MLB, NBA, NFL and NHL</b> results going back decades</span></div>
+            <div class="blp-cap"><span>Filter by <b>teams, opponent, venue, date range</b> and game situation</span></div>
+            <div class="blp-cap"><span>Analyse <b>moneyline, spread, total and team-total</b> markets at your number</span></div>
+            <div class="blp-cap"><span>Stack <b>86 conditions</b> into one highly specific historical query</span></div>
+            <div class="blp-cap"><span>See <b>the exact games</b> behind every result, and why each one qualified</span></div>
+            <div class="blp-cap"><span>Get <b>record, win %, break-even, edge</b> and a plainly worded verdict</span></div>
         </div>
-        <p class="blp-hero-note" id="heroNote">One free report every day — no card needed.</p>
+
+        <div class="blp-hero-cta">
+            <a class="blp-btn blp-btn--primary blp-btn--xl" id="tryBtn" href="/betlegend-pro/app/">Open BetLegend Pro <span class="arw" aria-hidden="true">&rarr;</span></a>
+            <a class="blp-btn blp-btn--lg" id="heroSecondary" href="#pricing">See plans</a>
+        </div>
+        <p class="blp-hero-note" id="heroNote">One free report every day. No card needed.</p>
 
         <div class="blp-facts">
-            <div class="blp-fact"><div class="blp-fact-v" id="factGames" data-pending="1">&mdash;</div><div class="blp-fact-l" id="factGamesLabel">Graded games in the dataset</div></div>
-            <div class="blp-fact"><div class="blp-fact-v">4</div><div class="blp-fact-l">Leagues — MLB, NBA, NFL, NHL</div></div>
-            <div class="blp-fact"><div class="blp-fact-v">5</div><div class="blp-fact-l">Markets per matchup</div></div>
-            <div class="blp-fact"><div class="blp-fact-v">0</div><div class="blp-fact-l">Estimated lines used in a verdict</div></div>
+            <div class="blp-fact"><div class="blp-fact-v is-teal" id="factGames" data-pending="1">130,000+</div><div class="blp-fact-l" id="factGamesLabel">Graded games in the database</div></div>
+            <div class="blp-fact"><div class="blp-fact-v">86</div><div class="blp-fact-l">Situational filters, in 8 groups</div></div>
+            <div class="blp-fact"><div class="blp-fact-v">4</div><div class="blp-fact-l">Markets read per matchup: moneyline, spread, total, team total</div></div>
+            <div class="blp-fact"><div class="blp-fact-v">0</div><div class="blp-fact-l">Estimated lines used in any figure</div></div>
         </div>
     </section>
 
-    <!-- ================================================== features -->
+    <!-- ================================================== the database -->
+    <div class="blp-sectionhead" id="database">
+        <span class="kicker">The dataset</span>
+        <h2>A real historical betting database, not a scraped trends widget.</h2>
+        <p>
+            Every figure BetLegend Pro reports is arithmetic over games that have already been played and
+            been graded. The counts below are read live from the engine at page load. Nothing on this
+            page is a number typed into a file.
+        </p>
+    </div>
+    <section class="blp-dataset" aria-label="Database coverage">
+        <div>
+            <div class="blp-dataset-n" id="dsCount">130,000+</div>
+            <div class="blp-dataset-k">graded historical games</div>
+            <p class="blp-dataset-note" id="dsNote">
+                Across MLB, NBA, NFL and NHL. The database keeps growing as further games are ingested
+                and graded.
+            </p>
+        </div>
+        <div>
+            <div class="blp-leagues" id="dsLeagues">
+                <div class="blp-league"><div class="blp-league-n">MLB</div><div class="blp-league-v" data-sport="MLB">&hellip;</div><div class="blp-league-l">games from 2000</div></div>
+                <div class="blp-league"><div class="blp-league-n">NHL</div><div class="blp-league-v" data-sport="NHL">&hellip;</div><div class="blp-league-l">games from 2003</div></div>
+                <div class="blp-league"><div class="blp-league-n">NBA</div><div class="blp-league-v" data-sport="NBA">&hellip;</div><div class="blp-league-l">games from 2007</div></div>
+                <div class="blp-league"><div class="blp-league-n">NFL</div><div class="blp-league-v" data-sport="NFL">&hellip;</div><div class="blp-league-l">games from 1966</div></div>
+            </div>
+            <div class="blp-coverage" id="dsMarkets" hidden>
+                <span class="blp-covpill">Games carrying a genuine closing moneyline: <b data-market="ml">&hellip;</b></span>
+                <span class="blp-covpill">Closing spread: <b data-market="sp">&hellip;</b></span>
+                <span class="blp-covpill">Closing total: <b data-market="to">&hellip;</b></span>
+            </div>
+            <p class="blp-dataset-note">
+                Market coverage is stated separately from the game count on purpose. A game with no
+                real closing number is excluded from that market's record rather than filled in with
+                an estimate.
+            </p>
+        </div>
+    </section>
+
+    <!-- ============================================= what it actually is -->
+    <div class="blp-sectionhead">
+        <span class="kicker">What BetLegend Pro is</span>
+        <h2>Ask questions normal sports sites can't answer.</h2>
+        <p>
+            Most sites hand you a prepared split and stop. BetLegend Pro is a database plus a query
+            engine: you describe the historical situation you want to test, and it goes and finds every
+            game that matches it.
+        </p>
+    </div>
+    <section class="blp-compare">
+        <article class="blp-compare-col">
+            <span class="blp-compare-k">A normal trends page</span>
+            <h3>One prepared number</h3>
+            <p class="blp-compare-quote">&ldquo;Boston is 7-3 in its last 10 games.&rdquo;</p>
+            <ul class="blp-compare-list">
+                <li>You cannot change the question</li>
+                <li>You cannot see which games it counted</li>
+                <li>No sample size stated, no break-even, no price</li>
+                <li>No way to combine it with anything else</li>
+            </ul>
+        </article>
+        <article class="blp-compare-col is-good">
+            <span class="blp-compare-k">BetLegend Pro</span>
+            <h3>The question you actually have</h3>
+            <p class="blp-compare-quote">
+                &ldquo;Boston at home, coming off a loss, against this opponent, priced between &minus;150 and
+                &minus;110, since 2015. What happened, in how many games, and which ones?&rdquo;
+            </p>
+            <ul class="blp-compare-list">
+                <li>How has this team done against this specific opponent?</li>
+                <li>What happens after a win, after a loss, on a streak?</li>
+                <li>What happens as a favorite, as an underdog, inside a price range?</li>
+                <li>What happens on short rest, on long rest, on a back-to-back?</li>
+                <li>What happens against a left-handed starter (MLB)?</li>
+                <li>What happens when several of those are true at once?</li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- ============================================ how it works, 3 steps -->
+    <div class="blp-sectionhead">
+        <span class="kicker">How it works</span>
+        <h2>Three steps, then the evidence.</h2>
+    </div>
+    <section class="blp-steps">
+        <article class="blp-step">
+            <span class="blp-step-n">1</span>
+            <h3>Choose the matchup</h3>
+            <p>
+                Pick the sport, the away team, the home team, and whether you want the games played at
+                that venue, the reverse fixture, or both. Team lists come from the database itself.
+            </p>
+        </article>
+        <article class="blp-step">
+            <span class="blp-step-n">2</span>
+            <h3>Build the situation</h3>
+            <p>
+                Set the period: all available history, a single season, or an exact date range. Then add
+                as many conditions as you want. Each one can be attached to either team on its own, or to
+                the game itself. Add a team total at any number and a price to test it against.
+            </p>
+        </article>
+        <article class="blp-step">
+            <span class="blp-step-n">3</span>
+            <h3>Get the evidence</h3>
+            <p>
+                BetLegend Pro searches the database and returns the qualifying record, win percentage,
+                scoring, the moneyline / spread / total splits, and every qualifying game with the reason
+                it qualified, plus a verdict that states its own confidence and sample size.
+            </p>
+        </article>
+    </section>
+
+    <!-- ================================================= filter library -->
+    <div class="blp-sectionhead">
+        <span class="kicker">The filter library</span>
+        <h2>Build the exact historical situation you want to test.</h2>
+        <p>
+            86 conditions, grouped by what they describe. Every one of them was kept only because the
+            data behind it is actually populated for that sport. A condition a sport's data cannot
+            answer is not offered for that sport, and it says why.
+        </p>
+    </div>
+    <section class="blp-filtergrid">
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Matchup</h3><span class="blp-fgroup-count">4</span></div>
+            <p>Who the game was against and where it was played.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag">Home or away</span>
+                <span class="blp-ftag">Favorite or underdog</span>
+                <span class="blp-ftag">Division or conference opponent</span>
+                <span class="blp-ftag is-sport">Regular season or postseason · NFL, NBA</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Market</h3><span class="blp-fgroup-count">6</span></div>
+            <p>The betting line the game was played to, and how it graded.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag">Moneyline range</span>
+                <span class="blp-ftag">Closing total range</span>
+                <span class="blp-ftag is-sport">Closing spread range · NFL, NBA</span>
+                <span class="blp-ftag">Straight-up result</span>
+                <span class="blp-ftag">Against-the-spread result</span>
+                <span class="blp-ftag">Over/under result</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Recent form</h3><span class="blp-fgroup-count">31</span></div>
+            <p>How the team was playing going into the game.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag">Previous game result</span>
+                <span class="blp-ftag">Win/loss streak</span>
+                <span class="blp-ftag">ATS streak</span>
+                <span class="blp-ftag">Over/under streak</span>
+                <span class="blp-ftag">Recent form (last 10)</span>
+                <span class="blp-ftag">After a blowout loss</span>
+                <span class="blp-ftag">Average scored, prior 3 / 5 / 10</span>
+                <span class="blp-ftag-more">+ 24 more</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Schedule &amp; rest</h3><span class="blp-fgroup-count">11</span></div>
+            <p>Rest, congestion and where the game fell in the calendar.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag">Minimum rest</span>
+                <span class="blp-ftag">Rest days range</span>
+                <span class="blp-ftag">Long rest only</span>
+                <span class="blp-ftag is-sport">Back-to-back only</span>
+                <span class="blp-ftag is-sport">Games in the prior 7 days</span>
+                <span class="blp-ftag">Day of week</span>
+                <span class="blp-ftag">Month</span>
+                <span class="blp-ftag-more">+ 4 more</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Team performance</h3><span class="blp-fgroup-count">15</span></div>
+            <p>Season-level and rolling strength measures entering the game.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag">Season wins</span>
+                <span class="blp-ftag">Season losses</span>
+                <span class="blp-ftag">Season win %</span>
+                <span class="blp-ftag">Season covers</span>
+                <span class="blp-ftag is-sport">Shots on goal &middot; NHL</span>
+                <span class="blp-ftag is-sport">Power-play opportunities &middot; NHL</span>
+                <span class="blp-ftag is-sport">Goals for / against, prior 3 &amp; 10 &middot; NHL</span>
+                <span class="blp-ftag-more">+ 8 more</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Pitcher &amp; lineup</h3><span class="blp-fgroup-count">5</span></div>
+            <p>Who started, and the handedness matchup.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag is-sport">Own starter handedness · MLB</span>
+                <span class="blp-ftag is-sport">Opposing starter handedness · MLB</span>
+                <span class="blp-ftag is-sport">Starting pitcher by name · MLB</span>
+                <span class="blp-ftag is-sport">Opposing starting pitcher · MLB</span>
+                <span class="blp-ftag is-sport">Starting quarterback · NFL</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Venue &amp; conditions</h3><span class="blp-fgroup-count">7</span></div>
+            <p>Ballpark, roof, surface and weather, where a real reading exists.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag is-sport">Day or night game · MLB</span>
+                <span class="blp-ftag is-sport">Indoor or outdoor · NFL</span>
+                <span class="blp-ftag is-sport">Playing surface · NFL</span>
+                <span class="blp-ftag is-sport">Temperature range · NFL</span>
+                <span class="blp-ftag is-sport">Wind speed range · NFL</span>
+                <span class="blp-ftag is-sport">Attendance range · MLB, NHL</span>
+                <span class="blp-ftag is-sport">Stadium or arena · NFL, NHL</span>
+            </div>
+        </article>
+
+        <article class="blp-fgroup">
+            <div class="blp-fgroup-head"><h3>Head-to-head &amp; opponent</h3><span class="blp-fgroup-count">7</span></div>
+            <p>History against this specific opponent, and the shape the opponent arrived in.</p>
+            <div class="blp-ftags">
+                <span class="blp-ftag">This opponent only</span>
+                <span class="blp-ftag">Opponent's previous game result</span>
+                <span class="blp-ftag">Opponent's win/loss streak</span>
+                <span class="blp-ftag">Opponent's season win %</span>
+                <span class="blp-ftag">Opponent's average scored, prior 5</span>
+                <span class="blp-ftag">Opponent's rest</span>
+                <span class="blp-ftag is-sport">Opponent on a back-to-back · MLB, NBA, NHL</span>
+            </div>
+        </article>
+    </section>
+
+    <div class="blp-filternote">
+        <div>
+            <p>
+                <strong>Filters are sport-aware, and they say why.</strong> MLB and NHL have no varying
+                spread, because the run line and puck line are fixed at &plusmn;1.5, so a spread-range condition is
+                switched off there and points you at the moneyline instead. NFL's roof, surface, rest and
+                quarterback readings only exist from 1999 on, and the tool states that coverage window
+                rather than returning a silent zero.
+            </p>
+            <p>
+                A condition that is unavailable tells you which of three things it is: not applicable to
+                the sport, meaningful but with no variation to separate anything, or simply not carried in
+                the deployed data. Those read identically as &ldquo;off&rdquo; everywhere else, and they mean
+                completely different things.
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================== combined filtering -->
+    <div class="blp-sectionhead">
+        <span class="kicker">Combined filtering</span>
+        <h2>The power isn't the filter list. It's stacking them.</h2>
+        <p>
+            Every condition narrows the same sample, and conditions can be attached to each team
+            separately, so one team can be on short rest while the other is coming off a blowout loss. That is the
+            query a flat, one-condition trends page cannot express at all.
+        </p>
+    </div>
+    <section class="blp-stack">
+        <div class="blp-query">
+            <div class="blp-query-k">One query, six conditions</div>
+            <div class="blp-qline">
+                <span class="blp-qop">Find</span>
+                <span class="blp-qtext">Red Sox at Yankees<span>MLB · games played in New York</span></span>
+            </div>
+            <div class="blp-qline">
+                <span class="blp-qop">Period</span>
+                <span class="blp-qtext">1 Apr 2015 &rarr; today<span>Or all available history, or a single season</span></span>
+            </div>
+            <div class="blp-qline">
+                <span class="blp-qop">And</span>
+                <span class="blp-qtext">Red Sox coming off a loss<span>Condition applied to one team only</span></span>
+            </div>
+            <div class="blp-qline">
+                <span class="blp-qop">And</span>
+                <span class="blp-qtext">Red Sox facing a right-handed starter<span>MLB starter handedness</span></span>
+            </div>
+            <div class="blp-qline">
+                <span class="blp-qop">And</span>
+                <span class="blp-qtext">Yankees on zero days' rest<span>Condition applied to the opponent</span></span>
+            </div>
+            <div class="blp-qline">
+                <span class="blp-qop">And</span>
+                <span class="blp-qtext">Closing moneyline between &minus;150 and +110<span>Market range condition on the game</span></span>
+            </div>
+            <div class="blp-qline">
+                <span class="blp-qop">And</span>
+                <span class="blp-qtext">It was a night game<span>Game-level condition, asked once</span></span>
+            </div>
+        </div>
+        <div>
+            <div class="blp-query" style="border-color:rgba(148,176,214,.22)">
+                <div class="blp-query-k">What comes back</div>
+                <div class="blp-qline">
+                    <span class="blp-qop">1</span>
+                    <span class="blp-qtext">Both teams' record over exactly those games<span>With win percentage, average runs, average margin and the home/away split</span></span>
+                </div>
+                <div class="blp-qline">
+                    <span class="blp-qop">2</span>
+                    <span class="blp-qtext">The market splits, on genuine closing numbers only<span>Moneyline record and flat-stake units, ATS record, over/under record, each with how many of the qualifying games actually carried that line</span></span>
+                </div>
+                <div class="blp-qline">
+                    <span class="blp-qop">3</span>
+                    <span class="blp-qtext">Every qualifying game, listed<span>Date, matchup, location, final score, winner, margin, favorite, closing total, closing moneyline, and why it qualified</span></span>
+                </div>
+            </div>
+            <div class="blp-qout">
+                <div class="blp-qout-k">And the honest part</div>
+                <p>
+                    If nothing in the database matches all seven conditions, it tells you that plainly and
+                    suggests what to widen. It does not relax your query behind your back and answer a
+                    different question.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ interface preview 1 -->
+    <div class="blp-sectionhead">
+        <span class="kicker">The interface</span>
+        <h2>This is what you're actually driving.</h2>
+        <p>
+            The query builder and the report below use the real controls, the real condition names and
+            the real result layout from the application. Figures shown are an illustrative example.
+        </p>
+    </div>
+
+    <section class="blp-preview" aria-label="BetLegend Pro query builder">
+        <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>BetLegend Pro · Matchup Report · query builder</span></div>
+        <div class="blp-preview-body">
+            <div class="blp-ui-steps">
+                <div>
+                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">1</span><span class="blp-ui-step-t">Matchup</span></div>
+                    <div class="blp-ui-row">
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Sport</span><div class="blp-ui-ctl">MLB <span class="caret">&#9662;</span></div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Away team</span><div class="blp-ui-ctl">Boston Red Sox <span class="caret">&#9662;</span></div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Played</span><div class="blp-ui-ctl">at <span class="caret">&#9662;</span></div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Home team</span><div class="blp-ui-ctl">New York Yankees <span class="caret">&#9662;</span></div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">2</span><span class="blp-ui-step-t">Historical period</span></div>
+                    <div class="blp-ui-row">
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Search period</span><div class="blp-ui-ctl">Custom date range&hellip; <span class="caret">&#9662;</span></div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">From date</span><div class="blp-ui-ctl">2015-04-01</div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">To date</span><div class="blp-ui-ctl">Today</div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Result limit</span><div class="blp-ui-ctl">Every qualifying meeting <span class="caret">&#9662;</span></div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">3</span><span class="blp-ui-step-t">Conditions (optional)</span></div>
+                    <div class="blp-ui-conds">
+                        <span class="blp-ui-cond"><b>Red Sox</b> · previous game result: loss <span class="x">&times;</span></span>
+                        <span class="blp-ui-cond"><b>Red Sox</b> · opposing starter: right-handed <span class="x">&times;</span></span>
+                        <span class="blp-ui-cond"><b>Yankees</b> · minimum rest: 0 days <span class="x">&times;</span></span>
+                        <span class="blp-ui-cond"><b>Game</b> · moneyline range &minus;150 to +110 <span class="x">&times;</span></span>
+                        <span class="blp-ui-cond"><b>Game</b> · night game <span class="x">&times;</span></span>
+                        <span class="blp-ui-cond is-add">+ Add condition</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">4</span><span class="blp-ui-step-t">Team total (optional)</span></div>
+                    <div class="blp-ui-row">
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Team</span><div class="blp-ui-ctl is-accent">Boston Red Sox <span class="caret">&#9662;</span></div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Side</span><div class="blp-ui-ctl is-accent">Under <span class="caret">&#9662;</span></div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Line</span><div class="blp-ui-ctl is-accent">4.5</div></div>
+                        <div class="blp-ui-field"><span class="blp-ui-lbl">Price</span><div class="blp-ui-ctl is-accent">&minus;115</div></div>
+                    </div>
+                </div>
+                <div class="blp-ui-run">Run the report <span class="arw" aria-hidden="true">&rarr;</span></div>
+            </div>
+            <p class="blp-preview-cap">
+                Conditions attach to a named team or to the game itself, which is why &ldquo;Boston off a loss
+                while New York is on zero days' rest&rdquo; is a single query rather than two separate lookups.
+            </p>
+        </div>
+    </section>
+
+    <!-- ============================================ interface preview 2 -->
+    <section class="blp-preview" aria-label="Example of a BetLegend Pro matchup report">
+        <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>BetLegend Pro · Matchup Report · result</span></div>
+        <div class="blp-preview-body">
+
+            <div class="blp-verdict">
+                <div class="blp-verdict-top">
+                    <div class="blp-verdict-main">
+                        <div class="blp-verdict-k">Verdict</div>
+                        <h3 class="blp-verdict-label">Lean</h3>
+                        <p class="blp-verdict-sel">Red Sox moneyline <span>at New York · off a loss · vs RHP · opponent on 0 days' rest · night games · &minus;150 to +110 · since 2015</span></p>
+                    </div>
+                    <div class="blp-conf">
+                        <div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">Moderate</span></div>
+                        <div class="blp-meter"><i style="width:58%"></i></div>
+                        <p class="blp-conf-note">Reflects sample size and consistency, not a probability of winning.</p>
+                    </div>
+                </div>
+                <p class="blp-verdict-basis">
+                    The sample clears the minimum for this market. The side has won at a rate above the
+                    break-even implied by the prices in the range, but the margin sits inside the band where
+                    variance still dominates, and the sample is small enough that a handful of games would
+                    move it.
+                </p>
+            </div>
+
+            <div class="blp-rcard">
+                <div class="blp-rcard-head"><h4>Head-to-head result</h4><span class="range">31 qualifying meetings</span></div>
+                <div class="blp-kpis">
+                    <div class="blp-kpi"><span>Red Sox record</span><strong>17-14</strong><em>54.8%</em></div>
+                    <div class="blp-kpi"><span>Yankees record</span><strong>14-17</strong><em>45.2%</em></div>
+                    <div class="blp-kpi"><span>Avg runs, Red Sox</span><strong>4.8</strong><em>median 4.0</em></div>
+                    <div class="blp-kpi"><span>Avg runs, Yankees</span><strong>4.4</strong><em>median 4.0</em></div>
+                    <div class="blp-kpi"><span>Average margin</span><strong>2.6</strong><em>combined 9.2 per game</em></div>
+                    <div class="blp-kpi"><span>Home side</span><strong>14-17</strong><em>whichever team hosted</em></div>
+                </div>
+            </div>
+
+            <div class="blp-rcard">
+                <div class="blp-rcard-head"><h4>Historical betting markets</h4><span class="range">Genuine stored lines only</span></div>
+                <div class="blp-kpis">
+                    <div class="blp-kpi"><span>Moneyline, Red Sox</span><strong>17-14</strong><em>54.8% · +2.1u flat · 31 priced</em></div>
+                    <div class="blp-kpi"><span>Moneyline, Yankees</span><strong>14-17</strong><em>45.2% · &minus;4.6u flat · 31 priced</em></div>
+                    <div class="blp-kpi"><span>Against the spread</span><strong>18-13</strong><em>58.1% · 31 of 31 carried a real closing spread</em></div>
+                    <div class="blp-kpi"><span>Over / under</span><strong>13-17-1</strong><em>43.3% over · 31 of 31 carried a real closing total</em></div>
+                </div>
+            </div>
+
+            <div class="blp-rcard">
+                <div class="blp-rcard-head"><h4>Team total: Red Sox under 4.5</h4><span class="range">Read from the qualifying sample, not a filter on it</span></div>
+                <div class="blp-kpis">
+                    <div class="blp-kpi"><span>Historical</span><strong>58.1%</strong><em>18-13 · 31 decided</em></div>
+                    <div class="blp-kpi"><span>Break even</span><strong>53.5%</strong><em>at &minus;115</em></div>
+                    <div class="blp-kpi"><span>Edge</span><strong class="is-pos">+4.6 pts</strong><em>historical minus break even</em></div>
+                    <div class="blp-kpi"><span>EV per 1u</span><strong class="is-pos">+0.09u</strong><em>over 31 graded</em></div>
+                </div>
+            </div>
+
+            <div class="blp-rcard">
+                <div class="blp-rcard-head"><h4>Every qualifying meeting (31)</h4><span class="range">Away side listed first · every column sorts</span></div>
+                <div class="blp-tablewrap">
+                    <table class="blp-gtable">
+                        <thead>
+                            <tr>
+                                <th>Date</th><th>Matchup</th><th>Location</th><th>Final score</th><th>Winner</th>
+                                <th>Margin</th><th>Favorite</th><th>Closing total</th><th>Closing moneyline</th><th>Why it qualified</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2025-08-23</td><td>Red Sox at Yankees</td><td>New York</td><td>6-4</td>
+                                <td><span class="blp-w">Red Sox</span></td><td>2</td><td>Yankees &minus;138</td><td>8.5</td>
+                                <td>Red Sox +118 · Yankees &minus;138</td>
+                                <td class="why">Off a loss · vs RHP · opponent on 0 days' rest · night game</td>
+                            </tr>
+                            <tr>
+                                <td>2024-07-06</td><td>Red Sox at Yankees</td><td>New York</td><td>3-8</td>
+                                <td><span class="blp-l">Yankees</span></td><td>5</td><td>Yankees &minus;145</td><td>9.0</td>
+                                <td>Red Sox +124 · Yankees &minus;145</td>
+                                <td class="why">Off a loss · vs RHP · opponent on 0 days' rest · night game</td>
+                            </tr>
+                            <tr>
+                                <td>2023-06-09</td><td>Red Sox at Yankees</td><td>New York</td><td>3-2</td>
+                                <td><span class="blp-w">Red Sox</span></td><td>1</td><td>Yankees &minus;130</td><td>8.0</td>
+                                <td>Red Sox +110 · Yankees &minus;130</td>
+                                <td class="why">Off a loss · vs RHP · opponent on 0 days' rest · night game</td>
+                            </tr>
+                            <tr>
+                                <td>2022-09-23</td><td>Red Sox at Yankees</td><td>New York</td><td>5-4</td>
+                                <td><span class="blp-w">Red Sox</span></td><td>1</td><td>Yankees &minus;148</td><td>8.5</td>
+                                <td>Red Sox +126 · Yankees &minus;148</td>
+                                <td class="why">Off a loss · vs RHP · opponent on 0 days' rest · night game</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="blp-preview-cap">Four of the 31 shown. The full report lists every qualifying game, and every column sorts.</p>
+            </div>
+
+            <div class="blp-unavail">
+                <strong>Not carried in this dataset:</strong> projected lineups, injuries and live in-play numbers.
+                These are left blank rather than estimated.
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================== the output -->
+    <div class="blp-sectionhead">
+        <span class="kicker">The output</span>
+        <h2>BetLegend Pro doesn't just give you a percentage.</h2>
+        <p>
+            A number with nothing behind it is not evidence. Every report shows what it counted, how much
+            of it there was, and which games produced it.
+        </p>
+    </div>
+    <section class="blp-outputs">
+        <article class="blp-output">
+            <h3>The record</h3>
+            <p>Both teams' record over exactly the qualifying games, never an unattributed &ldquo;11-7&rdquo;.</p>
+            <ul>
+                <li>Wins, losses and ties</li>
+                <li>Win percentage</li>
+                <li>Average and median score for each side</li>
+                <li>Average margin and average combined score</li>
+                <li>Current and longest streak in the sample</li>
+            </ul>
+        </article>
+        <article class="blp-output">
+            <h3>The markets</h3>
+            <p>Moneyline, against-the-spread and over/under, computed only over genuine stored closing numbers.</p>
+            <ul>
+                <li>Moneyline record, win % and flat-stake units for each side</li>
+                <li>ATS record and cover percentage</li>
+                <li>Over/under record and over percentage</li>
+                <li>How many qualifying games actually carried each line</li>
+                <li>A written statement when a market has nothing behind it</li>
+            </ul>
+        </article>
+        <article class="blp-output">
+            <h3>The price test</h3>
+            <p>Add a team total at any number, and the price you are being offered, and the report does the arithmetic.</p>
+            <ul>
+                <li>Historical hit rate and record at that number</li>
+                <li>Break-even percentage at your price</li>
+                <li>Edge in percentage points, historical minus break-even</li>
+                <li>Expected value per unit, and the games it is computed over</li>
+                <li>The full distribution at every neighbouring number</li>
+            </ul>
+        </article>
+        <article class="blp-output">
+            <h3>The evidence</h3>
+            <p>The games themselves, so you can check the number instead of trusting it.</p>
+            <ul>
+                <li>Date, matchup and location</li>
+                <li>Final score, winner and margin</li>
+                <li>Favorite, closing total and closing moneyline</li>
+                <li>Why each individual game qualified</li>
+                <li>Sortable on every column</li>
+            </ul>
+        </article>
+        <article class="blp-output">
+            <h3>The verdict</h3>
+            <p>A short call on the evidence, stated with its own limits attached.</p>
+            <ul>
+                <li>The call, in one word</li>
+                <li>Confidence level, driven by sample size and consistency</li>
+                <li>The basis for the call, in plain English</li>
+                <li>Never a prediction, and never a probability of winning</li>
+            </ul>
+        </article>
+        <article class="blp-output">
+            <h3>What it refuses to say</h3>
+            <p>The constraints are enforced in the engine, not promised in copy.</p>
+            <ul>
+                <li>Conditions it could not apply, and why</li>
+                <li>Readings not carried in the dataset, listed by name</li>
+                <li>Zero-result queries returned as zero, with what to widen</li>
+                <li>Estimated lines excluded from every figure</li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- ================================================== the four tools -->
     <div class="blp-sectionhead" id="tools">
-        <h2>Four tools, one dataset</h2>
-        <p>Each one answers a different question. All of them refuse to answer when the data isn't there.</p>
+        <span class="kicker">Four tools, one database</span>
+        <h2>Everything runs on the same graded games.</h2>
+        <p>Each one answers a different kind of question. All of them refuse to answer when the data isn't there.</p>
     </div>
     <section class="blp-features">
         <article class="blp-feature">
-            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg></div>
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg></div>
             <h3>Matchup Report</h3>
-            <p>Two teams, one market, your exact line. Get both sides' record at that number, your situational filters applied to each team independently, and a verdict with the confidence and sample size stated up front. Ask a team total at any number to see how often that side cleared it and how its scoring is actually distributed; enter the price you are being offered and the report adds the win rate that price needs to break even, the gap to the historical rate, and the expected value per unit at that gap.</p>
+            <p>The main research engine. Two teams, any period, any stack of conditions, and the complete record of every game that matched.</p>
+            <ul>
+                <li>86 stackable conditions, applied per team or per game</li>
+                <li>Moneyline, spread, total and team-total splits</li>
+                <li>Team total at any number, priced against your odds</li>
+                <li>Every qualifying game listed and sortable</li>
+            </ul>
         </article>
         <article class="blp-feature">
-            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg></div>
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg></div>
             <h3>Ask BetLegend</h3>
-            <p>Ask in plain English — a matchup, a team situation, today's board. You get a structured report: form, splits with real sample sizes, market read, and a bet-or-pass call you can argue with.</p>
+            <p>Ask in plain English. A matchup, a team situation, today's board, and you get a structured written report back.</p>
+            <ul>
+                <li>Matchup overview, odds and line movement</li>
+                <li>Recent form, home/away and situational splits</li>
+                <li>Betting trends and market interpretation</li>
+                <li>A bet-or-pass call, with its confidence and basis</li>
+            </ul>
         </article>
         <article class="blp-feature">
-            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6 4 9-2s6 1 9-5"/><path d="M3 21h18"/></svg></div>
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6 4 9-2s6 1 9-5"/><path d="M3 21h18"/></svg></div>
             <h3>Bankroll Simulator</h3>
-            <p>Enter the win rate you believe in and the price you're getting. Thousands of simulated sequences show the median finish, the bust rate and the drawdown you'd have to sit through — before you stake anything.</p>
+            <p>Enter the win rate you believe in and the price you're getting, and see the ride before you take it.</p>
+            <ul>
+                <li>Flat, half-Kelly and full-Kelly staking</li>
+                <li>Median finish across thousands of sequences</li>
+                <li>Bust rate at your stake size</li>
+                <li>The drawdown you would have to sit through</li>
+            </ul>
         </article>
         <article class="blp-feature">
-            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
             <h3>Team Trends</h3>
-            <p>One team, one situation, the raw split. After a loss, on a streak, with a rest edge, as a road dog — straight up, against the spread and over/under, with the game count attached.</p>
+            <p>One team, one situation, the raw split, the fastest way to check a single angle.</p>
+            <ul>
+                <li>Home favorite, road underdog, after a win, after a loss</li>
+                <li>3+ game win and losing streaks, rest advantage</li>
+                <li>Division and conference games, day and night games</li>
+                <li>Straight up, against the spread and over/under, with game counts</li>
+            </ul>
         </article>
     </section>
 
-    <!-- ============================================ interface preview -->
+    <!-- =============================================== example questions -->
     <div class="blp-sectionhead">
-        <h2>What a verdict looks like</h2>
-        <p>The answer first, the numbers that produced it second, the write-up last. This is the real interface, not a mock-up.</p>
+        <span class="kicker">In practice</span>
+        <h2>Questions BetLegend Pro can answer.</h2>
+        <p>Each of these is one query in the tool, not a research project.</p>
     </div>
-    <section class="blp-preview" aria-label="Example of a BetLegend Pro matchup report">
-        <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>Matchup Report — example output</span></div>
+    <section class="blp-questions">
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>How has this team actually done against this specific opponent over the last ten seasons?
+                <small>Matchup + custom date range. Returns the record, scoring, market splits and every meeting.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>What is this team's record the game after a loss, and after a blowout loss specifically?
+                <small>Previous game result, or the after-a-blowout-loss condition, applied to one team.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>How has it performed when favored between &minus;150 and &minus;110, rather than as a favorite generally?
+                <small>Moneyline range condition, so the question is about a price band, not a label.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>What happens when they play on zero days' rest while the opponent has had three?
+                <small>Rest condition on one team, opponent rest condition on the other, in the same query.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>How does this MLB lineup do against left-handed starters at this ballpark, in night games?
+                <small>Opposing starter handedness + day/night + venue, MLB only, because that is where the data exists.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>Does this NFL team cover as a home underdog on grass, in December, off a short week?
+                <small>Surface, month, rest and role conditions stacked. NFL coverage runs from 1999 for these readings.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>How often has this team gone under 4.5 runs in this matchup, and is &minus;115 a price worth paying?
+                <small>Team total at your number and your price: hit rate, break-even, edge in points and EV per unit.</small></p>
+        </article>
+        <article class="blp-question">
+            <span class="q">?</span>
+            <p>When several of these conditions are true at once, is there anything left, and on how many games?
+                <small>The sample size is printed beside every record, because 7-1 and 70-10 are not the same evidence.</small></p>
+        </article>
+    </section>
 
-        <div class="blp-verdict" data-verdict="lean">
-            <div class="blp-verdict-top">
-                <div class="blp-verdict-main">
-                    <div class="blp-verdict-k">Verdict</div>
-                    <h3 class="blp-verdict-label">Lean</h3>
-                    <p class="blp-verdict-sel">Away −1.5 <span>· road favorite vs division rival · MLB</span></p>
-                </div>
-                <div class="blp-conf">
-                    <div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">Moderate</span></div>
-                    <div class="blp-meter"><i style="width:58%"></i></div>
-                    <p class="blp-conf-note">Reflects sample size and consistency — not a probability of winning.</p>
-                </div>
-            </div>
-            <p class="blp-verdict-basis">Both sides clear the minimum sample on this market. The favourite has covered at a modest but consistent rate; the underdog is the weaker half of the same bucket. The edge survives situational filtering, but sits inside the range where variance still dominates.</p>
-        </div>
-
-        <div class="blp-cmp">
-            <div class="blp-cmp-head">
-                <span class="blp-cmp-title">Run line — hit rate at this number</span>
-                <span class="blp-cmp-sub">Break-even 52.4%</span>
-            </div>
-            <div class="blp-cmp-row">
-                <span class="blp-cmp-name">Away side</span>
-                <span class="blp-cmp-track"><span class="blp-cmp-fill" style="width:53.6%"></span><span class="blp-cmp-mark" style="left:52.4%"></span></span>
-                <span><span class="blp-cmp-val">53.6%</span><span class="blp-cmp-meta" style="display:block">97-84-3</span></span>
-            </div>
-            <div class="blp-cmp-row is-low">
-                <span class="blp-cmp-name">Home side</span>
-                <span class="blp-cmp-track"><span class="blp-cmp-fill" style="width:48.1%"></span><span class="blp-cmp-mark" style="left:52.4%"></span></span>
-                <span><span class="blp-cmp-val">48.1%</span><span class="blp-cmp-meta" style="display:block">76-82-2</span></span>
-            </div>
-            <div class="blp-cmp-legend"><i></i> Break-even at this price — a rate below the marker loses money long term.</div>
-        </div>
-
-        <div class="blp-unavail" style="margin-top:14px">
-            <strong>Not carried in this dataset:</strong> starting pitchers, projected lineups, injuries. These are left blank rather than estimated.
+    <!-- =============================================== mid-page CTA band -->
+    <section class="blp-finalcta" style="margin-top:64px">
+        <h2>Open it and run one.</h2>
+        <p id="midCtaNote">
+            You get one free report every day. Pick a matchup you already have an opinion about and see
+            whether the history agrees with you.
+        </p>
+        <div class="blp-hero-cta">
+            <a class="blp-btn blp-btn--primary blp-btn--xl" href="/betlegend-pro/app/">Open BetLegend Pro <span class="arw" aria-hidden="true">&rarr;</span></a>
         </div>
     </section>
 
     <!-- ======================================================= who -->
     <div class="blp-sectionhead">
-        <h2>Who it's for</h2>
-        <p>BetLegend Pro is a research tool. It is not a pick service and it does not tell you what to bet.</p>
+        <span class="kicker">Who it's for</span>
+        <h2>A research tool, not a pick service.</h2>
+        <p>BetLegend Pro does not tell you what to bet, and it does not sell you anyone's picks.</p>
     </div>
     <section class="blp-who">
         <article class="blp-who-item">
             <h3>Bettors who check before they bet</h3>
-            <p>If you already ask "has this actually been profitable?" before firing, this replaces the spreadsheet you'd otherwise keep by hand.</p>
+            <p>If you already ask &ldquo;has this actually been profitable?&rdquo; before firing, this replaces the spreadsheet you'd otherwise keep by hand.</p>
         </article>
         <article class="blp-who-item">
             <h3>Handicappers who publish a record</h3>
@@ -162,15 +844,40 @@
             <p>The simulator answers the question most staking advice skips: what the bad stretch actually looks like at your edge and your stake size.</p>
         </article>
         <article class="blp-who-item">
-            <h3>Not for you if…</h3>
+            <h3>Not for you if&hellip;</h3>
             <p>You want handed-over picks, guaranteed winners, or live in-play numbers. BetLegend Pro does none of those things.</p>
+        </article>
+    </section>
+
+    <!-- ===================================================== trust -->
+    <div class="blp-sectionhead">
+        <span class="kicker">How it stays honest</span>
+        <h2>The constraints are in the engine, not in the marketing.</h2>
+    </div>
+    <section class="blp-trust">
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <div><h3>No invented numbers</h3><p>Estimated totals and synthetic lines are excluded from every figure. A market with no real closing number returns nothing instead of a guess.</p></div>
+        </article>
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/></svg></span>
+            <div><h3>Sample size always shown</h3><p>Every rate comes with the record behind it. A 60% split on nine games is labelled as nine games, not presented as a trend.</p></div>
+        </article>
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5"/><path d="M12 16h.01"/></svg></span>
+            <div><h3>Gaps are stated, not hidden</h3><p>Where an era or market has no coverage, the report says so. Older MLB totals and pre-2010 NFL moneylines are blocked outright rather than approximated.</p></div>
+        </article>
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            <div><h3>No outcome is promised</h3><p>A verdict is a read on historical support at a price. It is arithmetic comparing what already happened against the number you typed in, not a forecast of the next game, and worth only as much as the sample size printed beside it.</p></div>
         </article>
     </section>
 
     <!-- =================================================== pricing -->
     <div class="blp-sectionhead" id="pricing">
-        <h2>Pricing</h2>
-        <p>Every plan is the same product with unlimited use. No per-report charges, no credits to manage, nothing metered.</p>
+        <span class="kicker">Pricing</span>
+        <h2>One product, unlimited use.</h2>
+        <p>Every plan is the same tool. No per-report charges, no credits to manage, nothing metered.</p>
     </div>
     <section class="blp-plans">
         <article class="blp-plan">
@@ -178,10 +885,10 @@
             <div class="blp-price"><span class="price-amt">$19</span><span class="blp-price-per">/month</span></div>
             <p class="blp-price-sub">Billed monthly. Cancel anytime from your account.</p>
             <ul class="blp-plan-feats">
-                <li><span class="tick">✓</span> Unlimited matchup reports</li>
-                <li><span class="tick">✓</span> Unlimited questions &amp; simulations</li>
-                <li><span class="tick">✓</span> Full report library, kept permanently</li>
-                <li><span class="tick">✓</span> No TMR Coin needed</li>
+                <li><span class="tick">&#10003;</span> Unlimited matchup reports</li>
+                <li><span class="tick">&#10003;</span> Unlimited questions &amp; simulations</li>
+                <li><span class="tick">&#10003;</span> Full report library, kept permanently</li>
+                <li><span class="tick">&#10003;</span> No TMR Coin needed</li>
             </ul>
             <button class="blp-btn blp-btn--block" data-buy="monthly" type="button">Choose Monthly</button>
             <p class="blp-plan-foot">Renews at $19/month until you cancel.</p>
@@ -191,12 +898,12 @@
             <span class="blp-plan-badge">Best Value</span>
             <div class="blp-plan-name">Annual</div>
             <div class="blp-price"><span class="price-amt">$149</span><span class="blp-price-per">/year</span></div>
-            <p class="blp-price-sub">Works out to <strong>$12.42/month</strong> — <span class="save">save $79 a year</span> versus monthly.</p>
+            <p class="blp-price-sub">Works out to <strong>$12.42/month</strong>, <span class="save">saving $79 a year</span> versus monthly.</p>
             <ul class="blp-plan-feats">
-                <li><span class="tick">✓</span> Everything in Monthly</li>
-                <li><span class="tick">✓</span> Two months and change, free</li>
-                <li><span class="tick">✓</span> One charge a year, not twelve</li>
-                <li><span class="tick">✓</span> Cancel anytime from your account</li>
+                <li><span class="tick">&#10003;</span> Everything in Monthly</li>
+                <li><span class="tick">&#10003;</span> Two months and change, free</li>
+                <li><span class="tick">&#10003;</span> One charge a year, not twelve</li>
+                <li><span class="tick">&#10003;</span> Cancel anytime from your account</li>
             </ul>
             <button class="blp-btn blp-btn--primary blp-btn--block" data-buy="annual" type="button">Choose Annual</button>
             <p class="blp-plan-foot">Renews at $149/year until you cancel.</p>
@@ -208,17 +915,17 @@
             <div class="blp-price"><span class="price-amt">$349</span><span class="blp-price-per">once</span></div>
             <p class="blp-price-sub">One payment, no renewal. Offered during launch; it won't be part of the permanent line-up.</p>
             <ul class="blp-plan-feats">
-                <li><span class="tick">✓</span> Everything in Annual</li>
-                <li><span class="tick">✓</span> Access never expires</li>
-                <li><span class="tick">✓</span> Nothing to cancel, ever</li>
-                <li><span class="tick">✓</span> Cheaper than Annual from year three on</li>
+                <li><span class="tick">&#10003;</span> Everything in Annual</li>
+                <li><span class="tick">&#10003;</span> Access never expires</li>
+                <li><span class="tick">&#10003;</span> Nothing to cancel, ever</li>
+                <li><span class="tick">&#10003;</span> Cheaper than Annual from year three on</li>
             </ul>
             <button class="blp-btn blp-btn--block" data-buy="lifetime" type="button">Choose Lifetime</button>
             <p class="blp-plan-foot">Single charge. No recurring billing.</p>
         </article>
     </section>
 
-    <div class="blp-note blp-note--err" id="buyError" hidden style="max-width:640px;margin:20px auto 0"></div>
+    <div class="blp-note blp-note--err" id="buyError" hidden style="max-width:680px;margin:20px auto 0"></div>
     <p class="blp-paynote">
         <span>Payments handled by Stripe · card details never touch TrustMyRecord</span>
     </p>
@@ -226,51 +933,34 @@
         <span>Not ready to buy? You get one free report every day, and 5 TMR Coin covers each one after that.</span>
     </p>
 
-    <!-- ===================================================== trust -->
-    <div class="blp-sectionhead">
-        <h2>How it stays honest</h2>
-        <p>The constraints below are enforced in the engine, not promised in marketing copy.</p>
-    </div>
-    <section class="blp-trust">
-        <article class="blp-trust-item">
-            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5z"/><path d="m9 12 2 2 4-4"/></svg></span>
-            <div><h3>No invented numbers</h3><p>Estimated totals and synthetic lines are excluded from every figure. A market with no real closing number returns nothing instead of a guess.</p></div>
-        </article>
-        <article class="blp-trust-item">
-            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/></svg></span>
-            <div><h3>Sample size always shown</h3><p>Every rate comes with the record behind it. A 60% split on nine games is labelled as nine games, not presented as a trend.</p></div>
-        </article>
-        <article class="blp-trust-item">
-            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5"/><path d="M12 16h.01"/></svg></span>
-            <div><h3>Gaps are stated, not hidden</h3><p>Where an era or market has no coverage, the report says so. Older MLB totals and pre-2010 NFL moneylines are blocked outright rather than approximated.</p></div>
-        </article>
-        <article class="blp-trust-item">
-            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-            <div><h3>No outcome is promised</h3><p>A verdict is a read on historical support at a price. It is not a prediction, and past splits do not carry forward. Where the report shows an edge or an expected value, that is arithmetic comparing what already happened against the price you typed in, not a forecast of the next game, and it is only worth as much as the sample size printed beside it.</p></div>
-        </article>
-    </section>
-
     <!-- ======================================================= FAQ -->
     <div class="blp-sectionhead">
-        <h2>Questions</h2>
+        <span class="kicker">Questions</span>
+        <h2>The things people ask first.</h2>
     </div>
     <section class="blp-faq">
-        <details class="blp-sec"><summary>Does BetLegend Pro tell me what to bet?</summary><div class="blp-sec-body"><p>No. It reports what the historical record is for the exact bet you describe, how large the sample is, and how that compares to the break-even at your price. The call it gives is a read on that evidence — you decide what to do with it.</p></div></details>
-        <details class="blp-sec"><summary>What data is it actually using?</summary><div class="blp-sec-body"><p>A dataset of graded games across MLB, NBA, NFL and NHL with source-backed closing numbers. Estimated totals and synthetic lines are excluded from results. Soccer, first-half/quarter/first-five-inning markets and NRFI/YRFI are not covered because there is no historical data for them here.</p></div></details>
-        <details class="blp-sec"><summary>How current is it?</summary><div class="blp-sec-body"><p>The dataset covers completed, graded games and is refreshed on a schedule. It is a historical research tool, not a live odds feed — it will not price tonight's game for you.</p></div></details>
+        <details class="blp-sec"><summary>What exactly is BetLegend Pro?</summary><div class="blp-sec-body"><p>A historical sports betting research engine. You describe a matchup, a period and any combination of situational conditions; it searches a database of graded MLB, NBA, NFL and NHL games for every game that matches and returns the record, the sample size, the market splits and the games themselves. It is a database and a query engine, not a picks page.</p></div></details>
+        <details class="blp-sec"><summary>Does BetLegend Pro tell me what to bet?</summary><div class="blp-sec-body"><p>No. It reports what the historical record is for the exact bet you describe, how large the sample is, and how that compares to the break-even at your price. The call it gives is a read on that evidence. You decide what to do with it.</p></div></details>
+        <details class="blp-sec"><summary>How is this different from a team trends page?</summary><div class="blp-sec-body"><p>A trends page gives you one prepared split with no sample size and no way to change the question. BetLegend Pro lets you stack up to 86 conditions across both teams and the game itself, over any date range, and then shows every individual game behind the number: date, final score, closing line, and the reason it qualified.</p></div></details>
+        <details class="blp-sec"><summary>What data is it actually using?</summary><div class="blp-sec-body"><p>A database of graded games across MLB, NBA, NFL and NHL with source-backed closing numbers. Estimated totals and synthetic lines are excluded from results. Soccer, first-half/quarter/first-five-inning markets and NRFI/YRFI are not covered because there is no historical data for them here.</p></div></details>
+        <details class="blp-sec"><summary>Why is a filter switched off for my sport?</summary><div class="blp-sec-body"><p>Because it would lie if it were on. MLB and NHL have no varying spread, because the run line and puck line are fixed at ±1.5, so a spread-range condition cannot separate anything there. NFL roof, surface, rest and quarterback readings only exist from 1999 on. In each case the tool states which of those it is rather than quietly returning zero games.</p></div></details>
+        <details class="blp-sec"><summary>How current is it?</summary><div class="blp-sec-body"><p>The database covers completed, graded games and is refreshed on a schedule. It is a historical research tool, not a live odds feed. It will not price tonight's game for you.</p></div></details>
         <details class="blp-sec"><summary>What's the difference between the plans?</summary><div class="blp-sec-body"><p>Nothing but the billing. Monthly, annual and lifetime all unlock the same unlimited access to all four tools and the full report library. Annual is the cheapest per month; lifetime is a single payment offered during launch.</p></div></details>
-        <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account — you keep access until the end of the period you already paid for, and are not billed again. Lifetime has no recurring billing, so there is nothing to cancel.</p></div></details>
+        <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account. You keep access until the end of the period you already paid for, and are not billed again. Lifetime has no recurring billing, so there is nothing to cancel.</p></div></details>
         <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: you get one free report every day, and beyond that each report costs 5 TMR Coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
         <details class="blp-sec"><summary>Is this gambling?</summary><div class="blp-sec-body"><p>No. TrustMyRecord is not a sportsbook, no real money is wagered here, and BetLegend Pro is an analysis tool. If betting has stopped being fun, <a href="https://www.ncpgambling.org/help-treatment/" rel="noopener" target="_blank">help is available</a>.</p></div></details>
     </section>
 
     <!-- ================================================ final CTA -->
     <section class="blp-finalcta">
-        <h2>Run one and see</h2>
-        <p>You get one free report every day. If it doesn't tell you something you didn't already know, you've lost nothing.</p>
+        <h2>Stop guessing whether the angle holds up.</h2>
+        <p id="finalNote">
+            Pick the matchup, build the situation, and read the games it comes back with. One free report
+            every day. If it doesn't tell you something you didn't already know, you've lost nothing.
+        </p>
         <div class="blp-hero-cta">
-            <a class="blp-btn blp-btn--primary blp-btn--lg" href="/betlegend-pro/app/">Open BetLegend Pro</a>
-            <a class="blp-btn blp-btn--lg" href="#pricing">See plans</a>
+            <a class="blp-btn blp-btn--primary blp-btn--xl" href="/betlegend-pro/app/">Open BetLegend Pro <span class="arw" aria-hidden="true">&rarr;</span></a>
+            <a class="blp-btn blp-btn--lg" id="finalSecondary" href="#pricing">See plans</a>
         </div>
     </section>
 
@@ -316,17 +1006,50 @@
         var planName = a.is_lifetime ? 'Lifetime' : a.plan === 'annual' ? 'Annual' : 'Monthly';
         var ends = a.current_period_end ? new Date(a.current_period_end).toLocaleDateString() : null;
         var detail = a.is_lifetime
-            ? 'Lifetime access — nothing renews and there is nothing to cancel.'
+            ? 'Nothing renews and there is nothing to cancel.'
             : a.cancel_at_period_end
-                ? 'Cancelled — your access runs until ' + esc(ends) + ' and will not renew.'
+                ? 'Cancelled. Your access runs until ' + esc(ends) + ' and will not renew.'
                 : ends ? 'Renews ' + esc(ends) + '.' : '';
-        banner('ok',
-            '<span><strong>You\'re on the ' + esc(planName) + ' plan.</strong> ' + detail + '</span>'
-            + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/app/">Open BetLegend Pro</a>'
-            + (a.manageable ? '<button class="blp-btn blp-btn--sm" id="portalBtn" type="button">Manage billing</button>' : ''));
 
-        $('heroNote').textContent = 'You already have unlimited access.';
+        // The sticky bar is the entitled user's real destination. A paying
+        // customer arriving here is looking for the product, not for plans, so
+        // the plan link is replaced by billing (or removed) rather than left
+        // sitting next to the button as a competing call to action.
+        $('accessTitle').textContent = a.is_lifetime ? 'Lifetime access active' : planName + ' plan active';
+        $('accessSub').textContent = detail || 'Unlimited access to every tool.';
+        var accessSecondary = $('accessSecondary');
+        if (a.manageable) {
+            // Swapped for a real <button>: an anchor with no href is not
+            // keyboard-operable, and this control opens a billing session
+            // rather than navigating anywhere.
+            var portalBtn = document.createElement('button');
+            portalBtn.type = 'button';
+            portalBtn.id = 'portalBtn';
+            portalBtn.className = 'blp-btn blp-btn--sm';
+            portalBtn.textContent = 'Manage billing';
+            accessSecondary.replaceWith(portalBtn);
+        } else {
+            accessSecondary.hidden = true;
+        }
+
+        // No second banner here. The access bar above already states the plan
+        // and carries the button; repeating it underneath is the same sentence
+        // twice. The banner stays reserved for checkout returns.
+
+        // Nothing on the page should push an already-paid customer at a plan.
+        ['heroSecondary', 'finalSecondary'].forEach(function (id) {
+            var el = $(id);
+            if (!el) return;
+            el.textContent = 'What it can do';
+            el.setAttribute('href', '#database');
+        });
+        $('heroNote').textContent = 'Unlimited access is active on your account.';
+        $('midCtaNote').textContent = 'Unlimited reports on your account. Pick a matchup you already have an '
+            + 'opinion about and see whether the history agrees with you.';
+        $('finalNote').textContent = 'Unlimited reports, unlimited conditions, the full library kept permanently. '
+            + 'Pick the matchup, build the situation, and read the games it comes back with.';
         $('freeTierNote').hidden = true;
+
         // Lifetime owners have nothing left to buy. Subscribers keep every OTHER
         // plan live so they can switch — only the plan they are already on is
         // disabled. Labelling a different plan "included" would be false and
@@ -336,9 +1059,11 @@
             var plan = b.dataset.buy;
             if (a.is_lifetime) {
                 b.disabled = true;
+                b.classList.remove('blp-btn--primary');
                 b.textContent = plan === 'lifetime' ? 'You own this' : 'Already covered by Lifetime';
             } else if (plan === a.plan) {
                 b.disabled = true;
+                b.classList.remove('blp-btn--primary');
                 b.textContent = 'Your current plan';
             } else {
                 b.textContent = 'Switch to ' + labels[plan];
@@ -394,7 +1119,7 @@
                         + ' In the meantime you still get a free report every day, and 5 TMR Coin covers each one after that.</span>'
                         + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
                 } else {
-                    err.innerHTML = '<span>' + esc((data && data.error) || 'Could not start checkout. Nothing was charged — try again.') + '</span>';
+                    err.innerHTML = '<span>' + esc((data && data.error) || 'Could not start checkout. Nothing was charged, so try again.') + '</span>';
                 }
                 err.hidden = false;
                 err.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -416,13 +1141,13 @@
         if (!purchase) return;
 
         if (purchase === 'canceled') {
-            banner('warn', '<span>Checkout was cancelled — you have not been charged.</span>');
+            banner('warn', '<span>Checkout was cancelled. You have not been charged.</span>');
             history.replaceState(null, '', location.pathname + '#pricing');
             return;
         }
         if (purchase !== 'success') return;
 
-        banner('ok', '<span><span class="blp-spin" style="display:inline-block;vertical-align:-2px;margin-right:8px"></span>Payment received — activating your access…</span>');
+        banner('ok', '<span><span class="blp-spin" style="display:inline-block;vertical-align:-2px;margin-right:8px"></span>Payment received. Activating your access…</span>');
         var deadline = Date.now() + 30000;
         while (Date.now() < deadline) {
             try {
@@ -441,46 +1166,60 @@
         history.replaceState(null, '', location.pathname);
         banner('warn', '<span><strong>Payment received, but your access hasn\'t activated yet.</strong> '
             + 'This usually clears within a minute. Reload this page, and if it still hasn\'t appeared, '
-            + '<a href="/contact/">contact support</a> — your payment is safe and on record.</span>');
+            + '<a href="/contact/">contact support</a>. Your payment is safe and on record.</span>');
     }
 
     // ------------------------------------------------- dataset headline
 
     /**
-     * The graded-game count comes from BetLegend Pro's live engine at page
-     * load, never from a number typed into this file. A hardcoded figure went
-     * stale once already (it claimed 130,785 long after the dataset moved),
-     * and a stale count on a sales page is a false claim.
+     * Every dataset figure on this page comes from BetLegend Pro's live engine
+     * at page load, never from a number typed into this file. A hardcoded
+     * figure went stale once already (it claimed 130,785 long after the dataset
+     * moved), and a stale count on a sales page is a false claim.
      *
-     * If the call fails the tile keeps its em-dash and the label degrades to a
-     * qualitative statement. It must never fall back to a remembered number.
+     * The static markup says "130,000+", which is a floor the dataset passed
+     * long ago and cannot fall back below, so a failed call degrades to a claim
+     * that is still true rather than to a remembered exact number.
      */
     async function paintDatasetSize() {
-        var el = $('factGames'), label = $('factGamesLabel');
-        if (!el) return;
+        var s;
         try {
-            var s = await window.api.getBetLegendProDatasetStats();
-            var n = s && Number(s.graded_games);
-            if (!Number.isFinite(n) || n <= 0) throw new Error('no count');
-            el.textContent = n.toLocaleString('en-US');
-            el.removeAttribute('data-pending');
-            if (s.latest_game_date) {
-                label.textContent = 'Graded games — through ' + String(s.latest_game_date).slice(0, 10);
-            }
-        } catch (err) {
-            el.textContent = 'Every';
-            el.style.fontSize = '20px';
-            label.textContent = 'graded game in MLB, NBA, NFL and NHL history we hold';
+            s = await window.api.getBetLegendProDatasetStats();
+        } catch (err) { return; }
+        var n = s && Number(s.graded_games);
+        if (!Number.isFinite(n) || n <= 0) return;
+
+        var pretty = n.toLocaleString('en-US');
+        $('factGames').textContent = pretty;
+        $('factGames').removeAttribute('data-pending');
+        $('dsCount').textContent = pretty;
+        $('heroCount').textContent = pretty;
+        if (s.latest_game_date) {
+            $('factGamesLabel').textContent = 'Graded games through ' + String(s.latest_game_date).slice(0, 10);
         }
+
+        var by = s.by_sport_games || {};
+        document.querySelectorAll('[data-sport]').forEach(function (el) {
+            var v = Number(by[el.getAttribute('data-sport')]);
+            if (Number.isFinite(v) && v > 0) el.textContent = v.toLocaleString('en-US');
+        });
+
+        // Market coverage is only shown once it is known. Rendering an em-dash
+        // beside "games carrying a genuine closing moneyline" invites the
+        // reading that the answer is none.
+        var mk = { ml: s.games_with_moneyline, sp: s.games_with_spread, to: s.games_with_total };
+        var any = false;
+        document.querySelectorAll('[data-market]').forEach(function (el) {
+            var v = Number(mk[el.getAttribute('data-market')]);
+            if (Number.isFinite(v) && v > 0) { el.textContent = v.toLocaleString('en-US'); any = true; }
+        });
+        if (any) $('dsMarkets').hidden = false;
     }
 
     // ----------------------------------------------------------- boot
 
     (async function boot() {
         paintDatasetSize();
-        if (loggedIn()) {
-            $('tryBtn').textContent = 'Open BetLegend Pro';
-        }
         // A plan carried through login goes straight back to pricing.
         var wanted = new URLSearchParams(location.search).get('plan');
         if (wanted && loggedIn() && window.CSS && CSS.escape) {

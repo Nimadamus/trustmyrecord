@@ -1,0 +1,640 @@
+/* ==========================================================================
+   BetLegend Pro — public product page (/betlegend-pro/)
+   --------------------------------------------------------------------------
+   Loaded AFTER blp-pro.css, which supplies the .blp design tokens and the
+   shared components the page script depends on (blp-btn, blp-note, blp-plan,
+   blp-spin). Everything here is the product page's own layout.
+
+   The page no longer loads tmr-light.css. It could not: that sheet forces
+   `h1,h2,h3 { color:#07182A !important }` and `p,li { color:#2E4459 }` onto
+   every element on the page, which painted near-black text onto the product's
+   dark navy cards. That is the "faint cards you cannot read" failure. The page
+   is dark, like the product it sells, and states its own colours.
+
+   Filename is versioned by name rather than ?v= so a redesign never waits on
+   Cloudflare's 4h edge cache for unversioned /static/.
+   ========================================================================== */
+
+/* ------------------------------------------------------------ page ground */
+
+body.tmr-site-shell[data-tmr-route="betlegend-pro"] {
+    background:
+        radial-gradient(1100px 560px at 10% -8%, rgba(45, 212, 191, .10), transparent 62%),
+        radial-gradient(900px 480px at 100% 2%, rgba(56, 189, 248, .07), transparent 58%),
+        linear-gradient(180deg, #0c1424 0%, #0a1020 42%, #080d1a 100%);
+    background-attachment: fixed;
+    color: #f7faff;
+}
+
+.blp-shell { width: min(1280px, calc(100% - 40px)); margin: 0 auto; padding: 28px 0 64px; }
+
+/* Typography floor. The old page ran 11.5–13px body copy on a sales page;
+   nothing here goes below 14px, and section copy sits at 16px. */
+.blp { font-size: 16px; line-height: 1.6; }
+/* tmr-sitewide turns on `hyphens: auto` site-wide, which broke the hero
+   headline across a hyphen ("ac-tually"). Display type is never hyphenated. */
+.blp, .blp h1, .blp h2, .blp h3, .blp h4 { hyphens: manual; -webkit-hyphens: manual; }
+.blp p { color: var(--ink-2); }
+.blp strong { color: var(--ink); }
+
+/* ------------------------------------------------------------- sticky bar */
+
+/* The access bar. It is the answer to "I already paid, where is the product":
+   once the hero scrolls away there is a full-width, high-contrast route back
+   into the app at every scroll position on the page.
+
+   `--nav-h` is the sticky site nav's own height. Sticking at top:0 parked the
+   bar underneath that nav (z-index 99999) where it was invisible on scroll,
+   which defeats the entire point of the bar. It stops below the nav instead,
+   and stays under it in the stack so the two never fight. */
+.blp { --nav-h: 78px; }
+@media (max-width: 900px) { .blp { --nav-h: 62px; } }
+
+.blp-access {
+    position: sticky;
+    top: calc(var(--nav-h) + 8px);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 0 0 22px;
+    padding: 11px 16px;
+    border: 1px solid rgba(45, 212, 191, .28);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(17, 26, 46, .96), rgba(12, 20, 36, .96));
+    backdrop-filter: saturate(140%) blur(10px);
+    box-shadow: 0 18px 40px -22px rgba(2, 6, 16, .95);
+}
+.blp-access-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; flex: none;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #06120f; font-family: Barlow, sans-serif; font-weight: 800; font-size: 15px;
+}
+.blp-access-text { min-width: 0; }
+.blp-access-title { font-family: Barlow, sans-serif; font-weight: 800; font-size: 15px; line-height: 1.15; color: var(--ink); }
+.blp-access-sub { margin: 2px 0 0; font-size: 12.5px; line-height: 1.35; color: var(--ink-3); }
+.blp-access-cta { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 620px) {
+    .blp-access { gap: 10px; padding: 10px 12px; }
+    .blp-access-sub { display: none; }
+}
+
+/* Below 900px the site nav stops being sticky and the sheet puts
+   `overflow-x: hidden` on html/body, which kills `position: sticky` outright:
+   measured, the bar simply scrolled away. So on phones it becomes a fixed
+   bottom action bar, which is where a thumb is anyway. The page reserves the
+   space so the fixed bar never sits on top of the footer. */
+@media (max-width: 900px) {
+    .blp-access {
+        position: fixed; top: auto; bottom: 10px; left: 12px; right: 12px;
+        z-index: 90; margin: 0; padding: 9px 11px; gap: 9px;
+    }
+    .blp-access-mark, .blp-access-text { display: none; }
+    .blp-access-cta { margin-left: 0; width: 100%; flex-wrap: nowrap; }
+    .blp-access-cta .blp-btn--lg { flex: 1 1 auto; min-height: 52px; font-size: 16px; padding: 0 16px; }
+    .blp-access-cta .blp-btn--sm { flex: 0 0 auto; }
+    body.tmr-site-shell[data-tmr-route="betlegend-pro"] { padding-bottom: 88px; }
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+/* The primary CTA on this page is a product entrance, not a link. It is sized
+   and coloured so that "where do I open the thing" is never a question. */
+.blp .blp-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    min-height: 46px; padding: 0 22px;
+    border: 1px solid var(--line-2); border-radius: 12px;
+    background: rgba(255, 255, 255, .045);
+    color: var(--ink);
+    font-family: Inter, system-ui, sans-serif; font-size: 15px; font-weight: 700;
+    text-decoration: none; cursor: pointer;
+    transition: transform .16s var(--ease), background .16s var(--ease), border-color .16s var(--ease);
+}
+.blp .blp-btn:hover { background: rgba(255, 255, 255, .09); border-color: rgba(148, 176, 214, .46); }
+.blp .blp-btn:active { transform: translateY(1px); }
+.blp .blp-btn:focus-visible { outline: 3px solid rgba(45, 212, 191, .55); outline-offset: 2px; }
+
+.blp .blp-btn--primary {
+    border-color: transparent;
+    background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%);
+    color: #04121b;
+    font-weight: 800;
+    letter-spacing: .01em;
+    box-shadow: 0 14px 34px -14px rgba(45, 212, 191, .85);
+}
+.blp .blp-btn--primary:hover { background: linear-gradient(135deg, #45e3cf 0%, #57caff 100%); }
+
+.blp .blp-btn--lg { min-height: 60px; padding: 0 34px; font-size: 17px; border-radius: 14px; }
+.blp .blp-btn--xl {
+    min-height: 68px; padding: 0 42px; border-radius: 16px;
+    font-family: Barlow, Inter, sans-serif; font-size: 21px; font-weight: 800;
+    letter-spacing: .015em; text-transform: uppercase;
+}
+.blp .blp-btn--sm { min-height: 38px; padding: 0 15px; font-size: 13.5px; border-radius: 10px; }
+.blp .blp-btn--block { width: 100%; }
+.blp .blp-btn:disabled { opacity: 1; background: rgba(255, 255, 255, .04); color: var(--ink-3); border-color: var(--line); box-shadow: none; cursor: default; }
+
+.blp-btn .arw { font-size: 1.05em; line-height: 1; transform: translateY(-1px); }
+
+@media (max-width: 560px) {
+    .blp .blp-btn--xl { min-height: 60px; padding: 0 22px; font-size: 17px; }
+    .blp .blp-btn--lg { min-height: 54px; padding: 0 22px; font-size: 15.5px; }
+}
+
+/* ------------------------------------------------------------------- hero */
+
+.blp-hero { padding: 18px 0 6px; text-align: left; max-width: 1000px; }
+.blp-eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid rgba(45, 212, 191, .34);
+    background: rgba(45, 212, 191, .10);
+    color: #7defdd;
+    font-size: 12.5px; font-weight: 800; letter-spacing: .10em; text-transform: uppercase;
+}
+.blp-hero h1 {
+    margin: 20px 0 0;
+    font-family: Barlow, Inter, sans-serif;
+    font-size: clamp(34px, 5.4vw, 62px);
+    font-weight: 800; line-height: 1.04; letter-spacing: -.025em;
+    color: var(--ink);
+}
+.blp-hero h1 .hl {
+    background: linear-gradient(100deg, #2dd4bf, #7dd3fc);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-variant-numeric: tabular-nums lining-nums;
+}
+.blp-hero-sub {
+    margin: 22px 0 0; max-width: 68ch;
+    font-size: clamp(17px, 1.5vw, 19px); line-height: 1.62; color: var(--ink-2);
+}
+.blp-hero-sub strong { color: var(--ink); font-weight: 700; }
+.blp-hero-cta { display: flex; justify-content: flex-start; gap: 14px; flex-wrap: wrap; margin-top: 30px; }
+.blp-hero-note { margin: 16px 0 0; font-size: 14px; color: var(--ink-3); }
+
+/* Six capability lines, directly under the hero paragraph, because the fastest
+   way to say what a research engine does is to list what it lets you do. */
+.blp-caps { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 10px 26px; margin-top: 30px; max-width: 940px; }
+.blp-cap { display: flex; gap: 11px; align-items: flex-start; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
+.blp-cap::before {
+    content: ""; flex: none; width: 9px; height: 9px; margin-top: 8px;
+    border-radius: 3px; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+.blp-cap b { color: var(--ink); font-weight: 700; }
+
+/* ------------------------------------------------------------- stat bands */
+
+.blp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 14px; margin-top: 42px; }
+.blp-fact {
+    padding: 22px 20px;
+    border: 1px solid rgba(148, 176, 214, .22);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(29, 44, 71, .92), rgba(17, 26, 46, .92));
+    box-shadow: 0 20px 44px -30px rgba(2, 6, 16, 1);
+}
+.blp-fact-v {
+    font-family: Barlow, sans-serif; font-size: clamp(30px, 3.4vw, 40px);
+    font-weight: 800; line-height: 1; letter-spacing: -.02em;
+    color: #ffffff; font-variant-numeric: tabular-nums lining-nums;
+}
+.blp-fact-v.is-teal { color: #5eead4; }
+.blp-fact-l { margin-top: 10px; font-size: 14px; font-weight: 600; line-height: 1.45; color: #b9cbe2; }
+
+/* The dataset band: the count is the headline number of the whole product, so
+   it gets its own full-width treatment rather than a fourth small tile. */
+.blp-dataset {
+    display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 34px;
+    align-items: center;
+    margin-top: 22px; padding: 34px;
+    border: 1px solid rgba(45, 212, 191, .26);
+    border-radius: 20px;
+    background:
+        radial-gradient(700px 260px at 0% 0%, rgba(45, 212, 191, .13), transparent 65%),
+        linear-gradient(180deg, rgba(22, 35, 59, .96), rgba(13, 21, 38, .96));
+}
+.blp-dataset-n {
+    font-family: Barlow, sans-serif; font-size: clamp(44px, 6.6vw, 72px);
+    font-weight: 800; line-height: .96; letter-spacing: -.03em; color: #ffffff;
+    font-variant-numeric: tabular-nums lining-nums;
+}
+.blp-dataset-k { margin-top: 10px; font-size: 16px; font-weight: 700; color: #5eead4; }
+.blp-dataset-note { margin: 12px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-3); }
+.blp-leagues { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.blp-league {
+    padding: 15px 16px; border: 1px solid var(--line); border-radius: 13px;
+    background: rgba(255, 255, 255, .035);
+}
+.blp-league-n { font-family: Barlow, sans-serif; font-size: 15px; font-weight: 800; letter-spacing: .06em; color: #7dd3fc; }
+.blp-league-v { margin-top: 6px; font-size: 24px; font-weight: 800; color: #ffffff; font-variant-numeric: tabular-nums; }
+.blp-league-l { margin-top: 3px; font-size: 12.5px; color: var(--ink-3); }
+.blp-coverage { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.blp-covpill {
+    padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px;
+    background: rgba(255, 255, 255, .03); font-size: 13px; color: var(--ink-2);
+}
+.blp-covpill b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 900px) { .blp-dataset { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 26px 20px; } }
+
+/* --------------------------------------------------------- section heads */
+
+.blp-sectionhead {
+    max-width: 74ch; margin: 84px 0 28px; text-align: left;
+    /* #pricing is linked from inside the app. Without this the sticky nav and
+       access bar sit on top of whatever the anchor lands on. */
+    scroll-margin-top: calc(var(--nav-h) + 110px);
+}
+.blp-sectionhead.is-center { margin-left: auto; margin-right: auto; text-align: center; }
+.blp-sectionhead .kicker {
+    display: block; margin-bottom: 12px;
+    font-size: 12.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #5eead4;
+}
+.blp-sectionhead h2 {
+    font-family: Barlow, Inter, sans-serif;
+    font-size: clamp(28px, 3.9vw, 44px); font-weight: 800; line-height: 1.08; letter-spacing: -.025em;
+    color: var(--ink);
+}
+.blp-sectionhead p { margin: 14px 0 0; font-size: 17px; line-height: 1.62; color: var(--ink-2); }
+
+/* --------------------------------------------------- what it is / compare */
+
+.blp-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.blp-compare-col {
+    padding: 24px; border: 1px solid var(--line); border-radius: 18px;
+    background: rgba(255, 255, 255, .028);
+}
+.blp-compare-col.is-good { border-color: rgba(45, 212, 191, .4); background: linear-gradient(180deg, rgba(45, 212, 191, .09), rgba(255, 255, 255, .02)); }
+.blp-compare-k { font-size: 12.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.blp-compare-col.is-good .blp-compare-k { color: #5eead4; }
+.blp-compare-col h3 { margin: 10px 0 0; font-size: 20px; font-weight: 800; color: var(--ink); }
+.blp-compare-quote {
+    margin: 16px 0 0; padding: 14px 16px; border-radius: 12px;
+    border-left: 3px solid var(--line-2);
+    background: rgba(0, 0, 0, .22);
+    font-size: 15.5px; line-height: 1.55; color: var(--ink-2);
+}
+.blp-compare-col.is-good .blp-compare-quote { border-left-color: var(--accent); }
+.blp-compare-list { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.blp-compare-list li { position: relative; padding-left: 26px; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
+.blp-compare-list li::before {
+    content: ""; position: absolute; left: 0; top: 8px; width: 14px; height: 8px;
+    border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+    transform: rotate(-45deg); border-radius: 1px;
+}
+.blp-compare-col:not(.is-good) .blp-compare-list li::before {
+    border: 0; top: 10px; width: 12px; height: 2px; background: var(--ink-3); transform: none; border-radius: 2px;
+}
+
+/* -------------------------------------------------------------- 3 steps */
+
+.blp-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; counter-reset: blpstep; }
+.blp-step {
+    position: relative; padding: 26px 24px 24px;
+    border: 1px solid var(--line); border-radius: 18px;
+    background: linear-gradient(180deg, rgba(29, 44, 71, .78), rgba(17, 26, 46, .78));
+}
+.blp-step-n {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #04121b; font-family: Barlow, sans-serif; font-size: 21px; font-weight: 800;
+}
+.blp-step h3 { margin: 16px 0 0; font-size: 20px; font-weight: 800; color: var(--ink); }
+.blp-step p { margin: 9px 0 0; font-size: 15.5px; line-height: 1.58; color: var(--ink-2); }
+
+/* ------------------------------------------------------- filter library */
+
+/* The eight groups hold between 4 and 31 conditions. On a grid the biggest
+   card sets the row height for everything beside it, so each card shows at
+   most eight example conditions and states its real total in the badge. That
+   keeps the cards a similar height instead of leaving columns of dead space.
+   (A column-flow masonry was tried first and read as eight loose columns.) */
+.blp-filtergrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.blp-fgroup {
+    padding: 22px; border: 1px solid var(--line); border-radius: 18px;
+    background: rgba(255, 255, 255, .028);
+}
+.blp-fgroup-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.blp-fgroup-head h3 { font-size: 18px; font-weight: 800; color: var(--ink); }
+.blp-fgroup-count {
+    padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(45, 212, 191, .34);
+    background: rgba(45, 212, 191, .10); color: #5eead4;
+    font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.blp-fgroup > p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-3); }
+.blp-ftags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 15px; }
+.blp-ftag {
+    padding: 6px 11px; border-radius: 8px;
+    border: 1px solid rgba(148, 176, 214, .22);
+    background: rgba(255, 255, 255, .045);
+    font-size: 13.5px; font-weight: 600; color: #d7e3f2;
+}
+.blp-ftag.is-sport { border-color: rgba(56, 189, 248, .3); background: rgba(56, 189, 248, .09); color: #9adcff; }
+.blp-ftag-more { padding: 6px 11px; font-size: 13.5px; font-weight: 700; color: var(--ink-3); }
+
+.blp-filternote {
+    display: flex; gap: 14px; align-items: flex-start;
+    margin-top: 18px; padding: 20px 22px;
+    border: 1px solid rgba(56, 189, 248, .26); border-radius: 16px;
+    background: rgba(56, 189, 248, .06);
+}
+.blp-filternote p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.blp-filternote p + p { margin-top: 9px; }
+
+/* --------------------------------------------------- stacked-query panel */
+
+.blp-stack { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 940px) { .blp-stack { grid-template-columns: minmax(0, 1fr); } }
+
+.blp-query {
+    padding: 24px; border: 1px solid rgba(45, 212, 191, .3); border-radius: 18px;
+    background: linear-gradient(180deg, rgba(22, 35, 59, .95), rgba(13, 21, 38, .95));
+}
+.blp-query-k { font-size: 12.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #5eead4; }
+.blp-qline { display: flex; gap: 12px; align-items: flex-start; padding: 13px 0; border-bottom: 1px dashed rgba(148, 176, 214, .18); }
+.blp-qline:last-child { border-bottom: 0; padding-bottom: 0; }
+.blp-qop {
+    flex: none; min-width: 52px; padding: 4px 9px; border-radius: 7px;
+    background: rgba(45, 212, 191, .14); color: #5eead4;
+    font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; text-align: center;
+}
+.blp-qtext { font-size: 15.5px; line-height: 1.5; color: var(--ink); }
+.blp-qtext span { color: var(--ink-3); font-size: 14px; display: block; margin-top: 3px; }
+.blp-qout {
+    margin-top: 20px; padding: 18px 20px; border-radius: 14px;
+    border: 1px solid rgba(45, 212, 191, .34); background: rgba(45, 212, 191, .08);
+}
+.blp-qout-k { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #5eead4; }
+.blp-qout p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+
+/* ---------------------------------------------------- interface preview */
+
+.blp-preview {
+    border: 1px solid rgba(148, 176, 214, .26); border-radius: 20px;
+    background: linear-gradient(180deg, #101a2d, #0b1322);
+    box-shadow: 0 50px 90px -50px rgba(2, 6, 16, 1);
+    overflow: hidden;
+}
+.blp-preview + .blp-preview { margin-top: 20px; }
+.blp-preview-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px; border-bottom: 1px solid rgba(148, 176, 214, .16);
+    background: rgba(255, 255, 255, .03);
+}
+.blp-preview-bar i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .16); }
+.blp-preview-bar span { margin-left: 10px; font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.blp-preview-body { padding: 22px; }
+.blp-preview-cap { margin: 12px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-3); }
+
+/* form replica */
+.blp-ui-steps { display: grid; gap: 18px; }
+.blp-ui-step-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.blp-ui-step-n {
+    width: 24px; height: 24px; flex: none; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(45, 212, 191, .16); color: #5eead4; font-size: 12.5px; font-weight: 800;
+}
+.blp-ui-step-t { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.blp-ui-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.blp-ui-field { min-width: 0; }
+.blp-ui-lbl { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.blp-ui-ctl {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    min-height: 44px; padding: 0 13px;
+    border: 1px solid rgba(148, 176, 214, .28); border-radius: 10px;
+    background: rgba(9, 15, 28, .9);
+    font-size: 15px; font-weight: 600; color: var(--ink);
+}
+.blp-ui-ctl .caret { color: var(--ink-3); font-size: 11px; }
+.blp-ui-ctl.is-accent { border-color: rgba(45, 212, 191, .45); }
+.blp-ui-conds { display: flex; flex-wrap: wrap; gap: 8px; }
+.blp-ui-cond {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 8px 12px; border-radius: 10px;
+    border: 1px solid rgba(45, 212, 191, .38); background: rgba(45, 212, 191, .10);
+    font-size: 14px; font-weight: 600; color: #d9fbf5;
+}
+.blp-ui-cond b { color: #ffffff; font-weight: 800; }
+.blp-ui-cond .x { color: #5eead4; font-size: 13px; opacity: .8; }
+.blp-ui-cond.is-add { border-style: dashed; border-color: rgba(148, 176, 214, .32); background: transparent; color: var(--ink-3); }
+.blp-ui-run {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-top: 4px; min-height: 52px; border-radius: 12px;
+    background: linear-gradient(135deg, #2dd4bf, #38bdf8); color: #04121b;
+    font-family: Barlow, sans-serif; font-size: 17px; font-weight: 800; letter-spacing: .02em;
+}
+
+/* results replica */
+.blp-verdict {
+    padding: 20px 22px; border-radius: 16px;
+    border: 1px solid rgba(45, 212, 191, .34);
+    background: linear-gradient(180deg, rgba(45, 212, 191, .12), rgba(255, 255, 255, .02));
+}
+.blp-verdict-top { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+.blp-verdict-main { flex: 1 1 300px; min-width: 0; }
+.blp-verdict-k { font-size: 11.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+.blp-verdict-label { margin: 6px 0 0; font-family: Barlow, sans-serif; font-size: 34px; font-weight: 800; line-height: 1; color: #ffffff; }
+.blp-verdict-sel { margin: 10px 0 0; font-size: 15.5px; font-weight: 700; color: var(--ink); }
+.blp-verdict-sel span { display: block; margin-top: 3px; font-size: 14px; font-weight: 600; color: var(--ink-3); }
+.blp-conf { flex: none; min-width: 190px; }
+.blp-conf-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.blp-conf-val { font-size: 15px; font-weight: 800; color: #ffffff; }
+.blp-meter { height: 8px; border-radius: 999px; background: rgba(0, 0, 0, .35); overflow: hidden; }
+.blp-meter i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.blp-conf-note { margin: 9px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--ink-3); }
+.blp-verdict-basis { margin: 16px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+
+.blp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+.blp-kpi { padding: 14px 15px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .035); }
+.blp-kpi span { display: block; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+.blp-kpi strong { display: block; margin-top: 7px; font-size: 22px; font-weight: 800; color: #ffffff; font-variant-numeric: tabular-nums; }
+.blp-kpi strong.is-pos { color: #4ade80; }
+.blp-kpi strong.is-neg { color: #f87171; }
+.blp-kpi em { display: block; margin-top: 4px; font-size: 12.5px; font-style: normal; color: var(--ink-3); }
+
+.blp-rcard { margin-top: 16px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .028); }
+.blp-rcard-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.blp-rcard-head h4 { font-family: Barlow, sans-serif; font-size: 16px; font-weight: 800; color: var(--ink); margin: 0; }
+.blp-rcard-head .range { font-size: 12.5px; color: var(--ink-3); }
+
+.blp-tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.blp-gtable { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 700px; }
+.blp-gtable th {
+    padding: 9px 9px; text-align: left; white-space: nowrap;
+    border-bottom: 1px solid rgba(148, 176, 214, .26);
+    font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3);
+}
+.blp-gtable td {
+    padding: 9px 9px; border-bottom: 1px solid rgba(148, 176, 214, .1);
+    color: #dce6f3; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.blp-gtable td.why { white-space: normal; min-width: 170px; color: var(--ink-3); font-size: 12px; line-height: 1.4; }
+.blp-gtable tr:last-child td { border-bottom: 0; }
+.blp-w { color: #4ade80; font-weight: 700; }
+.blp-l { color: #f87171; font-weight: 700; }
+
+.blp-unavail {
+    margin-top: 16px; padding: 14px 16px; border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, .3); background: rgba(251, 191, 36, .07);
+    font-size: 14px; line-height: 1.55; color: #f3e2b6;
+}
+.blp-unavail strong { color: #fbd67a; }
+
+/* -------------------------------------------------------- output section */
+
+.blp-outputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.blp-output {
+    padding: 22px; border: 1px solid var(--line); border-radius: 18px;
+    background: rgba(255, 255, 255, .028);
+}
+.blp-output h3 { font-size: 18px; font-weight: 800; color: var(--ink); }
+.blp-output p { margin: 9px 0 0; font-size: 15px; line-height: 1.58; color: var(--ink-2); }
+.blp-output ul { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.blp-output li { position: relative; padding-left: 20px; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.blp-output li::before { content: ""; position: absolute; left: 0; top: 9px; width: 8px; height: 2px; border-radius: 2px; background: var(--accent); }
+
+/* --------------------------------------------------------- feature cards */
+
+.blp-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.blp-feature {
+    padding: 26px 24px; border: 1px solid var(--line); border-radius: 18px;
+    background: linear-gradient(180deg, rgba(29, 44, 71, .72), rgba(17, 26, 46, .72));
+}
+.blp-feature-ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 12px;
+    border: 1px solid rgba(45, 212, 191, .34); background: rgba(45, 212, 191, .12); color: #5eead4;
+}
+.blp-feature h3 { margin: 16px 0 0; font-size: 20px; font-weight: 800; color: var(--ink); }
+.blp-feature p { margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.blp-feature ul { margin: 13px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.blp-feature li { position: relative; padding-left: 20px; font-size: 14.5px; line-height: 1.5; color: var(--ink-3); }
+.blp-feature li::before { content: ""; position: absolute; left: 0; top: 9px; width: 8px; height: 2px; border-radius: 2px; background: var(--accent); }
+
+/* ------------------------------------------------------ example questions */
+
+.blp-questions { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.blp-question {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 20px 22px; border: 1px solid var(--line); border-radius: 16px;
+    background: rgba(255, 255, 255, .03);
+}
+.blp-question .q {
+    flex: none; width: 30px; height: 30px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(56, 189, 248, .14); color: #7dd3fc;
+    font-family: Barlow, sans-serif; font-size: 16px; font-weight: 800;
+}
+.blp-question p { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink); font-weight: 600; }
+.blp-question small { display: block; margin-top: 7px; font-size: 13.5px; font-weight: 500; line-height: 1.5; color: var(--ink-3); }
+
+/* ------------------------------------------------------------------- who */
+
+.blp-who { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+.blp-who-item { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, .028); }
+.blp-who-item h3 { font-size: 17px; font-weight: 800; color: var(--ink); }
+.blp-who-item p { margin: 9px 0 0; font-size: 15px; line-height: 1.58; color: var(--ink-2); }
+
+/* ----------------------------------------------------------------- trust */
+
+.blp-trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.blp-trust-item { display: flex; gap: 14px; padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, .028); }
+.blp-trust-ico { flex: none; color: #5eead4; }
+.blp-trust-item h3 { font-size: 16.5px; font-weight: 800; color: var(--ink); }
+.blp-trust-item p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.58; color: var(--ink-2); }
+
+/* --------------------------------------------------------------- pricing */
+
+.blp-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; align-items: stretch; }
+.blp-plan {
+    position: relative; display: flex; flex-direction: column;
+    padding: 28px 24px; border: 1px solid var(--line); border-radius: 18px;
+    background: linear-gradient(180deg, rgba(29, 44, 71, .72), rgba(17, 26, 46, .72));
+}
+.blp-plan--featured { border-color: rgba(45, 212, 191, .5); box-shadow: 0 26px 60px -34px rgba(45, 212, 191, .55); }
+.blp-plan--launch { border-color: rgba(245, 196, 81, .42); }
+.blp-plan-badge {
+    position: absolute; top: -11px; left: 24px;
+    padding: 4px 11px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #04121b;
+    font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.blp-plan--launch .blp-plan-badge { background: linear-gradient(135deg, #f5c451, #f0a93c); }
+.blp-plan-name { font-family: Barlow, sans-serif; font-size: 15px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.blp-price { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; }
+.blp-price .price-amt { font-family: Barlow, sans-serif; font-size: 48px; font-weight: 800; line-height: 1; color: #ffffff; }
+.blp-price-per { font-size: 15px; font-weight: 600; color: var(--ink-3); }
+.blp-price-sub { margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.blp-price-sub .save { color: #5eead4; font-weight: 700; }
+.blp-plan-feats { margin: 18px 0 22px; padding: 0; list-style: none; display: grid; gap: 9px; }
+.blp-plan-feats li { display: flex; gap: 9px; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.blp-plan-feats .tick { color: #5eead4; font-weight: 800; }
+.blp-plan-feats + .blp-btn, .blp-plan .blp-btn { margin-top: auto; }
+.blp-plan-foot { margin: 12px 0 0; font-size: 12.5px; color: var(--ink-3); }
+.blp-paynote { display: flex; justify-content: center; gap: 9px; flex-wrap: wrap; margin-top: 20px; font-size: 14px; color: var(--ink-3); text-align: center; }
+
+/* ------------------------------------------------------------------- faq */
+
+.blp-faq { display: grid; gap: 10px; max-width: 900px; }
+.blp-sec { border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .028); overflow: hidden; }
+.blp-sec > summary {
+    padding: 17px 20px; cursor: pointer; list-style: none;
+    font-size: 16.5px; font-weight: 700; color: var(--ink);
+    /* sitewide uppercases <summary>; a question is not a label. */
+    text-transform: none; letter-spacing: 0;
+}
+.blp-sec > summary::-webkit-details-marker { display: none; }
+/* blp-pro.css draws this caret out of two borders. Overriding only `content`
+   left the borders behind and produced a glyph crossed by a chevron, so the
+   whole marker is restated here rather than half-replaced. */
+.blp-sec > summary::after {
+    content: ""; margin-left: auto; flex: none; width: 10px; height: 10px;
+    border: 0; border-right: 2px solid #5eead4; border-bottom: 2px solid #5eead4;
+    transform: rotate(45deg) translateY(-2px);
+}
+.blp-sec[open] > summary::after { transform: rotate(225deg) translateY(2px); }
+.blp-sec > summary:hover { background: rgba(255, 255, 255, .03); }
+.blp-sec-body { padding: 0 20px 18px; }
+.blp-sec-body p { font-size: 15px; line-height: 1.65; color: var(--ink-2); }
+
+/* -------------------------------------------------------------- final CTA */
+
+.blp-finalcta {
+    margin-top: 84px; padding: 52px 40px; text-align: center;
+    border: 1px solid rgba(45, 212, 191, .3); border-radius: 22px;
+    background:
+        radial-gradient(760px 300px at 50% 0%, rgba(45, 212, 191, .16), transparent 68%),
+        linear-gradient(180deg, rgba(22, 35, 59, .95), rgba(12, 20, 36, .95));
+}
+.blp-finalcta h2 { font-family: Barlow, sans-serif; font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -.025em; color: var(--ink); }
+.blp-finalcta p { margin: 14px auto 0; max-width: 64ch; font-size: 17px; line-height: 1.6; color: var(--ink-2); }
+.blp-finalcta .blp-hero-cta { justify-content: center; }
+@media (max-width: 560px) { .blp-finalcta { padding: 36px 20px; } }
+
+.blp-legal { margin: 34px auto 0; max-width: 84ch; font-size: 13px; line-height: 1.65; text-align: center; color: var(--ink-3); }
+
+/* --------------------------------------------------------------- notices */
+
+.blp .blp-note {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 15px 18px; border: 1px solid var(--line-2); border-radius: 14px;
+    background: rgba(255, 255, 255, .04); font-size: 15px; line-height: 1.55; color: var(--ink-2);
+}
+.blp .blp-note .blp-btn { margin-left: auto; }
+.blp .blp-note--ok { border-color: rgba(52, 211, 153, .4); background: rgba(52, 211, 153, .1); color: #c5f5e2; }
+.blp .blp-note--warn { border-color: rgba(251, 191, 36, .4); background: rgba(251, 191, 36, .09); color: #f6e3b6; }
+.blp .blp-note--err { border-color: rgba(248, 113, 113, .42); background: rgba(248, 113, 113, .09); color: #fbd0d0; }
+
+/* --------------------------------------------------------------- spacing */
+
+@media (max-width: 760px) {
+    .blp-shell { width: calc(100% - 28px); padding: 20px 0 48px; }
+    .blp-sectionhead { margin: 60px 0 22px; }
+    .blp-hero { padding-top: 10px; }
+    .blp-hero-cta .blp-btn { flex: 1 1 100%; }
+    .blp-preview-body { padding: 16px; }
+}
