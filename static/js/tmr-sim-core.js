@@ -715,30 +715,19 @@
     box.innerHTML = '';
     this.cfg.render(this, d, box);
 
-    // Simulate again is part of the shared shell so both sports behave the same.
-    var again = el('div', 'againrow');
-    var btn = el('button', 'btn', 'Simulate again');
-    btn.type = 'button';
-    btn.id = 'againBtn';
-    btn.addEventListener('click', function () {
-      self.run({ fresh: true });
-      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    again.appendChild(btn);
-    var share = el('button', 'btn ghost', 'Copy link to this run');
-    share.type = 'button';
-    share.addEventListener('click', function () {
-      var url = global.location.href;
-      if (global.navigator && global.navigator.clipboard) {
-        global.navigator.clipboard.writeText(url).then(function () { share.textContent = 'Link copied'; });
-      } else {
-        share.textContent = url;
-      }
-    });
-    again.appendChild(share);
-    again.appendChild(el('span', 'seednote',
-      'Seed ' + (d.meta && d.meta.seed) + '. Every run is a fresh simulation; the link above replays this exact one.'));
-    box.appendChild(again);
+    // THE SAME TWO ACTIONS, ONCE.
+    //
+    // A second pair of buttons used to sit at the foot of the result offering
+    // "Simulate again" and "Copy link to this run" -- the same two things the
+    // action bar at the top does under different names, which reads as four
+    // actions that might behave differently rather than two that do not.
+    // What is worth keeping from it is the seed, because that is the thing a
+    // shared link turns out to be about.
+    var foot = el('div', 'againrow');
+    foot.appendChild(el('span', 'seednote',
+      'Seed ' + (d.meta && d.meta.seed)
+      + '. Every run is a fresh simulation; Share result copies a link that replays this exact one.'));
+    box.appendChild(foot);
 
     var disc = el('div', 'disc', d.disclaimer || '');
     box.appendChild(disc);

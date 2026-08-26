@@ -23,6 +23,27 @@ const ROOT = path.join(__dirname, '..');
 const BACKEND = path.resolve(ROOT, '../trustmyrecord-backend');
 const HEADED = !!process.env.HEADED;
 
+
+/**
+ * Open a named results section.
+ *
+ * The result used to be one long page; it is now sections, and the box score is
+ * behind one of them. A check that reads the box score has to open it first, and
+ * has to fail if the section is not there rather than silently measuring
+ * whichever pane happened to be showing.
+ */
+async function openSection(page, label) {
+  const found = await page.evaluate((l) => {
+    const b = [...document.querySelectorAll('#result .tabs button')]
+      .find((x) => x.textContent.trim() === l);
+    if (!b) return false;
+    b.click();
+    return true;
+  }, label);
+  assert.ok(found, 'no results section called "' + label + '"');
+  await page.waitForTimeout(350);
+}
+
 /* ------------------------------------------------------------------ servers */
 
 function startApi() {
@@ -162,6 +183,7 @@ async function checkNba(browser, api, site, viewportName, viewport) {
   });
 
   // The box score reconciles in the DOM, not just in the API response.
+  await openSection(page, 'Full box score');
   const boxTotals = await page.$$eval('#result .tablewrap table', (tables) => tables
     .filter((t) => /PTS/.test(t.querySelector('thead').textContent))
     .map((t) => {
@@ -202,6 +224,7 @@ async function checkNba(browser, api, site, viewportName, viewport) {
 
   // The recap and the leaders panel have to be on the page, and the recap has
   // to agree with the scoreline the header is showing.
+  await openSection(page, 'Game summary');
   const nbaRecap = await page.$eval('#result .recap', (n) => n.textContent.trim())
     .catch(() => '');
   assert.ok(nbaRecap.length > 20, viewportName + ': the NBA recap did not render');
@@ -221,12 +244,19 @@ async function checkNba(browser, api, site, viewportName, viewport) {
   const crestCount = await page.$$eval('#result .mh-team img.crest, #result .mh-team .crest-fallback', (n) => n.length);
   assert.strictEqual(crestCount, 2, viewportName + ': the result header is missing team crests');
 
-  await page.click('#result .tabs button:has-text("Box score")');
+  await page.click('#result .tabs button:has-text("Full box score")');
 
   // Simulate again is a NEW simulation, not a replay.
   const seen = new Set([score.join('-')]);
   for (let i = 0; i < 4; i += 1) {
-    await page.click('#againBtn');
+    await page.evaluate(() => {
+      // The duplicate footer pair was removed; "Run again" in the action bar is
+      // the one control that does this now.
+      const b = [...document.querySelectorAll('#result .actionbar button')]
+        .find((x) => /Run again/.test(x.textContent));
+      if (!b) throw new Error('no Run again action on the result');
+      b.click();
+    });
     await page.waitForTimeout(120);
     await page.waitForSelector('#result .mh-team .pts', { timeout: 30000 });
     seen.add((await readScore(page)).join('-'));
@@ -372,21 +402,38 @@ async function checkNhl(browser, api, site, viewportName, viewport) {
       viewportName + ': the scoring summary has more goals than the final score');
   }
 
-  // Back to the box score for the goaltender checks below.
-  await page.evaluate(() => {
-    const tab = [...document.querySelectorAll('#result .tabs button')]
-      .find((t) => /Box score/i.test(t.textContent));
-    if (tab) tab.click();
-  });
-  await new Promise((r) => setTimeout(r, 250));
-
-  // The goaltender card must exist and reconcile.
-  const goalies = await page.$$eval('#result .goaliecard .ln', (n) => n.map((x) => x.textContent.trim()));
-  assert.ok(goalies.length >= 2, viewportName + ': no goaltender lines in the NHL result');
-  const saveLine = goalies.find((t) => /saves on/.test(t));
-  assert.ok(saveLine, viewportName + ': no goaltender save line: ' + goalies.join(' | '));
-  const m = /(\d+) saves on (\d+) shots/.exec(saveLine);
-  assert.ok(m && Number(m[1]) <= Number(m[2]), viewportName + ': a goaltender made more saves than shots faced');
+  // THE GOALTENDERS, in their own columns.
+  //
+  // They were a sentence and are now a line with a decision, shots faced, saves
+  // and a save percentage, so this reads the row rather than parsing prose.
+  await openSection(page, 'Goaltenders');
+  const goalies = await page.$$eval('#result .tablewrap table', (tables) => tables
+    .filter((t) => /SV%/.test(t.querySelector('thead').textContent))
+    .map((t) => {
+      const heads = [...t.querySelectorAll('thead th')].map((h) => h.textContent.trim());
+      const cells = [...t.querySelectorAll('tbody tr')][0];
+      const at = (h) => {
+        const i = heads.indexOf(h);
+        return i < 0 ? null : cells.children[i].textContent.trim();
+      };
+      return {
+        name: cells.children[0].textContent.trim(),
+        dec: at('DEC'), sa: Number(at('SA')), sv: Number(at('SV')),
+        ga: Number(at('GA')), pct: at('SV%'),
+      };
+    }));
+  assert.strictEqual(goalies.length, 2,
+    viewportName + ': expected two goaltender lines, found ' + goalies.length);
+  for (const g of goalies) {
+    assert.ok(['W', 'L', 'OTL', 'SOL'].includes(g.dec),
+      viewportName + ': ' + g.name + ' has decision "' + g.dec + '"');
+    assert.strictEqual(g.sv, g.sa - g.ga,
+      viewportName + ': ' + g.name + ' made ' + g.sv + ' saves on ' + g.sa
+      + ' shots allowing ' + g.ga);
+  }
+  const decisions = goalies.map((g) => g.dec);
+  assert.ok(decisions.filter((d) => d === 'W').length === 1,
+    viewportName + ': the two goaltenders were given decisions ' + decisions.join(' and '));
 
   // Choosing the backup must actually change the starter shown on the result.
   const backup = await page.$eval('#homeGoalie', (s) => (s.options[1] ? s.options[1].value : null));
@@ -394,7 +441,9 @@ async function checkNhl(browser, api, site, viewportName, viewport) {
     await page.selectOption('#homeGoalie', backup);
     await page.click('#runBtn');
     await page.waitForSelector('#result .mh-team .pts', { timeout: 30000 });
-    const shown = await page.$$eval('#result .goaliecard .nm', (n) => n.map((x) => x.textContent.trim()));
+    await openSection(page, 'Goaltenders');
+    const shown = await page.$$eval('#result .tablewrap table tbody tr td.name',
+      (n) => n.map((x) => x.textContent.trim()));
     const expected = await page.$eval('#homeGoalie option:checked', (o) => o.textContent.split(' (')[0]);
     assert.ok(shown.includes(expected),
       viewportName + ': started ' + expected + ' but the result shows ' + shown.join(', '));
@@ -402,7 +451,14 @@ async function checkNhl(browser, api, site, viewportName, viewport) {
 
   const seen = new Set();
   for (let i = 0; i < 5; i += 1) {
-    await page.click('#againBtn');
+    await page.evaluate(() => {
+      // The duplicate footer pair was removed; "Run again" in the action bar is
+      // the one control that does this now.
+      const b = [...document.querySelectorAll('#result .actionbar button')]
+        .find((x) => /Run again/.test(x.textContent));
+      if (!b) throw new Error('no Run again action on the result');
+      b.click();
+    });
     await page.waitForTimeout(120);
     await page.waitForSelector('#result .mh-team .pts', { timeout: 30000 });
     seen.add((await readScore(page)).join('-'));
