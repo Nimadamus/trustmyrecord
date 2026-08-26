@@ -270,7 +270,7 @@
   function availability(app, d) {
     var wrap = el('div');
     var teams = app.currentTeams();
-    [[teams.away, d.matchup.away], [teams.home, d.matchup.home]].forEach(function (pair) {
+    [[teams.away, d.matchup.away, 'away'], [teams.home, d.matchup.home, 'home']].forEach(function (pair) {
       var full = pair[0];
       var shown = pair[1];
       var block = el('div');
@@ -296,6 +296,24 @@
         { h: 'G', fmt: function (r) { return r.season ? r.season.g : '--'; } },
         { h: 'A', fmt: function (r) { return r.season ? r.season.a : '--'; } },
         { h: 'P', fmt: function (r) { return r.season ? r.season.pts : '--'; } },
+        // SCRATCHING A SKATER, which the engine could not do at all until now.
+        //
+        // The ice time goes to the men who remain, the next forward or
+        // defenceman up comes off the bench, and the goal projection loses the
+        // difference between what the scratch scored per sixty and what his
+        // position-mates score per sixty. The goaltender is chosen separately,
+        // in the control above the Run button, because he is not a scratch.
+        { h: 'Scratch', fmt: function (r) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          var held = app.scenario[pair[2]].indexOf(String(r.id)) >= 0;
+          b.className = 'outbtn' + (held ? ' on' : '');
+          b.textContent = held ? 'Scratched' : 'Scratch';
+          b.setAttribute('aria-pressed', held ? 'true' : 'false');
+          b.setAttribute('aria-label', (held ? 'Dress ' : 'Scratch ') + r.name);
+          b.addEventListener('click', function () { app.toggleOut(pair[2], r.id); });
+          return b;
+        } },
       ];
       block.appendChild(S.table(cols, full.lineup.forwards.concat(full.lineup.defence)));
 
@@ -322,10 +340,31 @@
       sp.style.height = '16px';
       wrap.appendChild(sp);
     });
+    var eff = d.projection && d.projection.scenario_effect;
+    if (eff && eff.change && (app.scenario.home.length || app.scenario.away.length)) {
+      var note = el('div', 'pill');
+      note.textContent = 'Scratches moved the projected margin by '
+        + S.signed(eff.change.projected_margin) + ' goals and the home win probability by '
+        + S.signed(Math.round(eff.change.home_win_probability * 1000) / 10) + ' points. '
+        + 'The lineup, the box score and the player ranges were all rebuilt without them.';
+      wrap.appendChild(note);
+      var reset = document.createElement('button');
+      reset.type = 'button';
+      reset.className = 'ghostbtn';
+      reset.textContent = 'Dress everybody';
+      reset.addEventListener('click', function () {
+        if (app.clearScenario()) {
+          var seed = app.lastResult && app.lastResult.meta ? app.lastResult.meta.seed : null;
+          app.run(seed ? { seed: seed } : {});
+        }
+      });
+      wrap.appendChild(reset);
+    }
     wrap.appendChild(el('div', 'disc',
       'Availability comes from the roster feed at the last data refresh, and only designations from the last '
       + 'three weeks are honoured, because a months-old listing is history rather than news. It will not know '
-      + 'about a late scratch or a game-time goaltender decision.'));
+      + 'about a late scratch, which is what Scratch is for: it asks the same question of any skater and '
+      + 'rebuilds the projection without him. The starting goaltender is chosen above the Run button.'));
     return wrap;
   }
 
@@ -453,13 +492,6 @@
     return box;
   }
 
-  var PROP_KEYS = {
-    main: { id: 'shots', label: 'Shots' },
-    line: { id: 'points', label: 'A point', value: 1 },
-    second: { id: 'goals', label: 'G' },
-    third: { id: 'assists', label: 'A' },
-  };
-
   /**
    * The win-probability line, drawn from the game that was played.
    *
@@ -507,46 +539,133 @@
   }
 
   /**
-   * Player distributions. A mean is the least useful true thing you can say
-   * about a player's night, so these lead with the range and the chance of
-   * clearing a line.
+   * THE PROP EXPLORER.
+   *
+   * The old panel showed a median, a range and one hard-coded line, and the line
+   * was whichever round number seemed reasonable when it was written. Nobody
+   * shops a 20-point line because it is round; they shop it because that is what
+   * is posted, and the number posted is rarely the number that was guessed here.
+   *
+   * So the line is typed in. Every stat here is a count and the engine publishes
+   * the whole distribution, so any line can be answered exactly by counting the
+   * replays on each side of it -- no curve, no interpolation, and a push reported
+   * as a push. Change the stat or the number and the whole column recomputes
+   * without going back to the server, because the distribution is already here.
    */
-  function propsPanel(d) {
+  function propExplorer(d, cfg) {
     var pd = d.result.player_distributions;
     var wrap = el('div');
     if (!pd) {
       wrap.appendChild(el('div', 'disc',
-        'Player ranges are computed by replaying the whole game many times. '
-        + 'Run a simulation with them enabled to see them.'));
+        d.projection && d.projection.sample_supports_projection === false
+          ? 'Single-game mode plays one game, so there is no distribution to describe. '
+            + 'Choose 100 or more simulations to see player ranges.'
+          : 'Player ranges are unavailable for this run.'));
       return wrap;
     }
-    var key = PROP_KEYS;
-    ['away', 'home'].forEach(function (side) {
-      var rows = pd[side] || [];
-      if (!rows.length) return;
-      wrap.appendChild(el('div', 'sechead', d.matchup[side].name));
-      wrap.appendChild(S.table([
-        { h: 'Player', fmt: function (r) { return r.name; } },
-        { h: key.main.label, fmt: function (r) { return r.stats[key.main.id].median; },
-          title: 'Median across the replays' },
-        { h: 'Range', fmt: function (r) {
-          var s2 = r.stats[key.main.id];
-          return s2.p10 + ' \u2013 ' + s2.p90;
-        }, title: 'Tenth to ninetieth percentile' },
-        { h: key.line.label, fmt: function (r) {
-          var at = r.stats[key.main.id].at_least || [];
-          var hit = at.filter(function (x) { return x.line === key.line.value; })[0];
-          return hit ? (hit.share * 100).toFixed(0) + '%' : '\u2014';
-        } },
-        { h: key.second.label, fmt: function (r) { return r.stats[key.second.id].median; } },
-        { h: key.third.label, fmt: function (r) { return r.stats[key.third.id].median; } },
-      ], rows));
+
+    var stat = cfg.stats[0];
+    var lines = {};        // player name -> the line being asked about
+    var body = el('div');
+
+    var bar = el('div', 'propbar');
+    var lab = el('label', 'fld');
+    lab.appendChild(el('span', '', 'Market'));
+    var sel = document.createElement('select');
+    cfg.stats.forEach(function (st) {
+      var o = document.createElement('option');
+      o.value = st.id;
+      o.textContent = st.label;
+      sel.appendChild(o);
     });
-    wrap.appendChild(el('div', 'disc',
-      'From ' + pd.runs + ' complete replays of this matchup. These are not fitted curves: '
-      + 'the replays where a player had a big night are the same replays where his team scored a lot, '
-      + 'so the numbers move together the way they do in a real game.'));
+    sel.addEventListener('change', function () {
+      stat = cfg.stats.filter(function (x) { return x.id === sel.value; })[0] || cfg.stats[0];
+      lines = {};
+      draw();
+    });
+    lab.appendChild(sel);
+    bar.appendChild(lab);
+    wrap.appendChild(bar);
+    wrap.appendChild(body);
+
+    function half(v) { return Math.max(0.5, Math.round(v) - 0.5); }
+
+    function rowsFor(side) {
+      var rows = (pd[side] || []).slice();
+      if (cfg.goalieStats && pd.goalies && pd.goalies[side]
+        && cfg.goalieStats.indexOf(stat.id) >= 0) {
+        rows = [pd.goalies[side]];
+      }
+      return rows.filter(function (r) { return r.stats && r.stats[stat.id]; });
+    }
+
+    function draw() {
+      body.innerHTML = '';
+      ['away', 'home'].forEach(function (side) {
+        var rows = rowsFor(side);
+        if (!rows.length) return;
+        body.appendChild(el('div', 'sechead', d.matchup[side].name));
+        body.appendChild(S.table([
+          { h: 'Player', fmt: function (r) { return r.name; } },
+          { h: 'Median', fmt: function (r) { return r.stats[stat.id].median; },
+            title: 'Median across the replays' },
+          { h: 'Range', fmt: function (r) {
+            var v = r.stats[stat.id];
+            return v.p10 + ' – ' + v.p90;
+          }, title: 'Tenth to ninetieth percentile' },
+          { h: 'Line', fmt: function (r) {
+            var v = r.stats[stat.id];
+            if (lines[r.name] === undefined) lines[r.name] = half(v.median);
+            return S.lineInput(lines[r.name], function (n) {
+              lines[r.name] = n;
+              draw();
+            });
+          } },
+          { h: 'Over', fmt: function (r) {
+            var ou = S.overUnder(r.stats[stat.id].dist, lines[r.name]);
+            return ou ? (ou.over * 100).toFixed(1) + '%' : '—';
+          } },
+          { h: 'Under', fmt: function (r) {
+            var ou = S.overUnder(r.stats[stat.id].dist, lines[r.name]);
+            return ou ? (ou.under * 100).toFixed(1) + '%' : '—';
+          } },
+          { h: 'Push', fmt: function (r) {
+            var ou = S.overUnder(r.stats[stat.id].dist, lines[r.name]);
+            if (!ou) return '—';
+            return ou.push > 0 ? (ou.push * 100).toFixed(1) + '%' : '—';
+          }, title: 'A whole-number line the player lands on exactly' },
+        ], rows));
+      });
+      body.appendChild(el('div', 'disc',
+        'From ' + pd.runs + ' complete replays of this matchup, counted directly: '
+        + 'a probability here is the share of those replays on that side of the line, '
+        + 'not a curve fitted to them. At ' + pd.runs + ' replays a stated percentage '
+        + 'carries about ' + (100 / (2 * Math.sqrt(pd.runs))).toFixed(1)
+        + ' points of sampling error. The replays where a player had a big night are the '
+        + 'same replays where his team scored a lot, so the numbers move together the way '
+        + 'they do in a real game.'));
+    }
+    draw();
     return wrap;
+  }
+
+  var PROP_CFG = {
+    stats: [
+      { id: 'points', label: 'Points' },
+      { id: 'goals', label: 'Goals' },
+      { id: 'assists', label: 'Assists' },
+      { id: 'shots', label: 'Shots on goal' },
+      { id: 'saves', label: 'Goaltender saves' },
+      { id: 'goals_against', label: 'Goals against' },
+    ],
+    // Markets that belong to the man in net rather than the skaters. Saves is
+    // the largest single prop market in the sport and the old panel did not
+    // carry it at all, because the collector only ever looked at skaters.
+    goalieStats: ['saves', 'goals_against', 'shots_against'],
+  };
+
+  function propsPanel(d) {
+    return propExplorer(d, PROP_CFG);
   }
 
   /** What the projection is resting on. */
@@ -657,7 +776,17 @@
     }
     if (d.result.leaders) box.appendChild(S.panel('Game leaders', leadersPanel(d)));
 
-    box.appendChild(S.kpis([
+    box.appendChild(S.kpis(p.sample_supports_projection === false ? [
+      { k: 'Final', v: d.result.final.away + ' - ' + d.result.final.home,
+        s: 'One game, played out shift by shift'
+          + (d.result.decided_in && d.result.decided_in !== 'regulation'
+            ? ', decided in ' + d.result.decided_in : '') },
+      { k: 'Pregame win probability', v: pct(p.win_probability.home, 1),
+        s: home.abbr + ', from the rating model rather than this game' },
+      { k: 'Shots in the game', v: (d.result.box_score.away.team_stats
+        ? d.result.box_score.away.team_stats.shots + d.result.box_score.home.team_stats.shots
+        : '—'), s: 'Both sides combined' },
+    ] : [
       { k: 'Projected score', v: n2(p.projected_score.away) + ' - ' + n2(p.projected_score.home),
         s: away.abbr + ' at ' + home.abbr },
       { k: 'Projected total', v: n2(p.total.mean),
@@ -689,7 +818,7 @@
     }
 
     var tabsBox = el('div', 'panel');
-    S.tabs(tabsBox, [
+    var panes = [
       { id: 'box', label: 'Box score', build: function (node) {
         d.result.box_score.away.team = away;
         d.result.box_score.home.team = home;
@@ -745,7 +874,19 @@
         node.appendChild(el('div', 'disc',
           'Across ' + d.meta.simulations.toLocaleString() + ' simulations. A projection is a range, not a number.'));
       } },
-    ]);
+    ];
+    // A SINGLE GAME HAS NO DISTRIBUTION TO SHOW.
+    //
+    // These three panels describe the shape of many runs: the most common
+    // finals, the histograms, the percentile ladder. In single-game mode the
+    // engine publishes none of it, deliberately, so the tabs that would present
+    // it are not offered rather than opened onto an empty box.
+    if (d.projection.sample_supports_projection === false) {
+      panes = panes.filter(function (t) {
+        return ['scores', 'charts', 'range'].indexOf(t.id) < 0;
+      });
+    }
+    S.tabs(tabsBox, panes);
     box.appendChild(tabsBox);
   }
 

@@ -59,6 +59,10 @@
     this.teams = [];
     this.byRef = {};
     this.state = { sims: 10000, venue: 'home', away: null, home: null };
+    // WHO IS NOT PLAYING, as a question the visitor asked rather than a fact the
+    // feed reported. Ids only, one list per side; the API already accepts them
+    // and already recomputes the whole projection around them.
+    this.scenario = { home: [], away: [] };
     this.lastResult = null;
     this.running = false;
   }
@@ -326,6 +330,43 @@
       note.textContent = d.method;
       host.appendChild(note);
 
+      // THE UNTOUCHED-SEASON RESULT, published next to the flattering one.
+      //
+      // Everything above is walk-forward, but the model's settings were chosen
+      // by looking at how they scored across all of these seasons, which makes
+      // the figure a little kinder than the model deserves. This is the same
+      // model with its settings frozen on the early seasons and scored once on
+      // seasons nobody had looked at. It is the number to judge it by, and it is
+      // shown with its interval because a skill of two percent on two thousand
+      // games and one of sixteen are not the same claim.
+      if (d.holdout && d.holdout.segments && d.holdout.segments.length) {
+        var ho = el('div', 'panel');
+        ho.appendChild(el('div', 'sechead', 'Held-out seasons: '
+          + d.holdout.holdout_seasons.join(' and ')
+          + ', never looked at while anything was tuned'));
+        ho.appendChild(table([
+          { h: 'On these games', fmt: function (r) { return r.segment; } },
+          { h: 'Games', fmt: function (r) { return r.games.toLocaleString(); } },
+          { h: 'Winner called', fmt: function (r) { return pct(r.accuracy, 1); } },
+          { h: 'Skill over picking the home side',
+            fmt: function (r) { return pct(r.brier_skill, 1); },
+            title: 'Brier skill: how much of the achievable improvement it captured' },
+          { h: '95% interval', fmt: function (r) {
+            return pct(r.ci[0], 1) + ' to ' + pct(r.ci[1], 1);
+          } },
+          { h: 'Margin error', fmt: function (r) { return r.margin_mae.toFixed(2); } },
+        ], d.holdout.segments));
+        var beats = d.holdout.segments[0].ci[0] > 0;
+        ho.appendChild(el('div', 'disc',
+          d.holdout_method + ' On the held-out seasons the interval for every game '
+          + (beats ? 'sits above zero, so the model is measurably better than picking the home side. '
+                   : 'includes zero, so the model has NOT been shown to beat picking the home side. ')
+          + 'Expected calibration error on those seasons was '
+          + pct(d.holdout.expected_calibration_error, 2)
+          + ': a stated seventy percent came in near seventy.'));
+        host.appendChild(ho);
+      }
+
       if (d.bySeason && d.bySeason.length) {
         var per = el('div', 'dim');
         per.textContent = 'By season: ' + d.bySeason.map(function (f) {
@@ -434,6 +475,7 @@
         $$('button', self.nodes.venueSeg).forEach(function (x) {
           x.classList.toggle('on', x.getAttribute('data-venue') === self.state.venue);
         });
+        self.clearScenario();
         if (self.cfg.onMatchupChanged) self.cfg.onMatchupChanged(self);
         self.renderPrerun();
         self.run({ fresh: true });
@@ -466,6 +508,7 @@
       sel.addEventListener('change', function () {
         self.state.away = self.nodes.away.value || null;
         self.state.home = self.nodes.home.value || null;
+        self.clearScenario();
         if (self.cfg.onMatchupChanged) self.cfg.onMatchupChanged(self);
         self.renderPrerun();
       });
@@ -499,7 +542,8 @@
       // A deep link is a request for that specific matchup, so open on the pane
       // that shows it selected rather than on a slate nobody asked for.
       this.setMode('custom');
-      if (this.cfg.onMatchupChanged) this.cfg.onMatchupChanged(this);
+      this.clearScenario();
+    if (this.cfg.onMatchupChanged) this.cfg.onMatchupChanged(this);
       this.renderPrerun();
       this.run({ seed: isFinite(seed) && seed > 0 ? seed : null });
     }
@@ -511,8 +555,31 @@
     this.nodes.home.value = a;
     this.state.away = this.nodes.away.value || null;
     this.state.home = this.nodes.home.value || null;
+    this.clearScenario();
     if (this.cfg.onMatchupChanged) this.cfg.onMatchupChanged(this);
     this.renderPrerun();
+  };
+
+  /**
+   * Ask the same game again with somebody held out.
+   *
+   * The seed is carried over deliberately. A visitor toggling a player is asking
+   * what changes, and re-drawing a different game underneath the question would
+   * bury the answer in noise: same seed, same draw, and the only thing that moved
+   * is the thing they changed.
+   */
+  SimApp.prototype.toggleOut = function (side, id) {
+    var list = this.scenario[side];
+    var i = list.indexOf(String(id));
+    if (i >= 0) list.splice(i, 1); else list.push(String(id));
+    var seed = this.lastResult && this.lastResult.meta ? this.lastResult.meta.seed : null;
+    this.run(seed ? { seed: seed } : {});
+  };
+
+  SimApp.prototype.clearScenario = function () {
+    if (!this.scenario.home.length && !this.scenario.away.length) return false;
+    this.scenario = { home: [], away: [] };
+    return true;
   };
 
   SimApp.prototype.currentTeams = function () {
@@ -574,10 +641,25 @@
       var extra = this.cfg.extraParams(this) || {};
       Object.keys(extra).forEach(function (k) { if (extra[k]) params.set(k, extra[k]); });
     }
+    if (this.scenario.home.length) params.set('homeOut', this.scenario.home.join(','));
+    if (this.scenario.away.length) params.set('awayOut', this.scenario.away.join(','));
+    // PLAYER DISTRIBUTIONS ARE ALWAYS ASKED FOR.
+    //
+    // The API has served these all along and the page has had a tab ready for
+    // them, but nothing ever set the parameter, so the tab showed "run a
+    // simulation with them enabled" to a visitor who had just run one and had no
+    // control to enable anything. A thousand replays cost a fraction of a second.
+    //
+    // Not in single-game mode: one simulation means one game, and quietly
+    // replaying it a thousand times to fill a table would contradict the thing
+    // the visitor selected.
+    if (this.state.sims >= 100) params.set('props', '1000');
 
     this.running = true;
     this.nodes.run.disabled = true;
-    this.setState('loading', 'Running ' + this.state.sims.toLocaleString() + ' simulations');
+    this.setState('loading', this.state.sims === 1
+      ? 'Playing one game'
+      : 'Running ' + this.state.sims.toLocaleString() + ' simulations');
 
     this.api('/simulate?' + params.toString()).then(function (d) {
       self.lastResult = d;
@@ -643,6 +725,57 @@
   };
 
   /* ---------- rendering primitives shared by both sports ---------------- */
+
+  /**
+   * The chance of clearing a line, read straight off the simulated distribution.
+   *
+   * Every stat published this way is a COUNT, so the engine ships the whole
+   * shape -- how many of the replays ended on each value -- and any line at all
+   * can then be answered exactly. No curve is fitted and nothing is interpolated
+   * between the published percentiles: this counts replays, which is the same
+   * thing the percentiles were counted from.
+   *
+   * A whole-number line can push, and that is reported rather than folded into
+   * one side, because a bet on 20 when he scores exactly 20 is not a loss.
+   */
+  function overUnder(dist, line) {
+    if (!dist || !dist.counts || !dist.runs) return null;
+    var over = 0;
+    var under = 0;
+    var push = 0;
+    for (var i = 0; i < dist.counts.length; i += 1) {
+      var v = dist.from + i;
+      var c = dist.counts[i];
+      if (v > line) over += c;
+      else if (v < line) under += c;
+      else push += c;
+    }
+    return {
+      over: over / dist.runs,
+      under: under / dist.runs,
+      push: push / dist.runs,
+      runs: dist.runs,
+    };
+  }
+
+  /**
+   * A number box for a line, stepping in halves because that is how lines are
+   * written. Reports on every edit so the probabilities move as it is typed.
+   */
+  function lineInput(value, onChange) {
+    var i = document.createElement('input');
+    i.type = 'number';
+    i.step = '0.5';
+    i.min = '0';
+    i.className = 'lineinput';
+    i.value = String(value);
+    i.setAttribute('aria-label', 'Line');
+    i.addEventListener('input', function () {
+      var v = parseFloat(i.value);
+      if (Number.isFinite(v)) onChange(v);
+    });
+    return i;
+  }
 
   /** Tab bar. `panes` is [{id, label, build(node)}]. */
   function tabs(container, panes) {
@@ -960,6 +1093,7 @@
     SimApp: SimApp,
     el: el, $: $, $$: $$, esc: esc, pct: pct, signed: signed,
     tabs: tabs, table: table, matchupHeader: matchupHeader, kpis: kpis,
+    overUnder: overUnder, lineInput: lineInput,
     compare: compare, driverCards: driverCards, panel: panel,
     crest: crest, histogram: histogram, curve: curve, chartCard: chartCard, svgEl: svgEl,
     API_HOST: API_HOST,
