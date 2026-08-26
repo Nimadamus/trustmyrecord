@@ -22,23 +22,39 @@
       if (p.pos) wrap.appendChild(el('span', 'pos', p.pos));
       return wrap;
     } },
-    { h: 'MIN', fmt: function (p) { return n1(p.min); } },
-    { h: 'PTS', k: 'pts' },
-    { h: 'FG', fmt: function (p) { return p.fgm + '-' + p.fga; } },
-    { h: 'FG%', fmt: function (p) { return p.fga ? p.fgPct.toFixed(1) : '--'; } },
-    { h: '3PT', fmt: function (p) { return p.tpm + '-' + p.tpa; } },
-    { h: '3P%', fmt: function (p) { return p.tpa ? p.threePct.toFixed(1) : '--'; } },
-    { h: 'FT', fmt: function (p) { return p.ftm + '-' + p.fta; } },
-    { h: 'FT%', fmt: function (p) { return p.fta ? p.ftPct.toFixed(1) : '--'; } },
-    { h: 'OREB', k: 'oreb' },
-    { h: 'DREB', k: 'dreb' },
-    { h: 'REB', k: 'reb' },
-    { h: 'AST', k: 'ast' },
-    { h: 'STL', k: 'stl' },
-    { h: 'BLK', k: 'blk' },
-    { h: 'TO', k: 'tov' },
-    { h: 'PF', fmt: function (p) { return p.fouledOut ? p.pf + ' (out)' : p.pf; } },
-    { h: '+/-', fmt: function (p) { return S.signed(p.plusMinus, 0); } },
+    { h: 'MIN', title: 'Minutes played', sortValue: function (p) { return p.min; },
+      fmt: function (p) { return n1(p.min); } },
+    { h: 'PTS', k: 'pts', title: 'Points' },
+    { h: 'FG', title: 'Field goals made and attempted',
+      sortValue: function (p) { return p.fgm; },
+      fmt: function (p) { return p.fgm + '-' + p.fga; } },
+    { h: 'FG%', title: 'Field-goal percentage',
+      sortValue: function (p) { return p.fga ? p.fgPct : -1; },
+      fmt: function (p) { return p.fga ? p.fgPct.toFixed(1) : '--'; } },
+    { h: '3PT', title: 'Three-pointers made and attempted',
+      sortValue: function (p) { return p.tpm; },
+      fmt: function (p) { return p.tpm + '-' + p.tpa; } },
+    { h: '3P%', title: 'Three-point percentage',
+      sortValue: function (p) { return p.tpa ? p.threePct : -1; },
+      fmt: function (p) { return p.tpa ? p.threePct.toFixed(1) : '--'; } },
+    { h: 'FT', title: 'Free throws made and attempted',
+      sortValue: function (p) { return p.ftm; },
+      fmt: function (p) { return p.ftm + '-' + p.fta; } },
+    { h: 'FT%', title: 'Free-throw percentage',
+      sortValue: function (p) { return p.fta ? p.ftPct : -1; },
+      fmt: function (p) { return p.fta ? p.ftPct.toFixed(1) : '--'; } },
+    { h: 'OREB', k: 'oreb', title: 'Offensive rebounds' },
+    { h: 'DREB', k: 'dreb', title: 'Defensive rebounds' },
+    { h: 'REB', k: 'reb', title: 'Total rebounds' },
+    { h: 'AST', k: 'ast', title: 'Assists' },
+    { h: 'STL', k: 'stl', title: 'Steals' },
+    { h: 'BLK', k: 'blk', title: 'Blocks' },
+    { h: 'TO', k: 'tov', title: 'Turnovers' },
+    { h: 'PF', title: 'Personal fouls', sortValue: function (p) { return p.pf; },
+      fmt: function (p) { return p.fouledOut ? p.pf + ' (out)' : p.pf; } },
+    { h: '+/-', title: 'Point differential while he was on the floor, counted possession by possession',
+      sortValue: function (p) { return p.plusMinus; },
+      fmt: function (p) { return S.signed(p.plusMinus, 0); } },
   ];
 
   /* ---------- distribution charts ----------------------------------------- */
@@ -99,8 +115,8 @@
   function boxTable(side, teamName) {
     var rows = side.players.map(function (p, i) {
       var r = Object.assign({}, p);
-      // The first bench player gets the visible break.
-      if (i > 0 && side.players[i - 1].starter && !p.starter) r._class = 'groupsplit';
+      // The line between the five who started and everybody else.
+      if (i > 0 && side.players[i - 1].starter && !p.starter) r._class = 'bench-start';
       return r;
     });
     var t = side.totals;
@@ -117,7 +133,30 @@
     head.appendChild(el('div', 'rec', t.pts + ' points on ' + t.fga + ' shots, '
       + t.teamRebounds + ' team rebounds'));
     wrap.appendChild(head);
-    wrap.appendChild(S.table(BOX_COLS, rows, { footer: footer }));
+    wrap.appendChild(S.table(BOX_COLS, rows, {
+      footer: footer, sortable: true, sticky: true,
+    }));
+
+    // WHO WAS THERE AND DID NOT PLAY.
+    //
+    // A sheet listing only the men who took the floor cannot tell a rested star
+    // from an injured one from somebody the coach did not use, and those are
+    // three different pieces of information. None of them are given a statistical
+    // line: a row of zeroes would claim he dressed and did nothing.
+    var out = side.did_not_play || [];
+    if (out.length) {
+      var dnp = el('div', 'dnp');
+      dnp.appendChild(el('b', '', 'Did not play: '));
+      out.forEach(function (p, i) {
+        var span = el('span');
+        span.appendChild(el('span', 'tag', p.status === 'inactive' ? 'INACTIVE'
+          : (p.status === 'held out' ? 'HELD OUT' : 'DNP')));
+        span.appendChild(document.createTextNode(p.name + ' (' + p.reason + ')'
+          + (i < out.length - 1 ? ' · ' : '')));
+        dnp.appendChild(span);
+      });
+      wrap.appendChild(dnp);
+    }
     return wrap;
   }
 
@@ -625,59 +664,78 @@
    * printed report that contains only whichever one happened to be open is not a
    * report.
    */
+  /**
+   * The four things to do with a finished result. The print handler expands
+   * every tab into the flow first, so a printed page carries the whole box
+   * score rather than whichever section happened to be open.
+   */
   function resultBar(app, d) {
-    var bar = el('div', 'resultbar');
-
-    var share = el('button', 'btn ghost', 'Copy link to this simulation');
-    share.type = 'button';
-    var said = el('span', 'copied', '');
-    share.addEventListener('click', function () {
-      var url = window.location.href;
-      var done = function () {
-        said.textContent = 'Link copied. It reproduces this exact simulation.';
-        share.setAttribute('aria-live', 'polite');
-      };
-      if (window.navigator && window.navigator.clipboard) {
-        window.navigator.clipboard.writeText(url).then(done, function () {
-          said.textContent = url;
+    return S.actionBar(app, {
+      beforePrint: function () {
+        var host = S.$('#result');
+        var bars = host ? S.$$('.tabs', host) : [];
+        bars.forEach(function (barEl) {
+          var buttons = S.$$('button', barEl);
+          var body = barEl.nextSibling;
+          if (!body || buttons.length < 2) return;
+          // Render every tab into the flow, each under its own heading, so the
+          // printed page carries the whole result.
+          var holder = el('div', 'printonly');
+          buttons.forEach(function (b) {
+            if (b.classList.contains('on')) return;
+            var section = el('div');
+            section.appendChild(el('div', 'sechead', b.textContent));
+            b.click();
+            var clone = body.cloneNode(true);
+            section.appendChild(clone);
+            holder.appendChild(section);
+          });
+          // Put the originally-open tab back for the person still at the screen.
+          if (buttons[0]) buttons[0].click();
+          barEl.parentNode.appendChild(holder);
         });
-      } else {
-        said.textContent = url;
-      }
+      },
     });
+  }
 
-    var print = el('button', 'btn ghost', 'Print or save as PDF');
-    print.type = 'button';
-    print.addEventListener('click', function () {
-      var host = S.$('#result');
-      var bars = host ? S.$$('.tabs', host) : [];
-      bars.forEach(function (barEl) {
-        var buttons = S.$$('button', barEl);
-        var body = barEl.nextSibling;
-        if (!body || buttons.length < 2) return;
-        // Render every tab into the flow, each under its own heading, so the
-        // printed page carries the whole result.
-        var holder = el('div', 'printonly');
-        buttons.forEach(function (b) {
-          if (b.classList.contains('on')) return;
-          var section = el('div');
-          section.appendChild(el('div', 'sechead', b.textContent));
-          b.click();
-          var clone = body.cloneNode(true);
-          section.appendChild(clone);
-          holder.appendChild(section);
-        });
-        // Put the originally-open tab back for the person still at the screen.
-        if (buttons[0]) buttons[0].click();
-        barEl.parentNode.appendChild(holder);
-      });
-      window.setTimeout(function () { window.print(); }, 120);
+  /**
+   * IMPORTANT EVENTS, from the possessions that were played.
+   *
+   * Basketball here is simulated possession by possession, not pass by pass, so
+   * there is no honest play-by-play to print and inventing one would be writing
+   * fiction around a number. What the record does hold is the score after every
+   * possession, which is enough for the things a reader actually asks: the runs,
+   * the last time the lead changed hands, and the point after which it was over.
+   * Each line is a fact about the simulated score with the quarter it happened
+   * in. See keyMoments in the engine.
+   */
+  function keyMoments(d) {
+    var wrap = el('div');
+    var ms = d.result.key_moments || [];
+    if (!ms.length) {
+      wrap.appendChild(el('div', 'disc',
+        'This game had no run, lead change or decisive stretch worth calling out: '
+        + 'it stayed close throughout, or it was never close.'));
+      return wrap;
+    }
+    ms.forEach(function (m) {
+      var row = el('div', 'evrow');
+      row.appendChild(el('span', 'when', m.quarter));
+      var what = el('span', 'what');
+      what.appendChild(el('b', '', m.team + ' '));
+      what.appendChild(document.createTextNode(m.detail));
+      row.appendChild(what);
+      row.appendChild(el('span', 'tag', m.kind));
+      wrap.appendChild(row);
     });
-
-    bar.appendChild(share);
-    bar.appendChild(print);
-    bar.appendChild(said);
-    return bar;
+    var f = d.result.game_flow || {};
+    wrap.appendChild(el('div', 'disc',
+      (f.lead_changes || 0) + ' lead changes, ' + (f.times_tied || 0) + ' ties, biggest lead '
+      + Math.max(f.biggest_lead ? f.biggest_lead.home : 0, f.biggest_lead ? f.biggest_lead.away : 0)
+      + '. Every line above is read off the score after each simulated possession, '
+      + 'not from a play-by-play, because this engine simulates possessions rather '
+      + 'than individual plays and will not describe events it did not generate.'));
+    return wrap;
   }
 
   function render(app, d, box) {
@@ -725,17 +783,19 @@
         s: 'Share of runs decided by a possession' },
     ]));
 
-    if (d.recap || d.result.game_flow) {
-      box.appendChild(S.panel('How it played out', recapPanel(d)));
-    }
-    if (d.result.leaders) box.appendChild(S.panel('Game leaders', leadersPanel(d)));
-
-    var lsPanel = S.panel('Quarter by quarter', lineScore(d));
-    box.appendChild(lsPanel);
 
     var tabsBox = el('div', 'panel');
     var panes = [
-      { id: 'box', label: 'Box score', build: function (node) {
+      // GAME SUMMARY OPENS FIRST, and is a summary rather than a landing page:
+      // what happened, who led it, and the quarters, without a click.
+      { id: 'summary', label: 'Game summary', build: function (node) {
+        if (d.recap || d.result.game_flow) {
+          node.appendChild(S.panel('How it played out', recapPanel(d)));
+        }
+        if (d.result.leaders) node.appendChild(S.panel('Game leaders', leadersPanel(d)));
+        node.appendChild(S.panel('Scoring by quarter', lineScore(d)));
+      } },
+      { id: 'box', label: 'Full box score', build: function (node) {
         d.result.box_score.away.team = away;
         d.result.box_score.home.team = home;
         node.appendChild(boxTable(d.result.box_score.away, away.name));
@@ -754,8 +814,17 @@
       { id: 'props', label: 'Player ranges', build: function (node) {
         node.appendChild(propsPanel(d));
       } },
-      { id: 'sens', label: 'What it rests on', build: function (node) {
+      { id: 'sens', label: 'Simulation analysis', build: function (node) {
         node.appendChild(sensitivityPanel(d));
+      } },
+      { id: 'quarters', label: 'Scoring by quarter', build: function (node) {
+        node.appendChild(lineScore(d));
+      } },
+      { id: 'leaders', label: 'Game leaders', build: function (node) {
+        if (d.result.leaders) node.appendChild(leadersPanel(d));
+      } },
+      { id: 'events', label: 'Important events', build: function (node) {
+        node.appendChild(keyMoments(d));
       } },
       { id: 'team', label: 'Team stats', build: function (node) { node.appendChild(teamStats(d)); } },
       { id: 'why', label: 'Why the model moved', build: function (node) {
@@ -786,6 +855,20 @@
           + ' simulations. A projection is a range, not a number.'));
       } },
     ];
+    // THE ORDER THE SECTIONS ARE ASKED FOR IN.
+    //
+    // Sorted rather than declared in order, because the build functions above
+    // are grouped by what they need and reordering them by hand invites a pane
+    // being lost in the move. Anything not named here keeps its place after the
+    // ones that are.
+    var ORDER = ['summary', 'box', 'team', 'quarters', 'leaders', 'events', 'props', 'sens',
+      'scores', 'wp', 'charts', 'range', 'why', 'season', 'avail'];
+    panes.sort(function (a, b) {
+      var ai = ORDER.indexOf(a.id);
+      var bi = ORDER.indexOf(b.id);
+      return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+    });
+
     // A SINGLE GAME HAS NO DISTRIBUTION TO SHOW.
     //
     // These three panels describe the shape of many runs: the most common

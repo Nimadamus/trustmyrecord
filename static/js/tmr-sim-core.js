@@ -797,6 +797,66 @@
     return i;
   }
 
+  /**
+   * WHAT TO DO WITH A RESULT ONCE YOU HAVE ONE.
+   *
+   * Four actions, and each answers a question the previous version left the
+   * visitor to solve by scrolling: play it again, pick different teams, send it
+   * to somebody, put it on paper. Run Again deliberately drops the seed -- it is
+   * a NEW game of the same matchup -- while the share link keeps it, because
+   * those are opposite intentions and using one control for both made the seed
+   * behaviour impossible to predict.
+   */
+  function actionBar(app, opts) {
+    opts = opts || {};
+    var bar = el('div', 'actionbar');
+    var said = el('span', 'copied', '');
+    said.setAttribute('aria-live', 'polite');
+
+    var add = function (label, cls, fn, title) {
+      var b = el('button', cls || '', label);
+      b.type = 'button';
+      if (title) b.title = title;
+      b.addEventListener('click', fn);
+      bar.appendChild(b);
+      return b;
+    };
+
+    add('Run again', 'primary', function () {
+      // No seed: a fresh draw of the same matchup.
+      app.run({});
+    }, 'Play this matchup again, from a new draw');
+
+    add('Change matchup', '', function () {
+      var setup = $('#setup');
+      if (setup) {
+        setup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var away = $('#awayTeam');
+        if (away) window.setTimeout(function () { away.focus(); }, 350);
+      }
+    }, 'Go back to the team pickers');
+
+    add('Share result', '', function () {
+      var url = global.location.href;
+      var done = function () {
+        said.textContent = 'Link copied. It reproduces this exact simulation.';
+      };
+      if (global.navigator && global.navigator.clipboard) {
+        global.navigator.clipboard.writeText(url).then(done, function () { said.textContent = url; });
+      } else {
+        said.textContent = url;
+      }
+    }, 'Copy a link that reproduces this exact game');
+
+    add('Print box score', '', function () {
+      if (opts.beforePrint) opts.beforePrint();
+      global.setTimeout(function () { global.print(); }, 140);
+    }, 'Print, or save as a PDF');
+
+    bar.appendChild(said);
+    return bar;
+  }
+
   /** Tab bar. `panes` is [{id, label, build(node)}]. */
   function tabs(container, panes) {
     var bar = el('div', 'tabs');
@@ -822,40 +882,88 @@
    * A row may carry `_class` for a modifier such as the starters/bench split.
    */
   function table(cols, rows, opts) {
-    var wrap = el('div', 'tablewrap');
-    var t = el('table');
+    opts = opts || {};
+    var wrap = el('div', 'tablewrap' + (opts.sticky ? ' sticky' : ''));
+    var t = el('table' );
     var thead = el('thead');
     var tr = el('tr');
-    cols.forEach(function (c) {
+    var tbody = el('tbody');
+    // A stat table is read by asking a question of it -- who had the most
+    // rebounds, who was on the ice longest -- and answering that by eye down
+    // twenty rows is work the browser should be doing.
+    var sortState = { index: -1, dir: -1 };
+    var view = rows.slice();
+
+    function valueOf(r, c) {
+      if (c.sortValue) return c.sortValue(r);
+      var raw = c.k ? r[c.k] : (c.fmt ? c.fmt(r) : null);
+      if (raw && raw.nodeType) raw = raw.textContent;
+      var n = parseFloat(String(raw == null ? '' : raw).replace(/[^0-9.\-]/g, ''));
+      return Number.isFinite(n) ? n : String(raw == null ? '' : raw).toLowerCase();
+    }
+
+    function paint() {
+      tbody.innerHTML = '';
+      view.forEach(function (r) {
+        var row = el('tr', r._class || '');
+        cols.forEach(function (c, i) {
+          var td = el('td', i === 0 ? 'name' : '');
+          if (c.align) td.style.textAlign = c.align;
+          var v = c.fmt ? c.fmt(r) : r[c.k];
+          if (v && v.nodeType) td.appendChild(v);
+          else td.innerHTML = v == null ? '' : String(v);
+          row.appendChild(td);
+        });
+        tbody.appendChild(row);
+      });
+      if (opts.footer) {
+        var f = el('tr', 'groupsplit');
+        cols.forEach(function (c, i) {
+          var td = el('td', i === 0 ? 'name' : '');
+          var v = c.fmt ? c.fmt(opts.footer) : opts.footer[c.k];
+          td.innerHTML = v == null ? '' : '<b>' + String(v) + '</b>';
+          f.appendChild(td);
+        });
+        tbody.appendChild(f);
+      }
+    }
+
+    cols.forEach(function (c, i) {
       var th = el('th', '', c.h);
       if (c.title) th.title = c.title;
+      if (opts.sortable && c.sortable !== false) {
+        th.tabIndex = 0;
+        th.className = 'sortable';
+        th.setAttribute('role', 'button');
+        th.setAttribute('aria-label', 'Sort by ' + (c.title || c.h));
+        var run = function () {
+          // Same column again reverses; a new column starts high, because the
+          // first thing anybody wants from a stat column is its top.
+          if (sortState.index === i) sortState.dir = -sortState.dir;
+          else { sortState.index = i; sortState.dir = i === 0 ? 1 : -1; }
+          view = rows.slice().sort(function (a, b) {
+            var av = valueOf(a, c);
+            var bv = valueOf(b, c);
+            if (av < bv) return -sortState.dir;
+            if (av > bv) return sortState.dir;
+            return 0;
+          });
+          [].forEach.call(tr.children, function (h2) {
+            h2.classList.remove('sorted-asc', 'sorted-desc');
+          });
+          th.classList.add(sortState.dir > 0 ? 'sorted-asc' : 'sorted-desc');
+          paint();
+        };
+        th.addEventListener('click', run);
+        th.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); run(); }
+        });
+      }
       tr.appendChild(th);
     });
     thead.appendChild(tr);
     t.appendChild(thead);
-
-    var tbody = el('tbody');
-    rows.forEach(function (r) {
-      var row = el('tr', r._class || '');
-      cols.forEach(function (c, i) {
-        var td = el('td', i === 0 ? 'name' : '');
-        var v = c.fmt ? c.fmt(r) : r[c.k];
-        if (v && v.nodeType) td.appendChild(v);
-        else td.innerHTML = v == null ? '' : String(v);
-        row.appendChild(td);
-      });
-      tbody.appendChild(row);
-    });
-    if (opts && opts.footer) {
-      var f = el('tr', 'groupsplit');
-      cols.forEach(function (c, i) {
-        var td = el('td', i === 0 ? 'name' : '');
-        var v = c.fmt ? c.fmt(opts.footer) : opts.footer[c.k];
-        td.innerHTML = v == null ? '' : '<b>' + String(v) + '</b>';
-        f.appendChild(td);
-      });
-      tbody.appendChild(f);
-    }
+    paint();
     t.appendChild(tbody);
     wrap.appendChild(t);
     return wrap;
@@ -1113,7 +1221,7 @@
     SimApp: SimApp,
     el: el, $: $, $$: $$, esc: esc, pct: pct, signed: signed,
     tabs: tabs, table: table, matchupHeader: matchupHeader, kpis: kpis,
-    overUnder: overUnder, lineInput: lineInput,
+    overUnder: overUnder, lineInput: lineInput, actionBar: actionBar,
     compare: compare, driverCards: driverCards, panel: panel,
     crest: crest, histogram: histogram, curve: curve, chartCard: chartCard, svgEl: svgEl,
     API_HOST: API_HOST,

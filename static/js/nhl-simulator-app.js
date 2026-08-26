@@ -60,20 +60,36 @@
       if (p.unit) wrap.appendChild(el('span', 'unit', p.unit));
       return wrap;
     } },
-    { h: 'G', k: 'g' },
-    { h: 'A', k: 'a' },
-    { h: 'P', k: 'pts' },
-    { h: 'SOG', k: 'shots' },
-    { h: 'PPG', k: 'ppG' },
-    { h: '+/-', fmt: function (p) { return S.signed(p.plusMinus, 0); } },
-    { h: 'PIM', k: 'pim' },
-    { h: 'HIT', k: 'hits' },
-    { h: 'BLK', k: 'blocks' },
-    { h: 'TOI', fmt: function (p) {
-      var m = Math.floor(p.toi);
-      var s = Math.round((p.toi - m) * 60);
-      return m + ':' + (s < 10 ? '0' : '') + s;
-    } },
+    { h: 'G', k: 'g', title: 'Goals' },
+    { h: 'A', k: 'a', title: 'Assists' },
+    { h: 'P', k: 'pts', title: 'Points' },
+    { h: 'SOG', k: 'shots', title: 'Shots on goal' },
+    { h: 'S%', title: 'Shooting percentage',
+      sortValue: function (p) { return p.shootingPct === null ? -1 : p.shootingPct; },
+      fmt: function (p) { return p.shootingPct === null ? '--' : p.shootingPct.toFixed(1); } },
+    { h: 'PPG', k: 'ppG', title: 'Power-play goals' },
+    { h: 'SHG', k: 'shG', title: 'Short-handed goals' },
+    { h: '+/-', title: 'Goal differential at even strength while he was on the ice',
+      sortValue: function (p) { return p.plusMinus; },
+      fmt: function (p) { return S.signed(p.plusMinus, 0); } },
+    { h: 'PIM', k: 'pim', title: 'Penalty minutes' },
+    { h: 'HIT', k: 'hits', title: 'Hits' },
+    { h: 'BLK', k: 'blocks', title: 'Blocked shots' },
+    { h: 'GV', k: 'giveaways', title: 'Giveaways' },
+    { h: 'TK', k: 'takeaways', title: 'Takeaways' },
+    { h: 'FO', title: 'Faceoffs won of faceoffs taken',
+      sortValue: function (p) { return p.faceoffWins; },
+      fmt: function (p) { return p.faceoffs ? p.faceoffWins + '-' + p.faceoffs : '--'; } },
+    { h: 'FO%', title: 'Faceoff win percentage, for the men who took draws',
+      sortValue: function (p) { return p.faceoffPct === null ? -1 : p.faceoffPct; },
+      fmt: function (p) { return p.faceoffPct === null ? '--' : p.faceoffPct.toFixed(1); } },
+    { h: 'TOI', title: 'Time on ice',
+      sortValue: function (p) { return p.toi; },
+      fmt: function (p) {
+        var m = Math.floor(p.toi);
+        var s = Math.round((p.toi - m) * 60);
+        return m + ':' + (s < 10 ? '0' : '') + s;
+      } },
   ];
 
   /* ---------- distribution charts ----------------------------------------- */
@@ -137,7 +153,11 @@
     var t = side.totals;
     var footer = {
       name: 'TEAM', g: t.goals, a: t.assists, pts: t.goals + t.assists, shots: t.shots,
-      ppG: t.powerPlayGoals, plusMinus: 0, pim: t.pim, hits: t.hits, blocks: t.blocks, toi: 300,
+      shootingPct: t.shootingPct, ppG: t.powerPlayGoals, shG: t.shortHandedGoals,
+      plusMinus: 0, pim: t.pim, hits: t.hits, blocks: t.blocks,
+      giveaways: t.giveaways, takeaways: t.takeaways,
+      faceoffWins: t.faceoffWins, faceoffs: t.faceoffs, faceoffPct: t.faceoffPct,
+      toi: 300,
     };
     var wrap = el('div');
     var head = el('div', 'teamhead');
@@ -146,24 +166,63 @@
     head.appendChild(el('div', 'rec', t.goals + ' goals on ' + t.shots + ' shots ('
       + t.shootingPct.toFixed(1) + '%), power play ' + t.powerPlayGoals + ' for ' + t.powerPlayOpportunities));
     wrap.appendChild(head);
-    wrap.appendChild(S.table(SKATER_COLS, rows, { footer: footer }));
+    wrap.appendChild(S.table(SKATER_COLS, rows, {
+      footer: footer, sortable: true, sticky: true,
+    }));
 
+    wrap.appendChild(goalieTable(side));
+    return wrap;
+  }
+
+  /**
+   * THE GOALTENDER'S OWN LINE, in the columns a goaltender is actually read in.
+   *
+   * He was a sentence before, which is fine for a recap and useless for a box
+   * score: the decision, the shots faced and the save percentage are the whole
+   * of how a goaltending night is judged and none of them could be scanned.
+   *
+   * An empty-net goal is shown separately and is not in his goals against, which
+   * is the rule -- he was on the bench for it -- and the reason the goals in the
+   * scoring summary can exceed what is charged to the two goaltenders.
+   */
+  function goalieTable(side) {
     var g = side.goalie;
-    var card = el('div', 'goaliecard');
-    var left = el('div');
-    left.appendChild(el('div', 'nm', g.name));
-    left.appendChild(el('div', 'sub',
-      g.season
-        ? g.season.gp + ' games, ' + g.season.savePct.toFixed(3).replace(/^0/, '') + ' save percentage, '
-          + g.season.gaa.toFixed(2) + ' goals against average last season'
-        : 'No qualifying season; started at replacement level'));
-    card.appendChild(left);
-    var ln = el('div', 'ln', g.saves + ' saves on ' + g.shotsAgainst + ' shots, '
-      + (g.shotsAgainst ? g.savePct.toFixed(3).replace(/^0/, '') : '--')
-      + (g.shutout ? ' shutout' : '')
-      + (g.emptyNetGoalsAgainst ? ' (empty-net goal not charged)' : ''));
-    card.appendChild(ln);
-    wrap.appendChild(card);
+    var wrap = el('div');
+    wrap.appendChild(el('div', 'sechead', 'Goaltending'));
+    wrap.appendChild(S.table([
+      { h: 'Goaltender', fmt: function (r) {
+        var w = el('span');
+        w.appendChild(el('span', 'nm', r.name));
+        if (r.shutout) w.appendChild(el('span', 'unit', 'SO'));
+        return w;
+      } },
+      { h: 'DEC', title: 'Decision: win, loss, or a loss in overtime or the shootout',
+        fmt: function (r) { return r.decision || '--'; } },
+      { h: 'TOI', title: 'Time on ice', fmt: function (r) {
+        var m = Math.floor(r.toi);
+        var sec = Math.round((r.toi - m) * 60);
+        return m + ':' + (sec < 10 ? '0' : '') + sec;
+      } },
+      { h: 'SA', k: 'shotsAgainst', title: 'Shots against' },
+      { h: 'SV', k: 'saves', title: 'Saves' },
+      { h: 'GA', k: 'goalsAgainst', title: 'Goals against, not counting empty-net goals' },
+      { h: 'SV%', title: 'Save percentage',
+        fmt: function (r) {
+          return r.shotsAgainst ? r.savePct.toFixed(3).replace(/^0/, '') : '--';
+        } },
+      { h: 'EN', title: 'Goals scored into his empty net, which are not charged to him',
+        fmt: function (r) { return r.emptyNetGoalsAgainst || 0; } },
+    ], [g], { sortable: false }));
+
+    wrap.appendChild(el('div', 'disc',
+      (g.season
+        ? g.name + ' came in on ' + g.season.gp + ' games, a '
+          + g.season.savePct.toFixed(3).replace(/^0/, '') + ' save percentage and a '
+          + g.season.gaa.toFixed(2) + ' goals-against average.'
+        : g.name + ' has no qualifying season and started at replacement level.')
+      + (g.emptyNetGoalsAgainst
+        ? ' The empty-net goal is not charged to him: he was on the bench for it.'
+        : '')));
     return wrap;
   }
 
@@ -391,38 +450,116 @@
     return wrap;
   }
 
+  /**
+   * THE SCORING SUMMARY.
+   *
+   * Every line is an event the simulation played, in the order it played them,
+   * with the strength it was played at. The shootout winner appears as its own
+   * line marked SO: it belongs to no skater and is charged to no goaltender,
+   * which is the actual rule, and leaving it out meant a reader could count the
+   * goals listed and come up one short of the final score.
+   */
   function scoringSummary(d) {
     var wrap = el('div');
     var plays = d.result.scoring_plays || [];
+    var STRENGTH = {
+      EV: 'Even strength', PP: 'Power play', SH: 'Short handed',
+      EN: 'Empty net', SO: 'Shootout',
+    };
     if (!plays.length) {
       wrap.appendChild(el('div', 'disc', 'No goals were scored in regulation or overtime.'));
-    } else {
-      wrap.appendChild(S.table([
-        { h: 'Per', fmt: function (r) { return r.period; } },
-        { h: 'Time', fmt: function (r) { return r.time; } },
-        { h: 'Team', fmt: function (r) { return d.matchup[r.team].abbr; } },
-        { h: 'Goal', fmt: function (r) {
-          return r.scorer + (r.assists.length ? ' (' + r.assists.join(', ') + ')' : ' (unassisted)');
-        } },
-        { h: 'Str', fmt: function (r) { return r.strength; },
-          title: 'Even strength, power play, short handed or empty net' },
-        { h: 'Score', fmt: function (r) { return r.score.away + '-' + r.score.home; } },
-      ], plays));
+      return wrap;
     }
-    var pens = d.result.penalty_summary || [];
-    if (pens.length) {
-      wrap.appendChild(el('div', 'sechead', 'Penalties'));
-      wrap.appendChild(S.table([
-        { h: 'Per', fmt: function (r) { return r.period; } },
-        { h: 'Time', fmt: function (r) { return r.time; } },
-        { h: 'Team', fmt: function (r) { return d.matchup[r.team].abbr; } },
-        { h: 'Player', fmt: function (r) { return r.player; } },
-        { h: 'Min', fmt: function (r) { return r.minutes; } },
-      ], pens));
-    }
+    plays.forEach(function (r) {
+      var row = el('div', 'evrow');
+      row.appendChild(el('span', 'when', r.period + (r.time === '--' ? '' : ' ' + r.time)));
+      var what = el('span', 'what');
+      what.appendChild(el('b', '', d.matchup[r.team].abbr + ' '));
+      if (r.strength === 'SO') {
+        what.appendChild(document.createTextNode(
+          'wins the shootout. Charged to no skater and no goaltender.'));
+      } else {
+        what.appendChild(document.createTextNode(r.scorer));
+        if (r.scorer_goal_number > 1) {
+          what.appendChild(el('span', 'tag', 'goal ' + r.scorer_goal_number));
+        }
+        what.appendChild(document.createTextNode(
+          r.assists.length ? ' (' + r.assists.join(', ') + ')' : ' (unassisted)'));
+      }
+      row.appendChild(what);
+      var right = el('span', 'score');
+      right.appendChild(el('span', 'tag', STRENGTH[r.strength] || r.strength));
+      right.appendChild(document.createTextNode(' ' + r.score.away + '-' + r.score.home));
+      row.appendChild(right);
+      wrap.appendChild(row);
+    });
     wrap.appendChild(el('div', 'disc',
-      'Every goal and penalty above is an event this simulation played, in the order it played them. '
-      + 'The running score is the score after that goal.'));
+      'Every goal above is an event this simulation played, in the order it played '
+      + 'them. The running score is the score after that goal, and it reconciles '
+      + 'with the final.'));
+    return wrap;
+  }
+
+  /**
+   * THE PENALTY SUMMARY, including what the penalty actually produced.
+   *
+   * The infraction is drawn from how often each minor is really called; the
+   * engine simulates that a penalty happened and who took it, not what he did to
+   * earn it, and that is said plainly rather than implied. The manpower is
+   * counted from the penalties running at that moment, so two men in the box
+   * reads as five on three rather than being assumed to be five on four.
+   */
+  function penaltySummary(d) {
+    var wrap = el('div');
+    var pens = d.result.penalty_summary || [];
+    if (!pens.length) {
+      wrap.appendChild(el('div', 'disc', 'No penalties were called in this game.'));
+      return wrap;
+    }
+    pens.forEach(function (r) {
+      var row = el('div', 'evrow');
+      row.appendChild(el('span', 'when', r.period + ' ' + r.time));
+      var what = el('span', 'what');
+      what.appendChild(el('b', '', d.matchup[r.team].abbr + ' '));
+      what.appendChild(document.createTextNode(r.player + ' — ' + r.infraction
+        + ', ' + r.minutes + ' minutes'));
+      row.appendChild(what);
+      row.appendChild(el('span', 'tag', r.manpower));
+      wrap.appendChild(row);
+    });
+    var pp = { home: d.result.box_score.home.totals, away: d.result.box_score.away.totals };
+    wrap.appendChild(el('div', 'disc',
+      d.matchup.away.abbr + ' ' + pp.away.powerPlayGoals + ' for ' + pp.away.powerPlayOpportunities
+      + ' on the power play, ' + d.matchup.home.abbr + ' ' + pp.home.powerPlayGoals + ' for '
+      + pp.home.powerPlayOpportunities + '. The infraction is drawn from how often each '
+      + 'minor is really called; this engine simulates that a penalty happened and who '
+      + 'took it, not what he did to earn it. Everything counted against it -- the '
+      + 'minutes, the power play, any goal it conceded -- came from the game.'));
+    return wrap;
+  }
+
+  /** The three stars, as the game produced them. */
+  function threeStars(d) {
+    var wrap = el('div');
+    var stars = d.result.three_stars || [];
+    if (!stars.length) {
+      wrap.appendChild(el('div', 'disc', 'No stars were awarded for this game.'));
+      return wrap;
+    }
+    stars.forEach(function (st, i) {
+      var row = el('div', 'evrow');
+      row.appendChild(el('span', 'when', (i + 1) + (i === 0 ? 'st' : (i === 1 ? 'nd' : 'rd'))));
+      var what = el('span', 'what');
+      what.appendChild(el('b', '', st.name));
+      what.appendChild(document.createTextNode(' — ' + (st.line || '')));
+      row.appendChild(what);
+      row.appendChild(el('span', 'tag', d.matchup[st.team] ? d.matchup[st.team].abbr : ''));
+      wrap.appendChild(row);
+    });
+    wrap.appendChild(el('div', 'disc',
+      'Awarded on what happened in this game. A goaltender is judged on volume and '
+      + 'rate together, so a shutout on eighteen shots does not outrank a forty-save '
+      + 'night; a skater on points, with a goal worth more than an assist.'));
     return wrap;
   }
 
@@ -707,59 +844,103 @@
    * printed report that contains only whichever one happened to be open is not a
    * report.
    */
+  /**
+   * The four things to do with a finished result. The print handler expands
+   * every tab into the flow first, so a printed page carries the whole box
+   * score rather than whichever section happened to be open.
+   */
   function resultBar(app, d) {
-    var bar = el('div', 'resultbar');
-
-    var share = el('button', 'btn ghost', 'Copy link to this simulation');
-    share.type = 'button';
-    var said = el('span', 'copied', '');
-    share.addEventListener('click', function () {
-      var url = window.location.href;
-      var done = function () {
-        said.textContent = 'Link copied. It reproduces this exact simulation.';
-        share.setAttribute('aria-live', 'polite');
-      };
-      if (window.navigator && window.navigator.clipboard) {
-        window.navigator.clipboard.writeText(url).then(done, function () {
-          said.textContent = url;
+    return S.actionBar(app, {
+      beforePrint: function () {
+        var host = S.$('#result');
+        var bars = host ? S.$$('.tabs', host) : [];
+        bars.forEach(function (barEl) {
+          var buttons = S.$$('button', barEl);
+          var body = barEl.nextSibling;
+          if (!body || buttons.length < 2) return;
+          // Render every tab into the flow, each under its own heading, so the
+          // printed page carries the whole result.
+          var holder = el('div', 'printonly');
+          buttons.forEach(function (b) {
+            if (b.classList.contains('on')) return;
+            var section = el('div');
+            section.appendChild(el('div', 'sechead', b.textContent));
+            b.click();
+            var clone = body.cloneNode(true);
+            section.appendChild(clone);
+            holder.appendChild(section);
+          });
+          // Put the originally-open tab back for the person still at the screen.
+          if (buttons[0]) buttons[0].click();
+          barEl.parentNode.appendChild(holder);
         });
-      } else {
-        said.textContent = url;
-      }
+      },
     });
+  }
 
-    var print = el('button', 'btn ghost', 'Print or save as PDF');
-    print.type = 'button';
-    print.addEventListener('click', function () {
-      var host = S.$('#result');
-      var bars = host ? S.$$('.tabs', host) : [];
-      bars.forEach(function (barEl) {
-        var buttons = S.$$('button', barEl);
-        var body = barEl.nextSibling;
-        if (!body || buttons.length < 2) return;
-        // Render every tab into the flow, each under its own heading, so the
-        // printed page carries the whole result.
-        var holder = el('div', 'printonly');
-        buttons.forEach(function (b) {
-          if (b.classList.contains('on')) return;
-          var section = el('div');
-          section.appendChild(el('div', 'sechead', b.textContent));
-          b.click();
-          var clone = body.cloneNode(true);
-          section.appendChild(clone);
-          holder.appendChild(section);
-        });
-        // Put the originally-open tab back for the person still at the screen.
-        if (buttons[0]) buttons[0].click();
-        barEl.parentNode.appendChild(holder);
-      });
-      window.setTimeout(function () { window.print(); }, 120);
+  /**
+   * IMPORTANT EVENTS: the goals that actually changed the game.
+   *
+   * Every goal is in the scoring summary; this is the shorter list a reader
+   * wants first -- the opener, the ones that tied it or took the lead, the
+   * winner, and the empty-netter that finished it. Each is picked by what it did
+   * to the score, so nothing here is a judgement the game did not make.
+   */
+  function importantEvents(d) {
+    var wrap = el('div');
+    var plays = d.result.scoring_plays || [];
+    if (!plays.length) {
+      wrap.appendChild(el('div', 'disc', 'Nothing was scored in this game.'));
+      return wrap;
+    }
+    var out = [];
+    var prev = { home: 0, away: 0 };
+    plays.forEach(function (r, i) {
+      var was = prev.home - prev.away;
+      var now = r.score.home - r.score.away;
+      var label = null;
+      if (i === 0) label = 'opening goal';
+      else if (was !== 0 && now === 0) label = 'ties it';
+      else if (was < 0 && now > 0) label = 'takes the lead';
+      else if (was > 0 && now < 0) label = 'takes the lead';
+      if (r.strength === 'EN') label = 'empty net';
+      if (r.strength === 'SO') label = 'wins it in the shootout';
+      prev = { home: r.score.home, away: r.score.away };
+      if (label) out.push({ r: r, label: label });
     });
+    // The goal that put the winner ahead for good.
+    var winner = d.result.winner;
+    var decisive = null;
+    for (var i = plays.length - 1; i >= 0; i -= 1) {
+      var m = plays[i].score.home - plays[i].score.away;
+      var ahead = winner === 'home' ? m > 0 : m < 0;
+      if (!ahead) break;
+      decisive = plays[i];
+    }
+    if (decisive && !out.some(function (x) { return x.r === decisive; })) {
+      out.push({ r: decisive, label: 'the winner' });
+    }
+    out.sort(function (a, b) { return plays.indexOf(a.r) - plays.indexOf(b.r); });
 
-    bar.appendChild(share);
-    bar.appendChild(print);
-    bar.appendChild(said);
-    return bar;
+    out.forEach(function (x) {
+      var row = el('div', 'evrow');
+      row.appendChild(el('span', 'when', x.r.period + (x.r.time === '--' ? '' : ' ' + x.r.time)));
+      var what = el('span', 'what');
+      what.appendChild(el('b', '', d.matchup[x.r.team].abbr + ' '));
+      what.appendChild(document.createTextNode(
+        x.r.strength === 'SO' ? 'wins the shootout' : x.r.scorer));
+      row.appendChild(what);
+      var right = el('span', 'score');
+      right.appendChild(el('span', 'tag', x.label));
+      right.appendChild(document.createTextNode(' ' + x.r.score.away + '-' + x.r.score.home));
+      row.appendChild(right);
+      wrap.appendChild(row);
+    });
+    wrap.appendChild(el('div', 'disc',
+      'Chosen by what each goal did to the score -- opened it, tied it, took the '
+      + 'lead, finished it -- rather than by any judgement of importance the game '
+      + 'did not make. The full list is under Scoring summary.'));
+    return wrap;
   }
 
   function render(app, d, box) {
@@ -785,7 +966,6 @@
     if (d.recap || (d.result.three_stars || []).length) {
       box.appendChild(S.panel('How it played out', recapPanel(d)));
     }
-    if (d.result.leaders) box.appendChild(S.panel('Game leaders', leadersPanel(d)));
 
     box.appendChild(S.kpis(p.sample_supports_projection === false ? [
       { k: 'Final', v: d.result.final.away + ' - ' + d.result.final.home,
@@ -808,7 +988,7 @@
         s: 'Either goaltender' },
     ]));
 
-    box.appendChild(S.panel('Period by period', lineScore(d)));
+
 
     var sg = d.matchup.starting_goalies;
     if (sg && sg.home && sg.away) {
@@ -830,7 +1010,43 @@
 
     var tabsBox = el('div', 'panel');
     var panes = [
-      { id: 'box', label: 'Box score', build: function (node) {
+      // GAME SUMMARY OPENS FIRST and is complete on its own: what happened, the
+      // goals in order, the stars and the period scores, without a click.
+      { id: 'summary', label: 'Game summary', build: function (node) {
+        if (d.result.leaders) node.appendChild(S.panel('Game leaders', leadersPanel(d)));
+        node.appendChild(S.panel('Scoring summary', scoringSummary(d)));
+        node.appendChild(S.panel('Three stars', threeStars(d)));
+        node.appendChild(S.panel('Scoring by period', lineScore(d)));
+      } },
+      { id: 'penalties', label: 'Penalty summary', build: function (node) {
+        node.appendChild(penaltySummary(d));
+      } },
+      { id: 'skaters', label: 'Skaters', build: function (node) {
+        d.result.box_score.away.team = away;
+        d.result.box_score.home.team = home;
+        node.appendChild(skaterTable(d.result.box_score.away, away.name));
+        var sp = el('div'); sp.style.height = '18px'; node.appendChild(sp);
+        node.appendChild(skaterTable(d.result.box_score.home, home.name));
+      } },
+      { id: 'goalies', label: 'Goaltenders', build: function (node) {
+        d.result.box_score.away.team = away;
+        d.result.box_score.home.team = home;
+        ['away', 'home'].forEach(function (k) {
+          var block = el('div');
+          block.appendChild(el('div', 'teamhead'));
+          block.lastChild.appendChild(S.crest(d.matchup[k], 26));
+          block.lastChild.appendChild(el('div', 'nm', d.matchup[k].name));
+          block.appendChild(goalieTable(d.result.box_score[k]));
+          node.appendChild(block);
+        });
+      } },
+      { id: 'stars', label: 'Three stars', build: function (node) {
+        node.appendChild(threeStars(d));
+      } },
+      { id: 'events', label: 'Important events', build: function (node) {
+        node.appendChild(importantEvents(d));
+      } },
+      { id: 'box', label: 'Full box score', build: function (node) {
         d.result.box_score.away.team = away;
         d.result.box_score.home.team = home;
         node.appendChild(skaterTable(d.result.box_score.away, away.name));
@@ -852,7 +1068,7 @@
       { id: 'props', label: 'Player ranges', build: function (node) {
         node.appendChild(propsPanel(d));
       } },
-      { id: 'sens', label: 'What it rests on', build: function (node) {
+      { id: 'sens', label: 'Simulation analysis', build: function (node) {
         node.appendChild(sensitivityPanel(d));
       } },
       { id: 'team', label: 'Team stats', build: function (node) { node.appendChild(teamStats(d)); } },
@@ -886,6 +1102,21 @@
           'Across ' + d.meta.simulations.toLocaleString() + ' simulations. A projection is a range, not a number.'));
       } },
     ];
+    // THE ORDER THE SECTIONS ARE ASKED FOR IN.
+    //
+    // Sorted rather than declared in order, because the build functions above
+    // are grouped by what they need and reordering them by hand invites a pane
+    // being lost in the move. Anything not named here keeps its place after the
+    // ones that are.
+    var ORDER = ['summary', 'box', 'team', 'scoring', 'penalties', 'skaters', 'goalies',
+      'stars', 'events', 'props', 'sens', 'scores', 'wp', 'charts', 'range',
+      'why', 'season', 'avail'];
+    panes.sort(function (a, b) {
+      var ai = ORDER.indexOf(a.id);
+      var bi = ORDER.indexOf(b.id);
+      return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+    });
+
     // A SINGLE GAME HAS NO DISTRIBUTION TO SHOW.
     //
     // These three panels describe the shape of many runs: the most common

@@ -411,3 +411,63 @@ input[type=date]{background:var(--bg2);border:1px solid var(--line);border-radiu
   color:var(--dim);
 }
 .freshness.ok strong{color:var(--ink);}
+
+/* --- broadcast box score ------------------------------------------------- */
+/* A NAME COLUMN THAT DOES NOT SCROLL AWAY. On a phone a full box score is far
+   wider than the screen, and scrolling right to read the rebound column is
+   useless if the names have gone with it: every row becomes anonymous. */
+.tablewrap.sticky td.name,
+.tablewrap.sticky th:first-child{
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:#0d1526;
+  text-align:left;
+  box-shadow:1px 0 0 var(--line);
+}
+.tablewrap.sticky thead th:first-child{z-index:3;}
+.tablewrap.sticky tr.groupsplit td.name{background:#111c30;}
+
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap;}
+th.sortable:hover{color:var(--ink);}
+th.sortable:focus-visible{outline:2px solid var(--accent,#38bdf8);outline-offset:-2px;}
+th.sortable::after{content:'';opacity:.35;margin-left:.3em;font-size:.8em;}
+th.sortable.sorted-asc::after{content:'91';opacity:1;}
+th.sortable.sorted-desc::after{content:'93';opacity:1;}
+
+/* Starters above the line, bench below it, without a heading row that costs a
+   whole row of vertical space on a phone. */
+tr.bench-start td{border-top:2px solid var(--line);}
+.dnp{margin:.7rem 0 0;font-size:.84rem;color:var(--dim);line-height:1.6;}
+.dnp b{color:var(--ink);font-weight:650;}
+.dnp .tag{
+  display:inline-block;margin-right:.35rem;padding:.05rem .4rem;
+  border:1px solid var(--line);border-radius:5px;font-size:.74rem;
+}
+
+/* The action bar under a result. */
+.actionbar{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 .9rem;}
+.actionbar button{
+  min-height:38px;padding:.45rem .9rem;font:inherit;font-size:.88rem;
+  color:var(--ink);background:transparent;border:1px solid var(--line);
+  border-radius:10px;cursor:pointer;
+}
+.actionbar button.primary{border-color:var(--accent,#38bdf8);color:#cdeeff;}
+.actionbar button:hover{border-color:var(--accent,#38bdf8);}
+.actionbar button:focus-visible{outline:2px solid var(--accent,#38bdf8);outline-offset:2px;}
+
+/* Scoring and penalty summaries read as lists, not spreadsheets. */
+.evrow{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem;align-items:baseline;
+  padding:.55rem 0;border-bottom:1px solid var(--line);}
+.evrow:last-child{border-bottom:none;}
+.evrow .when{color:var(--dim);font-size:.82rem;white-space:nowrap;}
+.evrow .what b{font-weight:650;}
+.evrow .tag{font-size:.72rem;border:1px solid var(--line);border-radius:5px;padding:.05rem .35rem;color:var(--dim);}
+.evrow .score{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;}
+
+@media print{
+  .actionbar{display:none;}
+  .tablewrap.sticky td.name,.tablewrap.sticky th:first-child{position:static;box-shadow:none;background:transparent;}
+  th.sortable::after{content:'';}
+  .evrow{border-bottom:1px solid #ccc;}
+}
