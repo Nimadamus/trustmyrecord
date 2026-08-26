@@ -108,6 +108,25 @@ These were real, are fixed, and are live:
 | 18 MOTD pages + every Game File | chart labels 9px on mobile against 10px on desktop | 11px, same column width | readable, chart height unchanged |
 | `/u/<name>/` | `.ca-highlights` bare `1fr`, 219px of the Most Recent Thread card cut off | `minmax(0,1fr)` | card fits |
 
+### 3.2b Narrow-phone defects found by the functional suite and fixed
+
+The suite drives six widths; 320px caught what a 390px sweep could not. A scan
+of all 507 pages at 320px on WebKit found ten pages a 320px phone could scroll
+sideways (plus the two frozen snapshots, left alone). All fixed and live:
+
+| Page(s) | Cause | Fix |
+|---|---|---|
+| `/forum/` | header is one nowrap flex row: logo block + Main Site + count + Log In + Register + burger need 453px against a 388px box; burger sat 22px off at 320px, 52px off at 412px | row wraps, logo block may shrink; all five controls kept |
+| `/forum/<slug>/` (category pages, a different template) | thread table's auto layout took the width of the longest title: 302px starting at x=22 | `table-layout:fixed` below 400px |
+| `/marketplace/` | seller grid `minmax(310px,1fr)` cannot shrink below a 296px column | `min(310px,100%)` |
+| `/mlb-simulator/` +3, `/model-builder/`, `/nfl-simulator/` | DS nav logo is `flex:none` and these pages carry a 244-263px wordmark against the usual 184px, pushing the hamburger off screen | logo may shrink below 430px; added to `tmr-linkhub.css` as well as `tmr-ds.css` because these pages are pinned to a content-hashed `tmr-ds` build |
+| `/mlb-simulator/` | inline `minmax(300px,1fr)` link grid + the slate grid | both `min(300px,100%)` |
+| `/polls/` | mobile leaderboard list is a grid with no declared column, so the implicit auto track took its 315px card as its minimum | `minmax(0,1fr)` |
+| `/admin/growth/`, `/admin/community-bots/` | wide admin tables with no scroll wrapper | the panel scrolls |
+
+Desktop verified unchanged at 1440px on every one of these: same scrollWidth,
+height, logo width and grid count as production.
+
 ### 3.3 Shared defects (present on desktop AND mobile - not parity gaps)
 Reported, not changed, because fixing them alters desktop behaviour and is a
 product change rather than a mobile-parity fix.
