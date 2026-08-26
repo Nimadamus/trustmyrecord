@@ -772,6 +772,14 @@ function renderResult(out,d){
   const k=el('div','kpis');
   const cards=[
     `<div class="kpi"><div class="k">Projected score</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · average of ${fmtN(d.meta.simulations)} sims</div></div>`,
+    // The average is the projection; THIS is a game. Both belong at the top,
+    // because a reader who only sees the average reasonably concludes the model
+    // thinks a seven-point favourite wins by seven. It does not: at the spread
+    // of outcomes this model produces, and the one the real NFL produces, a
+    // seven-point favourite loses outright about one game in four.
+    (d.box_score&&d.box_score.representative)
+      ? `<div class="kpi"><div class="k">One simulation</div><div class="v">${nz(d.box_score.representative.away_score)}–${nz(d.box_score.representative.home_score)}</div><div class="s">a single game from the run${d.box_score.representative.ot?' · OT':''} · run it again for another</div></div>`
+      : '',
     `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)}</div></div>`,
     `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`,
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
