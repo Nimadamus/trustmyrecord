@@ -112,6 +112,63 @@ separate attempts to improve it failed and are recorded.
 **Special teams as a rating input.** Would need per-game power-play data the
 feed does not expose without a request per game.
 
+# Product completeness audit, 25 August 2026
+
+Run against the LIVE pages rather than the code, because the two had diverged.
+Every item below was checked by driving production: opening the controls,
+running simulations, reading what came back. What it found was a set of
+features that were built, tested, documented, and unreachable.
+
+**Player ranges was a dead tab.** It said "run a simulation with them enabled"
+to a visitor who had just run one and had no control that enabled anything.
+Nothing ever sent the parameter. It is now always requested, the ceiling on
+replays went from 150 to 4,000 (replaying a game was assumed expensive and is
+not: a thousand replays cost about 280ms), and the panel takes a line the
+visitor types and answers it exactly off the published distribution rather than
+off a hard-coded 20-point column.
+
+**Goaltender saves did not exist.** The biggest prop market in hockey, and the
+collector only ever looked at skaters.
+
+**Holding a player out could not be expressed.** The route has accepted an
+out-and-minutes scenario all along; the rotation was published without player
+ids, so the page could show a lineup and had no way to name anyone in it.
+
+**Hockey scratches had no server support at all.** Built: next man up off the
+pool, ice re-allocated, projection loses what the scratch was worth over the men
+who remain. That last figure was measured against a pooled replacement rate that
+sat above nearly every defenceman in the league, so a team could lose its
+first-pair defenceman and the projection would not move. Replacement is now
+positional.
+
+**A minutes restriction removed the player from the game.** Capping a man
+overwrote his season average, so he fell out of the ten a team dresses and
+vanished from the box score. Fixing that exposed four separate leaks that each
+handed the minutes back, the last of which fired at the end of every single game.
+
+**The headline win probability moved with the run count.** It was fed the sample
+mean margin, so the same matchup came back between 63.5% and 75.6% on the
+100-run setting depending on the seed.
+
+**A tie was reported as an advantage.** "The Ducks had the better of the shots,
+31 to 31." Every number in that sentence was true, which is why the narrative
+suite passed it.
+
+**Accuracy was published without the holdout.** The walk-forward figures were
+measured across the same seasons the settings were chosen on. Both are now
+published side by side.
+
+**Provenance was only stated when it was bad news.** The data-age line rendered
+for ageing or stale data and nothing at all while it was current.
+
+**Two sitemap entries were duplicated**, and wide tables gave no sign they could
+be scrolled, which on a phone reads as a column that has been cut off.
+
+Added in the same pass: a single-game mode that plays one game and publishes no
+projection, because at one run every sample-derived figure collapses onto that
+game; a minutes-restriction control; and a comparison section stating what the
+seven surveyed competitors do and do not publish.
+
 ## The standard, re-checked
 
 All ten commitments from the first audit hold. The three that the category does
