@@ -3051,9 +3051,37 @@
         // (A 4th "long" arm was tested June 28 but overshot pitchers/team to 4.4 and,
         // by keeping late innings too fresh, pushed extra-inning games to ~15%; reverted.)
         var ordered = [];
-        if (bridge) ordered.push(bridge);
-        ordered.push(setup);
-        ordered.push(closer);
+        if (workloadV2()) {
+            // REAL_BULLPEN_DEPTH_20260827 -- a real staff is deeper than three arms.
+            //
+            // Measured on 4,860 real team-games of 2025, a club uses 4.29 pitchers
+            // a game: 4 in 32.7% of them, 5 in 26.1%, six or more in 15.3%. This
+            // engine could field a starter and three relievers, so 41% of the real
+            // distribution was structurally unreachable and the last arm absorbed
+            // everything the schedule had nowhere else to put -- the third reliever
+            // onward worked 5.36 outs against a real 3.02.
+            //
+            // A fourth arm was tried in June 2026 and reverted for overshooting
+            // pitchers-per-team-game to 4.4 and pushing extra-inning games toward
+            // 15%. That test predates two things that change the arithmetic: arms
+            // now leave mid-inning rather than each consuming a whole one, and the
+            // starter now comes out on a pitch count. 4.4 was also not far wrong --
+            // reality is 4.29, and the three-arm staff cannot reach it from below.
+            //
+            // Up to five arms, ordered low to high leverage. evActivePitcher's
+            // scheduler already splits the span between the starter's exit and the
+            // ninth across however many middle arms exist, so nothing else changes.
+            var depth = rest.slice(0, 4).reverse(); // worst ERA first, best last
+            for (var di = 0; di < depth.length; di++) {
+                if (depth[di] !== setup) ordered.push(depth[di]);
+            }
+            ordered.push(setup);
+            ordered.push(closer);
+        } else {
+            if (bridge) ordered.push(bridge);
+            ordered.push(setup);
+            ordered.push(closer);
+        }
         return { setup: setup, closer: closer, bridge: bridge, ordered: ordered };
     }
     function evStarterOuts(starter, team) {
@@ -3785,7 +3813,15 @@
                         && (spOutsNow >= target || spPitches >= STARTER_PITCH_LIMIT);
                 } else {
                     var margin = Math.abs((endLead == null ? 0 : endLead));
-                    leverage = onBase && apptBf >= 3 && margin <= 3
+                    // A reliever is not lifted merely because runners are standing
+                    // there -- inherited runners are the previous man's doing. He
+                    // comes out when HE has put someone on, in a game close enough
+                    // to matter, having satisfied the three-batter minimum. Without
+                    // the "against him" clause the first arm out of the pen was
+                    // hooked after three batters almost every time and worked 2.67
+                    // outs against a real 3.93.
+                    leverage = onBase && apptBf >= 3 && margin <= 2
+                        && (apptHits >= 1 || apptRuns >= 1)
                         && idx < arms.length - 1;
                 }
             }
@@ -3942,9 +3978,57 @@
             // Stage 3 strategic pinch hitter: late innings, a clearly weak bat due up,
             // bench available. Displayed game only (el present) so calibration is
             // untouched. Emits a SUB and the pinch hitter takes the at-bat.
-            if (el && log.inning >= 7 && side.bench && side.bench.length && b && b.realOps != null && b.realOps < 0.660 && random() < 0.06) {
-                var ph = elSwapSlot(bi, 'PH', 'strategic move');
-                if (ph) b = lineup[bi];
+            if (el && workloadV2() && side.bench && side.bench.length && b) {
+                /**
+                 * REAL_SUBSTITUTION_RATE_20260827 -- a manager who actually uses
+                 * his bench.
+                 *
+                 * Measured on 4,860 real team-games of 2025: a club sends 10.26
+                 * batters to the plate, of whom 1.06 are substitutes, and those
+                 * substitutes take 1.42 plate appearances between them. The engine
+                 * sent exactly 9, every game, standard deviation zero -- the
+                 * pinch-hit rule existed but demanded a seventh inning, a batter
+                 * under a .660 OPS and a 6% roll, and with real rosters installed
+                 * almost no starter is under .660, so it effectively never fired.
+                 *
+                 * That single missing behaviour is also what inflated plate
+                 * appearances for every batting slot: with nobody ever replaced,
+                 * the man who started a slot took every trip through it.
+                 *
+                 * Three real reasons a manager goes to the bench, in the order he
+                 * thinks of them. The thresholds are set so the SIMULATED
+                 * substitute count lands on the measured 1.06, rather than chosen
+                 * to taste.
+                 *
+                 * Displayed game only -- this whole branch is behind `el`, the
+                 * event-log sink the win-probability Monte Carlo does not pass. So
+                 * it changes the box score a visitor reads and cannot touch the
+                 * probability the page reports.
+                 */
+                var phDone = false;
+                var benchBest = side.bench[0] ? side.bench[0].realOps : null;
+                // 1. The weak bat, late. Widened from .660 to .700: the old bar was
+                //    below where real pinch hitting actually happens.
+                if (log.inning >= 7 && b.realOps != null && b.realOps < 0.720 && random() < 0.25) {
+                    phDone = !!elSwapSlot(bi, 'PH', 'pinch hitter for a weak bat');
+                }
+                // 2. The platoon move: a left-handed bat off the bench against a
+                //    right-handed arm late, or the reverse. Real and extremely
+                //    common, and the engine already knows both hands.
+                if (!phDone && log.inning >= 7 && pitcher && pitcher.hand
+                    && b.batSide && b.batSide === pitcher.hand && b.batSide !== 'S'
+                    && random() < 0.13) {
+                    phDone = !!elSwapSlot(bi, 'PH', 'platoon pinch hitter');
+                }
+                // 3. Anyone, very late, in a game already decided -- the bench gets
+                //    an inning of work. Small, and it is why real substitute counts
+                //    have a tail rather than a hard ceiling.
+                if (!phDone && log.inning >= 8 && Math.abs((endLead == null ? 0 : endLead)) >= 5
+                    && random() < 0.09) {
+                    phDone = !!elSwapSlot(bi, 'PH', 'bench work in a decided game');
+                }
+                if (phDone) b = lineup[bi];
+                if (benchBest === null) { /* no-op: keeps the reference used above */ }
             }
             // CATCHERS_INTERFERENCE_20260727: rare (real MLB ~0.02/team-game), does not
             // need a runner on base - the batter's swing is interfered with by the
@@ -5990,6 +6074,89 @@
         if (!pitcher) return 0;
         return clamp((pitcher.quality - 100) * 0.24, -4.2, 5.4);
     }
+    /**
+     * STARTER_RESIDUAL_20260827 -- price the starter as a DIFFERENCE, once.
+     *
+     * The shipped model adds the starter's absolute rating to a team rating that
+     * already contains him, and it does so three times over:
+     *
+     *   expectedRunsFor() uses the opponent's season runPrevention, which is a
+     *     team pitching number and therefore already includes his rotation
+     *   selectedPitcherRunAdjustment adds  (era - 4.30) * 0.264 runs
+     *   starterEraAdjustment adds          (era - 4.20) * 0.160 runs
+     *   selectedPitcherStrengthAdjustment adds (4.30 - era) * 2.88 strength
+     *
+     * The two run terms are different spellings of one input on one anchor. A
+     * 2.20 ERA starter moves the opponent's anchor by 0.77 runs between them,
+     * against a real ace-versus-average gap of roughly a third of a run, and
+     * then moves the win probability again through strength. The holdout agrees:
+     * withholding the named starter and changing nothing else is worth 1.64
+     * points of Brier skill (-0.85% to +0.79%).
+     *
+     * The residual formulation asks the only question that is not already
+     * answered by the team rating: how much better or worse is THIS starter than
+     * the man the team's season pitching number assumes? A league-average
+     * starter on a league-average rotation is worth nothing, by construction,
+     * which is what makes it safe to add to a rating that already prices the
+     * rotation.
+     *
+     * It is then scaled by the share of the game he is expected to pitch, since
+     * a starter who goes four innings cannot deliver a full start's worth of
+     * anything, and the innings he does not throw belong to a bullpen the team
+     * rating already prices separately.
+     *
+     * Off unless a weight is supplied.
+     */
+    /**
+     * STARTER_CHANNELS_20260827 -- switch off the starter's PROBABILITY channels
+     * while leaving him in the simulated game.
+     *
+     * "Identity only" is a real and separate arm of the experiment: the named
+     * starter still pitches in the plate-appearance engine and still appears in
+     * the box score, but contributes nothing to the run anchor or team strength.
+     * It separates "does knowing who starts help the forecast" from "does the
+     * way we PRICE him help the forecast", which the holdout cannot otherwise
+     * tell apart.
+     */
+    function starterChannelsOff() {
+        return (typeof window !== 'undefined') && window.TMR_MLB_STARTER_CHANNELS === 'none';
+    }
+    function starterResidualWeight() {
+        var w = (typeof window !== 'undefined') ? Number(window.TMR_MLB_STARTER_RESIDUAL) : 0;
+        return Number.isFinite(w) && w > 0 ? w : 0;
+    }
+    function starterResidual(pitcher, defenceTeam) {
+        // Quality points this starter is above the rotation his own club's
+        // season pitching rating already assumes.
+        var q = Number(pitcher && pitcher.quality);
+        if (!Number.isFinite(q)) return 0;
+        var baseline = Number(defenceTeam && defenceTeam.startingPitching);
+        if (!Number.isFinite(baseline)) baseline = 100;
+        return q - baseline;
+    }
+    /** Share of a nine-inning game this starter is expected to be responsible for. */
+    function starterShare(pitcher, defenceTeam) {
+        var info = evStarterOuts(pitcher, defenceTeam);
+        var outs = info && Number.isFinite(info.outs) ? info.outs : 16;
+        return clamp(outs / 27, 0.12, 0.85);
+    }
+    function starterResidualRunAdjustment(pitcher, defenceTeam) {
+        var w = starterResidualWeight();
+        if (!w) return 0;
+        // Negative because a BETTER starter (positive residual) means FEWER runs
+        // for the side batting against him.
+        return clamp(-starterResidual(pitcher, defenceTeam) * w * starterShare(pitcher, defenceTeam),
+            -0.60, 0.60);
+    }
+    function starterResidualStrengthAdjustment(pitcher, ownTeam) {
+        var w = starterResidualWeight();
+        if (!w) return 0;
+        // The same residual, converted once to the strength scale. The constant
+        // is the shipped 0.24-per-quality-point lever; only the quantity it is
+        // applied to changes, from an absolute rating to a difference.
+        return clamp(starterResidual(pitcher, ownTeam) * 0.24 * starterShare(pitcher, ownTeam),
+            -4.2, 5.4);
+    }
     function recordStrengthAdjustment(record) {
         if (!record || !Number.isFinite(record.pct)) return 0;
         return clamp((record.pct - 0.5) * 9, -3.5, 3.5);
@@ -6044,10 +6211,18 @@
         }
         var awayPitcher = awayPitcherPre;
         var homePitcher = homePitcherPre;
-        awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.9, 9.4);
-        homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.9, 9.4);
-        awayRuns = clamp(awayRuns + starterEraAdjustment(homePitcher), 1.8, 9.2);
-        homeRuns = clamp(homeRuns + starterEraAdjustment(awayPitcher), 1.8, 9.2);
+        // STARTER_RESIDUAL_20260827: one formulation or the other, never both.
+        if (starterChannelsOff()) {
+            // He pitches, he appears in the box score, he prices nothing.
+        } else if (starterResidualWeight()) {
+            awayRuns = clamp(awayRuns + starterResidualRunAdjustment(homePitcher, home), 1.8, 9.4);
+            homeRuns = clamp(homeRuns + starterResidualRunAdjustment(awayPitcher, away), 1.8, 9.4);
+        } else {
+            awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.9, 9.4);
+            homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.9, 9.4);
+            awayRuns = clamp(awayRuns + starterEraAdjustment(homePitcher), 1.8, 9.2);
+            homeRuns = clamp(homeRuns + starterEraAdjustment(awayPitcher), 1.8, 9.2);
+        }
         var parkFactor = parkRunFactor(home);
         if (parkFactor !== 1) {
             awayRuns = clamp(awayRuns * parkFactor, 1.8, 9.2);
@@ -6065,8 +6240,15 @@
         }
         var awayStrength = strength(away);
         var homeStrength = strength(home) + 1.7;
-        awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
-        homeStrength += selectedPitcherStrengthAdjustment(homePitcher);
+        if (starterChannelsOff()) {
+            // see STARTER_CHANNELS_20260827
+        } else if (starterResidualWeight()) {
+            awayStrength += starterResidualStrengthAdjustment(awayPitcher, away);
+            homeStrength += starterResidualStrengthAdjustment(homePitcher, home);
+        } else {
+            awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
+            homeStrength += selectedPitcherStrengthAdjustment(homePitcher);
+        }
         if (awayPitcher && homePitcher) {
             var awayHandLabel = awayPitcherHand ? ' (' + awayPitcherHand + 'HP)' : '';
             var homeHandLabel = homePitcherHand ? ' (' + homePitcherHand + 'HP)' : '';
