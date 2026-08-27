@@ -1650,7 +1650,7 @@
         var text = String(pitcher && pitcher.note ? pitcher.note : '')
             .replace(/\d{4}-\d{1,2}-\d{1,2}/g, ' ')
             .replace(/\d{4}-\d{1,2}/g, ' ');
-        var match = text.match(/(\d{1,3})\s*-\s*(\d{1,3})(?!\s*-\s*\d)/);
+        var match = text.match(/\b(\d{1,3})\s*-\s*(\d{1,3})\b(?!\s*-\s*\d)/);
         return match ? match[1] + '-' + match[2] : null;
     }
     // PITCHER_RATES_20260622: derive real WHIP + K-BB% from cached statsapi
@@ -5735,7 +5735,7 @@
                 // sentence. The call is left in place so this lights up on its
                 // own if the endpoint is ever shipped.
                 var msg = (error && error.message) || '';
-                var absent = /404/.test(msg);
+                var absent = /\b404\b/.test(msg);
                 state.backendProjectionStatus = {
                     checked: true,
                     available: false,
