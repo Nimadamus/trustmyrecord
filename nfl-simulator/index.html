@@ -434,6 +434,79 @@ let STATE={mode:'weekly',season:null,week:null,games:[],weeksMeta:[],selRef:null
   sims:10000,venue:'home',venueTouched:false,window:'late',
   lastRun:null};
 
+/* ===================== share a specific simulation =====================
+   A simulation is only worth sharing if the person opening the link sees the
+   SAME game. The API already mints a seed on every run and accepts one back to
+   replay it exactly, and the seed comes home in meta.seed -- it was stored and
+   never used for anything a reader could reach. This turns it into a link. */
+function shareUrl(){
+  const r=STATE.lastRun;
+  if(!r||!r.seed)return null;
+  const u=new URL(location.origin+location.pathname);
+  u.searchParams.set('seed',r.seed);
+  u.searchParams.set('sims',r.sims||STATE.sims);
+  if(r.kind==='scheduled'){u.searchParams.set('ref',r.ref)}
+  else{
+    u.searchParams.set('home',r.home);u.searchParams.set('away',r.away);
+    if(r.venue)u.searchParams.set('venue',r.venue);
+    if(r.window)u.searchParams.set('window',r.window);
+  }
+  return u.toString();
+}
+async function copyShare(btn){
+  const url=shareUrl();
+  if(!url)return;
+  const done=(ok)=>{const t=btn.textContent;btn.textContent=ok?'Link copied':'Copy failed';btn.disabled=true;
+    setTimeout(()=>{btn.textContent=t;btn.disabled=false},1600)};
+  try{await navigator.clipboard.writeText(url);done(true)}
+  catch(e){
+    // Clipboard access is refused in plenty of ordinary situations -- an
+    // insecure origin, a permissions policy, a browser that never implemented
+    // it. Falling back to a selectable field beats telling the reader no.
+    try{const ta=document.createElement('textarea');ta.value=url;ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);
+      ta.select();const ok=document.execCommand('copy');document.body.removeChild(ta);done(ok)}
+    catch(e2){done(false)}
+  }
+}
+/** A shared link runs that exact simulation on load. */
+async function runFromUrl(){
+  let q;try{q=new URLSearchParams(location.search)}catch(e){return false}
+  const seed=q.get('seed');
+  const sims=Number(q.get('sims'));
+  if(sims&&[100,1000,5000,10000,25000,50000].includes(sims)){
+    STATE.sims=sims;
+    const b=$$('#simSeg button').find(x=>+x.dataset.sims===sims);
+    if(b)segSet('#simSeg',b);
+    const n=$('#cSimsN');if(n)n.textContent=fmtN(sims);
+  }
+  const ref=q.get('ref');
+  if(ref){setMode('weekly');await runScheduled(ref,seed?Number(seed):null);return true}
+  const home=q.get('home'),away=q.get('away');
+  if(home&&away){
+    setMode('custom');
+    // The link carries the HOST and the VISITOR; the picker carries team1 and
+    // team2 plus a venue. Rebuild it as team1=visitor, team2=host so the
+    // default "team2 at home" reproduces the shared game.
+    STATE.t1=away;STATE.t2=home;
+    const v=q.get('venue');
+    STATE.venue=v==='neutral'?'neutral':'team2';STATE.venueTouched=true;
+    const w=q.get('window');if(w)STATE.window=w;
+    const s1=$('#t1'),s2=$('#t2');
+    if(s1)s1.value=STATE.t1;
+    if(s2)s2.value=STATE.t2;
+    const vb=$$('#venueSeg button').find(x=>x.dataset.venue===STATE.venue);
+    if(vb)segSet('#venueSeg',vb);
+    const wb=$$('#windowSeg button').find(x=>x.dataset.window===STATE.window);
+    if(wb)segSet('#windowSeg',wb);
+    relabelVenue();
+    updateChips();
+    await runCustom(seed?Number(seed):null);
+    return true;
+  }
+  return false;
+}
+
 /* ============================ boot ============================ */
 async function boot(){
   const seasons=[2026,2025,2024,2023];
@@ -458,6 +531,7 @@ async function boot(){
   STATE.season=2026;
   await Promise.all([loadSchedule(true),loadTeams()]);
   updateChips();
+  try{await runFromUrl()}catch(e){/* a malformed link must not break the page */}
 }
 function segSet(sel,btn){$$(sel+' button').forEach(x=>x.classList.toggle('on',x===btn))}
 
@@ -623,7 +697,7 @@ async function runScheduled(ref,seed){
   const q=new URLSearchParams();q.set('sims',STATE.sims);if(seed)q.set('seed',seed);
   const vp=venueParamWeekly();if(vp)q.set('venue',vp);
   if(STATE.window)q.set('window',STATE.window);
-  STATE.lastRun={kind:'scheduled',ref,seed};
+  STATE.lastRun={kind:'scheduled',ref,seed,sims:STATE.sims};
   try{const d=await nflApi(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
 }
 async function runCustom(seed){
@@ -641,7 +715,8 @@ async function runCustom(seed){
   loading(out,`Simulating ${fmtN(STATE.sims)} games…`);
   const q=new URLSearchParams();q.set('home',host.ref);q.set('away',visitor.ref);q.set('sims',STATE.sims);
   if(neutral)q.set('venue','neutral');if(STATE.window)q.set('window',STATE.window);if(seed)q.set('seed',seed);
-  STATE.lastRun={kind:'custom',seed};
+  STATE.lastRun={kind:'custom',seed,home:host.ref,away:visitor.ref,sims:STATE.sims,
+    venue:neutral?'neutral':null,window:STATE.window};
   try{const d=await nflApi(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
 }
 /* re-run the currently shown result with the SAME seed but updated settings */
@@ -764,6 +839,11 @@ function renderResult(out,d){
   const rerun=el('div');rerun.style.cssText='margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative';
   const again=el('button','btn ghost','🎲 Simulate again');again.onclick=simulateAgain;
   rerun.appendChild(again);
+  // Share THIS run. The seed replays it exactly, so whoever opens the link sees
+  // the same game rather than a fresh one with the same teams.
+  const share=el('button','btn ghost','🔗 Share this simulation');
+  share.onclick=()=>copyShare(share);
+  rerun.appendChild(share);
   rerun.appendChild(Object.assign(el('span','dim'),{textContent:`fresh ${fmtN(d.meta.simulations)}-game variation · same teams, venue & kickoff`}));
   mh.appendChild(rerun);
   out.appendChild(mh);
@@ -985,7 +1065,10 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
         mile.forEach(m=>line.push(pctTxt(r.milestones&&r.milestones[m[0]])));
         return line;
       });
-      sec.appendChild(mkTable(head,body2));
+      // Sortable. Eight players and fourteen columns is a table people want to
+      // reorder -- who catches the most, who is likeliest to score -- and
+      // re-sorting is cheaper than making them read it twice.
+      sec.appendChild(sortableTable(head,body2,2));
       body.appendChild(sec);
     }
     const note=el('div','callout');
@@ -1053,6 +1136,52 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     return;
   }
 }
+/**
+ * A table whose columns sort on click.
+ *
+ * `firstNumeric` is the index from which cells are numbers, so the name and
+ * position columns still sort alphabetically. Values like "167-316" and "16%"
+ * are read by their leading number, and an em-dash sorts last in either
+ * direction rather than jumping to the top as a zero would.
+ */
+function sortableTable(headers,rows,firstNumeric){
+  const w=el('div','tablewrap');
+  const numOf=(v)=>{
+    if(v==null)return null;
+    const m=String(v).match(/-?\d+(\.\d+)?/);
+    return m?parseFloat(m[0]):null;
+  };
+  // dir 1 is the first click on a column. For a stat that means BIGGEST FIRST,
+  // which is the question being asked; for a name it means A to Z.
+  let sortCol=-1,dir=1;
+  const draw=()=>{
+    const body=rows.slice();
+    if(sortCol>=0){
+      body.sort((a,b)=>{
+        const av=a[sortCol],bv=b[sortCol];
+        if(sortCol<firstNumeric)return dir*String(av).localeCompare(String(bv));
+        const an=numOf(av),bn=numOf(bv);
+        if(an==null&&bn==null)return 0;
+        if(an==null)return 1;      // blanks last, whichever way it is sorted
+        if(bn==null)return -1;
+        return dir*(bn-an);
+      });
+    }
+    const th=headers.map((h,i)=>`<th data-i="${i}" tabindex="0" role="columnheader" style="cursor:pointer;user-select:none"`
+      +` aria-sort="${sortCol===i?((i>=firstNumeric)===(dir===1)?'descending':'ascending'):'none'}">${esc(h)}`
+      +(sortCol===i?(((i>=firstNumeric)===(dir===1))?' ▾':' ▴'):'')+'</th>').join('');
+    const tb=body.map(r=>`<tr>${r.map(c=>`<td>${esc(c==null?'—':c)}</td>`).join('')}</tr>`).join('');
+    w.innerHTML=`<table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table>`;
+    w.querySelectorAll('th').forEach(h=>{
+      const go=()=>{const i=+h.dataset.i;if(i===sortCol)dir=-dir;else{sortCol=i;dir=1}draw()};
+      h.onclick=go;
+      h.onkeydown=(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+    });
+  };
+  draw();
+  return w;
+}
+
 function mkTable(headers,rows){
   const w=el('div','tablewrap');
   const th=headers.map(h=>`<th>${esc(h)}</th>`).join('');
