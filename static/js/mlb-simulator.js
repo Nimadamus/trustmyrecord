@@ -4494,7 +4494,30 @@
                 scheduledIdx = closerIdx;
             } else {
                 var span = CLOSER_FLOOR - starterOuts;
-                var k = span > 0 ? clamp(Math.floor(((outsRecorded - starterOuts) / span) * midCount), 0, midCount - 1) : 0;
+                // RELIEF_SHARE_20260827: the middle innings are not divided evenly.
+                //
+                // Splitting the span from the starter's exit to the ninth equally
+                // across however many middle arms exist gave the first man out of
+                // the pen 2.92 outs against a real 3.93, because with a deeper staff
+                // each equal slice got smaller. Real bullpens are front-loaded: the
+                // first reliever often covers two innings and the arms behind him
+                // cover one apiece. Measured by sequence on 4,860 real team-games,
+                // relief outings run 3.93, 3.25 and 3.02 outs -- a declining share,
+                // not a flat one. These weights reproduce that shape; they do not
+                // change the total, only who covers which part of it.
+                var RELIEF_SHARE = [1.35, 1.10, 1.00, 1.00, 1.00];
+                var k = 0;
+                if (span > 0 && midCount > 0) {
+                    var total = 0, wi;
+                    for (wi = 0; wi < midCount; wi++) total += (RELIEF_SHARE[wi] || 1);
+                    var pos = ((outsRecorded - starterOuts) / span) * total;
+                    var acc2 = 0;
+                    for (wi = 0; wi < midCount; wi++) {
+                        acc2 += (RELIEF_SHARE[wi] || 1);
+                        if (pos < acc2) break;
+                    }
+                    k = clamp(wi, 0, midCount - 1);
+                }
                 scheduledIdx = 1 + k;
             }
         }
