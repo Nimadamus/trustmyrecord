@@ -146,7 +146,12 @@
         'nba-handicappers': 'NBA Handicappers',
         'nfl-handicappers': 'NFL Handicappers',
         'mlb-the-show-stat-league': 'MLB The Show Stat League',
-        'online-gaming': 'MLB The Show',
+        'online-gaming': 'Open Gaming Challenges',
+        'sports-gaming': 'Sports Gaming',
+        'mlb-the-show': 'MLB The Show',
+        'madden': 'Madden NFL',
+        'nba-2k': 'NBA 2K',
+        'ea-fc': 'EA Sports FC',
         'polls-trivia': 'Polls & Trivia',
         'trustmyrecord-tools': 'Tools',
         'sell-sports-picks': 'Sell Sports Picks',
@@ -250,6 +255,52 @@
             ['/sportsbook/', 'Sportsbook'],
             ['/forum/strategy/', 'Strategy forum'],
             ['/leaderboards/', 'Leaderboards']
+        ],
+        /* Added 2026-08-27 with the Sports Gaming vertical. /arena/ and
+           /online-gaming/ had no entry here at all, so every page in the section
+           fell back to CORE and pointed members at the handicapping side of the
+           site. These three keys keep the video-game cluster linking to itself. */
+        'sports-gaming': [
+            ['/sports-gaming/', 'Sports Gaming Hub'],
+            ['/arena/', 'The TMR Arena'],
+            ['/online-gaming/', 'Open gaming challenges'],
+            ['/arena/rankings/', 'Gaming rankings'],
+            ['/arena/leagues/', 'Gaming leagues'],
+            ['/sports-gaming/mlb-the-show/', 'MLB The Show'],
+            ['/sports-gaming/madden/', 'Madden NFL'],
+            ['/sports-gaming/nba-2k/', 'NBA 2K'],
+            ['/sports-gaming/ea-fc/', 'EA Sports FC'],
+            ['/sports-gaming/nhl/', 'NHL']
+        ],
+        'arena': [
+            ['/sports-gaming/', 'Sports Gaming Hub'],
+            ['/online-gaming/', 'Open gaming challenges'],
+            ['/arena/rankings/', 'Gaming rankings'],
+            ['/arena/leagues/', 'Gaming leagues'],
+            ['/arena/live/', 'Live gaming matches'],
+            ['/arena/free-predictions/', 'Free Arena predictions'],
+            ['/sports-gaming/mlb-the-show/', 'MLB The Show'],
+            ['/sports-gaming/madden/', 'Madden NFL'],
+            ['/sports-gaming/nba-2k/', 'NBA 2K'],
+            ['/sports-gaming/nhl/', 'NHL']
+        ],
+        'online-gaming': [
+            ['/sports-gaming/', 'Sports Gaming Hub'],
+            ['/arena/', 'The TMR Arena'],
+            ['/arena/rankings/', 'Gaming rankings'],
+            ['/sports-gaming/mlb-the-show/', 'MLB The Show'],
+            ['/sports-gaming/madden/', 'Madden NFL'],
+            ['/sports-gaming/nba-2k/', 'NBA 2K'],
+            ['/sports-gaming/ea-fc/', 'EA Sports FC'],
+            ['/sports-gaming/nhl/', 'NHL'],
+            ['/mlb-the-show-stat-league/', 'MLB The Show Stat League']
+        ],
+        'mlb-the-show-stat-league': [
+            ['/sports-gaming/mlb-the-show/', 'MLB The Show challenges'],
+            ['/sports-gaming/', 'Sports Gaming Hub'],
+            ['/online-gaming/', 'Open gaming challenges'],
+            ['/arena/rankings/', 'Gaming rankings'],
+            ['/arena/leagues/', 'Gaming leagues']
         ],
         'challenges': [
             ['/sportsbook/', 'Sportsbook'],

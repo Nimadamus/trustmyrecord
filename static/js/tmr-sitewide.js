@@ -30,10 +30,28 @@
         ["/marketplace/", "Pick Marketplace"],
         ["/marketplace/sell/", "Sell Your Picks"]
     ];
+    // SPORTS GAMING, added 2026-08-27. Kept in step with tmr-ds-nav.js, which
+    // carries the same menu: this table serves the ~140 pages that still render
+    // their nav from this script. See the long note in tmr-ds-nav.js for why the
+    // video-game section left Compete.
+    const sportsGamingRoutes = [
+        ["/sports-gaming/", "Sports Gaming Hub"],
+        ["/arena/", "The TMR Arena"],
+        ["/online-gaming/", "Open Challenges"],
+        ["/arena/rankings/", "Gaming Rankings"],
+        ["/arena/leagues/", "Gaming Leagues"],
+        ["/sports-gaming/mlb-the-show/", "MLB The Show"],
+        ["/sports-gaming/madden/", "Madden NFL"],
+        ["/sports-gaming/nba-2k/", "NBA 2K"],
+        ["/sports-gaming/ea-fc/", "EA Sports FC"],
+        ["/sports-gaming/nhl/", "NHL"]
+    ];
     const competeMenuRoutes = [
         ["/contests/justbet-mlb/", "Contest"],
-        ["/arena/", "Arena"],
-        ["/challenges/", "Challenges"],
+        ["/challenges/", "Handicapper Challenges"],
+        // TMR Challenges was in tmr-ds-nav.js from 2026-08-18 and never added
+        // here, so half the site had no nav route to it. Added 2026-08-27.
+        ["/tmr-challenges/", "TMR Challenges"],
         ["/tmr-match/", "TMR Match"],
         ["/trivia/", "Trivia"],
         ["/polls/", "Polls"]
@@ -67,8 +85,9 @@
     // Pages that should highlight each dropdown's trigger even when the page
     // itself isn't one of the dropdown's own links.
     const HANDICAPPERS_GROUP = new Set(["handicappers.html", "leaderboards.html", "verified-handicapper-records.html", "marketplace.html"]);
-    const COMPETE_GROUP = new Set(["arena.html", "challenges.html", "trivia.html", "polls.html"]);
-    const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "online-gaming.html", "mlb-the-show-stat-league.html", "hangout.html"]);
+    const COMPETE_GROUP = new Set(["challenges.html", "tmr-challenges.html", "tmr-match.html", "trivia.html", "polls.html", "contests.html"]);
+    const SPORTS_GAMING_GROUP = new Set(["sports-gaming.html", "arena.html", "online-gaming.html", "mlb-the-show-stat-league.html", "rankings.html", "leagues.html", "mlb-the-show.html", "madden.html", "nba-2k.html", "ea-fc.html", "nhl.html"]);
+    const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "hangout.html"]);
     const TOOLS_GROUP = new Set(["tools.html", "sports-simulators.html", "mlb-simulator.html", "nfl-simulator.html", "nba-simulator.html", "nhl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
     const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
 
@@ -76,10 +95,11 @@
         "sportsbook.html": ["Sportsbook", "Lock picks before games start. Build a public, permanent record."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
-        "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
-        "challenges.html": ["Challenges", "Public competition, head-to-head challenges, and rivalry loops."],
+        "arena.html": ["The TMR Arena", "Run your head-to-head sports gaming challenges: create a match, track your own, and confirm results with your opponent."],
+        "sports-gaming.html": ["Sports Gaming", "Head-to-head sports video game challenges with verified records: MLB The Show, Madden NFL, NBA 2K, EA Sports FC, and NHL."],
+        "challenges.html": ["Handicapper Challenges", "Pick against pick on real sporting events. Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
-        "online-gaming.html": ["Online Gaming", "Create and accept open sports video game challenges in MLB The Show, Madden, NBA 2K, NHL, and EA FC. Track wins, box scores, and lifetime stats."],
+        "online-gaming.html": ["Open Gaming Challenges", "The live board of open sports video game challenges in MLB The Show, Madden, NBA 2K, NHL, and EA FC. Track wins, box scores, and lifetime stats."],
         "hangout.html": ["Hangout", "Off-topic chatter and life conversations &mdash; not sports polls."],
         "polls.html": ["Polls", "Sports polls, prediction polls, debates, and community calls."],
         "trivia.html": ["Trivia", "Sports trivia, custom questions, leaderboards, and reputation."],
@@ -472,6 +492,24 @@
                     </button>
                     <div class="tmr-support-menu__panel" role="menu" aria-label="Handicappers links">
                         ${handicappersMenuRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile;
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
+                    </div>
+                </div>
+                <div class="tmr-support-menu tmr-sports-gaming-menu${SPORTS_GAMING_GROUP.has(currentFile) ? " is-current" : ""}">
+                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Sports Gaming
+                    </button>
+                    <div class="tmr-support-menu__panel" role="menu" aria-label="Sports Gaming links">
+                        ${sportsGamingRoutes.map(([href, label]) => {
                             const hrefPath = href.split("#")[0].toLowerCase();
                             const segs = hrefPath.split("/").filter(Boolean);
                             const hrefFile = segs.length
@@ -1086,7 +1124,7 @@
                                 <a href="/sportsbook/"><strong>Sportsbook</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
                                 <a href="/handicappers/"><strong>Handicappers</strong><span>Find members and compare records</span></a>
-                                <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
+                                <a href="/sports-gaming/"><strong>Sports Gaming</strong><span>MLB The Show, Madden, 2K, EA FC, NHL</span></a>
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>
                                 <a href="/forum/"><strong>Forums</strong><span>Hardcore discussion threads</span></a>
