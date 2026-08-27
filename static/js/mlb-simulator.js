@@ -3758,7 +3758,39 @@
         function maybeChange() {
             if (!defSide || !Array.isArray(defSide.pitchers)) return;
             var arms = defSide.pitchers, idx = arms.indexOf(pitcher);
-            if (idx < 0 || idx >= arms.length - 1) return;
+            if (idx < 0) return;
+            /**
+             * LAST_ARM_POSITION_PLAYER_20260827 -- somebody has to take the ball.
+             *
+             * The last man in the sequence could never be relieved, so when he was
+             * being destroyed he stayed in and kept being destroyed. The 12,000-game
+             * realism suite caught the consequence on a classic-era matchup: a
+             * one-inning reliever who allowed TEN hits, past anything in 12,782 real
+             * relief appearances, where the maximum is seven.
+             *
+             * Real baseball has an answer for a bullpen with nothing left, and this
+             * engine already implements it: a position player on the mound. It was
+             * only reachable at an inning boundary while trailing by eight or more,
+             * which is the blowout case, not the being-shelled-right-now case.
+             *
+             * The threshold is deliberately higher than for an ordinary change. This
+             * is an emergency, not a matchup decision.
+             */
+            var lastArm = idx >= arms.length - 1;
+            if (lastArm) {
+                if (!workloadV2()) return; // no arm available to replace him
+                var lastHits = (pitcher && pitcher.acc) ? pitcher.acc.h - apptStartHits : 0;
+                if (!(apptRuns >= 5 || lastHits >= 6)) return;
+                if (!defSide.posPitcher) {
+                    var emergency = evMakePositionPitcher(defSide);
+                    if (emergency) {
+                        defSide.pitchers.push(emergency);
+                        defSide.posPitcherIdx = defSide.pitchers.length - 1;
+                        defSide.posPitcher = emergency;
+                    }
+                }
+                if (!defSide.posPitcher || defSide.posPitcher.removed || defSide.posPitcher === pitcher) return;
+            }
             var threshold = idx === 0 ? 5 : 3; // shelled starter: 5 runs; reliever: 3
             // HIT_HOOK_20260826: pull on BASERUNNERS too, not only on runs.
             //
@@ -3833,9 +3865,10 @@
             if (apptRuns >= threshold || apptHits >= hitThreshold || leverage) {
                 var outgoing = pitcher;
                 outgoing.removed = true; // mid-inning pull - can never return this game
-                pitcher = arms[idx + 1]; apptRuns = 0;
+                var nextIdx = lastArm ? defSide.posPitcherIdx : idx + 1;
+                pitcher = defSide.pitchers[nextIdx]; apptRuns = 0;
                 apptStartHits = (pitcher && pitcher.acc) ? pitcher.acc.h : 0;
-                defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1); defSide.midChanges = (defSide.midChanges || 0) + 1;
+                defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, nextIdx); defSide.midChanges = (defSide.midChanges || 0) + 1;
                 // The incoming arm inherits whoever is on base; bp[] already charges
                 // those runners to the pitcher who put them there.
                 var inheritedCount = bases.filter(function (x) { return x !== null; }).length;
