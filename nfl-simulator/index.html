@@ -250,6 +250,8 @@
      footer — comes from the shared system, replacing the page-local text-link
      header that matched nothing else on the site. -->
 <link rel="stylesheet" href="/static/css/tmr-ds.5a0234d6173a.css">
+<link rel="stylesheet" href="/static/css/tmr-sim-archive.css?v=20260827a">
+<script defer src="/static/js/tmr-sim-archive.js?v=20260827a"></script>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 
@@ -333,6 +335,11 @@
 
   <div class="disc" id="globalDisc">Simulated model projections based on current available roster and injury data. Probability estimates, not guarantees, and not financial or betting advice.</div>
 </main>
+<!-- SIM_ARCHIVE_20260827: the simulation archive for this sport. Additive,
+     rendered by static/js/tmr-sim-archive.js into this container only. It sits
+     BELOW the simulator so the tool is never buried under analytics, and it
+     never touches the simulator's own DOM, state or rendering path. -->
+<div class="sa-root sa-embed" data-sa="panel" data-sport="nfl"></div>
 
 <section class="seo" aria-label="About the NFL Game Simulator">
   <h2>Simulate any NFL matchup</h2>
@@ -383,6 +390,7 @@
   <hr class="divider" />
   <h2>Related TrustMyRecord tools</h2>
   <div class="linkgrid">
+    <a href="/nfl-simulator/results/">NFL Simulation Results<small>Archived box scores and matchup aggregates</small></a>
     <a href="/sports-simulators/">All Sports Simulators<small>The MLB, NFL, NBA and NHL suite</small></a>
     <a href="/mlb-simulator/">MLB Simulator<small>Simulate MLB games and box scores</small></a>
     <a href="/nfl-handicappers/">NFL Handicappers<small>Verified NFL records and rankings</small></a>

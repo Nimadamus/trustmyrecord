@@ -38,6 +38,8 @@
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=595de7b31fac">
 <script defer src="/static/js/tmr-linkhub.js?v=b4e9b31be5d3"></script>
 <script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<link rel="stylesheet" href="/static/css/tmr-sim-archive.css?v=20260827a">
+<script defer src="/static/js/tmr-sim-archive.js?v=20260827a"></script>
 </head>
 <body class="tmr-ds tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-blowout-calibration-20260727a">
 
@@ -485,6 +487,11 @@
             </section>
         </section>
 
+        <!-- SIM_ARCHIVE_20260827: the simulation archive for this sport. Additive,
+             rendered by static/js/tmr-sim-archive.js into this container only. It sits
+             BELOW the simulator so the tool is never buried under analytics, and it
+             never touches the simulator's own DOM, state or rendering path. -->
+        <div class="sa-root sa-embed sa-force-dark" data-sa="panel" data-sport="mlb"></div>
         <section id="simv2Contest" class="simv2-duo-contest" aria-label="MLB contest" hidden>
             <div class="simv2-panel">
                 <p class="simv2-kicker simv2-kicker-gold">Live Contest</p>
@@ -671,6 +678,10 @@
 <!--MK:mlbHubCrossLink-->
   <p class="tmr-mlbx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">Before you simulate, check what the game actually looks like: <a href="/handicapping/mlb/" style="color:#22D2C0;font-weight:700;text-decoration:none">today's MLB matchups with odds, probable pitchers and verified trends</a>, one research page per game.</p>
   <!--/MK:mlbHubCrossLink-->
+<!-- SIM_ARCHIVE_20260827: a crawlable link to the archive. The panel above
+     is rendered by JavaScript, so without this anchor the archive pages are
+     orphaned in the served HTML. -->
+  <p class="tmr-simarchive" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">Every simulation run here is kept: browse the <a href="/mlb-simulator/results/" style="color:#22D2C0;font-weight:700;text-decoration:none">MLB simulation results archive</a> for full box scores and matchup aggregates.</p>
 </main>
 
     <script src="/static/js/mlb-simulator.js?v=51362e6a31e9-blowoutfix"></script>

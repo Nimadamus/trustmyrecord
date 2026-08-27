@@ -44,6 +44,8 @@
 <script defer src="/static/js/tmr-sim-core.72293683a7f4.js"></script>
 <script defer src="/static/js/nhl-simulator-app.js?v=901f2a80faee"></script>
 <link rel="stylesheet" href="/static/css/tmr-ds.5a0234d6173a.css">
+<link rel="stylesheet" href="/static/css/tmr-sim-archive.css?v=20260827a">
+<script defer src="/static/js/tmr-sim-archive.js?v=20260827a"></script>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 <!-- CLS: the shared header is injected by tmr-ds-nav.js at the end of the body,
@@ -147,6 +149,11 @@
 
   <div class="disc">Model projections built on current rosters, plus team strength solved from three seasons of results against the schedule each team actually played. Estimates, not guarantees, and not financial or betting advice.</div>
 </main>
+<!-- SIM_ARCHIVE_20260827: the simulation archive for this sport. Additive,
+     rendered by static/js/tmr-sim-archive.js into this container only. It sits
+     BELOW the simulator so the tool is never buried under analytics, and it
+     never touches the simulator's own DOM, state or rendering path. -->
+<div class="sa-root sa-embed" data-sa="panel" data-sport="nhl"></div>
 
 <section class="seo" aria-label="About the NHL Game Simulator">
   <h2>Simulate any NHL matchup</h2>
@@ -248,6 +255,7 @@
   <hr class="divider" />
   <h2>Related TrustMyRecord tools</h2>
   <div class="linkgrid">
+    <a href="/nhl-simulator/results/">NHL Simulation Results<small>Archived box scores and matchup aggregates</small></a>
     <a href="/sports-simulators/">All Sports Simulators<small>The MLB, NFL, NBA and NHL suite</small></a>
     <a href="/nba-simulator/">NBA Simulator<small>Simulate NBA games and box scores</small></a>
     <a href="/nfl-simulator/">NFL Simulator<small>Simulate NFL games and box scores</small></a>
