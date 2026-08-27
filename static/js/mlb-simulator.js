@@ -264,7 +264,36 @@
         homePitcherTouched: false,
         simulation: null,
         aggregate: null,
-        simulationCount: 1
+        simulationCount: 1,
+        /**
+         * MARKET_MODE_20260827 -- what the number on the screen actually is.
+         *
+         * When a sportsbook board was available this page quietly blended 22% of
+         * the posted total into the run environment that anchors every plate
+         * appearance. A visitor reading "TMR's simulation" was reading a number
+         * that was part sportsbook, with nothing on the page saying so, and any
+         * accuracy claim made from it would have been partly a claim about the
+         * book. (A second blend, 15% of the no-vig moneyline into the win
+         * probability, turned out to be inert -- see
+         * DEAD_MONEYLINE_BLEND_20260827.)
+         *
+         * There are now two modes and the page says which one it is in.
+         *
+         *   'pure'   -- TMR's model only. Rosters, players, park, weather, game
+         *               state. No odds, no totals, no market of any kind.
+         *   'market' -- may blend the board, and must show the book and the
+         *               timestamp of the snapshot it used.
+         *
+         * DEFAULT IS 'pure', and the reason is evidence rather than preference:
+         * pure is the only mode whose predictive skill has been measured (the
+         * holdout tiers in the backend harness never had odds available, so every
+         * published figure describes this mode). The blend's value has never been
+         * measured, because it needs archived odds carrying the timestamp they
+         * were posted at, and no free source provides them. Until that
+         * measurement exists, the honest default is the mode we can actually
+         * account for -- not the one that might flatter a headline.
+         */
+        marketMode: 'pure'
     };
 
     function byId(id) { return document.getElementById(id); }
@@ -298,17 +327,6 @@
             x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
             return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
         };
-    }
-    function poisson(lambda, random, maxLambda) {
-        lambda = clamp(lambda, 0.02, Number.isFinite(maxLambda) ? maxLambda : 3.4);
-        var limit = Math.exp(-lambda);
-        var k = 0;
-        var product = 1;
-        do {
-            k += 1;
-            product *= random();
-        } while (product > limit && k < 12);
-        return k - 1;
     }
     function todayEspnDate() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
     function espnDateOffset(daysBack) {
@@ -1728,73 +1746,21 @@
             applied: true
         };
     }
-    function inningWeights(isHome) {
-        return isHome ? [0.108, 0.111, 0.114, 0.113, 0.112, 0.112, 0.112, 0.109, 0.109] : [0.111, 0.112, 0.114, 0.113, 0.112, 0.111, 0.109, 0.109, 0.109];
-    }
-    function controlledFinalScore(expected, opponentExpected, winShare, random) {
-        var base = clamp(expected, 1.6, 8.9);
-        var lambda = clamp(base * (0.74 + random() * 0.28), 0.9, 7.2);
-        var score = poisson(lambda, random, 4.85);
-        if (random() < 0.12) score += poisson(clamp(base * 0.14, 0.1, 1.4), random);
-        if (base >= 4.6 && score <= 2 && random() < 0.24) score += 1;
-        if (base >= 5.0 && score <= 3 && random() < 0.14) score += 1;
-        if (base >= 5.4 && winShare > 0.62 && random() < 0.12) score += 2 + poisson(0.75, random);
-        if (base >= 6.5 && random() < 0.08) score += 1 + poisson(0.6, random);
-        if (winShare > 0.58 && random() < 0.22) score += 1;
-        if (winShare < 0.38 && random() < 0.08) score = Math.max(0, score - 1);
-        var rareOutlier = random() < 0.006 && base >= 5.7;
-        var cap = rareOutlier ? 20 : (base >= 6.6 ? 16 : (base <= 3.2 ? 10 : 13));
-        if (opponentExpected >= 6.2 && score > 14 && !rareOutlier) cap = Math.min(cap, 14);
-        return clamp(score, 0, cap);
-    }
-    function distributeRuns(total, expected, random, isHome) {
-        var weights = inningWeights(isHome);
-        var innings = weights.map(function () { return 0; });
-        var remaining = total;
-        weights.forEach(function (weight, index) {
-            if (index === 8) return;
-            var lambda = clamp(expected * weight * (0.72 + random() * 0.68), 0.02, 1.85);
-            var maxInning = remaining >= 10 ? 6 : 4;
-            var runs = Math.min(remaining, Math.min(maxInning, poisson(lambda, random)));
-            innings[index] = runs;
-            remaining -= runs;
-        });
-        while (remaining > 0) {
-            var idx = Math.floor(random() * 9);
-            if (innings[idx] < (remaining > 6 ? 6 : 4)) {
-                innings[idx] += 1;
-                remaining -= 1;
-            }
-        }
-        return innings;
-    }
-    function hitTotalForRuns(runs, team, pitcher, random) {
-        var offenseLift = clamp((team.offense - 100) * 0.025, -0.7, 0.9);
-        var pitcherDrag = pitcher ? clamp((100 - pitcher.quality) * 0.012, -0.35, 0.45) : 0;
-        return Math.round(clamp(runs + 4.2 + offenseLift + pitcherDrag + (random() * 3.8), Math.max(runs, 1), 18));
-    }
-    function errorTotal(team, random) {
-        var prevention = clamp((104 - team.runPrevention) * 0.012, -0.25, 0.35);
-        var chance = clamp(0.44 + prevention, 0.18, 0.78);
-        var errors = random() < chance ? 1 : 0;
-        if (random() < 0.06) errors += 1;
-        return errors;
-    }
-    function allocateWhole(total, count, random, minimums) {
-        var values = [];
-        var remaining = Math.max(0, Math.round(total));
-        for (var i = 0; i < count; i += 1) {
-            var min = minimums && minimums[i] ? minimums[i] : 0;
-            values.push(min);
-            remaining -= min;
-        }
-        remaining = Math.max(0, remaining);
-        while (remaining > 0) {
-            values[Math.floor(random() * count)] += 1;
-            remaining -= 1;
-        }
-        return values;
-    }
+    // REMOVED 27 Aug 2026 -- buildBoxScoreLegacy and controlledFinalScore.
+    //
+    // A Poisson final-score generator and the box score it fed. Both were
+    // unreachable: nothing called buildBoxScoreLegacy and nothing but it called
+    // controlledFinalScore. They are deleted rather than left in place because
+    // buildBoxScoreLegacy opened with `var random = Math.random` -- it ignored the
+    // seed entirely. Reconnecting it by accident would have silently replaced the
+    // seeded plate-appearance simulation with unreproducible Poisson draws, and
+    // the box score would still have looked plausible.
+    //
+    // The code is in git history at b26ad22a1 if it is ever wanted back.
+    // Also removed with the legacy path: inningWeights, distributeRuns,
+    // hitTotalForRuns, errorTotal, allocateWhole and poisson. Each was reachable
+    // only from controlledFinalScore or buildBoxScoreLegacy once those went.
+    // tests/mlb-no-legacy-path-test.js fails if either name returns.
     function weightedAllocate(total, weights, random, caps, minimums) {
         var count = weights.length;
         var values = [];
@@ -4581,13 +4547,26 @@
         var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather);
         return { awaySide: awaySide, homeSide: homeSide };
     }
-    function eventWinProbability(inputs, samples, statsOut) {
+    function eventWinProbability(inputs, samples, statsOut, random) {
+        // REPRODUCIBLE_WIN_PROBABILITY_20260827: the Monte Carlo that produces the
+        // displayed win % used Math.random, so it was NOT reproducible from the
+        // seed even though the box score was. Two runs of the same seeded matchup
+        // returned the same 5-4 final and win probabilities a couple of points
+        // apart, which meant a shared result could not be reproduced, an A/B test
+        // could not be paired, and roughly 1.1 points of pure sampling noise sat
+        // on top of every measured game at 2,000 samples.
+        //
+        // The caller now passes a stream derived from the seed, and it is a
+        // DIFFERENT stream from the one the box score draws on -- same seed, own
+        // salt -- so the displayed game stays an independent draw from the same
+        // distribution rather than becoming the first of the 2,000 samples.
+        var rnd = typeof random === 'function' ? random : Math.random;
         // EXPECTED_RUNS_CONSISTENCY_20260623: optionally accumulate the mean simulated
         // runs per side over the SAME sample of games used for win probability, so the
         // caller can display expected runs that match the box scores exactly (one model).
         var homeWins = 0, total = 0, aSum = 0, hSum = 0;
         for (var i = 0; i < samples; i++) {
-            var g = evSimGame(inputs.awaySide, inputs.homeSide, Math.random);
+            var g = evSimGame(inputs.awaySide, inputs.homeSide, rnd);
             if (g.hRuns > g.aRuns) homeWins++;
             else if (g.aRuns > g.hRuns) { /* away */ } else homeWins += 0.5;
             aSum += g.aRuns; hSum += g.hRuns;
@@ -5146,102 +5125,6 @@
         if (!best || !best.playerName) return team.abbreviation + ' lineup contributed across the order';
         return team.abbreviation + ': ' + best.playerName + ' ' + best.h + '-for-' + best.ab + (best.hr ? ', ' + best.hr + ' HR' : '') + (best.rbi ? ', ' + best.rbi + ' RBI' : '');
     }
-    function buildBoxScoreLegacy(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
-        var random = Math.random;
-        var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
-        var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
-        if (awayScore === homeScore) {
-            if (random() < homeWin) homeScore += 1;
-            else awayScore += 1;
-        }
-        var combined = awayScore + homeScore;
-        if (combined > 30) {
-            var excess = combined - 30;
-            while (excess > 0) {
-                if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
-                else if (homeScore > 0) homeScore -= 1;
-                excess -= 1;
-            }
-            if (awayScore === homeScore) {
-                if (random() < homeWin && awayScore > 0) awayScore -= 1;
-                else if (homeScore > 0) homeScore -= 1;
-            }
-        }
-        awayScore = clamp(awayScore, 0, 20);
-        homeScore = clamp(homeScore, 0, 20);
-        while (awayScore + homeScore > 30) {
-            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
-            else if (homeScore > 0) homeScore -= 1;
-            else break;
-        }
-        if (awayScore === homeScore) {
-            if (random() < homeWin) {
-                if (homeScore < 20 && awayScore + homeScore < 30) homeScore += 1;
-                else if (awayScore > 0) awayScore -= 1;
-            } else {
-                if (awayScore < 20 && awayScore + homeScore < 30) awayScore += 1;
-                else if (homeScore > 0) homeScore -= 1;
-            }
-        }
-        while (awayScore + homeScore > 30) {
-            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
-            else if (homeScore > 0) homeScore -= 1;
-            else break;
-        }
-        var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
-        var homeInnings = distributeRuns(homeScore, homeRuns, random, true);
-        var awayHits = hitTotalForRuns(awayScore, away, homePitcher, random);
-        var homeHits = hitTotalForRuns(homeScore, home, awayPitcher, random);
-        var awayErrors = errorTotal(away, random);
-        var homeErrors = errorTotal(home, random);
-        var winner = homeScore > awayScore ? home : away;
-        var loser = homeScore > awayScore ? away : home;
-        var winnerPitcher = homeScore > awayScore ? homePitcher : awayPitcher;
-        var awayLate = awayInnings[6] + awayInnings[7] + awayInnings[8];
-        var homeLate = homeInnings[6] + homeInnings[7] + homeInnings[8];
-        var turningPoint = (awayLate || homeLate) ? 'Late innings swung ' + (homeLate >= awayLate ? home.abbreviation : away.abbreviation) + ' with a ' + Math.max(awayLate, homeLate) + '-run finish.' : 'The game stayed controlled after the starters set the run environment.';
-        var awayLine = { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher };
-        var homeLine = { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher };
-        var players = modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext);
-        awayLine.summaryStats = teamSummaryStats(awayLine, players.away, random);
-        homeLine.summaryStats = teamSummaryStats(homeLine, players.home, random);
-        return {
-            runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
-            away: awayLine,
-            home: homeLine,
-            winner: winner,
-            loser: loser,
-            players: players,
-            summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(awayScore, homeScore) + '-' + Math.min(awayScore, homeScore) + '. ' + (winnerPitcher ? winnerPitcher.name + ' gives the winning side the stronger starter profile. ' : '') + turningPoint,
-            pitcherLines: [
-                away.name + ': ' + (awayPitcher ? awayPitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line',
-                home.name + ': ' + (homePitcher ? homePitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line'
-            ],
-            keyPerformers: [
-                winner.abbreviation + ' lineup: ' + Math.max(2, Math.min(5, Math.round(Math.max(awayScore, homeScore) / 2))) + ' run-scoring chances converted',
-                loser.abbreviation + ' lineup: ' + Math.max(1, Math.min(4, Math.round(Math.min(awayScore, homeScore) / 2) + 1)) + ' scoring chances'
-            ]
-        };
-    }
-    /**
-     * League-average reference for the rating axes, measured from the current
-     * team table rather than assumed to be 100.
-     *
-     * The formula below reads every axis as a distance from league average, so
-     * what "league average" is has to be true or every matchup inherits the
-     * error. It was assumed to be 100 and is not: measured 2026-08-26, the
-     * shipped table averages offense 100.27 but runPrevention 98.93, starting
-     * pitching 98.70 and bullpen 98.53. Because the pitching terms enter as
-     * (100 - rating), a table centred below 100 hands EVERY club a drag bonus,
-     * adding about a fifth of a run to every simulated game.
-     *
-     * Measured from the CURRENT table only, deliberately. The classic clubs
-     * average about 110 across the same axes because they are curated great
-     * teams; they are supposed to read as better than a modern average side,
-     * and re-centring on them would erase exactly that.
-     *
-     * Computed once, lazily, so a refreshed table moves the reference with it.
-     */
     var ratingRefCache = null;
     function ratingReference() {
         if (ratingRefCache) return ratingRefCache;
@@ -5962,21 +5845,66 @@
         // MODEL_VS_MARKET_20260623: capture the no-vig market-implied win % (research
         // context only, never presented as a betting edge).
         var marketWin = null;
-        if (context && context.odds) {
+        // See MARKET_MODE_20260827 on state.marketMode. In pure mode the board is
+        // not consulted at all, even when it is sitting right there in context.
+        var marketAllowed = state.marketMode === 'market';
+        var marketInfluence = {
+            mode: state.marketMode,
+            // The win probability takes nothing from the market: see
+            // DEAD_MONEYLINE_BLEND_20260827 below. Kept in the shape so a consumer
+            // can assert on it rather than infer from an absent field.
+            appliedToWinProbability: false,
+            moneylineShownForComparison: false,
+            appliedToRunEnvironment: false,
+            book: null,
+            snapshotAt: null,
+            winProbabilityWeight: 0,
+            runEnvironmentWeight: 0
+        };
+        if (marketAllowed && context && context.odds) {
+            marketInfluence.book = context.odds.book || null;
+            marketInfluence.snapshotAt = context.odds.updatedAt || null;
             var awayImp = impliedFromAmerican(context.odds.awayPrice);
             var homeImp = impliedFromAmerican(context.odds.homePrice);
             if (awayImp != null && homeImp != null) {
                 var noVigHome = homeImp / (homeImp + awayImp);
                 marketWin = { awayPct: awayImp / (awayImp + homeImp), homePct: noVigHome, book: context.odds.book, awayPrice: context.odds.awayPrice, homePrice: context.odds.homePrice };
-                homeWin = clamp((homeWin * 0.85) + (noVigHome * 0.15), 0.17, 0.83);
-                liveFactors.push('Market context: ' + context.odds.book + ' moneyline snapshot is included, but no betting edge is claimed.');
+                // DEAD_MONEYLINE_BLEND_20260827 -- removed, because it did nothing.
+                //
+                // This line used to read
+                //     homeWin = clamp((homeWin * 0.85) + (noVigHome * 0.15), 0.17, 0.83);
+                // and it was measurably inert: roughly seventy lines below, homeWin is
+                // overwritten outright by the plate-appearance Monte Carlo
+                //     homeWin = clamp(simHomeWin, 0.05, 0.95)
+                // so every trace of the moneyline was discarded before anything read it.
+                // It has been dead since the event engine became the source of the win
+                // probability. Deleting it changes no output; keeping it would have meant
+                // a market-influence disclosure that named a blend which never happened.
+                //
+                // The no-vig market price is still captured in marketWin and still shown
+                // beside the model's own number. That is a comparison, not an input.
+                marketInfluence.moneylineShownForComparison = true;
+                liveFactors.push('Market comparison: the no-vig ' + context.odds.book
+                    + ' moneyline is displayed beside this projection'
+                    + (context.odds.updatedAt ? ' (snapshot ' + context.odds.updatedAt + ')' : '')
+                    + '. It is not blended into the win probability.');
             }
             if (context.odds.total != null) {
                 var calibrated = applyMarketTotalCalibration(awayRuns, homeRuns, context.odds.total, awayStrength / (awayStrength + homeStrength));
                 awayRuns = calibrated.awayRuns;
                 homeRuns = calibrated.homeRuns;
-                liveFactors.push('Market total snapshot: ' + context.odds.total + ' runs.');
-                if (calibrated.applied) liveFactors.push('Run environment calibration: sportsbook total is used only to anchor the scoring environment, not to create a betting edge.');
+                if (calibrated.applied) {
+                    marketInfluence.appliedToRunEnvironment = true;
+                    marketInfluence.runEnvironmentWeight = 0.22;
+                    liveFactors.push('MARKET-INFORMED: 22% of the ' + context.odds.book
+                        + ' posted total of ' + context.odds.total + ' runs is blended into the '
+                        + 'projected scoring environment'
+                        + (context.odds.updatedAt ? ' (snapshot ' + context.odds.updatedAt + ')' : '')
+                        + '. The projected score is therefore part sportsbook.');
+                } else {
+                    liveFactors.push('Market total snapshot: ' + context.odds.total
+                        + ' runs, outside the range this model will anchor to, so it was not used.');
+                }
             }
         }
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
@@ -6019,7 +5947,12 @@
         // run model, so calibration is unaffected.
         var wpSamples = state.simulationCount > 1 ? 200 : 2000;
         var simStats = {};
-        var simHomeWin = eventWinProbability(eventInputs, wpSamples, simStats);
+        // Own stream, derived from the same seed. See
+        // REPRODUCIBLE_WIN_PROBABILITY_20260827 on eventWinProbability.
+        var wpRandom = seedSalt === undefined || seedSalt === null || seedSalt === ''
+            ? Math.random
+            : seededRandom(seededHash('wp|' + seedSalt));
+        var simHomeWin = eventWinProbability(eventInputs, wpSamples, simStats, wpRandom);
         homeWin = clamp(Number.isFinite(simHomeWin) ? simHomeWin : homeWin, 0.05, 0.95);
         // TEAM_TRUE_TALENT_20260629: regularize the simulated win % toward a real
         // season run-differential prior (log5 of the two clubs' Pythagorean win
@@ -6084,6 +6017,9 @@
             confidenceBand: confidenceLabel(winnerPct, Math.abs(homeStrength - awayStrength)),
             eraAdjustment: eraAdjustmentNote(away, home),
             simulationMode: simulationModeLabel(),
+            // Everything the page needs to say honestly where this number came from.
+            marketInfluence: marketInfluence,
+            modelInputMode: state.marketMode === 'market' ? 'Market-informed' : 'Pure TMR simulation',
             dataMode: dataModeLabel(),
             dataLimitations: dataModeDetail(),
             dataSourcesUsed: verifiedLiveInputs().map(function (source) { return source.label; }),
@@ -7430,6 +7366,8 @@
         setText('simulationConfidenceValue', result.confidenceBand);
         setText('eraAdjustmentValue', result.eraAdjustment);
         setText('simulationModeValue', result.simulationMode);
+        setText('modelInputModeValue', result.modelInputMode || 'Pure TMR simulation');
+        renderMarketModeNote(result.marketInfluence);
         setText('dataModeValue', result.dataMode);
         renderDataModeChip(result);
         renderModelVsMarket(result);
@@ -7657,6 +7595,42 @@
         });
     }
 
+    /**
+     * Say, in the open, whether a sportsbook is inside this number.
+     *
+     * In market-informed mode the visitor is told the book, the moment the
+     * snapshot was taken and how much of it went in. When the mode is on but no
+     * board matched the game, that is said too, because "market-informed" with no
+     * market is a pure run and must not be presented as anything else.
+     */
+    function renderMarketModeNote(influence) {
+        var note = byId('simMarketModeNote');
+        if (!note) return;
+        var mode = (influence && influence.mode) || state.marketMode;
+        if (mode !== 'market') {
+            note.textContent = "Pure TMR simulation: this projection uses TMR's own model only - "
+                + 'rosters, players, park, weather and game context. No sportsbook odds or '
+                + 'totals are consulted.';
+            return;
+        }
+        if (!influence || !influence.appliedToRunEnvironment) {
+            note.textContent = 'Market-informed mode is selected, but no sportsbook board matched '
+                + 'this game, so nothing from the market was used. This projection is the pure '
+                + 'TMR model.';
+            return;
+        }
+        var parts = [];
+        if (influence.appliedToRunEnvironment) {
+            parts.push(Math.round(influence.runEnvironmentWeight * 100) + '% of the posted total into the projected scoring');
+        }
+        note.textContent = 'MARKET-INFORMED: this projection blends ' + parts.join(' and ')
+            + '. Source: ' + (influence.book || 'sportsbook board')
+            + (influence.snapshotAt ? ', snapshot taken ' + influence.snapshotAt : ', snapshot time not reported by the board')
+            + '. The moneyline is shown beside the model for comparison and is not blended in'
+            + '. Because a sportsbook is inside this number, it is not evidence of independent '
+            + 'model accuracy.';
+    }
+
     function wireEvents() {
         var away = byId('awayTeamSelect');
         var home = byId('homeTeamSelect');
@@ -7707,6 +7681,16 @@
         });
         if (run) run.addEventListener('click', runSimulation);
         if (simulationCountSelect) simulationCountSelect.addEventListener('change', function () { state.simulationCount = selectedSimulationCount(); });
+        var marketModeSelect = byId('simMarketModeSelect');
+        if (marketModeSelect) {
+            marketModeSelect.value = state.marketMode;
+            marketModeSelect.addEventListener('change', function () {
+                state.marketMode = marketModeSelect.value === 'market' ? 'market' : 'pure';
+                // The note describes the mode before a run and the actual influence
+                // after one, so it is never stale against the selector.
+                renderMarketModeNote(null);
+            });
+        }
         if (copyBox) copyBox.addEventListener('click', copyBoxScore);
         if (saveBox) saveBox.addEventListener('click', saveBoxScore);
         if (viewBox) viewBox.addEventListener('click', viewBoxScore);

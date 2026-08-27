@@ -192,6 +192,13 @@
                             <option value="cold">Cold</option>
                         </select>
                     </label>
+                    <label class="sim-count-field" for="simMarketModeSelect">
+                        <span>Model input mode</span>
+                        <select id="simMarketModeSelect" class="sim-select" aria-describedby="simMarketModeNote">
+                            <option value="pure" selected>Pure TMR simulation</option>
+                            <option value="market">Market-informed</option>
+                        </select>
+                    </label>
                     <label class="sim-count-field" for="simulationCountSelect">
                         <span>Number of simulations</span>
                         <select id="simulationCountSelect" class="sim-select">
@@ -207,6 +214,7 @@
                     <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
                 <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
+                <p id="simMarketModeNote" class="sim-message">Pure TMR simulation: this projection uses TMR's own model only - rosters, players, park, weather and game context. No sportsbook odds or totals are consulted.</p>
                 <p id="simWeatherNote" class="sim-message sim-weather-note">Clear: no weather impact on play. This is a simulated condition you choose for this game - not a verified live forecast.</p>
             </section>
 
@@ -306,6 +314,10 @@
                     <div>
                         <span id="simulationModeValue" class="projection-value muted">Ready to run</span>
                         <small>Simulation Mode Used</small>
+                    </div>
+                    <div>
+                        <span id="modelInputModeValue" class="projection-value muted">Pure TMR simulation</span>
+                        <small>Model Input Mode</small>
                     </div>
                     <div>
                         <span id="dataModeValue" class="projection-value muted">Baseline ratings</span>
