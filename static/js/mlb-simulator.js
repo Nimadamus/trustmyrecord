@@ -4058,7 +4058,13 @@
                 // fifty team-games, which is why it surfaced as a sporadic
                 // off-by-one between team plate appearances and pitcher batters
                 // faced rather than as anything obviously wrong.
-                b.acc.pa++; pitcher.acc.bf++;
+                // Gated with the rest of the candidate: correcting it changes the
+                // box score, and the release gate requires the flag-off path to
+                // stay byte-identical to what is live. Verified: ungated it broke
+                // equivalence on exactly the one fixture where an interference
+                // call occurs.
+                b.acc.pa++;
+                if (workloadV2()) pitcher.acc.bf++;
                 b.acc.ci = (b.acc.ci || 0) + 1; defSide.ci = (defSide.ci || 0) + 1;
                 if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); bases[2] = null; bp[2] = null; bu[2] = false; } bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; } bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; }
                 bases[0] = bi; bp[0] = pitcher; bu[0] = false; side.idx++;
