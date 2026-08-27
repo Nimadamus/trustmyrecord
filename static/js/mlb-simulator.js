@@ -1524,7 +1524,35 @@
             return 0;
         });
         if (!rosterRows.length && !options.length && curatedPitchers.length) {
-            try { console.warn('[mlb-simulator] EMERGENCY FALLBACK: live active-roster feed unavailable for ' + (team && team.abbreviation) + '; showing static emergency pitcher profiles (regenerated 2026-08-26, may be outdated).'); } catch (e) {}
+            // ROSTER_WARNING_ACCURACY_20260827: say which of the two this is.
+            //
+            // This branch fires whenever there are no roster rows to build a
+            // dropdown from, and it used to report every case as "live
+            // active-roster feed unavailable". That is only true for one of them.
+            // Rosters are fetched when a simulation runs, not on page load, so a
+            // visitor who has not run one yet -- which on this page is every
+            // logged-out visitor, because the run is behind the signup gate --
+            // saw a console warning claiming the MLB feed was down while it was
+            // simply not being asked for. Verified 27 Aug 2026 in production: the
+            // page logs the warning on load, and the same session then fetches
+            // every roster at HTTP 200 and loads 26 real players per club the
+            // moment a simulation runs.
+            //
+            // teamRosters distinguishes the two exactly: no entry means never
+            // attempted, an explicit null means attempted and failed.
+            var rosterMap = state.liveContext && state.liveContext.teamRosters;
+            var abbrKey = team && team.abbreviation;
+            var attempted = !!(rosterMap && abbrKey && Object.prototype.hasOwnProperty.call(rosterMap, abbrKey));
+            var reallyFailed = attempted && !(rosterMap && rosterMap[abbrKey]);
+            try {
+                if (reallyFailed) {
+                    console.warn('[mlb-simulator] EMERGENCY FALLBACK: the live active-roster feed FAILED for '
+                        + abbrKey + '; showing static emergency pitcher profiles (regenerated 2026-08-26, may be outdated).');
+                } else {
+                    console.info('[mlb-simulator] Rosters for ' + abbrKey + ' have not been loaded yet - they are '
+                        + 'fetched when a simulation runs. Showing static pitcher profiles until then; this is not a feed failure.');
+                }
+            } catch (e) {}
             state.usedEmergencyPitcherFallback = state.usedEmergencyPitcherFallback || {};
             if (team) state.usedEmergencyPitcherFallback[team.abbreviation] = true;
             return curatedPitchers.map(function (row) {
