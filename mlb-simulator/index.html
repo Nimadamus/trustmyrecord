@@ -705,7 +705,57 @@
   <p class="tmr-simarchive" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">Every simulation run here is kept: browse the <a href="/mlb-simulator/results/" style="color:#22D2C0;font-weight:700;text-decoration:none">MLB simulation results archive</a> for full box scores and matchup aggregates.</p>
 </main>
 
-    <script src="/static/js/mlb-simulator.js?v=51362e6a31e9-blowoutfix"></script>
+    <!--
+    MLB_ENGINE_RELEASE_20260827 -- the validated configuration, set here rather
+    than defaulted inside the engine.
+
+    The engine ships every one of these OFF. Turning them on is a deployment
+    decision and it belongs where a deployment can see it, so this block is the
+    whole switch: delete a line and that layer is gone on the next publish,
+    without touching the engine or rerunning its gates.
+
+    What each one earned, on the 2,434 games of a season the model never saw:
+
+      starter residual 0.010   Brier skill +1.38% [0.26%, 2.69%], calibration
+                               error 2.20%, against +0.83% and 3.59% for the
+                               shipped absolute starter. The starter's earned run
+                               average used to reach the forecast four separate
+                               times on top of a team rating that already
+                               contained him; this prices him once, as a
+                               difference from the rotation his own club's rating
+                               assumes.
+
+      workload v2              the realism bundle: real bullpen depth, bench
+                               substitutions, mid-inning relief, a starter pitch
+                               count, and the runner who moves up on an out.
+                               Batter metrics inside tolerance 105/135 -> 124/135,
+                               pitcher roles 10/32 -> 22/32, team shape 1/4 -> 5/6.
+                               Costs 0.08 points of Brier skill, which is inside
+                               the confidence interval and therefore not a cost
+                               that can be told apart from zero.
+
+    NOT deployed, and deliberately: measured park factors and the regressed K-BB
+    pitcher quality. Both are built and both are honest; neither improved the
+    holdout, so neither ships.
+-->
+    <script>
+window.TMR_MLB_STARTER_RESIDUAL = 0.010;
+window.TMR_MLB_WORKLOAD_V2 = true;
+/* The batted-ball table gates sacrifice flies, double plays and errors on
+   whether the ball was on the ground or in the air, per player. It loads
+   asynchronously and the layer stays inert until it arrives, which is a
+   degradation rather than a failure: without it those three fall back to the
+   flat rates the engine has always used. */
+(function () {
+    try {
+        fetch('/static/data/mlb-battedball-2024.40b9b03b1878.json', { cache: 'force-cache' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (t) { if (t && t.batters) window.TMR_MLB_BB_TABLE = t; })
+            .catch(function () {});
+    } catch (e) {}
+}());
+</script>
+    <script src="/static/js/mlb-simulator.js?v=aebda24993d7-blowoutfix"></script>
 
     <!-- MLB_SIM_CONVERSION_20260728: post-result save/signup panel. Flip
          any value to false + redeploy to disable instantly; the simulator

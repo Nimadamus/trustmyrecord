@@ -697,7 +697,17 @@ async function flushAsync() {
   assert(/Recent scoring form from ESPN finals/.test(live.elements.matchupNotes.innerHTML), 'live path factors recent final scores');
   assert(/Gerrit Cole|Jacob deGrom|Yankee Stadium|Weather context from ESPN|ESPN injury report|Bullpen context is limited/.test(live.elements.matchupNotes.innerHTML), 'live path renders verified context as factors');
   assert(/Park factor: New York Yankees home environment/.test(live.elements.matchupNotes.innerHTML), 'live path applies park factor to the run model');
-  assert(/Run environment calibration: sportsbook total is used only to anchor the scoring environment/.test(live.elements.matchupNotes.innerHTML), 'live path labels market-total calibration without claiming an edge');
+  // MARKET_MODE_20260827 changed what this asserts, deliberately. The page used
+  // to blend 22% of the sportsbook total into its run environment on every live
+  // matchup and label it afterwards. The default mode is now PURE: the board is
+  // not consulted at all, so there is no calibration line to find, and the
+  // absence is the guarantee. tests/mlb-market-mode-test.js covers the
+  // market-informed mode, where the blend happens and is disclosed with its book
+  // and snapshot time.
+  assert(!/Run environment calibration: sportsbook total/.test(live.elements.matchupNotes.innerHTML),
+    'the default mode must not blend the sportsbook total into the run environment');
+  assert(!/MARKET-INFORMED/.test(live.elements.matchupNotes.innerHTML),
+    'a pure simulation must not be labelled market-informed');
   assert(/Starting Pitchers:/.test(live.elements.matchupNotes.innerHTML) && /Jacob deGrom/.test(live.elements.matchupNotes.innerHTML) && /Gerrit Cole/.test(live.elements.matchupNotes.innerHTML), 'live output shows selected verified probable starters');
   choosePitchers(live.elements, 'MacKenzie Gore', 'Gerrit Cole');
   await live.simulator.runSimulation();
