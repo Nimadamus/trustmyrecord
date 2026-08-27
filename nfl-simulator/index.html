@@ -178,6 +178,14 @@
   .envstrip{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;position:relative}
   .envstrip .chip{background:rgba(255,255,255,.03)}
   @media(max-width:640px){ .mh-team .pts{font-size:1.8rem} .mh-team .nm{font-size:.9rem} }
+  /* MOBILE_LABEL_SIZE_20260827: the control labels above every input -- Season,
+     Simulations, Venue / home field, Kickoff window -- computed to 10.5px on a
+     390px phone, from .fld>span{font-size:.7rem}. Uppercase text with letter
+     spacing at that size is the hardest thing on the page to read, and it sits on
+     the controls a visitor has to use before they can simulate anything.
+     Raised to 0.78rem (about 11.7px) on small viewports only; the desktop rule is
+     untouched, and the media CONDITION is not scaled. */
+  @media(max-width:640px){ .fld>span{font-size:.78rem;letter-spacing:.04em} }
 
   /* ---------- chart cards ---------- */
   .chartgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:14px}
