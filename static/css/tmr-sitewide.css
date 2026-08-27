@@ -554,9 +554,16 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 .tmr-support-menu__panel {
     position: absolute;
     top: calc(100% + 9px);
-    right: 0;
+    /* Was `right: 0` with a hard 168px box, which is narrower than the longest
+       item ("MLB Matchups Today") and left the panel hanging ~70px to the left
+       of its own trigger. Both numbers now match the canonical .ds-menu-panel
+       in tmr-ds.css: sized to its content, anchored to the trigger's left edge. */
+    left: -2px;
+    right: auto;
     z-index: 1200;
-    min-width: 168px;
+    width: max-content;
+    min-width: 170px;
+    max-width: min(340px, calc(100vw - 24px));
     padding: 8px;
     border: 1px solid rgba(148, 163, 184, 0.22);
     border-radius: 14px;
@@ -598,12 +605,14 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 .tmr-support-menu__panel a {
     display: flex;
     align-items: center;
-    min-height: 34px;
-    padding: 8px 10px;
+    min-height: 35px;
+    padding: 9px 12px;
     border-radius: 9px;
     color: #dce8f5;
     text-decoration: none;
-    font: 800 0.82rem/1.15 var(--tmr-font);
+    /* Same one-line rule and type scale as .ds-menu-panel a. */
+    white-space: nowrap;
+    font: 700 0.9rem/1.2 var(--tmr-font);
     letter-spacing: 0;
     text-transform: none;
 }
@@ -2371,6 +2380,8 @@ html body.tmr-site-shell {
         position: static;
         display: none;
         width: 100%;
+        min-width: 0;
+        max-width: none;
         margin-top: 8px;
         opacity: 1;
         visibility: visible;
@@ -2385,6 +2396,13 @@ html body.tmr-site-shell {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 6px;
+    }
+
+    /* The stacked panel is a 2-up grid inside the burger, not a hover card:
+       the desktop nowrap would push the long labels out of their columns. */
+    .tmr-community-menu__panel a,
+    .tmr-support-menu__panel a {
+        white-space: normal;
     }
 
     .tmr-member-search {
@@ -2652,6 +2670,7 @@ html body.tmr-site-shell {
         right: 0;
         width: 100%;
         min-width: 0;
+        max-width: none;
         transform: translateY(-4px);
     }
 
