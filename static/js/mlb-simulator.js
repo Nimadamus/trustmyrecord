@@ -293,7 +293,14 @@
          * measurement exists, the honest default is the mode we can actually
          * account for -- not the one that might flatter a headline.
          */
-        marketMode: 'pure'
+        marketMode: 'pure',
+        /**
+         * SIM_DEPTH_20260827 -- how many games the win probability is sampled
+         * from. Null means "decide from the run count", which is what the page
+         * did before this was exposed. See the comment at the use site for what
+         * the numbers buy.
+         */
+        wpSamples: null
     };
 
     function byId(id) { return document.getElementById(id); }
@@ -6022,7 +6029,23 @@
         // batched aggregate runs 200) to cut that standard error to ~1%. This only
         // sharpens the win-probability estimate; it does not change the box score or
         // run model, so calibration is unaffected.
-        var wpSamples = state.simulationCount > 1 ? 200 : 2000;
+        // SIM_DEPTH_20260827: how many games the win probability is sampled from.
+        //
+        // The Monte Carlo standard error is about 1/(2*sqrt(n)) in points, so 200
+        // games carry roughly 3.5 points of sampling error, 2,000 carry 1.1, and
+        // 10,000 carry half a point. That is a real product choice -- a visitor
+        // comparing two lineups needs the difference between them to be larger
+        // than the noise in the estimate -- so it is exposed rather than buried.
+        //
+        // A batch of aggregate runs still defaults to the shallow sample, because
+        // the batch itself is already averaging over many games.
+        var wpSamples = state.simulationCount > 1
+            // A batch is already averaging over many games, so it keeps the
+            // shallow sample however deep a single run is set to. Otherwise a
+            // hundred runs at ten thousand games each is a million simulated
+            // games for a number the batch was going to average away anyway.
+            ? Math.min(Number(state.wpSamples) || 200, 200)
+            : (Number(state.wpSamples) > 0 ? Number(state.wpSamples) : 2000);
         var simStats = {};
         // Own stream, derived from the same seed. See
         // REPRODUCIBLE_WIN_PROBABILITY_20260827 on eventWinProbability.
@@ -7758,6 +7781,23 @@
         });
         if (run) run.addEventListener('click', runSimulation);
         if (simulationCountSelect) simulationCountSelect.addEventListener('change', function () { state.simulationCount = selectedSimulationCount(); });
+        var depthSelect = byId('simDepthSelect');
+        if (depthSelect) {
+            depthSelect.value = String(state.wpSamples || 2000);
+            depthSelect.addEventListener('change', function () {
+                var v = Number(depthSelect.value);
+                state.wpSamples = v > 0 ? v : null;
+                var note = byId('simDepthNote');
+                if (note) {
+                    // The error is 1/(2*sqrt(n)) as a share, shown as points.
+                    var err = (50 / Math.sqrt(v)).toFixed(1);
+                    note.textContent = 'The win probability is the share of ' + v.toLocaleString()
+                        + ' simulated games, so it carries about ' + err
+                        + ' percentage points of sampling error. A difference smaller than that '
+                        + 'between two scenarios is noise, not a finding.';
+                }
+            });
+        }
         var marketModeSelect = byId('simMarketModeSelect');
         if (marketModeSelect) {
             marketModeSelect.value = state.marketMode;

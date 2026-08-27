@@ -192,6 +192,14 @@
                             <option value="cold">Cold</option>
                         </select>
                     </label>
+                    <label class="sim-count-field" for="simDepthSelect">
+                        <span>Simulation depth</span>
+                        <select id="simDepthSelect" class="sim-select" aria-describedby="simDepthNote">
+                            <option value="500">Quick - 500 games</option>
+                            <option value="2000" selected>Standard - 2,000 games</option>
+                            <option value="10000">Deep - 10,000 games</option>
+                        </select>
+                    </label>
                     <label class="sim-count-field" for="simMarketModeSelect">
                         <span>Model input mode</span>
                         <select id="simMarketModeSelect" class="sim-select" aria-describedby="simMarketModeNote">
@@ -214,6 +222,7 @@
                     <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
                 <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
+                <p id="simDepthNote" class="sim-message">Standard: the win probability is the share of 2,000 simulated games, so it carries about 1.1 percentage points of sampling error. Quick is faster and carries about 2.2; Deep carries about 0.5 and is the setting to use when comparing two lineups whose difference is small.</p>
                 <p id="simMarketModeNote" class="sim-message">Pure TMR simulation: this projection uses TMR's own model only - rosters, players, park, weather and game context. No sportsbook odds or totals are consulted.</p>
                 <p id="simWeatherNote" class="sim-message sim-weather-note">Clear: no weather impact on play. This is a simulated condition you choose for this game - not a verified live forecast.</p>
             </section>
