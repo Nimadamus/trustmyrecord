@@ -846,7 +846,7 @@ function renderResult(out,d){
   const tp=el('div','panel');
   const tabs=el('div','tabs');
   const body=el('div');body.style.marginTop='8px';
-  const TABS=[['overview','Overview'],['box','Box Score'],['roster','Rosters & Injuries'],['why','Why the model moved']];
+  const TABS=[['overview','Overview'],['proj','Player Projections'],['box','Box Score'],['roster','Rosters & Injuries'],['why','Why the model moved']];
   const setTab=(id)=>{for(const b of tabs.children)b.classList.toggle('on',b.dataset.id===id);renderTab(body,id,d,g,hAbbr,aAbbr)};
   for(const [id,label] of TABS){const b=el('button',null,label);b.dataset.id=id;b.onclick=()=>setTab(id);tabs.appendChild(b)}
   tp.appendChild(tabs);tp.appendChild(body);out.appendChild(tp);
@@ -922,6 +922,69 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       else sec.appendChild(Object.assign(el('div','dim'),{textContent:'No major inactives reported for this game.'}));
       body.appendChild(sec);
     }
+    return;
+  }
+  if(id==='proj'){
+    /* Every player's whole distribution, not one game's line.
+       The box-score tab shows ONE simulated game, which is the point of a
+       simulation but is also a single draw: Mahomes throwing for 212 there says
+       nothing about the range. These are the same simulated games folded into
+       percentiles and milestone rates, which is the output an actual research
+       question wants. The engine has always computed them and nothing showed
+       them. */
+    const bx=d.box_score;
+    if(!bx||bx.unavailable||!bx.projections){body.appendChild(Object.assign(el('div','unavail'),{textContent:'Player projections unavailable for this matchup.'}));return}
+    const lead=el('p','muted');
+    lead.style.cssText='margin:0 0 14px;font-size:.88rem';
+    lead.innerHTML='Across <b>'+fmtN(d.meta.simulations)+'</b> simulations. <b>Range</b> is the tenth to ninetieth percentile: '
+      +'eight runs in ten land inside it, one below, one above. <b>Median</b> is the middle outcome, which is not the same as the average '
+      +'and is the more honest single number for a stat with a long tail. Milestone columns are how often that line was cleared, '
+      +'not a prediction that it will be.';
+    body.appendChild(lead);
+    const pctTxt=(v)=>v==null?'—':(v<=0?'—':(v*100).toFixed(0)+'%');
+    for(const [side,abbr,name] of [['away',aAbbr,g.away],['home',hAbbr,g.home]]){
+      const rows=bx.projections[side];
+      if(!rows||!rows.length)continue;
+      const sec=el('div');sec.style.marginBottom='18px';
+      const hd=el('div','team');hd.style.marginBottom='6px';
+      hd.appendChild(teamMark(abbr,26));
+      hd.appendChild(Object.assign(el('span','nm'),{textContent:name}));
+      sec.appendChild(hd);
+      // A receiver has no passing line and a quarterback rarely has a receiving
+      // one. Printing a column of zeroes for every player is noise, so each
+      // stat column only appears when somebody on this side actually has it.
+      const has=(k)=>rows.some(r=>r[k]&&(r[k].mean>0||r[k].p90>0));
+      const cols=[['pass_yards','Pass yds'],['rush_yards','Rush yds'],['rec_yards','Rec yds']].filter(c=>has(c[0]));
+      const mile=[['p300_pass','300+ pass'],['p2_pass_td','2+ pass TD'],['p100_rush','100+ rush'],['p100_rec','100+ rec'],['anytime_td','Any TD']]
+        .filter(m=>rows.some(r=>r.milestones&&r.milestones[m[0]]>0));
+      const head=['Player','Pos'];
+      cols.forEach(c=>{head.push(c[1]+' (median)');head.push(c[1]+' range');});
+      if(rows.some(r=>r.rec>0))head.push('Rec');
+      mile.forEach(m=>head.push(m[1]));
+      const showRec=rows.some(r=>r.rec>0);
+      const body2=rows.map(r=>{
+        const line=[r.name,r.pos];
+        cols.forEach(c=>{
+          const v=r[c[0]]||{};
+          // A quarterback has no receiving line and a receiver has no passing
+          // one. Printing 0 and a 0-0 range for those reads as a projection of
+          // zero rather than as "this player does not do this".
+          const none=!(v.p90>0)&&!(v.mean>0);
+          line.push(none?'—':String(v.p50));
+          line.push(none?'—':(v.p10+'–'+v.p90));
+        });
+        if(showRec)line.push(r.rec>0?String(r.rec):'—');
+        mile.forEach(m=>line.push(pctTxt(r.milestones&&r.milestones[m[0]])));
+        return line;
+      });
+      sec.appendChild(mkTable(head,body2));
+      body.appendChild(sec);
+    }
+    const note=el('div','callout');
+    note.innerHTML='<span style="font-size:1.1rem;line-height:1">📊</span><span>These are model projections from simulated games, not a forecast of any '
+      +'individual performance, and they move as depth charts and availability do. A player who is ruled out is excluded entirely rather than '
+      +'projected at zero.</span>';
+    body.appendChild(note);
     return;
   }
   if(id==='box'){
