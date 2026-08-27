@@ -3486,6 +3486,10 @@
         // every shift/advance so the taint survives until he scores or is put out.
         var bu = [false, false, false];
         var apptRuns = 0; // runs scored during the current pitcher's appearance this inning
+        // HIT_HOOK_20260826: hits allowed during this appearance, as a snapshot
+        // difference rather than a fifth counter threaded through the four sites
+        // that credit a hit. See maybeChange for why runs alone were not enough.
+        var apptStartHits = (pitcher && pitcher.acc) ? pitcher.acc.h : 0;
         // Per-event run ledger: every run is recorded with the runner, whether it
         // was earned, which pitcher is charged, and whether it is an RBI. The
         // batting table, pitching table, RBI notes and play-by-play all read this
@@ -3514,10 +3518,28 @@
             var arms = defSide.pitchers, idx = arms.indexOf(pitcher);
             if (idx < 0 || idx >= arms.length - 1) return;
             var threshold = idx === 0 ? 5 : 3; // shelled starter: 5 runs; reliever: 3
-            if (apptRuns >= threshold) {
+            // HIT_HOOK_20260826: pull on BASERUNNERS too, not only on runs.
+            //
+            // A reliever can be hit hard without conceding three runs: singles
+            // that strand, hits that score one at a time, a rally that ends on a
+            // double play. Runs were the only trigger, so the engine left those
+            // arms in and produced one-inning relief appearances of five, six,
+            // even eight hits.
+            //
+            // Measured against real baseball, 300 games of MLB 2024, 1,483
+            // one-inning relief appearances:
+            //     real   0.34% allowed 5+ hits, worst 6
+            //     engine 2.04% allowed 5+ hits, worst 8
+            // Six times too often. A manager pulls a reliever being squared up
+            // whether or not the runs have come home yet, and now so does this.
+            var apptHits = (pitcher && pitcher.acc) ? pitcher.acc.h - apptStartHits : 0;
+            var hitThreshold = idx === 0 ? 7 : 4;
+            if (apptRuns >= threshold || apptHits >= hitThreshold) {
                 var outgoing = pitcher;
                 outgoing.removed = true; // mid-inning pull - can never return this game
-                pitcher = arms[idx + 1]; apptRuns = 0; defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1); defSide.midChanges = (defSide.midChanges || 0) + 1;
+                pitcher = arms[idx + 1]; apptRuns = 0;
+                apptStartHits = (pitcher && pitcher.acc) ? pitcher.acc.h : 0;
+                defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1); defSide.midChanges = (defSide.midChanges || 0) + 1;
                 // The incoming arm inherits whoever is on base; bp[] already charges
                 // those runners to the pitcher who put them there.
                 var inheritedCount = bases.filter(function (x) { return x !== null; }).length;
@@ -4502,7 +4524,22 @@
     function sumOuts(side) { return side.pitchers.reduce(function (t, p) { return t + p.acc.outs; }, 0); }
 
     function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs, simWeather) {
-        var random = Math.random;
+        // REPRODUCIBLE_SEED_20260826: honour the seed we are already given.
+        //
+        // seedSalt has been threaded through this function since the box score was
+        // written, and was then ignored: the line here read `var random =
+        // Math.random`, so two simulations of the same matchup with the same seed
+        // produced different games. That makes a shared or saved result
+        // impossible to reproduce -- the page can link to a box score that will
+        // never come back the same way.
+        //
+        // seededHash and seededRandom (mulberry32) were already defined above and
+        // unused by this path. With a seed we use them; without one we keep
+        // Math.random, so the callers that deliberately want a fresh draw each
+        // time are unchanged.
+        var random = seedSalt === undefined || seedSalt === null || seedSalt === ''
+            ? Math.random
+            : seededRandom(seededHash(seedSalt));
         var inputs = eventInputs || buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather);
         return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather);
     }
