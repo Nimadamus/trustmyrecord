@@ -2729,6 +2729,28 @@
         if (k > 0) return clamp(n / (n + k), 0.05, 0.95);
         return clamp(n / 250, 0.15, 1);
     }
+    /**
+     * WORKLOAD_V2_20260827 -- the starter workload model, measured.
+     *
+     * Against 400 real games with the actual lineups installed:
+     *
+     *                       real            simulated
+     *   outs                15.11           16.92
+     *   p10 / p50 / p90     9 / 15 / 21     12 / 18 / 23
+     *   batters faced       21.09           23.86
+     *   pitches p90         100             123
+     *
+     * Two separate faults. The outing-length clamp floored at 12 outs, which
+     * deleted the short-start tail that real baseball has plenty of. And nothing
+     * anywhere counted pitches: a simulated starter could throw 123, which almost
+     * no modern manager allows, because the only thing that could pull him was an
+     * out target set before the first pitch or a five-earned-run hook.
+     *
+     * Off by default. Turned on only by measurement.
+     */
+    function workloadV2() {
+        return !!(typeof window !== 'undefined' && window.TMR_MLB_WORKLOAD_V2);
+    }
     function bbTable() {
         return (typeof window !== 'undefined' && window.TMR_MLB_BB_TABLE) || null;
     }
@@ -3041,7 +3063,17 @@
                 // is ~5.2-5.3 IP/start (16 outs) - audit measured the engine averaging
                 // 6.1 decimal IP against that target before this fix. Retargeted to 16.
                 var w = clamp(gs / 12, 0, 1);
-                return { outs: clamp(Math.round(perStartOuts * w + 16 * (1 - w)), 12, 21), isOpener: false };
+                // WORKLOAD_V2_20260827: the floor. Measured against 400 real games,
+                // the tenth percentile of a real starter's outing is 9 outs -- three
+                // innings -- and the engine's tenth percentile was 12, which is
+                // exactly where this clamp sat. The floor was not a safety net, it
+                // was the entire left tail: no simulated starter could have the kind
+                // of night that ends in the third, and the mean rose 1.8 outs because
+                // of it. Dropping the floor to 9 restores the tail the data has.
+                return {
+                    outs: clamp(Math.round(perStartOuts * w + 16 * (1 - w)), workloadV2() ? 9 : 12, 21),
+                    isOpener: false,
+                };
             }
         }
         // No-data fallback (synthetic teams, uncached pitchers): same 20260725 fix -
@@ -4181,6 +4213,10 @@
     // per-event Bernoulli roll (doubled exposure in extra innings) should be free
     // to compound past.
     var INJURY_GAME_CAP = 3;
+    // Where a manager starts looking at the bullpen rather than the scoreboard.
+    // Real starts pile up at 95-105 and thin out fast past 110; this is the point
+    // at which the next inning goes to someone else, not a hard cutoff mid-frame.
+    var STARTER_PITCH_LIMIT = 100;
     function armOutsThisGame(p) { return (p.acc && p.acc.outs) || 0; }
     // .removed is the hard "left the game, can never return" flag (mirrors real
     // baseball substitution rules). armUnderCap folds it in: a removed arm is
@@ -4206,6 +4242,18 @@
         if (arms.length && !arms[0].removed && outsRecorded < starterOuts) {
             var spAcc = arms[0].acc, spOuts = spAcc.outs || 0, spEr = spAcc.er || 0;
             if (spOuts >= 6 && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) {
+                starterOuts = Math.min(starterOuts, spOuts);
+            }
+            // WORKLOAD_V2_20260827: the pitch count, which nothing was watching.
+            //
+            // A real starter comes out somewhere around a hundred pitches almost
+            // regardless of how the innings are going, and a manager who lets one
+            // pass 110 is making news. The engine had no such limit -- its 90th
+            // percentile start was 123 pitches against a real 100 -- because the
+            // only things that could pull a starter were an out target fixed before
+            // the game and a five-run hook. This is the inning-boundary version: he
+            // finishes the frame he is in, then hands it over.
+            if (workloadV2() && (spAcc.pitches || 0) >= STARTER_PITCH_LIMIT) {
                 starterOuts = Math.min(starterOuts, spOuts);
             }
         }
