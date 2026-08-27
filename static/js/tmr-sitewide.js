@@ -48,10 +48,14 @@
     ];
     const toolsMenuRoutes = [
         ["/tools/", "Tools Hub"],
-        ["/mlb-simulator/", "MLB Simulator"],
-        ["/nfl-simulator/", "NFL Simulator"],
+        // One row for the whole simulator suite (MLB, NFL, NBA, NHL and
+        // whatever follows). Mirrors TOOLS in tmr-ds-nav.js - these two tables
+        // render the same menu on different halves of the site and must agree.
+        ["/sports-simulators/", "Sports Simulators"],
         ["/trendspotter/", "TrendSpotter"],
         ["/betlegend-pro/", "BetLegend Pro"],
+        // Was missing here while the DS nav has carried it since 2026-08-11.
+        ["/handicapping/mlb/", "MLB Matchups Today"],
         ["/handicapping/", "Handicapping Hub"]
     ];
     // TMR Coin is the only remaining flat top-level link (still called
@@ -65,7 +69,7 @@
     const HANDICAPPERS_GROUP = new Set(["handicappers.html", "leaderboards.html", "verified-handicapper-records.html", "marketplace.html"]);
     const COMPETE_GROUP = new Set(["arena.html", "challenges.html", "trivia.html", "polls.html"]);
     const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "online-gaming.html", "mlb-the-show-stat-league.html", "hangout.html"]);
-    const TOOLS_GROUP = new Set(["tools.html", "mlb-simulator.html", "nfl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
+    const TOOLS_GROUP = new Set(["tools.html", "sports-simulators.html", "mlb-simulator.html", "nfl-simulator.html", "nba-simulator.html", "nhl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
     const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
 
     const routeMeta = {

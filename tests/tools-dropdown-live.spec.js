@@ -1,5 +1,11 @@
-// The Tools dropdown must carry all four simulators, on desktop and on a phone,
-// signed out and signed in, and be usable by keyboard as well as by mouse.
+// The Tools dropdown must carry the Sports Simulators entry, on desktop and on a
+// phone, signed out and signed in, and be usable by keyboard as well as by mouse.
+//
+// SIMULATOR_HUB_20260827: the four simulators were four separate rows here until
+// they were collapsed behind /sports-simulators/. The requirement they encoded -
+// every simulator reachable from the nav on every device, without a hover - is
+// unchanged, it is now met in two clicks instead of one, so this asserts the hub
+// row in the nav AND that the hub itself carries all four links.
 //
 // Runs against production.
 
@@ -7,7 +13,13 @@ const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.TMR_BASE || 'https://trustmyrecord.com';
 
+// What the Tools dropdown itself must carry.
 const EXPECTED = [
+  { label: 'Sports Simulators', href: '/sports-simulators/' },
+];
+
+// What the hub must carry. These URLs are indexed and must not move.
+const SIMULATORS = [
   { label: 'MLB Simulator', href: '/mlb-simulator/' },
   { label: 'NFL Simulator', href: '/nfl-simulator/' },
   { label: 'NBA Simulator', href: '/nba-simulator/' },
@@ -89,11 +101,36 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-test('the four simulator links resolve', async ({ request }) => {
-  for (const item of EXPECTED) {
+test('the hub and the four simulator links resolve', async ({ request }) => {
+  for (const item of [...EXPECTED, ...SIMULATORS]) {
     const r = await request.get(BASE + item.href, { maxRedirects: 3 });
     expect(r.status(), `${item.label} responds`).toBe(200);
   }
+});
+
+test('the hub links to every simulator, and every simulator links back', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await context.newPage();
+
+  await page.goto(BASE + '/sports-simulators/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  for (const sim of SIMULATORS) {
+    await expect(
+      page.locator(`main a[href="${sim.href}"]`).first(),
+      `${sim.label} is linked from the hub body, not only from the nav`,
+    ).toHaveCount(1);
+  }
+
+  // A hub nobody can climb back to is a dead end. Each simulator carries the
+  // return link in its breadcrumb.
+  for (const sim of SIMULATORS) {
+    await page.goto(BASE + sim.href, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await expect(
+      page.locator('nav[aria-label="Breadcrumb"] a[href="/sports-simulators/"]').first(),
+      `${sim.label} links back to the hub from its breadcrumb`,
+    ).toHaveCount(1);
+  }
+
+  await context.close();
 });
 
 test('Tools links are reachable by keyboard', async ({ browser }) => {
