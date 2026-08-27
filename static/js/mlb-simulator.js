@@ -2655,6 +2655,58 @@
         nv.out = Math.max(0.02, v.out + (posOld - posNew));
         return evNormalize(nv);
     }
+    /**
+     * BATTED_BALL_20260827 -- was it on the ground or in the air?
+     *
+     * The engine resolves a plate appearance straight into an outcome: single,
+     * double, home run, out. An out is an out, with no notion of how it was made,
+     * and three things downstream pretend otherwise. A sacrifice fly fires on 25%
+     * of outs with a runner on third whether the ball was a fly to right or a
+     * chopper to short. A double play fires on 21% of outs with a man on first on
+     * the same terms. Errors are one flat team rate regardless of where the ball
+     * went. So a ground-ball hitter and a fly-ball hitter produce the same number
+     * of double plays and the same number of sacrifice flies, which is not true of
+     * any two real hitters.
+     *
+     * WHAT IS MEASURED AND WHAT IS NOT. The league feed carries groundOuts and
+     * airOuts per player, for batters and pitchers both, so a man's tendency to put
+     * the ball on the ground is real data. The split WITHIN air -- line drive,
+     * fly ball, popup -- is not in the feed at any price, and neither is direction.
+     * So this models exactly the one axis the data supports and does not invent the
+     * others. There is no pull/centre/oppo term here because there is nothing
+     * honest to build one from.
+     *
+     * NO-OP AT LEAGUE AVERAGE, BY CONSTRUCTION. The conditional rates are the old
+     * flat rates divided by the league share of the batted-ball type they now
+     * require. A batter and pitcher who are both exactly league average produce the
+     * same marginal sacrifice-fly, double-play and error rates as before. Every
+     * difference this layer makes therefore comes from real, measured, per-player
+     * deviation -- it cannot smuggle in a recalibration.
+     *
+     * ITS OWN RANDOM STREAM. The classification draws from a stream derived from
+     * the game seed but separate from the main one, so the plate-appearance
+     * sequence is bit-for-bit unchanged and a before/after comparison stays paired.
+     * With no table supplied nothing is drawn at all and the engine is identical.
+     */
+    var BB_ERROR_GROUND_SHARE = 0.62;  // share of fielding errors made on ground balls
+    /** One player's measured ground-ball share, or null if he has none. */
+    function bbShareOf(group, mlbId) {
+        var t = bbTable();
+        if (!t || !mlbId || !t[group] || !t[group].players) return null;
+        var row = t[group].players[String(mlbId)];
+        return row && Number.isFinite(row.gb) ? row.gb : null;
+    }
+    function bbTable() {
+        return (typeof window !== 'undefined' && window.TMR_MLB_BB_TABLE) || null;
+    }
+    /** Odds-ratio combine, the same log5 shape the rest of the engine uses. */
+    function bbGroundProb(batterGb, pitcherGb, leagueGb) {
+        var b = clamp(batterGb, 0.05, 0.95);
+        var p = clamp(pitcherGb, 0.05, 0.95);
+        var l = clamp(leagueGb, 0.05, 0.95);
+        var num = (b / (1 - b)) * (p / (1 - p)) / (l / (1 - l));
+        return clamp(num / (1 + num), 0.10, 0.90);
+    }
     function evApplyParkHr(v, hrFactor) {
         if (!hrFactor || hrFactor === 1) return v;
         return evNormalize({ bb: v.bb, so: v.so, hr: v.hr * hrFactor, b3: v.b3, b2: v.b2, b1: v.b1, out: v.out });
@@ -2771,6 +2823,9 @@
                 statSource: (s && s.real) ? ((s.statSource === 'split' && s.vsHand ? ('Real ' + seasonYear() + ' vs ' + s.vsHand + 'HP') : ('Real ' + seasonYear() + ' season')) + ' OPS ' + Number(s.realOpsRaw != null ? s.realOpsRaw : s.ops).toFixed(3)) : null,
                 sbRawRate: (s && s.sbRawRate != null) ? s.sbRawRate : null,
                 stealSucc: (s && s.stealSucc != null) ? s.stealSucc : null,
+                // BATTED_BALL_20260827: his own measured ground-ball share, or null
+                // when he has no measured one -- never a stand-in.
+                gbShare: bbShareOf('batters', s && s.mlbId),
                 acc: evNewBat()
             });
         }
@@ -2838,7 +2893,7 @@
         // the prior 3-slot team-profile pen (RP + CL) when real arms are unavailable.
         var arms = evRelieverArms(roster, ownStarter);
         var pitchers = [
-            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null }
+            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null, gbShare: bbShareOf('pitchers', ownStarter && ownStarter.mlbId) }
         ];
         if (arms) {
             arms.ordered.forEach(function (a, idx) {
@@ -2849,7 +2904,7 @@
                 // the normal setup/closer pockets afterward rather than every arm
                 // getting an extended cap.
                 var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : (isOpenerGame && idx === 0 ? 'BULK' : 'RP'));
-                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null });
+                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null, gbShare: bbShareOf('pitchers', a.mlbId) });
             });
         } else {
             pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: isOpenerGame ? 'BULK' : 'RP' });
@@ -3897,7 +3952,34 @@
                 // multi-decade rarity) - cap the roll so a long or chaotic (extra-innings)
                 // game cannot compound errors past a realistic ceiling.
                 var errCap = (defSide.gameErrors || 0) < ERROR_GAME_CAP;
-                if (errCap && random() < defSide.errRate) {
+                // BATTED_BALL_20260827. Ground or air, decided from the batter's and
+                // the pitcher's own measured shares combined by odds ratio. `null`
+                // means no table was supplied and every rate below falls back to the
+                // flat constant it used before, exactly.
+                //
+                // The three conditional rates are each the old flat rate divided by
+                // the league share of the batted-ball type they now require, so a
+                // league-average batter facing a league-average pitcher produces the
+                // same marginal error, sacrifice-fly and double-play rates as before.
+                // Only real deviation moves anything.
+                var bbT = bbTable();
+                var isGround = null;
+                if (bbT && side.bbRandom) {
+                    var lg = clamp(Number(bbT.batters && bbT.batters.league) || 0.48, 0.2, 0.8);
+                    var bGb = b.gbShare != null ? b.gbShare : lg;
+                    var pGb = pitcher.gbShare != null ? pitcher.gbShare : lg;
+                    isGround = side.bbRandom() < bbGroundProb(bGb, pGb, lg);
+                    if (isGround) pitcher.acc.gb++; else pitcher.acc.fb++;
+                    // The league shares the conditional rates are normalised against.
+                    var errG = defSide.errRate * (BB_ERROR_GROUND_SHARE / lg);
+                    var errA = defSide.errRate * ((1 - BB_ERROR_GROUND_SHARE) / (1 - lg));
+                    var sfAir = 0.25 / (1 - lg);
+                    var dpGround = 0.21 / lg;
+                }
+                var errRateNow = isGround === null ? defSide.errRate : (isGround ? errG : errA);
+                var sfRateNow = isGround === null ? 0.25 : (isGround ? 0 : sfAir);
+                var dpRateNow = isGround === null ? 0.21 : (isGround ? dpGround : 0);
+                if (errCap && random() < errRateNow) {
                     errors++; defSide.gameErrors = (defSide.gameErrors || 0) + 1; paErrorReach = true; // batter reaches as if a single but no hit, runs charged unearned
                     // A run that scores on an error is NOT an RBI (official scoring).
                     if (bases[2] !== null) { score(bases[2], false, bp[2], false); bases[2] = null; bp[2] = null; bu[2] = false; }
@@ -3906,7 +3988,8 @@
                     bases[0] = bi; bp[0] = pitcher; bu[0] = true; acc.ab++;
                 } else {
                     acc.ab++; pitcher.acc.outs++;
-                    if (outs < 2 && bases[2] !== null && random() < 0.25) {
+                    // A sacrifice fly needs a ball in the air. See BATTED_BALL_20260827.
+                    if (outs < 2 && bases[2] !== null && random() < sfRateNow) {
                         // Sac fly: run scores, batter is NOT charged an at-bat (official scoring).
                         acc.ab--; acc.sf = (acc.sf || 0) + 1; side.sf = (side.sf || 0) + 1; paSf = true;
                         score(bases[2], !bu[2], bp[2]); rbi++; bases[2] = null; bp[2] = null; bu[2] = false; outs++;
@@ -3923,7 +4006,8 @@
                         outs++;
                         logEvent({ type: 'SAC', batter: bname(bi), pitcher: pitcher.name });
                     }
-                    else if (outs < 2 && bases[0] !== null && random() < 0.21 * (defSide.dpFactor || 1)) {
+                    // A double play needs a ball on the ground. See BATTED_BALL_20260827.
+                    else if (outs < 2 && bases[0] !== null && random() < dpRateNow * (defSide.dpFactor || 1)) {
                         // GIDP rate calibrated June 4 2026: 0.11 produced 0.38/team
                         // vs real 0.72; 0.21 lands on the real rate. DEFENSE_REALISM_
                         // 20260727: defSide.dpFactor (>1 strong D, <1 weak D) scales
@@ -4305,7 +4389,11 @@
         chosen._mopUp = inn >= 4 && (oppRuns - defRuns) >= 4;
         return chosen;
     }
-    function evSimGame(awaySide, homeSide, random, logSink, simWeather) {
+    function evSimGame(awaySide, homeSide, random, logSink, simWeather, bbRandom) {
+        // BATTED_BALL_20260827: its own stream, so adding the layer does not shift
+        // the plate-appearance sequence and a before/after run stays paired.
+        awaySide.bbRandom = bbRandom || null;
+        homeSide.bbRandom = bbRandom || null;
         [awaySide, homeSide].forEach(function (s) {
             // Restore the pitcher staff to its real arms (drop any blowout position
             // player appended in a prior sampled game) so resampling never accumulates.
@@ -4611,7 +4699,10 @@
             ? Math.random
             : seededRandom(seededHash(seedSalt));
         var inputs = eventInputs || buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather);
-        return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather);
+        var bbRandom = seedSalt === undefined || seedSalt === null || seedSalt === ''
+            ? Math.random
+            : seededRandom(seededHash('bb|' + seedSalt));
+        return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather, bbRandom);
     }
     function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather) {
         // SIM_WEATHER_20260726: HR/carry factor folds into the same parkHr channel
@@ -4631,7 +4722,7 @@
         var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather, parkHrByHand);
         return { awaySide: awaySide, homeSide: homeSide };
     }
-    function eventWinProbability(inputs, samples, statsOut, random) {
+    function eventWinProbability(inputs, samples, statsOut, random, bbRandom) {
         // REPRODUCIBLE_WIN_PROBABILITY_20260827: the Monte Carlo that produces the
         // displayed win % used Math.random, so it was NOT reproducible from the
         // seed even though the box score was. Two runs of the same seeded matchup
@@ -4650,7 +4741,7 @@
         // caller can display expected runs that match the box scores exactly (one model).
         var homeWins = 0, total = 0, aSum = 0, hSum = 0;
         for (var i = 0; i < samples; i++) {
-            var g = evSimGame(inputs.awaySide, inputs.homeSide, rnd);
+            var g = evSimGame(inputs.awaySide, inputs.homeSide, rnd, null, null, bbRandom || null);
             if (g.hRuns > g.aRuns) homeWins++;
             else if (g.aRuns > g.hRuns) { /* away */ } else homeWins += 0.5;
             aSum += g.aRuns; hSum += g.hRuns;
@@ -4803,10 +4894,10 @@
         if (box.gameStatus === 'official') return 'Official (weather-shortened)';
         return 'Suspended';
     }
-    function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather) {
+    function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather, bbRandom) {
         var scoringLog = [];
         var eventLog = elNewLog('sim-' + Date.now());
-        var g = evSimGame(inputs.awaySide, inputs.homeSide, random, { scoring: scoringLog, el: eventLog }, simWeather);
+        var g = evSimGame(inputs.awaySide, inputs.homeSide, random, { scoring: scoringLog, el: eventLog }, simWeather, bbRandom);
         var awayHits = sum(evAllBatters(inputs.awaySide).map(function (rec) { return rec.b.acc.h; }));
         var homeHits = sum(evAllBatters(inputs.homeSide).map(function (rec) { return rec.b.acc.h; }));
         // Innings arrays are now complete per-inning (extras included). Home may be
@@ -6052,7 +6143,10 @@
         var wpRandom = seedSalt === undefined || seedSalt === null || seedSalt === ''
             ? Math.random
             : seededRandom(seededHash('wp|' + seedSalt));
-        var simHomeWin = eventWinProbability(eventInputs, wpSamples, simStats, wpRandom);
+        var wpBbRandom = seedSalt === undefined || seedSalt === null || seedSalt === ''
+            ? Math.random
+            : seededRandom(seededHash('bbwp|' + seedSalt));
+        var simHomeWin = eventWinProbability(eventInputs, wpSamples, simStats, wpRandom, wpBbRandom);
         homeWin = clamp(Number.isFinite(simHomeWin) ? simHomeWin : homeWin, 0.05, 0.95);
         // TEAM_TRUE_TALENT_20260629: regularize the simulated win % toward a real
         // season run-differential prior (log5 of the two clubs' Pythagorean win
