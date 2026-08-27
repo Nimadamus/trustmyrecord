@@ -3983,6 +3983,15 @@
             // Stage 3 strategic pinch hitter: late innings, a clearly weak bat due up,
             // bench available. Displayed game only (el present) so calibration is
             // untouched. Emits a SUB and the pinch hitter takes the at-bat.
+            // Flag off: the shipped rule, unchanged, INCLUDING its random draw.
+            // Skipping the block entirely removed a draw the production engine
+            // makes, which shifted every later draw in the game -- the equivalence
+            // check caught it as 0 of 37 fixtures matching with the layer off.
+            if (el && !workloadV2() && log.inning >= 7 && side.bench && side.bench.length
+                && b && b.realOps != null && b.realOps < 0.660 && random() < 0.06) {
+                var phOld = elSwapSlot(bi, 'PH', 'strategic move');
+                if (phOld) b = lineup[bi];
+            }
             if (el && workloadV2() && side.bench && side.bench.length && b) {
                 /**
                  * REAL_SUBSTITUTION_RATE_20260827 -- a manager who actually uses
@@ -4284,8 +4293,14 @@
                         // ball deep enough to tag on does the same thing less often.
                         // Both are ways a runner reaches third without a hit, and
                         // the engine modelled neither.
+                        // isGround is null when no batted-ball table is supplied, and
+                        // then this whole mechanism must not exist -- including its
+                        // random draw. Consuming one anyway would shift every later
+                        // draw in the game and change box scores the layer is
+                        // supposed to leave alone. The equivalence check caught
+                        // exactly that: 0 of 111 fixtures matched with the layer off.
                         var advanceOdds = isGround === null ? 0 : (isGround ? 0.55 : 0.20);
-                        if (outs < 2 && bases[1] !== null && bases[2] === null
+                        if (advanceOdds > 0 && outs < 2 && bases[1] !== null && bases[2] === null
                             && random() < advanceOdds) {
                             bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1];
                             bases[1] = null; bp[1] = null; bu[1] = false;
@@ -4557,7 +4572,7 @@
                 // relief outings run 3.93, 3.25 and 3.02 outs -- a declining share,
                 // not a flat one. These weights reproduce that shape; they do not
                 // change the total, only who covers which part of it.
-                var RELIEF_SHARE = [1.50, 1.12, 1.00, 1.00, 1.00];
+                var RELIEF_SHARE = workloadV2() ? [1.50, 1.12, 1.00, 1.00, 1.00] : [1, 1, 1, 1, 1];
                 var k = 0;
                 if (span > 0 && midCount > 0) {
                     var total = 0, wi;
