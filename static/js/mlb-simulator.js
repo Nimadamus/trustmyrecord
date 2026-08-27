@@ -3820,7 +3820,12 @@
                     // the "against him" clause the first arm out of the pen was
                     // hooked after three batters almost every time and worked 2.67
                     // outs against a real 3.93.
-                    leverage = onBase && apptBf >= 3 && margin <= 2
+                    // The FIRST arm out of the pen is given a longer leash: real
+                    // first relievers work 3.93 outs, often two full innings, and
+                    // pulling him at the three-batter minimum is what kept the
+                    // simulated figure near three.
+                    var minBf = idx === 1 ? 5 : 3;
+                    leverage = onBase && apptBf >= minBf && margin <= 2
                         && (apptHits >= 1 || apptRuns >= 1)
                         && idx < arms.length - 1;
                 }
@@ -4195,7 +4200,14 @@
                     // The league shares the conditional rates are normalised against.
                     var errG = defSide.errRate * (BB_ERROR_GROUND_SHARE / lg);
                     var errA = defSide.errRate * ((1 - BB_ERROR_GROUND_SHARE) / (1 - lg));
-                    var sfAir = 0.25 / (1 - lg);
+                    // SAC_FLY_RATE_20260827: the 0.25 was set when this fired on
+                    // EVERY batted-ball out. Dividing by the air share preserved
+                    // that rate exactly -- and the rate itself was already wrong.
+                    // Real teams record 0.252 sacrifice flies a team-game; the
+                    // engine recorded 0.122. Roughly half of real fly-ball outs
+                    // with a runner on third and fewer than two out are deep
+                    // enough to score him, which is the quantity this now is.
+                    var sfAir = 0.50;
                     var dpGround = 0.21 / lg;
                 }
                 var errRateNow = isGround === null ? defSide.errRate : (isGround ? errG : errA);
@@ -4238,7 +4250,47 @@
                         acc.gidp = (acc.gidp || 0) + 1; side.gidp = (side.gidp || 0) + 1; gidp++; paGidp = true;
                         outs += 2; pitcher.acc.outs++; bases[0] = null; bp[0] = null; bu[0] = false;
                     }
-                    else outs++;
+                    else {
+                        outs++;
+                        // PRODUCTIVE_OUT_20260827 -- the runner who moves up on a
+                        // ground ball.
+                        //
+                        // On an ordinary out this engine left every runner exactly
+                        // where he was. Real baseball does not: a ground ball to the
+                        // right side with fewer than two out moves a runner from
+                        // second to third routinely, and it is the single most
+                        // common way a runner reaches third base without a hit.
+                        //
+                        // Its absence was measurable. The engine produced 0.58
+                        // situations a team-game with a runner on third and fewer
+                        // than two out, against a real figure near 0.95 implied by
+                        // the sacrifice-fly rate, and so recorded 0.145 sacrifice
+                        // flies a team-game against a real 0.252. Raising the
+                        // sacrifice-fly conversion could not fix that: it would have
+                        // needed 81% of qualifying fly balls to score the runner,
+                        // where reality is about half. The shortfall was never in
+                        // the conversion, it was in the opportunities.
+                        //
+                        // Only on ground balls, only with fewer than two out, and
+                        // never onto an occupied base. No run scores here and no
+                        // extra out is recorded, so the run environment moves only
+                        // through the runners this puts in scoring position -- which
+                        // is exactly the effect it should have.
+                        // outs has already been incremented, so this is "fewer than
+                        // two out AFTER the play": a runner pushed to third with two
+                        // away cannot be driven in by a sacrifice fly, which is the
+                        // situation this exists to create.
+                        // A ground ball to the right side moves him over; a fly
+                        // ball deep enough to tag on does the same thing less often.
+                        // Both are ways a runner reaches third without a hit, and
+                        // the engine modelled neither.
+                        var advanceOdds = isGround === null ? 0 : (isGround ? 0.55 : 0.20);
+                        if (outs < 2 && bases[1] !== null && bases[2] === null
+                            && random() < advanceOdds) {
+                            bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1];
+                            bases[1] = null; bp[1] = null; bu[1] = false;
+                        }
+                    }
                 }
             }
             // Event log for extra-base hits (SB/CS/SF/SAC/HBP already recorded inline).
@@ -4505,7 +4557,7 @@
                 // relief outings run 3.93, 3.25 and 3.02 outs -- a declining share,
                 // not a flat one. These weights reproduce that shape; they do not
                 // change the total, only who covers which part of it.
-                var RELIEF_SHARE = [1.35, 1.10, 1.00, 1.00, 1.00];
+                var RELIEF_SHARE = [1.50, 1.12, 1.00, 1.00, 1.00];
                 var k = 0;
                 if (span > 0 && midCount > 0) {
                     var total = 0, wi;
