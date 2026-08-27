@@ -1911,7 +1911,7 @@
             var paUsed = hasReal ? Number(stat.plateAppearances || 0) : 0;
             // Reliability weight: full trust by ~250 PA, floored so a real-but-tiny sample
             // still nudges off league average toward the player's observed line.
-            var rw = clamp(paUsed / 250, 0.15, 1);
+            var rw = batterTrust(paUsed);
             var LG = { avg: 0.245, slg: 0.400, ops: 0.715, kRate: 0.225, bbRate: 0.085, hrRate: 0.033 };
             function reg(obs, lg) { return (obs == null || !Number.isFinite(obs)) ? lg : obs * rw + lg * (1 - rw); }
             var hrCount = seasonStat ? Number(seasonStat.homeRuns || 0) : 0;
@@ -2696,6 +2696,39 @@
         var row = t[group].players[String(mlbId)];
         return row && Number.isFinite(row.gb) ? row.gb : null;
     }
+    /**
+     * PLAYER_TRUST_20260827 -- how much of a batter's own line to believe.
+     *
+     * The shipped rule is `pa / 250`, capped at 1: a batter with 250 plate
+     * appearances is trusted COMPLETELY, with no regression toward league average
+     * at all. For the job this rule was written for -- describing a player in the
+     * season currently being played -- that is defensible. Used PREDICTIVELY it is
+     * not, and the holdout says so plainly.
+     *
+     * Scoring 2024 with each club's actual lineup and each player's 2023 line
+     * produced a WORSE forecast than ignoring the players entirely: Brier skill
+     * -0.85% against +0.56% for the team-level model, calibration error 5.74%
+     * against 4.75%, and a prediction spread 17% wider. That combination -- more
+     * confident, no more accurate, worse calibrated -- is the signature of a model
+     * trusting noise. A lineup of nine men who happened to have good seasons last
+     * year gets rated as a juggernaut, because nothing pulls last year's line back
+     * toward what a player actually is.
+     *
+     * So the strength is now a knob rather than a constant, and it can be swept on
+     * calibration seasons and frozen before the holdout is touched. The shipped
+     * behaviour is unchanged unless the override is set: same formula, same 250,
+     * same cap.
+     *
+     * With the override set the shape changes to the Bayesian one, pa / (pa + K),
+     * which never reaches full trust however long the season -- because a season is
+     * a sample of a player, not the player.
+     */
+    function batterTrust(pa) {
+        var k = (typeof window !== 'undefined' && Number(window.TMR_MLB_BATTER_PRIOR_PA)) || 0;
+        var n = Number(pa) || 0;
+        if (k > 0) return clamp(n / (n + k), 0.05, 0.95);
+        return clamp(n / 250, 0.15, 1);
+    }
     function bbTable() {
         return (typeof window !== 'undefined' && window.TMR_MLB_BB_TABLE) || null;
     }
@@ -3283,7 +3316,7 @@
         return benchPlayers.map(function (p) {
             var seasonStat = p.mlbId ? cachedPlayerStat(p.mlbId, 'hitting') : null;
             var pa = seasonStat ? Number(seasonStat.plateAppearances || 0) : 0;
-            var rw = clamp(pa / 250, 0.15, 1);
+            var rw = batterTrust(pa);
             var LG = { ops: 0.715, avg: 0.245, slg: 0.400, kRate: 0.225, bbRate: 0.085, hrRate: 0.033 };
             function reg(obs, lg) { return (obs == null || !Number.isFinite(obs)) ? lg : obs * rw + lg * (1 - rw); }
             var hasReal = !!(seasonStat && Number.isFinite(Number(seasonStat.ops)) && pa >= 15);
