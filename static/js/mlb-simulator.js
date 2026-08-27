@@ -4052,7 +4052,14 @@
             if (random() < 0.00053) {
                 evRuns = [];
                 var ciBefore = baseSnapshot(), ciName = bname(bi);
-                b.acc.pa++; b.acc.ci = (b.acc.ci || 0) + 1; defSide.ci = (defSide.ci || 0) + 1;
+                // CI_BATTERS_FACED_20260827: the batter is charged a plate
+                // appearance here, and the pitcher was never charged the batter he
+                // faced. Official scoring charges both. The rate is about one every
+                // fifty team-games, which is why it surfaced as a sporadic
+                // off-by-one between team plate appearances and pitcher batters
+                // faced rather than as anything obviously wrong.
+                b.acc.pa++; pitcher.acc.bf++;
+                b.acc.ci = (b.acc.ci || 0) + 1; defSide.ci = (defSide.ci || 0) + 1;
                 if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); bases[2] = null; bp[2] = null; bu[2] = false; } bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; } bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; }
                 bases[0] = bi; bp[0] = pitcher; bu[0] = false; side.idx++;
                 var ciWalkOff = evRuns.length > 0 && endLead !== undefined && endLead !== null && runs > endLead;
@@ -5141,7 +5148,25 @@
     // error charges no h/bb but does increment bf) - together they cover every
     // real way a pitcher can have appeared without tripping the old stat check.
     function evPitcherRows(side) {
-        return side.pitchers.filter(function (p) { return p.removed === true || p.acc.bf > 0 || p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0; }).map(function (p) {
+        // PHANTOM_PITCHER_ROW_20260827: a man who never faced anybody did not
+        // appear in the game.
+        //
+        // The `p.removed === true` clause listed any arm the engine had marked as
+        // pulled, including one selected for a half-inning that ended before he
+        // faced a batter -- zero batters faced, zero outs, a line of nothing. Real
+        // box scores do not carry him; he warmed up. Measured on 300 seeded games
+        // with real rosters: 12 such rows with the flags off, 9 with the release
+        // candidate, so this predates the workload work rather than being caused
+        // by it.
+        //
+        // Gated with the rest of the candidate so the flag-off path stays
+        // byte-identical to production, which is the release gate's whole point.
+        // The fix ships with the bundle it was validated in.
+        var pitcherAppeared = function (p) {
+            var worked = p.acc.bf > 0 || p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0;
+            return workloadV2() ? worked : (p.removed === true || worked);
+        };
+        return side.pitchers.filter(pitcherAppeared).map(function (p) {
             var a = p.acc;
             // RELIEVER_HAND_20260623: show the real throw hand on bullpen arms (LHP/RHP)
             // when the profile is available; cosmetic only (does not affect the sim math).
