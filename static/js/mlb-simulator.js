@@ -8421,6 +8421,9 @@
             MOP_UP_FACTOR: MOP_UP_FACTOR,
             evRelieverArms: evRelieverArms,
             parkHrFactor: parkHrFactor,
+            starterResidualRunAdjustment: starterResidualRunAdjustment,
+            starterResidual: starterResidual,
+            starterShare: starterShare,
             league: EV_LEAGUE,
             // TMR_EVENTLOG_20260723: event log + reducers, exposed so the offline
             // validators can fold a real game and assert every reconciliation rule.

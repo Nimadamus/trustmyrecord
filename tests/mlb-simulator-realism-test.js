@@ -95,6 +95,21 @@ function createSimulator() {
     CONFIG: { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } },
   };
   context.window.document = context.document;
+  /**
+   * RELEASE_CANDIDATE_FLAGS_20260827: the suite must exercise the build that is
+   * actually going out, not the shipped defaults. TMR_MLB_RC=1 turns on exactly
+   * what the release candidate turns on and nothing else -- the batted-ball
+   * table from the season before the one being played, the workload and bullpen
+   * layers, and the frozen residual starter weight. Without it the suite runs
+   * the current production engine, which is what the historical baselines were
+   * measured against.
+   */
+  if (process.env.TMR_MLB_RC) {
+    context.window.TMR_MLB_WORKLOAD_V2 = true;
+    context.window.TMR_MLB_STARTER_RESIDUAL = 0.010;
+    const bb = process.env.TMR_MLB_BB_TABLE_PATH;
+    if (bb && fs.existsSync(bb)) context.window.TMR_MLB_BB_TABLE = JSON.parse(fs.readFileSync(bb, 'utf8'));
+  }
   vm.runInNewContext(script, context);
   return context.window.TMRMlbSimulator;
 }
