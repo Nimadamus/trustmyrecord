@@ -37,7 +37,7 @@
 {"@type":"Question","name":"What is a sports simulator?","acceptedAnswer":{"@type":"Answer","text":"A sports simulator plays a game out rather than guessing at its result. The TrustMyRecord engines resolve the events a real game is made of, the plate appearances, drives, possessions and shifts, one at a time, using each team's and each player's real rates. The score, the statistics and the box score are what those simulated events added up to, so the same matchup run twice gives two different games in the same way real sport does."}},
 {"@type":"Question","name":"Which sports can I simulate?","acceptedAnswer":{"@type":"Answer","text":"MLB, NFL, NBA and NHL. Each sport has its own engine and its own page, because the things that decide a baseball game are not the things that decide a hockey game. The suite is built so further sports can be added without changing the four that already exist."}},
 {"@type":"Question","name":"Are the sports simulators free?","acceptedAnswer":{"@type":"Answer","text":"Yes, all four are free. The NBA and NHL simulators run with no account at all. The MLB and NFL simulators ask you to create a free TrustMyRecord account before a run, and your matchup and settings are carried through the sign-up so the simulation fires the moment you land back on the page."}},
-{"@type":"Question","name":"How accurate are the simulators?","acceptedAnswer":{"@type":"Answer","text":"Each engine was scored out of sample, projecting games using only results that came before them. The NBA model called the winner 66.5% of the time across 3,701 games with a 1.8% calibration error. The NHL model called 57.3% across 3,946 games with a 1.5% calibration error. The MLB model calls roughly 55 to 60 percent of winners with a Brier score near 0.245. The NFL model beats a coin flip on Brier score, with single-game margins carrying roughly a touchdown and a half of error. Every number on this page is research, not a betting edge, and none of it is betting advice."}},
+{"@type":"Question","name":"How accurate are the simulators?","acceptedAnswer":{"@type":"Answer","text":"Each engine was scored out of sample, projecting games using only results that came before them. The NBA model called the winner 66.7% of the time across 3,701 games with a 1.9% calibration error. The NHL model called 57.6% across 3,939 games with a 1.8% calibration error. The MLB model called 56.2% across 2,434 games against 54.3% for the home team, with a Brier score of 0.244, on team-level ratings rather than individual lineups. The NFL model scored a Brier of 0.224 against 0.250 for a coin flip on 285 held-out games, with single-game margins missing by 10.3 points. Every number on this page is research, not a betting edge, and none of it is betting advice."}},
 {"@type":"Question","name":"How many times can I run the same matchup?","acceptedAnswer":{"@type":"Answer","text":"As many as you like. Each simulator takes a simulation count, and the win probability, the total and the distribution charts come from that whole batch rather than from one lucky game. One run shows you a plausible night; a few thousand show you the shape of the matchup."}}
 ]}
 </script>
@@ -286,7 +286,7 @@
         <li><b>Run distribution</b> and win probability across as many simulations as you want to run.</li>
         <li><b>Current, classic and mixed-era</b> matchups, plus a separate season and playoff simulator.</li>
       </ul>
-      <p class="simscore">Backtested out of sample on completed games it never trained on: calls the winner about <b>55 to 60 percent</b> of the time, Brier score near <b>0.245</b>.</p>
+      <p class="simscore">Scored out of sample on the <b>2,434 games</b> of a season the model never saw, each projected from the season before it: winner called <b>56.2%</b> (home team alone: 54.3%), Brier <b>0.244</b>. That is a small edge and it is a TEAM-level result: the scoring run used league-average lineups, so it is not evidence about individual batters or starters.</p>
       <div class="simcta">
         <a class="run" href="/mlb-simulator/">Run MLB Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/mlb-season-simulator/">Season simulator</a>
@@ -309,7 +309,7 @@
         <li><b>Special teams</b> included: field-goal accuracy by distance, punting and return threat.</li>
         <li><b>Venue and kickoff window,</b> plus pace, drives per game, turnovers and defensive scores.</li>
       </ul>
-      <p class="simscore">Calibrated win probabilities beat a coin flip on Brier score out of sample. Single-game margins carry roughly <b>a touchdown and a half</b> of error, which is what NFL variance looks like.</p>
+      <p class="simscore">On <b>285 held-out games</b>, Brier <b>0.224</b> against 0.250 for a coin flip, and single-game margins missed by <b>10.3 points</b> on average, which is what NFL variance looks like. The smallest sample of the four.</p>
       <div class="simcta">
         <a class="run" href="/nfl-simulator/">Run NFL Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/nfl-simulator/#faq">NFL simulator FAQ</a>
@@ -332,7 +332,7 @@
         <li><b>Endgame and overtime</b> played under real closing rules rather than extrapolated.</li>
         <li><b>Home court</b> worth roughly two and a half to three points, removable for a neutral floor.</li>
       </ul>
-      <p class="simscore">Scored on <b>3,701 games</b> across four seasons, each projected only from games played before it: winner called <b>66.5%</b> (home team alone: 54.8%), calibration error <b>1.8%</b>.</p>
+      <p class="simscore">Scored on <b>3,701 games</b> across four seasons, each projected only from games played before it: winner called <b>66.7%</b> (home team alone: 54.8%), calibration error <b>1.9%</b>.</p>
       <div class="simcta">
         <a class="run" href="/nba-simulator/">Run NBA Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/nba-simulator/#accuracy">How it was scored</a>
@@ -355,7 +355,7 @@
         <li><b>Goals and assists</b> dealt to named skaters from their real per-sixty rates and ice time.</li>
         <li><b>Score effects, overtime, the shootout</b> and the empty net all handled explicitly.</li>
       </ul>
-      <p class="simscore">Scored on <b>3,946 games</b> across four seasons out of sample: winner called <b>57.3%</b> (home team alone: 54.1%), calibration error <b>1.5%</b>. A real edge, and a small one. Hockey is like that.</p>
+      <p class="simscore">Scored on <b>3,939 games</b> across four seasons out of sample: winner called <b>57.6%</b> (home team alone: 54.2%), calibration error <b>1.8%</b>. A real edge, and a small one. Hockey is like that.</p>
       <div class="simcta">
         <a class="run" href="/nhl-simulator/">Run NHL Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/nhl-simulator/#accuracy">How it was scored</a>
@@ -450,7 +450,7 @@
       </details>
       <details>
         <summary>How accurate are the simulators?</summary>
-        <p>Each engine was scored out of sample, projecting games using only results that came before them. The NBA model called the winner 66.5% of the time across 3,701 games with a 1.8% calibration error. The NHL model called 57.3% across 3,946 games with a 1.5% calibration error. The MLB model calls roughly 55 to 60 percent of winners with a Brier score near 0.245. The NFL model beats a coin flip on Brier score, with single-game margins carrying roughly a touchdown and a half of error. Every number here is research, not a betting edge, and none of it is betting advice.</p>
+        <p>Each engine was scored out of sample, projecting games using only results that came before them. The NBA model called the winner 66.7% of the time across 3,701 games with a 1.9% calibration error. The NHL model called 57.6% across 3,939 games with a 1.8% calibration error. The MLB model called 56.2% across 2,434 games against 54.3% for the home team, with a Brier score of 0.244, on team-level ratings rather than individual lineups. The NFL model scored a Brier of 0.224 against 0.250 for a coin flip on 285 held-out games, with single-game margins missing by 10.3 points. Every number here is research, not a betting edge, and none of it is betting advice.</p>
       </details>
       <details>
         <summary>How many times can I run the same matchup?</summary>
