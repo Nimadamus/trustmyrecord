@@ -24,6 +24,69 @@
  */
 
 const fs = require('fs');
+
+/**
+ * Conference and division, as reference data.
+ *
+ * The rating snapshots carry a club's id, name, colours and logo but not where
+ * it sits in the league, so this is the one thing on these pages that is not
+ * derived from the snapshot. It is stable published fact rather than anything
+ * modelled, and it earns its place: a division block names five real rivals per
+ * NBA club and gives each team page content no other team page has, which is the
+ * difference between a team page and a template with a name substituted in.
+ *
+ * If a slug is missing here the section is suppressed rather than guessed.
+ */
+const ALIGNMENT = {
+  nba: {
+    conferences: {
+      Eastern: {
+        Atlantic: ['boston-celtics', 'brooklyn-nets', 'new-york-knicks', 'philadelphia-76ers', 'toronto-raptors'],
+        Central: ['chicago-bulls', 'cleveland-cavaliers', 'detroit-pistons', 'indiana-pacers', 'milwaukee-bucks'],
+        Southeast: ['atlanta-hawks', 'charlotte-hornets', 'miami-heat', 'orlando-magic', 'washington-wizards'],
+      },
+      Western: {
+        Northwest: ['denver-nuggets', 'minnesota-timberwolves', 'oklahoma-city-thunder', 'portland-trail-blazers', 'utah-jazz'],
+        Pacific: ['golden-state-warriors', 'la-clippers', 'los-angeles-lakers', 'phoenix-suns', 'sacramento-kings'],
+        Southwest: ['dallas-mavericks', 'houston-rockets', 'memphis-grizzlies', 'new-orleans-pelicans', 'san-antonio-spurs'],
+      },
+    },
+    note: 'Division opponents are played four times a season, so they carry more weight in a rating than a team seen twice.',
+  },
+  nhl: {
+    conferences: {
+      Eastern: {
+        Atlantic: ['boston-bruins', 'buffalo-sabres', 'detroit-red-wings', 'florida-panthers', 'montreal-canadiens', 'ottawa-senators', 'tampa-bay-lightning', 'toronto-maple-leafs'],
+        Metropolitan: ['carolina-hurricanes', 'columbus-blue-jackets', 'new-jersey-devils', 'new-york-islanders', 'new-york-rangers', 'philadelphia-flyers', 'pittsburgh-penguins', 'washington-capitals'],
+      },
+      Western: {
+        Central: ['chicago-blackhawks', 'colorado-avalanche', 'dallas-stars', 'minnesota-wild', 'nashville-predators', 'st-louis-blues', 'utah-mammoth', 'winnipeg-jets'],
+        Pacific: ['anaheim-ducks', 'calgary-flames', 'edmonton-oilers', 'los-angeles-kings', 'san-jose-sharks', 'seattle-kraken', 'vancouver-canucks', 'vegas-golden-knights'],
+      },
+    },
+    note: 'Division opponents meet three or four times a season, so their results carry more weight in a rating than a cross-conference visitor seen twice.',
+  },
+};
+
+/** Where a club sits, or null when the slug is unknown to the table above. */
+function alignmentFor(sport, slug) {
+  const conf = (ALIGNMENT[sport] || {}).conferences || {};
+  for (const conference of Object.keys(conf)) {
+    for (const division of Object.keys(conf[conference])) {
+      const members = conf[conference][division];
+      if (members.indexOf(slug) !== -1) {
+        return {
+          conference,
+          division,
+          rivals: members.filter((m) => m !== slug),
+          note: ALIGNMENT[sport].note,
+        };
+      }
+    }
+  }
+  return null;
+}
+
 const path = require('path');
 const crypto = require('crypto');
 
@@ -238,6 +301,25 @@ ${(t.unavailable && t.unavailable.length)
     : '    <p class="dim">Nobody in this rotation is currently listed out.</p>'}
   </section>
 
+${(() => {
+      // Suppressed entirely when the club is not in the alignment table, rather
+      // than printed with a guess.
+      const al = alignmentFor('nba', t.slug);
+      if (!al) return '';
+      const nameOf = (slug) => {
+        const other = teams.filter((x) => x.slug === slug)[0];
+        return other ? other.nickname : slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      };
+      const rivalLinks = al.rivals.map((slug) => `<a href="/nba-simulator/teams/${slug}/">${esc(nameOf(slug))}</a>`).join(', ');
+      return `
+  <section class="panel">
+    <h2>Where the ${esc(t.nickname)} sit</h2>
+    <p>${esc(t.name)} play in the <strong>${esc(al.division)} Division</strong> of the
+    <strong>${esc(al.conference)} Conference</strong>. ${esc(al.note)}</p>
+    <p>Division opponents: ${rivalLinks}.</p>
+  </section>
+`;
+    })()}
   <section class="panel">
     <h2>Simulate a ${esc(t.nickname)} matchup</h2>
     <p>Pick an opponent and the simulator plays the game possession by possession:
@@ -303,7 +385,14 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
 }
 
 function nhlPages(matchupsBySlug) {
-  const teams = nhlTeams();
+  // NHL_NICKNAME_20260827: the NHL route returns `common` where the NBA route
+  // returns `nickname`. Every `t.nickname` below was therefore undefined, which
+  // put a literal "undefined" into all 32 title tags -- "Simulate undefined
+  // Games & Box Scores" -- and left headings reading "Simulate a  matchup".
+  // Normalised here rather than at each of the dozen call sites.
+  const teams = nhlTeams().map((t) => Object.assign({}, t, {
+    nickname: t.nickname || t.common || t.name,
+  }));
   const out = [];
   const diffRank = rankOf(teams, (t) => t.season.goalsFor - t.season.goalsAgainst, true);
   const ppRank = rankOf(teams, (t) => t.season.powerPlayPct, true);
@@ -354,6 +443,34 @@ ${goalies.length ? table(['Goaltender', 'GS', 'SV%', 'GAA'],
     goalies.map((g) => [g.name, g.gamesStarted, g.savePct.toFixed(3).replace(/^0/, ''), n2(g.gaa)])) : ''}
   </section>
 
+${(() => {
+      // The NHL route already carries conference and division, so this uses the
+      // real data and the hardcoded table is only a fallback for a club the feed
+      // has not caught up with.
+      const fromFeed = (t.conference && t.division)
+        ? {
+          conference: String(t.conference).replace(/ Conference$/i, ''),
+          division: String(t.division).replace(/ Division$/i, ''),
+          rivals: teams.filter((x) => x.division === t.division && x.slug !== t.slug).map((x) => x.slug),
+          note: (ALIGNMENT.nhl || {}).note || '',
+        }
+        : null;
+      const al = fromFeed || alignmentFor('nhl', t.slug);
+      if (!al) return '';
+      const nameOf = (slug) => {
+        const other = teams.filter((x) => x.slug === slug)[0];
+        return other ? other.nickname : slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      };
+      const rivalLinks = al.rivals.map((slug) => `<a href="/nhl-simulator/teams/${slug}/">${esc(nameOf(slug))}</a>`).join(', ');
+      return `
+  <section class="panel">
+    <h2>Where the ${esc(t.nickname)} sit</h2>
+    <p>${esc(t.name)} play in the <strong>${esc(al.division)} Division</strong> of the
+    <strong>${esc(al.conference)} Conference</strong>. ${esc(al.note)}</p>
+    <p>Division opponents: ${rivalLinks}.</p>
+  </section>
+`;
+    })()}
   <section class="panel">
     <h2>Simulate a ${esc(t.nickname)} matchup</h2>
     <p>Pick an opponent and the game is played on a clock, five skaters a side
