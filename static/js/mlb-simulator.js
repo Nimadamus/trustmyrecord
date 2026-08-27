@@ -193,7 +193,7 @@
         MIA: 0.92, ATH: 0.92, KC: 0.92, SEA: 0.91, PIT: 0.91, SF: 0.86
     };
     function parkHrFactor(homeTeam) {
-        return PARK_HR_FACTORS[homeTeam && homeTeam.abbreviation] || 1;
+        return parkHrFactorsFor(homeTeam).all;
     }
 
     // SIM_WEATHER_20260726: user-selected HYPOTHETICAL pregame conditions for this
@@ -1710,8 +1710,64 @@
         if (Math.abs(gap) < 2.5) return 'Near even';
         return (gap > 0 ? away.name : home.name) + ' +' + Math.abs(Math.round(gap));
     }
+    /**
+     * MEASURED_PARK_FACTORS_20260827 -- dated, handedness-aware park effects.
+     *
+     * The sixty constants above are hand-written, undated and symmetric. They
+     * apply today's numbers to a 2023 game, and they hit a left-handed pull hitter
+     * in Yankee Stadium exactly as hard as a right-handed one, which is the
+     * opposite of what the short porch does.
+     *
+     * When a measured table is supplied -- built by
+     * scripts/build_mlb_park_factors.js from home-and-road splits, regressed by
+     * sample size, and containing only seasons strictly BEFORE the one being
+     * simulated -- it is used instead, keyed by TEAM ID so a club that moves does
+     * not carry its old park's effect with it.
+     *
+     * With no table supplied, every value below falls through to the constants and
+     * nothing changes. That is deliberate: the table ships only once it has been
+     * measured to help.
+     */
+    function parkTableFor(homeTeam) {
+        var table = (typeof window !== 'undefined' && window.TMR_MLB_PARK_FACTORS) || null;
+        if (!table || !table.seasons) return null;
+        var season = (typeof window !== 'undefined' && window.TMR_MLB_PARK_SEASON)
+            ? String(window.TMR_MLB_PARK_SEASON)
+            : seasonYear();
+        var set = table.seasons[season];
+        if (!set || !set.parks) return null;
+        var id = homeTeam && (homeTeam.mlbId || homeTeam.teamId || homeTeam.id);
+        var entry = id != null ? set.parks[String(id)] : null;
+        if (!entry && homeTeam && homeTeam.abbreviation) {
+            // Fall back to the abbreviation only to FIND the row. The row itself is
+            // still the one measured for that club's park.
+            for (var k in set.parks) {
+                if (set.parks[k].abbr === homeTeam.abbreviation) { entry = set.parks[k]; break; }
+            }
+        }
+        return entry || null;
+    }
     function parkRunFactor(homeTeam) {
+        var measured = parkTableFor(homeTeam);
+        if (measured && Number.isFinite(measured.run)) return measured.run;
         return PARK_RUN_FACTORS[homeTeam && homeTeam.abbreviation] || 1;
+    }
+    /**
+     * Home-run factors for this park, split by the batter's side.
+     *
+     * `all` is what a batter with unknown handedness gets, and it is what the
+     * whole engine used before this existed. A split is only returned when it was
+     * measured on enough plate appearances to mean something; otherwise both sides
+     * get `all`, which is honest about not knowing rather than guessing.
+     */
+    function parkHrFactorsFor(homeTeam) {
+        var measured = parkTableFor(homeTeam);
+        var all = measured && Number.isFinite(measured.hr)
+            ? measured.hr
+            : (PARK_HR_FACTORS[homeTeam && homeTeam.abbreviation] || 1);
+        var l = measured && Number.isFinite(measured.hrLHB) ? measured.hrLHB : all;
+        var r = measured && Number.isFinite(measured.hrRHB) ? measured.hrRHB : all;
+        return { all: all, L: l, R: r };
     }
     function weatherRunAdjustment(weather) {
         if (!weather) return 0;
@@ -1866,7 +1922,11 @@
                 name: player.name,
                 position: playerPositionLabel(player),
                 mlbId: player.mlbId || null,
-                batSide: player && player.mlbId ? batSideOf(player.mlbId) : null,
+                // A roster entry that already knows which side he stands on is
+                // believed. The cached profile lookup only fires when it does not,
+                // which is what makes handedness available offline and in backtests.
+                batSide: (player && player.batSide)
+                    || (player && player.mlbId ? batSideOf(player.mlbId) : null),
                 ops: hasReal ? reg(Number(stat.ops), LG.ops) : null,
                 avg: hasReal ? reg(Number(stat.avg), LG.avg) : null,
                 slg: hasReal ? reg(Number(stat.slg), LG.slg) : null,
@@ -2668,7 +2728,7 @@
     // game (real MLB 2025 ~0.40), leaving BB ~2.8/team (well within the validator tol).
     var EV_HBP_SHARE = 0.13;
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
-    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr, simWeather) {
+    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr, simWeather, parkHrByHand) {
         var roster = rosterForTeam(team, rosterContext);
         var oppHand = oppPitcher && oppPitcher.mlbId ? pitchHandOf(oppPitcher.mlbId) : null;
         var slotStats = roster ? rosterBatterSlotStats(roster, oppHand) : [];
@@ -2814,7 +2874,8 @@
             // of them, not the same flat rate regardless of who's fielding).
             armFactor: clamp(1 + (100 - (team && team.runPrevention || 100)) * 0.003, 0.85, 1.15),
             dpFactor: clamp(1 - (100 - (team && team.runPrevention || 100)) * 0.003, 0.85, 1.15),
-            parkHr: parkHr || 1, simWeatherBb: (simWeather && simWeather.bb) || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
+            parkHr: parkHr || 1, parkHrByHand: parkHrByHand || null,
+            simWeatherBb: (simWeather && simWeather.bb) || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
     }
     // Layer 1: choose real bullpen arms from verified roster + cached season stats.
@@ -3759,7 +3820,15 @@
             // "dealing" day (see evSimGame) pitches with a lower effective anchor
             // for his own outing only (never touches relievers or the opponent).
             var dealingFactor = pitcher._dealing ? 0.42 : 1;
-            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor * mopUpFactor * dealingFactor);
+            // MEASURED_PARK_FACTORS_20260827: a left-handed batter gets the park's
+            // left-handed home-run factor. A switch hitter and anyone whose side is
+            // unknown gets the park's overall factor, because guessing a side would
+            // be inventing the very thing this is supposed to measure.
+            var paParkHr = side.parkHr;
+            if (side.parkHrByHand && (b.batSide === 'L' || b.batSide === 'R')) {
+                paParkHr = side.parkHrByHand[b.batSide];
+            }
+            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), paParkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor * mopUpFactor * dealingFactor);
             var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             // Event-sourced situational accounting (no post-hoc estimates):
             var paBefore = baseSnapshot(), paName = bname(bi), paRunnerPitchers = pitcherRefs();
@@ -4542,9 +4611,17 @@
         // every plate appearance already applies (evApplyParkHr at PA-resolution
         // time), so no new per-PA call site is needed for this effect. Clamped as a
         // safety net; SIM_WEATHER_CONDITIONS values are already far inside this range.
-        var parkHr = clamp(parkHrFactor(home) * ((simWeather && simWeather.hr) || 1), 0.5, 2.0); // both clubs hit in the home park
-        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr, simWeather);
-        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather);
+        var parkHrHand = parkHrFactorsFor(home);
+        var weatherHr = (simWeather && simWeather.hr) || 1;
+        var parkHr = clamp(parkHrHand.all * weatherHr, 0.5, 2.0); // both clubs hit in the home park
+        // The same weather multiplier on each side, so the split stays a park
+        // effect and does not quietly become a weather effect.
+        var parkHrByHand = {
+            L: clamp(parkHrHand.L * weatherHr, 0.5, 2.0),
+            R: clamp(parkHrHand.R * weatherHr, 0.5, 2.0),
+        };
+        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr, simWeather, parkHrByHand);
+        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather, parkHrByHand);
         return { awaySide: awaySide, homeSide: homeSide };
     }
     function eventWinProbability(inputs, samples, statsOut, random) {
