@@ -3672,6 +3672,10 @@
         // difference rather than a fifth counter threaded through the four sites
         // that credit a hit. See maybeChange for why runs alone were not enough.
         var apptStartHits = (pitcher && pitcher.acc) ? pitcher.acc.h : 0;
+        // Batters faced in the current appearance. The three-batter minimum makes
+        // this a rule, not a preference: since 2020 a pitcher must face three men
+        // or finish the inning, so no change below is allowed before it.
+        var apptStartBf = (pitcher && pitcher.acc) ? pitcher.acc.bf : 0;
         // Per-event run ledger: every run is recorded with the runner, whether it
         // was earned, which pitcher is charged, and whether it is an RBI. The
         // batting table, pitching table, RBI notes and play-by-play all read this
@@ -3716,7 +3720,48 @@
             // whether or not the runs have come home yet, and now so does this.
             var apptHits = (pitcher && pitcher.acc) ? pitcher.acc.h - apptStartHits : 0;
             var hitThreshold = idx === 0 ? 7 : 4;
-            if (apptRuns >= threshold || apptHits >= hitThreshold) {
+            /**
+             * MID_INNING_LEVERAGE_20260827 -- the change a manager makes when
+             * nothing has gone wrong yet.
+             *
+             * The hook above fires on damage. Real managers also change arms
+             * mid-inning with the game still in hand, and the evidence that the
+             * engine does not is in the outing lengths: a real third reliever's
+             * appearance runs 1/3/4 outs at the tenth, fiftieth and ninetieth
+             * percentile, and the simulated one runs 3/3/9. A one-out appearance
+             * is not a short outing -- it is an arm brought in DURING an inning to
+             * finish it, which this engine essentially never did. So it used too
+             * few pitchers and left each in too long.
+             *
+             * Two situations, both deterministic, no dice:
+             *
+             *   the starter is past his outing target or his pitch limit, a
+             *   runner is on, and the inning is not over -- the classic "he
+             *   started the sixth, gave up a hit, and that was that"
+             *
+             *   a reliever has satisfied the three-batter minimum, has men on
+             *   base, and the game is within three runs
+             *
+             * The three-batter minimum is a real rule and is enforced, so nothing
+             * here produces a change baseball would not allow.
+             */
+            var leverage = false;
+            if (workloadV2()) {
+                var apptBf = (pitcher && pitcher.acc) ? pitcher.acc.bf - apptStartBf : 0;
+                var onBase = bases[0] !== null || bases[1] !== null || bases[2] !== null;
+                if (idx === 0) {
+                    var spOutsNow = (pitcher.acc && pitcher.acc.outs) || 0;
+                    var spPitches = (pitcher.acc && pitcher.acc.pitches) || 0;
+                    var target = defSide.starterOutsGame || defSide.starterOuts || 16;
+                    leverage = onBase && apptBf >= 3
+                        && (spOutsNow >= target || spPitches >= STARTER_PITCH_LIMIT);
+                } else {
+                    var margin = Math.abs((endLead == null ? 0 : endLead));
+                    leverage = onBase && apptBf >= 3 && margin <= 3
+                        && idx < arms.length - 1;
+                }
+            }
+            if (apptRuns >= threshold || apptHits >= hitThreshold || leverage) {
                 var outgoing = pitcher;
                 outgoing.removed = true; // mid-inning pull - can never return this game
                 pitcher = arms[idx + 1]; apptRuns = 0;
