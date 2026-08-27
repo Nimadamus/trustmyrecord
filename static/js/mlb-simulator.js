@@ -836,6 +836,34 @@
         if (!Number.isFinite(n)) return 100;
         return Math.round(clamp(100 + (4.30 - n) * 12, 78, 130));
     }
+    /**
+     * PITCHER_QUALITY_20260827 -- rate a starter on something that holds up.
+     *
+     * pitcherQualityFromEra maps earned run average straight onto a thirty-point
+     * quality scale with no regression whatsoever, so a pitcher with thirty
+     * innings and a 2.10 earned run average is rated 126: the same as a man who
+     * has done it for two hundred innings. That rating then moves team strength
+     * through a coefficient of 0.24 per point and the run anchor through 0.022 per
+     * point, which is a large lever on a small sample.
+     *
+     * Earned run average is also the least stable pitching input there is. This
+     * project measured year-over-year correlations of 0.24 to 0.46 for ERA against
+     * 0.64 to 0.70 for strikeout-minus-walk rate, and built a regressed K-BB
+     * quality table on a 350-batter prior for exactly that reason. The engine was
+     * not consulting it.
+     *
+     * When a quality table is supplied it is used, keyed by player id. Without one
+     * nothing changes: the same ERA mapping, the same numbers.
+     */
+    function pitcherQualityFor(mlbId, era) {
+        var t = (typeof window !== 'undefined' && window.TMR_MLB_PITCHER_QUALITY) || null;
+        if (t && mlbId) {
+            var row = t[String(mlbId)];
+            var q = row && (Number.isFinite(row.quality) ? row.quality : Number(row));
+            if (Number.isFinite(q)) return Math.round(clamp(q, 78, 130));
+        }
+        return pitcherQualityFromEra(era);
+    }
 
     function playerPositionLabel(player) {
         return String(player && player.position || '').toUpperCase();
@@ -1514,7 +1542,7 @@
             addOption({
                 id: pitcherId(side, 'today-' + slugify(todayProbable.name)),
                 name: todayProbable.name,
-                quality: pitcherQualityFromEra(realEra),
+                quality: pitcherQualityFor(todayProbable.id, realEra),
                 era: Number.isFinite(realEra) ? realEra : null,
                 whip: todayRates.whip,
                 kbbPct: todayRates.kbbPct,
@@ -1613,7 +1641,7 @@
             addOption({
                 id: pitcherId(side, team.id + '-' + slugify(player.name)),
                 name: player.name,
-                quality: hasReal ? pitcherQualityFromEra(realEra) : (row ? row[2] : 100),
+                quality: hasReal ? pitcherQualityFor(player.mlbId, realEra) : (row ? row[2] : 100),
                 era: hasReal ? realEra : (row ? row[3] : null),
                 whip: rosterRates.whip,
                 kbbPct: rosterRates.kbbPct,
