@@ -5,6 +5,35 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
+/**
+ * SHARDING, so the full twelve thousand can use more than one core.
+ *
+ * Every iteration of the main loop is independent: `simulate()` is called with
+ * no seed, so each draws from Math.random, and the only thing the index decides
+ * is WHICH matchup is played. Splitting the indices across processes therefore
+ * changes nothing about what is measured. Shard k takes every index where
+ * i % shards === k, so the union is exactly 0..totalSimulations-1 with no index
+ * run twice and none missed.
+ *
+ * Every metric below is a sum, a maximum, a count, or a set-deduplicated list,
+ * all of which merge exactly. A shard emits its raw totals and the aggregator
+ * applies the identical assertions to the merged result.
+ *
+ * WHAT THIS IS NOT: bit-identical to a sequential run. It cannot be, because the
+ * suite is unseeded -- two sequential runs are not bit-identical to each other
+ * either. The equivalence is in coverage and in distribution, which is what the
+ * assertions test.
+ *
+ * With neither variable set the behaviour is exactly what it was.
+ */
+const SHARDS = Math.max(1, Number(process.env.TMR_MLB_SHARDS || 1));
+const SHARD = Math.max(0, Number(process.env.TMR_MLB_SHARD || 0));
+const SHARD_OUT = process.env.TMR_MLB_SHARD_OUT || '';
+if (SHARD >= SHARDS) {
+  throw new Error('TMR_MLB_SHARD ' + SHARD + ' is out of range for ' + SHARDS + ' shards');
+}
+
+
 const root = path.resolve(__dirname, '..');
 const scriptPath = path.join(root, 'static', 'js', 'mlb-simulator.js');
 const script = fs.readFileSync(scriptPath, 'utf8');
@@ -310,7 +339,9 @@ const historicalStrong = historical.slice().sort(byStrength);
 const currentWeak = currentStrong.slice().reverse();
 const historicalWeak = historicalStrong.slice().reverse();
 
-historical.forEach((team, index) => {
+// The historical coverage cases are per-club assertions, not samples, so they
+// run once rather than once per shard.
+if (SHARDS === 1 || SHARD === 0) historical.forEach((team, index) => {
   const opponent = historical[(index + 1) % historical.length];
   const { result, label } = runCase(simulator, 'historical', team, opponent, index, index + 1, 'coverage-' + index);
   const group = result.boxScore.players.away;
@@ -347,6 +378,7 @@ historical.forEach((team, index) => {
 // test nobody runs protects nothing. TMR_MLB_SIMS gives a shorter pass for
 // development and CI; the full default is what gates a release.
 const totalSimulations = Number(process.env.TMR_MLB_SIMS || 12000);
+
 const summary = {
   totalSimulations,
   averageHomeRunsScored: 0,
@@ -370,7 +402,10 @@ let expectedHomeRunTotal = 0;
 let expectedAwayRunTotal = 0;
 const extremeKeys = new Set();
 
+let ranInThisShard = 0;
 for (let i = 0; i < totalSimulations; i += 1) {
+  if (SHARDS > 1 && (i % SHARDS) !== SHARD) continue;
+  ranInThisShard += 1;
   let mode;
   let away;
   let home;
@@ -420,6 +455,40 @@ for (let i = 0; i < totalSimulations; i += 1) {
       starters: result.awayPitcher.name + ' vs ' + result.homePitcher.name,
     });
   }
+}
+
+if (SHARDS > 1) {
+  // Raw totals only. Averages and rates are computed by the aggregator over the
+  // full twelve thousand, so a shard never divides by its own partial count.
+  const payload = {
+    shard: SHARD,
+    shards: SHARDS,
+    totalSimulations,
+    ran: ranInThisShard,
+    homeRunTotal,
+    awayRunTotal,
+    expectedHomeRunTotal,
+    expectedAwayRunTotal,
+    highestScoreObserved: summary.highestScoreObserved,
+    highestCombinedScoreObserved: summary.highestCombinedScoreObserved,
+    gamesAbove15TotalRuns: summary.gamesAbove15TotalRuns,
+    gamesAbove20TotalRuns: summary.gamesAbove20TotalRuns,
+    teamScoresAbove15: summary.teamScoresAbove15,
+    teamScoresAbove18: summary.teamScoresAbove18,
+    combinedScoresAbove25: summary.combinedScoresAbove25,
+    invalidOutputs: summary.invalidOutputs,
+    invalidExamples: summary.invalidExamples,
+    modeCounts: summary.modeCounts,
+    // Carried WITH their keys so the aggregator can drop cross-shard duplicates
+    // rather than counting one extreme game twice.
+    extremes: summary.extremeValidOutputs.map((e, idx) => ({ key: [...extremeKeys][idx], ...e })),
+  };
+  if (!SHARD_OUT) throw new Error('sharded run needs TMR_MLB_SHARD_OUT');
+  fs.writeFileSync(SHARD_OUT, JSON.stringify(payload));
+  process.stdout.write('shard ' + SHARD + '/' + SHARDS + ': ran ' + ranInThisShard
+    + ' simulations, ' + summary.invalidOutputs + ' invalid, wrote ' + SHARD_OUT
+    + String.fromCharCode(10));
+  process.exit(0);
 }
 
 summary.averageHomeRunsScored = Number((homeRunTotal / totalSimulations).toFixed(2));
