@@ -71,6 +71,9 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from schema_event import event_description, sports_event  # noqa: E402
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -733,32 +736,32 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     description = (". ".join(desc_bits) + ".")[:300]
 
     # ---- structured data --------------------------------------------------
-    event = {
-        "@type": "SportsEvent",
-        "@id": url + "#event",
-        "name": "%s at %s" % (away, home),
-        "url": url,
-        "sport": "Baseball",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        # schema.org has no "completed" value, so a game that was played as
-        # scheduled stays EventScheduled. Postponed and cancelled DO have their
-        # own values and are reported honestly rather than flattened.
-        "eventStatus": {
-            "Postponed": "https://schema.org/EventPostponed",
-            "Cancelled": "https://schema.org/EventCancelled",
-            "Canceled": "https://schema.org/EventCancelled",
-            "Suspended": "https://schema.org/EventPostponed",
-        }.get(g.get("detailed_status") or "", "https://schema.org/EventScheduled"),
-        "awayTeam": {"@type": "SportsTeam", "name": away},
-        "homeTeam": {"@type": "SportsTeam", "name": home},
-        "competitor": [{"@type": "SportsTeam", "name": away},
-                       {"@type": "SportsTeam", "name": home}],
-        "organizer": {"@type": "SportsOrganization", "name": "Major League Baseball"},
-    }
-    if g.get("start_utc"):
-        event["startDate"] = g["start_utc"].replace("Z", "+00:00")
-    if venue:
-        event["location"] = {"@type": "Place", "name": venue}
+    # Built by scripts/schema_event.py so this page, the hub ItemList and the
+    # Game File articles cannot drift apart on the required Event fields.
+    event = sports_event(
+        url=url,
+        node_id=url + "#event",
+        away=away,
+        home=home,
+        sport="Baseball",
+        description=event_description(
+            away, home,
+            date_long=date_long,
+            start=start,
+            venue=venue,
+            away_sp=aw_start.get("name"),
+            home_sp=hm_start.get("name"),
+            ml_away=ml_a,
+            ml_home=ml_h,
+            away_label=away_n,
+            home_label=home_n,
+            status=g.get("detailed_status"),
+        ),
+        start_iso=g.get("start_utc"),
+        venue=venue,
+        status=g.get("detailed_status"),
+        organizer="Major League Baseball",
+    )
     trail = [("Home", "/"), ("Handicapping Hub", "/handicapping/"),
              ("MLB Matchups", HUB), ("%s vs %s, %s" % (away_n, home_n, date_long), None)]
     ld = {"@context": "https://schema.org", "@graph": [
@@ -1203,24 +1206,39 @@ def render_hub_block(date, rows, built_at):
 
 
 def render_hub_ld(date, rows, built_at):
+    # Same builder as the matchup pages: the slate entry and the page it links
+    # to describe the same fixture, so they carry the same Event fields.
     items = []
+    long = long_date(date)
     for i, r in enumerate(rows):
         items.append({
             "@type": "ListItem",
             "position": i + 1,
             "url": SITE + r["url"],
-            "item": {
-                "@type": "SportsEvent",
-                "name": "%s at %s" % (r["away"], r["home"]),
-                "url": SITE + r["url"],
-                "sport": "Baseball",
-                "startDate": r["start_utc"].replace("Z", "+00:00") if r["start_utc"] else None,
-                "awayTeam": {"@type": "SportsTeam", "name": r["away"]},
-                "homeTeam": {"@type": "SportsTeam", "name": r["home"]},
-                "location": {"@type": "Place", "name": r["venue"]} if r["venue"] else None,
-            },
+            "item": sports_event(
+                url=SITE + r["url"],
+                away=r["away"],
+                home=r["home"],
+                sport="Baseball",
+                description=event_description(
+                    r["away"], r["home"],
+                    date_long=long,
+                    start=r.get("start"),
+                    venue=r.get("venue"),
+                    away_sp=r.get("away_sp"),
+                    home_sp=r.get("home_sp"),
+                    ml_away=r.get("ml_away"),
+                    ml_home=r.get("ml_home"),
+                    away_label=r.get("away_nick"),
+                    home_label=r.get("home_nick"),
+                    status=r.get("detailed_status"),
+                ),
+                start_iso=r.get("start_utc"),
+                venue=r.get("venue"),
+                status=r.get("detailed_status"),
+                organizer="Major League Baseball",
+            ),
         })
-        items[-1]["item"] = {k: v for k, v in items[-1]["item"].items() if v is not None}
     url = SITE + HUB
     return {"@context": "https://schema.org", "@graph": [
         {"@type": "CollectionPage", "@id": url, "url": url,
@@ -1600,6 +1618,7 @@ def build(dates, today, dry_run=False, workers=4):
                 "away_nick": nickname(g["away_team"]), "home_nick": nickname(g["home_team"]),
                 "url": matchup_url(g), "start": et_time(g.get("start_utc")),
                 "start_utc": g.get("start_utc"),
+                "detailed_status": g.get("detailed_status"),
                 "venue": ov.get("venue") if avail(ov) else g.get("venue"),
                 "away_sp": aw_s.get("name"), "home_sp": hm_s.get("name"),
                 "away_sp_line": sp_line(aw_p), "home_sp_line": sp_line(hm_p),

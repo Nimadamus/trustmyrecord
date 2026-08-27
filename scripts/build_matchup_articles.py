@@ -61,6 +61,9 @@ import re
 import sys
 import urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from schema_event import event_description, sports_event  # noqa: E402
+
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
 SITE = "https://trustmyrecord.com"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -905,25 +908,30 @@ def render_article(article, provenance, neighbours):
     # optional and included when known.
     event_start = parse_iso(article.get("game_time_utc"))
     if event_start and article.get("away_team") and article.get("home_team"):
-        event = {
-            "@type": "SportsEvent",
-            "@id": url + "#event",
-            "name": "%s at %s" % (article["away_team"], article["home_team"]),
-            "startDate": event_start.isoformat(),
-            "eventStatus": "https://schema.org/EventScheduled",
-            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-            "sport": sport_label,
-            "url": url,
-            "description": article.get("dek") or article.get("meta_description") or "",
-            "awayTeam": {"@type": "SportsTeam", "name": article["away_team"]},
-            "homeTeam": {"@type": "SportsTeam", "name": article["home_team"]},
-            "competitor": [
-                {"@type": "SportsTeam", "name": article["away_team"]},
-                {"@type": "SportsTeam", "name": article["home_team"]},
-            ],
-        }
-        if article.get("venue_name"):
-            event["location"] = {"@type": "Place", "name": article["venue_name"]}
+        # The dek is written about this fixture, so it is the best description
+        # we have. When a Game File has no dek and no meta description the node
+        # still gets a real one, composed from the fixture facts by the same
+        # builder the MLB matchup pages use.
+        summary = (article.get("dek") or article.get("meta_description") or "").strip()
+        event = sports_event(
+            url=url,
+            node_id=url + "#event",
+            away=article["away_team"],
+            home=article["home_team"],
+            sport=sport_label,
+            description=summary or event_description(
+                article["away_team"], article["home_team"],
+                date_long=human_date(article.get("game_time_utc")),
+                venue=article.get("venue_name"),
+            ),
+            start_iso=event_start.isoformat(),
+            venue=article.get("venue_name"),
+            # No game-state field reaches this script - `status` on the payload
+            # is the publication state of the Game File, not the state of the
+            # fixture - so eventStatus is left to its EventScheduled default
+            # rather than derived from a field that means something else.
+            image=absolute(article["hero_image_url"]) if article.get("hero_image_url") else None,
+        )
         graph.append(event)
         graph[0]["about"] = {"@id": url + "#event"}
 
