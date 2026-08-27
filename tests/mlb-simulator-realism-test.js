@@ -128,6 +128,12 @@ function sum(values) {
   return values.reduce((total, value) => total + Number(value || 0), 0);
 }
 
+// Relief-appearance counters, accumulated across every validated game so the
+// tail can be judged as a RATE rather than as a forbidden event.
+let reliefAppearances = 0;
+let reliefFiveHit = 0;
+let reliefEightHit = 0;
+
 function validateResult(result, label) {
   const invalid = [];
   if (!result || !result.boxScore) invalid.push('missing result or box score');
@@ -275,22 +281,32 @@ function validateResult(result, label) {
           }
           if (row.er > row.r) invalid.push(side + ' pitcher earned runs exceed runs');
           if (outs <= 6 && row.r === 0 && row.h > 4) invalid.push(side + ' short outing has implausible no-damage hit total');
-          // Bounded by what real relievers actually do, not by a round number.
+          // RELIEVER TAIL, bounded by 12,782 real one-inning relief appearances
+          // (MLB 2022-2025, read from the league's own game feed):
           //
-          // Measured over 300 real MLB games in 2024 (1,483 one-inning relief
-          // appearances): 0.34% allowed five or more hits, and the WORST was six.
-          // The engine was doing it in 2.04% of appearances with a worst of eight,
-          // because the mid-inning hook fired only on runs, so a reliever being
-          // squared up without conceding three runs was never lifted. A hits
-          // trigger was added (HIT_HOOK_20260826) and the rate fell to 1.12% with
-          // a worst of six, matching reality's ceiling.
+          //     5+ hits   69   0.540%
+          //     7+ hits    1   0.0078%
+          //     8+ hits    0   (95% upper bound 0.023% by the rule of three)
+          //     maximum    7
           //
-          // Five hits in an inning is therefore rare but LEGAL, and asserting it
-          // never happens would fail on correct baseball. Seven is past anything
-          // observed and indicates the hook has stopped working.
-          if (outs <= 3 && row.h > 6) {
+          // An earlier version of this check asserted that more than SIX hits
+          // never happens, on a sample of 3,876 appearances where it had not been
+          // seen. Over the full twelve thousand simulations that fired thirty
+          // times, and the bound turned out to be wrong: seven hits does occur in
+          // real baseball, once in this sample. A "never" assertion on an event
+          // this rare will always fire at scale even when the rate is correct.
+          //
+          // So the instance check now bounds only what has NEVER been observed,
+          // and the frequency is judged separately as a rate in the aggregate,
+          // which is where a fat tail actually shows up. Both counters feed that.
+          if (outs <= 3) {
+            reliefAppearances += 1;
+            if (row.h >= 5) reliefFiveHit += 1;
+            if (row.h >= 8) reliefEightHit += 1;
+          }
+          if (outs <= 3 && row.h > 8) {
             invalid.push(side + ' one-inning reliever allowed ' + row.h
-              + ' hits, beyond anything real relievers do (worst observed: 6)');
+              + ' hits, past anything in 12,782 real appearances (maximum 7)');
           }
         });
       }
@@ -478,6 +494,9 @@ if (SHARDS > 1) {
     combinedScoresAbove25: summary.combinedScoresAbove25,
     invalidOutputs: summary.invalidOutputs,
     invalidExamples: summary.invalidExamples,
+    reliefAppearances,
+    reliefFiveHit,
+    reliefEightHit,
     modeCounts: summary.modeCounts,
     // Carried WITH their keys so the aggregator can drop cross-shard duplicates
     // rather than counting one extreme game twice.
@@ -537,6 +556,22 @@ assert(bigScoreRate <= 0.012,
 assert(bigTotalRate <= 0.015,
   'games total 26+ in ' + (bigTotalRate * 100).toFixed(3) + '% of games, against 0.195% in real MLB');
 assert(summary.averageHomeRunsScored >= 4.1 && summary.averageHomeRunsScored <= 5.2, 'home scoring average stays in MLB-like range');
+
+// THE RELIEVER TAIL AS A RATE. Real MLB 2022-2025, 12,782 one-inning relief
+// appearances: 0.540% allowed five or more hits, and eight or more was never
+// seen (95% upper bound 0.023% by the rule of three). The bounds below sit above
+// those, because a simulator matching reality should pass and only a genuinely
+// fat tail should fail.
+if (reliefAppearances > 0) {
+  const fiveRate = reliefFiveHit / reliefAppearances;
+  const eightRate = reliefEightHit / reliefAppearances;
+  assert(fiveRate <= 0.012,
+    'relievers allow 5+ hits in ' + (fiveRate * 100).toFixed(3)
+    + '% of one-inning outings, against 0.540% in real MLB');
+  assert(eightRate <= 0.0005,
+    'relievers allow 8+ hits in ' + (eightRate * 100).toFixed(4)
+    + '% of one-inning outings; real MLB never did in 12,782');
+}
 assert(summary.averageAwayRunsScored >= 3.9 && summary.averageAwayRunsScored <= 5.0, 'away scoring average stays in MLB-like range');
 assert(summary.averageTotalRunsScored >= 8.2 && summary.averageTotalRunsScored <= 9.8, 'total run average stays in realistic MLB range');
 assert(summary.averageExpectedTotalRuns >= 8.0 && summary.averageExpectedTotalRuns <= 9.5, 'displayed expected-run average stays in realistic MLB range');

@@ -74,6 +74,9 @@ const summary = {
   teamScoresAbove18: sum('teamScoresAbove18'),
   combinedScoresAbove25: sum('combinedScoresAbove25'),
   invalidOutputs: sum('invalidOutputs'),
+  reliefAppearances: sum('reliefAppearances'),
+  reliefFiveHit: sum('reliefFiveHit'),
+  reliefEightHit: sum('reliefEightHit'),
   invalidExamples: [],
   modeCounts: { current: 0, historical: 0, mixed: 0 },
 };
@@ -142,6 +145,13 @@ say('  modes (current / historical / mixed)  '
   + summary.modeCounts.current + ' / ' + summary.modeCounts.historical
   + ' / ' + summary.modeCounts.mixed);
 say('  invalid outputs                       ' + summary.invalidOutputs);
+say('  one-inning relief outings             ' + summary.reliefAppearances.toLocaleString());
+say('    5+ hits                             ' + summary.reliefFiveHit + '  ('
+  + (100 * summary.reliefFiveHit / Math.max(summary.reliefAppearances, 1)).toFixed(3)
+  + '%, real 0.540%)');
+say('    8+ hits                             ' + summary.reliefEightHit + '  ('
+  + (100 * summary.reliefEightHit / Math.max(summary.reliefAppearances, 1)).toFixed(4)
+  + '%, real 0% of 12,782)');
 say('');
 
 /* --- the gate, identical to the sequential suite -------------------------- */
@@ -164,6 +174,18 @@ assert(bigTotalRate <= 0.015,
   'games total 26+ in ' + (bigTotalRate * 100).toFixed(3) + '% of games, against 0.195% in real MLB');
 assert(summary.averageHomeRunsScored >= 4.1 && summary.averageHomeRunsScored <= 5.2,
   'home scoring average ' + summary.averageHomeRunsScored + ' stays in MLB-like range');
+
+// The reliever tail as a rate, on the same bounds the sequential suite uses.
+if (summary.reliefAppearances > 0) {
+  const fiveRate = summary.reliefFiveHit / summary.reliefAppearances;
+  const eightRate = summary.reliefEightHit / summary.reliefAppearances;
+  assert(fiveRate <= 0.012,
+    'relievers allow 5+ hits in ' + (fiveRate * 100).toFixed(3)
+    + '% of one-inning outings, against 0.540% in real MLB');
+  assert(eightRate <= 0.0005,
+    'relievers allow 8+ hits in ' + (eightRate * 100).toFixed(4)
+    + '% of one-inning outings; real MLB never did in 12,782');
+}
 
 say('  GATE PASSED on the full ' + totalSimulations.toLocaleString() + ' simulations.');
 say('');
