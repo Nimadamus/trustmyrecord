@@ -3723,11 +3723,39 @@
         // hit was wrongly charged earned. bu[] rides along with bases[]/bp[] through
         // every shift/advance so the taint survives until he scores or is put out.
         var bu = [false, false, false];
-        var apptRuns = 0; // runs scored during the current pitcher's appearance this inning
+        // Runs during this pitcher's appearance. Under the flag this spans the
+        // whole appearance rather than restarting each half-inning; see
+        // APPEARANCE_SCOPED_HOOK_20260827 below.
+        var apptRuns = (workloadV2() && pitcher && pitcher.acc && pitcher._apptStartRuns !== undefined)
+            ? (pitcher.acc.r - pitcher._apptStartRuns)
+            : 0;
         // HIT_HOOK_20260826: hits allowed during this appearance, as a snapshot
         // difference rather than a fifth counter threaded through the four sites
         // that credit a hit. See maybeChange for why runs alone were not enough.
-        var apptStartHits = (pitcher && pitcher.acc) ? pitcher.acc.h : 0;
+        /**
+         * APPEARANCE_SCOPED_HOOK_20260827 -- count an appearance, not a frame.
+         *
+         * These two counters were re-snapshotted at the top of EVERY half-inning,
+         * so a reliever who worked two innings had his hit and run totals reset
+         * between them. The hook that pulls a reliever at four hits therefore
+         * never saw four: three in one inning and three in the next read as three
+         * and three.
+         *
+         * That is how the 12,000-game suite found pitchers with five or more hits
+         * allowed, no runs, and two innings or less -- a line that appears zero
+         * times in 20,865 real relief appearances. The hits were real; the pull
+         * that should have followed them never came.
+         *
+         * The snapshot now lives on the pitcher, set once when he enters, so it
+         * survives the half-inning boundary the way an appearance does.
+         */
+        if (workloadV2() && pitcher && pitcher.acc && pitcher._apptStartHits === undefined) {
+            pitcher._apptStartHits = pitcher.acc.h;
+            pitcher._apptStartRuns = pitcher.acc.r;
+        }
+        var apptStartHits = (workloadV2() && pitcher && pitcher._apptStartHits !== undefined)
+            ? pitcher._apptStartHits
+            : ((pitcher && pitcher.acc) ? pitcher.acc.h : 0);
         // Batters faced in the current appearance. The three-batter minimum makes
         // this a rule, not a preference: since 2020 a pitcher must face three men
         // or finish the inning, so no change below is allowed before it.
@@ -3790,7 +3818,18 @@
                 // hit; he sends a hitter to the mound.
                 if (!(apptRuns >= 3 || lastHits >= 4)) return;
                 var emergency = evMakePositionPitcher(defSide);
+                // Never the same man twice. evMakePositionPitcher tracks who has
+                // been used, but a null pid on a synthetic lineup collapses that
+                // key, so the list itself is the authority: an object already on
+                // the staff is not added again. Without this the box score carried
+                // one player as two pitchers.
                 if (!emergency) return;
+                if (defSide.pitchers.indexOf(emergency) !== -1) return;
+                var already = false;
+                for (var pz = 0; pz < defSide.pitchers.length; pz++) {
+                    if (defSide.pitchers[pz].name === emergency.name) { already = true; break; }
+                }
+                if (already) return;
                 defSide.pitchers.push(emergency);
                 defSide.posPitcherIdx = defSide.pitchers.length - 1;
                 defSide.posPitcher = emergency;
@@ -3872,6 +3911,7 @@
                 var nextIdx = lastArm ? defSide.posPitcherIdx : idx + 1;
                 pitcher = defSide.pitchers[nextIdx]; apptRuns = 0;
                 apptStartHits = (pitcher && pitcher.acc) ? pitcher.acc.h : 0;
+                if (pitcher) { pitcher._apptStartHits = apptStartHits; pitcher._apptStartRuns = pitcher.acc.r; }
                 defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, nextIdx); defSide.midChanges = (defSide.midChanges || 0) + 1;
                 // The incoming arm inherits whoever is on base; bp[] already charges
                 // those runners to the pitcher who put them there.
