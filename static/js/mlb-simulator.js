@@ -3780,16 +3780,20 @@
             if (lastArm) {
                 if (!workloadV2()) return; // no arm available to replace him
                 var lastHits = (pitcher && pitcher.acc) ? pitcher.acc.h - apptStartHits : 0;
-                if (!(apptRuns >= 5 || lastHits >= 6)) return;
-                if (!defSide.posPitcher) {
-                    var emergency = evMakePositionPitcher(defSide);
-                    if (emergency) {
-                        defSide.pitchers.push(emergency);
-                        defSide.posPitcherIdx = defSide.pitchers.length - 1;
-                        defSide.posPitcher = emergency;
-                    }
-                }
-                if (!defSide.posPitcher || defSide.posPitcher.removed || defSide.posPitcher === pitcher) return;
+                // Held to the SAME standard as any other reliever, not a laxer
+                // one. The first version used 5 runs or 6 hits, and the
+                // 12,000-game suite showed why that is wrong: one-inning
+                // relievers allowed five or more hits at 1.95% against a real
+                // 0.54%, with outings of nine and twelve hits, because the last
+                // arm absorbed whatever the deeper bullpen routed to him. A
+                // manager out of pitchers does not raise his tolerance for being
+                // hit; he sends a hitter to the mound.
+                if (!(apptRuns >= 3 || lastHits >= 4)) return;
+                var emergency = evMakePositionPitcher(defSide);
+                if (!emergency) return;
+                defSide.pitchers.push(emergency);
+                defSide.posPitcherIdx = defSide.pitchers.length - 1;
+                defSide.posPitcher = emergency;
             }
             var threshold = idx === 0 ? 5 : 3; // shelled starter: 5 runs; reliever: 3
             // HIT_HOOK_20260826: pull on BASERUNNERS too, not only on runs.
@@ -4654,13 +4658,37 @@
     var POSITION_PITCHER_VEC = { so: 0.045, bb: 0.075, hr: 0.050, hitFactor: 1.22 };
     function evMakePositionPitcher(side) {
         var lineup = side.lineup || [];
-        var cand = lineup.filter(function (b) { return /1B|3B|2B|DH|SS|C\b/i.test(String(b.rawPos || '')); });
-        var pick = cand.length ? cand[cand.length - 1] : lineup[lineup.length - 1];
+        /**
+         * POSITION_PITCHER_POOL_20260827: a different man each time.
+         *
+         * A club that has already sent one hitter to the mound and is still being
+         * scored on sends another. It cannot send the same one twice: returning
+         * him leaves an arm on the mound that can never be relieved, which is how
+         * one-inning relievers ended up allowing nine and twelve hits.
+         *
+         * Gated. With the flag off this is exactly the shipped selection, same
+         * candidates in the same order, so the flag-off path stays byte-identical.
+         */
+        var POS_ELIGIBLE = new RegExp('1B|3B|2B|DH|SS|C' + String.fromCharCode(92) + 'b', 'i');
+        var pool = lineup;
+        if (workloadV2()) {
+            var used = side._posPitcherPids || (side._posPitcherPids = {});
+            pool = lineup.filter(function (b) { return !used[b.pid || b.playerName]; });
+        }
+        var cand = pool.filter(function (b) { return POS_ELIGIBLE.test(String(b.rawPos || '')); });
+        // If every hitter has already been to the mound -- possible deep in a
+        // marathon -- fall back to the whole lineup rather than returning nothing.
+        // Returning nothing leaves an arm out there that cannot be relieved, which
+        // is the exact failure this pool exists to prevent.
+        if (!pool.length) pool = lineup;
+        var cand2 = cand.length ? cand : pool.filter(function (b) { return POS_ELIGIBLE.test(String(b.rawPos || '')); });
+        var pick = cand2.length ? cand2[cand2.length - 1] : pool[pool.length - 1];
         if (!pick) return null;
         var nm = (pick.playerName || pick.name || 'Position player').replace(/\s*\([^)]*\)\s*$/, '');
         // POS_PITCHER_PID_SYNC_20260727: carry the source batter's pid so a later
         // injury/ejection on him AS A BATTER (elSwapSlot) can mark this pitcher
         // object .removed too - see elSwapSlot.
+        if (workloadV2() && side._posPitcherPids) side._posPitcherPids[pick.pid || pick.playerName] = true;
         return { name: nm + ' (' + (pick.rawPos || 'IF') + ', position player)', vec: POSITION_PITCHER_VEC, acc: evNewPit(), role: 'POS', hand: null, isPositionPlayer: true, pid: pick.pid || null };
     }
     // POSITION_PLAYER_PITCHING_20260629: pick the defending arm, but in a deep blowout
