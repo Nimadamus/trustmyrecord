@@ -34,17 +34,16 @@
     // carries the same menu: this table serves the ~140 pages that still render
     // their nav from this script. See the long note in tmr-ds-nav.js for why the
     // video-game section left Compete.
+    // Six rows. The five game titles came out on 2026-08-28: they made this the
+    // longest menu on the site and it grew with every title added. They are one
+    // click deeper now, on /online-games/. No game page moved.
     const sportsGamingRoutes = [
         ["/sports-gaming/", "Sports Gaming Hub"],
+        ["/online-games/", "Online Games"],
         ["/arena/", "The TMR Arena"],
         ["/online-gaming/", "Open Challenges"],
         ["/arena/rankings/", "Gaming Rankings"],
-        ["/arena/leagues/", "Gaming Leagues"],
-        ["/sports-gaming/mlb-the-show/", "MLB The Show"],
-        ["/sports-gaming/madden/", "Madden NFL"],
-        ["/sports-gaming/nba-2k/", "NBA 2K"],
-        ["/sports-gaming/ea-fc/", "EA Sports FC"],
-        ["/sports-gaming/nhl/", "NHL"]
+        ["/arena/leagues/", "Gaming Leagues"]
     ];
     const competeMenuRoutes = [
         ["/contests/justbet-mlb/", "Contest"],
@@ -86,7 +85,7 @@
     // itself isn't one of the dropdown's own links.
     const HANDICAPPERS_GROUP = new Set(["handicappers.html", "leaderboards.html", "verified-handicapper-records.html", "marketplace.html"]);
     const COMPETE_GROUP = new Set(["challenges.html", "tmr-challenges.html", "tmr-match.html", "trivia.html", "polls.html", "contests.html"]);
-    const SPORTS_GAMING_GROUP = new Set(["sports-gaming.html", "arena.html", "online-gaming.html", "mlb-the-show-stat-league.html", "rankings.html", "leagues.html", "mlb-the-show.html", "madden.html", "nba-2k.html", "ea-fc.html", "nhl.html"]);
+    const SPORTS_GAMING_GROUP = new Set(["sports-gaming.html", "arena.html", "online-gaming.html", "online-games.html", "mlb-the-show-stat-league.html", "rankings.html", "leagues.html", "mlb-the-show.html", "madden.html", "nba-2k.html", "ea-fc.html", "nhl.html"]);
     const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "hangout.html"]);
     const TOOLS_GROUP = new Set(["tools.html", "sports-simulators.html", "mlb-simulator.html", "nfl-simulator.html", "nba-simulator.html", "nhl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
     const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
@@ -99,6 +98,7 @@
         "sports-gaming.html": ["Sports Gaming", "Head-to-head sports video game challenges with verified records: MLB The Show, Madden NFL, NBA 2K, EA Sports FC, and NHL."],
         "challenges.html": ["Handicapper Challenges", "Pick against pick on real sporting events. Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
+        "online-games.html": ["Online Sports Games", "Every sports video game you can compete in on TrustMyRecord: MLB The Show, Madden NFL, NBA 2K, EA SPORTS FC, and EA SPORTS NHL."],
         "online-gaming.html": ["Open Gaming Challenges", "The live board of open sports video game challenges in MLB The Show, Madden, NBA 2K, NHL, and EA FC. Track wins, box scores, and lifetime stats."],
         "hangout.html": ["Hangout", "Off-topic chatter and life conversations &mdash; not sports polls."],
         "polls.html": ["Polls", "Sports polls, prediction polls, debates, and community calls."],
