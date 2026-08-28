@@ -39,7 +39,7 @@
     // click deeper now, on /online-games/. No game page moved.
     const sportsGamingRoutes = [
         ["/sports-gaming/", "Sports Gaming Hub"],
-        ["/online-games/", "Online Games"],
+        ["/online-games/", "Online Gaming"],
         ["/arena/", "The TMR Arena"],
         ["/online-gaming/", "Open Challenges"],
         ["/arena/rankings/", "Gaming Rankings"],
@@ -98,7 +98,7 @@
         "sports-gaming.html": ["Sports Gaming", "Head-to-head sports video game challenges with verified records: MLB The Show, Madden NFL, NBA 2K, EA Sports FC, and NHL."],
         "challenges.html": ["Handicapper Challenges", "Pick against pick on real sporting events. Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
-        "online-games.html": ["Online Sports Games", "Every sports video game you can compete in on TrustMyRecord: MLB The Show, Madden NFL, NBA 2K, EA SPORTS FC, and EA SPORTS NHL."],
+        "online-games.html": ["Online Sports Gaming", "Every sports video game you can compete in on TrustMyRecord: MLB The Show, Madden NFL, NBA 2K, EA SPORTS FC, and EA SPORTS NHL."],
         "online-gaming.html": ["Open Gaming Challenges", "The live board of open sports video game challenges in MLB The Show, Madden, NBA 2K, NHL, and EA FC. Track wins, box scores, and lifetime stats."],
         "hangout.html": ["Hangout", "Off-topic chatter and life conversations &mdash; not sports polls."],
         "polls.html": ["Polls", "Sports polls, prediction polls, debates, and community calls."],

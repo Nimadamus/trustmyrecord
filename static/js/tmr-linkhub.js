@@ -148,7 +148,7 @@
         'mlb-the-show-stat-league': 'MLB The Show Stat League',
         'online-gaming': 'Open Gaming Challenges',
         'sports-gaming': 'Sports Gaming',
-        'online-games': 'Online Games',
+        'online-games': 'Online Gaming',
         'mlb-the-show': 'MLB The Show',
         'madden': 'Madden NFL',
         'nba-2k': 'NBA 2K',
@@ -263,7 +263,7 @@
            site. These three keys keep the video-game cluster linking to itself. */
         'sports-gaming': [
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online games directory'],
+            ['/online-games/', 'Online gaming directory'],
             ['/arena/', 'The TMR Arena'],
             ['/online-gaming/', 'Open gaming challenges'],
             ['/arena/rankings/', 'Gaming rankings'],
@@ -276,7 +276,7 @@
         ],
         'arena': [
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online games directory'],
+            ['/online-games/', 'Online gaming directory'],
             ['/online-gaming/', 'Open gaming challenges'],
             ['/arena/rankings/', 'Gaming rankings'],
             ['/arena/leagues/', 'Gaming leagues'],
@@ -306,7 +306,7 @@
         ],
         'online-gaming': [
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online games directory'],
+            ['/online-games/', 'Online gaming directory'],
             ['/arena/', 'The TMR Arena'],
             ['/arena/rankings/', 'Gaming rankings'],
             ['/sports-gaming/mlb-the-show/', 'MLB The Show'],
@@ -319,7 +319,7 @@
         'mlb-the-show-stat-league': [
             ['/sports-gaming/mlb-the-show/', 'MLB The Show challenges'],
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online games directory'],
+            ['/online-games/', 'Online gaming directory'],
             ['/online-gaming/', 'Open gaming challenges'],
             ['/arena/rankings/', 'Gaming rankings'],
             ['/arena/leagues/', 'Gaming leagues']
