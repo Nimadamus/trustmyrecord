@@ -3824,15 +3824,40 @@
                 // the staff is not added again. Without this the box score carried
                 // one player as two pitchers.
                 if (!emergency) return;
-                if (defSide.pitchers.indexOf(emergency) !== -1) return;
-                var already = false;
-                for (var pz = 0; pz < defSide.pitchers.length; pz++) {
-                    if (defSide.pitchers[pz].name === emergency.name) { already = true; break; }
+                if (defSide.pitchers.indexOf(emergency) !== -1) emergency = null;
+                if (emergency) {
+                    for (var pz = 0; pz < defSide.pitchers.length; pz++) {
+                        if (defSide.pitchers[pz].name === emergency.name) { emergency = null; break; }
+                    }
                 }
-                if (already) return;
+                /**
+                 * NEVER_LEAVE_HIM_IN_20260827. If no NEW position player is
+                 * available, use one already on the staff rather than returning.
+                 *
+                 * Returning was a deadlock. On curated historical lineups the
+                 * players carry no pid and no playerName, so the used-player key
+                 * collapses to one value: after a single emergency the pool reads
+                 * as exhausted, the name check then matches the man already
+                 * pitching, and the last arm became unrelievable again. That is
+                 * how a one-inning reliever reached nine hits in the 12,000-game
+                 * suite after the earlier fix.
+                 *
+                 * Leaving a pitcher in past the point a manager would act produces
+                 * a line real baseball has never recorded. Reusing an arm that is
+                 * already in the game is legal and is the lesser wrong.
+                 */
+                if (!emergency) {
+                    for (var pq = defSide.pitchers.length - 1; pq >= 0; pq--) {
+                        var alt = defSide.pitchers[pq];
+                        if (alt !== pitcher && alt.isPositionPlayer && !alt.removed) { emergency = alt; break; }
+                    }
+                }
+                if (!emergency) return;
+                if (defSide.pitchers.indexOf(emergency) === -1) {
                 defSide.pitchers.push(emergency);
                 defSide.posPitcherIdx = defSide.pitchers.length - 1;
                 defSide.posPitcher = emergency;
+                }
             }
             var threshold = idx === 0 ? 5 : 3; // shelled starter: 5 runs; reliever: 3
             // HIT_HOOK_20260826: pull on BASERUNNERS too, not only on runs.
