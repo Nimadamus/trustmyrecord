@@ -148,7 +148,6 @@
         'mlb-the-show-stat-league': 'MLB The Show Stat League',
         'online-gaming': 'Open Gaming Challenges',
         'sports-gaming': 'Sports Gaming',
-        'online-games': 'Online Gaming',
         'mlb-the-show': 'MLB The Show',
         'madden': 'Madden NFL',
         'nba-2k': 'NBA 2K',
@@ -263,7 +262,6 @@
            site. These three keys keep the video-game cluster linking to itself. */
         'sports-gaming': [
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online gaming directory'],
             ['/arena/', 'The TMR Arena'],
             ['/online-gaming/', 'Open gaming challenges'],
             ['/arena/rankings/', 'Gaming rankings'],
@@ -276,7 +274,6 @@
         ],
         'arena': [
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online gaming directory'],
             ['/online-gaming/', 'Open gaming challenges'],
             ['/arena/rankings/', 'Gaming rankings'],
             ['/arena/leagues/', 'Gaming leagues'],
@@ -287,27 +284,13 @@
             ['/sports-gaming/nba-2k/', 'NBA 2K'],
             ['/sports-gaming/nhl/', 'NHL']
         ],
-        /* /online-games/ is the directory of supported titles; /online-gaming/
-           below is the live board of open challenges. Near-identical addresses,
-           two different jobs, so each one links to the other by name rather than
-           leaving a member to guess which is which. Added 2026-08-28. */
-        'online-games': [
-            ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-gaming/', 'Open gaming challenges'],
-            ['/arena/', 'The TMR Arena'],
-            ['/arena/rankings/', 'Gaming rankings'],
-            ['/arena/leagues/', 'Gaming leagues'],
-            ['/sports-gaming/mlb-the-show/', 'MLB The Show'],
-            ['/sports-gaming/madden/', 'Madden NFL'],
-            ['/sports-gaming/nba-2k/', 'NBA 2K'],
-            ['/sports-gaming/ea-fc/', 'EA SPORTS FC'],
-            ['/sports-gaming/nhl/', 'EA SPORTS NHL'],
-            ['/mlb-the-show-stat-league/', 'MLB The Show Stat League']
-        ],
+        /* Consolidated 2026-08-28: /online-games/ is an alias stub to
+           /online-gaming/, so the rail that used to name a separate directory
+           was removed rather than repointed at the page it sits on. */
         'online-gaming': [
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online gaming directory'],
             ['/arena/', 'The TMR Arena'],
+            ['/arena/leagues/', 'Gaming leagues'],
             ['/arena/rankings/', 'Gaming rankings'],
             ['/sports-gaming/mlb-the-show/', 'MLB The Show'],
             ['/sports-gaming/madden/', 'Madden NFL'],
@@ -319,7 +302,6 @@
         'mlb-the-show-stat-league': [
             ['/sports-gaming/mlb-the-show/', 'MLB The Show challenges'],
             ['/sports-gaming/', 'Sports Gaming Hub'],
-            ['/online-games/', 'Online gaming directory'],
             ['/online-gaming/', 'Open gaming challenges'],
             ['/arena/rankings/', 'Gaming rankings'],
             ['/arena/leagues/', 'Gaming leagues']
