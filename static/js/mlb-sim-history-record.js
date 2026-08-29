@@ -309,6 +309,11 @@
         out[k] = lc[k];
         any = true;
       }
+      // The per-game context object the engine is HANDED as an argument, as
+      // opposed to the state it reads. 395 bytes of schedule, odds and recent
+      // form, and it is passed straight into simulate(), so a replay that
+      // omitted it would be replaying a different call.
+      if (s.state.activeLiveContext) { out.__activeContext = s.state.activeLiveContext; any = true; }
       return any ? out : null;
     } catch (e) { return null; }
   }

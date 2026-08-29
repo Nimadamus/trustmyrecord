@@ -169,9 +169,33 @@ function teamByAbbr(sim, abbr) {
       continue;
     }
 
+    // INJECT THE MODEL STATE THE RUN CONSUMED.
+    //
+    // This is the whole point. The engine reads its player vectors out of
+    // state.liveContext, and replaying against an empty context makes it fall
+    // back to a local pool -- a different simulation with the same seed. The
+    // archive now stores that state, so it is put back before the game is
+    // played, and the per-game context object is handed to simulate() as the
+    // argument the original call received.
+    let injectedContext = {};
+    if (full.model_version) {
+      const snap = await get(BASE + '/api/sim-archive/model-snapshot?version='
+        + encodeURIComponent(full.model_version));
+      if (snap && snap.payload_gz_base64) {
+        try {
+          const zlib = require('zlib');
+          const state = JSON.parse(zlib.gunzipSync(
+            Buffer.from(snap.payload_gz_base64, 'base64')).toString('utf8'));
+          injectedContext = state.__activeContext || {};
+          delete state.__activeContext;
+          for (const k of Object.keys(state)) engine.state.liveContext[k] = state[k];
+        } catch (e) { /* replay falls back and is reported as PARTIAL */ }
+      }
+    }
+
     let out;
     try {
-      out = engine.simulate(at, ht, {}, seed, false, null);
+      out = engine.simulate(at, ht, injectedContext, seed, false, null);
     } catch (e) {
       tally.NOT_REPRODUCIBLE += 1;
       reasons.push('run ' + r.id + ': replay threw ' + e.message);
