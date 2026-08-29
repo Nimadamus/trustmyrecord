@@ -201,6 +201,16 @@
     var weather = box.simWeather || null;
 
     return {
+      // WHICH BUILD OF THE ENGINE ACTUALLY RAN THIS.
+      //
+      // The MLB engine computes in this browser, so no server-side hash of it is
+      // possible and the client has to report one. The page already loads the
+      // engine as mlb-simulator.js?v=<content hash>, maintained by
+      // scripts/version_static_refs.py from the file's own bytes, so that hash
+      // is the honest answer: derived by the build rather than typed by anybody.
+      // Null when it cannot be read, never a made-up constant -- the backend
+      // validates the shape and refuses anything that is not a plausible hash.
+      engine_version: engineBuildHash(),
       run_uid: ('sim-' + String(box.runId || (Date.now() + '-' + Math.random().toString(36).slice(2))))
         .replace(/[^A-Za-z0-9._:-]/g, '-').slice(0, 80),
       game_date: slateDate(),
@@ -254,6 +264,29 @@
   /* ---------------------------------------------------------------- */
   /* Recording                                                        */
   /* ---------------------------------------------------------------- */
+
+  /**
+   * The content hash the build stamped on the engine this page is running.
+   *
+   * Read off the script tag rather than stored anywhere, so it cannot drift from
+   * the file actually loaded. Returns null if the tag is missing or carries no
+   * version -- a local checkout served without the versioning step -- because a
+   * missing fingerprint is a true statement and a guessed one is not.
+   */
+  function engineBuildHash() {
+    try {
+      var tags = document.querySelectorAll('script[src*="mlb-simulator"]');
+      for (var i = 0; i < tags.length; i += 1) {
+        var src = tags[i].getAttribute('src') || '';
+        var m = src.match(/[?&]v=([0-9a-f]{8,40})/);
+        if (m) return m[1];
+        // Content-hashed filename form: mlb-simulator.<hash>.js
+        var f = src.match(/mlb-simulator\.([0-9a-f]{8,40})\.js/);
+        if (f) return f[1];
+      }
+    } catch (e) { /* no DOM, or no such tag */ }
+    return null;
+  }
 
   var recorded = Object.create(null);   // run_uid -> true; blocks a double submit
 
