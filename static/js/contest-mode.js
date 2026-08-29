@@ -102,12 +102,14 @@
             '<div class="tmr-cm-text">' +
                 '<div class="tmr-cm-title">Contest Mode: ' + escapeHtml(meta.name) + '</div>' +
                 '<div class="tmr-cm-body">Picks submitted here count <strong>only for the JustBet MLB contest leaderboard</strong> and <strong>will not affect your public profile record</strong>, ROI, units, or regular pick history.</div>' +
+                '<div class="tmr-cm-body" style="margin-top:6px; opacity:.92;">Every contest pick stays sealed from everyone until that game’s first pitch, then reveals in full. Contest scoring pays your units to win at a minus price and risks your units at a plus price. Pushes and postponed games score 0.</div>' +
                 '<div class="tmr-cm-pillrow" style="margin-top:8px;">' +
                     '<span class="tmr-cm-pill" id="tmr-cm-pill-status"><i class="fas fa-shield-halved" aria-hidden="true"></i> Registration: loading…</span>' +
                     '<span class="tmr-cm-pill" id="tmr-cm-pill-picks"><i class="fas fa-vault" aria-hidden="true"></i> Picks used: loading…</span>' +
                 '</div>' +
             '</div>' +
-            '<a class="tmr-cm-dash" href="/contests/' + encodeURIComponent(contestId) + '/dashboard/"><i class="fas fa-chart-line" aria-hidden="true"></i> Contest Dashboard</a>' +
+            '<a class="tmr-cm-dash" href="/contests/' + encodeURIComponent(contestId) + '/leaderboard/"><i class="fas fa-trophy" aria-hidden="true"></i> Leaderboard</a>' +
+            '<a class="tmr-cm-exit" href="/contests/' + encodeURIComponent(contestId) + '/dashboard/"><i class="fas fa-chart-line" aria-hidden="true"></i> Contest Board</a>' +
             '<a class="tmr-cm-exit" href="' + buildExitHref() + '" id="tmr-cm-exit-btn" data-tmr-cm-exit><i class="fas fa-arrow-left" aria-hidden="true"></i> Exit Contest Mode</a>';
         // Insert at the very top of body.
         document.body.insertBefore(banner, document.body.firstChild);
@@ -177,6 +179,22 @@
         }).catch(function () { return null; });
     }
 
+    // Markets this contest accepts. Kept in step with SUPPORTED_MARKETS in
+    // routes/contests.js: a market is only offered if the contest grader can
+    // actually settle it from the final team score. The f5_* family was offered
+    // for months and could never grade.
+    var CONTEST_MARKETS = ['h2h', 'spreads', 'totals', 'team_totals'];
+    var LINE_MARKETS = ['spreads', 'totals', 'team_totals'];
+
+    // Shape a local refusal like a fetch Response so the sportsbook's existing
+    // .then(result)/.catch(err) handling shows the message unchanged.
+    function contestError(message) {
+        return new Response(JSON.stringify({ error: message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
     // ---------- fetch interceptor: redirect /api/picks → /api/contests/:id/picks ----------
     var origFetch = window.fetch.bind(window);
     var PICKS_RE = /\/api\/picks(?:\/?$|\?)/;
@@ -195,19 +213,55 @@
         var bodyPromise = readBody(init);
         return bodyPromise.then(function (orig) {
             var payload = orig && typeof orig === 'object' ? orig : {};
+            var oddsVal = numericOrSelf(payload.odds != null ? payload.odds : payload.odds_snapshot);
+            var marketType = payload.market_type || payload.marketType;
             var transformed = {
                 contest_id: contestId,
                 game_id: payload.game_id || payload.gameId,
-                market_type: payload.market_type || payload.marketType,
+                market_type: marketType,
                 selection: payload.selection,
-                odds: numericOrSelf(payload.odds != null ? payload.odds : payload.odds_snapshot),
+                odds: oddsVal,
                 units: numericOrSelf(payload.units),
-                stake_mode: payload.stake_mode || payload.stakeMode || 'risk',
+                // CONTEST_STAKE_CONVENTION_20260829.
+                //
+                // The regular /api/picks route converts the user's chosen stake
+                // mode (RISK or TO-WIN) before storing, and grades from that. The
+                // contest grader does NOT read stake_mode at all: it always pays
+                // TO-WIN on a minus price and RISKING on a plus price, which is
+                // the published TrustMyRecord unit convention. This reroute used
+                // to drop units_mode entirely and hardcode stake_mode:'risk', so
+                // every contest row recorded a convention the grader never used
+                // and the sportsbook showed the entrant a different number than
+                // the contest would pay (a RISK 3u winner at -110 previewed
+                // +2.73u and scored +3.00u).
+                //
+                // The stored value now describes what the contest actually does,
+                // so the column stops lying and a later reader cannot mis-derive
+                // the P/L from it.
+                stake_mode: (Number(oddsVal) < 0) ? 'to_win' : 'risk',
                 attest_justbet_signup: true,
             };
             if (payload.line != null && payload.line !== '') {
                 var n = Number(payload.line);
                 if (Number.isFinite(n)) transformed.line = n;
+            }
+            // Fall back to the sportsbook's own snapshot field name so a line
+            // never arrives as null on a market that cannot grade without one.
+            if (transformed.line == null && payload.line_snapshot != null && payload.line_snapshot !== '') {
+                var n2 = Number(payload.line_snapshot);
+                if (Number.isFinite(n2)) transformed.line = n2;
+            }
+
+            // Client-side guard so an entrant gets a plain sentence instead of a
+            // raw 400 from the API. The server enforces all of this again; this
+            // is only for the message.
+            if (CONTEST_MARKETS.indexOf(marketType) === -1) {
+                return Promise.resolve(contestError(
+                    'That market is not part of this contest. Contest picks are moneyline, run line, total and team total on MLB games.'));
+            }
+            if (LINE_MARKETS.indexOf(marketType) !== -1 && transformed.line == null) {
+                return Promise.resolve(contestError(
+                    'That pick is missing its line, so it could never be graded. Reselect the number and try again.'));
             }
             var targetUrl = apiBase + '/api/contests/' + encodeURIComponent(contestId) + '/picks';
             var newInit = Object.assign({}, init || {});

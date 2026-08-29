@@ -430,6 +430,8 @@
             .pchip .pu { color: #2E4459; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
             .pchip .ps { font-weight: 800; color: #07182A; white-space: nowrap; flex-shrink: 0; margin-left: auto; }
             .pchip .po { color: #2E4459; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+            .pchip .pw { color: var(--faint); font-weight: 800; font-size: 0.72rem; }
+            .pchip .pn { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.72rem; }
             .pchip.res-won .ps { color: #0A8B4E; }
             .pchip.res-lost .ps { color: #BC372E; }
             .pchip.res-push .ps, .pchip.res-void .ps { color: #B98505; }
@@ -454,9 +456,15 @@
                     <div class="stat"><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
                     <div class="stat"><div class="k">Picks Per Entrant</div><div class="v">50</div></div>
                     <div class="stat"><div class="k">Registered</div><div class="v" id="stat-entrants">—</div></div>
-                    <div class="stat"><div class="k">Picks Open</div><div class="v">Not Yet</div></div>
+                    <div class="stat"><div class="k">Picks Open</div><div class="v" id="stat-picks-open">—</div></div>
                     <div class="stat"><div class="k">Reveal</div><div class="v">First Pitch</div></div>
                 </div>
+                <p class="sub" id="contest-window" style="margin-top:10px;"></p>
+                <p class="sub" style="margin-top:6px;">
+                    Every pick stays hidden from everyone until that game's first pitch. The moment a game starts,
+                    every contestant's pick on that game is revealed with its side, line, odds and units.
+                    Pushes score 0 units. Postponed or cancelled games are voided and score 0 units.
+                </p>
             </div>
 
             <div class="block" id="registered-members">
@@ -477,8 +485,31 @@
                 </div>
             </div>
 
-            <!-- CONTEST BOARD (hidden pre-launch; renders ONLY when PRELAUNCH=false,
-                 or in local-only dev preview). One compact card per game; each
+            <!-- CONTEST LEADERBOARD. Contest-specific data only: it reads
+                 GET /api/contests/justbet-mlb/leaderboard, which aggregates
+                 tmr_contest_picks for the registered contest field. It never
+                 touches the site-wide /api/users/leaderboard. -->
+            <div class="block" id="contest-leaderboard" hidden>
+                <div class="block-head">
+                    <h2>Contest Leaderboard</h2>
+                    <span class="sub">Full standings page: <a href="/contests/justbet-mlb/leaderboard/" style="text-decoration:underline;">/contests/justbet-mlb/leaderboard/</a></span>
+                    <button class="refresh-btn" id="refresh-lb"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                </div>
+                <div class="table-wrap">
+                    <table class="contest-table" id="lb-table">
+                        <thead><tr>
+                            <th>Rank</th><th>User</th><th class="num">Picks</th>
+                            <th class="num">W</th><th class="num">L</th><th class="num">P</th>
+                            <th class="num">Win %</th><th class="num">Net Units</th><th class="num">Pending</th>
+                        </tr></thead>
+                        <tbody id="lb-body"></tbody>
+                    </table>
+                </div>
+                <p class="board-foot" id="lb-foot"></p>
+            </div>
+
+            <!-- CONTEST BOARD (hidden until the contest window opens, or in the
+                 local-only dev preview). One compact card per game; each
                  contestant pick renders inside its game's ML / RL / Total cell. -->
             <div class="block" id="contest-board" hidden>
                 <div class="block-head">
@@ -503,14 +534,24 @@
     <script>
     (function () {
         const CONTEST_ID = 'justbet-mlb';
-        // PRE-LAUNCH GATE (authoritative, set by Nima — do NOT derive from the
-        // API's starts_at, which holds stale QA placeholder dates).
-        // While true the contest is NOT live: the page shows ONLY contest status,
-        // the full Registered Members list, and the contest-board placeholder.
-        // The pick grid + leaderboard were removed pre-launch (June 5, 2026) and
-        // must only be rebuilt from real contest picks AFTER the contest begins.
-        // Flip to false ONLY when launch + graded results are approved.
-        const PRELAUNCH = true;
+        // LAUNCH_GATE_20260829.
+        //
+        // This used to be a hardcoded `const PRELAUNCH = true` that had to be
+        // edited and redeployed to start the contest, which is why the board and
+        // the leaderboard were missing from the page entirely while the backend
+        // was serving both. The gate is now DERIVED from the contest row, so the
+        // single admin call that sets the real window
+        //
+        //   PATCH /api/contests/justbet-mlb  { starts_at, ends_at }
+        //
+        // starts everything at once and nothing has to be redeployed. Before
+        // starts_at the page shows status + registered members + the "not started
+        // yet" placeholder, exactly as it does today.
+        //
+        // The value is resolved in loadStatus() from the API's starts_at. It
+        // stays true until then, so a failed/slow meta fetch can never flash the
+        // live board.
+        let PRELAUNCH = true;
         const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
         const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
 
@@ -552,6 +593,42 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const c = await res.json();
                 contestLaunched = !!c.is_active;
+
+                // LAUNCH_GATE_20260829. The contest is live once it is active and
+                // starts_at has passed. Everything the entrants see (board,
+                // leaderboard, "picks open") follows from the contest row, so the
+                // admin PATCH that sets the window is the only launch switch.
+                const now = Date.now();
+                const startMs = c.starts_at ? new Date(c.starts_at).getTime() : null;
+                const endMs = c.ends_at ? new Date(c.ends_at).getTime() : null;
+                var started = !!c.is_active && (startMs === null || now >= startMs);
+                // A contest whose window has already closed AND has no picks at
+                // all has not really run: that is a stale placeholder window, not
+                // a finished contest. Showing an empty "Final" board to entrants
+                // would be worse than the placeholder, so keep the placeholder
+                // until either the window is real or picks actually exist.
+                if (started && endMs !== null && now >= endMs) {
+                    try {
+                        var pr = await fetch(API('/picks'), { credentials: 'include' });
+                        var pd = pr.ok ? await pr.json() : null;
+                        if (!pd || !pd.picks || !pd.picks.length) started = false;
+                    } catch (e) { started = false; }
+                }
+                PRELAUNCH = !started;
+
+                const picksOpen = started && (endMs === null || now < endMs);
+                const openEl = $('#stat-picks-open');
+                if (openEl) {
+                    openEl.textContent = !c.is_active ? 'Closed'
+                        : (!started ? 'Not Yet' : (picksOpen ? 'Open' : 'Closed'));
+                }
+                const winEl = $('#contest-window');
+                if (winEl) {
+                    winEl.textContent = (startMs || endMs)
+                        ? `Contest window: ${startMs ? fmtTime(c.starts_at) : 'open'} to ${endMs ? fmtTime(c.ends_at) : 'open'} (your local time). Picks lock at each game's first pitch.`
+                        : 'Contest window: to be announced.';
+                }
+                applyLaunchState();
             } catch { contestLaunched = false; }
         }
 
@@ -602,7 +679,7 @@
         // The preview can NEVER activate on the live domain — hostname-gated.
         const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
         const PREVIEW_BOARD = IS_LOCAL && new URLSearchParams(window.location.search).get('preview') === 'board';
-        const BOARD_ACTIVE = !PRELAUNCH || PREVIEW_BOARD;
+        const boardActive = () => (!PRELAUNCH || PREVIEW_BOARD);
 
         const MARKET_CELLS = [
             { key: 'h2h', label: 'Moneyline' },
@@ -620,14 +697,32 @@
         }
         const gameLabel = (g) => `${g.away_team} @ ${g.home_team}`;
 
+        // REVEAL AT FIRST PITCH. `sealed` is computed SERVER-SIDE from
+        // game_commence_time and the API strips selection/line/odds/units from a
+        // sealed row entirely, so there is nothing to leak here even if this
+        // rendering were wrong. The moment a game starts, every pick on that game
+        // reveals on the next poll (60s) or on refresh.
+        function signedLine(v) {
+            if (v === null || v === undefined || v === '') return '';
+            const n = Number(v);
+            if (!Number.isFinite(n)) return ' ' + String(v);
+            if (n === 0) return ' PK';
+            return ' ' + (n > 0 ? '+' : '') + n;
+        }
         function pickChip(p) {
             if (p.sealed) {
                 return `<div class="pchip sealed"><span class="pu">${escapeHtml(p.username)}</span><span class="ps"><i class="fa-solid fa-lock"></i>Sealed</span></div>`;
             }
             const res = (p.result && p.result !== 'pending') ? p.result : '';
             const cls = res === 'won' ? 'res-won' : res === 'lost' ? 'res-lost' : res === 'push' ? 'res-push' : res === 'void' ? 'res-void' : '';
-            const line = (p.line !== null && p.line !== undefined && p.line !== '') ? ` ${p.line}` : '';
-            return `<div class="pchip ${cls}"><span class="pu">${escapeHtml(p.username)}</span><span class="ps">${escapeHtml(teamNick(p.selection) || p.selection)}${escapeHtml(line)}</span><span class="po">${fmtOdds(p.odds)}</span></div>`;
+            // The API returns line_snapshot as `line` on a revealed pick. Without
+            // it a run line showed a bare team name and a total showed a bare
+            // "Over", so nobody could check what number was actually taken.
+            const line = signedLine(p.line);
+            const net = (p.units_net !== null && p.units_net !== undefined)
+                ? `<span class="pn ${Number(p.units_net) > 0 ? 'units-pos' : Number(p.units_net) < 0 ? 'units-neg' : 'units-zero'}">${Number(p.units_net) > 0 ? '+' : ''}${Number(p.units_net).toFixed(2)}u</span>` : '';
+            const units = (p.units !== null && p.units !== undefined) ? `<span class="pw">${Number(p.units).toFixed(1)}u</span>` : '';
+            return `<div class="pchip ${cls}" title="${escapeHtml(p.username)} · ${escapeHtml(p.selection)}${escapeHtml(line)} · ${fmtOdds(p.odds)}"><span class="pu">${escapeHtml(p.username)}</span><span class="ps">${escapeHtml(teamNick(p.selection) || p.selection)}${escapeHtml(line)}</span><span class="po">${fmtOdds(p.odds)}</span>${units}${net}</div>`;
         }
 
         function renderBoard(games, picks) {
@@ -674,7 +769,7 @@
         }
 
         async function loadBoard() {
-            if (!BOARD_ACTIVE) return;
+            if (!boardActive()) return;
             const grid = $('#board-grid');
             if (PREVIEW_BOARD && PRELAUNCH) {
                 // LOCAL-ONLY sample data, clearly labeled. Never reachable on the live
@@ -728,28 +823,86 @@
             { username: 'DemoCapper7', game: 'Minnesota Twins @ Kansas City Royals', market_type: 'totals', selection: 'Over', line: 8, odds: -115, sealed: true },
         ];
 
+        // ---------------- contest leaderboard ----------------
+        const pct = (v) => (v === null || v === undefined) ? '—' : (Number(v) * 100).toFixed(1) + '%';
+        function renderLeaderboard(data) {
+            const body = $('#lb-body');
+            const foot = $('#lb-foot');
+            const rows = (data && Array.isArray(data.entries)) ? data.entries : [];
+            if (!rows.length) {
+                body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No graded contest picks yet. Standings appear as games finish.</div></td></tr>`;
+                if (foot) foot.textContent = '';
+                return;
+            }
+            body.innerHTML = rows.map((e) => {
+                const rankCls = e.rank === 1 ? 'r1' : e.rank === 2 ? 'r2' : e.rank === 3 ? 'r3' : '';
+                const net = Number(e.units_net) || 0;
+                const netCls = net > 0 ? 'units-pos' : net < 0 ? 'units-neg' : 'units-zero';
+                // A null/absent field must never blank the row or throw.
+                const uname = e.username == null ? '—' : String(e.username);
+                return `<tr>
+                    <td><span class="lb-rank ${rankCls}">${e.rank}</span>${e.tied_on_units ? '<span class="sub" style="margin-left:6px;">tied</span>' : ''}</td>
+                    <td><a href="/profile/${encodeURIComponent(uname)}/">${escapeHtml(uname)}</a></td>
+                    <td class="num">${e.picks_used || 0} / ${e.picks_max || 50}</td>
+                    <td class="num">${e.wins || 0}</td>
+                    <td class="num">${e.losses || 0}</td>
+                    <td class="num">${e.pushes || 0}</td>
+                    <td class="num">${pct(e.win_pct)}</td>
+                    <td class="num ${netCls}">${net > 0 ? '+' : ''}${net.toFixed(2)}</td>
+                    <td class="num">${e.pending || 0}</td>
+                </tr>`;
+            }).join('');
+            if (foot) {
+                foot.innerHTML = `<strong>${rows.length}</strong> ranked entrant${rows.length === 1 ? '' : 's'}. `
+                    + `Ranked by ${escapeHtml(data.ranking_rule || 'net units')}. `
+                    + `Pushes and voided (postponed or cancelled) games score 0 units and never count as a win or a loss.`;
+            }
+        }
+        async function loadLeaderboard() {
+            if (!boardActive()) return;
+            const body = $('#lb-body');
+            try {
+                const r = await fetch(API('/leaderboard'), { credentials: 'include' });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                renderLeaderboard(await r.json());
+            } catch {
+                body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Leaderboard temporarily unavailable. Try refresh.</div></td></tr>`;
+            }
+        }
+
+        // Called by loadStatus() once the contest meta is known.
+        function applyLaunchState() {
+            const live = boardActive();
+            const board = $('#contest-board');
+            const ph = $('#contest-board-placeholder');
+            const lb = $('#contest-leaderboard');
+            if (board) board.hidden = !live;
+            if (lb) lb.hidden = !live;
+            if (ph) ph.hidden = live;
+            if (live && !applyLaunchState._started) {
+                applyLaunchState._started = true;
+                loadBoard();
+                loadLeaderboard();
+                // Sealed picks reveal at first pitch, and standings move as games
+                // finish, without anyone reloading the page.
+                setInterval(loadBoard, 60000);
+                setInterval(loadLeaderboard, 60000);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // Pre-launch dashboard: status + full Registered Members list only.
-            // The game-centric contest board renders only when PRELAUNCH=false
-            // (or in the localhost-only dev preview).
             loadStatus();
             loadMembers();
             const rs = $('#refresh-status');
-            if (rs) rs.addEventListener('click', () => { loadStatus(); loadMembers(); });
+            if (rs) rs.addEventListener('click', () => { loadStatus(); loadMembers(); loadBoard(); loadLeaderboard(); });
             const rm = $('#refresh-members');
             if (rm) rm.addEventListener('click', loadMembers);
-            // Keep the member list fresh without a manual reload.
+            const rb = $('#refresh-board');
+            if (rb) rb.addEventListener('click', loadBoard);
+            const rl = $('#refresh-lb');
+            if (rl) rl.addEventListener('click', loadLeaderboard);
             setInterval(loadMembers, 120000);
-
-            if (BOARD_ACTIVE) {
-                $('#contest-board').hidden = false;
-                $('#contest-board-placeholder').hidden = true;
-                loadBoard();
-                const rb = $('#refresh-board');
-                if (rb) rb.addEventListener('click', loadBoard);
-                // Sealed picks reveal at first pitch without a manual reload.
-                setInterval(loadBoard, 60000);
-            }
+            applyLaunchState();
         });
     })();
     </script>

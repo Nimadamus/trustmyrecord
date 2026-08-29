@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JustBet MLB Contest Leaderboard | TrustMyRecord</title>
+    <meta name="description" content="Live standings for the JustBet MLB Handicapping Contest on TrustMyRecord. Ranked by net units. Every pick is sealed until first pitch, then revealed in full.">
+    <link rel="canonical" href="https://trustmyrecord.com/contests/justbet-mlb/leaderboard/">
+    <meta name="robots" content="index,follow">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=1c9751b0ccbe">
+    <script defer src="/static/js/tmr-sitewide.js?v=10eb052d2ca0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root { --bg:#FFFFFF; --panel:#FFFFFF; --line:#D2DEEA;
+                --text:#07182A; --muted:#2E4459; --faint:#5E7590;
+                --cyan:#0C948C; --gold:#B98505; --gold-bright:#B98505; --justbet:#B98505; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+            background: radial-gradient(circle at 8% 0%, rgba(185,133,5,0.08), transparent 28%),
+                        linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 58%, #FFFFFF 100%); }
+        a { color: inherit; text-decoration: none; }
+        .page { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 64px; }
+        h1, h2 { margin: 0; font-family: "Barlow","Inter",sans-serif; font-weight: 900; }
+        .panel { border: 1px solid var(--line); background: linear-gradient(180deg, #F6F9FC, #FFFFFF); box-shadow: 0 22px 58px rgba(7,24,42,0.095); border-radius: 18px; padding: 26px 28px; margin-top: 18px; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; background: rgba(185,133,5,0.12); border: 1px solid rgba(185,133,5,.30); color: #B98505; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; }
+        h1 { font-size: clamp(1.7rem, 3.6vw, 2.2rem); margin-top: 10px; }
+        h2 { font-size: 1.05rem; }
+        .lead { color: var(--muted); margin: 10px 0 0; line-height: 1.55; }
+        .sub { color: var(--faint); font-size: 0.82rem; line-height: 1.5; }
+        .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-top: 18px; }
+        .stat { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #FFFFFF; }
+        .stat .k { font-size: 0.7rem; color: var(--faint); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; }
+        .stat .v { margin-top: 6px; font-family: "Barlow",sans-serif; font-weight: 900; font-size: 1.4rem; color: #07182A; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+        .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color: #1a1206; font-weight: 900; font-size: 0.9rem; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid rgba(185,133,5,.30); }
+        .cta-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; background: rgba(7,24,42,0.06); color: var(--text); border: 1px solid var(--line); font-weight: 700; font-size: 0.85rem; }
+        .block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .refresh-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; cursor: pointer; border: 1px solid var(--line); background: #FFFFFF; }
+        .refresh-btn:hover { color: var(--text); border-color: rgba(12,148,140,.28); }
+
+        .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); margin-top: 4px; }
+        table.contest-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        table.contest-table thead { background: linear-gradient(180deg, rgba(12,148,140,0.08), transparent); }
+        table.contest-table th { text-align: left; padding: 8px 12px; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 800; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        table.contest-table td { padding: 8px 12px; border-bottom: 1px solid #D2DEEA; color: #07182A; white-space: nowrap; line-height: 1.3; }
+        table.contest-table tr:last-child td { border-bottom: 0; }
+        table.contest-table tbody tr:hover { background: rgba(12,148,140,0.08); }
+        table.contest-table th.num, table.contest-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        table.contest-table td a { font-weight: 700; }
+        table.contest-table td a:hover { color: var(--cyan); }
+        .lb-rank { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 8px; background: rgba(7,24,42,0.06); border: 1px solid var(--line); font-family: "Barlow",sans-serif; font-weight: 900; font-size: 0.84rem; }
+        .lb-rank.r1 { background: linear-gradient(180deg, #E6C15A, var(--gold)); color: #1a1206; border-color: rgba(185,133,5,.45); }
+        .lb-rank.r2 { background: linear-gradient(180deg, #e2e8f0, #94a3b8); color: #0f172a; }
+        .lb-rank.r3 { background: linear-gradient(180deg, #C79A46, #B98505); color: #07182A; }
+        .tie-tag { margin-left: 6px; font-size: 0.66rem; color: var(--faint); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+        .units-pos { color: #0A8B4E; font-weight: 800; }
+        .units-neg { color: #BC372E; font-weight: 800; }
+        .units-zero { color: var(--muted); font-weight: 800; }
+        .empty-state { padding: 34px 22px; text-align: center; color: var(--muted); font-size: 0.95rem; border-radius: 12px; border: 1px dashed var(--line); background: rgba(7,24,42,0.048); }
+        .table-foot { margin-top: 10px; color: var(--faint); font-size: 0.8rem; line-height: 1.55; }
+        .table-foot strong { color: var(--muted); }
+
+        /* REVEALED PICKS. Sealed rows show a lock and nothing else; the API has
+           already stripped the side, line, odds and units from a sealed row, so
+           there is nothing here to leak. */
+        .reveal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 4px; }
+        .game-card { border: 1px solid var(--line); background: #FFFFFF; border-radius: 12px; padding: 11px 13px; min-width: 0; }
+        .game-card.is-live { border-color: rgba(12,148,140,.42); box-shadow: 0 0 0 1px rgba(12,148,140,.10) inset; }
+        .g-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+        .g-teams { font-family: "Barlow",sans-serif; font-weight: 900; font-size: 0.94rem; }
+        .g-teams .at { color: var(--faint); margin: 0 5px; font-weight: 700; }
+        .g-time { font-size: 0.72rem; color: var(--faint); font-weight: 700; white-space: nowrap; }
+        .g-state { margin-top: 3px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+        .g-state.sealed { color: var(--faint); }
+        .g-state.open { color: #07736D; }
+        .picks { margin-top: 9px; display: flex; flex-direction: column; gap: 5px; }
+        .pchip { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; line-height: 1.3; padding: 5px 8px; border-radius: 8px; background: rgba(7,24,42,0.04); border: 1px solid transparent; }
+        .pchip .pu { font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .pchip .ps { color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .pchip .po { font-family: "Barlow",sans-serif; font-weight: 900; }
+        .pchip .pn { font-family: "Barlow",sans-serif; font-weight: 900; font-size: 0.74rem; }
+        .pchip.sealed .ps { color: var(--faint); }
+        .pchip.res-won { background: rgba(10,139,78,0.10); border-color: rgba(10,139,78,.24); }
+        .pchip.res-lost { background: rgba(188,55,46,0.09); border-color: rgba(188,55,46,.22); }
+        .pchip.res-push, .pchip.res-void { background: rgba(7,24,42,0.06); border-color: var(--line); }
+        .none { color: var(--faint); font-size: 0.78rem; }
+        .rules-note { margin-top: 18px; padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(12,148,140,.28); background: rgba(7,24,42,0.06); color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
+        .rules-note strong { color: #07736D; }
+        .rules-note ul { margin: 8px 0 0; padding-left: 18px; }
+        .rules-note li { margin: 4px 0; }
+        @media (max-width: 640px) {
+            .panel { padding: 20px 16px; }
+            table.contest-table { font-size: 0.8rem; }
+            table.contest-table th, table.contest-table td { padding: 6px 8px; }
+            .reveal-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "JustBet MLB Contest", "item": "https://trustmyrecord.com/contests/justbet-mlb/"}, {"@type": "ListItem", "position": 3, "name": "Leaderboard", "item": "https://trustmyrecord.com/contests/justbet-mlb/leaderboard/"}]}
+</script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=326340cf3287">
+<script defer src="/static/js/tmr-linkhub.js?v=624f44f1bbc7"></script>
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=8e042cdd8bd6">
+</head>
+<body class="tmr-light">
+    <div id="tmr-nav-placeholder"></div>
+
+    <main class="page">
+        <section class="panel">
+            <span class="eyebrow"><i class="fa-solid fa-trophy"></i> Live Standings</span>
+            <h1>JustBet MLB Contest Leaderboard</h1>
+            <p class="lead">
+                Contest standings only. These numbers come from contest picks alone and are completely separate from
+                every entrant's regular TrustMyRecord profile record, ROI and pick history. Nothing on this page
+                affects a member's public record, and nothing from their public record affects this page.
+            </p>
+
+            <div class="stat-row">
+                <div class="stat"><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
+                <div class="stat"><div class="k">Ranked Entrants</div><div class="v" id="stat-entrants">—</div></div>
+                <div class="stat"><div class="k">Picks Graded</div><div class="v" id="stat-graded">—</div></div>
+                <div class="stat"><div class="k">Awaiting Result</div><div class="v" id="stat-pending">—</div></div>
+                <div class="stat"><div class="k">Contest Status</div><div class="v" id="stat-state">—</div></div>
+            </div>
+            <p class="sub" id="contest-window" style="margin-top:12px;"></p>
+
+            <div class="actions">
+                <a class="cta-primary" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-baseball"></i> Make a Contest Pick</a>
+                <a class="cta-ghost" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-chart-line"></i> Contest Dashboard</a>
+                <a class="cta-ghost" href="/contests/justbet-mlb/"><i class="fa-solid fa-circle-info"></i> Contest Rules</a>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="block-head">
+                <h2>Standings</h2>
+                <button class="refresh-btn" id="refresh-lb" type="button"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <div class="table-wrap">
+                <table class="contest-table" aria-label="Contest leaderboard">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Entrant</th>
+                            <th class="num">Picks</th>
+                            <th class="num">W</th>
+                            <th class="num">L</th>
+                            <th class="num">P</th>
+                            <th class="num">V</th>
+                            <th class="num">Win %</th>
+                            <th class="num">Net Units</th>
+                            <th class="num">Pending</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lb-body">
+                        <tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading standings…</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="table-foot" id="lb-foot"></p>
+        </section>
+
+        <section class="panel">
+            <div class="block-head">
+                <h2>Today's Picks</h2>
+                <button class="refresh-btn" id="refresh-reveal" type="button"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <p class="sub">
+                Every pick is hidden from everyone until that game's first pitch. The moment a game starts, every
+                entrant's pick on that game is revealed in full: side, line, odds and units. This page refreshes
+                itself every 60 seconds, so reveals appear on their own.
+            </p>
+            <div class="reveal-grid" id="reveal-grid" style="margin-top:14px;">
+                <div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-baseball"></i>Loading today's board…</div>
+            </div>
+            <p class="table-foot" id="reveal-foot"></p>
+        </section>
+
+        <section class="panel">
+            <h2>How standings are calculated</h2>
+            <div class="rules-note">
+                <strong>Scoring:</strong> net units across every contest pick, using the standard TrustMyRecord unit
+                P/L formula. A winner at a minus price pays the stated units; a winner at a plus price pays units
+                multiplied by the price over 100. A loser at a minus price costs units multiplied by the price over
+                100; a loser at a plus price costs the stated units.
+                <ul>
+                    <li><strong>Push:</strong> scores 0 units. It is not a win and not a loss.</li>
+                    <li><strong>Postponed or cancelled:</strong> the pick is voided and scores 0 units. It does not count as a win, a loss or a push.</li>
+                    <li><strong>Ranking:</strong> net units first. Level on net units breaks to the better win percentage, then to whoever submitted their first contest pick earliest.</li>
+                    <li><strong>Isolation:</strong> contest picks live in their own table and never appear in a member's public record, profile stats, grading history or the site-wide leaderboard.</li>
+                    <li><strong>Grading source:</strong> final scores come from the same ingested game results the rest of the site grades against. Results update automatically within about 15 minutes of a game going final.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <div id="tmr-footer-placeholder"></div>
+
+    <script>
+    (function () {
+        var CONTEST_ID = 'justbet-mlb';
+        var API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var API = function (path) { return API_BASE + '/api/contests/' + CONTEST_ID + path; };
+        function $(s) { return document.querySelector(s); }
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+            });
+        }
+        function fmtOdds(n) {
+            if (n === null || n === undefined || n === '') return '';
+            var v = Number(n);
+            if (!isFinite(v)) return String(n);
+            return v > 0 ? '+' + v : String(v);
+        }
+        function signedLine(v) {
+            if (v === null || v === undefined || v === '') return '';
+            var n = Number(v);
+            if (!isFinite(n)) return ' ' + String(v);
+            if (n === 0) return ' PK';
+            return ' ' + (n > 0 ? '+' : '') + n;
+        }
+        function fmtTime(iso) {
+            if (!iso) return '';
+            try {
+                return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            } catch (e) { return ''; }
+        }
+        function pct(v) { return (v === null || v === undefined) ? '—' : (Number(v) * 100).toFixed(1) + '%'; }
+        function teamNick(name) {
+            var parts = String(name || '').trim().split(/\s+/);
+            if (parts.length >= 2 && ['Red', 'White', 'Blue'].indexOf(parts[parts.length - 2]) !== -1) {
+                return parts.slice(-2).join(' ');
+            }
+            return parts[parts.length - 1] || String(name || '');
+        }
+
+        // ---------------- contest metadata ----------------
+        function loadMeta() {
+            return fetch(API(''), { credentials: 'include' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (c) {
+                    if (!c) return;
+                    var now = Date.now();
+                    var startMs = c.starts_at ? new Date(c.starts_at).getTime() : null;
+                    var endMs = c.ends_at ? new Date(c.ends_at).getTime() : null;
+                    var started = !!c.is_active && (startMs === null || now >= startMs);
+                    var open = started && (endMs === null || now < endMs);
+                    var state = !c.is_active ? 'Closed' : (!started ? 'Not Started' : (open ? 'Live' : 'Final'));
+                    // Guard the stale-placeholder case: a window that closed with
+                    // no picks at all never actually ran.
+                    if (state === 'Final' && $('#stat-graded') && $('#stat-graded').textContent === '0'
+                        && $('#stat-pending') && $('#stat-pending').textContent === '0') {
+                        state = 'Not Started';
+                    }
+                    var el = $('#stat-state');
+                    if (el) el.textContent = state;
+                    var win = $('#contest-window');
+                    if (win) {
+                        win.textContent = (startMs || endMs)
+                            ? 'Contest window: ' + (startMs ? fmtTime(c.starts_at) : 'open') + ' to ' + (endMs ? fmtTime(c.ends_at) : 'open') + ' (your local time). Each pick locks at that game’s first pitch.'
+                            : 'Contest window: to be announced.';
+                    }
+                })
+                .catch(function () { /* the standings still render on their own */ });
+        }
+
+        // ---------------- standings ----------------
+        // CONTEST DATA ONLY. This reads /api/contests/justbet-mlb/leaderboard,
+        // which aggregates tmr_contest_picks for the registered contest field.
+        // It must never fall back to /api/users/leaderboard, which is the
+        // site-wide record and a completely different number.
+        function renderLeaderboard(data) {
+            var body = $('#lb-body');
+            var foot = $('#lb-foot');
+            var rows = (data && Object.prototype.toString.call(data.entries) === '[object Array]') ? data.entries : [];
+            var graded = 0, pending = 0;
+            rows.forEach(function (e) {
+                graded += (e.wins || 0) + (e.losses || 0) + (e.pushes || 0) + (e.voids || 0);
+                pending += (e.pending || 0);
+            });
+            var se = $('#stat-entrants'); if (se) se.textContent = rows.length;
+            var sg = $('#stat-graded'); if (sg) sg.textContent = graded;
+            var sp = $('#stat-pending'); if (sp) sp.textContent = pending;
+
+            if (!rows.length) {
+                body.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-trophy"></i>'
+                    + 'No contest picks yet. Standings appear here as soon as entrants start submitting.'
+                    + '</div></td></tr>';
+                if (foot) foot.textContent = '';
+                return;
+            }
+            body.innerHTML = rows.map(function (e) {
+                var rankCls = e.rank === 1 ? 'r1' : e.rank === 2 ? 'r2' : e.rank === 3 ? 'r3' : '';
+                var net = Number(e.units_net) || 0;
+                var netCls = net > 0 ? 'units-pos' : (net < 0 ? 'units-neg' : 'units-zero');
+                // A null or missing field must render a dash, never blank the row
+                // and never throw.
+                var uname = (e.username === null || e.username === undefined) ? '' : String(e.username);
+                var nameCell = uname
+                    ? '<a href="/profile/' + encodeURIComponent(uname) + '/">' + escapeHtml(uname) + '</a>'
+                    : '<span class="units-zero">—</span>';
+                return '<tr>'
+                    + '<td><span class="lb-rank ' + rankCls + '">' + (e.rank || '—') + '</span>'
+                    + (e.tied_on_units ? '<span class="tie-tag">tied</span>' : '') + '</td>'
+                    + '<td>' + nameCell + '</td>'
+                    + '<td class="num">' + (e.picks_used || 0) + ' / ' + (e.picks_max || 50) + '</td>'
+                    + '<td class="num">' + (e.wins || 0) + '</td>'
+                    + '<td class="num">' + (e.losses || 0) + '</td>'
+                    + '<td class="num">' + (e.pushes || 0) + '</td>'
+                    + '<td class="num">' + (e.voids || 0) + '</td>'
+                    + '<td class="num">' + pct(e.win_pct) + '</td>'
+                    + '<td class="num ' + netCls + '">' + (net > 0 ? '+' : '') + net.toFixed(2) + '</td>'
+                    + '<td class="num">' + (e.pending || 0) + '</td>'
+                    + '</tr>';
+            }).join('');
+            if (foot) {
+                foot.innerHTML = '<strong>' + rows.length + '</strong> ranked entrant'
+                    + (rows.length === 1 ? '' : 's') + '. Ranked by '
+                    + escapeHtml(data.ranking_rule || 'net units') + '. '
+                    + 'W wins, L losses, P pushes, V voided (postponed or cancelled). '
+                    + 'Pushes and voids score 0 units and are excluded from win percentage.';
+            }
+        }
+        function loadLeaderboard() {
+            return fetch(API('/leaderboard'), { credentials: 'include' })
+                .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(renderLeaderboard)
+                .catch(function () {
+                    $('#lb-body').innerHTML = '<tr><td colspan="10"><div class="empty-state">'
+                        + '<i class="fa-solid fa-triangle-exclamation"></i>Standings temporarily unavailable. Try refresh.'
+                        + '</div></td></tr>';
+                });
+        }
+
+        // ---------------- reveal board ----------------
+        function pickChip(p) {
+            if (p.sealed) {
+                return '<div class="pchip sealed"><span class="pu">' + escapeHtml(p.username) + '</span>'
+                    + '<span class="ps"><i class="fa-solid fa-lock"></i> Sealed until first pitch</span></div>';
+            }
+            var res = (p.result && p.result !== 'pending') ? p.result : '';
+            var cls = res === 'won' ? 'res-won' : res === 'lost' ? 'res-lost'
+                : res === 'push' ? 'res-push' : res === 'void' ? 'res-void' : '';
+            var net = '';
+            if (p.units_net !== null && p.units_net !== undefined) {
+                var n = Number(p.units_net);
+                var c = n > 0 ? 'units-pos' : (n < 0 ? 'units-neg' : 'units-zero');
+                net = '<span class="pn ' + c + '">' + (n > 0 ? '+' : '') + n.toFixed(2) + 'u</span>';
+            }
+            var units = (p.units !== null && p.units !== undefined) ? ' · ' + Number(p.units).toFixed(1) + 'u' : '';
+            return '<div class="pchip ' + cls + '">'
+                + '<span class="pu">' + escapeHtml(p.username) + '</span>'
+                + '<span class="ps">' + escapeHtml(teamNick(p.selection) || p.selection) + escapeHtml(signedLine(p.line))
+                + ' <span class="po">' + fmtOdds(p.odds) + '</span>' + escapeHtml(units) + '</span>'
+                + net + '</div>';
+        }
+        function renderReveal(games, picks) {
+            var grid = $('#reveal-grid');
+            var foot = $('#reveal-foot');
+            var map = {};
+            (games || []).forEach(function (g) {
+                var label = g.away_team + ' @ ' + g.home_team;
+                map[label] = { label: label, away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] };
+            });
+            // Never drop a real pick because its game is missing from the slate.
+            (picks || []).forEach(function (p) {
+                if (!map[p.game]) {
+                    var parts = String(p.game).split(' @ ');
+                    map[p.game] = { label: p.game, away: parts[0] || p.game, home: parts[1] || '', start: p.game_start_at, picks: [] };
+                }
+                map[p.game].picks.push(p);
+            });
+            var cards = Object.keys(map).map(function (k) { return map[k]; })
+                .filter(function (c) { return c.picks.length > 0; })
+                .sort(function (a, b) { return new Date(a.start || 0) - new Date(b.start || 0); });
+
+            if (!cards.length) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">'
+                    + '<i class="fa-solid fa-baseball"></i>No contest picks on today’s board yet.</div>';
+                if (foot) foot.textContent = '';
+                return;
+            }
+            var now = Date.now();
+            var sealedCount = 0, revealedCount = 0;
+            grid.innerHTML = cards.map(function (c) {
+                var started = c.start && new Date(c.start).getTime() <= now;
+                var sealed = c.picks.filter(function (p) { return p.sealed; }).length;
+                sealedCount += sealed;
+                revealedCount += (c.picks.length - sealed);
+                var state = sealed
+                    ? '<div class="g-state sealed"><i class="fa-solid fa-lock"></i> ' + sealed + ' sealed until first pitch</div>'
+                    : '<div class="g-state open"><i class="fa-solid fa-lock-open"></i> Revealed</div>';
+                return '<div class="game-card' + (started ? ' is-live' : '') + '">'
+                    + '<div class="g-head"><span class="g-teams">' + escapeHtml(teamNick(c.away))
+                    + '<span class="at">@</span>' + escapeHtml(teamNick(c.home)) + '</span>'
+                    + '<span class="g-time">' + fmtTime(c.start) + '</span></div>'
+                    + state
+                    + '<div class="picks">' + (c.picks.length ? c.picks.map(pickChip).join('') : '<div class="none">—</div>') + '</div>'
+                    + '</div>';
+            }).join('');
+            if (foot) {
+                foot.innerHTML = '<strong>' + revealedCount + '</strong> revealed · <strong>'
+                    + sealedCount + '</strong> still sealed across <strong>' + cards.length + '</strong> game'
+                    + (cards.length === 1 ? '' : 's') + '. A pick reveals the moment its game starts.';
+            }
+        }
+        function loadReveal() {
+            return Promise.all([
+                fetch(API('/games?scope=full'), { credentials: 'include' }).then(function (r) { return r.ok ? r.json() : { games: [] }; }).catch(function () { return { games: [] }; }),
+                fetch(API('/picks'), { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+            ]).then(function (out) {
+                renderReveal(out[0].games || [], out[1].picks || []);
+            }).catch(function () {
+                $('#reveal-grid').innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">'
+                    + '<i class="fa-solid fa-triangle-exclamation"></i>Board temporarily unavailable. Try refresh.</div>';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadMeta();
+            loadLeaderboard();
+            loadReveal();
+            var rl = $('#refresh-lb');
+            if (rl) rl.addEventListener('click', function () { loadMeta(); loadLeaderboard(); });
+            var rr = $('#refresh-reveal');
+            if (rr) rr.addEventListener('click', loadReveal);
+            // Reveals happen at first pitch and standings move as games go final.
+            // Both refresh on their own so nobody has to reload the page.
+            setInterval(function () { loadLeaderboard(); loadReveal(); }, 60000);
+            setInterval(loadMeta, 300000);
+        });
+    })();
+    </script>
+</body>
+</html>
