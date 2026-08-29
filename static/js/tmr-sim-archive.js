@@ -984,17 +984,124 @@
    * data, so the same renderer serves a batting order, a rotation, a skater
    * list and a passing chart without knowing which it is looking at.
    */
+  /**
+   * EVERY FIELD THE FOUR ENGINES EMIT, WITH THE HEADER A REAL SHEET PRINTS.
+   *
+   * An archived run is rendered generically -- the renderer walks whatever was
+   * stored -- so it can never show FEWER fields than were captured. What it
+   * could do, and did, was show them badly: a column headed `toiEven`, an ice
+   * time reading 18.7 rather than 18:42, a save percentage as 0.912. The
+   * information was all there; the presentation was not.
+   *
+   * These labels cover every field in docs/SIMULATOR_COMPLETENESS.md -- NHL 45,
+   * NBA 44, MLB 51, NFL 47 -- and anything not listed still falls back to its
+   * own key rather than being dropped. Adding a field to an engine can make this
+   * list incomplete; it cannot make it wrong.
+   */
   var COLUMN_LABELS = {
     name: 'Player', player: 'Player', pos: 'Pos', position: 'Pos',
-    ab: 'AB', r: 'R', h: 'H', hr: 'HR', rbi: 'RBI', bb: 'BB', so: 'SO', lob: 'LOB',
-    ip: 'IP', er: 'ER', pitches: 'P',
-    min: 'MIN', pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tov: 'TO',
-    fgm: 'FGM', fga: 'FGA', tpm: '3PM', tpa: '3PA', ftm: 'FTM', fta: 'FTA', plusMinus: '+/-',
-    g: 'G', a: 'A', p: 'P', shots: 'S', hits: 'HIT', blocks: 'BLK', pim: 'PIM', toi: 'TOI',
-    saves: 'SV', goalsAgainst: 'GA', savePct: 'SV%',
-    yards: 'YDS', tds: 'TD', att: 'ATT', comp: 'CMP', ints: 'INT', rec: 'REC', targets: 'TGT',
+    rawPos: 'Pos', order: 'Ord', slot: 'Ord', number: '#', role: 'Role',
+
+    /* baseball -- batting */
+    ab: 'AB', r: 'R', h: 'H', hr: 'HR', rbi: 'RBI', bb: 'BB', so: 'SO',
+    lob: 'LOB', pa: 'PA', b1: '1B', b2: '2B', b3: '3B', tb: 'TB',
+    sb: 'SB', cs: 'CS', sf: 'SF', sh: 'SH', hbp: 'HBP', gidp: 'GIDP',
+    ibb: 'IBB', sub: 'Sub', subRole: 'Role',
+    gameAvg: 'AVG', gameObp: 'OBP', gameSlg: 'SLG', gameOps: 'OPS',
+    seasonAvg: 'SEA AVG', seasonObp: 'SEA OBP', seasonSlg: 'SEA SLG',
+    seasonOps: 'SEA OPS', statSource: 'Source',
+    /* baseball -- pitching */
+    ip: 'IP', er: 'ER', bf: 'BF', pitches: 'PC', strikes: 'ST',
+    fps: 'FPS', whiff: 'SwStr', ir: 'IR', irs: 'IRS', outs: 'Outs',
+    enterMargin: 'Entered', seasonEra: 'SEA ERA',
+
+    /* basketball */
+    min: 'MIN', pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK',
+    tov: 'TO', pf: 'PF', fgm: 'FGM', fga: 'FGA', fgPct: 'FG%',
+    tpm: '3PM', tpa: '3PA', threePct: '3P%', ftm: 'FTM', fta: 'FTA',
+    ftPct: 'FT%', oreb: 'OREB', dreb: 'DREB', plusMinus: '+/-',
+    fouledOut: 'FO', efgPct: 'eFG%', teamRebounds: 'Team REB',
+    pointsOffTurnovers: 'Pts off TO', secondChancePoints: '2nd chance',
+
+    /* hockey -- skaters */
+    g: 'G', a: 'A', p: 'PTS', shots: 'SOG', attempts: 'ATT',
+    hits: 'HIT', blocks: 'BLK', pim: 'PIM', giveaways: 'GV', takeaways: 'TK',
+    faceoffWins: 'FOW', faceoffLosses: 'FOL', faceoffs: 'FO', faceoffPct: 'FO%',
+    ppG: 'PPG', shG: 'SHG', shootingPct: 'S%',
+    toi: 'TOI', toiEven: 'EV TOI', toiPowerPlay: 'PP TOI', toiShortHanded: 'SH TOI',
+    line: 'Line', pair: 'Pair', unit: 'Unit',
+    /* hockey -- goaltenders */
+    saves: 'SV', goalsAgainst: 'GA', savePct: 'SV%', shotsAgainst: 'SA',
+    evenSaves: 'EV SV', evenShots: 'EV SA',
+    powerPlaySaves: 'PP SV', powerPlayShots: 'PP SA',
+    shortHandedSaves: 'SH SV', shortHandedShots: 'SH SA',
+    emptyNetGoalsAgainst: 'EN', emptyNetShotsAgainst: 'EN SA',
+    shutout: 'SO', decision: 'DEC',
+    /* hockey -- team */
+    goals: 'G', powerPlayGoals: 'PPG', powerPlayOpportunities: 'PP',
+    powerPlayPct: 'PP%', shortHandedGoals: 'SHG', evenStrengthGoals: 'EV G',
+
+    /* football */
+    comp: 'CMP', att: 'ATT', yards: 'YDS', td: 'TD', tds: 'TD',
+    int: 'INT', ints: 'INT', sacks: 'SACK', ypa: 'Y/A', rating: 'RTG',
+    carries: 'CAR', ypc: 'Y/C', long: 'LNG', fumbles: 'FUM', kneels: 'KN',
+    rec: 'REC', targets: 'TGT', ypr: 'Y/R'
   };
-  var COLUMN_SKIP = { id: 1, player_id: 1, starter: 1, scenario: 1, status: 1 };
+
+  /**
+   * HOW A VALUE IS PRINTED, WHICH IS A DIFFERENT QUESTION FROM WHAT IT IS CALLED.
+   *
+   * Three kinds of number were printed raw and read wrong:
+   *
+   *   clock    ice time is decimal minutes in the data and 18:42 on a scoreboard
+   *   rate     a batting average or a save percentage is .312 and .912, never
+   *            0.312 or 91.2; a percentage column is 45.8% and not 45.8
+   *   average  a per-attempt figure is one decimal place
+   *
+   * Null is preserved as an em dash throughout. A stat that does not apply -- a
+   * skater who took no draws, a goaltender who faced no power play -- is not
+   * zero, and printing zero would be a false statement about the game.
+   */
+  var CLOCK_KEYS = { toi: 1, toiEven: 1, toiPowerPlay: 1, toiShortHanded: 1, top: 1 };
+  var RATE_KEYS = {
+    savePct: 1, gameAvg: 1, gameObp: 1, gameSlg: 1, gameOps: 1,
+    seasonAvg: 1, seasonObp: 1, seasonSlg: 1, seasonOps: 1
+  };
+  var PERCENT_KEYS = {
+    fgPct: 1, threePct: 1, ftPct: 1, efgPct: 1, faceoffPct: 1,
+    shootingPct: 1, powerPlayPct: 1
+  };
+  var ONE_DP_KEYS = { ypa: 1, ypc: 1, ypr: 1, min: 1 };
+  // An earned run average is printed to two places, always. 3.4 is not an ERA.
+  var TWO_DP_KEYS = { seasonEra: 1, era: 1, gaa: 1 };
+
+  function clockFrom(minutes) {
+    var m = Math.floor(minutes);
+    var sec = Math.round((minutes - m) * 60);
+    if (sec === 60) { m += 1; sec = 0; }
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function cellText(key, value) {
+    if (value === null || value === undefined || value === '') return '—';
+    if (typeof value === 'boolean') return value ? 'Yes' : '—';
+    if (typeof value !== 'number') return String(value);
+    if (!isFinite(value)) return '—';
+    if (CLOCK_KEYS[key]) return clockFrom(value);
+    if (RATE_KEYS[key]) return value.toFixed(3).replace(/^0/, '');
+    if (PERCENT_KEYS[key]) return value.toFixed(1) + '%';
+    if (TWO_DP_KEYS[key]) return value.toFixed(2);
+    if (ONE_DP_KEYS[key]) return value.toFixed(1);
+    if (Math.abs(value - Math.round(value)) < 1e-9) return String(Math.round(value));
+    return String(Math.round(value * 10) / 10);
+  }
+
+  // `starter` is no longer skipped. It is what separates a starting five from a
+  // bench, and dropping it was why an archived basketball box could not show a
+  // distinction the live one does. It is consumed for grouping rather than
+  // printed as a column, so it leaves the table after the split.
+  var COLUMN_SKIP = { id: 1, player_id: 1, scenario: 1, status: 1 };
+  var GROUPING_KEYS = { starter: 1 };
 
   /**
    * The order a box score is read in.
@@ -1006,18 +1113,25 @@
    * incoming order and follows the named columns.
    */
   var COLUMN_ORDER = [
-    'name', 'player', 'pos', 'position', 'order',
+    'name', 'player', 'pos', 'position', 'rawPos', 'order', 'slot', 'number',
     // baseball, batting then pitching
-    'ab', 'r', 'h', 'double', 'triple', 'hr', 'rbi', 'bb', 'so', 'lob', 'sb', 'avg',
-    'ip', 'er', 'pitches',
+    'ab', 'r', 'h', 'b2', 'b3', 'hr', 'rbi', 'bb', 'so', 'pa', 'tb', 'lob',
+    'sb', 'cs', 'sf', 'sh', 'hbp', 'gidp', 'ibb',
+    'gameAvg', 'gameObp', 'gameSlg', 'gameOps',
+    'seasonAvg', 'seasonObp', 'seasonSlg', 'seasonOps',
+    'ip', 'er', 'bf', 'pitches', 'strikes', 'fps', 'whiff', 'ir', 'irs', 'seasonEra',
     // basketball
     'min', 'pts', 'fgm', 'fga', 'fgPct', 'tpm', 'tpa', 'threePct', 'ftm', 'fta', 'ftPct',
     'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'tov', 'pf', 'plusMinus',
     // hockey
-    'g', 'a', 'p', 'shots', 'hits', 'blocks', 'pim', 'giveaways', 'takeaways',
-    'faceoffWins', 'toi', 'saves', 'goalsAgainst', 'savePct',
+    'g', 'a', 'p', 'shots', 'attempts', 'hits', 'blocks', 'pim', 'giveaways', 'takeaways',
+    'faceoffWins', 'faceoffLosses', 'faceoffPct', 'ppG', 'shG', 'shootingPct',
+    'toi', 'toiEven', 'toiPowerPlay', 'toiShortHanded',
+    'shotsAgainst', 'saves', 'goalsAgainst', 'savePct',
+    'evenSaves', 'powerPlaySaves', 'shortHandedSaves', 'emptyNetGoalsAgainst', 'decision',
     // football
-    'comp', 'att', 'yards', 'tds', 'ints', 'rec', 'targets', 'long',
+    'comp', 'att', 'yards', 'ypa', 'td', 'tds', 'int', 'ints', 'rating',
+    'carries', 'ypc', 'rec', 'targets', 'ypr', 'long', 'fumbles', 'sacks',
   ];
   var COLUMN_RANK = {};
   COLUMN_ORDER.forEach(function (k, i) { COLUMN_RANK[k] = i; });
@@ -1036,7 +1150,7 @@
     var keys = [];
     rows.forEach(function (r) {
       Object.keys(r || {}).forEach(function (k) {
-        if (COLUMN_SKIP[k]) return;
+        if (COLUMN_SKIP[k] || GROUPING_KEYS[k]) return;
         var v = r[k];
         if (v !== null && typeof v === 'object') return;
         if (keys.indexOf(k) === -1) keys.push(k);
@@ -1064,7 +1178,7 @@
       keys.forEach(function (k) {
         var v = r[k];
         tr.appendChild(el('td', typeof v === 'number' ? 'sa-num' : null,
-          v === null || v === undefined ? '—' : String(v)));
+          cellText(k, v)));
       });
       tbody.appendChild(tr);
     });
@@ -1075,6 +1189,36 @@
   }
 
   /** Walks a details blob and renders every player list it can find. */
+  /**
+   * STARTERS AND BENCH ARE TWO TABLES, WHERE THE SPORT SAYS SO.
+   *
+   * A basketball box score is read as a starting five and then everybody else,
+   * and the archived view showed one undifferentiated list because the `starter`
+   * flag was being skipped before it reached the renderer. The flag is on the
+   * stored rows, so this needs no new data -- only for the split to be made.
+   *
+   * It splits only when the list actually carries the distinction and has men on
+   * both sides of it. A hockey skater list, a pitching line and a receiving
+   * table have no starters in this sense and stay whole, which is why this is
+   * conditional rather than applied everywhere.
+   */
+  function pushSplit(out, rows, caption) {
+    var hasFlag = rows.some(function (r) { return r && r.starter !== undefined; });
+    if (hasFlag) {
+      var starters = rows.filter(function (r) { return r && r.starter; });
+      var bench = rows.filter(function (r) { return r && !r.starter; });
+      if (starters.length && bench.length) {
+        var a = playerTable(starters, caption + ' \u00b7 starters');
+        var b = playerTable(bench, caption + ' \u00b7 bench');
+        if (a) out.push(a);
+        if (b) out.push(b);
+        return;
+      }
+    }
+    var t = playerTable(rows, caption);
+    if (t) out.push(t);
+  }
+
   function playerSections(details, run) {
     var out = [];
     var box = details.box_score || {};
@@ -1088,8 +1232,7 @@
         var value = data[listKey];
         if (!Array.isArray(value) || !value.length) return;
         if (typeof value[0] !== 'object') return;
-        var t = playerTable(value, (side.name || side.abbr) + ' — ' + listKey.replace(/_/g, ' '));
-        if (t) out.push(t);
+        pushSplit(out, value, (side.name || side.abbr) + ' \u2014 ' + listKey.replace(/_/g, ' '));
       });
     });
     // MLB's client-side simulator sends its lines under player_stats instead.
@@ -1101,8 +1244,7 @@
       Object.keys(data).forEach(function (listKey) {
         var value = data[listKey];
         if (!Array.isArray(value) || !value.length || typeof value[0] !== 'object') return;
-        var t = playerTable(value, (side.name || side.abbr) + ' — ' + listKey.replace(/_/g, ' '));
-        if (t) out.push(t);
+        pushSplit(out, value, (side.name || side.abbr) + ' \u2014 ' + listKey.replace(/_/g, ' '));
       });
     });
     return out;
