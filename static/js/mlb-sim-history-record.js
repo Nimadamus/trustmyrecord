@@ -314,6 +314,21 @@
       // form, and it is passed straight into simulate(), so a replay that
       // omitted it would be replaying a different call.
       if (s.state.activeLiveContext) { out.__activeContext = s.state.activeLiveContext; any = true; }
+      // THE TWO TEAM OBJECTS THE ENGINE WAS HANDED.
+      //
+      // simulate(away, home, ...) takes them as arguments and they carry the
+      // live season ratings the page resolved, so a replay that rebuilt them
+      // from the engine's static local pool was simulating two different clubs
+      // with the same abbreviations. That was the last divergence: a stored
+      // 1-2 replaying as 1-0.
+      try {
+        var res = s.state.simulation;
+        if (res && res.away && res.home) {
+          out.__awayTeam = res.away;
+          out.__homeTeam = res.home;
+          any = true;
+        }
+      } catch (e) { /* the rest of the snapshot is still worth sending */ }
       return any ? out : null;
     } catch (e) { return null; }
   }

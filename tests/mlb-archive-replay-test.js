@@ -159,7 +159,20 @@ function teamByAbbr(sim, abbr) {
     }
 
     const engine = loadEngine();
-    engine.state.simulationCount = Number(full.n_sims) || 10;
+    // THE SETTINGS THE RUN WAS MADE WITH, NOT THE DEFAULTS.
+    //
+    // The engine picks its probable pitchers and its weather off state when the
+    // caller has not chosen them, so a replay that skipped the archived
+    // selections was replaying a different configuration with the same seed --
+    // which is what took a stored 1-2 to a replayed 1-0.
+    const st = (full.details && full.details.settings) || {};
+    engine.state.simulationCount = Number(st.simulation_count) || Number(full.n_sims) || 10;
+    if (st.away_pitcher_id) engine.state.awayPitcherId = st.away_pitcher_id;
+    if (st.home_pitcher_id) engine.state.homePitcherId = st.home_pitcher_id;
+    if (st.away_pitcher_id) engine.state.awayPitcherTouched = true;
+    if (st.home_pitcher_id) engine.state.homePitcherTouched = true;
+    if (st.weather) engine.state.simWeatherCondition = st.weather;
+    if (st.data_mode) engine.state.dataMode = st.data_mode;
     const at = teamByAbbr(engine, away);
     const ht = teamByAbbr(engine, home);
     if (!at || !ht) {
@@ -178,6 +191,10 @@ function teamByAbbr(sim, abbr) {
     // played, and the per-game context object is handed to simulate() as the
     // argument the original call received.
     let injectedContext = {};
+    // The team objects the engine was handed, rather than ones rebuilt from its
+    // static pool: they carry the live season ratings the page resolved.
+    let archivedAway = null;
+    let archivedHome = null;
     if (full.model_version) {
       const snap = await get(BASE + '/api/sim-archive/model-snapshot?version='
         + encodeURIComponent(full.model_version));
@@ -187,7 +204,11 @@ function teamByAbbr(sim, abbr) {
           const state = JSON.parse(zlib.gunzipSync(
             Buffer.from(snap.payload_gz_base64, 'base64')).toString('utf8'));
           injectedContext = state.__activeContext || {};
+          archivedAway = state.__awayTeam || null;
+          archivedHome = state.__homeTeam || null;
           delete state.__activeContext;
+          delete state.__awayTeam;
+          delete state.__homeTeam;
           for (const k of Object.keys(state)) engine.state.liveContext[k] = state[k];
         } catch (e) { /* replay falls back and is reported as PARTIAL */ }
       }
@@ -195,7 +216,8 @@ function teamByAbbr(sim, abbr) {
 
     let out;
     try {
-      out = engine.simulate(at, ht, injectedContext, seed, false, null);
+      out = engine.simulate(archivedAway || at, archivedHome || ht, injectedContext, seed, false,
+        st.weather || null);
     } catch (e) {
       tally.NOT_REPRODUCIBLE += 1;
       reasons.push('run ' + r.id + ': replay threw ' + e.message);
