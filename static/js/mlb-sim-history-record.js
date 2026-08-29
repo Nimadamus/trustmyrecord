@@ -296,6 +296,48 @@
     'teamOaa', 'statcast'
   ];
 
+  /**
+   * THE CONFIRMED LINEUP LIVES IN THE TWO BLOBS I FIRST EXCLUDED.
+   *
+   * boardGames and espnSummaries were left out of the whitelist because they are
+   * 3.3MB and 4.3MB and looked like page furniture. They are not: the engine
+   * reads `state.liveContext.boardGames` to find tonight's game and
+   * `state.liveContext.espnSummaries[id]` to read its CONFIRMED batting order.
+   * Excluding them by size rather than by use is why the first replay came back
+   * with the right players in the wrong order.
+   *
+   * Sending them whole is not the answer either -- eight megabytes of scoreboard
+   * to reproduce one game. Only the entries for THIS matchup are sent, which is
+   * a few kilobytes and is the part the simulation actually read.
+   */
+  function matchupSlice(lc, awayAbbr, homeAbbr) {
+    var out = { boardGames: [], espnSummaries: {} };
+    try {
+      var want = [String(awayAbbr || '').toUpperCase(), String(homeAbbr || '').toUpperCase()];
+      var board = lc.boardGames || [];
+      for (var i = 0; i < board.length; i += 1) {
+        var g = board[i];
+        var txt = JSON.stringify(g || {}).toUpperCase();
+        if (txt.indexOf('"' + want[0] + '"') === -1 && txt.indexOf('"' + want[1] + '"') === -1) continue;
+        out.boardGames.push(g);
+        var id = g && (g.id || g.gameId || g.uid);
+        if (id && lc.espnSummaries && lc.espnSummaries[id]) out.espnSummaries[id] = lc.espnSummaries[id];
+      }
+      // Whatever summaries the page holds for those ids, plus any summary whose
+      // own payload names both clubs -- the id on a board entry is not always
+      // the key a summary is filed under.
+      var keys = Object.keys(lc.espnSummaries || {});
+      for (var j = 0; j < keys.length && Object.keys(out.espnSummaries).length < 4; j += 1) {
+        var sum = lc.espnSummaries[keys[j]];
+        var st = JSON.stringify(sum || {}).toUpperCase();
+        if (st.indexOf('"' + want[0] + '"') !== -1 && st.indexOf('"' + want[1] + '"') !== -1) {
+          out.espnSummaries[keys[j]] = sum;
+        }
+      }
+    } catch (e) { /* the rest of the snapshot is still worth sending */ }
+    return out;
+  }
+
   function modelInputs() {
     try {
       var s = sim();
@@ -327,6 +369,11 @@
           out.__awayTeam = res.away;
           out.__homeTeam = res.home;
           any = true;
+          // Only this matchup's board entry and summary: the confirmed batting
+          // order the engine read, without the other thirty games.
+          var slice = matchupSlice(lc, res.away.abbreviation, res.home.abbreviation);
+          if (slice.boardGames.length) { out.boardGames = slice.boardGames; }
+          if (Object.keys(slice.espnSummaries).length) { out.espnSummaries = slice.espnSummaries; }
         }
       } catch (e) { /* the rest of the snapshot is still worth sending */ }
       return any ? out : null;
