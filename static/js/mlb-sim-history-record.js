@@ -310,29 +310,45 @@
    * to reproduce one game. Only the entries for THIS matchup are sent, which is
    * a few kilobytes and is the part the simulation actually read.
    */
-  function matchupSlice(lc, awayAbbr, homeAbbr) {
-    var out = { boardGames: [], espnSummaries: {} };
+  function matchupSlice(lc, awayTeam, homeTeam) {
+    var out = { boardGames: [], espnSummaries: {}, espnEvents: [], scheduleGames: [] };
     try {
-      var want = [String(awayAbbr || '').toUpperCase(), String(homeAbbr || '').toUpperCase()];
-      var board = lc.boardGames || [];
-      for (var i = 0; i < board.length; i += 1) {
-        var g = board[i];
-        var txt = JSON.stringify(g || {}).toUpperCase();
-        if (txt.indexOf('"' + want[0] + '"') === -1 && txt.indexOf('"' + want[1] + '"') === -1) continue;
-        out.boardGames.push(g);
-        var id = g && (g.id || g.gameId || g.uid);
-        if (id && lc.espnSummaries && lc.espnSummaries[id]) out.espnSummaries[id] = lc.espnSummaries[id];
-      }
-      // Whatever summaries the page holds for those ids, plus any summary whose
-      // own payload names both clubs -- the id on a board entry is not always
-      // the key a summary is filed under.
-      var keys = Object.keys(lc.espnSummaries || {});
-      for (var j = 0; j < keys.length && Object.keys(out.espnSummaries).length < 4; j += 1) {
-        var sum = lc.espnSummaries[keys[j]];
-        var st = JSON.stringify(sum || {}).toUpperCase();
-        if (st.indexOf('"' + want[0] + '"') !== -1 && st.indexOf('"' + want[1] + '"') !== -1) {
-          out.espnSummaries[keys[j]] = sum;
+      // MATCH ON THE TEAM NAME, WHICH IS WHAT THE ENGINE MATCHES ON.
+      //
+      // The first version filtered on abbreviations and selected nothing,
+      // because ESPN records carry full club names -- the engine's own
+      // teamsMatch() compares normalised NAMES. Filtering on the wrong key is
+      // why the replay lost the confirmed batting order and rebuilt one of its
+      // own, dropping the number-two hitter and shifting everybody up.
+      var norm = function (v) {
+        return String(v == null ? '' : v).toLowerCase().replace(/[^a-z0-9]/g, '');
+      };
+      var names = [norm(awayTeam && awayTeam.name), norm(homeTeam && homeTeam.name)]
+        .filter(Boolean);
+      if (names.length < 2) return out;
+      var hits = function (obj) {
+        var t = norm(JSON.stringify(obj || {}));
+        return t.indexOf(names[0]) !== -1 && t.indexOf(names[1]) !== -1;
+      };
+
+      var events = lc.espnEvents || [];
+      for (var i = 0; i < events.length; i += 1) {
+        if (!hits(events[i])) continue;
+        out.espnEvents.push(events[i]);
+        var id = events[i] && events[i].id;
+        // The summary is keyed by the EVENT id, which is how the engine looks
+        // it up: summaryForEvent(espnGame && espnGame.id).
+        if (id && lc.espnSummaries && lc.espnSummaries[id]) {
+          out.espnSummaries[id] = lc.espnSummaries[id];
         }
+      }
+      var board = lc.boardGames || [];
+      for (var j = 0; j < board.length; j += 1) {
+        if (hits(board[j])) out.boardGames.push(board[j]);
+      }
+      var sched = lc.scheduleGames || [];
+      for (var k = 0; k < sched.length; k += 1) {
+        if (hits(sched[k])) out.scheduleGames.push(sched[k]);
       }
     } catch (e) { /* the rest of the snapshot is still worth sending */ }
     return out;
@@ -371,8 +387,10 @@
           any = true;
           // Only this matchup's board entry and summary: the confirmed batting
           // order the engine read, without the other thirty games.
-          var slice = matchupSlice(lc, res.away.abbreviation, res.home.abbreviation);
+          var slice = matchupSlice(lc, res.away, res.home);
           if (slice.boardGames.length) { out.boardGames = slice.boardGames; }
+          if (slice.espnEvents.length) { out.espnEvents = slice.espnEvents; }
+          if (slice.scheduleGames.length) { out.scheduleGames = slice.scheduleGames; }
           if (Object.keys(slice.espnSummaries).length) { out.espnSummaries = slice.espnSummaries; }
         }
       } catch (e) { /* the rest of the snapshot is still worth sending */ }
