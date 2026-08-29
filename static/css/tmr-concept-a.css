@@ -1,0 +1,702 @@
+/* =============================================================================
+   TMR — CONCEPT A (BROADCAST)                        REDESIGN PREVIEW ONLY
+   -----------------------------------------------------------------------------
+   Additive override sheet. Loaded LAST in <head>, so it wins on document order
+   without needing !important for anything the page styles at single-class
+   specificity.
+
+   RULES THIS FILE FOLLOWS
+   1. It only changes PRESENTATION. No markup, no behaviour, no data.
+   2. It deletes nothing. Every existing selector keeps working; this file
+      restates the handful of values the approved homepage hardcoded.
+   3. It is scoped to `body.tmr-ds` (and the homepage's own classes underneath),
+      so no page that has not adopted the design system is affected.
+   4. Branch redesign/concept-a only. Never merged without approval.
+
+   Visual target: the approved Concept A artifact, itself drawn from the
+   @BetLegend2025 X cover — true black, saturated electric blue, oblique
+   condensed athletic caps, silver wordmark, fine blue panel framing, green
+   reserved for realised performance.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. TOKENS — the design system's own names, remapped onto the Concept A ramp.
+   The homepage consumes these in 143 places, so most of the page follows from
+   this block alone.
+   -------------------------------------------------------------------------- */
+body.tmr-ds,
+body.tmr-ds-shell{
+  --page:#02050A;
+  --panel:#070E18; --panel-2:#040A12; --panel-3:#0D1D30;
+  --ink:#FFFFFF; --ink-2:#C3D6EA; --muted:#7F93A9;
+  --line:rgba(43,140,255,.26); --line-2:rgba(43,140,255,.46); --edge:rgba(43,140,255,.22);
+
+  /* brand: electric blue takes over every interactive role */
+  --brand:#1D7FE8; --brand-dk:#0B4FA8; --brand-lt:#4DA3FF; --brand-soft:rgba(43,140,255,.14);
+
+  --navy:#02050A; --navy-2:#070E18; --navy-3:#0D1D30;
+
+  --gold:#FFC93C; --gold-b:#FFD766; --gold-soft:rgba(255,201,60,.13);
+  --green:#2ECC71; --green-soft:rgba(46,204,113,.14);
+  --red:#FF5A5A;   --red-soft:rgba(255,90,90,.13);
+  --violet:#8FA8FF;--violet-soft:rgba(143,168,255,.13);
+  --blue:#4DA3FF;  --blue-soft:rgba(43,140,255,.14);
+
+  --sh:0 1px 1px rgba(0,0,0,.45), 0 2px 10px rgba(0,0,0,.5);
+  --sh-up:0 1px 2px rgba(0,0,0,.5), 0 22px 54px rgba(0,0,0,.72);
+
+  /* the athletic display face from the cover */
+  --display:Anton,'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;
+}
+
+body.tmr-ds{background:#02050A; color:var(--ink)}
+
+/* ambient light, kept off the panels so black stays black */
+body.tmr-ds::before{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(900px 460px at 10% -4%, rgba(43,140,255,.13), transparent 62%),
+    radial-gradient(700px 320px at 96% 2%, rgba(43,140,255,.05), transparent 60%);
+}
+body.tmr-ds > *{position:relative; z-index:1}
+
+/* -----------------------------------------------------------------------------
+   2. TYPE — oblique condensed caps for display, Inter unchanged for reading.
+   -------------------------------------------------------------------------- */
+body.tmr-ds h1,
+body.tmr-ds h2,
+body.tmr-ds h3,
+body.tmr-ds .hero h1,
+body.tmr-ds .sec-head h2,
+body.tmr-ds .chd h3,
+body.tmr-ds .cch h4,
+body.tmr-ds .comp-title,
+body.tmr-ds .final h2,
+body.tmr-ds .bridge .num,
+body.tmr-ds .kv .k b{
+  font-family:var(--display);
+  font-style:italic;
+  font-weight:400;
+  letter-spacing:-.004em;
+  text-transform:uppercase;
+}
+body.tmr-ds .hero h1{line-height:.90; text-shadow:0 0 60px rgba(43,140,255,.22)}
+body.tmr-ds .hero h1 em,
+body.tmr-ds .hero h1 span{color:var(--brand-lt); font-style:italic}
+
+/* uppercase labels keep Inter — they have to stay legible at 10-11px */
+body.tmr-ds .eyebrow,
+body.tmr-ds .cnt,
+body.tmr-ds .st,
+body.tmr-ds .badge,
+body.tmr-ds .cat{font-family:Inter,'Inter Fallback W',sans-serif}
+
+/* -----------------------------------------------------------------------------
+   3. THE TICKER — the live system. Presentation only: paging, rotation, states,
+   hover, timing and data are the page's own and are not touched.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .ticker{
+  background:rgba(2,5,10,.92);
+  border-bottom:1px solid rgba(43,140,255,.32);
+}
+body.tmr-ds .tlbl{
+  font-family:var(--display); font-style:italic; font-weight:400;
+  color:#fff; letter-spacing:.07em;
+  border-right-color:rgba(43,140,255,.30);
+}
+body.tmr-ds .tlbl .bl{background:var(--green); box-shadow:0 0 0 6px rgba(46,204,113,.20)}
+
+body.tmr-ds .gm{
+  background:linear-gradient(180deg,#070F1A 0%,#03080F 70%);
+  border:1px solid rgba(43,140,255,.28);
+  box-shadow:inset 0 1px 0 rgba(120,180,255,.12), 0 10px 26px rgba(0,0,0,.5);
+}
+body.tmr-ds a.gm:hover,
+body.tmr-ds .gm:hover{background:linear-gradient(180deg,#0A1728 0%,#050C16 70%); border-color:rgba(43,140,255,.62)}
+body.tmr-ds .gm .t{color:#FFFFFF}
+body.tmr-ds .gm .sc{color:#FFFFFF}
+body.tmr-ds .gm .st{color:#7F93A9}
+body.tmr-ds .gm .st.on{
+  color:#fff; background:var(--brand); border-radius:3px;
+  padding:5px 8px; margin-left:auto; letter-spacing:.09em;
+  box-shadow:0 0 18px rgba(43,140,255,.55);
+}
+body.tmr-ds .gm .gm-sp{color:#93A9C0}
+body.tmr-ds .gm .gm-in-l{color:#BBD0E6}
+body.tmr-ds .gm .gm-in-l .ts{background:var(--brand-lt); opacity:1}
+body.tmr-ds a.gm:hover .gm-in-l.is-on{color:#EAF3FB}
+body.tmr-ds .tk-nav{
+  background:rgba(43,140,255,.08); border:1px solid rgba(43,140,255,.30); color:#BBD0E6;
+}
+body.tmr-ds .tk-nav:hover{background:var(--brand); border-color:var(--brand); color:#fff}
+body.tmr-ds .gm.is-skel .sk,
+body.tmr-ds .sk{background:linear-gradient(90deg, rgba(43,140,255,.10), rgba(43,140,255,.20), rgba(43,140,255,.10))}
+
+/* Live on TMR lane */
+body.tmr-ds .tkact{border-left-color:rgba(43,140,255,.30)}
+body.tmr-ds .tkact-lbl{
+  font-family:var(--display); font-style:italic; font-weight:400;
+  color:var(--green); letter-spacing:.08em;
+}
+body.tmr-ds .tkact-lbl .bl{background:var(--green); box-shadow:0 0 0 5px rgba(46,204,113,.20)}
+body.tmr-ds .tkact-av{background:rgba(43,140,255,.12); border-color:rgba(43,140,255,.28); color:#BBD0E6}
+body.tmr-ds .tkact-who b{color:#FFFFFF}
+body.tmr-ds .tkact-team{color:#7F93A9}
+body.tmr-ds .tkact-team::before{color:#4C647A}
+body.tmr-ds .tkact-ago{color:#7F93A9}
+body.tmr-ds .tkact-act{color:#A9C0D8}
+body.tmr-ds a.tkact-item:hover{background:rgba(43,140,255,.10)}
+body.tmr-ds a.tkact-item:hover .tkact-who b{color:#fff}
+body.tmr-ds a.tkact-item:focus-visible{outline-color:rgba(43,140,255,.65)}
+
+/* -----------------------------------------------------------------------------
+   4. NAVIGATION — design-system chrome plus the homepage's own nav classes.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .ds-nav,
+body.tmr-ds nav.nav{
+  background:rgba(2,5,10,.94);
+  border-bottom:1px solid rgba(43,140,255,.28);
+  backdrop-filter:blur(8px);
+}
+body.tmr-ds .ds-navitem,
+body.tmr-ds .ds-menu > button,
+body.tmr-ds .mainnav a,
+body.tmr-ds .mainnav .nd-btn{
+  color:#BBD0E6; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+}
+body.tmr-ds .ds-navitem:hover,
+body.tmr-ds .ds-menu > button:hover,
+body.tmr-ds .mainnav a:hover,
+body.tmr-ds .mainnav .nd-btn:hover{color:#fff}
+body.tmr-ds .ds-navitem[aria-current="page"],
+body.tmr-ds .mainnav a[aria-current="page"]{
+  color:#fff; border-bottom-color:var(--brand-lt);
+}
+body.tmr-ds .ds-menu-panel,
+body.tmr-ds .nd-menu{
+  background:linear-gradient(180deg,#070F1A,#03080F);
+  border:1px solid rgba(43,140,255,.42);
+  box-shadow:0 24px 60px rgba(0,0,0,.8);
+}
+body.tmr-ds .ds-menu-panel a,
+body.tmr-ds .nd-menu a{color:#BBD0E6}
+body.tmr-ds .ds-menu-panel a:hover,
+body.tmr-ds .nd-menu a:hover{background:rgba(43,140,255,.16); color:#fff}
+body.tmr-ds .logo .mk{color:var(--brand-lt); border-color:var(--brand-lt)}
+body.tmr-ds .nav-toggle span{background:#BBD0E6}
+body.tmr-ds .nav-right .login{color:#BBD0E6}
+
+/* signed-in cluster */
+body.tmr-ds .v2nav-user:hover{color:var(--brand-lt)}
+body.tmr-ds .v2nav-avl{background:linear-gradient(140deg,#4DA3FF,#0B4FA8)}
+body.tmr-ds .v2nav-bell{color:#BBD0E6; border-color:rgba(43,140,255,.30)}
+body.tmr-ds .v2nav-coins{color:#FFD766; background:rgba(255,201,60,.10); border:1px solid rgba(255,201,60,.34)}
+
+/* -----------------------------------------------------------------------------
+   5. BUTTONS AND LINKS
+   -------------------------------------------------------------------------- */
+body.tmr-ds .btn.p,
+body.tmr-ds .ds-btn.p{
+  background:linear-gradient(180deg,#3B93FF,#1268D6);
+  border-color:transparent; color:#fff;
+  box-shadow:0 0 0 1px rgba(120,180,255,.42), 0 10px 28px rgba(29,127,232,.42);
+  font-style:italic; letter-spacing:.06em; text-transform:uppercase;
+}
+body.tmr-ds .btn.p:hover,
+body.tmr-ds .ds-btn.p:hover{
+  background:linear-gradient(180deg,#57A4FF,#1A76EA);
+  box-shadow:0 0 0 1px rgba(150,200,255,.65), 0 14px 36px rgba(29,127,232,.55);
+}
+body.tmr-ds .btn.s,
+body.tmr-ds .ds-btn:not(.p){
+  background:rgba(43,140,255,.10); border:1px solid rgba(43,140,255,.46); color:#fff;
+  font-style:italic; letter-spacing:.06em; text-transform:uppercase;
+}
+body.tmr-ds .btn.s:hover,
+body.tmr-ds .ds-btn:not(.p):hover{background:rgba(43,140,255,.20); border-color:var(--brand-lt); color:#fff}
+body.tmr-ds .tlink,
+body.tmr-ds .tlink.dk{color:var(--brand-lt); font-weight:700}
+body.tmr-ds .tlink:hover{color:#8CC0FF}
+
+/* -----------------------------------------------------------------------------
+   6. HERO
+   -------------------------------------------------------------------------- */
+body.tmr-ds .hero{border-bottom:1px solid rgba(43,140,255,.26)}
+/* .hero-bg is restated in section 9 so the Curry plate survives. */
+body.tmr-ds .grain{opacity:.35}
+body.tmr-ds .hero .eyebrow{
+  background:rgba(43,140,255,.13);
+  border:1px solid rgba(43,140,255,.40);
+  color:#CFE2F7;
+}
+body.tmr-ds .hero p.sub{color:#B7CEE4}
+body.tmr-ds .hero .rail{background:linear-gradient(180deg,transparent,rgba(43,140,255,.55),transparent)}
+
+/* angular broadcast light, purely decorative, behind everything */
+
+/* -----------------------------------------------------------------------------
+   7. PANELS, CARDS, DATA
+   -------------------------------------------------------------------------- */
+body.tmr-ds .card,
+body.tmr-ds .ccard,
+body.tmr-ds .spot,
+body.tmr-ds .ds-card,
+body.tmr-ds .etile{
+  background:linear-gradient(180deg,#070F1A 0%,#03080F 66%);
+  border:1px solid rgba(43,140,255,.28);
+  box-shadow:inset 0 1px 0 rgba(120,180,255,.12), 0 22px 52px rgba(0,0,0,.68);
+}
+body.tmr-ds .card .chd,
+body.tmr-ds .ds-card-head{
+  position:relative; padding-left:22px;
+  background:linear-gradient(90deg, rgba(43,140,255,.16), rgba(43,140,255,0) 62%);
+  border-bottom:1px solid rgba(43,140,255,.28);
+}
+body.tmr-ds .card .chd::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--brand-lt); box-shadow:0 0 14px rgba(43,140,255,.6);
+}
+body.tmr-ds .card .chd h3{color:#fff}
+body.tmr-ds .card .cnt{color:#7F93A9}
+body.tmr-ds .card .foot,
+body.tmr-ds .ds-card-foot{background:rgba(43,140,255,.05); border-top:1px solid rgba(43,140,255,.22)}
+
+/* rows */
+body.tmr-ds .lbr,
+body.tmr-ds .pk,
+body.tmr-ds .fr{border-bottom:1px solid rgba(43,140,255,.14)}
+body.tmr-ds .lbr:hover,
+body.tmr-ds .pk:hover,
+body.tmr-ds .fr:hover{background:rgba(43,140,255,.09)}
+body.tmr-ds .nm b,
+body.tmr-ds .who b,
+body.tmr-ds .ln,
+body.tmr-ds .ft2{color:#FFFFFF}
+body.tmr-ds .nm span,
+body.tmr-ds .mt,
+body.tmr-ds .fm{color:#7F93A9}
+body.tmr-ds .pos{color:var(--green)}
+body.tmr-ds .neg{color:var(--red)}
+body.tmr-ds .badge.w{background:rgba(46,204,113,.13); color:var(--green); border:1px solid rgba(46,204,113,.34)}
+body.tmr-ds .badge.l{background:rgba(255,90,90,.12); color:var(--red); border:1px solid rgba(255,90,90,.30)}
+body.tmr-ds .lgchip,
+body.tmr-ds .cat{
+  background:rgba(43,140,255,.12); border:1px solid rgba(43,140,255,.30); color:var(--brand-lt);
+}
+body.tmr-ds .cat.mlb,
+body.tmr-ds .cat.str{background:rgba(43,140,255,.12); color:var(--brand-lt)}
+
+/* tables */
+body.tmr-ds .ds-table th,
+body.tmr-ds table th{
+  background:rgba(43,140,255,.09); color:#93A9C0;
+  border-bottom:1px solid rgba(43,140,255,.32); letter-spacing:.14em;
+}
+body.tmr-ds .ds-table td,
+body.tmr-ds table td{border-bottom:1px solid rgba(43,140,255,.13); color:#C3D6EA}
+body.tmr-ds .ds-table tbody tr:hover td{background:rgba(43,140,255,.09)}
+
+/* stat bridge */
+body.tmr-ds .bridge{background:rgba(2,5,10,.75); border-color:rgba(43,140,255,.22)}
+body.tmr-ds .bridge .s{border-color:rgba(43,140,255,.20)}
+body.tmr-ds .bridge .num{color:#fff}
+body.tmr-ds .bridge .num.t{color:var(--brand-lt); text-shadow:0 0 34px rgba(43,140,255,.5)}
+body.tmr-ds .bridge .s span{color:#93A9C0; letter-spacing:.16em}
+
+/* live competition card in the hero */
+body.tmr-ds .spot .hd b,
+body.tmr-ds .comp-title{color:#fff}
+body.tmr-ds .comp-nm{color:#fff}
+body.tmr-ds .comp-meta,
+body.tmr-ds .comp-sub{color:#7F93A9}
+body.tmr-ds .comp-prog{background:rgba(43,140,255,.14)}
+body.tmr-ds .comp-prog i{box-shadow:0 0 16px rgba(43,140,255,.6)}
+
+/* compete cards */
+body.tmr-ds .ccard.feat{
+  border-color:rgba(255,201,60,.34);
+  background:linear-gradient(170deg, rgba(255,201,60,.10), transparent 42%), linear-gradient(180deg,#070F1A,#03080F);
+}
+body.tmr-ds .ccard.feat p{color:#B4CDE3}
+body.tmr-ds .cch h4{color:#fff}
+body.tmr-ds .crow{color:#C3D8EC}
+body.tmr-ds .kv .k{background:rgba(2,5,10,.55); border:1px solid rgba(43,140,255,.22)}
+body.tmr-ds .kv .k b{color:#fff}
+body.tmr-ds .kv .k span{color:#7F93A9}
+body.tmr-ds .ic,
+body.tmr-ds .ic2{background:rgba(43,140,255,.14); border:1px solid rgba(43,140,255,.40)}
+
+/* explore / final / footer */
+body.tmr-ds .final{
+  border-top:1px solid rgba(43,140,255,.28); border-bottom:1px solid rgba(43,140,255,.28);
+  background:radial-gradient(780px 320px at 50% 130%, rgba(43,140,255,.24), transparent 68%), rgba(2,5,10,.7);
+}
+body.tmr-ds .final h2{color:#fff}
+body.tmr-ds .final p{color:#A9C3DA}
+body.tmr-ds footer,
+body.tmr-ds .ds-footer{background:#02050A; color:#93AEC7; border-top:1px solid rgba(43,140,255,.20)}
+body.tmr-ds footer a,
+body.tmr-ds .ds-footer a{color:#93AEC7}
+body.tmr-ds footer a:hover,
+body.tmr-ds .ds-footer a:hover{color:var(--brand-lt)}
+body.tmr-ds .ds-footer h5,
+body.tmr-ds .ds-footer-res-label{color:var(--brand-lt); letter-spacing:.16em}
+body.tmr-ds .tmr-internal-cluster a{color:#93AEC7}
+body.tmr-ds .tmr-internal-cluster a:hover{color:var(--brand-lt)}
+
+/* first-pick reminder: it was cyan, which is the one hue that fights this palette */
+body.tmr-ds #tmr-fp-reminder{border-color:rgba(43,140,255,.34) !important; color:#DBE6F3 !important}
+body.tmr-ds .tmr-fp-reminder__icon{background:rgba(43,140,255,.16) !important; color:#8CC0FF !important}
+body.tmr-ds #tmr-fp-reminder .tmr-fp-btn--primary{
+  background:linear-gradient(135deg,#3B93FF,#1268D6) !important;
+  color:#fff !important; box-shadow:0 18px 45px rgba(29,127,232,.30) !important;
+}
+
+/* forms */
+body.tmr-ds input,
+body.tmr-ds select,
+body.tmr-ds textarea,
+body.tmr-ds .ds-input,
+body.tmr-ds .ds-select,
+body.tmr-ds .ds-textarea{
+  background:#040A12; border:1px solid rgba(43,140,255,.34); color:#EAF3FB;
+}
+body.tmr-ds input:focus,
+body.tmr-ds select:focus,
+body.tmr-ds textarea:focus{
+  border-color:var(--brand); box-shadow:0 0 0 3px rgba(43,140,255,.18); outline:none;
+}
+body.tmr-ds ::placeholder{color:#6F8399}
+
+/* focus ring, everywhere */
+body.tmr-ds :focus-visible{outline:2px solid var(--brand-lt); outline-offset:2px}
+
+/* the ambient wash must never sit on top of the fixed nav or a dialog */
+body.tmr-ds .ds-nav,
+body.tmr-ds nav.nav,
+body.tmr-ds #tmr-fp-reminder{z-index:60}
+
+/* -----------------------------------------------------------------------------
+   8. FIT CORRECTIONS measured in the running app
+   -------------------------------------------------------------------------- */
+/* Uppercase + tracking widened the six dropdowns enough to wrap the bar onto a
+   second row. Tighten the label, keep the broadcast treatment. */
+body.tmr-ds .ds-mainnav{flex-wrap:nowrap}
+body.tmr-ds .ds-navitem,
+body.tmr-ds .ds-menu > button{
+  font-size:13px; letter-spacing:.02em; padding-left:10px; padding-right:10px; white-space:nowrap;
+}
+@media (max-width:1440px){
+  body.tmr-ds .ds-navitem,
+  body.tmr-ds .ds-menu > button{font-size:12.5px; padding-left:8px; padding-right:8px}
+}
+
+/* The homepage logo mark: same geometry, Concept A colours. */
+body.tmr-ds .logo .mk{
+  color:#fff; border-color:rgba(120,180,255,.75);
+  background:linear-gradient(160deg,#4DA3FF,#0B4FA8);
+  box-shadow:0 0 24px rgba(29,127,232,.45);
+}
+body.tmr-ds .logo{color:#fff}
+body.tmr-ds .logo em,
+body.tmr-ds .logo .hl{color:var(--brand-lt)}
+
+/* The decorative hero streak sat 2% past the right edge and widened the
+   document on a 390px viewport. Pull it inside and drop it on phones. */
+/* Adding a 1px frame to panels that previously had none pushed the dash grid
+   2px past the viewport on a phone. Keep the frame, keep it inside the box. */
+body.tmr-ds .card,
+body.tmr-ds .ccard,
+body.tmr-ds .spot,
+body.tmr-ds .etile{box-sizing:border-box; max-width:100%}
+body.tmr-ds .board,
+body.tmr-ds .wrap.dash{min-width:0}
+body.tmr-ds .wrap.dash > *{min-width:0}
+/* Last 2px: a descendant of the dash section reports a wider scroll box on a
+   phone. overflow-x:clip contains it without creating a scroll container, so
+   sticky and dropdown behaviour are unaffected. */
+@media (max-width:640px){ body.tmr-ds .wrap.dash{overflow-x:clip} }
+
+/* The homepage ships .btn, .btn.d and .btn.p. Only .p was restyled above, which
+   left the contest CTA on its light-mode grey. Bring the other two across. */
+body.tmr-ds .btn{
+  font-style:italic; letter-spacing:.06em; text-transform:uppercase;
+  background:rgba(43,140,255,.10); border:1px solid rgba(43,140,255,.46); color:#fff;
+}
+body.tmr-ds .btn:hover{background:rgba(43,140,255,.20); border-color:var(--brand-lt); color:#fff}
+body.tmr-ds .btn.d{
+  background:linear-gradient(180deg,#3B93FF,#1268D6); border-color:transparent; color:#fff;
+  box-shadow:0 0 0 1px rgba(120,180,255,.42), 0 10px 28px rgba(29,127,232,.42);
+}
+body.tmr-ds .btn.d:hover{background:linear-gradient(180deg,#57A4FF,#1A76EA); color:#fff}
+
+
+/* =============================================================================
+   9. REFINEMENT PASS — brand dominance, silver contrast, cinematic depth
+   -----------------------------------------------------------------------------
+   Written against the @BetLegend2025 cover. Presentation only.
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+   9a. THE CURRY MOTION PLATE — restored.
+   These are the site's own asset URLs and its own two-stage mechanism: the
+   46KB still paints first, and the page's own after-load script adds
+   html.tmr-heroanim, which swaps in the 1.21MB animated WebP. Only the overlay
+   gradient changes, from the old navy wash to the Concept A black-and-blue one.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .hero-bg{
+  opacity:.72;
+  background:
+    linear-gradient(90deg, rgba(2,5,10,.97) 0%, rgba(2,5,10,.86) 34%, rgba(2,5,10,.40) 72%, rgba(2,5,10,.62) 100%),
+    linear-gradient(180deg, rgba(2,5,10,.30) 0%, rgba(2,5,10,0) 34%, rgba(2,5,10,.88) 100%),
+    radial-gradient(circle at 62% 40%, rgba(43,140,255,.22), transparent 58%),
+    url("/static/media/steph-curry-hero.e58e3f673f5a.webp") center / cover no-repeat;
+}
+html.tmr-heroanim body.tmr-ds .hero-bg{
+  background:
+    linear-gradient(90deg, rgba(2,5,10,.97) 0%, rgba(2,5,10,.86) 34%, rgba(2,5,10,.40) 72%, rgba(2,5,10,.62) 100%),
+    linear-gradient(180deg, rgba(2,5,10,.30) 0%, rgba(2,5,10,0) 34%, rgba(2,5,10,.88) 100%),
+    radial-gradient(circle at 62% 40%, rgba(43,140,255,.22), transparent 58%),
+    url("/static/media/steph-curry-hero-anim.9db12326f950.webp") center / cover no-repeat,
+    url("/static/media/steph-curry-hero.e58e3f673f5a.webp") center / cover no-repeat;
+}
+/* a hard black floor under the hero so the plate never fights the copy */
+body.tmr-ds .hero{position:relative; isolation:isolate}
+body.tmr-ds .hero::before{
+  content:''; position:absolute; inset:auto 0 0 0; height:34%; z-index:0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(2,5,10,0), #02050A);
+}
+body.tmr-ds .grain{opacity:.28; mix-blend-mode:overlay}
+
+/* -----------------------------------------------------------------------------
+   9b. PAINT STREAKS — feathered angular slashes, not plain diagonal lines.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .tmrb-fx{position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden}
+body.tmr-ds .tmrb-fx i{
+  position:absolute; display:block; transform:skewX(-15deg); border-radius:4px;
+  background:linear-gradient(180deg,
+    rgba(29,127,232,0) 0%, rgba(29,127,232,.85) 16%, #2B8CFF 48%,
+    rgba(43,140,255,.75) 74%, rgba(29,127,232,0) 100%);
+  filter:drop-shadow(0 0 18px rgba(43,140,255,.55));
+}
+body.tmr-ds .tmrb-fx i:nth-child(1){right:-8px;  top:-22%; width:34px; height:150%; opacity:1}
+body.tmr-ds .tmrb-fx i:nth-child(2){right:44px;  top:-22%; width:11px; height:150%; opacity:.72}
+body.tmr-ds .tmrb-fx i:nth-child(3){right:66px;  top:-22%; width:4px;  height:150%; opacity:.5}
+body.tmr-ds .tmrb-fx i:nth-child(4){right:92px;  top:-22%; width:86px; height:150%; opacity:.08; filter:none}
+body.tmr-ds .tmrb-fx i:nth-child(5){left:-14px;  top:-22%; width:6px;  height:150%; opacity:.42}
+body.tmr-ds .tmrb-fx i:nth-child(6){left:14px;   top:-22%; width:54px; height:150%; opacity:.07; filter:none}
+
+/* -----------------------------------------------------------------------------
+   9c. BRAND LOCKUP IN THE HERO
+   -------------------------------------------------------------------------- */
+body.tmr-ds .tmrb-lockup{
+  display:flex; align-items:center; gap:22px; margin:0 0 26px;
+}
+body.tmr-ds .tmrb-shield{
+  width:112px; height:122px; flex:none;
+  filter:drop-shadow(0 0 34px rgba(29,127,232,.55)) drop-shadow(0 12px 26px rgba(0,0,0,.7));
+}
+body.tmr-ds .tmrb-mark{
+  display:block;
+  font-family:var(--display); font-style:italic; font-weight:400; text-transform:uppercase;
+  font-size:clamp(30px,3.5vw,56px); line-height:.88; letter-spacing:-.01em;
+  background:linear-gradient(178deg,#FFFFFF 8%,#EAF0F7 34%,#9FB2C8 70%,#F4F8FC 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:
+    drop-shadow(2px 0 0 rgba(2,6,12,.9)) drop-shadow(-2px 0 0 rgba(2,6,12,.9))
+    drop-shadow(0 2px 0 rgba(2,6,12,.9)) drop-shadow(0 -2px 0 rgba(2,6,12,.9))
+    drop-shadow(0 8px 18px rgba(0,0,0,.8));
+}
+body.tmr-ds .tmrb-rule{display:flex; align-items:center; gap:11px; margin-top:12px}
+body.tmr-ds .tmrb-rule i{display:block; flex:none; width:30px; height:2px; background:var(--brand-lt)}
+body.tmr-ds .tmrb-rule b{
+  font:800 12px/1 Inter,sans-serif; font-style:italic; letter-spacing:.13em;
+  text-transform:uppercase; color:#D8E5F3; white-space:nowrap;
+}
+/* a giant shield watermark for depth behind the right-hand column */
+body.tmr-ds .hero-in::after{
+  content:''; position:absolute; z-index:0; pointer-events:none;
+  right:-70px; top:50%; transform:translateY(-50%);
+  width:520px; height:566px; opacity:.05;
+  background:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 152'%3E%3Cpath d='M70 3 137 23v15l-9 7 9 7v33c0 33-26 58-67 69C29 143 3 118 3 85V52l9-7-9-7V23z' fill='%234DA3FF'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* the headline steps back a little so the brand leads, and goes silver */
+body.tmr-ds .hero h1.hh{
+  font-size:clamp(30px,3.5vw,52px); line-height:.96; margin-top:6px;
+  background:linear-gradient(178deg,#FFFFFF 14%,#EDF2F8 44%,#B9C7D8 78%,#FFFFFF 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(2,6,12,.65)) drop-shadow(0 10px 24px rgba(0,0,0,.6));
+}
+body.tmr-ds .hero h1.hh em{
+  -webkit-text-fill-color:#4DA3FF; color:#4DA3FF; font-style:italic;
+}
+body.tmr-ds .hero p.sub{color:#C6D8EA; max-width:56ch}
+body.tmr-ds .hero .eyebrow{backdrop-filter:blur(6px)}
+
+/* -----------------------------------------------------------------------------
+   9d. SILVER SECTION TITLES — the cover's white-on-black, not blue-on-black
+   -------------------------------------------------------------------------- */
+body.tmr-ds .sec-head h2,
+body.tmr-ds .final h2,
+body.tmr-ds h2{
+  background:linear-gradient(178deg,#FFFFFF 16%,#EDF2F8 46%,#BCCAD9 80%,#FFFFFF 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(2,6,12,.55));
+}
+body.tmr-ds .card .chd h3,
+body.tmr-ds .cch h4,
+body.tmr-ds .comp-title{color:#FFFFFF}
+
+/* -----------------------------------------------------------------------------
+   9e. CINEMATIC DEPTH — planes, edges, elevation
+   -------------------------------------------------------------------------- */
+/* an illuminated top edge on every major band */
+body.tmr-ds .bridge,
+body.tmr-ds .wrap.dash,
+body.tmr-ds .final{position:relative}
+body.tmr-ds .bridge::before,
+body.tmr-ds .final::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:1px; pointer-events:none;
+  background:linear-gradient(90deg, transparent, rgba(77,163,255,.55) 22%, rgba(77,163,255,.55) 78%, transparent);
+}
+/* panels lift off the page instead of sitting flat on it */
+body.tmr-ds .card,
+body.tmr-ds .ccard,
+body.tmr-ds .spot{
+  box-shadow:
+    inset 0 1px 0 rgba(150,200,255,.16),
+    0 2px 0 rgba(0,0,0,.5),
+    0 26px 60px rgba(0,0,0,.72),
+    0 0 44px rgba(29,127,232,.05);
+}
+body.tmr-ds .spot{border-color:rgba(43,140,255,.50)}
+/* the competition card is the product shot: give it the device treatment */
+body.tmr-ds .spot .hd{
+  background:linear-gradient(90deg, rgba(43,140,255,.24), rgba(43,140,255,.03) 70%);
+  border-bottom:1px solid rgba(43,140,255,.40);
+}
+/* section separators read as angled planes, not hairlines */
+body.tmr-ds .bridge{
+  background:linear-gradient(180deg, rgba(6,14,26,.92), rgba(2,5,10,.85));
+  border-top:1px solid rgba(43,140,255,.24);
+}
+
+/* -----------------------------------------------------------------------------
+   9f. THE PLATFORM TILES — the cover's icon-tile language
+   -------------------------------------------------------------------------- */
+body.tmr-ds .etile,
+body.tmr-ds .ei{
+  background:linear-gradient(180deg,#070F1A,#03080F);
+  border:1px solid rgba(43,140,255,.28);
+}
+body.tmr-ds .etile:hover,
+body.tmr-ds .ei:hover{border-color:rgba(43,140,255,.66)}
+body.tmr-ds .ic2,
+body.tmr-ds .ei .ic2{
+  background:linear-gradient(180deg, rgba(43,140,255,.26), rgba(43,140,255,.06));
+  border:1px solid rgba(43,140,255,.50);
+  box-shadow:inset 0 1px 0 rgba(150,200,255,.35), 0 0 26px rgba(43,140,255,.22);
+}
+body.tmr-ds .ei h4,
+body.tmr-ds .etile b{color:#FFFFFF}
+
+@media (max-width:900px){
+  body.tmr-ds .tmrb-shield{width:74px; height:81px}
+  body.tmr-ds .tmrb-lockup{gap:14px; margin-bottom:20px}
+  body.tmr-ds .hero-in::after{display:none}
+  body.tmr-ds .tmrb-fx i:nth-child(4),
+  body.tmr-ds .tmrb-fx i:nth-child(5),
+  body.tmr-ds .tmrb-fx i:nth-child(6){display:none}
+}
+@media (max-width:640px){
+  body.tmr-ds .tmrb-shield{width:58px; height:63px}
+  body.tmr-ds .tmrb-rule b{font-size:10.5px; letter-spacing:.09em; white-space:normal}
+  body.tmr-ds .tmrb-fx i{opacity:.5 !important}
+}
+@media (prefers-reduced-motion:reduce){
+  html.tmr-heroanim body.tmr-ds .hero-bg{
+    background:
+      linear-gradient(90deg, rgba(2,5,10,.97) 0%, rgba(2,5,10,.86) 34%, rgba(2,5,10,.40) 72%, rgba(2,5,10,.62) 100%),
+      linear-gradient(180deg, rgba(2,5,10,.30) 0%, rgba(2,5,10,0) 34%, rgba(2,5,10,.88) 100%),
+      radial-gradient(circle at 62% 40%, rgba(43,140,255,.22), transparent 58%),
+      url("/static/media/steph-curry-hero.e58e3f673f5a.webp") center / cover no-repeat;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   9g. NAV MARK — the shared header uses .ds-logo > .mk + .wd, not .logo .mk.
+   Same geometry, Concept A colours, silver wordmark.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .ds-logo .mk{
+  background:linear-gradient(160deg,#5AA9FF,#0A4694);
+  color:#fff; border-color:rgba(150,200,255,.7);
+  box-shadow:inset 0 1px 0 rgba(200,225,255,.5), 0 0 22px rgba(29,127,232,.5);
+}
+body.tmr-ds .ds-logo .wd{
+  background:linear-gradient(178deg,#FFFFFF 12%,#EDF2F8 42%,#BDCBDA 76%,#FFFFFF 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+body.tmr-ds .ds-logo .wd em{-webkit-text-fill-color:#4DA3FF; color:#4DA3FF; font-style:normal}
+
+/* -----------------------------------------------------------------------------
+   9h. HERO LEFT COLUMN — one continuous stack.
+   The lockup sat 26px clear of the stats pill, and because the shield is taller
+   than the wordmark beside it the break read as two separate blocks. Close the
+   gap, tighten the lockup's internal rule, and run that rule out to the column
+   edge so it ties the branding to the copy underneath instead of floating above
+   it. Spacing between pill, headline, body and CTA is unchanged.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .tmrb-lockup{margin:0 0 12px}
+body.tmr-ds .tmrb-rule{margin-top:9px}
+/* the rule now travels to the edge of the column, under the wordmark */
+body.tmr-ds .tmrb-rule::after{
+  content:''; display:block; flex:1 1 auto; height:1px; min-width:24px;
+  background:linear-gradient(90deg, rgba(77,163,255,.55), rgba(77,163,255,0));
+}
+body.tmr-ds .hero h1.hh{margin-top:2px}
+@media (max-width:900px){
+  body.tmr-ds .tmrb-lockup{margin-bottom:10px}
+}
+
+/* -----------------------------------------------------------------------------
+   9i. HERO STATS PILL — removed from the composition.
+   The figure is redundant: the stats band directly below the hero already
+   carries PICKS TRACKED. Hidden rather than deleted from the markup, so
+   tmr-home-live.js keeps its #tmrEyebrowPicks target and its write is a no-op
+   instead of a null dereference. The left column now reads brand -> headline ->
+   body -> CTA.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .hero .eyebrow{display:none}
+body.tmr-ds .tmrb-lockup{margin-bottom:20px}
+body.tmr-ds .hero h1.hh{margin-top:0}
+@media (max-width:900px){
+  body.tmr-ds .tmrb-lockup{margin-bottom:16px}
+}
+
+
+/* -----------------------------------------------------------------------------
+   9j. HEADER MARK — the hero's TMR shield, scaled for the navbar.
+   The shared header renders <span class="mk">T</span>. The letter is hidden and
+   the box paints the shield artwork instead, so the nav script, the markup and
+   the flex geometry are all untouched. Sized to the box it already occupied
+   (38px desktop / 34px mobile) so header height does not move.
+   -------------------------------------------------------------------------- */
+body.tmr-ds .ds-logo{gap:11px}
+body.tmr-ds .ds-logo .mk{
+  width:37px; height:40px;
+  font-size:0; line-height:0; color:transparent;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 152'><defs><linearGradient id='s' x1='0' y1='0' x2='0.22' y2='1'><stop offset='0' stop-color='%23FFFFFF'/><stop offset='.40' stop-color='%23E9EFF6'/><stop offset='.74' stop-color='%23A3B4C8'/><stop offset='1' stop-color='%23F4F8FC'/></linearGradient><linearGradient id='b' x1='0' y1='0' x2='0.28' y2='1'><stop offset='0' stop-color='%235AA9FF'/><stop offset='.50' stop-color='%231D7FE8'/><stop offset='1' stop-color='%230A4694'/></linearGradient></defs><path d='M70 3 137 23v15l-9 7 9 7v33c0 33-26 58-67 69C29 143 3 118 3 85V52l9-7-9-7V23z' fill='url(%23b)'/><path d='M70 17 124 33v52c0 25-21 45-54 55-33-10-54-30-54-55V33z' fill='%2305101B' stroke='url(%23s)' stroke-width='7'/><text x='70' y='83' text-anchor='middle' font-family='Arial Narrow,Haettenschweiler,Impact,Arial,sans-serif' font-size='47' font-weight='700' font-style='italic' fill='url(%23s)'>TMR</text><path d='M50 105l13 14 28-31' fill='none' stroke='%232B8CFF' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+  border:0; border-radius:0; box-shadow:none;
+  filter:drop-shadow(0 0 14px rgba(29,127,232,.55));
+}
+body.tmr-ds .ds-logo .wd{line-height:1.05}
+
+@media (max-width:1100px){
+  body.tmr-ds .ds-logo .mk{width:33px; height:36px}
+  body.tmr-ds .ds-logo{gap:9px}
+}
+@media (max-width:640px){
+  body.tmr-ds .ds-logo .mk{width:30px; height:33px}
+  body.tmr-ds .ds-logo{gap:8px}
+}
