@@ -248,6 +248,17 @@ function teamByAbbr(sim, abbr) {
         + ' engine itself.');
       say('     run ' + r.id + '  ' + away + '@' + home + '  PARTIAL  stored '
         + stored.away + '-' + stored.home + ', replay ' + got.away + '-' + got.home);
+      // WHERE DOES IT FIRST DIVERGE? A lineup mismatch and a rate mismatch are
+      // different problems and guessing between them is how a session is lost.
+      try {
+        const arch = (full.details && full.details.lineups) || {};
+        const archAway = (arch.away || []).map((x) => x.name).slice(0, 9).join(', ');
+        const gotAway = ((out.boxScore.players && out.boxScore.players.away
+          && out.boxScore.players.away.batters) || []).map((x) => x.name).slice(0, 9).join(', ');
+        say('       archived lineup: ' + archAway.slice(0, 90));
+        say('       replayed lineup: ' + gotAway.slice(0, 90));
+        say('       lineups match  : ' + (archAway === gotAway));
+      } catch (e) { say('       lineup compare failed: ' + e.message); }
     }
   }
 
