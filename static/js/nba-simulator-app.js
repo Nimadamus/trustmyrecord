@@ -208,6 +208,13 @@
       { label: 'Blocks', away: a.blk, home: h.blk },
       { label: 'Turnovers', away: a.tov, home: h.tov },
       { label: 'Fouls', away: a.pf, home: h.pf },
+      // COUNTED, NOT ESTIMATED. Points off turnovers is what a side scored on
+      // trips that began with the other side giving the ball away; second-chance
+      // points are what it scored after an offensive rebound had already
+      // extended the trip. Both come out of the possession loop rather than off
+      // a league average, which is why they are shown at all.
+      { label: 'Points off turnovers', away: a.pointsOffTurnovers, home: h.pointsOffTurnovers },
+      { label: 'Second-chance points', away: a.secondChancePoints, home: h.secondChancePoints },
     ]));
 
     var s = el('div', 'statstrip');

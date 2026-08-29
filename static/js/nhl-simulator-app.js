@@ -85,12 +85,47 @@
       fmt: function (p) { return p.faceoffPct === null ? '--' : p.faceoffPct.toFixed(1); } },
     { h: 'TOI', title: 'Time on ice',
       sortValue: function (p) { return p.toi; },
-      fmt: function (p) {
-        var m = Math.floor(p.toi);
-        var s = Math.round((p.toi - m) * 60);
-        return m + ':' + (s < 10 ? '0' : '') + s;
-      } },
+      fmt: function (p) { return clock(p.toi); } },
+    // THE THREE SITUATIONS THE ICE TIME WAS PLAYED IN.
+    //
+    // A twenty-minute night is a different night depending on whether it was
+    // twenty at even strength or fourteen even, four on the power play and two
+    // killing penalties. The three add to TOI exactly, so a reader can check
+    // them against the column beside them.
+    { h: 'EV', title: 'Time on ice at even strength',
+      sortValue: function (p) { return p.toiEven || 0; },
+      fmt: function (p) { return clock(p.toiEven); } },
+    { h: 'PP', title: 'Time on ice on the power play',
+      sortValue: function (p) { return p.toiPowerPlay || 0; },
+      fmt: function (p) { return clock(p.toiPowerPlay); } },
+    { h: 'SH', title: 'Time on ice short handed',
+      sortValue: function (p) { return p.toiShortHanded || 0; },
+      fmt: function (p) { return clock(p.toiShortHanded); } },
   ];
+
+  /**
+   * Minutes as a clock. Ice time reads as 18:42, not 18.7, which is how every
+   * real box score prints it. A missing value is a dash rather than 0:00,
+   * because a man who never took a power-play shift did not play zero seconds of
+   * one -- he was never out there.
+   */
+  function clock(minutes) {
+    if (minutes === null || minutes === undefined || isNaN(minutes)) return '--';
+    var m = Math.floor(minutes);
+    var s = Math.round((minutes - m) * 60);
+    if (s === 60) { m += 1; s = 0; }
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  /**
+   * Saves of shots faced, which is more use than either on its own: 7 of 8 says
+   * what 7 does not. A goaltender who faced nothing in a situation gets a dash
+   * rather than a zero, because he did not fail to make those saves.
+   */
+  function strengthCell(saves, shots) {
+    if (!shots) return '--';
+    return saves + ' of ' + shots;
+  }
 
   /* ---------- distribution charts ----------------------------------------- */
 
@@ -229,11 +264,7 @@
       } },
       { h: 'DEC', title: 'Decision: win, loss, or a loss in overtime or the shootout',
         fmt: function (r) { return r.decision || '--'; } },
-      { h: 'TOI', title: 'Time on ice', fmt: function (r) {
-        var m = Math.floor(r.toi);
-        var sec = Math.round((r.toi - m) * 60);
-        return m + ':' + (sec < 10 ? '0' : '') + sec;
-      } },
+      { h: 'TOI', title: 'Time on ice', fmt: function (r) { return clock(r.toi); } },
       { h: 'SA', k: 'shotsAgainst', title: 'Shots against' },
       { h: 'SV', k: 'saves', title: 'Saves' },
       { h: 'GA', k: 'goalsAgainst', title: 'Goals against, not counting empty-net goals' },
@@ -243,6 +274,14 @@
         } },
       { h: 'EN', title: 'Goals scored into his empty net, which are not charged to him',
         fmt: function (r) { return r.emptyNetGoalsAgainst || 0; } },
+      // HIS NIGHT BY STRENGTH. Saves of shots faced at even strength, while his
+      // side was a man down, and while it was a man up. The three add to saves.
+      { h: 'EV SV', title: 'Saves at even strength',
+        fmt: function (r) { return strengthCell(r.evenSaves, r.evenShots); } },
+      { h: 'PP SV', title: 'Saves made while the other side was on the power play',
+        fmt: function (r) { return strengthCell(r.shortHandedSaves, r.shortHandedShots); } },
+      { h: 'SH SV', title: 'Saves made while his own side was on the power play',
+        fmt: function (r) { return strengthCell(r.powerPlaySaves, r.powerPlayShots); } },
     ], [g], { sortable: false }));
 
     wrap.appendChild(el('div', 'disc',
