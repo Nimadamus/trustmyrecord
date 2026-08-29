@@ -1969,6 +1969,19 @@
                 // drive the simulation model.
                 realAvgRaw: hasReal ? Number(stat.avg) : null,
                 realOpsRaw: hasReal ? Number(stat.ops) : null,
+                // SLUGGING AND ON-BASE, FOR THE BOX ROW.
+                //
+                // Both raw, both real, neither derived from this game. statsapi
+                // publishes obp directly; where it does not, OPS minus SLG is
+                // the identity that defines it rather than an estimate of it, so
+                // it is computed only from two numbers that are themselves real
+                // and is left null when either is missing.
+                realSlgRaw: hasReal && stat.slg != null ? Number(stat.slg) : null,
+                realObpRaw: hasReal
+                    ? (stat.obp != null ? Number(stat.obp)
+                        : ((stat.ops != null && stat.slg != null)
+                            ? Number(stat.ops) - Number(stat.slg) : null))
+                    : null,
                 hr: hrCount,
                 ab: hasReal ? Number(stat.atBats || 0) : 0,
                 pa: paUsed,
@@ -2571,6 +2584,22 @@
     }
     function evOdds(p) { p = clamp(p, 1e-4, 0.9999); return p / (1 - p); }
     function evFromOdds(o) { return o / (1 + o); }
+    /**
+     * A pitcher's real season earned run average, for the box row only.
+     *
+     * Read from the same cached statsapi line the simulation vector is built
+     * from, so it is the player's actual season and not a figure derived from
+     * one simulated game. Null when there is no cached line -- a synthetic team,
+     * an offline gate, a arm with no season -- because a blank is honest and a
+     * league-average ERA printed beside a real one is not.
+     */
+    function seasonEraOf(mlbId) {
+        if (!mlbId) return null;
+        var stat = cachedPlayerStat(mlbId, 'pitching');
+        var era = stat && stat.era != null ? Number(stat.era) : null;
+        return Number.isFinite(era) ? era : null;
+    }
+
     function evPitcherVector(pitcher, fallbackQuality) {
         var quality = Number(pitcher && pitcher.quality);
         if (!Number.isFinite(quality)) quality = Number.isFinite(fallbackQuality) ? fallbackQuality : 100;
@@ -2903,6 +2932,8 @@
                 rawPos: rawPos,
                 realAvg: (s && s.real && s.realAvgRaw != null) ? s.realAvgRaw : null,
                 realOps: (s && s.real && s.realOpsRaw != null) ? s.realOpsRaw : null,
+                realSlg: (s && s.real && s.realSlgRaw != null) ? s.realSlgRaw : null,
+                realObp: (s && s.real && s.realObpRaw != null) ? s.realObpRaw : null,
                 statSource: (s && s.real) ? ((s.statSource === 'split' && s.vsHand ? ('Real ' + seasonYear() + ' vs ' + s.vsHand + 'HP') : ('Real ' + seasonYear() + ' season')) + ' OPS ' + Number(s.realOpsRaw != null ? s.realOpsRaw : s.ops).toFixed(3)) : null,
                 sbRawRate: (s && s.sbRawRate != null) ? s.sbRawRate : null,
                 stealSucc: (s && s.stealSucc != null) ? s.stealSucc : null,
@@ -2976,7 +3007,7 @@
         // the prior 3-slot team-profile pen (RP + CL) when real arms are unavailable.
         var arms = evRelieverArms(roster, ownStarter);
         var pitchers = [
-            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null, gbShare: bbShareOf('pitchers', ownStarter && ownStarter.mlbId) }
+            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null, gbShare: bbShareOf('pitchers', ownStarter && ownStarter.mlbId), seasonEra: seasonEraOf(ownStarter && ownStarter.mlbId) }
         ];
         if (arms) {
             arms.ordered.forEach(function (a, idx) {
@@ -2987,7 +3018,7 @@
                 // the normal setup/closer pockets afterward rather than every arm
                 // getting an extended cap.
                 var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : (isOpenerGame && idx === 0 ? 'BULK' : 'RP'));
-                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null, gbShare: bbShareOf('pitchers', a.mlbId) });
+                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null, gbShare: bbShareOf('pitchers', a.mlbId), seasonEra: seasonEraOf(a.mlbId) });
             });
         } else {
             pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: isOpenerGame ? 'BULK' : 'RP' });
@@ -3424,6 +3455,12 @@
                 playerName: p.name, name: p.name + ' (' + pos + ')', rawPos: pos,
                 realAvg: hasReal ? Number(seasonStat.avg) : null,
                 realOps: hasReal ? Number(seasonStat.ops) : null,
+                realSlg: hasReal && seasonStat.slg != null ? Number(seasonStat.slg) : null,
+                realObp: hasReal
+                    ? (seasonStat.obp != null ? Number(seasonStat.obp)
+                        : ((seasonStat.ops != null && seasonStat.slg != null)
+                            ? Number(seasonStat.ops) - Number(seasonStat.slg) : null))
+                    : null,
                 statSource: hasReal ? ('Real ' + seasonYear() + ' season') : null,
                 speed: 1.0, stealRate: 0.09, stealSuccess: 0.75,
                 acc: evNewBat(), isBench: true, injuryPenalty: 0
@@ -5261,6 +5298,8 @@
                 // season mode (real, never synthesised - null when unknown)
                 seasonAvg: b.realAvg != null ? b.realAvg : null,
                 seasonOps: b.realOps != null ? b.realOps : null,
+                seasonSlg: b.realSlg != null ? b.realSlg : null,
+                seasonObp: b.realObp != null ? b.realObp : null,
                 statSource: b.statSource
             };
         }).filter(function (row) { return row.name; });
@@ -5308,7 +5347,11 @@
                 er: Math.min(a.r, a.er), bb: a.bb, ibb: a.ibb || 0, so: a.so, hr: a.hr, hbp: a.hbp || 0,
                 bf: a.bf || 0, pitches: a.pitches || 0, strikes: a.strikes || 0,
                 fps: a.fps || 0, whiff: a.whiff || 0, ir: a.ir || 0, irs: a.irs || 0,
-                enterMargin: p._enterMargin
+                enterMargin: p._enterMargin,
+                // His real season line, for the box row. Never derived from this
+                // game, and null rather than a league average when unknown.
+                seasonEra: p.seasonEra != null ? p.seasonEra : null,
+                role: p.role || null
             };
         });
     }
@@ -7095,6 +7138,8 @@
                 '<td class="bx-rate">' + fmt3(row.gameSlg) + '</td>' +
                 '<td class="bx-rate">' + fmt3(row.gameOps) + '</td>' +
                 '<td class="bx-season">' + (row.seasonAvg == null ? '—' : fmt3(row.seasonAvg)) + '</td>' +
+                '<td class="bx-season">' + (row.seasonObp == null ? '—' : fmt3(row.seasonObp)) + '</td>' +
+                '<td class="bx-season">' + (row.seasonSlg == null ? '—' : fmt3(row.seasonSlg)) + '</td>' +
                 '<td class="bx-season">' + (row.seasonOps == null ? '—' : fmt3(row.seasonOps)) + '</td></tr>';
         }).join('');
         var tAvg = totals.ab > 0 ? totals.h / totals.ab : null;
@@ -7104,7 +7149,8 @@
             cols.map(function (c) { return '<td>' + totals[c.k] + '</td>'; }).join('') +
             '<td class="bx-rate">' + fmt3(tAvg) + '</td><td class="bx-rate">' + fmt3(tObp) + '</td>' +
             '<td class="bx-rate">' + fmt3(tSlg) + '</td><td class="bx-rate">' + fmt3(tObp == null || tSlg == null ? null : tObp + tSlg) + '</td>' +
-            '<td class="bx-season"></td><td class="bx-season"></td></tr>';
+            '<td class="bx-season"></td><td class="bx-season"></td>'
+            + '<td class="bx-season"></td><td class="bx-season"></td></tr>';
         return body;
     }
     function batterTableHead(showAdvanced) {
@@ -7116,6 +7162,8 @@
             '<th class="bx-rate" title="Slugging, THIS GAME">SLG</th>' +
             '<th class="bx-rate" title="OPS, THIS GAME">OPS</th>' +
             '<th class="bx-season" title="Real season-to-date batting average">SEA AVG</th>' +
+            '<th class="bx-season" title="Real season-to-date on-base percentage">SEA OBP</th>' +
+            '<th class="bx-season" title="Real season-to-date slugging percentage">SEA SLG</th>' +
             '<th class="bx-season" title="Real season-to-date OPS">SEA OPS</th></tr>';
     }
     // MLB_BOXSCORE_PCST_20260623: MLB Gameday pitch count-strikes (PC-ST) per pitcher.
@@ -7166,7 +7214,12 @@
                 '<td>' + (gb === null ? '—' : gb + '-' + fb) + '</td>' +
                 '<td>' + Number(row.fps || 0) + '</td><td>' + Number(row.whiff || 0) + '</td>' +
                 '<td>' + Number(row.ir || 0) + '-' + Number(row.irs || 0) + '</td>' +
-                '<td>' + gameEra(row) + '</td><td>' + gameWhip(row) + '</td></tr>';
+                '<td>' + gameEra(row) + '</td><td>' + gameWhip(row) + '</td>' +
+                // His real season, beside what he did tonight. A dash when there
+                // is no cached line rather than a league average dressed as his.
+                '<td class="bx-season">'
+                + (row.seasonEra == null ? '—' : row.seasonEra.toFixed(2))
+                + '</td></tr>';
         }).join('');
         var tStPct = totals.pc ? Math.round((totals.st / totals.pc) * 100) + '%' : '—';
         body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + outsToIp(totals.outs) + '</td><td>' + totals.h + '</td><td>' + totals.r + '</td><td>' + totals.er + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + totals.hr + '</td>' +
@@ -7355,7 +7408,8 @@
             '<th title="Pitch count - strikes">PC-ST</th><th title="Strike percentage">ST%</th>' +
             '<th title="Groundouts-flyouts induced">GO-FO</th><th title="First-pitch strikes">FPS</th>' +
             '<th title="Swings and misses">SwStr</th><th title="Inherited runners - inherited runners scored">IR-IRS</th>' +
-            '<th title="ERA, this game">ERA</th><th title="WHIP, this game">WHIP</th></tr>';
+            '<th title="ERA, this game">ERA</th><th title="WHIP, this game">WHIP</th>' +
+            '<th class="bx-season" title="Real season-to-date earned run average">SEA ERA</th></tr>';
         return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p>' +
             '<div class="player-table-wrap"><table class="player-box-table bx-pit-table"><thead>' + head + '</thead><tbody>' +
             pitcherTableRows(players.pitchers, isWinner, margin, ctx, foldStaff) + '</tbody></table></div></section>';

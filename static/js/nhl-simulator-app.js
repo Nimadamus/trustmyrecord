@@ -64,6 +64,9 @@
     { h: 'A', k: 'a', title: 'Assists' },
     { h: 'P', k: 'pts', title: 'Points' },
     { h: 'SOG', k: 'shots', title: 'Shots on goal' },
+    // Every puck he threw at the net, on goal or not. Blocked and missed shots
+    // are a real part of how much a man shoots and the engine counts them.
+    { h: 'ATT', k: 'attempts', title: 'Shot attempts, including blocked and missed' },
     { h: 'S%', title: 'Shooting percentage',
       sortValue: function (p) { return p.shootingPct === null ? -1 : p.shootingPct; },
       fmt: function (p) { return p.shootingPct === null ? '--' : p.shootingPct.toFixed(1); } },
@@ -77,9 +80,13 @@
     { h: 'BLK', k: 'blocks', title: 'Blocked shots' },
     { h: 'GV', k: 'giveaways', title: 'Giveaways' },
     { h: 'TK', k: 'takeaways', title: 'Takeaways' },
-    { h: 'FO', title: 'Faceoffs won of faceoffs taken',
+    { h: 'FO', title: 'Faceoffs won and lost',
       sortValue: function (p) { return p.faceoffWins; },
-      fmt: function (p) { return p.faceoffs ? p.faceoffWins + '-' + p.faceoffs : '--'; } },
+      // Won-lost, the way a real sheet prints it. Won-of-taken made the reader
+      // do the subtraction and left the losses the engine tracks unshown.
+      fmt: function (p) {
+        return p.faceoffs ? p.faceoffWins + '-' + p.faceoffLosses : '--';
+      } },
     { h: 'FO%', title: 'Faceoff win percentage, for the men who took draws',
       sortValue: function (p) { return p.faceoffPct === null ? -1 : p.faceoffPct; },
       fmt: function (p) { return p.faceoffPct === null ? '--' : p.faceoffPct.toFixed(1); } },

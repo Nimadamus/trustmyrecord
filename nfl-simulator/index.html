@@ -1125,14 +1125,15 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       ['Yards / play',s.yards_per_play],['First downs',s.first_downs],['Third down',s.third],
       ['Fourth down',s.fourth],['Red zone (TD/trip)',s.red_zone],['Turnovers',s.turnovers],
       ['Sacks allowed',s.sacks_allowed],['Penalties',`${s.penalties}-${s.penalty_yards}`],['Time of possession',s.top],
+      ['Drives',s.drives],['Plays',s.plays],
     ]);
     for(const [side,abbr,name,score] of [[rep.away,aAbbr,g.away,rep.away_score],[rep.home,hAbbr,g.home,rep.home_score]]){
       const wrap=el('div');wrap.style.marginTop='22px';
       const th=el('div','teamhead');th.appendChild(teamMark(abbr,30));th.appendChild(Object.assign(el('span','nm'),{textContent:name}));th.appendChild(Object.assign(el('span','rec'),{textContent:'simulated '+score+' pts'}));
       wrap.appendChild(th);
-      const passT=mkTable(['Passing','C/ATT','Yds','TD','INT','Rtg'],side.passing.map(pp=>[pp.name,`${pp.comp}/${pp.att}`,pp.yards,pp.td,pp.int,pp.rating]));
+      const passT=mkTable(['Passing','C/ATT','Yds','Y/A','TD','INT','Rtg'],side.passing.map(pp=>[pp.name,`${pp.comp}/${pp.att}`,pp.yards,pp.ypa,pp.td,pp.int,pp.rating]));
       wrap.appendChild(grp(block('',passT), block('',teamTotals(side.summary))));
-      const rushT=mkTable(['Rushing','Car','Yds','TD','Y/C','Lng'],side.rushing.map(pp=>[pp.name,pp.carries,pp.yards,pp.td,pp.ypc,pp.long]));
+      const rushT=mkTable(['Rushing','Car','Yds','TD','Y/C','Lng','FUM'],side.rushing.map(pp=>[pp.name,pp.carries,pp.yards,pp.td,pp.ypc,pp.long,pp.fumbles]));
       const recT=mkTable(['Receiving','Rec/Tgt','Yds','TD','Y/R','Lng'],side.receiving.map(pp=>[pp.name,`${pp.rec}/${pp.targets}`,pp.yards,pp.td,pp.ypr,pp.long]));
       wrap.appendChild(grp(block('',rushT),block('',recT)));
       const defT=side.defense?mkTable(['Defense (team)','Value'],[['Sacks',side.defense.sacks],['Interceptions',side.defense.interceptions],['Fumble recoveries',side.defense.fumble_recoveries],['Takeaways',side.defense.takeaways],['Defensive TD',side.defense.defensive_tds],['Safeties',side.defense.safeties]]):null;
