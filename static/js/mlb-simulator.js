@@ -5239,7 +5239,19 @@
         var bbRandom = seedSalt === undefined || seedSalt === null || seedSalt === ''
             ? Math.random
             : seededRandom(seededHash('bb|' + seedSalt));
-        return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather, bbRandom);
+        var built = assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather, bbRandom);
+        // THE SEED THIS GAME WAS PLAYED WITH, CARRIED OUT ON THE BOX.
+        //
+        // It was not, and the replay harness found the consequence at once:
+        // every archived MLB run came back NOT_REPRODUCIBLE for want of a seed,
+        // while the engine itself reproduces a seed identically in a fresh
+        // interpreter. The blocker was never that the engine runs in a browser
+        // -- it was that the one input needed to run it again was not recorded.
+        if (built) {
+            built.seedSalt = (seedSalt === undefined || seedSalt === null || seedSalt === '')
+                ? null : String(seedSalt);
+        }
+        return built;
     }
     function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather) {
         // SIM_WEATHER_20260726: HR/carry factor folds into the same parkHr channel

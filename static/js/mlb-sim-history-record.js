@@ -211,6 +211,9 @@
       // Null when it cannot be read, never a made-up constant -- the backend
       // validates the shape and refuses anything that is not a plausible hash.
       engine_version: engineBuildHash(),
+      // The seed the engine played this game with, so the run can be played
+      // again. Null rather than invented when the engine did not carry one.
+      seed: (box && box.seedSalt) || null,
       run_uid: ('sim-' + String(box.runId || (Date.now() + '-' + Math.random().toString(36).slice(2))))
         .replace(/[^A-Za-z0-9._:-]/g, '-').slice(0, 80),
       game_date: slateDate(),
