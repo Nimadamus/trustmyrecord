@@ -214,6 +214,9 @@
       // The seed the engine played this game with, so the run can be played
       // again. Null rather than invented when the engine did not carry one.
       seed: (box && box.seedSalt) || null,
+      // The model state the engine consumed, so this run can be replayed
+      // against it rather than against whatever statsapi says later.
+      model_inputs: modelInputs(),
       run_uid: ('sim-' + String(box.runId || (Date.now() + '-' + Math.random().toString(36).slice(2))))
         .replace(/[^A-Za-z0-9._:-]/g, '-').slice(0, 80),
       game_date: slateDate(),
@@ -267,6 +270,48 @@
   /* ---------------------------------------------------------------- */
   /* Recording                                                        */
   /* ---------------------------------------------------------------- */
+
+  /**
+   * THE MODEL STATE THIS SIMULATION ACTUALLY CONSUMED.
+   *
+   * The engine reads its player vectors out of state.liveContext, and those
+   * vectors -- not the lineup names -- are what decide the game. A replay
+   * against today's statsapi is a different simulation, which is exactly what
+   * the replay harness measured: same seed, honoured faithfully, different
+   * score, because the roster behind it had moved.
+   *
+   * WHAT IS SENT IS A WHITELIST, AND THE WHITELIST IS TRACED, NOT GUESSED. Every
+   * key here is one the engine reads as `state.liveContext.<key>`. The two
+   * largest things in liveContext -- boardGames at 3.3MB and espnSummaries at
+   * 4.3MB -- are board and summary data for the page and are read by no
+   * simulation code, so they are not sent. What remains is tens of kilobytes.
+   *
+   * Sending the whole context would have been easier and would have archived
+   * eight megabytes of scoreboard per simulation to reproduce a game that does
+   * not depend on it.
+   */
+  var MODEL_INPUT_KEYS = [
+    'teamRosters', 'teamInjured', 'playerStats', 'playerSplits',
+    'playerProfiles', 'todaySchedule', 'teamTransactions', 'teamSeason',
+    'teamOaa', 'statcast'
+  ];
+
+  function modelInputs() {
+    try {
+      var s = sim();
+      var lc = s && s.state && s.state.liveContext;
+      if (!lc) return null;
+      var out = {};
+      var any = false;
+      for (var i = 0; i < MODEL_INPUT_KEYS.length; i += 1) {
+        var k = MODEL_INPUT_KEYS[i];
+        if (lc[k] === undefined || lc[k] === null) continue;
+        out[k] = lc[k];
+        any = true;
+      }
+      return any ? out : null;
+    } catch (e) { return null; }
+  }
 
   /**
    * The content hash the build stamped on the engine this page is running.
