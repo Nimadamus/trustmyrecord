@@ -2065,10 +2065,28 @@
             return Number(stats.gradedPicks != null ? stats.gradedPicks : (Number(stats.wins || 0) + Number(stats.losses || 0) + Number(stats.pushes || 0))) || 0;
         }
 
+        // Recency for FEATURED qualification only. "Activity in the last 30 days"
+        // must count a pick that SETTLED inside the window, not just one that was
+        // submitted inside it. getActivityTime() only ever sees submit timestamps
+        // (last_pick_at / locked_at), so a member whose final batch of picks was
+        // locked 31 days ago and graded 12 days ago read as inactive and was
+        // dropped from EVERY featured category, which is exactly what hid the
+        // true all-time units leader (makaveli66, +86.71u, last locked 2026-07-29,
+        // last graded 2026-08-16) and promoted the runner-up into the card.
+        // last_graded_at comes from /api/users/featured-stats, the same
+        // already-fetched server aggregate the Hot card ranks on, so this adds no
+        // request and introduces no second source of truth. Deliberately NOT
+        // folded into getActivityTime(): that function also drives the "Active"
+        // sort column, which is meant to mean "recently posted a pick".
+        function featuredActivityTime(member) {
+            const row = featuredRowFor(member);
+            return Math.max(getActivityTime(member), row ? getTime(row.last_graded_at) : 0);
+        }
+
         function isQualifiedTopPerformer(member) {
             return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS
                 && Number(member?.stats?.units || 0) > 0
-                && getActivityTime(member) > Date.now() - (30 * 24 * 60 * 60 * 1000);
+                && featuredActivityTime(member) > Date.now() - (30 * 24 * 60 * 60 * 1000);
         }
 
         // Tier of a member, by verified (graded) pick volume; members with no
