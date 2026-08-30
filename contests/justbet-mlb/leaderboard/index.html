@@ -17,7 +17,7 @@
     <style>
         :root { --bg:#FFFFFF; --panel:#FFFFFF; --line:#D2DEEA;
                 --text:#07182A; --muted:#2E4459; --faint:#5E7590;
-                --cyan:#0C948C; --gold:#B98505; --gold-bright:#B98505; --justbet:#B98505; }
+                --cyan:#0B4FA8; --gold:#B98505; --gold-bright:#B98505; --justbet:#B98505; }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; color: var(--text);
             font-family: "Inter", system-ui, sans-serif;
@@ -41,15 +41,15 @@
         .cta-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; background: rgba(7,24,42,0.06); color: var(--text); border: 1px solid var(--line); font-weight: 700; font-size: 0.85rem; }
         .block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
         .refresh-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; cursor: pointer; border: 1px solid var(--line); background: #FFFFFF; }
-        .refresh-btn:hover { color: var(--text); border-color: rgba(12,148,140,.28); }
+        .refresh-btn:hover { color: var(--text); border-color: rgba(11, 79, 168,.28); }
 
         .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); margin-top: 4px; }
         table.contest-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        table.contest-table thead { background: linear-gradient(180deg, rgba(12,148,140,0.08), transparent); }
+        table.contest-table thead { background: linear-gradient(180deg, rgba(11, 79, 168,0.08), transparent); }
         table.contest-table th { text-align: left; padding: 8px 12px; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 800; border-bottom: 1px solid var(--line); white-space: nowrap; }
         table.contest-table td { padding: 8px 12px; border-bottom: 1px solid #D2DEEA; color: #07182A; white-space: nowrap; line-height: 1.3; }
         table.contest-table tr:last-child td { border-bottom: 0; }
-        table.contest-table tbody tr:hover { background: rgba(12,148,140,0.08); }
+        table.contest-table tbody tr:hover { background: rgba(11, 79, 168,0.08); }
         table.contest-table th.num, table.contest-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
         table.contest-table td a { font-weight: 700; }
         table.contest-table td a:hover { color: var(--cyan); }
@@ -70,14 +70,14 @@
            there is nothing here to leak. */
         .reveal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 4px; }
         .game-card { border: 1px solid var(--line); background: #FFFFFF; border-radius: 12px; padding: 11px 13px; min-width: 0; }
-        .game-card.is-live { border-color: rgba(12,148,140,.42); box-shadow: 0 0 0 1px rgba(12,148,140,.10) inset; }
+        .game-card.is-live { border-color: rgba(11, 79, 168,.42); box-shadow: 0 0 0 1px rgba(11, 79, 168,.10) inset; }
         .g-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
         .g-teams { font-family: "Barlow",sans-serif; font-weight: 900; font-size: 0.94rem; }
         .g-teams .at { color: var(--faint); margin: 0 5px; font-weight: 700; }
         .g-time { font-size: 0.72rem; color: var(--faint); font-weight: 700; white-space: nowrap; }
         .g-state { margin-top: 3px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
         .g-state.sealed { color: var(--faint); }
-        .g-state.open { color: #07736D; }
+        .g-state.open { color: #0B4FA8; }
         .picks { margin-top: 9px; display: flex; flex-direction: column; gap: 5px; }
         .pchip { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; line-height: 1.3; padding: 5px 8px; border-radius: 8px; background: rgba(7,24,42,0.04); border: 1px solid transparent; }
         .pchip .pu { font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -89,8 +89,8 @@
         .pchip.res-lost { background: rgba(188,55,46,0.09); border-color: rgba(188,55,46,.22); }
         .pchip.res-push, .pchip.res-void { background: rgba(7,24,42,0.06); border-color: var(--line); }
         .none { color: var(--faint); font-size: 0.78rem; }
-        .rules-note { margin-top: 18px; padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(12,148,140,.28); background: rgba(7,24,42,0.06); color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
-        .rules-note strong { color: #07736D; }
+        .rules-note { margin-top: 18px; padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(11, 79, 168,.28); background: rgba(7,24,42,0.06); color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
+        .rules-note strong { color: #0B4FA8; }
         .rules-note ul { margin: 8px 0 0; padding-left: 18px; }
         .rules-note li { margin: 4px 0; }
         @media (max-width: 640px) {
@@ -108,7 +108,7 @@
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=a062f6370326">
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=07a9f05fecbc">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=4f0abcfa4b76">
 </head>
 <body class="tmr-light">
     <div id="tmr-nav-placeholder"></div>

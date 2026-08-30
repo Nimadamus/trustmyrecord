@@ -38,10 +38,10 @@
             --text-2: #2E4459;
             --muted: #2E4459;
             /* Accents */
-            --accent: #0C948C;
-            --accent-2: #0C948C;
-            --accent-dim: rgba(12,148,140,0.11);
-            --accent-border: rgba(12,148,140,.28);
+            --accent: #0B4FA8;
+            --accent-2: #0B4FA8;
+            --accent-dim: rgba(11, 79, 168,0.11);
+            --accent-border: rgba(11, 79, 168,.28);
             --accent-ink: #04222B;
             --green: #0A8B4E;
             --green-dim: rgba(10,139,78,0.12);
@@ -67,8 +67,8 @@
             --tmr-fb-bg: var(--bg);
             --tmr-fb-text: var(--text);
             --tmr-fb-muted: var(--muted);
-            --tmr-fb-link: #07736D;
-            --tmr-fb-link-hover: #07736D;
+            --tmr-fb-link: #0B4FA8;
+            --tmr-fb-link-hover: #0B4FA8;
             --tmr-fb-border: var(--border);
             --tmr-fb-border-strong: var(--border-strong);
             --tmr-fb-row-alt: var(--surface-2);
@@ -88,8 +88,8 @@
             /* Fixed attachment is deliberately avoided — it sizes the gradient to
                the viewport and leaves the rest of a long page unpainted. */
             background:
-                radial-gradient(58rem 22rem at 50% -8rem, rgba(12,148,140,0.08), transparent 68%) no-repeat,
-                radial-gradient(46rem 30rem at 92% 12rem, rgba(12,148,140,0.08), transparent 70%) no-repeat,
+                radial-gradient(58rem 22rem at 50% -8rem, rgba(11, 79, 168,0.08), transparent 68%) no-repeat,
+                radial-gradient(46rem 30rem at 92% 12rem, rgba(11, 79, 168,0.08), transparent 70%) no-repeat,
                 linear-gradient(180deg, #FFFFFF 0px, #FFFFFF 860px) no-repeat,
                 var(--bg-deep) !important;
             color: var(--text) !important;
@@ -141,14 +141,14 @@
             border: 1px solid var(--border);
             border-radius: var(--r-lg);
             background:
-                radial-gradient(30rem 12rem at 8% -4rem, rgba(12,148,140,0.1), transparent 70%),
+                radial-gradient(30rem 12rem at 8% -4rem, rgba(11, 79, 168,0.1), transparent 70%),
                 linear-gradient(135deg, #F6F9FC 0%, #F6F9FC 52%, #FFFFFF 100%);
             box-shadow: var(--shadow-1);
             overflow: hidden;
         }
         .pl-hero::after {
             content: ""; position: absolute; inset: 0 0 auto 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent), rgba(12,148,140,0.14), transparent);
+            background: linear-gradient(90deg, transparent, var(--accent), rgba(11, 79, 168,0.14), transparent);
             opacity: 0.55;
         }
         .pl-hero-main { min-width: 0; flex: 1 1 380px; }
@@ -174,7 +174,7 @@
         .pl-stat .pl-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; vertical-align: 1px; animation: plPulse 2.4s ease-in-out infinite; }
         @keyframes plPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
         /* Rotating prompt */
-        .pl-prompt { display: inline-flex; align-items: center; gap: 8px; margin-top: 11px; padding: 5px 11px 5px 9px; border: 1px solid var(--border); border-radius: 999px; background: rgba(12,148,140,0.08); color: var(--text-2); font-size: 0.755rem; font-weight: 500; max-width: 100%; }
+        .pl-prompt { display: inline-flex; align-items: center; gap: 8px; margin-top: 11px; padding: 5px 11px 5px 9px; border: 1px solid var(--border); border-radius: 999px; background: rgba(11, 79, 168,0.08); color: var(--text-2); font-size: 0.755rem; font-weight: 500; max-width: 100%; }
         .pl-prompt i { color: var(--accent); font-size: 0.66rem; }
         .pl-prompt span { transition: opacity 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .pl-prompt span.is-fading { opacity: 0; }
@@ -197,7 +197,7 @@
         select.tmr-fb-action-btn { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%237C90AB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px !important; width: auto !important; }
         select.tmr-fb-action-btn option { background: var(--surface-1); color: var(--text); }
         .tmr-fb-action-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--accent-border); }
-        .tmr-fb-action-btn.is-primary { background: linear-gradient(135deg, #0C948C, #DEF4F2); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+        .tmr-fb-action-btn.is-primary { background: linear-gradient(135deg, #0B4FA8, #DEF4F2); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
         .tmr-fb-action-btn.is-primary:hover { background: linear-gradient(135deg, #DEF4F2, #DEF4F2); color: var(--accent-ink); }
 
         /* ============ STICKY FILTER BAR ============ */
@@ -268,7 +268,7 @@
         /* Competition names are long ("Argentina Liga Profesional"). Rendering the
            label as-is (not force-uppercased) keeps it readable and keeps the badge
            subordinate to the question. */
-        .pl-badge--league { border: 1px solid rgba(12,148,140,.28); background: rgba(12,148,140,0.08); color: #1B4F9E; max-width: 180px; overflow: hidden; text-overflow: ellipsis; text-transform: none; letter-spacing: 0.012em; font-size: 0.675rem; font-weight: 650; }
+        .pl-badge--league { border: 1px solid rgba(11, 79, 168,.28); background: rgba(11, 79, 168,0.08); color: #1B4F9E; max-width: 180px; overflow: hidden; text-overflow: ellipsis; text-transform: none; letter-spacing: 0.012em; font-size: 0.675rem; font-weight: 650; }
         /* Type reads as words, not another block of caps beside the league. */
         .pl-badge--type { border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); letter-spacing: 0.005em; text-transform: none; font-size: 0.67rem; font-weight: 650; }
         .pl-badge--soon { border: 1px solid rgba(185,133,5,.30); background: var(--gold-dim); color: var(--gold); }
@@ -318,7 +318,7 @@
         }
         .pl-opt::before {
             content: ""; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(12,148,140,0.14), rgba(12,148,140,0.08));
+            background: linear-gradient(135deg, rgba(11, 79, 168,0.14), rgba(11, 79, 168,0.08));
             opacity: 0; transition: opacity 0.13s ease;
         }
         .pl-opt > * { position: relative; }
@@ -328,7 +328,7 @@
         .pl-opt:disabled { cursor: default; }
         .pl-opt.is-busy { opacity: 0.7; cursor: wait; }
         /* The option you currently hold, while changing a vote */
-        .pl-opt.is-current { border-color: var(--accent-border); background: rgba(12,148,140,0.1); color: #07182A; }
+        .pl-opt.is-current { border-color: var(--accent-border); background: rgba(11, 79, 168,0.1); color: #07182A; }
         .pl-opt.is-current::before { opacity: 0.45; }
         .pl-optcur { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 1px; }
         .pl-changerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 2px; color: var(--muted); font-size: 0.72rem; }
@@ -348,7 +348,7 @@
         }
         .pl-res-fillbg {
             position: absolute; inset: 0 auto 0 0; width: 0;
-            background: linear-gradient(90deg, rgba(12,148,140,0.14), rgba(12,148,140,0.09));
+            background: linear-gradient(90deg, rgba(11, 79, 168,0.14), rgba(11, 79, 168,0.09));
             transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .pl-res-inner { position: relative; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
@@ -357,8 +357,8 @@
         .pl-res-num { display: flex; align-items: baseline; gap: 7px; flex: 0 0 auto; }
         .pl-res-pct { color: var(--text); font-size: 0.86rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .pl-res-votes { color: var(--muted); font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-        .pl-res-row.is-you { border-color: var(--accent-border); background: rgba(12,148,140,0.08); }
-        .pl-res-row.is-you .pl-res-fillbg { background: linear-gradient(90deg, rgba(12,148,140,0.14), rgba(12,148,140,0.09)); }
+        .pl-res-row.is-you { border-color: var(--accent-border); background: rgba(11, 79, 168,0.08); }
+        .pl-res-row.is-you .pl-res-fillbg { background: linear-gradient(90deg, rgba(11, 79, 168,0.14), rgba(11, 79, 168,0.09)); }
         .pl-res-row.is-win { border-color: rgba(10,139,78,.28); }
         .pl-res-row.is-win .pl-res-fillbg { background: linear-gradient(90deg, rgba(10,139,78,0.14), rgba(10,139,78,0.08)); }
         /* Never colour-only: every state carries an icon + text tag */
@@ -382,12 +382,12 @@
             padding: 18px 20px 16px; border-radius: var(--r-lg);
             border: 1px solid var(--border-strong);
             background:
-                radial-gradient(34rem 14rem at 88% -3rem, rgba(12,148,140,0.09), transparent 68%),
+                radial-gradient(34rem 14rem at 88% -3rem, rgba(11, 79, 168,0.09), transparent 68%),
                 linear-gradient(135deg, #F6F9FC 0%, #F6F9FC 55%, #FFFFFF 100%);
             box-shadow: var(--shadow-2);
             display: flex; flex-direction: column; gap: 13px;
         }
-        .pl-feat::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--accent), rgba(12,148,140,0.14), transparent); }
+        .pl-feat::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--accent), rgba(11, 79, 168,0.14), transparent); }
         .pl-feat-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
         .pl-feat-top .pl-spacer { flex: 1 1 auto; }
         .pl-clock { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border-strong); background: rgba(7,24,42,0.06); color: var(--text-2); font-size: 0.72rem; font-weight: 650; white-space: nowrap; }
@@ -548,7 +548,7 @@
         .tmr-poll-status.closed { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border-strong); }
         .tmr-poll-status.expired { background: var(--red-dim); color: #BC372E; border: 1px solid rgba(188,55,46,.28); }
         .tmr-poll-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 4px; }
-        .tmr-poll-badge { display: inline-flex; align-items: center; max-width: 210px; padding: 2px 8px; border-radius: 5px; border: 1px solid rgba(12,148,140,.28); background: rgba(12,148,140,0.08); color: #07736D; font-size: 0.675rem; font-weight: 650; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-poll-badge { display: inline-flex; align-items: center; max-width: 210px; padding: 2px 8px; border-radius: 5px; border: 1px solid rgba(11, 79, 168,.28); background: rgba(11, 79, 168,0.08); color: #0B4FA8; font-size: 0.675rem; font-weight: 650; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tmr-poll-badge.is-entity { border-color: rgba(10,139,78,.28); background: var(--green-dim); color: #0A8B4E; }
         .tmr-poll-badge.is-category { border-color: rgba(185,133,5,.30); background: var(--gold-dim); color: var(--gold); }
         .tmr-poll-options { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
@@ -566,7 +566,7 @@
         .tmr-poll-bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-radius: 999px; transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
         .tmr-poll-result.is-winner { background: var(--green-dim); }
         .tmr-poll-result.is-winner .tmr-poll-bar-fill { background: var(--green); }
-        .tmr-poll-result.is-user-pick { background: rgba(12,148,140,0.08); }
+        .tmr-poll-result.is-user-pick { background: rgba(11, 79, 168,0.08); }
         .tmr-poll-result-tag { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.045em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
         .tmr-poll-result-tag.winner { background: var(--green); color: #05261C; }
         .tmr-poll-result-tag.user { background: var(--accent); color: var(--accent-ink); }
@@ -610,7 +610,7 @@
         .tmr-game-sub { color: var(--muted); font-size: var(--fs-sm); }
         .tmr-game-sub strong { color: var(--text-2); font-weight: 650; }
         .tmr-game-rules { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 4px; }
-        .tmr-game-rule { padding: 3px 9px; border-radius: 5px; background: rgba(12,148,140,0.08); border: 1px solid rgba(12,148,140,.28); color: #07736D; font-size: 0.7rem; font-weight: 650; }
+        .tmr-game-rule { padding: 3px 9px; border-radius: 5px; background: rgba(11, 79, 168,0.08); border: 1px solid rgba(11, 79, 168,.28); color: #0B4FA8; font-size: 0.7rem; font-weight: 650; }
         .tmr-q { border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; margin: 12px 0; background: var(--surface-2); }
         .tmr-q-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
         .tmr-q-title { font-weight: 650; color: var(--text); font-size: var(--fs-base); }
@@ -735,7 +735,7 @@
         .tmr-option-row .tmr-option-remove { width: 34px; height: 34px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--red); cursor: pointer; flex: 0 0 auto; }
         .tmr-option-row .tmr-option-remove:hover { border-color: rgba(188,55,46,.28); background: var(--red-dim); }
         .tmr-add-option-btn { padding: 8px 13px; border-radius: var(--r-sm); border: 1px dashed var(--accent-border); background: var(--accent-dim); color: var(--tmr-fb-link); font-weight: 650; font-size: 0.79rem; cursor: pointer; }
-        .tmr-add-option-btn:hover { background: rgba(12,148,140,0.14); }
+        .tmr-add-option-btn:hover { background: rgba(11, 79, 168,0.14); }
         .tmr-modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 8px; }
         .tmr-modal-error { padding: 9px 12px; border-radius: var(--r-sm); background: var(--red-dim); border: 1px solid rgba(188,55,46,.28); color: #BC372E; font-size: 0.82rem; margin-bottom: 12px; display: none; }
         .tmr-modal-error.is-shown { display: block; }
@@ -847,7 +847,7 @@
         .pl-lb-card.is-leader .v { color: var(--gold); }
 
         /* ---- your stats ---- */
-        .pl-lb-you { background: linear-gradient(180deg, rgba(12,148,140,0.08), rgba(12,148,140,0.08)); border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px; }
+        .pl-lb-you { background: linear-gradient(180deg, rgba(11, 79, 168,0.08), rgba(11, 79, 168,0.08)); border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px; }
         .pl-lb-you h3 { margin: 0 0 9px; font-size: 0.86rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 7px; }
         .pl-lb-you h3 .pl-lb-rankbig { color: var(--accent); font-variant-numeric: tabular-nums; }
         .pl-lb-youstats { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
@@ -864,8 +864,8 @@
         .pl-lb-table th:nth-child(2), .pl-lb-table td:nth-child(2) { text-align: left; }
         .pl-lb-table tbody tr:last-child td { border-bottom: 0; }
         .pl-lb-table tbody tr:hover td { background: rgba(30,91,191,0.08); }
-        .pl-lb-table tr.is-you td { background: rgba(12,148,140,0.085); }
-        .pl-lb-table tr.is-you:hover td { background: rgba(12,148,140,0.12); }
+        .pl-lb-table tr.is-you td { background: rgba(11, 79, 168,0.085); }
+        .pl-lb-table tr.is-you:hover td { background: rgba(11, 79, 168,0.12); }
         .pl-lb-table tr.is-you td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
         .pl-lb-num { font-variant-numeric: tabular-nums; color: var(--text-2); font-weight: 650; }
         .pl-lb-num.good { color: var(--green); }
@@ -932,7 +932,7 @@
                column shrink to the band (2026-08-25). */
             .pl-lb-cardlist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
             .pl-lb-mc { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; }
-            .pl-lb-mc.is-you { border-color: var(--accent-border); background: rgba(12,148,140,0.08); }
+            .pl-lb-mc.is-you { border-color: var(--accent-border); background: rgba(11, 79, 168,0.08); }
             .pl-lb-mc-top { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
             .pl-lb-mc-top .pl-lb-name { max-width: none; flex: 1 1 auto; }
             .pl-lb-mc-pts { margin-left: auto; color: var(--text); font-weight: 800; font-size: 0.95rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -953,7 +953,7 @@
 <script defer src="/static/js/tmr-linkhub.js?v=624f44f1bbc7"></script>
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=07a9f05fecbc">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=4f0abcfa4b76">
 </head>
 <body class="polls-page tmr-ds">
     <!-- Global nav: same canonical component as the homepage (tmr-ds-nav.js),
@@ -1132,7 +1132,7 @@
                     sportsbook. Do not add it back.
                 -->
                 <div id="createTypeStep">
-                    <p style="color:#2E4459;font-size:0.88rem;margin-bottom:14px;">A TMR poll is a multi-question quiz on NFL, NBA, MLB, NHL, WNBA or major college football and basketball. Single betting markets belong on the <a href="/sportsbook/" style="color:var(--tmr-fb-cyan,#07736D);">sportsbook</a>.</p>
+                    <p style="color:#2E4459;font-size:0.88rem;margin-bottom:14px;">A TMR poll is a multi-question quiz on NFL, NBA, MLB, NHL, WNBA or major college football and basketball. Single betting markets belong on the <a href="/sportsbook/" style="color:var(--tmr-fb-cyan,#0B4FA8);">sportsbook</a>.</p>
                     <div class="tmr-typegrid">
                         <button type="button" class="tmr-typebtn" onclick="setCreateType('quiz')">
                             <span class="ic"><i class="fas fa-trophy"></i></span>

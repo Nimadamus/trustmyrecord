@@ -2039,3 +2039,307 @@ body.tmr-site-shell table th, body.tmr-site-shell table td,
 body.tmr-ds-shell .sb-odds, body.tmr-ds-shell .odds{
   font-family:Inter,'Segoe UI',Arial,sans-serif; font-style:normal;
 }
+
+/* =============================================================================
+   28. FORUM — TMR brand, classic-forum density kept
+   -----------------------------------------------------------------------------
+   The forum is deliberately not on the design system and must not become cards.
+   Rows stay rows, the table stays a table, the line-height stays tight. What
+   changes is colour: the ground, the row banding, the separators, the links and
+   the headers. Nothing here alters spacing, font-size or structure.
+   -------------------------------------------------------------------------- */
+html:has(body.classic-forum){background-color:#02050A}
+body.classic-forum{
+  background-color:#02050A !important;
+  color:#C3D6EA !important;
+  --tmr-bg:#02050A; --tmr-panel:#070E18; --tmr-text:#C3D6EA; --tmr-muted:#7F93A9;
+  --tmr-accent:#1D7FE8; --tmr-accent-2:#4DA3FF; --tmr-border:rgba(43,140,255,.22);
+}
+/* group bands = the section headers of a classic forum */
+body.classic-forum .fgroup-band,
+body.classic-forum .fside-gtitle{
+  background:linear-gradient(90deg, rgba(43,140,255,.20), rgba(43,140,255,.04) 70%) !important;
+  border:1px solid rgba(43,140,255,.30) !important;
+  color:#FFFFFF !important;
+}
+body.classic-forum .fband-txt,
+body.classic-forum .fside-gtitle{
+  font-family:Anton,'Barlow Condensed',Inter,sans-serif;
+  font-style:italic; font-weight:400; text-transform:uppercase; letter-spacing:.02em;
+  color:#FFFFFF !important;
+}
+/* the table and its rows: banding by tint, separators by hairline */
+body.classic-forum .fgroup-table,
+body.classic-forum .fside-group,
+body.classic-forum .fside-gbody{
+  background:#040A12 !important;
+  border-color:rgba(43,140,255,.20) !important;
+}
+body.classic-forum .frow,
+body.classic-forum .frowinner,
+body.classic-forum .fcell,
+body.classic-forum .flpost{
+  background:transparent !important;
+  border-color:rgba(43,140,255,.14) !important;
+  color:#C3D6EA !important;
+}
+body.classic-forum .row-alt,
+body.classic-forum .frow:nth-child(even){background:rgba(43,140,255,.045) !important}
+body.classic-forum .frow:hover,
+body.classic-forum .frowinner:hover{background:rgba(43,140,255,.11) !important}
+/* column headers */
+body.classic-forum .fcol-forum, body.classic-forum .fcol-thr,
+body.classic-forum .fcol-post, body.classic-forum .fcol-last,
+body.classic-forum th{
+  background:rgba(43,140,255,.10) !important;
+  color:#9FC0E4 !important;
+  border-bottom:1px solid rgba(43,140,255,.34) !important;
+  font-family:Inter,'Segoe UI',Arial,sans-serif;
+}
+/* links, users, metadata */
+body.classic-forum a{color:#8CC0FF !important}
+body.classic-forum a:hover{color:#BFDCFF !important}
+body.classic-forum .fuser-link{color:#4DA3FF !important; font-weight:700}
+body.classic-forum .flpost-title{color:#EAF3FB !important}
+body.classic-forum .flpost-by, body.classic-forum .flpost-meta,
+body.classic-forum .fdesc, body.classic-forum .col-num, body.classic-forum .col-last{
+  color:#8FA3B8 !important;
+}
+body.classic-forum .fside-forum{color:#C3D6EA !important}
+body.classic-forum .fside-arrow{color:#4DA3FF !important}
+/* forum's own nav bar and any button */
+body.classic-forum .tmrfh-nav{
+  background:rgba(2,5,10,.94) !important;
+  border-bottom:1px solid rgba(43,140,255,.28) !important;
+}
+body.classic-forum .tmrfh-nav a{color:#BBD0E6 !important}
+body.classic-forum .tmrfh-nav a:hover{color:#FFFFFF !important}
+body.classic-forum button, body.classic-forum .btn, body.classic-forum input[type="submit"]{
+  background:rgba(43,140,255,.12) !important;
+  border:1px solid rgba(43,140,255,.44) !important;
+  color:#EAF3FB !important;
+}
+body.classic-forum button:hover, body.classic-forum .btn:hover{
+  background:rgba(43,140,255,.24) !important; color:#fff !important;
+}
+body.classic-forum input, body.classic-forum select, body.classic-forum textarea{
+  background:#040A12 !important; border:1px solid rgba(43,140,255,.38) !important; color:#EAF3FB !important;
+}
+/* 28d. tmr-redesign-overrides.css paints the forum cells from --tmr-surface,
+   which the block above never defined - so they resolved to the light default.
+   Defining the whole legacy vocabulary on the forum body fixes the cells,
+   the side rail and the stat blocks at their source, with no new override. */
+body.classic-forum{
+  --tmr-surface:#040A12; --tmr-surface-2:#070E18; --tmr-surface-3:#0D1D30;
+  --tmr-bg-soft:#070E18; --tmr-panel-2:#040A12; --tmr-card:#070E18;
+  --tmr-card-strong:#0D1D30; --tmr-card-soft:#040A12;
+  --tmr-app-bg:#02050A; --tmr-app-bg-2:#070E18;
+  --tmr-text-strong:#FFFFFF; --tmr-text-soft:#C3D6EA; --tmr-text-muted:#8FA3B8;
+  --tmr-line:rgba(43,140,255,.16); --tmr-line-strong:rgba(43,140,255,.34);
+  --tmr-border-strong:rgba(43,140,255,.34);
+  --tmr-teal:#1D7FE8; --tmr-action:#1D7FE8;
+  --tmr-green:#2ECC71; --tmr-success:#2ECC71; --tmr-red:#FF5A5A; --tmr-danger:#FF5A5A;
+  --tmr-gold:#FFC93C; --tmr-warning:#FFC93C;
+}
+
+/* 28e. Forum surfaces, stated once.
+   The rows and cells are transparent so the banding shows through, and the
+   surface they sit on is the table and its wrapper. Earlier drafts set the
+   table both transparent and dark in two different rules and the white of the
+   wrapper showed through; this is the single source for those surfaces. */
+html body.classic-forum main.fmain{background-color:#02050A !important}
+html body.classic-forum .fgroup-table,
+html body.classic-forum .fgroup-table > tbody,
+html body.classic-forum .fgroup-table + div,
+html body.classic-forum .fgroup-table,
+html body.classic-forum aside.fside,
+html body.classic-forum .fside,
+html body.classic-forum .fstatblock,
+html body.classic-forum .fstatblock-body,
+html body.classic-forum .fside-gbody{
+  background-color:#040A12 !important;
+  border-color:rgba(43,140,255,.18) !important;
+  color:#C3D6EA !important;
+}
+/* the wrapper the table sits in */
+html body.classic-forum .fgroup,
+html body.classic-forum .fgroup-wrap,
+html body.classic-forum .fmain > div,
+html body.classic-forum .fboard{background-color:#040A12 !important}
+/* rows: transparent, banded by tint, separated by hairline */
+html body.classic-forum tr.frow > td.fcell,
+html body.classic-forum td.fcell{
+  background-color:transparent !important;
+  border-color:rgba(43,140,255,.14) !important;
+  color:#C3D6EA !important;
+}
+html body.classic-forum tr.row-alt > td.fcell{background-color:rgba(43,140,255,.05) !important}
+html body.classic-forum tr.frow:hover > td.fcell{background-color:rgba(43,140,255,.11) !important}
+html body.classic-forum .fstatblock-num{color:#FFFFFF !important}
+html body.classic-forum input,
+html body.classic-forum textarea,
+html body.classic-forum select{
+  background-color:#040A12 !important; color:#EAF3FB !important;
+  border:1px solid rgba(43,140,255,.38) !important;
+}
+/* 28f. The classic sheet styles these through longer descendant chains than a
+   two-class selector can outrank. The forum body carries three classes, so
+   chaining them raises specificity without inventing new markup or touching
+   layout. This is the last word on the forum's surfaces. */
+html body.classic-forum.forum-ready .fgroup-table,
+html body.classic-forum.forum-ready td.fcell.col-last,
+html body.classic-forum.forum-ready td.fcell.col-num,
+html body.classic-forum.forum-ready .fstatblock-num,
+html body.classic-forum.forum-ready .fstatblock-body{
+  background-color:#040A12 !important;
+  color:#C3D6EA !important;
+  border-color:rgba(43,140,255,.16) !important;
+}
+html body.classic-forum.forum-ready td.fcell.col-last,
+html body.classic-forum.forum-ready td.fcell.col-num{background-color:transparent !important}
+html body.classic-forum.forum-ready .fstatblock-num{color:#FFFFFF !important}
+/* the old amber call-to-action becomes the TMR blue */
+html body.classic-forum.forum-ready .tmrfh-authlink--reg,
+html body.classic-forum.forum-ready button.fbtn.is-primary{
+  background:linear-gradient(180deg,#3B93FF,#1268D6) !important;
+  border-color:transparent !important;
+  color:#FFFFFF !important;
+}
+
+/* 28g. The forum's own inline sheet scopes its light surfaces through three
+   container IDs (#categoriesContainer, #viewThreads, #viewThread). An ID
+   outranks any number of classes, so those rules survived every class-only
+   override above. These match the same containers and therefore win on source
+   order. Surfaces and text only; no layout, spacing or density is touched. */
+html body.classic-forum #categoriesContainer .fgroup-table,
+html body.classic-forum #viewThreads .fgroup-table,
+html body.classic-forum #viewThreads .thread-table,
+html body.classic-forum #viewThread .fgroup-table{
+  background:#040A12 !important; color:#C3D6EA !important;
+  border-color:rgba(43,140,255,.16) !important;
+}
+html body.classic-forum #categoriesContainer .fgroup-table td.fcell,
+html body.classic-forum #viewThreads .thread-table td.fcell,
+html body.classic-forum #viewThread .fgroup-table td.fcell{
+  background:transparent !important; color:#C3D6EA !important;
+  border-color:rgba(43,140,255,.12) !important;
+}
+html body.classic-forum #categoriesContainer .fgroup-table tr.row-alt td.fcell,
+html body.classic-forum #viewThreads .thread-table tr.row-alt td.fcell{
+  background:rgba(43,140,255,.035) !important;
+}
+html body.classic-forum #categoriesContainer .fgroup-table tr.frow:hover td.fcell,
+html body.classic-forum #categoriesContainer .fgroup-table tr.frow:focus-within td.fcell,
+html body.classic-forum #viewThreads .thread-table tr.frow:hover td.fcell{
+  background:rgba(43,140,255,.085) !important;
+}
+html body.classic-forum #categoriesContainer .fgroup-table.f2p2-labels{
+  background:transparent !important;
+}
+html body.classic-forum button.fbtn,
+html body.classic-forum .fsearch input,
+html body.classic-forum #categoriesContainer input[type=text],
+html body.classic-forum #viewThreads input[type=text]{
+  background:#0A121E !important; color:#E8F1FB !important;
+  border-color:rgba(43,140,255,.22) !important;
+}
+html body.classic-forum .factionrow input[type=search],
+html body.classic-forum input[type=search]{
+  background:#0A121E !important; color:#E8F1FB !important;
+  border-color:rgba(43,140,255,.22) !important;
+}
+html body.classic-forum input[type=search]::placeholder{color:#7F93A9 !important}
+
+/* -----------------------------------------------------------------------------
+   29. TOKEN RETARGETS FOR PAGES THAT DECLARE THEIR OWN PALETTE
+   Two pages ship a private :root palette rather than using the site tokens.
+   Retargeting the declarations themselves converts every usage at once and
+   leaves the pages' own rules, layout and markup completely untouched.
+   -------------------------------------------------------------------------- */
+
+/* 29a. Sportsbook: a private neon palette, 272 usages. Cyan and magenta are
+   the two hues that fight the electric-blue identity; the semantic green, red
+   and the brand gold stay exactly as they are. */
+body[data-tmr-route="sportsbook"]{
+  --neon-cyan:#4DA3FF;
+  --neon-purple:#1D7FE8;
+}
+
+/* 29b. UserCP is a light classic-forum control panel with its own light ramp.
+   Same tokens, moved onto the dark ground so it matches the forum it belongs
+   to. Nothing but colour changes: the control panel's density is untouched. */
+body.classic-forum.tmr-theme-a{
+  --page:#02050A;
+  --paper:#070E18;
+  --panel:#040A12;
+  --bar:#0D1D30;
+  --bar-dark:#0A1728;
+  --line:rgba(43,140,255,.18);
+  --line-soft:rgba(43,140,255,.10);
+  --text:#C3D6EA;
+  --muted:#7F93A9;
+  --link:#4DA3FF;
+  --link-hover:#8CC0FF;
+  --button:#0A121E;
+  --button-border:rgba(43,140,255,.22);
+  --notice:#12203A;
+}
+
+/* -----------------------------------------------------------------------------
+   30. LAST LIGHT SURFACES
+   Components that kept a light card ramp from before the site went dark. Named
+   individually rather than swept with a wildcard, so nothing else moves.
+   -------------------------------------------------------------------------- */
+body.tmr-site-shell.tmr-theme-a{background:var(--a-page)}
+body.tmr-theme-a .as-card,
+body.tmr-theme-a .sg-game,
+body.tmr-theme-a a.as-card,
+body.tmr-ds .as-card,
+body.tmr-ds-shell .as-card{
+  background:var(--a-surface);
+  border-color:var(--a-line);
+  color:var(--a-text);
+}
+body.tmr-theme-a .as-card:hover,
+body.tmr-theme-a .sg-game:hover{background:var(--a-raised);border-color:var(--a-line-strong)}
+body.tmr-theme-a .as-disclaimer,
+body.tmr-ds .as-disclaimer,
+body.tmr-ds-shell .as-disclaimer{
+  background:var(--a-surface-2); border-color:var(--a-line); color:var(--a-muted);
+}
+body.tmr-ds .hm-action-btn,
+body.tmr-ds-shell .hm-action-btn,
+body.tmr-theme-a .hm-action-btn{
+  background:var(--a-raised); border-color:var(--a-line-strong); color:var(--a-heading);
+}
+body.tmr-ds .view-tabs,
+body.tmr-ds-shell .view-tabs,
+body.tmr-theme-a .view-tabs{background:var(--a-surface-2); border-color:var(--a-line)}
+
+/* 29c. The arena suite palette. tmr-light.css re-declares the --as-* ramp on a
+   light ground; this sheet only ever loads on themed pages, so re-declaring it
+   here converts arena, the sports-gaming hub and every game page in one place. */
+body.tmr-light{
+  --as-bg:#02050A; --as-surface:#070E18; --as-card:#0A121E; --as-card-hover:#0D1D30;
+  --as-border:rgba(43,140,255,.16); --as-glow:rgba(43,140,255,.10);
+  --as-primary:#1D7FE8; --as-primary-dim:rgba(29,127,232,.15);
+  --as-text:#E8F1FB; --as-dim:#5A6B7F; --as-muted:#7F93A9;
+}
+/* 29d. Two rules that set a literal white at their own weight. */
+body.tmr-theme-a .view-tabs,
+body.tmr-ds .view-tabs,
+body.tmr-ds-shell .view-tabs{background:var(--a-surface-2) !important}
+html body.tmr-site-shell.tmr-theme-a{background:var(--a-page) !important}
+body.tmr-light .view-tabs{background:var(--a-surface-2) !important}
+body.tmr-light .as-card,
+body.tmr-light .sg-game{background:var(--a-surface); border-color:var(--a-line); color:var(--a-text)}
+body.tmr-light .as-disclaimer{background:var(--a-surface-2); border-color:var(--a-line); color:var(--a-muted)}
+body.tmr-light .hm-action-btn{background:var(--a-raised); border-color:var(--a-line-strong); color:var(--a-heading)}
+/* 29e. The bare token family (--bg-*, --border, --text-*) that tmr-light.css
+   declares on body.tmr-light. Same weight, later source, so these win. */
+body.tmr-light{
+  --bg-page:#02050A; --bg-surface:#070E18; --bg-surface-2:#040A12;
+  --bg-card:#0A121E; --bg-card-solid:#0A121E; --bg-elevated:#0D1D30;
+  --border:rgba(43,140,255,.16); --border-strong:rgba(43,140,255,.28);
+  --text:#E8F1FB; --text-strong:#FFFFFF; --text-muted:#7F93A9; --text-dim:#5A6B7F;
+}

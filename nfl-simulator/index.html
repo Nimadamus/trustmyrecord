@@ -39,7 +39,7 @@
   :root{
     --bg:#0a0f1a; --bg2:#0e1524; --card:#111a2b; --card2:#16203300; --line:#1f2b40;
     --ink:#e8eef7; --mut:#94a3b8; --dim:#5b6b82;
-    --accent:#38bdf8; --accent2:#22d3ee; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --accent:#38bdf8; --accent2:#4DA3FF; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
     --r:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
@@ -254,7 +254,7 @@
 <script defer src="/static/js/tmr-sim-archive.js?v=9197ee377342"></script>
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=07a9f05fecbc">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=4f0abcfa4b76">
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 
@@ -940,7 +940,7 @@ function renderResult(out,d){
       `<div class="legend"><span>5th–95th pct: ${nz(p.percentiles.margin.p05)} … ${nz(p.percentiles.margin.p95)}</span></div>`));
   }
   if(p.distributions&&p.distributions.total&&p.distributions.total.length){
-    charts.appendChild(chartCard('Total points',svgBars(p.distributions.total,{color:'#22d3ee',markers:[{x:p.projected_total,label:'median',color:'#34d399'}],aria:'total distribution'}),
+    charts.appendChild(chartCard('Total points',svgBars(p.distributions.total,{color:'#4DA3FF',markers:[{x:p.projected_total,label:'median',color:'#34d399'}],aria:'total distribution'}),
       `<div class="legend"><span>5th–95th pct: ${nz(p.percentiles.total.p05)} … ${nz(p.percentiles.total.p95)}</span></div>`));
   }
   if(p.likely_scores&&p.likely_scores.length){
@@ -1347,7 +1347,7 @@ function simRenderConversion(out,d){
 
   const panel=el('div','panel');
   panel.id='simConvertPanel';
-  panel.style.cssText='margin-top:14px;border:1px solid rgba(45,212,191,.35);background:linear-gradient(180deg,rgba(45,212,191,.07),transparent)';
+  panel.style.cssText='margin-top:14px;border:1px solid rgba(29, 127, 232,.35);background:linear-gradient(180deg,rgba(29, 127, 232,.07),transparent)';
   panel.innerHTML=
     '<h3 style="margin-top:0">Turn this into a verified pick</h3>'+
     '<p class="muted" style="font-size:.9rem;margin:0 0 10px">Lock it before kickoff and TrustMyRecord timestamps it, grades it automatically, and counts it toward your public record. The simulation is research; the record is proof.</p>'+
@@ -1363,13 +1363,13 @@ function simRenderConversion(out,d){
     b.type='button';b.setAttribute('role','radio');
     b.dataset.team=name;
     b.className='btn ghost'+(name===proj?' on':'');
-    b.style.cssText='font-size:.85rem;padding:8px 14px'+(name===proj?';border-color:#2DD4BF;color:#2DD4BF':'');
+    b.style.cssText='font-size:.85rem;padding:8px 14px'+(name===proj?';border-color:#1D7FE8;color:#1D7FE8':'');
     b.setAttribute('aria-checked',name===proj?'true':'false');
     b.onclick=()=>{
       for(const c of teams.children){
         const on=c===b;
         c.setAttribute('aria-checked',on?'true':'false');
-        c.style.borderColor=on?'#2DD4BF':'';c.style.color=on?'#2DD4BF':'';
+        c.style.borderColor=on?'#1D7FE8':'';c.style.color=on?'#1D7FE8':'';
       }
     };
     teams.appendChild(b);
