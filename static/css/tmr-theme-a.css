@@ -2404,3 +2404,89 @@ body.tmr-ds .player-box-score-panel, body.tmr-ds-shell .player-box-score-panel,
 body.tmr-theme-a .player-box-score-panel, body.tmr-light .player-box-score-panel{
   background:var(--a-surface); border-color:var(--a-line); color:var(--a-text);
 }
+
+/* -----------------------------------------------------------------------------
+   32. CONTRAST ON THE DARK GROUND
+   tmr-light.css and the forum's own sheet were written for a light page and set
+   near-black text with !important. On the dark ground that text is unreadable,
+   so it is restated here at the same weight. Colour only.
+   -------------------------------------------------------------------------- */
+body.tmr-light h1, body.tmr-light h2, body.tmr-light h3,
+body.tmr-light h4, body.tmr-light h5, body.tmr-light h6{
+  color:var(--a-heading) !important;
+}
+body.tmr-light p, body.tmr-light li, body.tmr-light dd,
+body.tmr-light .tmrlh-related-note{color:var(--a-text)}
+/* the deep blue that read as an accent on white is too dark on near-black */
+body.tmr-light .ah-beta,
+body.tmr-light .subnav-link.active,
+body.tmr-light .go,
+body.tmr-ds .go, body.tmr-ds-shell .go{color:var(--a-blue-bright) !important}
+
+/* forum: links, titles and metadata were near-black for a white table */
+html body.classic-forum a,
+html body.classic-forum .fside-forum,
+html body.classic-forum .fuser-link,
+html body.classic-forum .ftitle h1,
+html body.classic-forum .fcell a{color:#DCEAF9 !important}
+html body.classic-forum a:hover,
+html body.classic-forum .fside-forum:hover,
+html body.classic-forum .fcell a:hover{color:var(--a-blue-bright) !important}
+html body.classic-forum .fuser-link{color:#9FBEDC !important}
+html body.classic-forum .fside-star{color:var(--a-warn) !important}
+html body.classic-forum,
+html body.classic-forum .fcell,
+html body.classic-forum td,
+html body.classic-forum .fdesc{color:#C3D6EA !important}
+
+/* 32b. The forum's own sheet reaches its links through long descendant chains.
+   Each winning selector is restated one level deeper, prefixed with html, so it
+   wins on specificity rather than on luck of source order. Colour only. */
+html body.classic-forum .fside-list .fside-gbody a.fside-forum,
+html body.classic-forum .fside-box:last-child .fside-list a,
+html body.classic-forum .fside-list a.fside-gtitle,
+html body.classic-forum #categoriesContainer .flpost-title a,
+html body.classic-forum .tmrlh-crumbs a.tmrlh-home.tmrlh-a{
+  color:#DCEAF9 !important;
+}
+html body.classic-forum .fside-list .fside-gbody a.fside-forum:hover,
+html body.classic-forum .fside-box:last-child .fside-list a:hover,
+html body.classic-forum #categoriesContainer .flpost-title a:hover{
+  color:#8CC0FF !important;
+}
+html body.classic-forum .flpost-by .fuser-link{color:#9FBEDC !important}
+html body.classic-forum .tmrlh-crumbs .tmrlh-current{color:#7F93A9 !important}
+html body.classic-forum .sport-icon.gen{color:#8CC0FF !important}
+html body.classic-forum .fstatblock-num span{color:#FFFFFF !important}
+html body a:not(.sportsbook-sports-nav a):not([class*="btn"]):not([class*="-cta"]):not(.as-btn):not(.fbtn):not(.tmrfh-authlink):not(.tmrfh-mainsite){color:#8CC0FF}
+/* the arena/sports-gaming body copy tmr-light.css sets near-black */
+body.tmr-light p, body.tmr-light li, body.tmr-light dd,
+body.tmr-light .tmrlh-related-note{color:var(--a-text) !important}
+/* 32c. The forum's table links come through tmr-redesign-overrides.css as
+   var(--tmr-teal) !important. On near-black the deep blue that token now
+   carries is too dark, so the forum gets the bright end of the ramp. */
+html body.classic-forum{--tmr-teal:#8CC0FF; --tmr-accent:#8CC0FF; --tmr-accent-2:#8CC0FF}
+html body.classic-forum.is-forum-home .ftitle p{color:#7F93A9 !important}
+html body.classic-forum #categoriesContainer .fname,
+html body.classic-forum #viewThreads .fname,
+html body.classic-forum #categoriesContainer .fname a,
+html body.classic-forum #viewThreads .fname a{color:#DCEAF9 !important}
+html body.classic-forum #categoriesContainer .fdesc,
+html body.classic-forum #viewThreads .fdesc{color:#8FA6BC !important}
+/* 32d. Remaining near-black text on dark surfaces, and one accent that ended up
+   light-on-gold. */
+html body.classic-forum .tmrlh-a,
+html body.classic-forum nav.tmrlh-crumbs a,
+html body.classic-forum .tmrlh-list a{color:#DCEAF9 !important}
+body.tmr-light .game-pill,
+body.tmr-ds .game-pill, body.tmr-ds-shell .game-pill,
+body.tmr-theme-a .game-pill{
+  color:var(--a-text) !important;
+  background:var(--a-raised) !important;
+  border-color:var(--a-line) !important;
+}
+/* a gold button keeps near-black text; only the blue ones take white */
+body.tmr-light a.as-btn-gold, body.tmr-theme-a a.as-btn-gold,
+body.tmr-ds a.as-btn-gold, body.tmr-ds-shell a.as-btn-gold{color:#1A1206 !important}
+body.tmr-light a.as-btn-primary, body.tmr-theme-a a.as-btn-primary,
+body.tmr-ds a.as-btn-primary, body.tmr-ds-shell a.as-btn-primary{color:#FFFFFF !important}
