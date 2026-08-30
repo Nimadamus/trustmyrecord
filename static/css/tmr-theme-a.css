@@ -3133,3 +3133,126 @@ html body .ah-breadcrumb span[aria-current="page"]{ color:#04121F !important; }
 
 /* 45f. The A/B/C/D markers on the trivia create form. */
 html body .correct-radio-btn{ color:#9CC8FF !important; }
+
+/* ============================================================
+   50. The last real-text failures, each traced to its element.
+   ============================================================ */
+
+/* 50a. TMR Coin column tag: dark teal on navy (2.09:1). Kept teal,
+   lifted to a readable value. */
+html body .tcoin-col-tag, html body .tcoin-col .tcoin-col-tag{
+  color:#6FD9C4 !important; background:rgba(43,140,255,.12) !important;
+}
+html body .tcoin-badge-blue, html body .tcoin-logo-tag{ color:#04121F !important; }
+
+/* 50b. Pick-package CTA was the page link blue on a brand-blue fill
+   (1.07:1). It is a filled button, so the label is white. */
+html body a.mppfs-pkg-btn, html body .mppfs-pkg .mppfs-pkg-btn{
+  color:#FFFFFF !important;
+  background-image:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
+}
+
+/* 50c. Forum "newest member" links were still near-black. */
+html body .fstatblock-newest a, html body .tmr-newest-welcome a,
+html body .fstatblock-newest, html body .tmr-newest-welcome{ color:#9CC8FF !important; }
+
+/* 50d. Notifications primary action: white was 4.18:1 on the teal
+   fill; the same deepened brand gradient takes it past 5:1. */
+html body .nv-btn.p, html body.nv-body .nv-btn.p, html body button.nv-btn.p{
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
+  color:#FFFFFF !important; border-color:rgba(255,255,255,.28) !important;
+}
+
+/* ============================================================
+   51. Corrections to 49e, plus the last filled-button label.
+   ============================================================ */
+
+/* 51a. 49e gave the active-tab counts dark type on the assumption
+   its light pill background would apply; it did not, leaving
+   1.11:1. Light type on the tab's own fill instead. */
+html body .lb-tab-count, html body .hm-tab-count,
+html body.tmr-ds .lb-tab.active .lb-tab-count, html body .lb-tab.active .lb-tab-count,
+html body.tmr-ds .hm-tab.is-active .hm-tab-count, html body .hm-tab.is-active .hm-tab-count{
+  color:#EDF3FA !important; background:rgba(43,140,255,.22) !important;
+}
+
+/* 51b. "Start Free" was the brand blue on the brand-blue fill. */
+html body a[class*="btn-"], html body a[class*="-btn"],
+html body .tmr-global-nav__button, html body a.btn-primary,
+html body a[class*="btn-"] span, html body a[class*="-btn"] span{
+  color:#FFFFFF !important;
+}
+
+/* ============================================================
+   46. The light palette at its source.
+
+   Every page still carries `body.tmr-light`, so tmr-light-base.css
+   hands the whole site a light surface ramp (--panel:#FFFFFF,
+   --tmr-bg:#F4F7FA, --surface-2:#F6F9FC and forty aliases of the
+   same seven roles) while Concept A paints the shell near-black.
+   Anything reading those tokens therefore drew a white panel under
+   light type. Reassigning the ramp here fixes that class of failure
+   in one place instead of page by page.
+
+   Only the SURFACE, LINE and INK roles move. The brand, gold, green,
+   red and violet hues, their pale -soft tints and every radius and
+   shadow are left exactly as they are: those pale tints are button
+   and badge FILLS that carry dark type on purpose.
+   ============================================================ */
+
+html body.tmr-light{
+  /* page grounds */
+  --page:#02050A;      --bg:#02050A;           --bg-dark:#02050A;
+  --bg-primary:#02050A;--dark-bg:#02050A;      --page-bg:#02050A;
+  --darker-bg:#04080F;
+  --tmr-bg:#02050A;    --tmr-bg-soft:#04080F;
+  --tmr-app-bg:#02050A;--tmr-app-bg-2:#04080F;
+
+  /* raised panels and cards */
+  --panel:#0E1620;     --tmr-panel:#0E1620;
+  --tmr-card:#0E1620;  --tmr-card-strong:#111B27;
+  --bg-surface:#0E1620;--surface:#0E1620;      --surface-1:#0E1620;
+  --bg-card:#0E1620;   --card-bg:#0E1620;      --card-bg-solid:#0E1620;
+  --paper:#0E1620;
+
+  /* the second, softer step */
+  --panel-2:#121C28;   --panel2:#121C28;       --tmr-panel-2:#121C28;
+  --tmr-card-soft:#121C28;
+  --bg-secondary:#121C28; --surface-2:#121C28;
+  --bg-card-hover:#16212E;--bg-hover:#16212E;  --surface-hover:#16212E;
+  --panel-3:#16212E;   --surface-3:#16212E;
+
+  /* rules and edges */
+  --line:rgba(148,163,184,.18);        --tmr-line:rgba(148,163,184,.18);
+  --border:rgba(148,163,184,.18);      --border-color:rgba(148,163,184,.18);
+  --glass-border:rgba(148,163,184,.18);--border-light:rgba(148,163,184,.14);
+  --line-2:rgba(148,163,184,.28);      --line-strong:rgba(148,163,184,.28);
+  --tmr-line-strong:rgba(148,163,184,.28);
+  --tmr-border:rgba(148,163,184,.18);  --tmr-border-strong:rgba(148,163,184,.28);
+  --border-glow:rgba(148,163,184,.28);
+  --edge:rgba(148,163,184,.10);        --faint:rgba(148,163,184,.08);
+
+  /* ink */
+  --ink:#DCE7F4;       --text:#DCE7F4;         --text-primary:#DCE7F4;
+  --text-pri:#DCE7F4;  --tmr-text:#DCE7F4;     --tmr-text-strong:#DCE7F4;
+  --ink-2:#C3D6EA;     --text-secondary:#C3D6EA;--text-dim:#C3D6EA;
+  --tmr-text-soft:#C3D6EA;
+  --text-muted:#9BB0C6;--tmr-text-muted:#9BB0C6;
+  --muted:#93A0B8;     --tmr-muted:#93A0B8;
+}
+
+/* 46b. The link-hub breadcrumb, related box and footer choose their
+   own tone by probing the first opaque background above them. On the
+   dark shell that probe must never land on a light answer, so the
+   dark tone is pinned rather than measured. */
+html body .tmrlh-crumbs,
+html body .tmrlh-related,
+html body .tmrlh-footer{
+  --tmrlh-fg:#E8ECF5;
+  --tmrlh-muted:#93A0B8;
+  --tmrlh-link:#6CC4FF;
+  --tmrlh-link-hover:#A5DCFF;
+  --tmrlh-surface:rgba(148,163,184,.09);
+  --tmrlh-surface-2:rgba(148,163,184,.05);
+  --tmrlh-line:rgba(148,163,184,.24);
+}
