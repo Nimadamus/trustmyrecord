@@ -2501,3 +2501,72 @@ body.tmr-theme-a .tmr-route-note{
 body.tmr-light .tmr-route-note strong,
 body.tmr-ds .tmr-route-note strong, body.tmr-ds-shell .tmr-route-note strong,
 body.tmr-theme-a .tmr-route-note strong{color:var(--a-blue-bright) !important}
+
+/* -----------------------------------------------------------------------------
+   33. THE LAST PRIVATE PALETTES
+   Four surfaces ship their own light token set rather than using the site
+   tokens. Each is retargeted at its own declaration so every usage converts at
+   once; no component rule, layout or markup is touched.
+   -------------------------------------------------------------------------- */
+
+/* 33a. Notifications (tmr-notif-v2.css declares --nv-* on :root) */
+html body.nv-body{
+  --nv-page:#02050A;
+  --nv-panel:#070E18; --nv-panel-2:#040A12; --nv-panel-3:#0D1D30;
+  --nv-ink:#E8F1FB; --nv-ink-2:#C3D6EA; --nv-muted:#7F93A9;
+  --nv-line:rgba(43,140,255,.16); --nv-line-2:rgba(43,140,255,.26);
+  --nv-brand:#1D7FE8; --nv-brand-dk:#0B4FA8; --nv-brand-lt:#4DA3FF;
+  --nv-brand-soft:rgba(43,140,255,.12);
+  --nv-navy:#040A12; --nv-navy-2:#0A121E; --nv-navy-3:#0D1D30;
+}
+html body.nv-body.tmr-site-shell{background:var(--nv-page) !important}
+html body.nv-body .nv-chip{background:var(--nv-panel-2) !important; color:var(--nv-ink) !important}
+
+/* 33b. Marketplace: a page palette plus the shared .mpx component palette */
+:root, html body.mp-browse-page{
+  --bg:#02050A; --panel:#070E18; --panel2:#040A12;
+  --line:rgba(43,140,255,.16); --text:#E8F1FB; --muted:#7F93A9;
+  --cyan:#4DA3FF;
+}
+html body .mpx{
+  --mpx-bg:#02050A; --mpx-panel:#070E18; --mpx-panel2:#0A121E;
+  --mpx-line:rgba(43,140,255,.16); --mpx-text:#E8F1FB; --mpx-muted:#7F93A9;
+  --mpx-teal:#1D7FE8;
+}
+html body.mp-browse-page .sc-stat,
+html body.mp-browse-page .mp-controls input,
+html body.mp-browse-page .mp-controls select,
+html body.mp-browse-page .sc-ava{
+  background:var(--a-surface-2) !important;
+  border-color:var(--a-line) !important;
+  color:var(--a-text) !important;
+}
+
+/* 33c. TMR Coin metric grid: the gap colour was the grid line, so both move */
+html body .tcoin-metrics{background:rgba(43,140,255,.16) !important; border-color:rgba(43,140,255,.16) !important}
+html body .tcoin-metric{background:var(--a-surface) !important; color:var(--a-text) !important}
+
+/* 33d. The forum jump menu is the one control tmr-light.css still claims */
+html body.classic-forum .fjump select,
+html body.tmr-light .fjump select{
+  background:#0A121E !important; border-color:rgba(43,140,255,.22) !important; color:#E8F1FB !important;
+}
+
+/* 33e. login / register / usercp share one cyan brand token */
+:root{--cyan:#4DA3FF}
+/* 33f. The marketplace declares its page palette on body.tmr-ds.mp-browse-page,
+   which outranks a single-class match. Same tokens, same weight. */
+html body.tmr-ds.mp-browse-page,
+html body.tmr-ds.tmr-ds--dark.mp-browse-page{
+  --bg:#02050A; --panel:#070E18; --panel2:#040A12;
+  --line:rgba(43,140,255,.16); --text:#E8F1FB; --muted:#7F93A9; --cyan:#4DA3FF;
+}
+/* 33g. login / register / usercp share one auth shell whose border and corner
+   wash are still the old teal. */
+html body .shell{
+  --border:rgba(43,140,255,.22);
+  background:
+    radial-gradient(circle at top right, rgba(43,140,255,.10), transparent 34%),
+    linear-gradient(180deg, #0A121E, #070E18) !important;
+  border-color:rgba(43,140,255,.22) !important;
+}
