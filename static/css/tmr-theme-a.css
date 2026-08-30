@@ -1723,3 +1723,106 @@ html body.profile-page .profile-rail-card{
     right:0 !important;
   }
 }
+
+/* =============================================================================
+   23. CONFORMANCE TO THE LIVE HOMEPAGE
+   -----------------------------------------------------------------------------
+   Measured against the deployed homepage, three values were still each page's
+   own rather than the system's. Colour only.
+   -------------------------------------------------------------------------- */
+
+/* 23a. Profile positive figures were #22C55E from a page-local rule at
+   `body.profile-page.tmr-social-profile .tmrx-value.is-pos` with !important,
+   not the system green the homepage uses. Matched selector-for-selector. */
+html body.profile-page.tmr-social-profile .tmrx-value.is-pos,
+html body.profile-page.tmr-social-profile .tmrx-sub.is-pos,
+html body.tmr-social-profile .tmrx-value.is-pos{
+  color:#2ECC71 !important;
+}
+html body.profile-page.tmr-social-profile .tmrx-value.is-neg,
+html body.tmr-social-profile .tmrx-value.is-neg{
+  color:#FF5A5A !important;
+}
+
+/* 23b. The stat rail's OUTER box is set by a page-local rule at the same
+   specificity this file was using, so the softened value never landed. One
+   step up, same intent as section 21: structure felt, not read. */
+html body.profile-page.tmr-social-profile .profile-rail{
+  border:1px solid rgba(120,152,196,.12) !important;
+}
+
+/* 23c. The handicapping board panels carry a white hairline. On the black
+   ground that reads as a different product; it becomes the system's blue. */
+body.tmr-ds .mhs,
+body.tmr-ds .hh-shell--mlb .mhs,
+body.tmr-ds .hh-card,
+body.tmr-ds .hh-panel{
+  border-color:rgba(43,140,255,.26);
+}
+
+/* 23d. Link colour: one blue for links across the interior families, the same
+   bright accent the homepage uses for its text links. */
+body.tmr-social-profile a:not([class*="btn"]):not(.profile-tab):not(.ds-logo),
+body.profile-page a:not([class*="btn"]):not(.profile-tab):not(.ds-logo){
+  color:#4DA3FF;
+}
+
+/* =============================================================================
+   24. PROFILE TYPOGRAPHY SPLIT — measured, then corrected
+   -----------------------------------------------------------------------------
+   Two faults the conformance pass exposed:
+
+   - .tmrx-table th had inherited Anton. An athletic display face in a dense
+     table header is the one place it must never go; column heads are scanned,
+     not read. Back to Inter.
+   - The section headings, eyebrows, stat values and labels were resolving to
+     -apple-system: the page's own stack lists a face that is not present, so
+     everything fell through to the system UI font and none of them looked like
+     the rest of the product. Headings take the athletic face, and the data
+     surfaces are pinned to Inter deliberately rather than by accident.
+   -------------------------------------------------------------------------- */
+
+/* major section headings: the athletic voice */
+html body.profile-page .tmrx-section-title,
+html body.tmr-social-profile .tmrx-section-title,
+html body.profile-page .profile-advanced-strip-head h2,
+html body.tmr-social-profile .profile-advanced-strip-head h2,
+html body.profile-page .profile-body-section > h2,
+html body.tmr-social-profile .profile-body-section > h2{
+  font-family:Anton,'Barlow Condensed',Inter,sans-serif !important;
+  font-style:italic !important;
+  font-weight:400 !important;
+  text-transform:uppercase;
+  letter-spacing:-.004em;
+  color:#FFFFFF;
+}
+
+/* everything that is read or scanned stays on Inter */
+html body.profile-page .tmrx-table th,
+html body.tmr-social-profile .tmrx-table th,
+html body.profile-page .tmrx-table td,
+html body.tmr-social-profile .tmrx-table td,
+html body.profile-page .tmrx-value,
+html body.tmr-social-profile .tmrx-value,
+html body.profile-page .tmrx-label,
+html body.tmr-social-profile .tmrx-label,
+html body.profile-page .tmrx-sub,
+html body.tmr-social-profile .tmrx-sub,
+html body.profile-page .tmrx-section-sub,
+html body.tmr-social-profile .tmrx-section-sub,
+html body.profile-page .profile-advanced-metric__value,
+html body.profile-page .profile-advanced-metric__label,
+html body.profile-page .profile-rail-value,
+html body.profile-page .profile-rail-label,
+html body.profile-page .profile-tab,
+html body.tmr-social-profile .profile-tab{
+  font-family:Inter,'Inter Fallback W','Segoe UI',Arial,sans-serif !important;
+  font-style:normal !important;
+}
+/* figures line up in columns */
+html body.profile-page .tmrx-value,
+html body.tmr-social-profile .tmrx-value,
+html body.profile-page .profile-rail-value,
+html body.profile-page .tmrx-table td{
+  font-variant-numeric:tabular-nums;
+}
