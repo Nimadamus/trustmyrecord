@@ -103,10 +103,11 @@ body.tmr-theme-a{
   --tmr-green:var(--a-pos); --tmr-red:var(--a-neg); --tmr-gold:var(--a-warn);
 }
 
+html{background-color:#02050A}
 body.tmr-ds,
 body.tmr-ds-shell,
 body.tmr-theme-a{
-  background-color:var(--a-page);
+  background-color:transparent;
   color:var(--a-text);
 }
 
@@ -397,12 +398,18 @@ body.tmr-ds .tmr-internal-cluster a:hover, body.tmr-ds-shell .tmr-internal-clust
 body.tmr-ds::before,
 body.tmr-ds-shell::before,
 body.tmr-theme-a::before{
-  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
   background:
     radial-gradient(900px 460px at 10% -4%, rgba(43,140,255,.13), transparent 62%),
     radial-gradient(700px 320px at 96% 2%, rgba(43,140,255,.05), transparent 60%);
 }
-body.tmr-ds > *, body.tmr-ds-shell > *, body.tmr-theme-a > *{position:relative; z-index:1}
+/* NEVER re-introduce a blanket position rule on body's direct children.
+   It shipped once in tmr-concept-a.css and broke the notification dropdown on
+   the live homepage: notifications.js appends a position:fixed;z-index:100000
+   panel straight to <body>, and `body.tmr-ds > *` (0,1,1) beat it, so the panel
+   opened 4,376px down the page instead of under the bell. Dropdowns, toasts,
+   modals and overlays all attach to <body>. The ground lives on <html> and the
+   wash sits at z-index:-1 instead, so nothing needs lifting. */
 body.tmr-ds .ds-nav, body.tmr-ds-shell .ds-nav, body.tmr-theme-a .ds-nav{z-index:60}
 
 /* =============================================================================
@@ -1973,4 +1980,62 @@ body.tmr-theme-a a[style*="f6f9fc"], body.tmr-light a[style*="f6f9fc"]{
   background:rgba(43,140,255,.10) !important;
   border-color:rgba(43,140,255,.34) !important;
   color:#BFDCFF !important;
+}
+
+/* =============================================================================
+   27. SPORTSBOOK — the legacy teal vocabulary, remapped
+   -----------------------------------------------------------------------------
+   Sportsbook already rendered on the dark ramp, so the ground and panels needed
+   nothing. What remained was the OLD brand hue: tmr-sitewide.css and the
+   sportsbook sheets read --tmr-teal / --tmr-accent from :root, and the shell
+   classes sportsbook uses (tmr-ds-shell, tmr-site-shell, tmr-ds--dark) were not
+   in the bridge's remap list, so every accent stayed teal.
+
+   Remapping the vocabulary on those shells converts the accents at their
+   source. No component is named, no !important is used, nothing is overridden
+   twice - the sheets simply resolve their own variables to the new palette.
+   -------------------------------------------------------------------------- */
+body.tmr-ds-shell,
+body.tmr-site-shell,
+body.tmr-ds--dark,
+body.tmr-ds{
+  --tmr-teal:#1D7FE8; --tmr-accent:#1D7FE8; --tmr-accent-2:#4DA3FF; --tmr-action:#1D7FE8;
+  --tmr-line-strong:rgba(43,140,255,.46); --tmr-border-strong:rgba(43,140,255,.46);
+  --tmr-bg:#02050A; --tmr-bg-soft:#070E18; --tmr-panel:#070E18; --tmr-panel-2:#040A12;
+  --tmr-app-bg:#02050A; --tmr-app-bg-2:#070E18;
+  --tmr-card:#070E18; --tmr-card-strong:#0D1D30; --tmr-card-soft:#040A12;
+  --tmr-text:#C3D6EA; --tmr-text-strong:#FFFFFF; --tmr-text-soft:#C3D6EA; --tmr-text-muted:#7F93A9;
+  --tmr-line:rgba(43,140,255,.26); --tmr-border:rgba(43,140,255,.26);
+  --tmr-green:#2ECC71; --tmr-success:#2ECC71; --tmr-red:#FF5A5A; --tmr-danger:#FF5A5A;
+  --tmr-gold:#FFC93C; --tmr-warning:#FFC93C;
+  /* the design system's own names, for sheets that read those instead */
+  --brand:#1D7FE8; --brand-lt:#4DA3FF; --brand-dk:#0B4FA8; --brand-soft:rgba(43,140,255,.14);
+}
+
+/* the remaining hardcoded cyan literals, named where they live */
+body.tmr-ds-shell .create-post-box,
+body.tmr-site-shell .create-post-box,
+body.tmr-ds-shell .make-picks-loggedout,
+body.tmr-site-shell .make-picks-loggedout{
+  border-color:rgba(43,140,255,.34) !important;
+  background:rgba(43,140,255,.08) !important;
+}
+body.tmr-ds-shell .sportsbook-lobby-label,
+body.tmr-site-shell .sportsbook-lobby-label{color:#4DA3FF !important}
+body.tmr-ds-shell .pending-picks-compact-link,
+body.tmr-site-shell .pending-picks-compact-link{
+  border-color:rgba(43,140,255,.40) !important; color:#8CC0FF !important;
+}
+
+/* sportsbook headings take the athletic face like every other family */
+body.tmr-ds-shell h1, body.tmr-ds-shell h2,
+body.tmr-site-shell h1, body.tmr-site-shell h2{
+  font-family:Anton,'Barlow Condensed',Inter,sans-serif;
+  font-style:italic; font-weight:400; text-transform:uppercase; letter-spacing:-.004em;
+}
+/* but never in the board's own dense rows */
+body.tmr-ds-shell table th, body.tmr-ds-shell table td,
+body.tmr-site-shell table th, body.tmr-site-shell table td,
+body.tmr-ds-shell .sb-odds, body.tmr-ds-shell .odds{
+  font-family:Inter,'Segoe UI',Arial,sans-serif; font-style:normal;
 }
