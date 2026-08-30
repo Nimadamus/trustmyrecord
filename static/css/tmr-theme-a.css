@@ -3004,7 +3004,7 @@ html body .tmr-global-nav__cta, html body a.tmr-hbtn.is-brand{
    brand-blue badge label on the mint pill (2.80:1). */
 html body .tcoin-chain, html body .tcoin-onbase, html body .tcoin-chip,
 html body .tcoin-market .tcoin-chip, html body [class*="tcoin"] .chip{
-  color:#7FE8C4 !important; background:rgba(43,140,255,.14) !important;
+  color:#4DA3FF !important; background:rgba(43,140,255,.14) !important;
 }
 html body .tcoin-badge, html body .tcoin-pill, html body .tcoin-logo span{ color:#04121F !important; }
 
@@ -3143,7 +3143,7 @@ html body .correct-radio-btn{ color:#9CC8FF !important; }
 /* 50a. TMR Coin column tag: dark teal on navy (2.09:1). Kept teal,
    lifted to a readable value. */
 html body .tcoin-col-tag, html body .tcoin-col .tcoin-col-tag{
-  color:#6FD9C4 !important; background:rgba(43,140,255,.12) !important;
+  color:#4DA3FF !important; background:rgba(43,140,255,.12) !important;
 }
 html body .tcoin-badge-blue, html body .tcoin-logo-tag{ color:#04121F !important; }
 
@@ -3258,3 +3258,35 @@ html body .tmrlh-footer{
   --tmrlh-surface-2:rgba(148,163,184,.05);
   --tmrlh-line:rgba(148,163,184,.24);
 }
+
+/* ============================================================
+   52. Two regressions from this pass, fixed.
+   ============================================================ */
+
+/* 52a. IBM Plex Sans sets marginally wider than Inter, which pushed
+   the global nav 8px past the viewport on the profile pages. The
+   button padding gives that back; nothing else moves. */
+html body nav.tmr-global-nav .tmr-global-nav__button{
+  padding-left:clamp(8px,.6vw,11px) !important;
+  padding-right:clamp(8px,.6vw,11px) !important;
+}
+html body nav.tmr-global-nav .tmr-global-nav__actions{ min-width:0; gap:6px; padding-right:6px; }
+html body nav.tmr-global-nav .tmr-global-nav__inner{ max-width:100%; }
+
+/* 52b. 47a/50a introduced a teal chip colour, which is exactly the
+   hue this redesign removed. Back to brand blue. */
+html body .tcoin-col-tag, html body .tcoin-col .tcoin-col-tag,
+html body .tcoin-chain, html body .tcoin-onbase, html body .tcoin-chip{
+  color:#4DA3FF !important; background:rgba(43,140,255,.14) !important;
+}
+
+/* ============================================================
+   53. --tmr-teal still defaulted to #22D2C0 on a few link sets
+   (this was lost when an earlier section was overwritten).
+   The redesign has no teal: brand blue instead.
+   ============================================================ */
+html body, html body a, html body footer, html body .tmr-global-footer{
+  --tmr-teal:#9CC8FF; --tmr-accent:#9CC8FF; --tmr-accent-2:#4DA3FF;
+}
+html body a[style*="22D2C0"], html body .tmr-global-footer a,
+html body footer a{ color:#9CC8FF !important; }
