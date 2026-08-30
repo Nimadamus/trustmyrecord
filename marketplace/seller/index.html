@@ -18,7 +18,7 @@
     <style>
         :root, body.tmr-ds.mp-storefront-page, body.tmr-ds.tmr-ds--dark.mp-storefront-page {
             --bg:#FFFFFF; --panel:#FFFFFF; --line:#D2DEEA;
-            --text:#07182A; --muted:#2E4459; --teal:#0B4FA8; --cyan:#0B4FA8;
+            --text:#07182A; --muted:#B7CBE1; --teal:#0B4FA8; --cyan:#0B4FA8;
             --amber:#B98505; --green:#0A8B4E; --red:#BC372E;
         }
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -45,7 +45,7 @@
         body.mp-storefront-page .sf-stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
         body.mp-storefront-page .pos { color:var(--green); } body.mp-storefront-page .neg { color:var(--red); }
         body.mp-storefront-page .offer h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:22px; }
-        body.mp-storefront-page .offer-desc { color:#07182A; font-size:13.5px; line-height:1.55; margin:6px 0 12px; max-width:640px; }
+        body.mp-storefront-page .offer-desc { color:#DCE7F4; font-size:13.5px; line-height:1.55; margin:6px 0 12px; max-width:640px; }
         body.mp-storefront-page .pkg-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
         body.mp-storefront-page .pkg { background:#F4F7FA; border:1px solid var(--line); border-radius:11px; padding:13px; display:flex; flex-direction:column; gap:8px; transition:border-color .15s; }
         body.mp-storefront-page .pkg:hover { border-color:rgba(11, 79, 168,.28); }
@@ -63,14 +63,14 @@
         body.mp-storefront-page .pr-main { flex:1; min-width:200px; }
         body.mp-storefront-page .pr-game { font-weight:700; font-size:14.5px; }
         body.mp-storefront-page .pr-meta { color:var(--muted); font-size:12px; margin-top:3px; }
-        body.mp-storefront-page .pr-meta b { color:#07182A; font-weight:600; }
+        body.mp-storefront-page .pr-meta b { color:#DCE7F4; font-weight:600; }
         body.mp-storefront-page .mp-empty { text-align:center; color:var(--muted); padding:40px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
         body.mp-storefront-page .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#F6F9FC; border:1px solid var(--line); color:var(--text); padding:12px 18px; border-radius:11px; font-size:13.5px; display:none; z-index:60; max-width:92vw; }
         /* modal */
         body.mp-storefront-page .modal-back { position:fixed; inset:0; background:#F4F7FA; display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
         body.mp-storefront-page .modal { background:#FFFFFF; border:1px solid var(--line); border-radius:16px; max-width:560px; width:100%; max-height:86vh; display:flex; flex-direction:column; }
         body.mp-storefront-page .modal-head { padding:16px 20px; border-bottom:1px solid var(--line); font-weight:800; font-size:16px; }
-        body.mp-storefront-page .modal-body { padding:16px 20px; overflow-y:auto; color:#07182A; font-size:13px; line-height:1.65; }
+        body.mp-storefront-page .modal-body { padding:16px 20px; overflow-y:auto; color:#DCE7F4; font-size:13px; line-height:1.65; }
         body.mp-storefront-page .modal-body h4 { color:var(--text); margin:12px 0 4px; font-size:13.5px; }
         body.mp-storefront-page .modal-foot { padding:14px 20px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
         body.mp-storefront-page .modal-foot label { font-size:12.5px; color:var(--muted); display:flex; gap:7px; align-items:center; margin-right:auto; }
@@ -81,7 +81,7 @@
 <link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=25159a6930a1">
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=a9c0211f7deb">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=f9ff2031f2ce">
 </head>
 <body class="mp-storefront-page tmr-ds">
 
@@ -181,7 +181,7 @@
                 // One package, both prices. The seller sets them on the same
                 // listing, so the buyer sees both here and chooses how to pay.
                 '<div class="pkg-price">' + money(x.price_cents, x.currency) +
-                    (x.accepts_tmr && x.price_tmr ? '<small style="color:#0B4FA8;font-weight:700;">or ' + Number(x.price_tmr).toLocaleString() + ' TMR</small>' : '') +
+                    (x.accepts_tmr && x.price_tmr ? '<small style="color:#7FB6FF;font-weight:700;">or ' + Number(x.price_tmr).toLocaleString() + ' TMR</small>' : '') +
                     '<small>' + (PER[x.product_type] || 'one-time') + '</small></div>' +
                 (store.marketplace_enabled && x.product_type !== 'single_pick'
                     ? '<button class="btn btn-primary" data-buy-listing="' + x.id + '">Buy ' + esc(x.product_label || '') + '</button>'

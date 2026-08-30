@@ -20,14 +20,14 @@
     <script defer src="/static/js/tmr-linkhub.js?v=624f44f1bbc7"></script>
     <style>
         :root { color-scheme: light; --text-muted:#2E4459; }
-        body { margin:0; background:#F4F7FA; color:#07182A; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
+        body { margin:0; background:#F4F7FA; color:#DCE7F4; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
         html, body { overflow-x:hidden; max-width:100%; }
         .th-wrap { max-width:1120px; margin:0 auto; padding:26px 18px 70px; box-sizing:border-box; }
         .th-card, .th-stat, .th-row { box-sizing:border-box; max-width:100%; }
         .th-btn { flex:0 0 auto; }
         .th-head h1 { font-family:Barlow,Inter,sans-serif; font-size:clamp(26px,4vw,38px); margin:0 0 6px; letter-spacing:-.01em; }
         .th-head p { color:var(--text-muted); margin:0 0 20px; font-size:14.5px; line-height:1.6; }
-        .th-head a { color:#0B4FA8; }
+        .th-head a { color:#7FB6FF; }
 
         .th-card { background:#FFFFFF; border:1px solid #D2DEEA; border-radius:14px; padding:18px; margin-bottom:18px; }
         .th-card h2 { font-size:16px; margin:0 0 12px; font-family:Barlow,Inter,sans-serif; letter-spacing:.02em; }
@@ -36,40 +36,40 @@
         @media (max-width:900px){ .th-summary { grid-template-columns:repeat(3,1fr); } }
         @media (max-width:520px){ .th-summary { grid-template-columns:repeat(2,1fr); } }
         .th-stat { background:rgba(7,24,42,0.007); border:1px solid #D2DEEA; border-radius:11px; padding:12px 10px; text-align:center; }
-        .th-stat .v { font-size:20px; font-weight:800; color:#07182A; font-family:Barlow,Inter,sans-serif; }
+        .th-stat .v { font-size:20px; font-weight:800; color:#DCE7F4; font-family:Barlow,Inter,sans-serif; }
         .th-stat .l { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-top:4px; }
 
         .th-filters { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
         .th-field { display:flex; flex-direction:column; gap:5px; flex:1 1 150px; min-width:0; }
         .th-field label { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
         .th-field select, .th-field input {
-            background:#FFFFFF; border:1px solid #D2DEEA; border-radius:8px; color:#07182A;
+            background:#FFFFFF; border:1px solid #D2DEEA; border-radius:8px; color:#DCE7F4;
             padding:8px 10px; font-size:13px; font-family:inherit; width:100%; min-width:0; max-width:100%;
         }
         .th-btn {
-            background:rgba(11, 79, 168,0.14); border:1px solid rgba(11, 79, 168,.28); color:#0B4FA8;
+            background:rgba(11, 79, 168,0.14); border:1px solid rgba(11, 79, 168,.28); color:#7FB6FF;
             border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer;
         }
-        .th-btn.secondary { background:rgba(7,24,42,0.012); border-color:#D2DEEA; color:#07182A; }
+        .th-btn.secondary { background:rgba(7,24,42,0.012); border-color:#D2DEEA; color:#DCE7F4; }
 
         .th-row {
             display:flex; gap:14px; justify-content:space-between; align-items:flex-start;
             padding:14px 0; border-bottom:1px solid #D2DEEA;
         }
         .th-row:last-child { border-bottom:none; }
-        .th-q { font-size:14.5px; color:#07182A; line-height:1.45; margin-bottom:6px; overflow-wrap:anywhere; }
+        .th-q { font-size:14.5px; color:#DCE7F4; line-height:1.45; margin-bottom:6px; overflow-wrap:anywhere; }
         .th-meta { font-size:12px; color:var(--text-muted); line-height:1.7; }
-        .th-meta strong { color:#07182A; }
+        .th-meta strong { color:#DCE7F4; }
         .th-pts { font-size:17px; font-weight:800; font-family:Barlow,Inter,sans-serif; white-space:nowrap; }
-        .th-pts.zero { color:#5E7590; }
-        .th-pts.pos  { color:#0A8B4E; }
+        .th-pts.zero { color:#9BB0C6; }
+        .th-pts.pos  { color:#2ECC71; }
         .badge { display:inline-block; padding:1px 8px; border-radius:999px; font-size:10px; font-weight:700;
                  letter-spacing:.04em; text-transform:uppercase; margin-right:5px; }
-        .badge.correct { background:rgba(10,139,78,0.14); color:#0A8B4E; }
+        .badge.correct { background:rgba(10,139,78,0.14); color:#2ECC71; }
         .badge.wrong   { background:rgba(188,55,46,0.14); color:#BC372E; }
         .badge.forfeit { background:rgba(185,133,5,0.14); color:#B98505; }
         .badge.expired { background:rgba(185,133,5,0.14); color:#B98505; }
-        .badge.diff    { background:rgba(7,24,42,0.017); color:#07182A; }
+        .badge.diff    { background:rgba(7,24,42,0.017); color:#DCE7F4; }
 
         .th-pager { display:flex; gap:10px; align-items:center; justify-content:center; margin-top:18px; flex-wrap:wrap; }
         .th-pager span { font-size:13px; color:var(--text-muted); }
@@ -82,10 +82,10 @@
         .th-bd-row:last-child { border-bottom:none; }
         .th-bd-row .n { color:var(--text-muted); }
     </style>
-    <link rel="stylesheet" href="/static/css/tmr-light.css?v=2a21b65b88d5">
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=c703fa79088d">
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=a9c0211f7deb">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=f9ff2031f2ce">
 </head>
 <body class="tmr-site-shell tmr-light">
 

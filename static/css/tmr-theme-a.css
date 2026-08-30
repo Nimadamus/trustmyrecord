@@ -2570,3 +2570,428 @@ html body .shell{
     linear-gradient(180deg, #0A121E, #070E18) !important;
   border-color:rgba(43,140,255,.22) !important;
 }
+
+/* ============================================================
+   34. LEGIBILITY PASS. Contrast only: no layout, no markup, no
+   colour-identity change. Near-black ground, navy panels,
+   electric-blue accents, white/silver primary text and green
+   positives are all preserved. Three readable text tiers:
+   primary #EDF3FA, secondary #C3D6EA, tertiary #93A9C0.
+   ============================================================ */
+
+/* 34a. Tertiary token was 3.1:1 on panels. Lifted to 4.9:1.
+   Body/UI face is Inter. */
+body.tmr-ds, body.tmr-ds-shell, body.tmr-theme-a, body.tmr-light, body.classic-forum{
+  --a-faint:#93A9C0;
+  --a-ui:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+}
+
+/* 34b. Navigation: 13px/800 uppercase at .02em read as cramped.
+   Larger, lighter, properly tracked, brighter. Type only. */
+body.tmr-ds .ds-navitem, body.tmr-ds .ds-menu > button,
+body.tmr-ds-shell .ds-navitem, body.tmr-ds-shell .ds-menu > button,
+body.tmr-theme-a .ds-navitem, body.tmr-theme-a .ds-menu > button{
+  font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+  color:#D6E4F4; font-weight:600; font-size:13.5px;
+  letter-spacing:.07em; padding-left:13px; padding-right:13px;
+}
+body.tmr-ds .ds-navitem:hover, body.tmr-ds .ds-menu > button:hover,
+body.tmr-ds-shell .ds-navitem:hover, body.tmr-ds-shell .ds-menu > button:hover,
+body.tmr-theme-a .ds-navitem:hover, body.tmr-theme-a .ds-menu > button:hover{color:#FFFFFF}
+html body nav.tmr-global-nav .tmr-global-nav__links a{
+  font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif; color:#D6E4F4; font-weight:600; letter-spacing:.06em;
+}
+
+/* 34c. Forum thread lists rendered near-black on the dark rows
+   (thread titles 1.08:1, author links 1.05:1, meta 1.18:1).
+   Restated at the same ID/class weight that was winning. */
+html body.classic-forum #viewThreads .thread-table .fname,
+html body.classic-forum #viewThreads .thread-table .fname a,
+html body.classic-forum .thread-table .fname,
+html body.classic-forum #viewThread .fname{
+  color:#EDF3FA !important; font-weight:600;
+}
+html body.classic-forum .fdesc .fuser-link,
+html body.classic-forum .thread-table .fuser-link,
+html body.classic-forum .fuser-link,
+html body.classic-forum .fdesc{ color:#B7CBE1 !important; }
+html body.classic-forum #viewThreads .thread-table .flpost-meta,
+html body.classic-forum .thread-table .flpost-meta,
+html body.classic-forum .flpost-meta{ color:#93A9C0 !important; }
+html body.classic-forum .fside-list .fside-gbody a.fside-forum.is-active,
+html body.classic-forum .fside-list a.fside-forum.is-active{
+  color:#FFFFFF !important; font-weight:600;
+}
+
+/* 34d. Link-hub strip: 1.34:1 blue-on-slate, the worst on the
+   site (118 nodes). Retarget its private palette. */
+html body .tmrlh, html body .tmrlh-related-links, html body .tmrlh-crumbs{
+  --tmrlh-link:#9CC8FF; --tmrlh-fg:#EDF3FA; --tmrlh-muted:#93A9C0;
+  --tmrlh-bg:#070E18; --tmrlh-line:rgba(43,140,255,.22);
+}
+html body .tmrlh-related-links a.tmrlh-a{ color:#9CC8FF !important; }
+html body .tmrlh-crumbs .tmrlh-current{ color:#C3D6EA !important; background:transparent !important; }
+html body.tmr-ds .tmrlh-home span,
+html body .tmrlh-crumbs a.tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark){ color:#04121F !important; }
+
+/* 34e. Panels painted by background-IMAGE gradients stayed cream
+   on the dark ground, with pale text on them. Same navy/panel
+   values the rest of the site already uses. */
+html body .signup-banner, html body .final-cta, html body .ss-cta,
+html body .chal4, html body .pl-hero, html body .pl-feat,
+html body .trivia-create-cta, html body .glass-card,
+html body .prize-tier, html body .prize-tier.first,
+html body a.category-card, html body .category-card,
+html body .ed-cover{
+  background-image:linear-gradient(180deg,#0A121E,#070E18) !important;
+  background-color:#070E18 !important;
+  border-color:rgba(43,140,255,.22) !important;
+  color:var(--a-text,#C3D6EA) !important;
+}
+html body .signup-banner *, html body .final-cta *, html body .ss-cta *,
+html body .chal4 *, html body .trivia-create-cta *,
+html body .prize-tier *, html body .category-card *{
+  color:inherit;
+}
+html body .signup-banner h1, html body .signup-banner h2, html body .signup-banner h3,
+html body .final-cta h1, html body .final-cta h2, html body .final-cta h3,
+html body .ss-cta h2, html body .chal4 h2, html body .category-card h3,
+html body .prize-tier strong, html body .prize-tier b{ color:#FFFFFF !important; }
+
+/* 34f. The contest callout is a class-less DIV whose only paint is
+   an inline cream gradient. Matched structurally, colour only. */
+html body [style*="linear-gradient"][style*="255, 251, 239"],
+html body [style*="linear-gradient"][style*="#fffbef"],
+html body [style*="linear-gradient"][style*="#FFFBEF"]{
+  background-image:linear-gradient(180deg,#0A121E,#070E18) !important;
+  color:var(--a-text,#C3D6EA) !important;
+  border-color:rgba(43,140,255,.22) !important;
+}
+
+/* 34g. Sportsbook de-emphasised odds were 2.4:1. */
+html body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.is-em,
+html body[data-tmr-route="sportsbook"] .sb-odds.is-em,
+html body .sb-odds.is-em{ color:#A9BFD6 !important; }
+
+/* 34h. Avatar initials were near-black discs. */
+html body .person-avatar, html body .profile-avatar{ color:#04121F !important; font-weight:700; }
+
+/* 34i. Table headers, form labels and placeholders: readable
+   tertiary rather than washed out. */
+html body th, html body .ds-table th, html body table thead th{ color:#C3D6EA; }
+html body label, html body .ds-label, html body .form-label{ color:#C3D6EA; }
+html body input::placeholder, html body textarea::placeholder{ color:#93A9C0; opacity:1; }
+html body select, html body input, html body textarea{ font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif; }
+
+/* 34j. Disabled and secondary states were faded past reading. */
+html body [disabled], html body .is-disabled, html body .disabled{ opacity:.62; }
+html body small, html body .meta, html body .ds-eyebrow{ color:#93A9C0; }
+html body footer, html body .ds-foot, html body .site-footer{ color:#B0C4DA; }
+html body footer a, html body .ds-foot a, html body .site-footer a{ color:#9CC8FF; }
+
+/* 34k. Community feed body copy: face, size and colour. */
+html body .feed-post, html body .cm-post, html body .feed-post p, html body .cm-post p,
+html body .post-body, html body .community-post{
+  font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif; color:#DCE7F4;
+}
+html body.tmr-ds .gf-sect p, html body.tmr-ds .gf-call p{ color:#C3D6EA !important; }
+
+/* 35. Last two contrast items found after 34. */
+
+/* 35a. --brand-dk (#0B4FA8) is a fine border/fill but 2.2:1 as text
+   on navy. Lifted only where it paints type. */
+html body.tmr-ds .hhc-cell.is-adv,
+html body.tmr-ds .hh-shell--mlb .hh-datebtn[aria-current="date"],
+html body .hhc-cell.is-adv, html body .hh-datebtn[aria-current="date"]{
+  color:#7FB6FF !important;
+}
+
+/* 35b. Forum header was neutral #2F2F2F: off-palette against the
+   navy panels everywhere else. Same navy, same border language. */
+html body.classic-forum #tmrForumHeader,
+html body #tmrForumHeader.tmrfh{
+  background:#070E18 !important;
+  border-bottom:1px solid rgba(43,140,255,.22) !important;
+}
+html body #tmrForumHeader.tmrfh .tmrfh-authlink,
+html body #tmrForumHeader.tmrfh a{ color:#D6E4F4; }
+
+/* 36. Corrections to 34. */
+
+/* 36a. 34d darkened the whole breadcrumb home link on the
+   assumption it sat on the gold pill. Only the mark does; the
+   label sits on the dark bar, so it went 1.12:1. Label light,
+   mark dark on its pill. */
+html body.tmr-ds .tmrlh-home span,
+html body .tmrlh-crumbs a.tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark){
+  color:#EDF3FA !important;
+}
+html body .tmrlh-home .tmrlh-home-mark,
+html body .tmrlh-crumbs .tmrlh-home-mark{ color:#04121F !important; }
+
+/* 36b. Avatar initials: white on the blue disc is 5.5:1,
+   near-black was 3.4:1. */
+html body .person-avatar, html body .profile-avatar{ color:#FFFFFF !important; }
+
+/* ============================================================
+   37. Inline light-theme inks. 33 pages hard-code text colour in a
+   style attribute, which outranks every non-important author rule,
+   so the theme never reached them: #07182A body copy was rendering
+   at 1.1:1 on the near-black ground. Each ink is remapped to a
+   readable value in the same role and hue. Colour only.
+   ============================================================ */
+html body [style*="color:#DCE7F4"],
+html body [style*="color: #DCE7F4"],
+html body [style*="color:#DCE7F4"],
+html body [style*="color: #DCE7F4"]{
+  color:#DCE7F4 !important;   /* was #07182A, primary ink */
+}
+html body [style*="color:#C3D6EA"],
+html body [style*="color: #C3D6EA"],
+html body [style*="color:#C3D6EA"],
+html body [style*="color: #C3D6EA"]{
+  color:#C3D6EA !important;   /* was #2E4459, secondary body */
+}
+html body [style*="color:#7FB6FF"],
+html body [style*="color: #7FB6FF"],
+html body [style*="color:#7FB6FF"],
+html body [style*="color: #7FB6FF"]{
+  color:#7FB6FF !important;   /* was #0B4FA8, deep brand blue */
+}
+html body [style*="color:#6C7380"],
+html body [style*="color: #6C7380"],
+html body [style*="color:#6c7380"],
+html body [style*="color: #6c7380"]{
+  color:#9BA7B8 !important;   /* was #6C7380, neutral meta */
+}
+html body [style*="color:#BC372E"],
+html body [style*="color: #BC372E"],
+html body [style*="color:#bc372e"],
+html body [style*="color: #bc372e"]{
+  color:#FF7A6E !important;   /* was #BC372E, negative red */
+}
+
+/* ============================================================
+   38. Two more private palettes reached only through variables.
+   Pages set colour inline as color:var(--token), so the value has
+   to be fixed at the token, not the rule. Declared at a weight
+   that beats the pages' own :root / body blocks.
+   ============================================================ */
+
+/* 38a. --tmrp-* (TMR Coin, prediction pages). */
+html body.tmr-light, html body.tmr-site-shell, html body[data-tmr-route], html body.tmr-ds{
+  --tmrp-text-primary:#DCE7F4;
+  --tmrp-text-muted:#9BB0C6;
+  --tmrp-bg-primary:#02050A;
+  --tmrp-bg-card:#070E18;
+  --tmrp-bg-card-solid:#0A121E;
+  --tmrp-glass-border:rgba(43,140,255,.22);
+  --tmrp-glass-hover:rgba(43,140,255,.14);
+  --tmrp-neon-cyan:#4DA3FF;
+  --tmrp-neon-gold:#E8C34A;
+  --tmrp-neon-purple:#8C7BE8;
+}
+
+/* 38b. Generic light-theme ink tokens still resolving dark on the
+   dark ground (online gaming, arena suite, legacy shells). */
+html body.tmr-light, html body.tmr-site-shell, html body[data-tmr-route]{
+  --text:#DCE7F4;
+  --ink:#DCE7F4;
+  --muted:#9BB0C6;
+  --faint:#93A9C0;
+  --cyan:#4DA3FF;
+}
+
+/* ============================================================
+   39. Editorial article palette (--ed-*). Matchup-of-the-day
+   pages read their ink from these tokens, which were still the
+   light-theme values, so body copy sat at 1.1:1. Surfaces move
+   to the same navy the rest of the site uses; positives stay
+   green, the two team accents keep their hues.
+   ============================================================ */
+html body.tmr-ds, html body.tmr-ds-shell, html body.tmr-theme-a, html body[data-tmr-route]{
+  --ed-bg:#02050A;
+  --ed-bg-warm:#070E18;
+  --ed-panel:#070E18;
+  --ed-ink:#EDF3FA;
+  --ed-body:#C3D6EA;
+  --ed-mut:#9BB0C6;
+  --ed-faint:#93A9C0;
+  --ed-acc:#7FB6FF;
+  --ed-acc-soft:rgba(43,140,255,.14);
+  --ed-line:rgba(43,140,255,.22);
+  --ed-line-2:rgba(43,140,255,.30);
+  --ed-pos:#2ECC71;
+  --ed-neg:#FF7A6E;
+  --ed-home:#FF8A7E;
+  --ed-away:#E8C34A;
+}
+
+/* ============================================================
+   40. Final contrast items.
+   ============================================================ */
+
+/* 40a. --text-primary/--text-secondary (pick-marketplace blocks on
+   profiles) were still light-theme ink at 1.2:1. */
+html body.tmr-ds, html body.tmr-ds-shell, html body.tmr-theme-a,
+html body.tmr-light, html body[data-tmr-route], html body.profile-page{
+  --text-primary:#EDF3FA;
+  --text-secondary:#C3D6EA;
+  --text-tertiary:#9BB0C6;
+}
+
+/* 40b. Text sitting ON a filled brand button inherited the page
+   link colour, giving blue-on-blue (1.07:1) and blue-on-teal
+   (2.64:1). On a filled button the label is always white. */
+html body a.as-btn, html body a.ds-btn, html body a.btn,
+html body a[class*="-btn"], html body a[class*="btn-"],
+html body a[class*="-cta"], html body .cta a, html body .ss-cta a,
+html body a.mppfs-buy, html body a.mppfs-cta,
+html body .tmr-hbtn a, html body button a{
+  color:#FFFFFF !important;
+}
+
+/* 40c. The breadcrumb mark sits on a dark gold pill, so its label
+   has to be light, not the dark ink 36a gave it. */
+html body .tmrlh-home .tmrlh-home-mark,
+html body .tmrlh-crumbs .tmrlh-home-mark{ color:#FFF3D6 !important; }
+
+/* 40d. Pale-gradient buttons keep dark type: 34e turned their
+   containers dark and the label inherited the light ink. */
+html body .tmr-hbtn.is-primary, html body .pl-chip.is-active,
+html body .tmr-poll-vote-btn, html body .view-tab.active,
+html body .tmr-hbtn.is-primary *, html body .pl-chip.is-active *{
+  color:#04121F !important;
+}
+
+/* 40e. 37 matched hex only; the same inks also appear inline in
+   rgb() notation. */
+html body [style*="color:rgb(7, 24, 42)"], html body [style*="color: rgb(7, 24, 42)"],
+html body [style*="color:rgb(7,24,42)"]{ color:#DCE7F4 !important; }
+html body [style*="color:rgb(46, 68, 89)"], html body [style*="color: rgb(46, 68, 89)"],
+html body [style*="color:rgb(46,68,89)"]{ color:#C3D6EA !important; }
+
+/* ============================================================
+   41. Corrections to 39/40.
+   ============================================================ */
+
+/* 41a. tmr-article.css declares the --ed-* palette on
+   "body.tmr-ds .ed" (0,2,1), which outranks the 0,1,2 block in
+   39. Same values, restated at the scope that actually wins. */
+html body.tmr-ds .ed, html body.tmr-ds-shell .ed, html body .ed{
+  --ed-bg:#02050A;
+  --ed-bg-warm:#070E18;
+  --ed-panel:#070E18;
+  --ed-ink:#EDF3FA;
+  --ed-body:#C3D6EA;
+  --ed-mut:#9BB0C6;
+  --ed-faint:#93A9C0;
+  --ed-acc:#7FB6FF;
+  --ed-acc-soft:rgba(43,140,255,.14);
+  --ed-line:rgba(43,140,255,.22);
+  --ed-line-2:rgba(43,140,255,.30);
+  --ed-pos:#2ECC71;
+  --ed-neg:#FF7A6E;
+  --ed-home:#FF8A7E;
+  --ed-away:#E8C34A;
+}
+
+/* 41b. The global nav paints a bright blue bar on some pages;
+   its links were the dim silver used on the dark bar (2.5:1). */
+html body nav.tmr-global-nav a:not(.tmr-global-nav__brand),
+html body nav.tmr-global-nav .tmr-global-nav__brand > span,
+html body nav.tmr-global-nav .tmr-global-nav__brand > span:not(.tmr-global-nav__mark){
+  color:#FFFFFF !important;
+}
+
+/* ============================================================
+   42. Polls / challenges palette. --text-2 was still #2E4459
+   (1.8-2.0:1) and --accent still #0B4FA8 (2.5:1); between them
+   they carry ranks, chips, vote counts, timestamps and the
+   "how it works" copy.
+   ============================================================ */
+html body.tmr-ds, html body.tmr-ds-shell, html body.tmr-theme-a,
+html body.tmr-light, html body[data-tmr-route], html body{
+  --text-2:#B7CBE1;
+  --text-3:#9BB0C6;
+  --accent:#7FB6FF;
+  --accent-2:#4DA3FF;
+}
+html body .pl-badge--league{ color:#9CC8FF !important; }
+html body .pl-lb-chip.is-active{ color:#04121F !important; }
+
+/* ============================================================
+   43. Remaining real-text failures.
+   ============================================================ */
+
+/* 43a. Pages that are only .tmr-light never got the --a-* type
+   tokens, so rules/help copy fell back to the old ink (1.96:1). */
+html body.tmr-light{
+  --a-heading:#FFFFFF;
+  --a-text:#C3D6EA;
+  --a-muted:#9BB0C6;
+  --a-faint:#93A9C0;
+  --a-silver-2:#EDF2F8;
+  --a-silver-3:#BCCAD9;
+}
+html body.tmr-light li, html body.tmr-light p, html body.tmr-light dd{ color:#C3D6EA; }
+
+/* 43b. The breadcrumb home pill is gold on some routes and navy on
+   others, so no single label colour worked: white was 3.03:1 on the
+   gold. The pill is normalised to the brand navy everywhere, which
+   is what the rest of the breadcrumb bar already uses. */
+html body .tmrlh-crumbs a.tmrlh-home,
+html body .tmrlh-crumbs a.tmrlh-home.tmrlh-a{
+  background:#0A121E !important;
+  background-image:none !important;
+  border:1px solid rgba(43,140,255,.30) !important;
+}
+html body .tmrlh-crumbs a.tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark){ color:#EDF3FA !important; }
+html body .tmrlh-crumbs .tmrlh-home-mark{ color:#04121F !important; }
+
+/* 43c. The global nav's blue bar was #277EEB, on which white is
+   only 4.01:1. One step deeper takes it to 5.2:1 and keeps the
+   electric blue. */
+html body nav.tmr-global-nav,
+html body nav.tmr-global-nav .tmr-global-nav__inner{
+  background-color:#125BB8 !important;
+}
+html body nav.tmr-global-nav a:not(.tmr-global-nav__brand),
+html body nav.tmr-global-nav .tmr-global-nav__brand span{ color:#FFFFFF !important; }
+
+/* 43d. 40d gave every "active tab" dark type for the pale-gradient
+   ones; the trivia tab is dark-filled, so it needs light type. */
+html body .view-tab.active, html body .view-tab.active *{
+  color:#04121F !important;
+  background:linear-gradient(135deg,#DEF4F2,#BFE3FF) !important;
+}
+
+/* ============================================================
+   44. Last real-text failures, targeted at the exact elements
+   the classified audit named. Brand blue #0B4FA8 stays as a FILL
+   (buttons rely on it); only its use as TYPE is lifted.
+   ============================================================ */
+
+/* 44a. TMR Coin metrics and status copy (1.96:1). */
+html body .tcoin-amt, html body .tcoin-item span, html body .tcoin-item .tcoin-amt,
+html body .tcoin-state, html body .tcoin-market .tcoin-state{ color:#C3D6EA !important; }
+html body .tcoin-badge, html body .tcoin-pill{ color:#04121F !important; }
+
+/* 44b. Trivia question counter and play label (2.3-2.45:1). */
+html body .q-count, html body .q-count strong, html body .play-btn,
+html body .card-meta .play-btn{ color:#9CC8FF !important; }
+
+/* 44c. Homepage "go" affordances and footer links (2.2-2.5:1).
+   index.html itself is untouched; this is the shared sheet. */
+html body .ei .go2, html body .mrow .go, html body .foot a,
+html body .go, html body .go2{ color:#9CC8FF !important; }
+html body .tabs button.tab.on, html body button.tab.on{ color:#EDF3FA !important; }
+
+/* 44d. The brand CTA/nav gradient averaged #277EEB, on which white
+   is 4.01:1. One step deeper clears 5:1 and keeps the electric
+   blue; the bright stop is retained for the highlight. */
+html body nav.tmr-global-nav,
+html body a[class*="-btn"].is-primary, html body a[class*="btn-"].is-primary,
+html body .tmr-global-nav__cta, html body a.tmr-hbtn.is-brand{
+  background-image:linear-gradient(135deg,#0F52A8,#1D7FE8) !important;
+}
