@@ -3290,3 +3290,50 @@ html body, html body a, html body footer, html body .tmr-global-footer{
 }
 html body a[style*="22D2C0"], html body .tmr-global-footer a,
 html body footer a{ color:#9CC8FF !important; }
+/* STAMP-PERSISTENCE-PROBE-1788134135 */
+
+/* ============================================================
+   54. The seven remaining interior-page contrast failures, each
+   restated at the exact scope of the rule that was winning.
+   No new broad selectors, no layout, no functional change.
+   ============================================================ */
+
+/* 54a. FORUM (2). forum/index.html's own style block carries the
+   legacy light-theme inks: ".fmain a{color:#111 !important}" put the
+   newest-member link at 1.05:1, and ".fdesc b"/".flpost-user b" at
+   #4a4a4a put the greeting at 2.24:1. Same scope, readable values. */
+html body.classic-forum .fmain a{ color:#9CC8FF !important; }
+html body.classic-forum .fdesc b,
+html body.classic-forum .flpost-user b{ color:#B7CBE1 !important; }
+
+/* 54b. FORUM/MLB (1). Same .fmain a rule paints the breadcrumb
+   "TrustMyRecord Forums" (2.24:1); covered by 54a, with the
+   breadcrumb itself pinned so the crumb keeps its quieter tier. */
+html body.classic-forum .fcrumb a,
+html body.classic-forum .fbreadcrumb a{ color:#9CC8FF !important; }
+
+/* 54c. TMR COIN (1 of 2). The "TMR Coin" chip is a link sitting on a
+   light mint pill, so the brand blue read at 2.80:1. Dark type on the
+   mint keeps the pill exactly as designed. */
+html body .tcoin-live-pill a, html body .tcoin-pill a,
+html body a.tcoin-chip, html body .tcoin-onbase a{ color:#04121F !important; }
+
+/* 54d. TMR COIN (2 of 2). The announcement kicker was #0C4F58 on
+   navy (2.14:1). Quieter than body copy, but readable. */
+html body .tcoin-announce-kick,
+html body .tcoin-announce .tcoin-announce-kick{ color:#9BB0C6 !important; }
+
+/* 54e. SPORTSBOOK (1). "Start Free" is a filled .ds-btn.p, so the
+   page link colour landed on the brand fill at 3.75:1. Filled button
+   means a white label; the fill itself is untouched. */
+html body a.ds-btn.p, html body a.ds-btn.p.sm,
+html body a.ds-btn.p span{ color:#FFFFFF !important; }
+
+/* 54f. MLB SIMULATOR (1). "Run Today's Matchups" is white on the
+   simulator's own lighter blue (#1692E9, 3.33:1). Deepened to the
+   same brand gradient every other primary button now uses. */
+html body a.simv2-btn.simv2-btn-primary,
+html body .simv2-btn.simv2-btn-primary{
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
+  color:#FFFFFF !important;
+}
