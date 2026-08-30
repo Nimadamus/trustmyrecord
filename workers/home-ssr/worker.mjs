@@ -173,7 +173,8 @@ async function getSlate(ctx) {
      strip carries both sports, and one failed feed must not cost the other its
      first paint. Only a payload with neither is refused. */
   if (!data || data.ok === false ||
-      (!Array.isArray(data.games) && !Array.isArray(data.nfl_games))) return null;
+      (!Array.isArray(data.games) && !Array.isArray(data.nfl_games)
+        && !Array.isArray(data.cfb_games))) return null;
   ctx.waitUntil(cache.put(cacheKey, new Response(body, {
     headers: {
       'Content-Type': 'application/json',
@@ -317,6 +318,32 @@ function compRowHtml(view, row, i) {
    did not actually change. Keep them in lockstep. -------------------------- */
 const logoImg = (url) => (url ? `<img src="${esc(url)}" alt="" loading="lazy" onerror="this.remove()">` : '');
 
+/* STATUS, BY SPORT - the port of the client's formatter, same lockstep rule.
+   MLB cards carry no `sport` and default to baseball; football says quarters. */
+const TICKER_ORD_Q = ['1st', '2nd', '3rd', '4th'];
+
+function isFootball(g) {
+  const sp = String((g && g.sport) || 'mlb');
+  return sp === 'nfl' || sp === 'cfb';
+}
+
+function footballStatus(g, short) {
+  const d = String(g.status_detail || '');
+  if (/half/i.test(d)) return short ? 'Half' : 'Halftime';
+  let p = Number(g.period) || 0;
+  if (!p) { const m = /(\d+)\s*(?:st|nd|rd|th)/i.exec(d); if (m) p = Number(m[1]); }
+  if (!p) return 'Live';
+  const name = p > 4 ? (p > 5 ? `OT${p - 4}` : 'OT')
+    : short ? `${p}Q` : `${TICKER_ORD_Q[p - 1]} Quarter`;
+  if (/^end\b/i.test(d)) return `${short ? 'End ' : 'End of '}${name}`;
+  const clk = String(g.clock || (/(\d{1,2}:\d{2})/.exec(d) || [])[1] || '');
+  if (!clk || clk === '0:00') return name;
+  return short ? `${clk} ${name}` : `${clk} \u2014 ${name}`;
+}
+
+/* TWO WORDINGS, ONE MARKUP - see the long note in tmr-home-live.js. The edge
+   has no viewport to read, so the choice cannot be made here; both are baked
+   and CSS shows one. Baseball chips stay a bare text node. */
 function statusChip(g) {
   const s = String(g.status || 'scheduled');
   if (s === 'scheduled') {
@@ -324,14 +351,39 @@ function statusChip(g) {
   }
   const score = (typeof g.away_score === 'number' && typeof g.home_score === 'number')
     ? ` ${g.away_score}-${g.home_score}` : '';
-  const text = s === 'live' ? (g.inning || 'Live') + score
-    : s === 'final' ? 'Final' + score
+  const fb = isFootball(g);
+  const fin = (fb && /\bot\b|overtime/i.test(String(g.status_detail || ''))) ? 'Final/OT' : 'Final';
+  const say = (live) => (s === 'live' ? live + score
+    : s === 'final' ? fin + score
     : s === 'postponed' ? 'PPD'
     : s === 'cancelled' ? 'Canceled'
     : s === 'suspended' ? 'Susp'
     : s === 'delayed' ? 'Delayed'
-    : (g.start_time_pt || '');
-  return `<span class="st is-${esc(s)}">${esc(text)}</span>`;
+    : (g.start_time_pt || ''));
+  const text = say(fb ? footballStatus(g, false) : (g.inning || 'Live'));
+  let body = esc(text);
+  if (fb) {
+    const brief = say(footballStatus(g, true));
+    if (brief !== text) {
+      body = `<span class="sf">${esc(text)}</span><span class="sa">${esc(brief)}</span>`;
+    }
+  }
+  return `<span class="st is-${esc(s)}">${body}</span>`;
+}
+
+/* "#4 Ohio State" - plain text, no CSS of its own, so it cannot move the strip. */
+function rankedName(rank, name) {
+  const r = Number(rank);
+  return (r >= 1 && r <= 25 ? `#${r} ` : '') + String(name || '');
+}
+
+/* The name span, two wordings, one markup - see tmr-home-live.js. */
+function nameSpan(logo, rank, name, abbr) {
+  const full = rankedName(rank, name);
+  const brief = abbr ? rankedName(rank, abbr) : full;
+  const inner = brief === full ? esc(full)
+    : `<span class="sf">${esc(full)}</span><span class="sa">${esc(brief)}</span>`;
+  return `<span class="t">${logoImg(logo)}<span class="tn">${inner}</span></span>`;
 }
 
 /* Probables are a PREGAME element: a FINAL card carries the real decisions in
@@ -437,8 +489,8 @@ function espnTickerHtml(games, key) {
     `<a class="gm gm--${key}" data-sport="${key}"` +
     ` href="${esc(g.href || '/sportsbook/')}">` +
     '<span class="gm-top">' +
-      `<span class="t">${logoImg(g.away_logo)}${esc(g.away)}</span>` +
-      `<span class="t">${logoImg(g.home_logo)}${esc(g.home)}</span>` +
+      nameSpan(g.away_logo, g.away_rank, g.away, g.away_abbr) +
+      nameSpan(g.home_logo, g.home_rank, g.home, g.home_abbr) +
       statusChip(g) +
     '</span>' +
     insightStrip(g) +
@@ -607,7 +659,8 @@ function buildRewriter(data, slate) {
       (((slate.games && slate.games.length) || 0)
         || ((slate.nfl_games && slate.nfl_games.length) || 0)
         || ((slate.nba_games && slate.nba_games.length) || 0)
-        || ((slate.nhl_games && slate.nhl_games.length) || 0))) {
+        || ((slate.nhl_games && slate.nhl_games.length) || 0)
+        || ((slate.cfb_games && slate.cfb_games.length) || 0))) {
     rw.on('.ticker .ticker-games', new AttrCell({
       'data-slate-date': slate.slate_date,
       'aria-busy': 'false',
@@ -616,7 +669,8 @@ function buildRewriter(data, slate) {
       `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games || [])}`
       + `${espnTickerHtml(slate.nfl_games, 'nfl')}`
       + `${espnTickerHtml(slate.nba_games, 'nba')}`
-      + `${espnTickerHtml(slate.nhl_games, 'nhl')}</div></div>`
+      + `${espnTickerHtml(slate.nhl_games, 'nhl')}`
+      + `${espnTickerHtml(slate.cfb_games, 'cfb')}</div></div>`
     ));
   }
 

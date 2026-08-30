@@ -176,6 +176,52 @@
     return url ? '<img src="' + esc(url) + '" alt="" loading="lazy" onerror="this.remove()">' : '';
   }
 
+  /* ----------------------------------------------- STATUS, BY SPORT
+
+     Nima, 2026-08-29: the football row was reading in baseball. The chip was
+     one generic formatter built on `g.inning` - the MLB feed's own field name
+     - so anything that was not baseball either borrowed baseball's wording or
+     fell through to the word "Live".
+
+     The card's own `sport` decides now, and nothing else does. MLB cards carry
+     no `sport` (their shape predates the field) and default to baseball, which
+     is why the MLB chip is byte-for-byte what it always was. Football cards say
+     `nfl` or `cfb` and get quarters. A league added later inherits nothing by
+     accident: it is baseball only if it says so. */
+  var TICKER_ORD_Q = ['1st', '2nd', '3rd', '4th'];
+
+  function isFootball(g) {
+    var sp = String(g && g.sport || 'mlb');
+    return sp === 'nfl' || sp === 'cfb';
+  }
+
+  /* Built from the period and the clock the feed published, not by re-parsing
+     status_detail: that string is ESPN's prose and its wording is not a
+     contract. The prose is read only for the two states that have no number -
+     halftime, and the end of a period. */
+  function footballStatus(g, short) {
+    var d = String(g.status_detail || '');
+    if (/half/i.test(d)) return short ? 'Half' : 'Halftime';
+    var p = Number(g.period) || 0;
+    if (!p) { var m = /(\d+)\s*(?:st|nd|rd|th)/i.exec(d); if (m) p = Number(m[1]); }
+    if (!p) return 'Live';
+    /* Past the fourth the number stops being the useful word. */
+    var name = p > 4 ? (p > 5 ? 'OT' + (p - 4) : 'OT')
+             : short ? p + 'Q' : TICKER_ORD_Q[p - 1] + ' Quarter';
+    if (/^end\b/i.test(d)) return (short ? 'End ' : 'End of ') + name;
+    var clk = String(g.clock || (/(\d{1,2}:\d{2})/.exec(d) || [])[1] || '');
+    if (!clk || clk === '0:00') return name;
+    return short ? clk + ' ' + name : clk + ' \u2014 ' + name;
+  }
+
+  /* TWO WORDINGS, ONE MARKUP. "8:42 - 2ND QUARTER 14-10" is more than twice the
+     width of "TOP 5TH 2-1", and at 390px the lane is 291px wide with a card
+     pinned to it and nowrap: the chip was being cut off its own right-hand end
+     (measured 2026-08-29). The chip cannot be sized from the viewport in JS -
+     the edge worker bakes this same markup with no viewport to read, and any
+     difference between the two shows up as a flicker when the client
+     re-renders. So both wordings are emitted and CSS shows exactly one.
+     Baseball is untouched: an MLB chip is still a bare text node. */
   function statusChip(g) {
     var s = String(g.status || 'scheduled');
     if (s === 'scheduled') {
@@ -183,14 +229,47 @@
     }
     var score = (typeof g.away_score === 'number' && typeof g.home_score === 'number')
       ? ' ' + g.away_score + '-' + g.home_score : '';
-    var text = s === 'live' ? (g.inning || 'Live') + score
-             : s === 'final' ? 'Final' + score
-             : s === 'postponed' ? 'PPD'
-             : s === 'cancelled' ? 'Canceled'
-             : s === 'suspended' ? 'Susp'
-             : s === 'delayed' ? 'Delayed'
-             : (g.start_time_pt || '');
-    return '<span class="st is-' + esc(s) + '">' + esc(text) + '</span>';
+    var fb = isFootball(g);
+    var fin = (fb && /\bot\b|overtime/i.test(String(g.status_detail || ''))) ? 'Final/OT' : 'Final';
+    var say = function (live) {
+      return s === 'live' ? live + score
+           : s === 'final' ? fin + score
+           : s === 'postponed' ? 'PPD'
+           : s === 'cancelled' ? 'Canceled'
+           : s === 'suspended' ? 'Susp'
+           : s === 'delayed' ? 'Delayed'
+           : (g.start_time_pt || '');
+    };
+    var text = say(fb ? footballStatus(g, false) : (g.inning || 'Live'));
+    var body = esc(text);
+    if (fb) {
+      var brief = say(footballStatus(g, true));
+      if (brief !== text) {
+        body = '<span class="sf">' + esc(text) + '</span><span class="sa">' + esc(brief) + '</span>';
+      }
+    }
+    return '<span class="st is-' + esc(s) + '">' + body + '</span>';
+  }
+
+  /* "#4 Ohio State". Plain text inside the name span on purpose: the poll rank
+     needs no box, no colour and no CSS of its own, so it cannot change the
+     height of a card or the geometry of the strip. */
+  function rankedName(rank, name) {
+    var r = Number(rank);
+    return (r >= 1 && r <= 25 ? '#' + r + ' ' : '') + String(name || '');
+  }
+
+  /* The name span, in the same two-wordings shape as the chip: the school
+     everywhere, its abbreviation on a phone, where "#4 Ohio State" and
+     "Michigan" plus a football status are wider than the card. A card with no
+     short form - every professional league, whose name IS the abbreviation -
+     ships one plain string and nothing changes for it. */
+  function nameSpan(logo, rank, name, abbr) {
+    var full = rankedName(rank, name);
+    var brief = abbr ? rankedName(rank, abbr) : full;
+    var inner = brief === full ? esc(full)
+      : '<span class="sf">' + esc(full) + '</span><span class="sa">' + esc(brief) + '</span>';
+    return '<span class="t">' + logoImg(logo) + '<span class="tn">' + inner + '</span></span>';
   }
 
   /* Probable pitchers render ONLY when the league has officially posted both,
@@ -527,7 +606,11 @@
     var espnRows = [
       { key: 'nfl', games: nflGames },
       { key: 'nba', games: (payload && payload.nba_games) || [] },
-      { key: 'nhl', games: (payload && payload.nhl_games) || [] }
+      { key: 'nhl', games: (payload && payload.nhl_games) || [] },
+      /* COLLEGE FOOTBALL (Nima, 2026-08-29): the WHOLE day's slate, ranked and
+         unranked alike, not a Top 25 highlight reel. Same card and same chip as
+         the NFL row - it is a football row that happens to be college. */
+      { key: 'cfb', games: (payload && payload.cfb_games) || [] }
     ];
     var otherGames = espnRows.reduce(function (n, r) { return n + r.games.length; }, 0);
     if (!payload || (payload.ok === false && !otherGames)) {
@@ -574,8 +657,8 @@
         html += '<a class="gm gm--' + row.key + '" data-sport="' + row.key + '"' +
           ' href="' + esc(g.href || '/sportsbook/') + '">' +
           '<span class="gm-top">' +
-            '<span class="t">' + logoImg(g.away_logo) + esc(g.away) + '</span>' +
-            '<span class="t">' + logoImg(g.home_logo) + esc(g.home) + '</span>' +
+            nameSpan(g.away_logo, g.away_rank, g.away, g.away_abbr) +
+            nameSpan(g.home_logo, g.home_rank, g.home, g.home_abbr) +
             statusChip(g) +
           '</span>' +
           /* The recap. Without this the backend was sending insights for every
@@ -843,7 +926,8 @@
     var pg = track.children[tkPageIndex];
     var first = pg && pg.querySelector ? pg.querySelector('.gm') : null;
     if (lbl && first) {
-      var want = first.getAttribute('data-sport') === 'nfl' ? 'NFL' : 'Today';
+      var sp = first.getAttribute('data-sport');
+      var want = sp === 'nfl' ? 'NFL' : sp === 'cfb' ? 'CFB' : 'Today';
       var tn = lbl.lastChild;
       if (tn && tn.nodeType === 3 && tn.nodeValue !== want) tn.nodeValue = want;
     }

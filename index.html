@@ -282,6 +282,11 @@ a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
 .gm .sc{color:#fff;font-weight:900;font-size:24px;font-variant-numeric:tabular-nums}
 .gm .st{color:#7593B1;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding-left:9px;margin-left:auto}
 .gm .st.on{color:var(--brand-lt)}
+/* A football card ships both its wordings and CSS picks one (Nima,
+   2026-08-29): the full one everywhere, the abbreviated one on a phone,
+   where "8:42 - 2ND QUARTER 14-10" is wider than the whole card. Baseball
+   chips carry neither span, so nothing about the MLB card changes. */
+.gm .sa{display:none}
 /* max-width pins the card's width to the intel strip's fixed 302px and never to
    this line. The probables string is nowrap and its width depends on the FONT,
    so once the 1.2x scale (2026-08-23) made it wider than the strip it became
@@ -376,6 +381,29 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   .ticker-page>.gm .gm-sp{font-size:11.5px}
   .ticker-page>.gm .gm-in-l{font-size:11.5px;gap:6px}
   .ticker-page>.gm .gm-in-l .ts{width:6px;height:6px;margin-top:4px}
+  /* THE SHORT WORDING, AND THE ROOM TO SHOW IT (Nima, 2026-08-29). A
+     football card carries "6:21 - 3RD QUARTER 24-17" where baseball carries
+     "TOP 5TH", and a college card carries school names where every other row
+     carries three letters, so at phone width the row stopped fitting the lane
+     and the card - nowrap, pinned to 100% above - cut the chip off its
+     right-hand end. The chip and the school both drop to their short form
+     here, and the gaps, side padding and chip tracking give back the ~15px
+     that decides whether the whole row fits a 291px lane. HORIZONTAL only:
+     nothing here touches the 103px card height the reservation promises. */
+  .ticker-page>.gm .sf{display:none}
+  .ticker-page>.gm .sa{display:inline}
+  .ticker-page>.gm--nfl,
+  .ticker-page>.gm--cfb{padding-left:10px;padding-right:10px}
+  .ticker-page>.gm--nfl .gm-top,
+  .ticker-page>.gm--cfb .gm-top{gap:7px;min-width:0}
+  .ticker-page>.gm--nfl .t,
+  .ticker-page>.gm--cfb .t{gap:4px;min-width:0}
+  .ticker-page>.gm--nfl .t .tn,
+  .ticker-page>.gm--cfb .t .tn{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .ticker-page>.gm--nfl .t img,
+  .ticker-page>.gm--cfb .t img{flex:0 0 auto}
+  .ticker-page>.gm--nfl .st,
+  .ticker-page>.gm--cfb .st{flex:0 0 auto;padding-left:6px;letter-spacing:.03em}
 }
 
 /* ---------- LOADING SKELETONS ----------------------------------------------
