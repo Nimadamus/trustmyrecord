@@ -2343,3 +2343,52 @@ body.tmr-light{
   --border:rgba(43,140,255,.16); --border-strong:rgba(43,140,255,.28);
   --text:#E8F1FB; --text-strong:#FFFFFF; --text-muted:#7F93A9; --text-dim:#5A6B7F;
 }
+
+/* -----------------------------------------------------------------------------
+   31. TYPOGRAPHY CONFORMANCE
+   Two rules the rest of the site already follows: the display face carries
+   major headings, and anything read as data or identity is set in Inter.
+   Family only. No size, weight, line-height or spacing is changed, so table
+   density and the forum's compact rows are exactly as they were.
+   -------------------------------------------------------------------------- */
+body.classic-forum h1, body.classic-forum h2,
+body.classic-forum .fpage-title, body.classic-forum .fgroup-band .fband-txt{
+  font-family:'Anton','Barlow Condensed',Impact,sans-serif;
+  font-style:italic; letter-spacing:.01em;
+}
+body.classic-forum,
+body.classic-forum .fcell,
+body.classic-forum .fgroup-table,
+body.classic-forum .thread-table,
+body.classic-forum input, body.classic-forum textarea, body.classic-forum select{
+  font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+}
+/* data is never set in the display face */
+body.tmr-ds table td, body.tmr-ds table th,
+body.tmr-ds-shell table td, body.tmr-ds-shell table th,
+body.tmr-theme-a table td, body.tmr-theme-a table th,
+body.tmr-light table td, body.tmr-light table th{
+  font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+}
+/* 31b. The forum sets its own font token on :root and the sportsbook's table
+   headers take the display face through an !important rule in tmr-sitewide.css.
+   Both are answered at their own weight. Family only. */
+html body.classic-forum{--f2p2-font:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif}
+html body.classic-forum h1,
+html body.classic-forum h2,
+html body.classic-forum .fpage-title{
+  font-family:'Anton','Barlow Condensed',Impact,sans-serif !important;
+  font-style:italic;
+}
+body.tmr-ds table td, body.tmr-ds table th,
+body.tmr-ds-shell table td, body.tmr-ds-shell table th,
+body.tmr-theme-a table td, body.tmr-theme-a table th,
+body.tmr-light table td, body.tmr-light table th{
+  font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif !important;
+}
+html body.classic-forum .ftitle h1,
+html body.classic-forum .ftitle h2,
+html body.classic-forum #forumPageTitle{
+  font-family:'Anton','Barlow Condensed',Impact,sans-serif !important;
+  font-style:italic; letter-spacing:.01em;
+}
