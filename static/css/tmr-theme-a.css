@@ -1826,3 +1826,151 @@ html body.profile-page .profile-rail-value,
 html body.profile-page .tmrx-table td{
   font-variant-numeric:tabular-nums;
 }
+
+/* =============================================================================
+   25. GROUND ENFORCEMENT
+   -----------------------------------------------------------------------------
+   Several families paint the page ground from a page-local block as
+   `html body{...!important}` or `html body.tmr-site-shell{...!important}`.
+   Those sit at (0,0,2) and (0,1,2), so the token block at (0,1,1) never wins
+   and the page stayed white under an otherwise themed shell.
+
+   This restates the ground one step up, on the hooks the site already uses, so
+   no page needs its own rule. Ground only - no layout, no components.
+   -------------------------------------------------------------------------- */
+html body.tmr-ds,
+html body.tmr-ds-shell,
+html body.tmr-theme-a,
+html body.tmr-site-shell,
+html body.tmr-polished-page{
+  background-color:#02050A !important;
+  background-image:
+    radial-gradient(900px 460px at 10% -4%, rgba(43,140,255,.10), transparent 62%),
+    radial-gradient(700px 320px at 96% 2%, rgba(43,140,255,.05), transparent 60%) !important;
+  color:#C3D6EA;
+}
+html:has(body.tmr-ds),
+html:has(body.tmr-ds-shell),
+html:has(body.tmr-theme-a),
+html:has(body.tmr-site-shell){
+  background-color:#02050A !important;
+}
+/* pages that drive their ground from their own token names */
+body.tmr-ds, body.tmr-ds-shell, body.tmr-theme-a, body.tmr-site-shell{
+  --bg-deep:#02050A; --bg:#02050A; --page-bg:#02050A; --app-bg:#02050A;
+  --surface:#070E18; --surface-2:#040A12;
+}
+
+/* =============================================================================
+   26. FAMILY COMPONENT SWEEP
+   -----------------------------------------------------------------------------
+   The named components each family still paints light, grouped by family so
+   the intent stays readable. Surfaces, borders and text only - no geometry.
+   -------------------------------------------------------------------------- */
+
+/* --- B4 article / matchup-of-the-day --- */
+body.tmr-ds .gf-sect, body.tmr-ds .gf-tlg, body.tmr-ds .gf-showcard,
+body.tmr-ds .ed, body.tmr-theme-a .gf-sect, body.tmr-theme-a .gf-tlg{
+  background:linear-gradient(180deg,#070E18,#03080F) !important;
+  border-color:rgba(43,140,255,.24) !important;
+  color:#C3D6EA;
+}
+body.tmr-ds .gf-showshot, body.tmr-ds .ed-face{background:#070E18 !important}
+
+/* --- B7 polls / trivia leaderboards --- */
+body.tmr-ds .pl-lb-card, body.tmr-ds .pl-filterbar, body.tmr-ds .pl-lb-tablewrap,
+body.tmr-theme-a .pl-lb-card, body.tmr-theme-a .pl-filterbar{
+  background:linear-gradient(180deg,#070E18,#03080F) !important;
+  border-color:rgba(43,140,255,.24) !important;
+}
+body.tmr-ds .pl-lb-card.is-leader{
+  border-color:rgba(255,201,60,.40) !important;
+  background:linear-gradient(170deg, rgba(255,201,60,.10), transparent 42%), linear-gradient(180deg,#070E18,#03080F) !important;
+}
+body.tmr-ds .pl-lb-av-f, body.tmr-ds .pl-lb-av{
+  background:rgba(43,140,255,.14) !important; border-color:rgba(43,140,255,.30) !important; color:#BFDCFF !important;
+}
+
+/* --- C3 legacy: strips, notices, tabs, small buttons --- */
+body.tmr-theme-a .strip, body.tmr-theme-a .notice, body.tmr-theme-a .mk-tabs,
+body.tmr-theme-a details.intro, body.tmr-site-shell .strip, body.tmr-site-shell .notice{
+  background:rgba(43,140,255,.06) !important;
+  border-color:rgba(43,140,255,.24) !important;
+  color:#C3D6EA !important;
+}
+body.tmr-theme-a .mkb, body.tmr-site-shell .mkb{
+  background:rgba(43,140,255,.12) !important;
+  border:1px solid rgba(43,140,255,.46) !important;
+  color:#EAF3FB !important;
+}
+body.tmr-theme-a .mkb:hover, body.tmr-site-shell .mkb:hover{
+  background:rgba(43,140,255,.24) !important; color:#fff !important;
+}
+body.tmr-light .tmr-glass, body.tmr-polished-page .tmr-glass, body.tmr-theme-a .tmr-glass{
+  background:linear-gradient(180deg,#070E18,#03080F) !important;
+  border-color:rgba(43,140,255,.24) !important;
+  backdrop-filter:none !important;
+}
+body.tmr-light .tmr-cta-secondary, body.tmr-polished-page .tmr-cta-secondary{
+  background:rgba(43,140,255,.12) !important; border-color:rgba(43,140,255,.46) !important; color:#EAF3FB !important;
+}
+
+/* --- D4 arena / online gaming --- */
+body.tmr-light .a-card, body.arena-page .a-card, body.tmr-theme-a .a-card,
+body.tmr-light .arena-head, body.arena-page .arena-head,
+body.tmr-light .match-feed, body.arena-page .match-feed{
+  background:linear-gradient(180deg,#070E18,#03080F) !important;
+  border-color:rgba(43,140,255,.26) !important;
+  color:#C3D6EA !important;
+}
+body.tmr-light .stat-chip, body.arena-page .stat-chip{
+  background:rgba(43,140,255,.10) !important;
+  border:1px solid rgba(43,140,255,.34) !important;
+  color:#CBD9EC !important;
+}
+body.tmr-light .arena-more-link, body.arena-page .arena-more-link{
+  background:rgba(43,140,255,.10) !important;
+  border:1px solid rgba(43,140,255,.38) !important;
+  color:#8CC0FF !important;
+}
+body.tmr-light .arena-more-link:hover, body.arena-page .arena-more-link:hover{
+  background:rgba(43,140,255,.22) !important; color:#fff !important;
+}
+
+/* --- forms everywhere: selects and buttons were still native-light --- */
+body.tmr-theme-a select, body.tmr-theme-a button:not([class]),
+body.tmr-site-shell select, body.tmr-ds select{
+  background:#040A12 !important;
+  border:1px solid rgba(43,140,255,.40) !important;
+  color:#EAF3FB !important;
+}
+body.tmr-theme-a select option, body.tmr-ds select option{background:#070E18; color:#EAF3FB}
+
+/* --- 26b. remaining named components, plus the one inline-styled case --- */
+body.tmr-ds .ed-jump, body.tmr-ds .gf-aside-card, body.tmr-ds .gf-verdict,
+body.tmr-ds .gf-meth, body.tmr-ds .pl-lb-how,
+body.tmr-theme-a .board, body.tmr-site-shell .board,
+body.tmr-theme-a .howto, body.tmr-site-shell .howto,
+body.tmr-theme-a .eico, body.tmr-site-shell .eico{
+  background:linear-gradient(180deg,#070E18,#03080F) !important;
+  border-color:rgba(43,140,255,.24) !important;
+  color:#C3D6EA !important;
+}
+body.tmr-theme-a .mk-tab, body.tmr-site-shell .mk-tab{
+  background:rgba(43,140,255,.10) !important;
+  border:1px solid rgba(43,140,255,.34) !important;
+  color:#CBD9EC !important;
+}
+body.tmr-theme-a .mk-tab[aria-selected="true"], body.tmr-theme-a .mk-tab.is-on{
+  background:linear-gradient(180deg,#3B93FF,#1268D6) !important; color:#fff !important; border-color:transparent !important;
+}
+/* The SEO internal-link pills carry their surface in an inline style attribute,
+   so no selector can reach them by class. Matching the one literal those pills
+   use is narrower than any blanket rule and touches nothing else. */
+body.tmr-theme-a a[style*="F6F9FC"], body.tmr-light a[style*="F6F9FC"],
+body.tmr-polished-page a[style*="F6F9FC"], body.tmr-ds a[style*="F6F9FC"],
+body.tmr-theme-a a[style*="f6f9fc"], body.tmr-light a[style*="f6f9fc"]{
+  background:rgba(43,140,255,.10) !important;
+  border-color:rgba(43,140,255,.34) !important;
+  color:#BFDCFF !important;
+}
