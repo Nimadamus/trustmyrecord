@@ -235,7 +235,7 @@ body.tmr-theme-a .ds-btn:hover, body.tmr-theme-a .btn:hover{
 body.tmr-ds .ds-btn.p, body.tmr-ds .btn.p, body.tmr-ds .btn.d, body.tmr-ds .btn-primary,
 body.tmr-ds-shell .ds-btn.p, body.tmr-ds-shell .btn.p, body.tmr-ds-shell .btn.d,
 body.tmr-theme-a .ds-btn.p, body.tmr-theme-a .btn.p, body.tmr-theme-a .btn.d{
-  background:linear-gradient(180deg,#3B93FF,#1268D6); border-color:transparent; color:#fff;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8); border-color:transparent; color:#fff;
   box-shadow:0 0 0 1px rgba(120,180,255,.42), 0 10px 28px var(--a-blue-glow);
 }
 body.tmr-ds .ds-btn.p:hover, body.tmr-ds .btn.p:hover, body.tmr-ds .btn.d:hover,
@@ -527,7 +527,7 @@ body.profile-page .btn, body.profile-page .btn-outline{
 body.tmr-light .btn-primary, body.tmr-light button.primary,
 body.tmr-light .tab-btn.active, body.tmr-light .filter-btn.active,
 body.profile-page .btn-primary, body.profile-page button.primary{
-  background:linear-gradient(180deg,#3B93FF,#1268D6) !important;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
   border-color:transparent !important; color:#fff !important;
 }
 body.tmr-light .about-section h2, body.tmr-light .section-title{
@@ -962,7 +962,7 @@ nav.tmr-global-nav .tmr-global-nav__button{
   font-size:12.5px; letter-spacing:.02em;
 }
 nav.tmr-global-nav .tmr-global-nav__button{
-  background:linear-gradient(180deg,#3B93FF,#1268D6) !important;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
   border-color:transparent !important; color:#fff !important;
   box-shadow:0 0 0 1px rgba(120,180,255,.42), 0 8px 22px rgba(29,127,232,.38) !important;
 }
@@ -1130,7 +1130,7 @@ body.tmr-social-profile .profile-tab.is-active,
 body.tmr-social-profile .profile-tab[aria-selected="true"],
 body.profile-page .profile-tab.is-active,
 body.profile-page .profile-tab.active{
-  background:linear-gradient(180deg,#3B93FF,#1268D6) !important;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
   border-color:transparent !important; color:#FFFFFF !important;
   box-shadow:0 0 0 1px rgba(120,180,255,.45), 0 8px 22px rgba(29,127,232,.40) !important;
 }
@@ -1969,7 +1969,7 @@ body.tmr-theme-a .mk-tab, body.tmr-site-shell .mk-tab{
   color:#CBD9EC !important;
 }
 body.tmr-theme-a .mk-tab[aria-selected="true"], body.tmr-theme-a .mk-tab.is-on{
-  background:linear-gradient(180deg,#3B93FF,#1268D6) !important; color:#fff !important; border-color:transparent !important;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important; color:#fff !important; border-color:transparent !important;
 }
 /* The SEO internal-link pills carry their surface in an inline style attribute,
    so no selector can reach them by class. Matching the one literal those pills
@@ -2201,7 +2201,7 @@ html body.classic-forum.forum-ready .fstatblock-num{color:#FFFFFF !important}
 /* the old amber call-to-action becomes the TMR blue */
 html body.classic-forum.forum-ready .tmrfh-authlink--reg,
 html body.classic-forum.forum-ready button.fbtn.is-primary{
-  background:linear-gradient(180deg,#3B93FF,#1268D6) !important;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
   border-color:transparent !important;
   color:#FFFFFF !important;
 }
@@ -3036,3 +3036,100 @@ html body.tmr-ds .ds-btn.p{
   background-image:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
   color:#FFFFFF !important;
 }
+
+/* ============================================================
+   48. Brand button gradient, finished.
+   #3B93FF -> #1268D6 put white at 4.01:1 overall and ~3.3:1 against
+   the light stop. Deepened to #1668C9 -> #0B4FA8 wherever this sheet
+   defines it, and forced on the global-nav button, whose rule in
+   tmr-sitewide.css was winning the background shorthand. White now
+   clears 5:1 across the whole fill; still electric blue.
+   ============================================================ */
+html body nav.tmr-global-nav a.tmr-global-nav__button.tmr-global-nav__button,
+html body a.tmr-global-nav__button.tmr-global-nav__button,
+html body #tmr-fp-reminder .tmr-fp-btn--primary.tmr-fp-btn--primary{
+  background:linear-gradient(180deg,#1668C9,#0B4FA8) !important;
+  border-color:rgba(255,255,255,.30) !important;
+  color:#FFFFFF !important;
+}
+html body nav.tmr-global-nav a.tmr-global-nav__button.tmr-global-nav__button *{color:#FFFFFF !important}
+
+/* 48b. Forum breadcrumb tail was near-black. */
+html body.classic-forum .fcrumb > span:last-child{ color:#C3D6EA !important; }
+
+/* ============================================================
+   49. Re-applied contrast rules (previously sections 35/36/45).
+   ============================================================ */
+
+/* 49a. --brand-dk is a good fill but 2.2:1 as type. */
+html body.tmr-ds .hhc-cell.is-adv,
+html body.tmr-ds .hh-shell--mlb .hh-datebtn[aria-current="date"],
+html body .hhc-cell.is-adv, html body .hh-datebtn[aria-current="date"]{ color:#7FB6FF !important; }
+
+/* 49b. Forum header off-palette neutral -> navy. */
+html body.classic-forum #tmrForumHeader, html body #tmrForumHeader.tmrfh{
+  background:#070E18 !important; border-bottom:1px solid rgba(43,140,255,.22) !important;
+}
+html body #tmrForumHeader.tmrfh a{ color:#D6E4F4; }
+
+/* 49c. Breadcrumb home: label light, mark dark on its pill. */
+html body.tmr-ds .tmrlh-home span,
+html body .tmrlh-crumbs a.tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark){ color:#EDF3FA !important; }
+html body .tmrlh-home .tmrlh-home-mark, html body .tmrlh-crumbs .tmrlh-home-mark{ color:#04121F !important; }
+
+/* 49d. Avatar initials: white is 5.5:1 on the blue disc. */
+html body .person-avatar, html body .profile-avatar{ color:#FFFFFF !important; }
+
+/* 49e. Active tab counts, chips and pills on equal-value fills. */
+html body.tmr-ds .lb-tab.active .lb-tab-count, html body .lb-tab.active .lb-tab-count,
+html body.tmr-ds .hm-tab.is-active .hm-tab-count, html body .hm-tab.is-active .hm-tab-count{
+  color:#04121F !important; background:#9CC8FF !important;
+}
+html body .pl-lb-chip.is-active{ color:#EDF3FA !important; background:#0F2C4E !important; }
+html body .sa-tab[aria-selected="true"], html body.tmr-ds--dark .sa-tab[aria-selected="true"]{ color:#04121F !important; }
+
+/* 49f. Empty states and disabled controls stay readable. */
+html body .tmr-fi-empty, html body .tmr-fi-empty-inline{ color:#9BB0C6 !important; }
+html body .box-score-panel .sim-button:disabled, html body .sim-button:disabled,
+html body button:disabled{ color:#A9BFD6 !important; opacity:.75; }
+html body .profile-fc-l{ color:#9BB0C6 !important; }
+
+/* 49g. Links that land on a filled brand surface take white. */
+html body .nv-btn.p, html body.nv-body .nv-btn.p,
+html body a[class*="btn-"], html body button.fbtn.is-primary{ color:#FFFFFF !important; }
+
+/* ============================================================
+   45. Contrast finishes from the live sweep. Everything here is
+   type colour on a fill that has to stay as it is, or a fill
+   that was missing behind type the ink lift had already turned
+   dark. No geometry, no new elements.
+   ============================================================ */
+
+/* 45a. The count chips on the handicapper and leaderboard tabs
+   keep a white pill, so the number on them has to be dark ink,
+   not the electric blue that is only legible on the dark shell. */
+html body .hm-tab-count,
+html body .lb-tab-count,
+html body .fa-tab-count{ color:#04121F !important; }
+
+/* 45b. The active poll leaderboard chip carried dark type with
+   no light fill behind it. Give it the pale fill every other
+   active tab on the site uses. */
+html body .pl-lb-chip.is-active,
+html body .pl-lb-chip.is-active *{
+  background:linear-gradient(135deg,#DEF4F2,#BFE3FF) !important;
+  color:#04121F !important;
+}
+
+/* 45c. Secondary poll links were still brand blue on near-black. */
+html body a.pl-link, html body .pl-link{ color:#9CC8FF !important; }
+
+/* 45d. Pagination gap marker on the profile pick tables. */
+html body .tmrx-page-gap{ color:#9CC8FF !important; }
+
+/* 45e. The arena breadcrumb marks the current page with a mint
+   pill, which needs dark ink rather than the link blue. */
+html body .ah-breadcrumb span[aria-current="page"]{ color:#04121F !important; }
+
+/* 45f. The A/B/C/D markers on the trivia create form. */
+html body .correct-radio-btn{ color:#9CC8FF !important; }
