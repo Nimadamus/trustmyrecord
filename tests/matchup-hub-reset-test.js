@@ -51,6 +51,10 @@ fs.copyFileSync(path.join(ROOT, 'scripts', 'build_matchup_articles.py'),
 // on ModuleNotFoundError inside the temp tree.
 fs.copyFileSync(path.join(ROOT, 'scripts', 'build_matchup_graphics.py'),
                 path.join(tmp, 'scripts', 'build_matchup_graphics.py'));
+// build_matchup_articles imports schema_event for the SportsEvent JSON-LD, so
+// it has to be in the temp tree too or the bake dies on ModuleNotFoundError.
+fs.copyFileSync(path.join(ROOT, 'scripts', 'schema_event.py'),
+                path.join(tmp, 'scripts', 'schema_event.py'));
 fs.copyFileSync(path.join(ROOT, 'matchups', 'index.html'),
                 path.join(tmp, 'matchups', 'index.html'));
 fs.copyFileSync(path.join(ROOT, 'matchups', 'mlb', 'index.html'),
