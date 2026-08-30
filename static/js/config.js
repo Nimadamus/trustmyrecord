@@ -65,7 +65,7 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof document === 'undefined') return;
     if (document.querySelector('script[data-contest-promo-modal]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/contest-promo-modal.js?v=f02344d9d574';
+    s.src = '/static/js/contest-promo-modal.js?v=5f439ce6c10e';
     s.defer = true;
     s.setAttribute('data-contest-promo-modal', '1');
     (document.head || document.documentElement).appendChild(s);

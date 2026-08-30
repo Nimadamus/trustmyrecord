@@ -1330,7 +1330,7 @@
     // they fetch in parallel; any already present on the page already ran
     // before this deferred script, so they're skipped.
     [
-        ["/static/js/config.js?v=7e4b853bbb3d", "config.js"],
+        ["/static/js/config.js?v=a6695bfebf66", "config.js"],
         ["/static/js/backend-api.js?v=c1f7d7dd762d", "backend-api.js"],
         ["/static/js/auth-persistent.js?v=533b6a5999e2", "auth-persistent.js"],
         ["/static/js/notifications.js?v=395be0dd8cdf", "notifications.js"]
