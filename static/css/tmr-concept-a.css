@@ -50,16 +50,27 @@ body.tmr-ds-shell{
   --display:Anton,'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;
 }
 
-body.tmr-ds{background:#02050A; color:var(--ink)}
+/* The ground lives on <html> and the body is transparent over it, so the
+   ambient wash can sit at z-index:-1 and stay behind the content without any
+   element having to be lifted above it.
 
-/* ambient light, kept off the panels so black stays black */
+   REGRESSION THIS FIXES (2026-08-30): the wash previously sat at z-index:0 and
+   every direct child of <body> was lifted with
+   `body.tmr-ds > *{position:relative;z-index:1}`. That selector is (0,1,1) and
+   beat `.notifications-dropdown` (0,1,0), so notifications.js's panel - which
+   declares position:fixed;z-index:100000 and is appended straight to <body> -
+   computed as position:relative;z-index:1 and opened 4,376px down the page,
+   below the footer, instead of under the bell. Clicking the bell looked like
+   it did nothing. Nothing may re-introduce a blanket position rule on body's
+   children: overlays, dropdowns, toasts and modals all attach there. */
+html{background-color:#02050A}
+body.tmr-ds{background-color:transparent; color:var(--ink)}
 body.tmr-ds::before{
-  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
   background:
     radial-gradient(900px 460px at 10% -4%, rgba(43,140,255,.13), transparent 62%),
     radial-gradient(700px 320px at 96% 2%, rgba(43,140,255,.05), transparent 60%);
 }
-body.tmr-ds > *{position:relative; z-index:1}
 
 /* -----------------------------------------------------------------------------
    2. TYPE — oblique condensed caps for display, Inter unchanged for reading.
