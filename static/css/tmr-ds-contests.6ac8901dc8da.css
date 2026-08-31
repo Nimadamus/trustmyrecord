@@ -53,7 +53,7 @@ body.tmr-ds .hero .eyebrow{
   padding:6px 14px;
   border:1px solid rgba(29, 127, 232,.34);
   background:rgba(29, 127, 232,.12);
-  color:#8DEDE0;
+  color:#BBD9FF;
   font-size:13px;
   font-weight:800;
   letter-spacing:.02em;
@@ -116,13 +116,18 @@ body.tmr-ds .contest-card .desc{color:var(--ink-2);font-size:14.5px;line-height:
 body.tmr-ds .contest-card .desc strong{color:var(--ink);font-weight:800}
 
 /* ---------- CTAs ---------- */
+/* The fill is the deep brand ramp, not the old blue-to-teal. The label is
+   pinned white here because tmr-theme-a's 47e rule assumes every .cta-primary
+   is gold-filled and forces a near-black label, which lands at 4.39:1 on this
+   blue. body.tmr-ds outranks its html body selector. */
+html body.tmr-ds .cta-primary,
 body.tmr-ds .cta-primary{
   height:46px;
   padding:0 24px;
   border-radius:var(--r-sm);
   border:1.5px solid transparent;
-  background:linear-gradient(180deg,#1D7FE8,#0A8A83);
-  color:#fff;
+  background:linear-gradient(180deg,#1668C9,#0B4FA8);
+  color:#FFFFFF !important;
   font-size:15.5px;
   font-weight:800;
   letter-spacing:-.012em;
@@ -130,7 +135,8 @@ body.tmr-ds .cta-primary{
   box-shadow:0 2px 10px rgba(11, 79, 168,.32);
   transition:.15s;
 }
-body.tmr-ds .cta-primary:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92)}
+html body.tmr-ds .cta-primary:hover,
+body.tmr-ds .cta-primary:hover{background:linear-gradient(180deg,#1D7FE8,#1055A8)}
 body.tmr-ds .cta-ghost{
   height:46px;
   padding:0 20px;

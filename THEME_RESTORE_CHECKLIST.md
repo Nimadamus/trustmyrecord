@@ -51,8 +51,19 @@ Structure, nav, sidebar and workflow untouched. Styling only.
   sidebar links, new-thread and search controls present, stats render, footer
   brand clears the rail at x=273, no page errors.
 
+### 3. /contests/ (and /contest/, which redirects here)  (2026-08-31)
+Content, cards and links untouched. Styling only.
+- "Register for Contest" was a blue-to-teal gradient wearing a near-black label
+  at 4.39:1. tmr-theme-a rule 47e assumes every `.cta-primary` is gold-filled and
+  forces `#1A1206`, but `tmr-ds-contests.css` had already repainted this one. The
+  fill is the deep brand ramp now and the label is pinned white at a specificity
+  that outranks 47e, without touching the gold CTAs on the other 18 pages.
+- Mint leftovers on the blue chips: the hero eyebrow `#8DEDE0`, the page-level
+  `#b4f1e7` on the eyebrow and the isolation note. All on `#BBD9FF`.
+- The JustBet sponsor gold on the card stays; it is the sponsor's colour.
+- Verified: contrast sweep 0 fails, all five contest links intact, no page errors.
+
 ## Next up (visibly damaged, not yet fixed)
-- /contest/ - contest card stat values, Register CTA is teal not blue.
 - /matchup-of-the-day/, /trendspotter/, /leaderboard/, /marketplace/ - not yet
   inspected in detail.
 - /profile/ also loads tmr-redesign-overrides.css, so it picked up the blue
