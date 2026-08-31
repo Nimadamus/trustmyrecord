@@ -134,18 +134,28 @@
     var tokenInput = document.getElementById('adminToken');
     tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
 
+    // The API allows Authorization but NOT x-admin-token through CORS, so a
+    // pasted ADMIN_TOKEN sent as a header fails the preflight and the page just
+    // sits on "Loading". adminOnly accepts the same token as ?admin_token=,
+    // which is a simple request and needs no preflight, so that is how it is
+    // sent from a browser. A founder bearer, when present, is used as well and
+    // is the normal path.
     function authHeaders() {
       var headers = { 'content-type': 'application/json' };
-      var adminToken = tokenInput.value.trim();
       var bearer = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken')
         || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
-      if (adminToken) headers['x-admin-token'] = adminToken;
       if (bearer) headers.Authorization = 'Bearer ' + bearer;
       return headers;
     }
 
+    function withAdminToken(path) {
+      var adminToken = tokenInput.value.trim();
+      if (!adminToken) return path;
+      return path + (path.indexOf('?') === -1 ? '?' : '&') + 'admin_token=' + encodeURIComponent(adminToken);
+    }
+
     async function request(path, options) {
-      var response = await fetch(API_BASE + path, Object.assign({}, options, { headers: authHeaders() }));
+      var response = await fetch(API_BASE + withAdminToken(path), Object.assign({}, options, { headers: authHeaders() }));
       var text = await response.text();
       var data;
       try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { raw: text }; }
