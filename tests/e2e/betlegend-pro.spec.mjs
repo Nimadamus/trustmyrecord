@@ -410,6 +410,72 @@ test.describe('situational filters', () => {
     });
 });
 
+// ------------------------------------------------- initialisation safety
+
+/**
+ * Late initialisation must never take a choice back.
+ *
+ * The page finishes loading in stages -- auth, entitlement, coverage, the
+ * team lists, the filter library -- and on a first visit the service worker
+ * claims the page a beat after that. None of it may reset what the reader has
+ * already chosen. The reload itself is only reachable over https, so the
+ * live suite owns that half; what is testable here is the state the reload
+ * decision is read from, and the team-list rebuild that used to clear the
+ * selects on its own.
+ */
+test.describe('initialisation safety', () => {
+  test('the page reports itself idle only while the reader has chosen nothing', async ({ page }) => {
+    await open(page);
+    const idle = () => page.evaluate(() => window.BLP_IDLE());
+
+    // Nothing chosen: a reload would cost nothing, and says so.
+    expect(await idle()).toBe(true);
+
+    // One team is enough to make a reload destructive.
+    await page.locator('#mAway').selectOption('New York Yankees');
+    expect(await idle()).toBe(false);
+
+    await page.locator('#mAway').selectOption('');
+    expect(await idle()).toBe(true);
+
+    // So is a situation, on its own.
+    await chooseMatchup(page);
+    await page.locator('#addCond').click();
+    await page.locator('#condMenu .condopt', { hasText: 'Previous game result' })
+      .getByRole('button', { name: /New York Yankees/ }).click();
+    expect(await idle()).toBe(false);
+
+    await page.locator('#clearAll').click();
+    await page.locator('#mAway').selectOption('');
+    await page.locator('#mHome').selectOption('');
+    expect(await idle()).toBe(true);
+
+    // And so is a period other than the default.
+    await page.locator('#mTimeframe').selectOption('custom');
+    expect(await idle()).toBe(false);
+  });
+
+  test('rebuilding the team lists keeps the matchup, and never carries it across leagues',
+    async ({ page }) => {
+      await open(page);
+      await chooseMatchup(page);
+      await expect(page.locator('#addCond')).toBeEnabled();
+
+      // A sport change is the one case where the old teams must NOT survive:
+      // they are not in the new league's list at all.
+      await page.locator('#mSport').selectOption('NBA');
+      await expect(page.locator('#mAway')).toHaveValue('');
+      await expect(page.locator('#mHome')).toHaveValue('');
+      await expect(page.locator('#addCond')).toBeDisabled();
+
+      // Chosen again in the new league, the selection holds.
+      await page.locator('#mAway').selectOption('Boston Celtics');
+      await page.locator('#mHome').selectOption('Atlanta Hawks');
+      await expect(page.locator('#addCond')).toBeEnabled();
+      await expect(page.locator('#mAway')).toHaveValue('Boston Celtics');
+    });
+});
+
 // ---------------------------------------------------------------- access
 
 test.describe('access', () => {

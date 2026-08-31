@@ -80,7 +80,7 @@
         }
     </style>
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=e7fa11ba8ae0"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=e0f14f0ccf45"></script>
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=176aced6d958">
@@ -638,7 +638,7 @@
 </template>
 
 <script src="/static/js/config.js?v=a6695bfebf66"></script>
-<script src="/static/js/backend-api.js?v=c1f7d7dd762d"></script>
+<script src="/static/js/backend-api.js?v=91fb62a52484"></script>
 <script>
 (function () {
     'use strict';
@@ -1706,7 +1706,13 @@
             var opts = '<option value="">Select team…</option>' + teams.map(function (t) {
                 return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
             }).join('');
+            // Rebuilding the options clears the selection, so put it back.
+            // Only if the team is still on the list: after a sport change it
+            // is not, and carrying it across leagues would be wrong.
+            var keepAway = mAway.value, keepHome = mHome.value;
             mAway.innerHTML = opts; mHome.innerHTML = opts;
+            if (keepAway && teams.indexOf(keepAway) !== -1) mAway.value = keepAway;
+            if (keepHome && teams.indexOf(keepHome) !== -1) mHome.value = keepHome;
             mAway.disabled = false; mHome.disabled = false;
         } catch (err) {
             if (mSport.value !== sport) return;
@@ -3122,6 +3128,26 @@
         await refreshStatus();
     }
 
+    /**
+     * True only when nothing the reader chose would be lost by a reload.
+     *
+     * Read by the service-worker block below, which is deliberately outside
+     * this IIFE and so cannot see these variables. Anything the reader put on
+     * screen counts: a team, a period other than the default, a situation, a
+     * team total, or a report.
+     */
+    window.BLP_IDLE = function () {
+        try {
+            if (mAway.value || mHome.value) return false;
+            if (Object.keys(filters).length) return false;
+            if (mTimeframe.value && mTimeframe.value !== 'all') return false;
+            if (ttTeam && ttTeam.value) return false;
+            var results = $('resultsView');
+            if (results && results.hidden === false) return false;
+            return true;
+        } catch (err) { return false; }
+    };
+
     if (window.api) boot();
     else window.addEventListener('DOMContentLoaded', boot);
 })();
@@ -3142,13 +3168,23 @@
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
 
     window.addEventListener('load', function () {
+        // Whether this page was ALREADY controlled when it loaded. On a first
+        // visit it is not: the worker activates, calls clients.claim(), and
+        // `controllerchange` fires for the adoption itself. Reloading there throws
+        // away a page the reader is already using -- a team they just picked, a
+        // situation they just added -- one second into the session, for no update
+        // at all. Captured before registering, because registration is what causes
+        // the claim.
+        var hadController = !!navigator.serviceWorker.controller;
         navigator.serviceWorker.register('/betlegend-pro/sw.js', { scope: '/betlegend-pro/' })
             .then(function (reg) {
                 // A new build should not wait for every tab to be closed, but it
                 // must not swap the page out from under someone mid-report
                 // either. So: take over as soon as a waiting worker appears,
-                // and let the CONTROLLER change be what reloads — which only
-                // happens once, on the next navigation this page makes.
+                // and let the CONTROLLER change decide whether to reload. See
+                // the handler below for the two cases it must refuse: the
+                // first claim on a page that was never controlled, and any
+                // moment the reader has work on screen.
                 function offerUpdate(worker) {
                     if (!worker) return;
                     worker.addEventListener('statechange', function () {
@@ -3165,9 +3201,25 @@
         var reloading = false;
         navigator.serviceWorker.addEventListener('controllerchange', function () {
             if (reloading) return;
+            // The first claim is an adoption, not a new build. Nothing to reload.
+            if (!hadController) { hadController = true; return; }
+            // A real update, and still never over work in progress: a half-built
+            // query or a report on screen is the reader's, not ours to discard.
+            // The new worker is already in control, so the next navigation they
+            // make picks it up anyway -- waiting costs nothing.
+            if (workInProgress()) return;
             reloading = true;
             location.reload();
         });
+
+        /** Has the reader started? Asked of the tool, which owns the answer; a
+         *  missing hook (older build, script still loading) counts as YES, because
+         *  the safe direction is never to reload. */
+        function workInProgress() {
+            try {
+                return !window.BLP_IDLE || window.BLP_IDLE() !== true;
+            } catch (err) { return true; }
+        }
     });
 
     // Install affordance. The prompt is deferred rather than fired on arrival:

@@ -757,6 +757,25 @@ class TrustMyRecordAPI {
         return this.request(`/picks/pending?limit=${limit}&offset=${offset}`);
     }
 
+    // ---- Report Ungraded Wager (GRADING_REPORTS_20260830) -------------------
+    // The pending-picks rows already carry can_report_ungraded /
+    // report_eligible_at / already_reported, so the ticket can render the button
+    // without calling this. It exists for a direct /report-ungraded/?pick=N link.
+    async getUngradedWagerEligibility(pickId) {
+        return this.request(`/grading-reports/eligibility/${encodeURIComponent(pickId)}`);
+    }
+
+    async reportUngradedWager(pickId, comment) {
+        return this.request('/grading-reports', {
+            method: 'POST',
+            body: JSON.stringify({ pick_id: pickId, comment: comment || null }),
+        });
+    }
+
+    async getMyUngradedWagerReports(limit = 50) {
+        return this.request(`/grading-reports/mine?limit=${limit}`);
+    }
+
     async createPick(pickData) {
         return this.request('/picks', {
             method: 'POST',

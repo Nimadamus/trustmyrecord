@@ -14,7 +14,7 @@
     .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
     h1 { margin: 0; font-size: 26px; line-height: 1.2; letter-spacing: 0; }
     .muted { color: #9bacbd; font-size: 13px; }
-    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
     .panel { background: #121a23; border: 1px solid #263546; border-radius: 8px; padding: 14px; }
     .stat { min-height: 76px; }
     .stat .label { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
@@ -62,6 +62,7 @@
     <section class="panel" style="margin-bottom:12px">
       <h2 style="margin-top:0;font-size:16px">Admin Tools</h2>
       <div class="actions">
+        <a href="/admin/grading-reports/" style="color:#e8eef5;">Grading Reports <span id="gradingReportsBadge" class="warn"></span></a>
         <a href="/admin/growth/" style="color:#e8eef5;">Growth Dashboard</a>
         <a href="/admin/tmr-economy/" style="color:#e8eef5;">TMR Economy Control Center</a>
         <a href="/admin/tmr-analytics/" style="color:#e8eef5;">TMR Economy Health (funnel, sinks, velocity)</a>
@@ -79,6 +80,7 @@
       <div class="panel stat"><div class="label">Pending</div><div class="value" id="pending">-</div></div>
       <div class="panel stat"><div class="label">Pending Completed</div><div class="value" id="pendingCompleted">-</div></div>
       <div class="panel stat"><div class="label">Graded Rolling 24h</div><div class="value" id="graded24">-</div></div>
+      <div class="panel stat"><div class="label">Ungraded Reports</div><div class="value" id="ungradedReports">-</div></div>
     </section>
 
     <section class="two">
@@ -216,6 +218,7 @@
     });
     document.getElementById('refreshBtn').addEventListener('click', () => {
       loadStatus().catch((error) => { document.getElementById('output').textContent = error.message; });
+      loadGradingReports();
     });
     document.getElementById('runBtn').addEventListener('click', async () => {
       const btn = document.getElementById('runBtn');
@@ -231,7 +234,24 @@
         btn.disabled = false;
       }
     });
+    // GRADING_REPORTS_20260830: a legitimate grading failure must not disappear
+    // into the system, so the open review count sits on the main admin panel.
+    // Fail-soft: an older backend without this route leaves the tile blank
+    // rather than breaking the autograder status page.
+    async function loadGradingReports() {
+      try {
+        const data = await request('/grading-reports/admin/summary');
+        const open = Number(data.open_count || 0);
+        const tile = document.getElementById('ungradedReports');
+        tile.textContent = open;
+        tile.className = 'value ' + (open > 0 ? 'warn' : 'ok');
+        const badge = document.getElementById('gradingReportsBadge');
+        badge.textContent = open > 0 ? '(' + open + ')' : '';
+      } catch (_) { /* route not deployed yet */ }
+    }
+
     loadStatus().catch((error) => { document.getElementById('output').textContent = error.message; });
+    loadGradingReports();
 
     // ---- Duplicate-account risk scan (read-only flags, no bans) ----
     document.getElementById('dupScanBtn').addEventListener('click', async () => {

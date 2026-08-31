@@ -33,55 +33,90 @@ async function openApp(page, calls) {
   }
   await page.goto(`${SITE}/betlegend-pro/app/`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#mAway')).toBeVisible({ timeout: 90_000 });
-  // The team list arrives from the API; wait for it before selecting.
-  await expect.poll(async () => page.locator('#mAway option').count(), { timeout: 90_000 })
-    .toBeGreaterThan(5);
+  // The team list arrives from the API, which is a free instance and cold
+  // often enough to fail one call. The page offers a retry for exactly that,
+  // so use it rather than failing the run on the engine's nap; the fetch
+  // itself is not what any of these specs is testing.
+  await expect.poll(async () => {
+    if (await page.locator('#teamsErr').isVisible().catch(() => false)) {
+      await page.locator('#teamsRetry').click().catch(() => {});
+    }
+    return page.locator('#mAway option').count();
+  }, { timeout: 180_000, intervals: [1_000] }).toBeGreaterThan(5);
 }
 
 /**
- * Choose the matchup, and make it stick.
+ * Choose the matchup.
  *
- * The page settles asynchronously after sign-in: the entitlement check and the
- * team lists both land after first paint and re-initialise the form, which can
- * drop a selection made in the first second or two. A human never notices;
- * a script that selects the instant the options exist does. So this sets both
- * selects and re-sets them until the tool itself agrees the matchup is chosen.
+ * Plain selects, deliberately: the page used to reload under the reader a beat
+ * after load, and a helper that retried until the selection stuck would hide
+ * that coming back. If a selection does not hold here, the suite should say so.
  */
 async function chooseMatchup(page, away = 'New York Yankees', home = 'Boston Red Sox') {
-  const sameTeam = away === home;
-  await expect.poll(async () => {
-    if (await page.locator('#mAway').inputValue() !== away) {
-      await page.locator('#mAway').selectOption(away).catch(() => {});
-    }
-    if (await page.locator('#mHome').inputValue() !== home) {
-      await page.locator('#mHome').selectOption(home).catch(() => {});
-    }
-    const stuck = await page.locator('#mAway').inputValue() === away
-      && await page.locator('#mHome').inputValue() === home;
-    const enabled = await page.locator('#addCond').isEnabled();
-    return stuck && (sameTeam ? !enabled : enabled);
-  }, { timeout: 90_000, intervals: [500] }).toBe(true);
+  await expect(page.locator('#mAway')).toBeEnabled({ timeout: 120_000 });
+  await page.locator('#mAway').selectOption(away);
+  await page.locator('#mHome').selectOption(home);
+  await expect(page.locator('#addCond')).toBeEnabled({ timeout: 30_000 });
 }
 
-/**
- * Open the situation list.
- *
- * Same reason as chooseMatchup: the page can re-initialise once more while the
- * entitlement and coverage calls settle, which re-locks the button for a beat.
- * Retried rather than slept on, so a genuine failure to unlock still fails.
- */
+/** Open the situation list. */
 async function openList(page) {
-  await expect.poll(async () => {
-    if (!(await list(page).isVisible())) {
-      if (await page.locator('#addCond').isEnabled()) {
-        await page.locator('#addCond').click({ timeout: 5_000 }).catch(() => {});
-      } else {
-        await chooseMatchup(page);
-      }
-    }
-    return list(page).isVisible();
-  }, { timeout: 90_000, intervals: [400] }).toBe(true);
+  await page.locator('#addCond').click();
+  await expect(list(page)).toBeVisible();
 }
+
+test('a choice made as early as the UI allows survives every late load', async ({ page }) => {
+  test.setTimeout(300_000);
+  const navigations = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) navigations.push(frame.url());
+  });
+  const calls = [];
+  await openApp(page, calls);
+
+  // The earliest the UI permits: the team selects are disabled and read
+  // "Loading…" until the list lands, so this is the first possible moment.
+  await expect(page.locator('#mAway')).toBeEnabled({ timeout: 120_000 });
+  await page.locator('#mAway').selectOption('New York Yankees');
+  await page.locator('#mHome').selectOption('Boston Red Sox');
+
+  // Now sit through everything that lands late: the entitlement call, the
+  // filter library, the coverage, the free preview, and the service worker
+  // taking control of a page that was not controlled when it loaded.
+  await page.waitForLoadState('networkidle', { timeout: 120_000 }).catch(() => {});
+  await page.waitForTimeout(8_000);
+
+  expect(navigations.length, `main-frame navigations: ${navigations.join(', ')}`).toBe(1);
+  await expect(page.locator('#mAway')).toHaveValue('New York Yankees');
+  await expect(page.locator('#mHome')).toHaveValue('Boston Red Sox');
+  await expect(page.locator('#addCond')).toBeEnabled();
+
+  // A situation added the instant it is unlocked must be just as durable.
+  await page.locator('#addCond').click();
+  await add(page, 't1|prev_result').click();
+  const prev = row(page, 't1|prev_result');
+  await expect(prev).toHaveCount(1);
+  await prev.locator('select').selectOption('loss');
+
+  await page.waitForLoadState('networkidle', { timeout: 120_000 }).catch(() => {});
+  await page.waitForTimeout(8_000);
+
+  expect(navigations.length).toBe(1);
+  await expect(page.locator('#mAway')).toHaveValue('New York Yankees');
+  await expect(page.locator('#condList .cond')).toHaveCount(1);
+  await expect(prev.locator('select')).toHaveValue('loss');
+  await expect(page.locator('#filterCount')).toContainText('1 situation');
+
+  // And the report still runs off exactly what is on screen.
+  await page.locator('#mSubmit').click();
+  await expect(page.locator('#mResult')).toBeVisible({ timeout: 240_000 });
+  await expect.poll(() => calls.length, { timeout: 240_000 }).toBeGreaterThan(0);
+  expect(calls.at(-1)).toMatchObject({
+    team_1: 'New York Yankees', team_2: 'Boston Red Sox',
+    team_1_filters: { prev_result: 'loss' },
+  });
+  expect(navigations.length).toBe(1);
+});
 
 test('the locked state explains itself, and lifts the moment the matchup is valid', async ({ page }) => {
   test.setTimeout(180_000);
@@ -94,7 +129,8 @@ test('the locked state explains itself, and lifts the moment the matchup is vali
   await page.screenshot({ path: `${OUT}/V1-locked.png`, fullPage: true });
 
   // A team against itself is not a matchup: the lock stays stated.
-  await chooseMatchup(page, 'New York Yankees', 'New York Yankees');
+  await page.locator('#mAway').selectOption('New York Yankees');
+  await page.locator('#mHome').selectOption('New York Yankees');
   await expect(page.locator('#addCond')).toBeDisabled();
   await expect(page.locator('#addCondHint')).toBeVisible();
 

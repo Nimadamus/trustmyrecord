@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=98c826c2516e">
-    <script defer src="/static/js/tmr-sitewide.js?v=e7fa11ba8ae0"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=e0f14f0ccf45"></script>
     <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
     <style>
         :root {
@@ -223,7 +223,7 @@
         .sk-line.lg { height: 22px; width: 60%; }
         .sk-line.sm { width: 40%; }
         .sk-rows { margin-top: 14px; border: 1px solid #D2DEEA; border-radius: 8px; overflow: hidden; }
-        .sk-row { display: grid; grid-template-columns: 1.4fr 0.7fr 1.3fr 0.6fr 0.6fr 0.6fr 0.6fr 1fr 0.8fr; gap: 14px;
+        .sk-row { display: grid; grid-template-columns: 1.4fr 0.7fr 1.3fr 0.6fr 0.6fr 0.6fr 0.6fr 1fr 0.8fr 1fr; gap: 14px;
             padding: 16px 18px; border-bottom: 1px solid #D2DEEA; }
         .sk-row:last-child { border-bottom: 0; }
         .sk-cell { height: 14px; }
@@ -266,6 +266,82 @@
                 overflow-wrap: anywhere;
             }
         }
+        /* REPORT_UNGRADED_WAGER_20260830: escalation lives on the ticket itself.
+           Two clicks from here - Report Ungraded Wager, then Submit Report. */
+        .report-btn {
+            display: inline-block;
+            max-width: 100%;
+            border: 1px solid #2C7BE5;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #1663C7, #0B4FA8);
+            color: #F2F8FF;
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            line-height: 1.25;
+            text-align: left;
+            cursor: pointer;
+        }
+        .report-btn:hover { background: linear-gradient(135deg, #2C7BE5, #1663C7); }
+        .report-btn:focus-visible { outline: 3px solid #7FB6FF; outline-offset: 2px; }
+        .report-state {
+            display: block;
+            color: #C3D6EA;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        .report-state .report-when { display: block; margin-top: 2px; font-weight: 800; color: #DCE7F4; }
+        .report-state.reported { color: #4FD18B; }
+        .report-state.reported .report-when { color: #9FE9C4; }
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(2,5,10,0.78);
+        }
+        .modal-card {
+            width: min(560px, 100%);
+            max-height: calc(100vh - 36px);
+            overflow: auto;
+            border: 1px solid rgba(44,123,229,.38);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #101A26, #0B121B);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+            padding: 22px;
+            color: #DCE7F4;
+        }
+        .modal-card h2 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: 22px; font-weight: 800; color: #F2F8FF; }
+        .modal-card .modal-sub { margin: 8px 0 16px; color: #C3D6EA; font-size: 13px; line-height: 1.5; }
+        .modal-facts { border: 1px solid rgba(44,123,229,.24); border-radius: 8px; background: #0B121B; padding: 4px 14px; margin-bottom: 16px; }
+        .modal-fact { display: grid; grid-template-columns: 132px 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(195,214,234,.14); }
+        .modal-fact:last-child { border-bottom: 0; }
+        .modal-fact dt { margin: 0; color: #9FBBD8; font-size: 10px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+        .modal-fact dd { margin: 0; color: #DCE7F4; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+        .modal-card label { display: block; color: #9FBBD8; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+        .modal-card textarea {
+            width: 100%;
+            min-height: 78px;
+            border: 1px solid rgba(44,123,229,.32);
+            border-radius: 8px;
+            background: #060C14;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 13px;
+            color: #DCE7F4;
+            resize: vertical;
+        }
+        .modal-card textarea::placeholder { color: #7E97B2; }
+        .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .modal-msg { margin: 14px 0 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
+        .modal-msg.ok { color: #4FD18B; }
+        .modal-msg.err { color: #FF8B8B; }
         @media print {
             body { background: #02050A; }
             .pending-page { padding-top: 24px; }
@@ -300,10 +376,10 @@
                 <div class="sk-summary"><div class="sk-block sk-line sm"></div><div class="sk-block sk-line lg"></div></div>
             </div>
             <div class="sk-rows">
-                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
-                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
-                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
-                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
             </div>
         </section>
 
@@ -354,6 +430,7 @@
                                 <th>Time Submitted (ET)</th>
                                 <th>Status</th>
                                 <th>Ticket #</th>
+                                <th>Report</th>
                             </tr>
                         </thead>
                         <tbody id="pendingRows"></tbody>
@@ -362,10 +439,29 @@
                 <div id="pendingCards" class="mobile-cards"></div>
             </section>
         </section>
+
+        <!-- REPORT_UNGRADED_WAGER_20260830: confirm step. Every wager fact is
+             pre-filled from the ticket the user clicked, so the only thing they
+             may type is an optional comment. Member-facing copy only: no
+             database terms, no internal diagnostics. -->
+        <div id="reportModal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+            <div class="modal-card">
+                <h2 id="reportModalTitle">Report Ungraded Wager</h2>
+                <p class="modal-sub" id="reportModalSub">This wager is still pending well after its event should have been graded. Submit it for review and we will check the grading status.</p>
+                <dl class="modal-facts" id="reportFacts"></dl>
+                <label for="reportComment">Comment (optional)</label>
+                <textarea id="reportComment" maxlength="1000" placeholder="Game ended yesterday and this is still pending."></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-primary" id="reportSubmitBtn">Submit Report</button>
+                    <button type="button" class="btn" id="reportCancelBtn">Cancel</button>
+                </div>
+                <p class="modal-msg" id="reportMsg" hidden></p>
+            </div>
+        </div>
     </main>
 
     <script src="/static/js/config.js?v=a6695bfebf66"></script>
-    <script src="/static/js/backend-api.js?v=c1f7d7dd762d"></script>
+    <script src="/static/js/backend-api.js?v=91fb62a52484"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -572,6 +668,26 @@
             var n = Number(pick && pick.id);
             return Number.isFinite(n) && n > 0 ? String(Math.floor(n)).padStart(7, '0') : '';
         }
+        // ---- REPORT_UNGRADED_WAGER_20260830 -----------------------------
+        // Escalation belongs on the ticket, not in a DM. The backend decides
+        // eligibility and ships the verdict with each pending row
+        // (can_report_ungraded / report_eligible_at / already_reported), so this
+        // page never has to reimplement the grading-window policy - it just
+        // renders one of three states, in plain member language.
+        function reportCellHtml(pick) {
+            if (pick && pick.already_reported) {
+                return '<span class="report-state reported">Reported<span class="report-when">Awaiting review</span></span>';
+            }
+            if (pick && pick.can_report_ungraded) {
+                return '<button type="button" class="report-btn" data-report-pick="' + esc(pick.id) + '">Report Ungraded Wager</button>';
+            }
+            if (pick && pick.report_eligible_at) {
+                return '<span class="report-state">This wager can be reported after<span class="report-when">'
+                    + esc(fmtDate(pick.report_eligible_at)) + '</span></span>';
+            }
+            return '<span class="report-state">-</span>';
+        }
+
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
             var stake = stakeAmounts(pick);
@@ -586,6 +702,7 @@
                 + '<td>' + esc(fmtSubmittedAt(pick)) + '</td>'
                 + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
                 + '<td>' + esc(ticketId(pick)) + '</td>'
+                + '<td>' + reportCellHtml(pick) + '</td>'
                 + '</tr>';
         }
         function cardRow(label, value) {
@@ -604,12 +721,15 @@
                 + cardRow('Time Submitted', fmtSubmittedAt(pick))
                 + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
                 + cardRow('Ticket #', esc(ticketId(pick)))
+                + cardRow('Report', reportCellHtml(pick))
                 + '</article>';
         }
+        var currentPicks = [];
         function render(picks) {
             var pending = (Array.isArray(picks) ? picks : []).filter(function (pick) {
                 return pick && String(pick.status || 'pending').toLowerCase() === 'pending';
             });
+            currentPicks = pending;
             skeleton.hidden = true;
             var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
             var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
@@ -630,6 +750,127 @@
             rows.innerHTML = pending.map(rowHtml).join('');
             cards.innerHTML = pending.map(cardHtml).join('');
         }
+        // ---- Report Ungraded Wager: confirm-and-submit ------------------
+        // Pending wager -> Report Ungraded Wager -> Submit Report. Two clicks,
+        // and nothing to type: every wager fact the review needs is already on
+        // the row and is captured server-side from the pick id.
+        var reportModal = document.getElementById('reportModal');
+        var reportFacts = document.getElementById('reportFacts');
+        var reportComment = document.getElementById('reportComment');
+        var reportSubmitBtn = document.getElementById('reportSubmitBtn');
+        var reportCancelBtn = document.getElementById('reportCancelBtn');
+        var reportMsg = document.getElementById('reportMsg');
+        var reportSub = document.getElementById('reportModalSub');
+        var reportPickId = null;
+        var lastFocused = null;
+
+        function findPick(id) {
+            for (var i = 0; i < currentPicks.length; i += 1) {
+                if (String(currentPicks[i].id) === String(id)) return currentPicks[i];
+            }
+            return null;
+        }
+
+        function factRow(label, value) {
+            return '<div class="modal-fact"><dt>' + esc(label) + '</dt><dd>' + esc(value) + '</dd></div>';
+        }
+
+        function showReportMsg(text, kind) {
+            reportMsg.textContent = text;
+            reportMsg.className = 'modal-msg ' + (kind || '');
+            reportMsg.hidden = false;
+        }
+
+        function closeReportModal() {
+            reportModal.hidden = true;
+            reportPickId = null;
+            if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+        }
+
+        function openReportModal(pickId, trigger) {
+            var pick = findPick(pickId);
+            if (!pick) return;
+            reportPickId = pick.id;
+            lastFocused = trigger || null;
+            var stake = stakeAmounts(pick);
+            reportFacts.innerHTML = [
+                factRow('Ticket #', ticketId(pick)),
+                factRow('Sport / League', sportLabel(pick.sport_key)),
+                factRow('Matchup', matchup(pick)),
+                factRow('Selection', pickText(pick)),
+                factRow('Market', marketLabel(pick.market_type)),
+                factRow('Line', fmtPickLine(pick)),
+                factRow('Odds', fmtOdds(pick.odds_snapshot)),
+                factRow('Risk / To Win', fmtUnits(stake.risk) + ' / ' + fmtUnits(stake.toWin)),
+                factRow('Event Date', fmtDate(pick.commence_time)),
+                factRow('Submitted', fmtSubmittedAt(pick)),
+                factRow('Current Status', statusText(pick))
+            ].join('');
+            reportComment.value = '';
+            reportMsg.hidden = true;
+            reportSubmitBtn.hidden = false;
+            reportSubmitBtn.disabled = false;
+            reportSubmitBtn.textContent = 'Submit Report';
+            reportCancelBtn.textContent = 'Cancel';
+            reportSub.textContent = 'This wager is still pending well after its event should have been graded. Submit it for review and we will check the grading status.';
+            reportModal.hidden = false;
+            reportSubmitBtn.focus();
+        }
+
+        function markReported(pickId) {
+            var pick = findPick(pickId);
+            if (pick) {
+                pick.already_reported = true;
+                pick.can_report_ungraded = false;
+            }
+            rows.innerHTML = currentPicks.map(rowHtml).join('');
+            cards.innerHTML = currentPicks.map(cardHtml).join('');
+        }
+
+        function onReportClick(event) {
+            var trigger = event.target.closest ? event.target.closest('[data-report-pick]') : null;
+            if (!trigger) return;
+            event.preventDefault();
+            openReportModal(trigger.getAttribute('data-report-pick'), trigger);
+        }
+        rows.addEventListener('click', onReportClick);
+        cards.addEventListener('click', onReportClick);
+
+        reportCancelBtn.addEventListener('click', closeReportModal);
+        reportModal.addEventListener('click', function (event) {
+            if (event.target === reportModal) closeReportModal();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !reportModal.hidden) closeReportModal();
+        });
+
+        reportSubmitBtn.addEventListener('click', async function () {
+            if (!reportPickId) return;
+            var pickId = reportPickId;
+            reportSubmitBtn.disabled = true;
+            reportSubmitBtn.textContent = 'Submitting...';
+            try {
+                var result = await window.api.reportUngradedWager(pickId, reportComment.value.trim());
+                showReportMsg((result && result.message) || "Report submitted. We'll review the grading status.", 'ok');
+                markReported(pickId);
+                reportSubmitBtn.hidden = true;
+                reportCancelBtn.textContent = 'Done';
+            } catch (error) {
+                // 409 is the duplicate guard, and it is a normal outcome rather
+                // than a failure: the wager is already in the review queue.
+                if (error && error.status === 409) {
+                    showReportMsg((error.data && (error.data.message || error.data.error)) || 'This wager has already been reported and is awaiting review.', 'ok');
+                    markReported(pickId);
+                    reportSubmitBtn.hidden = true;
+                    reportCancelBtn.textContent = 'Done';
+                    return;
+                }
+                showReportMsg((error && error.message) || 'Could not submit that report. Please try again.', 'err');
+                reportSubmitBtn.disabled = false;
+                reportSubmitBtn.textContent = 'Submit Report';
+            }
+        });
+
         // PENDING_PICK_AUTH_VS_TRANSIENT_SPLIT_20260613: three distinct end states.
         //   (1) Not authenticated / token truly invalid (no session, or 401/403)
         //       -> show login prompt + Log In button, then redirect to /login/.
