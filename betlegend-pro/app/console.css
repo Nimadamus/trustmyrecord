@@ -1098,3 +1098,46 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
 }
 .tt-dist div.is-line { background: var(--accent-soft); }
 .tt-dist div.is-line b, .tt-dist div.is-line span { color: var(--accent-2); }
+
+/* --- Field-level refusals -------------------------------------------------
+ * A disabled Run button with a tooltip is not an explanation. Anything the
+ * page will not send now says so beside the input that is wrong, in the
+ * error's own voice rather than as one more grey note among many. */
+.fielderr {
+    margin: 6px 0 0;
+    font: 600 12.5px/1.45 var(--sans);
+    color: var(--bad, #b3261e);
+}
+.fielderr::before { content: '⚠ '; }
+.fielderr[hidden] { display: none; }
+
+/* A value the page CLEARED for the reader, and why. Not an error -- they did
+   nothing wrong -- but it must not pass unremarked either. */
+.cleared {
+    margin: 8px 0 0; padding: 8px 11px; border-radius: 8px;
+    font: 500 12.5px/1.45 var(--sans);
+    color: var(--ink-2); background: var(--card-2);
+    border-left: 3px solid var(--accent, var(--line-2, var(--line)));
+}
+.cleared[hidden] { display: none; }
+
+/* --- Touch targets --------------------------------------------------------
+ * WCAG 2.2 puts the floor at 44px. Measured on the live page: + Add Situation
+ * was 34px at every width, and the situation remove button was smaller again. */
+#addCond { min-height: 44px; }
+.cond-x { min-width: 32px; min-height: 32px; }
+@media (max-width: 720px) {
+    #addCond { width: 100%; min-height: 46px; }
+    /* The remove button belongs on the row's own line on a phone, where the
+       team chip and the label already use the width. */
+    .cond-head { flex-wrap: wrap; }
+    .cond-x { min-width: 44px; min-height: 44px; margin-left: auto; }
+    .ttgrid { gap: 10px; }
+    .ttfield input, .ttfield select { min-height: 44px; }
+    #mTimeframe, #mLimit, #mSport, #mAway, #mHome, #mVenue { min-height: 44px; }
+}
+
+/* Data the dataset genuinely does not hold. Stated, not dressed up as a
+   value: the old venue fallback printed the home team's name and read as a
+   stadium called "Boston Red Sox". */
+.unk { color: var(--ink-3); font-style: italic; }
