@@ -33,7 +33,7 @@
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=e52aedbf57a5">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=7744beacad17">
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light" data-tmr-route="profile-market">
   <main class="page">
@@ -60,6 +60,6 @@
     }
     async function init(){if(!username||!market){document.getElementById('hero').innerHTML='<div class="error">Missing user or market.</div>';return}try{if(apiClient.ready)await apiClient.ready.catch(()=>null);render(await apiClient.request('/users/'+encodeURIComponent(username)+'/stats/markets/'+encodeURIComponent(market)))}catch(e){document.getElementById('hero').innerHTML='<div class="error">Unable to load this market breakdown.</div>'}}init();
   </script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.16761c4b2deb.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.1a96b8a4be24.js"></script>
 </body>
 </html>

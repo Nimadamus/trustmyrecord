@@ -1,0 +1,382 @@
+/* =============================================================================
+   TrustMyRecord — GLOBAL HEADER IMMUNITY  (tmr-ds-header.css)
+   -----------------------------------------------------------------------------
+   tmr-navbar.css states what the one approved bar LOOKS like. This file states
+   that no page may overrule it.
+
+   The header is a single shared component now (static/js/tmr-ds-nav.js draws
+   nav.ds-nav on every page, and tmr-navbar.css gives it the homepage's
+   geometry), but a shared component rendered inside 671 documents is only as
+   consistent as the weakest page stylesheet, and several of them style by SHAPE
+   rather than by role — "every button on this page", "every panel div" — which
+   catches the header on the way past. Measured on production, signed in, at
+   1920 on /profile/ and /u/<name>/:
+
+     * tmr-redesign-overrides.css's
+       `body.tmr-social-profile button:not(.primary):not(.profile-tab):not(.tab):not(.is-primary)`
+       repainted all six dropdown triggers as 999px outlined pills in Inter
+       13px/700 with 9px 18px padding. That is 151px per item against the
+       approved 110, so the row overran the bar: the pills collided with each
+       other, the first one printed over the wordmark ("TRUSTMYRECORO"), TODAY
+       was pushed out of the bar entirely and the TMR Coin pill landed on top of
+       TOOLS.
+     * the same sheets paint a dark gradient "panel" surface, plus a 24px/60px
+       drop shadow, onto the nav's structural boxes — .ds-nav-panel, .ds-mainnav
+       and each dropdown wrapper — which drew black slabs behind six of the
+       eight entries while TODAY and TMR COIN, being plain links, stayed bare.
+     * a text-gradient meant for headings was landing on the lockup, tinting the
+       wordmark gold.
+
+   None of that is reachable by editing tmr-navbar.css: those rules are
+   `!important`, and `body.tmr-social-profile button:not()×4` scores FIVE classes
+   because :not() arguments count, which outranks anything written against a
+   normal `.ds-nav .ds-navitem` selector. So every rule below repeats the nav's
+   own class five times. That is not decoration — it is the specificity floor
+   that makes the shared header actually shared.
+
+   WHAT THIS FILE DOES NOT DO: size anything. Heights, paddings, type sizes, the
+   --home-nav-scale ramp and the responsive ladder all stay in tmr-navbar.css and
+   tmr-ds.css, which own them. This file only removes what pages add.
+
+   It is injected by tmr-ds-nav.js (see injectHeaderCSS there), so it needed no
+   change to any of the 671 documents, and it lands last in <head> — which is
+   also where that helper now moves tmr-navbar.css, so the approved geometry
+   stops losing to a page that happens to link tmr-ds.css after it.
+
+   Created Aug 31, 2026.
+
+   AFTER EDITING, republish the hashed builds twice — the injector embeds this
+   file's hash, so hashing the CSS changes the JS, and the JS's hash is what the
+   documents reference:
+       python scripts/build_ds_assets.py static/css/tmr-ds-header.css
+       python scripts/repoint_ds_assets.py
+       python scripts/build_ds_assets.py static/js/tmr-ds-nav.js
+       python scripts/repoint_ds_assets.py
+   ============================================================================= */
+
+/* --- 1. THE BAR IS A BLOCK -------------------------------------------------
+   A page that styles `nav { display: flex }` turns the bar into a flex CONTAINER
+   and its inner row into a flex ITEM, which then shrink-to-fits: measured at
+   1180 the row came out 327px wide and `margin:0 auto` centred the lockup and
+   the burger in the middle of the window. The bar is a block; .ds-nav-in is the
+   only flex container in the header. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav {
+  display: block !important;
+}
+
+/* --- 1b. THE BAR'S OWN HEIGHT ----------------------------------------------
+   .ds-nav-in takes its height from `var(--nav-h)`, and --nav-h is a plain custom
+   property any page can redefine. /polls/ and /polls-trivia/ did: an 84px bar
+   against every other page's 82.25. One pixel of chrome is not worth a rule on
+   its own -- a bar that is a different height from the one next to it is, and a
+   token is the easiest thing on this site to redefine by accident. Stated from
+   the ramp itself, which is the same number --nav-h is supposed to carry. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-in {
+  min-height: calc(70px * var(--home-nav-scale, 1)) !important;
+}
+
+/* --- 2. THE HEADER'S BOXES CARRY NO SURFACE --------------------------------
+   Only the bar itself and the controls in it have a surface. Everything between
+   them is structure. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-panel,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-right,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* --- 3. THE TOP-LEVEL ITEM -------------------------------------------------
+   One component for every entry in the primary row, in either mode: a dropdown
+   trigger (Sportsbook, Handicappers, ...) and a plain link (TODAY) are the same
+   box. Its surface comes from its own state and nowhere else, and its FACE is
+   restated because a page can override a font-family far more easily than a
+   layout — and the row's width is a function of its type, so the face is part of
+   the header, not a detail of it. Size stays with tmr-navbar.css. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-navitem,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu > button {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+  font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif !important;
+  font-weight: 600 !important;
+  /* THE HOMEPAGE'S OWN NUMBERS, not a scaled approximation of them.
+     tmr-concept-a.css - the file the shared navbar was copied out of - sets the
+     item at a flat 17px/.07em, dropping to 16.5px under 1440. The copy in
+     tmr-navbar.css instead derives it as `15px * --home-nav-scale`, which is
+     17.625px at 1920: every page on the shared sheet rendered its nav type
+     .625px larger than the page it was copied from. 307 of 339 audited pages
+     differed from the homepage on this one value alone, and it is the reason
+     the rows never quite lined up. Six more (/account/, /dashboard/) were at
+     13px, a page sheet's button styling landing on the nav. One number, here,
+     immune to both. */
+  font-size: 17px !important;
+  letter-spacing: .07em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  transform: none !important;
+}
+@media (max-width: 1440px) {
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-navitem,
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu > button {
+    font-size: 16.5px !important;
+  }
+}
+/* State beats the base above on its own: :hover, [aria-current] and .is-current
+   each add a component of specificity to the identical selector. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-navitem:hover,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu > button:hover,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-navitem[aria-current="page"],
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu.is-current > button,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu.is-open > button {
+  background: rgba(77, 163, 255, .14) !important;
+}
+
+/* --- 4. THE LOCKUP ---------------------------------------------------------
+   The mark and the wordmark are a fixed lockup, not two elements a page may
+   re-skin. The gradient-text treatment in particular: pages paint a gradient on
+   the element, clip it to the glyphs and set `color:transparent` so the text
+   takes the gradient. Applied to .wd by shape, that tinted the wordmark gold on
+   the profile pages — and undoing only the gradient leaves the transparent
+   colour behind, which is worse: TRUST and RECORD vanish and the lockup reads as
+   a lone blue "MY". So the colour is restored with the gradient. `em` (the "My")
+   keeps its own accent: tmr-ds.css targets `.ds-logo .wd em` directly, and a
+   rule on the parent never overrides a rule on the child. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-logo,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-logo .wd {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  overflow: visible !important;
+  max-width: none !important;
+  text-overflow: clip !important;
+  transform: none !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-logo .wd em {
+  color: #4DA3FF !important;
+  -webkit-text-fill-color: #4DA3FF !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-logo .mk {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* --- 4b. THE BURGER -------------------------------------------------------
+   The one control that only exists below the desktop floor, and the one nobody
+   looks at on a wide screen. On /profile/ the page's own button styling turned
+   it into a 40px circle with no fill and an invisible icon: at 1180 the entire
+   navigation was a faint ring in the top-right corner. Same square, same wash,
+   same bars as every other page. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-toggle {
+  width: 40px !important; height: 40px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, .10) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-toggle svg {
+  display: block !important;
+  width: 20px !important; height: 20px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  opacity: 1 !important;
+}
+
+/* --- 5. THE SIGNED-IN CLUSTER ----------------------------------------------
+   Backgrounds are deliberately NOT reset here — the coin pill's gold, the bell's
+   wash and the chip's fill are the controls' own. What pages add is chrome:
+   outlines on every <a>/<button> they can see, and lift transforms on hover that
+   knock a 36px control off the bar's optical line. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu > .v2nav-user,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-bell,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-coins,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-right .ds-btn {
+  border: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+/* THE CLUSTER'S OWN SIZES, taken from the homepage's inline ramp rather than
+   from tmr-navbar.css's re-derivation of it. Measured at 1366 signed in, the
+   homepage's coin pill is 102x36 at 14.5px on 12.9px of side padding; every
+   other page rendered it 124x41 at 16.1px, because the shared copy scales a
+   16px base where the homepage scales 13.5px and a 34px box it re-derived as
+   something taller. And on /profile/ the page's own button rule was adding
+   `9px 18px` to the account chip (52px tall against 44) and `14px 8px` to the
+   bell. Three controls, one row, three different answers per page. These are
+   the homepage's numbers, so on the homepage they change nothing. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-coins {
+  height: calc(34px * var(--home-nav-scale, 1)) !important;
+  min-height: 0 !important;
+  padding: 0 calc(12px * var(--home-nav-scale, 1)) !important;
+  font-size: calc(13.5px * var(--home-nav-scale, 1)) !important;
+  gap: 6px !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-coins #navCoinBalance {
+  font-size: inherit !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-coins-icon {
+  width: calc(18px * var(--home-nav-scale, 1)) !important;
+  height: calc(18px * var(--home-nav-scale, 1)) !important;
+  margin: 0 !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-bell {
+  width: calc(34px * var(--home-nav-scale, 1)) !important;
+  height: calc(34px * var(--home-nav-scale, 1)) !important;
+  padding: 0 !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu > .v2nav-user {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 5px 8px 5px 5px !important;
+  gap: 9px !important;
+}
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-ava,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-avl {
+  width: calc(32px * var(--home-nav-scale, 1)) !important;
+  height: calc(32px * var(--home-nav-scale, 1)) !important;
+}
+
+/* The balance is the point of the coin control, so it is never allowed to fall
+   to a chrome size, and it is set in tabular figures so the pill does not
+   twitch as the number changes. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-coins,
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-coins #navCoinBalance {
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+/* --- 6. THE ROW NEVER SPILLS ----------------------------------------------
+   The one piece of geometry this file does own, because it is an integrity rule
+   rather than a look: between the point where the account name is dropped and
+   the point where the links move into the burger, the primary row still has to
+   fit. It did not. Measured signed in with the sheets as they stand, .ds-mainnav
+   overflowed its box by 20px at 1512, 57px at 1366 and 101px at 1260 — on the
+   homepage as well as everywhere else, so this predates the shared navbar — and
+   because the row is centred inside its box the spill goes out BOTH sides at
+   once: the first item prints over the wordmark while the last prints under the
+   TMR Coin pill. An overflowing centred row is the single defect behind every
+   "the header falls apart as it gets narrower" report.
+
+   What gives is the space between and inside the items, in that order. The type
+   is never shrunk — an unreadable bar is not a fix — and no item is dropped.
+   Five classes so it holds on the homepage's inline ladder too, which is where
+   the overflow was worst. */
+@media (min-width: 1260px) and (max-width: 1560px) {
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav {
+    column-gap: 2px !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-navitem,
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu > button {
+    padding-left: clamp(1px, calc((100vw - 1260px) / 30), 9px) !important;
+    padding-right: clamp(1px, calc((100vw - 1260px) / 30), 9px) !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-in,
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-panel {
+    gap: clamp(6px, calc((100vw - 1260px) / 16), 22px) !important;
+  }
+}
+/* The bottom rung. The last 12px come from the gaps BETWEEN items rather than
+   from anything inside them, so the labels keep their own air right down to the
+   width where the sheet takes over. */
+@media (min-width: 1260px) and (max-width: 1340px) {
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav { column-gap: 0 !important; }
+}
+
+/* The account control's TYPE, restated for the same reason the nav items' type
+   is: /profile/ forces `font:700 13px Inter` on every button it can see, so the
+   member's own name rendered at 13px Inter there against 17px Barlow Condensed
+   on /contests/ and the homepage — three pages, three different account chips.
+   The value is the approved one (14.5px on the base bar, riding the same
+   --home-nav-scale ramp), so nothing moves where nothing was broken. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu > .v2nav-user {
+  font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif !important;
+  font-size: calc(14.5px * var(--home-nav-scale, 1)) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* One line inside a one-line control. `display` is deliberately absent: the
+   narrow ladder drops the name with `display:none` between 1220 and 1610, and a
+   `display:block !important` here — at five classes — silently outranked it and
+   kept the name in the bar at every width, which is 100px the row does not
+   have. Set what the name looks like, never whether it is there. */
+html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-name {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  max-width: 140px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+/* --- 7. THE BURGER FLOOR, ON THE HOMEPAGE TOO ------------------------------
+   tmr-navbar.css moves the links into the sheet at 1259px, which is where this
+   bar genuinely runs out of room. The homepage does not link that file -- it
+   keeps its own inline copy of the approved rules on purpose, so that it cannot
+   move -- and its copy still collapses at 1219. That leaves one 40px band,
+   1220-1259, where the homepage alone is stuck with a desktop row it cannot
+   fit: measured signed in at 1220, .ds-mainnav overflows by 95px and, being
+   centred, prints over the wordmark on one side and the coin pill on the other.
+
+   This is the same collapse, for that band only, stated where the homepage can
+   see it. Identical values to tmr-navbar.css section 10, so on every other page
+   it changes nothing; the homepage's own <=1219 block takes over below it. */
+@media (min-width: 1220px) and (max-width: 1259px) {
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-toggle { display: inline-flex !important; margin-left: auto !important; }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-in { position: relative !important; }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-panel {
+    display: none !important;
+    position: absolute !important;
+    top: var(--nav-h, 71px) !important; left: 0 !important; right: 0 !important;
+    flex: none !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 14px calc(var(--gutter, 28px) + var(--nav-edge, 0px)) 20px !important;
+    background: #08192B !important;
+    border-top: 1px solid rgba(255, 255, 255, .10) !important;
+    max-height: calc(100vh - var(--nav-h, 71px)) !important;
+    overflow-y: auto !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav.is-open .ds-nav-panel { display: flex !important; }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav {
+    flex: none !important; flex-direction: column !important; flex-wrap: nowrap !important;
+    align-items: stretch !important; justify-content: flex-start !important;
+    column-gap: 0 !important; row-gap: 0 !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu { display: block !important; }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-navitem,
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-mainnav > .ds-menu > button {
+    width: 100% !important; justify-content: flex-start !important;
+    padding: 11px 0 !important; border-radius: 0 !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-menu-panel {
+    position: static !important; display: flex !important;
+    box-shadow: none !important; border: 0 !important; background: none !important;
+    min-width: 0 !important; padding: 0 0 6px 14px !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .ds-nav-right {
+    margin-left: 0 !important; flex-wrap: wrap !important; row-gap: 10px !important;
+    padding-top: 12px !important; border-top: 1px solid rgba(255, 255, 255, .10) !important;
+  }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu { display: block !important; flex: 1 0 100% !important; order: -1 !important; }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu > .v2nav-user { width: 100% !important; padding: 11px 0 !important; }
+  html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-menu-panel { position: static !important; }
+}

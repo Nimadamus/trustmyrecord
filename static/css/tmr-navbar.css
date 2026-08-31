@@ -194,6 +194,15 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-m
 /* The dropdown is absolutely positioned; a page that made it static pushed the
    bar open to its full height. */
 body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel{ position:absolute !important; }
+/* THE CLOSED STATE. tmr-ds.css keeps a dropdown panel `display:none` until its
+   menu carries .is-open, and this sheet had only pinned the panel's POSITION.
+   On a page that adopts the bar without tmr-ds.css -- /wallet/account/ and the
+   rest of the `tmr-theme-a` shell -- every one of the six panels was therefore
+   painted open at once: 639px wide, stacked under the row, and 837px of
+   overflow inside .ds-mainnav. The bar is not self-contained without this.
+   (2026-08-31) */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel{ display:none !important; }
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu.is-open .ds-menu-panel{ display:flex !important; }
 body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-toggle{ display:none !important; }
 @media (max-width:1024px){
   body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-toggle{ display:inline-flex !important; }
