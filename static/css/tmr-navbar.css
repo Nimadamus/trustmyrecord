@@ -347,8 +347,27 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.d
   font-family:"Barlow Condensed","Segoe UI",Arial,sans-serif !important;
 }
 body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .mk,
-body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .wd{
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .wd,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .wd em,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .wd *{
   font-family:Anton,"Barlow Condensed","Barlow Cond Fallback W","Barlow Cond Fallback A","Barlow Cond Fallback M",Inter,sans-serif !important;
 }
 @font-face{font-family:'Inter Fallback W';src:local('Segoe UI');ascent-override:96.9%;descent-override:24.1%;line-gap-override:0%;size-adjust:101.6%}
 @font-face{font-family:'Inter Fallback A';src:local('Arial');ascent-override:90%;descent-override:22.4%;line-gap-override:0%;size-adjust:107.4%}
+
+/* ---- 11. THE 1440 COMPRESSION --------------------------------------------
+   tmr-concept-a.css section 8 tightens the tabs at and below 1440px so six
+   uppercase dropdowns cannot wrap the bar onto a second row: 16.5px on 8px
+   side padding, overriding the scale ramp. Porting the ramp in section 8
+   without this band left every other page's tabs at calc(15px * 1.11) =
+   16.65px on 12.21px padding - 9px wider per tab than the homepage. Must stay
+   after section 8. */
+@media (max-width:1440px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav a,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu>button{
+    font-size:16.5px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+  }
+}
