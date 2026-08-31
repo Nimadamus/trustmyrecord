@@ -371,3 +371,120 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.d
     padding-right:8px !important;
   }
 }
+
+/* =============================================================================
+   10. THE NARROW LADDER, AND THE SHEET  (added 2026-08-31)
+   -----------------------------------------------------------------------------
+   Sections 7 and 8 gave every page the homepage's bar, but only its WIDE state.
+   Two pieces of the homepage's behaviour did not come with it, and both are
+   load-bearing:
+
+   * the compressions. index.html holds tmr-ds.css's 1220-1560 ladder open to
+     1840 and drops the account name up to 1610, because its bar is 11-17%
+     larger than the bar those numbers were measured against. Without them the
+     row simply overran: measured signed in on /profile/, .ds-mainnav overflowed
+     its box by 75px at 1512, 131px at 1366 and 176px at 1220, and because the
+     row is centred the spill went out BOTH sides -- SPORTSBOOK printed over the
+     wordmark while TOOLS printed under the TMR Coin pill.
+
+   * the sheet. tmr-ds.css collapses the links behind the burger at 1219px, but
+     section 7 above pins `.ds-mainnav{flex-direction:row;flex-wrap:nowrap}` and
+     `.ds-nav-panel{flex-wrap:nowrap}` with !important at every width -- so the
+     collapse could not fire, and the burger, shown from 1024px, opened onto a
+     row that was still a row. At 1180 and at 1024 the overflow measured
+     identical (96px on /profile/), which is the signature of a breakpoint that
+     never took effect.
+
+   Both are restored here, with the same values, against the shell classes this
+   file serves. Nothing new is introduced.
+   ============================================================================= */
+
+/* --- the compressions ----------------------------------------------------- */
+@media (min-width:1561px) and (max-width:1840px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-in{gap:calc(22px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel{gap:calc(22px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav a,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu>button{
+    padding:calc(8px * var(--home-nav-scale)) calc(9px * var(--home-nav-scale)) !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel:has(.v2nav-menu) .ds-mainnav{
+    column-gap:clamp(2px, (100vw - 1680px) / 12, calc(14px * var(--home-nav-scale))) !important;
+  }
+}
+/* Below 1561 the ladder tightens further rather than letting the row spill: the
+   outer gaps go first, then item padding. Type is never shrunk. */
+@media (min-width:1260px) and (max-width:1560px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-in{gap:calc(16px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel{gap:calc(14px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav{column-gap:2px !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav a,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu>button{
+    padding:calc(8px * var(--home-nav-scale)) calc(7px * var(--home-nav-scale)) !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right{gap:calc(8px * var(--home-nav-scale)) !important}
+}
+/* The account NAME is the cheapest thing in the bar and the first to go. */
+@media (min-width:1260px) and (max-width:1610px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel:has(.v2nav-menu) .v2nav-name{display:none !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-menu>.v2nav-user{padding:5px !important}
+}
+
+/* --- the sheet ------------------------------------------------------------
+   1259px is where the signed-in row stops fitting on one line honestly, so it
+   is where the links move behind the burger. tmr-ds.css puts that floor at 1219,
+   which was right for its unscaled 70px bar; this bar is the homepage's, ~11%
+   larger, so it runs out of room 40px sooner. Measured at 1220 with every
+   compression already applied, /feed/ still overflowed by 16px. Not 1024, which
+   is where section 7 had it and which left ~200px of overflow standing in
+   between. */
+@media (max-width:1259px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-toggle{ display:inline-flex !important; margin-left:auto !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-in{ position:relative !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel{
+    display:none !important;
+    position:absolute !important;
+    top:var(--nav-h, 71px) !important; left:0 !important; right:0 !important;
+    flex:none !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+    align-items:stretch !important;
+    gap:4px !important;
+    padding:14px calc(var(--gutter, 28px) + var(--nav-edge, 0px)) 20px !important;
+    background:#08192B !important;
+    border-top:1px solid rgba(255,255,255,.10) !important;
+    /* the panel hangs off a sticky bar, so it needs its own scroll region or a
+       short viewport can put the account block out of reach */
+    max-height:calc(100vh - var(--nav-h, 71px)) !important;
+    overflow-y:auto !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav.is-open .ds-nav-panel{ display:flex !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav{
+    flex:none !important; flex-direction:column !important; flex-wrap:nowrap !important;
+    align-items:stretch !important; justify-content:flex-start !important;
+    column-gap:0 !important; row-gap:0 !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu{ display:block !important; }
+  /* the desktop hover chip is a padded pill; across the full width of the sheet
+     it would be a band, so the item goes back to plain text */
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav a,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu>button{
+    width:100% !important; justify-content:flex-start !important;
+    padding:11px 0 !important; border-radius:0 !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel{
+    position:static !important; display:flex !important;
+    box-shadow:none !important; border:0 !important; background:none !important;
+    min-width:0 !important; padding:0 0 6px 14px !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right{
+    margin-left:0 !important; flex-wrap:wrap !important; row-gap:10px !important;
+    padding-top:12px !important; border-top:1px solid rgba(255,255,255,.10) !important;
+  }
+  /* the account block is LAST in the desktop cluster and FIRST in the sheet,
+     which is where it has always been; DOM order stays desktop's. */
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-menu{ display:block !important; flex:1 0 100% !important; order:-1 !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-menu>.v2nav-user{ width:100% !important; padding:11px 0 !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-menu-panel{ position:static !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-name{ display:block !important; }
+}
