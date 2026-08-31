@@ -11,8 +11,21 @@ const AUDIT = () => {
   const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
   const over = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
   const ratio = (a, b) => { const l1 = lum(a), l2 = lum(b); const hi = Math.max(l1, l2), lo = Math.min(l1, l2); return (hi + 0.05) / (lo + 0.05); };
+  const topLayer = (img) => {
+    // a multi-layer background paints the FIRST layer on top; only that one is
+    // the fill. Pooling every layer's stops made a padding-box fill read as its
+    // border-box ring.
+    const s = String(img); let d = 0, start = 0;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (ch === '(') d++;
+      else if (ch === ')') d--;
+      else if (ch === ',' && d === 0) return s.slice(start, i);
+    }
+    return s;
+  };
   const gradStop = (img) => {
-    const cols = String(img).match(/rgba?\([^)]+\)/g); if (!cols || !cols.length) return null;
+    const cols = String(topLayer(img)).match(/rgba?\([^)]+\)/g); if (!cols || !cols.length) return null;
     const ps = cols.map(parse).filter(Boolean); if (!ps.length) return null;
     return ps[Math.floor(ps.length / 2)];
   };
