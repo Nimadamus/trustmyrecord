@@ -285,7 +285,9 @@ test.describe('D/F. /admin/grading-reports/', () => {
   test('the queue lists the tickets the audit opened with a reason on each', async ({ page }) => {
     await signInAdmin(page);
     await page.goto('/admin/grading-reports/');
-    await expect(page.locator('#reportRows tr').first()).toBeVisible({ timeout: 45000 });
+    // #reportRows always holds a "Loading..." row, so wait for the counter the
+    // page only writes once the data has actually landed.
+    await expect(page.locator('#rowCount')).toContainText('report(s) shown', { timeout: 60000 });
 
     const open = Number(await page.locator('#openCount').textContent());
     expect(open).toBeGreaterThan(0);
