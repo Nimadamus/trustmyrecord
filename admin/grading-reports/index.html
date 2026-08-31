@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grading Reports | TrustMyRecord Admin</title>
+  <meta name="robots" content="index, follow">
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0b1117; color: #e8eef5; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .wrap { max-width: 1480px; margin: 0 auto; padding: 28px 18px 64px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.2; }
+    .muted { color: #9bacbd; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .panel { background: #121a23; border: 1px solid #263546; border-radius: 8px; padding: 14px; }
+    .stat { min-height: 76px; }
+    .stat .label { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    .stat .value { margin-top: 8px; font-size: 24px; font-weight: 750; }
+    .ok { color: #4ade80; }
+    .bad { color: #fb7185; }
+    .warn { color: #fbbf24; }
+    button { border: 1px solid #3b5066; background: #1a2633; color: #f4f7fb; border-radius: 7px; padding: 9px 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    button.primary { background: #d9a441; border-color: #d9a441; color: #111827; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    input, select, textarea { background: #0d141c; border: 1px solid #304155; border-radius: 7px; color: #e8eef5; padding: 9px 11px; font-family: inherit; font-size: 13px; }
+    input[type="password"] { width: min(520px, 100%); }
+    a { color: #7dd3fc; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1180px; }
+    th, td { text-align: left; border-bottom: 1px solid #243242; padding: 10px 8px; vertical-align: top; }
+    th { color: #9bacbd; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 0; color: #c7d2de; font-size: 12px; }
+    .pill { display: inline-block; border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .pill.new { background: #3b2a08; color: #fbbf24; }
+    .pill.investigating { background: #0b2f45; color: #7dd3fc; }
+    .pill.resolved { background: #0d2f1e; color: #4ade80; }
+    .pill.invalid { background: #33202a; color: #fb7185; }
+    .pill.system { background: #221d33; color: #c4b5fd; }
+    .pill.user { background: #1a2633; color: #cbd5e1; }
+    .cause { color: #fbbf24; font-weight: 700; }
+    .row-actions { display: flex; flex-direction: column; gap: 6px; min-width: 210px; }
+    .row-actions .actions { gap: 6px; }
+    details summary { cursor: pointer; color: #9bacbd; font-size: 12px; }
+    @media (max-width: 1000px) { .grid { grid-template-columns: 1fr 1fr; } .top { flex-direction: column; align-items: flex-start; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <h1>Grading Reports</h1>
+        <div class="muted" id="updated">Loading review queue...</div>
+      </div>
+      <div class="actions">
+        <a href="/admin/">Autograder Status</a>
+        <button id="refreshBtn">Refresh</button>
+        <button class="primary" id="scanBtn">Run Stale-Pick Audit</button>
+      </div>
+    </div>
+
+    <section class="panel" style="margin-bottom:12px">
+      <div class="actions">
+        <input id="adminToken" type="password" autocomplete="off" placeholder="Optional ADMIN_TOKEN. Founder login token is used automatically when available.">
+        <button id="saveTokenBtn">Save Token</button>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        Reports come from two places: a user reporting their own pending ticket, and the hourly stale-pick audit that opens
+        one itself when a wager stays pending past its grading window. Resolving a report notifies the user; it does not grade
+        the wager. Settle the wager with the existing grader controls (Re-grade / Void unplayed) and the report closes with it.
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel stat"><div class="label">Ungraded Reports</div><div class="value" id="openCount">-</div></div>
+      <div class="panel stat"><div class="label">New</div><div class="value" id="newCount">-</div></div>
+      <div class="panel stat"><div class="label">Investigating</div><div class="value" id="investigatingCount">-</div></div>
+      <div class="panel stat"><div class="label">Open (System Detected)</div><div class="value" id="systemCount">-</div></div>
+      <div class="panel stat"><div class="label">Resolved (7d)</div><div class="value" id="resolved7d">-</div></div>
+    </section>
+
+    <section class="panel" style="margin-bottom:12px">
+      <div class="actions">
+        <label class="muted" for="statusFilter">Filter</label>
+        <select id="statusFilter">
+          <option value="open" selected>Open (new + investigating)</option>
+          <option value="">All</option>
+          <option value="new">NEW</option>
+          <option value="investigating">INVESTIGATING</option>
+          <option value="resolved_win">RESOLVED - WIN</option>
+          <option value="resolved_loss">RESOLVED - LOSS</option>
+          <option value="resolved_push_void">RESOLVED - PUSH/VOID</option>
+          <option value="invalid">INVALID REPORT</option>
+        </select>
+        <span class="muted" id="rowCount"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Age</th>
+              <th>User</th>
+              <th>Ticket #</th>
+              <th>Sport</th>
+              <th>Matchup</th>
+              <th>Selection</th>
+              <th>Event Date</th>
+              <th>Current Status</th>
+              <th>Official Result</th>
+              <th>Why It Did Not Grade</th>
+              <th>Report Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reportRows"><tr><td colspan="12" class="muted">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:12px">
+      <h2 style="margin-top:0;font-size:16px">Output</h2>
+      <pre id="output">-</pre>
+    </section>
+  </main>
+
+  <script src="/static/js/config.js"></script>
+  <script>
+    var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var tokenInput = document.getElementById('adminToken');
+    tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
+
+    function authHeaders() {
+      var headers = { 'content-type': 'application/json' };
+      var adminToken = tokenInput.value.trim();
+      var bearer = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken')
+        || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+      if (adminToken) headers['x-admin-token'] = adminToken;
+      if (bearer) headers.Authorization = 'Bearer ' + bearer;
+      return headers;
+    }
+
+    async function request(path, options) {
+      var response = await fetch(API_BASE + path, Object.assign({}, options, { headers: authHeaders() }));
+      var text = await response.text();
+      var data;
+      try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { raw: text }; }
+      if (!response.ok) throw new Error((data && data.error) || ('HTTP ' + response.status));
+      return data;
+    }
+
+    function esc(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+      });
+    }
+    function fmt(value) {
+      if (!value) return '-';
+      var d = new Date(value);
+      return isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+    }
+    function pretty(value) { return JSON.stringify(value || {}, null, 2); }
+    function ageText(hours) {
+      var n = Number(hours);
+      if (!isFinite(n)) return '-';
+      if (n < 1) return 'under 1h';
+      if (n < 48) return n + 'h';
+      return Math.floor(n / 24) + 'd';
+    }
+
+    var STATUS_LABELS = {
+      new: 'NEW',
+      investigating: 'INVESTIGATING',
+      resolved_win: 'RESOLVED - WIN',
+      resolved_loss: 'RESOLVED - LOSS',
+      resolved_push_void: 'RESOLVED - PUSH/VOID',
+      invalid: 'INVALID REPORT'
+    };
+    function statusPillClass(status) {
+      if (status === 'new') return 'new';
+      if (status === 'investigating') return 'investigating';
+      if (status === 'invalid') return 'invalid';
+      return 'resolved';
+    }
+    function statusOptions(current) {
+      return Object.keys(STATUS_LABELS).map(function (key) {
+        return '<option value="' + key + '"' + (key === current ? ' selected' : '') + '>' + esc(STATUS_LABELS[key]) + '</option>';
+      }).join('');
+    }
+
+    function rowHtml(report) {
+      var snap = report.snapshot || {};
+      var username = report.pick_username || report.username || (snap.username || null);
+      // The username column is always the WAGER'S OWNER, including on a report
+      // nobody filed: that is whose bet is stuck and who gets the notification.
+      // The source pill is what says whether a member escalated it or the
+      // stale-pick audit opened it on its own.
+      var userCell = username
+        ? '<a href="/u/' + encodeURIComponent(username) + '/" target="_blank" rel="noopener">' + esc(username) + '</a>'
+        : '<span class="muted">unknown account</span>';
+      var sourcePill = report.source === 'system'
+        ? '<span class="pill system">system detected</span>'
+        : '<span class="pill user">user report</span>';
+      var diagnosis = report.diagnosis || {};
+      var cause = report.grader_reason || diagnosis.likely_cause || 'not investigated yet';
+      var detail = report.grader_reason_detail || diagnosis.likely_cause_detail || '';
+
+      return '<tr data-report="' + esc(report.id) + '">'
+        + '<td>' + esc(ageText(report.age_hours)) + '<br><span class="muted">' + esc(fmt(report.created_at)) + '</span></td>'
+        + '<td>' + userCell + '<br>' + sourcePill + '</td>'
+        + '<td><a href="/pick/?id=' + encodeURIComponent(report.pick_id) + '" target="_blank" rel="noopener">' + esc(report.ticket) + '</a>'
+          + '<br><span class="muted">pick ' + esc(report.pick_id) + '</span></td>'
+        + '<td>' + esc(report.sport_title || report.sport_key || snap.sport || '-') + '</td>'
+        + '<td>' + esc(report.matchup || '-') + '</td>'
+        + '<td>' + esc(report.selection || snap.selection || '-')
+          + '<br><span class="muted">' + esc(report.market_type || snap.market || '') + ' ' + esc(report.odds_snapshot != null ? report.odds_snapshot : '') + '</span></td>'
+        + '<td>' + esc(fmt(report.commence_time || snap.event_time)) + '</td>'
+        + '<td>' + esc(String(report.pick_status || '').toUpperCase() || '-') + '</td>'
+        + '<td>' + esc(report.official_result || (report.completed ? 'final, no score stored' : 'no final score')) + '</td>'
+        + '<td><span class="cause">' + esc(cause) + '</span>'
+          + (detail ? '<details><summary>detail</summary><pre>' + esc(detail) + '</pre></details>' : '')
+          + (report.comment ? '<details><summary>user comment</summary><pre>' + esc(report.comment) + '</pre></details>' : '')
+          + (report.auto_resolved ? '<br><span class="ok">auto-resolved by the standard grader</span>' : '')
+          + '</td>'
+        + '<td><span class="pill ' + statusPillClass(report.status) + '">' + esc(STATUS_LABELS[report.status] || report.status) + '</span>'
+          + (report.resolved_at ? '<br><span class="muted">' + esc(fmt(report.resolved_at)) + '</span>' : '')
+          + (report.user_notified_at ? '<br><span class="ok">user notified</span>' : '')
+          + '</td>'
+        + '<td><div class="row-actions">'
+          + '<div class="actions"><button data-investigate="' + esc(report.id) + '">Investigate</button></div>'
+          + '<div class="actions"><select data-status="' + esc(report.id) + '">' + statusOptions(report.status) + '</select>'
+          + '<button data-save="' + esc(report.id) + '">Save</button></div>'
+          + '<input data-note="' + esc(report.id) + '" placeholder="Admin note (optional)" value="' + esc(report.admin_note || '') + '">'
+          + '</div></td>'
+        + '</tr>';
+    }
+
+    function applySummary(summary) {
+      summary = summary || {};
+      var open = Number(summary.open_count || 0);
+      var openEl = document.getElementById('openCount');
+      openEl.textContent = open;
+      openEl.className = 'value ' + (open > 0 ? 'warn' : 'ok');
+      document.getElementById('newCount').textContent = summary.new_count != null ? summary.new_count : '-';
+      document.getElementById('investigatingCount').textContent = summary.investigating_count != null ? summary.investigating_count : '-';
+      document.getElementById('systemCount').textContent = summary.open_system_count != null ? summary.open_system_count : '-';
+      document.getElementById('resolved7d').textContent = summary.resolved_7d != null ? summary.resolved_7d : '-';
+    }
+
+    async function load() {
+      var filter = document.getElementById('statusFilter').value;
+      var qs = filter === 'open' ? '?open=true' : (filter ? '?status=' + encodeURIComponent(filter) : '');
+      // Blank the table BEFORE the request, not after it. Leaving the previous
+      // rows on screen during a reload means an admin can pick a status on a row
+      // that is about to be replaced, and the re-render then silently discards
+      // that choice - the Save posts whatever the fresh markup defaults to.
+      var body = document.getElementById('reportRows');
+      body.innerHTML = '<tr><td colspan="12" class="muted">Loading...</td></tr>';
+      document.getElementById('rowCount').textContent = '';
+      var data = await request('/grading-reports/admin' + qs);
+      applySummary(data.summary);
+      document.getElementById('updated').textContent = 'Updated ' + new Date().toLocaleString();
+      document.getElementById('rowCount').textContent = data.count + ' report(s) shown';
+      body.innerHTML = (data.reports || []).length
+        ? data.reports.map(rowHtml).join('')
+        : '<tr><td colspan="12" class="muted">No reports in this view.</td></tr>';
+      return data;
+    }
+
+    function setOutput(value) {
+      document.getElementById('output').textContent = typeof value === 'string' ? value : pretty(value);
+    }
+
+    document.getElementById('saveTokenBtn').addEventListener('click', function () {
+      localStorage.setItem('tmr_admin_token', tokenInput.value.trim());
+      setOutput('Admin token saved in this browser.');
+    });
+    document.getElementById('refreshBtn').addEventListener('click', function () {
+      load().catch(function (error) { setOutput(error.message); });
+    });
+    document.getElementById('statusFilter').addEventListener('change', function () {
+      load().catch(function (error) { setOutput(error.message); });
+    });
+    document.getElementById('scanBtn').addEventListener('click', async function () {
+      var btn = document.getElementById('scanBtn');
+      btn.disabled = true;
+      setOutput('Scanning for stale ungraded wagers...');
+      try {
+        setOutput(await request('/grading-reports/admin/scan-stale', { method: 'POST', body: '{}' }));
+        await load();
+      } catch (error) {
+        setOutput(error.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('reportRows').addEventListener('click', async function (event) {
+      var investigateBtn = event.target.closest && event.target.closest('[data-investigate]');
+      var saveBtn = event.target.closest && event.target.closest('[data-save]');
+      if (investigateBtn) {
+        var id = investigateBtn.getAttribute('data-investigate');
+        investigateBtn.disabled = true;
+        setOutput('Investigating report ' + id + '...');
+        try {
+          setOutput(await request('/grading-reports/admin/' + id + '/investigate', { method: 'POST', body: '{}' }));
+          await load();
+        } catch (error) {
+          setOutput(error.message);
+          investigateBtn.disabled = false;
+        }
+        return;
+      }
+      if (saveBtn) {
+        var reportId = saveBtn.getAttribute('data-save');
+        var status = document.querySelector('[data-status="' + reportId + '"]').value;
+        var note = document.querySelector('[data-note="' + reportId + '"]').value.trim();
+        saveBtn.disabled = true;
+        try {
+          setOutput(await request('/grading-reports/admin/' + reportId, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: status, admin_note: note || null })
+          }));
+          await load();
+        } catch (error) {
+          setOutput(error.message);
+          saveBtn.disabled = false;
+        }
+      }
+    });
+
+    load().catch(function (error) { setOutput(error.message); });
+  </script>
+</body>
+</html>
