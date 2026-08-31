@@ -1,3 +1,8 @@
+/* The wordmark is set in Anton. The homepage requests that face itself; other
+   pages stopped requesting it when the theme block came off, so the lockup
+   fell back to Barlow Condensed and measured ~19px wider. Requested here so
+   the one navbar always has the one face. */
+
 /* =============================================================================
    TMR NAVBAR — THE ONE APPROVED TOP BAR
    -----------------------------------------------------------------------------
@@ -193,3 +198,157 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-n
 @media (max-width:1024px){
   body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-toggle{ display:inline-flex !important; }
 }
+
+/* ---- 8. THE HOMEPAGE'S NAVBAR GEOMETRY -----------------------------------
+   This is the piece that made every other page's bar look wrong. The approved
+   proportions were never in a stylesheet at all: index.html carries an inline
+   --home-nav-scale ramp that grows the bar from 1x at 1220px to 1.11x at 1440px
+   and on to 1.175x, together with --wrap:2064px and --gutter:33.6px. Nothing
+   else on the site could read it, so every other page rendered the same markup
+   at the design system's unscaled 70px / 1720px / 28px - an 11% smaller bar
+   with different gutters, which is exactly the "different navbar" report.
+
+   The ramp is reproduced here verbatim, applied to the shared shell classes.
+   index.html keeps its own inline copy untouched, so the homepage cannot move.
+   ------------------------------------------------------------------------- */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum){
+  --home-nav-scale:1;
+  --wrap:2064px;
+  --gutter:33.6px;
+}
+@media (min-width:1220px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum){
+    /* (100vw - 1220px) is a LENGTH; dividing by the 220px span before
+       multiplying by the unitless 0.11 keeps every term a plain number, which
+       is what clamp() needs when its other bounds are numbers. */
+    --home-nav-scale:clamp(1, 1 + (100vw - 1220px) / 220px * 0.11, 1.11);
+  }
+}
+@media (min-width:1440px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum){
+    --home-nav-scale:clamp(1.11, 1.11 + (100vw - 1440px) / 460px * 0.065, 1.175);
+  }
+}
+@media (min-width:1220px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum){
+    --nav-h:calc(70px * var(--home-nav-scale));
+    --nav-edge:calc(26px * var(--home-nav-scale));
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-in{gap:calc(30px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel{gap:calc(30px * var(--home-nav-scale)) !important}
+
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-logo{gap:calc(9px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-logo .mk{
+    width:calc(34px * var(--home-nav-scale));
+    height:calc(34px * var(--home-nav-scale));
+    border-radius:calc(8px * var(--home-nav-scale));
+    font-size:calc(22px * var(--home-nav-scale));
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-logo .wd{font-size:calc(21px * var(--home-nav-scale))}
+
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav a,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu>button{
+    font-size:calc(15px * var(--home-nav-scale)) !important;
+    padding:calc(8px * var(--home-nav-scale)) calc(11px * var(--home-nav-scale)) !important;
+    border-radius:calc(9px * var(--home-nav-scale));
+    gap:calc(6px * var(--home-nav-scale));
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav{column-gap:calc(14px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a{font-size:calc(14.5px * var(--home-nav-scale))}
+
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right{gap:calc(10px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right .login{font-size:calc(15px * var(--home-nav-scale))}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right .ds-btn.sm{
+    height:calc(36px * var(--home-nav-scale));
+    padding:0 calc(15px * var(--home-nav-scale));
+    font-size:calc(14px * var(--home-nav-scale));
+  }
+
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-menu>.v2nav-user{font-size:calc(14.5px * var(--home-nav-scale))}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-ava,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-avl{
+    width:calc(32px * var(--home-nav-scale));
+    height:calc(32px * var(--home-nav-scale));
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-avl{font-size:calc(12.5px * var(--home-nav-scale))}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-bell{
+    width:calc(34px * var(--home-nav-scale));
+    height:calc(34px * var(--home-nav-scale));
+  }
+  /* The coin control keeps section 6's enlarged treatment and rides the same
+     ramp, so it stays on the bar's one optical line. */
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins{
+    height:calc(38px * var(--home-nav-scale)) !important;
+    font-size:calc(15px * var(--home-nav-scale)) !important;
+    padding:0 calc(15px * var(--home-nav-scale)) 0 calc(12px * var(--home-nav-scale)) !important;
+  }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins #navCoinBalance{font-size:calc(16px * var(--home-nav-scale)) !important}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins-icon{
+    width:calc(24px * var(--home-nav-scale)) !important;
+    height:calc(24px * var(--home-nav-scale)) !important;
+  }
+}
+
+/* ---- 9. THE LOCKUP FACE AND THE CTA --------------------------------------
+   Two more homepage-only values. The wordmark reads in the display face
+   (tmr-concept-a's --display, Anton first); everywhere else it fell back to
+   Barlow Condensed. And the primary CTA is an italic uppercase brand button on
+   the homepage, plain sentence case elsewhere. Both are copied from
+   tmr-concept-a.css so the right-hand cluster matches too. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-logo .mk,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-logo .wd{
+  font-family:Anton,"Barlow Condensed","Barlow Cond Fallback W","Barlow Cond Fallback A","Barlow Cond Fallback M",Inter,sans-serif !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-btn.p{
+  background:linear-gradient(180deg,#1668C9,#0B4FA8);
+  border-color:transparent; color:#fff;
+  box-shadow:0 0 0 1px rgba(120,180,255,.42), 0 10px 28px rgba(29,127,232,.42);
+  font-style:italic !important; letter-spacing:.06em !important; text-transform:uppercase !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-btn.p:hover{
+  background:linear-gradient(180deg,#57A4FF,#1A76EA);
+  box-shadow:0 0 0 1px rgba(150,200,255,.65), 0 14px 36px rgba(29,127,232,.55);
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-btn:not(.p){
+  background:rgba(43,140,255,.10); border:1px solid rgba(43,140,255,.46); color:#fff;
+  font-style:italic !important; letter-spacing:.06em !important; text-transform:uppercase !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-nav-in,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-nav-right,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-nav-panel,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav .ds-mainnav{ color:#FFFFFF; }
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav a.ds-logo{ color:#FFFFFF !important; }
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav a.ds-btn.p{ color:#FFFFFF !important; }
+
+/* The bar itself is a block that lays its own inner row out. A page whose
+   stylesheet made every <nav> a flex container turned .ds-nav-in into a
+   shrinking flex item, which narrowed and offset the whole header. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav{
+  display:block !important;
+  flex-wrap:nowrap !important;
+  gap:normal !important;
+  padding:0 !important;
+}
+
+/* ---- 10. THE BAR'S OWN FONT STACK ----------------------------------------
+   The homepage declares metric-matched Inter fallbacks so the bar does not
+   shift while the webfont loads. Other pages named a plain Segoe UI fallback,
+   which measured a few pixels wider on the wordmark. Same stack here, so the
+   two bars agree during load as well as after it. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav *{
+  font-family:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-navitem,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-mainnav a,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-menu>button{
+  font-family:"Barlow Condensed","Segoe UI",Arial,sans-serif !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .mk,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.ds-nav .ds-logo .wd{
+  font-family:Anton,"Barlow Condensed","Barlow Cond Fallback W","Barlow Cond Fallback A","Barlow Cond Fallback M",Inter,sans-serif !important;
+}
+@font-face{font-family:'Inter Fallback W';src:local('Segoe UI');ascent-override:96.9%;descent-override:24.1%;line-gap-override:0%;size-adjust:101.6%}
+@font-face{font-family:'Inter Fallback A';src:local('Arial');ascent-override:90%;descent-override:22.4%;line-gap-override:0%;size-adjust:107.4%}

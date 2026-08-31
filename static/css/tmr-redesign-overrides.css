@@ -379,8 +379,12 @@ body .tmr-pending-pick-odds{
 }
 
 /* ===== Links ===== */
-body a:not(.sportsbook-sports-nav a){color:var(--tmr-teal) !important}
-body a:not(.sportsbook-sports-nav a):hover{color:#3dd0ed !important;text-decoration:underline !important}
+/* Scoped off the shared chrome 2026-08-31: this blanket !important anchor
+   colour was repainting the header lockup and the primary CTA label, which
+   is why the Sportsbook bar carried a blue wordmark and a blue-on-blue
+   button where the homepage has white. */
+body a:not(.sportsbook-sports-nav a):not(.ds-nav *):not(.ds-footer *):not(.tmrlh-related *){color:var(--tmr-teal) !important}
+body a:not(.sportsbook-sports-nav a):not(.ds-nav *):not(.ds-footer *):not(.tmrlh-related *):hover{color:#3dd0ed !important;text-decoration:underline !important}
 
 /* ===== Placeholder kills (CSS-only — no JS edits) ===== */
 body .market-subtab[data-market="live"]{display:none !important}
