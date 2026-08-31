@@ -7287,6 +7287,37 @@
     // line with inning, player, team, responsible pitcher, and RBI, so users see exactly
     // what happened instead of a single run-on summary line. Built entirely from the
     // per-game scoringLog captured in the plate-appearance engine.
+    /* RECAP_LANGUAGE_20260830: the recap read like a stat dump - "1-run HR",
+       "0 on base, 1 out". A box score says solo homer, 2-run homer, 3-run homer,
+       grand slam, and it counts outs in words. One set of helpers so the on-page
+       block and the copied/exported text cannot drift apart. */
+    function homerPhrase(runs) {
+        var r = Number(runs) || 1;
+        if (r >= 4) return 'grand slam';
+        if (r <= 1) return 'solo homer';
+        return r + '-run homer';
+    }
+    function outsPhrase(outs) {
+        var o = Number(outs) || 0;
+        return o === 1 ? 'one out' : (o === 2 ? 'two outs' : 'nobody out');
+    }
+    function onBasePhrase(men) {
+        var m = Number(men) || 0;
+        if (m <= 0) return 'the bases empty';
+        if (m === 1) return 'a runner on';
+        if (m === 2) return 'two on';
+        return 'the bases loaded';
+    }
+    /* "solo homer" and "grand slam" already state who was on, so the runner
+       clause is dropped rather than repeated. */
+    function homerLine(e) {
+        var runs = Number(e.rbi) || 1;
+        var stem = e.batter + ' hit a ' + homerPhrase(runs) + ' off ' + e.pitcher;
+        return (runs <= 1 || runs >= 4)
+            ? stem + ' with ' + outsPhrase(e.outs)
+            : stem + ' with ' + onBasePhrase(e.runners) + ' and ' + outsPhrase(e.outs);
+    }
+
     function scoringDetailSections(result) {
         var box = result && result.boxScore;
         var log = box && Array.isArray(box.scoringLog) ? box.scoringLog : [];
@@ -7307,24 +7338,21 @@
             return '<div class="scoring-detail-block"><h5>' + escapeHtml(title) + '</h5>' + body + '</div>';
         }
         var hr = byType.HR.map(function (e) {
-            var runs = (Number(e.rbi) || 1);
-            var men = Number(e.runners) || 0;
-            var outs = Number(e.outs) || 0;
-            return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') homered off ' + e.pitcher + ', ' +
-                runs + '-run HR, ' + men + (men === 1 ? ' runner on, ' : ' on base, ') + outs + (outs === 1 ? ' out' : ' outs'));
+            return line(frame(e) + ', ' + e.team + ': ' + homerLine(e));
         });
         var xbh = byType.XBH.map(function (e) {
             var verb = e.type === '3B' ? 'tripled' : 'doubled';
             var rbi = Number(e.rbi) || 0;
-            return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') ' + verb + ' off ' + e.pitcher + (rbi ? ', ' + rbi + ' RBI' : ''));
+            return line(frame(e) + ', ' + e.team + ': ' + e.batter + ' ' + verb + ' off ' + e.pitcher +
+                (rbi ? ', driving in ' + (rbi === 1 ? 'a run' : rbi + ' runs') : ''));
         });
         var run = byType.RUN.map(function (e) {
-            var act = e.type === 'SB' ? 'stole ' + (e.base || '2nd') : 'caught stealing ' + (e.base || '2nd');
-            return line(frame(e) + ' — ' + e.runner + ' (' + e.team + ') ' + act + ' (battery: ' + e.pitcher + ')');
+            var act = e.type === 'SB' ? 'stole ' + (e.base || '2nd') : 'was caught stealing ' + (e.base || '2nd');
+            return line(frame(e) + ', ' + e.team + ': ' + e.runner + ' ' + act + ' (battery: ' + e.pitcher + ')');
         });
         var sac = byType.SAC.map(function (e) {
-            if (e.type === 'SF') return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') sacrifice fly off ' + e.pitcher + ', 1 RBI');
-            return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') sacrifice bunt (advanced a runner)');
+            if (e.type === 'SF') return line(frame(e) + ', ' + e.team + ': ' + e.batter + ' drove in a run with a sacrifice fly off ' + e.pitcher);
+            return line(frame(e) + ', ' + e.team + ': ' + e.batter + ' laid down a sacrifice bunt to move the runner up');
         });
         return '<section class="scoring-detail">' +
             '<h4>Scoring Plays &amp; Detail</h4>' +
@@ -7876,7 +7904,7 @@
                 lines.push('');
                 lines.push('Home Runs:');
                 hrT.forEach(function (e) {
-                    lines.push('  ' + frameT(e) + ': ' + e.batter + ' (' + e.team + '), ' + ((Number(e.rbi) || 1)) + '-run HR off ' + e.pitcher + ', ' + (Number(e.runners) || 0) + ' on, ' + (Number(e.outs) || 0) + ' out');
+                    lines.push('  ' + frameT(e) + ': ' + e.team + ': ' + homerLine(e));
                 });
             }
             var otherT = box.scoringLog.filter(function (e) { return e.type !== 'HR' && (e.batter || e.runner); });
@@ -7885,11 +7913,13 @@
                 lines.push('Other scoring/baserunning detail:');
                 otherT.forEach(function (e) {
                     var who = e.batter || e.runner;
-                    var desc = e.type === '2B' ? 'double off ' + e.pitcher : e.type === '3B' ? 'triple off ' + e.pitcher
-                        : e.type === 'SB' ? 'stole ' + (e.base || '2nd') : e.type === 'CS' ? 'caught stealing ' + (e.base || '2nd')
-                        : e.type === 'SF' ? 'sacrifice fly off ' + e.pitcher : e.type === 'SAC' ? 'sacrifice bunt'
-                        : e.type === 'HBP' ? 'hit by pitch (' + e.pitcher + ')' : e.type;
-                    lines.push('  ' + frameT(e) + ': ' + who + ' (' + e.team + '), ' + desc + (e.rbi ? ', ' + e.rbi + ' RBI' : ''));
+                    var desc = e.type === '2B' ? 'doubled off ' + e.pitcher : e.type === '3B' ? 'tripled off ' + e.pitcher
+                        : e.type === 'SB' ? 'stole ' + (e.base || '2nd') : e.type === 'CS' ? 'was caught stealing ' + (e.base || '2nd')
+                        : e.type === 'SF' ? 'hit a sacrifice fly off ' + e.pitcher : e.type === 'SAC' ? 'laid down a sacrifice bunt'
+                        : e.type === 'HBP' ? 'was hit by a pitch from ' + e.pitcher : e.type;
+                    var rbiT = Number(e.rbi) || 0;
+                    lines.push('  ' + frameT(e) + ': ' + e.team + ': ' + who + ' ' + desc +
+                        (rbiT ? ', driving in ' + (rbiT === 1 ? 'a run' : rbiT + ' runs') : ''));
                 });
             }
         }

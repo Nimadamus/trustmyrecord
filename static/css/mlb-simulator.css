@@ -1122,7 +1122,7 @@
 .box-score-heading strong {
     display: block;
     margin-top: 3px;
-    color: #B7CBE1;
+    color: #C9D9EC;
     font-family: Inter, Arial, Helvetica, sans-serif;
     font-size: 12px;
     font-weight: 700;
@@ -1175,7 +1175,7 @@
 .compact-action:hover:not(:disabled) {
     border-color: #64748b;
     background: #f1f5f9;
-    color: #DCE7F4;
+    color: #0B1220;
 }
 
 .box-score-matchup-card {
@@ -1237,7 +1237,7 @@
 
 .box-score-team-card strong {
     display: block;
-    color: #DCE7F4;
+    color: #0B1220;
     font: 900 18px/1 Inter, Arial, sans-serif;
 }
 
@@ -1268,7 +1268,7 @@
 }
 
 .box-score-final strong {
-    color: #DCE7F4;
+    color: #0B1220;
     font: 900 38px/0.95 Inter, Arial, sans-serif;
     letter-spacing: 0;
 }
@@ -1293,13 +1293,13 @@
     gap: 8px 14px;
     padding-top: 6px;
     border-top: 0;
-    color: #B7CBE1;
+    color: #334155;
     font-size: 11px;
     font-weight: 800;
 }
 
 .box-score-decisions strong {
-    color: #DCE7F4;
+    color: #0B1220;
     font-weight: 900;
 }
 
@@ -1415,7 +1415,7 @@
     margin: 0;
     padding: 5px 7px;
     border-bottom: 1px solid #cbd5e1;
-    color: #DCE7F4;
+    color: #0B1220;
     background: #eef2f7;
     font: 900 10px/1 Arial, Helvetica, sans-serif;
     letter-spacing: 0.06em;
@@ -1479,7 +1479,7 @@
 }
 
 .box-score-summary-head strong {
-    color: #DCE7F4;
+    color: #EAF1F9;
     font-size: 13px;
     font-weight: 900;
 }
@@ -1500,7 +1500,7 @@
 }
 
 .box-score-summary li {
-    color: #B7CBE1;
+    color: #C9D9EC;
     padding-left: 2px;
 }
 
@@ -1566,7 +1566,7 @@
 
 .team-box-label {
     margin: 0;
-    color: #DCE7F4;
+    color: #EAF1F9;
     font: 800 13px/1.2 Inter, Arial, sans-serif;
 }
 
@@ -1576,7 +1576,7 @@
     border-radius: 999px;
     border: 1px solid #cbd5e1;
     background: #f1f5f9;
-    color: #B7CBE1;
+    color: #334155;
     font: 800 10px/1.2 Inter, Arial, sans-serif;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -1606,7 +1606,7 @@
     border-top: 2px solid #cbd5e1;
     background: #f8fafc;
     font-weight: 900;
-    color: #DCE7F4;
+    color: #0B1220;
 }
 
 .batting-fielding-details {
@@ -1616,7 +1616,7 @@
 
 .batting-fielding-details h5 {
     margin: 0 0 6px;
-    color: #B7CBE1;
+    color: #C9D9EC;
     font: 800 11px/1 Inter, Arial, sans-serif;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1630,7 +1630,7 @@
 }
 
 .batting-fielding-details strong {
-    color: #DCE7F4;
+    color: #EAF1F9;
     font-weight: 900;
 }
 
@@ -1642,7 +1642,7 @@
 
 .scoring-detail > h4 {
     margin: 0 0 8px;
-    color: #DCE7F4;
+    color: #EAF1F9;
     font: 900 13px/1 Inter, Arial, sans-serif;
     letter-spacing: 0.02em;
 }
@@ -1657,7 +1657,7 @@
 
 .scoring-detail-block h5 {
     margin: 0 0 4px;
-    color: #B7CBE1;
+    color: #C9D9EC;
     font: 800 11px/1 Inter, Arial, sans-serif;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1681,7 +1681,7 @@
 
 .scoring-detail-empty {
     margin: 0;
-    color: #94a3b8;
+    color: #55617A;
     font-size: 12px;
     font-style: italic;
 }
@@ -1791,7 +1791,7 @@
 .box-score-team-details p,
 .box-score-game-meta p {
     margin: 0;
-    color: #B7CBE1;
+    color: #C9D9EC;
     font-size: 11px;
     line-height: 1.38;
 }
@@ -1816,7 +1816,7 @@
     border: 1px solid #d7dee8;
     border-bottom: 0;
     border-radius: 3px 3px 0 0;
-    color: #DCE7F4;
+    color: #EAF1F9;
     background: #eef2f7;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
@@ -1826,14 +1826,26 @@
 
 .player-source-note {
     margin: 0;
-    padding: 5px 10px;
+    /* SOURCE_BAR_CONTRAST_20260830: these bars carry the lineup / active-roster
+       provenance and the "this is a simulation" notice. At #64748b 10px on a
+       #fbfdff ground they read as a smudge; at 125% Windows scaling they were
+       reported as invisible. Darker ink, a real tinted ground and a left rule
+       so the bar looks deliberate instead of like a rendering artefact. */
+    padding: 7px 10px;
     border: 0;
-    border-bottom: 1px solid #e5e7eb;
-    background: #fbfdff;
-    color: #64748b;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1.35;
+    border-left: 3px solid #94A9C4;
+    border-bottom: 1px solid #d5dce6;
+    background: #eff4fa;
+    color: #26344A;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.player-source-note strong,
+.player-source-note b {
+    color: #0B1220;
+    font-weight: 900;
 }
 
 .player-table-wrap {
@@ -1888,7 +1900,7 @@
 .player-box-table .player-total-row td {
     border-top: 1px solid #cbd5e1;
     background: #f8fafc;
-    color: #DCE7F4;
+    color: #0B1220;
     font-weight: 900;
 }
 
@@ -3181,9 +3193,9 @@ select.pitcher-select option {
 .player-box-table th,.player-box-table td{padding:6px 9px;border-bottom:1px solid #ececec;text-align:right;font-size:12px;font-weight:400;white-space:nowrap;}
 .player-box-table th:first-child,.player-box-table td:first-child{text-align:left;font-weight:600;color:#0a0a0a;}
 .player-box-table tbody tr:nth-child(odd) td,.player-box-table tbody tr:nth-child(odd) th{background:#fafafa;}
-.player-box-table thead th{border-bottom:2px solid #041e42;color:#5b6670;background:#fff;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
+.player-box-table thead th{border-bottom:2px solid #041e42;color:#22303F;background:#fff;font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
 .player-box-table tbody tr.totals-row th,.player-box-table tbody tr.totals-row td{border-top:2px solid #cbd5e1;background:#fff !important;color:#041e42;font-weight:800;text-transform:uppercase;font-size:11px;}
-.player-box-table .bx-pos{color:#9aa0a6;font-weight:400;font-size:11px;margin-left:3px;}
+.player-box-table .bx-pos{color:#5B6670;font-weight:400;font-size:11px;margin-left:3px;}
 .player-box-table .bx-dec{color:#041e42;font-weight:800;margin-left:4px;}
 
 /* MODEL_VS_MARKET_20260623: read-only model-vs-market win% comparison (not a bet). */
@@ -3213,28 +3225,28 @@ select.pitcher-select option {
 }
 .box-score-panel .box-score-heading,
 .box-score-panel .box-score-heading h3,
-.box-score-panel .sim-label { color: #DCE7F4; }
+.box-score-panel .sim-label { color: #EAF1F9; }
 
 /* Matchup header: logos + winner emphasis (ESPN game header feel) */
 .box-score-team-card .scoreboard-logo { display: inline-grid; place-items: center; }
 .box-score-team-card.winner strong { color: #047857; }
 .bx-win-dot { color: #059669; font-size: 13px; }
-.box-score-final strong { color: #DCE7F4; }
+.box-score-final strong { color: #0B1220; }
 .box-score-matchup-card { border-bottom: 1px solid #e5e7eb; }
 
 /* Line-score team cell: logo + abbreviation */
 .line-score-team { display: inline-grid; grid-template-columns: 24px auto; align-items: center; gap: 8px; }
 .line-score-team .line-score-logo { width: 22px; height: 22px; border-radius: 4px; overflow: hidden; }
 .line-score-team .line-score-logo img { width: 100%; height: 100%; object-fit: contain; }
-.line-score-team .ls-abbr { font-weight: 900; color: #DCE7F4; letter-spacing: 0.02em; }
+.line-score-team .ls-abbr { font-weight: 900; color: #0B1220; letter-spacing: 0.02em; }
 
 /* Line score: highlight winner, separate + emphasize R | H | E */
 .box-score-table .winner-row td, .box-score-table .winner-row th { background: #ecfdf5; }
 .box-score-table .winner-row .ls-abbr { color: #047857; }
 .box-score-table tbody tr:hover td, .box-score-table tbody tr:hover th { background: #f1f5f9; }
 .box-score-table th:nth-last-child(3), .box-score-table td:nth-last-child(3) { border-left: 2px solid #cbd5e1; }
-.box-score-table .total-runs { color: #DCE7F4; font-size: 15px; font-weight: 900; }
-.box-score-table thead th { background: #f8fafc; color: #64748b; }
+.box-score-table .total-runs { color: #0B1220; font-size: 15px; font-weight: 900; }
+.box-score-table thead th { background: #f8fafc; color: #22303F; }
 
 /* Player tables: zebra, hover, sticky name column, bold totals */
 .player-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #e5e7eb; }
@@ -3251,15 +3263,15 @@ select.pitcher-select option {
 .player-box-table tbody tr:nth-child(even):not(.totals-row) th:first-child { background: #f8fafc; }
 .player-box-table tbody tr:hover:not(.totals-row) th:first-child { background: #eef2ff; }
 .player-box-table tbody tr.totals-row th, .player-box-table tbody tr.totals-row td {
-    border-top: 2px solid #cbd5e1; background: #f1f5f9; color: #DCE7F4; font-weight: 900;
+    border-top: 2px solid #cbd5e1; background: #f1f5f9; color: #0B1220; font-weight: 900;
 }
 .player-box-table tbody tr.totals-row th:first-child { background: #f1f5f9; }
 
 /* Batter position + pitcher decision pills */
-.bx-pos { color: #64748b; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; margin-left: 5px; }
+.bx-pos { color: #46536A; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; margin-left: 5px; }
 .bx-dec { display: inline-block; font-size: 9px; font-weight: 900; letter-spacing: 0.03em;
     padding: 1px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
-    background: #e2e8f0; color: #B7CBE1; }
+    background: #e2e8f0; color: #334155; }
 .bx-dec-W { background: #dcfce7; color: #15803d; }
 .bx-dec-L { background: #fee2e2; color: #b91c1c; }
 .bx-dec-SV, .bx-dec-S, .bx-dec-H, .bx-dec-HLD { background: #dbeafe; color: #1d4ed8; }
@@ -3272,7 +3284,7 @@ select.pitcher-select option {
 .sb-table .sb-runs { font-weight: 900; }
 
 /* Team-box header chips read crisp on white */
-.team-box-header .team-box-label { color: #DCE7F4; font-weight: 900; }
+.team-box-header .team-box-label { color: #EAF1F9; font-weight: 900; }
 
 @media (max-width: 640px) {
     .box-score-final strong { font-size: 30px; }
@@ -3290,10 +3302,10 @@ select.pitcher-select option {
     white-space: nowrap;
 }
 .box-score-final .bsf-score { display: inline-flex; align-items: baseline; gap: 6px; }
-.box-score-final .bsf-score strong { font: 900 34px/1 Inter, Arial, sans-serif; color: #DCE7F4; }
-.box-score-final .bsf-score em { font-style: normal; color: #94a3b8; font-weight: 700; font-size: 24px; }
+.box-score-final .bsf-score strong { font: 900 34px/1 Inter, Arial, sans-serif; color: #0B1220; }
+.box-score-final .bsf-score em { font-style: normal; color: #5A6473; font-weight: 700; font-size: 24px; }
 .box-score-final .bsf-final {
-    color: #64748b; font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #3D4A5C; font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase;
 }
 @media (max-width: 640px) {
     .box-score-final .bsf-score strong { font-size: 28px; }
@@ -3312,16 +3324,16 @@ select.pitcher-select option {
     padding: 0.45rem 0.6rem;
     border-left: 3px solid #1c3f94;
     background: rgba(28, 63, 148, 0.06);
-    color: #33415c;
+    color: #C9D9EC;
     border-radius: 0 4px 4px 0;
 }
-.bx-mode-legend strong { color: #14264d; }
+.bx-mode-legend strong { color: #EAF1F9; }
 
 .bx-slot {
     display: inline-block;
     min-width: 1.15em;
     margin-right: 0.35em;
-    color: #7b8794;
+    color: #46536A;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
 }
@@ -3387,7 +3399,7 @@ select.pitcher-select option {
 .pbp-btn:hover { background: #eef1f6; }
 .pbp-speed-label {
     font: 500 0.76rem/1 Inter, Arial, sans-serif;
-    color: #6b7688;
+    color: #4A5566;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
@@ -3401,7 +3413,7 @@ select.pitcher-select option {
     background: #ffffff;
 }
 .pbp-playback-status {
-    color: #7b8794;
+    color: #4A5566;
     font-size: 0.76rem;
     margin-left: auto;
 }
@@ -3476,7 +3488,7 @@ select.pitcher-select option {
 }
 .pbp-half[open] > summary::before { transform: rotate(90deg); }
 .pbp-half-label { font-weight: 700; color: #14264d; }
-.pbp-half-summary { color: #6b7688; font-size: 0.82rem; }
+.pbp-half-summary { color: #4A5566; font-size: 0.82rem; }
 .pbp-list {
     margin: 0;
     padding: 0 0 0.5rem;
@@ -3495,8 +3507,8 @@ select.pitcher-select option {
 .pbp-list li:last-child { border-bottom: none; }
 .pbp-list li.pbp-scoring { background: rgba(28, 148, 76, 0.07); }
 .pbp-list li.pbp-sub { background: rgba(148, 104, 28, 0.08); font-style: italic; }
-.pbp-text { grid-column: 1; color: #22304d; }
-.pbp-meta { grid-column: 1; color: #7b8794; font-size: 0.76rem; }
+.pbp-text { grid-column: 1; color: #16233D; }
+.pbp-meta { grid-column: 1; color: #4A5566; font-size: 0.76rem; }
 .pbp-score {
     grid-column: 2;
     grid-row: 1 / span 2;
@@ -3530,7 +3542,7 @@ select.pitcher-select option {
    TMR_ROSTER_STATE_20260723 (Stage 3) — substitutions, injuries, ejections.
    ===================================================================== */
 .bx-sub-row th[scope="row"] { padding-left: 0.4rem; }
-.bx-sub-row td, .bx-sub-row th { color: #55607a; font-style: italic; background: rgba(120,120,120,0.05); }
+.bx-sub-row td, .bx-sub-row th { color: #3E4A63; font-style: italic; background: rgba(120,120,120,0.05); }
 .bx-sub-arrow { color: #94681c; margin-right: 0.2rem; font-style: normal; }
 .bx-slot-sub { min-width: 1.15em; display: inline-block; }
 

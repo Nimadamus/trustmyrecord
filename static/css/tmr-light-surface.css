@@ -1,0 +1,425 @@
+/* =============================================================================
+   TMR LIGHT SURFACE CONTRACT (tmr-light-surface.css)   LIGHT_SURFACE_20260830
+   -----------------------------------------------------------------------------
+   WHY THIS FILE EXISTS
+
+   tmr-theme-a.css repainted the whole site for the dark shell by remapping the
+   ink tokens to a pale blue scale (--a-text #C3D6EA, #93A9C0, #DCE7F4) and then
+   applying them with blanket element rules:
+
+       body.tmr-ds table td   { color: var(--a-text) }      /* #C3D6EA */
+       body.tmr-ds table th   { color: #93A9C0 }
+       html body th           { color: #C3D6EA }
+       body.tmr-ds p, li      { color: var(--a-text) }
+       html body small, .meta { color: #93A9C0 }
+       html body label        { color: #C3D6EA }
+
+   That is correct on the navy ground and wrong inside the components that
+   deliberately paint themselves WHITE. On the MLB simulator that is the box
+   score card, the batting and pitching tables, the lineup / active-roster
+   source bars, the scoring-plays block and the play-by-play: measured, the
+   batting numbers were landing at 1.42:1 and the source bars at 1.46:1, i.e.
+   present in the DOM and unreadable on screen.
+
+   THE FIX IS A CONTRACT, NOT A PATCH
+
+   A component that paints itself on a light ground declares itself a light
+   surface (by class, or with data-tmr-surface="light"). Inside that subtree:
+
+     1. the theme's ink TOKENS are redefined to a dark scale, which repairs
+        every var()-driven theme rule with no !important at all; and
+     2. the handful of theme rules that hard-code a pale hex are neutralised
+        with a scoped !important, then the component's own intentional accents
+        (winner green, decision pills, injury orange, links) are restored after
+        them so they win on source order.
+
+   It is sport-agnostic on purpose. The NBA, NFL and NHL simulators are fully
+   dark today, so nothing here changes them; the point is that the next results
+   panel that goes white - in any sport - inherits readable type instead of
+   inheriting the bug.
+
+   Load LAST, after tmr-theme-a.css.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. The light-surface roots.
+   Keep this list additive. A new component opts in either by being named here
+   or by carrying data-tmr-surface="light".
+   -------------------------------------------------------------------------- */
+html body .tmr-light-surface,
+html body [data-tmr-surface="light"],
+html body .box-score-matchup-card,
+html body .box-score-scroll,
+html body .box-score-table,
+html body .player-table-wrap,
+html body .player-box-table,
+html body .player-source-note,
+html body .box-score-honesty,
+html body .player-box-score-content > h4,
+html body .pbp-controls,
+html body .pbp-half,
+html body .pbp-list,
+html body .weather-delay-banner {
+    /* The light ink scale. Every value clears 4.5:1 on #FFFFFF and on the
+       #F1F5F9 / #F8FAFC zebra grounds these components actually use. */
+    --ls-ink: #0B1220;          /* primary: names, totals, final score      */
+    --ls-ink-2: #22304A;        /* stat values, body copy                   */
+    --ls-ink-3: #46536A;        /* meta, positions, lineup slots, captions  */
+    --ls-accent: #0B4FA8;       /* links and interactive text               */
+    --ls-positive: #0F6B3F;     /* winner / good                            */
+    --ls-negative: #A32020;     /* loss / bad                               */
+    --ls-rule: #D3DBE6;
+    --ls-rule-strong: #8FA0B6;
+    --ls-surface: #FFFFFF;
+    --ls-surface-2: #F1F5F9;
+
+    /* Redefining the theme's own tokens is what repairs every var()-driven
+       rule inside the subtree without a single !important. */
+    --a-text: var(--ls-ink-2);
+    --a-muted: var(--ls-ink-3);
+    --tmr-text: var(--ls-ink-2);
+    --tmr-text-soft: var(--ls-ink-2);
+    --tmr-text-strong: var(--ls-ink);
+    --tmr-text-muted: var(--ls-ink-3);
+    --tmr-muted: var(--ls-ink-3);
+    --ink: var(--ls-ink);
+    --ink-2: var(--ls-ink-2);
+    --text: var(--ls-ink-2);
+    --text-2: var(--ls-ink-3);
+    --text-primary: var(--ls-ink);
+    --text-secondary: var(--ls-ink-2);
+    --text-dim: var(--ls-ink-3);
+    --muted: var(--ls-ink-3);
+    --faint: var(--ls-ink-3);
+    --tmrp-text-primary: var(--ls-ink);
+    --tmrp-text-muted: var(--ls-ink-3);
+    --ed-body: var(--ls-ink-2);
+
+    color: var(--ls-ink-2);
+}
+
+/* -----------------------------------------------------------------------------
+   2. Neutralise the theme rules that hard-code a pale hex.
+   These are the only ones that need force, and they are forced only inside a
+   declared light surface.
+   -------------------------------------------------------------------------- */
+html body .tmr-light-surface :is(p, li, dd, small, label, .meta, blockquote),
+html body [data-tmr-surface="light"] :is(p, li, dd, small, label, .meta, blockquote),
+html body .box-score-matchup-card :is(p, li, dd, small, label, .meta),
+html body .pbp-half :is(p, li, dd, small, label, .meta),
+html body .pbp-list :is(p, li, dd, small, label, .meta),
+html body .pbp-controls :is(p, li, dd, small, label, .meta),
+html body .weather-delay-banner :is(p, li, dd, small, label, .meta) {
+    color: var(--ls-ink-2, #22304A);
+}
+
+html body .tmr-light-surface :is(td, th),
+html body [data-tmr-surface="light"] :is(td, th),
+html body .box-score-table :is(td, th),
+html body .player-box-table :is(td, th) {
+    /* Beats `body.tmr-ds table td{color:var(--a-text)}`, `html body th`,
+       `body.tmr-ds table th` and `body.mlb-simulator-page table th`, all of
+       which paint a pale blue straight onto a white table. */
+    color: var(--ls-ink-2, #22304A) !important;
+}
+
+/* Column headers read as a header, not as a whisper. */
+html body .tmr-light-surface thead :is(th, td),
+html body [data-tmr-surface="light"] thead :is(th, td),
+html body .box-score-table thead th,
+html body .player-box-table thead th {
+    color: #22303F !important;
+    font-weight: 900;
+}
+
+/* Row labels - player names, team abbreviations, line-score team cells - are
+   the anchor of every row and carry primary ink. */
+html body .tmr-light-surface tbody th[scope="row"],
+html body [data-tmr-surface="light"] tbody th[scope="row"],
+html body .box-score-table tbody th,
+html body .player-box-table tbody th[scope="row"],
+html body .player-box-table :is(td, th):first-child {
+    color: var(--ls-ink, #0B1220) !important;
+    font-weight: 800;
+}
+
+/* Totals and the R / H / E group are the numbers people actually look for. */
+html body .tmr-light-surface :is(.totals-row, .player-total-row) :is(th, td),
+html body .box-score-table .total-runs,
+html body .player-box-table :is(.totals-row, .player-total-row) :is(th, td) {
+    color: var(--ls-ink, #0B1220) !important;
+    font-weight: 900;
+}
+
+/* Strong / emphasis inside a light surface is primary ink, never theme pale. */
+html body .tmr-light-surface :is(strong, b),
+html body [data-tmr-surface="light"] :is(strong, b),
+html body .box-score-matchup-card :is(strong, b),
+html body .player-source-note :is(strong, b),
+html body .pbp-half :is(strong, b),
+html body .pbp-list :is(strong, b) {
+    color: var(--ls-ink, #0B1220);
+}
+
+/* -----------------------------------------------------------------------------
+   3. Section headers. "Batting", "Pitching", "Scoring Plays & Detail" and the
+   per-team labels were competing with body copy for weight; they now sit a
+   clear step above it and carry a rule so the eye finds the section break.
+   -------------------------------------------------------------------------- */
+html body .tmr-light-surface :is(h2, h3, h4, h5, h6),
+html body [data-tmr-surface="light"] :is(h2, h3, h4, h5, h6),
+html body .box-score-matchup-card :is(h2, h3, h4, h5, h6),
+html body .player-box-score-content > h4 {
+    color: var(--ls-ink, #0B1220) !important;
+}
+
+/* The navy sub-headings inside the dark box-score shell - "Scoring Plays &
+   Detail", "<Team> Batting", "Batting, Baserunning & Fielding", the pitching
+   notes - are the other half of requirement 4: they get the dark-shell primary
+   ink and a rule, not the theme's washed secondary. */
+html body .scoring-detail > h4,
+html body .box-score-detail-section > h4,
+html body .box-score-stat-section > h4,
+html body .espn-box-group > h4,
+html body .player-box-score-heading h3 {
+    color: #EAF1F9 !important;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+}
+
+html body .scoring-detail-block h5,
+html body .batting-fielding-details h5,
+html body .box-score-team-details h5,
+html body .box-score-detail-group h6,
+html body .rm-block h5 {
+    color: #C9D9EC !important;
+}
+
+html body .scoring-detail-list li,
+html body .batting-fielding-details p,
+html body .box-score-team-details p,
+html body .box-score-game-meta p,
+html body .rm-block li,
+html body .bx-mode-legend {
+    color: #C9D9EC !important;
+}
+
+html body .scoring-detail-list li strong,
+html body .batting-fielding-details p strong,
+html body .box-score-team-details p strong,
+html body .bx-mode-legend strong {
+    color: #FFFFFF !important;
+}
+
+html body .player-box-score-content > h4 {
+    border-top: 1px solid var(--ls-rule-strong, #8FA0B6);
+    border-bottom: 1px solid var(--ls-rule-strong, #8FA0B6);
+    background: #E4EAF2;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+}
+
+html body .scoring-detail > h4,
+html body .box-score-detail-section > h4,
+html body .box-score-stat-section > h4,
+html body .espn-box-group > h4 {
+    padding-bottom: 6px;
+    border-bottom: 2px solid rgba(160, 190, 225, 0.45);
+}
+
+/* -----------------------------------------------------------------------------
+   4. Information / source / notice bars. These carried real provenance (which
+   lineup, which roster feed, when it refreshed, and the "this is a simulation"
+   disclaimer) in near-invisible type on a near-white ground. Given a tinted
+   ground, a left rule and dark ink they read as deliberate UI.
+   -------------------------------------------------------------------------- */
+html body .tmr-light-surface .notice,
+html body .tmr-light-surface .info-bar,
+html body [data-tmr-surface="light"] .notice,
+html body .player-source-note,
+html body .box-score-disclaimer,
+html body .lineup-freshness-note,
+html body .box-score-honesty {
+    color: #26344A !important;
+}
+
+html body .box-score-honesty {
+    padding: 6px 10px;
+    border-top: 1px solid var(--ls-rule, #D3DBE6);
+    background: #F4F7FB;
+    font-size: 11px;
+}
+
+/* -----------------------------------------------------------------------------
+   5. Controls sitting on a light surface. .sim-button is authored for the dark
+   panel gradient, so on white it inherited near-white mint. Filled, so the two
+   export actions are obviously actions.
+   -------------------------------------------------------------------------- */
+html body .tmr-light-surface .sim-button,
+html body [data-tmr-surface="light"] .sim-button,
+html body .box-score-panel .sim-button,
+html body .player-box-score-panel .sim-button,
+html body .box-score-panel .sim-button.secondary,
+html body .box-score-panel .compact-action {
+    border: 1px solid #0B5B55;
+    background: #0F766E;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+html body .box-score-panel .sim-button:not(:disabled):hover,
+html body .box-score-panel .sim-button.secondary:not(:disabled):hover,
+html body .tmr-light-surface .sim-button:not(:disabled):hover {
+    border-color: #073F3B;
+    background: #0B5B55;
+    color: #FFFFFF;
+}
+
+html body .box-score-panel .sim-button:disabled,
+html body .tmr-light-surface .sim-button:disabled {
+    border-color: #B8C2D0;
+    background: #EDF1F6;
+    color: #55617A;
+    opacity: 1;
+}
+
+html body .tmr-light-surface a:not([class]),
+html body [data-tmr-surface="light"] a:not([class]),
+html body .box-score-matchup-card a:not([class]),
+html body .pbp-half a:not([class]) {
+    color: var(--ls-accent, #0B4FA8) !important;
+}
+
+html body .tmr-light-surface :is(input, select, textarea),
+html body [data-tmr-surface="light"] :is(input, select, textarea) {
+    color: var(--ls-ink, #0B1220);
+    background: var(--ls-surface, #FFFFFF);
+    border-color: var(--ls-rule-strong, #8FA0B6);
+}
+
+/* -----------------------------------------------------------------------------
+   6. Restore the component's intentional accents. Declared after the blanket
+   rules above so they win on source order at equal specificity - the point of
+   sections 2-5 is to remove the theme's pale wash, not to flatten meaning.
+   -------------------------------------------------------------------------- */
+html body .box-score-table .winner-row .ls-abbr,
+html body .box-score-team-card.winner strong,
+html body .sb-table .sb-row.sb-winner .sb-team strong {
+    color: #0F6B3F !important;
+}
+
+html body .bx-dec-W { color: #14663A !important; }
+html body .bx-dec-L { color: #A0181B !important; }
+html body :is(.bx-dec-SV, .bx-dec-S, .bx-dec-H, .bx-dec-HLD) { color: #1A45B8 !important; }
+
+html body .lineup-status-chip[data-lineup-status="confirmed"] { color: #14532D !important; }
+html body .lineup-status-chip[data-lineup-status="posted"] { color: #6B3D07 !important; }
+html body .lineup-status-chip[data-lineup-status="fallback"] { color: #8A1616 !important; }
+
+html body .bx-sub-arrow { color: #7A5410 !important; }
+/* Roster moves sit on the navy shell, not on a white card, so this tag keeps a
+   light amber rather than the light-surface brown. */
+html body .rm-sim-tag { color: #F0A35E !important; }
+html body .pbp-list li.pbp-scoring .pbp-text { color: #0E2B1B !important; }
+html body .pbp-list li.pbp-sub .pbp-text { color: #4A3208 !important; }
+html body .pbp-list li.pbp-injury .pbp-text { color: #5C2408 !important; }
+html body .pbp-list li.pbp-ejection .pbp-text { color: #6B1410 !important; }
+html body .weather-delay-banner .wdb-head { color: #5C3F05 !important; }
+html body .weather-delay-banner[data-outcome="suspended"] .wdb-head { color: #7A1B1B !important; }
+html body .weather-delay-banner[data-outcome="official"] .wdb-head { color: #10203F !important; }
+html body .box-score-final.box-score-suspended .bsf-final { color: #7A1B1B !important; }
+
+/* Muted-by-design details keep their step down, but a readable one. */
+html body .player-box-table .bx-pos,
+html body .bx-pos,
+html body .bx-slot,
+html body .pbp-meta,
+html body .pbp-playback-status,
+html body .pbp-half-summary,
+html body .box-score-final .bsf-final,
+html body .scoring-detail-empty {
+    color: #46536A !important;
+}
+
+html body .box-score-summary-head span { color: #C9D9EC !important; }
+html body .scoring-detail .scoring-detail-empty { color: #A9BCD4 !important; }
+
+html body .player-box-table .bx-season {
+    color: #3E4A63 !important;
+}
+
+/* -----------------------------------------------------------------------------
+   7. Two finishing calls made against the rendered page rather than the source.
+
+   7a. The line score is the first thing anyone reads. Its inning cells were
+   sitting on secondary ink; on a white ground with 11px tabular figures that is
+   still a squint at 125% Windows scaling, so the whole grid takes primary ink
+   and the R / H / E group is separated by weight as well as by its rule.
+   -------------------------------------------------------------------------- */
+html body .box-score-table tbody :is(td, th) {
+    color: #0B1220 !important;
+}
+
+html body .box-score-table :is(th, td):nth-last-child(-n + 3) {
+    color: #0B1220 !important;
+    font-weight: 900;
+}
+
+html body .box-score-table thead th {
+    color: #1B2838 !important;
+}
+
+/* 7b. tmr-theme-a gives display headings a gradient painted through
+   background-clip:text and then sets -webkit-text-fill-color to the pale
+   secondary, which on the box-score header bar reads as a smudge rather than
+   as the panel's title. Solid white, so the section announces itself. */
+html body .box-score-heading h2,
+html body .player-box-score-heading h3 {
+    -webkit-text-fill-color: #FFFFFF;
+    color: #FFFFFF;
+}
+
+/* -----------------------------------------------------------------------------
+   8. PAPER IS A LIGHT SURFACE.
+
+   PRE-EXISTING, found while verifying this work and reproduced on a pristine
+   origin/main worktree: tests/nba-nhl-simulator-integrity-test.cjs asserts that
+   the NBA and NHL simulators print on a light ground, and it fails with
+   rgb(2, 5, 10). tmr-sim-arena.css does say `@media print { body { background:
+   #fff !important } }`, but that selector is (0,0,1) and tmr-theme-a.css paints
+   `html body.tmr-ds-shell { background:#02050A !important }` at (0,1,2), so the
+   theme wins and a printed box score comes out black on black - the same bug
+   this file exists to fix, one medium over.
+
+   Fixed here rather than in tmr-sim-arena.css because this is the theme-level
+   light-surface contract and because it must outrank tmr-theme-a, which means
+   matching its specificity and loading after it. Print media only: nothing here
+   can change a single pixel on screen.
+   -------------------------------------------------------------------------- */
+@media print {
+  html:has(body.tmr-ds), html:has(body.tmr-ds-shell), html:has(body.tmr-light),
+  html body.tmr-ds, html body.tmr-ds-shell, html body.tmr-theme-a,
+  html body.tmr-light, html body[data-tmr-route], html body.mlb-simulator-page,
+  html body.mlb-sim-season-page, html body.simhist-page, html body {
+    background: #FFFFFF !important;
+    color: #0B1220 !important;
+  }
+
+  /* The theme's pale ink scale is correct on navy and invisible on paper. */
+  html body :is(p, li, dd, dt, small, span, strong, b, em, td, th, caption,
+                h1, h2, h3, h4, h5, h6, .meta, .disc, .note) {
+    color: #0B1220 !important;
+  }
+
+  html body :is(.panel, .card, .mh, .tablewrap, table, thead th, tbody td,
+                .box-score-panel, .player-box-score-panel) {
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+  }
+
+  html body :is(table, thead th, tbody td, tbody th) {
+    border-color: #9AA6B8 !important;
+  }
+}
