@@ -32,10 +32,31 @@ Tools in this tree:
 - Verified: contrast sweep clean, market tabs switch, league rail intact,
   clicking a price still adds the selection to the pick slip, no page errors.
 
+### 2. /forum/  (2026-08-31)
+Structure, nav, sidebar and workflow untouched. Styling only.
+- The forum was still on the pre-theme gold identity while the rest of the site
+  is electric blue: the TMR mark, the Main Site pill, Register, the active nav
+  tab underline and every forum row icon. All on the blue ramp now. Main Site is
+  an outlined pill so it stops competing with Register. The gold OFFICIAL badge
+  and the TMR Coin tip amounts stay gold, they are semantic.
+- `.fbtn.is-primary` had been repainted electric blue but kept `color:#3a2c00`
+  and a gold border, so its label was brown on blue.
+- The shared footer is appended outside `.fshell`, so it never picked up the
+  offset that clears the fixed 250px rail. The rail covered the footer's brand
+  column and the legal line. Offset mirrored, dropped under 900px like the shell.
+- Last-post column: thread titles were `#1a1a1a` and the by-line `#767676` on the
+  near-black table, both light-theme leftovers. Now `#E8EFF8` / `#93AEC7`, hover
+  electric blue.
+- Verified: contrast sweep 0 fails, 12 category rows, 11 category links, 34
+  sidebar links, new-thread and search controls present, stats render, footer
+  brand clears the rail at x=273, no page errors.
+
 ## Next up (visibly damaged, not yet fixed)
-- /forum/ - still the legacy gold/amber theme, own nav and sidebar.
-- /contest/ - contest card stat values render with a broken textured fill.
-- /matchup-of-the-day/, /trendspotter/, /leaderboard/ - not yet inspected in detail.
+- /contest/ - contest card stat values, Register CTA is teal not blue.
+- /matchup-of-the-day/, /trendspotter/, /leaderboard/, /marketplace/ - not yet
+  inspected in detail.
+- /profile/ also loads tmr-redesign-overrides.css, so it picked up the blue
+  accent from step 1. Not yet visually verified (needs a signed-in session).
 
 ## Known false positive
 `nav.ds-logo span.mk` reports 1:1 in the sweep. It is gradient text with
