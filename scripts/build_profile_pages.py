@@ -80,12 +80,16 @@ _DS_CSS, _DS_USER_CSS, _DS_NAV, _HYDRATE = _ds_assets()
 DS_HEAD = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900'
+    '<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Barlow+Condensed:wght@600;700;800;900'
     '&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">\n'
     f'<link rel="stylesheet" href="{_DS_CSS}">\n'
     f'<link rel="stylesheet" href="{_DS_USER_CSS}">\n'
     # NAV_20260721: shared breadcrumb / related-links / footer component.
-    '<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">'
+    '<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">\n'
+    # NAVBAR_20260831: the one approved navbar. Without it these pages rendered
+    # the shared header at the design system's unscaled size in Inter 13px -- a
+    # visibly different bar from every other page on the site.
+    '<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=1">'
 )
 # Shared nav + footer, so these pages are no longer chrome-less dead ends.
 #
