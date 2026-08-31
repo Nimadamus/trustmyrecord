@@ -1106,11 +1106,14 @@ TEMPLATE = """<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/tmr-ds.css">
 <link rel="stylesheet" href="/static/css/tmr-article.css">
+<!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css">
 <script type="application/ld+json">
 {jsonld}
 </script>
 </head>
-<body class="tmr-ds tmr-ds--dark">
+<body class="tmr-ds tmr-ds--dark tmr-theme-a">
 <main class="ed" style="--ed-away:{away_color};--ed-home:{home_color}{logo_vars}">
 
   <header class="ed-hero">
