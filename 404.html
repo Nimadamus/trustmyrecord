@@ -29,7 +29,9 @@
             background:
                 radial-gradient(circle at 10% 0%, rgba(11, 79, 168,0.12), transparent 30%),
                 linear-gradient(180deg, #FFFFFF, #FFFFFF);
-            color: #DCE7F4;
+            /* The ground here is white; this ink is left over from the dark
+               original, so the h1 that inherits it sat at 1.0:1. */
+            color: #0A1B2E;
             font-family: 'Inter', sans-serif;
         }
 
@@ -45,7 +47,7 @@
             text-align: center;
         }
 
-        .nf-links a{color:#7FB6FF;text-decoration:none;margin:0 2px;}
+        .nf-links a{color:#0B4FA8;text-decoration:none;margin:0 2px;}
         .redirect-kicker {
             display: inline-flex;
             align-items: center;
@@ -54,7 +56,7 @@
             border-radius: 999px;
             border: 1px solid rgba(11, 79, 168,.28);
             background: rgba(11, 79, 168,0.1);
-            color: #DCE7F4;
+            color: #0B4FA8;
             font-size: 0.72rem;
             font-weight: 800;
             letter-spacing: 0.1em;
@@ -71,10 +73,20 @@
 
         p {
             margin: 0;
-            color: #C3D6EA;
+            color: #3C5468;
             font-size: 0.96rem;
             line-height: 1.65;
         }
+
+        /* The shared theme sheet loads after this block and paints h1-h5 and
+           anchors for the dark shell, which this page is not: its ground and
+           its card are both literal #FFFFFF. Pinned here so the heading is
+           not white on white. */
+        body.tmr-light h1,
+        body.tmr-light .redirect-shell h1{ color:#0A1B2E !important; -webkit-text-fill-color:#0A1B2E !important; background:none !important; }
+        body.tmr-light .redirect-shell p{ color:#3C5468 !important; }
+        body.tmr-light .redirect-kicker{ color:#0B4FA8 !important; }
+        body.tmr-light .nf-links a{ color:#0B4FA8 !important; }
     </style>
     <script>
         // Route known legacy SPA-style paths directly to the real multipage site.
@@ -197,7 +209,7 @@
 <script defer src="/static/js/tmr-linkhub.js?v=624f44f1bbc7"></script>
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=176aced6d958">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=ca015f4a580f">
 </head>
 <body class="tmr-light">
     <div class="redirect-shell">
