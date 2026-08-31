@@ -83,6 +83,72 @@ async function openList(page) {
   }, { timeout: 90_000, intervals: [400] }).toBe(true);
 }
 
+/**
+ * The initialisation race.
+ *
+ * The page finishes loading in stages -- auth, entitlement, coverage, the team
+ * lists, the filter library -- and on a first visit the service worker claims
+ * the page a beat after that. This test deliberately does NOT use the settling
+ * helpers above: it selects the instant the control allows it, then sits
+ * through every late arrival, and asserts nothing was taken back.
+ *
+ * It also counts main-frame navigations. The reload this test exists for was a
+ * `controllerchange` reload fired by the worker's first claim, so one
+ * navigation is a pass and two is the bug.
+ */
+test('a choice made as early as the UI allows survives every late load', async ({ page }) => {
+  test.setTimeout(300_000);
+  const navigations = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) navigations.push(frame.url());
+  });
+  const calls = [];
+  await openApp(page, calls);
+
+  // The earliest the UI permits: the team selects are disabled and read
+  // "Loading…" until the list lands, so this is the first possible moment.
+  await expect(page.locator('#mAway')).toBeEnabled({ timeout: 120_000 });
+  await page.locator('#mAway').selectOption('New York Yankees');
+  await page.locator('#mHome').selectOption('Boston Red Sox');
+
+  // Now sit through everything that lands late: the entitlement call, the
+  // filter library, the coverage, the free preview, and the service worker
+  // taking control of a page that was not controlled when it loaded.
+  await page.waitForLoadState('networkidle', { timeout: 120_000 }).catch(() => {});
+  await page.waitForTimeout(8_000);
+
+  expect(navigations.length, `main-frame navigations: ${navigations.join(', ')}`).toBe(1);
+  await expect(page.locator('#mAway')).toHaveValue('New York Yankees');
+  await expect(page.locator('#mHome')).toHaveValue('Boston Red Sox');
+  await expect(page.locator('#addCond')).toBeEnabled();
+
+  // A situation added the instant it is unlocked must be just as durable.
+  await page.locator('#addCond').click();
+  await add(page, 't1|prev_result').click();
+  const prev = row(page, 't1|prev_result');
+  await expect(prev).toHaveCount(1);
+  await prev.locator('select').selectOption('loss');
+
+  await page.waitForLoadState('networkidle', { timeout: 120_000 }).catch(() => {});
+  await page.waitForTimeout(8_000);
+
+  expect(navigations.length).toBe(1);
+  await expect(page.locator('#mAway')).toHaveValue('New York Yankees');
+  await expect(page.locator('#condList .cond')).toHaveCount(1);
+  await expect(prev.locator('select')).toHaveValue('loss');
+  await expect(page.locator('#filterCount')).toContainText('1 situation');
+
+  // And the report still runs off exactly what is on screen.
+  await page.locator('#mSubmit').click();
+  await expect(page.locator('#mResult')).toBeVisible({ timeout: 240_000 });
+  await expect.poll(() => calls.length, { timeout: 240_000 }).toBeGreaterThan(0);
+  expect(calls.at(-1)).toMatchObject({
+    team_1: 'New York Yankees', team_2: 'Boston Red Sox',
+    team_1_filters: { prev_result: 'loss' },
+  });
+  expect(navigations.length).toBe(1);
+});
+
 test('the locked state explains itself, and lifts the moment the matchup is valid', async ({ page }) => {
   test.setTimeout(180_000);
   await openApp(page);
