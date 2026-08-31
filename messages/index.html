@@ -22,20 +22,26 @@
            override, no !important color fights. Email-style 3-column layout.
            ============================================================ */
         :root {
+            /* Dark inbox ink ramp. The light-theme conversion left navy ink
+               (#07182A) on navy surfaces here after the surfaces were re-darkened,
+               which made received bubbles ~1.05:1. These are the dark-ground values. */
             --msg-bg: #02050A;
-            --msg-surface: #0E1620;
-            --msg-surface-2: #121C28;
-            --msg-surface-3: #121C28;
-            --msg-border: #D2DEEA;
-            --msg-border-strong: #D2DEEA;
-            --msg-text: #07182A;
-            --msg-text-soft: #07182A;
-            --msg-text-muted: #2E4459;
-            --msg-accent: #0B4FA8;
-            --msg-accent-soft: rgba(11, 79, 168,0.14);
-            --msg-accent-line: rgba(11, 79, 168,.28);
-            --msg-sent: #1E5BBF;
-            --msg-danger: #BC372E;
+            --msg-surface: #0B131C;
+            --msg-surface-2: #16222F;
+            --msg-surface-3: #223448;
+            --msg-border: #2A3D52;
+            --msg-border-strong: #3C556F;
+            --msg-text: #EAF2FB;
+            --msg-text-soft: #C4D6E8;
+            --msg-text-muted: #93AAC2;
+            --msg-accent: #2E9BFF;
+            --msg-accent-strong: #5FB4FF;
+            --msg-accent-soft: rgba(46,155,255,0.16);
+            --msg-accent-line: rgba(46,155,255,.55);
+            --msg-sent: #0F5DC4;
+            --msg-sent-ink: #FFFFFF;
+            --msg-sent-meta: #DCEBFF;
+            --msg-danger: #FF6A5E;
             --msg-radius: 8px;
             --msg-radius-lg: 10px;
             --msg-nav-w: 208px;
@@ -115,9 +121,9 @@
             cursor: pointer;
             transition: background 0.15s, transform 0.05s;
         }
-        .msg-compose-btn:hover { background: #DEF4F2; }
+        .msg-compose-btn:hover { background: #5FB4FF; }
         .msg-compose-btn:active { transform: translateY(1px); }
-        .msg-compose-btn:focus-visible { outline: 2px solid rgba(11, 79, 168,.28); outline-offset: 2px; }
+        .msg-compose-btn:focus-visible { outline: 2px solid var(--msg-accent-strong); outline-offset: 2px; }
 
         .msg-folder {
             display: flex;
@@ -323,6 +329,7 @@
 
         .msg-thread {
             flex: 1;
+            background: var(--msg-bg);
             min-height: 0;
             overflow-y: auto;
             overscroll-behavior: contain;
@@ -351,17 +358,23 @@
         .msg-bubble.received {
             align-self: flex-start;
             background: var(--msg-surface-3);
-            border: 1px solid var(--msg-border);
+            border: 1px solid var(--msg-border-strong);
+            border-left: 3px solid var(--msg-accent);
             color: var(--msg-text);
             border-bottom-left-radius: 3px;
         }
         .msg-bubble.sent {
             align-self: flex-end;
             background: var(--msg-sent);
-            color: #DCE7F4;
+            border: 1px solid var(--msg-accent-line);
+            color: var(--msg-sent-ink);
             border-bottom-right-radius: 3px;
         }
-        .msg-bubble-time { font-size: 0.68rem; margin-top: 4px; opacity: 0.7; }
+        .msg-bubble.received a { color: var(--msg-accent-strong); }
+        .msg-bubble.sent a { color: var(--msg-sent-meta); }
+        .msg-bubble-time { font-size: 0.68rem; margin-top: 4px; font-weight: 600; }
+        .msg-bubble.received .msg-bubble-time { color: var(--msg-text-muted); }
+        .msg-bubble.sent .msg-bubble-time { color: var(--msg-sent-meta); }
         .msg-bubble.sent { position: relative; }
         .msg-bubble.received { position: relative; }
         /* Message action buttons live INSIDE the bubble so they are never clipped by
@@ -374,13 +387,22 @@
         .msg-bubble-delete, .msg-bubble-react, .msg-bubble-reply {
             width: 22px; height: 22px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            background: rgba(7,24,42,0.034); border: 1px solid #D2DEEA;
-            color: inherit; cursor: pointer; padding: 0;
-            font-size: 0.8rem; line-height: 1; opacity: 0.55;
-            transition: opacity 0.12s ease;
+            background: rgba(0,0,0,0.30); border: 1px solid rgba(255,255,255,0.55);
+            color: var(--msg-sent-ink); cursor: pointer; padding: 0;
+            font-size: 0.8rem; line-height: 1; opacity: 0.8;
+            transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
         }
         .msg-bubble.received .msg-bubble-delete, .msg-bubble.received .msg-bubble-react, .msg-bubble.received .msg-bubble-reply {
-            background: var(--msg-surface-2); border-color: var(--msg-border); color: var(--msg-text-muted);
+            background: #0E1B27; border-color: var(--msg-border-strong); color: var(--msg-text-soft);
+        }
+        .msg-bubble.received .msg-bubble-delete:hover, .msg-bubble.received .msg-bubble-react:hover, .msg-bubble.received .msg-bubble-reply:hover {
+            background: var(--msg-accent-soft); border-color: var(--msg-accent); color: var(--msg-accent-strong);
+        }
+        .msg-bubble.sent .msg-bubble-delete:hover, .msg-bubble.sent .msg-bubble-react:hover, .msg-bubble.sent .msg-bubble-reply:hover {
+            background: rgba(0,0,0,0.46); border-color: #FFFFFF;
+        }
+        .msg-bubble-delete:focus-visible, .msg-bubble-react:focus-visible, .msg-bubble-reply:focus-visible {
+            opacity: 1; outline: 2px solid var(--msg-accent-strong); outline-offset: 1px;
         }
         .msg-bubble:hover .msg-bubble-delete, .msg-bubble:hover .msg-bubble-react, .msg-bubble:hover .msg-bubble-reply,
         .msg-bubble:focus-within .msg-bubble-delete, .msg-bubble:focus-within .msg-bubble-react, .msg-bubble:focus-within .msg-bubble-reply { opacity: 1; }
@@ -397,18 +419,18 @@
         .msg-reply-quote {
             display: block; width: 100%; text-align: left;
             margin: 0 0 6px; padding: 5px 8px;
-            background: rgba(7,24,42,0.032);
+            background: rgba(255,255,255,0.10);
             border: none; border-left: 3px solid currentColor;
             border-radius: 6px; color: inherit; font: inherit;
             cursor: pointer; opacity: 0.85;
         }
-        .msg-bubble.received .msg-reply-quote { background: rgba(7,24,42,0.021); }
+        .msg-bubble.received .msg-reply-quote { background: rgba(255,255,255,0.07); }
         .msg-reply-quote:hover { opacity: 1; }
         .msg-reply-quote.unavailable { cursor: default; font-style: italic; }
         .msg-reply-quote-name { display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 1px; }
         .msg-reply-quote-text {
             display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-            overflow: hidden; font-size: 0.78rem; line-height: 1.35; opacity: 0.9;
+            overflow: hidden; font-size: 0.78rem; line-height: 1.35;
         }
         /* The bubble reserves right padding for the action buttons; the quote
            drops below them and reclaims that width so less of it truncates. */
@@ -424,7 +446,7 @@
         .msg-reaction-chip {
             display: inline-flex; align-items: center; gap: 3px;
             font-size: 0.72rem; padding: 1px 7px; border-radius: 12px;
-            background: rgba(7,24,42,0.022); border: 1px solid transparent;
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
             cursor: pointer; color: inherit; line-height: 1.5;
         }
         .msg-reaction-chip.mine { border-color: currentColor; }
@@ -432,13 +454,13 @@
             position: fixed; z-index: 300; display: flex; gap: 2px;
             background: var(--msg-surface-3); border: 1px solid var(--msg-border);
             border-radius: 18px; padding: 4px 6px;
-            box-shadow: 0 6px 18px rgba(7,24,42,0.1);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
         }
         .msg-react-palette button {
             background: none; border: none; font-size: 1.05rem; line-height: 1;
             cursor: pointer; padding: 3px 5px; border-radius: 8px;
         }
-        .msg-react-palette button:hover { background: rgba(7,24,42,0.028); }
+        .msg-react-palette button:hover { background: rgba(255,255,255,0.14); }
         .msg-bubble-time { display: flex; align-items: center; gap: 4px; }
         .msg-bubble.sent .msg-bubble-time { justify-content: flex-end; }
         .msg-ticks { display: inline-flex; align-items: center; opacity: 0.75; }
@@ -487,9 +509,9 @@
             cursor: pointer;
             transition: background 0.13s;
         }
-        .send-btn:hover { background: #DEF4F2; }
+        .send-btn:hover { background: #5FB4FF; }
         .send-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-        .send-btn:focus-visible { outline: 2px solid rgba(11, 79, 168,.28); outline-offset: 2px; }
+        .send-btn:focus-visible { outline: 2px solid var(--msg-accent-strong); outline-offset: 2px; }
         .composer-hint { grid-area: tools; align-self: center; font-size: 0.72rem; color: var(--msg-text-muted); }
 
         /* Reply-to strip above the composer */
@@ -579,7 +601,7 @@
             border: 1px solid var(--msg-border-strong);
             border-radius: 14px;
             padding: 22px;
-            box-shadow: 0 30px 80px rgba(7,24,42,0.1);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7);
         }
         .modal h3 { font-family: 'Barlow','Inter',sans-serif; color: var(--msg-text); font-size: 1.15rem; }
         .modal-input {
@@ -603,7 +625,7 @@
         .modal-btn.secondary { background: var(--msg-surface-3); color: var(--msg-text-soft); }
         .modal-btn.secondary:hover { color: var(--msg-text); }
         .modal-btn.primary { background: var(--msg-accent); color: #04121f; }
-        .modal-btn.primary:hover { background: #DEF4F2; }
+        .modal-btn.primary:hover { background: #5FB4FF; }
         .modal-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .modal-close {
             background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer;
