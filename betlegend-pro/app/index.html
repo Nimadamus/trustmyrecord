@@ -1199,9 +1199,12 @@
             return spec.label + ': ' + v;
         }
         if (spec.kind === 'range') {
-            if (v.min != null && v.max != null) return spec.label + ' ' + v.min + '–' + v.max;
-            if (v.min != null) return spec.label + ' ' + v.min + '+';
-            return spec.label + ' up to ' + v.max;
+            if (v.min != null && v.max != null) {
+                return v.min === v.max ? spec.label + ' of exactly ' + v.min
+                    : spec.label + ' between ' + v.min + ' and ' + v.max;
+            }
+            if (v.min != null) return spec.label + ' of ' + v.min + ' or more';
+            return spec.label + ' of ' + v.max + ' or less';
         }
         return spec.label + ': ' + v;
     }
@@ -1730,26 +1733,26 @@
         return body;
     }
 
-    /** Carry the team total across a sport change only when it still means
-     *  something there; otherwise clear it and say why, rather than leaving
-     *  4.5 runs sitting on a Warriors/Lakers matchup as 4.5 points. */
+    /** A team total does not survive a sport change, and the reader is told.
+     *
+     *  The line is a number of RUNS in MLB, GOALS in NHL and POINTS in the NBA
+     *  and NFL, and the team it points at belongs to the league it was chosen
+     *  in. 4.5 happens to be inside the NFL band as well as the MLB one, which
+     *  is exactly why "keep it if it still validates" is the wrong rule: it
+     *  would leave 4.5 runs sitting on a 49ers matchup as 4.5 points, valid
+     *  and meaningless. So it is always cleared -- and always explained,
+     *  because a value vanishing without a word is the thing we are fixing. */
     function carryTeamTotalAcrossSport(fromSport) {
-        var line = parseFloat(ttLine.value);
-        var wasOn = !!ttTeam.value;
-        if (!wasOn && !isFinite(line)) { ttNote.hidden = true; return; }
+        var line = ttLine.value;
+        if (!ttTeam.value && !line) { ttNote.hidden = true; return; }
         var band = ttBand();
-        if (isFinite(line) && (line < band[0] || line > band[1])) {
-            ttTeam.value = ''; ttLine.value = ''; ttOdds.value = '';
-            ttNote.textContent = 'Team total cleared: ' + line + ' is a ' + fromSport
-                + ' number, and ' + mSport.value + ' team totals run '
-                + band[0] + ' to ' + band[1] + ' ' + ttNoun() + '.';
-            ttNote.hidden = false;
-            return;
-        }
-        // Still a plausible line here, so it is kept -- but the team it points
-        // at belonged to the other league, so the side is re-read from the new
-        // matchup rather than assumed.
-        ttNote.hidden = true;
+        ttTeam.value = ''; ttLine.value = ''; ttOdds.value = ''; ttSide.value = 'under';
+        ttNote.textContent = 'Team total cleared. ' + (line ? line + ' was a ' + fromSport + ' number; ' : '')
+            + mSport.value + ' team totals are ' + ttNoun() + ', usually '
+            + (mSport.value === 'NBA' ? '95 to 130' : mSport.value === 'NFL' ? '14 to 34'
+                : mSport.value === 'NHL' ? '1.5 to 4.5' : '3 to 6')
+            + ' — enter the number you are being offered.';
+        ttNote.hidden = false;
     }
 
     var lastSport = mSport.value;
