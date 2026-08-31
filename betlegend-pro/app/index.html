@@ -149,7 +149,7 @@
                 <p>BetLegend Pro is a historical matchup research tool. Pick two teams and search their
                 head-to-head history in our graded-game database. See the complete matchup history, or
                 narrow it with situational filters to see how those two teams actually performed under
-                specific conditions. Everything it returns is games that have already been played &mdash;
+                specific situations. Everything it returns is games that have already been played &mdash;
                 it is research, not a prediction, and not a guarantee of any result.</p>
             </div>
 
@@ -177,15 +177,15 @@
                         <li><b>3</b><span><strong>Choose the history.</strong> The widest option is
                             <em id="howSince">since the first year on file</em>; you can narrow it to a
                             single season or an exact date range.</span></li>
-                        <li><b>4</b><span><strong>Add filters &mdash; optional.</strong> With none, you get
+                        <li><b>4</b><span><strong>Add situations &mdash; optional.</strong> With none, you get
                             <strong>every</strong> qualifying meeting in that period. Each one you add
                             narrows the sample: day or night, coming off a win or a loss, win and losing
                             streaks, days of rest, starting-pitcher handedness, previous-game scoring,
-                            moneyline range. Only conditions this sport's data can actually answer are
+                            moneyline range. Only situations this sport's data can actually answer are
                             offered.</span></li>
                         <li><b>5</b><span><strong>Run the report.</strong> It returns the qualifying games
                             with both teams' records, win percentage, scoring, and the exact period and
-                            conditions it searched.</span></li>
+                            situations it searched.</span></li>
                     </ol>
                     <p class="intro-note"><strong>Sample size matters.</strong> Every filter you add makes
                     the sample smaller. 7-1 and 70-10 are not the same evidence, so read the qualifying
@@ -250,7 +250,7 @@
                         <span class="prog-sep" aria-hidden="true"></span>
                         <span class="prog-step" data-step="period"><b>2</b>Period</span>
                         <span class="prog-sep" aria-hidden="true"></span>
-                        <span class="prog-step" data-step="filters"><b>3</b>Conditions</span>
+                        <span class="prog-step" data-step="filters"><b>3</b>Situations</span>
                         <span class="prog-sep" aria-hidden="true"></span>
                         <span class="prog-step" data-step="results"><b>4</b>Results</span>
                         <span class="prog-spacer"></span>
@@ -354,36 +354,48 @@
                             </div>
                         </section>
 
-                        <!-- ================================ 3. OPTIONAL CONDITIONS ==
-                             Added one at a time from a searchable picker, never a
-                             permanent wall of controls: a matchup with no conditions is
-                             already a complete query, and the panel should look like it.
-                             A condition about a team is added FOR a named team -- "one
+                        <!-- ============================== 3. SITUATIONAL FILTERS ==
+                             Added one at a time from a searchable list of NAMES, never
+                             a permanent wall of controls: a matchup with no situations
+                             is already a complete query, and the panel should look like
+                             it. A situation's controls do not exist until it is chosen.
+                             A situation about a team is added FOR a named team -- "one
                              day of rest" is meaningless on a two-team report until it
-                             says whose. -->
+                             says whose.
+
+                             The locked state is STATED, not merely disabled. A greyed
+                             out button with a six-word grey hint beside it reads as
+                             broken software; the same button inside a sentence that
+                             says what to do next reads as a door that is not open yet. -->
                         <section class="card">
                             <div class="card-head">
                                 <div class="ftools">
-                                    <h2>Optional conditions</h2>
+                                    <h2>Situational filters</h2>
                                     <span class="meta" id="filterCount">None</span>
                                     <span class="spacer"></span>
                                     <button class="linkbtn" id="clearAll" type="button" hidden>Remove all</button>
                                 </div>
                             </div>
                             <div class="card-body">
-                                <p class="note-s" id="condIntro">No conditions. The report will list
-                                <strong>every</strong> historical meeting between these two teams in the selected
-                                period &mdash; the simplest and most common question this tool answers.</p>
+                                <p class="note-s" id="condIntro">Optional. Add a situation to narrow the
+                                matchup &mdash; with none, the report lists <strong>every</strong> historical
+                                meeting between these two teams in the selected period, which is the simplest
+                                and most common question this tool answers.</p>
+                                <p class="cond-active-h" id="condActiveH" hidden>Active situations</p>
                                 <div class="condlist" id="condList"></div>
                                 <div class="condadd">
+                                    <div class="condlock" id="addCondHint">
+                                        <span class="condlock-i" aria-hidden="true">&#128274;</span>
+                                        <span class="condlock-t">Choose two different teams above to unlock
+                                        situational filters.</span>
+                                    </div>
                                     <button class="btn" id="addCond" type="button" aria-expanded="false"
-                                            aria-describedby="addCondHint" disabled>+ Add condition</button>
-                                    <span class="meta" id="addCondHint">Choose both teams first.</span>
-                                    <div class="condmenu" id="condMenu" hidden role="dialog" aria-label="Add a condition">
+                                            aria-describedby="addCondHint" disabled>+ Add Situation</button>
+                                    <div class="condmenu" id="condMenu" hidden role="dialog" aria-label="Add a situation">
                                         <div class="condmenu-head">
-                                            <label class="sr" for="filterSearch">Search conditions</label>
+                                            <label class="sr" for="filterSearch">Search situations</label>
                                             <input class="search" id="filterSearch" type="search"
-                                                   placeholder="Search conditions &mdash; rest, streak, night game, moneyline&hellip;" autocomplete="off">
+                                                   placeholder="Search situations &mdash; rest, streak, night game, moneyline&hellip;" autocomplete="off">
                                             <button class="linkbtn" id="condClose" type="button">Close</button>
                                         </div>
                                         <div class="condmenu-body" id="condOptions"></div>
@@ -411,7 +423,7 @@
                             </div>
                             <div class="card-body">
                                 <p class="note-s">How often one side cleared a number, in whatever sample your
-                                conditions leave. This does not narrow the report &mdash; it reads it.
+                                situations leave. This does not narrow the report &mdash; it reads it.
                                 Add a price and it also works out the break even that price demands.</p>
                                 <div class="ttgrid">
                                     <div class="ttfield">
@@ -1046,20 +1058,27 @@
                 + '<span class="cond-label">' + esc(r.spec.label) + '</span>'
                 + '<span class="spacer"></span>'
                 + '<button type="button" class="cond-x" data-remove="' + esc(r.key) + '" '
-                + 'aria-label="Remove condition: ' + esc(r.spec.label) + (team ? ' for ' + esc(team) : '') + '">&times;</button>'
+                + 'aria-label="Remove situation: ' + esc(r.spec.label) + (team ? ' for ' + esc(team) : '') + '">&times;</button>'
                 + '</div>'
                 + '<div class="cond-body">' + renderControl(r.spec, r.bucket) + '</div>'
                 + (r.spec.help ? '<p class="cond-help">' + esc(r.spec.help) + '</p>' : '')
                 + (r.spec.available === false
                     ? '<p class="cond-warn">' + esc(r.spec.unavailable_reason
-                        || ('Not offered for ' + mSport.value + '.')) + ' This condition will not be sent.</p>'
+                        || ('Not offered for ' + mSport.value + '.')) + ' This situation will not be sent.</p>'
                     : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
-                           : '<p class="cond-warn">Set a value &mdash; until then this condition is not part of the query.</p>'))
+                           : '<p class="cond-warn">Set a value &mdash; until then this situation is not part of the query.</p>'))
                 + '</div>';
         }).join('');
 
         $('clearAll').hidden = rows.length === 0;
+        $('condActiveH').hidden = rows.length === 0;
         $('condIntro').hidden = rows.length > 0;
+        // A situation removed returns to the list at once. Repainted whether
+        // the list is open or not: a click on a remove button lands OUTSIDE
+        // the popover, so the document handler hides it first and a repaint
+        // guarded on 'is it open' would leave the row greyed out in stale
+        // markup the next time it is opened.
+        renderCondMenu();
         syncSetup(); scheduleReview(); scheduleTrail();
     }
 
@@ -1069,13 +1088,13 @@
     function renderCondMenu() {
         var box = $('condOptions');
         if (!library) {
-            box.innerHTML = '<p class="empty-note">Loading the condition library&hellip;</p>';
+            box.innerHTML = '<p class="empty-note">Loading the situation library&hellip;</p>';
             return;
         }
         var groups = menuGroups();
         if (!groups.length) {
-            box.innerHTML = '<p class="empty-note">No condition matches that search. This database supports '
-                + 'only the conditions listed here &mdash; nothing is estimated or substituted.</p>';
+            box.innerHTML = '<p class="empty-note">No situation matches that search. This database supports '
+                + 'only the situations listed here &mdash; nothing is estimated or substituted.</p>';
             return;
         }
         box.innerHTML = groups.map(function (g) {
@@ -1265,7 +1284,7 @@
             library = lib;
         } catch (err) {
             library = null;
-            $('condOptions').innerHTML = '<p class="empty-note">The condition library could not be loaded, so '
+            $('condOptions').innerHTML = '<p class="empty-note">The situation library could not be loaded, so '
                 + 'only the unfiltered report is available right now.</p>';
             $('coverLine').textContent = 'Database coverage could not be read right now. The report still '
                 + 'searches every year on file.';
@@ -1392,7 +1411,7 @@
         reads.className = set ? 'cond-reads' : 'cond-warn';
         reads.textContent = set
             ? 'Reads as: ' + chipFor(spec, filters[key])
-            : 'Set a value — until then this condition is not part of the query.';
+            : 'Set a value — until then this situation is not part of the query.';
     }
 
     $('condList').addEventListener('change', function (ev) {
@@ -1742,6 +1761,9 @@
         // sitting live and adding a condition about "Away team".
         var bothPicked = !!away && !!home && away !== home;
         $('addCond').disabled = !bothPicked;
+        // The lock is a stated sentence, not a grey aside: it appears the
+        // moment the matchup is incomplete or invalid and disappears the
+        // instant two different teams are chosen, with no reload.
         $('addCondHint').hidden = bothPicked;
         if (!bothPicked && !$('condMenu').hidden) openCondMenu(false);
         paintOrient();
@@ -1787,7 +1809,7 @@
         // value on a row that already exists changes the count without
         // re-rendering the list, and the chip sat on the stale number while
         // the progress rail below it already said "2 conditions set".
-        $('filterCount').textContent = n ? (n + (n === 1 ? ' condition' : ' conditions')) : 'None';
+        $('filterCount').textContent = n ? (n + (n === 1 ? ' situation' : ' situations')) : 'None';
         var summary = $('runSummary');
         if (!ready) {
             summary.innerHTML = err ? esc(err) : 'Choose a sport and two different teams to continue.';
@@ -1797,8 +1819,8 @@
             var joiner = mVenue.value === 'all' ? ' and ' : (mVenue.value === 'away' ? ' at ' : ' vs ');
             summary.innerHTML = '<strong>' + esc(away) + esc(joiner) + esc(home) + '</strong> · '
                 + esc(mSport.value) + ' · ' + esc(timeframeLabel()) + ' · '
-                + (n ? '<strong>' + n + '</strong> ' + (n === 1 ? 'condition' : 'conditions') + ', combined with AND'
-                     : 'no optional conditions — every meeting in the period');
+                + (n ? '<strong>' + n + '</strong> ' + (n === 1 ? 'situation' : 'situations') + ', combined with AND'
+                     : 'no situational filters — every meeting in the period');
         }
 
         var note = $('progNote');
@@ -1806,7 +1828,7 @@
             setProgress('results'); note.textContent = 'Report ready';
         } else if (ready) {
             setProgress('filters');
-            note.textContent = n ? n + (n === 1 ? ' condition set' : ' conditions set') : 'Conditions are optional';
+            note.textContent = n ? n + (n === 1 ? ' situation set' : ' situations set') : 'Situations are optional';
         } else {
             setProgress('matchup'); note.textContent = 'Pick a sport and two teams to begin';
         }
@@ -1855,7 +1877,7 @@
         if (qualified != null) {
             bits.push('<span class="funnel-arrow" aria-hidden="true">→</span><span><strong>'
                 + fmtInt(qualified) + '</strong> matched '
-                + (r.conditions_applied === false ? 'no conditions (unfiltered side)' : 'your conditions') + '</span>');
+                + (r.conditions_applied === false ? 'no situations (unfiltered side)' : 'your situations') + '</span>');
         }
         bits.push('<span class="funnel-arrow" aria-hidden="true">→</span><span><strong>'
             + fmtInt(shown) + '</strong> listed below and used for every figure here</span>');
@@ -2023,11 +2045,11 @@
         var body = rows
             ? '<div class="tablewrap"><table class="games is-sortable">'
                 + '<caption class="sr">Qualifying meetings between ' + esc(d.team_1) + ' and ' + esc(d.team_2)
-                + ', with the conditions each one satisfied. Column headers sort the list; '
+                + ', with the situations each one satisfied. Column headers sort the list; '
                 + 'the records and averages above always cover every qualifying meeting.</caption>'
                 + '<thead><tr>' + head + '</tr></thead><tbody>'
                 + rows + '</tbody></table></div>'
-            : '<p class="note-s">No meeting matches these conditions in this period. Remove a condition or '
+            : '<p class="note-s">No meeting matches these situations in this period. Remove a situation or '
                 + 'widen the period — nothing here is broken, the dataset simply holds no meeting that met '
                 + 'all of them.</p>';
         return '<section class="rcard">'
@@ -2238,7 +2260,7 @@
             + '<div class="tags">'
             + (applied.length
                 ? applied.map(function (a) { return '<span class="tag">' + esc(a) + '</span>'; }).join('')
-                : '<span class="tag">No conditions — every completed game</span>')
+                : '<span class="tag">No situations — every completed game</span>')
             + '</div>'
             + (declined.length
                 ? '<div class="block-note is-warn"><strong>Conditions requested but not applied</strong><ul>'
@@ -2263,7 +2285,7 @@
                     + unavailable.map(function (n) { return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>'; }).join('')
                     + '</ul></div>' : '')
             + (warnings.length
-                ? '<div class="block-note is-warn"><strong>Check these conditions</strong><ul>'
+                ? '<div class="block-note is-warn"><strong>Check these situations</strong><ul>'
                     + warnings.map(function (w) { return '<li>' + esc(w.filter) + ': ' + esc(w.reason) + '</li>'; }).join('')
                     + '</ul></div>' : '')
             + (notes.length
@@ -2273,7 +2295,7 @@
             + '<p class="note-s">' + context.map(esc).join(' · ') + '.</p>'
             + resolutionNote
             + '<p class="note-s">' + esc(d.disclaimer || 'Historical patterns do not guarantee future results.')
-            + ' These are completed games that already met these conditions; a condition appearing alongside a '
+            + ' These are completed games that already met these situations; a situation appearing alongside a '
             + 'result is not evidence it caused one.</p>'
             + receiptRow(res)
             + '</section>';
@@ -2517,7 +2539,7 @@
         hide($('mError'));
         mSubmit.disabled = true;
         $('mLoading').innerHTML = skeleton('report',
-            'Pulling both teams’ histories and applying your conditions — 15 to 30 seconds…');
+            'Pulling both teams’ histories and applying your situations — 15 to 30 seconds…');
         $('mLoading').hidden = false;
         try {
             var res = await window.api.submitBetLegendProHistoricalMatchup(payload);

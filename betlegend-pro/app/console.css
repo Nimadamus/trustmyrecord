@@ -796,6 +796,27 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
 
 /* -- the picker ----------------------------------------------------------- */
 .condadd { position: relative; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 11px; }
+/* The locked state, stated. A disabled button on its own reads as broken
+   software; the same button under a sentence that names the next action reads
+   as a door that is not open yet. It takes the full row so the button lands
+   beneath it, never beside it as a grey aside. */
+.condlock {
+    flex: 1 0 100%;
+    display: flex; align-items: flex-start; gap: 9px;
+    padding: 11px 13px; border-radius: 10px;
+    border: 1px dashed var(--line-2, var(--line));
+    background: var(--card-2);
+}
+.condlock[hidden] { display: none; }
+.condlock-i { font-size: 15px; line-height: 1.35; flex-shrink: 0; }
+.condlock-t { font: 600 13px/1.45 var(--sans); color: var(--ink-2); }
+/* The heading the chosen situations sit under, so the active area is named
+   rather than implied by the fact that something is in it. */
+.cond-active-h {
+    margin: 0 0 8px; font: 700 11px/1.2 var(--sans);
+    letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+}
+.cond-active-h[hidden] { display: none; }
 .condmenu {
     position: absolute; z-index: 40; top: calc(100% + 7px); left: 0;
     /* Bounded by the panel it hangs off, not by the viewport: 100vw includes
