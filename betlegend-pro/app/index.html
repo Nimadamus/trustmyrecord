@@ -179,9 +179,9 @@
                             single season or an exact date range.</span></li>
                         <li><b>4</b><span><strong>Add situations &mdash; optional.</strong> With none, you get
                             <strong>every</strong> qualifying meeting in that period. Each one you add
-                            narrows the sample: day or night, coming off a win or a loss, win and losing
-                            streaks, days of rest, starting-pitcher handedness, previous-game scoring,
-                            moneyline range. Only situations this sport's data can actually answer are
+                            narrows the sample: <span id="howExamples">coming off a win or a loss, win and
+                            losing streaks, days of rest, previous-game scoring, moneyline range</span>.
+                            Only situations this sport's data can actually answer are
                             offered.</span></li>
                         <li><b>5</b><span><strong>Run the report.</strong> It returns the qualifying games
                             with both teams' records, win percentage, scoring, and the exact period and
@@ -299,6 +299,7 @@
                                 </div>
                                 <p class="orient" id="orientRead" aria-live="polite">Choose an away team and a home team.</p>
                                 <p class="err-line" id="setupErr" hidden></p>
+                                <p class="cleared" id="sportNote" role="status" hidden></p>
                                 <div class="note is-err" id="teamsErr" hidden>
                                     <span>Couldn't load the team list.</span>
                                     <button class="btn" id="teamsRetry" type="button">Retry</button>
@@ -323,7 +324,7 @@
                                 <div class="setup setup-2">
                                     <div class="field">
                                         <label class="lbl" for="mTimeframe">Search period</label>
-                                        <select class="sel" id="mTimeframe">
+                                        <select class="sel" id="mTimeframe" aria-describedby="periodLoading">
                                             <option value="all" selected>All available history</option>
                                             <option value="custom">Custom date range&hellip;</option>
                                         </select>
@@ -349,6 +350,8 @@
                                         <input class="inp" id="mDateTo" type="date">
                                     </div>
                                 </div>
+                                <p class="note-s" id="periodLoading" hidden>Reading the seasons on file for this
+                                sport&hellip; the period options appear as soon as the coverage lands.</p>
                                 <p class="note-s">The limit applies last, to the list only. Records, averages and
                                 market splits always cover every qualifying meeting in the period.</p>
                             </div>
@@ -443,8 +446,9 @@
                                     </div>
                                     <div class="ttfield">
                                         <label for="ttLine">Line</label>
-                                        <input id="ttLine" type="number" step="0.5" min="0" max="60"
-                                               inputmode="decimal" placeholder="3.5">
+                                        <input id="ttLine" type="number" step="0.5" min="0" max="200"
+                                               inputmode="decimal" placeholder="3.5"
+                                               aria-describedby="ttErr">
                                     </div>
                                     <div class="ttfield">
                                         <label for="ttOdds">Price <span class="ttopt">optional</span></label>
@@ -452,7 +456,8 @@
                                                inputmode="numeric" placeholder="-110">
                                     </div>
                                 </div>
-                                <p class="note-s" id="ttErr" hidden></p>
+                                <p class="fielderr" id="ttErr" role="alert" hidden></p>
+                                <p class="cleared" id="ttNote" role="status" hidden></p>
                             </div>
                         </section>
 
@@ -922,7 +927,17 @@
     var mTimeframe = $('mTimeframe'), mDateFrom = $('mDateFrom'), mDateTo = $('mDateTo');
     var mLimit = $('mLimit');
     var ttCard = $('ttCard'), ttTeam = $('ttTeam'), ttSide = $('ttSide');
-    var ttLine = $('ttLine'), ttOdds = $('ttOdds'), ttErr = $('ttErr');
+    var ttLine = $('ttLine'), ttOdds = $('ttOdds'), ttErr = $('ttErr'), ttNote = $('ttNote');
+
+    /* A team total is RUNS in MLB, GOALS in NHL and POINTS in the NBA and NFL,
+     * so the number that is plausible depends entirely on the sport. These
+     * mirror TEAM_TOTAL_RANGE in the engine's request model; the server is
+     * still the authority, this is what stops the user finding out by way of a
+     * refused request. */
+    var TT_BAND = { MLB: [0, 20], NHL: [0, 12], NFL: [0, 70], NBA: [0, 200] };
+    var TT_NOUN = { MLB: 'runs', NHL: 'goals', NFL: 'points', NBA: 'points' };
+    function ttBand() { return TT_BAND[mSport.value] || [0, 200]; }
+    function ttNoun() { return TT_NOUN[mSport.value] || 'points'; }
     var ttState = $('ttState'), ttClear = $('ttClear');
     // This sport's measured database era, carried on the filter library the
     // panel already fetches. Every year the period selector offers comes from
@@ -940,6 +955,41 @@
     var library = null, libraryFor = null, libraryCache = {};
     var filters = {};
     var filterSearch = '';
+
+    /** Why this situation's value cannot be sent, or ''. The library gives a
+     *  min and a max for every number it offers; a value outside them is not a
+     *  narrower query, it is a query that can never match (9999 days rest) or
+     *  never narrow (-5). Both used to run. */
+    function valueError(spec, v) {
+        if (!spec || !isSet(v)) return '';
+        var lo = (spec.min === null || spec.min === undefined) ? null : Number(spec.min);
+        var hi = (spec.max === null || spec.max === undefined) ? null : Number(spec.max);
+        var unit = spec.unit ? ' ' + spec.unit : '';
+        function band() {
+            if (lo !== null && hi !== null) return 'between ' + lo + ' and ' + hi + unit;
+            if (lo !== null) return lo + unit + ' or more';
+            return hi + unit + ' or less';
+        }
+        function check(n, what) {
+            if (n === null || n === undefined || n === '' || !isFinite(Number(n))) return '';
+            n = Number(n);
+            if (lo !== null && n < lo) return what + n + ' is below the range this reading covers — use ' + band() + '.';
+            if (hi !== null && n > hi) return what + n + ' is above the range this reading covers — use ' + band() + '.';
+            return '';
+        }
+        if (lo === null && hi === null) return '';
+        if (typeof v === 'object') return check(v.min, 'Minimum ') || check(v.max, 'Maximum ');
+        if (spec.kind === 'int' || spec.kind === 'range') return check(v, '');
+        return '';
+    }
+
+    /** Every situation currently holding a value the engine would refuse. */
+    function situationValueErrors() {
+        return Object.keys(filters).map(function (key) {
+            var err = valueError(specById(idOf(key)), filters[key]);
+            return err ? { key: key, err: err } : null;
+        }).filter(Boolean);
+    }
 
     function isSet(v) {
         if (v === undefined || v === null || v === false || v === '' || v === 'any') return false;
@@ -1065,8 +1115,10 @@
                 + (r.spec.available === false
                     ? '<p class="cond-warn">' + esc(r.spec.unavailable_reason
                         || ('Not offered for ' + mSport.value + '.')) + ' This situation will not be sent.</p>'
-                    : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
-                           : '<p class="cond-warn">Set a value &mdash; until then this situation is not part of the query.</p>'))
+                    : (valueError(r.spec, filters[r.key])
+                        ? '<p class="fielderr" role="alert">' + esc(valueError(r.spec, filters[r.key])) + '</p>'
+                        : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
+                               : '<p class="cond-warn">Set a value &mdash; until then this situation is not part of the query.</p>')))
                 + '</div>';
         }).join('');
 
@@ -1098,8 +1150,16 @@
             return;
         }
         box.innerHTML = groups.map(function (g) {
+            // Offered first, declined after. A reader scanning for something
+            // they can use should not have to read past rows this sport
+            // cannot answer -- but the reasons stay on the page, because "why
+            // isn't it here" is a real question and hiding it invites a
+            // support ticket.
+            var specs = g.specs.slice().sort(function (a, b) {
+                return (a.available === false ? 1 : 0) - (b.available === false ? 1 : 0);
+            });
             return '<section class="condgrp"><p class="condgrp-h">' + esc(g.label) + '</p>'
-                + g.specs.map(function (spec) {
+                + specs.map(function (spec) {
                     var buckets = bucketsFor(spec);
                     var actions = !spec.available ? ''
                         : '<div class="cond-acts">' + buckets.map(function (b) {
@@ -1266,6 +1326,10 @@
             coverage = (library && library.database_coverage) || null;
             paintCoverage();
             buildPeriodOptions();
+            // The season list IS the coverage. Until it has arrived the
+            // control says so and refuses input, rather than offering two
+            // options that look like the whole answer.
+            setPeriodLoading(!coverage);
             renderConditions();
             if (!$('condMenu').hidden) renderCondMenu();
         };
@@ -1288,6 +1352,7 @@
                 + 'only the unfiltered report is available right now.</p>';
             $('coverLine').textContent = 'Database coverage could not be read right now. The report still '
                 + 'searches every year on file.';
+            setPeriodLoading(false);
             return;
         }
         apply();
@@ -1301,6 +1366,24 @@
      *  (`coverage_all` on the filter library), never from anything written
      *  into the page: a hard-coded year here would be a claim about the
      *  database that the database never made. */
+    /** The examples in step 4 name situations THIS sport actually offers. A
+     *  reader looking at the NBA was being told about starting-pitcher
+     *  handedness, which the NBA declines two panels below. */
+    var HOW_EXAMPLES = {
+        MLB: 'day or night, coming off a win or a loss, win and losing streaks, days of rest, '
+            + 'starting-pitcher handedness, previous-game scoring, moneyline range',
+        NBA: 'coming off a win or a loss, back-to-backs, days of rest, favourite or underdog, '
+            + 'closing spread range, previous-game scoring, moneyline range',
+        NFL: 'coming off a win or a loss, primetime slots, week of the season, days of rest, '
+            + 'closing spread range, indoors or out, previous-game scoring, moneyline range',
+        NHL: 'coming off a win or a loss, back-to-backs, days of rest, shots and power plays, '
+            + 'previous-game scoring, moneyline range',
+    };
+    function paintHowExamples() {
+        var el = $('howExamples');
+        if (el) el.textContent = HOW_EXAMPLES[mSport.value] || HOW_EXAMPLES.MLB;
+    }
+
     function paintIntro() {
         var box = $('coverTable'), active = $('coverActive'), since = $('howSince');
         var rows = (library && library.coverage_all) || (coverage ? [coverage] : []);
@@ -1346,8 +1429,30 @@
         }
     }
 
+    /** The period control is only as good as the coverage behind it. While
+     *  that is in flight it says so and refuses input, rather than offering a
+     *  two-option list that looks like the whole answer. */
+    function setPeriodLoading(loading) {
+        mTimeframe.disabled = loading;
+        mLimit.disabled = loading;
+        var note = $('periodLoading');
+        if (note) note.hidden = !loading;
+        if (loading && !mTimeframe.querySelector('option[value="__loading"]')) {
+            var o = document.createElement('option');
+            o.value = '__loading';
+            o.textContent = 'Reading available seasons…';
+            mTimeframe.insertBefore(o, mTimeframe.firstChild);
+            mTimeframe.value = '__loading';
+        }
+        if (!loading) {
+            var stale = mTimeframe.querySelector('option[value="__loading"]');
+            if (stale) stale.remove();
+        }
+    }
+
     function paintCoverage() {
         paintIntro();
+        paintHowExamples();
         var line = $('coverLine'), meta = $('coverMeta');
         if (!coverage || coverage.earliest_season == null || coverage.latest_season == null) {
             line.textContent = 'Reading database coverage\u2026';
@@ -1406,8 +1511,18 @@
         if (!spec) return;
         var set = isSet(filters[key]);
         row.classList.toggle('is-unset', !set);
-        var reads = row.querySelector('.cond-reads, .cond-warn');
+        var reads = row.querySelector('.cond-reads, .cond-warn, .fielderr');
         if (!reads || spec.available === false) return;
+        // The refusal has to appear on the keystroke that causes it, beside
+        // the input, not only on a full re-render the reader never triggers.
+        var bad = valueError(spec, filters[key]);
+        if (bad) {
+            reads.className = 'fielderr';
+            reads.setAttribute('role', 'alert');
+            reads.textContent = bad;
+            return;
+        }
+        reads.removeAttribute('role');
         reads.className = set ? 'cond-reads' : 'cond-warn';
         reads.textContent = set
             ? 'Reads as: ' + chipFor(spec, filters[key])
@@ -1609,17 +1724,64 @@
         return body;
     }
 
+    /** Carry the team total across a sport change only when it still means
+     *  something there; otherwise clear it and say why, rather than leaving
+     *  4.5 runs sitting on a Warriors/Lakers matchup as 4.5 points. */
+    function carryTeamTotalAcrossSport(fromSport) {
+        var line = parseFloat(ttLine.value);
+        var wasOn = !!ttTeam.value;
+        if (!wasOn && !isFinite(line)) { ttNote.hidden = true; return; }
+        var band = ttBand();
+        if (isFinite(line) && (line < band[0] || line > band[1])) {
+            ttTeam.value = ''; ttLine.value = ''; ttOdds.value = '';
+            ttNote.textContent = 'Team total cleared: ' + line + ' is a ' + fromSport
+                + ' number, and ' + mSport.value + ' team totals run '
+                + band[0] + ' to ' + band[1] + ' ' + ttNoun() + '.';
+            ttNote.hidden = false;
+            return;
+        }
+        // Still a plausible line here, so it is kept -- but the team it points
+        // at belonged to the other league, so the side is re-read from the new
+        // matchup rather than assumed.
+        ttNote.hidden = true;
+    }
+
+    var lastSport = mSport.value;
     mSport.addEventListener('change', function () {
-        // A condition that exists for one sport may not for the next, so the
-        // selection resets rather than carrying across silently.
+        var from = lastSport;
+        lastSport = mSport.value;
+        var dropped = [];
+
+        // Situations are league-specific: an NHL faceoff reading has no
+        // meaning in the NBA, and a season from another league is not a period
+        // here. Both are cleared -- and now SAID, rather than the panel simply
+        // being empty when the user looks back at it.
+        var hadSituations = activeFilterCount();
+        if (hadSituations) dropped.push(hadSituations + (hadSituations === 1 ? ' situation' : ' situations'));
         filters = {};
         filterSearch = '';
         $('filterSearch').value = '';
         openCondMenu(false);
         reviewSig = null;
         $('review').hidden = true;
-        // A season from another league is not a valid period here.
+        if (mTimeframe.value !== 'all') dropped.push('the chosen period');
         mTimeframe.value = 'all';
+        // The result on screen answered a question about another league.
+        if (!$('resultsView').hidden) { $('resultsView').hidden = true; dropped.push('the report on screen'); }
+
+        // The market value is kept only where it still means something.
+        carryTeamTotalAcrossSport(from);
+        if (ttNote.hidden === false) dropped.push('the team total');
+
+        var note = $('sportNote');
+        if (dropped.length) {
+            note.textContent = 'Switched to ' + mSport.value + ' — cleared ' + dropped.join(', ')
+                + '. The two teams are chosen again below.';
+            note.hidden = false;
+        } else {
+            note.hidden = true;
+        }
+
         coverage = null; paintCoverage();
         loadFilterLibrary(mSport.value);
         loadMatchupTeams(mSport.value);
@@ -1637,6 +1799,84 @@
         el.addEventListener('change', syncSetup);
         el.addEventListener('input', syncSetup);
     });
+
+    /** One situation as a sentence fragment, naming the team it measures and
+     *  the value it was set to. The library's own wording is used throughout,
+     *  so a row on screen and this sentence can never disagree. */
+    function situationPhrase(key) {
+        var spec = specById(idOf(key));
+        if (!spec) return null;
+        var v = filters[key];
+        if (!isSet(v)) return null;
+        var who = teamName(bktOf(key));
+        var body = chipFor(spec, v);
+        return who ? who + ' — ' + body : body;
+    }
+
+    /** Every situation, in the order the reader added them, with both benches
+     *  folded together when the same question was asked of each. */
+    function situationPhrases() {
+        var byId = {};
+        var order = [];
+        Object.keys(filters).forEach(function (key) {
+            if (!isSet(filters[key])) return;
+            var id = idOf(key);
+            if (!byId[id]) { byId[id] = []; order.push(id); }
+            byId[id].push(key);
+        });
+        var out = [];
+        order.forEach(function (id) {
+            var keys = byId[id];
+            var spec = specById(id);
+            // The same question of both teams, answered the same way, reads as
+            // one clause rather than two near-identical ones.
+            if (keys.length === 2 && spec && JSON.stringify(filters[keys[0]]) === JSON.stringify(filters[keys[1]])) {
+                out.push('both teams — ' + chipFor(spec, filters[keys[0]]));
+                return;
+            }
+            keys.forEach(function (k) {
+                var phrase = situationPhrase(k);
+                if (phrase) out.push(phrase);
+            });
+        });
+        return out;
+    }
+
+    /** "a, b and c" -- the join a person uses. */
+    function joinClauses(parts) {
+        if (!parts.length) return '';
+        if (parts.length === 1) return parts[0];
+        return parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
+    }
+
+    /** The team total as its own sentence: it is asked OF the sample the
+     *  first sentence found, not as one more narrowing of it. */
+    function teamTotalPhrase() {
+        var tt = teamTotalPayload();
+        if (!tt) return '';
+        var who = tt.team === 'team_1' ? mAway.value : mHome.value;
+        return 'Analyze ' + who + ' team total ' + (tt.side === 'over' ? 'Over' : 'Under')
+            + ' ' + tt.line + ' ' + ttNoun()
+            + (tt.odds != null ? ' at ' + (tt.odds > 0 ? '+' : '') + tt.odds : '') + '.';
+    }
+
+    /** The whole question, in one plain-English sentence, built from the same
+     *  state the request body is built from -- so it cannot drift from what is
+     *  actually sent. */
+    function querySentence() {
+        var a = mAway.value, h = mHome.value;
+        var verb = mVenue.value === 'all' ? ' and ' : (mVenue.value === 'home' ? ' vs ' : ' at ');
+        var head = 'Find ' + a + verb + h + ' games'
+            + (mSport.value ? '' : '') + ' in ' + timeframeLabel();
+        var clauses = situationPhrases();
+        var limit = mLimit.value && mLimit.value !== 'all'
+            ? ', listing their ' + mLimit.value + ' most recent qualifying meetings' : '';
+        var first = clauses.length
+            ? head + limit + ', where ' + joinClauses(clauses) + '.'
+            : head + limit + '.';
+        var tt = teamTotalPhrase();
+        return tt ? first + ' ' + tt : first;
+    }
 
     function timeframeLabel() {
         var v = mTimeframe.value;
@@ -1775,6 +2015,16 @@
         paintOrient();
         syncTeamTotal();
         if (away && home && away === home) err = 'The away team and the home team must be two different teams.';
+        // A situation whose number the engine would refuse must not reach it.
+        // 9999 days rest can never match and -5 can never narrow; both used to
+        // run, quietly, and cost the reader a report.
+        if (!err) {
+            var bad = situationValueErrors()[0];
+            if (bad) {
+                var badSpec = specById(idOf(bad.key));
+                err = (badSpec ? badSpec.label + ': ' : '') + bad.err;
+            }
+        }
         if (!err && mTimeframe.value === 'custom') {
             if (!mDateFrom.value && !mDateTo.value) err = 'Enter a from date, a to date, or both.';
             else if (mDateFrom.value && mDateTo.value && mDateFrom.value > mDateTo.value) {
@@ -1822,11 +2072,11 @@
         } else if (SUBMIT_BLOCKED) {
             summary.textContent = SUBMIT_BLOCKED_REASON || 'This report cannot run on this account right now.';
         } else {
-            var joiner = mVenue.value === 'all' ? ' and ' : (mVenue.value === 'away' ? ' at ' : ' vs ');
-            summary.innerHTML = '<strong>' + esc(away) + esc(joiner) + esc(home) + '</strong> · '
-                + esc(mSport.value) + ' · ' + esc(timeframeLabel()) + ' · '
-                + (n ? '<strong>' + n + '</strong> ' + (n === 1 ? 'situation' : 'situations') + ', combined with AND'
-                     : 'no situational filters — every meeting in the period');
+            // The whole question, in the words the reader chose it with. A
+            // count ("2 situations, combined with AND") is true and tells them
+            // nothing: not which, not whose, not what value, and not the
+            // market they configured underneath.
+            summary.textContent = querySentence();
         }
 
         var note = $('progNote');
@@ -2474,7 +2724,11 @@
         if (isFinite(line) && Math.round(line * 2) !== line * 2) {
             return 'Line must be a whole or half number, such as 3.5 or 4.';
         }
-        if (isFinite(line) && (line < 0 || line > 60)) return 'Line must be between 0 and 60.';
+        var band = ttBand();
+        if (isFinite(line) && (line < band[0] || line > band[1])) {
+            return mSport.value + ' team totals must be between ' + band[0] + ' and ' + band[1]
+                + ' ' + ttNoun() + '. ' + ttLine.value + ' is outside that range.';
+        }
         var odds = parseFloat(ttOdds.value);
         if (ttOdds.value !== '' && !isFinite(odds)) return 'Enter a number for the price, such as -110.';
         // A book never prices anything between -99 and +99; a number in that
@@ -2489,6 +2743,11 @@
     // The two team options are the actual teams, so the control reads
     // "Colorado Rockies / under / 3.5" instead of "team_1 / under / 3.5".
     function syncTeamTotal() {
+        var band = ttBand();
+        ttLine.min = String(band[0]);
+        ttLine.max = String(band[1]);
+        ttLine.placeholder = mSport.value === 'NBA' ? '112.5'
+            : mSport.value === 'NFL' ? '23.5' : mSport.value === 'NHL' ? '2.5' : '4.5';
         var haveBoth = !!(mAway.value && mHome.value && mAway.value !== mHome.value);
         ttCard.hidden = !haveBoth;
         if (!haveBoth) return;
