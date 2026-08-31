@@ -1,0 +1,106 @@
+/* =============================================================================
+   TMR NAVBAR — THE ONE APPROVED TOP BAR
+   -----------------------------------------------------------------------------
+   The navigation bar had drifted: which face, weight and tracking a page got
+   depended on which shell class its <body> happened to carry, so /sportsbook/
+   rendered Inter 800 while the homepage rendered Barlow Condensed 600. Two
+   different navbars on one site.
+
+   These rules are the homepage's, copied verbatim out of tmr-concept-a.css
+   (sections 4, 8, 9g, 9h). That file is frozen and the homepage keeps reading
+   its own copy, so the homepage cannot move. Every OTHER page links this sheet
+   and therefore renders the identical bar.
+
+   Scope note: tmr-concept-a.css scopes to `body.tmr-ds`. Internal pages carry
+   any of four shell classes, so the same rules are widened to all of them here.
+   Nothing else about a page is touched: this file styles the shared `.ds-*`
+   header component and nothing outside it.
+
+   The markup is already one shared component (static/js/tmr-ds-nav.js). This is
+   the matching stylesheet for it.
+   ============================================================================= */
+
+:root{ --tmr-nav-shell: .tmr-ds; }
+
+/* ---- 1. the bar itself --------------------------------------------------- */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav{
+  background:rgba(2,5,10,.94);
+  border-bottom:1px solid rgba(43,140,255,.28);
+  backdrop-filter:blur(8px);
+  z-index:60;
+}
+
+/* ---- 2. the top-level items --------------------------------------------- */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu > button,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav a{
+  font-family:"Barlow Condensed","Segoe UI",Arial,sans-serif !important;
+  font-weight:600 !important;
+  font-style:normal !important;
+  letter-spacing:.07em !important;
+  text-transform:uppercase !important;
+  color:#D6E3F2;
+  font-size:17px;
+  padding-left:10px;
+  padding-right:10px;
+  white-space:nowrap;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav{flex-wrap:nowrap}
+
+@media (max-width:1440px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem,
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu > button{
+    font-size:16.5px; padding-left:8px; padding-right:8px;
+  }
+}
+
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem:hover,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu > button:hover{
+  color:#4DA3FF; background:rgba(77,163,255,.10);
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem[aria-current="page"],
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu.is-current > button{
+  color:#4DA3FF; background:rgba(77,163,255,.14); border-bottom-color:#4DA3FF;
+}
+
+/* ---- 3. the dropdown panels --------------------------------------------- */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel{
+  background:linear-gradient(180deg,#070F1A,#03080F);
+  border:1px solid rgba(43,140,255,.42);
+  box-shadow:0 24px 60px rgba(0,0,0,.8);
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a{color:#BBD0E6}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a:hover{
+  background:rgba(43,140,255,.16); color:#fff;
+}
+
+/* ---- 4. the lockup ------------------------------------------------------- */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo{gap:11px}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo .mk{
+  width:37px; height:40px;
+  font-size:0; line-height:0; color:transparent;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 152'><defs><linearGradient id='s' x1='0' y1='0' x2='0.22' y2='1'><stop offset='0' stop-color='%23FFFFFF'/><stop offset='.40' stop-color='%23E9EFF6'/><stop offset='.74' stop-color='%23A3B4C8'/><stop offset='1' stop-color='%23F4F8FC'/></linearGradient><linearGradient id='b' x1='0' y1='0' x2='0.28' y2='1'><stop offset='0' stop-color='%235AA9FF'/><stop offset='.50' stop-color='%231D7FE8'/><stop offset='1' stop-color='%230A4694'/></linearGradient></defs><path d='M70 3 137 23v15l-9 7 9 7v33c0 33-26 58-67 69C29 143 3 118 3 85V52l9-7-9-7V23z' fill='url(%23b)'/><path d='M70 17 124 33v52c0 25-21 45-54 55-33-10-54-30-54-55V33z' fill='%2305101B' stroke='url(%23s)' stroke-width='7'/><text x='70' y='83' text-anchor='middle' font-family='Arial Narrow,Haettenschweiler,Impact,Arial,sans-serif' font-size='47' font-weight='700' font-style='italic' fill='url(%23s)'>TMR</text><path d='M50 105l13 14 28-31' fill='none' stroke='%232B8CFF' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+  border:0; border-radius:0; box-shadow:none;
+  filter:drop-shadow(0 0 14px rgba(29,127,232,.55));
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo .wd{
+  background:linear-gradient(178deg,#FFFFFF 12%,#EDF2F8 42%,#BDCBDA 76%,#FFFFFF 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  line-height:1.05;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo .wd em{
+  -webkit-text-fill-color:#4DA3FF; color:#4DA3FF; font-style:normal;
+}
+@media (max-width:1100px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo .mk{width:33px; height:36px}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo{gap:9px}
+}
+@media (max-width:640px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo .mk{width:30px; height:33px}
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-logo{gap:8px}
+}
+
+/* ---- 5. focus ring, matching the homepage ------------------------------- */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav :focus-visible{
+  outline:2px solid #4DA3FF; outline-offset:2px;
+}

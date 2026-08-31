@@ -459,6 +459,13 @@
         var items = trail(segs);
         if (segs[0] === 'u') items.unshift(['/handicappers/', 'Handicappers']);
 
+        /* The last item is the page being viewed. It carries no href and used
+           to render as a .tmrlh-current label, which on a page that already
+           titles itself is a duplicate. The trail now stops at the last
+           ANCESTOR, so a top-level page shows the home crumb alone. The baked
+           BreadcrumbList JSON-LD is separate and still lists the full trail. */
+        if (items.length && !items[items.length - 1][0]) items.pop();
+
         var html = homeCrumbHtml();
         for (var i = 0; i < items.length; i++) {
             html += '<span class="tmrlh-sep" aria-hidden="true">&rsaquo;</span>';

@@ -140,16 +140,27 @@ const AUDIT = () => {
     const f = path.join(ROOT, rel); if (!f.startsWith(ROOT) || !fs.existsSync(f)) return r.continue();
     return r.fulfill({ status: 200, headers: { 'content-type': TYPES[e] }, body: fs.readFileSync(f) });
   });
-  const p = await ctx.newPage();
-  p.on('pageerror', () => {});
   for (const rel of list.slice(start, start + count)) {
     const url = 'https://trustmyrecord.com/' + rel;
-    let a;
+    let a = null, p = null;
     try {
-      await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 40000 });
-      await p.waitForTimeout(4200);
-      a = await p.evaluate(AUDIT);
-    } catch (e) { console.log('PAGE /' + rel + ' ERROR ' + String(e.message).slice(0, 70)); continue; }
+      p = await ctx.newPage();
+      p.on('pageerror', () => {});
+      p.on('dialog', (d) => d.dismiss().catch(() => {}));
+      a = await Promise.race([
+        (async () => {
+          await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
+          await p.waitForTimeout(4200);
+          return await p.evaluate(AUDIT);
+        })(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('page timeout')), 60000)),
+      ]);
+    } catch (e) {
+      console.log('PAGE /' + rel + ' ERROR ' + String(e.message).slice(0, 70));
+      try { if (p) await p.close(); } catch (e2) {}
+      continue;
+    }
+    try { await p.close(); } catch (e2) {}
     const score = a.contrast.length + a.lightSurfaces.length + a.offPalette.length + a.shellLeak.length + (a.hOverflow > 2 ? 1 : 0);
     console.log('PAGE /' + rel + ' contrast=' + a.contrast.length + ' light=' + a.lightSurfaces.length + ' offpal=' + a.offPalette.length + ' leak=' + a.shellLeak.length + ' hx=' + a.hOverflow + ' SCORE=' + score);
     if (score) console.log('   ' + JSON.stringify({ c: a.contrast.slice(0, 6), l: a.lightSurfaces.slice(0, 4), o: a.offPalette.slice(0, 6), k: a.shellLeak.slice(0, 4) }));

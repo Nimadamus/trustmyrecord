@@ -32,10 +32,10 @@
     <style>
         /* ===== ARENA DASHBOARD REDESIGN (ARENA_PRO_20260711) ===== */
         :root {
-            --bg-dark: #02050A;
-            --bg-surface: #0E1620;
-            --bg-card: #0E1620;
-            --bg-card-hover: #16212E;
+            --bg-dark: #F4F7FA;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F6F9FC;
             --border: #D2DEEA;
             --border-glow: #D2DEEA;
             --primary: #0B4FA8;
@@ -45,7 +45,7 @@
             --accent-red: #BC372E;
             --accent-purple: #1E5BBF;
             --text: #07182A;
-            --text-dim: #B7CBE1;
+            --text-dim: #2E4459;
             --text-muted: #5E7590;
             --font-display: 'Barlow', sans-serif;
             --font-body: 'Inter', sans-serif;
@@ -178,7 +178,7 @@
         .lb-table tr:hover td { background: rgba(7,24,42,0.02); }
         .lb-rank { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-dim); }
         .lb-rank.gold { color: var(--accent-gold); }
-        .lb-rank.silver { color: #DCE7F4; }
+        .lb-rank.silver { color: #07182A; }
         .lb-rank.bronze { color: #B98505; }
         .lb-user { display: flex; align-items: center; gap: 10px; }
         .lb-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-dim); object-fit: cover; }
@@ -229,7 +229,7 @@
         .arena-more-link .aml-sub { display: block; font-size: 12px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
 
         /* ===== MODAL ===== */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: #0B121B; z-index: 200; justify-content: center; align-items: flex-start; padding: 40px 16px; overflow-y: auto; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: #F4F7FA; z-index: 200; justify-content: center; align-items: flex-start; padding: 40px 16px; overflow-y: auto; }
         .modal-overlay.open { display: flex; }
         .modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 540px; padding: 24px; position: relative; }
         .modal h2 { font-family: var(--font-display); font-size: 19px; font-weight: 700; margin-bottom: 18px; }
@@ -270,7 +270,7 @@
         .gp-field .gp-icon { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 14px; flex-shrink: 0; }
         .gp-field .gp-icon.psn { background: rgba(30,91,191,0.14); color: #1B4F9E; }
         .gp-field .gp-icon.xbox { background: rgba(10,139,78,0.14); color: #2ECC71; }
-        .gp-field .gp-icon.steam { background: rgba(30,91,191,0.14); color: #C3D6EA; }
+        .gp-field .gp-icon.steam { background: rgba(30,91,191,0.14); color: #2E4459; }
         .gp-field .gp-icon.console { background: rgba(30,91,191,0.14); color: var(--accent-purple); }
         .gp-field .gp-info { flex: 1; min-width: 0; }
         .gp-field .gp-label { font-size: 11px; color: var(--text-muted); margin-bottom: 1px; }
@@ -312,9 +312,10 @@
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=326340cf3287">
 <script defer src="/static/js/tmr-linkhub.js?v=624f44f1bbc7"></script>
-<!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=37c35bb94347">
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=1">
 </head>
 <body class="tmr-site-shell tmr-light">
 
