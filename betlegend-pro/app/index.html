@@ -1192,7 +1192,9 @@
         if (spec.kind === 'bool') return spec.label;
         if (spec.kind === 'enum') {
             for (var i = 0; i < spec.options.length; i++) {
-                if (spec.options[i].value === v) return spec.label + ': ' + spec.options[i].label;
+                // "After a win" says everything "Previous game result: After a
+                // win" says, and reads as English rather than as a field.
+                if (spec.options[i].value === v) return spec.options[i].label;
             }
             return spec.label + ': ' + v;
         }
@@ -1241,6 +1243,10 @@
         if (!host) return;
         if (!trailReady()) { host.hidden = true; host.innerHTML = ''; trailSig = null; return; }
         var payload = currentPayload();
+        // The team total reads the sample, it does not narrow it -- so it
+        // changes no count, and sending it here only meant a 422 in the
+        // console on every keystroke of a line still being typed.
+        delete payload.team_total;
         var sig = JSON.stringify(payload);
         if (sig === trailSig) return;
         trailSig = sig;
