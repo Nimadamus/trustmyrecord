@@ -33,69 +33,38 @@ async function openApp(page, calls) {
   }
   await page.goto(`${SITE}/betlegend-pro/app/`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#mAway')).toBeVisible({ timeout: 90_000 });
-  // The team list arrives from the API; wait for it before selecting.
-  await expect.poll(async () => page.locator('#mAway option').count(), { timeout: 90_000 })
-    .toBeGreaterThan(5);
+  // The team list arrives from the API, which is a free instance and cold
+  // often enough to fail one call. The page offers a retry for exactly that,
+  // so use it rather than failing the run on the engine's nap; the fetch
+  // itself is not what any of these specs is testing.
+  await expect.poll(async () => {
+    if (await page.locator('#teamsErr').isVisible().catch(() => false)) {
+      await page.locator('#teamsRetry').click().catch(() => {});
+    }
+    return page.locator('#mAway option').count();
+  }, { timeout: 180_000, intervals: [1_000] }).toBeGreaterThan(5);
 }
 
 /**
- * Choose the matchup, and make it stick.
+ * Choose the matchup.
  *
- * The page settles asynchronously after sign-in: the entitlement check and the
- * team lists both land after first paint and re-initialise the form, which can
- * drop a selection made in the first second or two. A human never notices;
- * a script that selects the instant the options exist does. So this sets both
- * selects and re-sets them until the tool itself agrees the matchup is chosen.
+ * Plain selects, deliberately: the page used to reload under the reader a beat
+ * after load, and a helper that retried until the selection stuck would hide
+ * that coming back. If a selection does not hold here, the suite should say so.
  */
 async function chooseMatchup(page, away = 'New York Yankees', home = 'Boston Red Sox') {
-  const sameTeam = away === home;
-  await expect.poll(async () => {
-    if (await page.locator('#mAway').inputValue() !== away) {
-      await page.locator('#mAway').selectOption(away).catch(() => {});
-    }
-    if (await page.locator('#mHome').inputValue() !== home) {
-      await page.locator('#mHome').selectOption(home).catch(() => {});
-    }
-    const stuck = await page.locator('#mAway').inputValue() === away
-      && await page.locator('#mHome').inputValue() === home;
-    const enabled = await page.locator('#addCond').isEnabled();
-    return stuck && (sameTeam ? !enabled : enabled);
-  }, { timeout: 90_000, intervals: [500] }).toBe(true);
+  await expect(page.locator('#mAway')).toBeEnabled({ timeout: 120_000 });
+  await page.locator('#mAway').selectOption(away);
+  await page.locator('#mHome').selectOption(home);
+  await expect(page.locator('#addCond')).toBeEnabled({ timeout: 30_000 });
 }
 
-/**
- * Open the situation list.
- *
- * Same reason as chooseMatchup: the page can re-initialise once more while the
- * entitlement and coverage calls settle, which re-locks the button for a beat.
- * Retried rather than slept on, so a genuine failure to unlock still fails.
- */
+/** Open the situation list. */
 async function openList(page) {
-  await expect.poll(async () => {
-    if (!(await list(page).isVisible())) {
-      if (await page.locator('#addCond').isEnabled()) {
-        await page.locator('#addCond').click({ timeout: 5_000 }).catch(() => {});
-      } else {
-        await chooseMatchup(page);
-      }
-    }
-    return list(page).isVisible();
-  }, { timeout: 90_000, intervals: [400] }).toBe(true);
+  await page.locator('#addCond').click();
+  await expect(list(page)).toBeVisible();
 }
 
-/**
- * The initialisation race.
- *
- * The page finishes loading in stages -- auth, entitlement, coverage, the team
- * lists, the filter library -- and on a first visit the service worker claims
- * the page a beat after that. This test deliberately does NOT use the settling
- * helpers above: it selects the instant the control allows it, then sits
- * through every late arrival, and asserts nothing was taken back.
- *
- * It also counts main-frame navigations. The reload this test exists for was a
- * `controllerchange` reload fired by the worker's first claim, so one
- * navigation is a pass and two is the bug.
- */
 test('a choice made as early as the UI allows survives every late load', async ({ page }) => {
   test.setTimeout(300_000);
   const navigations = [];
@@ -160,7 +129,8 @@ test('the locked state explains itself, and lifts the moment the matchup is vali
   await page.screenshot({ path: `${OUT}/V1-locked.png`, fullPage: true });
 
   // A team against itself is not a matchup: the lock stays stated.
-  await chooseMatchup(page, 'New York Yankees', 'New York Yankees');
+  await page.locator('#mAway').selectOption('New York Yankees');
+  await page.locator('#mHome').selectOption('New York Yankees');
   await expect(page.locator('#addCond')).toBeDisabled();
   await expect(page.locator('#addCondHint')).toBeVisible();
 
