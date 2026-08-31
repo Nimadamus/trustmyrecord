@@ -2226,6 +2226,16 @@
         var r = d.team_1_report;
         if (!r) return '';
         var games = r.games || [];
+        // A rest column, but only when rest is what the reader asked about --
+        // and then BOTH teams', because "Boston had 0 days rest" is not
+        // substantiated by a table showing only New York's. Read straight off
+        // the row; nothing here recomputes it.
+        var restIds = ['min_rest_days', 'rest_days_range', 'back_to_back', 'long_rest',
+                       'opp_rest_days', 'opp_back_to_back'];
+        var askedAboutRest = restIds.some(function (id) {
+            return Object.keys(filters).some(function (k) { return idOf(k) === id; });
+        }) && games.some(function (g) { return g.rest_days != null || g.opponent_rest_days != null; });
+        var restDay = function (v) { return v == null ? DASH : (v + (v === 1 ? ' day' : ' days')); };
         var total = (r.total_qualifying_games != null) ? r.total_qualifying_games : games.length;
         var rows = games.map(function (g) {
             var homeSide = g.venue === 'Home';
@@ -2234,7 +2244,12 @@
             var score = homeSide ? (g.opponent_score + '-' + g.team_score)
                                  : (g.team_score + '-' + g.opponent_score);
             var winner = g.result === 'W' ? g.team : (g.result === 'L' ? (g.opponent || '') : 'Tie');
-            var where = g.venue_name || (home ? home + ' (home)' : '');
+            // A venue or nothing. The old fallback printed the home team's
+            // name with "(home)" after it, which reads as a stadium called
+            // "Boston Red Sox" -- and the Matchup column two cells to the left
+            // already says who hosted. Older rows genuinely carry no venue, so
+            // they say so rather than being dressed up.
+            var where = g.venue_name || '';
             // The favourite, and THE NUMBER THAT MADE THEM ONE -- which is not
             // the same field in every sport, and pairing the wrong two produced
             // a self-contradicting cell.
@@ -2282,7 +2297,7 @@
                     : (g.role === 'Favorite' ? g.closing_line : -g.closing_line));
             return '<tr><td>' + esc(g.date || '') + '</td>'
                 + '<td>' + esc(away || '') + ' at ' + esc(home || '') + '</td>'
-                + '<td>' + (where ? esc(where) : DASH) + '</td>'
+                + '<td>' + (where ? esc(where) : '<span class="unk">Venue unavailable</span>') + '</td>'
                 + '<td class="n" data-k="' + ((g.team_score || 0) + (g.opponent_score || 0)) + '">' + esc(score) + '</td>'
                 + '<td><span class="res res-' + (g.result === 'T' ? 't' : (winner === g.team ? 'w' : 'l')) + '">'
                 + esc(winner) + '</span></td>'
@@ -2290,6 +2305,12 @@
                 + '<td class="n" data-k="' + (favKey === '' || favKey == null ? '' : favKey) + '">' + fav + '</td>'
                 + '<td class="n" data-k="' + (g.closing_total == null || g.closing_total_available === false ? '' : g.closing_total) + '">' + totalCell + '</td>'
                 + '<td class="n">' + ml + '</td>'
+                + (askedAboutRest
+                    ? '<td class="n" data-k="' + (g.rest_days == null ? '' : g.rest_days) + '">'
+                        + restDay(g.rest_days) + '</td>'
+                      + '<td class="n" data-k="' + (g.opponent_rest_days == null ? '' : g.opponent_rest_days) + '">'
+                        + restDay(g.opponent_rest_days) + '</td>'
+                    : '')
                 + '<td class="why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
         }).join('');
         // Every column a research question could be asked of is sortable. Date
@@ -2299,8 +2320,13 @@
             ['Date', 'text', 'desc'], ['Matchup', 'text', ''], ['Location', 'text', ''],
             ['Final score', 'num', ''], ['Winner', 'text', ''], ['Margin', 'num', ''],
             ['Favorite', 'num', ''], ['Closing total', 'num', ''],
-            ['Closing moneyline', '', ''], ['Why it qualified', '', ''],
-        ].map(function (c) {
+            ['Closing moneyline', '', ''],
+        ].concat(askedAboutRest
+            ? [[esc(d.team_1) + ' rest', 'num', ''], [esc(d.team_2) + ' rest', 'num', '']]
+            : []
+        ).concat([
+            ['Why it qualified', '', ''],
+        ]).map(function (c) {
             if (!c[1]) return '<th>' + c[0] + '</th>';
             return '<th class="th-sort" data-sort="' + c[1] + '" tabindex="0" role="columnheader"'
                 + ' aria-sort="' + (c[2] === 'desc' ? 'descending' : 'none') + '"'
