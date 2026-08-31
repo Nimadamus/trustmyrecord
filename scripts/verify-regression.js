@@ -41,10 +41,19 @@ const allChecks = [
   ['unit/static: MLB hub first-paint stability', 'node', ['tests/handicapping-mlb-first-paint-stability-test.js'], 'static'],
   ['unit/static: logged-out session (no failing auth calls)', 'node', ['tests/logged-out-session-regression-test.js'], 'static'],
   ['unit/static: recursion/retry-pattern guard', 'node', ['tests/recursion-retry-guard-test.js'], 'static'],
+  // RECAP_LANGUAGE_20260831 / LIGHT_SURFACE_20260831. Both guard a defect that
+  // shipped and was invisible to every existing check: the simulator's box score
+  // rendering pale-blue dark-theme ink onto its own white cards at 1.14:1, and a
+  // scoring recap that said "1-run HR" instead of "solo homer". The language test
+  // is offline and deterministic, so it belongs in the static tier; the contrast
+  // one drives a real browser and is grouped with the other live browser proofs.
+  ['unit/static: MLB simulator recap language', 'node', ['tests/mlb-simulator-recap-language-test.js'], 'static'],
   ['live static: sportsbook public loading', 'node', ['tests/sportsbook-public-loading-regression-test.js'], 'static'],
   ['forbidden text scan', 'node', ['scripts/forbidden-text-scan.js'], 'static'],
   ['visual/function: Playwright regression lock', 'npx', ['playwright', 'test', '--config=playwright.regression.config.cjs'], 'playwright'],
   ['live browser: sportsbook proof', 'npx', ['playwright', 'test', '--config=playwright.config.cjs'], 'playwright'],
+  ['live browser: MLB simulator result legibility', 'node',
+    ['tests/mlb-simulator-legibility-test.cjs', '--site', 'https://trustmyrecord.com'], 'playwright'],
 ];
 
 const staticOnly = process.env.TMR_REGRESSION_STATIC_ONLY === '1' || process.argv.includes('--static-only');
