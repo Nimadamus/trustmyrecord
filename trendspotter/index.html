@@ -41,6 +41,69 @@
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=37c35bb94347">
+<!-- ---------------------------------------------------------------------------
+     HEADING RHYTHM. Spacing only: no font, colour, size, wording, card or
+     layout change anywhere on this page.
+
+     Why it is here and not in trendspotter-explainer.css: tmr-ds.css ships
+     `body.tmr-ds h1,h2,h3,h4{line-height:1;margin:0}` and `body.tmr-ds p
+     {margin:0}`, which outranks the single-class rules in the page sheets, so
+     every heading sat flush against the text under it with descenders (the p
+     and y in "Pick a matchup") touching the line below. These rules carry an
+     extra element in the selector so they win the cascade wherever they land,
+     and they set the gap on the HEADING, so it holds whatever follows it.
+
+     One scale, used everywhere:
+       --tsp-gap-lg  under a section headline
+       --tsp-gap-md  under a card or step heading
+       --tsp-gap-sm  under an eyebrow / kicker / term
+     --------------------------------------------------------------------------- -->
+<style>
+html body.ts-page{--tsp-gap-lg:20px;--tsp-gap-md:14px;--tsp-gap-sm:9px}
+
+/* --- hero ---------------------------------------------------------------- */
+html body.ts-page .ts-hero .ts-eyebrow{margin:0 0 var(--tsp-gap-sm);line-height:1.35}
+html body.ts-page .ts-hero h1{line-height:1.06;margin:0 0 var(--tsp-gap-md)}
+html body.ts-page .ts-hero-lead{margin:0 0 var(--tsp-gap-sm);line-height:1.45}
+html body.ts-page .ts-hero-sub{margin:0;line-height:1.6}
+
+/* --- app card headings ("Pick a matchup", "Set conditions") --------------- */
+html body.ts-page .ts-card-head h2{line-height:1.22}
+html body.ts-page .ts-card-head .ts-card-note{line-height:1.5}
+html body.ts-page .ts-summary-eyebrow{margin:0 0 var(--tsp-gap-sm);line-height:1.35}
+html body.ts-page .ts-summary-text{margin:0;line-height:1.55}
+
+/* --- result placeholder --------------------------------------------------- */
+html body.ts-page .ts-results h2,
+html body.ts-page .ts-results h3{line-height:1.2;margin:0 0 var(--tsp-gap-md)}
+
+/* --- explainer section headlines ----------------------------------------- */
+/* the kicker is a <p> inside .ts-explain-head, so the body rule below has to
+   exclude it or it takes the kicker's own margin away again. Its size and
+   colour are left exactly as they are; only the gap under it is set. */
+html body.ts-page .ts-explain-head p:not(.ts-explain-kicker){margin:0;line-height:1.62}
+html body.ts-page .ts-explain-kicker{margin:0 0 var(--tsp-gap-sm)}
+html body.ts-page .ts-explain-head h2{line-height:1.14;margin:0 0 var(--tsp-gap-lg)}
+
+/* --- "What you ask" / "What comes back" / "How it is graded" -------------- */
+html body.ts-page .ts-xcard h3{line-height:1.18;margin:0 0 var(--tsp-gap-md)}
+html body.ts-page .ts-xcard p{margin:0}
+html body.ts-page .ts-xcard .ts-xlist{margin-top:var(--tsp-gap-md)}
+
+/* --- the three numbered steps -------------------------------------------- */
+/* .ts-step-n is inline-flex, so a margin on it does nothing vertically; the
+   14px that separated it from the heading stays on the heading's top edge. */
+html body.ts-page .ts-step h3{line-height:1.18;margin:14px 0 var(--tsp-gap-md)}
+html body.ts-page .ts-step p{margin:0}
+
+/* --- remaining term / body pairs ----------------------------------------- */
+html body.ts-page .ts-question p{line-height:1.5}
+html body.ts-page .ts-question small{margin-top:var(--tsp-gap-sm)}
+html body.ts-page .ts-limits dt{line-height:1.32;margin:0 0 var(--tsp-gap-sm)}
+html body.ts-page .ts-limits dd{margin:0}
+html body.ts-page .ts-faq summary{line-height:1.35}
+html body.ts-page .ts-modal-panel h2{line-height:1.16;margin:0 0 var(--tsp-gap-md)}
+</style>
 </head>
 <body class="tmr-ds ts-page">
 
