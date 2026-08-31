@@ -104,3 +104,92 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-l
 body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav :focus-visible{
   outline:2px solid #4DA3FF; outline-offset:2px;
 }
+
+/* ---- 6. THE TMR COIN BALANCE ---------------------------------------------
+   The coin control was a 34px pill with an 18px mark and a 13.5px number in
+   #F5D98B on a 12% tint: the icon read as decoration and the balance itself was
+   the quietest thing in the right-hand cluster. It is the member's money, so it
+   is now the loudest: a bigger mark, a tabular number a size up in near-white,
+   a deeper fill and a defined edge. Same element, same link, same behaviour.
+   Defined once here, so every page gets the identical control. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins{
+  display:inline-flex; align-items:center; gap:9px;
+  height:38px; padding:0 15px 0 12px;
+  border-radius:999px;
+  background:linear-gradient(180deg, rgba(245,201,60,.20), rgba(245,201,60,.12)) !important;
+  border:1px solid rgba(245,201,60,.46) !important;
+  box-shadow:inset 0 1px 0 rgba(255,240,200,.18), 0 2px 10px rgba(0,0,0,.35);
+  color:#FFE9A8 !important;
+  font-weight:800 !important;
+  font-size:15px !important;
+  line-height:1;
+  white-space:nowrap;
+  text-decoration:none;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins-icon{
+  display:block; width:24px; height:24px; flex:0 0 auto;
+  filter:drop-shadow(0 0 6px rgba(245,201,60,.45));
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins #navCoinBalance{
+  display:inline-block; line-height:1;
+  color:#FFFFFF;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  font-size:16px; font-weight:900; letter-spacing:.01em;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins:hover{
+  background:linear-gradient(180deg, rgba(245,201,60,.30), rgba(245,201,60,.18)) !important;
+  border-color:rgba(245,201,60,.70) !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins:focus-visible{ outline:2px solid #FFD766; outline-offset:2px; }
+/* The frozen state stays legible rather than dropping to a grey-on-grey chip. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins.is-frozen{
+  color:#DCE7F4 !important;
+  background:rgba(255,255,255,.10) !important;
+  border-color:rgba(174,198,220,.40) !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins.is-frozen #navCoinBalance{ color:#EDF2F8; }
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .v2nav-coins[hidden]{ display:none !important; }
+
+/* ---- 7. LAYOUT HARDENING --------------------------------------------------
+   The bar is now on pages that carry a decade of their own generic `nav`, `a`
+   and `div` rules. On /tmr-match/ one of them stacked the links and the header
+   rendered 456px tall instead of 71px. The shared component's own geometry is
+   restated here so no page stylesheet can take it apart; these are the same
+   values tmr-ds.css uses, not new ones. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-in{
+  display:flex !important; align-items:center !important; gap:30px !important;
+  flex-wrap:nowrap !important;
+  /* --nav-h is a tmr-ds.css token; pages outside the design system never
+     defined it, so the bar collapsed to its content height (39px on
+     /tmr-match/). The fallback is the homepage's own bar height. */
+  min-height:var(--nav-h, 71px) !important;
+  max-width:var(--wrap, 1440px) !important;
+  padding-left:calc(var(--gutter, 28px) + var(--nav-edge, 0px)) !important;
+  padding-right:calc(var(--gutter, 28px) + var(--nav-edge, 0px)) !important;
+  margin:0 auto !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-panel{
+  display:flex !important; align-items:center !important;
+  flex:1 1 auto !important; min-width:0 !important; flex-wrap:nowrap !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav{
+  display:flex !important; align-items:center !important; flex-direction:row !important;
+  flex-wrap:nowrap !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right{
+  display:flex !important; align-items:center !important; flex-direction:row !important;
+  margin-left:auto !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-navitem,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu > button{
+  display:inline-flex !important; align-items:center !important; width:auto !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu{ position:relative !important; display:inline-flex !important; }
+/* The dropdown is absolutely positioned; a page that made it static pushed the
+   bar open to its full height. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel{ position:absolute !important; }
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-toggle{ display:none !important; }
+@media (max-width:1024px){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-toggle{ display:inline-flex !important; }
+}

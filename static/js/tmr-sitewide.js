@@ -607,7 +607,19 @@
             </div>
         </div>
     `;
-    document.body.prepend(nav);
+    /* ONE NAVBAR (2026-08-31). tmr-ds-nav.js renders the approved .ds-nav, and
+       every page that loads this file loads that one too, so prepending this
+       bar as well put TWO differently-styled navigations on the page. It is
+       still BUILT, because the wiring below queries its nodes for the coin
+       balance, alerts and menus, but it is no longer inserted where the shared
+       component is present. The .ds-nav carries the same controls. */
+    var __tmrHasSharedNav = document.querySelector('.ds-nav')
+        || document.querySelector('script[src*="tmr-ds-nav."]');
+    if (__tmrHasSharedNav) {
+        nav.setAttribute('data-tmr-legacy-nav', 'suppressed');
+    } else {
+        document.body.prepend(nav);
+    }
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
     const communityMenu = nav.querySelector(".tmr-community-menu");

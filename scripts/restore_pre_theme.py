@@ -27,7 +27,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-LOCKED = {"index.html", "handicappers/index.html"}
+LOCKED = {"index.html", "handicappers/index.html", "today/index.html"}
 
 THEME_LINK = re.compile(rb'[ \t]*<link rel="stylesheet" href="/static/css/tmr-theme-a\.css[^"]*">[ \t]*\r?\n')
 ANTON_LINK = re.compile(rb'[ \t]*<link rel="stylesheet" href="https://fonts\.googleapis\.com/css2\?family=Anton[^"]*">[ \t]*\r?\n')
