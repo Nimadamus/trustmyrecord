@@ -59,6 +59,24 @@ function filterLibrary(sport) {
         filters: [teamScoped('prev_result', 'Previous game result', "How the team's previous game finished.")],
       },
       {
+        id: 'player', label: 'Pitcher & lineup',
+        filters: [{
+          id: 'opp_starter_hand', label: 'Opposing starter handedness',
+          help: 'Whether the team faced a left- or right-handed starting pitcher.',
+          kind: 'enum', scope: 'team', available: sport === 'MLB',
+          unavailable_reason: sport === 'MLB' ? null : `${sport} has no starting pitcher.`,
+          options: [{ value: 'L', label: 'Faced a lefty' }, { value: 'R', label: 'Faced a righty' }],
+        }],
+      },
+      {
+        id: 'schedule', label: 'Schedule & rest',
+        filters: [{
+          id: 'min_rest_days', label: 'Minimum rest', help: 'Days off before the game.',
+          kind: 'int', scope: 'team', available: true, unit: 'days',
+          min: 0, max: 14, step: 1, options: [],
+        }],
+      },
+      {
         id: 'market', label: 'Market',
         filters: [{
           id: 'spread_range', label: 'Closing spread range',
@@ -238,6 +256,159 @@ async function chooseMatchup(page, away = 'New York Yankees', home = 'Boston Red
   await page.locator('#mAway').selectOption(away);
   await page.locator('#mHome').selectOption(home);
 }
+
+// -------------------------------------------------- situational filters
+
+/**
+ * The situation list, driven the way a first-time user drives it.
+ *
+ * The properties here exist because a greyed-out button with no explanation is
+ * indistinguishable from broken software, and because a wall of controls for
+ * situations nobody asked for reads as a form to fill in. So: the lock says
+ * what to do, it lifts the instant the matchup is valid, the list is names
+ * only, and a situation's controls exist only after it is chosen.
+ */
+test.describe('situational filters', () => {
+  const list = (page) => page.locator('#condMenu');
+
+  test('an incomplete matchup states what to do instead of greying out in silence',
+    async ({ page }) => {
+      await open(page);
+      await expect(page.locator('#addCondHint'))
+        .toContainText('Choose two different teams above to unlock situational filters.');
+      await expect(page.locator('#addCond')).toBeDisabled();
+
+      // A team against itself is not a matchup, so the lock stays stated.
+      await chooseMatchup(page, 'New York Yankees', 'New York Yankees');
+      await expect(page.locator('#addCondHint')).toBeVisible();
+      await expect(page.locator('#addCond')).toBeDisabled();
+    });
+
+  test('two different teams unlock it immediately, with no reload', async ({ page }) => {
+    await open(page);
+    await chooseMatchup(page);
+    await expect(page.locator('#addCondHint')).toBeHidden();
+    await expect(page.locator('#addCond')).toBeEnabled();
+    await expect(page.locator('#addCond')).toHaveText('+ Add Situation');
+  });
+
+  test('the list offers names only — no control exists until a situation is chosen',
+    async ({ page }) => {
+      await open(page);
+      await chooseMatchup(page);
+      await expect(page.locator('#condList')).toBeEmpty();
+      await expect(page.locator('#condActiveH')).toBeHidden();
+
+      await page.locator('#addCond').click();
+      await expect(list(page)).toBeVisible();
+      await expect(list(page)).toContainText('Previous game result');
+      await expect(list(page)).toContainText('Opposing starter handedness');
+      await expect(list(page)).toContainText('Minimum rest');
+      // Names and add buttons. Nothing in the list is a value control.
+      await expect(list(page).locator('select, input[type="number"], input[type="text"]'))
+        .toHaveCount(0);
+    });
+
+  test('choosing one moves it into Active situations and only then shows its control',
+    async ({ page }) => {
+      await open(page);
+      await chooseMatchup(page);
+
+      // 1. A win/loss pick-one.
+      await page.locator('#addCond').click();
+      await list(page).locator('.condopt', { hasText: 'Previous game result' })
+        .getByRole('button', { name: /New York Yankees/ }).click();
+      await expect(page.locator('#condActiveH')).toBeVisible();
+      const prev = page.locator('#condList .cond', { hasText: 'Previous game result' });
+      await expect(prev).toContainText('New York Yankees');
+      await expect(prev.locator('select, [role="group"] button, input')).not.toHaveCount(0);
+      await expect(prev.getByRole('button', { name: /^Remove situation/ })).toBeVisible();
+
+      // 2. A handedness pick-one — a different control, same interaction.
+      await page.locator('#addCond').click();
+      await list(page).locator('.condopt', { hasText: 'Opposing starter handedness' })
+        .getByRole('button', { name: /New York Yankees/ }).click();
+      const hand = page.locator('#condList .cond', { hasText: 'Opposing starter handedness' });
+      await expect(hand).toContainText(/lefty|righty/i);
+
+      // 3. A whole number — a number field, and it says it is unset until answered.
+      await page.locator('#addCond').click();
+      await list(page).locator('.condopt', { hasText: 'Minimum rest' })
+        .getByRole('button', { name: /Boston Red Sox/ }).click();
+      const rest = page.locator('#condList .cond', { hasText: 'Minimum rest' });
+      await expect(rest.locator('input[type="number"]')).toBeVisible();
+      await expect(rest).toContainText(/Set a value/i);
+      await rest.locator('input[type="number"]').fill('0');
+      await expect(rest).not.toContainText(/Set a value/i);
+
+      await expect(page.locator('#condList .cond')).toHaveCount(3);
+      await expect(page.locator('#filterCount')).toContainText('3 situations');
+    });
+
+  test('a situation already added cannot be added again, and returns to the list when removed',
+    async ({ page }) => {
+      await open(page);
+      await chooseMatchup(page);
+      await page.locator('#addCond').click();
+      const row = list(page).locator('.condopt', { hasText: 'Previous game result' });
+      await row.getByRole('button', { name: /New York Yankees/ }).click();
+
+      // Reopened, the side already asked is refused; the other bench is not.
+      await page.locator('#addCond').click();
+      await expect(row.getByRole('button', { name: /New York Yankees/ })).toBeDisabled();
+      await expect(row.getByRole('button', { name: /Boston Red Sox/ })).toBeEnabled();
+
+      // Removing it hands it straight back. The remove button sits outside the
+      // popover, so clicking it also dismisses the list -- what must be true is
+      // that the situation is selectable again the next time the list is
+      // opened, with no reload and no other action in between.
+      await page.locator('#condList .cond')
+        .getByRole('button', { name: /^Remove situation/ }).first().click();
+      await expect(page.locator('#condList .cond')).toHaveCount(0);
+      await expect(page.locator('#condActiveH')).toBeHidden();
+      await page.locator('#addCond').click();
+      await expect(row.getByRole('button', { name: /New York Yankees/ })).toBeEnabled();
+      await expect(row.getByRole('button', { name: /Boston Red Sox/ })).toBeEnabled();
+    });
+
+  test('the list is searchable, and says so when nothing matches', async ({ page }) => {
+    await open(page);
+    await chooseMatchup(page);
+    await page.locator('#addCond').click();
+
+    await page.locator('#filterSearch').fill('rest');
+    await expect(list(page)).toContainText('Minimum rest');
+    await expect(list(page)).not.toContainText('Previous game result');
+
+    await page.locator('#filterSearch').fill('zzzz-not-a-situation');
+    await expect(list(page)).toContainText('No situation matches that search');
+  });
+
+  test('the chosen situations reach the request on the team they were added for',
+    async ({ page }) => {
+      const calls = await open(page);
+      await chooseMatchup(page);
+
+      await page.locator('#addCond').click();
+      await list(page).locator('.condopt', { hasText: 'Previous game result' })
+        .getByRole('button', { name: /New York Yankees/ }).click();
+      await page.locator('#addCond').click();
+      await list(page).locator('.condopt', { hasText: 'Opposing starter handedness' })
+        .getByRole('button', { name: /New York Yankees/ }).click();
+      await page.locator('#addCond').click();
+      await list(page).locator('.condopt', { hasText: 'Minimum rest' })
+        .getByRole('button', { name: /Boston Red Sox/ }).click();
+      await page.locator('#condList .cond', { hasText: 'Minimum rest' })
+        .locator('input[type="number"]').fill('0');
+
+      await page.locator('#mSubmit').click();
+      await expect.poll(() => calls.matchup.length).toBe(1);
+      const body = calls.matchup[0];
+      expect(Object.keys(body.team_1_filters)).toEqual(
+        expect.arrayContaining(['prev_result', 'opp_starter_hand']));
+      expect(body.team_2_filters).toMatchObject({ min_rest_days: 0 });
+    });
+});
 
 // ---------------------------------------------------------------- access
 
@@ -425,7 +596,7 @@ test.describe('report', () => {
       games: [],
       matchup_summary: { qualifying_games: 0, team_1_record: '0-0', team_2_record: '0-0' },
       zero_result: {
-        message: 'No meeting matches these conditions in this period.',
+        message: 'No meeting matches these situations in this period.',
         narrowest_filter: { filter: 'Previous game result', games_before: 241, games_after: 0 },
         actions: [],
       },
@@ -433,7 +604,7 @@ test.describe('report', () => {
     await open(page, { report: empty });
     await chooseMatchup(page);
     await page.locator('#mSubmit').click();
-    await expect(page.locator('#mResult')).toContainText(/No meeting matches these conditions/i);
+    await expect(page.locator('#mResult')).toContainText(/No meeting matches these situations/i);
     await expect(page.locator('table.games')).toHaveCount(0);
   });
 
