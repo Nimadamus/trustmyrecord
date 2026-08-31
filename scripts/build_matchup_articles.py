@@ -1105,6 +1105,7 @@ TEMPLATE = """<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/tmr-ds.css">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css">
 <link rel="stylesheet" href="/static/css/tmr-article.css">
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">

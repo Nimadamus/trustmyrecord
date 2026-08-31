@@ -530,6 +530,10 @@ HEAD_ASSETS = (
     '&amp;family=Barlow:wght@700;800&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap"'
     ' rel="stylesheet">\n'
     '    <link rel="stylesheet" href="%s">\n'
+    # The shared navbar's geometry. Without it a page mounts the shared header
+    # component and then renders it 5-12px shorter than every other page, because
+    # tmr-ds.css's unscaled --nav-h is all it has to go on. (2026-08-31)
+    '    <link rel="stylesheet" href="/static/css/tmr-navbar.css">\n'
     '    <link rel="stylesheet" href="/static/css/tmr-mlb-matchup.css">\n'
     '    <link rel="stylesheet" href="/static/css/tmr-linkhub.css">\n'
 ) % _hashed("static/css/tmr-ds.css")
