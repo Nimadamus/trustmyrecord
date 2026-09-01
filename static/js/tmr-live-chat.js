@@ -53,6 +53,18 @@
     });
   }
 
+  // A headset support agent, drawn inline so the launcher never waits on a
+  // network request and cannot break if an asset path moves.
+  var AGENT_ICON = [
+    '<svg viewBox="0 0 24 24" fill="none" stroke="#06210f" stroke-width="2"',
+    ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">',
+    '<path d="M4 13a8 8 0 0 1 16 0"></path>',
+    '<path d="M4 14v3a2 2 0 0 0 2 2h1v-5H6a2 2 0 0 0-2 2z"></path>',
+    '<path d="M20 14v3a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2z"></path>',
+    '<path d="M17 19v1a2 2 0 0 1-2 2h-3"></path>',
+    '</svg>',
+  ].join('');
+
   var STYLES = [
     '.tmr-lc, .tmr-lc * { box-sizing: border-box; }',
     '.tmr-lc {',
@@ -61,13 +73,28 @@
     '  --lc-visitor: #2a4f8f; position: fixed; right: 20px; bottom: 20px;',
     '  z-index: 2147483000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;',
     '}',
+    // The launcher is the familiar support-agent bubble: a round avatar with an
+    // online dot, and the label beside it so it reads as help, not decoration.
     '.tmr-lc-launcher {',
-    '  display: flex; align-items: center; gap: 8px; border: 0; cursor: pointer;',
-    '  background: var(--lc-accent); color: #06210f; font-weight: 700; font-size: 15px;',
-    '  padding: 13px 18px; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.35);',
+    '  display: flex; align-items: center; gap: 10px; border: 0; cursor: pointer;',
+    '  background: var(--lc-raised); color: var(--lc-ink); font-weight: 700; font-size: 15px;',
+    '  padding: 8px 20px 8px 8px; border-radius: 999px; box-shadow: 0 10px 28px rgba(0,0,0,.4);',
+    '  border: 1px solid var(--lc-line);',
     '}',
-    '.tmr-lc-launcher:hover { filter: brightness(1.06); }',
-    '.tmr-lc-dot { width: 8px; height: 8px; border-radius: 50%; background: #06210f; }',
+    '.tmr-lc-launcher:hover { filter: brightness(1.12); }',
+    '.tmr-lc-avatar {',
+    '  position: relative; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%;',
+    '  background: var(--lc-accent); display: flex; align-items: center; justify-content: center;',
+    '}',
+    '.tmr-lc-avatar svg { width: 26px; height: 26px; display: block; }',
+    '.tmr-lc-avatar.sm { width: 34px; height: 34px; }',
+    '.tmr-lc-avatar.sm svg { width: 20px; height: 20px; }',
+    '.tmr-lc-dot {',
+    '  position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px;',
+    '  border-radius: 50%; background: #35d07f; border: 2px solid var(--lc-raised);',
+    '}',
+    '.tmr-lc-label { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }',
+    '.tmr-lc-label small { font-size: 11px; font-weight: 600; color: var(--lc-muted); }',
     '.tmr-lc-panel {',
     '  display: none; flex-direction: column; width: 360px; max-width: calc(100vw - 32px);',
     '  height: 520px; max-height: calc(100vh - 120px); background: var(--lc-surface);',
@@ -117,14 +144,18 @@
     var root = document.createElement('div');
     root.className = 'tmr-lc';
     root.innerHTML = [
-      '<button class="tmr-lc-launcher" type="button" aria-label="Open live chat">',
-      '  <span class="tmr-lc-dot"></span> Live chat',
+      '<button class="tmr-lc-launcher" type="button" aria-label="Open live help">',
+      '  <span class="tmr-lc-avatar">' + AGENT_ICON + '<span class="tmr-lc-dot"></span></span>',
+      '  <span class="tmr-lc-label">Live help<small>Claude, TMR AI agent</small></span>',
       '</button>',
       '<div class="tmr-lc-panel" role="dialog" aria-label="Live chat">',
       '  <div class="tmr-lc-head">',
-      '    <div>',
-      '      <p class="tmr-lc-title">Live chat</p>',
-      '      <p class="tmr-lc-sub">Claude, the AI agent that runs the site</p>',
+      '    <div style="display:flex;align-items:center;gap:10px">',
+      '      <span class="tmr-lc-avatar sm">' + AGENT_ICON + '<span class="tmr-lc-dot"></span></span>',
+      '      <span>',
+      '        <p class="tmr-lc-title">Live help</p>',
+      '        <p class="tmr-lc-sub">Claude, TMR live AI agent</p>',
+      '      </span>',
       '    </div>',
       '    <button class="tmr-lc-close" type="button" aria-label="Close live chat">&times;</button>',
       '  </div>',
