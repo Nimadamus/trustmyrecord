@@ -527,6 +527,122 @@
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=7744beacad17">
+<!-- JUSTBET_CONTEST_CONTRAST_20260901: this page is dark-authored but the site
+     loads tmr-light.css after it, so half the ink stayed light-on-light and half
+     stayed dark-on-dark. This layer is loaded last and pins the foreground to the
+     surface each block actually renders. Colour only: no layout, no redesign. -->
+<style id="justbet-contrast-fix">
+    /* ink on DARK surfaces */
+    body.tmr-light .hero h1 {
+        background: none !important;
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+    body.tmr-light .hero .kicker { color: #EAF2FA !important; }
+    body.tmr-light .hero-sub { color: #D2DCEB !important; }
+    body.tmr-light .hero-meta { color: #B7CBE1 !important; }
+    body.tmr-light .hero-meta b { color: #FFFFFF !important; }
+    body.tmr-light .hero .status-tag { color: #6EE7A0 !important; }
+
+    body.tmr-light .prize-card .label { color: #F2C14E !important; }
+    body.tmr-light .prize-card .amount { color: #F2F7FD !important; }
+    body.tmr-light .prize-card .amount .currency { color: #F2C14E !important; }
+    body.tmr-light .prize-card .sub { color: #CFDDEC !important; }
+    body.tmr-light .prize-card .breakdown,
+    body.tmr-light .prize-card .breakdown span { color: #E8C36A !important; }
+
+    /* hero closing notice sits on a cream card, so it takes dark ink */
+    body.tmr-light #tmr-closing-notice,
+    body.tmr-light #tmr-closing-notice * { color: #4A3600 !important; }
+    body.tmr-light #tmr-closing-notice b { color: #2B1F00 !important; }
+
+    body.tmr-light .signup-banner .req-tag { color: #F2C14E !important; }
+    body.tmr-light .signup-banner h2 { color: #F2F7FD !important; }
+    body.tmr-light .signup-banner p { color: #CFDDEC !important; }
+    body.tmr-light .signup-banner p strong { color: #FFFFFF !important; }
+    body.tmr-light .signup-banner .promo-slot,
+    body.tmr-light .signup-banner .promo-slot strong { color: #F2C14E !important; }
+
+    body.tmr-light .final-cta h2 { color: #F2F7FD !important; }
+    body.tmr-light .final-cta p { color: #CFDDEC !important; }
+
+    body.tmr-light .prize-tier .place { color: #C6D6E8 !important; }
+    body.tmr-light .prize-tier.first .place,
+    body.tmr-light .prize-tier.third .place { color: #F2C14E !important; }
+    body.tmr-light .prize-tier .amt { color: #F2F7FD !important; }
+    body.tmr-light .prize-tier.first .amt .currency { color: #F2C14E !important; }
+
+    /* ink on LIGHT surfaces */
+    body.tmr-light .section h2,
+    body.tmr-light .section h2 i,
+    body.tmr-light .reg-card h3,
+    body.tmr-light .step h3,
+    body.tmr-light .faq-item h3 { color: #0B1B2E !important; }
+    body.tmr-light .section .lead,
+    body.tmr-light .section > p,
+    body.tmr-light .step p,
+    body.tmr-light .faq-item p,
+    body.tmr-light .reg-consent,
+    body.tmr-light .reg-consent span { color: #33475C !important; }
+    body.tmr-light .section .kicker {
+        color: #7A5600 !important;
+        background: #FDF3DC !important;
+        border-color: rgba(122,86,0,.35) !important;
+    }
+    body.tmr-light .section .kicker i { color: #7A5600 !important; }
+    body.tmr-light .footnote,
+    body.tmr-light .reg-help,
+    body.tmr-light .rule-stat .k { color: #4A6076 !important; }
+
+    body.tmr-light .rules-list li { color: #21374C !important; }
+    body.tmr-light .rules-list strong { color: #0B1B2E !important; }
+    body.tmr-light .rule-stat .v { color: #0B1B2E !important; }
+
+    /* body links inside the light sections stay electric blue but readable */
+    body.tmr-light .section a:not(.cta-primary):not(.cta-ghost):not(.cta-disabled) { color: #0B4FA8 !important; }
+    body.tmr-light .section a:not(.cta-primary):not(.cta-ghost):not(.cta-disabled):hover { color: #073B7D !important; text-decoration: underline; }
+
+    /* registration board */
+    body.tmr-light .reg-board th { color: #33475C !important; background: #EFF4F9 !important; }
+    body.tmr-light .reg-board td { color: #21374C !important; }
+    body.tmr-light .reg-board td a,
+    body.tmr-light .reg-board td a:visited { color: #0B4FA8 !important; font-weight: 700; }
+    body.tmr-light .reg-board td a:hover { color: #073B7D !important; text-decoration: underline; }
+    body.tmr-light .reg-board .empty { color: #4A6076 !important; }
+    body.tmr-light .reg-counts { color: #33475C !important; }
+    body.tmr-light .reg-counts b { color: #0B1B2E !important; }
+    body.tmr-light .reg-form label { color: #33475C !important; }
+    body.tmr-light .reg-form input,
+    body.tmr-light .reg-form select { color: #0B1B2E !important; }
+
+    body.tmr-light .reg-status-pill.verified { color: #0A6E3C !important; background: #DFF3E8 !important; border-color: rgba(10,110,60,.45) !important; }
+    body.tmr-light .reg-status-pill.pending { color: #7A5600 !important; background: #FDF3DC !important; border-color: rgba(122,86,0,.45) !important; }
+    body.tmr-light .reg-status-pill.needs_info { color: #0B4FA8 !important; background: #E3ECFB !important; border-color: rgba(11,79,168,.45) !important; }
+    body.tmr-light .reg-status-pill.rejected { color: #A32B22 !important; background: #FBE6E4 !important; border-color: rgba(163,43,34,.45) !important; }
+    body.tmr-light .reg-error { color: #A32B22 !important; background: #FBE6E4 !important; }
+    body.tmr-light .reg-success { color: #0A6E3C !important; background: #DFF3E8 !important; }
+
+    /* secondary buttons render on both dark and light blocks, so they get one
+       explicit light chip treatment that reads on either */
+    body.tmr-light .cta-ghost,
+    body.tmr-light a.cta-ghost,
+    body.tmr-light button.cta-ghost {
+        background: #FFFFFF !important;
+        color: #0B1B2E !important;
+        border: 1px solid #C3D3E4 !important;
+    }
+    body.tmr-light .cta-ghost i { color: #0B4FA8 !important; }
+    body.tmr-light .cta-ghost:hover,
+    body.tmr-light a.cta-ghost:hover,
+    body.tmr-light button.cta-ghost:hover {
+        background: #EEF4FB !important;
+        color: #073B7D !important;
+        border-color: #0B4FA8 !important;
+    }
+    body.tmr-light .cta-ghost:hover i { color: #073B7D !important; }
+    body.tmr-light .cta-primary i { color: inherit !important; }
+    body.tmr-light .cta-disabled { color: #4A6076 !important; background: #EDF2F7 !important; }
+</style>
 </head>
 <body class="tmr-ds-shell tmr-light">
     <div id="tmr-nav-placeholder"></div>
@@ -649,10 +765,10 @@
             <div class="reg-grid">
                 <div class="reg-card" id="reg-card-form">
                     <h3>Register for the Contest</h3>
-                    <div id="reg-state-loading" style="color: var(--muted); font-size: 0.92rem;">Loading…</div>
+                    <div id="reg-state-loading" style="color:#4A6076; font-size: 0.92rem;">Loading…</div>
 
                     <div id="reg-state-anon" hidden>
-                        <p style="color:#DCE7F4; line-height:1.55;">You must be logged into your TrustMyRecord account to register.</p>
+                        <p style="color:#21374C; line-height:1.55;">You must be logged into your TrustMyRecord account to register.</p>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px;">
                             <a class="cta-ghost" href="/login/"><i class="fa-solid fa-right-to-bracket"></i> Log In</a>
                             <a class="cta-ghost" href="/register/"><i class="fa-solid fa-user-plus"></i> Create TMR Account</a>
@@ -660,17 +776,17 @@
                     </div>
 
                     <form id="reg-state-form" class="reg-form" hidden novalidate>
-                        <label for="reg-sb-name">Sportsbook Name <span style="color:var(--red);">*</span></label>
+                        <label for="reg-sb-name">Sportsbook Name <span style="color:#A32B22;">*</span></label>
                         <select id="reg-sb-name" name="sportsbook_name" required>
                             <option value="JustBet" selected>JustBet</option>
                         </select>
                         <div class="reg-help">JustBet is the contest sponsor. Selecting another sportsbook requires admin approval.</div>
 
-                        <label for="reg-sb-acct">Sportsbook Account / Customer ID <span style="color:var(--red);">*</span></label>
+                        <label for="reg-sb-acct">Sportsbook Account / Customer ID <span style="color:#A32B22;">*</span></label>
                         <input type="text" id="reg-sb-acct" name="sportsbook_account_id" autocomplete="off" required maxlength="80" placeholder="Your JustBet customer ID">
                         <div class="reg-help"><strong>Admin-only.</strong> Your account/customer ID is used to verify your qualifying signup. It is never shown publicly.</div>
 
-                        <label for="reg-sb-email">Sportsbook Email <span style="color:var(--muted); font-weight:600; text-transform:none; letter-spacing:0;">(optional)</span></label>
+                        <label for="reg-sb-email">Sportsbook Email <span style="color:#4A6076; font-weight:600; text-transform:none; letter-spacing:0;">(optional)</span></label>
                         <input type="email" id="reg-sb-email" name="sportsbook_email" autocomplete="off" maxlength="160" placeholder="Optional — speeds up verification">
                         <div class="reg-help"><strong>Admin-only.</strong> Sportsbook email is private verification data and never displayed publicly.</div>
 
@@ -690,11 +806,11 @@
                     <div id="reg-state-existing" hidden>
                         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                             <span id="reg-status-pill" class="reg-status-pill verified">Registered</span>
-                            <span id="reg-username-label" style="color:#DCE7F4; font-weight:800;"></span>
+                            <span id="reg-username-label" style="color:#0B1B2E; font-weight:800;"></span>
                         </div>
-                        <p id="reg-status-msg" style="margin-top: 10px; color:#DCE7F4; line-height:1.55;"></p>
-                        <p id="reg-status-reason" style="margin-top: 6px; color:#BC372E; font-size:0.9rem;" hidden></p>
-                        <div style="margin-top: 12px; font-size:0.85rem; color: var(--muted);">
+                        <p id="reg-status-msg" style="margin-top: 10px; color:#21374C; line-height:1.55;"></p>
+                        <p id="reg-status-reason" style="margin-top: 6px; color:#A32B22; font-size:0.9rem;" hidden></p>
+                        <div style="margin-top: 12px; font-size:0.85rem; color:#4A6076;">
                             Your sportsbook account/customer ID is stored privately and is visible only to TrustMyRecord admins for verification. It is <strong>never</strong> shown on the public contest board.
                         </div>
                         <div id="reg-resubmit-row" style="margin-top: 14px;" hidden>
@@ -705,7 +821,7 @@
 
                 <div class="reg-card" id="reg-card-board">
                     <h3>Public Signup Board</h3>
-                    <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.5; margin: 0 0 12px;">
+                    <p style="color:#33475C; font-size: 0.92rem; line-height: 1.5; margin: 0 0 12px;">
                         Live list of TrustMyRecord users registered for the contest. Shows only TMR username and <strong>Registered</strong> status. Sportsbook account numbers, emails, internal verification stages, and other private details are <strong>never</strong> displayed here.
                     </p>
                     <div id="reg-board-counts" class="reg-counts">
@@ -914,7 +1030,7 @@
                     }
                     tbody.innerHTML = entries.map(function (e) {
                         return '<tr>' +
-                            '<td><a href="/profile/?username=' + encodeURIComponent(e.username) + '" style="color:#DCE7F4; font-weight:700;">@' + escapeHtml(e.username) + '</a></td>' +
+                            '<td><a href="/profile/?username=' + encodeURIComponent(e.username) + '" style="color:#0B1B2E; font-weight:700;">@' + escapeHtml(e.username) + '</a></td>' +
                             '<td><span class="reg-status-pill verified">Registered</span></td>' +
                             '</tr>';
                     }).join('');
@@ -942,27 +1058,27 @@
             <p class="lead">Players who open a new JustBet account through the official contest signup link on this page are eligible for the current JustBet new player offer:</p>
             <ul style="list-style:none; padding:0; margin: 0 0 16px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
                 <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#DCE7F4;">115%</div>
-                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Free Play bonus</div>
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#0B1B2E;">115%</div>
+                    <div style="margin-top:4px; color:#7A5600; font-size:0.9rem; line-height:1.45;">Free Play bonus</div>
                 </li>
                 <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#DCE7F4;">11x</div>
-                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Rollover requirement</div>
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#0B1B2E;">11x</div>
+                    <div style="margin-top:4px; color:#7A5600; font-size:0.9rem; line-height:1.45;">Rollover requirement</div>
                 </li>
                 <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#DCE7F4;">$300</div>
-                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Minimum qualifying deposit</div>
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#0B1B2E;">$300</div>
+                    <div style="margin-top:4px; color:#7A5600; font-size:0.9rem; line-height:1.45;">Minimum qualifying deposit</div>
                 </li>
                 <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#DCE7F4;">$1,500</div>
-                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Maximum qualifying deposit</div>
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#0B1B2E;">$1,500</div>
+                    <div style="margin-top:4px; color:#7A5600; font-size:0.9rem; line-height:1.45;">Maximum qualifying deposit</div>
                 </li>
                 <li style="padding:16px; border-radius:12px; border:1px solid rgba(185,133,5,.30); background:rgba(7,24,42,0.06);">
-                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#DCE7F4;">10,000 BetPoints</div>
-                    <div style="margin-top:4px; color:#B98505; font-size:0.9rem; line-height:1.45;">Redeemable for $55 cash</div>
+                    <div style="font-family:'Barlow', sans-serif; font-weight:900; font-size:1.5rem; color:#0B1B2E;">10,000 BetPoints</div>
+                    <div style="margin-top:4px; color:#7A5600; font-size:0.9rem; line-height:1.45;">Redeemable for $55 cash</div>
                 </li>
             </ul>
-            <p style="margin: 0 0 16px; color: var(--muted); font-size:0.92rem; line-height:1.5;"><strong style="color:#DCE7F4;">VIP support:</strong> JustBet VIP Services will have agents standing by to assist once the contest goes live.</p>
+            <p style="margin: 0 0 16px; color:#33475C; font-size:0.92rem; line-height:1.5;"><strong style="color:#0B1B2E;">VIP support:</strong> JustBet VIP Services will have agents standing by to assist once the contest goes live.</p>
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <a class="cta-primary"
                    href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
@@ -972,7 +1088,7 @@
                    style="font-size:0.92rem;">
                     <i class="fa-solid fa-up-right-from-square"></i> Create JustBet Account
                 </a>
-                <span style="color: var(--faint); font-size:0.78rem; line-height:1.5;">Bonus terms are set by JustBet. Eligibility, rollover, and redemption rules are determined at signup.</span>
+                <span style="color:#4A6076; font-size:0.78rem; line-height:1.5;">Bonus terms are set by JustBet. Eligibility, rollover, and redemption rules are determined at signup.</span>
             </div>
         </section>
 
@@ -1092,8 +1208,8 @@
                 <li><strong>Prizes.</strong> 1st: $1,500 · 2nd: $750 · 3rd: $250.</li>
             </ol>
             <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px;border-radius:12px;border:1px solid rgba(185,133,5,.30);background:rgba(7,24,42,0.06);">
-                <div style="flex:1;min-width:240px;color:#B98505;font-size:0.95rem;">
-                    <strong style="color:#DCE7F4;">Came from Twitter or TrustMyRecord?</strong> You still must click the JustBet signup button on this page to qualify.
+                <div style="flex:1;min-width:240px;color:#7A5600;font-size:0.95rem;">
+                    <strong style="color:#0B1B2E;">Came from Twitter or TrustMyRecord?</strong> You still must click the JustBet signup button on this page to qualify.
                 </div>
                 <a class="cta-primary"
                    href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
