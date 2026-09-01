@@ -369,18 +369,26 @@
         function renderReveal(games, picks) {
             var grid = $('#reveal-grid');
             var foot = $('#reveal-foot');
+            // DOUBLEHEADER_20260901. Cards are keyed by game id, not by the
+            // "Away @ Home" label. Both halves of a doubleheader carry the same
+            // label, so keying on it collapsed two separate games into one card:
+            // one start time for two games, and game 2's sealed picks sitting in
+            // the same card as game 1's revealed ones. The id keeps them apart and
+            // the time in the card header tells them apart on screen.
             var map = {};
             (games || []).forEach(function (g) {
                 var label = g.away_team + ' @ ' + g.home_team;
-                map[label] = { label: label, away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] };
+                var key = g.id || label;
+                map[key] = { label: label, away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] };
             });
             // Never drop a real pick because its game is missing from the slate.
             (picks || []).forEach(function (p) {
-                if (!map[p.game]) {
+                var key = p.game_id || p.game;
+                if (!map[key]) {
                     var parts = String(p.game).split(' @ ');
-                    map[p.game] = { label: p.game, away: parts[0] || p.game, home: parts[1] || '', start: p.game_start_at, picks: [] };
+                    map[key] = { label: p.game, away: parts[0] || p.game, home: parts[1] || '', start: p.game_start_at, picks: [] };
                 }
-                map[p.game].picks.push(p);
+                map[key].picks.push(p);
             });
             var cards = Object.keys(map).map(function (k) { return map[k]; })
                 .filter(function (c) { return c.picks.length > 0; })

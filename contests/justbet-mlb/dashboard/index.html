@@ -737,14 +737,19 @@
 
             // Cards keyed by game label; defensively add a card for any pick whose
             // game is missing from the board so no real pick is ever dropped.
+            // DOUBLEHEADER_20260901. Keyed by game id, not by the "Away @ Home"
+            // label: both halves of a doubleheader share a label, so the label
+            // key merged two separate games into a single card carrying one
+            // start time and both games' picks.
             const cardMap = new Map();
-            (games || []).forEach(g => cardMap.set(gameLabel(g), { label: gameLabel(g), away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] }));
+            (games || []).forEach(g => cardMap.set(g.id || gameLabel(g), { label: gameLabel(g), away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] }));
             (picks || []).forEach(p => {
-                if (!cardMap.has(p.game)) {
+                const key = p.game_id || p.game;
+                if (!cardMap.has(key)) {
                     const [away, home] = String(p.game).split(' @ ');
-                    cardMap.set(p.game, { label: p.game, away: away || p.game, home: home || '', start: p.game_start_at, picks: [] });
+                    cardMap.set(key, { label: p.game, away: away || p.game, home: home || '', start: p.game_start_at, picks: [] });
                 }
-                cardMap.get(p.game).picks.push(p);
+                cardMap.get(key).picks.push(p);
             });
             const cards = [...cardMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
 
