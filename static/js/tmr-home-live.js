@@ -63,10 +63,21 @@
   function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
   function sign(n) { return (n > 0 ? '+' : '') + n.toFixed(2); }
   function initials(name) { return String(name || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(); }
+  /* The initials chip, as an onerror attribute. EVERY avatar <img> this module
+     emits carries it - including the one built from a stored avatar_url, which
+     until now was the one branch that shipped a bare <img>.
+     A stored avatar_url is not always a plain hosted file: an account whose
+     avatar lives in the DB as a data URI is handed back as the API's own
+     /users/:id/avatar proxy, and that route answers 204 for an empty avatar and
+     404 for any query error. With no onerror that row painted the browser's
+     broken-image glyph and kept it. TMRPolls in Sports Talk was exactly that. */
+  function avatarFallback(u, cls) {
+    return ' onerror="this.outerHTML=\'<span class=&quot;' + cls.replace('ava', 'avl') + '&quot;>' +
+      initials(u && u.username) + '</span>\'"';
+  }
   function avatar(u, cls) {
-    if (u && u.avatar_url) return '<img class="' + cls + '" src="' + esc(u.avatar_url) + '" alt="">';
-    if (u && u.id) return '<img class="' + cls + '" src="' + API + '/users/' + u.id + '/avatar" alt="" ' +
-      'onerror="this.outerHTML=\'<span class=&quot;' + cls.replace('ava', 'avl') + '&quot;>' + initials(u.username) + '</span>\'">';
+    if (u && u.avatar_url) return '<img class="' + cls + '" src="' + esc(u.avatar_url) + '" alt=""' + avatarFallback(u, cls) + '>';
+    if (u && u.id) return '<img class="' + cls + '" src="' + API + '/users/' + u.id + '/avatar" alt=""' + avatarFallback(u, cls) + '>';
     return '<span class="' + cls.replace('ava', 'avl') + '">' + initials(u && u.username) + '</span>';
   }
   function timeAgo(ts) {

@@ -232,6 +232,18 @@
         return `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23${color}%22/><text x=%2250%22 y=%2264%22 font-size=%2248%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial,sans-serif%22>${letter}</text></svg>`;
     }
 
+    /* An avatar_url is not a guarantee of an image. A member whose avatar lives
+       in the DB as a data URI is handed back as the API's own /users/:id/avatar
+       proxy, and that route answers 204 for an empty avatar and 404 on any query
+       error, which paints the browser's broken-image glyph. Every <img> built
+       from getUserAvatar carries this onerror, so a bad or unreachable URL falls
+       back to the very same generated initials tile an avatar-less member
+       already gets - never to a broken image. */
+    function avatarFallbackAttr(user) {
+        const seed = Object.assign({}, user || {}, { avatar: null, avatarUrl: null, avatar_url: null });
+        return ` onerror="this.onerror=null;this.src='${getUserAvatar(seed)}'"`;
+    }
+
     function buildLoggedOutActions() {
         return `
                 <a class="tmr-global-nav__button" href="/login/" data-tmr-auth-route="login">Log In</a>
@@ -327,7 +339,7 @@
         return `
             <span class="tmr-user-chip-wrap">
                 <button type="button" class="tmr-global-nav__user tmr-user-menu-trigger" data-tmr-user-menu aria-haspopup="true" aria-expanded="false"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
-                    <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
+                    <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar"${avatarFallbackAttr(user)}>
                     <span class="tmr-global-nav__user-copy">
                         <strong>${escapeHtml(displayName)}</strong>
                         <span>@${escapeHtml(username)}</span>
@@ -725,7 +737,7 @@
                 const href = "/profile/?user=" + encodeURIComponent(username);
                 const avatar = getUserAvatar(user);
                 const next = '<a class="tmr-premium-login auth-link" href="' + href + '" style="display:inline-flex;align-items:center;gap:8px;">'
-                           + '<img class="tmr-premium-avatar" src="' + avatar + '" alt="' + escapeHtml(display) + ' avatar" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:1px solid rgba(148,163,184,.45);">'
+                           + '<img class="tmr-premium-avatar" src="' + avatar + '" alt="' + escapeHtml(display) + ' avatar" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:1px solid rgba(148,163,184,.45);"' + avatarFallbackAttr(user) + '>'
                            + '<span>' + escapeHtml(display) + '</span></a>'
                            // Sitewide alerts bell for the homepage baked header. The global-nav
                            // bell is display:none on the homepage, so mirror it here between the
@@ -1210,7 +1222,7 @@
                         : "";
                     const meta = [picks, units].filter(Boolean).join(" · ") || "@" + username;
                     return `<a class="tmr-search-result tmr-search-result--user" href="/profile/?user=${encodeURIComponent(username)}">
-                        <img class="tmr-search-result__avatar" src="${avatar}" alt="">
+                        <img class="tmr-search-result__avatar" src="${avatar}" alt=""${avatarFallbackAttr(u)}>
                         <span class="tmr-search-result__copy">
                             <strong>${escapeHtml(display)}</strong>
                             <span>@${escapeHtml(username)} · ${escapeHtml(meta)}</span>
