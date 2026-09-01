@@ -251,7 +251,9 @@ class TrustMyRecordAPI {
        the bearer token because these endpoints are viewer-dependent, so an
        owner's response can never be handed to a logged-out reader. */
     static get READ_COALESCE_PATTERN() {
-        return /^\/(users\/[^/]+(\/metrics)?|picks)(\?|$)/;
+        // /users/:name, /users/:name/metrics, /users/:name/stats/<x>, /picks.
+        // The stats/breakdowns read was measured going out twice per profile view.
+        return /^\/(users\/[^/]+(\/(metrics|stats\/[a-z-]+))?|picks)(\?|$)/;
     }
 
     async request(endpoint, options = {}) {

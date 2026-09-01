@@ -1355,7 +1355,7 @@
     // before this deferred script, so they're skipped.
     [
         ["/static/js/config.js?v=a6695bfebf66", "config.js"],
-        ["/static/js/backend-api.js?v=ea630ee25e7a", "backend-api.js"],
+        ["/static/js/backend-api.js?v=68c9d15dbed8", "backend-api.js"],
         ["/static/js/auth-persistent.js?v=533b6a5999e2", "auth-persistent.js"],
         ["/static/js/notifications.js?v=395be0dd8cdf", "notifications.js"]
     ].forEach(([src, name]) => {
