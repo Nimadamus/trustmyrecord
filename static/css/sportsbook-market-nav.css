@@ -1,0 +1,182 @@
+/* ==========================================================================
+   sportsbook-market-nav.css  (MARKET_NAV_ONE_ROW_20260831)
+   The market / period tab strip (#lobbyPeriodBar, .sportsbook-period-bar)
+   used by every sport on the Make Picks board.
+
+   Problem it fixes: the strip was flex-wrap:wrap, so any catalog one tab too
+   wide dropped a single orphan ("PLAYER PROPS") onto a second row.
+
+   Behaviour: the strip is now a single non-wrapping row. When the catalog
+   does not fit, sportsbook-market-nav.js folds the lowest-priority markets
+   (Alt Lines / Player Props first - they are last in every PERIOD_CATALOG)
+   into a MORE dropdown, and on viewports too narrow to keep at least three
+   tabs beside MORE it becomes a smooth horizontal scroller instead.
+   There is never a partial second row.
+
+   Layout only. Colours, font and the electric-blue active pill are inherited
+   from the existing sportsbook theme; nothing else on the page is touched.
+   Selectors carry two ids + repeated classes because the live theme styles
+   this strip at `body.tmr-site-shell[data-tmr-route="sportsbook"] #picks
+   #lobbyPeriodBar` with !important.
+   ========================================================================== */
+
+/* ---- the strip: one row, never wrapped -------------------------------- */
+html body .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.tmr-mktnav,
+html body #picks .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.tmr-mktnav,
+html body #picks #lobbyPeriodBar.sportsbook-period-bar.tmr-mktnav.tmr-mktnav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+/* Fallback mode for viewports too narrow to fold gracefully. */
+html body .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.is-scroll,
+html body #picks .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.is-scroll,
+html body #picks #lobbyPeriodBar.sportsbook-period-bar.tmr-mktnav.is-scroll {
+    overflow-x: auto !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+html body .sportsbook-period-bar.tmr-mktnav::-webkit-scrollbar,
+html body #picks #lobbyPeriodBar.tmr-mktnav::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+}
+
+/* ---- the tabs: one consistent height, tighter horizontal padding ------ */
+html body .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.tmr-mktnav .sportsbook-period-tab,
+html body #picks .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.tmr-mktnav .sportsbook-period-tab,
+html body #picks #lobbyPeriodBar.sportsbook-period-bar.tmr-mktnav.tmr-mktnav .sportsbook-period-tab,
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab,
+html body .tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 8px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+
+/* ---- MORE trigger: reads as one more tab ------------------------------ */
+html body .tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more {
+    gap: 5px !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    color: #b9c4d6 !important;
+    font: 800 10.75px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+    letter-spacing: .02em !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+html body .tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more[hidden] {
+    display: none !important;
+}
+
+html body .tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more:hover,
+html body .tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more[aria-expanded="true"] {
+    background: #16243f !important;
+    color: #f1f5fb !important;
+}
+
+/* Active market folded into the dropdown keeps the electric-blue pill. */
+html body .tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.tmr-mktnav-more.is-active {
+    background: linear-gradient(135deg, #1668C8, #0F55A8) !important;
+    color: #FFFFFF !important;
+}
+
+/* Crisp CSS caret rather than a text glyph, which renders as a faint dash at
+   this size in Inter. */
+html body .tmr-mktnav-more .tmr-mktnav-more-caret {
+    width: 0 !important;
+    height: 0 !important;
+    border-left: 4px solid transparent !important;
+    border-right: 4px solid transparent !important;
+    border-top: 5px solid currentColor !important;
+    opacity: .9 !important;
+    transition: transform .15s ease !important;
+}
+
+html body .tmr-mktnav-more[aria-expanded="true"] .tmr-mktnav-more-caret {
+    transform: rotate(180deg) !important;
+}
+
+/* ---- the dropdown ------------------------------------------------------ */
+html body .tmr-mktnav-menu {
+    position: fixed !important;
+    z-index: 4000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    margin: 0 !important;
+    padding: 6px !important;
+    background: #0e1a2e !important;
+    border: 1px solid rgba(148, 163, 184, .18) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 18px 40px rgba(2, 8, 20, .55) !important;
+}
+
+html body .tmr-mktnav-menu[hidden] {
+    display: none !important;
+}
+
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 0 12px !important;
+    border-radius: 7px !important;
+}
+
+/* Tabs sit at the theme's own font size (never smaller); the extra room the
+   full 10-market catalog needs comes from horizontal spacing only. */
+html body .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.tmr-mktnav .sportsbook-period-tab,
+html body #picks .sportsbook-period-bar.tmr-mktnav.tmr-mktnav.tmr-mktnav .sportsbook-period-tab,
+html body #picks #lobbyPeriodBar.sportsbook-period-bar.tmr-mktnav.tmr-mktnav .sportsbook-period-tab {
+    letter-spacing: .02em !important;
+}
+
+/* The dropdown is appended to <body>, outside #picks, so none of the board's
+   own `#picks .sportsbook-period-tab` theming reaches it. Restate the tab look
+   here - same colours, same font, same electric-blue active pill - at a
+   specificity that clears the sitewide `body button:not(...)` chain. */
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab {
+    background: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    color: #b9c4d6 !important;
+    font: 800 10.75px 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+    letter-spacing: .02em !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    text-align: left !important;
+}
+
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab:hover {
+    background: #16243f !important;
+    color: #f1f5fb !important;
+}
+
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab.is-active,
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab.active,
+html body .tmr-mktnav-menu.tmr-mktnav-menu.tmr-mktnav-menu .sportsbook-period-tab.sportsbook-period-tab.sportsbook-period-tab[aria-selected="true"] {
+    background: linear-gradient(135deg, #1668C8, #0F55A8) !important;
+    color: #FFFFFF !important;
+}
