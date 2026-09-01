@@ -31,6 +31,9 @@ the underlying fact is real and held:
   * startDate    is emitted only when we hold a real first pitch.
   * location     is emitted only when the venue is known. Its postal address is
                  emitted only when the feed hands us a real one for that venue.
+  * performer    is the two clubs. They are the fixture's participants, which is
+                 exactly what schema.org means by performer, and they are the
+                 one recommended field a fixture always holds.
   * organizer    is emitted only when the governing body is known AND we hold a
                  real homepage for it. Search Console reported "Missing field
                  url (in organizer)" site wide on 2026-09-01 because the
@@ -66,6 +69,17 @@ ORGANIZER_URLS = {
     "nhl": "https://www.nhl.com/",
     "trustmyrecord": "https://trustmyrecord.com/",
 }
+
+# The governing body a league code names. Used where a caller holds the league
+# rather than the body's full name. Only codes with exactly one governing body
+# appear here; a college or international code names none.
+SPORT_ORGANIZERS = {
+    "mlb": "Major League Baseball",
+    "nba": "National Basketball Association",
+    "nfl": "National Football League",
+    "nhl": "National Hockey League",
+}
+
 
 # Which schema.org type a given organizer is. A league governs sport, so it is a
 # SportsOrganization; TrustMyRecord is not a league, so it is an Organization.
@@ -213,6 +227,11 @@ def sports_event(url, away, home, sport, description, node_id=None,
         "homeTeam": {"@type": "SportsTeam", "name": home_team or home},
         "competitor": [{"@type": "SportsTeam", "name": away_team or away},
                        {"@type": "SportsTeam", "name": home_team or home}],
+        # The clubs again under the name Google reads. competitor and performer
+        # are the same two facts: schema.org calls them competitors, Google's
+        # Event guidance asks for performers, and a fixture always holds both.
+        "performer": [{"@type": "SportsTeam", "name": away_team or away},
+                      {"@type": "SportsTeam", "name": home_team or home}],
     }
     if node_id:
         event["@id"] = node_id
@@ -231,6 +250,6 @@ def sports_event(url, away, home, sport, description, node_id=None,
         event["offers"] = offers
     ordered = ["@type", "@id", "name", "url", "description", "sport",
                "startDate", "endDate", "eventStatus", "eventAttendanceMode",
-               "location", "image", "organizer", "offers",
+               "location", "image", "organizer", "performer", "offers",
                "awayTeam", "homeTeam", "competitor"]
     return {k: event[k] for k in ordered if k in event}

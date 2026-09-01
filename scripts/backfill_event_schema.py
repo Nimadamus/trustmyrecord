@@ -39,6 +39,14 @@ Nothing is invented. For each Event node that is missing a field:
                 and nothing else. Only the url is added; the name is never
                 changed, and a name we hold no homepage for is left alone.
 
+  performer     the two clubs, taken from the node's own competitor/awayTeam/
+                homeTeam. Nothing new is learned - the same two teams are simply
+                also stated under the name Google's Event guidance reads.
+
+  organizer     (where absent) the governing body the node's own `sport` names,
+                for the four leagues that have exactly one. A node whose sport
+                is a college or international code names no organizer.
+
   location      the park's real postal address, read from the MLB venue feed and
                 cached in scripts/mlb_venue_addresses.json, matched on the venue
                 name the node already carries. A venue that is not in that file
@@ -65,7 +73,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from schema_event import (  # noqa: E402
-    OFFLINE, event_status, organizer_node, postal_address,
+    OFFLINE, SPORT_ORGANIZERS, event_status, organizer_node, postal_address,
 )
 
 VENUE_ADDRESSES = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -209,6 +217,17 @@ def repair_doc(doc, status_text):
             # organizer_node returns None for a body we hold no homepage for, in
             # which case the node is left exactly as it was rather than stripped.
             filled = organizer_node(org)
+            if filled:
+                ev["organizer"] = filled
+        if not ev.get("performer"):
+            teams = [t for t in (ev.get("awayTeam"), ev.get("homeTeam")) if isinstance(t, dict)]
+            if not teams and isinstance(ev.get("competitor"), list):
+                teams = [t for t in ev["competitor"] if isinstance(t, dict)]
+            if teams:
+                ev["performer"] = [dict(t) for t in teams]
+        if not ev.get("organizer"):
+            body = SPORT_ORGANIZERS.get((ev.get("sport") or "").strip().lower())
+            filled = organizer_node(body) if body else None
             if filled:
                 ev["organizer"] = filled
         place = ev.get("location")
