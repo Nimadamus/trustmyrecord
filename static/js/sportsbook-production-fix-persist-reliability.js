@@ -1192,6 +1192,26 @@
         }
 
         const api = await getApiClientOrFallback();
+        /* THE AGGREGATOR RIDES WITH THE PICK LIST (LEDGER_PARITY_20260901).
+           ------------------------------------------------------------------
+           Two earlier attempts put this fetch in the wrong place. The override
+           window.loadMyRecordPage never runs, because the page's inline script
+           calls its own local declaration. window.ensureBackendPicks does run --
+           but only when the inline renderer's guard fires, and by then another
+           caller (a showSection wrapper, the pending-picks watchdog) has often
+           already loaded the picks and set _tmrBackendPicksLoaded, so the guard
+           passes straight through and the aggregator is never asked for.
+           Measured live both times: 704 picks paginated correctly, tiles filled,
+           __tmrOwnerMetrics still unset, ROI still +1.3% against the server's
+           +0.93%.
+
+           fetchCurrentUserPicksNow is the one function every one of those paths
+           funnels through. Fetching here means the authoritative record is in
+           hand whenever the pick list is, no matter who asked for it. It runs in
+           parallel with the pagination, so it costs no wall-clock, and a failure
+           is swallowed to null -- the record page falls back to local arithmetic
+           rather than losing the pick list over it. */
+        const metricsPromise = fetchOwnerMetrics(api, user.username || user.id);
         let response;
         let privatePendingResponse = null;
         try {
@@ -1223,6 +1243,8 @@
         const picks = Array.from(mergedById.values()).map(normalizePick).sort(function(a, b) {
             return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
         });
+        const ownerMetrics = await metricsPromise;
+        if (ownerMetrics && ownerMetrics.summary) window.__tmrOwnerMetrics = ownerMetrics;
         state.currentUserPicks = picks;
         window._cachedBackendPicks = picks;
         // Marks the cache as REAL backend data. The legacy inline
@@ -3992,22 +4014,16 @@
             if (!user && hasStoredToken()) {
                 throw new Error('Signed in, but your session could not be restored');
             }
-            const apiClient = await getApiClientOrFallback();
-            /* Both reads go out together. They are independent -- the aggregator
-               computes the record server-side, the pick list feeds the tables --
-               and running them in series added a whole round trip to a page whose
-               complaint was that it took too long to show anything. */
-            const results = await Promise.all([
-                fetchCurrentUserPicks(),
-                fetchOwnerMetrics(apiClient, user && (user.username || user.id))
-            ]);
-            const picks = results[0];
-            const metrics = results[1];
+            /* One fetch, one owner. fetchCurrentUserPicksNow pulls the pick list
+               and the aggregator together and parks the aggregator on window, so
+               asking for it again here would either duplicate the request or --
+               worse -- overwrite a good payload with null on a transient failure. */
+            const picks = await fetchCurrentUserPicks();
+            const metrics = window.__tmrOwnerMetrics || null;
             // Full inline render first (breakdown tables + secondary metrics,
             // reading the freshly-set window._cachedBackendPicks), then the
             // canonical record widgets last so the four headline numbers always
             // end on the server aggregator's math.
-            window.__tmrOwnerMetrics = metrics || null;
             if (typeof window.__tmrInlineMyRecordRender === 'function') {
                 try {
                     window.__tmrInlineMyRecordRender();
@@ -4767,16 +4783,9 @@
            parallel; the record does not wait on the pick list or vice versa. */
         window.ensureBackendPicks = function(callback) {
             const done = function () { if (typeof callback === 'function') callback(); };
-            const user = getCurrentUser();
-            Promise.all([
-                fetchCurrentUserPicks(),
-                getApiClientOrFallback()
-                    .then(function (c) { return fetchOwnerMetrics(c, user && (user.username || user.id)); })
-                    .catch(function () { return null; })
-            ]).then(function (r) {
-                const picks = r[0];
-                const metrics = r[1];
-                if (metrics) window.__tmrOwnerMetrics = metrics;
+            fetchCurrentUserPicks().then(function (picks) {
+                // fetchCurrentUserPicksNow parked the aggregator alongside the picks.
+                const metrics = window.__tmrOwnerMetrics;
                 syncRecordWidgets(picks, metrics);
                 setMyRecordError(null);
                 myRecordRetries = 0;
