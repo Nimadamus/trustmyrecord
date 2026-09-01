@@ -342,6 +342,29 @@
         .modal-msg { margin: 14px 0 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
         .modal-msg.ok { color: #4FD18B; }
         .modal-msg.err { color: #FF8B8B; }
+        /* PENDING_PICKS_CONTRAST_20260831: readability pass only, no layout change.
+           Two problems, both cascade: the sitewide light theme forces every <p>
+           to the muted slate #2E4459, which lands dark-on-dark inside the navy
+           summary cards, and the picks table kept its dark-theme ink after the
+           table surface turned white. Scoped to this route so nothing else moves. */
+        body.tmr-light[data-tmr-route="my-pending-picks"] .summary-label { color: #7FB6FF !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .summary-value { color: #FFFFFF !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .summary-hint { color: #AFC7DF !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap th { color: #0B2137 !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap td { color: #07182A !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .pick-main { color: #0B4FA8 !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .pick-sub { color: #2E4459 !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .league-chip {
+            background: rgba(11,79,168,0.16) !important;
+            color: #0B4FA8 !important;
+        }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .report-state { color: #4A6076 !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .report-state .report-when { color: #2E4459 !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .report-state.reported { color: #07733F !important; }
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .report-state.reported .report-when { color: #065C33 !important; }
+        /* Same gold badge, one shade down so the lettering clears 4.5:1 on white.
+           The mobile card copy sits on navy and keeps the original #B98505. */
+        body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .status-pill { color: #855D00 !important; }
         @media print {
             body { background: #02050A; }
             .pending-page { padding-top: 24px; }
