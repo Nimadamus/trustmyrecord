@@ -119,10 +119,14 @@ const shims = [
   },
   {
     file: 'my-record/index.html',
-    target: '/sportsbook/#my-record',
-    canonical: 'https://trustmyrecord.com/sportsbook/#my-record',
+    // ROUTE FIX 2026-09-01: /my-record/ used to forward to the sportsbook board
+    // with a #my-record anchor, so "My Record" opened the pick-entry screen.
+    // /profile/ is the record page (record, win rate, units, ROI, advanced
+    // metrics, pick history) and is where /dashboard/ and /account/ resolve.
+    target: '/profile/',
+    canonical: 'https://trustmyrecord.com/profile/',
     label: 'Continue',
-    forbiddenTargets: []
+    forbiddenTargets: ['/sportsbook/#my-record']
   },
   {
     file: 'mypicks/index.html',
