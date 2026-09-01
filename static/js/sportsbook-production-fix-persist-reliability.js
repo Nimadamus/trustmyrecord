@@ -1173,6 +1173,18 @@
     async function fetchCurrentUserPicksNow() {
         const user = await waitForCurrentUser(8000);
         if (!user) {
+            /* A stored token that never resolved into a user means the session
+               restore itself failed -- /auth/me was unreachable or errored. That
+               is an OUTAGE, not a logged-out visitor, and the two must not produce
+               the same screen: marking the list loaded here would paint 0-0-0 over
+               a real 675-pick record and leave it there. Throw instead, so the
+               caller's error banner and retry take over.
+
+               A visitor with no token at all is genuinely logged out; [] is the
+               correct answer for them and it is marked loaded as before. */
+            if (hasStoredToken()) {
+                throw new Error('Signed in, but your session could not be restored');
+            }
             state.currentUserPicks = [];
             window._cachedBackendPicks = [];
             window._tmrBackendPicksLoaded = true;
@@ -3972,11 +3984,14 @@
         banner.appendChild(retry);
     }
 
-    let myRecordAutoRetried = false;
+    let myRecordRetries = 0;
 
     async function loadMyRecordPage() {
         try {
             const user = await waitForCurrentUser(8000);
+            if (!user && hasStoredToken()) {
+                throw new Error('Signed in, but your session could not be restored');
+            }
             const apiClient = await getApiClientOrFallback();
             /* Both reads go out together. They are independent -- the aggregator
                computes the record server-side, the pick list feeds the tables --
@@ -4002,16 +4017,22 @@
             }
             syncRecordWidgets(picks, metrics);
             setMyRecordError(null);
-            myRecordAutoRetried = false;
+            myRecordRetries = 0;
         } catch (error) {
             console.error('[MyRecord] could not load your record:', error);
             setMyRecordError(
                 'Your record could not be loaded right now (' +
                 ((error && error.message) || 'network error') + ').'
             );
-            if (!myRecordAutoRetried) {
-                myRecordAutoRetried = true;
-                setTimeout(function () { loadMyRecordPage(); }, 4000);
+            /* Back off and try again a few times rather than once. The failures
+               this rides out -- a Render cold start, a pool exhausted for a few
+               seconds, a database mid-restart -- last tens of seconds, not four.
+               Capped, so a genuinely down backend does not turn every open tab
+               into a retry loop against it. */
+            if (myRecordRetries < 4) {
+                const delay = 4000 * Math.pow(2, myRecordRetries);
+                myRecordRetries += 1;
+                setTimeout(function () { loadMyRecordPage(); }, delay);
             }
         }
     }
