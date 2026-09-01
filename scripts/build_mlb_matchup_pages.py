@@ -540,6 +540,11 @@ HEAD_ASSETS = (
     # component and then renders it 5-12px shorter than every other page, because
     # tmr-ds.css's unscaled --nav-h is all it has to go on. (2026-08-31)
     '    <link rel="stylesheet" href="/static/css/tmr-navbar.css">\n'
+    # the immunity sheet. It must be a real <link> and not the runtime
+    # injection in tmr-ds-nav.js: an injected stylesheet does not block
+    # rendering, so the bar painted at the wrong type for a measured 168ms
+    # before snapping. (2026-09-01)
+    '    <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">\n'
     '    <link rel="stylesheet" href="/static/css/tmr-mlb-matchup.css">\n'
     '    <link rel="stylesheet" href="/static/css/tmr-linkhub.css">\n'
 ) % _hashed("static/css/tmr-ds.css")
