@@ -7401,6 +7401,29 @@
     }
 
     // ======================== ADVANCED METRICS ========================
+    /* RAIL_AVG_ODDS_20260901. The header rail reads its Avg Odds from the users
+       row (`p.avg_odds`), which does not carry that column, and its fallback is a
+       ledger calculation that has not run yet when the header first paints. So a
+       profile with 675 graded picks and a perfectly good average price of -130 in
+       the aggregator rendered "N/A" in the rail while the correct figure sat in a
+       payload this page had already fetched.
+
+       /metrics is the authority for this number -- it is the average implied
+       probability converted back to American, computed server-side over the graded
+       set -- so when it lands, it fills the cell. Display only; nothing else about
+       the header changes. */
+    function applyRailAvgOdds(data) {
+        const odds = data && data.summary ? data.summary.avg_odds : null;
+        if (odds == null || !Number.isFinite(Number(odds)) || Number(odds) === 0) return;
+        const card = document.querySelector('.profile-rail-card--avg-odds .profile-rail-value');
+        if (!card) return;
+        const current = (card.textContent || '').trim();
+        // Only fill a placeholder. A real value already on screen is left alone.
+        if (current && current !== 'N/A' && current !== 'Loading...' && current !== 'Unavailable' && current !== '—') return;
+        const n = Math.round(Number(odds));
+        card.textContent = (n > 0 ? '+' : '') + n;
+    }
+
     // Calls the new /api/users/:username/metrics aggregator and fills the
     // Advanced Metrics tab placeholders. Anything the aggregator returns
     // null for stays as the '—' placeholder per the no-fake-data rule.
@@ -7821,6 +7844,7 @@
             return;
         }
         try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
+        try { applyRailAvgOdds(data); } catch (e) { console.warn('[Profile] rail avg odds failed:', e); }
         const set = (id, value, opts) => {
             const el = document.getElementById(id);
             if (!el || value == null) return;

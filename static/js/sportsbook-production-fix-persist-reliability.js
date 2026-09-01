@@ -1134,8 +1134,44 @@
         }
     }
 
+    /* AUTH_RACE_20260901 -- a token in hand is not yet a user object.
+       auth-persistent restores a remembered session ASYNCHRONOUSLY: it reads the
+       stored token, calls /auth/me, and only then populates auth.currentUser. Any
+       reader that asks getCurrentUser() before that round trip lands gets null.
+
+       That mattered here because null took the branch below, which declares the
+       member's pick list to be [] and marks it LOADED. My Record then rendered a
+       confident 0-0-0 / 0.0% / +0.00 for a signed-in account with 675 graded
+       picks, and never corrected itself -- the loaded flag said the answer was
+       already known. It is the same false-zero the inline renderer's guard was
+       written to prevent, arriving through a door the guard does not watch.
+
+       So: if there is no user BUT there is a token, wait for the session to
+       finish restoring before concluding anything. Only a genuinely logged-out
+       visitor -- no user and no token -- gets the empty answer, which for them is
+       the correct one. */
+    function hasStoredToken() {
+        try {
+            return !!(localStorage.getItem('trustmyrecord_token') ||
+                localStorage.getItem('accessToken') ||
+                localStorage.getItem('access_token') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('tmr_token'));
+        } catch (e) { return false; }
+    }
+
+    async function waitForCurrentUser(timeoutMs) {
+        const deadline = Date.now() + (timeoutMs || 8000);
+        let user = getCurrentUser();
+        while (!user && Date.now() < deadline && hasStoredToken()) {
+            await new Promise(function (r) { setTimeout(r, 120); });
+            user = getCurrentUser();
+        }
+        return user;
+    }
+
     async function fetchCurrentUserPicksNow() {
-        const user = getCurrentUser();
+        const user = await waitForCurrentUser(8000);
         if (!user) {
             state.currentUserPicks = [];
             window._cachedBackendPicks = [];
@@ -3940,7 +3976,7 @@
 
     async function loadMyRecordPage() {
         try {
-            const user = getCurrentUser();
+            const user = await waitForCurrentUser(8000);
             const apiClient = await getApiClientOrFallback();
             /* Both reads go out together. They are independent -- the aggregator
                computes the record server-side, the pick list feeds the tables --
