@@ -606,7 +606,7 @@
                 const now = Date.now();
                 const startMs = c.starts_at ? new Date(c.starts_at).getTime() : null;
                 const endMs = c.ends_at ? new Date(c.ends_at).getTime() : null;
-                var started = !!c.is_active && (startMs === null || now >= startMs);
+                var started = !!c.is_active && startMs !== null && now >= startMs;
                 // A contest whose window has already closed AND has no picks at
                 // all has not really run: that is a stale placeholder window, not
                 // a finished contest. Showing an empty "Final" board to entrants
