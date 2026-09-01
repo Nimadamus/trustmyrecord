@@ -4749,12 +4749,50 @@
         lockFunction(window, 'switchPicksTab', switchPicksTabBackend);
         lockFunction(window, 'loadMyRecordPage', loadMyRecordPage);
         lockFunction(window, 'calculateUserStatsById', calculateUserStatsById);
+        /* THE REAL FUNNEL (LEDGER_PARITY_20260901).
+           ------------------------------------------------------------------
+           window.loadMyRecordPage below is an override, but the page's own
+           inline script calls its LOCAL `loadMyRecordPage` -- a bare function
+           declaration in its own scope -- so the override is never what runs on
+           a section show. What every path does go through is this: the inline
+           renderer's guard calls window.ensureBackendPicks and re-renders from
+           the callback. Measured live: the pick list paginated correctly and the
+           tiles filled, yet window.__tmrOwnerMetrics stayed unset and the ROI
+           read +1.3% against the aggregator's +0.93%, because the override that
+           fetches the aggregator had not executed at all.
+
+           So the aggregator is fetched HERE, in the funnel, and parked before the
+           callback fires -- which is what the inline renderer reads to decide
+           whether it is quoting the server or its own arithmetic. The two run in
+           parallel; the record does not wait on the pick list or vice versa. */
         window.ensureBackendPicks = function(callback) {
-            fetchCurrentUserPicks().then(function(picks) {
-                syncRecordWidgets(picks);
-                if (typeof callback === 'function') callback();
-            }).catch(function() {
-                if (typeof callback === 'function') callback();
+            const done = function () { if (typeof callback === 'function') callback(); };
+            const user = getCurrentUser();
+            Promise.all([
+                fetchCurrentUserPicks(),
+                getApiClientOrFallback()
+                    .then(function (c) { return fetchOwnerMetrics(c, user && (user.username || user.id)); })
+                    .catch(function () { return null; })
+            ]).then(function (r) {
+                const picks = r[0];
+                const metrics = r[1];
+                if (metrics) window.__tmrOwnerMetrics = metrics;
+                syncRecordWidgets(picks, metrics);
+                setMyRecordError(null);
+                myRecordRetries = 0;
+                done();
+            }).catch(function (error) {
+                console.error('[MyRecord] could not load your record:', error);
+                setMyRecordError(
+                    'Your record could not be loaded right now (' +
+                    ((error && error.message) || 'network error') + ').'
+                );
+                if (myRecordRetries < 4) {
+                    const delay = 4000 * Math.pow(2, myRecordRetries);
+                    myRecordRetries += 1;
+                    setTimeout(function () { window.ensureBackendPicks(callback); }, delay);
+                }
+                done();
             });
         };
         startLiveRefreshLoop();
