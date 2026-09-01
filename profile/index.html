@@ -7415,13 +7415,27 @@
     function applyRailAvgOdds(data) {
         const odds = data && data.summary ? data.summary.avg_odds : null;
         if (odds == null || !Number.isFinite(Number(odds)) || Number(odds) === 0) return;
-        const card = document.querySelector('.profile-rail-card--avg-odds .profile-rail-value');
-        if (!card) return;
-        const current = (card.textContent || '').trim();
-        // Only fill a placeholder. A real value already on screen is left alone.
-        if (current && current !== 'N/A' && current !== 'Loading...' && current !== 'Unavailable' && current !== '—') return;
         const n = Math.round(Number(odds));
-        card.textContent = (n > 0 ? '+' : '') + n;
+        const text = (n > 0 ? '+' : '') + n;
+        /* The metrics fetch and the header render race, and metrics usually wins
+           -- the rail card does not exist yet when this first runs, and a single
+           attempt therefore did nothing at all. Poll briefly for the cell, and
+           keep watching a little longer in case the header re-renders over us. */
+        let tries = 0;
+        const fill = function () {
+            tries += 1;
+            const card = document.querySelector('.profile-rail-card--avg-odds .profile-rail-value');
+            if (card) {
+                const current = (card.textContent || '').trim();
+                // Only fill a placeholder. A real value already on screen is left alone.
+                if (!current || current === 'N/A' || current === 'Loading...' ||
+                    current === 'Unavailable' || current === '—' || current === '-') {
+                    card.textContent = text;
+                }
+            }
+            if (tries < 40) setTimeout(fill, 250);
+        };
+        fill();
     }
 
     // Calls the new /api/users/:username/metrics aggregator and fills the
