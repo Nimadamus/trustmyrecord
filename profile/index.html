@@ -6243,7 +6243,7 @@
     <script src="/static/js/config.js?v=a6695bfebf66"></script>
     <script src="/static/js/tmr-team-logo.js?v=913429d69d70"></script>
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-    <script src="/static/js/backend-api.js?v=91fb62a52484"></script>
+    <script src="/static/js/backend-api.js?v=ea630ee25e7a"></script>
     <script src="/static/js/nav-badges.js?v=e5bfe5d9e8b9"></script>
     <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
     <script src="/static/js/auto-grader-fixed.js?v=e31d0cab9a4a"></script>
@@ -7787,9 +7787,21 @@
            gets the owner view. Anything that did not produce a usable payload
            falls through to the normal request below. */
         try {
+            /* SHARED, NOT SINGLE-USE (DUPLICATE_READ_20260901). This used to null
+               the preload after consuming it, which sounds right -- one payload,
+               one consumer -- but this page has TWO independent metrics boot
+               chains: this one, and bootstrapProfileAdvancedMetricsStrip() lower
+               down. Nulling it here guaranteed the second one missed the preload
+               and issued a request of its own, which is why a single profile view
+               was measured making /users/:name/metrics TWICE.
+
+               The preload is a promise, and a promise can be awaited any number
+               of times for the same answer at no extra cost. Both chains now read
+               the same one. It is still scoped to a username and still not reused
+               across a later render of a DIFFERENT member, because the username
+               guard below is what actually enforces that -- not the nulling. */
             const pre = window.__TMR_PROFILE_PRELOAD;
             if (pre && pre.username === username && pre.metrics) {
-                window.__TMR_PROFILE_PRELOAD = null;   // single use -- never reused on a later render
                 data = await withTimeout(pre.metrics, 10000, 'Metrics preload');
             }
         } catch (err) { data = null; }
@@ -8113,7 +8125,15 @@
                 if (window.api && typeof window.api.request === 'function') break;
                 await new Promise(resolve => setTimeout(resolve, 150));
             }
-            if (window.api && typeof window.api.request === 'function') {
+            /* Prefer the head preload for exactly the reason described at the
+               other metrics boot chain above: it is already in flight before
+               this page's body was parsed, and reading it here is what stops
+               this strip issuing a second identical request. */
+            const pre = window.__TMR_PROFILE_PRELOAD;
+            if (pre && pre.username === username && pre.metrics) {
+                data = await withTimeout(pre.metrics, 10000, 'Metrics preload');
+            }
+            if (!data && window.api && typeof window.api.request === 'function') {
                 data = await withTimeout(window.api.request('/users/' + encodeURIComponent(username) + '/metrics'), 10000, 'Metrics request');
             }
         } catch (err) {
@@ -15257,7 +15277,7 @@
         <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=2ebabddf8a94 -->
 
 
-    <script src="/static/js/platform-production-fix.js?v=2b02d2261abd"></script>
+    <script src="/static/js/platform-production-fix.js?v=8c91ae5c9ac1"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=01c47cb4a4b0" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=a7e3156d314b">
 

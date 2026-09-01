@@ -23135,7 +23135,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- External Scripts -->
     <script src="/static/js/config.js?v=a6695bfebf66"></script>
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-    <script src="/static/js/backend-api.js?v=91fb62a52484"></script>
+    <script src="/static/js/backend-api.js?v=ea630ee25e7a"></script>
     <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
     <script src="/static/js/nhl-markets.js?v=36669341eb11"></script>
     <script>
@@ -23348,7 +23348,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=135ca9f9dc69&cb=20260802unitsfix2"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=6bbba43c040a&cb=20260802unitsfix2"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
@@ -25019,10 +25019,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const picks = window._cachedBackendPicks;
 
-        // Basic counts - backend uses 'won'/'lost' not 'win'/'loss'
+        /* LEDGER_PARITY_20260901 -- 'pushed' is as real a status as 'push'.
+           The backend grades on `status IN ('won','lost','push','pushed')`; this
+           page counted only 'push', so those rows fell out of the graded total
+           here and stayed in it on the profile. Same ledger, two records. */
+        const isPush = p => p.status === 'push' || p.status === 'pushed';
+        const isGraded = p => p.status === 'won' || p.status === 'lost' || isPush(p);
+        const gradedPicks = picks.filter(isGraded);
         const wins = picks.filter(p => p.status === 'won').length;
         const losses = picks.filter(p => p.status === 'lost').length;
-        const pushes = picks.filter(p => p.status === 'push').length;
+        const pushes = picks.filter(isPush).length;
         const graded = wins + losses + pushes;
         const total = picks.length;
 
@@ -25035,46 +25041,95 @@ document.addEventListener('DOMContentLoaded', function() {
             if (pick.status !== 'pending' && pick.status) {
                 totalRisked += parseFloat(pick.units) || 1;
             }
-            const odds = parseFloat(pick.odds);
-            if (!isNaN(odds)) { oddsSum += odds; oddsCount++; }
         });
 
-        const avgOdds = oddsCount > 0 ? Math.round(oddsSum / oddsCount) : -110;
+        /* AVERAGE ODDS -- via average implied probability, never an arithmetic
+           mean of moneylines. The old line here was
+               Math.round(oddsSum / oddsCount)
+           which is not an approximation, it is a category error: American odds
+           are discontinuous at zero and non-linear either side of it, so -110
+           and +110 (52.4% and 47.6% implied -- almost the same price) average to
+           0, which is not a price. It also sampled EVERY pick including pending
+           ones, and read `pick.odds` where the ledger column is `odds_snapshot`.
+           This is now the same calculation the server does in routes/users.js,
+           over the same graded-only set. */
+        const oddsOf = p => {
+            const o = Number(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
+            return Number.isFinite(o) && o !== 0 ? o : null;
+        };
+        const impliedOf = o => (o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100));
+        const gradedProbs = gradedPicks.map(oddsOf).filter(o => o !== null).map(impliedOf);
+        const avgImplied = gradedProbs.length
+            ? gradedProbs.reduce((a, b) => a + b, 0) / gradedProbs.length
+            : 0.5;
+        const avgOdds = gradedProbs.length
+            ? (avgImplied >= 0.5
+                ? Math.round(-(avgImplied / (1 - avgImplied)) * 100)
+                : Math.round(((1 - avgImplied) / avgImplied) * 100))
+            : -110;
         const winRate = graded > 0 ? (wins / graded * 100).toFixed(1) : '0.0';
         const roi = totalRisked > 0 ? (unitsProfit / totalRisked * 100).toFixed(1) : '0.0';
 
-        // Average implied probability
-        let avgImplied = 0;
-        picks.forEach(p => { avgImplied += impliedProbability(p.odds); });
-        avgImplied = picks.length > 0 ? avgImplied / picks.length : 0.5;
-
         const zScore = calculateZScore(wins, graded, avgImplied);
         const streaks = calculateStreaks(picks);
-        const avgUnits = picks.length > 0 ? (picks.reduce((s,p) => s + (parseFloat(p.units)||1), 0) / picks.length).toFixed(1) : '1.0';
+        // Graded-only, to match the server's avg_units and the label beside it.
+        const avgUnits = gradedPicks.length > 0 ? (gradedPicks.reduce((s,p) => s + (parseFloat(p.units)||1), 0) / gradedPicks.length).toFixed(1) : '1.0';
+
+        /* ONE AUTHORITATIVE RECORD (LEDGER_PARITY_20260901)
+           ------------------------------------------------------------------
+           Everything above is a browser-side derivation from the pick list. It
+           now agrees with the server's method, but agreeing with it is not the
+           same as BEING it: the server applies record_reset_at, deleted_at and
+           the is_public gate in SQL, and this page cannot see any of that.
+
+           So when the aggregator answered -- GET /api/users/:username/metrics,
+           fetched by loadMyRecordPage() and parked on window.__tmrOwnerMetrics --
+           its numbers win, for every headline and secondary tile. That endpoint
+           is the same one /u/<name>/ and /profile/ read, so the two record pages
+           now quote the same bytes rather than two calculations that merely try
+           to round the same way. The local values remain as the offline fallback
+           and still drive the breakdown tables, which /metrics does not enumerate. */
+        const srv = (window.__tmrOwnerMetrics && window.__tmrOwnerMetrics.summary)
+            ? window.__tmrOwnerMetrics.summary : null;
+        const srvStreaks = (window.__tmrOwnerMetrics && window.__tmrOwnerMetrics.streaks) || {};
+        const D = {
+            record:       srv ? srv.record : `${wins}-${losses}-${pushes}`,
+            winRate:      srv ? Number(srv.win_rate || 0).toFixed(1) : winRate,
+            unitsProfit:  srv ? Number(srv.net_units || 0) : unitsProfit,
+            roi:          srv ? Number(srv.roi || 0).toFixed(1) : roi,
+            zScore:       srv && srv.z_score != null ? Number(srv.z_score) : zScore,
+            avgOdds:      srv && srv.avg_odds ? Number(srv.avg_odds) : avgOdds,
+            avgUnits:     srv ? Number(srv.avg_units || 0).toFixed(1) : avgUnits,
+            totalPicks:   srv ? Number(srv.total_picks || 0) : total,
+            currentStreak: srv ? Number(srvStreaks.current || 0) : (streaks.currentType === 'won' ? streaks.current : -streaks.current),
+            bestStreak:   srv ? Number(srvStreaks.best || 0) : streaks.bestWin
+        };
 
         // Update Primary Stats
-        updateEl('advRecordDisplay', `${wins}-${losses}-${pushes}`);
-        updateEl('advWinRate', `${winRate}%`);
+        updateEl('advRecordDisplay', D.record);
+        updateEl('advWinRate', `${D.winRate}%`);
 
         const unitsEl = document.getElementById('advUnitsProfit');
         if (unitsEl) {
-            unitsEl.textContent = (unitsProfit >= 0 ? '+' : '') + unitsProfit.toFixed(2);
-            unitsEl.className = 'big-stat-value ' + (unitsProfit >= 0 ? 'positive' : 'negative');
+            unitsEl.textContent = (D.unitsProfit >= 0 ? '+' : '') + D.unitsProfit.toFixed(2);
+            unitsEl.className = 'big-stat-value ' + (D.unitsProfit >= 0 ? 'positive' : 'negative');
         }
 
         const roiEl = document.getElementById('advROI');
         if (roiEl) {
-            roiEl.textContent = (parseFloat(roi) >= 0 ? '+' : '') + roi + '%';
-            roiEl.className = 'big-stat-value ' + (parseFloat(roi) >= 0 ? 'positive' : 'negative');
+            roiEl.textContent = (parseFloat(D.roi) >= 0 ? '+' : '') + D.roi + '%';
+            roiEl.className = 'big-stat-value ' + (parseFloat(D.roi) >= 0 ? 'positive' : 'negative');
         }
 
         // Secondary Stats
-        updateEl('advZScore', zScore.toFixed(2));
-        updateEl('advAvgOdds', avgOdds > 0 ? '+' + avgOdds : avgOdds.toString());
-        updateEl('advCurrentStreak', streaks.current > 0 ? streaks.current + (streaks.currentType === 'won' ? 'W' : 'L') : '-');
-        updateEl('advBestStreak', streaks.bestWin + 'W');
-        updateEl('advAvgUnits', avgUnits);
-        updateEl('advTotalPicks', total.toString());
+        updateEl('advZScore', Number(D.zScore).toFixed(2));
+        updateEl('advAvgOdds', D.avgOdds > 0 ? '+' + D.avgOdds : String(D.avgOdds));
+        updateEl('advCurrentStreak', D.currentStreak !== 0
+            ? Math.abs(D.currentStreak) + (D.currentStreak > 0 ? 'W' : 'L')
+            : '-');
+        updateEl('advBestStreak', D.bestStreak + 'W');
+        updateEl('advAvgUnits', D.avgUnits);
+        updateEl('advTotalPicks', String(D.totalPicks));
 
         // Sport Breakdown Table
         renderSportBreakdown(picks);
@@ -25083,19 +25138,21 @@ document.addEventListener('DOMContentLoaded', function() {
         renderBetTypeBreakdown(picks);
 
         // Full advanced metrics and supporting breakdowns
+        // Same authoritative values as the tiles above, so the detail cards
+        // cannot quote a different record from the headline six inches higher.
         renderMyRecordAdvancedMetrics(picks, {
-            wins,
-            losses,
-            pushes,
-            graded,
-            total,
-            unitsProfit,
-            totalRisked,
-            avgOdds,
-            avgUnits: parseFloat(avgUnits),
-            winRate: parseFloat(winRate),
-            roi: parseFloat(roi),
-            zScore,
+            wins: srv ? Number(srv.wins || 0) : wins,
+            losses: srv ? Number(srv.losses || 0) : losses,
+            pushes: srv ? Number(srv.pushes || 0) : pushes,
+            graded: srv ? (Number(srv.wins || 0) + Number(srv.losses || 0) + Number(srv.pushes || 0)) : graded,
+            total: D.totalPicks,
+            unitsProfit: D.unitsProfit,
+            totalRisked: srv ? Number(srv.total_units_risked || 0) : totalRisked,
+            avgOdds: D.avgOdds,
+            avgUnits: parseFloat(D.avgUnits),
+            winRate: parseFloat(D.winRate),
+            roi: parseFloat(D.roi),
+            zScore: Number(D.zScore),
             streaks
         });
         renderMyRecordPriceProfile(picks);
@@ -27642,8 +27699,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
 
-    <script src="/static/js/streaks.js?v=54916ab279a1"></script>
-    <script src="/static/js/platform-production-fix.js?v=2b02d2261abd"></script>
+    <script src="/static/js/streaks.js?v=832bed1bbe47"></script>
+    <script src="/static/js/platform-production-fix.js?v=8c91ae5c9ac1"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {

@@ -1071,6 +1071,69 @@
         }
     }
 
+    /* PICK_TRUNCATION_20260901
+       ------------------------------------------------------------------
+       This used to be a single `api.getPicks({ userId, limit: 100 })`.
+       routes/picks.js caps `limit` at 100 by validator and returns `hasMore`,
+       and neither was honoured here: the call asked for one page and the result
+       was treated as the member's ENTIRE pick history.
+
+       For an account with 675 graded picks that means My Record was computing
+       the record, the units, the ROI and every breakdown table from the 100 most
+       recent picks. It was not a slow page showing the right number late; it was
+       a fast page showing the wrong number. It is also exactly why My Record and
+       the public profile could never agree -- the profile's own hydrate paginates
+       to 1000, this did not paginate at all.
+
+       The loop follows `hasMore` and stops on a short page, so a member with 40
+       picks still costs exactly one request. PAGE_CAP is a runaway guard, not a
+       product limit: at 100 per page it covers 5,000 picks, comfortably beyond
+       the largest account on the site (675) and beyond the whole picks table
+       (4,102 rows as of 2026-09-01). */
+    const PICKS_PAGE_SIZE = 100;
+    const PICKS_PAGE_CAP = 50;
+
+    async function fetchEveryPick(api, userId) {
+        const all = [];
+        for (let page = 0; page < PICKS_PAGE_CAP; page++) {
+            const resp = await api.getPicks({
+                userId: userId,
+                limit: PICKS_PAGE_SIZE,
+                offset: page * PICKS_PAGE_SIZE
+            });
+            const batch = (resp && (resp.picks || resp)) || [];
+            if (!Array.isArray(batch) || batch.length === 0) break;
+            all.push.apply(all, batch);
+            const more = resp && typeof resp.hasMore === 'boolean'
+                ? resp.hasMore
+                : batch.length === PICKS_PAGE_SIZE;
+            if (!more) break;
+        }
+        return { picks: all };
+    }
+
+    /* The authoritative record. GET /api/users/:username/metrics is the SAME
+       aggregator the public /u/ page and the /profile/ dashboard read, computed
+       server-side from the graded ledger with the record_reset_at, deleted_at
+       and is_public gates applied and with average odds derived from average
+       implied probability. Calling it as the signed-in owner returns the owner
+       view, so private picks and the pending count are included exactly as they
+       should be for this page.
+
+       Reading it here is what makes My Record and the public profile agree by
+       construction rather than by two implementations happening to round the
+       same way. The local arithmetic below is kept ONLY as an offline fallback
+       for when this call cannot be made. */
+    async function fetchOwnerMetrics(api, username) {
+        if (!username) return null;
+        try {
+            return await api.request('/users/' + encodeURIComponent(username) + '/metrics');
+        } catch (error) {
+            console.error('[MyRecord] /metrics unavailable, falling back to local computation:', error);
+            return null;
+        }
+    }
+
     async function fetchCurrentUserPicksNow() {
         const user = getCurrentUser();
         if (!user) {
@@ -1084,7 +1147,7 @@
         let response;
         let privatePendingResponse = null;
         try {
-            response = await api.getPicks({ userId: user.id, limit: 100 });
+            response = await fetchEveryPick(api, user.id);
         } catch (error) {
             // Do NOT clear auth on a 401/403 here. The picks list is a best-effort
             // read; backend-api.request() already owns the refresh-then-clear
@@ -1130,7 +1193,11 @@
         const normalized = (picks || []).map(normalizePick);
         const wins = normalized.filter(function(pick) { return pick.status === 'won'; }).length;
         const losses = normalized.filter(function(pick) { return pick.status === 'lost'; }).length;
-        const pushes = normalized.filter(function(pick) { return pick.status === 'push'; }).length;
+        // The backend writes BOTH 'push' and 'pushed' (routes/users.js grades on
+        // `status IN ('won','lost','push','pushed')`). Counting only 'push' here
+        // silently dropped the 'pushed' rows out of the graded total, so the same
+        // ledger produced a different record on this page than on the profile.
+        const pushes = normalized.filter(function(pick) { return pick.status === 'push' || pick.status === 'pushed'; }).length;
         const pending = normalized.filter(function(pick) { return pick.status === 'pending'; }).length;
         const graded = wins + losses + pushes;
         const totalUnits = normalized.reduce(function(sum, pick) {
@@ -1167,8 +1234,37 @@
         if (el) el.textContent = value;
     }
 
-    function syncRecordWidgets(picks) {
-        const stats = getRecordStats(picks);
+    /* When the server aggregator answered, IT is the record -- not the numbers we
+       could derive from the pick list in the browser. Both surfaces then quote
+       the same bytes from the same endpoint, which is the only way they can be
+       guaranteed to match. getRecordStats(picks) stays as the offline fallback
+       for when the call failed. */
+    function statsFromMetrics(metrics) {
+        if (!metrics || !metrics.summary) return null;
+        const sum = metrics.summary;
+        const streaks = metrics.streaks || {};
+        return {
+            wins: sum.wins,
+            losses: sum.losses,
+            pushes: sum.pushes,
+            pending: Number(sum.pending_picks || 0),
+            graded: Number(sum.wins || 0) + Number(sum.losses || 0) + Number(sum.pushes || 0),
+            record: sum.record,
+            winRate: Number(sum.win_rate || 0).toFixed(1),
+            totalUnits: Number(sum.net_units || 0),
+            roi: Number(sum.roi || 0).toFixed(1),
+            avgOdds: sum.avg_odds,
+            avgUnits: Number(sum.avg_units || 0),
+            zScore: sum.z_score,
+            totalPicks: Number(sum.total_picks || 0),
+            currentStreak: Number(streaks.current || 0),
+            bestStreak: Number(streaks.best || 0),
+            fromServer: true
+        };
+    }
+
+    function syncRecordWidgets(picks, metrics) {
+        const stats = statsFromMetrics(metrics) || getRecordStats(picks);
         updateText('advRecordDisplay', stats.record);
         updateText('profileRecord', stats.record);
         updateText('myStatsRecord', stats.record);
@@ -3795,18 +3891,93 @@
         loadMyPicks(tab === 'graded' || tab === 'all' ? tab : 'pending');
     }
 
+    /* MY_RECORD_SILENT_FAILURE_20260901
+       ------------------------------------------------------------------
+       This function used to end in `catch (error) {}`. That empty block is the
+       whole reason the page reported blank/dash metrics with no explanation:
+       fetchCurrentUserPicks() threw on the API 500, the throw was swallowed
+       here, and -- because the throw happened BEFORE window._tmrBackendPicksLoaded
+       could be set -- the inline renderer's guard kept returning early forever.
+       One attempt, no retry, no message, placeholders for the rest of the
+       session. A failure nobody can see is a failure nobody can diagnose.
+
+       Now: the error is logged with its cause, a short banner tells the visitor
+       the record could not be loaded and offers a retry, and a single automatic
+       retry runs a few seconds later to ride out a cold start or a momentary
+       pool exhaustion. Nothing about the healthy path changes. */
+    function setMyRecordError(message) {
+        const host = document.getElementById('my-record');
+        if (!host) return;
+        let banner = document.getElementById('myRecordErrorBanner');
+        if (!message) {
+            if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+            return;
+        }
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'myRecordErrorBanner';
+            banner.setAttribute('role', 'status');
+            banner.style.cssText = 'margin:12px 0;padding:11px 14px;border-radius:10px;' +
+                'background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.35);' +
+                'color:#ffb4b4;font-size:13.5px;line-height:1.5;';
+            host.insertBefore(banner, host.firstChild);
+        }
+        banner.textContent = message;
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.textContent = 'Retry';
+        retry.style.cssText = 'margin-left:10px;padding:3px 11px;border-radius:7px;cursor:pointer;' +
+            'background:transparent;border:1px solid rgba(255,180,180,.5);color:#ffd2d2;font:inherit;';
+        retry.addEventListener('click', function () {
+            setMyRecordError('Reloading your record...');
+            window._tmrBackendPicksLoaded = false;
+            loadMyRecordPage();
+        });
+        banner.appendChild(retry);
+    }
+
+    let myRecordAutoRetried = false;
+
     async function loadMyRecordPage() {
         try {
-            const picks = await fetchCurrentUserPicks();
+            const user = getCurrentUser();
+            const apiClient = await getApiClientOrFallback();
+            /* Both reads go out together. They are independent -- the aggregator
+               computes the record server-side, the pick list feeds the tables --
+               and running them in series added a whole round trip to a page whose
+               complaint was that it took too long to show anything. */
+            const results = await Promise.all([
+                fetchCurrentUserPicks(),
+                fetchOwnerMetrics(apiClient, user && (user.username || user.id))
+            ]);
+            const picks = results[0];
+            const metrics = results[1];
             // Full inline render first (breakdown tables + secondary metrics,
             // reading the freshly-set window._cachedBackendPicks), then the
             // canonical record widgets last so the four headline numbers always
-            // end on computeCanonicalRecordStats' math.
+            // end on the server aggregator's math.
+            window.__tmrOwnerMetrics = metrics || null;
             if (typeof window.__tmrInlineMyRecordRender === 'function') {
-                try { window.__tmrInlineMyRecordRender(); } catch (renderError) {}
+                try {
+                    window.__tmrInlineMyRecordRender();
+                } catch (renderError) {
+                    console.error('[MyRecord] inline render failed:', renderError);
+                }
             }
-            syncRecordWidgets(picks);
-        } catch (error) {}
+            syncRecordWidgets(picks, metrics);
+            setMyRecordError(null);
+            myRecordAutoRetried = false;
+        } catch (error) {
+            console.error('[MyRecord] could not load your record:', error);
+            setMyRecordError(
+                'Your record could not be loaded right now (' +
+                ((error && error.message) || 'network error') + ').'
+            );
+            if (!myRecordAutoRetried) {
+                myRecordAutoRetried = true;
+                setTimeout(function () { loadMyRecordPage(); }, 4000);
+            }
+        }
     }
 
     async function refreshCurrentSport() {

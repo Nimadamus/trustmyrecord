@@ -68,7 +68,7 @@
         const normalized = Array.isArray(picks) ? picks.map(normalizeStreakPick) : [];
         const ordered = normalized
             .filter(function(pick) {
-                return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push';
+                return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push' || pick.status === 'pushed';
             })
             .sort(compareChronological);
         ordered.forEach(function(pick, index) {
@@ -108,7 +108,7 @@
             currentStreak = latest.status === 'won' ? 1 : -1;
             for (let i = latest.indexInOrdered - 1; i >= 0; i -= 1) {
                 const status = ordered[i].status;
-                if (status === 'push') continue;
+                if (status === 'push' || status === 'pushed') continue;
                 if (status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }

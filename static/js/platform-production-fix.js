@@ -90,7 +90,7 @@
     function calculateCanonicalStreaks(picks) {
         const ordered = (Array.isArray(picks) ? picks : [])
             .filter(function(pick) {
-                return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push';
+                return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push' || pick.status === 'pushed';
             })
             .sort(function(a, b) {
                 return localPickTimestamp(a) - localPickTimestamp(b);
@@ -117,7 +117,7 @@
         if (latest && latest.status !== 'push') {
             currentStreak = latest.status === 'won' ? 1 : -1;
             for (let i = ordered.length - 2; i >= 0; i -= 1) {
-                if (ordered[i].status === 'push') continue;
+                if (ordered[i].status === 'push' || ordered[i].status === 'pushed') continue;
                 if (ordered[i].status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }
@@ -125,14 +125,57 @@
         return { currentStreak, longestWinStreak, longestLossStreak };
     }
 
+    /* AVERAGE AMERICAN ODDS -- the correct method (AOP_20260901).
+       ---------------------------------------------------------------------
+       Averaging American odds arithmetically is not a rounding quibble, it is
+       meaningless: the scale is discontinuous across zero and non-linear on both
+       sides. -110 and +110 are near-identical prices (52.4% vs 47.6% implied),
+       yet their arithmetic mean is 0, which is not a price at all. A book of
+       -200 and +200 averages to 0 the same way, while the honest answer is about
+       -108. The error grows with every plus-money pick in the sample.
+
+       The backend has always done this properly -- routes/users.js computes the
+       average IMPLIED PROBABILITY and converts that single probability back to
+       American, and says so in a comment. This is the same calculation, so the
+       fallback path can no longer disagree with the server it is standing in for. */
+    function americanToImpliedProb(odds) {
+        const o = Number(odds);
+        if (!Number.isFinite(o) || o === 0) return null;
+        return o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100);
+    }
+
+    function impliedProbToAmerican(p) {
+        if (!Number.isFinite(p) || p <= 0 || p >= 1) return null;
+        return p >= 0.5
+            ? Math.round(-(p / (1 - p)) * 100)
+            : Math.round(((1 - p) / p) * 100);
+    }
+
+    function averageAmericanOdds(picks) {
+        const probs = [];
+        for (let i = 0; i < picks.length; i++) {
+            const p = americanToImpliedProb(picks[i].odds_snapshot || picks[i].odds || picks[i].price);
+            if (p !== null) probs.push(p);
+        }
+        if (!probs.length) return null;
+        const mean = probs.reduce(function(a, b) { return a + b; }, 0) / probs.length;
+        return impliedProbToAmerican(mean);
+    }
+
+    function isGradedStatus(status) {
+        // 'pushed' is a real status in the ledger and the server counts it as a
+        // push; omitting it here dropped those rows out of the graded record.
+        return status === 'won' || status === 'lost' || status === 'push' || status === 'pushed';
+    }
+
     function computeCanonicalRecordStats(picks) {
         const normalized = Array.isArray(picks) ? picks.map(normalizeRecordPick) : [];
         const graded = normalized.filter(function(pick) {
-            return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push';
+            return isGradedStatus(pick.status);
         });
         const wins = graded.filter(function(pick) { return pick.status === 'won'; }).length;
         const losses = graded.filter(function(pick) { return pick.status === 'lost'; }).length;
-        const pushes = graded.filter(function(pick) { return pick.status === 'push'; }).length;
+        const pushes = graded.filter(function(pick) { return pick.status === 'push' || pick.status === 'pushed'; }).length;
         const pending = normalized.filter(function(pick) { return !pick.status || pick.status === 'pending'; }).length;
         const totalUnits = graded.reduce(function(sum, pick) {
             return sum + calculatePickUnits(pick);
@@ -144,10 +187,13 @@
             ? window.TMR.calculateStreaks(normalized)
             : calculateCanonicalStreaks(normalized);
 
-        const oddsSamples = normalized
-            .map(function(pick) { return Number(pick.odds_snapshot || pick.odds || pick.price); })
-            .filter(Number.isFinite);
-        const unitSamples = normalized
+        /* Odds and stake averages describe the GRADED record, which is what every
+           label around them says. Sampling `normalized` swept pending picks into
+           both -- so a member with open bets saw an average price and an average
+           stake that no settled result had contributed to, and those numbers moved
+           every time they placed a bet rather than when one graded. The server
+           averages over the graded set; so do we. */
+        const unitSamples = graded
             .map(function(pick) { return Number(pick.units || pick.stake); })
             .filter(Number.isFinite);
 
@@ -165,7 +211,7 @@
             currentStreak: streaks.currentStreak,
             bestStreak: streaks.longestWinStreak,
             worstStreak: streaks.longestLossStreak,
-            avgOdds: oddsSamples.length ? Math.round(oddsSamples.reduce(function(a, b) { return a + b; }, 0) / oddsSamples.length) : null,
+            avgOdds: averageAmericanOdds(graded),
             avgUnits: unitSamples.length ? (unitSamples.reduce(function(a, b) { return a + b; }, 0) / unitSamples.length) : 0
         };
     }

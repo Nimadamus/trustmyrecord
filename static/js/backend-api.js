@@ -228,8 +228,55 @@ class TrustMyRecordAPI {
         return headers;
     }
 
-    // HTTP Request Helper
+    /* DUPLICATE_READ_COALESCER_20260901
+       ------------------------------------------------------------------
+       One public profile view was measured issuing NINETEEN API calls, three
+       of them exact duplicates: /users/:name/metrics twice (profile/index.html
+       has two independent metrics bootstraps -- loadAdvancedMetrics() consumes
+       the head preload, bootstrapProfileAdvancedMetricsStrip() always fires its
+       own), /users/:name twice, and /picks twice. Every one of those is a read
+       that lands on a 12-connection pool.
+
+       Rather than restructure both boot chains -- which would be a redesign --
+       identical concurrent GETs to a read-only record endpoint now share ONE
+       in-flight promise, and the answer is reusable for a couple of seconds
+       after it settles so two bootstraps racing a few hundred ms apart collapse
+       into one request.
+
+       This does NOT reintroduce stale stats. The rule that GETs bypass the HTTP
+       cache (below) was written for CDN/browser caching ACROSS page loads,
+       which once showed a profile 91-93-4 while the ledger held 92-93-3. This
+       window is 2.5s and lives entirely inside a single page's boot, so no
+       visitor can ever be shown a record from a previous visit. The key carries
+       the bearer token because these endpoints are viewer-dependent, so an
+       owner's response can never be handed to a logged-out reader. */
+    static get READ_COALESCE_PATTERN() {
+        return /^\/(users\/[^/]+(\/metrics)?|picks)(\?|$)/;
+    }
+
     async request(endpoint, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+        if (method !== 'GET' || options.body || options.__noCoalesce) {
+            return this._requestUncoalesced(endpoint, options);
+        }
+        if (!TrustMyRecordAPI.READ_COALESCE_PATTERN.test(endpoint)) {
+            return this._requestUncoalesced(endpoint, options);
+        }
+        if (!this._readCoalesce) this._readCoalesce = new Map();
+        const key = endpoint + '|' + (this.token || 'anon');
+        const hit = this._readCoalesce.get(key);
+        if (hit && Date.now() < hit.until) return hit.promise;
+
+        const promise = this._requestUncoalesced(endpoint, options);
+        // A rejected read must never be cached -- the next caller has to be able
+        // to retry immediately against a backend that may have just recovered.
+        promise.catch(() => { this._readCoalesce.delete(key); });
+        this._readCoalesce.set(key, { promise, until: Date.now() + 2500 });
+        return promise;
+    }
+
+    // HTTP Request Helper
+    async _requestUncoalesced(endpoint, options = {}) {
         this.loadTokens();
         const candidateUrls = this.getCandidateBaseUrls();
         let lastError = null;
