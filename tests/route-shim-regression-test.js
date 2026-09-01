@@ -27,13 +27,6 @@ const shims = [
     forbiddenTargets: []
   },
   {
-    file: 'community/index.html',
-    target: '/feed/',
-    canonical: null,
-    label: 'Feed',
-    forbiddenTargets: []
-  },
-  {
     file: 'dashboard/index.html',
     target: '/profile/',
     canonical: null,
@@ -45,20 +38,6 @@ const shims = [
     target: '/handicappers/',
     canonical: null,
     label: 'Handicappers',
-    forbiddenTargets: []
-  },
-  {
-    file: 'challenges/index.html',
-    target: '/arena/',
-    canonical: 'https://trustmyrecord.com/arena/',
-    label: 'Continue to Arena',
-    forbiddenTargets: []
-  },
-  {
-    file: 'consensus/index.html',
-    target: '/sportsbook/#consensus',
-    canonical: 'https://trustmyrecord.com/sportsbook/#consensus',
-    label: 'Continue',
     forbiddenTargets: []
   },
   {
@@ -140,13 +119,6 @@ const shims = [
     forbiddenTargets: []
   },
   {
-    file: 'pick/index.html',
-    target: '/sportsbook/',
-    canonical: null,
-    label: 'Make Picks',
-    forbiddenTargets: []
-  },
-  {
     file: 'promos/index.html',
     target: '/sportsbook/#promos',
     canonical: 'https://trustmyrecord.com/sportsbook/#promos',
@@ -198,6 +170,32 @@ for (const shim of shims) {
     assert(!html.includes(forbidden), `${shim.file} still references ${forbidden}`);
   }
 }
+
+// /community/ was a redirect stub to /feed/ when this guard was written
+// (2026-05-09). It was deliberately rebuilt into a real, indexed Community Hub
+// on 2026-06-03 by the GSC noindex/404/redirect cleanup, and it is listed in
+// sitemap.xml -- so the shim assertions above no longer describe it. Guard what
+// it actually is now: a canonical page that must never regress back into a
+// redirect stub.
+const challengesHtml = read('challenges/index.html');
+assert(challengesHtml.includes('href="https://trustmyrecord.com/challenges/"'), 'open challenges canonical should stay on /challenges/');
+assert(!/http-equiv="refresh"/.test(challengesHtml), 'open challenges must not regress into a redirect stub');
+
+const consensusHtml = read('consensus/index.html');
+assert(consensusHtml.includes('href="https://trustmyrecord.com/consensus/"'), 'consensus canonical should stay on /consensus/');
+assert(!/http-equiv="refresh"/.test(consensusHtml), 'consensus must not regress into a redirect stub');
+
+// /pick/ renders a single pick by ?id=; the only /sportsbook/ hop left is its
+// missing-or-malformed-id fallback, which must stay a fallback and never
+// become the page's unconditional target.
+const pickHtml = read('pick/index.html');
+assert(pickHtml.includes('id="pkRoot"'), 'pick page must keep its renderer host');
+assert(!/http-equiv="refresh"/.test(pickHtml), 'pick page must not regress into a redirect stub');
+
+const communityHtml = read('community/index.html');
+assert(communityHtml.includes('href="https://trustmyrecord.com/community/"'), 'community hub canonical should stay on /community/');
+assert(!/http-equiv="refresh"/.test(communityHtml), 'community hub must not regress into a redirect stub');
+assert(!communityHtml.includes('url=/feed/'), 'community hub must not regress into the feed shim');
 
 const predictionsHtml = read('predictions/index.html');
 assert(predictionsHtml.includes('<title>MLB Run Prediction Model | TrustMyRecord</title>'), 'predictions page should remain the MLB prediction model page');
