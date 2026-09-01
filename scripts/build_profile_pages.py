@@ -675,8 +675,13 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
               f'\n<meta name="twitter:title" content="{e(og_social_title)}">'
               f'\n<meta name="twitter:description" content="{og_desc}">'
               f'\n<meta name="twitter:image" content="{og_card}">')
+    # onerror: this page renders NOTHING when a member has no avatar, so an
+    # unreachable URL degrades to exactly that supported state instead of the
+    # browser's broken-image glyph. A stored avatar_url can be the API's
+    # /users/<id>/avatar proxy, which 204s on an empty avatar and 404s on any
+    # query error.
     avatar_html = (f'<img class="u-avatar" src="{e(avatar)}" alt="{e(disp)} avatar" '
-                   f'width="84" height="84">') if avatar else ""
+                   f'width="84" height="84" onerror="this.remove()">') if avatar else ""
     bio_html = f'<p class="u-bio">{e(bio)}</p>' if bio else ""
     share_html = share_button(un, disp)
 

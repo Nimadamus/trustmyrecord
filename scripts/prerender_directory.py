@@ -29,6 +29,16 @@ INTERNAL_DENYLIST = {"admin", "test", "tmr", "system", "support", "demo"}
 ADMIN_ALLOWLIST   = {"BetLegend"}
 DEFAULT_AVATAR    = "https://trustmyrecord.com/static/media/TMR-avatar-256.jpg"
 
+# A stored avatar_url is not a guarantee of an image. An account whose avatar
+# lives in the DB as a data URI is handed back as the API's own
+# /users/<id>/avatar proxy, which answers 204 for an empty avatar and 404 on
+# any query error - a bare <img> then paints the browser's broken-image glyph.
+# Every avatar this file bakes falls back to the same shared default that
+# clean_avatar already hands avatar-less members, so a bad or unreachable URL
+# can never surface as a broken image.
+AVATAR_ONERROR    = (' onerror="this.onerror=null;this.src=&#39;'
+                     + DEFAULT_AVATAR + '&#39;"')
+
 def clean_avatar(url):
     """Never bake giant inline data: URIs into the static HTML (one user's
     avatar is 160KB+). Fall back to the shared default static avatar."""
@@ -251,7 +261,7 @@ def handi_row(r, now):
         f'<div class="hm-row hm-member-row" data-username="{e(r["username"])}" data-profile-href="{href}" role="link" tabindex="0" aria-label="{e(label)}">'
         f'<div class="hm-user">'
         f'<a class="hm-avatar-link" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
-        f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"></a>'
+        f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"{AVATAR_ONERROR}></a>'
         f'<div class="hm-name"><a class="hm-profile-name" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
         f'<strong data-tmr-username="{e(r["username"])}">{e(r["display_name"])}</strong></a><span>@{e(r["username"])}</span>{badge_html}</div>'
         f'</div>'
@@ -271,7 +281,7 @@ def lead_row(r, idx):
     rank_cls = "gold" if idx == 0 else "silver" if idx == 1 else "bronze" if idx == 2 else ""
     initial = e((r["display_name"] or "?")[:1].upper())
     if r["avatar_url"]:
-        avatar = f'<img class="avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar">'
+        avatar = f'<img class="avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"{AVATAR_ONERROR}>'
     else:
         avatar = f'<span class="avatar avatar-initial">{initial}</span>'
     return (
