@@ -38,7 +38,7 @@ body.tmr-light {
   /* design-system source values */
   --page:#F4F7FA;
   --panel:#FFFFFF; --panel-2:#F6F9FC; --panel-3:#E6EDF5;
-  --ink:#07182A; --ink-2:#B7CBE1;
+  --ink:#07182A; --ink-2:#2E4459;
   --line:#D2DEEA; --line-2:#B7C8DA; --edge:rgba(7,24,42,.13);
   --brand:#0B4FA8; --brand-dk:#0B4FA8; --brand-lt:#1D7FE8; --brand-soft:#DEF4F2;
   --navy:#08192B; --navy-2:#10334F; --navy-3:#164A73;
@@ -60,8 +60,8 @@ body.tmr-light {
   --tmr-line:#D2DEEA;           --tmr-line-strong:#B7C8DA;
   --tmr-border:#D2DEEA;         --tmr-border-strong:#B7C8DA;
   --tmr-text:#07182A;           --tmr-text-strong:#07182A;
-  --tmr-text-soft:#B7CBE1;      --tmr-text-muted:#5E7590;
-  --tmr-muted:#9BB0C6;
+  --tmr-text-soft:#2E4459;      --tmr-text-muted:#5E7590;
+  --tmr-muted:#5E7590;
   --tmr-teal:#0B4FA8;           --tmr-accent:#0B4FA8;
   --tmr-accent-2:#1E5BBF;       --tmr-action:#0B4FA8;
   --tmr-gold:#B98505;           --tmr-warning:#B98505;
@@ -84,10 +84,10 @@ body.tmr-light {
   --surface-1:#FFFFFF; --surface-2:#F6F9FC;    --surface-3:#E6EDF5;
   --border:#D2DEEA;    --border-color:#D2DEEA;  --border-light:#E6EDF5;
   --border-glow:#B7C8DA; --glass-border:#D2DEEA; --line-strong:#B7C8DA;
-  --faint:rgba(7,24,42,.05);
+  --faint:#5E7590;
   --text:#07182A;      --text-primary:#07182A;  --text-pri:#07182A;
-  --text-secondary:#B7CBE1; --text-dim:#B7CBE1;
-  --text-muted:#5E7590;--muted:#9BB0C6;
+  --text-secondary:#2E4459; --text-dim:#2E4459;
+  --text-muted:#5E7590;--muted:#5E7590;
   --primary:#0B4FA8;   --primary-dim:rgba(11, 79, 168,.12);
   --primary-glow:rgba(11, 79, 168,.22);
   --accent:#0B4FA8;    --teal:#0B4FA8;          --cyan:#1E5BBF;
@@ -107,27 +107,27 @@ html:has(body.tmr-light) { background:#F4F7FA; }
 
 html body.tmr-light {
   background:#F4F7FA !important;
-  color:#DCE7F4 !important;
+  color:#07182A !important;
 }
 
 body.tmr-light h1,
 body.tmr-light h2,
 body.tmr-light h3,
-body.tmr-light h4 { color:#DCE7F4; }
+body.tmr-light h4 { color:#07182A; }
 
 body.tmr-light p,
 body.tmr-light li,
 body.tmr-light dd,
-body.tmr-light dt { color:#C3D6EA; }
+body.tmr-light dt { color:#2E4459; }
 
 body.tmr-light small,
 body.tmr-light .muted,
 body.tmr-light .text-muted,
 body.tmr-light .subtitle,
-body.tmr-light .note { color:#9BB0C6; }
+body.tmr-light .note { color:#55697F; }
 
-body.tmr-light a { color:#7FB6FF; }
-body.tmr-light a:hover { color:#7FB6FF; }
+body.tmr-light a { color:#0B4FA8; }
+body.tmr-light a:hover { color:#0B4FA8; }
 
 body.tmr-light hr { border:0; border-top:1px solid #D2DEEA; }
 
@@ -259,7 +259,7 @@ body.tmr-light :is(
 ) :is(.cta-ghost,.btn-secondary,.button-secondary,.cta-secondary,
       .tmr-cta-secondary,.btn-outline,.btn-white,.btn-light) {
   background:#FFFFFF !important;
-  color:#DCE7F4 !important;
+  color:#07182A !important;
   border:1px solid #D2DEEA !important;
 }
 
@@ -291,6 +291,7 @@ body.tmr-light .tmr-dark {
    it back on the container is what keeps unclassed text inside a dropdown
    readable without a rule per element. */
 body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
+                   .ds-nav,.ds-footer,.ds-footer-brand,.tmr-ticker,
                    .tmr-community-menu,.tmr-support-menu,.tmr-user-menu-panel,
                    .tmr-search-modal,.tmr-account-modal,
                    .tmr-community-menu__panel,.tmr-support-menu__panel) {
@@ -313,17 +314,19 @@ body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
 }
 
 body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
+                   .ds-nav,.ds-footer,.ds-footer-brand,.tmr-ticker,
                    .tmr-community-menu,.tmr-support-menu,.tmr-user-menu-panel,
                    .tmr-search-modal,.tmr-account-modal)
   :is(h1,h2,h3,h4,.section-title) { color:#EAF2FA !important; }
 
 body.tmr-light :is(.tmr-global-nav,.tmr-global-footer,.tmrlh-footer,
+                   .ds-nav,.ds-footer,.ds-footer-brand,.tmr-ticker,
                    .tmr-community-menu,.tmr-support-menu,.tmr-user-menu-panel,
                    .tmr-search-modal,.tmr-account-modal)
   :is(p,li,dd,dt,label,small,.muted) { color:#93AEC7 !important; }
 
-body.tmr-light :is(.tmr-global-footer,.tmrlh-footer) a { color:#B9CCE0 !important; }
-body.tmr-light :is(.tmr-global-footer,.tmrlh-footer) a:hover { color:#1D7FE8 !important; }
+body.tmr-light :is(.tmr-global-footer,.tmrlh-footer,.ds-footer) a { color:#B9CCE0 !important; }
+body.tmr-light :is(.tmr-global-footer,.tmrlh-footer,.ds-footer) a:hover { color:#8CC0FF !important; }
 
 body.tmr-light .tmr-global-nav__links a,
 body.tmr-light .tmr-global-nav__actions a { color:#DCE8F5 !important; }
@@ -376,7 +379,7 @@ body.tmr-light textarea {
   background:#FFFFFF;
   border:1px solid #D2DEEA;
   border-radius:7px;
-  color:#DCE7F4;
+  color:#07182A;
 }
 body.tmr-light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 body.tmr-light select {
@@ -414,7 +417,7 @@ body.tmr-light .tmr-btn-primary:hover,
 body.tmr-light button.primary:hover {
   background:#0B4FA8;
   border-color:#0B4FA8;
-  /* !important because the blanket `a:hover{color:#7FB6FF !important}` above
+  /* !important because the blanket `a:hover{color:#0B4FA8 !important}` above
      otherwise repaints the label the exact colour of its own hover background,
      which made a primary button's text vanish on hover. */
   color:#FFFFFF !important;
@@ -426,7 +429,7 @@ body.tmr-light .btn-outline,
 body.tmr-light .tmr-btn-outline {
   background:#FFFFFF;
   border:1px solid #D2DEEA;
-  color:#DCE7F4;
+  color:#07182A;
   border-radius:7px;
 }
 body.tmr-light .btn-secondary:hover,
@@ -435,7 +438,7 @@ body.tmr-light .cta-secondary:hover,
 body.tmr-light .btn-outline:hover,
 body.tmr-light .tmr-btn-outline:hover {
   border-color:#0B4FA8;
-  color:#7FB6FF;
+  color:#0B4FA8;
 }
 
 /* tmr-page-polish.css builds its CTA out of a neon cyan/magenta gradient with
@@ -454,7 +457,7 @@ body.tmr-light .tmr-cta-primary:hover {
 }
 
 /* THE LABEL USED TO VANISH ON HOVER.
-   `body.tmr-light a:not(.sportsbook-sports-nav a):hover{color:#7FB6FF}` is a
+   `body.tmr-light a:not(.sportsbook-sports-nav a):hover{color:#0B4FA8}` is a
    blanket link rule, and #0B4FA8 is exactly the hover background of a primary
    button, so the text and its background became the same colour: 1.00:1.
    That rule scores (0,3,3), which beats the obvious fix at (0,3,2), so the
@@ -469,11 +472,11 @@ body.tmr-light a.tmr-btn-primary.tmr-btn-primary:hover {
 }
 body.tmr-light .tmr-cta-secondary {
   background:#FFFFFF !important;
-  color:#DCE7F4 !important;
+  color:#07182A !important;
   border:1px solid #D2DEEA !important;
   border-radius:7px !important;
 }
-body.tmr-light .tmr-cta-secondary:hover { border-color:#0B4FA8 !important; color:#7FB6FF !important; }
+body.tmr-light .tmr-cta-secondary:hover { border-color:#0B4FA8 !important; color:#0B4FA8 !important; }
 
 /* Active / selected states are teal, not "whatever the page had". */
 body.tmr-light .tab.active,
@@ -485,23 +488,23 @@ body.tmr-light [aria-selected="true"],
 body.tmr-light [aria-current="page"]:not(.tmr-global-nav__links a) {
   background:#DEF4F2;
   border-color:#0B4FA8;
-  color:#7FB6FF;
+  color:#0B4FA8;
 }
 
 /* Tables read as data, not as a dark grid. */
 body.tmr-light table { background:#FFFFFF; border-color:#D2DEEA; }
 body.tmr-light thead th {
   background:#F6F9FC;
-  color:#9BB0C6;
+  color:#55697F;
   border-bottom:1px solid #D2DEEA;
 }
-body.tmr-light tbody td { border-bottom:1px solid #E6EDF5; color:#DCE7F4; }
+body.tmr-light tbody td { border-bottom:1px solid #E6EDF5; color:#07182A; }
 body.tmr-light tbody tr:hover td { background:#F6F9FC; }
 
 /* Semantic colours keep their meaning at light-surface contrast. */
-body.tmr-light .positive, body.tmr-light .win,  body.tmr-light .up   { color:#2ECC71; }
+body.tmr-light .positive, body.tmr-light .win,  body.tmr-light .up   { color:#0A8B4E; }
 body.tmr-light .negative, body.tmr-light .loss, body.tmr-light .down { color:#BC372E; }
-body.tmr-light .push, body.tmr-light .pending { color:#B98505; }
+body.tmr-light .push, body.tmr-light .pending { color:#8A6206; }
 
 /* Section rhythm: the pages used 24/30/40/48/56/64/80px. Two values now. */
 body.tmr-light section + section,

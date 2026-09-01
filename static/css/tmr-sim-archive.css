@@ -322,3 +322,23 @@ body.tmr-ds--dark .sa-tab[aria-selected="true"]{ color:#04231F; }
   .sa-rank{ padding:11px 14px; }
   .sa-hist{ height:96px; }
 }
+
+/* On a light host page the shell whitens .sa-table with !important, so the
+   force-dark ink above landed as #EAF2FA on white. When the host is light the
+   archive follows it: same tokens, light ramp. */
+body.tmr-light .sa-root.sa-force-dark,
+body.tmr-ds:not(.tmr-ds--dark) .sa-root.sa-force-dark{
+  --page:#F4F7FA;
+  --panel:#FFFFFF; --panel-2:#F6F9FC; --panel-3:#E6EDF5;
+  --ink:#07182A; --ink-2:#2E4459; --muted:#55697F;
+  --line:#D2DEEA; --line-2:#B7C8DA; --edge:rgba(7,24,42,.13);
+  --brand:#0B4FA8; --brand-dk:#0B4FA8; --brand-lt:#1D7FE8;
+  --green:#0A7A45;
+}
+
+/* A tmr-ds--dark host sets the dark token ramp but nothing paints the ground,
+   so the archive drew #EAF2FA ink straight onto the browser's white default.
+   Paint the shell with the ground its own tokens assume. */
+body:is(.tmr-ds,.tmr-ds-shell).tmr-ds--dark .sa-root{
+  background:var(--page); color:var(--ink);
+}

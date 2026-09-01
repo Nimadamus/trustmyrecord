@@ -61,12 +61,12 @@
 body.tmr-ds,body.tmr-ds-shell{
   --page:#F4F7FA;
   --panel:#FFFFFF; --panel-2:#F6F9FC; --panel-3:#E6EDF5;
-  --ink:#07182A; --ink-2:#B7CBE1; --muted:#9BB0C6;
+  --ink:#07182A; --ink-2:#2E4459; --muted:#55697F;
   --line:#D2DEEA; --line-2:#B7C8DA; --edge:rgba(7,24,42,.13);
   --brand:#0B4FA8; --brand-dk:#0B4FA8; --brand-lt:#1D7FE8; --brand-soft:#DEF4F2;
   --navy:#08192B; --navy-2:#10334F; --navy-3:#164A73;
-  --gold:#B98505; --gold-b:#FFC93C; --gold-soft:#FBF1D8;
-  --green:#0A8B4E; --green-soft:#DFF3E8;
+  --gold:#B98505; --gold-b:#FFC93C; --gold-soft:#FBF1D8; --gold-ink:#8A6206;
+  --green:#0A7A45; --green-soft:#DFF3E8;
   --red:#BC372E;   --red-soft:#FAE9E7;
   --violet:#5940AE;--violet-soft:#EBE7F9;
   --blue:#1E5BBF;  --blue-soft:#E3ECFB;
@@ -91,13 +91,29 @@ body.tmr-ds,body.tmr-ds-shell{
 
 /* Dark surface mode: the SAME tokens, reassigned onto the navy ramp. Brand and
    semantic colours lift to their on-dark variants so contrast holds. */
+/* A tmr-theme-a page is a DARK ground. Several of them also carry
+   .tmr-ds-shell for the chrome, which handed them the LIGHT token ramp above:
+   --muted #55697F and --ink #07182A landed on near-black panels. Same values as
+   the dark mode below, selected one step higher so the theme class wins. */
+body.tmr-ds.tmr-theme-a,body.tmr-ds-shell.tmr-theme-a{
+  --page:#061321;
+  --panel:#0C2138; --panel-2:#0A1B2D; --panel-3:#143453;
+  --ink:#EDF3FA; --ink-2:#C3D6EA; --muted:#93A9C0;
+  --line:rgba(174,198,220,.18); --line-2:rgba(174,198,220,.30); --edge:rgba(174,198,220,.16);
+  --brand:#4DA3FF; --brand-dk:#8CC0FF; --brand-lt:#4DA3FF; --brand-soft:rgba(29,127,232,.14);
+  --gold:#FFC93C; --gold-ink:#FFC93C; --gold-soft:rgba(255,201,60,.13);
+  --green:#3FD08A; --green-soft:rgba(63,208,138,.14);
+  --red:#F1867C;   --red-soft:rgba(241,134,124,.14);
+  --violet:#A996EA;--blue:#7FB0EF;
+}
+
 body.tmr-ds.tmr-ds--dark,body.tmr-ds-shell.tmr-ds--dark{
   --page:#061321;
   --panel:#0C2138; --panel-2:#0A1B2D; --panel-3:#143453;
   --ink:#EAF2FA; --ink-2:#C3D8EC; --muted:#8FAECB;
   --line:rgba(174,198,220,.18); --line-2:rgba(174,198,220,.30); --edge:rgba(174,198,220,.16);
   --brand:#1D7FE8; --brand-dk:#8CC0FF; --brand-lt:#1D7FE8; --brand-soft:rgba(29, 127, 232,.14);
-  --gold:#FFC93C; --gold-soft:rgba(255,201,60,.13);
+  --gold:#FFC93C; --gold-soft:rgba(255,201,60,.13); --gold-ink:#FFC93C;
   --green:#3FD08A; --green-soft:rgba(63,208,138,.14);
   --red:#F1867C;   --red-soft:rgba(241,134,124,.14);
   --violet:#A996EA;--violet-soft:rgba(169,150,234,.14);
@@ -736,8 +752,8 @@ body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a{
   font-size:14.5px;font-weight:700;color:var(--ink-2);
   padding:9px 12px;border-radius:var(--r-sm);white-space:nowrap;
 }
-body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a:hover{background:var(--panel-2);color:#7FB6FF}
-body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a[aria-current="page"]{background:var(--brand-soft);color:#7FB6FF}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a:hover{background:var(--panel-2);color:var(--brand)}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a[aria-current="page"]{background:var(--brand-soft);color:var(--brand)}
 
 /* Right cluster reading order (and DOM order, see userHTML() in tmr-ds-nav.js):
    coin balance -> bell -> My Record -> account. My Record is the one filled
@@ -920,7 +936,7 @@ body:is(.tmr-ds,.tmr-ds-shell) .ds-btn{
   border:1.5px solid var(--line-2);background:var(--panel);color:var(--ink-2);
   white-space:nowrap;cursor:pointer;transition:.15s;
 }
-body:is(.tmr-ds,.tmr-ds-shell) .ds-btn:hover{border-color:var(--brand);color:#7FB6FF}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-btn:hover{border-color:var(--brand);color:var(--brand)}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn:disabled{opacity:.55;cursor:default}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--brand-soft);border-color:var(--brand)}
 
@@ -935,7 +951,7 @@ body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.d:hover{background:rgba(255,255,255,.2);b
    .ghost = borderless low-emphasis, .danger = destructive (confirm/delete only).
    No further button families — a new visual style is a design decision. */
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.ghost{background:transparent;border-color:transparent}
-body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.ghost:hover{background:var(--panel-2);border-color:transparent;color:#7FB6FF}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.ghost:hover{background:var(--panel-2);border-color:transparent;color:var(--brand)}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.danger{background:var(--red);color:#fff;border-color:transparent}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.danger:hover{filter:brightness(.94);color:#fff}
 body:is(.tmr-ds,.tmr-ds-shell).tmr-ds--dark .ds-btn.danger{background:var(--red-soft);color:var(--red);border-color:var(--red)}
@@ -943,7 +959,7 @@ body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.sm{height:38px;padding:0 16px;font-size:1
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.lg{height:54px;padding:0 32px;font-size:17px}
 body:is(.tmr-ds,.tmr-ds-shell) .ds-btn.xs{height:30px;padding:0 12px;font-size:13px;border-width:1px}
 
-body.tmr-ds .ds-link{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:800;color:#7FB6FF}
+body.tmr-ds .ds-link{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:800;color:var(--brand)}
 body.tmr-ds .ds-link:hover{color:var(--brand)}
 body.tmr-ds .ds-link.dk{color:#8CC0FF}
 
@@ -987,23 +1003,23 @@ body.tmr-ds .ds-tab{
 }
 body.tmr-ds .ds-tab:hover{border-color:var(--line-2);color:var(--ink)}
 body.tmr-ds .ds-tab.on,body.tmr-ds .ds-tab.is-active,body.tmr-ds .ds-tab[aria-selected="true"]{
-  background:var(--brand-soft);border-color:var(--brand);color:#7FB6FF;
+  background:var(--brand-soft);border-color:var(--brand);color:var(--brand);
 }
 body.tmr-ds .ds-tab .n{
   font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;
   background:var(--panel-3);border-radius:999px;padding:1px 7px;color:var(--muted);
 }
-body.tmr-ds .ds-tab.on .n,body.tmr-ds .ds-tab.is-active .n{background:#fff;color:#7FB6FF}
+body.tmr-ds .ds-tab.on .n,body.tmr-ds .ds-tab.is-active .n{background:#fff;color:var(--brand)}
 
 body.tmr-ds .ds-chip{
   display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
   border-radius:5px;font-size:11.5px;font-weight:800;letter-spacing:.02em;
   background:var(--panel-3);color:var(--ink-2);
 }
-body.tmr-ds .ds-chip--brand{background:var(--brand-soft);color:#7FB6FF}
+body.tmr-ds .ds-chip--brand{background:var(--brand-soft);color:var(--brand)}
 body.tmr-ds .ds-chip--green{background:var(--green-soft);color:var(--green)}
 body.tmr-ds .ds-chip--red{background:var(--red-soft);color:var(--red)}
-body.tmr-ds .ds-chip--gold{background:var(--gold-soft);color:var(--gold)}
+body.tmr-ds .ds-chip--gold{background:var(--gold-soft);color:var(--gold-ink)}
 body.tmr-ds .ds-chip--blue{background:var(--blue-soft);color:var(--blue)}
 body.tmr-ds .ds-chip--violet{background:var(--violet-soft);color:var(--violet)}
 
@@ -1032,7 +1048,7 @@ body.tmr-ds .ds-table .num,body.tmr-ds .ds-table [data-num]{
 }
 body.tmr-ds .ds-sortable{cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 body.tmr-ds .ds-sortable:hover{color:var(--ink)}
-body.tmr-ds [aria-sort="ascending"],body.tmr-ds [aria-sort="descending"]{color:#7FB6FF}
+body.tmr-ds [aria-sort="ascending"],body.tmr-ds [aria-sort="descending"]{color:var(--brand)}
 
 /* ---------------------------------------------------------------------------
    10. FORMS
@@ -1144,7 +1160,7 @@ body:is(.tmr-ds,.tmr-ds-shell) .tmr-internal-cluster a{
   display:inline-flex;align-items:center;gap:8px;
   padding:4px 0;
   font-size:14.5px;font-weight:700;
-  color:#7FB6FF;
+  color:var(--brand);
 }
 body:is(.tmr-ds,.tmr-ds-shell) .tmr-internal-cluster a:hover{color:var(--brand);text-decoration:underline}
 body:is(.tmr-ds,.tmr-ds-shell) .tmr-internal-cluster a span{color:var(--muted);font-weight:900}

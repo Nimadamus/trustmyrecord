@@ -148,7 +148,7 @@ body.tmr-ds .profile-tab.active,
 body.tmr-ds .profile-tab[aria-selected="true"]{
   background:var(--brand-soft);
   border-color:var(--brand);
-  color:#7FB6FF;
+  color:var(--brand);
 }
 
 /* ---------------------------------------------------------------------------
@@ -254,7 +254,7 @@ body.tmr-ds .is-placeholder{color:var(--muted)}
 
 /* correlation badges keep their semantic ramp on the light surface */
 body.tmr-ds .corr-low{background:var(--green-soft);color:var(--green)}
-body.tmr-ds .corr-moderate{background:var(--gold-soft);color:var(--gold)}
+body.tmr-ds .corr-moderate{background:var(--gold-soft);color:var(--gold-ink)}
 body.tmr-ds .corr-high{background:var(--red-soft);color:var(--red)}
 body.tmr-ds .corr-extreme{background:var(--red-soft);color:var(--red)}
 
@@ -280,7 +280,7 @@ body.tmr-ds .btn-secondary{
   color:var(--ink-2);
   box-shadow:none;
 }
-body.tmr-ds .btn-secondary:hover{border-color:var(--brand);color:#7FB6FF;background:var(--panel)}
+body.tmr-ds .btn-secondary:hover{border-color:var(--brand);color:var(--brand);background:var(--panel)}
 body.tmr-ds .empty-state,
 body.tmr-ds .empty{
   padding:44px 24px;
@@ -402,7 +402,7 @@ body.tmr-ds.profile-page.tmr-social-profile .quick-filter-btn.is-active,
 body.tmr-ds.profile-page.tmr-social-profile .capper-filter-pill.is-active{
   background:var(--brand-soft);
   border-color:var(--brand);
-  color:#7FB6FF;
+  color:var(--brand);
 }
 /* badges keep semantics */
 body.tmr-ds.profile-page.tmr-social-profile .result-badge,
@@ -542,7 +542,7 @@ body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat span{
 body.tmr-ds.profile-page.tmr-social-profile .profile-corr-ticket,
 body.tmr-ds.profile-page.tmr-social-profile .fa-cat,
 body.tmr-ds.profile-page.tmr-social-profile .fa-stat{
-  color:#7FB6FF;
+  color:var(--brand);
 }
 
 /* --- 3. semantic colours tuned for black, retuned for white ----------------- */
@@ -571,7 +571,7 @@ body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-lost{
 body.tmr-ds.profile-page.tmr-social-profile .rail-corr-badge.corr-moderate,
 body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-pending{
   background:var(--gold-soft);
-  color:var(--gold);
+  color:var(--gold-ink);
 }
 body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-void,
 body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-push{
@@ -630,7 +630,7 @@ html body.tmr-ds.profile-page.tmr-social-profile .zero{
 html body.tmr-ds.profile-page.tmr-social-profile .summary,
 html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip-name,
 html body.tmr-ds.profile-page.tmr-social-profile .fa-tab-count{
-  color:#7FB6FF;
+  color:var(--brand);
 }
 /* active tabs read as the brand pill, not white-on-white */
 html body.tmr-ds.profile-page.tmr-social-profile .profile-tab.active,
@@ -638,11 +638,11 @@ html body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-tab.is-active,
 html body.tmr-ds.profile-page.tmr-social-profile .fa-tab.is-active{
   background:var(--brand-soft);
   border:1px solid var(--brand);
-  color:#7FB6FF;
+  color:var(--brand);
 }
 /* categorical accents kept, but at readable weight on white */
 html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-personality{color:var(--violet)}
-html body.tmr-ds.profile-page.tmr-social-profile .is-conflict{color:var(--gold)}
+html body.tmr-ds.profile-page.tmr-social-profile .is-conflict{color:var(--gold-ink)}
 /* semantic greens/reds: catch the compound-class cases that tie at (0,4,1) */
 html body.tmr-ds.profile-page.tmr-social-profile .v.is-pos,
 html body.tmr-ds.profile-page.tmr-social-profile .num.pos,
@@ -696,6 +696,9 @@ html body.tmr-ds.profile-page.tmr-social-profile .ledger-pick-meta span{color:va
    --panel-2, so both pass comfortably.
    --------------------------------------------------------------------------- */
 html body.tmr-ds.profile-page{--muted:#4E6379}
+/* the profile shell is navy on a theme-a ground, so #4E6379 is 1.9:1 there */
+html body.tmr-ds.profile-page.tmr-theme-a,
+html body.tmr-ds.profile-page.tmr-ds--dark{--muted:#93A9C0}
 
 /* legacy greys that never went through a token */
 html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat-label,
@@ -837,7 +840,7 @@ html body.tmr-ds.profile-page.tmr-social-profile .row-won div,
 html body.tmr-ds.profile-page.tmr-social-profile .row-lost div{color:var(--ink-2)}
 
 /* brand-coloured interactive text keeps its role */
-html body.tmr-ds.profile-page.tmr-social-profile a:not([class]){color:#7FB6FF}
+html body.tmr-ds.profile-page.tmr-social-profile a:not([class]){color:var(--brand)}
 
 /* ---------------------------------------------------------------------------
    18. CONTAINMENT + BADGES
@@ -1019,12 +1022,12 @@ html body.tmr-ds.profile-page.tmr-social-profile .tmrx-page-btn{
 }
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button:hover:not(:disabled),
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button:hover:not(:disabled){
-  border-color:var(--brand);color:#7FB6FF;
+  border-color:var(--brand);color:var(--brand);
 }
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button.is-active,
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button[aria-current],
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button.is-active{
-  background:var(--brand-soft);border-color:var(--brand);color:#7FB6FF;
+  background:var(--brand-soft);border-color:var(--brand);color:var(--brand);
 }
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button:disabled{opacity:.5}
 
@@ -1041,7 +1044,7 @@ html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-personality,
 html body.tmr-ds.profile-page.tmr-social-profile .profile-identity-badge{
   background:var(--gold-soft);
   border:1px solid var(--gold);
-  color:var(--gold);
+  color:var(--gold-ink);
   border-radius:5px;
   font-weight:800;
 }
@@ -1068,13 +1071,13 @@ html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button{
 html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button:hover:not(:disabled),
 html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button:hover:not(:disabled){
   border-color:var(--brand);
-  color:#7FB6FF;
+  color:var(--brand);
 }
 html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button.is-active,
 html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button.is-active{
   background:var(--brand-soft);
   border-color:var(--brand);
-  color:#7FB6FF;
+  color:var(--brand);
 }
 html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button:disabled,
 html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button:disabled{

@@ -3485,3 +3485,25 @@ html body .tools-actions a.secondary{
 html body .composer-login-state a{ color:#03110D !important; }
 html body .rs-rank, html body .pe-chip.is-sport{ color:#7FB6FF !important; }
 html body .ss-step > h2 .n{ color:#7FB6FF !important; }
+
+/* ============================================================
+   45. THEME-A PAGES ALSO CARRY .tmr-ds-shell, so they were
+   picking up the design system's LIGHT token ramp on a near-black
+   ground: --ink #07182A, --green #0A7A45 and --brand #0B4FA8 all
+   landed as dark ink on dark panels (extra-markets: 360 odds cells
+   at 1.4:1). Re-pin the DS tokens onto the on-dark ramp for this
+   theme. Colour only, and it cannot reach a light page because it
+   is gated on the theme's own body class.
+   ============================================================ */
+html body.tmr-theme-a{
+  --ink:#EDF3FA;   --ink-2:#C3D6EA;  --muted:#93A9C0;
+  --text:#EDF3FA;  --text-primary:#EDF3FA; --text-secondary:#C3D6EA;
+  --text-muted:#93A9C0; --faint:#93A9C0;
+  --brand:#4DA3FF; --brand-dk:#8CC0FF; --brand-lt:#4DA3FF;
+  --green:#3FD08A; --gold:#FFC93C;   --red:#F1867C;
+  --blue:#7FB0EF;  --violet:#A996EA;
+  --tmr-text:#EDF3FA; --tmr-text-strong:#EDF3FA; --tmr-text-soft:#C3D6EA;
+  --tmr-text-muted:#93A9C0; --tmr-muted:#93A9C0;
+  --tmr-teal:#4DA3FF; --tmr-accent:#4DA3FF; --tmr-action:#4DA3FF;
+  --tmr-green:#3FD08A; --tmr-gold:#FFC93C; --tmr-red:#F1867C;
+}
