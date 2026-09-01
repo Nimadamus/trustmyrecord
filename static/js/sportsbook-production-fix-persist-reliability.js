@@ -4259,10 +4259,91 @@
         );
     }
 
+    // ------------------------------------------------------------------
+    // BOARD REFRESH INTERLOCK, 2026-09-01.
+    // The 20s refresh calls selectSportAndShowGames, which rebuilds the whole
+    // games list. If that lands while someone is mid-tap, the tile under their
+    // finger is replaced and they lock a bet they never chose. @SportsSmOoOkEn
+    // hit it twice: tapped Over 5.5 on the Orioles team total and got Under 5.5
+    // both times, and watched the line go 5.5 -> 6.5 while he was tapping.
+    //
+    // A silent rebuild under a live finger is a wrong bet on someone's public
+    // record, so the refresh now yields to the user. It never fires while:
+    //   - they touched the board in the last BOARD_QUIET_MS
+    //   - a pick is selected or sitting in the slip
+    //   - a board tile has focus
+    // Skipped refreshes are not dropped, they are retried on the next tick, and
+    // once a refresh has been held back we tell the user the odds moved instead
+    // of swapping the board out from under them.
+    // ------------------------------------------------------------------
+    var BOARD_QUIET_MS = 12000;
+
+    function markBoardInteraction() {
+        window.__tmrBoardTouchedAt = Date.now();
+    }
+    try {
+        ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(function (evt) {
+            document.addEventListener(evt, function (e) {
+                var host = document.getElementById('picks');
+                if (host && e.target && host.contains(e.target)) markBoardInteraction();
+            }, true);
+        });
+    } catch (e) { /* interlock is best effort, never break the board */ }
+
+    function userIsMidPick() {
+        try {
+            if (window.__tmrBoardTouchedAt && (Date.now() - window.__tmrBoardTouchedAt) < BOARD_QUIET_MS) return true;
+            if (window.TMR && window.TMR.currentSelectedPick) return true;
+            if (document.querySelector('#picks .selected, #picks .is-selected, #picks [aria-pressed="true"]')) return true;
+            var slip = document.getElementById('pickDetails');
+            if (slip && slip.classList.contains('has-selection')) return true;
+            var ae = document.activeElement;
+            var host = document.getElementById('picks');
+            if (ae && host && host.contains(ae) && ae !== document.body) return true;
+        } catch (e) { /* if we cannot tell, assume they are mid pick */ return true; }
+        return false;
+    }
+
+    function showOddsMovedNotice() {
+        try {
+            if (document.getElementById('tmrOddsMovedNotice')) return;
+            var host = document.getElementById('picks');
+            if (!host) return;
+            var n = document.createElement('div');
+            n.id = 'tmrOddsMovedNotice';
+            n.setAttribute('role', 'status');
+            n.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:9999;'
+                + 'background:#0B2A1A;color:#EAFBF1;border:2px solid #35E07A;border-radius:12px;'
+                + 'padding:10px 14px;font:600 13px/1.35 Inter,system-ui,sans-serif;max-width:92vw;'
+                + 'box-shadow:0 10px 26px rgba(0,0,0,.45);display:flex;align-items:center;gap:10px';
+            n.innerHTML = '<span>Odds have moved. Your board is held so nothing changes while you pick.</span>'
+                + '<button type="button" id="tmrOddsMovedBtn" style="background:#35E07A;color:#05230F;'
+                + 'border:0;border-radius:8px;padding:7px 11px;font-weight:800;cursor:pointer">Update</button>';
+            document.body.appendChild(n);
+            var btn = n.querySelector('#tmrOddsMovedBtn');
+            if (btn) btn.addEventListener('click', function () {
+                n.remove();
+                window.__tmrBoardTouchedAt = 0;
+                window.__tmrBoardRefreshHeld = false;
+                refreshCurrentSport().catch(function() {});
+            });
+        } catch (e) { /* cosmetic */ }
+    }
+
     function startLiveRefreshLoop() {
         if (window.__tmrSportsbookRefreshTimer) return;
         window.__tmrSportsbookRefreshTimer = window.setInterval(function() {
             if (document.hidden || !state.selectedSport || !isPicksBoardVisible()) return;
+            if (userIsMidPick()) {
+                // Hold the refresh. Retried on the next tick; the user is told
+                // rather than having the board rebuilt under their finger.
+                if (window.__tmrBoardRefreshHeld) showOddsMovedNotice();
+                window.__tmrBoardRefreshHeld = true;
+                return;
+            }
+            window.__tmrBoardRefreshHeld = false;
+            var stale = document.getElementById('tmrOddsMovedNotice');
+            if (stale) stale.remove();
             refreshCurrentSport().catch(function() {});
         }, LIVE_REFRESH_MS);
     }
