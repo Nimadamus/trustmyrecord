@@ -75,13 +75,25 @@
     '}',
     // The launcher is the familiar support-agent bubble: a round avatar with an
     // online dot, and the label beside it so it reads as help, not decoration.
+    // At rest it is just the round agent bubble, because a fixed corner widget
+    // sits on top of whatever the page put there. The label rides out on hover,
+    // on keyboard focus, and once on arrival so people see what it is.
     '.tmr-lc-launcher {',
-    '  display: flex; align-items: center; gap: 10px; border: 0; cursor: pointer;',
+    '  display: flex; align-items: center; gap: 0; cursor: pointer;',
     '  background: var(--lc-raised); color: var(--lc-ink); font-weight: 700; font-size: 15px;',
-    '  padding: 8px 20px 8px 8px; border-radius: 999px; box-shadow: 0 10px 28px rgba(0,0,0,.4);',
+    '  padding: 6px; border-radius: 999px; box-shadow: 0 10px 28px rgba(0,0,0,.4);',
     '  border: 1px solid var(--lc-line);',
     '}',
     '.tmr-lc-launcher:hover { filter: brightness(1.12); }',
+    '.tmr-lc-label {',
+    '  max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0;',
+    '  transition: max-width .22s ease, opacity .18s ease, margin .22s ease;',
+    '}',
+    '.tmr-lc-launcher:hover .tmr-lc-label,',
+    '.tmr-lc-launcher:focus-visible .tmr-lc-label,',
+    '.tmr-lc-launcher.is-wide .tmr-lc-label {',
+    '  max-width: 190px; opacity: 1; margin: 0 14px 0 10px;',
+    '}',
     '.tmr-lc-avatar {',
     '  position: relative; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%;',
     '  background: var(--lc-accent); display: flex; align-items: center; justify-content: center;',
@@ -93,7 +105,7 @@
     '  position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px;',
     '  border-radius: 50%; background: #35d07f; border: 2px solid var(--lc-raised);',
     '}',
-    '.tmr-lc-label { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }',
+    '.tmr-lc-label > span { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }',
     '.tmr-lc-label small { font-size: 11px; font-weight: 600; color: var(--lc-muted); }',
     '.tmr-lc-panel {',
     '  display: none; flex-direction: column; width: 360px; max-width: calc(100vw - 32px);',
@@ -120,7 +132,7 @@
     '.tmr-lc-send { border: 0; border-radius: 10px; padding: 0 16px; background: var(--lc-accent); color: #06210f; font-weight: 700; cursor: pointer; }',
     '.tmr-lc-send[disabled] { opacity: .5; cursor: default; }',
     '.tmr-lc-note { padding: 0 16px 10px; font-size: 12px; color: var(--lc-muted); }',
-    '@media (max-width: 480px) { .tmr-lc { right: 12px; bottom: 12px; } .tmr-lc-panel { height: calc(100vh - 96px); } }',
+    '@media (max-width: 480px) { .tmr-lc-launcher.is-wide .tmr-lc-label { max-width: 0; opacity: 0; margin: 0; } .tmr-lc { right: 12px; bottom: 12px; } .tmr-lc-panel { height: calc(100vh - 96px); } }',
   ].join('\n');
 
   var state = {
@@ -146,7 +158,7 @@
     root.innerHTML = [
       '<button class="tmr-lc-launcher" type="button" aria-label="Open live help">',
       '  <span class="tmr-lc-avatar">' + AGENT_ICON + '<span class="tmr-lc-dot"></span></span>',
-      '  <span class="tmr-lc-label">Live help<small>Claude, TMR AI agent</small></span>',
+      '  <span class="tmr-lc-label"><span>Live help<small>Claude, TMR AI agent</small></span></span>',
       '</button>',
       '<div class="tmr-lc-panel" role="dialog" aria-label="Live chat">',
       '  <div class="tmr-lc-head">',
@@ -178,6 +190,11 @@
     el.form = root.querySelector('.tmr-lc-form');
     el.input = root.querySelector('.tmr-lc-input');
     el.send = root.querySelector('.tmr-lc-send');
+
+    // Say what it is on arrival, then get out of the way. From then on the
+    // label is a hover affordance and the footprint is the bubble alone.
+    el.launcher.classList.add('is-wide');
+    setTimeout(function () { el.launcher.classList.remove('is-wide'); }, 6000);
 
     el.launcher.addEventListener('click', open);
     el.close.addEventListener('click', close);
