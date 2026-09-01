@@ -29,7 +29,15 @@ the underlying fact is real and held:
                  scheduled stays EventScheduled; postponed, cancelled and
                  suspended games are reported as what they are.
   * startDate    is emitted only when we hold a real first pitch.
-  * location     is emitted only when the venue is known.
+  * location     is emitted only when the venue is known. Its postal address is
+                 emitted only when the feed hands us a real one for that venue.
+  * organizer    is emitted only when the governing body is known AND we hold a
+                 real homepage for it. Search Console reported "Missing field
+                 url (in organizer)" site wide on 2026-09-01 because the
+                 organizer was written as a bare name. An organizer without a
+                 url can no longer leave this file: organizer_node() returns
+                 None rather than emit a half node, so the warning cannot come
+                 back through a caller that forgets the url.
 """
 
 EVENT_STATUS = {
@@ -42,6 +50,97 @@ EVENT_STATUS = {
 }
 EVENT_SCHEDULED = "https://schema.org/EventScheduled"
 OFFLINE = "https://schema.org/OfflineEventAttendanceMode"
+
+# The governing bodies whose fixtures this site publishes, each with its own
+# homepage. A name that is not in here has no url we hold, so it gets no
+# organizer node at all rather than a nameless-url one Search Console will
+# report. Add a league here when the site starts publishing its fixtures.
+ORGANIZER_URLS = {
+    "major league baseball": "https://www.mlb.com/",
+    "mlb": "https://www.mlb.com/",
+    "national football league": "https://www.nfl.com/",
+    "nfl": "https://www.nfl.com/",
+    "national basketball association": "https://www.nba.com/",
+    "nba": "https://www.nba.com/",
+    "national hockey league": "https://www.nhl.com/",
+    "nhl": "https://www.nhl.com/",
+    "trustmyrecord": "https://trustmyrecord.com/",
+}
+
+# Which schema.org type a given organizer is. A league governs sport, so it is a
+# SportsOrganization; TrustMyRecord is not a league, so it is an Organization.
+ORGANIZER_TYPES = {
+    "trustmyrecord": "Organization",
+}
+
+
+def organizer_node(organizer, url=None):
+    """Build a complete organizer node, or none at all.
+
+    Accepts either the organizer's name or an already shaped dict. The rule is
+    absolute: a node comes back only when it has BOTH a name and a url, because
+    a bare name is exactly what Search Console flagged. An organizer we hold no
+    homepage for is dropped, since organizer is a recommended field and an
+    absent one costs nothing while an incomplete one is an open warning.
+    """
+    if not organizer:
+        return None
+    node = dict(organizer) if isinstance(organizer, dict) else {"name": organizer}
+    name = (node.get("name") or "").strip()
+    if not name:
+        return None
+    key = name.lower()
+    node["name"] = name
+    node["@type"] = node.get("@type") or ORGANIZER_TYPES.get(key, "SportsOrganization")
+    href = (url or node.get("url") or ORGANIZER_URLS.get(key) or "").strip()
+    if not href:
+        return None
+    node["url"] = href
+    return {k: node[k] for k in ("@type", "name", "url") if node.get(k)}
+
+
+# The postal address fields schema.org names, in the order a reader reads them,
+# mapped from the keys the MLB venue feed uses.
+ADDRESS_FIELDS = (
+    ("streetAddress", ("streetAddress", "address1")),
+    ("addressLocality", ("addressLocality", "city")),
+    ("addressRegion", ("addressRegion", "stateAbbrev", "state")),
+    ("postalCode", ("postalCode",)),
+    ("addressCountry", ("addressCountry", "country")),
+)
+
+
+def postal_address(address):
+    """Shape a feed's venue location into a PostalAddress, or nothing.
+
+    Every field is copied, never derived. A location that carries no locality is
+    not an address anyone could stand at, so it comes back as None instead of a
+    PostalAddress holding only a country.
+    """
+    if not address:
+        return None
+    if isinstance(address, str):
+        text = address.strip()
+        return {"@type": "PostalAddress", "streetAddress": text} if text else None
+    node = {"@type": "PostalAddress"}
+    for field, keys in ADDRESS_FIELDS:
+        for key in keys:
+            value = (address.get(key) or "").strip() if isinstance(address.get(key), str) else address.get(key)
+            if value:
+                node[field] = value
+                break
+    return node if node.get("addressLocality") else None
+
+
+def place_node(venue, address=None):
+    """A Place for the venue, carrying its postal address when we hold one."""
+    if not venue:
+        return None
+    place = {"@type": "Place", "name": venue}
+    postal = postal_address(address)
+    if postal:
+        place["address"] = postal
+    return place
 
 
 def event_status(status):
@@ -92,9 +191,9 @@ def event_description(away, home, date_long=None, start=None, venue=None,
 
 
 def sports_event(url, away, home, sport, description, node_id=None,
-                 start_iso=None, end_iso=None, venue=None, status=None,
-                 organizer=None, image=None, offers=None,
-                 away_team=None, home_team=None):
+                 start_iso=None, end_iso=None, venue=None, venue_address=None,
+                 status=None, organizer=None, organizer_url=None, image=None,
+                 offers=None, away_team=None, home_team=None):
     """Build one SportsEvent node. The only Event builder on the site.
 
     `description` is required on purpose: a caller that has no facts to describe
@@ -122,9 +221,10 @@ def sports_event(url, away, home, sport, description, node_id=None,
     if end_iso:
         event["endDate"] = end_iso.replace("Z", "+00:00")
     if venue:
-        event["location"] = {"@type": "Place", "name": venue}
-    if organizer:
-        event["organizer"] = {"@type": "SportsOrganization", "name": organizer}
+        event["location"] = place_node(venue, venue_address)
+    org = organizer_node(organizer, organizer_url)
+    if org:
+        event["organizer"] = org
     if image:
         event["image"] = image
     if offers:

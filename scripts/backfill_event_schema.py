@@ -32,6 +32,19 @@ Nothing is invented. For each Event node that is missing a field:
                 the description is composed from the Event node's own name,
                 startDate and location.
 
+  organizer     the league homepage for the governing body the node already
+                names. Search Console reported "Missing field url (in
+                organizer)" on 2026-09-01: the node carried
+                {"@type":"SportsOrganization","name":"Major League Baseball"}
+                and nothing else. Only the url is added; the name is never
+                changed, and a name we hold no homepage for is left alone.
+
+  location      the park's real postal address, read from the MLB venue feed and
+                cached in scripts/mlb_venue_addresses.json, matched on the venue
+                name the node already carries. A venue that is not in that file
+                keeps its bare Place, because an address is a fact about a place
+                and cannot be composed.
+
   eventStatus   the game state the page itself displays ("Status <b>Final</b>"),
                 mapped by the same table the generators use. A page with no
                 displayed state gets EventScheduled, which is what schema.org
@@ -51,7 +64,39 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from schema_event import OFFLINE, event_status  # noqa: E402
+from schema_event import (  # noqa: E402
+    OFFLINE, event_status, organizer_node, postal_address,
+)
+
+VENUE_ADDRESSES = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "mlb_venue_addresses.json")
+
+
+def load_venues():
+    """The venue name -> postal address map, or an empty map if it is absent."""
+    try:
+        with io.open(VENUE_ADDRESSES, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (IOError, OSError, ValueError):
+        return {}
+
+
+VENUES = load_venues()
+
+
+def venue_address(name):
+    """Look a park up by the name the node already carries.
+
+    Some pages name the park as "Truist Park, Atlanta" because that is how the
+    research overview writes it. The trailing city is stripped for the lookup
+    and for nothing else - the displayed name is never rewritten.
+    """
+    if not name:
+        return None
+    key = name.strip()
+    if key in VENUES:
+        return VENUES[key]
+    return VENUES.get(key.rsplit(",", 1)[0].strip())
 
 LD = re.compile(r'(<script[^>]*application/ld\+json[^>]*>)(.*?)(</script>)', re.S | re.I)
 STATUS_HTML = re.compile(r'Status\s*<b>(.*?)</b>', re.I)
@@ -159,6 +204,18 @@ def repair_doc(doc, status_text):
             ev["eventStatus"] = event_status(status_text)
         if not (ev.get("eventAttendanceMode") or "").strip():
             ev["eventAttendanceMode"] = OFFLINE
+        org = ev.get("organizer")
+        if isinstance(org, dict) and not (org.get("url") or "").strip():
+            # organizer_node returns None for a body we hold no homepage for, in
+            # which case the node is left exactly as it was rather than stripped.
+            filled = organizer_node(org)
+            if filled:
+                ev["organizer"] = filled
+        place = ev.get("location")
+        if isinstance(place, dict) and not place.get("address"):
+            postal = postal_address(venue_address(place.get("name")))
+            if postal:
+                place["address"] = postal
         if json.dumps(ev, sort_keys=True, ensure_ascii=False) != before:
             fixed += 1
     return fixed

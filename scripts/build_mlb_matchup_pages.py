@@ -289,7 +289,12 @@ def avail(section):
 # data gathering
 # ---------------------------------------------------------------------------
 def fetch_schedule(date):
-    d = get_json("%s/schedule?sportId=1&date=%s&hydrate=probablePitcher,team,venue,linescore"
+    # venue(location) rather than plain venue: the location block is where the
+    # feed keeps the park's real postal address, which Google asks for inside
+    # the Event's location. Without it the address would have to be guessed, and
+    # a guessed address is worse than none.
+    d = get_json("%s/schedule?sportId=1&date=%s"
+                 "&hydrate=probablePitcher,team,venue(location),linescore"
                  % (STATS_API, urllib.parse.quote(date)))
     games = []
     for day in d.get("dates") or []:
@@ -306,6 +311,7 @@ def fetch_schedule(date):
                 "date": date,
                 "start_utc": g.get("gameDate"),
                 "venue": (g.get("venue") or {}).get("name"),
+                "venue_address": (g.get("venue") or {}).get("location") or None,
                 "away_team": away_name,
                 "home_team": home_name,
                 "game_number": g.get("gameNumber") or 1,
@@ -698,6 +704,10 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     date_long = long_date(g["date"])
     start = et_time(g.get("start_utc"))
     venue = (research.get("overview") or {}).get("venue") or g.get("venue")
+    # The address belongs to the park the schedule feed named. When the research
+    # overview names a different park, the address we hold is not that park's,
+    # so it is dropped rather than attached to the wrong place.
+    venue_address = g.get("venue_address") if venue and venue == g.get("venue") else None
     final = g.get("status") == "Final" and has(g.get("away_score")) and has(g.get("home_score"))
 
     ov = research.get("overview") or {}
@@ -763,6 +773,7 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
         ),
         start_iso=g.get("start_utc"),
         venue=venue,
+        venue_address=venue_address,
         status=g.get("detailed_status"),
         organizer="Major League Baseball",
     )
@@ -1239,6 +1250,7 @@ def render_hub_ld(date, rows, built_at):
                 ),
                 start_iso=r.get("start_utc"),
                 venue=r.get("venue"),
+                venue_address=r.get("venue_address"),
                 status=r.get("detailed_status"),
                 organizer="Major League Baseball",
             ),
@@ -1624,6 +1636,9 @@ def build(dates, today, dry_run=False, workers=4):
                 "start_utc": g.get("start_utc"),
                 "detailed_status": g.get("detailed_status"),
                 "venue": ov.get("venue") if avail(ov) else g.get("venue"),
+                "venue_address": (g.get("venue_address")
+                                  if (ov.get("venue") if avail(ov) else g.get("venue")) == g.get("venue")
+                                  else None),
                 "away_sp": aw_s.get("name"), "home_sp": hm_s.get("name"),
                 "away_sp_line": sp_line(aw_p), "home_sp_line": sp_line(hm_p),
                 "sp_away_full": sp_full(aw_p, aw_s), "sp_home_full": sp_full(hm_p, hm_s),

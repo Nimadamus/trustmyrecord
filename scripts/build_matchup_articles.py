@@ -124,6 +124,18 @@ SPORT_LABEL = {
     "soccer": "Soccer", "ncaaf": "College Football", "ncaab": "College Basketball",
 }
 
+# The governing body that actually stages the fixture, for the leagues where
+# there is exactly one and we know it. College and soccer fixtures are staged by
+# a conference or a federation that varies game to game, so they name no
+# organizer rather than a guessed one. schema_event.organizer_node turns the
+# name into a node with the league's homepage, or drops it.
+SPORT_ORGANIZER = {
+    "mlb": "Major League Baseball",
+    "nba": "National Basketball Association",
+    "nfl": "National Football League",
+    "nhl": "National Hockey League",
+}
+
 # Only these hosts may appear in an article image. A Game File must not hotlink
 # a photograph from wherever the research happened to find it.
 ALLOWED_IMAGE_PREFIXES = ("/static/", SITE + "/static/", "https://trustmyrecord-api.onrender.com/api/share/og")
@@ -926,6 +938,7 @@ def render_article(article, provenance, neighbours):
             ),
             start_iso=event_start.isoformat(),
             venue=article.get("venue_name"),
+            organizer=SPORT_ORGANIZER.get(sport),
             # No game-state field reaches this script - `status` on the payload
             # is the publication state of the Game File, not the state of the
             # fixture - so eventStatus is left to its EventScheduled default
