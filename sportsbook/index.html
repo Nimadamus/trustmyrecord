@@ -11524,8 +11524,17 @@ window.toggleSportFamily = function (family) {
             if (_lobbyMlbProbable.inflight) { finish(); return; }
             _lobbyMlbProbable.inflight = true;
             var guard = setTimeout(finish, 6000);
-            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' +
-                  encodeURIComponent(range) + '&limit=200', { cache: 'no-store' })
+            // MLB_PROBABLES_PROXY_20260901. This used to call ESPN directly.
+            // ESPN's edge answers 403 to browser User-Agents and a 403 carries no
+            // CORS header, so the request always failed and every MLB row on the
+            // board printed "TBD" for both starters. The backend fetches ESPN
+            // server side, where it is still served, and returns the same shape
+            // this parser already reads.
+            var _probApiBase = (window.api && window.api.baseUrl) ||
+                               (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) ||
+                               'https://trustmyrecord-api.onrender.com/api';
+            fetch(String(_probApiBase).replace(/\/$/, '') + '/games/mlb-probables?dates=' +
+                  encodeURIComponent(range), { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
                     _lobbyMlbProbable.inflight = false;
