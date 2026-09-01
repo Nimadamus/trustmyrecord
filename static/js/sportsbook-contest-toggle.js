@@ -2,10 +2,12 @@
  * Sportsbook bet-slip contest toggle — DISABLED PLACEHOLDER (May 22, 2026).
  *
  * Renders a "JustBet MLB Contest Pick" section inside the existing Pick
- * Slip with a permanently disabled checkbox and the helper text
- * "Contest picks are not open yet." The control is purely visual at this
- * stage. There is NO contest routing, NO backend probe, NO fetch
- * interceptor. Normal single-pick submission is untouched.
+ * Slip with a permanently disabled checkbox and a link into Contest Mode,
+ * which is where contest picks are actually submitted. The control is
+ * purely visual at this stage. There is NO contest routing, NO backend
+ * probe, NO fetch interceptor. Normal single-pick submission is untouched.
+ * Because it never probes the contest, it must not assert whether the
+ * contest is open: it points at Contest Mode, which does the gating.
  *
  * Injects into BOTH known slip containers so whichever one the user's
  * page is actually rendering picks up the placeholder:
@@ -78,7 +80,9 @@
             '  background:rgba(15,23,42,0.55); border:1px solid rgba(255,184,0,0.4);',
             '  color:#ffe4a3; font-size:0.78rem; font-weight:700;',
             '  display:inline-flex; align-items:center; gap:6px;',
+            '  text-decoration:none;',
             '}',
+            '.tmr-contest-toggle-block a.tmr-cgt-status:hover { border-color:rgba(255,184,0,0.75); color:#fff2cf; }',
         ].join('\n');
         document.head.appendChild(s);
     })();
@@ -95,10 +99,18 @@
                 '<input type="checkbox" disabled aria-disabled="true" tabindex="-1">' +
                 '<span>' +
                     '<span class="tmr-cgt-label">Submit this as a contest pick</span>' +
-                    '<span class="tmr-cgt-help">Contest picks will be tracked separately from your public profile record once the contest opens.</span>' +
+                    '<span class="tmr-cgt-help">Contest picks are tracked separately from your public profile record and are made in Contest Mode.</span>' +
                 '</span>' +
             '</label>' +
-            '<div class="tmr-cgt-status"><i class="fas fa-lock" aria-hidden="true"></i> Contest picks are not open yet.</div>';
+            // CONTEST_MODE_POINTER_20260901. This line used to assert "Contest
+            // picks are not open yet." The control is a placeholder that never
+            // activates, so once the contest opens that sentence is simply false
+            // and it is the last thing an entrant reads before deciding their
+            // picks are not counting. The real submission path has always been
+            // Contest Mode, so point at it instead of asserting a state this
+            // script does not check.
+            '<a class="tmr-cgt-status" href="/sportsbook/?contest=justbet-mlb">' +
+                '<i class="fas fa-trophy" aria-hidden="true"></i> Submit contest picks in Contest Mode</a>';
         return block;
     }
 
