@@ -275,7 +275,12 @@
       .then(function (data) {
         setTyping(false);
         render(data.messages);
-        if (data.pending_human) {
+        if (data.queued) {
+          // Claude is answering from the operator side rather than inside the
+          // request. Poll fast so the reply appears the moment it is written.
+          state.waitingForHuman = true;
+          setNote('I am on this one. The answer lands in this chat, keep the tab open.');
+        } else if (data.pending_human) {
           state.waitingForHuman = true;
           setNote('Someone on the team is on this thread. Their reply lands here.');
         } else if (data.escalated) {
@@ -306,7 +311,9 @@
     if (!state.open || !state.conversationId) return;
     request('/' + encodeURIComponent(state.conversationId) + '/messages?after=' + state.lastMessageId)
       .then(function (data) {
-        state.waitingForHuman = Boolean(data.human_takeover);
+        // A queued thread is waiting on a reply just as much as a human-owned
+        // one, so it keeps the fast cadence until the answer arrives.
+        state.waitingForHuman = Boolean(data.human_takeover) || data.status === 'queued';
         render(data.messages);
       })
       .catch(function () { /* a poll that fails just tries again */ })
