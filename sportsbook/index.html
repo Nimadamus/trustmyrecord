@@ -2093,8 +2093,9 @@
         }
 
         // Update UI to show selection — clear all then mark the clicked tile.
-        document.querySelectorAll('.bet-pick-btn, .total-btn, .odds-btn').forEach(function(btn) {
+        document.querySelectorAll('.bet-pick-btn, .total-btn, .odds-btn, .sb-odds').forEach(function(btn) {
             btn.classList.remove('selected');
+            btn.classList.remove('is-selected');
             btn.removeAttribute('aria-pressed');
         });
         try {
@@ -2102,10 +2103,11 @@
             // outer button or one of the inner spans (.odds-line / .odds-value).
             var tappedBtn = null;
             if (typeof event !== 'undefined' && event && event.target) {
-                tappedBtn = (event.target.closest && event.target.closest('.odds-btn,.bet-pick-btn,.total-btn')) || null;
+                tappedBtn = (event.target.closest && event.target.closest('.odds-btn,.bet-pick-btn,.total-btn,.sb-odds')) || null;
             }
             if (tappedBtn) {
                 tappedBtn.classList.add('selected');
+                tappedBtn.classList.add('is-selected');
                 tappedBtn.setAttribute('aria-pressed', 'true');
             }
         } catch (e) { /* selection highlight is cosmetic — never block lock-in */ }
@@ -34614,7 +34616,74 @@ document.addEventListener('DOMContentLoaded', function() {
             text-align: center !important;
         }
     }
-    </style>
+
+    /* ------------------------------------------------------------------
+       SELECTED PICK, 2026-09-01. An entrant reported the board was
+       "blacked out not highlighted, I can't see nothing" and locked the
+       wrong side of a total because of it. Cause: the board renders
+       .sb-odds buttons, but selectGameBet only ever marked .odds-btn /
+       .bet-pick-btn / .total-btn, and no rule styled .sb-odds.selected at
+       all. The chosen tile stayed identical to its eleven neighbours.
+       This block is LAST on purpose: the .sb-odds-line / .sb-odds-price
+       colour rules above carry !important, so the selected ink has to be
+       declared after them to win. Bright fill, dark ink, both AA.
+       ------------------------------------------------------------------ */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.is-selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds[aria-pressed="true"],
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .bet-pick-btn.selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .total-btn.selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-prop-pick="1"].selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-alt-pick="1"].selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-tt-pick="1"].selected {
+        background: linear-gradient(180deg, #35E07A, #14A94F) !important;
+        border: 2px solid #B8FFD2 !important;
+        box-shadow:
+            0 0 0 3px rgba(53, 224, 122, 0.28),
+            0 8px 20px rgba(0, 0, 0, 0.35) !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.selected .sb-odds-line,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.selected .sb-odds-price,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.is-selected .sb-odds-line,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.is-selected .sb-odds-price,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds[aria-pressed="true"] .sb-odds-line,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds[aria-pressed="true"] .sb-odds-price,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.selected .odds-line,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.selected .odds-value,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .bet-pick-btn.selected .line,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .bet-pick-btn.selected .odds,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .total-btn.selected .value,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .total-btn.selected .odds,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-prop-pick="1"].selected,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-prop-pick="1"].selected *,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-alt-pick="1"].selected *,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks [data-tt-pick="1"].selected * {
+        color: #05230F !important;
+        font-weight: 800 !important;
+        text-shadow: none !important;
+    }
+
+    /* The word PICKED, so the state does not rest on colour alone. */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.selected::after,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.is-selected::after,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds[aria-pressed="true"]::after {
+        content: 'PICKED';
+        display: block;
+        width: 100%;
+        margin-top: 2px;
+        color: #05230F;
+        font-family: 'Inter', sans-serif;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        line-height: 1;
+        text-align: center;
+    }
+</style>
     <!-- MARKET_NAV_ONE_ROW_20260831: market/period tab strip keeps every
          market on ONE row. Overflow folds into a MORE dropdown (Alt Lines /
          Player Props first) and falls back to smooth horizontal scrolling on
@@ -34847,6 +34916,80 @@ document.addEventListener('DOMContentLoaded', function() {
 <script defer src="/static/js/sportsbook-default-board.js?v=8bc4c765f703"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.72115f1cff68.js"></script>
 
+
+<script>
+/* ---------------------------------------------------------------------------
+   SELECTED PICK MARKER, 2026-09-01.
+   An entrant reported the board was "blacked out not highlighted, I can't see
+   nothing" and locked the under when he wanted the over. Cause: the board
+   emits .sb-odds tiles, but the runtime that actually owns window.selectGameBet
+   (sportsbook-production-fix-persist-reliability.js) never adds a selected
+   class to anything, and the inline selectGameBet that does only looked for
+   .odds-btn / .bet-pick-btn / .total-btn. So every tile stayed identical and
+   the chosen one was invisible.
+
+   This is a delegated listener on purpose: it does not care which runtime owns
+   selectGameBet, so a future reassignment cannot silently kill the highlight
+   again. Marking only, never touches the pick payload.
+   --------------------------------------------------------------------------- */
+(function () {
+    if (window.__tmrPickMarkerBound) return;
+    window.__tmrPickMarkerBound = true;
+
+    var TILE = '.sb-odds, .odds-btn, .bet-pick-btn, .total-btn, .tmr-option-btn';
+
+    function mark(btn, on) {
+        if (!btn) return;
+        btn.classList.toggle('selected', !!on);
+        btn.classList.toggle('is-selected', !!on);
+        if (on) btn.setAttribute('aria-pressed', 'true');
+        else btn.removeAttribute('aria-pressed');
+    }
+
+    /* Siblings that are mutually exclusive with this tile: the over/under or
+       away/home pair it is stacked with, and the same column of the same row. */
+    function exclusiveSiblings(btn) {
+        var scope = btn.closest('.sb-odds-stack') || btn.closest('.sb-board-row')
+                 || btn.closest('article.sportsbook-game-card') || btn.closest('.game-row');
+        if (!scope) return [];
+        return [].slice.call(scope.querySelectorAll(TILE)).filter(function (b) { return b !== btn; });
+    }
+
+    document.addEventListener('click', function (ev) {
+        var btn = ev.target && ev.target.closest && ev.target.closest(TILE);
+        if (!btn || btn.disabled || btn.classList.contains('is-empty')) return;
+
+        var wasOn = btn.classList.contains('selected') || btn.classList.contains('is-selected');
+        exclusiveSiblings(btn).forEach(function (b) { mark(b, false); });
+        mark(btn, !wasOn);
+    }, true);
+
+    /* A re-render wipes the classes. Re-apply from the slip so the board still
+       shows what is actually queued. */
+    function reconcile() {
+        var slipRows = document.querySelectorAll('[data-slip-key], .tmr-slip-item, .multislip-item');
+        if (!slipRows.length) return;
+        var keys = {};
+        [].forEach.call(slipRows, function (r) {
+            var k = (r.getAttribute('data-slip-key') || r.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+            if (k) keys[k] = true;
+        });
+        [].forEach.call(document.querySelectorAll(TILE), function (b) {
+            var txt = (b.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+            if (!txt) return;
+            for (var k in keys) { if (k.indexOf(txt) >= 0) { mark(b, true); return; } }
+        });
+    }
+    var mo = new MutationObserver(function () {
+        clearTimeout(window.__tmrPickMarkerT);
+        window.__tmrPickMarkerT = setTimeout(reconcile, 250);
+    });
+    try {
+        var host = document.getElementById('picks') || document.body;
+        mo.observe(host, { childList: true, subtree: true });
+    } catch (e) { /* marking is cosmetic, never block the board */ }
+})();
+</script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
