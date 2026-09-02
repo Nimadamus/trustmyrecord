@@ -6,8 +6,10 @@
  * style is scoped under .tmr-lc and set on a shadow-free island with its own
  * variables, so a page theme cannot bleed into it and it cannot bleed out.
  *
- * The conversation id is the only credential, held in sessionStorage, so a
- * reload keeps the thread and a new tab starts a clean one.
+ * The conversation id is the only credential. It lives in localStorage, not
+ * sessionStorage: a visitor who opens a second tab is still the same person
+ * with the same question, and a fresh empty thread per tab made one person
+ * show up in the queue five times over.
  */
 (function () {
   'use strict';
@@ -274,7 +276,7 @@
     if (state.conversationId) return Promise.resolve();
 
     var stored = null;
-    try { stored = sessionStorage.getItem(STORAGE_KEY); } catch (err) { stored = null; }
+    try { stored = localStorage.getItem(STORAGE_KEY); } catch (err) { stored = null; }
     if (stored) {
       state.conversationId = stored;
       return request('/' + encodeURIComponent(stored) + '/messages?after=0')
@@ -285,7 +287,7 @@
         .catch(function () {
           // The stored thread is gone. Start clean rather than stranding them.
           state.conversationId = null;
-          try { sessionStorage.removeItem(STORAGE_KEY); } catch (err) { /* private mode */ }
+          try { localStorage.removeItem(STORAGE_KEY); } catch (err) { /* private mode */ }
           return ensureConversation();
         });
     }
@@ -293,7 +295,7 @@
     return request('/start', { method: 'POST', body: { page_url: window.location.href } })
       .then(function (data) {
         state.conversationId = data.conversation_id;
-        try { sessionStorage.setItem(STORAGE_KEY, data.conversation_id); } catch (err) { /* private mode */ }
+        try { localStorage.setItem(STORAGE_KEY, data.conversation_id); } catch (err) { /* private mode */ }
         render(data.messages);
       })
       .catch(function (error) {
