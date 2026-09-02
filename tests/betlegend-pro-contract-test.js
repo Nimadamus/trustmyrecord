@@ -134,6 +134,53 @@ check('the service worker claims no scope over /tools/ or the simulators',
 check('the manifest scope excludes the free tools',
   !String(manifest.scope).startsWith('/tools') && manifest.scope === '/betlegend-pro/');
 
+console.log('\nThe period placeholder never reaches the engine');
+// Sentry, 2026-09-02: ValueError int('__loading') on /api/matchup/preview.
+// While the seasons on file are being read the period select holds a
+// "__loading" option; currentPayload() sent it as `season`, the engine met
+// it in int(), and every free sample preview during that window was a 500.
+check('the placeholder is declared once, by name', /var PERIOD_LOADING = '__loading';/.test(app));
+check('no other literal spelling of the placeholder survives',
+  (app.match(/'__loading'/g) || []).length === 1);
+check('a season travels only as four digits',
+  /else if \(SEASON_RE\.test\(tf\)\) \{[\s\S]{0,700}body\.season = tf;/.test(app));
+check('the preview waits for the period control',
+  /function trailReady\(\)[\s\S]{0,300}periodReady\(\)/.test(app));
+check('the report submit waits for the period control',
+  /bothPicked && !periodReady\(\)\) err = /.test(app));
+
+// The shipped functions, run against a stand-in period control.
+function lift(name) {
+  const m = app.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?\\n    \\}`));
+  if (!m) throw new Error(`${name} not found in the app`);
+  return m[0];
+}
+function harness(tf, disabled) {
+  const el = (value) => ({ value });
+  const ctx = {
+    mTimeframe: { value: tf, disabled: !!disabled },
+    mSport: el('MLB'), mAway: el('New York Yankees'), mHome: el('Boston Red Sox'),
+    mVenue: el('away'), mLimit: el('20'), mDateFrom: el(''), mDateTo: el(''),
+    filterPayload: () => ({}), teamTotalPayload: () => null,
+  };
+  const src = `var PERIOD_LOADING = '__loading'; var SEASON_RE = /^\\d{4}$/;\n`
+    + `${lift('periodReady')}\n${lift('trailReady')}\n${lift('currentPayload')}\n`
+    + 'return { periodReady, trailReady, currentPayload };';
+  return new Function(...Object.keys(ctx), src)(...Object.values(ctx));
+}
+for (const bad of ['__loading', '', 'null', 'undefined', 'abc', 'NaN', '20x4', 'Reading available seasons…']) {
+  const h = harness(bad);
+  check(`"${bad}" is never sent as a season`, !('season' in h.currentPayload()));
+  check(`"${bad}" holds the preview`, h.trailReady() === false);
+}
+check('a disabled period control holds the preview', harness('2019', true).trailReady() === false);
+check('a real season travels and runs',
+  harness('2019').currentPayload().season === '2019' && harness('2019').trailReady() === true);
+check('all history sends no season and runs',
+  !('season' in harness('all').currentPayload()) && harness('all').trailReady() === true);
+check('a custom range sends no season and runs',
+  !('season' in harness('custom').currentPayload()) && harness('custom').trailReady() === true);
+
 if (failures) {
   console.error(`\n${failures} BetLegend Pro contract check(s) failed.\n`);
   process.exit(1);

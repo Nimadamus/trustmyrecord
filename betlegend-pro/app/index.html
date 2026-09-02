@@ -1370,8 +1370,21 @@
 
     function scheduleTrail() { clearTimeout(trailTimer); trailTimer = setTimeout(runTrail, 450); }
 
+    /** The period control is a real choice only once the seasons on file
+     *  have been read: until then it holds the "__loading" placeholder, which
+     *  is not a season and must never be sent. All history, a custom range
+     *  and a four-digit year are the only values that travel. */
+    var PERIOD_LOADING = '__loading';
+    var SEASON_RE = /^\d{4}$/;
+    function periodReady() {
+        var tf = mTimeframe.value;
+        if (mTimeframe.disabled || tf === PERIOD_LOADING) return false;
+        return tf === 'all' || tf === 'custom' || SEASON_RE.test(tf);
+    }
+
     function trailReady() {
-        return mSport.value && mAway.value && mHome.value && mAway.value !== mHome.value;
+        return !!(mSport.value && mAway.value && mHome.value && mAway.value !== mHome.value
+            && periodReady());
     }
 
     async function runTrail() {
@@ -1586,15 +1599,17 @@
         mLimit.disabled = loading;
         var note = $('periodLoading');
         if (note) note.hidden = !loading;
-        if (loading && !mTimeframe.querySelector('option[value="__loading"]')) {
+        // The placeholder is a display state, never a value: periodReady()
+        // holds every request (preview and report) while it is selected.
+        if (loading && !mTimeframe.querySelector('option[value="' + PERIOD_LOADING + '"]')) {
             var o = document.createElement('option');
-            o.value = '__loading';
+            o.value = PERIOD_LOADING;
             o.textContent = 'Reading available seasons…';
             mTimeframe.insertBefore(o, mTimeframe.firstChild);
-            mTimeframe.value = '__loading';
+            mTimeframe.value = PERIOD_LOADING;
         }
         if (!loading) {
-            var stale = mTimeframe.querySelector('option[value="__loading"]');
+            var stale = mTimeframe.querySelector('option[value="' + PERIOD_LOADING + '"]');
             if (stale) stale.remove();
         }
     }
@@ -2185,6 +2200,10 @@
                 err = 'The from date must be on or before the to date.';
             }
         }
+        // The period placeholder is not a period. The select refuses input
+        // while the seasons are read, but the form itself was not held, so a
+        // report could be asked for a "season" the engine cannot parse.
+        if (!err && bothPicked && !periodReady()) err = 'Reading the seasons on file for this sport…';
         var errEl = $('setupErr');
         errEl.textContent = err;
         errEl.hidden = !err;
@@ -2872,7 +2891,11 @@
         if (tf === 'custom') {
             if (mDateFrom.value) body.date_from = mDateFrom.value;
             if (mDateTo.value) body.date_to = mDateTo.value;
-        } else if (tf !== 'all') {
+        } else if (SEASON_RE.test(tf)) {
+            // Only a real four-digit season travels. 'all' means no period,
+            // and the "__loading" placeholder (or anything else the control
+            // could hold) is never a season: it reached the engine's int()
+            // as `season` and came back as a 500 on every preview.
             body.season = tf;
         }
         var chosen = filterPayload();
