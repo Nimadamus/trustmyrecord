@@ -80,6 +80,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = "https://trustmyrecord.com"
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
 STATS_API = "https://statsapi.mlb.com/api/v1"
+
+# The SEO hook generator, imported by path because these scripts are run
+# directly rather than installed as a package.
+import importlib.util as _ilu
+_hspec = _ilu.spec_from_file_location(
+    "seo_hooks", os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "matchup_seo_hooks.py"))
+seo = _ilu.module_from_spec(_hspec)
+_hspec.loader.exec_module(seo)
 HUB = "/handicapping/mlb/"
 TIMEOUT = 45
 
@@ -322,28 +331,37 @@ def fetch_schedule(date):
                 "home_score": home.get("score"),
                 "away_probable": ((away.get("probablePitcher") or {}) or {}).get("fullName"),
                 "home_probable": ((home.get("probablePitcher") or {}) or {}).get("fullName"),
+                "away_probable_id": ((away.get("probablePitcher") or {}) or {}).get("id"),
+                "home_probable_id": ((home.get("probablePitcher") or {}) or {}).get("id"),
             })
     games.sort(key=lambda g: (g.get("start_utc") or "", g["away_team"]))
     return games
 
 
 def matchup_slug(g):
-    """One permanent URL per matchup, with no date in it.
+    """One permanent URL per GAME, keyed on the immutable MLB game id.
 
-    These used to read brewers-vs-cubs-2026-08-31, which minted a brand new URL
-    every time the same two teams met and left the previous one behind as a
-    stale page nobody would ever link to again. The pair is the thing that has
-    a permanent identity, so the URL is the pair: brewers-vs-cubs. It is reused
-    the next time they play and the content on it moves to that game.
+    Three shapes have been tried here and the reasoning matters. The original
+    carried the date, brewers-vs-cubs-2026-08-31, which is unique but ages: the
+    URL reads as stale the day after and nothing links to it again. Dropping
+    the date to brewers-vs-cubs fixed that but cannot represent two different
+    Brewers-Cubs games, so every meeting overwrote the last and the previous
+    game's page ceased to exist.
 
-    The only suffix left is the second game of a doubleheader, which is a
-    genuinely different game played the same day between the same two teams and
-    would otherwise overwrite the first. It carries no date either.
+    gamePk is the schedule's own permanent identifier for one specific game. It
+    never changes, never collides, and distinguishes both ends of a
+    doubleheader without a -game-2 suffix. The URL is therefore unique forever
+    and says nothing that will stop being true, and the changing part of the
+    story lives in the title instead.
     """
     base = "%s-vs-%s" % (team_slug(g["away_team"]), team_slug(g["home_team"]))
-    if g.get("game_number") and int(g["game_number"]) > 1:
-        base += "-game-%d" % int(g["game_number"])
-    return base
+    pk = g.get("game_pk")
+    if pk:
+        return "%s-%s" % (base, pk)
+    # No id from the feed is a schedule problem, not something to paper over
+    # with a colliding slug.
+    raise BuildError("game has no gamePk: %s at %s on %s"
+                     % (g.get("away_team"), g.get("home_team"), g.get("date")))
 
 
 def matchup_url(g):
@@ -746,12 +764,21 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     # Deterministic on the two club names and the date, so a given URL always
     # gets the same title: the shorter forms only ever fire for the long
     # nickname pairs, and they fire every time for those pairs.
-    title = None
-    for tail in ("Odds, Probable Pitchers, Stats", "Odds, Pitchers, Stats", "Odds & Stats"):
-        candidate = "%s vs %s, %s: %s" % (away_n, home_n, short_date(g["date"]), tail)
-        title = candidate
-        if len(candidate) <= 65:
-            break
+    # A frozen, game-specific stat when this game supports one, because every
+    # page otherwise carries the same title shape and they compete with each
+    # other for a single query. The hook is chosen once and stored, so it does
+    # not rewrite itself after the game is played. Falls back to the previous
+    # deterministic form when nothing on the ladder qualifies.
+    hook = g.get("seo_hook")
+    if hook:
+        title = "%s vs %s: %s" % (away_n, home_n, hook[0])
+    else:
+        title = None
+        for tail in ("Odds, Probable Pitchers, Stats", "Odds, Pitchers, Stats", "Odds & Stats"):
+            candidate = "%s vs %s, %s: %s" % (away_n, home_n, short_date(g["date"]), tail)
+            title = candidate
+            if len(candidate) <= 65:
+                break
     desc_bits = ["%s at %s on %s" % (away, home, date_long)]
     if start:
         desc_bits[0] += " at %s" % start
@@ -1563,6 +1590,8 @@ def build(dates, today, dry_run=False, workers=4):
     consensus = fetch_consensus()
 
     pending = {}          # repo relative path -> html
+    hook_store = seo.load_store()   # frozen SEO hooks, one per game
+    hook_used = set()               # no two pages get the same title
     sitemap_urls = []
     hub_rows_by_date = {}
     trends_by_date = {}
@@ -1589,7 +1618,17 @@ def build(dates, today, dry_run=False, workers=4):
 
         rows = []
         day_trends = []
+        probables = {}
+        for x in games:
+            for side in ("away", "home"):
+                pid, nm = x.get("%s_probable_id" % side), x.get("%s_probable" % side)
+                if pid and nm:
+                    probables[(x["%s_team" % side], side, x["date"])] = (nm, pid)
         for g, research in zip(games, research_list):
+            g["seo_hook"] = seo.hook_for(
+                "MLB", g["away_team"], g["home_team"], g["date"], None,
+                probables, int(g["date"][:4]), hook_store, hook_used,
+                trends_for(trend_feed, g), (research or {}).get("records"))
             bg = board_for(board, g)
             market = markets_from(bg)
             trends = trends_for(trend_feed, g)
@@ -1756,6 +1795,21 @@ def build(dates, today, dry_run=False, workers=4):
     merged = {}
     for u, lastmod, freq, prio in sitemap_urls:
         merged[u] = (u, lastmod, freq, prio)
+    # Every game page on disk belongs in the sitemap, not only the ones this run
+    # rebuilt. A finished game keeps a permanent URL and stays worth indexing,
+    # and the archive pages re-homed from the old dated URLs would otherwise
+    # never be advertised at all.
+    mlb_dir = os.path.join(ROOT, "handicapping", "mlb")
+    if os.path.isdir(mlb_dir):
+        for entry in sorted(os.listdir(mlb_dir)):
+            if "-vs-" not in entry or not re.search(r"-\d{5,}$", entry):
+                continue
+            if not os.path.isfile(os.path.join(mlb_dir, entry, "index.html")):
+                continue
+            url = "%s%s/" % (HUB, entry)
+            if url not in merged:
+                merged[url] = (url, today, "weekly", "0.5")
+
     for u in existing:
         if u in merged:
             continue
@@ -1771,6 +1825,7 @@ def build(dates, today, dry_run=False, workers=4):
     else:
         sm = sm.replace("</urlset>", block + "\n</urlset>")
     pending[sm_path] = sm.replace("\n", sm_nl)
+    seo.save_store(hook_store)
 
     # --- write --------------------------------------------------------------
     new_pages = [p for p in pending

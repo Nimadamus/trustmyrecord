@@ -50,6 +50,11 @@ _spec = importlib.util.spec_from_file_location(
 mlb = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mlb)
 
+_hspec = importlib.util.spec_from_file_location(
+    "seo_hooks", os.path.join(HERE, "matchup_seo_hooks.py"))
+seo = importlib.util.module_from_spec(_hspec)
+_hspec.loader.exec_module(seo)
+
 SITE = mlb.SITE
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
 ENGINE = os.environ.get("BETLEGEND_PRO_API_BASE", "https://betlegend-pro-api.onrender.com")
@@ -107,6 +112,7 @@ def fetch_board(sport):
         if not home or not away:
             continue
         games.append({"home": home, "away": away, "commence": g.get("commence_time"),
+                      "event_id": g.get("id"),
                       "markets": best_markets(g), "priced": bool(g.get("has_sportsbook_odds"))})
     games.sort(key=lambda x: (x["commence"] or "", x["away"]))
     return games
@@ -176,12 +182,21 @@ def fetch_nfl_extras():
 # ---------------------------------------------------------------- helpers
 
 def game_slug(g):
-    """The permanent URL for this matchup, with no date in it.
+    """One permanent URL per GAME, keyed on the board's own event id.
 
-    The pair of teams is what has a lasting identity, not the individual
-    fixture, so the page is reused the next time they play rather than a new
-    URL being minted and the old one stranded."""
-    return "%s-vs-%s" % (slugify(g["away"]), slugify(g["home"]))
+    A bare pair slug cannot represent two different meetings between the same
+    teams: the second one overwrites the first and the earlier page stops
+    existing. The board's id is immutable and unique per fixture, so the URL is
+    permanent and the changing part of the story lives in the title.
+
+    The feed's ids read an_americanfootball_nfl_290843; only the numeric tail is
+    kept, since the sport is already in the path."""
+    base = "%s-vs-%s" % (slugify(g["away"]), slugify(g["home"]))
+    raw = str(g.get("event_id") or "")
+    tail = raw.rsplit("_", 1)[-1] if raw else ""
+    if not tail:
+        raise BuildError("board game has no id: %s at %s" % (g["away"], g["home"]))
+    return "%s-%s" % (base, tail)
 
 
 def game_url(sport, g):
@@ -403,10 +418,15 @@ def coverage_section(hist):
 
 # ---------------------------------------------------------------- pages
 
-def render_game(sport, g, hist, slate, extras, built_at):
+def render_game(sport, g, hist, slate, extras, built_at, hook=None):
     label = SPORTS[sport]["label"]
     teams_by_name, qb1, injuries = extras
-    title = "%s vs %s: %s Odds, Head to Head and Betting Trends" % (g["away"], g["home"], label)
+    # The hook is one true, game-specific number, frozen the first time this
+    # fixture is seen. Without it every page in the sport carries the same
+    # title and they compete with each other for one query.
+    title = ("%s vs %s: %s" % (g["away"], g["home"], hook[0]) if hook
+             else "%s vs %s: %s Odds, Head to Head and Betting Trends"
+             % (g["away"], g["home"], label))
     desc = ("%s at %s. The current line, the complete head to head record, against the spread and "
             "over/under splits, and recent form for both teams." % (g["away"], g["home"]))
     url = SITE + game_url(sport, g)
@@ -565,13 +585,19 @@ def build(sport, built_at):
     extras = fetch_nfl_extras() if sport == "nfl" else ({}, {}, {})
     changed = 0
     cache = {}
+    store = seo.load_store()
+    used = set()
     for g in games:
         key = (g["away"], g["home"])
         if key not in cache:
             cache[key] = fetch_history(sport, g["away"], g["home"])
+        hook = seo.hook_for(SPORTS[sport]["engine"], g["away"], g["home"],
+                            (g["commence"] or "")[:10], cache[key],
+                            None, None, store, used)
         if write("handicapping/%s/%s/index.html" % (sport, game_slug(g)),
-                 render_game(sport, g, cache[key], games, extras, built_at)):
+                 render_game(sport, g, cache[key], games, extras, built_at, hook)):
             changed += 1
+    seo.save_store(store)
     if write("handicapping/%s/index.html" % sport, render_hub(sport, games, built_at)):
         changed += 1
     print("%s: %d file(s) written" % (sport.upper(), changed))
