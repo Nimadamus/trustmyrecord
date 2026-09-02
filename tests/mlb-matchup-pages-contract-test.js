@@ -33,7 +33,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
 const HUB_DIR = path.join(ROOT, 'handicapping', 'mlb');
 const HUB_URL = SITE + '/handicapping/mlb/';
-const SLUG_RE = /^[a-z0-9-]+-vs-[a-z0-9-]+-\d{4}-\d{2}-\d{2}(-game-\d)?$/;
+const SLUG_RE = /^[a-z0-9-]+-vs-[a-z0-9-]+-\d{5,}$/;
 const SUPPORT = ['probable-pitchers', 'odds', 'trends'];
 
 let failures = 0;
