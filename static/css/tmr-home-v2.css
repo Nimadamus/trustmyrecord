@@ -59,14 +59,14 @@
 
 
 :root{
-  --page:#F4F7FA;
-  --panel:#FFFFFF; --panel-2:#F6F9FC; --panel-3:#E6EDF5;
+  --page:#02050A;
+  --panel:#0E1620; --panel-2:#121C28; --panel-3:#E6EDF5;
   --ink:#07182A; --ink-2:#2E4459; --muted:#5E7590;
   --line:#D2DEEA; --line-2:#B7C8DA; --edge:rgba(7,24,42,.13);
-  --brand:#0B4FA8; --brand-dk:#0B4FA8; --brand-lt:#1D7FE8; --brand-soft:#DEF4F2;
+  --brand:#0C948C; --brand-dk:#07736D; --brand-lt:#22D2C0; --brand-soft:#DEF4F2;
   --navy:#08192B; --navy-2:#10334F; --navy-3:#164A73;
-  --gold:#B98505; --gold-b:#FFC93C; --gold-soft:#FBF1D8;
-  --green:#0A8B4E; --green-soft:#DFF3E8;
+  --gold:#8A6206; --gold-b:#FFC93C; --gold-soft:#FBF1D8;
+  --green:#0B6B3E; --green-soft:#DFF3E8;
   --red:#BC372E; --red-soft:#FAE9E7;
   --violet:#5940AE; --violet-soft:#EBE7F9;
   --blue:#1E5BBF; --blue-soft:#E3ECFB;
@@ -100,7 +100,7 @@ img{display:block;max-width:100%}
 .nav{background:var(--navy);position:sticky;top:0;z-index:60;border-bottom:1px solid rgba(255,255,255,.09)}
 .nav-in{max-width:2580px;margin:0 auto;padding:0 43px;height:105px;display:flex;align-items:center;gap:51px}
 .logo{display:flex;align-items:center;gap:14px;color:#fff;font-weight:950;font-size:33px;letter-spacing:-.035em;line-height:1}
-.logo .mk{width:46px;height:54px;display:grid;place-items:center;color:#4DA3FF;font-weight:950;font-size:24px;border:3px solid #4DA3FF;clip-path:polygon(50% 0,100% 15%,90% 78%,50% 100%,10% 78%,0 15%);filter:drop-shadow(0 0 21px rgba(77, 163, 255,.24))}
+.logo .mk{width:46px;height:54px;display:grid;place-items:center;color:#37D6C1;font-weight:950;font-size:24px;border:3px solid #37D6C1;clip-path:polygon(50% 0,100% 15%,90% 78%,50% 100%,10% 78%,0 15%);filter:drop-shadow(0 0 21px rgba(55,214,193,.24))}
 .logo em{font-style:normal;color:var(--brand-lt);letter-spacing:inherit}
 .mainnav{display:flex;align-items:center;gap:45px;height:105px;margin-left:auto}
 .mainnav a{color:#AEC6DC;font-size:24px;font-weight:700;height:105px;display:flex;align-items:center;border-bottom:5px solid transparent}
@@ -146,16 +146,16 @@ img{display:block;max-width:100%}
   .nav-right .login{display:none}
 }
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:14px;height:69px;padding:0 36px;border-radius:var(--r-sm);font-size:24px;font-weight:800;cursor:pointer;border:3px solid var(--line-2);background:var(--panel);color:var(--ink-2);white-space:nowrap;transition:.15s;letter-spacing:-.012em}
-.btn:hover{border-color:var(--brand);color:#7FB6FF}
-.btn.p{background:linear-gradient(180deg,#1D7FE8,#0A8A83);color:#fff;border-color:transparent;box-shadow:0 3px 15px rgba(11, 79, 168,.32)}
+.btn:hover{border-color:var(--brand);color:var(--brand-dk)}
+.btn.p{background:linear-gradient(180deg,#13B0A5,#0A8A83);color:#fff;border-color:transparent;box-shadow:0 3px 15px rgba(12,148,140,.32)}
 .btn.p:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
 .btn.d{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.32)}
 .btn.d:hover{background:rgba(255,255,255,.2);border-color:#fff}
 .btn.sm{height:58px;padding:0 24px;font-size:21px}
 .btn.lg{height:81px;padding:0 48px;font-size:25px}
-.tlink{display:inline-flex;align-items:center;gap:10px;font-size:23px;font-weight:800;color:#7FB6FF}
+.tlink{display:inline-flex;align-items:center;gap:10px;font-size:23px;font-weight:800;color:var(--brand-dk)}
 .tlink:hover{color:var(--brand)}
-.tlink.dk{color:#8CC0FF}
+.tlink.dk{color:#7FEBDC}
 
 /* ---------- TICKER ---------- */
 .ticker{background:#050F1B;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -173,7 +173,7 @@ img{display:block;max-width:100%}
   justify-content:center;padding:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
   border-radius:9px;color:#9FBCD6;font-size:23px;line-height:1;cursor:pointer;
   transition:background .15s ease,border-color .15s ease,color .15s ease}
-.tk-nav:hover{background:rgba(29, 127, 232,.12);border-color:rgba(29, 127, 232,.34);color:#fff}
+.tk-nav:hover{background:rgba(34,210,192,.12);border-color:rgba(34,210,192,.34);color:#fff}
 /* The arrows keep their 26px box even while hidden. tmr-home-live.js sets
    .hidden once it has measured how many pages the slate needs, which is
    after the games land -- and `display:none` meant the lane was 72px wider
@@ -188,16 +188,21 @@ img{display:block;max-width:100%}
 .tk-prev{margin-right:15px}
 .tk-next{margin-left:15px}
 .tlbl{align-self:center;display:flex;align-items:center;gap:14px;color:var(--brand-lt);font-size:18px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;height:36px;flex:0 0 auto;padding-right:28px;margin-right:28px;border-right:1px solid rgba(255,255,255,.14)}
-.tlbl .bl{width:10px;height:10px;border-radius:50%;background:var(--brand-lt);box-shadow:0 0 0 6px rgba(29, 127, 232,.2)}
+.tlbl .bl{width:10px;height:10px;border-radius:50%;background:var(--brand-lt);box-shadow:0 0 0 6px rgba(34,210,192,.2)}
 a.gm{text-decoration:none}
 .gm{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:9px 23px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);white-space:nowrap;scroll-snap-align:start;transition:background .15s ease,border-color .15s ease}
-a.gm:hover{background:rgba(29, 127, 232,.10);border-color:rgba(29, 127, 232,.34)}
+a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
 .gm .gm-top{display:flex;align-items:center;gap:18px;width:100%}
 .gm .t{display:flex;align-items:center;gap:10px;color:#DFEBF6;font-size:21px;font-weight:700}
 .gm .t img{width:31px;height:31px}
 .gm .sc{color:#fff;font-weight:900;font-size:24px;font-variant-numeric:tabular-nums}
 .gm .st{color:#7593B1;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding-left:9px;margin-left:auto}
 .gm .st.on{color:var(--brand-lt)}
+/* A football card ships both its wordings and CSS picks one (Nima,
+   2026-08-29): the full one everywhere, the abbreviated one on a phone,
+   where "8:42 - 2ND QUARTER 14-10" is wider than the whole card. Baseball
+   chips carry neither span, so nothing about the MLB card changes. */
+.gm .sa{display:none}
 /* max-width pins the card's width to the intel strip's fixed 302px and never to
    this line. The probables string is nowrap and its width depends on the FONT,
    so once the 1.2x scale (2026-08-23) made it wider than the strip it became
@@ -292,6 +297,29 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   .ticker-page>.gm .gm-sp{font-size:11.5px}
   .ticker-page>.gm .gm-in-l{font-size:11.5px;gap:6px}
   .ticker-page>.gm .gm-in-l .ts{width:6px;height:6px;margin-top:4px}
+  /* THE SHORT WORDING, AND THE ROOM TO SHOW IT (Nima, 2026-08-29). A
+     football card carries "6:21 - 3RD QUARTER 24-17" where baseball carries
+     "TOP 5TH", and a college card carries school names where every other row
+     carries three letters, so at phone width the row stopped fitting the lane
+     and the card - nowrap, pinned to 100% above - cut the chip off its
+     right-hand end. The chip and the school both drop to their short form
+     here, and the gaps, side padding and chip tracking give back the ~15px
+     that decides whether the whole row fits a 291px lane. HORIZONTAL only:
+     nothing here touches the 103px card height the reservation promises. */
+  .ticker-page>.gm .sf{display:none}
+  .ticker-page>.gm .sa{display:inline}
+  .ticker-page>.gm--nfl,
+  .ticker-page>.gm--cfb{padding-left:10px;padding-right:10px}
+  .ticker-page>.gm--nfl .gm-top,
+  .ticker-page>.gm--cfb .gm-top{gap:7px;min-width:0}
+  .ticker-page>.gm--nfl .t,
+  .ticker-page>.gm--cfb .t{gap:4px;min-width:0}
+  .ticker-page>.gm--nfl .t .tn,
+  .ticker-page>.gm--cfb .t .tn{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .ticker-page>.gm--nfl .t img,
+  .ticker-page>.gm--cfb .t img{flex:0 0 auto}
+  .ticker-page>.gm--nfl .st,
+  .ticker-page>.gm--cfb .st{flex:0 0 auto;padding-left:6px;letter-spacing:.03em}
 }
 
 /* ---------- LOADING SKELETONS ----------------------------------------------
@@ -373,7 +401,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   min-height:calc(100dvh - var(--header-height));
   min-height:calc(100svh - var(--header-height));
   background:
-  radial-gradient(62rem 28rem at 82% -6rem, rgba(29, 127, 232,.20), transparent 60%),
+  radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
   linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 62%, var(--navy-3) 100%)}
 .hero .grain{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(110deg,rgba(255,255,255,.028) 0 3px,transparent 3px 36px)}
 /* Nima 2026-08-14: the breadcrumb bar above the ticker was removed, which
@@ -392,7 +420,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    .spot card's own internal type/padding, bridge stats, nav, below-the-fold
    sections) scaled cleanly to 1.25x with no such ceiling. */
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 624px;gap:86px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:15px;padding:10px 24px;border-radius:1499px;background:rgba(29, 127, 232,.12);border:1px solid rgba(29, 127, 232,.34);color:#8DEDE0;font-size:17px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.eyebrow{display:inline-flex;align-items:center;gap:15px;padding:10px 24px;border-radius:1499px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:17px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:10px;height:10px;border-radius:50%;background:var(--brand-lt)}
 .hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:62px;line-height:1.04;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:26px 0 28px}
 .hero h1.hh em{font-style:normal;color:var(--brand-lt)}
@@ -410,7 +438,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .spot .hd{padding:23px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}
 .spot .hd b{font-size:18px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:13px}
 .spot .bd{padding:33px 36px 30px}
-.vchip{display:inline-flex;align-items:center;gap:8px;padding:6px 15px;border-radius:8px;background:var(--brand-soft);color:#7FB6FF;font-size:18px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(11, 79, 168,.28)}
+.vchip{display:inline-flex;align-items:center;gap:8px;padding:6px 15px;border-radius:8px;background:var(--brand-soft);color:var(--brand-dk);font-size:18px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto;line-height:1;border:1px solid rgba(12,148,140,.28)}
 .spot .ft{padding:23px 36px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:21px;color:var(--muted);font-weight:600}
 
 /* ---------------------------------------------------------------------------
@@ -447,18 +475,18 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    on the way in either. */
 .comp-title{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:41px;font-weight:900;letter-spacing:.006em;line-height:1.03;text-transform:uppercase;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden}
 .comp-sub{display:flex;align-items:baseline;gap:14px;margin-top:14px;height:25px;min-width:0}
-.comp-cat{font-size:18px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:#7FB6FF;white-space:nowrap;flex:0 0 auto}
+.comp-cat{font-size:18px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--brand-dk);white-space:nowrap;flex:0 0 auto}
 .comp-note{font-size:17px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .comp-note::before{content:'·';margin-right:13px;color:var(--line-2)}
 
 /* The live pulse next to LIVE COMPETITION. A slow breath, not a blink: the
    dot never fully disappears, so it reads as a status light rather than an
    alert. */
-.spot.comp .hd b .bl{width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 0 rgba(11, 79, 168,.45);animation:compPulse 2.4s ease-out infinite;flex:0 0 auto}
+.spot.comp .hd b .bl{width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 0 rgba(12,148,140,.45);animation:compPulse 2.4s ease-out infinite;flex:0 0 auto}
 @keyframes compPulse{
-  0%{box-shadow:0 0 0 0 rgba(11, 79, 168,.42);opacity:1}
-  70%{box-shadow:0 0 0 10px rgba(11, 79, 168,0);opacity:.72}
-  100%{box-shadow:0 0 0 0 rgba(11, 79, 168,0);opacity:1}
+  0%{box-shadow:0 0 0 0 rgba(12,148,140,.42);opacity:1}
+  70%{box-shadow:0 0 0 10px rgba(12,148,140,0);opacity:.72}
+  100%{box-shadow:0 0 0 0 rgba(12,148,140,0);opacity:1}
 }
 
 /* The rotating stage. Height is fixed here and nowhere else. */
@@ -486,7 +514,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .comp-avl{background:linear-gradient(140deg,var(--brand),var(--brand-dk));color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
 .comp-id{min-width:0;max-width:100%;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .comp-nm{display:block;max-width:100%;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
-a.comp-nm:hover{color:#7FB6FF}
+a.comp-nm:hover{color:var(--brand-dk)}
 .comp-meta{display:block;max-width:100%;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px;line-height:1.2}
 .comp-val{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:13px;flex:0 0 auto;white-space:nowrap}
 .comp-num{font-size:26px;font-weight:900;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
@@ -504,6 +532,9 @@ a.comp-nm:hover{color:#7FB6FF}
    homepage already uses, with the white card, the gold rail and every other
    value unchanged. The four sportsbook boards share ONE accent so the card
    does not strobe through a palette while it rotates. */
+/* --brand-dk resolves to the light-theme brand (#0B4FA8) here, which is
+   2.5:1 on this card's dark ground. The sibling accents (gold, green)
+   were already on-dark values; this one was not. */
 .spot.comp .comp-cat{color:#7FB6FF}
 .spot.comp .comp-row.r1 .comp-rk{color:var(--gold)}
 .spot.comp.comp-acc-trivia .comp-cat{color:var(--gold)}
@@ -546,7 +577,7 @@ a.comp-nm:hover{color:#7FB6FF}
    changes -- the broadcast "cut" -- and nothing else. It sits above the rows
    and below nothing, is 420ms long, and is never on screen otherwise. */
 .spot.comp .bd{position:relative;overflow:hidden}
-.comp-flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(100deg,rgba(29, 127, 232,0) 34%,rgba(29, 127, 232,.16) 50%,rgba(255,201,60,.13) 58%,rgba(29, 127, 232,0) 74%);transform:translateX(-38%)}
+.comp-flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(100deg,rgba(34,210,192,0) 34%,rgba(34,210,192,.16) 50%,rgba(255,201,60,.13) 58%,rgba(34,210,192,0) 74%);transform:translateX(-38%)}
 .comp-flash.go{animation:compFlash .42s cubic-bezier(.4,0,.2,1) both}
 @keyframes compFlash{
   0%{opacity:0;transform:translateX(-38%)}
@@ -592,7 +623,7 @@ a.comp-nm:hover{color:#7FB6FF}
   .comp-flash.go,.comp-prog.run i,.spot.comp .hd b .bl{animation:none!important}
   .comp-view.is-off{transition:none}
   .comp-prog.run i{transform:scaleX(1)}
-  .spot.comp .hd b .bl{box-shadow:0 0 0 5px rgba(11, 79, 168,.18)}
+  .spot.comp .hd b .bl{box-shadow:0 0 0 5px rgba(12,148,140,.18)}
 }
 
 /* Narrow tiers. The rank column and the avatar are the first things to go:
@@ -634,7 +665,7 @@ a.comp-nm:hover{color:#7FB6FF}
 .bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 43px}
 .bridge .s{padding:21px 33px;border-right:1px solid var(--line)}
 .bridge .s b{display:block;font-size:39px;font-weight:900;letter-spacing:-.04em;line-height:1.08}
-.bridge .s b.t{color:#7FB6FF}
+.bridge .s b.t{color:var(--brand-dk)}
 .bridge .s span{display:block;font-size:18px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:9px}
 .bridge .cta-cell{display:flex;align-items:center;gap:28px;padding:21px 33px;background:var(--panel-2)}
 .bridge .cta-cell p{font-size:21px;color:var(--muted);font-weight:600;max-width:315px;line-height:1.45}
@@ -695,7 +726,7 @@ a.comp-nm:hover{color:#7FB6FF}
 .rk.g3{background:linear-gradient(150deg,#EBC095,#BE8447);color:#3F2408}
 .ava{width:63px;height:63px;border-radius:14px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line)}
 .avl{width:63px;height:63px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:21px;flex:0 0 auto}
-.c1{background:linear-gradient(140deg,#0B4FA8,#0B4FA8)}.c2{background:linear-gradient(140deg,#3877D2,#1B4A9B)}
+.c1{background:linear-gradient(140deg,#0C948C,#07736D)}.c2{background:linear-gradient(140deg,#3877D2,#1B4A9B)}
 .c3{background:linear-gradient(140deg,#BE7229,#925218)}.c4{background:linear-gradient(140deg,#C54B69,#96324C)}
 .c5{background:linear-gradient(140deg,#6947C2,#4A2C9C)}.c6{background:linear-gradient(140deg,#388B58,#24643E)}
 /* The leaderboard card is a 1.04fr column of .board, so between 1401px and
@@ -721,12 +752,12 @@ a.comp-nm:hover{color:#7FB6FF}
 .fr:last-child{border-bottom:none}
 .fr:hover{background:var(--panel-2)}
 .fr .fb{min-width:0;flex:1}
-.cat{display:inline-block;padding:5px 14px;border-radius:6px;font-size:16px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:13px}
+.cat{display:inline-block;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:13px}
 .cat.mlb{background:var(--blue-soft);color:var(--blue)}
 .cat.soc{background:var(--green-soft);color:var(--green)}
 .cat.str{background:var(--violet-soft);color:var(--violet)}
-.fr .ft2{font-size:25px;font-weight:800;line-height:1.34;letter-spacing:-.027em}
-.fr .fm{font-size:20px;color:var(--muted);margin-top:10px;font-weight:600}
+.fr .ft2{font-size:16px;font-weight:800;line-height:1.34;letter-spacing:-.027em}
+.fr .fm{font-size:13px;color:var(--muted);margin-top:10px;font-weight:600}
 
 /* ---------- COMPETE ROW ---------- */
 .compete{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:27px;margin-top:27px;align-items:stretch}
@@ -756,7 +787,7 @@ a.comp-nm:hover{color:#7FB6FF}
 .mrow .mt2 span{display:block;font-size:17px;color:var(--muted);font-weight:600;margin-top:1px}
 .mrow .go{font-size:17px;font-weight:900;color:#7FB6FF;text-transform:uppercase;letter-spacing:.06em}
 .crow{display:flex;align-items:center;gap:14px;font-size:19px;font-weight:600;color:#C3D8EC;padding:9px 0}
-.crow i{width:27px;height:27px;border-radius:50%;background:rgba(29, 127, 232,.18);color:var(--brand-lt);display:flex;align-items:center;justify-content:center;font-size:14px;font-style:normal;font-weight:900;flex:0 0 auto}
+.crow i{width:27px;height:27px;border-radius:50%;background:rgba(34,210,192,.18);color:var(--brand-lt);display:flex;align-items:center;justify-content:center;font-size:14px;font-style:normal;font-weight:900;flex:0 0 auto}
 .pollq{font-size:22px;font-weight:800;margin-bottom:8px;line-height:1.38;letter-spacing:-.027em}
 .pollmeta{font-size:18px;color:var(--muted);font-weight:600;margin-bottom:22px}
 .pbar{margin-bottom:18px}
@@ -813,9 +844,9 @@ footer a:hover{color:#fff}
 
 /* ---- logged-in nav state (added; approved nav layout unchanged) ---- */
 .v2nav-user{display:inline-flex;align-items:center;gap:14px;color:#fff;font-weight:700;font-size:21px;text-decoration:none}
-.v2nav-user:hover{color:#8CC0FF}
+.v2nav-user:hover{color:#7FEBDC}
 .v2nav-ava{width:45px;height:45px;border-radius:13px;object-fit:cover;display:block;border:1px solid rgba(255,255,255,.25)}
-.v2nav-avl{width:45px;height:45px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#1D7FE8,#0B4FA8);color:#04211F;font-weight:900;font-size:18px}
+.v2nav-avl{width:45px;height:45px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#22D2C0,#0C948C);color:#04211F;font-weight:900;font-size:18px}
 .v2nav-name{max-width:195px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .v2nav-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:14px;color:#AEC6DC;border:1px solid rgba(255,255,255,.18)}
 .v2nav-bell:hover{color:#fff;border-color:rgba(255,255,255,.4)}
@@ -880,16 +911,16 @@ html.tmr-heroanim .hero-bg{
 .tmr-fp-reminder{position:relative;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
 max-width:1770px;margin:18px auto;padding:16px 66px 16px 23px;border-radius:18px;
 background:linear-gradient(90deg,rgba(0,110,124,0.30),rgba(10,17,24,0.97));
-border:1px solid rgba(43, 140, 255,0.26);color:#dbe6f3;font:600 0.92rem/1.4 var(--font,Inter,sans-serif)}
+border:1px solid rgba(0,255,255,0.26);color:#dbe6f3;font:600 0.92rem/1.4 var(--font,Inter,sans-serif)}
 .tmr-fp-reminder__icon{flex:0 0 auto;width:45px;height:45px;border-radius:14px;display:flex;
-align-items:center;justify-content:center;background:rgba(43, 140, 255,0.14);color:#4DA3FF;font-size:21px}
+align-items:center;justify-content:center;background:rgba(0,255,255,0.14);color:#67e8f9;font-size:21px}
 .tmr-fp-reminder__text{flex:1 1 300px}
 .tmr-fp-reminder__text strong{color:#f8fafc;font-weight:800}
 .tmr-fp-reminder .tmr-fp-btn{display:inline-flex;align-items:center;justify-content:center;gap:14px;
 padding:14px 24px;border-radius:16px;font:800 0.85rem/1 var(--font,Inter,sans-serif);letter-spacing:.02em;cursor:pointer;
 border:1px solid transparent;text-decoration:none;transition:transform .14s ease,box-shadow .14s ease}
-#tmr-fp-reminder .tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#4DA3FF) !important;
-color:#04111a !important;box-shadow:0 18px 45px rgba(43, 140, 255,0.24) !important;text-decoration:none !important}
+#tmr-fp-reminder .tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#67e8f9) !important;
+color:#04111a !important;box-shadow:0 18px 45px rgba(0,255,255,0.24) !important;text-decoration:none !important}
 .tmr-fp-reminder__close{position:absolute;top:13px;right:15px;background:transparent;border:0;
 color:#7f8ea6;font-size:28px;line-height:1;cursor:pointer;padding:6px 9px}
 #tmr-fp-reminder .tmr-fp-reminder__close{background:transparent !important;border:0 !important;
@@ -976,14 +1007,14 @@ box-shadow:none !important;color:#7f8ea6 !important}
 
 .ticker .gm.gm--gf {
   position: relative;
-  background: rgba(29, 127, 232, .085);
-  border-color: rgba(29, 127, 232, .38);
+  background: rgba(34, 210, 192, .085);
+  border-color: rgba(34, 210, 192, .38);
   /* Left accent: inset, so it does not add the 3px a border would. */
-  box-shadow: inset 5px 0 0 0 var(--brand-lt, #1D7FE8);
+  box-shadow: inset 5px 0 0 0 var(--brand-lt, #22D2C0);
 }
 .ticker a.gm.gm--gf:hover {
-  background: rgba(29, 127, 232, .16);
-  border-color: rgba(29, 127, 232, .62);
+  background: rgba(34, 210, 192, .16);
+  border-color: rgba(34, 210, 192, .62);
 }
 
 /* The badge is out of flow and reserves NO space, and it must NEVER cover game
@@ -993,9 +1024,9 @@ box-shadow:none !important;color:#7f8ea6 !important}
 .ticker .gm.gm--gf .gm-gf {
   position: absolute; top: 1px; right: 13px;
   font-size: 10px; font-weight: 800; letter-spacing: .12em;
-  color: var(--brand-lt, #1D7FE8);
+  color: var(--brand-lt, #22D2C0);
   background: rgba(6, 35, 31, .55);
-  border: 1px solid rgba(29, 127, 232, .40);
+  border: 1px solid rgba(34, 210, 192, .40);
   padding: 1px 6px; border-radius: 1499px; line-height: 1;
   pointer-events: none; white-space: nowrap;
 }
@@ -1024,14 +1055,14 @@ box-shadow:none !important;color:#7f8ea6 !important}
    strip's height and every card's x and width are untouched, which is what the
    layout assertions in tests/ticker-gamefile-feature-test.js check. */
 @keyframes tmrGfPulse {
-  0%, 100% { box-shadow: inset 5px 0 0 0 var(--brand-lt, #1D7FE8),
-                         0 0 0 0 rgba(29, 127, 232, 0);
-             border-color: rgba(29, 127, 232, .40);
-             background: rgba(29, 127, 232, .09); }
-  50%      { box-shadow: inset 5px 0 0 0 var(--brand-lt, #1D7FE8),
-                         0 0 15px 3px rgba(29, 127, 232, .38);
-             border-color: rgba(29, 127, 232, .85);
-             background: rgba(29, 127, 232, .18); }
+  0%, 100% { box-shadow: inset 5px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 0 0 rgba(34, 210, 192, 0);
+             border-color: rgba(34, 210, 192, .40);
+             background: rgba(34, 210, 192, .09); }
+  50%      { box-shadow: inset 5px 0 0 0 var(--brand-lt, #22D2C0),
+                         0 0 15px 3px rgba(34, 210, 192, .38);
+             border-color: rgba(34, 210, 192, .85);
+             background: rgba(34, 210, 192, .18); }
 }
 .ticker .gm.gm--gf { animation: tmrGfPulse 2.6s ease-in-out infinite; }
 
@@ -1044,7 +1075,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
   .ticker .gm.gm--gf { animation: none; }
   /* Without the pulse the card still has to read as the featured one, so it
      keeps the brighter of the two tints rather than the resting one. */
-  .ticker .gm.gm--gf { background: rgba(29, 127, 232, .16); }
+  .ticker .gm.gm--gf { background: rgba(34, 210, 192, .16); }
 }
 
 /* The breakdown call-out bar that sat under the strip was REMOVED at Nima's
@@ -1088,7 +1119,7 @@ box-shadow:none !important;color:#7f8ea6 !important}
    games lane is measured against the final geometry from the first frame. */
 .tkact:not(.is-ready){border-left-color:transparent}
 .tkact-lbl .bl{width:9px;height:9px;border-radius:50%;background:var(--brand-lt);
-  box-shadow:0 0 0 5px rgba(29, 127, 232,.2)}
+  box-shadow:0 0 0 5px rgba(34,210,192,.2)}
 
 /* Fixed slot: the item inside it changes every few seconds and must never
    change the height of the ticker row while it does. */
@@ -1099,10 +1130,10 @@ box-shadow:none !important;color:#7f8ea6 !important}
   opacity:1;transform:translateY(0);
   transition:opacity .24s ease,transform .24s ease,background-color .15s ease}
 a.tkact-item{cursor:pointer}
-a.tkact-item:hover{background:rgba(29, 127, 232,.08)}
+a.tkact-item:hover{background:rgba(34,210,192,.08)}
 a.tkact-item:hover .tkact-who b{color:#fff}
 a.tkact-item:hover .tkact-act{color:rgba(235,245,250,.92)}
-a.tkact-item:focus-visible{outline:3px solid rgba(29, 127, 232,.55);outline-offset:3px}
+a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset:3px}
 /* Entering below, leaving above: a few pixels of travel, no bounce, no flash. */
 .tkact-item.is-in{opacity:0;transform:translateY(8px)}
 .tkact-item.is-out{opacity:0;transform:translateY(-8px)}
