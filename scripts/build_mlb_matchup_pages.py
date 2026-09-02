@@ -328,7 +328,19 @@ def fetch_schedule(date):
 
 
 def matchup_slug(g):
-    base = "%s-vs-%s-%s" % (team_slug(g["away_team"]), team_slug(g["home_team"]), g["date"])
+    """One permanent URL per matchup, with no date in it.
+
+    These used to read brewers-vs-cubs-2026-08-31, which minted a brand new URL
+    every time the same two teams met and left the previous one behind as a
+    stale page nobody would ever link to again. The pair is the thing that has
+    a permanent identity, so the URL is the pair: brewers-vs-cubs. It is reused
+    the next time they play and the content on it moves to that game.
+
+    The only suffix left is the second game of a doubleheader, which is a
+    genuinely different game played the same day between the same two teams and
+    would otherwise overwrite the first. It carries no date either.
+    """
+    base = "%s-vs-%s" % (team_slug(g["away_team"]), team_slug(g["home_team"]))
     if g.get("game_number") and int(g["game_number"]) > 1:
         base += "-game-%d" % int(g["game_number"])
     return base
@@ -1724,18 +1736,30 @@ def build(dates, today, dry_run=False, workers=4):
     sm_raw = io.open(os.path.join(ROOT, sm_path), encoding="utf-8", newline="").read()
     sm_nl = "\r\n" if "\r\n" in sm_raw else "\n"
     sm = sm_raw.replace("\r\n", "\n")
-    # Keep the block to a rolling window. A game page NEVER disappears from the
-    # site, it only stops being advertised: exactly the unpublish behaviour
-    # build_matchup_articles.py uses for a Game File.
-    existing = re.findall(r"<loc>%s(/handicapping/mlb/[a-z0-9-]+-vs-[a-z0-9-]+-(\d{4}-\d{2}-\d{2})[a-z0-9-]*/)</loc>"
-                          % re.escape(SITE), sm)
-    cutoff = (dt.date(*(int(x) for x in today.split("-"))) - dt.timedelta(days=13)).isoformat()
+    # A matchup URL is now the team pair and carries no date, so it does not
+    # expire and there is no rolling window to keep. The block is the current
+    # slate plus every pair page previously advertised that still exists on
+    # disk. The old code harvested DATED urls back out of the sitemap and
+    # re-listed them for 13 days, which after this change would have kept
+    # advertising retired dated paths and produced exactly the duplicate
+    # indexing the dateless URLs exist to prevent.
+    # The character class has to allow digits, so a pattern alone cannot tell
+    # yankees-vs-angels from yankees-vs-angels-2026-09-02. Harvest both and
+    # drop anything ending in a date, which is the retired form.
+    harvested = re.findall(
+        r"<loc>%s(/handicapping/mlb/[a-z0-9-]+-vs-[a-z0-9-]+/)</loc>"
+        % re.escape(SITE), sm)
+    existing = [u for u in harvested if not re.search(r"-\d{4}-\d{2}-\d{2}/$", u)]
     merged = {}
     for u, lastmod, freq, prio in sitemap_urls:
         merged[u] = (u, lastmod, freq, prio)
-    for u, d in existing:
-        if u not in merged and d >= cutoff:
-            merged[u] = (u, d, "monthly", "0.5")
+    for u in existing:
+        if u in merged:
+            continue
+        # Only keep it if the page is still there. A pair that has not played
+        # since a rebuild removed its directory should not stay advertised.
+        if os.path.isdir(os.path.join(ROOT, u.strip("/"))):
+            merged[u] = (u, today, "weekly", "0.5")
     ordered = sorted(merged.values(), key=lambda t: (t[1], t[0]), reverse=True)
     block = sitemap_block(ordered)
     if "<!-- BEGIN_MLB_MATCHUP_URLS -->" in sm:
