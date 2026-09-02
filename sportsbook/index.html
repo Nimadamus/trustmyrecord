@@ -27,6 +27,23 @@
     </script>
     <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
     <script>
+    // ESPN_LEAGUE_PROXY_20260901. Every browser fetch to site.api.espn.com on
+    // this site fails: ESPN's edge answers 403 to browser User-Agents and a 403
+    // carries no CORS header. The same conclusion is already recorded in the
+    // PITCHER_WALKS_20260822 note below. Route league scoreboards through the
+    // backend, which fetches ESPN server side and returns the same shape with
+    // odds and logos intact.
+    window.TMR = window.TMR || {};
+    window.TMR.espnScoreboardUrl = function (espnPath, dates, limit) {
+        var apiBase = (window.api && window.api.baseUrl) ||
+                      (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
+                      'https://trustmyrecord-api.onrender.com/api';
+        var u = String(apiBase).replace(/\/$/, '') + '/games/espn/scoreboard?path=' + encodeURIComponent(espnPath);
+        if (dates) u += '&dates=' + encodeURIComponent(dates);
+        if (limit) u += '&limit=' + encodeURIComponent(limit);
+        return u;
+    };
+
     // This runs FIRST, before any other scripts
     console.log('[TMR EARLY] Defining core functions...');
 
@@ -268,7 +285,7 @@
             // which late at night UTC is yesterday's slate (e.g. 4/30 04:00 UTC
             // returns 4/29 'post' games). Pinning the query to today's UTC date
             // prevents skipping today's pre-game slate entirely.
-            var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + dateStr;
+            var url = window.TMR.espnScoreboardUrl(espnPath, dateStr);
             console.log('[TMR] ESPN FETCH:', url, '(day +' + daysOffset + ')');
 
             fetch(url)
@@ -408,8 +425,7 @@
         var pad = function (d) { return d.toISOString().split('T')[0].replace(/-/g, ''); };
         var start = new Date();
         var end = new Date(); end.setDate(end.getDate() + (daysAhead || 14));
-        var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath +
-                  '/scoreboard?dates=' + pad(start) + '-' + pad(end) + '&limit=300';
+        var url = window.TMR.espnScoreboardUrl(espnPath, pad(start) + '-' + pad(end), 300);
         fetch(url)
             .then(function (r) { if (!r.ok) throw new Error('ESPN ' + r.status); return r.json(); })
             .then(function (data) {
@@ -2832,8 +2848,7 @@
 
     // Fetch scores for a sport from ESPN (includes completed games)
     window.TMR.fetchScoresForDate = function(sportPath, dateStr) {
-        var url = 'https://site.api.espn.com/apis/site/v2/sports/' + sportPath + '/scoreboard';
-        if (dateStr) url += '?dates=' + dateStr;
+        var url = window.TMR.espnScoreboardUrl(sportPath, dateStr || '');
         console.log('[TMR ScoreFetch] Fetching:', url);
         return fetch(url)
             .then(function(r) {
