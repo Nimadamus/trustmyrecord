@@ -1379,7 +1379,18 @@
     function periodReady() {
         var tf = mTimeframe.value;
         if (mTimeframe.disabled || tf === PERIOD_LOADING) return false;
-        return tf === 'all' || tf === 'custom' || SEASON_RE.test(tf);
+        if (tf === 'custom') return customRangeReady();
+        return tf === 'all' || SEASON_RE.test(tf);
+    }
+
+    /** A custom range is a real period only with at least one date, and with
+     *  the two in order. syncSetup() already refuses the report on these; the
+     *  free preview used to fire anyway and paint "0 of 0 meetings" beside
+     *  the refusal. */
+    function customRangeReady() {
+        var from = mDateFrom.value, to = mDateTo.value;
+        if (!from && !to) return false;
+        return !(from && to && from > to);
     }
 
     function trailReady() {

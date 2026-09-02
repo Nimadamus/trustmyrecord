@@ -155,16 +155,16 @@ function lift(name) {
   if (!m) throw new Error(`${name} not found in the app`);
   return m[0];
 }
-function harness(tf, disabled) {
+function harness(tf, disabled, from, to) {
   const el = (value) => ({ value });
   const ctx = {
     mTimeframe: { value: tf, disabled: !!disabled },
     mSport: el('MLB'), mAway: el('New York Yankees'), mHome: el('Boston Red Sox'),
-    mVenue: el('away'), mLimit: el('20'), mDateFrom: el(''), mDateTo: el(''),
+    mVenue: el('away'), mLimit: el('20'), mDateFrom: el(from || ''), mDateTo: el(to || ''),
     filterPayload: () => ({}), teamTotalPayload: () => null,
   };
   const src = `var PERIOD_LOADING = '__loading'; var SEASON_RE = /^\\d{4}$/;\n`
-    + `${lift('periodReady')}\n${lift('trailReady')}\n${lift('currentPayload')}\n`
+    + `${lift('periodReady')}\n${lift('customRangeReady')}\n${lift('trailReady')}\n${lift('currentPayload')}\n`
     + 'return { periodReady, trailReady, currentPayload };';
   return new Function(...Object.keys(ctx), src)(...Object.values(ctx));
 }
@@ -178,8 +178,12 @@ check('a real season travels and runs',
   harness('2019').currentPayload().season === '2019' && harness('2019').trailReady() === true);
 check('all history sends no season and runs',
   !('season' in harness('all').currentPayload()) && harness('all').trailReady() === true);
-check('a custom range sends no season and runs',
-  !('season' in harness('custom').currentPayload()) && harness('custom').trailReady() === true);
+check('a custom range with dates in order sends no season and runs',
+  !('season' in harness('custom', false, '2022-04-01', '2022-10-31').currentPayload())
+  && harness('custom', false, '2022-04-01', '2022-10-31').trailReady() === true);
+check('a custom range with one date runs', harness('custom', false, '2022-04-01', '').trailReady() === true);
+check('an inverted custom range holds the preview', harness('custom', false, '2022-09-01', '2022-04-01').trailReady() === false);
+check('an empty custom range holds the preview', harness('custom').trailReady() === false);
 
 if (failures) {
   console.error(`\n${failures} BetLegend Pro contract check(s) failed.\n`);
