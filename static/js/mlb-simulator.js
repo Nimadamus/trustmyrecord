@@ -8437,8 +8437,13 @@
         state.liveContext.status = 'loading';
         renderDataModeStatus();
         var base = apiBaseUrl();
+        // ESPN_SIM_PROXY_20260901. These used to hit ESPN directly. ESPN's edge
+        // answers 403 to browser User-Agents and a 403 carries no CORS header, so
+        // every one of them failed and the simulator silently ran on baseline
+        // ratings with no starters, records, form or injuries. The backend fetches
+        // ESPN server side and returns the same shape, trimmed to what we read.
         var espnUrls = recentEspnDates().map(function (date) {
-            return 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + date;
+            return base + '/games/espn/mlb/scoreboard?dates=' + encodeURIComponent(date);
         });
         fetchStatcastExpected();
         fetchTeamOaa();
@@ -8454,7 +8459,7 @@
             var espnEvents = espnEventsByDate[0] || [];
             var recentEvents = espnEventsByDate.reduce(function (all, events) { return all.concat(events); }, []).filter(function (event) { return event && event.completed; });
             var summaryRequests = espnEvents.slice(0, 20).filter(function (event) { return event && event.id; }).map(function (event) {
-                return fetchJson('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=' + encodeURIComponent(event.id)).then(function (summary) {
+                return fetchJson(base + '/games/espn/mlb/summary?event=' + encodeURIComponent(event.id)).then(function (summary) {
                     return { id: event.id, summary: summary };
                 });
             });
