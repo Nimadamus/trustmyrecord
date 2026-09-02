@@ -1195,3 +1195,145 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
 :host(.is-embed) .bar, :host(.is-embed) .rail { display: none; }
 :host(.is-embed) .shell { width: 100%; padding: 6px 0 10px; }
 :host(.is-embed) .layout { grid-template-columns: 1fr; }
+
+/* ==========================================================================
+   Polish pass, 2026-09-02. Overrides only, in cascade order: the tool is the
+   page, the words around it recede. Nothing here changes an id, a control,
+   or a behaviour; every rule is presentation.
+   ========================================================================== */
+:host {
+    --line: #e3e9f0;
+    --r-l: 14px;
+    --sh-1: 0 1px 2px rgba(13, 21, 32, .04), 0 10px 24px -20px rgba(13, 21, 32, .25);
+}
+.shell { padding: 14px 0 44px; }
+
+/* -- product bar: a strap, not a card -------------------------------------- */
+.bar { padding: 2px 4px 10px; margin-bottom: 8px; border: 0; background: transparent; box-shadow: none; }
+
+/* -- tools: a tab strip across the top, the form gets the full width -------- */
+@media (min-width: 1040px) {
+    .layout { grid-template-columns: 1fr; }
+    .rail { position: static; flex-direction: row; overflow-x: auto; }
+    .rail-label { display: none; }
+}
+.rail { padding: 5px; gap: 4px; border-radius: 999px; }
+.navbtn { min-height: 36px; padding: 6px 14px; border-radius: 999px; font-size: 13px; }
+
+/* -- intro: one line of welcome, the years as chips, the steps folded ------ */
+.intro { padding: 18px 20px 16px; gap: 12px; border-radius: var(--r-l); box-shadow: var(--sh-1); }
+.intro-title { font-size: 22px; margin-bottom: 4px; }
+.intro-lede p { font-size: 14px; line-height: 1.55; max-width: 72ch; }
+.intro-grid, .intro-grid:where(*) { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@media (min-width: 900px) { .intro-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+.intro-cover { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.intro-cover .intro-h { margin: 0; }
+.cover-table { display: flex; flex-wrap: wrap; gap: 6px; }
+.cover-row {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 11px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card-2);
+    font-size: 12.5px; line-height: 1.2;
+}
+.cover-row b { font-size: 12px; }
+.cover-row .cover-years { font: 700 12.5px/1.2 var(--sans); }
+.cover-row i { font-size: 11px; }
+.cover-row.is-on { background: var(--accent-soft); border-color: var(--accent-line); }
+#coverActive { flex: 1 0 100%; margin: 0; padding: 0; border: 0; background: none; font-size: 12px; color: var(--ink-3); }
+#coverActive:empty { display: none; }
+.how-summary {
+    display: inline-flex; margin: 0; padding: 6px 11px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card);
+    font: 700 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2);
+}
+.how-summary:hover { background: var(--card-2); color: var(--ink); }
+.how { margin-top: 12px; }
+@media (max-width: 560px) { .cover-row { grid-template-columns: none; padding: 5px 9px; } .cover-row i { display: none; } }
+:host(.is-embed) .intro-lede { display: none; }
+:host(.is-embed) .intro { padding: 12px 14px; }
+
+/* -- the five steps: bigger, and the current one is unmistakable ----------- */
+.prog { padding: 8px 12px; margin-bottom: 12px; gap: 4px; }
+.prog-step { padding: 5px 14px 5px 6px; font-size: 13.5px; }
+.prog-step b { width: 24px; height: 24px; flex-basis: 24px; font-size: 12px; }
+.prog-step.is-done b { font-size: 0; }
+.prog-step.is-done b::after { content: "\2713"; font-size: 12px; }
+.prog-sep { flex: 1 1 12px; max-width: 40px; }
+.prog-note {
+    padding: 6px 12px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent-2); font-weight: 600;
+}
+
+/* -- cards: numbered, tagged, roomier -------------------------------------- */
+.card { margin-bottom: 12px; }
+.card-head { padding: 12px 18px; gap: 8px; }
+.card-head h2 { display: flex; align-items: center; gap: 9px; font-size: 15px; letter-spacing: 0; }
+.step-n {
+    display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ink); color: #fff; font: 800 11.5px/1 var(--sans);
+}
+.tag {
+    padding: 4px 8px; border-radius: 999px;
+    background: var(--sink); color: var(--ink-3);
+    font: 700 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+}
+.tag.is-req { background: var(--accent-soft); color: var(--accent-2); }
+.card-body { padding: 16px 18px; }
+.note-s { font-size: 12px; line-height: 1.5; color: var(--ink-3); }
+
+/* -- controls: taller, softer, and the sport column fits its years --------- */
+.lbl { margin-bottom: 5px; font-size: 11px; }
+.inp, .sel { height: 40px; border-radius: 9px; font-size: 14px; }
+.swap { width: 40px; height: 40px; flex-basis: 40px; }
+.venuesel { min-width: 88px; }
+@media (min-width: 1120px) {
+    .setup { grid-template-columns: 182px minmax(0, 1fr) 136px minmax(0, 1fr) minmax(0, 1.05fr); }
+}
+.orient {
+    margin-top: 12px; padding: 10px 12px; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--card-2); font-size: 13px;
+}
+.cleared {
+    margin-top: 10px; padding: 9px 12px 9px 12px; border-radius: 9px;
+    border: 1px solid var(--accent-line); border-left-width: 3px;
+    background: var(--accent-soft); color: var(--accent-2); font-weight: 500;
+}
+.cover {
+    margin-bottom: 12px; padding: 8px 11px; border-radius: 9px;
+    border-color: var(--line); background: var(--card-2); color: var(--ink-2); font-size: 12.5px;
+}
+.cover strong { color: var(--ink); }
+/* The years already sit in the chips above; here they are a whisper. */
+.cover { margin-bottom: 10px; padding: 0; border: 0; background: none; font-size: 12px; color: var(--ink-3); }
+#coverActive { display: none; }
+.ttfield select, .ttfield input { height: 40px; border-radius: 9px; font-size: 14px; }
+.ttfield label { font-size: 11px; letter-spacing: .07em; }
+.trail { margin-top: 12px; }
+
+/* -- situations: air ------------------------------------------------------- */
+.sitareas { gap: 10px; margin-top: 12px; }
+.sit-head { padding: 13px 16px; }
+.sit-lead { font-size: 12.5px; color: var(--ink-3); }
+.condlock { margin-top: 10px; }
+
+/* -- the one action ----------------------------------------------------------- */
+.runbar {
+    margin-top: 12px; padding: 14px 18px; gap: 14px;
+    border-color: var(--accent-line);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(243, 250, 248, .98));
+}
+.runsum { font-size: 13px; }
+.runsum::before {
+    content: "Your search"; display: block; margin-bottom: 3px;
+    font: 800 10px/1 var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--accent-2);
+}
+.run { min-height: 48px; padding: 0 26px; border-radius: 12px; font-size: 15px; }
+.run::after { content: "\2192"; font-size: 17px; line-height: 1; }
+.run:disabled::after { opacity: .5; }
+
+@media (max-width: 720px) {
+    .card-head { padding: 11px 14px; }
+    .card-body { padding: 14px; }
+    .intro { padding: 14px 14px 12px; }
+    .runbar { padding: 12px 14px; }
+}

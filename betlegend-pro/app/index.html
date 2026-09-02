@@ -170,56 +170,48 @@
              page. Every year shown is measured from the loaded database
              (GET matchup-filters -> coverage_all); nothing here is written
              into the markup. -->
-        <section class="intro" id="intro">
-            <div class="intro-lede">
-                <h1 class="intro-title">BetLegend Pro <span>Historical Matchup Research</span></h1>
-                <p>BetLegend Pro is a historical matchup research tool. Pick two teams and search their
-                head-to-head history in our graded-game database. See the complete matchup history, or
-                narrow it with situational filters to see how those two teams actually performed under
-                specific situations. Everything it returns is games that have already been played &mdash;
-                it is research, not a prediction, and not a guarantee of any result.</p>
-            </div>
+            <section class="intro" id="intro">
+                <div class="intro-lede">
+                    <h1 class="intro-title">BetLegend Pro <span>Historical Matchup Research</span></h1>
+                    <p>Pick two teams, choose the years to search, add any situations, and see how
+                    they actually played each other. Every result is a game already played
+                    &mdash; research, not a prediction.</p>
+                </div>
 
-            <div class="intro-grid">
-                <section class="intro-block">
-                    <p class="intro-h">Database coverage</p>
-                    <ul class="cover-table" id="coverTable">
-                        <li class="cover-row"><span>Reading the database&hellip;</span></li>
-                    </ul>
-                    <p class="intro-note" id="coverActive"></p>
-                </section>
+                <div class="intro-grid">
+                    <section class="intro-block intro-cover">
+                        <p class="intro-h">Years on file</p>
+                        <ul class="cover-table" id="coverTable">
+                            <li class="cover-row"><span>Reading the database&hellip;</span></li>
+                        </ul>
+                        <p class="intro-note" id="coverActive"></p>
+                    </section>
 
-                <!-- A disclosure, open by default. Stacked (below 900px) the
-                     five steps plus the coverage table pushed the tool 1,400px
-                     down the page, which is not "near the top" by any reading,
-                     so boot collapses it there and the reader opens it if they
-                     want it. Wide screens and no-JS both get it open. -->
-                <details class="intro-block intro-block-wide how-wrap" id="howWrap" open>
-                    <summary class="intro-h how-summary">How it works<span class="how-toggle" aria-hidden="true"></span></summary>
-                    <ol class="how">
-                        <li><b>1</b><span><strong>Select the sport.</strong> The coverage above marks the
-                            years on file for it.</span></li>
-                        <li><b>2</b><span><strong>Select the matchup.</strong> Away team, where the games
-                            were played, home team.</span></li>
-                        <li><b>3</b><span><strong>Choose the history.</strong> The widest option is
-                            <em id="howSince">since the first year on file</em>; you can narrow it to a
-                            single season or an exact date range.</span></li>
-                        <li><b>4</b><span><strong>Add situations &mdash; optional.</strong> With none, you get
-                            <strong>every</strong> qualifying meeting in that period. Each one you add
-                            narrows the sample: <span id="howExamples">coming off a win or a loss, win and
-                            losing streaks, days of rest, previous-game scoring, moneyline range</span>.
-                            Only situations this sport's data can actually answer are
-                            offered.</span></li>
-                        <li><b>5</b><span><strong>Run the report.</strong> It returns the qualifying games
-                            with both teams' records, win percentage, scoring, and the exact period and
-                            situations it searched.</span></li>
-                    </ol>
-                    <p class="intro-note"><strong>Sample size matters.</strong> Every filter you add makes
-                    the sample smaller. 7-1 and 70-10 are not the same evidence, so read the qualifying
-                    count next to any record before you lean on it.</p>
-                </details>
-            </div>
-        </section>
+                    <!-- Closed by default at every width: the tool is the
+                         page, the steps are there for whoever wants them. -->
+                    <details class="intro-block intro-block-wide how-wrap" id="howWrap">
+                        <summary class="intro-h how-summary">How it works<span class="how-toggle" aria-hidden="true"></span></summary>
+                        <ol class="how">
+                            <li><b>1</b><span><strong>Pick the sport.</strong> The years on file for it
+                                are shown above.</span></li>
+                            <li><b>2</b><span><strong>Pick the matchup.</strong> Away team, where the games
+                                were played, home team.</span></li>
+                            <li><b>3</b><span><strong>Choose the years.</strong> Everything
+                                <em id="howSince">since the first year on file</em>, one season, or an
+                                exact date range.</span></li>
+                            <li><b>4</b><span><strong>Add situations, if you want.</strong> With none you
+                                get <strong>every</strong> meeting in that period. Each one you add narrows
+                                the sample: <span id="howExamples">coming off a win or a loss, win and
+                                losing streaks, days of rest, previous-game scoring, moneyline range</span>.</span></li>
+                            <li><b>5</b><span><strong>Run the report.</strong> Both teams' records, win
+                                percentage, scoring, and the exact games that qualified.</span></li>
+                        </ol>
+                        <p class="intro-note"><strong>Sample size matters.</strong> Every situation you add
+                        makes the sample smaller. 7-1 and 70-10 are not the same evidence, so read the
+                        qualifying count next to any record before you lean on it.</p>
+                    </details>
+                </div>
+            </section>
 
         <section class="card" id="authGate" hidden>
             <div class="card-body">
@@ -292,7 +284,8 @@
                              place the meaning lives. -->
                         <section class="card">
                             <div class="card-head">
-                                <h2>Matchup</h2>
+                                <h2><span class="step-n" aria-hidden="true">1</span>Matchup</h2>
+                                <span class="tag is-req">Required</span>
                                 <span class="spacer"></span>
                                 <span class="meta">Graded games only</span>
                             </div>
@@ -342,7 +335,8 @@
                              the list only. -->
                         <section class="card">
                             <div class="card-head">
-                                <h2>Historical period</h2>
+                                <h2><span class="step-n" aria-hidden="true">2</span>Historical period</h2>
+                                <span class="tag is-req">Required</span>
                                 <span class="spacer"></span>
                                 <span class="meta" id="coverMeta"></span>
                             </div>
@@ -379,8 +373,8 @@
                                 </div>
                                 <p class="note-s" id="periodLoading" hidden>Reading the seasons on file for this
                                 sport&hellip; the period options appear as soon as the coverage lands.</p>
-                                <p class="note-s">The limit applies last, to the list only. Records, averages and
-                                market splits always cover every qualifying meeting in the period.</p>
+                                <p class="note-s">The limit trims the game list only. Records and averages
+                                always use every qualifying meeting.</p>
                             </div>
                         </section>
 
@@ -397,19 +391,18 @@
                 <section class="card" id="sitCard">
                     <div class="card-head">
                         <div class="ftools">
-                            <h2>Situational filters</h2>
-                            <span class="meta" id="filterCount">None</span>
+                                    <h2><span class="step-n" aria-hidden="true">3</span>Situations</h2>
+                                    <span class="tag">Optional</span>
+                                    <span class="meta" id="filterCount">None</span>
                             <span class="spacer"></span>
                             <button class="linkbtn" id="clearAll" type="button" hidden>Remove all</button>
                         </div>
                     </div>
                     <div class="card-body">
-                        <p class="note-s" id="condIntro">Optional. With none, the report lists
-                            <strong>every</strong> historical meeting between these two teams in the
-                            selected period. Click a team to see the situations you can add for
-                            that team, written in plain English. Situations about the game itself
-                            &mdash; day or night, the total, the day of the week &mdash; have their own
-                            section underneath.</p>
+                                <p class="note-s" id="condIntro">Leave this empty for <strong>every</strong>
+                                    meeting in the period. Or click a team to add situations for that team,
+                                    in plain English. Situations about the game itself have their own
+                                    section below.</p>
                         <div class="condlock" id="addCondHint">
                             <span class="condlock-i" aria-hidden="true">&#128274;</span>
                             <span class="condlock-t">Choose two different teams above to unlock
@@ -489,15 +482,16 @@
                             <div class="card-head">
                                 <div class="ftools">
                                     <h2>Team total</h2>
+                                    <span class="tag">Optional</span>
                                     <span class="meta" id="ttState">Off</span>
                                     <span class="spacer"></span>
                                     <button class="linkbtn" id="ttClear" type="button" hidden>Clear</button>
                                 </div>
                             </div>
                             <div class="card-body">
-                                <p class="note-s">How often one side cleared a number, in whatever sample your
-                                situations leave. This does not narrow the report &mdash; it reads it.
-                                Add a price and it also works out the break even that price demands.</p>
+                                <p class="note-s">How often one side cleared a number in the games your
+                                situations leave. It does not narrow the report. Add a price to see the
+                                break even.</p>
                                 <div class="ttgrid">
                                     <div class="ttfield">
                                         <label for="ttTeam">Team</label>
@@ -758,7 +752,7 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260902-team-areas';
+sheet.href = '/betlegend-pro/app/console.css?v=20260902-polish';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -1267,8 +1261,8 @@
             if (!open) return;
             var who = bucket === 'game' ? 'the game itself' : areaName(bucket);
             lead.textContent = bucket === 'game'
-                ? 'Situations about the game: when and where it was played and how the market priced it. Add one to keep only the games that match.'
-                : 'Situations ' + who + ' was in going into the game. Add one to keep only the games where that was true.';
+                ? 'When and where the game was played, and how it was priced. Add one to keep only the games that match.'
+                : 'What ' + who + ' was coming into the game with. Add one to keep only the games where that was true.';
             if (!library) {
                 box.innerHTML = '<p class="empty-note">' + (libraryError || 'Loading the situation library&hellip;') + '</p>';
                 return;
@@ -1589,10 +1583,8 @@
         if (!mine) {
             active.innerHTML = '';
         } else if (mine.earliest_date && mine.latest_date) {
-            active.innerHTML = 'Searching <strong>' + esc(mine.sport) + '</strong> from <strong>'
-                + esc(mine.earliest_date) + '</strong> through <strong>' + esc(mine.latest_date)
-                + '</strong>. Every year listed is measured from the games on file, '
-                + 'not a configured value.';
+                active.innerHTML = 'Searching <strong>' + esc(mine.sport) + '</strong> games from <strong>'
+                    + esc(mine.earliest_date) + '</strong> to <strong>' + esc(mine.latest_date) + '</strong>.';
         } else {
             active.innerHTML = '<strong>' + fmtInt(mine.games) + '</strong> '
                 + esc(mine.sport) + ' games on file. Sign in to search them.';
