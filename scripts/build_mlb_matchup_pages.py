@@ -1629,6 +1629,8 @@ def build(dates, today, dry_run=False, workers=4):
                 "MLB", g["away_team"], g["home_team"], g["date"], None,
                 probables, int(g["date"][:4]), hook_store, hook_used,
                 trends_for(trend_feed, g), (research or {}).get("records"))
+            seo.record_page(hook_store, "MLB", g["away_team"], g["home_team"], g["date"],
+                            "%s%s/" % (HUB, matchup_slug(g)))
             bg = board_for(board, g)
             market = markets_from(bg)
             trends = trends_for(trend_feed, g)

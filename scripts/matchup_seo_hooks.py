@@ -74,6 +74,20 @@ def game_key(sport, away, home, date):
     return "%s|%s|%s|%s" % (sport.upper(), away, home, (date or "")[:10])
 
 
+def record_page(store, sport, away, home, date, path):
+    """Remember which page this game's hook was written onto.
+
+    Without it the only way to check a hook reached its page is to search every
+    title for the text, which counts pages rather than games and cannot tell a
+    hook that is legitimately true of two different fixtures (Cal Raleigh's six
+    homers apply to both of his team's games) from one that landed on the wrong
+    page. Storing the path makes the check exact.
+    """
+    key = game_key(sport, away, home, date)
+    if key in store:
+        store[key]["page"] = path
+
+
 # ---------------------------------------------------------------- MLB
 
 def _ip_to_outs(ip):

@@ -594,6 +594,9 @@ def build(sport, built_at):
         hook = seo.hook_for(SPORTS[sport]["engine"], g["away"], g["home"],
                             (g["commence"] or "")[:10], cache[key],
                             None, None, store, used)
+        seo.record_page(store, SPORTS[sport]["engine"], g["away"], g["home"],
+                        (g["commence"] or "")[:10],
+                        "/handicapping/%s/%s/" % (sport, game_slug(g)))
         if write("handicapping/%s/%s/index.html" % (sport, game_slug(g)),
                  render_game(sport, g, cache[key], games, extras, built_at, hook)):
             changed += 1
