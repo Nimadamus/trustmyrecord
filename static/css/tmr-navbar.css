@@ -74,9 +74,39 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-m
   border:1px solid rgba(43,140,255,.42);
   box-shadow:0 24px 60px rgba(0,0,0,.8);
 }
-body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a{color:#BBD0E6}
-body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a:hover{
-  background:rgba(43,140,255,.16); color:#fff;
+/* ROW STATES (2026-09-02). Exactly one row may carry a fill: the row under the
+   pointer. Before this, the current-page row ALSO carried a fill, painted with
+   var(--brand-soft) - which on most pages resolves to the light theme's mint -
+   and a prefix match handed that state to two rows at once (see currentIn()
+   in tmr-ds-nav.js), so up to three rows of one dropdown read as highlighted.
+   Now: current page = brand text + a bar on its left edge, no fill; hover =
+   the fill, and only under a real pointer (a tap on a touch screen leaves
+   :hover stuck on the row it landed on); keyboard focus = the ring from the
+   :focus-visible rule above, no fill. No transition, so the previous row
+   drops its state the instant the pointer leaves it. !important throughout:
+   the theme sheets restyle this row with theme variables and this bar is the
+   one thing on the site that never changes theme. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a{
+  color:#BBD0E6 !important; background:none !important; box-shadow:none !important; transition:none !important;
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a[aria-current="page"]{
+  color:#4DA3FF !important; box-shadow:inset 3px 0 0 #4DA3FF !important;
+}
+@media (hover:hover){
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a:hover{
+    background:rgba(43,140,255,.16) !important; color:#fff !important;
+  }
+}
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a:focus-visible{
+  background:none !important;
+}
+/* Sportsbook and Tools share one width. Each panel is sized by its longest
+   row, so the two opened at different widths; the minimum is set in em of the
+   row's own type so it tracks the --home-nav-scale ramp like everything else
+   in the bar. */
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav .ds-menu[data-menu="sportsbook"] .ds-menu-panel a,
+body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-mainnav .ds-menu[data-menu="tools"] .ds-menu-panel a{
+  min-width:13.7em !important;
 }
 
 /* ---- 4. the lockup ------------------------------------------------------- */
@@ -486,6 +516,8 @@ body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) nav.d
     box-shadow:none !important; border:0 !important; background:none !important;
     min-width:0 !important; padding:0 0 6px 14px !important;
   }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a{ min-width:0 !important; }
+  body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-menu-panel a:hover{ background:none !important; color:#fff !important; }
   body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav-right{
     margin-left:0 !important; flex-wrap:wrap !important; row-gap:10px !important;
     padding-top:12px !important; border-top:1px solid rgba(255,255,255,.10) !important;

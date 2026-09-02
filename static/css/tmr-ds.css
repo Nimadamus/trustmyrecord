@@ -753,8 +753,23 @@ body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a{
   font-size:14.5px;font-weight:700;color:var(--ink-2);
   padding:9px 12px;border-radius:var(--r-sm);white-space:nowrap;
 }
-body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a:hover{background:var(--panel-2);color:var(--brand)}
-body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a[aria-current="page"]{background:var(--brand-soft);color:var(--brand)}
+/* Row states (2026-09-02): one fill at most, on the hovered row only; the
+   current page is brand text with a bar on its left edge, never a fill (the
+   old --brand-soft fill resolved to the light theme's mint inside the dark
+   panel and read as a second stuck highlight). Hover only under a real
+   pointer, and no transition, so a row drops its state the moment the
+   pointer leaves. tmr-navbar.css restates these for the pages it covers. */
+body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a{transition:none}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a[aria-current="page"]{color:var(--brand);box-shadow:inset 3px 0 0 var(--brand)}
+@media (hover:hover){
+  body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a:hover{background:var(--panel-2);color:var(--brand)}
+}
+body:is(.tmr-ds,.tmr-ds-shell) .ds-menu-panel a:focus-visible{background:none}
+/* Sportsbook and Tools open at one width (see tmr-navbar.css for the same
+   rule on the pages it covers; the homepage runs on this sheet alone and its
+   row type is set narrower, hence its own number). */
+body:is(.tmr-ds,.tmr-ds-shell) .ds-mainnav .ds-menu[data-menu="sportsbook"] .ds-menu-panel a,
+body:is(.tmr-ds,.tmr-ds-shell) .ds-mainnav .ds-menu[data-menu="tools"] .ds-menu-panel a{min-width:12.7em}
 
 /* Right cluster reading order (and DOM order, see userHTML() in tmr-ds-nav.js):
    coin balance -> bell -> My Record -> account. My Record is the one filled

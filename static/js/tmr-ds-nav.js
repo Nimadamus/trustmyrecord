@@ -211,12 +211,11 @@
        its own unchanged URL. Nothing left the site - only the dropdown. */
     ['/sports-simulators/', 'Sports Simulators'],
     ['/trendspotter/', 'TrendSpotter'],
-    ['/betlegend-pro/', 'BetLegend Pro'],
-    /* The daily MLB board keeps its own row rather than living behind the sport
-       chooser: a member who came to this menu for MLB should reach today's games
-       in one click, next to the tools that model them. */
-    ['/handicapping/mlb/', 'MLB Matchups Today'],
-    ['/handicapping/', 'Handicapping Hub']
+    ['/betlegend-pro/', 'BetLegend Pro']
+    /* 'MLB Matchups Today' and 'Handicapping Hub' left this menu on 2026-09-02.
+       Both already sit in SPORTSBOOK, and one destination in two dropdowns
+       taught members there were two different things. Tools is the four
+       products above; the handicapping pages are reached from Sportsbook. */
   ];
 
   var FOOTER = [
@@ -278,10 +277,23 @@
     var h = href.toLowerCase();
     return path === h || (h !== '/' && path.indexOf(h) === 0);
   }
+  /* ONE aria-current per list (2026-09-02). isCurrent() is a prefix match, so
+     on /handicapping/mlb/ both '/handicapping/mlb/' and '/handicapping/'
+     matched and two rows of the same dropdown rendered as the current page at
+     once, on top of whichever row the pointer was over. Only the longest
+     matching href in a list is the page you are on; the rest are ancestors. */
+  function currentIn(list) {
+    var best = null;
+    list.forEach(function (r) {
+      if (isCurrent(r[0]) && (best === null || r[0].length > best.length)) best = r[0];
+    });
+    return best;
+  }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function links(list) {
+    var cur = currentIn(list);
     return list.map(function (r) {
-      return '<a href="' + r[0] + '"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+      return '<a href="' + r[0] + '"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
     }).join('');
   }
   /**
@@ -324,11 +336,14 @@
     if (hideOnOwnPage && list.length && isCurrent(list[0][0])) return '';
     var on = list.some(function (r) { return isCurrent(r[0]); }) ||
       (alsoCurrent || []).some(function (h) { return isCurrent(h); });
-    return '<div class="ds-menu' + (on ? ' is-current' : '') + '">' +
+    var cur = currentIn(list);
+    /* data-menu names the dropdown for the stylesheet (tmr-navbar.css gives
+       Sportsbook and Tools one shared width); it carries no behaviour. */
+    return '<div class="ds-menu' + (on ? ' is-current' : '') + '" data-menu="' + esc(label.toLowerCase()) + '">' +
       '<button type="button" class="ds-navitem ds-navitem--trigger" aria-expanded="false" aria-haspopup="true">' + label + '</button>' +
       '<div class="ds-menu-panel" role="menu" aria-label="' + label + ' links">' +
       list.map(function (r) {
-        return '<a href="' + r[0] + '" role="menuitem"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+        return '<a href="' + r[0] + '" role="menuitem"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
       }).join('') + '</div></div>';
   }
 
