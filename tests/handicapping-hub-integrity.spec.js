@@ -40,7 +40,9 @@ const num = (s) => Number(String(s).replace(/[^0-9.+-]/g, ''));
 test.describe('Handicapping Hub integrity (user view vs verified values)', () => {
   test.setTimeout(10 * 60 * 1000);
 
-  test(`random matchup cards reconcile with the API and MLB StatsAPI (seed ${SEED0})`, async ({ page }) => {
+  // Title must be static: Playwright matches tests by title across the runner
+  // and worker processes, and the seed is only shared when HUB_SEED is set.
+  test('random matchup cards reconcile with the API and MLB StatsAPI', async ({ page }) => {
     const mismatches = [];
     const note = (label, displayed, verified, source) => {
       const a = String(displayed), b = String(verified);
@@ -53,10 +55,28 @@ test.describe('Handicapping Hub integrity (user view vs verified values)', () =>
     await page.waitForSelector('[data-toggle]', { timeout: 90_000 });
     const toggles = await page.locator('[data-toggle]').count();
     expect(toggles).toBeGreaterThan(0);
-    const chosen = pick([...Array(toggles).keys()], Math.min(CARDS, toggles));
-    console.log(`hub ${HUB_URL} cards=${toggles} chosen=${chosen.join(',')} seed=${SEED0}`);
+    // The hub is pregame research: a card whose game is in progress is
+    // re-rendered by the live board every refresh and its numbers move with
+    // the game, so only cards for games that have not started are audited.
+    const boardAll = await J(`${API}/games/board/baseball_mlb`);
+    const pregame = [];
+    for (let i = 0; i < toggles; i++) {
+      const art = page.locator('[data-toggle]').nth(i).locator('xpath=ancestor::article[contains(@class,"hh-game")][1]');
+      const href = await art.locator('[data-share]').getAttribute('data-href').catch(() => null);
+      const gid = decodeURIComponent((href || '').split('#game-')[1] || '');
+      const txt = (await art.locator('.hhc-head').first().textContent().catch(() => '')) || '';
+      let g = boardAll.games.find((x) => String(x.id) === gid);
+      if (!g) g = boardAll.games.find((x) => txt.includes(x.away_team) && txt.includes(x.home_team));
+      if (g && new Date(g.commence_time).getTime() > Date.now() + 5 * 60 * 1000) pregame.push(i);
+    }
+    const chosen = process.env.HUB_PICK
+      ? process.env.HUB_PICK.split(',').map(Number).filter((i) => i >= 0 && i < toggles)
+      : pick(pregame, Math.min(CARDS, pregame.length));
+    console.log(`hub ${HUB_URL} cards=${toggles} pregame=${pregame.length} chosen=${chosen.join(',')} seed=${SEED0}`);
+    expect(chosen.length, 'no pregame cards to audit').toBeGreaterThan(0);
 
     for (const idx of chosen) {
+     try {
       const toggle = page.locator('[data-toggle]').nth(idx);
       // Card root is the <article class="hh-game"> from the template. The
       // comparison grid renders in the collapsed card; the toggle opens the
@@ -175,6 +195,9 @@ test.describe('Handicapping Hub integrity (user view vs verified values)', () =>
         }
       }
       console.log(`  grid rows=${Object.keys(grid).length} trends=${shown}`);
+     } catch (e) {
+      mismatches.push(`card ${idx}: ${String(e.message || e).split(String.fromCharCode(10))[0]}`);
+     }
     }
 
     if (mismatches.length) console.log('\nMISMATCHES\n' + mismatches.join('\n'));
