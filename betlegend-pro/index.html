@@ -93,6 +93,10 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=7744beacad17">
 <link rel="stylesheet" href="/static/css/tmr-ds.df4f9fa04a0e.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+    <style>
+        .blp-live-frame { display: block; width: 100%; min-height: 760px; border: 0; background: #eef2f7; }
+        .blp-live-cap { padding: 10px 22px 14px; }
+    </style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-theme-a" data-tmr-route="betlegend-pro">
 <main class="blp blp-shell">
@@ -151,6 +155,29 @@
             <div class="blp-fact"><div class="blp-fact-v">0</div><div class="blp-fact-l">Estimated lines used in any figure</div></div>
         </div>
     </section>
+
+            <!-- ============================================ the tool, live
+                 The application itself, not a picture of it. The frame is
+                 the same /betlegend-pro/app/ page in embed mode: one code
+                 path, one query engine, sized by the height it posts. -->
+            <div class="blp-sectionhead" id="tool">
+                <span class="kicker">The tool</span>
+                <h2>Use BetLegend Pro right here.</h2>
+                <p>
+                    Pick a sport and two teams, choose the years to search, add situations for
+                    either team or for the game itself, and run the report. Every year offered is
+                    measured from the games on file.
+                </p>
+            </div>
+
+            <section class="blp-preview blp-live" aria-label="BetLegend Pro">
+                <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>BetLegend Pro &middot; Matchup Report</span></div>
+                <iframe class="blp-live-frame" id="blpLiveFrame" src="/betlegend-pro/app/?embed=1"
+                        title="BetLegend Pro" loading="eager" scrolling="no"></iframe>
+                <p class="blp-preview-cap blp-live-cap">
+                    Prefer a full screen? <a href="/betlegend-pro/app/">Open BetLegend Pro on its own page</a>.
+                </p>
+            </section>
 
     <!-- ================================================== the database -->
     <div class="blp-sectionhead" id="database">
@@ -473,68 +500,17 @@
         </div>
     </section>
 
-    <!-- ============================================ interface preview 1 -->
-    <div class="blp-sectionhead">
-        <span class="kicker">The interface</span>
-        <h2>This is what you're actually driving.</h2>
-        <p>
-            The query builder and the report below use the real controls, the real condition names and
-            the real result layout from the application. Figures shown are an illustrative example.
-        </p>
-    </div>
-
-    <section class="blp-preview" aria-label="BetLegend Pro query builder">
-        <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>BetLegend Pro · Matchup Report · query builder</span></div>
-        <div class="blp-preview-body">
-            <div class="blp-ui-steps">
-                <div>
-                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">1</span><span class="blp-ui-step-t">Matchup</span></div>
-                    <div class="blp-ui-row">
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Sport</span><div class="blp-ui-ctl">MLB <span class="caret">&#9662;</span></div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Away team</span><div class="blp-ui-ctl">Boston Red Sox <span class="caret">&#9662;</span></div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Played</span><div class="blp-ui-ctl">at <span class="caret">&#9662;</span></div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Home team</span><div class="blp-ui-ctl">New York Yankees <span class="caret">&#9662;</span></div></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">2</span><span class="blp-ui-step-t">Historical period</span></div>
-                    <div class="blp-ui-row">
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Search period</span><div class="blp-ui-ctl">Custom date range&hellip; <span class="caret">&#9662;</span></div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">From date</span><div class="blp-ui-ctl">2015-04-01</div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">To date</span><div class="blp-ui-ctl">Today</div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Result limit</span><div class="blp-ui-ctl">Every qualifying meeting <span class="caret">&#9662;</span></div></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">3</span><span class="blp-ui-step-t">Conditions (optional)</span></div>
-                    <div class="blp-ui-conds">
-                        <span class="blp-ui-cond"><b>Red Sox</b> · previous game result: loss <span class="x">&times;</span></span>
-                        <span class="blp-ui-cond"><b>Red Sox</b> · opposing starter: right-handed <span class="x">&times;</span></span>
-                        <span class="blp-ui-cond"><b>Yankees</b> · minimum rest: 0 days <span class="x">&times;</span></span>
-                        <span class="blp-ui-cond"><b>Game</b> · moneyline range &minus;150 to +110 <span class="x">&times;</span></span>
-                        <span class="blp-ui-cond"><b>Game</b> · night game <span class="x">&times;</span></span>
-                        <span class="blp-ui-cond is-add">+ Add condition</span>
-                    </div>
-                </div>
-                <div>
-                    <div class="blp-ui-step-h"><span class="blp-ui-step-n">4</span><span class="blp-ui-step-t">Team total (optional)</span></div>
-                    <div class="blp-ui-row">
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Team</span><div class="blp-ui-ctl is-accent">Boston Red Sox <span class="caret">&#9662;</span></div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Side</span><div class="blp-ui-ctl is-accent">Under <span class="caret">&#9662;</span></div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Line</span><div class="blp-ui-ctl is-accent">4.5</div></div>
-                        <div class="blp-ui-field"><span class="blp-ui-lbl">Price</span><div class="blp-ui-ctl is-accent">&minus;115</div></div>
-                    </div>
-                </div>
-                <div class="blp-ui-run">Run the report <span class="arw" aria-hidden="true">&rarr;</span></div>
+    <!-- ============================================ example report -->
+            <div class="blp-sectionhead">
+                <span class="kicker">The result</span>
+                <h2>What a report looks like.</h2>
+                <p>
+                    The layout below is the real result layout from the application. Figures shown
+                    are an illustrative example.
+                </p>
             </div>
-            <p class="blp-preview-cap">
-                Conditions attach to a named team or to the game itself, which is why &ldquo;Boston off a loss
-                while New York is on zero days' rest&rdquo; is a single query rather than two separate lookups.
-            </p>
-        </div>
-    </section>
 
-    <!-- ============================================ interface preview 2 -->
+            <!-- ============================================ interface preview 2 -->
     <section class="blp-preview" aria-label="Example of a BetLegend Pro matchup report">
         <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>BetLegend Pro · Matchup Report · result</span></div>
         <div class="blp-preview-body">
@@ -987,6 +963,20 @@
 (function () {
     'use strict';
     var $ = function (id) { return document.getElementById(id); };
+
+    // The embedded tool reports its height and where "top" is. Same origin
+    // only: the frame is this site's own page.
+    window.addEventListener('message', function (ev) {
+        if (ev.origin !== location.origin || !ev.data || typeof ev.data !== 'object') return;
+        var f = $('blpLiveFrame');
+        if (!f) return;
+        if (ev.data.type === 'blp-embed-height' && ev.data.height > 0) {
+            f.style.height = Math.ceil(ev.data.height) + 'px';
+        } else if (ev.data.type === 'blp-embed-scroll') {
+            var y = f.getBoundingClientRect().top + window.pageYOffset + (Number(ev.data.top) || 0) - 84;
+            window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        }
+    });
     function esc(v) {
         return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
             return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];

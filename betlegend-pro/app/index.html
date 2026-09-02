@@ -71,6 +71,19 @@
            they read as the app having accidentally embedded a web page. The
            legal line at the bottom of it is kept, because a wagering-research
            product may not quietly drop its disclaimer. */
+        /* Embedded inside the product page (/betlegend-pro/?tool): the
+           page around the tool is the product page itself, so the site
+           header, footer, chat launcher and anything else a site script
+           appends to <body> stay out of the frame. The tool posts its own
+           height to the parent so the frame never scrolls on its own. */
+        html.blp-embed, html.blp-embed body.tmr-site-shell[data-blp-console] {
+            background: transparent !important;
+            overflow: hidden;
+            padding: 0 !important; margin: 0 !important;
+        }
+        html.blp-embed body > :not(#blpConsole):not(#blpMarkup):not(script):not(noscript) {
+            display: none !important;
+        }
         @media (display-mode: standalone) {
             body.tmr-site-shell[data-blp-console] .tmr-global-footer__grid,
             body.tmr-site-shell[data-blp-console] .tmr-global-footer__resources {
@@ -79,6 +92,17 @@
             body.tmr-site-shell[data-blp-console] .tmr-global-footer { padding-top: 14px; }
         }
     </style>
+    <script>
+        // Embed mode is decided before any anchor exists: every link inside
+        // the frame then opens in the page around it, never inside the box.
+        (function () {
+            if (!/(?:^|[?&])embed=1(?:&|$)/.test(location.search)) return;
+            document.documentElement.classList.add('blp-embed');
+            var base = document.createElement('base');
+            base.target = '_top';
+            document.head.appendChild(base);
+        }());
+    </script>
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=920781dd373a"></script>
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
@@ -361,56 +385,99 @@
                         </section>
 
                         <!-- ============================== 3. SITUATIONAL FILTERS ==
-                             Added one at a time from a searchable list of NAMES, never
-                             a permanent wall of controls: a matchup with no situations
-                             is already a complete query, and the panel should look like
-                             it. A situation's controls do not exist until it is chosen.
-                             A situation about a team is added FOR a named team -- "one
-                             day of rest" is meaningless on a two-team report until it
-                             says whose.
+                     Three plain areas, one per thing a situation can be
+                     about: the away team, the home team, the game itself.
+                     Clicking a team's area reveals, in plain English, the
+                     situations the database can answer for that team; the
+                     ones added sit right under that team's name. Nothing is
+                     a form to fill in: a matchup with no situations is a
+                     complete query, and the panel reads that way.
 
-                             The locked state is STATED, not merely disabled. A greyed
-                             out button with a six-word grey hint beside it reads as
-                             broken software; the same button inside a sentence that
-                             says what to do next reads as a door that is not open yet. -->
-                        <section class="card">
-                            <div class="card-head">
-                                <div class="ftools">
-                                    <h2>Situational filters</h2>
-                                    <span class="meta" id="filterCount">None</span>
-                                    <span class="spacer"></span>
-                                    <button class="linkbtn" id="clearAll" type="button" hidden>Remove all</button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <p class="note-s" id="condIntro">Optional. Add a situation to narrow the
-                                matchup &mdash; with none, the report lists <strong>every</strong> historical
-                                meeting between these two teams in the selected period, which is the simplest
-                                and most common question this tool answers.</p>
-                                <p class="cond-active-h" id="condActiveH" hidden>Active situations</p>
-                                <div class="condlist" id="condList"></div>
-                                <div class="condadd">
-                                    <div class="condlock" id="addCondHint">
-                                        <span class="condlock-i" aria-hidden="true">&#128274;</span>
-                                        <span class="condlock-t">Choose two different teams above to unlock
-                                        situational filters.</span>
+                     The locked state is STATED, not merely disabled. -->
+                <section class="card" id="sitCard">
+                    <div class="card-head">
+                        <div class="ftools">
+                            <h2>Situational filters</h2>
+                            <span class="meta" id="filterCount">None</span>
+                            <span class="spacer"></span>
+                            <button class="linkbtn" id="clearAll" type="button" hidden>Remove all</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="note-s" id="condIntro">Optional. With none, the report lists
+                            <strong>every</strong> historical meeting between these two teams in the
+                            selected period. Click a team to see the situations you can add for
+                            that team, written in plain English. Situations about the game itself
+                            &mdash; day or night, the total, the day of the week &mdash; have their own
+                            section underneath.</p>
+                        <div class="condlock" id="addCondHint">
+                            <span class="condlock-i" aria-hidden="true">&#128274;</span>
+                            <span class="condlock-t">Choose two different teams above to unlock
+                                situational filters.</span>
+                        </div>
+                        <div class="sitareas" id="sitAreas">
+                            <section class="sitarea" data-bucket="t1">
+                                <button class="sit-head" type="button" data-toggle="t1"
+                                        aria-expanded="false" aria-controls="sitBody-t1" disabled>
+                                    <span class="sit-kicker">Away team</span>
+                                    <span class="sit-name" id="sitName-t1">Away team</span>
+                                    <span class="sit-count" id="sitCount-t1">No situations added</span>
+                                    <span class="sit-cta" id="sitCta-t1">Add situations</span>
+                                </button>
+                                <div class="condlist sit-active" id="sitActive-t1"></div>
+                                <div class="sit-body" id="sitBody-t1" hidden>
+                                    <p class="sit-lead" id="sitLead-t1"></p>
+                                    <div class="sit-search">
+                                        <label class="sr" for="sitSearch-t1">Search situations</label>
+                                        <input class="search" id="sitSearch-t1" data-search="t1" type="search"
+                                               placeholder="Search &mdash; rest, streak, off a loss, moneyline&hellip;" autocomplete="off">
                                     </div>
-                                    <button class="btn" id="addCond" type="button" aria-expanded="false"
-                                            aria-describedby="addCondHint" disabled>+ Add Situation</button>
-                                    <div class="condmenu" id="condMenu" hidden role="dialog" aria-label="Add a situation">
-                                        <div class="condmenu-head">
-                                            <label class="sr" for="filterSearch">Search situations</label>
-                                            <input class="search" id="filterSearch" type="search"
-                                                   placeholder="Search situations &mdash; rest, streak, night game, moneyline&hellip;" autocomplete="off">
-                                            <button class="linkbtn" id="condClose" type="button">Close</button>
-                                        </div>
-                                        <div class="condmenu-body" id="condOptions"></div>
-                                    </div>
+                                    <div class="sit-options" id="sitOptions-t1"></div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
+                            <section class="sitarea" data-bucket="t2">
+                                <button class="sit-head" type="button" data-toggle="t2"
+                                        aria-expanded="false" aria-controls="sitBody-t2" disabled>
+                                    <span class="sit-kicker">Home team</span>
+                                    <span class="sit-name" id="sitName-t2">Home team</span>
+                                    <span class="sit-count" id="sitCount-t2">No situations added</span>
+                                    <span class="sit-cta" id="sitCta-t2">Add situations</span>
+                                </button>
+                                <div class="condlist sit-active" id="sitActive-t2"></div>
+                                <div class="sit-body" id="sitBody-t2" hidden>
+                                    <p class="sit-lead" id="sitLead-t2"></p>
+                                    <div class="sit-search">
+                                        <label class="sr" for="sitSearch-t2">Search situations</label>
+                                        <input class="search" id="sitSearch-t2" data-search="t2" type="search"
+                                               placeholder="Search &mdash; rest, streak, off a loss, moneyline&hellip;" autocomplete="off">
+                                    </div>
+                                    <div class="sit-options" id="sitOptions-t2"></div>
+                                </div>
+                            </section>
+                            <section class="sitarea is-game" data-bucket="game">
+                                <button class="sit-head" type="button" data-toggle="game"
+                                        aria-expanded="false" aria-controls="sitBody-game" disabled>
+                                    <span class="sit-kicker">Game filters</span>
+                                    <span class="sit-name" id="sitName-game">The game itself</span>
+                                    <span class="sit-count" id="sitCount-game">No situations added</span>
+                                    <span class="sit-cta" id="sitCta-game">Add situations</span>
+                                </button>
+                                <div class="condlist sit-active" id="sitActive-game"></div>
+                                <div class="sit-body" id="sitBody-game" hidden>
+                                    <p class="sit-lead" id="sitLead-game"></p>
+                                    <div class="sit-search">
+                                        <label class="sr" for="sitSearch-game">Search game situations</label>
+                                        <input class="search" id="sitSearch-game" data-search="game" type="search"
+                                               placeholder="Search &mdash; night game, total, day of week&hellip;" autocomplete="off">
+                                    </div>
+                                    <div class="sit-options" id="sitOptions-game"></div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
 
-                        <!-- TEAM TOTAL. Deliberately NOT in the condition picker
+                <!-- TEAM TOTAL. Deliberately NOT in the condition picker
                              above. Everything there narrows the sample; this asks a
                              question OF whatever sample survived. Filtering on the
                              outcome you are asking about would answer 100% every
@@ -661,9 +728,37 @@
     var host = document.getElementById('blpConsole');
     var root = host.attachShadow({ mode: 'open' });
 
+    // Embedded in the product page. The frame is sized by the parent from
+    // the height posted here (the tool's own bottom edge: the document's
+    // scrollHeight is never less than the frame, so it could only grow), and
+    // "scroll to the top" means the top of the
+    // tool on that page, not the top of a box that cannot scroll.
+    var EMBED = document.documentElement.classList.contains('blp-embed');
+    if (EMBED) {
+        host.classList.add('is-embed');
+        var postHeight = function () {
+            try {
+                parent.postMessage({ type: 'blp-embed-height',
+                    height: Math.ceil(host.getBoundingClientRect().bottom + window.pageYOffset) + 4 }, location.origin);
+            } catch (e) { /* no parent to tell */ }
+        };
+        if (window.ResizeObserver) {
+            var ro = new ResizeObserver(postHeight);
+            ro.observe(document.documentElement);
+            ro.observe(document.body);
+            ro.observe(host);
+        }
+        window.addEventListener('load', postHeight);
+        setInterval(postHeight, 1500);
+        window.scrollTo = function (o) {
+            var top = (o && typeof o === 'object') ? o.top : arguments[1];
+            try { parent.postMessage({ type: 'blp-embed-scroll', top: top || 0 }, location.origin); } catch (e) { /* ignore */ }
+        };
+    }
+
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-    sheet.href = '/betlegend-pro/app/console.css?v=20260816-picker-sortable';
+    sheet.href = '/betlegend-pro/app/console.css?v=20260902-team-areas';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -957,7 +1052,10 @@
     // dashboard framing this tool is not.
     var library = null, libraryFor = null, libraryCache = {};
     var filters = {};
-    var filterSearch = '';
+    var libraryError = '';
+    var BUCKETS = ['t1', 't2', 'game'];
+    var sitSearch = { t1: '', t2: '', game: '' };
+    var sitOpen = { t1: false, t2: false, game: false };
 
     /** Why this situation's value cannot be sent, or ''. The library gives a
      *  min and a max for every number it offers; a value outside them is not a
@@ -1014,9 +1112,12 @@
      *  head-to-head, and division/conference is fixed by the two teams. */
     var STRUCTURAL = { venue: 1, head_to_head_only: 1, opponent_type: 1 };
 
-    function menuGroups() {
+    /** The situations one area may offer: team situations for a team's
+     *  area, game situations for the game's, each in the server's own
+     *  groups, narrowed by that area's search box. */
+    function areaGroups(bucket) {
         if (!library) return [];
-        var q = filterSearch.toLowerCase();
+        var q = (sitSearch[bucket] || '').toLowerCase();
         var matches = function (spec) {
             if (!q) return true;
             return spec.label.toLowerCase().indexOf(q) !== -1
@@ -1025,7 +1126,10 @@
         };
         return (library.groups || []).map(function (g) {
             var specs = (g.filters || []).filter(function (f) {
-                return !STRUCTURAL[f.id] && matches(f);
+                if (STRUCTURAL[f.id]) return false;
+                var isGame = f.applies_to === 'game';
+                if (bucket === 'game' ? !isGame : isGame) return false;
+                return matches(f);
             });
             // Answerable first; an unavailable one never sits above a live one.
             specs.sort(function (a, b) { return (b.available ? 1 : 0) - (a.available ? 1 : 0); });
@@ -1048,6 +1152,12 @@
         if (bucket === 't1') return mAway.value || 'Team';
         if (bucket === 't2') return mHome.value || 'Opponent';
         return '';
+    }
+    /** What an area is called on its own header. */
+    function areaName(bucket) {
+        if (bucket === 't1') return mAway.value || 'Away team';
+        if (bucket === 't2') return mHome.value || 'Home team';
+        return 'The game itself';
     }
 
     function renderControl(spec, bucket) {
@@ -1093,7 +1203,6 @@
     /** The conditions the user has added, as rows. Nothing is on screen until
      *  they put it there, and every team condition carries the team's name. */
     function renderConditions() {
-        var box = $('condList');
         var rows = [];
         Object.keys(filters).forEach(function (key) {
             var spec = specById(idOf(key));
@@ -1102,93 +1211,114 @@
         });
         rows.sort(function (a, b) { return a.key.localeCompare(b.key); });
 
-        box.innerHTML = rows.map(function (r) {
-            var team = teamName(r.bucket);
-            var set = isSet(filters[r.key]);
-            return '<div class="cond' + (set ? '' : ' is-unset') + '">'
-                + '<div class="cond-head">'
-                + (team ? '<b class="cond-team">' + esc(team) + '</b>' : '')
-                + '<span class="cond-label">' + esc(r.spec.label) + '</span>'
-                + '<span class="spacer"></span>'
-                + '<button type="button" class="cond-x" data-remove="' + esc(r.key) + '" '
-                + 'aria-label="Remove situation: ' + esc(r.spec.label) + (team ? ' for ' + esc(team) : '') + '">&times;</button>'
-                + '</div>'
-                + '<div class="cond-body">' + renderControl(r.spec, r.bucket) + '</div>'
-                + (r.spec.help ? '<p class="cond-help">' + esc(r.spec.help) + '</p>' : '')
-                + (r.spec.available === false
-                    ? '<p class="cond-warn">' + esc(r.spec.unavailable_reason
-                        || ('Not offered for ' + mSport.value + '.')) + ' This situation will not be sent.</p>'
-                    : (valueError(r.spec, filters[r.key])
-                        ? '<p class="fielderr" role="alert">' + esc(valueError(r.spec, filters[r.key])) + '</p>'
-                        : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
-                               : '<p class="cond-warn">Set a value &mdash; until then this situation is not part of the query.</p>')))
-                + '</div>';
-        }).join('');
+        BUCKETS.forEach(function (bucket) {
+            var box = $('sitActive-' + bucket);
+            if (!box) return;
+            box.innerHTML = rows.filter(function (r) { return r.bucket === bucket; }).map(function (r) {
+                var team = teamName(r.bucket);
+                var set = isSet(filters[r.key]);
+                return '<div class="cond' + (set ? '' : ' is-unset') + '">'
+                    + '<div class="cond-head">'
+                    + (team ? '<b class="cond-team">' + esc(team) + '</b>' : '')
+                    + '<span class="cond-label">' + esc(r.spec.label) + '</span>'
+                    + '<span class="spacer"></span>'
+                    + '<button type="button" class="cond-x" data-remove="' + esc(r.key) + '" '
+                    + 'aria-label="Remove situation: ' + esc(r.spec.label) + (team ? ' for ' + esc(team) : '') + '">&times;</button>'
+                    + '</div>'
+                    + '<div class="cond-body">' + renderControl(r.spec, r.bucket) + '</div>'
+                    + (r.spec.help ? '<p class="cond-help">' + esc(r.spec.help) + '</p>' : '')
+                    + (r.spec.available === false
+                        ? '<p class="cond-warn">' + esc(r.spec.unavailable_reason
+                            || ('Not offered for ' + mSport.value + '.')) + ' This situation will not be sent.</p>'
+                        : (valueError(r.spec, filters[r.key])
+                            ? '<p class="fielderr" role="alert">' + esc(valueError(r.spec, filters[r.key])) + '</p>'
+                            : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
+                                : '<p class="cond-warn">Set a value &mdash; until then this situation is not part of the query.</p>')))
+                    + '</div>';
+            }).join('');
+        });
 
         $('clearAll').hidden = rows.length === 0;
-        $('condActiveH').hidden = rows.length === 0;
-        $('condIntro').hidden = rows.length > 0;
-        // A situation removed returns to the list at once. Repainted whether
-        // the list is open or not: a click on a remove button lands OUTSIDE
-        // the popover, so the document handler hides it first and a repaint
-        // guarded on 'is it open' would leave the row greyed out in stale
-        // markup the next time it is opened.
-        renderCondMenu();
+        // Repainted whether an area is open or not: a removed situation
+        // returns to its list at once.
+        renderSitAreas();
         syncSetup(); scheduleReview(); scheduleTrail();
     }
 
-    /** The searchable picker. A popover, not a permanent panel: the library is
-     *  ~85 conditions and putting them all on screen reads as a form to fill in
-     *  rather than an optional narrowing of a query that is already complete. */
-    function renderCondMenu() {
-        var box = $('condOptions');
-        if (!library) {
-            box.innerHTML = '<p class="empty-note">Loading the situation library&hellip;</p>';
-            return;
-        }
-        var groups = menuGroups();
-        if (!groups.length) {
-            box.innerHTML = '<p class="empty-note">No situation matches that search. This database supports '
-                + 'only the situations listed here &mdash; nothing is estimated or substituted.</p>';
-            return;
-        }
-        box.innerHTML = groups.map(function (g) {
-            // Offered first, declined after. A reader scanning for something
-            // they can use should not have to read past rows this sport
-            // cannot answer -- but the reasons stay on the page, because "why
-            // isn't it here" is a real question and hiding it invites a
-            // support ticket.
-            var specs = g.specs.slice().sort(function (a, b) {
-                return (a.available === false ? 1 : 0) - (b.available === false ? 1 : 0);
-            });
-            return '<section class="condgrp"><p class="condgrp-h">' + esc(g.label) + '</p>'
-                + specs.map(function (spec) {
-                    var buckets = bucketsFor(spec);
-                    var actions = !spec.available ? ''
-                        : '<div class="cond-acts">' + buckets.map(function (b) {
-                            // A team condition is added FOR a named side. No
-                            // default team: guessing one is how "one day of
-                            // rest" ends up meaning the wrong bench.
-                            var label = (buckets.length === 1) ? 'Add' : teamName(b);
-                            var already = (fkey(b, spec.id) in filters);
-                            return '<button type="button" class="cond-add" data-add="' + esc(fkey(b, spec.id)) + '"'
-                                + (already ? ' disabled' : '') + '>+ ' + esc(label) + '</button>';
-                        }).join('') + '</div>';
-                    return '<div class="condopt' + (spec.available ? '' : ' is-off') + '">'
-                        + '<div class="condopt-t"><span class="condopt-l">' + esc(spec.label) + '</span>'
-                        + (spec.help ? '<span class="condopt-h">' + esc(spec.help) + '</span>' : '')
-                        + (spec.available ? '' : '<span class="cond-warn">' + esc(spec.unavailable_reason
-                            || ('Not offered for ' + mSport.value + '.')) + '</span>')
-                        + '</div>' + actions + '</div>';
-                }).join('') + '</section>';
-        }).join('');
+    /** Each area's header and, when open, its plain-English list of
+     *  situations. A team's list is that team's situations only; the
+     *  game's list is the game's. */
+    function renderSitAreas() {
+        BUCKETS.forEach(function (bucket) {
+            var name = $('sitName-' + bucket), count = $('sitCount-' + bucket);
+            var cta = $('sitCta-' + bucket), body = $('sitBody-' + bucket);
+            var head = root.querySelector('.sit-head[data-toggle="' + bucket + '"]');
+            var lead = $('sitLead-' + bucket), box = $('sitOptions-' + bucket);
+            if (!name || !count || !cta || !body || !head || !box) return;
+            var n = Object.keys(filters).filter(function (k) { return bktOf(k) === bucket; }).length;
+            name.textContent = areaName(bucket);
+            count.textContent = n === 0 ? 'No situations added'
+                : n + (n === 1 ? ' situation added' : ' situations added');
+            var open = !!sitOpen[bucket];
+            cta.textContent = open ? 'Close list' : (n ? 'Add more' : 'Add situations');
+            head.setAttribute('aria-expanded', open ? 'true' : 'false');
+            head.classList.toggle('is-open', open);
+            body.hidden = !open;
+            if (!open) return;
+            var who = bucket === 'game' ? 'the game itself' : areaName(bucket);
+            lead.textContent = bucket === 'game'
+                ? 'Situations about the game: when and where it was played and how the market priced it. Add one to keep only the games that match.'
+                : 'Situations ' + who + ' was in going into the game. Add one to keep only the games where that was true.';
+            if (!library) {
+                box.innerHTML = '<p class="empty-note">' + (libraryError || 'Loading the situation library&hellip;') + '</p>';
+                return;
+            }
+            var groups = areaGroups(bucket);
+            if (!groups.length) {
+                box.innerHTML = '<p class="empty-note">No situation matches that search. This database supports '
+                    + 'only the situations listed here &mdash; nothing is estimated or substituted.</p>';
+                return;
+            }
+            box.innerHTML = groups.map(function (g) {
+                // Offered first, declined after, but the declined ones
+                // stay on the page with their reason: "why isn't it
+                // here" is a real question.
+                var specs = g.specs.slice().sort(function (a, b) {
+                    return (a.available === false ? 1 : 0) - (b.available === false ? 1 : 0);
+                });
+                return '<section class="condgrp"><p class="condgrp-h">' + esc(g.label) + '</p>'
+                    + specs.map(function (spec) {
+                        var key = fkey(bucket, spec.id);
+                        var already = (key in filters);
+                        var actions = !spec.available ? ''
+                            : '<div class="cond-acts"><button type="button" class="cond-add" data-add="' + esc(key) + '"'
+                                + (already ? ' disabled' : '') + '>' + (already ? 'Added' : '+ Add') + '</button></div>';
+                        return '<div class="condopt' + (spec.available ? '' : ' is-off') + (already ? ' is-added' : '') + '">'
+                            + '<div class="condopt-t"><span class="condopt-l">' + esc(spec.label) + '</span>'
+                            + (spec.help ? '<span class="condopt-h">' + esc(spec.help) + '</span>' : '')
+                            + (spec.available ? '' : '<span class="cond-warn">' + esc(spec.unavailable_reason
+                                || ('Not offered for ' + mSport.value + '.')) + '</span>')
+                            + '</div>' + actions + '</div>';
+                    }).join('') + '</section>';
+            }).join('');
+        });
     }
 
-    function openCondMenu(open) {
-        var menu = $('condMenu');
-        menu.hidden = !open;
-        $('addCond').setAttribute('aria-expanded', open ? 'true' : 'false');
-        if (open) { renderCondMenu(); $('filterSearch').focus(); }
+    function toggleArea(bucket, open) {
+        if (bucket) {
+            sitOpen[bucket] = !!open;
+        } else {
+            BUCKETS.forEach(function (b) { sitOpen[b] = false; });
+        }
+        renderSitAreas();
+        if (bucket && open) {
+            var search = $('sitSearch-' + bucket);
+            if (search && !('ontouchstart' in window)) search.focus({ preventScroll: true });
+        }
+    }
+    function closeAreas() {
+        BUCKETS.forEach(function (b) { sitSearch[b] = ''; var el = $('sitSearch-' + b); if (el) el.value = ''; });
+        toggleArea(null, false);
     }
 
     function chipFor(spec, v) {
@@ -1343,7 +1473,6 @@
             // options that look like the whole answer.
             setPeriodLoading(!coverage);
             renderConditions();
-            if (!$('condMenu').hidden) renderCondMenu();
         };
         if (libraryFor === sport && library) { apply(); return; }
         libraryFor = sport;
@@ -1351,7 +1480,7 @@
         // catalogue that cannot have changed and dropped the panel back to
         // "Loading…" each time.
         if (libraryCache[sport]) { library = libraryCache[sport]; apply(); return; }
-        library = null; coverage = null;
+        library = null; coverage = null; libraryError = '';
         apply();
         try {
             var lib = await window.api.getBetLegendProMatchupFilters(sport);
@@ -1360,8 +1489,8 @@
             library = lib;
         } catch (err) {
             library = null;
-            $('condOptions').innerHTML = '<p class="empty-note">The situation library could not be loaded, so '
-                + 'only the unfiltered report is available right now.</p>';
+            libraryError = 'The situation library could not be loaded, so only the unfiltered report is available right now.';
+            renderSitAreas();
             $('coverLine').textContent = 'Database coverage could not be read right now. The report still '
                 + 'searches every year on file.';
             setPeriodLoading(false);
@@ -1420,6 +1549,14 @@
                     : fmtInt(r.games) + ' games') + '</span>'
                 + (known ? '<i>' + fmtInt(r.games) + ' games</i>' : '') + '</li>';
         }).join('');
+        // The sport control itself says what years are on file, so the
+        // era is in front of the reader at the moment they choose.
+        [].slice.call(mSport.options).forEach(function (o) {
+            var r = rows.filter(function (x) { return x.sport === o.value; })[0];
+            o.textContent = r && r.earliest_season != null
+                ? o.value + ' \u00b7 ' + r.earliest_season + '\u2013' + r.latest_season
+                : o.value;
+        });
         var mine = rows.filter(function (r) { return r.sport === mSport.value; })[0];
         // Signed out, the public coverage endpoint gives counts but no era, so
         // `mine` has no dates. Printing the same sentence anyway rendered
@@ -1541,7 +1678,7 @@
             : 'Set a value — until then this situation is not part of the query.';
     }
 
-    $('condList').addEventListener('change', function (ev) {
+    $('sitAreas').addEventListener('change', function (ev) {
         var el = ev.target;
         if (!el || !el.getAttribute) return;
         var fid = el.getAttribute('data-fid');
@@ -1557,7 +1694,7 @@
         syncSetup(); scheduleReview(); scheduleTrail();
     });
 
-    $('condList').addEventListener('input', function (ev) {
+    $('sitAreas').addEventListener('input', function (ev) {
         var el = ev.target;
         if (!el || !el.getAttribute) return;
         var fid = el.getAttribute('data-fid');
@@ -1587,65 +1724,61 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    $('condList').addEventListener('click', function (ev) {
-        var btn = ev.target.closest && ev.target.closest('[data-remove]');
-        if (!btn) return;
-        delete filters[btn.getAttribute('data-remove')];
-        renderConditions();
-    });
-
-    $('addCond').addEventListener('click', function () {
-        openCondMenu($('condMenu').hidden);
-    });
-    $('condClose').addEventListener('click', function () { openCondMenu(false); });
-
-    $('condOptions').addEventListener('click', function (ev) {
-        var btn = ev.target.closest && ev.target.closest('[data-add]');
-        if (!btn) return;
+    // One delegated handler for the three areas: open or close an area,
+    // add a situation from its list, remove one from its active list.
+    $('sitAreas').addEventListener('click', function (ev) {
+        var t = ev.target;
+        var toggle = t.closest && t.closest('[data-toggle]');
+        if (toggle) {
+            if (toggle.disabled) return;
+            var b = toggle.getAttribute('data-toggle');
+            toggleArea(b, !sitOpen[b]);
+            return;
+        }
+        var rm = t.closest && t.closest('[data-remove]');
+        if (rm) {
+            delete filters[rm.getAttribute('data-remove')];
+            renderConditions();
+            return;
+        }
+        var btn = t.closest && t.closest('[data-add]');
+        if (!btn || btn.disabled) return;
         var key = btn.getAttribute('data-add');
         var spec = specById(idOf(key));
         if (!spec) return;
         // Enums land on their first option and ranges land empty-but-listed: an
-        // added condition is visible immediately, and one that cannot yet
-        // narrow anything says so on its own row rather than vanishing.
+        // added situation is visible immediately under its team, and one that
+        // cannot yet narrow anything says so on its own row rather than vanishing.
         filters[key] = spec.kind === 'bool' ? true
             : spec.kind === 'enum' ? ((spec.options[0] || {}).value || '')
             : spec.kind === 'range' ? { min: null, max: null }
             : '';
-        openCondMenu(false);
-        filterSearch = ''; $('filterSearch').value = '';
         renderConditions();
+        var rows = $$('#sitActive-' + bktOf(key) + ' [data-remove]');
+        var mine = rows.filter(function (x) { return x.getAttribute('data-remove') === key; })[0];
+        if (mine && mine.closest('.cond')) {
+            var ctl = mine.closest('.cond').querySelector('select, input');
+            if (ctl && !('ontouchstart' in window)) ctl.focus({ preventScroll: true });
+        }
     });
 
-    $('filterSearch').addEventListener('input', function () {
-        filterSearch = $('filterSearch').value.trim();
-        renderCondMenu();
+    $('sitAreas').addEventListener('input', function (ev) {
+        var inp = ev.target.closest && ev.target.closest('[data-search]');
+        if (!inp) return;
+        sitSearch[inp.getAttribute('data-search')] = inp.value.trim();
+        renderSitAreas();
     });
 
     $('clearAll').addEventListener('click', function () {
         filters = {};
-        filterSearch = '';
-        $('filterSearch').value = '';
-        openCondMenu(false);
+        closeAreas();
         renderConditions();
     });
 
-    // A click anywhere else closes the picker, the same as Escape.
-    //
-    // Bound to the shadow ROOT, not the host: an event crossing a shadow
-    // boundary is RETARGETED, so a listener on the host sees the host itself as
-    // event.target and every click looks like an outside click -- which closed
-    // the picker on the very click that opened it.
-    root.addEventListener('click', function (ev) {
-        if ($('condMenu').hidden) return;
-        var path = ev.composedPath ? ev.composedPath() : [ev.target];
-        var inside = path.some(function (n) {
-            return n && n.id && (n.id === 'condMenu' || n.id === 'addCond');
-        });
-        if (!inside) openCondMenu(false);
-    });
     root.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Escape' && !$('condMenu').hidden) openCondMenu(false);
+        if (ev.key !== 'Escape') return;
+        var openOne = BUCKETS.some(function (b) { return sitOpen[b]; });
+        if (openOne) toggleArea(null, false);
     });
 
     // ------------------------------------------------------- table sorting
@@ -1771,9 +1904,7 @@
         var hadSituations = activeFilterCount();
         if (hadSituations) dropped.push(hadSituations + (hadSituations === 1 ? ' situation' : ' situations'));
         filters = {};
-        filterSearch = '';
-        $('filterSearch').value = '';
-        openCondMenu(false);
+        closeAreas();
         reviewSig = null;
         $('review').hidden = true;
         if (mTimeframe.value !== 'all') dropped.push('the chosen period');
@@ -1985,7 +2116,17 @@
         var a = mAway.value;
         mAway.value = mHome.value;
         mHome.value = a;
-        syncSetup();
+        // A situation stays with the TEAM it was added for, not with the
+        // slot: "Yankees off a loss" must still read Yankees after the swap,
+        // and the request must still carry it on the Yankees' side.
+        var swapped = {};
+        Object.keys(filters).forEach(function (key) {
+            var bkt = bktOf(key);
+            var to = bkt === 't1' ? 't2' : bkt === 't2' ? 't1' : bkt;
+            swapped[fkey(to, idOf(key))] = filters[key];
+        });
+        filters = swapped;
+        if (library) renderConditions(); else syncSetup();
     });
     [mAway, mHome].forEach(function (s) {
         s.addEventListener('change', function () {
@@ -2018,12 +2159,13 @@
         // to until both teams are chosen. The button says why rather than
         // sitting live and adding a condition about "Away team".
         var bothPicked = !!away && !!home && away !== home;
-        $('addCond').disabled = !bothPicked;
+        $$('.sit-head').forEach(function (h) { h.disabled = !bothPicked; });
+        $('sitAreas').classList.toggle('is-locked', !bothPicked);
         // The lock is a stated sentence, not a grey aside: it appears the
         // moment the matchup is incomplete or invalid and disappears the
         // instant two different teams are chosen, with no reload.
         $('addCondHint').hidden = bothPicked;
-        if (!bothPicked && !$('condMenu').hidden) openCondMenu(false);
+        if (!bothPicked && BUCKETS.some(function (b) { return sitOpen[b]; })) toggleArea(null, false);
         paintOrient();
         syncTeamTotal();
         if (away && home && away === home) err = 'The away team and the home team must be two different teams.';
@@ -3396,6 +3538,15 @@
 
     // ============================================================= boot
     async function boot() {
+        if (EMBED) {
+            // Signing in from inside the product page returns to the tool
+            // on that page, and "What is BetLegend Pro?" is the page the
+            // reader is already on.
+            $$('#authGate a[href^="/login/"]').forEach(function (a) {
+                a.href = '/login/?next=' + encodeURIComponent('/betlegend-pro/#tool');
+            });
+            $$('#authGate a[href="/betlegend-pro/"]').forEach(function (a) { a.hidden = true; });
+        }
         if (!(window.api && window.api.isLoggedIn())) {
             $('authGate').hidden = false;
             $('topbarRight').hidden = true;

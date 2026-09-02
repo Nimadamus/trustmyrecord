@@ -14,11 +14,14 @@ const OUT = process.env.BLP_SHOT_DIR || 'artifacts/blp-situations-live';
 
 test.skip(!TOKEN, 'set TMR_TOKEN');
 
-const list = (page) => page.locator('#condMenu');
+/** One area per thing a situation is about: 't1' (away), 't2' (home), 'game'. */
+const area = (page, b = 't1') => page.locator('#sitBody-' + b);
+const list = area;
+const head = (page, b = 't1') => page.locator(`.sit-head[data-toggle="${b}"]`);
 /** By engine id, not by wording: "Previous game result" is also a substring of
  *  "Opponent's previous game result", and the live library offers both. */
-const add = (page, key) => list(page).locator(`[data-add="${key}"]`);
-const row = (page, key) => page.locator(`#condList .cond:has([data-remove="${key}"])`);
+const add = (page, key) => page.locator(`[data-add="${key}"]`);
+const row = (page, key) => page.locator(`.sit-active .cond:has([data-remove="${key}"])`);
 
 async function openApp(page, calls) {
   await page.addInitScript((token) => {
@@ -56,13 +59,13 @@ async function chooseMatchup(page, away = 'New York Yankees', home = 'Boston Red
   await expect(page.locator('#mAway')).toBeEnabled({ timeout: 120_000 });
   await page.locator('#mAway').selectOption(away);
   await page.locator('#mHome').selectOption(home);
-  await expect(page.locator('#addCond')).toBeEnabled({ timeout: 30_000 });
+  await expect(head(page)).toBeEnabled({ timeout: 30_000 });
 }
 
-/** Open the situation list. */
-async function openList(page) {
-  await page.locator('#addCond').click();
-  await expect(list(page)).toBeVisible();
+/** Open one area's situation list (a click on the team's own header). */
+async function openList(page, b = 't1') {
+  if (await area(page, b).isHidden()) await head(page, b).click();
+  await expect(area(page, b)).toBeVisible();
 }
 
 test('a choice made as early as the UI allows survives every late load', async ({ page }) => {
@@ -89,10 +92,10 @@ test('a choice made as early as the UI allows survives every late load', async (
   expect(navigations.length, `main-frame navigations: ${navigations.join(', ')}`).toBe(1);
   await expect(page.locator('#mAway')).toHaveValue('New York Yankees');
   await expect(page.locator('#mHome')).toHaveValue('Boston Red Sox');
-  await expect(page.locator('#addCond')).toBeEnabled();
+  await expect(head(page)).toBeEnabled();
 
   // A situation added the instant it is unlocked must be just as durable.
-  await page.locator('#addCond').click();
+  await openList(page);
   await add(page, 't1|prev_result').click();
   const prev = row(page, 't1|prev_result');
   await expect(prev).toHaveCount(1);
@@ -103,7 +106,7 @@ test('a choice made as early as the UI allows survives every late load', async (
 
   expect(navigations.length).toBe(1);
   await expect(page.locator('#mAway')).toHaveValue('New York Yankees');
-  await expect(page.locator('#condList .cond')).toHaveCount(1);
+  await expect(page.locator('.sit-active .cond')).toHaveCount(1);
   await expect(prev.locator('select')).toHaveValue('loss');
   await expect(page.locator('#filterCount')).toContainText('1 situation');
 
@@ -124,20 +127,21 @@ test('the locked state explains itself, and lifts the moment the matchup is vali
 
   await expect(page.locator('#addCondHint'))
     .toContainText('Choose two different teams above to unlock situational filters.');
-  await expect(page.locator('#addCond')).toBeDisabled();
-  await expect(page.locator('#addCond')).toHaveText('+ Add Situation');
+  await expect(head(page, 'game')).toBeDisabled();
+  await expect(head(page)).toBeDisabled();
+  await expect(page.locator('#sitCta-t1')).toHaveText('Add situations');
   await page.screenshot({ path: `${OUT}/V1-locked.png`, fullPage: true });
 
   // A team against itself is not a matchup: the lock stays stated.
   await page.locator('#mAway').selectOption('New York Yankees');
   await page.locator('#mHome').selectOption('New York Yankees');
-  await expect(page.locator('#addCond')).toBeDisabled();
+  await expect(head(page)).toBeDisabled();
   await expect(page.locator('#addCondHint')).toBeVisible();
 
   // Two different teams, and it lifts with no reload.
   await chooseMatchup(page);
   await expect(page.locator('#addCondHint')).toBeHidden();
-  await expect(page.locator('#addCond')).toBeEnabled();
+  await expect(head(page)).toBeEnabled();
 });
 
 test('select the situation, then answer it — three shapes of control, live', async ({ page }) => {
@@ -147,8 +151,8 @@ test('select the situation, then answer it — three shapes of control, live', a
   await chooseMatchup(page);
 
   // Nothing on screen until the reader puts it there.
-  await expect(page.locator('#condList .cond')).toHaveCount(0);
-  await expect(page.locator('#condActiveH')).toBeHidden();
+  await expect(page.locator('.sit-active .cond')).toHaveCount(0);
+  await expect(page.locator('#sitCount-t1')).toContainText('No situations added');
 
   await openList(page);
   await expect(list(page)).toBeVisible();
@@ -161,7 +165,7 @@ test('select the situation, then answer it — three shapes of control, live', a
 
   // 1. Previous game result — a win/loss pick-one, on the named away team.
   await add(page, 't1|prev_result').click();
-  await expect(page.locator('#condActiveH')).toBeVisible();
+  await expect(page.locator('#sitCount-t1')).toContainText('1 situation added');
   const prev = row(page, 't1|prev_result');
   await expect(prev).toContainText('New York Yankees');
   await expect(prev.locator('select')).toBeVisible();
@@ -175,7 +179,7 @@ test('select the situation, then answer it — three shapes of control, live', a
   await hand.locator('select').selectOption('L');
 
   // 3. Minimum rest — a whole number, withheld until answered.
-  await openList(page);
+  await openList(page, 't2');
   await add(page, 't2|min_rest_days').click();
   const rest = row(page, 't2|min_rest_days');
   await expect(rest.locator('input[type="number"]')).toBeVisible();
@@ -183,13 +187,14 @@ test('select the situation, then answer it — three shapes of control, live', a
   await rest.locator('input[type="number"]').fill('0');
   await expect(rest).not.toContainText(/Set a value/i);
 
-  await expect(page.locator('#condList .cond')).toHaveCount(3);
+  await expect(page.locator('.sit-active .cond')).toHaveCount(3);
   await expect(page.locator('#filterCount')).toContainText('3 situations');
   await page.screenshot({ path: `${OUT}/V3-active.png`, fullPage: true });
 
   // A situation already on a bench cannot be added to it twice.
   await openList(page);
   await expect(add(page, 't1|prev_result')).toBeDisabled();
+  await openList(page, 't2');
   await expect(add(page, 't2|prev_result')).toBeEnabled();
 
   // The request carries each situation on the team it was added for.
@@ -219,12 +224,12 @@ test('removing a situation returns it to the list, with no reload', async ({ pag
 
   await openList(page);
   await add(page, 't1|prev_result').click();
-  await expect(page.locator('#condList .cond')).toHaveCount(1);
+  await expect(page.locator('.sit-active .cond')).toHaveCount(1);
 
   await row(page, 't1|prev_result')
     .getByRole('button', { name: /^Remove situation/ }).click();
-  await expect(page.locator('#condList .cond')).toHaveCount(0);
-  await expect(page.locator('#condActiveH')).toBeHidden();
+  await expect(page.locator('.sit-active .cond')).toHaveCount(0);
+  await expect(page.locator('#sitCount-t1')).toContainText('No situations added');
 
   await openList(page);
   await expect(add(page, 't1|prev_result')).toBeEnabled();
@@ -236,14 +241,14 @@ test('the list is searchable', async ({ page }) => {
   await chooseMatchup(page);
   await openList(page);
 
-  await page.locator('#filterSearch').fill('pitcher');
+  await page.locator('#sitSearch-t1').fill('pitcher');
   await expect(list(page)).toContainText(/starter handedness/i);
   await expect(list(page)).not.toContainText('Day or night game');
 
-  await page.locator('#filterSearch').fill('rest');
+  await page.locator('#sitSearch-t1').fill('rest');
   await expect(list(page)).toContainText('Minimum rest');
 
-  await page.locator('#filterSearch').fill('zzzz-not-a-situation');
+  await page.locator('#sitSearch-t1').fill('zzzz-not-a-situation');
   await expect(list(page)).toContainText('No situation matches that search');
 });
 
@@ -257,7 +262,7 @@ test('mobile: the lock and the list are both usable at 390', async ({ page }) =>
   await chooseMatchup(page);
   await openList(page);
   await add(page, 't1|prev_result').click();
-  await expect(page.locator('#condList .cond')).toHaveCount(1);
+  await expect(page.locator('.sit-active .cond')).toHaveCount(1);
   const overflow = await page.evaluate(() =>
     document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);

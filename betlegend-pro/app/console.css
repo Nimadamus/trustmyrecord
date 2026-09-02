@@ -237,7 +237,10 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .setup { display: grid; grid-template-columns: 1fr; gap: 10px 11px; align-items: end; }
 @media (min-width: 620px) { .setup { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1120px) {
-    .setup { grid-template-columns: 112px minmax(0, 1fr) 36px minmax(0, 1fr) minmax(0, 1.05fr); }
+    /* The middle column holds the venue select (84px) AND the swap button
+       (36px) with an 8px gap. At 36px the swap overflowed under the home
+       team select and could not be clicked at all. */
+    .setup { grid-template-columns: 112px minmax(0, 1fr) 128px minmax(0, 1fr) minmax(0, 1.05fr); }
 }
 .field { min-width: 0; }
 .lbl {
@@ -1141,3 +1144,54 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
    value: the old venue fallback printed the home team's name and read as a
    stadium called "Boston Red Sox". */
 .unk { color: var(--ink-3); font-style: italic; }
+
+/* ------------------------------------------------ situation areas
+   One area per thing a situation can be about: the away team, the home
+   team, the game itself. The header names the team, says how many
+   situations it carries, and opens that team's plain-English list. */
+.sitareas { display: grid; gap: 10px; margin-top: 11px; }
+.sitareas.is-locked { opacity: .6; }
+.sitarea { border: 1px solid var(--line); border-radius: 11px; background: var(--card); overflow: hidden; }
+.sitarea.is-game { border-color: #cfd8e3; }
+.sit-head {
+  display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap;
+  width: 100%; padding: 12px 14px; border: 0; background: var(--card-2);
+  color: var(--ink); text-align: left; cursor: pointer; font: inherit;
+}
+.sit-head:hover:not(:disabled) { background: var(--accent-soft); }
+.sit-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sit-head:disabled { cursor: not-allowed; }
+/* The site header is fixed; a header scrolled to the top edge would sit under it. */
+.sit-head, .cond { scroll-margin-top: 96px; }
+.sit-head.is-open { background: var(--accent-soft); box-shadow: inset 0 -1px 0 var(--accent-line); }
+.sit-kicker {
+  font: 700 10.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); padding: 5px 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+}
+.sit-name { font: 800 15px/1.2 var(--sans); color: var(--ink); }
+.sit-count { font: 500 12px/1.2 var(--sans); color: var(--ink-3); }
+.sit-cta {
+  margin-left: auto; font: 700 12.5px/1 var(--sans); color: var(--accent-2);
+  padding: 8px 12px; border: 1px solid var(--accent-line); border-radius: 999px; background: var(--card); white-space: nowrap;
+}
+.sit-head:hover:not(:disabled) .sit-cta { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sit-head:disabled .sit-cta { color: var(--ink-3); border-color: var(--line); }
+.sit-active { padding: 10px 12px 0; }
+.sit-active:empty { display: none; padding: 0; }
+.sit-body { padding: 10px 12px 12px; border-top: 1px solid var(--line); }
+.sit-active:not(:empty) + .sit-body { margin-top: 10px; }
+.sit-lead { margin: 0 0 8px; font: 400 12.5px/1.5 var(--sans); color: var(--ink-2); }
+.sit-search .search { width: 100%; }
+.sit-options { margin-top: 8px; max-height: clamp(280px, 48vh, 560px); overflow-y: auto; padding-right: 2px; }
+.condopt.is-added { opacity: .6; }
+@media (max-width: 560px) {
+  .sit-head { padding: 11px 12px; }
+  .sit-cta { margin-left: 0; width: 100%; text-align: center; }
+}
+
+/* ------------------------------------------------ embedded on /betlegend-pro/
+   The product page around the frame already carries the brand and the
+   plans, so the tool's own top bar and the tool rail stay out. */
+:host(.is-embed) .bar, :host(.is-embed) .rail { display: none; }
+:host(.is-embed) .shell { width: 100%; padding: 6px 0 10px; }
+:host(.is-embed) .layout { grid-template-columns: 1fr; }
