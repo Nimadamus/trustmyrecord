@@ -424,7 +424,7 @@
     function hhcCommunityPanel(game) {
         return hhcPanel("Community & Public Betting", null,
             consensusFor(game) +
-            '<p class="hhc-flag">Public betting percentages: <b>not tracked yet</b> — TrustMyRecord does not currently have a licensed public-bet-percentage feed wired in. Shown above is real TMR/external community pick data, not sportsbook handle.</p>');
+            '<p class="hhc-flag">Public betting percentages: <b>not tracked</b> — TrustMyRecord has no licensed public-bet-percentage feed wired in, so none is shown. Anything above is a count of picks logged on TrustMyRecord, not sportsbook handle.</p>');
     }
 
     function hhcTrendsPanel(game, d, uid) {
@@ -438,7 +438,12 @@
         var body = total
             ? top + (total > 2 ? '<p class="hhc-empty-note">' + (total - 2) + ' more in the Trends tab below.</p>' : "")
             : '<p class="hhc-empty-note">No trend cleared the engine\'s sample-size and edge thresholds for this matchup.</p>';
-        return hhcPanel("Verified Trends", total ? (total + " cleared the engine") : null, body);
+        /* Only the strict engine's trends "cleared the engine". The last-10
+           feed rows are recent form and are counted as such, never folded
+           into the engine's count. */
+        var src = apiTrends.length ? apiTrends.length + " cleared the engine" : null;
+        if (reps.length) src = (src ? src + " · " : "") + reps.length + " last-10 form line" + (reps.length === 1 ? "" : "s");
+        return hhcPanel("Verified Trends", src, body);
     }
 
     function hhcLineupNote(name, lineup) {
@@ -855,17 +860,27 @@
         if (t.record) stats.push("Record <b>" + esc(t.record) + "</b>");
         if (hasVal(t.win_pct)) stats.push("Win% <b>" + esc(Number(t.win_pct).toFixed(2)) + "%</b>");
         if (hasVal(t.expected_win_pct)) stats.push("Baseline <b>" + esc(Number(t.expected_win_pct).toFixed(2)) + "%</b>");
-        if (hasVal(t.sample)) stats.push("Sample <b>" + esc(t.sample) + "</b>");
+        if (hasVal(t.sample)) stats.push("Sample <b>" + esc(t.sample) + " decided</b>" + (Number(t.pushes) > 0 ? " (+" + esc(t.pushes) + " push" + (Number(t.pushes) === 1 ? "" : "es") + ")" : ""));
         if (t.date_range) stats.push("Range <b>" + esc(t.date_range) + "</b>");
         if (hasVal(t.seasons_covered)) stats.push("Seasons <b>" + esc(t.seasons_covered) + "</b>");
+        /* units/roi are null when the corpus holds no price for the market
+           (run line). Nothing is rendered then: "0.00u" read as break-even. */
         var u = fmtSigned(t.units, "u");
         if (u) stats.push("Units <b class=\"" + (Number(t.units) >= 0 ? "is-pos" : "is-neg") + "\">" + esc(u) + "</b>");
         var roi = fmtSigned(t.roi_pct, "%");
         if (roi) stats.push("ROI <b class=\"" + (Number(t.roi_pct) >= 0 ? "is-pos" : "is-neg") + "\">" + esc(roi) + "</b>");
+        if (!u && String(t.market || "") === "run_line") stats.push("Units <b>not measurable, no run-line price on file</b>");
 
+        /* The moneyline baseline is the average implied probability of the
+           prices actually laid, vig included: the break-even win rate. It is
+           named as that, not as a fair probability. */
         var baseline = t.baseline_type
-            ? '<p class="hh-trend__why">Measured against <b>' + esc(String(t.baseline_type).replace(/_/g, " ")) + '</b>' +
-              (hasVal(t.expected_win_pct) ? " (" + esc(Number(t.expected_win_pct).toFixed(2)) + "% expected)" : "") + '.</p>'
+            ? '<p class="hh-trend__why">Measured against <b>' +
+              (String(t.baseline_type) === "market_implied_probability"
+                  ? "the break-even win rate at the prices laid (vig included)"
+                  : esc(String(t.baseline_type).replace(/_/g, " "))) + '</b>' +
+              (hasVal(t.expected_win_pct) ? " (" + esc(Number(t.expected_win_pct).toFixed(2)) + "%)" : "") +
+              (t.date_range ? ". Sample runs " + esc(t.date_range) + "; games after that date are not in the corpus." : ".") + '</p>'
             : "";
 
         var gid = "tg-" + uid + "-" + idx;
@@ -941,7 +956,7 @@
         return '<section class="hh-tsec hh-tsec--ov">' +
             '<div class="hh-tsec__head">' +
                 '<h4 class="hh-tsec__title">Matchup Trends</h4>' +
-                '<span class="hh-tsec__count">' + total + ' verified</span>' +
+                '<span class="hh-tsec__count">' + (api ? api + ' verified' : '') + (api && reps.length ? ' · ' : '') + (reps.length ? reps.length + ' last-10 form' : '') + '</span>' +
             '</div>' +
             '<div class="hh-tsec__list">' + reps.slice(0, TOP).map(trendCardHtml).join("") + '</div>' +
             '<button type="button" class="hh-tsec__all" data-gototrends>' +
@@ -960,7 +975,14 @@
         var trends = d.trends || [];
         var meta = d.trend_meta || {};
         if (trends.length) {
+            var through = hasVal(meta.corpus_through)
+                ? '<p class="hh-src">Historical corpus through <b>' + esc(String(meta.corpus_through).slice(0, 10)) + '</b>' +
+                  (hasVal(meta.corpus_days_behind) && Number(meta.corpus_days_behind) > 0 ? ' (' + esc(meta.corpus_days_behind) + ' days behind today)' : '') +
+                  (hasVal(meta.starters_through) ? '; starting-pitcher handedness through <b>' + esc(String(meta.starters_through).slice(0, 10)) + '</b>' : '') +
+                  '. Samples include postseason games: the corpus carries no season-type flag, so they are not separated. Favourite and underdog are read from the single line recorded per game (book and time not recorded).</p>'
+                : "";
             out += '<div class="hh-sub"><h4 class="hh-sub__title">Verified trends <span class="hh-count">' + trends.length + ' cleared the engine</span></h4>' +
+                through +
                 trends.map(function (t, i) { return apiTrendHtml(t, i, uid); }).join("") + '</div>';
         }
 
@@ -971,9 +993,10 @@
             var TOP = 6;
             out += '<section class="hh-tsec">' +
                 '<div class="hh-tsec__head">' +
-                    '<h4 class="hh-tsec__title">Matchup Trends</h4>' +
-                    '<span class="hh-tsec__count">' + reps.length + ' verified</span>' +
+                    '<h4 class="hh-tsec__title">Recent form, last 10 games</h4>' +
+                    '<span class="hh-tsec__count">' + reps.length + ' last-10 line' + (reps.length === 1 ? "" : "s") + '</span>' +
                 '</div>' +
+                '<p class="hh-src">Each line is one team\'s record over its last 10 completed games on the market named. Counts only: no baseline, no sample gate, no edge claim. A totals line reports whichever side of the number came in more often over those 10 games, so it reads at or above 50% by construction.</p>' +
                 '<div class="hh-tsec__list">' + reps.slice(0, TOP).map(trendCardHtml).join("") + '</div>' +
                 (reps.length > TOP
                     ? '<button type="button" class="hh-tsec__all" data-viewall><span>Show the remaining ' + (reps.length - TOP) + '</span><span class="hh-tsec__arrow" aria-hidden="true">↓</span></button>' +
@@ -1081,6 +1104,10 @@
         A losing split is still worth showing — it is a fade signal — but saying
         a 4-6 run-line record "supports" that side is simply false. */
     function trendStance(rel, side) {
+        /* Totals and team-total lines pick Over or Under AFTER counting the
+           results (whichever came in more often), so a stance badge on them
+           would restate the selection as a finding. Context only. */
+        if (rel.dataMined) return null;
         var wp = Number(rel.wp);
         /* The card head already names the team, so a team-side badge only has to
            carry the direction; totals still need Over/Under spelled out. */
@@ -1330,8 +1357,8 @@
             return lbl.indexOf(al) >= 0 && lbl.indexOf(hl) >= 0;
         });
         if (!rows.length) {
-            return '<div class="hh-state hh-state--na"><strong>No community picks yet</strong>' +
-                '<p>No public picks have been logged on this matchup in the last 3 days. Be the first to make a public pick.</p></div>';
+            return '<div class="hh-state hh-state--na"><strong>No community picks on this game</strong>' +
+                '<p>The community read is built only from picks actually logged on TrustMyRecord. None cover this matchup in the last 3 days, so nothing is shown. No consensus is estimated.</p></div>';
         }
         var byLabel = {};
         rows.forEach(function (r) {

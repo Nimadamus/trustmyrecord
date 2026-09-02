@@ -297,9 +297,9 @@ def form_section(hist):
         if c.get("current_streak"):
             bits.append("streak %s" % c["current_streak"])
         if c.get("last_20_home_record"):
-            bits.append("home %s" % c["last_20_home_record"])
+            bits.append("home games within the last 20 %s" % c["last_20_home_record"])
         if c.get("last_20_away_record"):
-            bits.append("away %s" % c["last_20_away_record"])
+            bits.append("road games within the last 20 %s" % c["last_20_away_record"])
         if bits:
             rows.append(row(c["team"], esc(", ".join(bits))))
     note = ((hist.get("team_1_context") or {}).get("note") or "").strip() or None
@@ -333,8 +333,26 @@ def h2h_section(sport, hist):
         rows.append(row("Average margin", esc(sc["avg_margin"])))
     if (ms.get("close_games") or {}).get("label"):
         rows.append(row("One score games", esc(ms["close_games"]["label"])))
-    return section("Head to head", rows, None,
-                   (hist.get("qualifying_span") or {}).get("label"))
+    # The engine states the sample it answered with; the page repeats it
+    # verbatim so a reader knows which meetings are in and which are out.
+    lede_bits = []
+    qs = (hist.get("query_summary") or {}).get("text")
+    if qs:
+        lede_bits.append(esc(qs))
+    span = (hist.get("qualifying_span") or {}).get("label")
+    if span:
+        lede_bits.append(esc(span))
+    h2h = hist.get("head_to_head") or {}
+    if h2h.get("lifetime_meetings") and h2h.get("record"):
+        lede_bits.append("Every completed meeting on file, no filters: %s meetings, %s %s."
+                         % (esc(h2h["lifetime_meetings"]), esc(h2h.get("team") or ""),
+                            esc(h2h["record"])))
+    applied = [str(f) for f in (hist.get("filters_applied") or []) if f]
+    if applied:
+        lede_bits.append("Filter applied by the engine: %s. Neutral-site games are counted by "
+                         "the designated home side; the dataset carries no neutral-site flag."
+                         % esc("; ".join(applied)))
+    return section("Head to head", rows, None, " ".join(lede_bits) or None)
 
 
 def market_section(hist):
@@ -352,10 +370,13 @@ def market_section(hist):
         s = money.get(side) or {}
         if s.get("team") and s.get("units") is not None:
             rows.append(row("%s moneyline units" % s["team"],
-                            "%s over %s games" % (esc(s["units"]),
-                                                  esc(s.get("eligible_games", 0)))))
-    return section("Betting splits in this matchup", rows,
-                   ((hist.get("matchup_summary") or {}).get("samples") or {}).get("note"))
+                            "%s over %s games, flat one-unit stake at the closing price"
+                            % (esc(s["units"]), esc(s.get("eligible_games", 0)))))
+    note = ((hist.get("matchup_summary") or {}).get("samples") or {}).get("note")
+    money_note = (money.get("note") or "").strip()
+    if money_note:
+        note = ("%s %s" % (note, money_note)).strip() if note else money_note
+    return section("Betting splits in this matchup", rows, note)
 
 
 def nfl_people_sections(sport, g, teams_by_name, qb1, injuries):

@@ -1060,13 +1060,78 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     b.append("        </section>\n")
 
     # ---- trends -----------------------------------------------------------
+    # Two different things, labelled as two different things:
+    #   1. the verified engine's trends (research["trends"]): situational
+    #      samples over the 2010+ corpus, gated on sample size and edge, with
+    #      a stated baseline, units and ROI;
+    #   2. the TrendSpotter feed (`trends`): each team's last 10 completed
+    #      games from the games table. A last-10 record has no baseline and
+    #      no gate; it is recent form, and is now titled as recent form.
+    # Audit 2026-09-02: (2) was rendered under a lede claiming (1)'s method.
+    engine_trends = (research or {}).get("trends") or []
+    meta = (research or {}).get("trend_meta") or {}
     b.append('        <section class="mm-sec" aria-labelledby="mm-trends">\n')
     b.append('          <h2 id="mm-trends">Verified trends for this matchup</h2>\n')
+    if engine_trends:
+        lede = ('Each trend below is a situational sample drawn from completed MLB games in '
+                'TrustMyRecord\'s historical corpus, and carries the record, the sample size, the '
+                'date range and the exact games behind it. Moneyline trends are measured against '
+                'the break-even win rate implied by the prices actually laid (vig included), not '
+                'against 50 percent. A negative edge means the side did worse than its prices '
+                'implied. Only samples that cleared the engine\'s size and edge gates are shown.')
+        if has(meta.get("corpus_through")):
+            lede += (' The corpus runs through %s; games after that date are not in any sample.'
+                     % esc(meta["corpus_through"]))
+        lede += (' Samples include postseason games (the corpus carries no season-type flag), '
+                 'and favourite or underdog is read from the single line recorded per game.')
+        b.append('          <p class="mm-sub">%s</p>\n' % lede)
+        b.append('          <ul class="mm-trends">\n')
+        for t in engine_trends[:12]:
+            bits = []
+            if has(t.get("record")):
+                bits.append("Record <b>%s</b>" % esc(t["record"]))
+            if has(t.get("win_pct")):
+                bits.append("win rate <b>%s%%</b>" % esc(num(t["win_pct"])))
+            if has(t.get("expected_win_pct")):
+                bits.append("break-even at the prices laid <b>%s%%</b>" % esc(num(t["expected_win_pct"])))
+            if has(t.get("edge_pct")):
+                bits.append("edge <b>%s pts</b>" % esc(("%+.2f" % float(t["edge_pct"]))))
+            if has(t.get("sample")):
+                bits.append("sample <b>%s decided games</b>" % esc(t["sample"]))
+            if has(t.get("pushes")) and int(t.get("pushes") or 0) > 0:
+                bits.append("pushes <b>%s</b>" % esc(t["pushes"]))
+            if has(t.get("units")):
+                bits.append("units <b>%s</b>" % esc(("%+.2f" % float(t["units"]))))
+            if has(t.get("roi_pct")):
+                bits.append("ROI <b>%s%%</b>" % esc(("%+.2f" % float(t["roi_pct"]))))
+            if has(t.get("date_range")):
+                bits.append("range %s" % esc(t["date_range"]))
+            if has(t.get("seasons_covered")):
+                bits.append("seasons <b>%s</b>" % esc(t["seasons_covered"]))
+            if has(t.get("confidence")):
+                bits.append("confidence <b>%s</b>" % esc(t["confidence"]))
+            b.append('            <li class="mm-trend"><p>%s</p><p class="mm-tmeta">%s</p></li>\n'
+                     % (esc(t.get("statement")), ", ".join(bits)))
+        b.append("          </ul>\n")
+        b.append('          <p class="mm-sub">The full sample behind every trend, game by game with '
+                 'the query that produced it, opens on <a href="%s">the live matchup card</a>.</p>\n'
+                 % esc(HUB))
+    else:
+        b.append('          <p class="mm-sub">No trend cleared the sample size and edge gates for '
+                 'this matchup, so none is shown. An empty section here is a real answer, not a '
+                 'missing one.</p>\n')
+    b.append("        </section>\n")
+
+    # ---- recent form (TrendSpotter last-10 feed) ---------------------------
+    b.append('        <section class="mm-sec" aria-labelledby="mm-form">\n')
+    b.append('          <h2 id="mm-form">Recent form, last 10 games</h2>\n')
     if trends:
-        b.append('          <p class="mm-sub">Every trend here was measured against completed games '
-                 'with final scores, and each one carries the sample it was drawn from. Moneyline '
-                 'trends are measured against market implied probability, not against 50 percent. '
-                 'Nothing that failed the sample gate is shown.</p>\n')
+        b.append('          <p class="mm-sub">Each line is one team\'s record over its last 10 '
+                 'completed games from TrustMyRecord\'s scores table, on the market named. These '
+                 'are counts of what happened, with no baseline, no sample gate and no edge '
+                 'claim. A totals or team-total line reports whichever side of the number came '
+                 'in more often over those 10 games, so it always reads at or above 50 percent by '
+                 'construction; read it as context, not as a signal.</p>\n')
         b.append('          <ul class="mm-trends">\n')
         for t in trends[:12]:
             bits = []
@@ -1082,14 +1147,12 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
                      % (esc(t.get("claim")), ", ".join(bits)))
         b.append("          </ul>\n")
         if len(trends) > 12:
-            b.append('          <p class="mm-sub">%d more trends cleared the gate for this game. '
-                     'See them all on <a href="%strends/">today\'s verified MLB trends</a>.</p>\n'
+            b.append('          <p class="mm-sub">%d more last-10 lines for this game are on '
+                     '<a href="%strends/">today\'s MLB trends page</a>.</p>\n'
                      % (len(trends) - 12, HUB))
     else:
-        b.append('          <p class="mm-sub">No trend cleared the sample size and edge gates for '
-                 'this matchup, so none is shown. An empty section here is a real answer, not a '
-                 'missing one. <a href="%strends/">Every verified MLB trend on today\'s board</a> '
-                 'is one click away.</p>\n' % HUB)
+        b.append('          <p class="mm-sub">No last-10 line is available for this game: the '
+                 'scores table does not hold 10 completed games for one of these teams yet.</p>\n')
     b.append("        </section>\n")
 
     # ---- community --------------------------------------------------------
@@ -1496,13 +1559,18 @@ def render_odds(date, rows, built_at):
 
 def render_trends(date, rows, all_trends, built_at):
     body = ['        <section class="mm-sec" aria-labelledby="tr-t">\n',
-            '          <h2 id="tr-t">Every verified MLB trend on today\'s board</h2>\n']
+            '          <h2 id="tr-t">Recent form on today\'s board: every last-10 line</h2>\n']
     if all_trends:
-        body.append('          <p class="mm-sub">%d trends cleared the sample size and edge gates '
-                    'for today\'s slate. Each was measured over completed games with final scores '
-                    'and carries the sample it came from. Moneyline trends are measured against '
-                    'market implied probability, not against 50 percent. A trend describes what has '
-                    'already happened. It is not a prediction and it is not a pick.</p>\n'
+        # These are the TrendSpotter last-10 records, not the gated engine
+        # trends (those live on each matchup page). Say exactly what they are.
+        body.append('          <p class="mm-sub">%d last-10 lines for today\'s slate: each is one '
+                    'team\'s record over its last 10 completed games from TrustMyRecord\'s scores '
+                    'table, on the market named, with the games behind it. These are counts of what '
+                    'happened. They carry no baseline, no sample gate and no edge claim, and a '
+                    'totals line reports whichever side came in more often over those 10 games. '
+                    'A line describes what has already happened. It is not a prediction and it is '
+                    'not a pick. The gated, baseline-measured verified trends are on each '
+                    'matchup page.</p>\n'
                     % len(all_trends))
         by_game = {}
         for r in rows:
