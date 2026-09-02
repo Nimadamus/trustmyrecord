@@ -752,7 +752,9 @@
 
     var sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
-sheet.href = '/betlegend-pro/app/console.css?v=20260902-polish';
+// A new NAME per build, not a new query string: the edge caches this sheet
+    // for four hours and ignores the query string, so `?v=` never reached it.
+    sheet.href = '/betlegend-pro/app/console.20260902b.css';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
