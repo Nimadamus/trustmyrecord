@@ -134,7 +134,10 @@ test.describe('Handicapping Hub integrity (user view vs verified values)', () =>
         const m = (re) => { const x = stats.match(re); return x ? x[1] : null; };
         note(`${t.id} Record`, m(/Record (\d+-\d+(?:-\d+)?)/), t.record, 'API');
         note(`${t.id} Win%`, num(m(/Win% ([\d.]+)%/)), t.win_pct, 'API');
-        if (t.expected_win_pct != null) note(`${t.id} Baseline`, num(m(/Baseline ([\d.]+)%/)), t.expected_win_pct, 'API');
+        if (t.expected_win_pct != null) note(`${t.id} Baseline`, num(m(/Baseline ([\d.]+)%/)), t.expected_win_pct, 'API fair market probability');
+        if (t.break_even_pct != null) note(`${t.id} Break-even`, num(m(/Break-even ([\d.]+)%/)), t.break_even_pct, 'API break_even_pct');
+        if (t.scope) { const why = ((await c.locator('.hh-trend__why').textContent().catch(() => '')) || ''); note(`${t.id} scope shown`, why.includes(t.scope), true, 'API scope'); }
+        if (/\|(FAV|DOG)$/.test(t.id)) note(`${t.id} favourite margin stated`, /at least 4 pts clear/.test(statement), true, 'statement contract');
         note(`${t.id} Sample`, num(m(/Sample (\d+)/)), t.sample, 'API decided games');
         note(`${t.id} Range`, m(/Range (\d{4}-\d{2}-\d{2} to \d{4}-\d{2}-\d{2})/), t.date_range, 'API');
         note(`${t.id} Seasons`, num(m(/Seasons (\d+)/)), t.seasons_covered, 'API');

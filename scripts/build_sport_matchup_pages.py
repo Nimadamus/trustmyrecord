@@ -516,8 +516,12 @@ def render_hub(sport, games, built_at):
          'splits, recent form, and what the data does not cover.</p>\n' % esc(label),
          '        </header>\n',
          '        <section class="mm-sec">\n            <h2>On the board</h2>\n',
-         '            <p class="mm-lede">%d game%s listed, %d priced by the sportsbook feed. '
-         'Times are Eastern.</p>\n' % (len(games), "" if len(games) == 1 else "s", priced),
+         ('            <p class="mm-lede">%d game%s listed, %d priced by the sportsbook feed. '
+          'Times are Eastern.</p>\n' % (len(games), "" if len(games) == 1 else "s", priced))
+         if games else
+         ('            <p class="mm-lede">No %s games are on the board right now. Matchup pages '
+          'are built from the board, so none exist until the league schedule is posted; nothing '
+          'is shown in the meantime rather than a stale or estimated slate.</p>\n' % esc(label)),
          '            <table class="mm-table">\n',
          '                <thead><tr><th>Matchup</th><th>Start</th><th>Moneyline</th>'
          '<th>Spread</th><th>Total</th></tr></thead>\n                <tbody>\n']
@@ -599,8 +603,13 @@ def write(path, html):
 def build(sport, built_at):
     games = fetch_board(sport)
     if not games:
-        print("%s: board is empty, skipping (out of season)" % sport.upper())
-        return 0, []
+        # Out of season the board is empty. The hub page is still written so
+        # /handicapping/<sport>/ answers with the true state ("no games on the
+        # board") instead of a 404, and stays in the sitemap.
+        print("%s: board is empty, writing the hub page only (out of season)" % sport.upper())
+        hub_path = os.path.join("handicapping", sport, "index.html")
+        changed = 1 if write(hub_path, render_hub(sport, [], built_at)) else 0
+        return changed, [("/handicapping/%s/" % sport, "0.8")]
     print("%s: %d games on the board" % (sport.upper(), len(games)))
 
     extras = fetch_nfl_extras() if sport == "nfl" else ({}, {}, {})

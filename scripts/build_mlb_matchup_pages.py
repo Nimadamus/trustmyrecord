@@ -770,15 +770,23 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     # not rewrite itself after the game is played. Falls back to the previous
     # deterministic form when nothing on the ladder qualifies.
     hook = g.get("seo_hook")
+    # The contract gate (tests/mlb-matchup-pages-contract-test.js) rejects any
+    # <title> over 65 characters; a hook title that would be truncated by the
+    # search result is not a title we wrote, so the deterministic form is used
+    # instead and the hook still leads the page copy.
+    title = None
     if hook:
-        title = "%s vs %s: %s" % (away_n, home_n, hook[0])
-    else:
-        title = None
-        for tail in ("Odds, Probable Pitchers, Stats", "Odds, Pitchers, Stats", "Odds & Stats"):
+        candidate = "%s vs %s: %s" % (away_n, home_n, hook[0])
+        if len(candidate) <= 65:
+            title = candidate
+    if not title:
+        for tail in ("Odds, Probable Pitchers, Stats", "Odds, Pitchers, Stats", "Odds & Stats", "Odds, Stats", "Odds"):
             candidate = "%s vs %s, %s: %s" % (away_n, home_n, short_date(g["date"]), tail)
             title = candidate
             if len(candidate) <= 65:
                 break
+        if len(title) > 65:
+            title = "%s vs %s: %s" % (away_n, home_n, "Odds")
     desc_bits = ["%s at %s on %s" % (away, home, date_long)]
     if start:
         desc_bits[0] += " at %s" % start
@@ -1073,17 +1081,20 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     b.append('        <section class="mm-sec" aria-labelledby="mm-trends">\n')
     b.append('          <h2 id="mm-trends">Verified trends for this matchup</h2>\n')
     if engine_trends:
-        lede = ('Each trend below is a situational sample drawn from completed MLB games in '
-                'TrustMyRecord\'s historical corpus, and carries the record, the sample size, the '
-                'date range and the exact games behind it. Moneyline trends are measured against '
-                'the break-even win rate implied by the prices actually laid (vig included), not '
-                'against 50 percent. A negative edge means the side did worse than its prices '
-                'implied. Only samples that cleared the engine\'s size and edge gates are shown.')
+        lede = ('Each trend below is a situational sample drawn from completed regular-season MLB '
+                'games in TrustMyRecord\'s historical corpus, and carries the record, the sample '
+                'size, the date range and the exact games behind it. Moneyline trends are measured '
+                'against the fair market probability of the prices actually laid (both sides\' '
+                'prices with the vig removed), not against 50 percent; the break-even rate at those '
+                'prices is shown beside it. A negative edge means the side did worse than the market '
+                'priced it. "Favourite" and "underdog" mean the recorded line put that side at least '
+                '4 points of implied probability clear of the other side; closer games are not '
+                'classified. Only samples that cleared the engine\'s size and edge gates are shown.')
         if has(meta.get("corpus_through")):
             lede += (' The corpus runs through %s; games after that date are not in any sample.'
                      % esc(meta["corpus_through"]))
-        lede += (' Samples include postseason games (the corpus carries no season-type flag), '
-                 'and favourite or underdog is read from the single line recorded per game.')
+        lede += (' Lines are ESPN pickcenter through 2026-08-22 and the DraftKings board after; '
+                 'a game with no recorded line counts in the record but not in any priced split.')
         b.append('          <p class="mm-sub">%s</p>\n' % lede)
         b.append('          <ul class="mm-trends">\n')
         for t in engine_trends[:12]:
@@ -1093,7 +1104,9 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
             if has(t.get("win_pct")):
                 bits.append("win rate <b>%s%%</b>" % esc(num(t["win_pct"])))
             if has(t.get("expected_win_pct")):
-                bits.append("break-even at the prices laid <b>%s%%</b>" % esc(num(t["expected_win_pct"])))
+                bits.append("fair market baseline <b>%s%%</b>" % esc(num(t["expected_win_pct"])))
+            if has(t.get("break_even_pct")):
+                bits.append("break-even at the prices laid <b>%s%%</b>" % esc(num(t["break_even_pct"])))
             if has(t.get("edge_pct")):
                 bits.append("edge <b>%s pts</b>" % esc(("%+.2f" % float(t["edge_pct"]))))
             if has(t.get("sample")):

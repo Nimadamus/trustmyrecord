@@ -860,6 +860,7 @@
         if (t.record) stats.push("Record <b>" + esc(t.record) + "</b>");
         if (hasVal(t.win_pct)) stats.push("Win% <b>" + esc(Number(t.win_pct).toFixed(2)) + "%</b>");
         if (hasVal(t.expected_win_pct)) stats.push("Baseline <b>" + esc(Number(t.expected_win_pct).toFixed(2)) + "%</b>");
+        if (hasVal(t.break_even_pct)) stats.push("Break-even <b>" + esc(Number(t.break_even_pct).toFixed(2)) + "%</b>");
         if (hasVal(t.sample)) stats.push("Sample <b>" + esc(t.sample) + " decided</b>" + (Number(t.pushes) > 0 ? " (+" + esc(t.pushes) + " push" + (Number(t.pushes) === 1 ? "" : "es") + ")" : ""));
         if (t.date_range) stats.push("Range <b>" + esc(t.date_range) + "</b>");
         if (hasVal(t.seasons_covered)) stats.push("Seasons <b>" + esc(t.seasons_covered) + "</b>");
@@ -876,11 +877,15 @@
            named as that, not as a fair probability. */
         var baseline = t.baseline_type
             ? '<p class="hh-trend__why">Measured against <b>' +
-              (String(t.baseline_type) === "market_implied_probability"
+              (String(t.baseline_type) === "market_fair_probability"
+                  ? "the fair market probability of the prices laid (both sides' prices, vig removed)"
+                  : String(t.baseline_type) === "market_implied_probability"
                   ? "the break-even win rate at the prices laid (vig included)"
                   : esc(String(t.baseline_type).replace(/_/g, " "))) + '</b>' +
               (hasVal(t.expected_win_pct) ? " (" + esc(Number(t.expected_win_pct).toFixed(2)) + "%)" : "") +
-              (t.date_range ? ". Sample runs " + esc(t.date_range) + "; games after that date are not in the corpus." : ".") + '</p>'
+              (hasVal(t.break_even_pct) ? "; break-even at those prices " + esc(Number(t.break_even_pct).toFixed(2)) + "%" : "") +
+              (t.scope ? "; " + esc(t.scope) : "") +
+              (t.date_range ? ". Sample runs " + esc(t.date_range) + "." : ".") + '</p>'
             : "";
 
         var gid = "tg-" + uid + "-" + idx;
@@ -979,7 +984,7 @@
                 ? '<p class="hh-src">Historical corpus through <b>' + esc(String(meta.corpus_through).slice(0, 10)) + '</b>' +
                   (hasVal(meta.corpus_days_behind) && Number(meta.corpus_days_behind) > 0 ? ' (' + esc(meta.corpus_days_behind) + ' days behind today)' : '') +
                   (hasVal(meta.starters_through) ? '; starting-pitcher handedness through <b>' + esc(String(meta.starters_through).slice(0, 10)) + '</b>' : '') +
-                  '. Samples include postseason games: the corpus carries no season-type flag, so they are not separated. Favourite and underdog are read from the single line recorded per game (book and time not recorded).</p>'
+                  '. Regular season only. Lines: ESPN pickcenter through 2026-08-22, the DraftKings board after; a game with no recorded line counts in the record but not in any priced split. "Favourite" means the recorded line put that side at least 4 points of implied probability clear; closer games are not classified.</p>'
                 : "";
             out += '<div class="hh-sub"><h4 class="hh-sub__title">Verified trends <span class="hh-count">' + trends.length + ' cleared the engine</span></h4>' +
                 through +
