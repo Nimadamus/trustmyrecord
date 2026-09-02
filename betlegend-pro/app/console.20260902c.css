@@ -1337,3 +1337,253 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
     .intro { padding: 14px 14px 12px; }
     .runbar { padding: 12px 14px; }
 }
+
+/* ==========================================================================
+   Presentation overhaul, 2026-09-02 (second pass). Overrides only, last in
+   cascade. The page reads top to bottom as one guided flow: Sport, Matchup,
+   Period, Situations, Results. Nothing here renames an id or changes what a
+   control does; the sport buttons only drive the native select.
+   ========================================================================== */
+:host {
+    --paper: #f3f5f8;
+    --card-2: #f6f8fb;
+    --sink: #edf1f5;
+    --line: #e6ebf1;
+    --line-2: #cfd8e2;
+    --r-s: 9px;
+    --r-m: 12px;
+    --r-l: 18px;
+    --sh-1: 0 1px 2px rgba(13, 21, 32, .04), 0 12px 32px -24px rgba(13, 21, 32, .28);
+    --sh-2: 0 2px 6px rgba(13, 21, 32, .06), 0 18px 40px -22px rgba(13, 21, 32, .35);
+    font-size: 14.5px;
+}
+.shell { width: min(1180px, calc(100% - 28px)); padding: 10px 0 56px; }
+
+/* -- product bar: brand only, quiet ---------------------------------------- */
+.bar { padding: 4px 2px 8px; margin-bottom: 6px; }
+.brand-name { font-size: 15px; }
+.brand-sub { display: none; }
+.mark { width: 30px; height: 30px; flex-basis: 30px; border-radius: 9px; }
+
+/* -- tools strip: understated tabs ------------------------------------------ */
+.rail { padding: 4px; gap: 2px; margin-bottom: 4px; border: 0; background: transparent; box-shadow: none; }
+.navbtn { min-height: 34px; padding: 6px 13px; font-size: 13px; color: var(--ink-3); }
+.navbtn:hover { background: rgba(13, 21, 32, .05); color: var(--ink); }
+.navbtn[aria-selected="true"] { background: var(--card); border-color: var(--line); color: var(--ink); box-shadow: var(--sh-1); }
+.navbtn[aria-selected="true"] svg { color: var(--accent); }
+
+/* -- intro: one strap, the chips beside it, the steps folded away ----------- */
+.intro {
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px 24px; align-items: center;
+    padding: 16px 20px; margin-bottom: 14px;
+    border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--sh-1);
+    background: linear-gradient(135deg, #ffffff 0%, #f5faf9 100%);
+}
+@media (min-width: 900px) { .intro { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }
+.intro-grid { display: contents; }
+.intro-title { font-size: 21px; margin-bottom: 4px; letter-spacing: -.015em; }
+.intro-title span { font-size: 10.5px; padding: 4px 8px; }
+.intro-lede p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); max-width: 60ch; }
+.intro-cover { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+@media (min-width: 900px) { .intro-cover { justify-content: flex-end; } }
+.intro-cover .intro-h { flex: 1 0 100%; margin: 0 0 2px; font-size: 10px; }
+@media (min-width: 900px) { .intro-cover .intro-h { text-align: right; } }
+.cover-row { padding: 5px 10px; gap: 6px; font-size: 12px; background: var(--card); border-color: var(--line); }
+.cover-row b { font-size: 11.5px; }
+.cover-row .cover-years { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.cover-row i { display: none; }
+.cover-row.is-on { background: var(--accent-soft); border-color: var(--accent-line); }
+.cover-row.is-on b, .cover-row.is-on .cover-years { color: var(--accent-2); }
+.how-wrap { grid-column: 1 / -1; margin-top: 2px; }
+.how-summary { padding: 5px 10px; font-size: 10.5px; letter-spacing: .07em; background: transparent; border-color: var(--line-2); color: var(--ink-3); }
+.how-summary:hover { background: var(--card); color: var(--ink); }
+.how { margin-top: 12px; gap: 6px; }
+.how li { font-size: 12.5px; }
+.intro-note { font-size: 12px; }
+:host(.is-embed) .intro { display: none; }
+
+/* -- progress: five steps, the current one unmistakable --------------------- */
+.prog {
+    padding: 6px 8px; margin-bottom: 14px; gap: 2px;
+    border: 0; border-radius: 999px; background: var(--card); box-shadow: var(--sh-1);
+}
+.prog-step { padding: 5px 13px 5px 6px; font-size: 13px; color: var(--ink-3); }
+.prog-step b { width: 22px; height: 22px; flex-basis: 22px; font-size: 11.5px; background: var(--sink); color: var(--ink-3); }
+.prog-step.is-done { color: var(--ink-2); }
+.prog-step.is-done b { background: var(--win-soft); color: var(--win); }
+.prog-step.is-on { background: var(--ink); color: #fff; }
+.prog-step.is-on b { background: #fff; color: var(--ink); }
+.prog-sep { flex: 1 1 10px; max-width: 28px; height: 1px; background: var(--line-2); }
+.prog-note { padding: 6px 12px; font-size: 12px; background: transparent; color: var(--ink-3); }
+@media (max-width: 640px) {
+    .prog { padding: 5px 6px; }
+    .prog-step { padding: 4px 9px 4px 4px; gap: 6px; }
+    .prog-step:not(.is-on) { font-size: 0; gap: 0; padding-right: 4px; }
+    .prog-step:not(.is-on) b { font-size: 11px; }
+    .prog-sep { flex-basis: 6px; }
+}
+
+/* -- cards: soft, roomy, numbered ------------------------------------------- */
+.card { margin-bottom: 14px; border-color: var(--line); border-radius: var(--r-l); box-shadow: var(--sh-1); }
+.card-head { padding: 16px 22px 0; gap: 10px; border-bottom: 0; }
+.card-head h2 { font-size: 16px; gap: 10px; }
+.step-n { width: 24px; height: 24px; font-size: 12px; background: var(--ink); color: #fff; }
+.tag { font-size: 9.5px; padding: 4px 8px; }
+.tag.is-req { background: var(--accent-soft); color: var(--accent-2); }
+.meta { font-size: 11.5px; font-weight: 500; }
+.card-body { padding: 14px 22px 20px; }
+.card-head .ftools { gap: 10px; }
+.note-s { font-size: 12px; color: var(--ink-3); }
+@media (max-width: 720px) {
+    .card-head { padding: 14px 16px 0; }
+    .card-body { padding: 12px 16px 16px; }
+}
+
+/* -- step 1: sport as a segmented control ---------------------------------- */
+.card.is-sport .card-body { display: flex; align-items: center; gap: 14px 20px; flex-wrap: wrap; padding: 14px 22px; }
+.card.is-sport h2 { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.sport-native { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sportpick { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; }
+.sportbtn {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 92px; min-height: 48px; padding: 6px 14px; cursor: pointer;
+    border: 1px solid var(--line-2); border-radius: 12px;
+    background: var(--card); color: var(--ink-2);
+    transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
+}
+.sportbtn b { font: 800 14px/1 var(--display); letter-spacing: .04em; }
+.sportbtn i { font: 500 10.5px/1 var(--sans); font-style: normal; color: var(--ink-3); }
+.sportbtn:hover { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-2); }
+.sportbtn.is-on { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 6px 16px -10px rgba(13, 21, 32, .6); }
+.sportbtn.is-on i { color: rgba(255, 255, 255, .72); }
+.sportbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 560px) {
+    .card.is-sport .card-body { gap: 10px; }
+    .sportpick { flex: 1 0 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .sportbtn { min-width: 0; padding: 6px 4px; }
+    .sportbtn b { font-size: 13px; }
+    .sportbtn i { font-size: 9.5px; }
+}
+
+/* -- step 2: the matchup row ------------------------------------------------- */
+.setup-teams { grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: end; }
+@media (min-width: 700px) { .setup-teams { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; } }
+.lbl { margin-bottom: 6px; font-size: 10.5px; letter-spacing: .09em; color: var(--ink-3); }
+.inp, .sel { height: 46px; padding: 0 14px; border-radius: var(--r-m); font-size: 15px; font-weight: 600; border-color: var(--line-2); }
+.sel { padding-right: 36px; background-position: right 12px center; background-size: 15px; }
+.inp:hover, .sel:hover { border-color: #b4c0cf; }
+.inp:focus, .sel:focus { box-shadow: 0 0 0 4px rgba(13, 110, 102, .14); }
+.swapcol { gap: 8px; justify-content: center; padding-bottom: 0; }
+.venuesel { min-width: 96px; height: 46px; font-weight: 700; text-align: center; padding-left: 12px; }
+.swap { width: 46px; height: 46px; flex-basis: 46px; font-size: 16px; border-radius: 12px; }
+.orient { margin-top: 12px; padding: 0; border: 0; background: none; font-size: 13.5px; color: var(--ink-2); }
+.orient strong { color: var(--ink); }
+.err-line { margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: var(--loss-soft); color: #85241f; font-size: 13px; }
+.cleared {
+    display: flex; align-items: flex-start; gap: 9px;
+    margin-top: 12px; padding: 10px 13px; border-radius: 12px;
+    border: 1px solid var(--accent-line); border-left-width: 1px;
+    background: var(--accent-soft); color: var(--accent-2); font-size: 13px; font-weight: 500; line-height: 1.45;
+}
+.cleared::before { content: "\2139"; flex: 0 0 auto; display: grid; place-items: center; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; background: var(--accent); color: #fff; font: 800 11px/1 var(--sans); }
+@media (max-width: 699px) {
+    .swapcol { justify-content: flex-start; }
+    .venuesel { flex: 1 1 auto; }
+}
+
+/* -- step 3: period ---------------------------------------------------------- */
+.cover { margin-bottom: 12px; font-size: 12.5px; color: var(--ink-3); }
+.setup-2 { gap: 12px; }
+.dates { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+#periodLoading { margin-top: 10px; }
+.card-body > .note-s:last-child { margin-top: 12px; }
+
+/* -- step 4: situations, three plain rows ------------------------------------ */
+#condIntro { margin-top: 0; font-size: 13px; color: var(--ink-2); }
+.condlock { margin-top: 12px; padding: 12px 14px; border-radius: 12px; border-style: solid; background: var(--card-2); }
+.condlock-i { font-size: 14px; opacity: .8; }
+.condlock-t { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.sitareas { gap: 0; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--card); }
+.sitareas.is-locked { opacity: .55; }
+.sitarea { border: 0; border-radius: 0; }
+.sitarea + .sitarea { border-top: 1px solid var(--line); }
+.sitarea.is-game { border-color: var(--line); }
+.sit-head { padding: 14px 18px; gap: 8px 14px; background: var(--card); }
+.sit-head:hover:not(:disabled) { background: var(--card-2); }
+.sit-head.is-open { background: var(--card-2); box-shadow: none; }
+.sit-kicker { order: 1; flex: 0 0 auto; min-width: 88px; padding: 0; border: 0; background: none; font-size: 10.5px; color: var(--ink-3); }
+.sit-name { order: 2; font-size: 15px; font-weight: 700; }
+.sit-count { order: 3; font-size: 12px; color: var(--ink-3); }
+.sit-count.is-set { color: var(--accent-2); font-weight: 700; }
+.sit-cta { order: 4; padding: 8px 14px; border-radius: 10px; font-size: 12.5px; }
+.sit-head:hover:not(:disabled) .sit-cta { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sit-active { padding: 0 18px 12px; }
+.sit-body { padding: 12px 18px 16px; border-top: 1px solid var(--line); background: var(--card-2); }
+.sit-lead { font-size: 12.5px; color: var(--ink-3); }
+.sit-options { margin-top: 10px; }
+.condgrp-h { background: var(--card-2); }
+.condopt { padding: 9px 10px; border-radius: 10px; }
+.condopt:hover { background: var(--card); }
+.cond { border-radius: 12px; padding: 12px 14px; }
+.cond.is-unset { border-style: solid; border-color: var(--accent-line); background: var(--accent-soft); }
+.cond-team { font-size: 9.5px; }
+.cond-label { font-size: 13.5px; }
+.cond-x { border-radius: 9px; }
+@media (max-width: 560px) {
+    .sit-head { padding: 12px 14px; }
+    .sit-kicker { flex-basis: 100%; min-width: 0; }
+    .sit-cta { margin-left: 0; width: 100%; text-align: center; }
+    .sit-active { padding: 0 14px 12px; }
+    .sit-body { padding: 12px 14px 14px; }
+}
+
+/* -- team total: stays quiet ------------------------------------------------- */
+#ttCard .card-head h2 { font-size: 14.5px; }
+
+/* -- the one action ---------------------------------------------------------- */
+.runbar {
+    margin-top: 14px; padding: 14px 20px; gap: 14px 20px;
+    border: 1px solid var(--line); border-radius: var(--r-l);
+    background: rgba(255, 255, 255, .97); box-shadow: var(--sh-2);
+}
+.runsum { font-size: 13px; color: var(--ink-2); }
+.runsum::before { font-size: 9.5px; color: var(--ink-3); }
+.run {
+    min-height: 52px; padding: 0 28px; border-radius: 14px; font-size: 15.5px;
+    background: linear-gradient(180deg, #119084, #0b6f67); border-color: #0b6f67;
+    box-shadow: 0 10px 24px -12px rgba(13, 110, 102, .9);
+}
+.run:hover:not(:disabled) { background: linear-gradient(180deg, #0f8177, #095a54); }
+.run:disabled { background: var(--sink); border-color: var(--line-2); color: var(--ink-3); box-shadow: none; }
+.run .cost { font-size: 11px; opacity: .85; }
+@media (max-width: 560px) {
+    .runbar { padding: 12px 14px; }
+    .run { width: 100%; }
+}
+
+/* -- live sample count ------------------------------------------------------- */
+.trail { margin-top: 12px; padding: 12px 16px; border-radius: 14px; }
+.trail-n { font-size: 24px; }
+
+/* -- results bar ------------------------------------------------------------- */
+.resultbar { padding: 12px 18px; border-radius: 14px; }
+.rcard { border-radius: 14px; padding: 16px 18px; }
+
+/* -- fit and finish after the first render ---------------------------------- */
+@media (min-width: 900px) { .intro { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
+/* The site's live-help bubble sits bottom right; the run bar keeps clear of it. */
+.runbar { padding-right: 236px; }
+@media (max-width: 720px) {
+    .runbar { padding-right: 88px; }
+    .run { width: 100%; }
+}
+@media (max-width: 560px) {
+    /* On a phone the tool is the page: title, the years, the folded steps. */
+    .intro { padding: 12px 14px; gap: 8px; }
+    .intro-title { font-size: 19px; }
+    .intro-lede p { display: none; }
+    .intro-cover .intro-h { display: none; }
+    .cover-row { padding: 4px 9px; font-size: 11.5px; }
+    .how-wrap { margin-top: 0; }
+    .prog-step.is-done b { font-size: 0; }
+}

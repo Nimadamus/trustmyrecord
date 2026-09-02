@@ -14,7 +14,13 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = path.join(ROOT, 'betlegend-pro', 'app', 'index.html');
-const CSS = path.join(ROOT, 'betlegend-pro', 'app', 'console.css');
+// The stylesheet gets a new name per build; the app page says which one.
+const CSS = (() => {
+  const dir = path.join(ROOT, 'betlegend-pro', 'app');
+  const m = fs.readFileSync(path.join(dir, 'index.html'), 'utf8').match(/\/betlegend-pro\/app\/(console\.[0-9a-z]+\.css)/);
+  if (!m) throw new Error('index.html does not reference a built stylesheet');
+  return path.join(dir, m[1]);
+})();
 const SALES = path.join(ROOT, 'betlegend-pro', 'index.html');
 const SW = path.join(ROOT, 'betlegend-pro', 'sw.js');
 const MANIFEST = path.join(ROOT, 'betlegend-pro', 'manifest.webmanifest');
@@ -119,8 +125,13 @@ console.log('\nThe app page still declares itself, and the sales page still sell
 check('the app is noindex (private, per-account)', /name="robots" content="noindex/.test(app));
 check('the sales page is NOT noindex', !/name="robots"[^>]*noindex/.test(sales));
 check('the manifest is linked from the app', /rel="manifest"/.test(app));
-check('console.css carries a version string',
-  /console\.css\?v=[0-9a-z-]+/.test(app));
+check('the stylesheet is referenced by a per-build name, and that file exists',
+  /\/betlegend-pro\/app\/console\.[0-9a-z]+\.css/.test(app) && fs.existsSync(CSS));
+check('the guided flow names its five steps in order',
+  /data-step="sport"[\s\S]*data-step="matchup"[\s\S]*data-step="period"[\s\S]*data-step="filters"[\s\S]*data-step="results"/.test(app)
+  && /\['sport', 'matchup', 'period', 'filters', 'results'\]/.test(app));
+check('the sport buttons drive the native select, which every reader still owns',
+  /id="sportPick"/.test(app) && /mSport\.dispatchEvent\(new Event\('change'/.test(app) && /<select class="sel" id="mSport">/.test(app));
 
 console.log('\nHomepage does not claim the paid product is free');
 check('the tools card names BetLegend Pro', /Free tools \+ BetLegend Pro/.test(home));

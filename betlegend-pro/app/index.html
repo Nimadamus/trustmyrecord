@@ -173,9 +173,9 @@
             <section class="intro" id="intro">
                 <div class="intro-lede">
                     <h1 class="intro-title">BetLegend Pro <span>Historical Matchup Research</span></h1>
-                    <p>Pick two teams, choose the years to search, add any situations, and see how
-                    they actually played each other. Every result is a game already played
-                    &mdash; research, not a prediction.</p>
+                    <p>Pick two teams, choose the years, add a situation if you like, and see how
+                    they actually played each other. Graded games only &mdash; research, never a
+                    prediction.</p>
                 </div>
 
                 <div class="intro-grid">
@@ -265,13 +265,15 @@
                 <section class="panel is-active" id="panel-matchup" role="tabpanel" aria-label="Matchup Report">
 
                     <nav class="prog" aria-label="Report progress">
-                        <span class="prog-step is-on" data-step="matchup"><b>1</b>Matchup</span>
+                        <span class="prog-step is-done" data-step="sport"><b>1</b>Sport</span>
                         <span class="prog-sep" aria-hidden="true"></span>
-                        <span class="prog-step" data-step="period"><b>2</b>Period</span>
+                        <span class="prog-step is-on" data-step="matchup"><b>2</b>Matchup</span>
                         <span class="prog-sep" aria-hidden="true"></span>
-                        <span class="prog-step" data-step="filters"><b>3</b>Situations</span>
+                        <span class="prog-step" data-step="period"><b>3</b>Period</span>
                         <span class="prog-sep" aria-hidden="true"></span>
-                        <span class="prog-step" data-step="results"><b>4</b>Results</span>
+                        <span class="prog-step" data-step="filters"><b>4</b>Situations</span>
+                        <span class="prog-sep" aria-hidden="true"></span>
+                        <span class="prog-step" data-step="results"><b>5</b>Results</span>
                         <span class="prog-spacer"></span>
                         <p class="prog-note" id="progNote">Pick a sport and two teams to begin</p>
                     </nav>
@@ -282,24 +284,31 @@
                              outright and read back in a full sentence underneath:
                              "at" is the standard notation but must never be the only
                              place the meaning lives. -->
-                        <section class="card">
+                        <section class="card is-sport" id="sportCard">
+                            <div class="card-body">
+                                <h2><span class="step-n" aria-hidden="true">1</span>Sport</h2>
+                                <div class="sportpick" id="sportPick" role="group" aria-label="Sport"></div>
+                                <div class="field sport-native">
+                                    <label class="lbl" for="mSport">Sport</label>
+                                    <select class="sel" id="mSport">
+                                        <option value="MLB">MLB</option>
+                                        <option value="NHL">NHL</option>
+                                        <option value="NBA">NBA</option>
+                                        <option value="NFL">NFL</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="card" id="matchupCard">
                             <div class="card-head">
-                                <h2><span class="step-n" aria-hidden="true">1</span>Matchup</h2>
+                                <h2><span class="step-n" aria-hidden="true">2</span>Matchup</h2>
                                 <span class="tag is-req">Required</span>
                                 <span class="spacer"></span>
                                 <span class="meta">Graded games only</span>
                             </div>
                             <div class="card-body">
-                                <div class="setup">
-                                    <div class="field">
-                                        <label class="lbl" for="mSport">Sport</label>
-                                        <select class="sel" id="mSport">
-                                            <option value="MLB">MLB</option>
-                                            <option value="NHL">NHL</option>
-                                            <option value="NBA">NBA</option>
-                                            <option value="NFL">NFL</option>
-                                        </select>
-                                    </div>
+                                <div class="setup setup-teams">
                                     <div class="field">
                                         <label class="lbl" for="mAway">Away team</label>
                                         <select class="sel" id="mAway" disabled><option value="">Loading&hellip;</option></select>
@@ -335,7 +344,7 @@
                              the list only. -->
                         <section class="card">
                             <div class="card-head">
-                                <h2><span class="step-n" aria-hidden="true">2</span>Historical period</h2>
+                                <h2><span class="step-n" aria-hidden="true">3</span>Period</h2>
                                 <span class="tag is-req">Required</span>
                                 <span class="spacer"></span>
                                 <span class="meta" id="coverMeta"></span>
@@ -391,7 +400,7 @@
                 <section class="card" id="sitCard">
                     <div class="card-head">
                         <div class="ftools">
-                                    <h2><span class="step-n" aria-hidden="true">3</span>Situations</h2>
+                                    <h2><span class="step-n" aria-hidden="true">4</span>Situations</h2>
                                     <span class="tag">Optional</span>
                                     <span class="meta" id="filterCount">None</span>
                             <span class="spacer"></span>
@@ -399,14 +408,11 @@
                         </div>
                     </div>
                     <div class="card-body">
-                                <p class="note-s" id="condIntro">Leave this empty for <strong>every</strong>
-                                    meeting in the period. Or click a team to add situations for that team,
-                                    in plain English. Situations about the game itself have their own
-                                    section below.</p>
+                                <p class="note-s" id="condIntro">Optional. Leave this empty to include <strong>every</strong> meeting in
+                                    the period, or add situations for either team or for the game itself.</p>
                         <div class="condlock" id="addCondHint">
                             <span class="condlock-i" aria-hidden="true">&#128274;</span>
-                            <span class="condlock-t">Choose two different teams above to unlock
-                                situational filters.</span>
+                            <span class="condlock-t">Pick both teams above to add situations.</span>
                         </div>
                         <div class="sitareas" id="sitAreas">
                             <section class="sitarea" data-bucket="t1">
@@ -754,7 +760,7 @@
     sheet.rel = 'stylesheet';
 // A new NAME per build, not a new query string: the edge caches this sheet
     // for four hours and ignores the query string, so `?v=` never reached it.
-    sheet.href = '/betlegend-pro/app/console.20260902b.css';
+    sheet.href = '/betlegend-pro/app/console.20260902c.css';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -1018,6 +1024,36 @@
     // ================================================== MATCHUP RESEARCH
 
     var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome'), mVenue = $('mVenue');
+
+    // ---------------------------------------------------- sport buttons
+    // The native #mSport select stays the source of truth (every reader of
+    // mSport.value is untouched); these buttons only set it and mirror it,
+    // and carry the years on file for each league so the era is in front of
+    // the reader at the moment they choose.
+    function paintSportPick() {
+        var pick = $('sportPick');
+        if (!pick) return;
+        pick.innerHTML = [].slice.call(mSport.options).map(function (o) {
+            var years = o.textContent.split('\u00b7')[1];
+            var on = o.value === mSport.value;
+            return '<button type="button" class="sportbtn' + (on ? ' is-on' : '') + '" data-sport="'
+                + esc(o.value) + '" aria-pressed="' + (on ? 'true' : 'false') + '"><b>' + esc(o.value) + '</b>'
+                + (years ? '<i>' + esc(years.trim()) + '</i>' : '') + '</button>';
+        }).join('');
+    }
+    (function () {
+        var pick = $('sportPick');
+        if (!pick) return;
+        pick.addEventListener('click', function (ev) {
+            var b = ev.target && ev.target.closest ? ev.target.closest('.sportbtn') : null;
+            if (!b || b.getAttribute('data-sport') === mSport.value) return;
+            mSport.value = b.getAttribute('data-sport');
+            mSport.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        mSport.addEventListener('change', paintSportPick);
+        paintSportPick();
+    })();
+
     var mTimeframe = $('mTimeframe'), mDateFrom = $('mDateFrom'), mDateTo = $('mDateTo');
     var mLimit = $('mLimit');
     var ttCard = $('ttCard'), ttTeam = $('ttTeam'), ttSide = $('ttSide');
@@ -1577,6 +1613,7 @@
                 ? o.value + ' \u00b7 ' + r.earliest_season + '\u2013' + r.latest_season
                 : o.value;
         });
+        paintSportPick();
         var mine = rows.filter(function (r) { return r.sport === mSport.value; })[0];
         // Signed out, the public coverage endpoint gives counts but no era, so
         // `mine` has no dates. Printing the same sentence anyway rendered
@@ -1938,8 +1975,8 @@
 
         var note = $('sportNote');
         if (dropped.length) {
-            note.textContent = 'Switched to ' + mSport.value + ' — cleared ' + dropped.join(', ')
-                + '. The two teams are chosen again below.';
+            note.textContent = 'Now searching ' + mSport.value + '. Cleared ' + dropped.join(', ')
+                + '. Choose the two teams again below.';
             note.hidden = false;
         } else {
             note.hidden = true;
@@ -2161,7 +2198,7 @@
     mVenue.addEventListener('change', paintOrient);
 
     function setProgress(step) {
-        var order = ['matchup', 'period', 'filters', 'results'];
+        var order = ['sport', 'matchup', 'period', 'filters', 'results'];
         var at = order.indexOf(step);
         $$('.prog-step').forEach(function (el) {
             var i = order.indexOf(el.getAttribute('data-step'));
