@@ -149,9 +149,43 @@ function buildFetchMock(mode) {
       return mockResponse({
         roster: (rosters[teamId] || []).map((entry, index) => {
           const [name, position] = entry.split('|');
-          return { person: { id: index + 1, fullName: name }, position: { abbreviation: position }, parentTeamId: Number(teamId), status: { code: 'A' } };
+          return { person: { id: Number(teamId) * 1000 + index + 1, fullName: name }, position: { abbreviation: position }, parentTeamId: Number(teamId), status: { code: 'A' } };
         }),
       });
+    }
+    // Today's league schedule, hydrated with probables (todaysScheduleUrl in the
+    // simulator): the mock names deGrom / Cole as tonight's starters so the live
+    // path can preselect them, exactly as the real hydrate=probablePitcher does.
+    if (String(url).includes('statsapi.mlb.com/api/v1/schedule?sportId=1&date=')) {
+      return mockResponse({
+        dates: [{
+          games: [{
+            gamePk: 900140147,
+            gameDate: '2026-05-05T23:05:00Z',
+            status: { abstractGameState: 'Preview', detailedState: 'Scheduled' },
+            teams: {
+              away: { team: { id: 140, name: 'Texas Rangers' }, leagueRecord: { wins: 20, losses: 14, pct: '.588' }, probablePitcher: { id: 140002, fullName: 'Jacob deGrom' } },
+              home: { team: { id: 147, name: 'New York Yankees' }, leagueRecord: { wins: 22, losses: 12, pct: '.647' }, probablePitcher: { id: 147001, fullName: 'Gerrit Cole' } },
+            },
+            venue: { id: 3313, name: 'Yankee Stadium' },
+          }],
+        }],
+      });
+    }
+    // Real season pitching lines (REAL_ERA_LABELS_20260606): the dropdown label
+    // only carries ERA / W-L once statsapi has verified them.
+    if (/statsapi\.mlb\.com\/api\/v1\/people\/(\d+)\/stats\?/.test(String(url))) {
+      const pid = Number(String(url).match(/people\/(\d+)\/stats/)[1]);
+      const lines = {
+        140002: { era: '3.20', wins: 2, losses: 1, gamesStarted: 6, inningsPitched: '36.0', whip: '1.05', strikeOuts: 42, baseOnBalls: 8 },
+        147001: { era: '2.88', wins: 3, losses: 1, gamesStarted: 7, inningsPitched: '44.0', whip: '0.98', strikeOuts: 51, baseOnBalls: 9 },
+      };
+      const stat = lines[pid] || { era: '4.10', wins: 1, losses: 1, gamesStarted: pid % 1000 <= 5 ? 4 : 0, inningsPitched: '20.0', whip: '1.30', strikeOuts: 18, baseOnBalls: 8 };
+      return mockResponse({ stats: [{ splits: [{ stat }] }] });
+    }
+    if (/statsapi\.mlb\.com\/api\/v1\/people\/(\d+)\?/.test(String(url))) {
+      const pid = Number(String(url).match(/people\/(\d+)\?/)[1]);
+      return mockResponse({ people: [{ id: pid, fullName: pid === 140002 ? 'Jacob deGrom' : (pid === 147001 ? 'Gerrit Cole' : 'Player ' + pid) }] });
     }
     if (String(url).includes('statsapi.mlb.com/api/v1/schedule?')) {
       const teamId = Number((String(url).match(/teamId=(\d+)/) || [])[1]);
@@ -246,7 +280,9 @@ function buildFetchMock(mode) {
         },
       });
     }
-    if (String(url).includes('site.api.espn.com')) {
+    // aaf9aeaf (2026-09-01): ESPN inputs come through our API now, same shape,
+    // at /games/espn/mlb/scoreboard and /games/espn/mlb/summary.
+    if (String(url).includes('site.api.espn.com') || String(url).includes('/games/espn/mlb/')) {
       if (String(url).includes('/teams/ari/roster')) {
         return mockResponse({
           athletes: [
@@ -676,8 +712,8 @@ async function flushAsync() {
   await live.simulator.runSimulation();
   assert.strictEqual((live.elements.awayPitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'live Team A dropdown shows five pitcher options');
   assert.strictEqual((live.elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'live Team B dropdown shows five pitcher options');
-  assert(/Jacob deGrom, ERA 3.2, W-L 2-1/.test(live.elements.awayPitcherSelect.innerHTML), 'live probable away starter appears as a selectable dropdown option');
-  assert(/Gerrit Cole, ERA 2.88, W-L 3-1/.test(live.elements.homePitcherSelect.innerHTML), 'live probable home starter appears as a selectable dropdown option');
+  assert(/Jacob deGrom, ERA 3.2, (WHIP [\d.]+, )?W-L 2-1/.test(live.elements.awayPitcherSelect.innerHTML), 'live probable away starter appears as a selectable dropdown option');
+  assert(/Gerrit Cole, ERA 2.88, (WHIP [\d.]+, )?W-L 3-1/.test(live.elements.homePitcherSelect.innerHTML), 'live probable home starter appears as a selectable dropdown option');
   assert.strictEqual(live.elements.dataModeBadge.textContent, 'Verified live inputs', 'live path switches data mode');
   assert.strictEqual(live.elements.dataModeValue.textContent, 'Verified live inputs', 'live output states verified data mode');
   assert(/MLB schedule\/finals/.test(live.elements.inputSummary.innerHTML), 'live path includes schedule/finals source');

@@ -207,7 +207,9 @@ async function verifyHubAndRoutes(page) {
     '/sportsbook/',
     '/leaderboards/',
   ];
-  const hrefs = await page.locator('.tool-card a').evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+  // The hub was rebuilt as .ts-card tiles with .ts-btn CTAs (Model Builder is a
+  // button, not a card); the old .tool-card selector matched nothing.
+  const hrefs = await page.locator('.tool-card a, a.ts-card, a.ts-btn').evaluateAll((links) => links.map((link) => link.getAttribute('href')));
   for (const href of expected) {
     if (!hrefs.includes(href)) throw new Error(`Tools Hub missing CTA ${href}`);
   }

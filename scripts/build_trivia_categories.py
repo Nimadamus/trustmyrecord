@@ -238,7 +238,20 @@ def sibling_links(slug):
 
 
 def nl_agnostic(b):
-    return b.replace(b"\r\n", b"\n")
+    return b.replace(bytes([13, 10]), bytes([10]))
+
+
+# Content-hash pins: "?v=<12 hex>" query pins and "<name>.<12 hex>.<ext>" files.
+PIN_RE = re.compile(rb"(" + re.escape(b"?v=") + rb")[0-9a-f]{12}|[.][0-9a-f]{12}([.](?:js|css|png|jpg|jpeg|webp|svg|ico|woff2?))")
+
+
+def pin_agnostic(b):
+    """Content-hash pins are not content. The Static Asset Versions workflow
+    lands them in two commits (publish the hashed builds, then re-pin every
+    page), so a push that runs this check between the two sees the master and
+    the league pages carrying different hashes for the same asset. Only what
+    the master says should red the build, so hashes are blanked on both sides."""
+    return PIN_RE.sub(lambda m: (m.group(1) or b"") + b"HASH" + (m.group(2) or b""), nl_agnostic(b))
 
 
 def main():
@@ -263,7 +276,7 @@ def main():
             # checkout can hand us LF where a Windows box has CRLF; that is a
             # checkout artefact, not content drift, and only content drift
             # should red the build.
-            if nl_agnostic(have) != nl_agnostic(out):
+            if pin_agnostic(have) != pin_agnostic(out):
                 failures.append(slug)
                 print("  DRIFT  /trivia/%s/ (%d bytes on disk, %d generated)"
                       % (slug, len(have), len(out)))

@@ -59,8 +59,8 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
 
   await expect(page.locator('h1')).toHaveText('Trend Spotter');
-  await expect(page.locator('body')).toContainText('Verified Sports Research');
-  await expect(page.locator('body')).toContainText('Build source-backed matchup trends in seconds.');
+  await expect(page.locator('body')).toContainText('Free verified research');
+  await expect(page.locator('body')).toContainText('Pick a team, a market and a situation. Get the record, and the games behind it.');
   await expect(page.locator('body')).toContainText('Set conditions');
 
   // The old engineering copy must not come back.

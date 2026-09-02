@@ -208,6 +208,9 @@ try {
     Invoke-StaleQuarantineCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js") "drilldown markup superseded by current profile/market.html"
     Invoke-StaleQuarantineCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js") "simulator page DOM evolved; test references prior structure"
     Invoke-StaleQuarantineCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js") "jsdom render-harness drift; AVG/OPS/ERA columns exist in mlb-simulator.js (verified); re-validate"
+    # Quarantined, so its verdict is ignored here; 12,000 simulations at ~8 s each
+    # would only ever end in the job timeout. Short pass, as the test itself documents.
+    $env:TMR_MLB_SIMS = "40"
     Invoke-StaleQuarantineCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js") "simulator snapshot drift (same class as boxscore/page); re-validate"
     Invoke-GuardCommand "MLB simulator roster source (no stale fixtures) test" @("node", "tests/mlb-simulator-roster-source-test.js")
     # RECAP_LANGUAGE_20260831: offline, deterministic, seconds to run. Hard guard.

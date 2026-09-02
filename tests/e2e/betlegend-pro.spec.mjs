@@ -23,6 +23,13 @@ import { fileURLToPath } from 'node:url';
  */
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.join(HERE, '..', '..', 'betlegend-pro', 'app');
+// The console stylesheet gets a new name per build (c5988630), so resolve
+// whichever console*.css the app currently ships instead of a fixed name.
+function consoleStylesheet() {
+  const names = fs.readdirSync(APP).filter((f) => /^console(\.[0-9a-z]+)?\.css$/.test(f)).sort();
+  if (!names.length) throw new Error('betlegend-pro/app has no console*.css');
+  return names[names.length - 1];
+}
 const STATIC = path.join(HERE, '..', '..', 'static', 'css');
 
 const TEAMS = {
@@ -247,7 +254,7 @@ async function open(page, opts = {}) {
     const style = document.createElement('style');
     style.textContent = css;
     document.getElementById('blpConsole').shadowRoot.appendChild(style);
-  }, fs.readFileSync(path.join(APP, 'console.css'), 'utf8'));
+  }, fs.readFileSync(path.join(APP, consoleStylesheet()), 'utf8'));
 
   return calls;
 }

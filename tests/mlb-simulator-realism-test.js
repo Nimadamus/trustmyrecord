@@ -408,7 +408,13 @@ if (SHARDS === 1 || SHARD === 0) historical.forEach((team, index) => {
 // run to completion. A test that takes three hours is a test nobody runs, and a
 // test nobody runs protects nothing. TMR_MLB_SIMS gives a shorter pass for
 // development and CI; the full default is what gates a release.
-const totalSimulations = Number(process.env.TMR_MLB_SIMS || 12000);
+// On GitHub Actions nothing sets TMR_MLB_SIMS, so the full 12,000 ran there at
+// ~8 s each (CPU profile 2026-09-02: clamp/evPlayHalf), which is a 26-hour
+// step that only ever ends in the 6-hour job timeout. Both CI invocations
+// (stale-quarantine in predeploy-guard.ps1, continue-on-error in the
+// workflow) already ignore this test's verdict, so CI gets the short pass the
+// comment above promises; the full default still gates a release locally.
+const totalSimulations = Number(process.env.TMR_MLB_SIMS || (process.env.GITHUB_ACTIONS ? 40 : 12000));
 
 const summary = {
   totalSimulations,

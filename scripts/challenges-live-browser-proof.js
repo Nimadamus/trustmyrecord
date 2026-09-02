@@ -97,31 +97,27 @@ async function launchProofWindow() {
     const text = await page.locator('body').innerText();
     const required = [
       'Open Challenges',
-      'Create Open Challenge',
-      'Test Bragging Rights Challenge',
-      'Bragging Rights Only. No cash prize. No paid entry.',
-      'Money challenges and token contests are not active yet.',
+      'Create Challenge',
+      'Bragging rights only',
+      'No cash prize, no paid entry, no wagering.',
     ];
     const missing = required.filter((item) => !text.includes(item));
     if (missing.length) throw new Error(`Challenges live proof missing: ${missing.join(', ')}`);
     if (text.includes('Continue to Arena') || text.includes('Redirecting to Arena')) {
       throw new Error('Challenges page still shows old Arena redirect content.');
     }
-    await page.click('[data-view]');
-    await page.waitForSelector('#detail-modal.open', { timeout: 15000 });
-    const modalText = await page.locator('#detail-modal').innerText();
-    const modalRequired = [
-      'Test Bragging Rights Challenge',
-      'tmrtestcreator',
-      'tmrtestacceptor',
-      'General',
-      'Bragging Rights Only',
-      'Participants',
-      '2 / 2',
-      'Bragging Rights Only. No cash prize. No paid entry.',
-    ];
-    const missingModal = modalRequired.filter((item) => !modalText.includes(item));
-    if (missingModal.length) throw new Error(`Challenges detail modal missing: ${missingModal.join(', ')}`);
+    // The seeded tmrtestcreator/tmrtestacceptor fixture is gone (no test
+    // accounts in production); open whichever live challenge is listed, if any.
+    if (await page.locator('[data-view]').count()) {
+      await page.click('[data-view]');
+      await page.waitForSelector('#detail-modal.open', { timeout: 15000 });
+      const modalText = await page.locator('#detail-modal').innerText();
+      const modalRequired = ['Participants', 'Bragging rights'];
+      const missingModal = modalRequired.filter((item) => !modalText.toLowerCase().includes(item.toLowerCase()));
+      if (missingModal.length) throw new Error(`Challenges detail modal missing: ${missingModal.join(', ')}`);
+    } else if (!/0 SHOWN/i.test(text)) {
+      throw new Error('Challenges page lists no challenge and shows no empty state');
+    }
     validatedUrl = page.url();
 
     await browser.close();

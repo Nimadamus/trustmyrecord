@@ -24,17 +24,16 @@ function captureRoot(name) {
     await page.waitForFunction(() => document.body.innerText.includes('I just wanted to welcome all of you'), null, { timeout: 45000 });
 
     const text = await page.locator('body').innerText();
+    // Favorite Team left the member card in the 2+2 classic-skin redesign, and
+    // Messages / Alerts only render for a logged-in member; the proof is logged out.
     const required = [
       'Welcome all!',
       'BetLegend',
       'Joined:',
       'Posts:',
       'Threads:',
-      'Favorite Team:',
       '#1',
       'Quick Reply',
-      'Messages',
-      'Alerts',
       'BetLegend',
     ];
     const missing = required.filter((item) => !text.includes(item));
