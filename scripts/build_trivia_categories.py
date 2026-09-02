@@ -257,6 +257,11 @@ def pin_agnostic(b):
 def main():
     check = "--check" in sys.argv
     master = open(MASTER, "rb").read().decode("utf-8")
+    # The anchors below carry CRLF because the repo files do. A Linux CI checkout
+    # (core.autocrlf) hands us LF, and every anchor then reads "found 0", so the
+    # master is normalised back to CRLF before any anchor is looked for.
+    if chr(13) + chr(10) not in master:
+        master = master.replace(chr(10), chr(13) + chr(10))
     if "<script>window.TMR_TRIVIA_CATEGORY = " in master:
         raise SystemExit("ABORT: trivia/index.html looks like a generated league page, not the master")
 
