@@ -109,7 +109,10 @@ async function main() {
   const profileUser = profileData.user || {};
   assert.strictEqual(Number(profileUser.graded_picks), stats.graded, 'profile graded picks should match ledger');
   assert.strictEqual(`${profileUser.wins}-${profileUser.losses}-${profileUser.pushes}`, stats.record, 'profile record should match ledger');
-  assert.strictEqual(Math.round(Number(profileUser.win_rate) * 10), Math.round(stats.winRate * 10), 'profile win rate should match ledger');
+  // The API rounds win_rate to one decimal before it is served; the ledger
+  // value here is exact. Allow one tenth of a point so a x.x5 boundary does
+  // not fail the deploy (540 vs 539 on 2026-09-02 was exactly that).
+  assert(Math.abs(Number(profileUser.win_rate) - stats.winRate) <= 0.1, 'profile win rate should match ledger');
 
   const leaderboardResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/leaderboard?sortBy=net_units&limit=250');
   assert.strictEqual(leaderboardResponse.status, 200, 'leaderboard should load');
@@ -118,7 +121,7 @@ async function main() {
   if (leaderboardUser) {
     assert.strictEqual(Number(leaderboardUser.total_picks), stats.graded, 'leaderboard graded picks should match ledger');
     assert.strictEqual(`${leaderboardUser.wins}-${leaderboardUser.losses}-${leaderboardUser.pushes}`, stats.record, 'leaderboard record should match ledger');
-    assert.strictEqual(Math.round(Number(leaderboardUser.win_rate) * 10), Math.round(stats.winRate * 10), 'leaderboard win rate should match ledger');
+    assert(Math.abs(Number(leaderboardUser.win_rate) - stats.winRate) <= 0.1, 'leaderboard win rate should match ledger');
     assert.strictEqual(Math.round(Number(leaderboardUser.net_units) * 100), Math.round(stats.net * 100), 'leaderboard net units should match ledger');
   } else {
     assert.strictEqual(profileUser.leaderboard_rank, null, 'unranked BetLegend profile rank should be hidden');

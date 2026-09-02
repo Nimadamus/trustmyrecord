@@ -64,9 +64,17 @@ assertRegex(
   'top pending picks button must remain larger, visible, and unclipped'
 );
 
+// Aug 30 legibility reconcile (3a3b7971): the board wrapper is now
+// full-bleed, width: min(100vw - 16px, 1900px) with max-width: none, and
+// horizontal clipping is prevented one level up by overflow-x: clip on html
+// and body. Lock that shipped geometry, not the pre-Aug-30 100% wrapper.
 assertRegex(
-  /body\.tmr-site-shell\[data-tmr-route="sportsbook"\]\s+#picks,[\s\S]*?\.picks-container-modern\s*\{[\s\S]*?width:\s*100%\s*!important;[\s\S]*?max-width:\s*100%\s*!important;[\s\S]*?overflow-x:\s*hidden\s*!important;/,
-  'outer sportsbook wrapper must prevent horizontal clipping'
+  /#picks\s+\.picks-container-modern\s*\{[\s\S]*?width:\s*min\(100vw - 16px, 1900px\);[\s\S]*?max-width:\s*none;/,
+  'outer sportsbook wrapper must keep the approved full-bleed geometry'
+);
+assertRegex(
+  /html\s*\{[\s\S]*?overflow-x:\s*clip;/,
+  'html must prevent horizontal clipping (overflow-x: clip)'
 );
 
 assertIncludes(
@@ -85,7 +93,7 @@ assertRegex(
 );
 
 assertRegex(
-  /\.tmr-pending-picks-panel,[\s\S]*?\.tmr-pending-pick\s*\{[\s\S]*?max-width:\s*100%\s*!important;[\s\S]*?overflow-x:\s*hidden\s*!important;/,
+  /\.tmr-pending-picks-panel,[\s\S]*?\.tmr-pending-pick\s*\{[\s\S]*?max-width:\s*100%\s*!important;[\s\S]*?overflow-x:\s*(?:hidden|clip)\s*!important;/,
   'pending picks panel and cards must not create horizontal overflow'
 );
 

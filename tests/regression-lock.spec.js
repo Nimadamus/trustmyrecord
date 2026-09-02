@@ -400,7 +400,10 @@ test.describe('homepage approved-baseline geometry', () => {
       // stripe begins at the viewport's bottom edge, and "Happening Right
       // Now" stays below the fold until the user scrolls.
       expect(m.heroDisplay, 'hero must be a flex column so the stripe can be pushed to its bottom edge').toBe('flex');
-      expect(m.heroPadding, 'hero padding must stay 28px 0 0 (bottom 0 = stripe flush)').toBe('28px 0px 0px');
+      // Owner-approved 2026-08-24 (Nima): hero compacted so the stats stripe
+      // clears the fold on a laptop, top padding 43 -> 0. The static lock in
+      // tests/homepage-approved-baseline-lock-test.js carries the same value.
+      expect(m.heroPadding, 'hero padding must stay 0 (compact hero, stripe flush)').toBe('0px');
       expect(Math.abs(m.gapBelowStripe), 'stats stripe must sit flush on the hero bottom edge').toBeLessThanOrEqual(1);
       expect(m.dashTopVsViewport, `"Happening Right Now" must not be visible in the initial viewport at ${width}x${height}`).toBeGreaterThanOrEqual(-1);
       // full-width flush stripe (owner-requested 2026-08-01): no side margins, no rounded corners
@@ -437,14 +440,18 @@ test.describe('homepage approved-baseline geometry', () => {
       expect(m.navLinks, `navbar must expose tappable links at ${width}x${height}`).toBeGreaterThan(0);
 
       // --- text readable -----------------------------------------------------
-      expect(m.minHeroFontSize, `hero text must stay readable at ${width}x${height}`).toBeGreaterThanOrEqual(11);
+      // 10.5, not 11: the 2026-08-30 legibility reconcile (3a3b7971) stepped the
+      // hero down by 0.91, which takes its smallest label to 10.5px.
+      expect(m.minHeroFontSize, `hero text must stay readable at ${width}x${height}`).toBeGreaterThanOrEqual(10.5);
 
       // --- card spacing + mobile stacking ------------------------------------
       const cols = m.gridCols.trim().split(/\s+/);
       if (width > 1400) {
-        expect(cols[cols.length - 1], `capper-card column must be 520px at ${width}px`).toBe('520px');
+        // 568 / 502: the 2026-08-30 legibility reconcile (3a3b7971) steps the
+        // 624px / 552px approved columns down by 0.91 in two desktop bands.
+        expect(cols[cols.length - 1], `capper-card column must be 568px at ${width}px`).toBe('568px');
       } else if (width > 1180) {
-        expect(cols[cols.length - 1], `capper-card column must be 460px at ${width}px`).toBe('460px');
+        expect(cols[cols.length - 1], `capper-card column must be 502px at ${width}px`).toBe('502px');
       } else {
         expect(cols.length, `hero must stack to a single column at ${width}px`).toBe(1);
         // stacked means the card sits BELOW the copy, not beside it
@@ -476,7 +483,10 @@ test.describe('core route and content locks', () => {
   });
 
   test('shared navigation remains reachable', async ({ page }) => {
-    await gotoRoute(page, '/sportsbook/');
+    // Not /sportsbook/: since 2026-08-31 (hideOnOwnPage in tmr-ds-nav.js) the
+    // Sportsbook trigger is dropped on the page it names, so the shared nav
+    // is asserted from a neighbouring route instead.
+    await gotoRoute(page, '/leaderboards/');
     const nav = page.locator('.tmr-global-nav, nav').first();
     await expect(nav, 'global nav should be visible').toBeVisible();
     await expect(nav, 'nav should expose Make Picks').toContainText(/Make Picks|Sportsbook/i);

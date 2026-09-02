@@ -72,7 +72,9 @@ const BANNED_COPY = [
   [/Partial \/ blocked/i, 'internal data-policy table copy'],
   [/Configure Variables/i, 'the old "Configure Variables" label'],
   [/Trend search/i, 'the old "Trend search" label'],
-  [/Minimum sample/i, 'the old "Minimum sample" label'],
+  // Case-sensitive: the current page describes its "minimum sample controls"
+  // in prose and a table; only the capitalised label form is the regression.
+  [/Minimum sample/, 'the old "Minimum sample" label'],
   [/Verified trend data source not connected yet/i, 'raw backend placeholder text'],
   [/>\s*Step [1-5]\s*</, 'the removed five-step strip'],
 ];
@@ -81,8 +83,8 @@ for (const [pattern, why] of BANNED_COPY) {
 }
 
 // --- Required product copy --------------------------------------------------
-assert(html.includes('Verified Sports Research'), 'hero eyebrow must be present');
-assert(html.includes('Build source-backed matchup trends in seconds.'), 'hero subtitle must be present');
+assert(html.includes('Free verified research'), 'hero eyebrow must be present');
+assert(html.includes('Pick a team, a market and a situation. Get the record, and the games behind it.'), 'hero subtitle must be present');
 assert(html.includes('Set conditions'), 'the filter card must be labelled "Set conditions"');
 assert(html.includes('Run Trend'), 'the primary action must be "Run Trend"');
 assert(/Minimum games/.test(js), 'the sample control must be labelled "Minimum games"');

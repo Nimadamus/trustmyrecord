@@ -194,7 +194,11 @@ if (!slugs.length) {
     // ceiling for the ~580px it renders.
     const t = tag(html, /<title>([\s\S]*?)<\/title>/i) || '';
     if (!t) fail(`${slug}: has no title`);
-    else if (t.length > 65) { longTitle += 1; fail(`${slug}: title is ${t.length} chars: ${t}`); }
+    // 90, not 65: d8691912 put a real game-specific stat in every title
+    // ("Blue Jays vs Guardians: Dylan Cease Has Allowed 2 Runs or Fewer in 3
+    // Straight Starts"), which Google truncates but still reads whole. The cap
+    // now guards against runaway titles, not against the stat itself.
+    else if (t.length > 90) { longTitle += 1; fail(`${slug}: title is ${t.length} chars: ${t}`); }
 
     const chars = textOf(html.split('<body')[1] || '').length;
     if (chars < 2500) { thin += 1; fail(`${slug}: only ${chars} chars of rendered text, that is a thin page`); }
