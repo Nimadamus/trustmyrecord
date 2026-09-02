@@ -56,7 +56,14 @@
 
         // Fetch scores from ESPN for a specific date
         fetchScoresForDate: async function(sportPath, dateStr) {
-            const url = `https://site.api.espn.com/apis/site/v2/sports/${sportPath}/scoreboard?dates=${dateStr}`;
+            // ESPN_SCORES_PROXY_20260901. Direct ESPN calls from a browser always
+            // fail: 403 to browser User-Agents, and a 403 carries no CORS header.
+            // This grader only runs when the backend API is absent, but if it ever
+            // does run it should be able to actually read scores.
+            const graderApiBase = (window.api && window.api.baseUrl) ||
+                                  (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
+                                  'https://trustmyrecord-api.onrender.com/api';
+            const url = `${String(graderApiBase).replace(/\/$/, '')}/games/espn/scoreboard?path=${encodeURIComponent(sportPath)}&dates=${encodeURIComponent(dateStr)}`;
 
             try {
                 const response = await fetch(url);

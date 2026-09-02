@@ -5,12 +5,10 @@ const TMR_IS_LOCAL_HOST =
     ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 const CONFIG = {
-    // ESPN API Configuration (FREE - no API key needed!)
-    oddsApi: {
-        key: null,
-        baseUrl: "https://site.api.espn.com/apis/v2/scoreboard/header",
-        provider: "ESPN (DraftKings data)",
-    },
+    // DEAD_ODDSAPI_REMOVED_20260901. This advertised a browser-side ESPN odds
+    // endpoint that nothing in the codebase read, and that could not have worked
+    // anyway: ESPN answers 403 to browser User-Agents and a 403 carries no CORS
+    // header. Odds come from the backend board. Do not re-add a browser ESPN URL.
 
     // API Configuration
     // Only expose localhost fallbacks when the site is actually running locally.
