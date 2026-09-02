@@ -167,6 +167,13 @@ def run(check=False):
         return 1
     if not changed:
         print("  every MLB cross-link is already in place.")
+    if not check:
+        # Last generator before the MLB workflow's gates and commit step: land on
+        # the latest main now so the push that follows is a fast-forward
+        # (CI_SYNC_MAIN_20260902, see scripts/ci_sync_main.py). No-op locally.
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from ci_sync_main import sync_to_origin_main
+        sync_to_origin_main("MLB bake")
     return 0
 
 

@@ -111,6 +111,12 @@ def run(check_only):
         print("rewrote refs in %d files" % len(uniq))
         for u in uniq:
             print("  " + u)
+        # Last script before the prerender workflow's commit step: land on the
+        # latest main now so the push that follows is a fast-forward
+        # (CI_SYNC_MAIN_20260902, see scripts/ci_sync_main.py). No-op locally.
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from ci_sync_main import sync_to_origin_main
+        sync_to_origin_main("prerender bake")
 
 if __name__ == "__main__":
     run("--check" in sys.argv)
