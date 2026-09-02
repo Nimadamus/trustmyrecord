@@ -1749,7 +1749,10 @@ def build(dates, today, dry_run=False, workers=4):
     harvested = re.findall(
         r"<loc>%s(/handicapping/mlb/[a-z0-9-]+-vs-[a-z0-9-]+/)</loc>"
         % re.escape(SITE), sm)
-    existing = [u for u in harvested if not re.search(r"-\d{4}-\d{2}-\d{2}/$", u)]
+    # Anywhere in the path, not just at the end: a doubleheader's retired URL
+    # is .../red-sox-vs-yankees-2026-08-29-game-2/, and anchoring the test to
+    # the end let those two through into the live sitemap.
+    existing = [u for u in harvested if not re.search(r"-\d{4}-\d{2}-\d{2}", u)]
     merged = {}
     for u, lastmod, freq, prio in sitemap_urls:
         merged[u] = (u, lastmod, freq, prio)
