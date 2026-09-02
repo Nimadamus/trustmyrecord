@@ -1,5 +1,22 @@
 const assert = require('assert');
 
+// CI_RETRIES_20260902: this proof reads production. A cold start, a 502 from
+// the edge or a dropped socket is not a regression; retry it three times with
+// backoff. A 4xx or a wrong body is returned as-is and fails exactly as before.
+const rawFetch = globalThis.fetch;
+async function fetch(url, init) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const response = await rawFetch(url, init);
+      const transient = response.status === 429 || (response.status >= 500 && response.status <= 599);
+      if (attempt === 3 || !transient) return response;
+    } catch (error) {
+      if (attempt === 3) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
+  }
+}
+
 const API = 'https://trustmyrecord-api.onrender.com/api';
 const SITE = 'https://www.trustmyrecord.com';
 

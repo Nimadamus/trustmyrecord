@@ -5,7 +5,9 @@ module.exports = defineConfig({
   testMatch: /trendspotter-live-verification\.spec\.js/,
   outputDir: 'artifacts/trendspotter-playwright-results',
   timeout: 90000,
-  retries: 0,
+  // CI_RETRIES_20260902: transient production hiccups retry; a genuine
+  // regression fails every attempt and still fails the run.
+  retries: process.env.CI ? 2 : 0,
   use: {
     baseURL: 'https://trustmyrecord.com',
     trace: 'retain-on-failure',

@@ -7,6 +7,12 @@ module.exports = defineConfig({
   testDir: './tests',
   testMatch: /regression-lock\.spec\.js/,
   timeout: 120000,
+  // CI_RETRIES_20260902: these locks run against production. A Render cold
+  // start, a slow ESPN proxy or an auth redirect racing DOMContentLoaded is
+  // not a regression; Playwright reports a pass-on-retry as "flaky" and the
+  // run stays green. A genuine regression fails all three attempts and the
+  // run fails exactly as before.
+  retries: process.env.CI ? 2 : 0,
   expect: {
     timeout: 20000,
     toHaveScreenshot: {
