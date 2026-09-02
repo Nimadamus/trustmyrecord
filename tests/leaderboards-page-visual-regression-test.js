@@ -90,7 +90,7 @@ for (const cssToken of [
   'grid-template-columns: repeat(5, minmax(94px, 1fr))',
   'appearance: none',
   '.empty-state {',
-  'radial-gradient(circle at top, rgba(45,212,191,0.07)',
+  'radial-gradient(circle at top, rgba(29, 127, 232,0.07)',
   '@media (max-width: 720px)',
 ]) {
   assert(html.includes(cssToken), `leaderboards premium visual CSS missing: ${cssToken}`);

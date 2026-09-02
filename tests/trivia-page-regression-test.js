@@ -73,7 +73,7 @@ assert(html.includes('/static/js/backend-api.js'), 'backend API include is missi
 [
   '/sportsbook/',
   '/leaderboards/',
-  '/arena/',
+  '/online-gaming/',
   '/forum/',
   '/feed/',
   '/polls/',

@@ -106,7 +106,7 @@ for (const requiredStyle of [
   // token ramp — light workspace surfaces, navy ink, teal accent
   '--bg: #FFFFFF;',
   '--surface-1: #FFFFFF;',
-  '--accent: #0C948C;',
+  '--accent: #0B4FA8;',
   '--text-2: #2E4459;',
   // layout: 3-up desktop grid, 2-up medium, 1-up mobile
   '.pl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));',

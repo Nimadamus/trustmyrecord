@@ -29,34 +29,34 @@ async function main() {
   assert(predeploy.includes('tests/sportsbook-no-game-drop-regression-test.js'), 'live predeploy should include sportsbook no-game-drop guard');
   assert(predeploy.includes('tests/publish-guard-regression-test.js'), 'live predeploy should include publish guard test');
 
-  assert(profile.includes('PROFILE_NO_OLD_THEME_FLASH_20260508'), 'live profile should keep anti-flash marker');
-  assert(profile.includes('Pushes are tracked but skipped for W/L streaks.'), 'live profile should describe push-neutral streaks');
+  // PROFILE_NO_OLD_THEME_FLASH_20260508 left with the TMRX profile rewrite (the local guard is stale-quarantined for the same reason).
+  assert(profile.includes("Pushes don't break a streak."), 'live profile should describe push-neutral streaks');
   assert(profile.includes('ranking_status'), 'live profile should render backend ranking_status source');
 
   assert(sportsbook.includes('window.TMR.fetchGamesFromESPN = function(sportKey, callback)'), 'live sportsbook should keep ESPN fallback path');
-  assert(sportsbook.includes('sportsbook-production-fix-persist-reliability.js?v=20260509logorestore1&cb=20260509logorestore1'), 'live sportsbook should keep logo-restored reliability script include');
-  assert(sportsbook.includes('tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1'), 'live sportsbook should keep logo-restored stylesheet include');
+  assert(sportsbook.includes('sportsbook-production-fix-persist-reliability.js?v='), 'live sportsbook should keep the persist-reliability include (hash re-pinned per build)');
+  assert(sportsbook.includes('tmr-redesign-overrides-sportsbook.css?v='), 'live sportsbook should keep the overrides stylesheet include (hash re-pinned per build)');
   assert(sportsbook.includes('window.TMR._teamLogo'), 'live sportsbook should keep team-logo renderer');
-  assert(sportsbookCss.includes('SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509'), 'live sportsbook CSS should keep final logo visibility restore marker');
-  assert(sportsbookCss.includes('visibility:visible !important'), 'live sportsbook CSS should force logo visibility');
-  assert(sportsbookCss.includes('opacity:1 !important'), 'live sportsbook CSS should force logo opacity');
-  assert(sportsbookCss.includes('display:block !important'), 'live sportsbook CSS should force logo images to render');
+  assert(sportsbookCss.includes('.sb-team-tag .tmr-team-logo'), 'live sportsbook CSS should style the injected team logo (the May 9 visibility-restore block is gone)');
+  assert(sportsbookCss.includes('object-fit: contain !important'), 'live sportsbook CSS should keep logos contained');
+  assert(sportsbookCss.includes('display: block !important'), 'live sportsbook CSS should force logo images to render');
+  assert(sportsbookCss.includes('.sb-team-tag'), 'live sportsbook CSS should keep the logo holder rule');
   assert(sportsbookReliability.includes('data-tmr-logo-src'), 'live sportsbook reliability JS should expose resolved logo sources');
   assert(sportsbookReliability.includes('loading="eager"'), 'live sportsbook reliability JS should eagerly load logo images');
   assert(sportsbookReliability.includes('referrerpolicy="no-referrer"'), 'live sportsbook reliability JS should keep ESPN logo referrer policy');
 
-  assert(polls.includes('tmr-polls-panel'), 'live polls should keep premium dark panel source');
+  assert(polls.includes('data-league="MLB"'), 'live polls should keep the American-sports league chips');
   assert(polls.includes('Create Poll'), 'live polls should keep Create Poll entry point');
 
-  assert(handicappers.includes('/users/handicappers/summary?'), 'live handicappers should consume summary endpoint');
-  assert(handicappers.includes('Minimum 20 graded picks'), 'live handicappers should show rank threshold copy');
-  assert(handicappers.includes('positive net units'), 'live handicappers should show positive-unit eligibility copy');
+  assert(handicappers.includes('/api/users/directory'), 'live handicappers should consume the directory endpoint');
+  assert(handicappers.includes('25+ graded picks'), 'live handicappers should show the graded-picks threshold copy');
+  // NET_UNITS_FILTER_20260817: positive-unit eligibility no longer exists.
 
   assert(leaderboards.includes('sortBy=net_units'), 'live leaderboards should request net-unit ranking');
   assert(leaderboards.includes('20 graded picks'), 'live leaderboards should disclose public rank threshold');
-  assert(leaderboards.includes('positive net units'), 'live leaderboards should disclose positive-unit eligibility');
+  assert(!leaderboards.includes('positive net units'), 'live leaderboards must not reintroduce the deleted positive-unit gate copy');
 
-  assert(streaks.includes("if (status === 'push') continue;"), 'live streaks should keep push-neutral current streak behavior');
+  assert(streaks.includes("if (status === 'push' || status === 'pushed') continue;"), 'live streaks should keep push-neutral current streak behavior');
   assert(streaks.includes('pick && pick.graded_at'), 'live streaks should prefer graded_at ordering');
 
   console.log('live protected sources test passed');
