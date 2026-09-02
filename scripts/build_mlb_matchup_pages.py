@@ -1094,6 +1094,7 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
              % (esc(built_at[:16].replace("T", " ") + " UTC"),
                 (" Metrics our providers do not supply for this game, listed rather than guessed: "
                  + esc(", ".join(uniq)) + ".") if uniq else ""))
+    b.append(BLP_CROSS_LINK)
     b.append("    </main>\n")
     b.append('    <script src="/static/js/tmr-mlb-matchup-live.js"></script>\n')
     b.append(FOOT_SCRIPTS)
@@ -1307,9 +1308,20 @@ def _support_page(slug, title, h1, description, kicker, lede, body_html, date, b
          'game corpus, and lines from the sportsbook feed. Built %s. '
          '<a href="%s">Back to today\'s MLB slate</a>.</p>\n'
          % (esc(built_at[:16].replace("T", " ") + " UTC"), HUB),
+         BLP_CROSS_LINK,
          "    </main>\n", FOOT_SCRIPTS, "</body>\n</html>\n"]
     return page_head(title, description, url, ld) + "".join(b)
 
+
+BLP_CROSS_LINK = (
+    '    <!--MK:blpCrossLink-->\n'
+    '    <p class="mm-note">This page is the read on one game. '
+    '<a href="/betlegend-pro/">BetLegend Pro</a> is the read on every game like it: '
+    'search 130,000+ graded games across MLB, NBA, NFL and NHL for the same matchup '
+    'and situation, and get the record with the sample size behind it. '
+    'Free to try, 25 lookups a day.</p>\n'
+    '    <!--/MK:blpCrossLink-->\n'
+)
 
 def render_probable_pitchers(date, rows, built_at):
     body = ['        <section class="mm-sec" aria-labelledby="pp-t">\n',
