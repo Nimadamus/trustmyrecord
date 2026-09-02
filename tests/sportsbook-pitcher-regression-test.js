@@ -31,17 +31,23 @@ const end = html.indexOf('function renderRow(', start);
 assert(end !== -1, 'could not find the end of the probable-pitcher block (renderRow)');
 const block = html.slice(start, end);
 
-/* ---- 1. Every ESPN request in this block must be date-scoped ------------- */
+/* ---- 1. The probables request must be date-scoped, and go through our API ---- */
+// MLB_PROBABLES_PROXY_20260901: the block no longer calls ESPN from the browser.
+// ESPN's edge answers 403 to browser User-Agents, so the backend fetches the
+// scoreboard and the board reads /games/mlb-probables. The date contract is
+// unchanged: a dateless call returns TODAY, not the slate the board is
+// showing, which is the exact bug that made every game show TBD on Jul 23 2026.
 const espnUrls = block.match(/https:\/\/site\.api\.espn\.com[^'"\s]*/g) || [];
-assert(espnUrls.length > 0, 'probable-pitcher block no longer calls the ESPN scoreboard');
-espnUrls.forEach((u) => {
-  assert(
-    /scoreboard\?dates=/.test(u),
-    'ESPN scoreboard call in the probable-pitcher block is missing ?dates= (' + u + '). ' +
-      'A dateless call returns TODAY, not the slate the board is showing — this is the exact ' +
-      'bug that made every game show TBD on Jul 23 2026.'
-  );
-});
+assert(
+  espnUrls.length === 0,
+  'probable-pitcher block calls ESPN directly again (' + espnUrls.join(', ') + '). ' +
+    'ESPN answers 403 to browser User-Agents; the probables must come from /games/mlb-probables.'
+);
+assert(
+  /\/games\/mlb-probables\?dates=/.test(block),
+  'probable-pitcher block no longer calls /games/mlb-probables?dates= — the proxied ' +
+    'scoreboard call must be date-scoped to the slate the board is showing'
+);
 
 /* ---- 2. The date range must come from the board's own games -------------- */
 assert(
@@ -147,4 +153,4 @@ assert(
     'failure can never stop odds from rendering'
 );
 
-console.log('Sportsbook probable-pitcher guard: PASS (' + espnUrls.length + ' date-scoped ESPN call(s) checked)');
+console.log('Sportsbook probable-pitcher guard: PASS (probables come from /games/mlb-probables?dates=, no direct ESPN call)');
