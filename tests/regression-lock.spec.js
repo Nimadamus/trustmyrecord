@@ -473,7 +473,18 @@ test.describe('homepage approved-baseline geometry', () => {
 test.describe('core route and content locks', () => {
   test('critical public routes render and do not 404 or blank', async ({ page }) => {
     for (const route of ROUTES) {
-      const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+      let response = null;
+      try {
+        response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+      } catch (e) {
+        // A route whose own script redirects before DOMContentLoaded (the wallet
+        // auth gate on mobile, 2026-09-02) aborts the first navigation with
+        // net::ERR_ABORTED. That is the page working, not failing: follow it and
+        // judge the page it lands on.
+        if (!/ERR_ABORTED/.test(String(e))) throw e;
+        await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
+        response = await page.request.get(page.url());
+      }
       expect(response && response.status(), `${route.path} must not 404`).not.toBe(404);
       await expect(page.locator('body'), `${route.path} body should be visible`).toBeVisible();
       const text = await visibleText(page);
