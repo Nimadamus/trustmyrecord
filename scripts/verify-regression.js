@@ -24,6 +24,7 @@ const allChecks = [
   ['unit/static: sportsbook market hydration', 'node', ['tests/sportsbook-market-groups-hydration-test.js'], 'static'],
   ['unit/static: sportsbook team totals rendering', 'node', ['tests/sportsbook-team-totals-rendering-regression-test.js'], 'static'],
   ['unit/static: protected sportsbook file drift', 'node', ['tests/protected-baseline-regression-test.js'], 'static'],
+  ['unit/static: sportsbook submission idempotency wiring', 'node', ['tests/sportsbook-idempotency-guard-test.js'], 'static'],
   ['unit/static: critical DOM/content locks', 'node', ['tests/critical-dom-content-lock-test.js'], 'static'],
   ['unit/static: homepage approved-baseline lock', 'node', ['tests/homepage-approved-baseline-lock-test.js'], 'static'],
   ['unit/static: leaderboards hero/tab count lock', 'node', ['tests/leaderboards-counts-lock-test.js'], 'static'],
@@ -52,6 +53,21 @@ const allChecks = [
   ['forbidden text scan', 'node', ['scripts/forbidden-text-scan.js'], 'static'],
   ['visual/function: Playwright regression lock', 'npx', ['playwright', 'test', '--config=playwright.regression.config.cjs'], 'playwright'],
   ['live browser: sportsbook proof', 'npx', ['playwright', 'test', '--config=playwright.config.cjs'], 'playwright'],
+  // SPORTSBOOK_V2_20260903 / PICK_IDEMPOTENCY_20260903 live browser suites. Every
+  // one intercepts POST /api/picks, so none of them can record a pick. They need a
+  // member JWT path in TMR_TEST_JWT_FILE; without it they skip rather than fail.
+  ['live browser: sportsbook board + slip + submit regression', 'node',
+    ['tests/sportsbook-v2/regression.cjs', '--label', 'ci', '--url', 'https://trustmyrecord.com/sportsbook/',
+     '--dry', '1', '--token', process.env.TMR_TEST_JWT_FILE || ''], 'playwright'],
+  ['live browser: pick submission idempotency (double-click / retry / re-stage)', 'node',
+    ['tests/sportsbook-v2/idempotency-ui.cjs', '--label', 'ci', '--url', 'https://trustmyrecord.com/sportsbook/',
+     '--token', process.env.TMR_TEST_JWT_FILE || ''], 'playwright'],
+  ['live browser: sport-switch selection integrity', 'node',
+    ['tests/sportsbook-v2/switch-stress.cjs', '--label', 'ci', '--url', 'https://trustmyrecord.com/sportsbook/',
+     '--runs', '1', '--token', process.env.TMR_TEST_JWT_FILE || ''], 'playwright'],
+  ['live browser: UFC total rounds market mapping', 'node',
+    ['tests/sportsbook-v2/ufc-rounds.cjs', '--label', 'ci', '--url', 'https://trustmyrecord.com/sportsbook/',
+     '--token', process.env.TMR_TEST_JWT_FILE || ''], 'playwright'],
   ['live browser: MLB simulator result legibility', 'node',
     ['tests/mlb-simulator-legibility-test.cjs', '--site', 'https://trustmyrecord.com'], 'playwright'],
 ];

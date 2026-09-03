@@ -1,5 +1,25 @@
 # TrustMyRecord Development Rules
 
+## Sportsbook v2 skin + pick submission identity (Sep 3, 2026) — HARD RULE (PERMANENT)
+`SPORTSBOOK_V2_20260903` / `PICK_IDEMPOTENCY_20260903`. The sportsbook is served through a feature-flagged skin
+(`static/css/sportsbook-v2.css` + `static/js/sportsbook-v2.js`, `ROLLOUT_PERCENT` currently 100). The classic
+sportsbook stays in the page as the rollback: `node scripts/sportsbook-v2-rollout.cjs 0 --push`, or `?sbv2=0` per user.
+Full rollout state, commit ledger and per-change revert commands: `docs/sportsbook-v2-rollback.md`.
+
+1. **Every Lock Pick POST must carry a submission identity.** `submission_batch_id` (a seed minted when a price is
+   staged, folded with game, market, selection, line, odds, units and stake mode) plus `submission_item_key`. This is
+   what makes a double-click, a retry, a lagging browser or a repeated POST of the SAME staged wager replay to the
+   original pick via `pick_submission_requests`, while a changed stake or a re-tapped price stays a NEW wager.
+   Guarded by `tests/sportsbook-idempotency-guard-test.js` — do not delete it or the wiring without explicit approval.
+2. **Never record real picks while testing.** Every browser tool in `tests/sportsbook-v2/` intercepts `POST /api/picks`
+   unconditionally. `tests/sportsbook-v2/idempotency-api.cjs` is the one exception and needs explicit approval per run.
+3. **`window.TMR.currentGames` must follow the visible board.** The cached-board paint path assigns it
+   (`STALE_BOARD_FIX_20260903` in `sportsbook/index.html`); without it a sport switch attaches the previous sport's
+   game to the slip. Proven by `tests/sportsbook-v2/switch-stress.cjs`.
+4. **Fight boards price Total Rounds, not a moneyline.** `roundsover`/`roundsunder` map to `mma_total_rounds`
+   (`UFC_ROUNDS_MAP_20260903`) in the reliability bridge, its slip mapping and the slip headline. Proven by
+   `tests/sportsbook-v2/ufc-rounds.cjs`.
+
 ## MLB probable pitchers on the sportsbook board (Jul 23, 2026) — HARD RULE (PERMANENT)
 `PITCHER_DATE_FIX_20260723`. On Jul 23 2026 every MLB game on `/sportsbook/` showed **TBD**, and any team that played back-to-back days showed the **previous day's** starter. Cause: the lobby board asked ESPN for the *default* scoreboard (`.../baseball/mlb/scoreboard` with **no `?dates=`**), which always returns TODAY — while the board itself renders the next **UPCOMING** slate (in-progress games are filtered out). The two datasets never lined up.
 

@@ -8,7 +8,15 @@
  */
 const fs = require('fs');
 const args = {}; for (let i = 2; i < process.argv.length; i++) { const a = process.argv[i]; if (a.startsWith('--')) { args[a.slice(2)] = process.argv[i + 1]; i++; } }
-const TOKEN = fs.readFileSync(args.token, 'utf8').trim();
+// CI: these suites need a member session. Without TMR_TEST_JWT_FILE (or --token)
+// they SKIP rather than fail, so the sportsbook regression job stays meaningful
+// on forks and in environments without the secret.
+const TOKEN_PATH = (args.token && args.token.trim()) || process.env.TMR_TEST_JWT_FILE || '';
+if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) {
+  console.log('SKIP: no member JWT (pass --token <file> or set TMR_TEST_JWT_FILE).');
+  process.exit(0);
+}
+const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
 const API = 'https://trustmyrecord-api.onrender.com/api';
 const DELAY_MIN = parseFloat(args.delayMinutes || '2.5');
 let failures = 0; const created = [];

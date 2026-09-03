@@ -13,8 +13,6 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
-const { installOverlay } = require('./overlay.cjs');
 
 const args = {};
 for (let i = 2; i < process.argv.length; i++) {
@@ -23,7 +21,17 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 const LABEL = args.label || 'run';
 const URL_ = args.url || 'https://trustmyrecord.com/sportsbook/';
-const TOKEN = args.token ? fs.readFileSync(args.token, 'utf8').trim() : null;
+// CI: these suites need a member session. Without TMR_TEST_JWT_FILE (or --token)
+// they SKIP rather than fail, so the sportsbook regression job stays meaningful
+// on forks and in environments without the secret.
+const TOKEN_PATH = (args.token && args.token.trim()) || process.env.TMR_TEST_JWT_FILE || '';
+if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) {
+  console.log('SKIP: no member JWT (pass --token <file> or set TMR_TEST_JWT_FILE).');
+  process.exit(0);
+}
+const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+const { chromium } = require('playwright');
+const { installOverlay } = require('./overlay.cjs');
 const PICKS = args.picks ? JSON.parse(args.picks) : [];
 const REPORT = args.report || path.join(process.cwd(), `sportsbook-regression-${LABEL}.json`);
 const API = 'https://trustmyrecord-api.onrender.com/api';
