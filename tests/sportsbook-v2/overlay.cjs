@@ -1,0 +1,24 @@
+// Shared helper: open trustmyrecord.com with LOCAL working-tree files overlaid
+// for the v2 preview route + v2 assets, so the real origin/backend/CORS are used
+// while the not-yet-deployed files come from disk. Classic (/sportsbook/) is
+// never overlaid: it is always the live production page.
+const fs = require('fs');
+const path = require('path');
+const root = path.resolve(__dirname, '..', '..');
+const OVERLAY = {
+  '/sportsbook/v2/': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
+  '/sportsbook/v2/index.html': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
+  '/static/css/sportsbook-v2.css': ['static/css/sportsbook-v2.css', 'text/css; charset=utf-8'],
+  '/static/js/sportsbook-v2.js': ['static/js/sportsbook-v2.js', 'application/javascript; charset=utf-8'],
+};
+async function installOverlay(context) {
+  if (process.env.SBV2_NO_OVERLAY === '1') return;
+  await context.route(/^https:\/\/trustmyrecord\.com\/.*/, async (route) => {
+    const u = new URL(route.request().url());
+    const hit = OVERLAY[u.pathname];
+    if (!hit) return route.continue();
+    const body = fs.readFileSync(path.join(root, hit[0]));
+    return route.fulfill({ status: 200, body, headers: { 'content-type': hit[1], 'cache-control': 'no-store' } });
+  });
+}
+module.exports = { installOverlay, root };
