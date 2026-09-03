@@ -163,6 +163,7 @@ async function verifyClick(page, clicked, boards, label) {
   }
   // 5. submission payload (dry: POST answered locally)
   if (TOKEN && st.submitEnabled) {
+    await page.waitForFunction(() => !window.__tmrLockInFlight, null, { timeout: 20000 }).catch(() => {});
     const respP = page.waitForRequest((r) => /\/api\/picks(\?|$)/.test(r.url()) && r.method() === 'POST', { timeout: 15000 }).catch(() => null);
     await page.locator('#ttSlipSubmit').dispatchEvent('click').catch(() => {}); // the classic quick-bet bar can sit over the slip button; a coordinate click would land on the bar
     const req = await respP;

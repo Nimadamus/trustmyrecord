@@ -85,6 +85,7 @@ async function sideCheck(browser, flag, viewport, name) {
       if (TOKEN && slip.enabled) {
         let req = null;
         for (let attempt = 0; attempt < 2 && !req; attempt++) {
+          await page.waitForFunction(() => !window.__tmrLockInFlight, null, { timeout: 20000 }).catch(() => {});
           const reqP = page.waitForRequest((r) => /\/api\/picks(\?|$)/.test(r.url()) && r.method() === 'POST', { timeout: 30000 }).catch(() => null);
           await page.locator('#ttSlipSubmit').dispatchEvent('click').catch(() => {}); // the classic quick-bet bar can sit over the slip button; a coordinate click would land on the bar
           req = await reqP;

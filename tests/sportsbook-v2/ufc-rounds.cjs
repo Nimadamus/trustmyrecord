@@ -58,7 +58,9 @@ async function clickCell(page, cardIdx, row, col) {
 async function state(page) {
   return page.evaluate(() => { const t = (s) => { const e = document.querySelector(s); return e ? e.textContent.trim() : null; }; const c = (window.TMR && window.TMR.currentSelectedPick) || {}; return { pick: { gameId: c.gameId, sport: c.sport, team: c.team, away: c.awayTeam, home: c.homeTeam, odds: c.odds, line: c.line, betType: c.betType, marketType: c.marketType }, slip: { sel: t('.sportsbook-ticket-preview-topline strong'), game: t('.tmr-ticket-row--game strong'), odds: t('.tmr-ticket-row--odds strong'), market: t('.tmr-ticket-row--market strong') }, enabled: !!(document.getElementById('ttSlipSubmit') && !document.getElementById('ttSlipSubmit').disabled) }; });
 }
+async function waitLockIdle(page) { await page.waitForFunction(() => !window.__tmrLockInFlight, null, { timeout: 20000 }).catch(() => {}); }
 async function lock(page) {
+  await waitLockIdle(page);
   const reqP = page.waitForRequest((r) => /\/api\/picks(\?|$)/.test(r.url()) && r.method() === 'POST', { timeout: 30000 }).catch(() => null);
   const resP = page.waitForResponse((r) => /\/api\/picks(\?|$)/.test(r.url()) && r.request().method() === 'POST', { timeout: 30000 }).catch(() => null);
   await page.locator('#ttSlipSubmit').dispatchEvent('click');

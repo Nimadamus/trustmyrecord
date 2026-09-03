@@ -192,6 +192,7 @@ async function setUnits(page, units) {
 
 async function submitPick(page, expectation, label) {
   if (DRY) expectation = 'new';
+  await page.waitForFunction(() => !window.__tmrLockInFlight, null, { timeout: 20000 }).catch(() => {});
   const respP = page.waitForResponse((r) => /\/api\/picks(\?|$)/.test(r.url()) && r.request().method() === 'POST', { timeout: 30000 }).catch(() => null);
   await page.locator('#ttSlipSubmit').click();
   const resp = await respP;
@@ -333,8 +334,9 @@ async function runFlow(browser, viewport, opts) {
 
     // ---- My Record / pending page --------------------------------------------
     await page.goto('https://trustmyrecord.com/my-pending-picks/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    const seen = await page.waitForFunction((team) => document.body && document.body.innerText.indexOf(team) !== -1, sel.team, { timeout: 30000 }).then(() => true).catch(() => false);
-    check(`${name}: My Pending Picks page shows the submitted pick (${sel.team})${DRY ? ' [from the earlier live run]' : ''}`, seen);
+    if (DRY) { check(`${name}: My Pending Picks page loads (dry run records nothing to look for)`, await page.waitForSelector('body', { timeout: 30000 }).then(() => true).catch(() => false)); }
+    const seen = DRY ? true : await page.waitForFunction((team) => document.body && document.body.innerText.indexOf(team) !== -1, sel.team, { timeout: 30000 }).then(() => true).catch(() => false);
+    if (!DRY) check(`${name}: My Pending Picks page shows the submitted pick (${sel.team})`, seen);
     assertClean(mon, `${name}: pending page`, true);
 
     // ---- refresh / back navigation ---------------------------------------------
@@ -394,7 +396,8 @@ async function runFlow(browser, viewport, opts) {
   for (const s of sports) {
     const btn = page.locator(`.sportsbook-rail-board[data-sport="${s}"]`).first();
     if (!(await btn.count())) { check(`${name}: sport rail has ${s}`, false); continue; }
-    await btn.click();
+    await btn.scrollIntoViewIfNeeded().catch(() => {});
+    await btn.click({ timeout: 10000 }).catch(async () => { await btn.dispatchEvent('click'); });
     try { await waitBoard(page, 40000); } catch (_) {}
     const st = await boardState(page);
     check(`${name}: switch to ${s} -> board sport=${st.sport}, ${st.cards.length} games${st.empty ? ' (empty state)' : ''}`, String(st.sport).toUpperCase() === s.toUpperCase() || /Soccer|Tennis/i.test(s), { sport: st.sport, title: st.title });
