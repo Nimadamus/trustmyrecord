@@ -13,6 +13,12 @@ const OVERLAY = {
 };
 async function installOverlay(context) {
   if (process.env.SBV2_NO_OVERLAY === '1') return;
+  // SBV2_OVERLAY_CLASSIC=1 also serves the working-tree production page for
+  // /sportsbook/ so a fix can be tested on the real origin before it deploys.
+  if (process.env.SBV2_OVERLAY_CLASSIC === '1') {
+    OVERLAY['/sportsbook/'] = ['sportsbook/index.html', 'text/html; charset=utf-8'];
+    OVERLAY['/sportsbook/index.html'] = ['sportsbook/index.html', 'text/html; charset=utf-8'];
+  }
   await context.route(/^https:\/\/trustmyrecord\.com\/.*/, async (route) => {
     const u = new URL(route.request().url());
     const hit = OVERLAY[u.pathname];

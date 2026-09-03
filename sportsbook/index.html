@@ -14362,6 +14362,11 @@ window.toggleSportFamily = function (family) {
             // Restored HTML can carry pitcher lines from earlier in the session.
             // Re-pull probables for this slate and rewrite just those lines.
             var cachedGames = _lobbyBoardGames[cacheKey];
+            // STALE_BOARD_FIX_20260903: the fetch path hands the rendered games to
+            // selectGameBet through window.TMR.currentGames (see paintBoard). The
+            // cached path skipped that, so a click on a restored board resolved
+            // against the PREVIOUS sport's list and the slip named the wrong game.
+            if (Array.isArray(cachedGames)) window.TMR.currentGames = cachedGames;
             if (lobbyIsMlb(null, sport) && Array.isArray(cachedGames) && cachedGames.length) {
                 lobbyEnsureMlbPitchers(cachedGames, function () {
                     lobbyRepaintPitcherLines(cachedGames);

@@ -6,7 +6,7 @@ const { installOverlay } = require('./overlay.cjs');
     const ctx = await b.newContext({ viewport: { width: w, height: h } });
     await installOverlay(ctx);
     const p = await ctx.newPage();
-    await p.goto('https://trustmyrecord.com/sportsbook/v2/', { waitUntil: 'domcontentloaded' });
+    await p.goto(process.argv[2] || 'https://trustmyrecord.com/sportsbook/v2/', { waitUntil: 'domcontentloaded' });
     await p.waitForSelector('#lobbyBoardRows .sb-odds', { timeout: 45000 });
     const r = await p.evaluate(() => {
       const sels = ['.picks-container-modern','.make-picks-loggedout','.make-picks-header','.sportsbook-page-topbar','#sportSelection','.sportsbook-picks-layout','.sportsbook-league-rail','.sportsbook-rail-list','.sportsbook-board-shell','.sportsbook-selector-head','.sportsbook-period-bar','.sportsbook-board-grid','.sportsbook-board-grid-head','#lobbyBoardRows','#lobbyBoardRows .sportsbook-game-card','#lobbyBoardRows .game-meta-row','#lobbyBoardRows .market-header-row','#lobbyBoardRows .team-market-row','#lobbyBoardRows .odds-cell','#lobbyBoardRows .sb-odds','.sportsbook-ticket-preview'];
@@ -14,6 +14,8 @@ const { installOverlay } = require('./overlay.cjs');
     });
     console.log('==', name); console.log(r.join('\n'));
     // siblings between header and layout
+    const cls = await p.evaluate(() => 'html.class=' + document.documentElement.className + ' | v2flag=' + JSON.stringify(window.__tmrSbV2 ? { enabled: window.__tmrSbV2.enabled, rollout: window.__tmrSbV2.rolloutPercent } : null));
+    console.log(cls);
     const sib = await p.evaluate(() => [...document.querySelector('.picks-container-modern').children].map(e => { const r=e.getBoundingClientRect(); return `${e.tagName}#${e.id}.${String(e.className).slice(0,40)} top=${Math.round(r.top+scrollY)} h=${Math.round(r.height)} disp=${getComputedStyle(e).display}`; }));
     console.log('-- container children'); console.log(sib.join('\n'));
     await ctx.close();
