@@ -24,7 +24,7 @@ Build only. Does NOT commit or deploy. Run from the repo root:
     python scripts/build_forum_threads.py
 Add --dry-run to print what would be written without touching files.
 """
-import json, os, sys, html, re, urllib.request, urllib.error, datetime, shutil
+import gzip, json, os, sys, html, re, urllib.request, urllib.error, datetime, shutil
 
 # Thread titles contain emoji. Never let a console encoding kill the build.
 for _s in (sys.stdout, sys.stderr):
@@ -73,9 +73,12 @@ UA = {"User-Agent": "TMR-ForumThreadBuilder/1.0", "Accept": "application/json"}
 
 
 def get(url):
-    req = urllib.request.Request(url, headers=UA)
+    req = urllib.request.Request(url, headers={**UA, "Accept-Encoding": "gzip"})
     with urllib.request.urlopen(req, timeout=45) as f:
-        return json.loads(f.read().decode("utf-8"))
+        raw = f.read()
+        if (f.headers.get("Content-Encoding") or "").lower() == "gzip":
+            raw = gzip.decompress(raw)
+        return json.loads(raw.decode("utf-8"))
 
 
 def list_threads():

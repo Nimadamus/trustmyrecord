@@ -16,7 +16,7 @@ Add --dry-run to print the eligible set + sample row without writing files.
 Idempotent: re-running replaces content between <!--MK:key--> markers, so a
 30-min cron/GitHub Action can call it repeatedly without drift.
 """
-import json, os, sys, re, html, math, time, datetime, urllib.request, urllib.parse
+import gzip, json, os, sys, re, html, math, time, datetime, urllib.request, urllib.parse
 
 API  = "https://trustmyrecord-api.onrender.com/api"
 SITE = "https://trustmyrecord.com"
@@ -56,9 +56,12 @@ def get(url, attempts=3):
         if i:
             time.sleep(2 * i)
         try:
-            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            req = urllib.request.Request(url, headers={"Accept": "application/json", "Accept-Encoding": "gzip"})
             with urllib.request.urlopen(req, timeout=45) as r:
-                return json.load(r)
+                raw = r.read()
+                if (r.headers.get("Content-Encoding") or "").lower() == "gzip":
+                    raw = gzip.decompress(raw)
+                return json.loads(raw.decode("utf-8"))
         except Exception as err:
             last = err
     raise last
