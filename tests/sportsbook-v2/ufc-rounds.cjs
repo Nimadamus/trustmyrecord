@@ -6,7 +6,7 @@
  * Also re-checks MLB spread / ML / game total so nothing regressed.
  *
  *   NODE_PATH=<playwright> node tests/sportsbook-v2/ufc-rounds.cjs --url <sportsbook url> --label x --token <jwt>
- * POST /api/picks is answered locally unless --real 1 (records ONE real pick, the first UFC click).
+ * POST /api/picks is ALWAYS answered locally: this script never records a pick.
  */
 const fs = require('fs');
 const { chromium } = require('playwright');
@@ -16,19 +16,18 @@ for (let i = 2; i < process.argv.length; i++) { const a = process.argv[i]; if (a
 const URL_ = args.url || 'https://trustmyrecord.com/sportsbook/';
 const LABEL = args.label || 'ufc';
 const TOKEN = fs.readFileSync(args.token, 'utf8').trim();
-const REAL = String(args.real || '') === '1';
 const API = 'https://trustmyrecord-api.onrender.com/api';
 let failures = 0; const log = [];
-function check(name, ok, d) { if (!ok) failures++; log.push({ name, ok, d }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : ' -> ' + JSON.stringify(d).slice(0, 400)}`); }
+function check(name, ok, d) { if (!ok) failures++; log.push({ name, ok, d }); let dd = ''; try { dd = JSON.stringify(d).slice(0, 400); } catch (_) { dd = String(d); } console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : ' -> ' + dd}`); }
 const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 const pnum = (s) => parseInt(String(s).replace(/[^\d-]/g, ''), 10);
 
-async function newPage(browser, viewport, dry) {
+async function newPage(browser, viewport) {
   const ctx = await browser.newContext({ viewport });
   await installOverlay(ctx);
   const me = await (await fetch(API + '/auth/me', { headers: { Authorization: `Bearer ${TOKEN}` } })).json();
   await ctx.addInitScript(({ user, token }) => { const s = JSON.stringify({ user }); localStorage.setItem('trustmyrecord_session', s); localStorage.setItem('currentUser', s); localStorage.setItem('trustmyrecord_token', token); localStorage.setItem('token', token); localStorage.setItem('tmr_token', token); localStorage.setItem('tmr_is_logged_in', 'true'); localStorage.setItem('tmr_multislip', '0'); }, { user: me.user, token: TOKEN });
-  if (dry) await ctx.route(/\/api\/picks(\?.*)?$/, (route) => {
+  await ctx.route(/\/api\/picks(\?.*)?$/, (route) => {
     if (route.request().method() !== 'POST') return route.continue();
     let body = {}; try { body = JSON.parse(route.request().postData() || '{}'); } catch (_) {}
     return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ message: 'dry-run', pick: Object.assign({ id: 0 }, body) }) });
@@ -84,6 +83,7 @@ async function verify(page, clicked, kind, label, doLock) {
     check(`${label}: slip names the fighter/team`, st.slip.sel && st.slip.sel.indexOf(clicked.side === 'home' ? clicked.home : clicked.away) !== -1, st.slip);
   }
   if (!doLock) return null;
+  if (args.units) { const u = page.locator('#ttSlipUnits'); await u.fill(String(args.units)); await u.dispatchEvent('input'); await u.dispatchEvent('change'); await page.waitForTimeout(300); }
   const r = await lock(page);
   const p = r.payload || {};
   check(`${label}: Lock POSTed (${r.status})`, !!r.payload && r.status && r.status < 300, r);
@@ -91,6 +91,7 @@ async function verify(page, clicked, kind, label, doLock) {
   if (exp.sel) check(`${label}: payload selection ${exp.sel}`, p.selection === exp.sel, { selection: p.selection, label: p.selection_label });
   if (exp.sel) check(`${label}: payload line ${clicked.line.replace(/^[OU] /, '')}`, Number(p.line_snapshot) === Number(clicked.line.replace(/^[OU] /, '')), { line_snapshot: p.line_snapshot });
   check(`${label}: payload odds ${clicked.price}`, pnum(p.odds_snapshot) === pnum(clicked.price), { odds_snapshot: p.odds_snapshot });
+  if (args.units) check(`${label}: payload units ${args.units}`, Number(p.units) === Number(args.units), { units: p.units });
   check(`${label}: payload event = clicked matchup`, p.game_snapshot && norm(p.game_snapshot.away_team) === norm(clicked.away) && norm(p.game_snapshot.home_team) === norm(clicked.home) && p.game_id === st.pick.gameId, { game_id: p.game_id, snap: p.game_snapshot && [p.game_snapshot.away_team, p.game_snapshot.home_team] });
   check(`${label}: payload sport_key mma_ufc`, p.sport_key === 'mma_ufc', p.sport_key);
   return r;
@@ -98,15 +99,13 @@ async function verify(page, clicked, kind, label, doLock) {
 
 (async () => {
   const browser = await chromium.launch({ headless: true });
-  let realResult = null;
   for (const [vp, vname] of [[{ width: 1440, height: 900 }, 'desktop'], [{ width: 390, height: 844 }, 'mobile']]) {
-    const dry = !(REAL && vname === 'desktop');
-    const { ctx, page } = await newPage(browser, vp, dry);
+    const { ctx, page } = await newPage(browser, vp);
     const L = `${LABEL} ${vname}`;
     await gotoSport(page, 'UFC');
     // OVER (away row, col 3 on the two-market fight card), UNDER (home row, col 3), ML (away row, col 2)
     let c = await clickCell(page, 0, 'away', 3); check(`${L}: OVER chip present`, !!c && /^O /.test(c.line), c);
-    if (c) realResult = (await verify(page, c, 'over', `${L} OVER`, true)) || realResult;
+    if (c) await verify(page, c, 'over', `${L} OVER`, true);
     c = await clickCell(page, 1, 'home', 3); check(`${L}: UNDER chip present`, !!c && /^U /.test(c.line), c);
     if (c) await verify(page, c, 'under', `${L} UNDER`, true);
     c = await clickCell(page, 2, 'away', 2); c && (c.side = 'away'); check(`${L}: ML chip present`, !!c, c);
@@ -135,7 +134,6 @@ async function verify(page, clicked, kind, label, doLock) {
     await ctx.close();
   }
   await browser.close();
-  if (REAL && realResult) console.log('REAL PICK RESPONSE ' + JSON.stringify(realResult.body).slice(0, 400));
   if (args.report) fs.writeFileSync(args.report, JSON.stringify({ label: LABEL, url: URL_, failures, log }, null, 2));
   console.log(`== ${LABEL}: ${log.length - failures} passed, ${failures} failed`);
   process.exit(failures ? 1 : 0);
