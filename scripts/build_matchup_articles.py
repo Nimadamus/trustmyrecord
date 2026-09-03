@@ -863,6 +863,25 @@ def graphics_spec(article):
                         "hand": "Left-handed" if str(p.get("meta", "")).startswith("LHP") else "Right-handed",
                         "note": "Tonight's starter",
                     }
+            elif kind == "cards":
+                # A `cards` block names the people it is drawing, so the artwork
+                # is generated from the article rather than being a second copy
+                # of the same facts kept somewhere else. Football has no
+                # licensable headshot feed, which is exactly the case
+                # player_card() was written for and then kept for.
+                for item in block.get("items") or []:
+                    if not (item or {}).get("src") or not item.get("name"):
+                        continue
+                    spec.setdefault("cards", []).append({
+                        "src": item["src"],
+                        "name": item["name"],
+                        "mono": item.get("mono") or "",
+                        "team": item.get("team") or "",
+                        "role": item.get("role") or "",
+                        "note": item.get("note") or "",
+                        "sample": item.get("sample") or "",
+                        "accent": item.get("accent_color") or spec.get("home_color") or "#B3A369",
+                    })
     return spec
 
 
@@ -1246,8 +1265,8 @@ TODAY_TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index, follow">
-<title>Today&#39;s Matchup of the Day: {matchup} | TrustMyRecord</title>
-<meta name="description" content="Today&#39;s Matchup of the Day: {matchup}. Opening the full analysis.">
+<title>{eyebrow}: {matchup} | TrustMyRecord</title>
+<meta name="description" content="{eyebrow}: {matchup}. Opening the full analysis.">
 <link rel="canonical" href="{target_abs}">
 <meta http-equiv="refresh" content="0; url={target}">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -1264,7 +1283,7 @@ TODAY_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
 <main class="t">
-  <p>Matchup of the Day</p>
+  <p>{eyebrow}</p>
   <a href="{target}">{headline}</a>
 </main>
 </body>
@@ -1705,7 +1724,36 @@ def main():
                 target=esc(target),
                 target_abs=esc(SITE + target),
                 headline=esc(headline),
+                eyebrow="Today&#39;s Matchup of the Day",
                 matchup=esc("%s vs. %s" % (motd_lead["away_team"], motd_lead["home_team"])),
+            )))
+
+        # /matchup-of-the-day/<sport>/ - the same stable door, one per sport.
+        #
+        # /today/ is newest-wins across every sport, which is the right answer
+        # for one nav entry and the wrong one the moment there are two. A menu
+        # item that says NCAAF Matchup of the Day has to land on the NCAAF piece
+        # on a Thursday in September whether or not baseball published later
+        # that morning, so each sport gets its own address, baked with that
+        # sport's newest Game File.
+        #
+        # Same contract as /today/: canonicalised TO the article so search
+        # consolidates on the permanent URL, deliberately kept out of the
+        # sitemap, and never noindexed, because it is a real page with a real
+        # link on it.
+        by_sport = {}
+        for a in daily:
+            by_sport.setdefault(a["sport"], a)      # `daily` is already newest-first
+        for sport, lead in sorted(by_sport.items()):
+            s_target = article_href(lead)
+            s_label = SPORT_LABEL.get(sport, sport.upper())
+            s_headline = lead.get("h1") or ("%s vs. %s" % (lead["away_team"], lead["home_team"]))
+            writes.append((os.path.join(MOTD_DIR, sport, "index.html"), TODAY_TEMPLATE.format(
+                target=esc(s_target),
+                target_abs=esc(SITE + s_target),
+                headline=esc(s_headline),
+                eyebrow=esc("%s Matchup of the Day" % s_label),
+                matchup=esc("%s vs. %s" % (lead["away_team"], lead["home_team"])),
             )))
     else:
         print("WARN: matchup-of-the-day/index.html is missing; the daily hub was not written")

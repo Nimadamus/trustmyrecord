@@ -52,8 +52,17 @@ const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
 /* `today` is the deliberate exception and is documented as one: a stable
    address that redirects to whichever article is current. It is canonical'd TO
    that article, is kept out of the sitemap on purpose, and would fail the
-   self-canonical rule for exactly the right reason. */
-const EXEMPT = new Set(['today']);
+   self-canonical rule for exactly the right reason.
+
+   The per-sport doors added 2026-09-03 are the same object with a narrower
+   question. /matchup-of-the-day/ncaaf/ exists because /today/ is newest-wins
+   across every sport, so a nav entry that says NCAAF has to land on the NCAAF
+   piece even when baseball published later the same morning. They carry the
+   same contract as `today`: canonical'd to the article, out of the sitemap, and
+   never noindexed. The list is the sports the generator can write a door for,
+   so a typo'd directory under matchup-of-the-day/ is still caught as an article
+   that failed to build. */
+const EXEMPT = new Set(['today', 'mlb', 'nba', 'nfl', 'nhl', 'soccer', 'ncaaf', 'ncaab']);
 
 const slugs = fs.readdirSync(DIR, { withFileTypes: true })
   .filter((e) => e.isDirectory() && !EXEMPT.has(e.name))

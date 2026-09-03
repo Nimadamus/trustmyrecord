@@ -242,6 +242,18 @@ def build_for_article(slug, spec):
     # twice, once for real and once not. player_card() is kept — a sport
     # without a headshot feed will want it.
 
+    # Player cards, when the article asked for them. A sport with no headshot
+    # feed says who it wants drawn in its `cards` block and gets a designed
+    # object rather than an empty frame; the file name is the src the article
+    # already published, so the two can never point at different things.
+    for card in spec.get("cards") or []:
+        name = os.path.basename(card["src"])
+        key = name.rsplit("-", 1)[-1].rsplit(".", 1)[0]
+        player_card(key, card["name"], card.get("mono") or "", card.get("team") or "",
+                    card.get("role") or "", card.get("note") or "",
+                    card.get("accent") or "#B3A369", card.get("sample") or "",
+                    out_name=name)
+
     if spec.get("venue_name"):
         venue(spec["venue_name"], spec.get("venue_city") or "",
               away_hex, home_hex, out_name="%s-venue.svg" % slug)

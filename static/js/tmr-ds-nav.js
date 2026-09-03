@@ -102,6 +102,13 @@
        article and hands off to it; the hub keeps its own footer and Explore
        entries, where an archive is what a reader is actually after. */
     ['/matchup-of-the-day/today/', 'Matchup of the Day'],
+    /* Added 2026-09-03, the day college football got its first Game File.
+       /today/ is newest-wins across every sport, so on a Thursday in September
+       it can hand a reader the baseball piece when they clicked for football.
+       /matchup-of-the-day/ncaaf/ is the same kind of stable door scoped to one
+       sport: baked with the newest NCAAF Game File, canonicalised to it, and
+       out of the sitemap so search consolidates on the article's own URL. */
+    ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
     /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
        sport whose research hub is actually built, so every member who picked
        'Handicapping Hub' from this menu landed on a page whose only real
