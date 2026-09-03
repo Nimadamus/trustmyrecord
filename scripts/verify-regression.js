@@ -68,6 +68,9 @@ const allChecks = [
   ['live browser: UFC total rounds market mapping', 'node',
     ['tests/sportsbook-v2/ufc-rounds.cjs', '--label', 'ci', '--url', 'https://trustmyrecord.com/sportsbook/',
      '--token', process.env.TMR_TEST_JWT_FILE || ''], 'playwright'],
+  ['live browser: multi-pick slip (add / remove / units / submit)', 'node',
+    ['tests/sportsbook-v2/multipick.cjs', '--label', 'ci', '--url', 'https://trustmyrecord.com/sportsbook/',
+     '--token', process.env.TMR_TEST_JWT_FILE || ''], 'playwright'],
   ['live browser: MLB simulator result legibility', 'node',
     ['tests/mlb-simulator-legibility-test.cjs', '--site', 'https://trustmyrecord.com'], 'playwright'],
 ];

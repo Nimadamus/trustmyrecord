@@ -1001,4 +1001,431 @@ html.tmr-sbv2 #picks .team-cell { font-size: 14px !important; }
     html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 11px !important; }
     html.tmr-sbv2 #picks .sb-odds { padding: 5px 1px !important; }
 }
+
+/* ============================================================================
+ * Pass 9 (Nima 2026-09-03): readable numbers + a short, fast ticket.
+ *  A. odds/lines get a clean tabular face, more size, more weight, more contrast
+ *  B. the single-pick ticket collapses to a short panel (submit above the fold)
+ *  C. the multi-pick slip gets the same compaction
+ * Presentation only: no DOM ids, handlers or payload fields change.
+ * ========================================================================== */
+
+/* ---- A. Numbers ------------------------------------------------------------ */
+html.tmr-sbv2 {
+    /* Inter is already loaded sitewide and has true tabular figures, so columns
+       of prices line up without the squint of a condensed face. */
+    --sbv2-num: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --sbv2-price: #6ee7a0;
+    --sbv2-price-neg: #7dd3fc;
+}
+html.tmr-sbv2 #picks .sb-odds .sb-odds-price {
+    font-family: var(--sbv2-num) !important;
+    font-size: 23px !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: 'tnum' 1, 'lnum' 1 !important;
+    color: var(--sbv2-price) !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45) !important;
+    white-space: nowrap !important;
+}
+html.tmr-sbv2 #picks .sb-odds .sb-odds-line {
+    font-family: var(--sbv2-num) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    font-variant-numeric: tabular-nums !important;
+    color: #dbe4ef !important;
+    letter-spacing: 0 !important;
+}
+/* Higher contrast behind the numbers, and a clearer resting border. */
+html.tmr-sbv2 #picks .sb-odds {
+    background: #10161f !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+html.tmr-sbv2 #picks .sb-odds:hover { background: #1a2534 !important; border-color: rgba(34, 211, 238, 0.6) !important; }
+html.tmr-sbv2 #picks .sb-odds.selected,
+html.tmr-sbv2 #picks .sb-odds.is-selected,
+html.tmr-sbv2 #picks .sb-odds.active,
+html.tmr-sbv2 #picks .sb-odds[aria-pressed="true"],
+html.tmr-sbv2 #picks .sb-odds.tmr-ms-on {
+    background: var(--sbv2-accent) !important;
+    border-color: var(--sbv2-accent) !important;
+    box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28) !important;
+}
+html.tmr-sbv2 #picks .sb-odds.tmr-ms-on .sb-odds-line,
+html.tmr-sbv2 #picks .sb-odds.tmr-ms-on .sb-odds-price { color: var(--sbv2-accent-ink) !important; }
+/* Empty cells must not read as a price. */
+html.tmr-sbv2 #picks .sb-odds.is-empty .sb-odds-price,
+html.tmr-sbv2 #picks .sb-odds[disabled] .sb-odds-price { font-size: 19px !important; color: #64748b !important; text-shadow: none !important; }
+
+/* ---- B. Single-pick ticket: short panel ------------------------------------- */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-head { padding: 9px 12px !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-head h3 { font-size: 13px !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-card { padding: 10px !important; gap: 6px !important; }
+
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-topline { padding: 9px 11px 8px !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-topline strong { font-size: 15px !important; line-height: 1.25 !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-topline span { padding: 2px 7px !important; font-size: 9.5px !important; }
+
+/* Detail rows become a two-column grid: label left, value right, half the height. */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row {
+    padding: 5px 11px !important;
+    font-size: 11.5px !important;
+    min-height: 0 !important;
+}
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row > span { font-size: 9.5px !important; letter-spacing: .06em !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row > strong { font-size: 12px !important; line-height: 1.25 !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row.tmr-ticket-row--odds > strong {
+    font-family: var(--sbv2-num) !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+    color: var(--sbv2-price) !important;
+}
+/* The book row is the least useful line in a single-pick ticket. */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row.tmr-ticket-row--book { padding: 4px 11px !important; opacity: .75 !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row.tmr-ticket-row--book > strong { font-size: 11px !important; font-weight: 600 !important; }
+
+/* Stake mode + units share one compact strip. */
+html.tmr-sbv2 #picks .tmr-ticket-stake-mode-row { margin-top: 6px !important; padding: 6px 11px !important; }
+html.tmr-sbv2 #picks .tmr-ticket-stake-mode-toggle { padding: 2px !important; }
+html.tmr-sbv2 #picks .tmr-ticket-stake-mode-btn { padding: 5px 11px !important; font-size: 11px !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row:has(#ttSlipUnits) { padding: 6px 11px !important; }
+html.tmr-sbv2 #picks #ttSlipUnits {
+    height: 32px !important;
+    width: 66px !important;
+    min-width: 66px !important;
+    font-family: var(--sbv2-num) !important;
+    font-size: 15px !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+/* Risk / To Win on one short line instead of two tall cards. */
+html.tmr-sbv2 #picks #ttSlipStakePreview.tmr-ticket-stake-summary { gap: 6px !important; margin: 2px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ticket-stake-summary-cell {
+    flex-direction: row !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+}
+html.tmr-sbv2 #picks .tmr-ticket-stake-summary-label { font-size: 9px !important; letter-spacing: .08em !important; }
+html.tmr-sbv2 #picks .tmr-ticket-stake-summary-cell strong {
+    font-family: var(--sbv2-num) !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+html.tmr-sbv2 #picks .tmr-ticket-stake-summary-divider { display: none !important; }
+
+/* The long legal-ish note is one line, not a paragraph. */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-card .sportsbook-ticket-preview-note {
+    font-size: 10.5px !important;
+    line-height: 1.35 !important;
+    max-height: 2.7em !important;
+    overflow: hidden !important;
+}
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-submit { margin-top: 4px !important; padding: 12px 14px !important; font-size: 13px !important; }
+
+/* Contest entry is a one-line opt-in, not a block that outsizes the bet. */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview .tmr-contest-toggle-block {
+    padding: 7px 10px !important;
+    margin: 4px 0 0 !important;
+    border-radius: 9px !important;
+    font-size: 11px !important;
+}
+html.tmr-sbv2 #picks .tmr-contest-toggle-block .tmr-cgt-title { font-size: 10px !important; margin: 0 0 3px !important; letter-spacing: .06em !important; }
+html.tmr-sbv2 #picks .tmr-contest-toggle-block .tmr-cgt-row { margin: 0 !important; font-size: 11px !important; line-height: 1.3 !important; }
+html.tmr-sbv2 #picks .tmr-contest-toggle-block .tmr-cgt-help { display: none !important; }
+html.tmr-sbv2 #picks .tmr-contest-toggle-block .tmr-cgt-label { font-size: 11px !important; font-weight: 700 !important; }
+html.tmr-sbv2 #picks .tmr-contest-toggle-block a,
+html.tmr-sbv2 #picks .tmr-contest-toggle-block button { font-size: 10.5px !important; padding: 5px 9px !important; margin-top: 5px !important; }
+
+/* Empty state does not need to be tall either. */
+html.tmr-sbv2 #picks .sportsbook-empty-slip { min-height: 84px !important; padding: 14px 12px !important; }
+
+/* ---- C. Multi-pick slip ----------------------------------------------------- */
+html.tmr-sbv2 #picks .tmr-ms-head { padding: 0 0 6px !important; margin: 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-title { font-size: 13px !important; font-weight: 800 !important; letter-spacing: .02em !important; }
+/* The count is the "2 PICKS / 3 PICKS" signal: make it unmissable. */
+html.tmr-sbv2 #picks .tmr-ms-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 7px !important;
+    margin-left: 6px !important;
+    border-radius: 999px !important;
+    background: var(--sbv2-accent) !important;
+    color: var(--sbv2-accent-ink) !important;
+    font-family: var(--sbv2-num) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-title::after {
+    content: 'PICKS';
+    margin-left: 6px;
+    color: var(--sbv2-muted);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+html.tmr-sbv2 #picks .tmr-ms-clear { padding: 5px 10px !important; font-size: 10.5px !important; border-radius: 8px !important; }
+html.tmr-sbv2 #picks .tmr-ms-list { gap: 6px !important; }
+html.tmr-sbv2 #picks .tmr-ms-card { padding: 8px 9px !important; border-radius: 9px !important; }
+html.tmr-sbv2 #picks .tmr-ms-card-top { gap: 8px !important; }
+html.tmr-sbv2 #picks .tmr-ms-sel { font-size: 12.5px !important; font-weight: 800 !important; line-height: 1.25 !important; }
+html.tmr-sbv2 #picks .tmr-ms-match { font-size: 10.5px !important; line-height: 1.3 !important; margin: 1px 0 0 !important; color: var(--sbv2-muted) !important; }
+html.tmr-sbv2 #picks .tmr-ms-meta { font-size: 10.5px !important; margin: 2px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-odds {
+    font-family: var(--sbv2-num) !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+    color: var(--sbv2-price) !important;
+}
+/* Remove control: obvious, square, and a real tap target. */
+html.tmr-sbv2 #picks .tmr-ms-remove {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    border-radius: 7px !important;
+    background: rgba(248, 113, 113, 0.12) !important;
+    border: 1px solid rgba(248, 113, 113, 0.32) !important;
+    color: #fca5a5 !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-remove:hover { background: rgba(248, 113, 113, 0.24) !important; color: #fff !important; }
+/* Per-card stake: one row, no second row of chips (the bulk row above covers it). */
+html.tmr-sbv2 #picks .tmr-ms-units-row { margin: 6px 0 0 !important; gap: 6px !important; align-items: center !important; }
+html.tmr-sbv2 #picks .tmr-ms-units-label { font-size: 9.5px !important; letter-spacing: .06em !important; text-transform: uppercase !important; }
+html.tmr-sbv2 #picks .tmr-ms-units-input {
+    height: 30px !important;
+    font-family: var(--sbv2-num) !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-mini-chips { display: none !important; }
+html.tmr-sbv2 #picks .tmr-ms-bulk { padding: 7px 9px !important; margin: 0 0 7px !important; border-radius: 9px !important; gap: 5px !important; }
+html.tmr-sbv2 #picks .tmr-ms-bulk-label { font-size: 9.5px !important; letter-spacing: .06em !important; text-transform: uppercase !important; }
+html.tmr-sbv2 #picks .tmr-ms-chip {
+    min-width: 30px !important;
+    padding: 5px 8px !important;
+    font-family: var(--sbv2-num) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    border-radius: 7px !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-mode { gap: 4px !important; margin: 0 0 7px !important; }
+html.tmr-sbv2 #picks .tmr-ms-mode-btn { padding: 7px 10px !important; font-size: 11.5px !important; border-radius: 8px !important; }
+html.tmr-sbv2 #picks .tmr-ms-totals { padding: 7px 10px !important; font-size: 11px !important; margin: 0 0 6px !important; }
+html.tmr-sbv2 #picks .tmr-ms-totals strong {
+    font-family: var(--sbv2-num) !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-foot { padding: 0 !important; margin: 4px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-submit { padding: 12px 14px !important; font-size: 13px !important; border-radius: 10px !important; letter-spacing: .05em !important; text-transform: uppercase !important; }
+html.tmr-sbv2 #picks .tmr-ms-step { font-size: 10.5px !important; margin: 4px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-empty { padding: 14px 12px !important; font-size: 12px !important; }
+
+/* The slip may grow with picks, but it must never push Submit off screen: the
+   list scrolls inside the panel while the head and footer stay put. */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview:has(.tmr-ms-list) .sportsbook-ticket-preview-card {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: calc(100vh - 150px) !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-list {
+    overflow-y: auto !important;
+    max-height: calc(100vh - 430px) !important;
+    min-height: 60px !important;
+    scrollbar-width: thin !important;
+}
+
+/* ---- Tablet / mobile ------------------------------------------------------- */
+@media (max-width: 1099px) {
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 21px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 12.5px !important; }
+    html.tmr-sbv2 #picks .tmr-ms-list { max-height: none !important; }
+    html.tmr-sbv2 #picks .sportsbook-ticket-preview:has(.tmr-ms-list) .sportsbook-ticket-preview-card { max-height: none !important; }
+    /* The multi-slip drawer is the mobile surface; keep it short and scrollable. */
+    html.tmr-sbv2 .tmr-ms-drawer-panel { max-height: 82vh !important; }
+    html.tmr-sbv2 .tmr-ms-drawer-body { max-height: calc(82vh - 54px) !important; overflow-y: auto !important; }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-card { padding: 8px 9px !important; }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-mini-chips { display: none !important; }
+    html.tmr-sbv2 .tmr-ms-pill,
+    html.tmr-sbv2 [class*='tmr-ms-pill'] { font-weight: 800 !important; }
+}
+@media (max-width: 560px) {
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 19px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 11.5px !important; }
+    html.tmr-sbv2 #picks .sb-odds.is-empty .sb-odds-price { font-size: 16px !important; }
+}
+@media (max-width: 400px) {
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 18px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 11px !important; }
+}
+
+/* ---- Pass 10: contain the multi-pick slip so Submit is always reachable ------
+ * .tmr-ms-root sat at its natural height inside the capped card and simply
+ * overflowed, pushing the submit button off screen once 3-4 picks were on the
+ * slip. Make the whole chain a flex column with min-height:0 so only the LIST
+ * scrolls, and trim the fixed furniture around it.
+ * -------------------------------------------------------------------------- */
+html.tmr-sbv2 #picks .tmr-ms-root {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+}
+html.tmr-sbv2 #picks .sportsbook-ticket-preview:has(.tmr-ms-list) {
+    overflow: hidden !important;
+    max-height: calc(100vh - 104px) !important;
+}
+html.tmr-sbv2 #picks .sportsbook-ticket-preview:has(.tmr-ms-list) .sportsbook-ticket-preview-card {
+    min-height: 0 !important;
+    overflow: hidden !important;
+    max-height: none !important;
+    flex: 1 1 auto !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-list {
+    flex: 1 1 auto !important;
+    min-height: 96px !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding-right: 3px !important;
+}
+/* Head / bulk / mode / totals / foot are fixed furniture: keep them short. */
+html.tmr-sbv2 #picks .tmr-ms-head,
+html.tmr-sbv2 #picks .tmr-ms-bulk,
+html.tmr-sbv2 #picks .tmr-ms-mode,
+html.tmr-sbv2 #picks .tmr-ms-totals,
+html.tmr-sbv2 #picks .tmr-ms-foot { flex: 0 0 auto !important; }
+html.tmr-sbv2 #picks .tmr-ms-bulk {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    padding: 6px 8px !important;
+    margin: 0 0 6px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-bulk::-webkit-scrollbar { display: none; }
+html.tmr-sbv2 #picks .tmr-ms-bulk-label { flex: 0 0 auto !important; white-space: nowrap !important; margin-right: 2px !important; }
+html.tmr-sbv2 #picks .tmr-ms-chip { flex: 0 0 auto !important; min-width: 28px !important; padding: 4px 7px !important; }
+html.tmr-sbv2 #picks .tmr-ms-foot { margin: 6px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-submit { margin: 0 !important; padding: 11px 14px !important; }
+
+/* Compact pick cards: selection + matchup + market/odds + one units row. */
+html.tmr-sbv2 #picks .tmr-ms-card { padding: 7px 8px !important; }
+html.tmr-sbv2 #picks .tmr-ms-sel { font-size: 12px !important; }
+html.tmr-sbv2 #picks .tmr-ms-match {
+    font-size: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-meta { font-size: 10px !important; margin: 1px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-units-row { margin: 5px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-units-input { height: 27px !important; font-size: 13px !important; }
+html.tmr-sbv2 #picks .tmr-ms-units-row button { width: 26px !important; height: 27px !important; font-size: 15px !important; }
+html.tmr-sbv2 #picks .tmr-ms-remove { width: 26px !important; height: 26px !important; flex-basis: 26px !important; }
+
+/* A touch more headroom for the single-pick ticket too. */
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-card .sportsbook-ticket-preview-note { max-height: 2.7em !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-row.tmr-ticket-row--book { display: none !important; }
+html.tmr-sbv2 #picks .sportsbook-ticket-preview-topline { padding: 8px 11px 7px !important; }
+
+@media (max-width: 1099px) {
+    /* Mobile uses the drawer, so the in-flow aside must not be height-capped. */
+    html.tmr-sbv2 #picks .sportsbook-ticket-preview:has(.tmr-ms-list) { max-height: none !important; overflow: visible !important; }
+    html.tmr-sbv2 #picks .tmr-ms-root { overflow: visible !important; max-height: none !important; }
+    html.tmr-sbv2 #picks .tmr-ms-list { overflow: visible !important; }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-list { overflow-y: auto !important; }
+}
+
+/* ---- Pass 11: last of the fixed furniture, so a 3-pick slip fits at scroll 0 */
+html.tmr-sbv2 #picks .tmr-ms-head { padding: 0 0 4px !important; }
+html.tmr-sbv2 #picks .tmr-ms-mode { margin: 0 0 5px !important; }
+html.tmr-sbv2 #picks .tmr-ms-mode-btn { padding: 6px 10px !important; }
+html.tmr-sbv2 #picks .tmr-ms-totals { padding: 5px 9px !important; margin: 0 0 5px !important; font-size: 10.5px !important; }
+html.tmr-sbv2 #picks .tmr-ms-bulk { margin: 0 0 5px !important; }
+html.tmr-sbv2 #picks .tmr-ms-foot { margin: 5px 0 0 !important; }
+html.tmr-sbv2 #picks .tmr-ms-foot > .tmr-ms-step { display: none !important; }
+html.tmr-sbv2 #picks .tmr-ms-units-row .tmr-ms-step {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 30px !important;
+    flex: 0 0 28px !important;
+    padding: 0 !important;
+    border-radius: 7px !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+html.tmr-sbv2 #picks .tmr-ms-units-input {
+    box-sizing: border-box !important;
+    height: 30px !important;
+    padding: 0 6px !important;
+}
+html.tmr-sbv2 #picks .sportsbook-ticket-preview:has(.tmr-ms-list) .sportsbook-ticket-preview-card { padding: 8px !important; }
+html.tmr-sbv2 #picks .tmr-ms-list { gap: 5px !important; }
+
+/* ---- Pass 12: pin Submit inside the mobile drawer --------------------------
+ * The drawer body scrolled as one block, so with 3+ picks the submit button sat
+ * below the fold of the drawer. Contain the drawer the same way as the desktop
+ * panel: only the pick LIST scrolls, the head and the footer stay put.
+ * -------------------------------------------------------------------------- */
+@media (max-width: 1099px) {
+    html.tmr-sbv2 .tmr-ms-drawer-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        max-height: 86vh !important;
+        overflow: hidden !important;
+    }
+    html.tmr-sbv2 .tmr-ms-drawer-body {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: hidden !important;
+    }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-root {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-list {
+        flex: 1 1 auto !important;
+        min-height: 80px !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-head,
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-bulk,
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-mode,
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-totals,
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-foot { flex: 0 0 auto !important; }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-foot {
+        padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+        background: inherit !important;
+    }
+    html.tmr-sbv2 .tmr-ms-drawer-body .tmr-ms-submit { width: 100% !important; }
+}
 }
