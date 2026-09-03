@@ -141,8 +141,8 @@ async function slipState(page) {
     const vals = [...document.querySelectorAll('#ttSlipStakePreview .tmr-ticket-stake-summary-value')].map((e) => e.textContent.trim());
     const num = (s) => { const m = /(-?\d+(?:\.\d+)?)/.exec(s || ''); return m ? parseFloat(m[1]) : null; };
     return {
-      selection: t('.sportsbook-ticket-preview-topline strong'),
-      odds: t('.tmr-ticket-row--odds strong'),
+      selection: t('.sportsbook-ticket-preview-topline strong') || t('.tmr-ms-card .tmr-ms-sel'),
+      odds: t('.tmr-ticket-row--odds strong') || t('.tmr-ms-card .tmr-ms-odds'),
       market: t('.tmr-ticket-row--market strong'),
       game: t('.tmr-ticket-row--game strong'),
       mode: (q('#ttSlipStakeMode') || {}).value || null,
@@ -150,7 +150,7 @@ async function slipState(page) {
       risk: num(vals[0]), toWin: num(vals[1]),
       selectedChips: document.querySelectorAll('#lobbyBoardRows .sb-odds.selected, #lobbyBoardRows .sb-odds.is-selected').length,
       selectedChipText: (q('#lobbyBoardRows .sb-odds.selected') || { textContent: '' }).textContent.replace(/\s+/g, ' ').trim(),
-      submitEnabled: !!(q('#ttSlipSubmit') && !q('#ttSlipSubmit').disabled),
+      submitEnabled: !!((q('#ttSlipSubmit') && !q('#ttSlipSubmit').disabled) || (q('.tmr-ms-submit') && !q('.tmr-ms-submit').disabled)),
     };
   });
 }
