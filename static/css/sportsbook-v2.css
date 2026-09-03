@@ -1537,4 +1537,63 @@ html.tmr-sbv2 #picks .sb-odds[disabled] .sb-odds-price { font-size: 13px !import
     html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-price,
     html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 16px !important; }
 }
+
+/* ============================================================================
+ * Pass 15 (Nima): a fixed line carries no information, so the price leads there.
+ *
+ * Pass 14 made the line the hero everywhere except the moneyline column. That
+ * is right where the line actually varies (NFL +3.5 / -7, NCAAF -42.5, totals
+ * O 44.5 vs O 8.5), but wrong for baseball and hockey: the run line and puck
+ * line are ALWAYS +/-1.5, so the only number that moves is the price.
+ *
+ * Sampled on the live board before writing this:
+ *   MLB   21 games -> every run line is exactly -1.5 / +1.5, totals vary (8.5, 9, 8, 7.5)
+ *   NPB    5 games -> same, totals vary (8, 7, 5.5, 7.5)
+ *   NHL            -> header reads "Puck Line", same +/-1.5 convention
+ *   NFL   16 games -> spreads vary (+3.5, -2.5, +7.5, -7, +1.5)
+ *   NCAAF 85 games -> spreads vary (+6.5, -42.5, +55.5, -26.5)
+ *   Soccer         -> 3-way handicap varies (+/-0.5, +/-1.5)
+ * So only the first market column of MLB / NPB / NHL flips; totals keep the
+ * line as hero on every sport, and the moneyline column is unchanged.
+ * ========================================================================== */
+html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line,
+html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line,
+html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .04em !important;
+    color: var(--sbv2-muted) !important;
+    text-shadow: none !important;
+}
+html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+@media (max-width: 1099px) {
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line { font-size: 10.5px !important; }
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 18.5px !important; }
+}
+@media (max-width: 560px) {
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line { font-size: 10px !important; }
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 17px !important; }
+}
+@media (max-width: 400px) {
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="MLB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NPB"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks #lobbyBoardRows[data-sport="NHL"] .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 16px !important; }
+}
 }
