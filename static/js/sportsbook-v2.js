@@ -20,7 +20,7 @@
  * ========================================================================== */
 (function () {
     'use strict';
-    var ROLLOUT_PERCENT = 10;
+    var ROLLOUT_PERCENT = 50;
     var CLS = 'tmr-sbv2';
     var root = document.documentElement;
 
