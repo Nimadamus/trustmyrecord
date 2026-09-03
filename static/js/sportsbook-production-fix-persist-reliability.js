@@ -3200,11 +3200,37 @@
             showSelectionFeedback._scrollTimer = window.setTimeout(scrollPickSlipIntoView, 80);
         }
     }
+    // PICK_IDEMPOTENCY_20260903: one submission identity per STAGED wager.
+    // The seed is minted every time a price is staged into the slip; the key
+    // also folds in the material wager fields, so a retry / double-click /
+    // repeated POST of the same staged wager replays to the original pick
+    // (backend pick_submission_requests), while changing units, stake mode,
+    // line, odds, selection or re-staging a price yields a new key = new wager.
+    function newSubmissionSeed() {
+        try { if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID(); } catch (_) {}
+        return 'sb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+    }
+    function submissionHash(parts) {
+        var s = parts.join('|'); var h = 5381;
+        for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+        return (h >>> 0).toString(16);
+    }
+    function buildSubmissionIdentity(payload) {
+        if (!state.submissionSeed) state.submissionSeed = newSubmissionSeed();
+        var material = [payload.game_id, payload.market_type, payload.selection,
+            payload.line_snapshot == null ? '' : Number(payload.line_snapshot), Number(payload.odds_snapshot),
+            Number(payload.units), payload.stake_mode || 'risk'];
+        return {
+            submission_batch_id: state.submissionSeed + ':' + submissionHash(material),
+            submission_item_key: String(payload.game_id || 'single')
+        };
+    }
     function selectOption(optionId) {
         const option = state.currentOptions.get(optionId);
         if (!option) return;
 
         state.selectedOption = option;
+        state.submissionSeed = newSubmissionSeed(); // PICK_IDEMPOTENCY_20260903: new staging = new wager identity
 
         // MULTISLIP_20260730: when the flag-gated multi-pick slip is active it
         // consumes the selection (toggle add/remove, its own slip UI) and the
@@ -3645,6 +3671,7 @@
                 game_snapshot: buildSubmittedGameSnapshot(option),
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
             };
+            Object.assign(payload, buildSubmissionIdentity(payload)); // PICK_IDEMPOTENCY_20260903
             Object.assign(payload, getTeamTotalSubmitMeta(option));
             finalPayload = payload;
             try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}

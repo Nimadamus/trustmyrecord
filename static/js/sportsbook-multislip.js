@@ -758,6 +758,14 @@
             game_snapshot: I.buildSubmittedGameSnapshot(opt),
             reasoning: ''
         };
+        // PICK_IDEMPOTENCY_20260903: one identity per slip entry (a removed and
+        // re-added line is a new entry = new wager); material fields fold in so a
+        // changed stake is a new wager while a retry replays to the original pick.
+        if (!entry.__tmrSeed) { try { entry.__tmrSeed = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('ms-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)); } catch (_) { entry.__tmrSeed = 'ms-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); } }
+        var __mat = [opt.game_id, opt.market_type, submittedSelection, lineValue == null ? '' : Number(lineValue), oddsValue, units, stakeMode || 'risk'].join('|');
+        var __h = 5381; for (var __i = 0; __i < __mat.length; __i++) __h = ((__h << 5) + __h + __mat.charCodeAt(__i)) | 0;
+        payload.submission_batch_id = entry.__tmrSeed + ':' + (__h >>> 0).toString(16);
+        payload.submission_item_key = String(opt.game_id || 'single') + '|' + String(opt.market_type || '') + '|' + String(submittedSelection || '');
         Object.assign(payload, I.getTeamTotalSubmitMeta(opt));
         return payload;
     }
