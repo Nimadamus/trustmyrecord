@@ -3318,6 +3318,12 @@
                         displayTeam = option.selection || label.replace(/\s+[+-]?\d+(\.\d+)?\s*$/,'').trim();
                         sideLabel = /under/i.test(label) ? 'F5 Team Under' : 'F5 Team Over';
                         break;
+                    case 'mma_total_rounds':
+                        // UFC_ROUNDS_MAP_20260903: fight total rounds is Over/Under, not a moneyline.
+                        betType = /under/i.test(label) ? 'roundsunder' : 'roundsover';
+                        displayTeam = '';
+                        sideLabel = /under/i.test(label) ? 'Under' : 'Over';
+                        break;
                     case 'spreads':
                         betType = 'spread';
                         displayTeam = option.selection || label.split(' ')[0] || '';
@@ -4568,6 +4574,19 @@
                         marketType = 'alt_totals'; groupLabel = 'Alt Totals';
                         selection = 'Under';
                         selectionLabel = 'Alt Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    // UFC_ROUNDS_MAP_20260903: the fight board emits roundsover/roundsunder
+                    // (see index.html renderRow). Without these cases the bridge fell
+                    // through to the moneyline default and locked 'Over' as h2h.
+                    case 'roundsover':
+                        marketType = 'mma_total_rounds'; groupLabel = 'Total Rounds';
+                        selection = 'Over';
+                        selectionLabel = 'Over' + (lineDisp ? ' ' + lineDisp : '') + ' Rounds';
+                        break;
+                    case 'roundsunder':
+                        marketType = 'mma_total_rounds'; groupLabel = 'Total Rounds';
+                        selection = 'Under';
+                        selectionLabel = 'Under' + (lineDisp ? ' ' + lineDisp : '') + ' Rounds';
                         break;
                     case 'spread':
                         marketType = 'spreads'; groupLabel = 'Full Game';

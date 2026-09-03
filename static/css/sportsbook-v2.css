@@ -926,4 +926,79 @@ html.tmr-sbv2 #picks .sportsbook-game-card { padding: 8px 12px 8px !important; }
     html.tmr-sbv2 body:has(#tmrQuickBet.show) .tmr-lc { bottom: 96px !important; }
     html.tmr-sbv2 body:has(#tmrQuickBet.show) .tmr-lc-launcher.is-wide .tmr-lc-label { display: none !important; }
 }
+
+/* ---- Pass 6 (Nima 2026-09-03): bigger lines, odds and tap targets ---------- */
+html.tmr-sbv2 #picks .sportsbook-board-grid-head { grid-template-columns: minmax(0, 1fr) 118px 118px 118px !important; }
+html.tmr-sbv2 #picks .team-market-row { grid-template-columns: minmax(0, 1fr) 118px 118px 118px !important; gap: 8px !important; padding: 4px 0 !important; }
+html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row,
+html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .market-header-row { grid-template-columns: minmax(0, 1fr) 118px 118px !important; }
+html.tmr-sbv2 #picks .team-market-row + .team-market-row { margin-top: 6px !important; }
+html.tmr-sbv2 #picks .sb-odds { min-height: 60px !important; padding: 6px 6px !important; gap: 2px !important; border-radius: 10px !important; }
+html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font: 700 13.5px/1.1 var(--sbv2-font) !important; color: var(--sbv2-text) !important; }
+html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font: 700 21px/1.05 var(--sbv2-num) !important; letter-spacing: .02em !important; }
+html.tmr-sbv2 #picks .sb-odds.selected::after, html.tmr-sbv2 #picks .sb-odds.is-selected::after, html.tmr-sbv2 #picks .sb-odds[aria-pressed="true"]::after { font-size: 9px !important; }
+html.tmr-sbv2 #picks .team-cell { font-size: 14px !important; }
+
+@media (max-width: 1099px) {
+    html.tmr-sbv2 #picks .sportsbook-board-grid-head { grid-template-columns: minmax(0, 1fr) 96px 96px 96px !important; }
+    html.tmr-sbv2 #picks .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row { grid-template-columns: minmax(0, 1fr) 96px 96px 96px !important; gap: 6px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .market-header-row { grid-template-columns: minmax(0, 1fr) 96px 96px !important; }
+    html.tmr-sbv2 #picks .sb-odds { min-height: 58px !important; padding: 5px 4px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 13px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 20px !important; }
+}
+@media (max-width: 560px) {
+    html.tmr-sbv2 #picks .picks-container-modern { padding-left: 4px !important; padding-right: 4px !important; }
+    html.tmr-sbv2 #picks .sportsbook-league-rail { margin-left: -4px !important; margin-right: -4px !important; padding-left: 8px !important; padding-right: 8px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card { padding: 7px 6px !important; }
+    html.tmr-sbv2 #picks .sportsbook-board-grid-head { grid-template-columns: minmax(0, 1fr) 68px 68px 68px !important; gap: 4px !important; padding: 7px 6px !important; }
+    html.tmr-sbv2 #picks .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row { grid-template-columns: minmax(0, 1fr) 68px 68px 68px !important; gap: 4px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .market-header-row { grid-template-columns: minmax(0, 1fr) 68px 68px !important; }
+    html.tmr-sbv2 #picks .sb-odds { min-height: 56px !important; padding: 5px 2px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 12px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 18px !important; }
+    html.tmr-sbv2 #picks .team-cell { font-size: 12px !important; gap: 5px !important; }
+    html.tmr-sbv2 #picks .team-cell b { -webkit-line-clamp: 2 !important; }
+}
+
+/* ---- Pass 7: mobile fit for the larger chips --------------------------------- */
+@media (max-width: 1099px) {
+    html.tmr-sbv2 #picks .sportsbook-selector-head,
+    html.tmr-sbv2 #picks .sportsbook-selector-head > div,
+    html.tmr-sbv2 #picks .sportsbook-selector-head h3,
+    html.tmr-sbv2 #picks .sportsbook-selector-head .sportsbook-lobby-label { text-align: left !important; justify-content: flex-start !important; align-items: flex-start !important; margin-left: 0 !important; }
+}
+@media (max-width: 560px) {
+    html.tmr-sbv2 #picks .sportsbook-board-grid-head { grid-template-columns: minmax(0, 1fr) 64px 64px 64px !important; gap: 3px !important; }
+    html.tmr-sbv2 #picks .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row { grid-template-columns: minmax(0, 1fr) 64px 64px 64px !important; gap: 3px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .market-header-row { grid-template-columns: minmax(0, 1fr) 64px 64px !important; }
+    html.tmr-sbv2 #picks .team-cell { font-size: 11.5px !important; gap: 4px !important; }
+    html.tmr-sbv2 #picks .team-cell img, html.tmr-sbv2 #picks .team-cell .sb-team-logo, html.tmr-sbv2 #picks .team-cell .team-logo { width: 16px !important; height: 16px !important; flex-basis: 16px !important; }
+    html.tmr-sbv2 #picks .team-cell b { -webkit-line-clamp: 3 !important; word-break: normal !important; }
+    html.tmr-sbv2 #picks .sb-team-pitcher { font-size: 9.5px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 17px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 11.5px !important; }
+}
+
+/* ---- Pass 8: narrow phones ----------------------------------------------------- */
+@media (max-width: 400px) {
+    html.tmr-sbv2 #picks .sportsbook-board-grid-head { grid-template-columns: minmax(0, 1fr) 60px 60px 60px !important; gap: 2px !important; }
+    html.tmr-sbv2 #picks .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row { grid-template-columns: minmax(0, 1fr) 60px 60px 60px !important; gap: 2px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .market-header-row { grid-template-columns: minmax(0, 1fr) 60px 60px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card { padding: 6px 4px !important; }
+    html.tmr-sbv2 #picks .team-cell { font-size: 11px !important; gap: 3px !important; }
+    html.tmr-sbv2 #picks .team-cell img, html.tmr-sbv2 #picks .team-cell .sb-team-logo, html.tmr-sbv2 #picks .team-cell .team-logo { width: 14px !important; height: 14px !important; flex-basis: 14px !important; }
+    html.tmr-sbv2 #picks .team-cell b { -webkit-line-clamp: 3 !important; overflow-wrap: anywhere !important; line-height: 1.15 !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 16.5px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 11px !important; }
+    html.tmr-sbv2 #picks .sb-odds { padding: 5px 1px !important; }
+}
 }

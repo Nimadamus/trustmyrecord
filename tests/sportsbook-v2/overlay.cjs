@@ -18,6 +18,7 @@ async function installOverlay(context) {
   if (process.env.SBV2_OVERLAY_CLASSIC === '1') {
     OVERLAY['/sportsbook/'] = ['sportsbook/index.html', 'text/html; charset=utf-8'];
     OVERLAY['/sportsbook/index.html'] = ['sportsbook/index.html', 'text/html; charset=utf-8'];
+    OVERLAY['/static/js/sportsbook-production-fix-persist-reliability.js'] = ['static/js/sportsbook-production-fix-persist-reliability.js', 'application/javascript; charset=utf-8'];
   }
   await context.route(/^https:\/\/trustmyrecord\.com\/.*/, async (route) => {
     const u = new URL(route.request().url());
