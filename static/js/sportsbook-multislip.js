@@ -29,7 +29,7 @@
     // bucket (0-99, assigned once) enables the slip for ROLLOUT_PERCENT% of
     // browsers. Kill switch = deploy with ROLLOUT_PERCENT 0; explicit users
     // can always opt out with ?multislip=0.
-    var ROLLOUT_PERCENT = 50;
+    var ROLLOUT_PERCENT = 100;
     function resolveFlag() {
         try {
             var params = new URLSearchParams(window.location.search || '');
