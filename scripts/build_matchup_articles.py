@@ -303,6 +303,9 @@ SOURCE_SHORT = {
     "actionnetwork": "Market feed",
     "fanduel": "FanDuel props",
     "tmr-editorial": "TMR Research",
+    "espn": "ESPN Data",
+    "draftkings": "DraftKings",
+    "tmr-derived": "TMR Calculation",
 }
 
 SOURCE_LABEL = {
@@ -313,6 +316,9 @@ SOURCE_LABEL = {
     "actionnetwork": "Market odds feed",
     "fanduel": "FanDuel player props feed",
     "tmr-editorial": "TrustMyRecord Research (editorial analysis)",
+    "espn": "ESPN public data APIs (scoreboard, team record, team statistics)",
+    "draftkings": "DraftKings odds board",
+    "tmr-derived": "TrustMyRecord calculation from the sourced inputs shown",
 }
 
 
