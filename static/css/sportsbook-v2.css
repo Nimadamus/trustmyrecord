@@ -1450,4 +1450,91 @@ html.tmr-sbv2 #picks .sb-odds[disabled] .sb-odds-price { font-size: 17px !import
     html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 16px !important; }
     html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 10.5px !important; }
 }
+
+/* ============================================================================
+ * Pass 14 (Nima): the LINE is the bet, not the juice.
+ *
+ * Passes 9/13 sized the American price as the hero and left the line small.
+ * That is backwards for spread and total chips, where every price is -110/-115
+ * noise and the number the user is actually choosing is the line (+3.5, O 44.5,
+ * -1.5). So: the line leads, the price becomes the supporting number (and still
+ * grows a step from where it was).
+ *
+ * The one exception is the MONEYLINE column, whose "line" is the literal label
+ * "ML" -- there the price IS the bet, so that column keeps the price as hero.
+ * Column map (verified against the live board):
+ *   standard card  : 2 = spread, 3 = MONEYLINE, 4 = total
+ *   two-market card: 2 = MONEYLINE, 3 = total rounds   (UFC/PFL fights)
+ * ========================================================================== */
+
+/* ---- Default: the line is the hero ---------------------------------------- */
+html.tmr-sbv2 #picks .sb-odds .sb-odds-line {
+    font-family: var(--sbv2-num) !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: 'tnum' 1, 'lnum' 1 !important;
+    color: #f4f8fc !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45) !important;
+    white-space: nowrap !important;
+}
+html.tmr-sbv2 #picks .sb-odds .sb-odds-price {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0 !important;
+    color: var(--sbv2-price) !important;
+    text-shadow: none !important;
+}
+
+/* ---- Moneyline column: the price is the bet, "ML" is only a label ---------- */
+html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-line,
+html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .06em !important;
+    color: var(--sbv2-muted) !important;
+    text-shadow: none !important;
+}
+html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-price,
+html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Empty cells stay quiet in both arrangements. */
+html.tmr-sbv2 #picks .sb-odds.is-empty .sb-odds-line,
+html.tmr-sbv2 #picks .sb-odds[disabled] .sb-odds-line { font-size: 15px !important; color: #64748b !important; text-shadow: none !important; }
+html.tmr-sbv2 #picks .sb-odds.is-empty .sb-odds-price,
+html.tmr-sbv2 #picks .sb-odds[disabled] .sb-odds-price { font-size: 13px !important; }
+
+/* ---- Tablet / mobile ------------------------------------------------------- */
+@media (max-width: 1099px) {
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 18.5px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 13px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-line,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line { font-size: 10.5px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 18.5px !important; }
+}
+@media (max-width: 560px) {
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 17px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 12px !important; }
+    html.tmr-sbv2 #picks .sb-odds.is-empty .sb-odds-line { font-size: 13px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-line,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-line { font-size: 10px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 17px !important; }
+}
+@media (max-width: 400px) {
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-line { font-size: 16px !important; }
+    html.tmr-sbv2 #picks .sb-odds .sb-odds-price { font-size: 11.5px !important; }
+    html.tmr-sbv2 #picks .sportsbook-game-card:not(.sportsbook-game-card--two-market-cols) .team-market-row .odds-cell:nth-child(3) .sb-odds .sb-odds-price,
+    html.tmr-sbv2 #picks .sportsbook-game-card--two-market-cols .team-market-row .odds-cell:nth-child(2) .sb-odds .sb-odds-price { font-size: 16px !important; }
+}
 }
