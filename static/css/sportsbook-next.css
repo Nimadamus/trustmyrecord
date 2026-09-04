@@ -62,19 +62,19 @@ body {
 .sbn-back { margin-left: auto; color: var(--sbn-muted); font-size: 12.5px; font-weight: 600; text-decoration: none; }
 .sbn-back:hover { color: var(--sbn-accent); }
 .sbn-notice {
-    margin: 8px 16px 0; padding: 6px 12px; border-radius: 10px;
+    margin: 6px 16px 0; padding: 4px 12px; border-radius: 8px;
     background: rgba(245, 184, 46, 0.07); border: 1px solid rgba(245, 184, 46, 0.28);
-    color: var(--sbn-text2); font-size: 12.5px;
+    color: var(--sbn-text2); font-size: 12px;
 }
 .sbn-notice strong { color: var(--sbn-gold); }
 
 /* ---- Three-column stage ---------------------------------------------------- */
 .sbn-shell {
     display: grid;
-    grid-template-columns: 168px minmax(0, 1fr) 320px;
+    grid-template-columns: 150px minmax(0, 1fr) 300px;
     gap: 16px;
     align-items: start;
-    max-width: 1560px;
+    max-width: 1720px;
     margin: 0 auto;
     padding: 12px 16px 40px;
 }
@@ -98,15 +98,15 @@ body {
 .sbn-railbtn b { font-size: 13.5px; font-weight: 700; }
 .sbn-railbtn small { font-size: 10.5px; color: var(--sbn-muted); }
 
-.sbn-boardhead { margin: 0 0 8px; }
-.sbn-boardhead h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
-.sbn-boardhead p { margin: 2px 0 0; color: var(--sbn-muted); font-size: 12px; }
+.sbn-boardhead { margin: 0 0 2px; }
+.sbn-boardhead h1 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--sbn-text2); }
+.sbn-boardhead p { display: none; }
 .sbn-note { padding: 40px 16px; text-align: center; color: var(--sbn-muted); background: var(--sbn-panel); border: 1px solid var(--sbn-line); border-radius: 12px; }
 
 /* ---- Compact board: one scannable row per game ----------------------------- */
 /* Column geometry is declared once and shared by the header strip and every
    team row, so prices line up down the whole board. */
-.sbn-colhead, .sbn-trow { display: grid; grid-template-columns: minmax(0, 1fr) 156px 156px 156px; gap: 10px; align-items: center; }
+.sbn-colhead, .sbn-trow { display: grid; grid-template-columns: minmax(190px, 1fr) repeat(3, minmax(150px, 210px)); gap: 10px; align-items: center; }
 .sbn-colhead {
     position: sticky; top: 56px; z-index: 8;
     padding: 9px 14px; margin: 0 0 8px;
@@ -117,14 +117,15 @@ body {
 .sbn-colhead span { text-align: center; }
 .sbn-colhead span:first-child { text-align: left; }
 .sbn-row {
-    padding: 8px 14px 11px;
+    padding: 6px 12px 7px;
     background: var(--sbn-panel);
     border: 1px solid var(--sbn-line);
     border-radius: 8px;
     margin: 0 0 5px;
 }
 .sbn-row:hover { border-color: rgba(255, 255, 255, 0.16); }
-.sbn-rowtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 24px; }
+.sbn-row { margin: 0 0 3px; }
+.sbn-rowtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 22px; }
 .sbn-rowtime { color: var(--sbn-muted); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
 .sbn-deep {
     padding: 4px 11px; border: 1px solid var(--sbn-line2); border-radius: 999px;
@@ -133,9 +134,9 @@ body {
 }
 .sbn-deep:hover { background: rgba(34, 211, 238, 0.12); border-color: rgba(34, 211, 238, 0.45); }
 .sbn-deep b { font-weight: 800; opacity: .8; }
-.sbn-teams { margin-top: 4px; }
+.sbn-teams { margin-top: 3px; }
 .sbn-trow { height: 54px; }
-.sbn-trow + .sbn-trow { margin-top: 6px; }
+.sbn-trow + .sbn-trow { margin-top: 5px; }
 .sbn-tname { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 10px; }
 .sbn-tname b {
     min-width: 0; font-size: 15px; font-weight: 700; line-height: 1.15;
@@ -149,9 +150,12 @@ body {
 }
 
 /* ---- Price chip: line on top, price under, both tabular -------------------- */
+/* A grid with FIXED row heights, not a centred flex column. Both rows occupy
+   the same space in every chip whatever the text, so nothing sits high, low or
+   off to one side, and an empty second row still holds its place. */
 .sbn-chip {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
-    width: 100%; height: 54px; padding: 5px 5px;
+    display: grid; grid-template-rows: 22px 15px; align-content: center; justify-items: stretch;
+    width: 100%; height: 54px; padding: 0 6px;
     border: 1px solid var(--sbn-line2); border-radius: 7px;
     background: var(--sbn-chip); color: var(--sbn-text);
     font-family: inherit; cursor: pointer;
@@ -160,8 +164,14 @@ body {
 .sbn-chip:hover { background: var(--sbn-chip-hi); border-color: rgba(34, 211, 238, 0.55); }
 .sbn-chip:active { transform: scale(.97); }
 .sbn-chip:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: 2px; }
-.sbn-chip-top { font-size: 13px; font-weight: 700; line-height: 1.15; color: var(--sbn-text2); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.sbn-chip-bot { font-size: 13px; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; color: var(--sbn-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sbn-chip-top, .sbn-chip-bot {
+    display: flex; align-items: center; justify-content: center;
+    min-width: 0; line-height: 1; text-align: center; white-space: nowrap;
+    font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; letter-spacing: 0;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.sbn-chip-top { font-size: 13px; font-weight: 700; color: var(--sbn-text2); }
+.sbn-chip-bot { font-size: 13px; font-weight: 700; color: var(--sbn-green); }
 /* When the LINE is the bet (spread, total) it takes the hero weight and the
    price supports it. When the price is the bet (moneyline, fixed run line) the
    card passes hero-top and the two swap. */
@@ -375,10 +385,10 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 .sbn-dcell .sbn-chip { height: 44px; }
 
 @media (max-width: 1360px) {
-    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 132px 132px 132px; }
+    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(126px, 180px)); }
 }
 @media (max-width: 1180px) {
-    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 112px 112px 112px; gap: 8px; }
+    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(120px, 1fr) repeat(3, minmax(104px, 150px)); gap: 8px; }
     .sbn-chip.hero-top .sbn-chip-top { font-size: 18px; }
 }
 @media (max-width: 1023px) {
@@ -406,3 +416,119 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
     .sbn-chip-top { font-size: 12px; }
     .sbn-chip-bot { font-size: 11.5px; }
 }
+
+/* ---- Market category toolbar ----------------------------------------------
+   The tabs are generated from the inventory the feed returns for the loaded
+   sport, so this bar is the honest answer to "what can I bet on here". */
+.sbn-toolbar {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 8px 0 9px; margin: 0 0 8px;
+    background: var(--sbn-bg);
+    border-bottom: 1px solid var(--sbn-line);
+}
+.sbn-cats {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    flex: 1 1 auto; min-width: 0;
+}
+.sbn-cats::-webkit-scrollbar { display: none; }
+.sbn-cat {
+    display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+    padding: 8px 13px; border: 1px solid var(--sbn-line2); border-radius: 999px;
+    background: var(--sbn-panel); color: var(--sbn-text2);
+    font-family: inherit; font-size: 12.5px; font-weight: 700; white-space: nowrap; cursor: pointer;
+    transition: background .1s ease, border-color .1s ease, color .1s ease;
+}
+.sbn-cat:hover { background: var(--sbn-chip-hi); color: var(--sbn-text); }
+.sbn-cat i {
+    font-style: normal; font-size: 10.5px; font-weight: 800;
+    padding: 1px 6px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09); color: var(--sbn-muted);
+    font-variant-numeric: tabular-nums;
+}
+.sbn-cat.is-on { background: var(--sbn-accent); border-color: var(--sbn-accent); color: var(--sbn-ink); }
+.sbn-cat.is-on i { background: rgba(0, 0, 0, 0.22); color: var(--sbn-ink); }
+.sbn-cat:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: 2px; }
+.sbn-tally {
+    flex: 0 0 auto; padding-top: 9px; color: var(--sbn-muted);
+    font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+}
+.sbn-colhead { top: 56px; }
+
+/* ---- Two-column category (team totals) ------------------------------------ */
+.sbn-colhead--ou, .sbn-row--ou .sbn-trow { grid-template-columns: minmax(190px, 1fr) repeat(2, minmax(150px, 210px)); }
+
+/* ---- Ladder categories: alt lines, alt totals, player props ---------------- */
+/* One track per side or per player. Rungs stay on the row up to a fixed count;
+   the rest live behind the +N, which opens the drawer at this category. */
+.sbn-strip { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; height: 54px; }
+.sbn-strip + .sbn-strip { margin-top: 6px; }
+.sbn-striplabel { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sbn-striplabel b {
+    min-width: 0; font-size: 13px; font-weight: 700; line-height: 1.15;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.sbn-striptrack { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, 190px); justify-content: start; gap: 6px; min-width: 0; }
+.sbn-strip.is-blank { visibility: hidden; }
+.sbn-striprest {
+    display: block; width: 100%; margin: 8px 0 0; padding: 8px 12px;
+    border: 1px dashed var(--sbn-line2); border-radius: 8px; background: transparent;
+    color: var(--sbn-accent); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.sbn-striprest:hover { background: rgba(34, 211, 238, 0.1); border-style: solid; }
+.sbn-striptrack .sbn-more { margin: 0; height: 54px; justify-content: center; }
+.sbn-norow { padding: 16px 2px; color: var(--sbn-muted); font-size: 12.5px; }
+
+@media (max-width: 1180px) {
+    .sbn-colhead--ou, .sbn-row--ou .sbn-trow { grid-template-columns: minmax(0, 1fr) 112px 112px; }
+    .sbn-strip { grid-template-columns: 116px minmax(0, 1fr); }
+}
+@media (max-width: 1023px) {
+    .sbn-toolbar { top: 0; }
+    .sbn-colhead { top: 49px; }
+}
+@media (max-width: 720px) {
+    .sbn-colhead--ou, .sbn-row--ou .sbn-trow { grid-template-columns: minmax(0, 1fr) 84px 84px; }
+    .sbn-strip { grid-template-columns: 84px minmax(0, 1fr); gap: 6px; }
+    .sbn-striplabel b { font-size: 11.5px; }
+    .sbn-striptrack { grid-auto-columns: 72px; overflow-x: auto; scrollbar-width: none; }
+    .sbn-striptrack::-webkit-scrollbar { display: none; }
+    .sbn-tally { display: none; }
+    .sbn-cats { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .sbn-cats::-webkit-scrollbar { display: none; }
+}
+
+/* Column count follows the inventory: a category that posts only a total gets
+   one column, not three, so no board ever prints a row of dead placeholders. */
+.sbn-cols3 { grid-template-columns: minmax(190px, 1fr) repeat(3, minmax(150px, 210px)); }
+.sbn-cols2 { grid-template-columns: minmax(190px, 1fr) repeat(2, minmax(150px, 210px)); }
+.sbn-cols1 { grid-template-columns: minmax(190px, 1fr) minmax(150px, 210px); }
+@media (max-width: 1360px) {
+    .sbn-cols3 { grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(126px, 180px)); }
+    .sbn-cols2 { grid-template-columns: minmax(150px, 1fr) repeat(2, minmax(126px, 180px)); }
+    .sbn-cols1 { grid-template-columns: minmax(150px, 1fr) minmax(126px, 180px); }
+}
+@media (max-width: 1180px) {
+    .sbn-cols3 { grid-template-columns: minmax(120px, 1fr) repeat(3, minmax(104px, 150px)); }
+    .sbn-cols2 { grid-template-columns: minmax(120px, 1fr) repeat(2, minmax(104px, 150px)); }
+    .sbn-cols1 { grid-template-columns: minmax(120px, 1fr) minmax(104px, 150px); }
+}
+@media (max-width: 720px) {
+    .sbn-cols3 { grid-template-columns: minmax(0, 1fr) repeat(3, 84px); }
+    .sbn-cols2 { grid-template-columns: minmax(0, 1fr) repeat(2, 84px); }
+    .sbn-cols1 { grid-template-columns: minmax(0, 1fr) 84px; }
+}
+@media (max-width: 420px) {
+    .sbn-cols3 { grid-template-columns: minmax(0, 1fr) repeat(3, 74px); }
+    .sbn-cols2 { grid-template-columns: minmax(0, 1fr) repeat(2, 74px); }
+    .sbn-cols1 { grid-template-columns: minmax(0, 1fr) 74px; }
+}
+
+/* The board name leads the market tabs rather than taking a line of its own. */
+.sbn-boardname {
+    flex: 0 0 auto; padding-top: 9px;
+    font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: var(--sbn-text);
+}
+.sbn-colhead { padding-top: 7px; padding-bottom: 7px; }
+.sbn-cat { padding: 7px 12px; font-size: 12px; }
+@media (max-width: 720px) { .sbn-boardname { display: none; } }

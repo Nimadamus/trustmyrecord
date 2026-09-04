@@ -227,6 +227,146 @@ async function pickSport(page, sport) {
     await ctx.close();
   }
 
+
+  // ---- 6. market category navigation --------------------------------------
+  // Every tab must come from inventory the feed actually returned, must change
+  // what the board shows, and must never print a column the category lacks.
+  {
+    const { ctx, page, errs } = await open(browser, { width: 1440, height: 1000 });
+    for (const sport of ['MLB', 'NFL']) {
+      await goto(page, sport);
+      const feedCats = await page.evaluate(() => {
+        const st = window.__sbNext.state;
+        const keys = new Set();
+        st.games.forEach((g) => {
+          if (g.main) keys.add('game_lines');
+          Object.keys(g.groups).forEach((k) => keys.add(['full_game', 'spread', 'total'].includes(k) ? 'game_lines' : k));
+        });
+        return [...keys];
+      });
+      const tabs = await page.$$eval('.sbn-cat', (ns) => ns.map((n) => n.getAttribute('data-cat')));
+      check(`${sport}: a tab for every market group in the feed (${tabs.length})`,
+        tabs.length === feedCats.length && feedCats.every((k) => tabs.includes(k)),
+        { tabs, feedCats });
+      check(`${sport}: no tab names a market the feed did not return`,
+        tabs.every((t) => feedCats.includes(t)), tabs.filter((t) => !feedCats.includes(t)));
+      check(`${sport}: every tab is on screen without a horizontal scroll`,
+        await page.evaluate(() => {
+          const n = document.querySelector('.sbn-cats');
+          return n.scrollWidth <= n.clientWidth + 1;
+        }));
+
+      const seen = new Set();
+      for (const key of tabs) {
+        await page.evaluate((k) => document.querySelector(`.sbn-cat[data-cat="${k}"]`).click(), key);
+        await page.waitForTimeout(300);
+        const v = await page.evaluate(() => {
+          const rows = [...document.querySelectorAll('.sbn-row')];
+          const chips = [...document.querySelectorAll('.sbn-row .sbn-chip')];
+          const live = chips.filter((c) => c.hasAttribute('data-pick'));
+          const heads = [...document.querySelectorAll('.sbn-colhead span')].map((x) => x.textContent.trim()).filter(Boolean);
+          const shape = new Set(), voff = new Set();
+          let offCentre = 0, clipped = 0;
+          chips.forEach((c) => {
+            const r = c.getBoundingClientRect();
+            const t = c.querySelector('.sbn-chip-top'), b = c.querySelector('.sbn-chip-bot');
+            const tr = t.getBoundingClientRect(), br = b.getBoundingClientRect();
+            shape.add(`${Math.round(r.height)}/${Math.round(tr.height)}/${Math.round(br.height)}`);
+            voff.add(`${Math.round(tr.top - r.top)}/${Math.round(br.top - r.top)}`);
+            const cx = r.left + r.width / 2;
+            [t, b].forEach((el) => {
+              const rr = el.getBoundingClientRect();
+              if (Math.abs(rr.left + rr.width / 2 - cx) > 1.5) offCentre++;
+              if (el.scrollWidth > el.clientWidth + 1) clipped++;
+            });
+          });
+          const bodies = rows.map((r) => (r.querySelector('.sbn-norow') ? 'none' : 'has'));
+          const heights = [...new Set(rows.filter((r, i) => bodies[i] === 'has')
+            .map((r) => Math.round(r.getBoundingClientRect().height)))];
+          return {
+            rows: rows.length, chips: chips.length, live: live.length, heads,
+            shape: [...shape], voff: [...voff], offCentre, clipped, heights,
+            deadCols: heads.length ? heads.filter((h, i) =>
+              [...document.querySelectorAll('.sbn-row .sbn-trow')].every((tr) => {
+                const c = tr.querySelectorAll('.sbn-chip')[i];
+                return c && c.classList.contains('is-off');
+              })).length : 0,
+            hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          };
+        });
+        seen.add(JSON.stringify([v.chips, v.heads.join('|')]));
+        check(`${sport}/${key}: the board renders priced chips (${v.live}/${v.chips})`, v.live > 0, v);
+        check(`${sport}/${key}: every chip has the identical internal geometry`,
+          v.shape.length === 1 && v.voff.length === 1, { shape: v.shape, voff: v.voff });
+        check(`${sport}/${key}: no chip text is off-centre or clipped`,
+          v.offCentre === 0 && v.clipped === 0, { offCentre: v.offCentre, clipped: v.clipped });
+        check(`${sport}/${key}: every card carrying this market is the same height`,
+          v.heights.length === 1, v.heights);
+        check(`${sport}/${key}: no column is printed that the market does not post`,
+          v.deadCols === 0, v.heads);
+        check(`${sport}/${key}: no horizontal page overflow`, !v.hScroll);
+      }
+      check(`${sport}: switching tabs actually changes the board`, seen.size > 1, seen.size);
+    }
+    check('no JS errors while touring every market category', errs.length === 0, errs.slice(0, 4));
+    await ctx.close();
+  }
+
+  // ---- 7. a pick from a deeper category records THAT market ----------------
+  // A group key is a display bucket: first_5 holds f5_h2h, f5_spreads and
+  // f5_totals. Submitting the bucket name would file the pick as the wrong
+  // market, so the payload must carry the item's own market_type.
+  {
+    const { ctx, page, posts, errs } = await open(browser, { width: 1440, height: 1000 });
+    await goto(page, 'MLB');
+    const tabs = await page.$$eval('.sbn-cat', (ns) => ns.map((n) => n.getAttribute('data-cat')));
+    const want = ['first_5', 'team_totals', 'alt_totals', 'player_props', 'first_inning'].filter((k) => tabs.includes(k));
+    const expected = [];
+    for (const key of want) {
+      await page.evaluate((k) => document.querySelector(`.sbn-cat[data-cat="${k}"]`).click(), key);
+      await page.waitForTimeout(300);
+      const got = await page.evaluate(() => {
+        const c = document.querySelector('.sbn-row .sbn-chip[data-pick]');
+        if (!c) return null;
+        const d = JSON.parse(c.getAttribute('data-pick'));
+        c.click();
+        return { marketType: d.marketType, groupLabel: d.groupLabel, line: d.line, odds: d.odds };
+      });
+      if (got) expected.push([key, got]);
+      await page.waitForTimeout(200);
+    }
+    check(`a chip in each deeper category is pickable (${expected.length}/${want.length})`,
+      expected.length === want.length, { want, got: expected.map((e) => e[0]) });
+    // Buckets that hold several market types under one heading. Their name is a
+    // display label only and must never reach the record as a market_type.
+    const BUCKETS = ['full_game', 'spread', 'total', 'first_5', 'first_inning',
+      'first_half', 'second_half', 'period_1', 'period_2', 'period_3', 'period_4', 'player_props'];
+    check('no category submits a display bucket as the market type',
+      expected.every(([, g]) => g.marketType && !BUCKETS.includes(g.marketType)),
+      expected.map(([k, g]) => [k, g.marketType]));
+    check('First 5 records an f5_* market, never "first_5"',
+      !expected.some(([k, g]) => k === 'first_5') || expected.find(([k]) => k === 'first_5')[1].marketType.startsWith('f5_'),
+      expected.filter(([k]) => k === 'first_5').map(([, g]) => g.marketType));
+    check('1st Inning records first_inning_totals, never "first_inning"',
+      !expected.some(([k]) => k === 'first_inning') || expected.find(([k]) => k === 'first_inning')[1].marketType === 'first_inning_totals',
+      expected.filter(([k]) => k === 'first_inning').map(([, g]) => g.marketType));
+    posts.length = 0;
+    await page.evaluate(() => document.getElementById('sbnSubmit').click());
+    await page.waitForTimeout(2500);
+    check(`locking the deep-market slip posts one pick per selection (${posts.length})`,
+      posts.length === expected.length, posts.map((p) => p.market_type));
+    check('every posted market_type matches the chip that was tapped',
+      posts.every((p, i) => expected.some(([, g]) => g.marketType === p.market_type)),
+      { posted: posts.map((p) => p.market_type), tapped: expected.map(([, g]) => g.marketType) });
+    check('every posted price and line match the chip that was tapped',
+      posts.every((p) => expected.some(([, g]) => g.odds === p.odds_snapshot && (g.line == null ? p.line_snapshot == null : g.line === p.line_snapshot))),
+      posts.map((p) => [p.market_type, p.line_snapshot, p.odds_snapshot]));
+    check('every posted market carries the feed label for its group',
+      posts.every((p) => !!p.market_label), posts.map((p) => p.market_label));
+    check('no JS errors through the deep-market pick flow', errs.length === 0, errs.slice(0, 4));
+    await ctx.close();
+  }
+
   await browser.close();
   if (args.report) fs.writeFileSync(args.report, JSON.stringify({ failures, log }, null, 2));
   console.log(`== next-preview: ${log.length - failures} passed, ${failures} failed`);

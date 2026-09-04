@@ -53,7 +53,9 @@
         loading: false,
         picks: [],            // [{ key, game, market, betType, selection, label, line, odds, units, book }]
         stakeMode: 'risk',
+        cat: 'game_lines',    // selected market category (see categories())
         drawer: null,         // gameId whose full market list is open
+        drawerCat: null,      // category the drawer scrolled to
         error: null,
         reqId: 0
     };
@@ -150,9 +152,16 @@
                     line: num(i.line),
                     odds: num(i.odds),
                     book: i.book_title || null,
-                    marketType: grp.key
+                    side: i.side || null,
+                    player: i.player_name || null,
+                    playerTeam: i.player_team || null,
+                    propLabel: i.prop_label || null,
+                    marketType: i.market_type || i.market_key || grp.key,
+                    displayOnly: i.display_only === true,
+                    pickable: i.pickable !== false
                 };
             }).filter(function (i) {
+                if (i.displayOnly || !i.pickable) return false;
                 if (!i.selection || !validLine(i.line) || !validOdds(i.odds)) return false;
                 // MLB team totals below 2.5 are unit-farming lines, not markets.
                 if (/team_totals/.test(grp.key) && sport === 'MLB' && Math.abs(i.line) < 2.5) return false;
@@ -207,7 +216,7 @@
     function load(sportKey) {
         var meta = sportMeta(sportKey);
         var id = ++state.reqId;
-        state.sport = sportKey; state.loading = true; state.error = null; state.games = [];
+        state.sport = sportKey; state.cat = 'game_lines'; state.loading = true; state.error = null; state.games = [];
         render();
         fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, { cache: 'no-store' })
             .then(function (r) { return r.ok ? r.json() : null; })
@@ -374,53 +383,221 @@
         return '<span class="sbn-crest sbn-crest--fb">' + esc(initials(team)) + '</span>';
     }
 
-    // ---- Main board: one compact row per game --------------------------------
-    // The board is for SCANNING. It carries only the three primary markets, at a
-    // fixed row height, with the column headers printed once above the list.
-    // Every deeper market lives behind More markets, which opens a drawer.
-    function marketCols(g) {
-        var m = g.main || {};
-        var find = function (arr, name) {
-            if (!arr) return null;
-            for (var i = 0; i < arr.length; i++) if (arr[i].selection === name) return arr[i];
-            return null;
-        };
-        var side = function (over) {
-            if (!m.total) return null;
-            for (var i = 0; i < m.total.length; i++) {
-                var t = String(m.total[i].selection).toLowerCase();
-                if (over && t === 'over') return m.total[i];
-                if (!over && t === 'under') return m.total[i];
-            }
-            return null;
-        };
-        return { find: find, side: side };
+    // ---- Market categories ---------------------------------------------------
+    // Built from the inventory the feed actually returns for the loaded sport.
+    // Nothing here is invented: a category appears only when at least one game
+    // carries that group_key, and its long name is the feed's own group_label.
+    var CAT_ORDER = ['game_lines', 'alt_spreads', 'alt_totals', 'team_totals', 'player_props',
+        'first_5', 'first_inning', 'first_half', 'second_half',
+        'period_1', 'period_2', 'period_3', 'period_4'];
+    // Shorter tab captions for our own long labels. The full feed label is kept
+    // as the tab's title attribute and as the drawer heading.
+    var CAT_SHORT = {
+        alt_spreads: 'Alt Lines', alt_totals: 'Alt Totals', team_totals: 'Team Totals',
+        player_props: 'Player Props', first_5: 'First 5', first_inning: '1st Inning',
+        first_half: '1st Half', second_half: '2nd Half'
+    };
+    var LINE_GROUPS = { full_game: 1, spread: 1, total: 1 };   // folded into Game Lines
+    function catLabel(key, long) {
+        if (key === 'game_lines') return 'Game Lines';
+        return CAT_SHORT[key] || long || key;
     }
-    function rowCells(g, team, isAway) {
-        var m = g.main || {};
-        var c = marketCols(g);
-        var fixed = !!FIXED_LINE_SPORTS[state.sport];
-        var sp = c.find(m.spread, team), ml = c.find(m.h2h, team), to = isAway ? c.side(true) : c.side(false);
-        var out = '';
-        out += sp && validOdds(sp.odds)
-            ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
-                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true,
-                sel: isSel(g, 'spreads', team, sp.line),
-                data: pickData(g, 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, 'Full Game') })
-            : chip({ disabled: true });
-        out += to && validOdds(to.odds)
-            ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds), heroTop: true,
-                sel: isSel(g, 'totals', isAway ? 'Over' : 'Under', to.line),
-                data: pickData(g, 'totals', isAway ? 'Over' : 'Under', (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, 'Full Game') })
-            : chip({ disabled: true });
-        out += ml && validOdds(ml.odds)
-            ? chip({ top: fmtOdds(ml.odds), bottom: 'ML', heroTop: true, sel: isSel(g, 'h2h', team, null),
-                data: pickData(g, 'h2h', team, team + ' ML', null, ml.odds, 'Full Game') })
-            : chip({ disabled: true });
+    function catLayout(key) {
+        if (key === 'team_totals') return 'ou';
+        if (key === 'alt_spreads' || key === 'alt_totals' || key === 'player_props') return 'strip';
+        return 'lines';   // game lines, halves, periods, First 5: h2h + spread + total
+    }
+    function categories() {
+        var count = {}, long = {};
+        state.games.forEach(function (g) {
+            var seen = {};
+            if (g.main) seen.game_lines = 1;
+            Object.keys(g.groups).forEach(function (k) {
+                if (LINE_GROUPS[k]) { seen.game_lines = 1; return; }
+                seen[k] = 1; long[k] = g.groups[k].label || k;
+            });
+            Object.keys(seen).forEach(function (k) { count[k] = (count[k] || 0) + 1; });
+        });
+        var keys = Object.keys(count).sort(function (a, b) {
+            var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
+            if (ia < 0) ia = 99; if (ib < 0) ib = 99;
+            return ia - ib || a.localeCompare(b);
+        });
+        return keys.map(function (k) {
+            return { key: k, label: catLabel(k, long[k]), long: long[k] || catLabel(k, null), games: count[k], layout: catLayout(k) };
+        });
+    }
+    function activeCat() {
+        var cats = categories();
+        for (var i = 0; i < cats.length; i++) if (cats[i].key === state.cat) return cats[i];
+        return cats[0] || null;
+    }
+
+    // ---- Reading one category out of a game ---------------------------------
+    // Period / half / First 5 buckets hold three market types at once. Split them
+    // the same way the primary board is split so every category reads alike.
+    function isH2H(mt) { return /(^|_)h2h$/.test(mt); }
+    function isSpread(mt) { return /spreads$/.test(mt) && !/team/.test(mt); }
+    function isTotal(mt) { return /totals$/.test(mt) && !/team/.test(mt); }
+    function catLines(g, key) {
+        if (key === 'game_lines') return g.main;
+        var grp = g.groups[key];
+        if (!grp) return null;
+        var out = { book: grp.book, spread: [], h2h: [], total: [] };
+        grp.items.forEach(function (i) {
+            var mt = String(i.marketType || '');
+            if (isH2H(mt)) out.h2h.push(i);
+            else if (isSpread(mt)) out.spread.push(i);
+            else if (isTotal(mt)) out.total.push(i);
+        });
+        if (!out.spread.length && !out.h2h.length && !out.total.length) return null;
         return out;
     }
-    // The board row already carries h2h / spreads / totals, so the drawer lists
-    // only the markets you cannot reach from the row.
+    function catStrips(g, key) {
+        var grp = g.groups[key];
+        if (!grp || !grp.items.length) return [];
+        var buckets = {}, order = [];
+        grp.items.forEach(function (i) {
+            var label;
+            if (key === 'alt_totals') label = String(i.side || i.selection).toLowerCase() === 'under' ? 'Under' : 'Over';
+            else if (key === 'player_props') label = (i.player || i.selection) + ' \u00b7 ' + (i.propLabel || '');
+            else label = i.selection;
+            if (!buckets[label]) { buckets[label] = []; order.push(label); }
+            buckets[label].push(i);
+        });
+        return order.map(function (l) {
+            return { label: l, book: grp.book, items: buckets[l].slice().sort(function (a, b) { return (a.line || 0) - (b.line || 0); }) };
+        });
+    }
+
+    // ---- Board rows ----------------------------------------------------------
+    function findSel(list, team) {
+        if (!list) return null;
+        for (var i = 0; i < list.length; i++) if (list[i].selection === team) return list[i];
+        return null;
+    }
+    function findSide(list, over) {
+        if (!list) return null;
+        for (var i = 0; i < list.length; i++) {
+            var t = String(list[i].side || list[i].selection).toLowerCase();
+            if (over ? t === 'over' : t === 'under') return list[i];
+        }
+        return null;
+    }
+    function linesCols(cat) {
+        var has = { spread: false, total: false, h2h: false };
+        state.games.forEach(function (g) {
+            var m = catLines(g, cat.key);
+            if (!m) return;
+            if ((m.spread || []).length) has.spread = true;
+            if ((m.total || []).length) has.total = true;
+            if ((m.h2h || []).length) has.h2h = true;
+        });
+        var cols = [];
+        if (has.spread) cols.push('spread');
+        if (has.total) cols.push('total');
+        if (has.h2h) cols.push('h2h');
+        return cols.length ? cols : ['spread', 'total', 'h2h'];
+    }
+    function linesCells(g, cat, team, isAway, cols) {
+        var m = catLines(g, cat.key);
+        var blank = cols.map(function () { return chip({ disabled: true }); }).join('');
+        if (!m) return blank;
+        var fixed = cat.key === 'game_lines' && !!FIXED_LINE_SPORTS[state.sport];
+        var sp = findSel(m.spread, team), ml = findSel(m.h2h, team), to = findSide(m.total, isAway);
+        var gl = cat.long, bk = m.book;
+        var cell = {};
+        cell.spread = sp && validOdds(sp.odds)
+            ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
+                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true,
+                sel: isSel(g, sp.marketType || 'spreads', team, sp.line),
+                data: pickData(g, sp.marketType || 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, gl, bk) })
+            : chip({ disabled: true });
+        cell.total = to && validOdds(to.odds)
+            ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds), heroTop: true,
+                sel: isSel(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', to.line),
+                data: pickData(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, gl, bk) })
+            : chip({ disabled: true });
+        cell.h2h = ml && validOdds(ml.odds)
+            ? chip({ top: fmtOdds(ml.odds), bottom: 'ML', heroTop: true,
+                sel: isSel(g, ml.marketType || 'h2h', team, null),
+                data: pickData(g, ml.marketType || 'h2h', team, team + ' ML', null, ml.odds, gl, bk) })
+            : chip({ disabled: true });
+        return cols.map(function (c) { return cell[c]; }).join('');
+    }
+    function ouCells(g, cat, team) {
+        var grp = g.groups[cat.key];
+        var pick = function (over) {
+            if (!grp) return null;
+            var want = team + (over ? ' Over' : ' Under');
+            for (var i = 0; i < grp.items.length; i++) if (grp.items[i].selection === want) return grp.items[i];
+            return null;
+        };
+        return [true, false].map(function (over) {
+            var it = pick(over);
+            if (!it || !validOdds(it.odds)) return chip({ disabled: true });
+            var selName = team + (over ? ' Over' : ' Under');
+            return chip({ top: (over ? 'O ' : 'U ') + fmtLine(it.line), bottom: fmtOdds(it.odds), heroTop: true,
+                sel: isSel(g, it.marketType, selName, it.line),
+                data: pickData(g, it.marketType, selName, it.label || selName + ' ' + fmtLine(it.line), it.line, it.odds, cat.long, grp.book) });
+        }).join('');
+    }
+    var STRIP_MAX = 6;
+    // A ladder holds far more rungs than a row can show. Pick the window around
+    // the line the game is actually priced at rather than the first six, which
+    // would be the longest shots on the board.
+    function anchorLine(g, cat, row) {
+        var m = g.main;
+        if (!m) return null;
+        if (cat.key === 'alt_spreads') {
+            var sp = findSel(m.spread, row.label);
+            return sp ? sp.line : null;
+        }
+        if (cat.key === 'alt_totals') {
+            var to = findSide(m.total, row.label !== 'Under');
+            return to ? to.line : null;
+        }
+        return null;
+    }
+    function ladderWindow(items, anchor, size) {
+        if (items.length <= size) return { shown: items, from: 0 };
+        var at = 0;
+        if (anchor != null) {
+            var best = Infinity;
+            items.forEach(function (i, idx) {
+                var d = Math.abs((i.line == null ? 0 : i.line) - anchor);
+                if (d < best) { best = d; at = idx; }
+            });
+        } else {
+            at = Math.floor(items.length / 2);
+        }
+        var from = Math.max(0, Math.min(items.length - size, at - Math.floor(size / 2)));
+        return { shown: items.slice(from, from + size), from: from };
+    }
+    var STRIP_ROWS = { alt_spreads: 2, alt_totals: 2, player_props: 4 };
+    function stripRow(g, cat, row) {
+        var win = ladderWindow(row.items, anchorLine(g, cat, row), STRIP_MAX);
+        var shown = win.shown;
+        var rest = row.items.length - shown.length;
+        var cells = shown.map(function (i) {
+            var isOU = cat.key !== 'alt_spreads';
+            var sel = cat.key === 'alt_totals' ? row.label : i.selection;
+            var top = cat.key === 'alt_spreads' ? fmtLine(i.line, true)
+                : (cat.key === 'alt_totals' ? (row.label === 'Under' ? 'U ' : 'O ') + fmtLine(i.line)
+                    : ((i.side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line)));
+            if (cat.key === 'player_props') sel = i.selection;
+            return chip({ top: top, bottom: fmtOdds(i.odds), heroTop: true,
+                sel: isSel(g, i.marketType, sel, i.line),
+                data: pickData(g, i.marketType, sel, i.label || (sel + ' ' + fmtLine(i.line)), i.line, i.odds, cat.long, row.book) });
+        }).join('');
+        var isTeamRow = cat.key === 'alt_spreads' && (row.label === g.away || row.label === g.home);
+        return '<div class="sbn-strip">' +
+            '<span class="sbn-striplabel">' + (isTeamRow ? crest(row.label) : '') + '<b>' + esc(row.label) + '</b></span>' +
+            '<div class="sbn-striptrack">' + cells +
+            (rest > 0 ? '<button type="button" class="sbn-more" data-drawer="' + esc(g.id) + '" data-drawercat="' + esc(cat.key) + '">+' + rest + '</button>' : '') +
+            '</div></div>';
+    }
+
     var PRIMARY_KEYS = { h2h: 1, spreads: 1, totals: 1, moneyline: 1,
         full_game: 1, spread: 1, total: 1, run_line: 1, puck_line: 1, game_total: 1 };
     function deepKeys(g) {
@@ -428,84 +605,134 @@
             return !PRIMARY_KEYS[k] && g.groups[k].items.length;
         });
     }
-    function countDeep(g) { return deepKeys(g).length; }
-    function gameCard(g) {
-        var deep = countDeep(g);
-        return '<article class="sbn-row" data-game="' + esc(g.id) + '">' +
+    function countPrices(g) {
+        var n = g.main ? ((g.main.spread || []).length + (g.main.h2h || []).length + (g.main.total || []).length) : 0;
+        Object.keys(g.groups).forEach(function (k) { if (!LINE_GROUPS[k]) n += g.groups[k].items.length; });
+        return n;
+    }
+    function gameCard(g, cat, cols) {
+        var body;
+        if (cat.layout === 'strip') {
+            var want = STRIP_ROWS[cat.key] || 3;
+            var all = catStrips(g, cat.key);
+            var rows = all.slice(0, want);
+            var restRows = all.length - rows.length;
+            body = rows.length ? rows.map(function (r) { return stripRow(g, cat, r); }).join('')
+                : '<div class="sbn-norow">Not posted for this game.</div>';
+            // pad so every card in this category is exactly the same height
+            for (var pad = rows.length; rows.length && pad < want; pad++) body += '<div class="sbn-strip is-blank"></div>';
+            if (rows.length) body += '<button type="button" class="sbn-striprest" data-drawer="' + esc(g.id) +
+                '" data-drawercat="' + esc(cat.key) + '">' +
+                (restRows > 0 ? restRows + ' more in ' + cat.label : 'See every ' + cat.label + ' price') + '</button>';
+        } else if (cat.layout === 'ou') {
+            body = '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + ouCells(g, cat, g.away) + '</div>' +
+                '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + ouCells(g, cat, g.home) + '</div>';
+        } else {
+            body = '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + linesCells(g, cat, g.away, true, cols) + '</div>' +
+                '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + linesCells(g, cat, g.home, false, cols) + '</div>';
+        }
+        var ncol = cat.layout === 'ou' ? 2 : (cols ? cols.length : 3);
+        return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol + '" data-game="' + esc(g.id) + '">' +
             '<div class="sbn-rowtop">' +
             '<span class="sbn-rowtime">' + esc(whenText(g.when)) + '</span>' +
             '<button type="button" class="sbn-deep" data-drawer="' + esc(g.id) + '">' +
-            'More markets' + (deep ? ' <b>' + deep + '</b>' : '') + '</button>' +
+            'All markets <b>' + countPrices(g) + '</b></button>' +
             '</div>' +
-            '<div class="sbn-teams">' +
-            '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + rowCells(g, g.away, true) + '</div>' +
-            '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + rowCells(g, g.home, false) + '</div>' +
-            '</div></article>';
+            '<div class="sbn-teams">' + body + '</div></article>';
+    }
+    var COL_NAME = { spread: 'Spread', total: 'Total', h2h: 'Moneyline' };
+    function colHead(cat, cols) {
+        if (cat.layout === 'strip') return '';
+        var names = cat.layout === 'ou'
+            ? ['Over', 'Under']
+            : cols.map(function (c) {
+                return c === 'spread' && cat.key === 'game_lines' ? (SPREAD_LABEL[state.sport] || 'Spread') : COL_NAME[c];
+            });
+        return '<div class="sbn-colhead sbn-colhead--' + cat.layout + ' sbn-cols' + names.length + '"><span></span>' +
+            names.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>';
+    }
+    function catNav() {
+        var cats = categories();
+        if (!cats.length) return '';
+        var active = activeCat();
+        var total = state.games.reduce(function (n, g) { return n + countPrices(g); }, 0);
+        return '<div class="sbn-toolbar">' +
+            '<span class="sbn-boardname">' + esc(sportMeta(state.sport).label) + '</span>' +
+            '<nav class="sbn-cats" aria-label="Market categories">' +
+            cats.map(function (c) {
+                return '<button type="button" class="sbn-cat' + (active && c.key === active.key ? ' is-on' : '') +
+                    '" data-cat="' + esc(c.key) + '" title="' + esc(c.long) + '">' +
+                    esc(c.label) + '<i>' + c.games + '</i></button>';
+            }).join('') +
+            '</nav>' +
+            '<span class="sbn-tally">' + state.games.length + ' games \u00b7 ' + total.toLocaleString() + ' prices</span>' +
+            '</div>';
     }
 
     // ---- Drawer: the whole market inventory for one game ---------------------
-    var GROUP_ORDER = [
-        ['alt_spreads', 'Alternate spreads'],
-        ['alt_totals', 'Alternate totals'],
-        ['team_totals', 'Team totals'],
-        ['f5_h2h', 'First 5 moneyline'], ['f5_spreads', 'First 5 run line'],
-        ['f5_totals', 'First 5 total'], ['f5_team_totals', 'First 5 team totals'],
-        ['first_inning_totals', 'First inning (NRFI / YRFI)'],
-        ['first_half_h2h', 'First half moneyline'], ['first_half_spreads', 'First half spread'],
-        ['first_half_totals', 'First half total'],
-        ['second_half_h2h', 'Second half moneyline'], ['second_half_spreads', 'Second half spread'],
-        ['second_half_totals', 'Second half total'],
-        ['first_5', 'First 5 innings'],
-        ['first_inning', 'First inning (NRFI / YRFI)'],
-        ['mma_total_rounds', 'Total rounds']
-    ];
-    function drawerGroup(g, key, title) {
-        var grp = g.groups[key];
-        if (!grp || !grp.items.length) return '';
+    function drawerGroup(g, key, title, book, items, open) {
+        if (!items || !items.length) return '';
         var buckets = {}, order = [];
-        grp.items.forEach(function (i) {
-            var sl = String(i.selection).toLowerCase();
-            var side = (sl === 'over' || sl === 'under') ? (sl === 'under' ? 'Under' : 'Over') : i.selection;
+        items.forEach(function (i) {
+            var side;
+            if (key === 'player_props') side = (i.player || i.selection) + ' \u00b7 ' + (i.propLabel || '');
+            else if (isTotal(String(i.marketType)) || key === 'alt_totals') side = String(i.side || i.selection).toLowerCase() === 'under' ? 'Under' : 'Over';
+            else side = i.selection;
             if (!buckets[side]) { buckets[side] = []; order.push(side); }
             buckets[side].push(i);
         });
         var body = order.map(function (side) {
             var list = buckets[side].slice().sort(function (a, b) { return (a.line || 0) - (b.line || 0); });
             var cells = list.map(function (i) {
-                var mt = key === 'alt_spreads' ? 'spreads' : (key === 'alt_totals' ? 'totals' : key);
-                var isOU = (side === 'Over' || side === 'Under');
-                var noLine = (i.line == null || Number(i.line) === 0);
-                var top = isOU ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
-                    : (noLine ? 'ML' : fmtLine(i.line, true));
-                var sel = isOU ? side : i.selection;
-                var label = isOU ? (side + ' ' + fmtLine(i.line))
-                    : (i.label || (i.selection + (noLine ? ' ML' : ' ' + fmtLine(i.line, true))));
+                var mt = i.marketType;
+                var ou = /^(Over|Under)$/.test(side);
+                // A moneyline has no line to lead with, so the price is the hero there,
+                // exactly as it is in the Moneyline column on the board.
+                var noLine = i.line == null;
+                var top = ou ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
+                    : (noLine ? fmtOdds(i.odds) : fmtLine(i.line, !isTotal(String(mt))));
+                var bottom = noLine ? 'ML' : fmtOdds(i.odds);
+                var sel = ou && key !== 'player_props' ? side : i.selection;
+                var label = i.label || (sel + (noLine ? '' : ' ' + fmtLine(i.line)));
                 return '<span class="sbn-dcell">' + chip({
-                    top: top, bottom: fmtOdds(i.odds), sel: isSel(g, mt, sel, i.line),
-                    data: pickData(g, mt, sel, label, i.line, i.odds, title, grp.book)
+                    top: top, bottom: bottom, heroTop: true, sel: isSel(g, mt, sel, i.line),
+                    data: pickData(g, mt, sel, label, i.line, i.odds, title, book)
                 }) + '</span>';
             }).join('');
             return '<div class="sbn-drow"><span class="sbn-dside">' + esc(side) + '</span><div class="sbn-dgrid">' + cells + '</div></div>';
         }).join('');
-        return '<section class="sbn-dsec"><h4>' + esc(title) +
-            '<span class="sbn-count">' + grp.items.length + '</span>' +
-            (grp.book ? '<span class="sbn-book">' + esc(grp.book) + '</span>' : '') + '</h4>' + body + '</section>';
+        return '<section class="sbn-dsec' + (open ? ' is-open' : '') + '"><h4>' + esc(title) +
+            '<span class="sbn-count">' + items.length + '</span>' +
+            (book ? '<span class="sbn-book">' + esc(book) + '</span>' : '') + '</h4>' + body + '</section>';
     }
     function drawerHtml() {
         var g = null;
         for (var i = 0; i < state.games.length; i++) if (state.games[i].id === state.drawer) g = state.games[i];
         if (!g) return '';
-        var secs = GROUP_ORDER.filter(function (p) { return !PRIMARY_KEYS[p[0]]; })
-            .map(function (p) { return drawerGroup(g, p[0], p[1]); }).join('');
-        var known = {}; GROUP_ORDER.forEach(function (p) { known[p[0]] = 1; });
-        secs += deepKeys(g).filter(function (k) { return !known[k]; })
-            .map(function (k) { return drawerGroup(g, k, g.groups[k].label || k); }).join('');
+        var secs = '';
+        if (g.main) {
+            var mainItems = [];
+            (g.main.spread || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line, true), line: x.line, odds: x.odds, marketType: 'spreads' }); });
+            (g.main.total || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line), line: x.line, odds: x.odds, marketType: 'totals', side: x.selection }); });
+            (g.main.h2h || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ML', line: null, odds: x.odds, marketType: 'h2h' }); });
+            secs += drawerGroup(g, 'game_lines', 'Game Lines', g.main.book, mainItems, state.drawerCat === 'game_lines' || !state.drawerCat);
+        }
+        var keys = Object.keys(g.groups).filter(function (k) { return !LINE_GROUPS[k] && g.groups[k].items.length; })
+            .sort(function (a, b) {
+                var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
+                if (ia < 0) ia = 99; if (ib < 0) ib = 99;
+                return ia - ib || a.localeCompare(b);
+            });
+        keys.forEach(function (k) {
+            var grp = g.groups[k];
+            secs += drawerGroup(g, k, grp.label || k, grp.book, grp.items, state.drawerCat === k);
+        });
         return '<div class="sbn-drawer-back" data-drawerclose="1"></div>' +
             '<div class="sbn-drawer-panel" role="dialog" aria-modal="true" aria-label="All markets">' +
             '<header class="sbn-dhead"><div><div class="sbn-dmatch">' + crest(g.away) + esc(g.away) + ' <i>@</i> ' + crest(g.home) + esc(g.home) + '</div>' +
-            '<div class="sbn-dwhen">' + esc(whenText(g.when)) + '</div></div>' +
+            '<div class="sbn-dwhen">' + esc(whenText(g.when)) + ' \u00b7 ' + countPrices(g) + ' prices</div></div>' +
             '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
-            '<div class="sbn-dbody">' + (secs || '<div class="sbn-empty">No additional markets are posted for this game.</div>') + '</div></div>';
+            '<div class="sbn-dbody">' + (secs || '<div class="sbn-empty">No markets are posted for this game.</div>') + '</div></div>';
     }
 
     function slipHtml() {
@@ -558,7 +785,12 @@
             if (state.loading) board.innerHTML = '<div class="sbn-note">Loading ' + esc(sportMeta(state.sport).label) + ' odds…</div>';
             else if (state.error) board.innerHTML = '<div class="sbn-note">' + esc(state.error) + '</div>';
             else if (!state.games.length) board.innerHTML = '<div class="sbn-note">No upcoming ' + esc(sportMeta(state.sport).label) + ' games with posted odds right now.</div>';
-            else board.innerHTML = '<div class="sbn-colhead"><span></span><span>' + esc(SPREAD_LABEL[state.sport] || 'Spread') + '</span><span>Total</span><span>Moneyline</span></div>' + state.games.map(gameCard).join('');
+            else {
+                var cat = activeCat();
+                var cols = cat.layout === 'lines' ? linesCols(cat) : null;
+                board.innerHTML = catNav() + colHead(cat, cols) +
+                    state.games.map(function (g) { return gameCard(g, cat, cols); }).join('');
+            }
         }
         var slip = el('sbnSlip'); if (slip) slip.innerHTML = slipHtml();
         var dw = el('sbnDrawer');
@@ -585,9 +817,16 @@
             togglePick(data);
             return;
         }
+        var catBtn = t.closest && t.closest('[data-cat]');
+        if (catBtn) { state.cat = catBtn.getAttribute('data-cat'); render(); return; }
         var dOpen = t.closest && t.closest('[data-drawer]');
-        if (dOpen) { state.drawer = dOpen.getAttribute('data-drawer'); render(); return; }
-        if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; render(); return; }
+        if (dOpen) {
+            state.drawer = dOpen.getAttribute('data-drawer');
+            state.drawerCat = dOpen.getAttribute('data-drawercat') || state.cat;
+            render();
+            return;
+        }
+        if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; state.drawerCat = null; render(); return; }
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');
@@ -624,7 +863,8 @@
         var q = new URLSearchParams(location.search || '');
         var s = q.get('sport');
         load(s && sportMeta(s).key === s ? s : 'MLB');
-        window.__sbNext = { state: state, load: load, validOdds: validOdds, singleBook: singleBook, monotonic: monotonic };
+        window.__sbNext = { state: state, load: load, validOdds: validOdds, singleBook: singleBook,
+            monotonic: monotonic, categories: categories, render: render };
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
