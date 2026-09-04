@@ -652,6 +652,14 @@
         return '<div class="sbn-colhead sbn-colhead--' + cat.layout + ' sbn-cols' + names.length + '"><span></span>' +
             names.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>';
     }
+    // A11Y_20260904. The market chips are a tablist; these two give each tab a
+    // stable id and name the panel it controls, so a screen reader announces
+    // "Game Lines, tab, selected, 1 of 7" and can jump to the board it labels.
+    var BOARD_PANEL_ID = 'sbnBoardRows';
+    function catTabId(key) {
+        return 'sbnCat-' + String(key).replace(/[^A-Za-z0-9_-]/g, '');
+    }
+
     function catNav() {
         var cats = categories();
         if (!cats.length) return '';
@@ -659,10 +667,22 @@
         var total = state.games.reduce(function (n, g) { return n + countPrices(g); }, 0);
         return '<div class="sbn-toolbar">' +
             '<span class="sbn-boardname">' + esc(sportMeta(state.sport).label) + '</span>' +
-            '<nav class="sbn-cats" aria-label="Market categories">' +
+            // A11Y_20260904: these controls switch which market the board below
+            // is showing, which is a tablist, so they say so. Roles and state
+            // only - the classes, the markup order and the styling are
+            // untouched, so nothing about the look or the click behaviour
+            // changes. tabindex is roving (the selected tab is the one in the
+            // tab order) and catTabId() ties each tab to the panel it labels.
+            '<nav class="sbn-cats" role="tablist" aria-label="Market categories">' +
             cats.map(function (c) {
-                return '<button type="button" class="sbn-cat' + (active && c.key === active.key ? ' is-on' : '') +
-                    '" data-cat="' + esc(c.key) + '" title="' + esc(c.long) + '">' +
+                var on = !!(active && c.key === active.key);
+                return '<button type="button" role="tab" id="' + catTabId(c.key) +
+                    '" class="sbn-cat' + (on ? ' is-on' : '') +
+                    '" data-cat="' + esc(c.key) +
+                    '" aria-selected="' + (on ? 'true' : 'false') +
+                    '" aria-controls="' + BOARD_PANEL_ID +
+                    '" tabindex="' + (on ? '0' : '-1') +
+                    '" title="' + esc(c.long) + '">' +
                     esc(c.label) + '<i>' + c.games + '</i></button>';
             }).join('') +
             '</nav>' +
@@ -746,9 +766,12 @@
                 '<div class="sbn-slipmeta">' + esc(p.groupLabel || 'Full Game') + ' &middot; <b>' + fmtOdds(p.odds) + '</b>' +
                 (p.book ? ' &middot; ' + esc(p.book) : '') + '</div></div>' +
                 '<button type="button" class="sbn-slipx" data-remove="' + i + '" aria-label="Remove ' + esc(p.label) + '">&times;</button>' +
-                '<div class="sbn-slipunits"><label>Units</label>' +
+                // A11Y_20260904: the "Units" label was floating free - no `for`,
+                // so it named nothing and the field leaned on an aria-label that
+                // duplicated it. Associated properly now, one id per slip row.
+                '<div class="sbn-slipunits"><label for="sbnUnits' + i + '">Units</label>' +
                 '<button type="button" class="sbn-step" data-units="' + i + '" data-dir="-1" aria-label="Decrease units">&minus;</button>' +
-                '<input type="number" min="0.5" max="5" step="0.5" value="' + p.units + '" data-unitsinput="' + i + '" aria-label="Units">' +
+                '<input id="sbnUnits' + i + '" type="number" min="0.5" max="5" step="0.5" value="' + p.units + '" data-unitsinput="' + i + '">' +
                 '<button type="button" class="sbn-step" data-units="' + i + '" data-dir="1" aria-label="Increase units">+</button>' +
                 '<span class="sbn-slipcalc">' + (state.stakeMode === 'to_win' ? 'Risk ' + (Math.round(st.risk * 100) / 100) : 'To win ' + (Math.round(st.win * 100) / 100)) + 'u</span>' +
                 '</div></div>';
@@ -789,8 +812,15 @@
             else {
                 var cat = activeCat();
                 var cols = cat.layout === 'lines' ? linesCols(cat) : null;
-                board.innerHTML = catNav() + colHead(cat, cols) +
-                    state.games.map(function (g) { return gameCard(g, cat, cols); }).join('');
+                // The rows are the tab's panel. An unstyled block wrapper: it
+                // adds no padding, border or display of its own, so the column
+                // header and the rows lay out exactly as they did.
+                board.innerHTML = catNav() +
+                    '<div id="' + BOARD_PANEL_ID + '" role="tabpanel" aria-labelledby="' +
+                    catTabId(cat.key) + '">' +
+                    colHead(cat, cols) +
+                    state.games.map(function (g) { return gameCard(g, cat, cols); }).join('') +
+                    '</div>';
             }
         }
         var slip = el('sbnSlip'); if (slip) slip.innerHTML = slipHtml();
@@ -807,6 +837,37 @@
     }
 
     // ---- events -------------------------------------------------------------
+
+    // A11Y_20260904: a tablist is expected to be walked with the arrow keys,
+    // Home and End - that is what the roving tabindex is for. Only fires when
+    // focus is already on a market tab, so it takes no key away from the page.
+    // Selecting re-renders the tablist and throws away the focused node, so
+    // focus is put back on its replacement or the next arrow press would go
+    // nowhere.
+    function onTabKey(ev) {
+        if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft'
+            && ev.key !== 'Home' && ev.key !== 'End') return;
+        var t = ev.target;
+        var current = t && t.closest && t.closest('.sbn-cats [role="tab"]');
+        if (!current) return;
+        var list = current.parentNode;
+        var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+        var i = tabs.indexOf(current);
+        if (i === -1) return;
+        var next;
+        if (ev.key === 'Home') next = tabs[0];
+        else if (ev.key === 'End') next = tabs[tabs.length - 1];
+        else next = tabs[(i + (ev.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        if (!next || next === current) return;
+        ev.preventDefault();
+        var key = next.getAttribute('data-cat');
+        next.focus();
+        state.cat = key;
+        render();
+        var replacement = document.getElementById(catTabId(key));
+        if (replacement && replacement !== document.activeElement) replacement.focus();
+    }
+
     function onClick(ev) {
         var t = ev.target;
         var railBtn = t.closest && t.closest('.sbn-railbtn');
@@ -864,6 +925,7 @@
         if (!el('sbnBoard')) return;
         document.addEventListener('click', onClick, false);
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.drawer) { state.drawer = null; render(); } }, false);
+        document.addEventListener('keydown', onTabKey, false);
         document.addEventListener('change', onChange, false);
         var q = new URLSearchParams(location.search || '');
         var s = q.get('sport');
