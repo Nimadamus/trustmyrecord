@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" class="sbn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sportsbook Preview | TrustMyRecord</title>
+<!-- SPORTSBOOK_NEXT_20260903 — ISOLATED PREVIEW.
+     Nothing here is loaded by the production sportsbook at /sportsbook/.
+     It reuses only the read-only board API, the shared auth session and the
+     proven api.createPick submit path. Canonical points at the live board so
+     this preview never competes with it in search (never noindex, house rule). -->
+<link rel="canonical" href="https://trustmyrecord.com/sportsbook/">
+<meta name="description" content="Preview of the redesigned TrustMyRecord sportsbook board.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/sportsbook-next.css">
+</head>
+<body>
+<a class="sbn-skip" href="#sbnBoard">Skip to the board</a>
+
+<header class="sbn-topbar">
+  <a class="sbn-brand" href="/sportsbook/">
+    <span class="sbn-brand-mark">TMR</span>
+    <span class="sbn-brand-name">Trust<b>My</b>Record</span>
+  </a>
+  <span class="sbn-flag">Sportsbook preview</span>
+  <a class="sbn-back" href="/sportsbook/">Back to the live sportsbook</a>
+</header>
+
+<div class="sbn-notice" role="status">
+  <strong>This is a preview.</strong>
+  The live sportsbook is unchanged. Picks locked here go to your real record, exactly as they do on the live board.
+</div>
+
+<main class="sbn-shell">
+  <aside class="sbn-railwrap" aria-label="Sports">
+    <div class="sbn-railhead">Sports</div>
+    <nav id="sbnRail" class="sbn-rail"></nav>
+  </aside>
+
+  <section class="sbn-main">
+    <div class="sbn-boardhead">
+      <h1 id="sbnTitle">Board</h1>
+      <p>Every game shows the same markets in the same order. Tap any price to add it to your slip.</p>
+    </div>
+    <div id="sbnBoard" class="sbn-boardlist"></div>
+  </section>
+
+  <aside id="sbnSlip" class="sbn-slip" aria-label="Pick slip"></aside>
+</main>
+
+<div id="sbnBar" class="sbn-bar" role="button" tabindex="0" aria-controls="sbnSlip">
+  <span class="sbn-bardot" aria-hidden="true"></span>
+  <span class="sbn-bartext">Tap a price to start</span>
+  <span class="sbn-barcta">View slip</span>
+</div>
+
+<p id="sbnLive" class="sbn-sr" role="status" aria-live="polite"></p>
+
+<script src="/static/js/config.js"></script>
+<script src="/static/js/backend-api.js"></script>
+<script src="/static/js/auth-persistent.js"></script>
+<script src="/static/js/sportsbook-next.js"></script>
+</body>
+</html>

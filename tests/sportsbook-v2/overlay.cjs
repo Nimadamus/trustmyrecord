@@ -6,6 +6,11 @@ const fs = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..', '..');
 const OVERLAY = {
+  // SPORTSBOOK_NEXT_20260903 preview (isolated; never served to /sportsbook/)
+  '/sportsbook/next/': ['sportsbook/next/index.html', 'text/html; charset=utf-8'],
+  '/sportsbook/next/index.html': ['sportsbook/next/index.html', 'text/html; charset=utf-8'],
+  '/static/css/sportsbook-next.css': ['static/css/sportsbook-next.css', 'text/css; charset=utf-8'],
+  '/static/js/sportsbook-next.js': ['static/js/sportsbook-next.js', 'application/javascript; charset=utf-8'],
   '/sportsbook/v2/': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
   '/sportsbook/v2/index.html': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
   '/static/css/sportsbook-v2.css': ['static/css/sportsbook-v2.css', 'text/css; charset=utf-8'],
