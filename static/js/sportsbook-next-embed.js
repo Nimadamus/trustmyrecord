@@ -72,6 +72,25 @@
         '</div>' +
         '<p id="sbnLive" class="sbn-sr" role="status" aria-live="polite"></p>';
 
+    // The legacy sportsbook shell boxes the board into a 1400px column with
+    // 14px of side padding, and it does it from @layer sbv2. sbv2 is registered
+    // before this file's layer, and for !important an EARLIER layer wins, so no
+    // stylesheet rule here can beat it. An inline important declaration can.
+    var FREE = ['main', '#picks.page-section', '.picks-container-modern', '.pick-step'];
+    function freeTheWrappers() {
+        FREE.forEach(function (sel) {
+            var el = document.querySelector(sel);
+            if (!el || !el.style) return;
+            el.style.setProperty('max-width', 'none', 'important');
+            el.style.setProperty('width', '100%', 'important');
+            el.style.setProperty('padding-left', '0', 'important');
+            el.style.setProperty('padding-right', '0', 'important');
+            el.style.setProperty('margin-left', '0', 'important');
+            el.style.setProperty('margin-right', '0', 'important');
+            el.style.setProperty('border-left-width', '0', 'important');
+            el.style.setProperty('border-right-width', '0', 'important');
+        });
+    }
     function hide(node) {
         if (node && node.style) node.style.setProperty('display', 'none', 'important');
     }
@@ -94,6 +113,8 @@
         ['.sportsbook-market-nav', '.tmr-ms-bar', '.tmr-multislip-bar'].forEach(function (sel) {
             [].forEach.call(document.querySelectorAll(sel), hide);
         });
+        freeTheWrappers();
+        rehomePendingLink();
         return true;
     }
 
@@ -105,25 +126,48 @@
     var snapping = false;
     function snapToPixelGrid() {
         if (snapping) return;
-        var host = document.querySelector('.sbn-embed');
-        if (!host) return;
+        // Snap the SHELL, not the mount: the utility row sits inside the mount,
+        // so correcting the mount leaves whatever that row measures between it
+        // and the board. The shell is the element whose children are the cards.
+        var shell = document.getElementById('sbnShell');
+        if (!shell) return;
         snapping = true;
         try {
-            host.style.paddingTop = '0px';
-            var top = host.getBoundingClientRect().top;
+            shell.style.paddingTop = '';
+            var base = parseFloat(getComputedStyle(shell).paddingTop) || 0;
+            var top = shell.getBoundingClientRect().top + base;   // where the children start
             var frac = top - Math.floor(top);
-            if (frac > 0.005) host.style.paddingTop = (1 - frac).toFixed(3) + 'px';
+            if (frac > 0.005) shell.style.setProperty('padding-top', (base + 1 - frac).toFixed(3) + 'px', 'important');
         } finally {
             // let the observers see the corrected layout before they may fire again
             setTimeout(function () { snapping = false; }, 0);
         }
     }
+    // The legacy page header that held the pending-picks link is hidden, so the
+    // link is moved into a slim utility row of its own rather than deleted.
+    // Moving the real element keeps its href and anything bound to it. It is
+    // deliberately NOT put in the board toolbar: there it stole width from the
+    // market tabs and wrapped them onto four rows.
+    function rehomePendingLink() {
+        var host = document.querySelector('.sbn-embed');
+        var link = document.querySelector('.pending-picks-compact-link');
+        if (!host || !link) return;
+        var util = host.querySelector('.sbn-util');
+        if (!util) {
+            util = document.createElement('div');
+            util.className = 'sbn-util';
+            host.insertBefore(util, host.firstChild);
+        }
+        if (link.parentNode !== util) util.appendChild(link);
+    }
     function watchPixelGrid() {
+        freeTheWrappers();
+        rehomePendingLink();
         snapToPixelGrid();
         var pending = null;
         var soon = function () {
             if (pending) clearTimeout(pending);
-            pending = setTimeout(function () { pending = null; snapToPixelGrid(); }, 80);
+            pending = setTimeout(function () { pending = null; rehomePendingLink(); snapToPixelGrid(); }, 80);
         };
         window.addEventListener('resize', soon, { passive: true });
         if (document.fonts && document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(soon);

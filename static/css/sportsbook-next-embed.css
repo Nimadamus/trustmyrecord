@@ -3,42 +3,173 @@
  * Everything here is gated behind html.tmr-sbnext, which only the embed script
  * sets and only when the rollout flag says so. With the flag off this file
  * matches nothing at all, so the classic board is untouched.
+ *
+ * Every rule lives in @layer sbnext. The production page neutralises layout
+ * with unlayered !important declarations at specificities the board cannot
+ * out-write, and for !important a layered rule outranks an unlayered one
+ * whatever the specificity. That is the only reliable way to win here.
  * ========================================================================== */
+@layer sbnext {
+    /* The classic board is hidden, not removed: its markup and its scripts stay
+       in place so rolling back is a single class. */
+    html.tmr-sbnext .sportsbook-picks-layout,
+    html.tmr-sbnext .sportsbook-market-nav,
+    html.tmr-sbnext .sportsbook-board-toolbar,
+    html.tmr-sbnext .tmr-ms-bar,
+    html.tmr-sbnext .tmr-multislip-bar,
+    html.tmr-sbnext .sportsbook-slip-fab {
+        display: none !important;
+    }
 
-/* The classic board is hidden, not removed: its markup and its scripts stay in
-   place so rolling back is a single class. */
-html.tmr-sbnext .sportsbook-picks-layout,
-html.tmr-sbnext .sportsbook-market-nav,
-html.tmr-sbnext .sportsbook-board-toolbar,
-html.tmr-sbnext .tmr-ms-bar,
-html.tmr-sbnext .tmr-multislip-bar,
-html.tmr-sbnext .sportsbook-slip-fab {
-    display: none !important;
-}
+    /* ---- Give the board the page, not a column -----------------------------
+       Measured at 1440x1000 against the approved preview: the legacy sportsbook
+       shell was costing the board 69px of width and pushing it 222px down the
+       page. Each rule below removes one wrapper. None of them touch the board's
+       own design.
 
-/* The board sits inside the page's own content column, so it drops the
-   standalone shell's page padding and centres on the column instead. */
-html.tmr-sbnext .sbn-embed { margin: 6px 0 0; }
-html.tmr-sbnext .sbn-shell {
-    max-width: none;
-    padding: 0 0 24px;
-    gap: 14px;
-}
+         nav.tmrlh-crumbs        44px  "TrustMyRecord Home" bar
+         .section-header         72px  "Make Your Picks" + subtitle + old tabs
+         main                          20px of side margin, 1400px of width
+         #picks.page-section           1px border + 17.28px of side padding
+         .picks-container-modern       max-width 1440 + 14px of side padding
 
-/* The preview shell had its own 56px top bar. In production the site header is
-   the sticky element, so anything that pinned to 56px pins under that instead. */
-html.tmr-sbnext .sbn-railwrap,
-html.tmr-sbnext .sbn-slip { top: 84px; }
-html.tmr-sbnext .sbn-colhead { top: 84px; }
-html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
+       The global site nav stays: it is sticky, 79px, and site-wide. */
+    html.tmr-sbnext nav.tmrlh-crumbs,
+    html.tmr-sbnext .section-header.make-picks-header,
+    html.tmr-sbnext .sportsbook-page-topbar,
+    html.tmr-sbnext .sportsbook-sport-tabs {
+        display: none !important;
+    }
+    html.tmr-sbnext main {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    html.tmr-sbnext #picks.page-section {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+    html.tmr-sbnext .picks-container-modern {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    html.tmr-sbnext .pick-step {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 
-@media (max-width: 1023px) {
+    /* the shell now carries the preview's own geometry, unchanged */
+    html.tmr-sbnext .sbn-embed { margin: 0 !important; padding: 0 !important; }
+    html.tmr-sbnext .sbn-shell {
+        max-width: 1720px !important;
+        margin: 0 auto !important;
+        padding: 12px 16px 28px !important;
+        gap: 16px !important;
+    }
+
+    /* A slim utility row above the board. It exists only to carry the
+       pending-picks link, which used to live in the page header this file
+       hides: the link is moved, not deleted. */
+    html.tmr-sbnext .sbn-util {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        max-width: 1720px;
+        margin: 0 auto;
+        padding: 2px 16px 0;
+        min-height: 0;
+    }
+    html.tmr-sbnext .sbn-util .pending-picks-compact-link {
+        margin: 0 !important;
+        padding: 3px 10px !important;
+        border: 1px solid var(--sbn-line2) !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        color: var(--sbn-accent) !important;
+        font-family: var(--sbn-font) !important;
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        line-height: 16px !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+    }
+    html.tmr-sbnext .sbn-util .pending-picks-compact-link:hover {
+        background: rgba(34, 211, 238, 0.1) !important;
+        border-color: rgba(34, 211, 238, 0.45) !important;
+    }
+
+    /* The logged-out prompt keeps its job but stops being a banner: it is the
+       only thing telling a signed-out visitor they need an account, so it is
+       slimmed rather than dropped. Signed in, the page's auth shim hides it. */
+    html.tmr-sbnext .make-picks-loggedout {
+        max-width: 1720px !important;
+        margin: 4px auto 0 !important;
+        padding: 4px 16px !important;
+        min-height: 0 !important;
+        line-height: 17px !important;
+        border-radius: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        font-size: 12px !important;
+        gap: 12px !important;
+    }
+
+
+    /* ---- Parity with the approved preview ----------------------------------
+       Diffed component by component against /sportsbook/next/ at 1440x1000. The
+       site stylesheet forces min-height on every button and an 18px gap on every
+       flex container, which inflated the market tabs, the sports rail and the
+       All markets pill. These restore the preview's own values and nothing else. */
+    html.tmr-sbnext .sbn-cat,
+    html.tmr-sbnext .sbn-deep,
+    html.tmr-sbnext .sbn-railbtn,
+    html.tmr-sbnext .sbn-more,
+    html.tmr-sbnext .sbn-striprest,
+    html.tmr-sbnext .sbn-chip,
+    html.tmr-sbnext .sbn-dclose {
+        min-height: 0 !important;
+        height: auto !important;
+    }
+    html.tmr-sbnext .sbn-chip { height: 46px !important; }
+    html.tmr-sbnext .sbn-cats { gap: 6px !important; }
+    html.tmr-sbnext .sbn-rail { gap: 2px !important; }
+    html.tmr-sbnext .sbn-railbtn {
+        padding: 8px 10px !important;
+        border-radius: 9px !important;
+        font-weight: 400 !important;
+    }
+    html.tmr-sbnext .sbn-deep { font-weight: 700 !important; }
+    html.tmr-sbnext .sbn-chip { font-weight: 400 !important; }
+    html.tmr-sbnext .sbn-shell { padding-bottom: 40px !important; }
+    html.tmr-sbnext .sbn-slip h3 { line-height: 18.85px !important; }
+
+    /* The site nav is sticky at 79px, so anything the board pins pins under it. */
     html.tmr-sbnext .sbn-railwrap,
     html.tmr-sbnext .sbn-slip,
-    html.tmr-sbnext .sbn-colhead { top: 0; }
-    /* the slip becomes a sheet on small screens, so the page needs room for the
-       fixed bar the same way the standalone shell did */
-    html.tmr-sbnext body { padding-bottom: 74px; }
+    html.tmr-sbnext .sbn-colhead { top: 87px !important; }
+    html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 119px) !important; }
+}
+
+@media (max-width: 1023px) {
+    @layer sbnext {
+        html.tmr-sbnext .sbn-railwrap,
+        html.tmr-sbnext .sbn-slip,
+        html.tmr-sbnext .sbn-colhead { top: 0 !important; }
+        html.tmr-sbnext body { padding-bottom: 74px !important; }
+        html.tmr-sbnext .sbn-util { padding: 4px 12px 0; }
+    }
 }
 
 /* ---- Hold the board's own look against the page's site-wide styles ---------
@@ -73,6 +204,7 @@ html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
         text-shadow: none !important;
     }
     html.tmr-sbnext .sbn-chip {
+        color: var(--sbn-text) !important;
         background: #1a212c !important;
         border: 1px solid rgba(255, 255, 255, 0.10) !important;
         border-radius: 6px !important;
@@ -120,10 +252,12 @@ html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
         color: var(--sbn-accent) !important;
     }
     html.tmr-sbnext .sbn-railbtn {
+        display: flex !important;
+        width: 100% !important;
         background: transparent !important;
         border: 1px solid transparent !important;
-        border-radius: 8px !important;
-        padding: 7px 9px !important;
+        border-radius: 9px !important;
+        padding: 8px 10px !important;
         color: var(--sbn-text2) !important;
     }
     html.tmr-sbnext .sbn-railbtn.is-on {
@@ -137,7 +271,7 @@ html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
         font-family: var(--sbn-font) !important;
         font-size: 13px !important;
         font-weight: 800 !important;
-        line-height: 18px !important;
+        line-height: 18.85px !important;
         letter-spacing: .02em !important;
         text-transform: uppercase !important;
         color: var(--sbn-text) !important;
@@ -150,5 +284,29 @@ html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
     html.tmr-sbnext input[data-unitsinput] {
         font-family: var(--sbn-font) !important;
         border-radius: 6px !important;
+    }
+
+    /* The pending-picks link is moved into the board toolbar rather than
+       deleted with the header it used to sit in. */
+    html.tmr-sbnext .sbn-toolbar .pending-picks-compact-link {
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        padding: 7px 12px !important;
+        border: 1px solid var(--sbn-line2) !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        color: var(--sbn-accent) !important;
+        font-family: var(--sbn-font) !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        text-decoration: none !important;
+        align-self: flex-start !important;
+    }
+    html.tmr-sbnext .sbn-toolbar .pending-picks-compact-link:hover {
+        background: rgba(34, 211, 238, 0.1) !important;
+        border-color: rgba(34, 211, 238, 0.45) !important;
     }
 }
