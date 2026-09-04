@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="/static/css/sportsbook-next.css?v=b64ba2ce24b6">
 <!-- SPORTSBOOK_NEXT_V3_20260904: refinement pass, preview only. Scoped to
      html.sbn-v3, which the live board neither loads nor carries. -->
-<link rel="stylesheet" href="/static/css/sportsbook-next-v3.css?v=603ba14b53b5">
+<link rel="stylesheet" href="/static/css/sportsbook-next-v3.css?v=cdd4cbd1d5ed">
 </head>
 <body>
 <a class="sbn-skip" href="#sbnBoard">Skip to the board</a>
@@ -68,16 +68,48 @@
 (function () {
     function moveTally() {
         var tally = document.querySelector('.sbn-toolbar .sbn-tally');
+        if (!tally) return;
         var slot = document.querySelector('.sbn-colhead span:first-child');
-        if (!tally || !slot) return;
+        if (!slot) {
+            // ladder tabs print no column header, so the count gets a strip of its
+            // own rather than staying in the tab row and wrapping it onto two lines
+            var board = document.getElementById('sbnBoard');
+            if (!board) return;
+            slot = board.querySelector('.sbn-loosetally');
+            if (!slot) {
+                slot = document.createElement('div');
+                slot.className = 'sbn-loosetally';
+                board.insertBefore(slot, board.firstChild);
+            }
+        }
         slot.textContent = tally.textContent;
-        slot.className = 'sbn-headtally';
+        if (!/loose/.test(slot.className)) slot.className = 'sbn-headtally';
         tally.style.display = 'none';
     }
+    // The engine writes a player prop label as one string, "Name . Prop Type".
+    // Split it so the player reads first and the market supports it.
+    function splitPropLabels() {
+        var on = document.querySelector('.sbn-cat.is-on');
+        if (!on || on.getAttribute('data-cat') !== 'player_props') return;
+        [].forEach.call(document.querySelectorAll('.sbn-striplabel > b'), function (b) {
+            if (b.querySelector('i')) return;
+            var parts = b.textContent.split('·');
+            if (parts.length < 2) return;
+            b.innerHTML = '';
+            var who = document.createElement('span');
+            who.className = 'sbn-propwho';
+            who.textContent = parts[0].trim();
+            var what = document.createElement('i');
+            what.textContent = parts.slice(1).join('·').trim();
+            b.appendChild(who); b.appendChild(what);
+            b.parentNode.classList.add('is-prop');
+        });
+    }
+    function tidy() { moveTally(); splitPropLabels(); }
     var board = document.getElementById('sbnBoard');
-    if (board && window.MutationObserver) new MutationObserver(moveTally).observe(board, { childList: true });
-    document.addEventListener('DOMContentLoaded', moveTally);
-    setTimeout(moveTally, 400); setTimeout(moveTally, 1500);
+    if (board && window.MutationObserver) new MutationObserver(tidy).observe(board, { childList: true });
+    document.addEventListener('DOMContentLoaded', tidy);
+    setTimeout(tidy, 400); setTimeout(tidy, 1500);
 })();
 </script>
 </body>

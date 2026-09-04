@@ -269,3 +269,440 @@ html.sbn-v3 .sbn-sliphead { border-radius: 10px 10px 0 0; }
     html.sbn-v3 .sbn-chip-bot { font-size: 11px; }
     html.sbn-v3 .sbn-tname b { font-size: 12px; line-height: 14px; }
 }
+
+/* ============================================================================
+ * SECONDARY MARKET VIEWS — Alt Lines, Alt Totals, Team Totals, Player Props,
+ * First 5, 1st Inning. Same palette, same type, same controls as Game Lines;
+ * these views were the ones still reading as a wall of identical boxes.
+ * ========================================================================== */
+
+/* the count gets its own strip on the tabs that print no column header */
+html.sbn-v3 .sbn-loosetally {
+    /* line-height normal on a 10px font measured 11.5px and put every ladder
+       card on a half pixel, which is what makes the numbers render soft */
+    line-height: 14px;
+    padding: 0 13px 8px;
+    color: #6f7c8e;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+/* ---- The ladder ------------------------------------------------------------
+   One label column that lines up with the matchup column on the main board,
+   then a track of equal-width rungs. Fixed rung width is what stops a ladder
+   reading as a wall: the eye can step along it. */
+html.sbn-v3 .sbn-strip {
+    grid-template-columns: 205px minmax(0, 1fr);
+    gap: 6px;
+    height: 44px;
+}
+html.sbn-v3 .sbn-strip + .sbn-strip { margin-top: 4px; }
+html.sbn-v3 .sbn-striplabel { gap: 9px; padding-right: 12px; }
+html.sbn-v3 .sbn-striplabel b { font-size: 14px; line-height: 17px; font-weight: 700; }
+html.sbn-v3 .sbn-striptrack {
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 5px;
+}
+html.sbn-v3 .sbn-striptrack .sbn-chip { height: 44px; }
+
+/* the overflow rung stops pretending to be a price and becomes a control */
+html.sbn-v3 .sbn-striptrack .sbn-more {
+    height: 44px;
+    padding: 0 10px;
+    gap: 4px;
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    background: transparent;
+    color: #8fa3b8;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+html.sbn-v3 .sbn-striptrack .sbn-more::after {
+    content: 'more';
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .75;
+}
+html.sbn-v3 .sbn-striptrack .sbn-more:hover {
+    border-style: solid;
+    border-color: rgba(34, 211, 238, 0.45);
+    background: rgba(34, 211, 238, 0.08);
+    color: var(--sbn-accent);
+}
+
+/* ---- Player props ----------------------------------------------------------
+   The player leads, the market supports. One string of identical weight was the
+   whole problem on this tab. */
+html.sbn-v3 .sbn-strip.is-prop { height: 48px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 48px; }
+html.sbn-v3 .sbn-striplabel b {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    -webkit-line-clamp: none;
+}
+html.sbn-v3 .sbn-propwho {
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 16px;
+    color: var(--sbn-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+html.sbn-v3 .sbn-striplabel b i {
+    font-style: normal;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #7b8798;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Rhythm between entries in one card ----------------------------------- */
+html.sbn-v3 .sbn-strip + .sbn-strip::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    margin-top: -3px;
+    border-top: 1px solid rgba(255, 255, 255, 0.045);
+}
+html.sbn-v3 .sbn-strip { position: relative; }
+html.sbn-v3 .sbn-strip.is-blank::before { display: none; }
+
+/* ---- One "more" control, shared by every secondary tab -------------------- */
+html.sbn-v3 .sbn-striprest {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: auto;
+    margin: 8px 0 1px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.022);
+    color: var(--sbn-text2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+html.sbn-v3 .sbn-striprest::after {
+    content: '';
+    width: 6px; height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg) translateY(-1px);
+    opacity: .7;
+}
+html.sbn-v3 .sbn-striprest:hover {
+    border-color: rgba(34, 211, 238, 0.45);
+    background: rgba(34, 211, 238, 0.09);
+    color: var(--sbn-accent);
+}
+html.sbn-v3 .sbn-norow {
+    padding: 14px 2px;
+    color: #6f7c8e;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+@media (max-width: 1180px) {
+    html.sbn-v3 .sbn-strip { grid-template-columns: 150px minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-strip { grid-template-columns: 108px minmax(0, 1fr); gap: 5px; height: 42px; }
+    html.sbn-v3 .sbn-strip.is-prop { height: 46px; }
+    html.sbn-v3 .sbn-striplabel b { font-size: 12px; line-height: 15px; }
+    html.sbn-v3 .sbn-propwho { font-size: 12px; line-height: 14px; }
+    html.sbn-v3 .sbn-striplabel b i { font-size: 9.5px; line-height: 12px; }
+    html.sbn-v3 .sbn-striptrack { grid-auto-columns: 74px; overflow-x: auto; scrollbar-width: none; }
+    html.sbn-v3 .sbn-striptrack::-webkit-scrollbar { display: none; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip,
+    html.sbn-v3 .sbn-striptrack .sbn-more { height: 42px; }
+    html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+    html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 46px; }
+}
+
+/* keep a ladder rung a rung: with only two rungs a 1fr track stretched each
+   cell to 575px, which is why Player Props read as two slabs per player */
+html.sbn-v3 .sbn-striptrack {
+    grid-auto-columns: minmax(0, 168px);
+    justify-content: start;
+}
+
+/* ============================================================================
+ * PICK SLIP — larger, with a clearer order of information. Same palette, same
+ * type, same accent; the panel simply stops being cramped.
+ * ========================================================================== */
+html.sbn-v3 .sbn-slip {
+    border-radius: 12px;
+    border-color: rgba(255, 255, 255, 0.09);
+}
+html.sbn-v3 .sbn-sliphead {
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 12px 12px 0 0;
+    background: var(--sbn-panel2);
+}
+html.sbn-v3 .sbn-sliphead h3 {
+    font-size: 12.5px;
+    line-height: 18px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    color: var(--sbn-text2);
+}
+html.sbn-v3 .sbn-slipcount {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 22px;
+}
+html.sbn-v3 .sbn-clear {
+    margin-left: auto;
+    padding: 5px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    background: transparent;
+    color: #8fa3b8;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+html.sbn-v3 .sbn-clear:hover { border-color: rgba(248, 113, 113, 0.5); color: var(--sbn-red); background: rgba(248, 113, 113, 0.08); }
+
+/* Risk / To win reads as one segmented control rather than two loose buttons */
+html.sbn-v3 .sbn-mode {
+    display: flex;
+    gap: 3px;
+    margin: 12px 16px 0;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.25);
+}
+html.sbn-v3 .sbn-modebtn {
+    flex: 1 1 0;
+    height: 32px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #8fa3b8;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+}
+html.sbn-v3 .sbn-modebtn:hover { color: var(--sbn-text2); background: rgba(255, 255, 255, 0.045); }
+html.sbn-v3 .sbn-modebtn.is-on { background: var(--sbn-accent); color: var(--sbn-ink); }
+
+html.sbn-v3 .sbn-sliplist { padding: 12px 16px 0; }
+
+/* one selection, with the bet first and its context under it */
+html.sbn-v3 .sbn-sliprow {
+    position: relative;
+    padding: 12px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.022);
+}
+html.sbn-v3 .sbn-sliprow + .sbn-sliprow { margin-top: 9px; }
+html.sbn-v3 .sbn-slipsel {
+    padding-right: 26px;
+    font-size: 14.5px;
+    line-height: 19px;
+    font-weight: 700;
+    color: var(--sbn-text);
+}
+html.sbn-v3 .sbn-slipgame {
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 16px;
+    color: #8b97a8;
+}
+html.sbn-v3 .sbn-slipmeta {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #6f7c8e;
+}
+html.sbn-v3 .sbn-slipmeta b {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0;
+    color: #92cfa8;
+}
+html.sbn-v3 .sbn-slipx {
+    position: absolute;
+    top: 9px; right: 9px;
+    width: 24px; height: 24px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #6f7c8e;
+    font-size: 17px;
+    line-height: 22px;
+    cursor: pointer;
+}
+html.sbn-v3 .sbn-slipx:hover { border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.1); color: var(--sbn-red); }
+
+/* the stake row: a real stepper, and the derived number sitting apart from it */
+html.sbn-v3 .sbn-slipunits {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 11px;
+    padding-top: 11px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+html.sbn-v3 .sbn-slipunits label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #6f7c8e;
+}
+html.sbn-v3 .sbn-step {
+    width: 28px; height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--sbn-text2);
+    font-size: 15px;
+    line-height: 26px;
+    cursor: pointer;
+}
+html.sbn-v3 .sbn-step:hover { border-color: rgba(34, 211, 238, 0.45); color: var(--sbn-accent); background: rgba(34, 211, 238, 0.08); }
+html.sbn-v3 .sbn-slipunits input {
+    width: 52px; height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.28);
+    color: var(--sbn-text);
+    font-family: var(--sbn-font);
+    font-size: 13.5px;
+    font-weight: 700;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+html.sbn-v3 .sbn-slipunits input:focus { outline: none; border-color: rgba(34, 211, 238, 0.6); }
+html.sbn-v3 .sbn-slipcalc {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8b97a8;
+    font-variant-numeric: tabular-nums;
+}
+
+/* totals and the commit control */
+html.sbn-v3 .sbn-sliptotals {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 14px 16px 0;
+    padding: 12px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.22);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #6f7c8e;
+}
+html.sbn-v3 .sbn-sliptotals span { display: flex; flex-direction: column; gap: 4px; }
+html.sbn-v3 .sbn-sliptotals span:last-child { text-align: right; }
+html.sbn-v3 .sbn-sliptotals b {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: var(--sbn-text);
+    font-variant-numeric: tabular-nums;
+}
+html.sbn-v3 .sbn-sliptotals span:last-child b { color: #92cfa8; }
+html.sbn-v3 .sbn-submit {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 12px 16px 16px;
+    padding: 0;
+    height: 46px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--sbn-accent);
+    color: var(--sbn-ink);
+    font-family: var(--sbn-font);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background .12s ease;
+}
+html.sbn-v3 .sbn-submit:hover { background: #3ddcf2; }
+html.sbn-v3 .sbn-submit:disabled { opacity: .6; cursor: default; }
+
+/* the empty state says what to do rather than just that nothing is there */
+html.sbn-v3 .sbn-slipempty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 16px;
+    padding: 30px 18px;
+    border: 1px dashed rgba(255, 255, 255, 0.11);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.014);
+    color: #7b8798;
+    font-size: 12.5px;
+    line-height: 18px;
+    text-align: center;
+}
+html.sbn-v3 .sbn-slipempty strong {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: var(--sbn-text2);
+}
+
+@media (max-width: 1023px) {
+    html.sbn-v3 .sbn-submit { height: 48px; }
+}
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-sliphead { padding: 12px 14px; }
+    html.sbn-v3 .sbn-sliplist { padding: 10px 14px 0; }
+    html.sbn-v3 .sbn-mode { margin: 10px 14px 0; }
+    html.sbn-v3 .sbn-sliptotals { margin: 12px 14px 0; }
+    html.sbn-v3 .sbn-submit { width: calc(100% - 28px); margin: 10px 14px 14px; }
+    html.sbn-v3 .sbn-slipsel { font-size: 13.5px; line-height: 18px; }
+}
+
+/* The 168px rung cap above is declared after the breakpoints, so it was winning
+   on phones too and squeezing seven rungs into a 230px track until every number
+   clipped. Restate the phone track last. */
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-striptrack {
+        grid-auto-columns: 74px;
+        justify-content: start;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    html.sbn-v3 .sbn-striptrack::-webkit-scrollbar { display: none; }
+}
