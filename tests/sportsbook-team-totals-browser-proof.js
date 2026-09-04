@@ -5,7 +5,24 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const LIVE_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
+const REQUESTED_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
+// SPORTSBOOK_SKIN_20260904. This proof drives the CLASSIC board
+// (#lobbyBoardRows / #gamesListContainer, .tmr-market-card, the
+// .sportsbook-ticket-preview-card slip). /sportsbook/ now serves the V2 board
+// (#sbnBoard, article.sbn-row) to everyone, so on the default URL this proof
+// waited for markup the page no longer renders and timed out on a healthy site.
+//
+// The classic board is still shipped and is the documented rollback target
+// (`?sbnext=0`), so rather than delete the coverage it is pinned to the skin it
+// was written for, which keeps the rollback path proven. The V2 board users
+// actually get is covered by tests/sportsbook-live-verification.spec.js and the
+// sportsbook blocks in tests/regression-lock.spec.js. An explicit ?sbnext= in
+// TMR_SPORTSBOOK_URL still wins.
+const LIVE_URL = (() => {
+  const url = new URL(REQUESTED_URL);
+  if (!url.searchParams.has('sbnext')) url.searchParams.set('sbnext', '0');
+  return url.toString();
+})();
 const OUT_DIR = path.join(process.cwd(), 'artifacts');
 const OUT = path.join(OUT_DIR, 'sportsbook-team-totals-browser-proof.png');
 const REPORT = path.join(OUT_DIR, 'sportsbook-team-totals-browser-proof.json');
@@ -27,7 +44,13 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
 
   try {
-    await page.goto(`${LIVE_URL}?teamtotals_browser_proof=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    // Append with the URL API, not a bare "?": LIVE_URL now carries a query
+    // string of its own, and `${LIVE_URL}?x=1` produced ...?sbnext=0?x=1, which
+    // makes sbnext read as "0?teamtotals_browser_proof=..." and silently drops
+    // the skin pin.
+    const proofUrl = new URL(LIVE_URL);
+    proofUrl.searchParams.set('teamtotals_browser_proof', String(Date.now()));
+    await page.goto(proofUrl.toString(), { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForBoardSettled(page);
 
     await page.evaluate(() => {

@@ -63,16 +63,36 @@ async function verifyTrendspotter(page) {
   await page.goto(TREND_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
 
-  await page.locator('.ts-tab:not([disabled])').first().waitFor({ state: 'visible', timeout: 30000 });
+  // LOCKED_TAB_CONTRACT_20260904. b0a3c4aba moved locked tabs off the native
+  // `disabled` attribute onto aria-disabled="true" + tabindex="-1" on purpose:
+  // a disabled <button> swallows the click, so a visitor who tapped a locked
+  // market got no response at all and read the tablist as broken. This proof
+  // still asked the live page for `.ts-tab[disabled]`, found none, and reported
+  // "no locked market tabs rendered" against a Trend Spotter that was locking
+  // them correctly. Assert the contract that shipped, and assert it harder: a
+  // locked tab must not be natively disabled, must stay out of the tab order,
+  // and must still carry its real reason.
+  const LOCKED = '.ts-tab[aria-disabled="true"]';
+  await page.locator(`.ts-tab:not([aria-disabled="true"])`).first().waitFor({ state: 'visible', timeout: 30000 });
 
   // Markets with no data behind them must be locked, and must say why.
-  for (const id of ['team_total', 'first_half', 'first_five', 'props']) {
-    const tab = page.locator(`.ts-tab[aria-label*="${id.replace(/_/g, ' ')}" i]`).first();
-    const locked = page.locator('.ts-tab[disabled]');
-    if ((await locked.count()) === 0) throw new Error('no locked market tabs rendered');
-    void tab;
+  const locked = page.locator(LOCKED);
+  if ((await locked.count()) === 0) throw new Error('no locked market tabs rendered');
+  const lockedState = await locked.evaluateAll((nodes) => nodes.map((node) => ({
+    label: (node.textContent || '').trim(),
+    nativelyDisabled: node.disabled,
+    tabindex: node.getAttribute('tabindex'),
+    reason: node.getAttribute('title') || '',
+  })));
+  for (const tab of lockedState) {
+    if (tab.nativelyDisabled) {
+      throw new Error(`locked market "${tab.label}" is natively disabled, so a tap on it reports nothing`);
+    }
+    if (tab.tabindex !== '-1') {
+      throw new Error(`locked market "${tab.label}" is still in the tab order`);
+    }
   }
-  const reason = await page.locator('.ts-tab[disabled]').first().getAttribute('title');
+  const reason = lockedState[0].reason;
   if (!reason || reason.length < 40) throw new Error('a locked market did not explain itself');
 
   // Run a real trend end to end through the deployed page.
