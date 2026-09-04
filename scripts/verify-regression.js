@@ -102,6 +102,18 @@ function resolveInvocation(command, args) {
   return { file: resolveCommand(command), argv: args };
 }
 
+// A test calling process.exit() inside this runner is not an error, it is the
+// test finishing. The stub in runInlineNodeCheck throws this so execution
+// actually stops there, and only this class is swallowed - a real throw from a
+// test still fails the check.
+class ExitSignal extends Error {
+  constructor(code) {
+    super(`process.exit(${code})`);
+    this.name = 'ExitSignal';
+    this.code = code;
+  }
+}
+
 async function runInlineNodeCheck(name, args) {
   const started = Date.now();
   const scriptPath = path.join(root, args[0]);
@@ -113,15 +125,26 @@ async function runInlineNodeCheck(name, args) {
   process.argv = [process.execPath, scriptPath, ...args.slice(1)];
   // Tests call process.exit() as their final statement -- some do it from
   // inside an async .catch() handler (e.g. trendspotter-accuracy-test.js),
-  // which runs outside this function's synchronous try/catch. Throwing here
-  // used to escape as an unhandled rejection and crash the whole runner
-  // instead of just failing that one check. Just record the code instead;
-  // nothing in any test file runs after its own process.exit() call.
+  // which runs outside this function's synchronous try/catch. Recording the
+  // code and RETURNING was wrong in one specific and expensive way: a test
+  // that exits EARLY carried on running. Every tests/sportsbook-v2 suite does
+  // exactly that -- no member JWT, print SKIP, exit(0) -- and then fell
+  // straight through to `fs.readFileSync('')`, so six suites that were meant
+  // to skip reported `ENOENT: no such file or directory, open ''` and held the
+  // Regression Lock red (2026-09-04).
+  //
+  // So the stub throws a sentinel, which really does stop the module, and both
+  // the synchronous catch below and the unhandledRejection handler recognise
+  // it and let the recorded exit code stand. Throwing a plain Error here is
+  // what crashed the runner before; the sentinel is what makes it safe.
   process.exit = (code = 0) => {
     exitCode = Number(code) || 0;
+    throw new ExitSignal(exitCode);
   };
   const unhandled = [];
-  const onUnhandledRejection = (error) => unhandled.push(error);
+  const onUnhandledRejection = (error) => {
+    if (!(error instanceof ExitSignal)) unhandled.push(error);
+  };
   process.on('unhandledRejection', onUnhandledRejection);
 
   try {
@@ -130,7 +153,7 @@ async function runInlineNodeCheck(name, args) {
     await new Promise((resolve) => setTimeout(resolve, 2500));
     if (unhandled.length) throw unhandled[0];
   } catch (error) {
-    failure = error;
+    if (!(error instanceof ExitSignal)) failure = error;
   } finally {
     process.exit = originalExit;
     process.argv = originalArgv;

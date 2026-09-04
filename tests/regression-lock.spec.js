@@ -52,12 +52,27 @@ async function waitForSportsbook(page) {
   await expect(page.locator('body')).not.toContainText(/Loading live odds/i, { timeout: 45000 });
 }
 
+// SPORTSBOOK_V2_20260904: /sportsbook/ now serves the v2 board (#sbnBoard, rows
+// of article.sbn-row) where it used to serve #lobbyBoardRows / the .tmr-market-card
+// list. Both are listed everywhere a board hook is needed, so these locks assert
+// the same guarantees whichever skin answers -- production (v2) and the local
+// static server this config falls back to (classic) included.
 function visibleBoard(page) {
-  return page.locator('#lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first();
+  return page.locator('#sbnBoard:visible, #lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first();
 }
 
+// Slip and stake-preview hooks, classic and v2. `.sbn-sliplist` is the v2 slip;
+// `.sbn-sliptotals` is where it prints "Total risk 1u / To win 0.53u".
+const SLIP = '#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel, .sbn-sliplist';
+const STAKE_PREVIEW = '#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel, .sbn-sliptotals';
+
 async function clickSport(page, sport) {
-  const label = sport === 'Soccer' ? /Soccer\b/i : new RegExp(`^${sport}\\b`, 'i');
+  // The sport rail prints an icon before the label ("⚾ MLB", "🏀 NBA"), so an
+  // accessible name anchored at ^ stopped matching anything the day those icons
+  // shipped, and took all four locks in this describe down with it (2026-09-04).
+  // Still an exact-label match, just one that tolerates a leading glyph: the
+  // sport must appear as its own word, so NBA still cannot match WNBA.
+  const label = sport === 'Soccer' ? /Soccer\b/i : new RegExp(`(^|[^A-Za-z])${sport}\\b`, 'i');
   const tab = page.getByRole('button', { name: label }).first();
   await expect(tab, `${sport} tab should exist`).toBeVisible({ timeout: 20000 });
   await tab.click();
@@ -106,9 +121,18 @@ async function selectSportWithPostedLines(page) {
   return target.tab;
 }
 
+// A market switcher entry, in whichever skin is serving: role=tab on the classic
+// board, button.sbn-cat on the v2 board.
+function marketTab(page, name) {
+  return page
+    .locator('[role="tab"], button.sbn-cat, .sportsbook-market-tab')
+    .filter({ hasText: name })
+    .first();
+}
+
 async function firstEnabledPickButton(page) {
   const button = page
-    .locator('#lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
+    .locator('#sbnBoard button:not([disabled]), #lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
     .filter({ hasText: /ML|[+-]\d|O\s*\d|U\s*\d/i })
     .first();
   await expect(button, 'at least one enabled wager button should be available when games have posted lines').toBeVisible({ timeout: 45000 });
@@ -176,7 +200,14 @@ test.describe('sportsbook geometry lock', () => {
         const r = el.getBoundingClientRect();
         return { top: Math.round(r.top), bottom: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height) };
       };
-      const board = document.querySelector('#lobbyBoardRows, #gamesListContainer, main article');
+      // First VISIBLE board container, in preference order. A comma list in
+      // querySelector returns document order, and the page carries the classic
+      // board's markup hidden alongside the v2 board, so the old one-liner
+      // measured a single game row (134px tall) and reported the board as
+      // collapsed on a board that was fine (2026-09-04).
+      const board = ['#sbnBoard', '#lobbyBoardRows', '#gamesListContainer', 'main article']
+        .map((sel) => document.querySelector(sel))
+        .find((el) => el && el.getClientRects().length) || null;
       const navs = document.querySelectorAll('nav.tmr-global-nav, nav.ds-nav');
       const foots = document.querySelectorAll('footer, .ds-footer, .tmr-global-footer');
       return {
@@ -188,9 +219,10 @@ test.describe('sportsbook geometry lock', () => {
         nav: box(navs[0]),
         footerCount: foots.length,
         footer: box(foots[0]),
-        sportButtons: document.querySelectorAll('.sportsbook-sports-nav button').length,
+        sportButtons: document.querySelectorAll(
+          '.sportsbook-sports-nav button, button.sbn-railbtn').length,
         marketTabs: document.querySelectorAll('.market-tabs button, .market-tabs a, #picks .market-tabs *').length,
-        slip: box(document.querySelector('#pickDetails')),
+        slip: box(document.querySelector('#pickDetails, .sbn-slip')),
       };
     });
 
@@ -219,7 +251,7 @@ test.describe('sportsbook geometry lock', () => {
     // 5. The controls a user needs are present. Counts are lower bounds, never
     //    exact, so a league being out of season cannot fail the build.
     expect(m.sportButtons, 'sports navigation lost its buttons').toBeGreaterThanOrEqual(5);
-    expect(m.slip, 'the pick slip (#pickDetails) must render').not.toBeNull();
+    expect(m.slip, 'the pick slip must render').not.toBeNull();
   });
 });
 
@@ -542,9 +574,16 @@ test.describe('sportsbook functional locks', () => {
     await waitForSportsbook(page);
     for (const sport of SPORT_TABS) {
       await clickSport(page, sport);
-      const boardText = await visibleBoard(page).innerText();
-      expect(boardText.trim().length, `${sport} board should not collapse to empty`).toBeGreaterThan(20);
-      expect(boardText).not.toMatch(/My Pick History/i);
+      // Polled, not snapshotted. The comment below already knew the board can
+      // still be filling in when innerText() is read -- but the length check
+      // right under it was a one-shot, so an out-of-season sport whose empty
+      // notice had not painted yet ("No upcoming NBA games with posted odds
+      // right now.") failed before the poll under it ever ran (2026-09-04).
+      await expect
+        .poll(async () => (await visibleBoard(page).innerText()).trim().length,
+          { message: `${sport} board should not collapse to empty`, timeout: 30000 })
+        .toBeGreaterThan(20);
+      expect(await visibleBoard(page).innerText()).not.toMatch(/My Pick History/i);
       // Out-of-season sports are expected to be empty -- but they must say so,
       // never render a blank panel or a stuck "Loading..." state. Poll rather
       // than branch on the snapshot above: the board can still be filling in
@@ -572,16 +611,19 @@ test.describe('sportsbook functional locks', () => {
     await clickSport(page, 'MLB');
     const markets = page.locator('button:has-text("Game Lines"), button:has-text("Team Totals"), button:has-text("5 Inning")');
     await expect(markets.first(), 'market tabs should exist').toBeVisible({ timeout: 30000 });
-    await page.getByRole('tab', { name: /Game Lines/i }).first().click();
+    // The classic switcher was a tablist; the v2 switcher is a row of
+    // button.sbn-cat with no role. marketTab() takes either, so the lock is on
+    // the market being selectable, not on which element implements it.
+    await marketTab(page, /Game Lines/i).click();
     await expect(visibleBoard(page)).toBeVisible();
-    const teamTotals = page.getByRole('button', { name: /Team Totals/i }).first();
+    const teamTotals = marketTab(page, /Team Totals/i);
     if (await teamTotals.count()) {
       await teamTotals.click();
       await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|ML|O\s*\d|U\s*\d/i);
     }
     // PROPS_PICKABLE_20260608 made Player Props a real, pickable market tab —
     // the old "props must not appear" lock inverted into: the tab must exist.
-    await expect(page.getByRole('tab', { name: /Player Props/i }).first()).toBeVisible({ timeout: 30000 });
+    await expect(marketTab(page, /Player Props/i)).toBeVisible({ timeout: 30000 });
   });
 
   test('wager buttons select a pick, odds are display-only, and logged-out submit requires login', async ({ page }) => {
@@ -589,22 +631,50 @@ test.describe('sportsbook functional locks', () => {
     await selectSportWithPostedLines(page);
     const pickButton = await firstEnabledPickButton(page);
     await pickButton.click();
-    await expect(page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first()).toBeVisible();
-    const odds = page.locator('#pickOddsInput').first();
-    await expect(odds, 'odds field exists for selected wager').toHaveCount(1);
-    const oddsReadonly = await odds.evaluate((node) => node.readOnly || node.disabled || node.getAttribute('aria-readonly') === 'true');
-    expect(oddsReadonly, 'odds must not be manually editable').toBe(true);
-    await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel').first()).toContainText(/Risk/i);
-    await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel').first()).toContainText(/To Win/i);
+    const slip = page.locator(SLIP).first();
+    await expect(slip).toBeVisible();
+    // The point of this assertion has always been that the price the board
+    // posted is the price that gets recorded — a visitor cannot type their own.
+    // The classic slip put the price in a readonly #pickOddsInput; the v2 slip
+    // prints it as text and offers no odds field at all, which satisfies the
+    // same rule more completely. So: if an odds field exists it must be
+    // uneditable, and either way nothing in the slip may accept typed odds.
+    const odds = page.locator('#pickOddsInput');
+    if (await odds.count()) {
+      const oddsReadonly = await odds.first().evaluate(
+        (node) => node.readOnly || node.disabled || node.getAttribute('aria-readonly') === 'true');
+      expect(oddsReadonly, 'odds must not be manually editable').toBe(true);
+    } else {
+      const editableOdds = await slip.locator('input:not([readonly]):not([disabled])').evaluateAll(
+        (nodes) => nodes.filter((n) => /odds|price/i.test(
+          (n.id || '') + ' ' + (n.className || '') + ' ' + (n.getAttribute('aria-label') || '')
+          + ' ' + (n.name || ''))).length);
+      expect(editableOdds, 'the slip must not offer an editable odds field').toBe(0);
+    }
+    await expect(page.locator(STAKE_PREVIEW).first()).toContainText(/Risk/i);
+    await expect(page.locator(STAKE_PREVIEW).first()).toContainText(/To Win/i);
     // The slip labels the market and prints the price ("Spread - -200"); it only
     // prints the literal word "Odds" for some markets, so pinning that word made
     // the check depend on which button happened to be first on the board. Assert
     // the thing that actually matters: a real American price is shown in the slip.
     await expect(
-      page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first(),
+      page.locator(SLIP).first(),
       'the slip must show the price of the selected wager'
     ).toContainText(/(Odds|[+-]\d{2,4})/i);
-    const submit = page.locator('.submit-pick-btn, .lock-pick-btn, button:has-text("Lock"), button:has-text("Submit")').first();
+    // On a phone the v2 slip is a bottom sheet parked off-screen
+    // (transform: translateY) behind a summary bar; tapping #sbnBar sets
+    // html.sbn-slip-open and raises it. Without that tap the Lock button is
+    // visible and enabled but permanently outside the viewport, which is what
+    // the mobile project timed out on. This is the product's own flow, not a
+    // workaround: a phone user taps the bar to open their slip.
+    const slipBar = page.locator('#sbnBar:visible');
+    if (await slipBar.count()) await slipBar.first().click();
+    // :visible matters. The page still carries the classic slip's markup with
+    // display:none, and .first() in DOM order picked that hidden button, so the
+    // click sat waiting for an element that can never become actionable.
+    const submit = page.locator(
+      '.sbn-submit:visible, .submit-pick-btn:visible, .lock-pick-btn:visible, '
+      + 'button:visible:has-text("Lock"), button:visible:has-text("Submit")').first();
     if (await submit.count()) {
       await submit.click();
       await expect(page.locator('body')).toContainText(/log in|login|sign in|account/i);
@@ -616,13 +686,19 @@ test.describe('sportsbook functional locks', () => {
     await selectSportWithPostedLines(page);
     const pickButton = await firstEnabledPickButton(page);
     await pickButton.click();
-    const input = page.locator('#ttSlipUnits, #unitsInput').first();
-    const preview = page.locator('#ttSlipStakePreview, #unitsStakePreview').first();
+    const input = page.locator(`#ttSlipUnits, #unitsInput, ${SLIP} input[type="number"]`).first();
+    const preview = page.locator(STAKE_PREVIEW).first();
     await expect(input).toBeVisible();
     await expect(preview).toBeVisible();
     for (const value of UNIT_VALUES) {
       await input.fill(value);
+      // Both events. The classic slip recalculated on `input`; the v2 slip
+      // commits on `change`, so dispatching only `input` left the preview
+      // showing the previous stake and the lock failed on a slip that works.
+      // What is locked here is that the preview follows the units, not which
+      // event the field happens to listen on.
       await input.dispatchEvent('input');
+      await input.dispatchEvent('change');
       await expect(preview, `stake preview should reflect ${value} units`).toContainText(new RegExp(value.replace('.', '\\.') + '|Risk|To Win'));
     }
   });

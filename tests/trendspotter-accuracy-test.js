@@ -198,10 +198,20 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
   console.log('\nCapability-driven chrome');
   const base = { '/capabilities': CAPABILITIES, '/matchups': MATCHUPS };
 
-  await test('locked markets render disabled with their real reason', async () => {
+  // A locked tab is aria-disabled, NOT natively disabled. b0a3c4aba made that
+  // switch on purpose: a `disabled` button eats the click, so tapping Team
+  // Total produced literally nothing - no selection and no explanation. The
+  // assertions below are the contract that change created, so they check both
+  // halves of it: the tab cannot be selected, AND it answers the click.
+  await test('locked markets render locked with their real reason', async () => {
     const { doc } = await mount(base);
-    const locked = $$(doc, '.ts-tab[disabled]');
+    const locked = $$(doc, '.ts-tab[aria-disabled="true"]');
     assert(locked.length >= 2, `expected locked market tabs, got ${locked.length}`);
+    assert.strictEqual($$(doc, '.ts-tab[disabled]').length, 0,
+      'a natively disabled tab swallows the click and tells the visitor nothing; '
+      + 'locked tabs are aria-disabled so the reason can be printed');
+    locked.forEach((t) => assert.strictEqual(t.getAttribute('tabindex'), '-1',
+      'a locked tab must stay out of the tab order'));
     const tt = locked.find((t) => /Team Total/.test(t.textContent));
     assert(tt, 'Team Total must be shown as locked');
     assert(/no historical team-total lines/i.test(tt.getAttribute('title')),
@@ -209,9 +219,21 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert(!/unsupported/i.test(tt.getAttribute('title')));
   });
 
+  await test('clicking a locked market says why and changes nothing', async () => {
+    const { win, doc } = await mount(base);
+    const before = ($(doc, '.ts-tab[aria-selected="true"]') || {}).textContent;
+    const tt = $$(doc, '.ts-tab[aria-disabled="true"]').find((t) => /Team Total/.test(t.textContent));
+    tt.dispatchEvent(new win.Event('click', { bubbles: true }));
+    await new Promise((r) => win.setTimeout(r, 20));
+    assert.strictEqual(($(doc, '.ts-tab[aria-selected="true"]') || {}).textContent, before,
+      'a locked market must not become the selected market');
+    assert(/no historical team-total lines/i.test(txt(doc, '#marketNotice')),
+      'the click must print the reason under the row, not be swallowed');
+  });
+
   await test('only markets the league supports are interactive', async () => {
     const { doc } = await mount(base);
-    const open = $$(doc, '.ts-tab:not([disabled])').map((t) => t.textContent.trim());
+    const open = $$(doc, '.ts-tab:not([aria-disabled="true"])').map((t) => t.textContent.trim());
     assert.deepStrictEqual(open, ['Moneyline', 'Run Line', 'Total'],
       'MLB must expose exactly its three supported markets, with the run-line label');
   });
@@ -219,7 +241,12 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
   await test('a league with no data is offered as locked, never as a working tab', async () => {
     const { doc } = await mount(base);
     const ncaab = $$(doc, '#leagueTabs button').find((b) => b.textContent.trim() === 'NCAAB');
-    assert(ncaab && ncaab.disabled, 'NCAAB must be disabled');
+    assert(ncaab, 'NCAAB must be shown');
+    assert.strictEqual(ncaab.getAttribute('aria-disabled'), 'true', 'NCAAB must be locked');
+    assert.strictEqual(ncaab.getAttribute('tabindex'), '-1',
+      'a locked league must stay out of the tab order');
+    assert(!ncaab.hasAttribute('data-league'),
+      'a locked league must not carry data-league, or the click handler would select it');
     assert(/no historical college basketball/i.test(ncaab.getAttribute('title')));
   });
 
@@ -470,7 +497,9 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
   await test('arrow keys walk the tablists and keep focus after the re-render', async () => {
     const { win, doc } = await mount({ ...base, '/query': priced() });
     for (const [container, attr] of [['#leagueTabs', 'data-league'], ['#marketTabs', 'data-market']]) {
-      const tabs = $$(doc, `${container} button:not([disabled])`);
+      // Locked tabs are aria-disabled and arrowNav skips them, so the test has
+      // to count the same tabs production does or it arrows onto a dead one.
+      const tabs = $$(doc, `${container} button:not([disabled]):not([aria-disabled="true"])`);
       if (tabs.length < 2) continue;
       tabs[0].focus();
       const startId = tabs[0].getAttribute(attr);

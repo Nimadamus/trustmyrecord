@@ -5,14 +5,20 @@ const LIVE_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sp
 const ARTIFACT_PATH = path.join(process.cwd(), 'artifacts', 'sportsbook-live-verification.png');
 
 async function clickSport(page, sport) {
-  const label = sport === 'Soccer' ? /Soccer\b/i : new RegExp(`^${sport}\\b`, 'i');
+  // The sport rail prints an icon before the label ("⚾ MLB"), so anchoring the
+  // accessible name at ^ stopped matching. Still an exact-label match: the
+  // sport must appear as its own word, so NBA cannot match WNBA.
+  const label = sport === 'Soccer' ? /Soccer\b/i : new RegExp(`(^|[^A-Za-z])${sport}\\b`, 'i');
   const tab = page.getByRole('button', { name: label }).first();
   await expect(tab, `${sport} tab should be present`).toBeVisible({ timeout: 15000 });
   await tab.click();
 }
 
+// SPORTSBOOK_V2_20260904: production serves the v2 board (#sbnBoard, rows of
+// article.sbn-row). Both skins are listed at every hook so this proof asserts
+// the same guarantees whichever one answers.
 function visibleBoard(page) {
-  return page.locator('#lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first();
+  return page.locator('#sbnBoard:visible, #lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first();
 }
 
 async function waitForBoardSettled(page) {
@@ -158,9 +164,19 @@ test('live sportsbook primary markets and pick slip are usable', async ({ page }
   const primaryGrid = card;
   await expect(primaryGrid, sport + ' card must expose the main markets directly on the card').toBeVisible({ timeout: 15000 });
 
-  await expect(primaryGrid, 'Moneyline must be visible in the primary grid').toContainText(/Moneyline/i);
-  await expect(primaryGrid, 'Spread/Puck Line must be visible in the primary grid').toContainText(/Puck Line|Spread/i);
-  await expect(primaryGrid, 'Total must be visible in the primary grid').toContainText(/Total/i);
+  // The guarantee is that a reader sees all three primary markets on the board
+  // without opening anything. WHERE the names are printed changed with the v2
+  // board: the compact row (article.sbn-row) carries only prices, and the market
+  // names are printed once in the column header above the rows
+  // (div.sbn-colhead: "Run Line | Total | Moneyline"). Asserting them against
+  // the card alone therefore failed on a board that is in fact correct
+  // (2026-09-04). Assert them against the board that contains the card, which
+  // covers the v2 column header and the classic card equally.
+  const boardScope = page.locator('#sbnBoard:visible, #lobbyBoardRows:visible, #gamesListContainer:visible').first();
+  const marketNames = (await boardScope.count()) ? boardScope : primaryGrid;
+  await expect(marketNames, 'Moneyline must be named on the board').toContainText(/Moneyline|\bML\b/i);
+  await expect(marketNames, 'Spread/Run Line/Puck Line must be named on the board').toContainText(/Puck Line|Run Line|Spread/i);
+  await expect(marketNames, 'Total must be named on the board').toContainText(/Total/i);
   await expect
     .poll(async () => card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {
       const style = window.getComputedStyle(node);
@@ -174,26 +190,39 @@ test('live sportsbook primary markets and pick slip are usable', async ({ page }
   await expect(primaryButtons.first(), 'visible market prices should be clickable').toBeVisible({ timeout: 15000 });
   await primaryButtons.first().click();
 
-  const labels = [
-    /away.*moneyline|moneyline.*away|ml/i,
-    /home.*moneyline|moneyline.*home|ml/i,
-    /away.*puck line|puck line.*away|\+|-|1\.5/i,
-    /home.*puck line|puck line.*home|\+|-|1\.5/i,
-    /over|o\s*\d/i,
-    /under|u\s*\d/i,
-  ];
-  for (const label of labels) {
-    await expect(primaryGrid, `primary grid is missing ${label}`).toContainText(label);
-  }
+  // What this has always been for: the card prices BOTH sides of all three
+  // primary markets, on the card, with nothing to open first. It used to check
+  // that by looking for the market NAMES in the cell text ("ml", "puck line").
+  // The v2 row prints the price and nothing else — the names moved to the
+  // column header, asserted above — so name-matching failed on a board that
+  // was pricing all six cells correctly (2026-09-04). Count the priced cells
+  // instead, which is the thing the reader needs and is true of both boards.
+  await expect
+    .poll(async () => primaryButtons.count(),
+      { message: 'the card must price both sides of all three primary markets' })
+    .toBeGreaterThanOrEqual(6);
+  await expect(primaryGrid, 'the total must be priced Over').toContainText(/over|o\s*\d/i);
+  await expect(primaryGrid, 'the total must be priced Under').toContainText(/under|u\s*\d/i);
+  await expect(primaryGrid, 'a handicap line must be posted').toContainText(/[+-]\d+(\.\d+)?/);
 
-  await expect(page.getByRole('tab', { name: /Game Lines/i }).first()).toBeVisible();
-  const teamTotals = page.getByRole('tab', { name: /Team Totals/i }).first();
+  // The classic board's market switcher was a tablist; the v2 board renders the
+  // same switcher as button.sbn-cat with no role, so a role=tab lookup found
+  // nothing on a switcher that works. Take either implementation - what is
+  // locked is that the market can be selected, not the element used for it.
+  const marketTab = (name) => page
+    .locator('[role="tab"], button.sbn-cat, .sportsbook-market-tab')
+    .filter({ hasText: name })
+    .first();
+  await expect(marketTab(/Game Lines/i)).toBeVisible();
+  const teamTotals = marketTab(/Team Totals/i);
   await expect(teamTotals).toBeVisible();
   await teamTotals.click();
   await waitForBoardSettled(page);
   await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|Total/i);
 
-  const slip = page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first();
+  const slip = page.locator(
+    '.sbn-sliplist:visible, .tmr-slip-panel:visible, #pickDetails:visible, '
+    + 'aside:has-text("Pick Slip"):visible').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();
   // The point is that the clicked PRICE reached the slip, not that a particular
   // label is used for it. The mainline slip writes "Odds"; the multislip panel
@@ -202,7 +231,8 @@ test('live sportsbook primary markets and pick slip are usable', async ({ page }
   await expect(slip, 'clicking a visible price should carry that price into the slip')
     .toContainText(/Odds|[+-]\d{2,4}/i);
   await expect(
-    page.locator('#unitsInput, #ttSlipUnits, .tmr-ms-units-row input, [id^="msUnits"]').first(),
+    page.locator('#unitsInput, #ttSlipUnits, .tmr-ms-units-row input, [id^="msUnits"], '
+      + '.sbn-slipunits input[type="number"]').first(),
     'units input should remain available'
   ).toBeVisible();
   await expect(slip, 'stake mode text should remain available').toContainText(/Stake Mode|Risk|To Win/i);
