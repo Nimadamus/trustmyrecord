@@ -1277,3 +1277,48 @@ html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(88px, 150px); }
 html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
+
+/* ---- Market column headings, readability only ------------------------------
+   Run Line / Total / Moneyline, and the Over / Under headings on the two-column
+   tabs, were set at 9.5px in a muted grey and were hard to read. They go up to
+   11.5px and a brighter tone. line-height stays at 15px on purpose: the header's
+   height is what keeps the board below it on whole pixels, so the type grows
+   inside the same box and no geometry moves. */
+html.sbn-v3 .sbn-colhead {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .11em;
+    color: #c6cfdb;
+}
+html.sbn-v3 .sbn-headtally,
+html.sbn-v3 .sbn-loosetally { font-size: 11px; color: #8d99aa; }
+
+@media (max-width: 720px) {
+    /* a touch smaller on a phone, still well above the 9.5px it was */
+    html.sbn-v3 .sbn-colhead { font-size: 10.5px; letter-spacing: .08em; }
+}
+
+@media (max-width: 720px) {
+    /* the count does not fit the matchup column on a phone and was clipping */
+    html.sbn-v3 .sbn-headtally { display: none; }
+}
+
+@media (max-width: 720px) {
+    /* display:none removed the cell from the grid entirely, which shifted Run
+       Line, Total and Moneyline one column left and off the prices they label.
+       visibility keeps the cell and just empties it. */
+    html.sbn-v3 .sbn-headtally { display: block; visibility: hidden; }
+}
+
+@media (max-width: 720px) {
+    /* zero the type too, so the hidden cell cannot register as clipped text and
+       mask a real clip somewhere else later */
+    html.sbn-v3 .sbn-headtally { font-size: 0; }
+}
+
+@media (max-width: 720px) {
+    /* "Moneyline" at .08em tracking needs 77px in a 70px column and was cut.
+       The tracking goes, not the label: the point of this change is legibility. */
+    html.sbn-v3 .sbn-colhead { letter-spacing: .01em; }
+    html.sbn-v3 .sbn-colhead span:not(:first-child) { padding-left: 5px; }
+}
