@@ -869,3 +869,173 @@ html.sbn-v3 .sbn-striptrack { align-items: stretch; }
 html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 13.5px; }
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
+
+/* ============================================================================
+ * PASS 2 — stop the board reading as a tray of floating cards.
+ * A sportsbook board is one continuous list: games are separated by a hairline,
+ * not by a gap, a border, a radius and a shadow each. That single change does
+ * more for the "professional book" feel than any amount of cell polish, because
+ * it turns thirty objects into one object with thirty rows.
+ * ========================================================================== */
+html.sbn-v3 .sbn-boardlist {
+    border: 1px solid var(--sbn-line);
+    border-top: 0;
+    border-radius: 0 0 10px 10px;
+    background: var(--sbn-panel);
+    overflow: hidden;
+}
+html.sbn-v3 .sbn-colhead {
+    border-radius: 0;
+    border-bottom: 0;
+    margin: 0;
+}
+html.sbn-v3 .sbn-row {
+    margin: 0;
+    padding: 7px 12px 8px;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    background: transparent;
+}
+html.sbn-v3 .sbn-row:first-child { border-top: 0; }
+html.sbn-v3 .sbn-row:hover { background: rgba(255, 255, 255, 0.014); border-color: rgba(255, 255, 255, 0.05); }
+
+/* the kickoff line becomes a quiet caption, not a header bar */
+html.sbn-v3 .sbn-rowtop { height: 18px; }
+html.sbn-v3 .sbn-rowtime { font-size: 10px; letter-spacing: .08em; color: #717d8e; }
+html.sbn-v3 .sbn-deep {
+    padding: 1px 8px;
+    font-size: 10px;
+    line-height: 14px;
+    border-radius: 4px;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #7f8c9e;
+}
+html.sbn-v3 .sbn-teams { margin-top: 3px; }
+
+/* ---- The cell: a control, not a tile --------------------------------------
+   Hairline border, flat surface a shade above the list, tight gaps so the three
+   markets read as one strip of controls rather than three separate tiles. */
+html.sbn-v3 .sbn-colhead,
+html.sbn-v3 .sbn-trow { gap: 4px; }
+html.sbn-v3 .sbn-chip {
+    height: 40px;                    /* 40 - 20 line box = 20, even */
+    border-radius: 4px;
+    border-color: rgba(255, 255, 255, 0.06);
+    background: #1b222d;
+}
+html.sbn-v3 .sbn-trow { height: 40px; }
+html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 3px; }
+html.sbn-v3 .sbn-chip:hover {
+    background: #232d3c;
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* ---- Selected: a lit control, not a slab of paint ------------------------- */
+html.sbn-v3 .sbn-chip.is-sel {
+    background: rgba(34, 211, 238, 0.13);
+    border: 1px solid var(--sbn-accent);
+    box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.28);
+}
+html.sbn-v3 .sbn-chip.is-sel .sbn-chip-top,
+html.sbn-v3 .sbn-chip.is-sel .sbn-chip-bot.is-line { color: #ffffff; }
+html.sbn-v3 .sbn-chip.is-sel .sbn-chip-bot { color: #8ff0ff; }
+html.sbn-v3 .sbn-chip.is-sel:hover { background: rgba(34, 211, 238, 0.18); }
+
+/* ---- Market nav: a bar, not a panel of pills ------------------------------ */
+html.sbn-v3 .sbn-toolbar {
+    border: 1px solid var(--sbn-line);
+    border-bottom: 1px solid var(--sbn-line);
+    border-radius: 10px 10px 0 0;
+    background: var(--sbn-panel2);
+}
+html.sbn-v3 .sbn-boardname {
+    padding: 0 13px;
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: var(--sbn-text2);
+}
+html.sbn-v3 .sbn-cat {
+    height: 36px;
+    padding: 0 11px;
+    font-size: 12px;
+    font-weight: 600;
+}
+html.sbn-v3 .sbn-cat i { font-size: 10px; color: #5f6b7c; }
+html.sbn-v3 .sbn-cat.is-on { font-weight: 700; }
+html.sbn-v3 .sbn-cat::after { left: 7px; right: 7px; height: 2px; }
+html.sbn-v3 .sbn-colhead { padding: 6px 12px; font-size: 9.5px; }
+
+/* ---- Ladder: a price strip -------------------------------------------------
+   Rungs share a surface and sit tight, so the line progression reads across in
+   one sweep instead of as a wall of separate tiles. */
+html.sbn-v3 .sbn-strip { height: 40px; }
+html.sbn-v3 .sbn-strip.is-prop { height: 44px; }
+html.sbn-v3 .sbn-striptrack { gap: 3px; grid-auto-columns: minmax(0, 150px); }
+html.sbn-v3 .sbn-striptrack .sbn-chip,
+html.sbn-v3 .sbn-striptrack .sbn-more { height: 40px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 44px; }
+html.sbn-v3 .sbn-striptrack .sbn-more {
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.015);
+    font-size: 10px;
+}
+
+/* ---- Pick slip: a touch wider and calmer ---------------------------------- */
+html.sbn-v3 .sbn-shell { grid-template-columns: 150px minmax(0, 1fr) 322px; }
+html.sbn-v3 .sbn-sliprow { border-color: rgba(255, 255, 255, 0.06); background: rgba(255, 255, 255, 0.016); }
+html.sbn-v3 .sbn-modebtn.is-on { background: rgba(34, 211, 238, 0.16); color: #8ff0ff; box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.5); }
+
+/* Phone rules restated last, again: desktop ladder sizing declared after the
+   breakpoints keeps overriding the phone track. Everything phone-specific for
+   this pass lives here so it cannot happen a fourth time. */
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-boardlist { border-radius: 0 0 10px 10px; }
+    html.sbn-v3 .sbn-strip { height: 44px; }
+    html.sbn-v3 .sbn-strip.is-prop { height: 46px; }
+    html.sbn-v3 .sbn-striptrack {
+        grid-auto-columns: 86px;
+        gap: 4px;
+        justify-content: start;
+        align-items: stretch;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    html.sbn-v3 .sbn-striptrack::-webkit-scrollbar { display: none; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip,
+    html.sbn-v3 .sbn-striptrack .sbn-more { height: 44px; }
+    html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+    html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 46px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 2px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 13px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 11.5px; }
+    html.sbn-v3 .sbn-chip { height: 44px; }
+    html.sbn-v3 .sbn-trow { height: 44px; }
+}
+
+/* overflow:hidden on the list broke the sticky column header, which then
+   clipped the first game. Round the last row instead of clipping the list. */
+html.sbn-v3 .sbn-boardlist { overflow: visible; }
+html.sbn-v3 .sbn-row:last-child { border-radius: 0 0 10px 10px; }
+
+/* the floated price left a doubled separator behind it in the meta line, so the
+   price goes back inline and simply carries the weight */
+html.sbn-v3 .sbn-slipmeta b { float: none; margin-left: 0; font-size: 13px; }
+
+/* The wider slip column was declared without a breakpoint, so the three-column
+   shell was still in force at 390px and pushed the page 21px wide. It is a
+   desktop rule and now says so. */
+html.sbn-v3 .sbn-shell { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) {
+    html.sbn-v3 .sbn-shell { grid-template-columns: 150px minmax(0, 1fr) 322px; }
+}
+
+/* A rung needs a floor: at 150px max with no minimum, an NFL alt-totals track
+   squeezed the pair until the price crossed the right inset. */
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(96px, 150px); }
+
+/* stretch the label too, or a 41px label in a 40px row grows the card by a
+   pixel and the cards stop matching each other */
+html.sbn-v3 .sbn-striplabel { align-self: stretch; }
