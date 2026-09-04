@@ -1,5 +1,28 @@
 # TrustMyRecord Development Rules
 
+## Editorial: a negative number takes the MINUS SIGN, never the word (Sep 4, 2026) — HARD RULE (PERMANENT, SITE WIDE)
+`HOUSE_STYLE_MINUS_SIGN_20260904`. Applies to every word TrustMyRecord publishes, human or automated:
+Matchup of the Day, board and ticker blurbs, forum card posts, article copy, captions, alt text, headlines,
+meta descriptions, OG copy and JSON-LD.
+
+**Never spell out "minus".** Point spreads, prices, moneylines, scoring margins, run and point differentials,
+units and any other figure a sports page prints with a sign are written with the sign, tight against the digits.
+
+- RIGHT: `Stanford was -5 at home and -119 on the road last season.`  WRONG: `minus 5` / `minus 119`
+- RIGHT: `Miami is laying 24.5` (or `-24.5` if the sentence needs the sign).  WRONG: `laying minus 24.5`
+- RIGHT: `the card went 0-3 for -16.50 units`.  WRONG: `for minus 16.50 units`
+
+Untouched: `plus-minus` the statistic, arithmetic prose ("7 minus 3"), and "minus" with no number after it.
+
+**Why this is enforced in code, not only in a prompt.** The Game File author prompt bans dashes, because an em dash
+is the other machine tell. A model reading that ban over-applies it, decides the `-` glyph itself is forbidden and
+reaches for the word: that is how "Stanford Was Minus 5 at Home and Minus 119 on the Road Last Season" shipped as a
+headline on Sep 4, 2026. The prompt now carves the minus sign out explicitly, and
+`trustmyrecord-backend/services/matchupArticles/houseStyle.js` applies the rule deterministically on every path that
+writes article copy: the daily automated author runs it before the publish gate, and `store.update()` runs it on every
+patch, so a hand build and the admin API are covered too. Locked by
+`trustmyrecord-backend/tests/matchup-house-style-sign-test.js` (in `npm run test:matchup`).
+
 ## Sportsbook v2 skin + pick submission identity (Sep 3, 2026) — HARD RULE (PERMANENT)
 `SPORTSBOOK_V2_20260903` / `PICK_IDEMPOTENCY_20260903`. The sportsbook is served through a feature-flagged skin
 (`static/css/sportsbook-v2.css` + `static/js/sportsbook-v2.js`, `ROLLOUT_PERCENT` currently 100). The classic
