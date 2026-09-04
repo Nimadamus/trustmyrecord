@@ -10,6 +10,7 @@ const OVERLAY = {
   '/sportsbook/v2/index.html': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
   '/static/css/sportsbook-v2.css': ['static/css/sportsbook-v2.css', 'text/css; charset=utf-8'],
   '/static/js/sportsbook-v2.js': ['static/js/sportsbook-v2.js', 'application/javascript; charset=utf-8'],
+  '/static/css/sportsbook-altgame.css': ['static/css/sportsbook-altgame.css', 'text/css; charset=utf-8'],
 };
 async function installOverlay(context) {
   if (process.env.SBV2_NO_OVERLAY === '1') return;

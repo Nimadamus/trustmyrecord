@@ -13047,7 +13047,11 @@ window.toggleSportFamily = function (family) {
         var sport = (window.TMR && window.TMR.selectedSport) || info.sport || '';
         var betType = info.betType;
         var isTotal = (betType === 'over' || betType === 'under');
-        var marketType = isTotal ? 'totals' : 'spread';
+        // ALT_GAME_GROUPING_20260903: the matchup card's PRIMARY row includes a
+        // moneyline. Without this branch 'ml' fell through to the spread path and
+        // would have recorded an h2h pick as market_type 'spreads'.
+        var isMl = (betType === 'ml');
+        var marketType = isTotal ? 'totals' : (isMl ? 'h2h' : 'spread');
         var team = isTotal ? (info.selection || (betType === 'under' ? 'Under' : 'Over')) : info.selection;
         var synthGame = { id: info.gameId || null, commence_time: info.gameTime || null, away_team: info.awayTeam, home_team: info.homeTeam };
         if (_ttGameStarted(synthGame)) {
@@ -13067,6 +13071,10 @@ window.toggleSportFamily = function (family) {
             altMarketType = 'totals';
             altSelection = (betType === 'under') ? 'Under' : 'Over';
             altSelectionLabel = altSelection + (lineDisp ? ' ' + lineDisp : '');
+        } else if (isMl) {
+            altMarketType = 'h2h';
+            altSelection = String(info.selection || '').trim();
+            altSelectionLabel = altSelection + ' ML';
         } else {
             altMarketType = 'spreads';
             altSelection = String(info.selection || '').trim();
@@ -13086,9 +13094,9 @@ window.toggleSportFamily = function (family) {
                 market_type: altMarketType,
                 selection: altSelection,
                 selection_label: altSelectionLabel,
-                line: info.line,
+                line: isMl ? null : info.line,
                 odds: info.odds,
-                group_label: info.market || (isTotal ? 'Alternate Totals' : 'Alternate Spreads'),
+                group_label: info.market || (isTotal ? 'Alternate Totals' : (isMl ? 'Full Game' : 'Alternate Spreads')),
                 book_title: info.book || ''
             });
             if (ok === false) return;
@@ -13927,27 +13935,151 @@ window.toggleSportFamily = function (family) {
         // Shared card renderer — used for both the Bovada feed and the board
         // fallback. Expects games shaped { away_team, home_team, commence_time,
         // id, alt_groups:[{ key, label, items:[{ selection, line, odds }] }] }.
+        // ALT_GAME_GROUPING_20260903 (Nima): one self-contained section per
+        // matchup. Before this, every alt line for a game was dumped into a
+        // single flat auto-fill grid, so one MLB game ran 1,597px tall and the
+        // same game's totals sat far below its 40+ alt spreads. Now each card
+        // renders: matchup header -> PRIMARY markets (main spread / moneyline /
+        // total) -> ALTERNATE SPREADS -> ALTERNATE TOTALS, with each alternate
+        // section showing a useful first run and collapsing the rest behind a
+        // "View N more" control that expands inline inside that matchup.
+        //
+        // The click contract is unchanged: every price is still a
+        // [data-alt-pick="1"] button carrying data-bet-type / data-selection /
+        // data-line / data-odds, so window.selectAltBet drives the canonical
+        // pick slip and lockInPick submits it (ALT_LINES_CLICK_FIX_20260528).
+        // How many of each ladder show while collapsed is decided in CSS per
+        // breakpoint (sportsbook-altgame.css), so a phone shows fewer than a
+        // desktop without re-rendering. The markup carries every line.
+        function altBtn(betType, mkt, selection, line, odds, label) {
+            var lineTxt = (line == null || line === '') ? '' :
+                ((Number(line) > 0 ? '+' : '') + line);
+            return '<button type="button" class="sb-altbtn" data-alt-pick="1"'
+                + ' data-bet-type="' + esc(betType) + '" data-market="' + esc(mkt) + '"'
+                + ' data-selection="' + esc(selection) + '"'
+                + ' data-line="' + esc(line == null ? '' : line) + '" data-odds="' + esc(odds) + '">'
+                + '<span class="sb-altbtn-line">' + esc(label != null ? label : lineTxt) + '</span>'
+                + '<span class="sb-altbtn-odds">' + fmtOdds(odds) + '</span></button>';
+        }
+        function altEmptyBtn() {
+            return '<span class="sb-altbtn is-empty" aria-hidden="true">'
+                + '<span class="sb-altbtn-line">&mdash;</span><span class="sb-altbtn-odds">&nbsp;</span></span>';
+        }
+        // Primary markets: main spread / moneyline / total, one row per team, so
+        // the three markets a user reaches for stay at the top of every matchup.
+        function primaryBlock(g) {
+            var m = g.main;
+            if (!m || !(m.spread || m.h2h || m.total)) return '';
+            var spreadMktMain = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
+            var pick = function (arr, name) {
+                if (!arr) return null;
+                for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].selection === name) return arr[i];
+                return null;
+            };
+            var side = function (over) {
+                if (!m.total) return null;
+                for (var i = 0; i < m.total.length; i++) {
+                    var t = String(m.total[i].selection || '').toLowerCase();
+                    if (over && t === 'over') return m.total[i];
+                    if (!over && t === 'under') return m.total[i];
+                }
+                return null;
+            };
+            var row = function (team, isAway) {
+                var sp = pick(m.spread, team), ml = pick(m.h2h, team), to = isAway ? side(true) : side(false);
+                return '<div class="sb-altp-row">'
+                    + '<span class="sb-altp-team" title="' + esc(team) + '">' + esc(team) + '</span>'
+                    + (sp ? altBtn('spread', spreadMktMain, team, sp.line, sp.odds) : altEmptyBtn())
+                    + (ml ? altBtn('ml', 'Moneyline', team, null, ml.odds, 'ML') : altEmptyBtn())
+                    + (to ? altBtn(isAway ? 'over' : 'under', 'Total',
+                        (isAway ? 'Over' : 'Under'), to.line, to.odds,
+                        (isAway ? 'O ' : 'U ') + to.line) : altEmptyBtn())
+                    + '</div>';
+            };
+            return '<section class="sb-altsec sb-altsec--primary">'
+                + '<h4 class="sb-altsec-title">Primary markets</h4>'
+                + '<div class="sb-altp-head"><span></span><span>' + esc(spreadMktMain) + '</span><span>Moneyline</span><span>Total</span></div>'
+                + row(g.away_team, true) + row(g.home_team, false)
+                + '</section>';
+        }
+        // One collapsible alternate section (spreads or totals), grouped by the
+        // side the line belongs to and ordered by line so the ladder reads.
+        function altSection(g, grp, isTotal) {
+            var items = (grp.items || []).slice();
+            if (!items.length) return '';
+            var mkt = isTotal ? 'Alt Total' : spreadMkt;
+            var buckets = {}, order = [];
+            items.forEach(function (it) {
+                var sel = String(it.selection == null ? '' : it.selection).trim();
+                var key = isTotal ? (sel.toLowerCase() === 'under' ? 'Under' : 'Over') : sel;
+                if (!buckets[key]) { buckets[key] = []; order.push(key); }
+                buckets[key].push(it);
+            });
+            if (isTotal) order.sort();
+            var total = items.length;
+            var body = order.map(function (key) {
+                var list = buckets[key].slice().sort(function (a, b) { return Number(a.line) - Number(b.line); });
+                var betType = isTotal ? (key === 'Under' ? 'under' : 'over') : 'spread';
+                var cells = list.map(function (it, i) {
+                    var lineTxt = isTotal
+                        ? ((key === 'Under' ? 'U ' : 'O ') + it.line)
+                        : ((Number(it.line) > 0 ? '+' : '') + it.line);
+                    return '<span class="sb-altcell">'
+                        + altBtn(betType, mkt, isTotal ? key : it.selection, it.line, it.odds, lineTxt)
+                        + '</span>';
+                }).join('');
+                return '<div class="sb-altrow">'
+                    + '<div class="sb-altrow-label" title="' + esc(key) + '">' + esc(key) + '</div>'
+                    + '<div class="sb-altrow-grid">' + cells + '</div>'
+                    + '</div>';
+            }).join('');
+            var label = 'Show all ' + total + ' ' + (isTotal ? 'alternate totals' : 'alternate spreads');
+            var more = '<button type="button" class="sb-altmore" data-alt-more="1" aria-expanded="false"'
+                + ' data-alt-more-label="' + esc(label) + '">' + esc(label) + '</button>';
+            return '<section class="sb-altsec" data-alt-open="0">'
+                + '<h4 class="sb-altsec-title">' + esc(isTotal ? 'Alternate totals' : 'Alternate spreads')
+                + ' <span class="sb-altsec-count">' + total + '</span></h4>'
+                + '<div class="sb-altsec-body">' + body + '</div>' + more
+                + '</section>';
+        }
         function renderAltGames(games) {
             rowsEl.innerHTML = games.map(function (g) {
                 var gAttrs = ' data-alt-away="' + esc(g.away_team) + '" data-alt-home="' + esc(g.home_team) + '"'
                     + ' data-alt-time="' + esc(g.commence_time || '') + '" data-alt-gid="' + esc(g.id || '') + '"';
-                var groups = (g.alt_groups || []).map(function (grp) {
-                    var isTotal = grp.key === 'alt_totals';
-                    var lines = (grp.items || []).map(function (it) {
-                        var lineStr = (Number(it.line) > 0 ? '+' : '') + it.line;
-                        // alt_totals → over/under by selection; alt_spreads → spread on the named team.
-                        var betType = isTotal ? (String(it.selection).toLowerCase() === 'under' ? 'under' : 'over') : 'spread';
-                        var mkt = isTotal ? 'Alt Total' : spreadMkt;
-                        return '<button type="button" class="odds-btn" data-alt-pick="1"'
-                            + ' data-bet-type="' + esc(betType) + '" data-market="' + esc(mkt) + '"'
-                            + ' data-selection="' + esc(it.selection) + '" data-line="' + esc(it.line) + '" data-odds="' + esc(it.odds) + '"'
-                            + ' style="background:rgba(255,255,255,.04);border:1px solid var(--glass-border,#262636);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;cursor:pointer;color:inherit;text-align:left;width:100%">'
-                            + '<span>' + esc(it.selection) + ' ' + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(it.odds) + '</b></button>';
-                    }).join('');
-                    return '<div style="padding:6px 0"><h4 style="margin:6px 0;color:var(--accent-gold,#ffd700);font-size:12px;text-transform:uppercase;letter-spacing:.5px">' + esc(grp.label || grp.key) + '</h4><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' + lines + '</div></div>';
-                }).join('');
-                return '<article class="sportsbook-game-card"' + gAttrs + '><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
+                var groups = g.alt_groups || [];
+                var spreads = groups.filter(function (gr) { return gr.key !== 'alt_totals'; });
+                var totals = groups.filter(function (gr) { return gr.key === 'alt_totals'; });
+                var merge = function (list) {
+                    var items = [];
+                    list.forEach(function (gr) { items = items.concat(gr.items || []); });
+                    return items.length ? { items: items } : null;
+                };
+                var sp = merge(spreads), to = merge(totals);
+                return '<article class="sportsbook-game-card sb-altgame"' + gAttrs + '>'
+                    + '<header class="sb-altgame-head">'
+                    + '<span class="sb-altgame-teams">' + esc(g.away_team) + ' <i>@</i> ' + esc(g.home_team) + '</span>'
+                    + '<span class="sb-altgame-when">' + esc(fmtWhen(g.commence_time)) + '</span>'
+                    + '</header>'
+                    + primaryBlock(g)
+                    + (sp ? altSection(g, sp, false) : '')
+                    + (to ? altSection(g, to, true) : '')
+                    + '</article>';
             }).join('');
+        }
+        // Inline expansion, scoped to the matchup that owns the control.
+        if (!window.TMR._altMoreBound) {
+            window.TMR._altMoreBound = true;
+            document.addEventListener('click', function (ev) {
+                var b = ev.target && ev.target.closest && ev.target.closest('[data-alt-more="1"]');
+                if (!b) return;
+                ev.preventDefault();
+                var sec = b.closest('.sb-altsec');
+                if (!sec) return;
+                var open = sec.getAttribute('data-alt-open') === '1';
+                sec.setAttribute('data-alt-open', open ? '0' : '1');
+                b.setAttribute('aria-expanded', open ? 'false' : 'true');
+                b.textContent = open ? (b.getAttribute('data-alt-more-label') || 'Show all') : 'Show fewer';
+            }, false);
         }
 
         // ALT_LINES_BOARD_FALLBACK_20260530 (Nima): the dedicated Bovada altlines
@@ -13962,6 +14094,26 @@ window.toggleSportFamily = function (family) {
         // items that carry a real numeric line AND numeric odds; drop a group if
         // it has none, and the game if no real alt groups remain.
         var _altReal = function (it) { return it && isFinite(Number(it.line)) && it.line !== null && it.line !== '' && isFinite(Number(it.odds)) && it.odds !== null && it.odds !== ''; };
+        // ALT_GAME_GROUPING_20260903: pull the MAIN spread / moneyline / total off
+        // the board game so each matchup can lead with its primary markets.
+        function _altMainMarkets(g) {
+            var bk = (g && g.bookmakers && g.bookmakers[0]) || null;
+            if (!bk || !bk.markets) return null;
+            var find = function (k) {
+                for (var i = 0; i < bk.markets.length; i++) if (bk.markets[i] && bk.markets[i].key === k) return bk.markets[i];
+                return null;
+            };
+            var outs = function (k) {
+                var m = find(k);
+                if (!m || !m.outcomes) return null;
+                var list = m.outcomes.map(function (o) {
+                    return { selection: o.name, line: (o.point == null ? null : o.point), odds: o.price };
+                }).filter(function (o) { return o.odds != null && isFinite(Number(o.odds)); });
+                return list.length ? list : null;
+            };
+            var main = { spread: outs('spreads'), h2h: outs('h2h'), total: outs('totals') };
+            return (main.spread || main.h2h || main.total) ? main : null;
+        }
         function altGamesFromBoard(bgames) {
             return (bgames || []).map(function (g) {
                 var ag = (g.market_groups || []).filter(function (grp) {
@@ -13974,7 +14126,7 @@ window.toggleSportFamily = function (family) {
                     };
                 }).filter(function (grp) { return grp.items.length; });
                 if (!ag.length) return null;
-                return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, alt_groups: ag };
+                return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, alt_groups: ag, main: _altMainMarkets(g) };
             }).filter(Boolean);
         }
         function fallbackToBoard() {
@@ -14008,6 +14160,8 @@ window.toggleSportFamily = function (family) {
                 if (!g || !(g.alt_groups || []).length) return;
                 var k = altMatchupKey(g);
                 if (!map[k]) { map[k] = g; order.push(k); return; }
+                // Bovada has no main markets; keep whichever source supplied them.
+                if (!map[k].main && g.main) map[k].main = g.main;
                 // Union groups by key; keep the richer set of items per group.
                 var byKey = {};
                 (map[k].alt_groups || []).forEach(function (gr) { byKey[gr.key] = gr; });
@@ -34786,6 +34940,7 @@ document.addEventListener('DOMContentLoaded', function() {
          Player Props first) and falls back to smooth horizontal scrolling on
          very narrow viewports. Loaded last so its layout rules win the
          cascade over the redesign tail guard above. Layout only. -->
+    <link rel="stylesheet" href="/static/css/sportsbook-altgame.css">
     <link rel="stylesheet" href="/static/css/sportsbook-market-nav.css?v=ffea4040a3b5">
     <script src="/static/js/sportsbook-market-nav.js?v=2c28e62168d7" defer></script>
     <script>
