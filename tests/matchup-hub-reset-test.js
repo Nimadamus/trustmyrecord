@@ -55,6 +55,13 @@ fs.copyFileSync(path.join(ROOT, 'scripts', 'build_matchup_graphics.py'),
 // it has to be in the temp tree too or the bake dies on ModuleNotFoundError.
 fs.copyFileSync(path.join(ROOT, 'scripts', 'schema_event.py'),
                 path.join(tmp, 'scripts', 'schema_event.py'));
+// team_logos.py + its registry: the bake resolves every club mark through them,
+// so the temp tree needs both or the bake dies on ModuleNotFoundError.
+fs.copyFileSync(path.join(ROOT, 'scripts', 'team_logos.py'),
+                path.join(tmp, 'scripts', 'team_logos.py'));
+fs.mkdirSync(path.join(tmp, 'data'), { recursive: true });
+fs.copyFileSync(path.join(ROOT, 'data', 'team-logos.json'),
+                path.join(tmp, 'data', 'team-logos.json'));
 fs.copyFileSync(path.join(ROOT, 'matchups', 'index.html'),
                 path.join(tmp, 'matchups', 'index.html'));
 fs.copyFileSync(path.join(ROOT, 'matchups', 'mlb', 'index.html'),
