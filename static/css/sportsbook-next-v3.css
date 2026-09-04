@@ -1,0 +1,271 @@
+/* ============================================================================
+ * SPORTSBOOK_NEXT_V3_20260904 — refinement pass, PREVIEW ONLY.
+ * Loaded only by /sportsbook/next/, and every rule is scoped to html.sbn-v3,
+ * which only that page sets. The live board at /sportsbook/ neither loads this
+ * file nor carries the class, so nothing here can reach production.
+ * ========================================================================== */
+
+/* ---- 6. The head of the board reads as one designed unit -------------------
+   Sport selector, then market categories, then the tally, then the column
+   headers: four things that used to sit stacked and flat. They are now one
+   panel with an internal rhythm and a single outer edge. */
+html.sbn-v3 .sbn-toolbar {
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    background: var(--sbn-panel);
+    border: 1px solid var(--sbn-line);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+}
+
+/* the sport is a label, not another tab: it gets its own cell and a divider */
+html.sbn-v3 .sbn-boardname {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: 0 14px;
+    border-right: 1px solid var(--sbn-line);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sbn-text);
+}
+
+/* ---- 1. Market navigation --------------------------------------------------
+   Underlined tabs rather than a row of pills. The active market is obvious from
+   the accent rule and the brighter label, which is how a sportsbook marks it,
+   and it stops the row reading as eight identical buttons. */
+/* Wrap rather than scroll: NFL posts ten markets and a scrolling row hides the
+   last of them behind no affordance at all. A second line costs 40px on that
+   sport only and keeps every market discoverable, which is the point of the
+   bar. Phones still scroll, where a second line costs too much. */
+html.sbn-v3 .sbn-cats {
+    gap: 0;
+    flex-wrap: wrap;
+    align-self: stretch;
+    align-items: stretch;
+}
+html.sbn-v3 .sbn-cats::-webkit-scrollbar { display: none; }
+html.sbn-v3 .sbn-cat {
+    position: relative;
+    align-items: baseline;
+    gap: 5px;
+    height: 40px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--sbn-muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0;
+    transition: color .12s ease, background .12s ease;
+}
+html.sbn-v3 .sbn-cat::after {
+    content: '';
+    position: absolute;
+    left: 9px;
+    right: 9px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: transparent;
+    transition: background .12s ease;
+}
+html.sbn-v3 .sbn-cat:hover {
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--sbn-text2);
+}
+html.sbn-v3 .sbn-cat.is-on {
+    background: transparent;
+    color: var(--sbn-text);
+    font-weight: 700;
+}
+html.sbn-v3 .sbn-cat.is-on::after { background: var(--sbn-accent); }
+
+/* the counts sit with the label as a quieter figure, not a badge on a button */
+html.sbn-v3 .sbn-cat i {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: #6f7c8e;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+html.sbn-v3 .sbn-cat.is-on i { background: none; color: var(--sbn-accent); }
+
+/* the count moves into the header row, where the matchup column is otherwise
+   blank, which frees the whole toolbar width for the market tabs */
+html.sbn-v3 .sbn-headtally {
+    text-align: left;
+    color: #6f7c8e;
+    font-size: 10px;
+    letter-spacing: .12em;
+}
+html.sbn-v3 .sbn-tally {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-left: 1px solid var(--sbn-line);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    color: #6f7c8e;
+}
+
+/* the column headers close the panel rather than floating under it */
+html.sbn-v3 .sbn-colhead {
+    top: 56px;
+    padding: 7px 13px;
+    margin: 0 0 6px;
+    background: var(--sbn-panel2);
+    border: 1px solid var(--sbn-line);
+    border-radius: 0 0 10px 10px;
+    font-size: 10px;
+    letter-spacing: .16em;
+    color: #93a1b2;
+}
+
+/* ---- 5. One coherent row ---------------------------------------------------
+   The matchup and the prices were reading as two separate blocks. The columns
+   tighten, the whole row lights on hover, and the name cell carries a hairline
+   that ties it to the grid instead of leaving a gap. */
+html.sbn-v3 .sbn-colhead,
+html.sbn-v3 .sbn-trow {
+    grid-template-columns: minmax(0, 205px) repeat(3, minmax(104px, 1fr));
+    gap: 6px;
+}
+html.sbn-v3 .sbn-trow {
+    height: 44px;
+    padding-left: 2px;
+    border-radius: 6px;
+    transition: background .1s ease;
+}
+html.sbn-v3 .sbn-trow:hover { background: rgba(255, 255, 255, 0.022); }
+html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 4px; }
+html.sbn-v3 .sbn-tname { gap: 9px; padding-right: 12px; }
+html.sbn-v3 .sbn-tname b { font-size: 14.5px; line-height: 17px; }
+html.sbn-v3 .sbn-crest { flex-basis: 26px; width: 26px; height: 26px; }
+
+/* ---- 4. Denser rows, same breathing room ---------------------------------- */
+html.sbn-v3 .sbn-row {
+    padding: 5px 11px 6px;
+    margin: 0 0 4px;
+    border-radius: 9px;
+    background: var(--sbn-panel);
+    border-color: rgba(255, 255, 255, 0.055);
+}
+html.sbn-v3 .sbn-row:hover { border-color: rgba(255, 255, 255, 0.13); }
+/* The All markets pill measures 20px (14 line + 4 padding + 2 border). In a
+   19px row that centres at -0.5px and put the whole card on a half pixel. */
+html.sbn-v3 .sbn-rowtop { height: 20px; }
+html.sbn-v3 .sbn-teams { margin-top: 2px; }
+html.sbn-v3 .sbn-rowtime { font-size: 10.5px; line-height: 14px; letter-spacing: .06em; color: #7b8798; }
+html.sbn-v3 .sbn-deep {
+    padding: 2px 9px;
+    font-size: 10.5px;
+    line-height: 14px;
+    border-radius: 6px;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #8fa3b8;
+}
+html.sbn-v3 .sbn-deep:hover { color: var(--sbn-accent); border-color: rgba(34, 211, 238, 0.4); background: rgba(34, 211, 238, 0.08); }
+html.sbn-v3 .sbn-deep b { color: var(--sbn-text2); opacity: 1; }
+
+/* ---- 2. The price control --------------------------------------------------
+   Shorter, tighter corners, a hairline that reads as an edge rather than a box,
+   and a hover that lifts the surface instead of outlining it. */
+html.sbn-v3 .sbn-chip {
+    height: 44px;
+    padding: 0 5px;
+    border-radius: 5px;
+    border-color: rgba(255, 255, 255, 0.075);
+    background: #191f29;
+    /* rows: 19 + 6 + 13 = 38, and 44 - 38 = 6, so the content still centres on a
+       whole pixel, which is what keeps the numbers crisp */
+    grid-template-rows: 19px 13px;
+    row-gap: 6px;
+}
+/* A one-row cell needs its own even remainder: 44 - 19 is odd, which put every
+   moneyline price on a half pixel. 44 - 20 is even. */
+html.sbn-v3 .sbn-chip.is-single { grid-template-rows: 20px; row-gap: 0; }
+html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { line-height: 20px; }
+html.sbn-v3 .sbn-chip:hover {
+    background: #222b39;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+html.sbn-v3 .sbn-chip.is-sel {
+    background: #1ec6e0;
+    border-color: #57dcf1;
+}
+html.sbn-v3 .sbn-chip.is-off {
+    background: rgba(255, 255, 255, 0.012);
+    border-color: rgba(255, 255, 255, 0.045);
+}
+
+/* ---- 3. The numbers -------------------------------------------------------- */
+html.sbn-v3 .sbn-chip-top {
+    line-height: 19px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: #eef2f7;
+}
+html.sbn-v3 .sbn-chip-bot {
+    line-height: 13px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #92cfa8;
+}
+html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { color: #aab6c6; }
+
+/* ---- 7. Pick slip: only enough to match the new cells ---------------------- */
+html.sbn-v3 .sbn-slip { border-radius: 10px; }
+html.sbn-v3 .sbn-sliphead { border-radius: 10px 10px 0 0; }
+
+/* ---- Responsive ------------------------------------------------------------ */
+@media (max-width: 1180px) {
+    html.sbn-v3 .sbn-colhead,
+    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 150px) repeat(3, minmax(96px, 1fr)); }
+    html.sbn-v3 .sbn-chip-top { font-size: 15px; }
+}
+@media (max-width: 1023px) {
+    html.sbn-v3 .sbn-colhead { top: 0; }
+}
+@media (max-width: 720px) {
+    /* the head stacks: the sport label and tally step out of the tab row */
+    html.sbn-v3 .sbn-toolbar { flex-wrap: wrap; border-radius: 10px 10px 0 0; }
+    /* line-height normal measured 26.844px here and the whole board inherited
+       that fraction, which is what makes the numbers render soft. */
+    html.sbn-v3 .sbn-boardname,
+    html.sbn-v3 .sbn-tally { line-height: 16px; height: auto; }
+    html.sbn-v3 .sbn-boardname { border-right: 0; padding: 8px 12px 0; }
+    html.sbn-v3 .sbn-tally { border-left: 0; padding: 8px 12px 0; }
+    html.sbn-v3 .sbn-cats {
+        order: 3; width: 100%; border-top: 1px solid var(--sbn-line);
+        flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    }
+    html.sbn-v3 .sbn-cats::-webkit-scrollbar { display: none; }
+    html.sbn-v3 .sbn-cat { height: 38px; padding: 0 11px; font-size: 12px; }
+    html.sbn-v3 .sbn-colhead, html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 1fr) repeat(3, 78px); gap: 4px; }
+    html.sbn-v3 .sbn-chip { height: 42px; }   /* 42-38=4, 42-20=22, both even */
+    html.sbn-v3 .sbn-chip-top { font-size: 14.5px; }
+    html.sbn-v3 .sbn-chip-bot { font-size: 11.5px; }
+    html.sbn-v3 .sbn-row { padding: 5px 9px 6px; }
+    /* the count wrapped to two lines here and squeezed the column labels */
+    html.sbn-v3 .sbn-headtally { display: none; }
+    /* a three-line club name at the base 15px line box is 45px, which does not
+       fit the 44px row and pushed the card onto a half pixel */
+    html.sbn-v3 .sbn-tname b { font-size: 13px; line-height: 14px; }
+}
+@media (max-width: 420px) {
+    html.sbn-v3 .sbn-colhead, html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 1fr) repeat(3, 70px); }
+    html.sbn-v3 .sbn-chip { height: 40px; }   /* 40-38=2, 40-20=20, both even */
+    html.sbn-v3 .sbn-chip-top { font-size: 13px; }
+    html.sbn-v3 .sbn-chip-bot { font-size: 11px; }
+    html.sbn-v3 .sbn-tname b { font-size: 12px; line-height: 14px; }
+}

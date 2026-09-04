@@ -11,6 +11,7 @@ const OVERLAY = {
   '/sportsbook/next/index.html': ['sportsbook/next/index.html', 'text/html; charset=utf-8'],
   '/static/css/sportsbook-next.css': ['static/css/sportsbook-next.css', 'text/css; charset=utf-8'],
   '/static/js/sportsbook-next.js': ['static/js/sportsbook-next.js', 'application/javascript; charset=utf-8'],
+  '/static/css/sportsbook-next-v3.css': ['static/css/sportsbook-next-v3.css', 'text/css; charset=utf-8'],
   '/sportsbook/v2/': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
   '/sportsbook/v2/index.html': ['sportsbook/v2/index.html', 'text/html; charset=utf-8'],
   '/static/css/sportsbook-v2.css': ['static/css/sportsbook-v2.css', 'text/css; charset=utf-8'],

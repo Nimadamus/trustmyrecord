@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="sbn">
+<html lang="en" class="sbn sbn-v3">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -13,6 +13,9 @@
 <meta name="description" content="Preview of the redesigned TrustMyRecord sportsbook board.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/sportsbook-next.css?v=b64ba2ce24b6">
+<!-- SPORTSBOOK_NEXT_V3_20260904: refinement pass, preview only. Scoped to
+     html.sbn-v3, which the live board neither loads nor carries. -->
+<link rel="stylesheet" href="/static/css/sportsbook-next-v3.css?v=603ba14b53b5">
 </head>
 <body>
 <a class="sbn-skip" href="#sbnBoard">Skip to the board</a>
@@ -58,5 +61,24 @@
 <script src="/static/js/backend-api.js?v=68c9d15dbed8"></script>
 <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
 <script src="/static/js/sportsbook-next.js?v=87fda9565bfd"></script>
+<!-- SPORTSBOOK_NEXT_V3_20260904: preview only. Moves the game/price tally out of
+     the market tab row and into the empty first column header, so all eight market
+     tabs fit on one line instead of the last one clipping. -->
+<script>
+(function () {
+    function moveTally() {
+        var tally = document.querySelector('.sbn-toolbar .sbn-tally');
+        var slot = document.querySelector('.sbn-colhead span:first-child');
+        if (!tally || !slot) return;
+        slot.textContent = tally.textContent;
+        slot.className = 'sbn-headtally';
+        tally.style.display = 'none';
+    }
+    var board = document.getElementById('sbnBoard');
+    if (board && window.MutationObserver) new MutationObserver(moveTally).observe(board, { childList: true });
+    document.addEventListener('DOMContentLoaded', moveTally);
+    setTimeout(moveTally, 400); setTimeout(moveTally, 1500);
+})();
+</script>
 </body>
 </html>
