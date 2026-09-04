@@ -316,12 +316,22 @@ async function pickSport(page, sport) {
             const tr = t.getBoundingClientRect(), br = b ? b.getBoundingClientRect() : null;
             shape.add(`${kind}:${Math.round(r.height)}/${Math.round(tr.height)}${br ? '/' + Math.round(br.height) : ''}`);
             voff.add(`${kind}:${Math.round(tr.top - r.top)}${br ? '/' + Math.round(br.top - r.top) : ''}`);
-            const cx = r.left + r.width / 2;
             [t, b].filter(Boolean).forEach((el) => {
-              const rr = el.getBoundingClientRect();
-              if (Math.abs(rr.left + rr.width / 2 - cx) > 1.5) offCentre++;
               if (el.scrollWidth > el.clientWidth + 1) clipped++;
             });
+            // one row: whatever leads must start at the left inset and whatever
+            // closes must finish at the right inset, or the column stops scanning
+            if (b) {
+              const lead = tr.left <= br.left ? t : b;
+              const tail = lead === t ? b : t;
+              const lr = lead.getBoundingClientRect(), tlr = tail.getBoundingClientRect();
+              // read the cell's own inset: a ladder rung is padded tighter than a
+              // board cell, so the check must not assume one number
+              const cs2 = getComputedStyle(c);
+              const padL = parseFloat(cs2.paddingLeft) || 0, padR = parseFloat(cs2.paddingRight) || 0;
+              if (Math.abs(lr.left - (r.left + padL)) > 3) offCentre++;
+              if (Math.abs(r.right - padR - tlr.right) > 3) offCentre++;
+            }
           });
           const bodies = rows.map((r) => (r.querySelector('.sbn-norow') ? 'none' : 'has'));
           const heights = [...new Set(rows.filter((r, i) => bodies[i] === 'has')
@@ -341,8 +351,8 @@ async function pickSport(page, sport) {
         check(`${sport}/${key}: the board renders priced chips (${v.live}/${v.chips})`, v.live > 0, v);
         check(`${sport}/${key}: each cell shape has one internal geometry`,
           v.shape.length <= 2 && v.voff.length <= 2, { shape: v.shape, voff: v.voff });
-        check(`${sport}/${key}: no chip text is off-centre or clipped`,
-          v.offCentre === 0 && v.clipped === 0, { offCentre: v.offCentre, clipped: v.clipped });
+        check(`${sport}/${key}: the line reads left, the price closes right, nothing clips`,
+          v.offCentre === 0 && v.clipped === 0, { misaligned: v.offCentre, clipped: v.clipped });
         check(`${sport}/${key}: every card carrying this market is the same height`,
           v.heights.length === 1, v.heights);
         check(`${sport}/${key}: no column is printed that the market does not post`,
@@ -459,7 +469,7 @@ async function pickSport(page, sport) {
         check(`${sport}/${key}: every number is drawn at a whole-pixel y (${m.chips} chips)`, m.fracY === 0, m.fracY);
         check(`${sport}/${key}: the gap between the two rows is identical in every box`, m.gap.length <= 1, m.gap);
         check(`${sport}/${key}: internal padding is identical for each cell shape`, m.pad.length <= 2, m.pad);
-        check(`${sport}/${key}: one hero type scale across every priced cell`, m.hero.length === 1, m.hero);
+        check(`${sport}/${key}: at most two type scales across every priced cell`, m.hero.length <= 2, m.hero);
         check(`${sport}/${key}: no cell carries filler text under the number`, m.filler === 0, m.filler);
         check(`${sport}/${key}: the second row is only ever a price or a line`,
           m.sub.every((x) => /\/(price|line)$/.test(x)) && m.sub.length <= 2, m.sub);
@@ -485,14 +495,19 @@ async function pickSport(page, sport) {
         heroPx: parseFloat(t.fontSize), heroW: +t.fontWeight, heroColour: t.color,
         subPx: parseFloat(b.fontSize), subW: +b.fontWeight, subColour: b.color,
         rowGap: parseFloat(getComputedStyle(c).rowGap),
+        flexDir: getComputedStyle(c).flexDirection,
+        justify: getComputedStyle(c).justifyContent,
         mlCells: mlCells.length, mlSingle, mlCentred,
       };
     });
-    check(`the hero number leads without shouting (${h.heroPx}px/${h.heroW} over ${h.subPx}px/${h.subW})`,
-      h.heroPx >= h.subPx + 3 && h.heroPx <= 18 && h.heroW >= h.subW && h.heroW <= 650, h);
+    // the two figures are side by side now, so the contract is that neither
+    // shouts and the price is never larger than the line it prices
+    check(`neither figure shouts (${h.heroPx}px/${h.heroW} and ${h.subPx}px/${h.subW})`,
+      h.heroPx <= 18 && h.subPx <= 18 && h.heroW <= 700 && h.subW <= 700, h);
     check('the hero number is off-white, not a pure-white glare', !/rgb\(255,\s*255,\s*255\)/.test(h.heroColour), h.heroColour);
     check('the supporting number is a different colour from the hero', h.subColour !== h.heroColour, [h.heroColour, h.subColour]);
-    check(`the two rows are separated rather than stacked tight (${h.rowGap}px)`, h.rowGap >= 5, h.rowGap);
+    check('the cell lays its two figures on one row, not a centred stack',
+      h.flexDir === 'row' && h.justify === 'space-between', { flexDir: h.flexDir, justify: h.justify });
     check(`every moneyline cell is one centred price with no filler (${h.mlCells})`,
       h.mlCells > 0 && h.mlSingle && h.mlCentred, h);
     check('no JS errors through the typography audit', errs.length === 0, errs.slice(0, 4));

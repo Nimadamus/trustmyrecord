@@ -706,3 +706,166 @@ html.sbn-v3 .sbn-slipempty strong {
     }
     html.sbn-v3 .sbn-striptrack::-webkit-scrollbar { display: none; }
 }
+
+/* ============================================================================
+ * MARKET CELL: LINE LEFT, PRICE RIGHT
+ * The centred two-row stack was the thing that made every cell read as a
+ * generic button. A sportsbook cell is a single row: the selection or line sits
+ * left, the price sits right against it, sharing one baseline. That is what
+ * makes a column of cells scannable, because the eye reads down the left edge
+ * for lines and down the right edge for prices instead of down a stack.
+ * ========================================================================== */
+html.sbn-v3 .sbn-chip {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 42px;              /* 42 - 20 line box = 22, even, so text stays crisp */
+    padding: 0 11px;
+    border-radius: 4px;
+    row-gap: 0;
+}
+html.sbn-v3 .sbn-chip.is-single { height: 42px; }
+html.sbn-v3 .sbn-chip-top,
+html.sbn-v3 .sbn-chip-bot {
+    flex: 0 1 auto;
+    min-width: 0;
+    line-height: 20px;
+    justify-content: flex-start;
+}
+/* the line leads */
+html.sbn-v3 .sbn-chip-top {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #f0f4f9;
+}
+/* the price closes the row, hard right */
+html.sbn-v3 .sbn-chip-bot {
+    justify-content: flex-end;
+    font-size: 14px;
+    font-weight: 700;
+    color: #7fd6a0;
+}
+/* On a fixed-line board the engine puts the PRICE on top and the line under it,
+   because a +/-1.5 run line carries no information. Reorder so the line still
+   reads on the left and the price still closes the row. */
+html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line {
+    order: -1;
+    justify-content: flex-start;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f0f4f9;
+}
+html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top {
+    justify-content: flex-end;
+    font-size: 14px;
+    font-weight: 700;
+    color: #7fd6a0;
+}
+/* a moneyline has no line, so its price owns the row */
+html.sbn-v3 .sbn-chip.is-single .sbn-chip-top {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 15px;
+    color: #7fd6a0;
+}
+html.sbn-v3 .sbn-chip.is-off .sbn-chip-top { color: #566173; }
+html.sbn-v3 .sbn-chip.is-sel .sbn-chip-top,
+html.sbn-v3 .sbn-chip.is-sel .sbn-chip-bot,
+html.sbn-v3 .sbn-chip.is-sel .sbn-chip-bot.is-line { color: var(--sbn-ink); }
+
+/* rows tighten to match the shorter cell */
+html.sbn-v3 .sbn-trow { height: 42px; }
+html.sbn-v3 .sbn-strip { height: 42px; }
+html.sbn-v3 .sbn-strip.is-prop { height: 46px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip { height: 42px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 46px; }
+html.sbn-v3 .sbn-striptrack .sbn-more { height: 42px; border-radius: 4px; }
+html.sbn-v3 .sbn-colhead span:not(:first-child) { text-align: left; padding-left: 11px; }
+
+/* the ladder rung is narrower now that its content is one row */
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(0, 148px); }
+
+/* pick slip: the price leaves the middle of the meta line and closes the row,
+   the way a slip states the bet then its price */
+html.sbn-v3 .sbn-slipmeta b { float: right; margin-left: 10px; font-size: 14px; }
+
+@media (max-width: 1180px) {
+    html.sbn-v3 .sbn-chip { padding: 0 9px; gap: 6px; }
+    html.sbn-v3 .sbn-chip-top { font-size: 14px; }
+    html.sbn-v3 .sbn-chip-bot { font-size: 13px; }
+}
+@media (max-width: 720px) {
+    /* too narrow for one row: the stack comes back, but left aligned */
+    html.sbn-v3 .sbn-chip {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 2px;
+        height: 44px;          /* 44 - (17 + 2 + 15) = 10, even */
+        padding: 0 8px;
+    }
+    html.sbn-v3 .sbn-chip-top { line-height: 17px; font-size: 13.5px; justify-content: flex-start; }
+    html.sbn-v3 .sbn-chip-bot { line-height: 15px; font-size: 12px; justify-content: flex-start; }
+    html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { justify-content: flex-start; font-size: 13.5px; }
+    html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top { justify-content: flex-start; font-size: 12px; }
+    html.sbn-v3 .sbn-chip.is-single { height: 44px; }
+    html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { justify-content: flex-start; }
+    html.sbn-v3 .sbn-trow { height: 44px; }
+    html.sbn-v3 .sbn-strip { height: 44px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip { height: 44px; }
+    html.sbn-v3 .sbn-striptrack { grid-auto-columns: 82px; }
+    html.sbn-v3 .sbn-colhead span:not(:first-child) { padding-left: 8px; }
+}
+
+/* The two figures must not shrink below their own text: with flex: 0 1 auto the
+   line and the price were being squeezed inside the rung and clipping. */
+html.sbn-v3 .sbn-chip-top,
+html.sbn-v3 .sbn-chip-bot { flex: 0 0 auto; }
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(0, 158px); }
+html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 9px; gap: 6px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 14px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13px; }
+
+/* Restated last: the rung sizing above is declared after the breakpoints, so it
+   was overriding the phone track and clipping every ladder number again. */
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-striptrack {
+        grid-auto-columns: 86px;
+        justify-content: start;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    html.sbn-v3 .sbn-striptrack::-webkit-scrollbar { display: none; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 2px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 13px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 11.5px; }
+}
+
+/* The More control measured a pixel taller than a rung, so the track row grew to
+   45px and centred every 44px chip on a half pixel. Pin both to the row. */
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-striptrack { align-items: stretch; }
+    html.sbn-v3 .sbn-striptrack > *,
+    html.sbn-v3 .sbn-striptrack .sbn-chip,
+    html.sbn-v3 .sbn-striptrack .sbn-more { height: 44px; }
+    html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+    html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 46px; }
+}
+
+/* Stretch instead of centre: the label column was measuring a pixel taller than
+   the row, so the track was centred against it and every rung landed on a half
+   pixel. Stretching removes the centring arithmetic entirely. */
+html.sbn-v3 .sbn-strip { align-items: stretch; }
+html.sbn-v3 .sbn-striplabel { align-self: center; }
+html.sbn-v3 .sbn-striptrack { align-items: stretch; }
+
+/* An NFL alt-totals rung is only 94px wide, and "O 41.5" plus "-172" at the
+   board's type sizes needs 102px, so the price was pushing past the right inset.
+   The ladder gets its own slightly tighter type and inset so the pair fits. */
+html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 13.5px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
