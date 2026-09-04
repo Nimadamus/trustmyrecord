@@ -7,10 +7,59 @@
  *   NODE_PATH=<playwright> node tests/sportsbook-v2/next-preview.cjs --url <preview url> --token <jwt file>
  */
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const crypto = require('crypto');
 const args = {}; for (let i = 2; i < process.argv.length; i++) { const a = process.argv[i]; if (a.startsWith('--')) { args[a.slice(2)] = process.argv[i + 1]; i++; } }
+
+// ---- member credential --------------------------------------------------
+// A saved token file expires, and a run that carries an expired one still
+// exercises the board but reports a false failure on /api/auth/me. So the
+// harness mints its own short-lived token the same way routes/auth.js does,
+// from the API's signing secret kept outside the repo. A saved token is still
+// honoured when it is given and still valid.
+function b64url(buf) {
+  return Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function signJwt(payload, secret) {
+  const head = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const body = b64url(JSON.stringify(payload));
+  const sig = crypto.createHmac('sha256', secret).update(`${head}.${body}`).digest();
+  return `${head}.${body}.${b64url(sig)}`;
+}
+function jwtExpiry(tok) {
+  try {
+    const raw = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(Buffer.from(raw, 'base64').toString('utf8')).exp || 0;
+  } catch (_) { return 0; }
+}
+function firstFile(list) { for (const f of list) if (f && fs.existsSync(f)) return f; return ''; }
+
 const TOKEN_PATH = (args.token && args.token.trim()) || process.env.TMR_TEST_JWT_FILE || '';
-if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) { console.log('SKIP: no member JWT (pass --token <file> or set TMR_TEST_JWT_FILE).'); process.exit(0); }
-const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+const SECRET_PATH = firstFile([
+  args['jwt-secret'] && args['jwt-secret'].trim(),
+  process.env.TMR_JWT_SECRET_FILE,
+  path.join(os.homedir(), '.tmr_jwt_secret'),
+]);
+const TEST_USER_ID = Number(args.user || process.env.TMR_TEST_USER_ID || 1);
+let TOKEN = '';
+let TOKEN_SOURCE = '';
+if (TOKEN_PATH && fs.existsSync(TOKEN_PATH)) {
+  const saved = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+  if (jwtExpiry(saved) > Date.now() / 1000 + 120) { TOKEN = saved; TOKEN_SOURCE = `saved token ${TOKEN_PATH}`; }
+  else console.log(`NOTE: ${TOKEN_PATH} is expired; minting a fresh test token instead.`);
+}
+if (!TOKEN && SECRET_PATH) {
+  const secret = fs.readFileSync(SECRET_PATH, 'utf8').trim();
+  const now = Math.floor(Date.now() / 1000);
+  TOKEN = signJwt({ userId: TEST_USER_ID, sessionId: `sbn-verify-${now}`, iat: now, exp: now + 3600 }, secret);
+  TOKEN_SOURCE = `minted for user ${TEST_USER_ID} from ${SECRET_PATH}`;
+}
+if (!TOKEN) {
+  console.log('SKIP: no member credential (pass --token <valid jwt file> or --jwt-secret <file>, or set TMR_JWT_SECRET_FILE).');
+  process.exit(0);
+}
+console.log(`CREDENTIAL: ${TOKEN_SOURCE}`);
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const BASE = args.url || 'https://trustmyrecord.com/sportsbook/next/';
@@ -18,10 +67,17 @@ const API = 'https://trustmyrecord-api.onrender.com/api';
 let failures = 0; const log = [];
 function check(n, ok, d) { if (!ok) failures++; log.push({ n, ok, d }); let dd = ''; try { dd = JSON.stringify(d).slice(0, 340); } catch (_) {} console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${ok ? '' : ' -> ' + dd}`); }
 
+// Resolved once, then reused: the identity the board runs as.
+let ME = null;
+async function whoami() {
+  const r = await fetch(API + '/auth/me', { headers: { Authorization: `Bearer ${TOKEN}` } });
+  const body = await r.json().catch(() => ({}));
+  return { status: r.status, body };
+}
 async function open(browser, vp) {
   const ctx = await browser.newContext({ viewport: vp });
   await installOverlay(ctx);
-  const me = await (await fetch(API + '/auth/me', { headers: { Authorization: `Bearer ${TOKEN}` } })).json();
+  const me = ME || (await whoami()).body;
   await ctx.addInitScript(({ user, token }) => {
     const s = JSON.stringify({ user });
     localStorage.setItem('trustmyrecord_session', s); localStorage.setItem('currentUser', s);
@@ -56,6 +112,25 @@ async function pickSport(page, sport) {
 }
 
 (async () => {
+  // ---- 0. the credential itself ------------------------------------------
+  // Everything below runs as a logged-in member, so the account endpoint is
+  // verified first and by name. A bad credential fails here loudly instead of
+  // surfacing later as a pile of 401s against the board.
+  ME = null;
+  {
+    const me = await whoami();
+    check(`GET /api/auth/me answers 200 for the test credential (${me.status})`, me.status === 200, me.body);
+    const u = me.body && me.body.user;
+    check('the account endpoint returns the member the token names',
+      !!(u && Number(u.id) === TEST_USER_ID && u.username), u || me.body);
+    if (me.status !== 200 || !u) {
+      console.log('== next-preview: aborted, the member credential is not usable.');
+      console.log(`== next-preview: ${log.length - failures} passed, ${failures} failed`);
+      process.exit(1);
+    }
+    ME = me.body;
+  }
+
   const browser = await chromium.launch({ headless: true });
 
   // ---- 1. compact board: identical row shape everywhere -------------------
