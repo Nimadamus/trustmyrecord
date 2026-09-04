@@ -110,6 +110,52 @@
         if (!best) return { book: null, items: [] };
         return { book: best === '(unknown)' ? null : best, items: items.filter(function (i) { return (i.book || '(unknown)') === best; }) };
     }
+    // SBN_BOOK_SCOPE_20260904: one book per GROUP threw real markets away. Player
+    // props are several ladders in one group and the feed prices them at
+    // different books (pitcher walks at DraftKings, the batter markets at
+    // FanDuel), so scoping the rule to the group dropped pitcher walks entirely.
+    // Alt ladders mix books by rung (Bovada posts the whole numbers, FanDuel the
+    // half points), so the same rule dropped every whole number line. Scope the
+    // rule to what is actually one market.
+    function scopeBooks(key, items) {
+        if (key === 'alt_spreads' || key === 'alt_totals') return mergeLadder(items);
+        var buckets = {}, order = [];
+        items.forEach(function (i) {
+            var k = i.marketType || key;
+            if (!buckets[k]) { buckets[k] = []; order.push(k); }
+            buckets[k].push(i);
+        });
+        var out = [], books = {};
+        order.forEach(function (k) {
+            var one = singleBook(buckets[k]);
+            if (one.book) books[one.book] = 1;
+            out = out.concat(one.items);
+        });
+        return { book: onlyBook(books), items: out };
+    }
+    // Rungs from different books may share a ladder, but a side and line may
+    // never carry two prices. When both books post the same rung, the book that
+    // prices more of this ladder wins. The monotonicity pass below still throws
+    // out any rung the merge leaves incoherent.
+    function mergeLadder(items) {
+        var count = {};
+        items.forEach(function (i) { var b = i.book || '(unknown)'; count[b] = (count[b] || 0) + 1; });
+        var at = {}, out = [], books = {};
+        items.forEach(function (i) {
+            var k = String(i.selection) + '|' + i.line;
+            if (at[k] == null) { at[k] = out.length; out.push(i); return; }
+            var cur = out[at[k]];
+            if ((count[i.book || '(unknown)'] || 0) > (count[cur.book || '(unknown)'] || 0)) out[at[k]] = i;
+        });
+        out.forEach(function (i) { if (i.book) books[i.book] = 1; });
+        return { book: onlyBook(books), items: out };
+    }
+    // A group header names a book only when every price in it came from that
+    // book. Mixed groups name the book on the pick itself instead.
+    function onlyBook(books) {
+        var names = Object.keys(books);
+        return names.length === 1 ? names[0] : null;
+    }
     // A harder rung may never pay less than an easier one. Drop the rungs that
     // break the ladder instead of "fixing" a price.
     function monotonic(items, harderIsLowerLine) {
@@ -168,7 +214,7 @@
                 return true;
             });
             if (!items.length) return;
-            var one = singleBook(items);
+            var one = scopeBooks(grp.key, items);
             out[grp.key] = { key: grp.key, label: grp.label || grp.key, book: one.book, items: one.items };
         });
         // Ladders get the monotonicity pass, bucketed per side.
@@ -561,7 +607,7 @@
             var selName = team + (over ? ' Over' : ' Under');
             return chip({ top: (over ? 'O ' : 'U ') + fmtLine(it.line), bottom: fmtOdds(it.odds),
                 sel: isSel(g, it.marketType, selName, it.line),
-                data: pickData(g, it.marketType, selName, it.label || selName + ' ' + fmtLine(it.line), it.line, it.odds, cat.long, grp.book) });
+                data: pickData(g, it.marketType, selName, it.label || selName + ' ' + fmtLine(it.line), it.line, it.odds, cat.long, it.book || grp.book) });
         }).join('');
     }
     var STRIP_MAX = 6;
@@ -610,7 +656,7 @@
             if (cat.key === 'player_props') sel = i.selection;
             return chip({ top: top, bottom: fmtOdds(i.odds),
                 sel: isSel(g, i.marketType, sel, i.line),
-                data: pickData(g, i.marketType, sel, i.label || (sel + ' ' + fmtLine(i.line)), i.line, i.odds, cat.long, row.book) });
+                data: pickData(g, i.marketType, sel, i.label || (sel + ' ' + fmtLine(i.line)), i.line, i.odds, cat.long, i.book || row.book) });
         }).join('');
         var isTeamRow = cat.key === 'alt_spreads' && (row.label === g.away || row.label === g.home);
         return '<div class="sbn-strip">' +
@@ -738,7 +784,7 @@
                 var label = i.label || (sel + (noLine ? '' : ' ' + fmtLine(i.line)));
                 return '<span class="sbn-dcell">' + chip({
                     top: top, bottom: bottom, sel: isSel(g, mt, sel, i.line),
-                    data: pickData(g, mt, sel, label, i.line, i.odds, title, book)
+                    data: pickData(g, mt, sel, label, i.line, i.odds, title, i.book || book)
                 }) + '</span>';
             }).join('');
             return '<div class="sbn-drow"><span class="sbn-dside">' + esc(side) + '</span><div class="sbn-dgrid">' + cells + '</div></div>';
