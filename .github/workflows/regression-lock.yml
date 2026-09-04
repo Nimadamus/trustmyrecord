@@ -5,6 +5,35 @@ on:
   push:
     branches:
       - main
+    # RUN_VOLUME_20260904. These checks run against the LIVE site
+    # (TMR_REGRESSION_BASE_URL defaults to https://trustmyrecord.com), so a push
+    # that cannot change the site's behaviour cannot change their answer.
+    # Prerendered profile pages, sitemaps, the feed and prose are published by
+    # bots several times an hour; re-running a 20-minute browser suite for each
+    # one produced an identical verdict and an identical email. Every path that
+    # CAN move behaviour still triggers the full suite, and the nightly schedule
+    # below keeps the live-site signal on a day of content-only pushes.
+    paths-ignore:
+      - 'u/**'
+      - 'sitemap*.xml'
+      - 'news-sitemap.xml'
+      - 'feed.xml'
+      - 'robots.txt'
+      - '**/*.md'
+      - 'artifacts/**'
+      - 'docs/**'
+  schedule:
+    # 13:10 UTC daily: proves the live site against the same locks on days when
+    # nothing but content shipped.
+    - cron: '10 13 * * *'
+  workflow_dispatch:
+
+# One run per ref. A burst of commits used to start a full live browser suite
+# each, all asking the same question of the same production site and all
+# emailing the same answer. Supersede rather than pile up.
+concurrency:
+  group: regression-lock-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   regression-lock:
