@@ -19,7 +19,7 @@
 (function () {
     'use strict';
 
-    var ROLLOUT_PERCENT = 100;          // SBNEXT_ROLLOUT — edited by the rollout script
+    var ROLLOUT_PERCENT = 0;          // SBNEXT_ROLLOUT — edited by the rollout script
     var KEY = 'tmr_sbnext';
     var BUCKET_KEY = 'tmr_sbnext_bucket';
 
