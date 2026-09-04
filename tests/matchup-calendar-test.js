@@ -111,11 +111,14 @@ const TODAY_ARTICLE = fixture(DAYS.today, 4);
 
 /* ------------------------------------------------------------- the harness */
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tmr-calendar-'));
-for (const rel of ['matchups', 'matchups/mlb', 'matchup-of-the-day', 'scripts']) {
+for (const rel of ['matchups', 'matchups/mlb', 'matchup-of-the-day', 'scripts', 'data']) {
   fs.mkdirSync(path.join(tmp, rel), { recursive: true });
 }
+// team_logos.py + its registry: the bake resolves club marks through them, so
+// the sandbox needs both or every article in here renders an initials badge.
 for (const rel of ['scripts/build_matchup_articles.py', 'scripts/build_matchup_graphics.py',
-                   'scripts/schema_event.py',
+                   'scripts/schema_event.py', 'scripts/team_logos.py',
+                   'data/team-logos.json',
                    'matchups/index.html', 'matchups/mlb/index.html',
                    'matchup-of-the-day/index.html']) {
   fs.copyFileSync(path.join(ROOT, rel), path.join(tmp, rel));

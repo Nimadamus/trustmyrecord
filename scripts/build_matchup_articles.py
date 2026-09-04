@@ -63,6 +63,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from schema_event import event_description, sports_event  # noqa: E402
+from team_logos import team_logo  # noqa: E402
 
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
 SITE = "https://trustmyrecord.com"
@@ -144,7 +145,8 @@ ALLOWED_IMAGE_PREFIXES = ("/static/", SITE + "/static/", "https://trustmyrecord-
 # /static/ and nothing else. An article's images are fetched once, at bake time,
 # and committed, so a published piece has no third-party dependency at render
 # time and cannot have an image change or disappear underneath it later.
-ALLOWED_FETCH_HOSTS = ("https://midfield.mlbstatic.com/", "https://www.mlbstatic.com/")
+ALLOWED_FETCH_HOSTS = ("https://midfield.mlbstatic.com/", "https://www.mlbstatic.com/",
+                       "https://a.espncdn.com/")
 
 # A downloaded file has to actually be the kind of image it claims to be. Size
 # alone is not a check: an error page is several KB of perfectly valid bytes.
@@ -1007,19 +1009,38 @@ def render_article(article, provenance, neighbours):
     research = article.get("research_json") or {}
     eyebrow = article.get("angle_label") or research.get("eyebrow") or sport_label
 
-    def club_mark(side):
-        """The club's own mark, or the coloured rule that stood there before it.
+    def club_logo(side):
+        """The club's own mark, resolved from the TEAM, not from the article.
 
-        Falls back rather than failing: a logo the bake could not fetch must not
-        take the article down, and the coloured rule identified the two sides
-        perfectly well on its own."""
-        mark = hero.get("%s_logo" % side) or {}
-        if not mark.get("src"):
-            return "<i></i>"
+        TEAM_LOGO_PIPELINE_20260903. This used to print whatever logo the
+        record happened to carry and a coloured rule when it carried none,
+        which is how the first college Game File shipped with a hand-drawn
+        roundel instead of the Georgia Tech mark. team_logos.team_logo() looks
+        the club up in data/team-logos.json, caches its real mark under
+        /static/media/matchups/logos/ once, and falls back to an initials badge it
+        writes itself, so this branch can no longer produce an empty hero and
+        can no longer produce a broken image either.
+        """
+        authored = hero.get("%s_logo" % side) or {}
+        if authored.get("src") and not authored.get("alt"):
+            authored = dict(authored, alt=hero.get("%s_logo_alt" % side) or "")
+        return team_logo(
+            sport,
+            city=hero.get("%s_city" % side),
+            nick=hero.get("%s_nick" % side),
+            full_name=article.get("%s_team" % side),
+            authored=authored,
+            color=hero.get("%s_color" % side))
+
+    def club_mark(side):
+        mark = club_logo(side)
         check_image(mark["src"], "%s club logo" % side)
-        return ('<img class="ed-team-logo" src="%s" alt="%s" width="72" height="72" '
-                'loading="lazy" decoding="async">' % (
-                    esc(mark["src"]), esc(hero.get("%s_logo_alt" % side) or "")))
+        # The rendered box is fixed and square so the two sides of the strip are
+        # symmetrical whatever shape the league drew its mark in; the asset
+        # itself stays 500px so it is sharp at 2x and 3x.
+        return ('<img class="ed-team-logo" src="%s" alt="%s" width="%d" height="%d" '
+                'fetchpriority="high" decoding="async">' % (
+                    esc(mark["src"]), esc(mark["alt"]), mark["w"], mark["h"]))
 
     away_logo_html = club_mark("away")
     home_logo_html = club_mark("home")
@@ -1031,9 +1052,7 @@ def render_article(article, provenance, neighbours):
     # words did, which is the only way to add imagery without adding scroll.
     logo_bits = ""
     for side in ("away", "home"):
-        mark = hero.get("%s_logo" % side) or {}
-        if mark.get("src"):
-            logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(mark["src"]))
+        logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(club_logo(side)["src"]))
 
     def hero_faces_html():
         """The two starters, in the hero, beside the headline.

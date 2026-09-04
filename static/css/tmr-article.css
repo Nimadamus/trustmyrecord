@@ -302,20 +302,34 @@ body.tmr-ds .ed-team i {
 }
 body.tmr-ds .ed-team--home i { margin-left: auto; background: var(--ed-home); }
 
-/* The club's own mark. Sized in CSS rather than trusted to the SVG's intrinsic
-   box, because the league's logo files do not share one: some are square, some
-   are wide wordmarks, and left to themselves they set two different heights on
-   the two sides of the same strip. */
+/* The club's own mark. TEAM_LOGO_PIPELINE_20260903 raised this from a 26-38px
+   strip to the first thing the eye lands on, because identifying the two teams
+   is the whole job of the fixture card and a 30px roundel did not do it.
+
+   A fixed SQUARE box, not a height: the marks now come from one pipeline at a
+   uniform 500px square, and boxing both sides identically is what keeps the
+   strip symmetrical whatever shape a league drew its badge in. contain means a
+   wide wordmark still fits without being cropped or stretched.
+
+   No plate and no border behind it. The mark is a transparent PNG sitting on
+   the card with one soft shadow under it, which reads as seated in the design
+   rather than pasted on top of it, and works for a dark navy badge and a white
+   one alike. */
 body.tmr-ds .ed-team-logo {
   display: block;
-  width: auto;
-  height: clamp(26px, 3vw, 38px);
-  max-width: 120px;
-  margin-bottom: 10px;
+  width: clamp(58px, 7.4vw, 78px);
+  height: clamp(58px, 7.4vw, 78px);
+  margin-bottom: 12px;
   object-fit: contain;
-  object-position: left center;
+  object-position: center;
+  /* A faint halo, not a plate. On the navy card a drop shadow does nothing,
+     and a solid disc behind the badge is the "pasted on" look this was meant
+     to avoid; a 6% radial lift seats the mark on the surface instead. */
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 46%,
+              rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 70%);
 }
-body.tmr-ds .ed-team--home .ed-team-logo { margin-left: auto; object-position: right center; }
+body.tmr-ds .ed-team--home .ed-team-logo { margin-left: auto; }
 body.tmr-ds .ed-team-city {
   display: block;
   font-size: 11px;
@@ -1173,6 +1187,10 @@ body.tmr-ds .gf-sample { color: var(--ed-faint); font-size: .78rem; }
   body.tmr-ds .ed { font-size: 18px; }
   body.tmr-ds .ed-fixture-in { grid-template-columns: 1fr auto 1fr; gap: 10px; }
   body.tmr-ds .ed-team-line { font-size: 12px; }
+  /* 54px still reads as the club's badge at 360px wide and leaves the
+     nickname and record their own lines (2026-09-03). */
+  body.tmr-ds .ed-team-logo,
+  body.tmr-ds .ed-cover .ed-team-logo { width: 54px; height: 54px; margin-bottom: 9px; }
   body.tmr-ds .gf-bar { grid-template-columns: 1fr minmax(66px, auto) 1fr; gap: 6px; }
   body.tmr-ds .gf-bar-v { font-size: 1.15rem; min-width: 3ch; }
   /* 9px was SMALLER than the 10px this label uses on desktop, so the phone
@@ -1392,7 +1410,11 @@ body.tmr-ds .ed-cover .ed-fixture-in {
   gap: 10px;
 }
 body.tmr-ds .ed-cover .ed-team-nick { font-size: 1.32rem; }
-body.tmr-ds .ed-cover .ed-team-logo { height: 30px; margin-bottom: 8px; }
+body.tmr-ds .ed-cover .ed-team-logo {
+  width: clamp(56px, 6.6vw, 72px);
+  height: clamp(56px, 6.6vw, 72px);
+  margin-bottom: 10px;
+}
 body.tmr-ds .ed-cover .ed-at { padding-bottom: 8px; }
 
 /* The two starters, centred under the clubs they pitch for rather than floated
