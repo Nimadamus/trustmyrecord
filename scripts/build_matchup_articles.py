@@ -1035,6 +1035,14 @@ def render_article(article, provenance, neighbours):
     def club_mark(side):
         mark = club_logo(side)
         check_image(mark["src"], "%s club logo" % side)
+        # Fail closed, the same way a bad API read does. team_logos writes even
+        # its fallback badge to disk, so a src with no file behind it means the
+        # resolver could not write one, and shipping the page anyway would put a
+        # broken image in the hero of a permanent publication.
+        if not os.path.exists(os.path.join(ROOT, mark["src"].lstrip("/"))):
+            raise RuntimeError(
+                "%s club logo resolved to %s, which is not on disk" % (
+                    side, mark["src"]))
         # The rendered box is fixed and square so the two sides of the strip are
         # symmetrical whatever shape the league drew its mark in; the asset
         # itself stays 500px so it is sharp at 2x and 3x.
