@@ -67,28 +67,34 @@ function check(n, ok, d) {
             games = (d && d.games) || [];
         } catch (_) {}
         if (!games.length) { console.log(`SKIP  ${key}: no board posted right now`); continue; }
+        // A group counts as inventory only if something in it is actually priced.
+        // The feed emits market shells with null odds and null lines: 62 of 80
+        // NCAAF games carry a Second Half group where every item is priceless.
+        // There is nothing to bet there, the board is right to drop it, and a
+        // tab for it would be a tab onto an empty market.
+        const priced = (grp) => (grp.items || []).some((i) => i && i.odds !== null && i.odds !== undefined);
         const feedCats = new Set();
         games.forEach((g) => {
             if ((g.bookmakers || []).length) feedCats.add('game_lines');
             (g.market_groups || []).forEach((grp) => {
-                if (!grp || !grp.key) return;
+                if (!grp || !grp.key || !priced(grp)) return;
                 feedCats.add(LINE_GROUPS[grp.key] ? 'game_lines' : grp.key);
             });
         });
 
         await page.goto(`${PAGE}?sport=${key}`, { waitUntil: 'domcontentloaded', timeout: 90000 });
         await page.waitForSelector('.sbn-row', { timeout: 90000 }).catch(() => {});
-        // The tab bar is built from whatever games have resolved so far, so a fixed
-        // sleep can sample it mid-render and under-report a market. Wait until the
-        // count stops moving instead.
-        await page.waitForFunction(() => {
-            const n = document.querySelectorAll('.sbn-cat').length;
-            if (!n) return false;
-            const w = window.__tabWatch || (window.__tabWatch = { n: -1, same: 0 });
-            if (w.n === n) w.same++; else { w.n = n; w.same = 0; }
-            return w.same >= 4;
-        }, null, { timeout: 60000, polling: 250 }).catch(() => {});
-        await page.waitForTimeout(600);
+        // The tab bar is built from whatever games have resolved so far, so any
+        // fixed sleep, and even a short stability window, can sample it mid-render
+        // and under-report a market. Wait for the expected set instead: if a market
+        // really is missing this still times out and the check below fails, which
+        // is the outcome we want. It just stops failing for a market that was on
+        // its way in.
+        await page.waitForFunction((want) => {
+            const have = [...document.querySelectorAll('.sbn-cat')].map((n) => n.getAttribute('data-cat'));
+            return have.length > 0 && want.every((w) => have.includes(w));
+        }, [...feedCats], { timeout: 45000, polling: 250 }).catch(() => {});
+        await page.waitForTimeout(500);
         const tabs = await page.$$eval('.sbn-cat', (ns) => ns.map((n) => n.getAttribute('data-cat')));
         const missing = [...feedCats].filter((c) => !tabs.includes(c));
         check(`${key}: every market group in the feed has a tab (${tabs.length} tabs, ${feedCats.size} groups)`,

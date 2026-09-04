@@ -208,7 +208,12 @@
                 };
             }).filter(function (i) {
                 if (i.displayOnly || !i.pickable) return false;
-                if (!i.selection || !validLine(i.line) || !validOdds(i.odds)) return false;
+                // A moneyline has no line, so requiring one dropped every
+                // moneyline-only market: 62 of 80 NCAAF games were losing their
+                // Second Half group outright because it held nothing else.
+                var needsLine = !/(^|_)h2h$/.test(String(i.marketType || ''));
+                if (!i.selection || !validOdds(i.odds)) return false;
+                if (needsLine && !validLine(i.line)) return false;
                 // MLB team totals below 2.5 are unit-farming lines, not markets.
                 if (/team_totals/.test(grp.key) && sport === 'MLB' && Math.abs(i.line) < 2.5) return false;
                 return true;

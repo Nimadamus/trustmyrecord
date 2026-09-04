@@ -1322,3 +1322,34 @@ html.sbn-v3 .sbn-loosetally { font-size: 11px; color: #8d99aa; }
     html.sbn-v3 .sbn-colhead { letter-spacing: .01em; }
     html.sbn-v3 .sbn-colhead span:not(:first-child) { padding-left: 5px; }
 }
+
+/* ---- Market tabs: one legible standard for every sport ---------------------
+   12px/600 read as secondary text. 13.5px/700 on a 40px tab, with the count
+   given real space beside the label rather than crowding it, and an active
+   state that carries a tint as well as the accent rule so the current market is
+   obvious at a glance. Applies to every sport, since one element renders them
+   all. Height stays even so the board below keeps landing on whole pixels. */
+html.sbn-v3 .sbn-cat {
+    height: 40px;
+    padding: 0 14px;
+    gap: 7px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #98a5b6;
+}
+html.sbn-v3 .sbn-cat i { font-size: 11.5px; font-weight: 700; color: #6c7889; }
+html.sbn-v3 .sbn-cat:hover { background: rgba(255, 255, 255, 0.045); color: var(--sbn-text2); }
+html.sbn-v3 .sbn-cat:hover i { color: #8794a6; }
+html.sbn-v3 .sbn-cat.is-on {
+    background: rgba(34, 211, 238, 0.08);
+    color: #ffffff;
+    font-weight: 800;
+}
+html.sbn-v3 .sbn-cat.is-on i { color: var(--sbn-accent); }
+html.sbn-v3 .sbn-cat::after { left: 6px; right: 6px; height: 3px; }
+html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
+
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-cat { height: 38px; padding: 0 12px; font-size: 12.5px; gap: 6px; }
+    html.sbn-v3 .sbn-cat i { font-size: 11px; }
+}
