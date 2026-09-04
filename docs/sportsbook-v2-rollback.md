@@ -65,7 +65,18 @@ One added line in `sportsbook/index.html`. Reverting reintroduces the bug where
 switching back to an already-loaded sport could attach the previous sport's
 game to the slip, so only revert it if it is proven to cause something worse.
 
-### 5. UFC total-rounds mapping — revert one commit
+### 5. Per-matchup alternate grouping + board clarity - revert one commit
+
+```
+git revert 4672cba
+```
+
+Touches `sportsbook/index.html` (the alt board renderer and a moneyline branch
+in `selectAltBet`), the new `static/css/sportsbook-altgame.css`, and the v2
+layer. Reverting restores the flat alternate grid; no data, feed, grading or
+submission behaviour changes either way.
+
+### 6. UFC total-rounds mapping — revert one commit
 
 ```
 git revert 83df19c      # UFC Total Rounds map to mma_total_rounds (+ larger v2 chips)
@@ -91,6 +102,9 @@ the end of `static/css/sportsbook-v2.css` instead of reverting.
 | `9cad9fe` | 2026-09-03 | Odds size toned down one step (20px desktop / 16px phones) |
 | `4c3cf63` | 2026-09-03 | Multi-pick slip rollout 10% -> 50% + rollout switch |
 | `ccca752` | 2026-09-03 | Multi-pick slip rollout 50% -> 100% |
+| `d248aab` | 2026-09-03 | Chip hierarchy: the LINE leads, price supports (moneyline column excepted) |
+| `a44ca82` | 2026-09-03 | Fixed lines (MLB/NPB run line, NHL puck line) lead with the price |
+| `4672cba` | 2026-09-03 | `ALT_GAME_GROUPING_20260903` per-matchup alternate sections + board clarity |
 
 ## Regression suite (must pass before any future sportsbook change)
 
@@ -119,6 +133,7 @@ Live browser suites, all of which intercept `POST /api/picks` and therefore
 | `npm run verify:sportsbook-switching` | selection, slip and payload stay attached to the visible game across every sport-switch order |
 | `npm run verify:sportsbook-ufc-rounds` | UFC rounds Over/Under and fighter ML map to the right market, plus MLB spread/ML/total regression |
 | `npm run verify:sportsbook-multipick` | add 1-4 selections, remove from the ticket and by re-clicking the line, per-card units, + stepper, apply-to-all, Risk/To Win, confirm modal, one POST per pick, contest mode stays single-pick, mobile drawer |
+| `npm run verify:sportsbook-altgame` | each matchup is one card (header, primary markets, collapsed alternate spreads and totals), inline expansion, and that a primary moneyline records h2h while alternate spreads/totals record their own market with a line |
 | `npm run verify:sportsbook-health` | production health probe used during rollout (JS errors, API errors, duplicate/malformed picks, odds loading) |
 
 `node tests/sportsbook-v2/idempotency-api.cjs` proves the backend contract
