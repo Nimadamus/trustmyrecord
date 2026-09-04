@@ -23,6 +23,13 @@ on:
       - 'package.json'
       - '.github/workflows/sportsbook-live-verification.yml'
 
+# RUN_VOLUME_20260904. One run per ref: a burst of commits used to start one
+# live browser run each against the same production site, every one reaching
+# the same verdict and sending its own email. Supersede instead.
+concurrency:
+  group: sportsbook-live-verification-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify-live-sportsbook:
     runs-on: ubuntu-latest
