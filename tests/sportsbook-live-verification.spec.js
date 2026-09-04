@@ -214,14 +214,10 @@ test('live sportsbook primary markets and pick slip are usable', async ({ page }
   await expect(primaryGrid, 'the total must be priced Under').toContainText(/under|u\s*\d/i);
   await expect(primaryGrid, 'a handicap line must be posted').toContainText(/[+-]\d+(\.\d+)?/);
 
-  // The classic board's market switcher was a tablist; the v2 board renders the
-  // same switcher as button.sbn-cat with no role, so a role=tab lookup found
-  // nothing on a switcher that works. Take either implementation - what is
-  // locked is that the market can be selected, not the element used for it.
-  const marketTab = (name) => page
-    .locator('[role="tab"], button.sbn-cat, .sportsbook-market-tab')
-    .filter({ hasText: name })
-    .first();
+  // role=tab, and only role=tab. The v2 board briefly shipped its market
+  // switcher as plain buttons, and accepting those here would have made the
+  // tablist contract unenforceable; afed2baea restored the semantics instead.
+  const marketTab = (name) => page.getByRole('tab', { name }).first();
   await expect(marketTab(/Game Lines/i)).toBeVisible();
   const teamTotals = marketTab(/Team Totals/i);
   await expect(teamTotals).toBeVisible();

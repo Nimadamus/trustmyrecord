@@ -121,13 +121,13 @@ async function selectSportWithPostedLines(page) {
   return target.tab;
 }
 
-// A market switcher entry, in whichever skin is serving: role=tab on the classic
-// board, button.sbn-cat on the v2 board.
+// A market switcher entry. role=tab, and only role=tab: the v2 board shipped
+// its switcher as plain buttons for a while and this helper briefly accepted
+// button.sbn-cat to get the suite green, which quietly made "the market
+// switcher is a tablist" unenforceable. afed2baea restored the semantics, so
+// the tighter locator is back and the a11y lock below asserts the rest.
 function marketTab(page, name) {
-  return page
-    .locator('[role="tab"], button.sbn-cat, .sportsbook-market-tab')
-    .filter({ hasText: name })
-    .first();
+  return page.getByRole('tab', { name }).first();
 }
 
 async function firstEnabledPickButton(page) {
@@ -701,6 +701,84 @@ test.describe('sportsbook functional locks', () => {
       await input.dispatchEvent('change');
       await expect(preview, `stake preview should reflect ${value} units`).toContainText(new RegExp(value.replace('.', '\\.') + '|Risk|To Win'));
     }
+  });
+
+  // A11Y_20260904. The v2 board shipped a market switcher of plain buttons and
+  // a units field whose "Units" label had no `for`, so a screen reader got
+  // seven unrelated buttons with no current one and an unnamed number box.
+  // Restored in afed2baea; this is what stops it going again, and it is
+  // deliberately about semantics rather than markup, so it holds for whichever
+  // board is serving.
+  test('the market switcher is a real tablist and the units field is labelled', async ({ page }) => {
+    await waitForSportsbook(page);
+    await selectSportWithPostedLines(page);
+
+    const tabs = page.getByRole('tab');
+    await expect(tabs.first(), 'the market switcher must expose its entries as tabs')
+      .toBeVisible({ timeout: 30000 });
+
+    const semantics = await page.evaluate(() => {
+      const tabEls = Array.from(document.querySelectorAll('[role="tab"]'))
+        .filter((t) => t.getClientRects().length);
+      const list = tabEls.length ? tabEls[0].closest('[role="tablist"]') : null;
+      const selected = tabEls.filter((t) => t.getAttribute('aria-selected') === 'true');
+      const controlled = selected.length ? selected[0].getAttribute('aria-controls') : null;
+      const panel = controlled ? document.getElementById(controlled) : null;
+      return {
+        tabs: tabEls.length,
+        inTablist: !!list,
+        tablistNamed: !!(list && (list.getAttribute('aria-label') || list.getAttribute('aria-labelledby'))),
+        selected: selected.length,
+        stateOnEvery: tabEls.every((t) => t.hasAttribute('aria-selected')),
+        inTabOrder: tabEls.filter((t) => t.getAttribute('tabindex') === '0').length,
+        panelRole: panel ? panel.getAttribute('role') : null,
+        panelLabelResolves: !!(panel && document.getElementById(panel.getAttribute('aria-labelledby') || '')),
+      };
+    });
+
+    expect(semantics.tabs, 'the switcher should expose several market tabs').toBeGreaterThanOrEqual(2);
+    expect(semantics.inTablist, 'market tabs must live inside a role="tablist"').toBe(true);
+    expect(semantics.tablistNamed, 'the tablist must carry an accessible name').toBe(true);
+    expect(semantics.stateOnEvery, 'every tab must publish aria-selected, not just the current one').toBe(true);
+    expect(semantics.selected, 'exactly one market tab is the selected one').toBe(1);
+    // Roving tabindex: the selected tab is the one in the page's tab order, and
+    // it is the only one, or arrowing through the list is meaningless.
+    expect(semantics.inTabOrder, 'exactly one tab may be in the tab order (roving tabindex)').toBe(1);
+    if (semantics.panelRole !== null) {
+      expect(semantics.panelRole, 'the tab must control a tabpanel').toBe('tabpanel');
+      expect(semantics.panelLabelResolves, 'the tabpanel must be labelled by its tab').toBe(true);
+    }
+
+    // Arrow keys walk the tablist. That is the whole point of a roving tabindex,
+    // and it is what a keyboard user has instead of a mouse.
+    const before = await page.evaluate(() =>
+      (document.querySelector('[role="tab"][aria-selected="true"]') || {}).id || null);
+    await page.locator('[role="tab"][aria-selected="true"]').first().focus();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(1500);
+    const after = await page.evaluate(() =>
+      (document.querySelector('[role="tab"][aria-selected="true"]') || {}).id || null);
+    expect(after, 'ArrowRight must move the selected market tab').not.toBe(before);
+
+    // And the units field must be named by something a screen reader can read.
+    const pickButton = await firstEnabledPickButton(page);
+    await pickButton.click();
+    const units = page.locator(`#ttSlipUnits, #unitsInput, ${SLIP} input[type="number"]`).first();
+    await expect(units).toBeVisible();
+    const named = await units.evaluate((node) => ({
+      labels: node.labels ? node.labels.length : 0,
+      ariaLabel: node.getAttribute('aria-label') || '',
+      labelledBy: node.getAttribute('aria-labelledby') || '',
+    }));
+    // An ASSOCIATION, not just a string. A bare aria-label would satisfy a name
+    // check while the visible "Units" text next to the field still labelled
+    // nothing -- which is exactly the state afed2baea fixed, so accepting it
+    // here would leave the regression free to come back.
+    expect(
+      named.labels > 0 || !!named.labelledBy,
+      'the units field must be associated with its visible label (<label for> or '
+      + 'aria-labelledby), not merely given an aria-label that duplicates it'
+    ).toBe(true);
   });
 
   test('mobile sportsbook layout keeps nav and board accessible', async ({ page }, testInfo) => {
