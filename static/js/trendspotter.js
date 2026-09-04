@@ -658,6 +658,16 @@
       }).join('') + '</div></div>';
   }
 
+  // The API rounds win_rate to two decimals. Rounding THAT to the one decimal
+  // the page prints rounds twice: 69-33 is 67.647%, which must read 67.6%, but
+  // 67.65 rounded again reads 67.7%. Derive the printed figure from the counts.
+  function winRatePct(s) {
+    var decided = (s.decided_games !== null && s.decided_games !== undefined)
+      ? s.decided_games : (s.wins + s.losses);
+    if (!decided) return s.win_rate === null ? null : s.win_rate;
+    return (100 * s.wins) / decided;
+  }
+
   function metric(label, value, sub, tone) {
     if (value === null || value === undefined) return '';
     return '<div class="ts-metric"' + (tone ? ' data-tone="' + esc(tone) + '"' : '') + '>' +
@@ -897,7 +907,7 @@
 
     var metrics =
       metric('Record', s.record, s.pushes ? s.pushes + ' push' + (s.pushes === 1 ? '' : 'es') : 'no pushes') +
-      metric('Win rate', s.win_rate === null ? '—' : s.win_rate.toFixed(1) + '%', s.decided_games + ' decided') +
+      metric('Win rate', s.win_rate === null ? '—' : winRatePct(s).toFixed(1) + '%', s.decided_games + ' decided') +
       (s.units === null
         ? metric('Units', '—', 'no closing price recorded')
         : metric('Units', (s.units > 0 ? '+' : '') + s.units.toFixed(2) + 'u', s.units_risked.toFixed(2) + 'u risked',
@@ -941,7 +951,7 @@
     if (!lastResult || !lastResult.summary) return window.location.href;
     var s = lastResult.summary;
     var lines = [lastResult.statement];
-    lines.push('Record ' + s.record + (s.win_rate === null ? '' : ' (' + s.win_rate.toFixed(1) + '%)') +
+    lines.push('Record ' + s.record + (s.win_rate === null ? '' : ' (' + winRatePct(s).toFixed(1) + '%)') +
       ' · Sample ' + s.sample + ' games' +
       (s.date_range ? ' · ' + s.date_range.from + ' to ' + s.date_range.to : ''));
     if (s.units === null) lines.push('Units and ROI unavailable: no closing price is recorded for these games.');
