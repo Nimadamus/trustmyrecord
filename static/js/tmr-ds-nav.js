@@ -100,14 +100,21 @@
        day's piece landed on a page about the idea of the piece and had to find
        and click it. /today/ is a stable address that bakes with the day's
        article and hands off to it; the hub keeps its own footer and Explore
-       entries, where an archive is what a reader is actually after. */
-    ['/matchup-of-the-day/today/', 'Matchup of the Day'],
+       entries, where an archive is what a reader is actually after.
+
+       Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/ and renamed
+       MLB Matchup of the Day. /today/ is newest-wins across every sport, so
+       once college football started publishing its own Game Files this entry
+       and the NCAAF one below both landed on whichever piece happened to be
+       newest, which on a Thursday in September is the football one. Each menu
+       item now points at its own sport's stable door, so the two can never
+       collapse onto the same page again. The name is permanent: this entry is
+       the baseball lane and says so. */
+    ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
     /* Added 2026-09-03, the day college football got its first Game File.
-       /today/ is newest-wins across every sport, so on a Thursday in September
-       it can hand a reader the baseball piece when they clicked for football.
-       /matchup-of-the-day/ncaaf/ is the same kind of stable door scoped to one
-       sport: baked with the newest NCAAF Game File, canonicalised to it, and
-       out of the sitemap so search consolidates on the article's own URL. */
+       /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
+       with the newest NCAAF Game File, canonicalised to it, and out of the
+       sitemap so search consolidates on the article's own URL. */
     ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
     /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
        sport whose research hub is actually built, so every member who picked

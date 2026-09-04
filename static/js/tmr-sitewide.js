@@ -15,7 +15,11 @@
         // nav entry point on any of them. /today/ (not the hub) for the same
         // reason as in tmr-ds-nav.js: it is a stable address that hands off to
         // the day's article, and the article's own URL changes daily.
-        ["/matchup-of-the-day/today/", "Matchup of the Day"],
+        // Split per sport 2026-09-04, in step with tmr-ds-nav.js: /today/ is
+        // newest-wins across every sport, so one entry could not serve both
+        // baseball and college football once each had its own daily lane.
+        ["/matchup-of-the-day/mlb/", "MLB Matchup of the Day"],
+        ["/matchup-of-the-day/ncaaf/", "NCAAF Matchup of the Day"],
         ["/handicapping/", "Handicapping Hub"]
     ];
     // Kept in sync with static/js/tmr-ds-nav.js's route tables so every page

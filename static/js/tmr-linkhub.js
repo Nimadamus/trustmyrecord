@@ -231,7 +231,8 @@
             /* The Sportsbook dropdown is not rendered on /sportsbook/ itself, so
                the two research destinations that lived only in it are carried
                here instead. Handicapping Hub was already in this list. */
-            ['/matchup-of-the-day/today/', 'Matchup of the Day'],
+            ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
+            ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
             ['/handicapping/mlb/', 'MLB Matchups Today'],
             ['/handicapping/', 'Handicapping Hub'],
             ['/my-record/', 'My record'],
