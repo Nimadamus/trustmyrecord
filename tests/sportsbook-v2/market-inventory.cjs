@@ -78,7 +78,17 @@ function check(n, ok, d) {
 
         await page.goto(`${PAGE}?sport=${key}`, { waitUntil: 'domcontentloaded', timeout: 90000 });
         await page.waitForSelector('.sbn-row', { timeout: 90000 }).catch(() => {});
-        await page.waitForTimeout(2600);
+        // The tab bar is built from whatever games have resolved so far, so a fixed
+        // sleep can sample it mid-render and under-report a market. Wait until the
+        // count stops moving instead.
+        await page.waitForFunction(() => {
+            const n = document.querySelectorAll('.sbn-cat').length;
+            if (!n) return false;
+            const w = window.__tabWatch || (window.__tabWatch = { n: -1, same: 0 });
+            if (w.n === n) w.same++; else { w.n = n; w.same = 0; }
+            return w.same >= 4;
+        }, null, { timeout: 60000, polling: 250 }).catch(() => {});
+        await page.waitForTimeout(600);
         const tabs = await page.$$eval('.sbn-cat', (ns) => ns.map((n) => n.getAttribute('data-cat')));
         const missing = [...feedCats].filter((c) => !tabs.includes(c));
         check(`${key}: every market group in the feed has a tab (${tabs.length} tabs, ${feedCats.size} groups)`,
