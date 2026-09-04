@@ -342,6 +342,38 @@
         return findPick([g.id, marketType, selection, line == null ? '' : line].join('|')) >= 0;
     }
 
+
+    // ---- Team crests ---------------------------------------------------------
+    // Same source the live board uses: the ESPN logo CDN, keyed by team slug.
+    // a.espncdn.com is an image host (no CORS/API involved), so this is safe from
+    // the browser. Anything not in the map falls back to a clean initials badge,
+    // never a broken image.
+    var LOGO_BASE = 'https://a.espncdn.com/i/teamlogos/';
+    var SLUGS = {
+        baseball_mlb: { 'arizona diamondbacks': 'ari', 'atlanta braves': 'atl', 'baltimore orioles': 'bal', 'boston red sox': 'bos', 'chicago cubs': 'chc', 'chicago white sox': 'chw', 'cincinnati reds': 'cin', 'cleveland guardians': 'cle', 'colorado rockies': 'col', 'detroit tigers': 'det', 'houston astros': 'hou', 'kansas city royals': 'kc', 'los angeles angels': 'laa', 'los angeles dodgers': 'lad', 'miami marlins': 'mia', 'milwaukee brewers': 'mil', 'minnesota twins': 'min', 'new york mets': 'nym', 'new york yankees': 'nyy', 'athletics': 'oak', 'oakland athletics': 'oak', 'philadelphia phillies': 'phi', 'pittsburgh pirates': 'pit', 'san diego padres': 'sd', 'san francisco giants': 'sf', 'seattle mariners': 'sea', 'st. louis cardinals': 'stl', 'st louis cardinals': 'stl', 'tampa bay rays': 'tb', 'texas rangers': 'tex', 'toronto blue jays': 'tor', 'washington nationals': 'wsh' },
+        americanfootball_nfl: { 'arizona cardinals': 'ari', 'atlanta falcons': 'atl', 'baltimore ravens': 'bal', 'buffalo bills': 'buf', 'carolina panthers': 'car', 'chicago bears': 'chi', 'cincinnati bengals': 'cin', 'cleveland browns': 'cle', 'dallas cowboys': 'dal', 'denver broncos': 'den', 'detroit lions': 'det', 'green bay packers': 'gb', 'houston texans': 'hou', 'indianapolis colts': 'ind', 'jacksonville jaguars': 'jax', 'kansas city chiefs': 'kc', 'las vegas raiders': 'lv', 'los angeles chargers': 'lac', 'los angeles rams': 'lar', 'miami dolphins': 'mia', 'minnesota vikings': 'min', 'new england patriots': 'ne', 'new orleans saints': 'no', 'new york giants': 'nyg', 'new york jets': 'nyj', 'philadelphia eagles': 'phi', 'pittsburgh steelers': 'pit', 'san francisco 49ers': 'sf', 'seattle seahawks': 'sea', 'tampa bay buccaneers': 'tb', 'tennessee titans': 'ten', 'washington commanders': 'wsh' },
+        basketball_nba: { 'atlanta hawks': 'atl', 'boston celtics': 'bos', 'brooklyn nets': 'bkn', 'charlotte hornets': 'cha', 'chicago bulls': 'chi', 'cleveland cavaliers': 'cle', 'dallas mavericks': 'dal', 'denver nuggets': 'den', 'detroit pistons': 'det', 'golden state warriors': 'gs', 'houston rockets': 'hou', 'indiana pacers': 'ind', 'la clippers': 'lac', 'los angeles clippers': 'lac', 'los angeles lakers': 'lal', 'memphis grizzlies': 'mem', 'miami heat': 'mia', 'milwaukee bucks': 'mil', 'minnesota timberwolves': 'min', 'new orleans pelicans': 'no', 'new york knicks': 'ny', 'oklahoma city thunder': 'okc', 'orlando magic': 'orl', 'philadelphia 76ers': 'phi', 'phoenix suns': 'phx', 'portland trail blazers': 'por', 'sacramento kings': 'sac', 'san antonio spurs': 'sa', 'toronto raptors': 'tor', 'utah jazz': 'utah', 'washington wizards': 'wsh' },
+        icehockey_nhl: { 'anaheim ducks': 'ana', 'boston bruins': 'bos', 'buffalo sabres': 'buf', 'calgary flames': 'cgy', 'carolina hurricanes': 'car', 'chicago blackhawks': 'chi', 'colorado avalanche': 'col', 'columbus blue jackets': 'cbj', 'dallas stars': 'dal', 'detroit red wings': 'det', 'edmonton oilers': 'edm', 'florida panthers': 'fla', 'los angeles kings': 'la', 'minnesota wild': 'min', 'montreal canadiens': 'mtl', 'nashville predators': 'nsh', 'new jersey devils': 'nj', 'new york islanders': 'nyi', 'new york rangers': 'nyr', 'ottawa senators': 'ott', 'philadelphia flyers': 'phi', 'pittsburgh penguins': 'pit', 'san jose sharks': 'sj', 'seattle kraken': 'sea', 'st. louis blues': 'stl', 'tampa bay lightning': 'tb', 'toronto maple leafs': 'tor', 'utah hockey club': 'utah', 'vancouver canucks': 'van', 'vegas golden knights': 'vgk', 'washington capitals': 'wsh', 'winnipeg jets': 'wpg' }
+    };
+    var LEAGUE_PATH = { baseball_mlb: 'mlb', americanfootball_nfl: 'nfl', basketball_nba: 'nba', icehockey_nhl: 'nhl' };
+    function initials(name) {
+        var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '--';
+        if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
+        return (parts[parts.length - 2].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+    function crest(team) {
+        var api = sportMeta(state.sport).api;
+        var map = SLUGS[api], path = LEAGUE_PATH[api];
+        var slug = map ? map[String(team || '').trim().toLowerCase()] : null;
+        if (slug && path) {
+            return '<img class="sbn-crest" src="' + LOGO_BASE + path + '/500/' + slug + '.png" alt="" loading="lazy" ' +
+                'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'sbn-crest sbn-crest--fb\',textContent:this.getAttribute(\'data-i\')||\'\'}))" ' +
+                'data-i="' + esc(initials(team)) + '">';
+        }
+        return '<span class="sbn-crest sbn-crest--fb">' + esc(initials(team)) + '</span>';
+    }
+
     // ---- Main board: one compact row per game --------------------------------
     // The board is for SCANNING. It carries only the three primary markets, at a
     // fixed row height, with the column headers printed once above the list.
@@ -406,8 +438,8 @@
             'More markets' + (deep ? ' <b>' + deep + '</b>' : '') + '</button>' +
             '</div>' +
             '<div class="sbn-teams">' +
-            '<div class="sbn-trow"><span class="sbn-tname">' + esc(g.away) + '</span>' + rowCells(g, g.away, true) + '</div>' +
-            '<div class="sbn-trow"><span class="sbn-tname">' + esc(g.home) + '</span>' + rowCells(g, g.home, false) + '</div>' +
+            '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + rowCells(g, g.away, true) + '</div>' +
+            '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + rowCells(g, g.home, false) + '</div>' +
             '</div></article>';
     }
 
@@ -470,7 +502,7 @@
             .map(function (k) { return drawerGroup(g, k, g.groups[k].label || k); }).join('');
         return '<div class="sbn-drawer-back" data-drawerclose="1"></div>' +
             '<div class="sbn-drawer-panel" role="dialog" aria-modal="true" aria-label="All markets">' +
-            '<header class="sbn-dhead"><div><div class="sbn-dmatch">' + esc(g.away) + ' <i>@</i> ' + esc(g.home) + '</div>' +
+            '<header class="sbn-dhead"><div><div class="sbn-dmatch">' + crest(g.away) + esc(g.away) + ' <i>@</i> ' + crest(g.home) + esc(g.home) + '</div>' +
             '<div class="sbn-dwhen">' + esc(whenText(g.when)) + '</div></div>' +
             '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
             '<div class="sbn-dbody">' + (secs || '<div class="sbn-empty">No additional markets are posted for this game.</div>') + '</div></div>';
