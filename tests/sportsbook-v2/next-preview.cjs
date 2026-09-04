@@ -444,14 +444,15 @@ async function pickSport(page, sport) {
       });
       return {
         heroPx: parseFloat(t.fontSize), heroW: +t.fontWeight, heroColour: t.color,
-        subPx: parseFloat(b.fontSize), subW: +b.fontWeight,
+        subPx: parseFloat(b.fontSize), subW: +b.fontWeight, subColour: b.color,
         rowGap: parseFloat(getComputedStyle(c).rowGap),
         mlCells: mlCells.length, mlSingle, mlCentred,
       };
     });
     check(`the hero number leads without shouting (${h.heroPx}px/${h.heroW} over ${h.subPx}px/${h.subW})`,
-      h.heroPx >= h.subPx + 3 && h.heroPx <= 18 && h.heroW > h.subW && h.heroW <= 700, h);
+      h.heroPx >= h.subPx + 3 && h.heroPx <= 18 && h.heroW >= h.subW && h.heroW <= 650, h);
     check('the hero number is off-white, not a pure-white glare', !/rgb\(255,\s*255,\s*255\)/.test(h.heroColour), h.heroColour);
+    check('the supporting number is a different colour from the hero', h.subColour !== h.heroColour, [h.heroColour, h.subColour]);
     check(`the two rows are separated rather than stacked tight (${h.rowGap}px)`, h.rowGap >= 5, h.rowGap);
     check(`every moneyline cell is one centred price with no filler (${h.mlCells})`,
       h.mlCells > 0 && h.mlSingle && h.mlCentred, h);
