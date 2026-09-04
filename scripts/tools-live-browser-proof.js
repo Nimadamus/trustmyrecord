@@ -316,6 +316,15 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
+  // TRANSIENT_5XX_20260904. Chromium's console line for a failed request is
+  // "Failed to load resource: the server responded with a status of 503 ()" and
+  // carries NO url, so it can be neither attributed to a host nor rechecked.
+  // Record the responses themselves, which do carry one.
+  const serverErrors = new Map();
+  page.on('response', (response) => {
+    const status = response.status();
+    if (status >= 500) serverErrors.set(response.url(), status);
+  });
   try {
     if (process.env.TMR_ONLY_TRENDSPOTTER === '1') {
       const trendspotter = await verifyTrendspotter(page);
@@ -380,12 +389,50 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
       console.warn("THIRD_PARTY_DEGRADED (" + thirdParty.length + ") - not a TMR regression; the product path is verified above:");
       thirdParty.slice(0, 5).forEach((e) => console.warn("  " + e.slice(0, 160)));
     }
-    if (hardErrors.length) throw new Error("Console errors detected (TMR-owned):" + String.fromCharCode(10) + hardErrors.join(String.fromCharCode(10)));
+    // A 5xx is worth failing the build for when the endpoint is actually
+    // broken, and worth nothing when Render cold-starts one request. The
+    // Playwright suites already draw that line by retrying (CI_RETRIES_20260902
+    // in playwright.config.cjs); this proof is a plain script with no retry, so
+    // a single cold-start 503 on /api/users/<id>/avatar failed the whole
+    // workflow while every endpoint answered 200 seconds later. Re-request each
+    // URL that 5xx'd: still failing is a regression and still fails the run;
+    // recovered is reported and does not.
+    const recovered = [];
+    const stillFailing = [];
+    for (const [url, status] of serverErrors) {
+      if (THIRD_PARTY_HOSTS.test(url)) { thirdParty.push(status + ' ' + url); continue; }
+      let ok = false;
+      for (let attempt = 0; attempt < 3 && !ok; attempt += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+        // Playwright's request context, not page.evaluate(fetch): the recheck
+        // must not be able to fail for a CORS reason the browser tab would
+        // impose, which would read as an outage that is not there.
+        // eslint-disable-next-line no-await-in-loop
+        const res = await page.request.get(url, { timeout: 20000 }).catch(() => null);
+        ok = !!res && res.status() < 500;
+      }
+      (ok ? recovered : stillFailing).push(status + ' ' + url);
+    }
+    if (recovered.length) {
+      console.warn('TRANSIENT_5XX (' + recovered.length + ') - answered normally on recheck, not a regression:');
+      recovered.forEach((entry) => console.warn('  ' + entry));
+    }
+    if (stillFailing.length) {
+      throw new Error('Server errors that did not recover on recheck:' + String.fromCharCode(10) + stillFailing.join(String.fromCharCode(10)));
+    }
+
+    // With every 5xx accounted for above, a bare status-only console line is no
+    // longer evidence of anything this run has not already judged.
+    const STATUS_ONLY = /^Failed to load resource: the server responded with a status of 5\d\d/i;
+    const remaining = hardErrors.filter((entry) => !STATUS_ONLY.test(entry));
+    if (remaining.length) throw new Error("Console errors detected (TMR-owned):" + String.fromCharCode(10) + remaining.join(String.fromCharCode(10)));
 
     const report = {
       checked_at: new Date().toISOString(),
       product_health: 'OK',
       third_party_degraded: thirdParty.length ? thirdParty.slice(0, 5) : null,
+      transient_5xx_recovered: recovered.length ? recovered : null,
       tools_url: HUB_URL,
       trendspotter_url: TREND_URL,
       mlb_simulator_url: SIM_URL,
