@@ -108,9 +108,18 @@ async function selectRenderableSport(page, ranked) {
   for (const sport of ranked) {
     await clickSport(page, sport);
     await waitForBoardSettled(page);
+    // Polled, not counted once. waitForBoardSettled returns as soon as a board
+    // container is visible and the body is not saying "Loading live odds" --
+    // and the v2 board shows its container before its rows and never prints
+    // that phrase, so a single count() read zero rows off a board that was
+    // still filling and declared the sport unrenderable (2026-09-04). Wait for
+    // the rows the way the assertions further down already do, and only move on
+    // to the next ranked sport once this one really has produced nothing.
     const rendered = await page
-      .locator('#lobbyBoardRows article, #gamesListContainer .tmr-market-card, main article')
-      .count()
+      .locator('#sbnBoard article, #lobbyBoardRows article, #gamesListContainer .tmr-market-card, main article')
+      .first()
+      .waitFor({ state: 'visible', timeout: 25000 })
+      .then(() => 1)
       .catch(() => 0);
     if (rendered > 0) return sport;
     tried.push(`${sport} (slate posted, board rendered 0 cards)`);
