@@ -19,7 +19,7 @@
 (function () {
     'use strict';
 
-    var ROLLOUT_PERCENT = 0;          // SBNEXT_ROLLOUT — edited by the rollout script
+    var ROLLOUT_PERCENT = 100;          // SBNEXT_ROLLOUT — edited by the rollout script
     var KEY = 'tmr_sbnext';
     var BUCKET_KEY = 'tmr_sbnext_bucket';
 
@@ -97,13 +97,49 @@
         return true;
     }
 
+    // The board's own boxes are whole numbers, but the production page's header
+    // is not: it ends on a fraction of a pixel, and everything below inherits
+    // that offset, which is exactly what makes numbers render soft. Nothing
+    // inside the board can correct it, so the mount absorbs the remainder in its
+    // own padding and hands its children a whole-pixel origin.
+    var snapping = false;
+    function snapToPixelGrid() {
+        if (snapping) return;
+        var host = document.querySelector('.sbn-embed');
+        if (!host) return;
+        snapping = true;
+        try {
+            host.style.paddingTop = '0px';
+            var top = host.getBoundingClientRect().top;
+            var frac = top - Math.floor(top);
+            if (frac > 0.005) host.style.paddingTop = (1 - frac).toFixed(3) + 'px';
+        } finally {
+            // let the observers see the corrected layout before they may fire again
+            setTimeout(function () { snapping = false; }, 0);
+        }
+    }
+    function watchPixelGrid() {
+        snapToPixelGrid();
+        var pending = null;
+        var soon = function () {
+            if (pending) clearTimeout(pending);
+            pending = setTimeout(function () { pending = null; snapToPixelGrid(); }, 80);
+        };
+        window.addEventListener('resize', soon, { passive: true });
+        if (document.fonts && document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(soon);
+        var board = document.getElementById('sbnBoard');
+        if (board && window.MutationObserver) new MutationObserver(soon).observe(board, { childList: true });
+        // the page's own scripts settle after first paint
+        [250, 800, 2000].forEach(function (t) { setTimeout(snapToPixelGrid, t); });
+    }
+
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
         else fn();
     }
 
     ready(function () {
-        if (mount()) return;
+        if (mount()) { watchPixelGrid(); return; }
         // The board region is rendered by the page's own scripts, so it may not
         // exist yet on first paint. Watch for it, and give up quietly rather
         // than leaving the page half-switched.
@@ -111,6 +147,7 @@
         var timer = setInterval(function () {
             if (mount() || ++tries > 60) {
                 clearInterval(timer);
+                if (document.getElementById('sbnShell')) watchPixelGrid();
                 if (!document.getElementById('sbnShell')) {
                     window.__SBN_MOUNT = false;
                     if (window.console && console.warn) console.warn('[sbnext] board region not found; staying on the classic board');

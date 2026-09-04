@@ -136,8 +136,13 @@ async function goto(page, qs) {
             const v = await page.evaluate(() => ({
                 live: document.querySelectorAll('.sbn-row .sbn-chip[data-pick]').length,
                 shapes: [...new Set([...document.querySelectorAll('.sbn-row .sbn-chip')].map((c) => Math.round(c.getBoundingClientRect().height)))],
+                // embedded, the page's own header ends on a fraction of a pixel;
+                // the mount has to absorb it or every number renders soft
+                frac: [...document.querySelectorAll('.sbn-row .sbn-chip-top, .sbn-row .sbn-chip-bot')]
+                    .filter((e) => Math.abs(e.getBoundingClientRect().top % 1) > 0.01).length,
             }));
-            check(`flag on: ${key} renders priced chips (${v.live})`, v.live > 0 && v.shapes.length === 1, v);
+            check(`flag on: ${key} renders priced chips on whole pixels (${v.live})`,
+                v.live > 0 && v.shapes.length === 1 && v.frac === 0, v);
         }
 
         // pick flow
