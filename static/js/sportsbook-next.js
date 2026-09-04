@@ -374,14 +374,33 @@
     }
     function crest(team) {
         var api = sportMeta(state.sport).api;
-        var map = SLUGS[api], path = LEAGUE_PATH[api];
-        var slug = map ? map[String(team || '').trim().toLowerCase()] : null;
-        if (slug && path) {
-            return '<img class="sbn-crest" src="' + LOGO_BASE + path + '/500/' + slug + '.png" alt="" loading="lazy" ' +
-                'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'sbn-crest sbn-crest--fb\',textContent:this.getAttribute(\'data-i\')||\'\'}))" ' +
+        var url = crestUrl(api, team);
+        if (url) {
+            return '<img class="sbn-crest" src="' + url + '" alt="" loading="lazy" ' +
+                'onerror="this.replaceWith(Object.assign(document.createElement(&#39;span&#39;),{className:&#39;sbn-crest sbn-crest--fb&#39;,textContent:this.getAttribute(&#39;data-i&#39;)||&#39;&#39;}))" ' +
                 'data-i="' + esc(initials(team)) + '">';
         }
         return '<span class="sbn-crest sbn-crest--fb">' + esc(initials(team)) + '</span>';
+    }
+    // The generated map (sportsbook-next-logos.js) covers every league; the small
+    // hand map below stays as a fallback if that file ever fails to load.
+    function crestUrl(api, team) {
+        var L = window.TMR_SBN_LOGOS, canon = window.TMR_SBN_LOGO_CANON;
+        if (L && canon && L[api]) {
+            var m = L[api];
+            var key = canon(team);
+            var hit = m[key];
+            // College feeds append a nickname our source and ESPN do not always
+            // share ("Nicholls State Colonels" against "Nicholls State"), so drop
+            // trailing words until the location matches. Two words is the floor,
+            // below which a name is too generic to match safely.
+            var parts = key.split(' ');
+            while (!hit && parts.length > 2) { parts.pop(); hit = m[parts.join(' ')]; }
+            if (hit) return hit.charAt(0) === '~' ? (window.TMR_SBN_LOGO_PREFIX || '') + hit.slice(1) : hit;
+        }
+        var slug = SLUGS[api] && SLUGS[api][String(team || '').trim().toLowerCase()];
+        var pathPart = LEAGUE_PATH[api];
+        return slug && pathPart ? LOGO_BASE + pathPart + '/500/' + slug + '.png' : '';
     }
 
     // ---- Market categories ---------------------------------------------------
