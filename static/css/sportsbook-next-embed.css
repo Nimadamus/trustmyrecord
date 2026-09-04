@@ -1,0 +1,42 @@
+/* ============================================================================
+ * SPORTSBOOK_NEXT_EMBED_20260904
+ * Everything here is gated behind html.tmr-sbnext, which only the embed script
+ * sets and only when the rollout flag says so. With the flag off this file
+ * matches nothing at all, so the classic board is untouched.
+ * ========================================================================== */
+
+/* The classic board is hidden, not removed: its markup and its scripts stay in
+   place so rolling back is a single class. */
+html.tmr-sbnext .sportsbook-picks-layout,
+html.tmr-sbnext .sportsbook-market-nav,
+html.tmr-sbnext .sportsbook-board-toolbar,
+html.tmr-sbnext .tmr-ms-bar,
+html.tmr-sbnext .tmr-multislip-bar,
+html.tmr-sbnext .sportsbook-slip-fab {
+    display: none !important;
+}
+
+/* The board sits inside the page's own content column, so it drops the
+   standalone shell's page padding and centres on the column instead. */
+html.tmr-sbnext .sbn-embed { margin: 6px 0 0; }
+html.tmr-sbnext .sbn-shell {
+    max-width: none;
+    padding: 0 0 24px;
+    gap: 14px;
+}
+
+/* The preview shell had its own 56px top bar. In production the site header is
+   the sticky element, so anything that pinned to 56px pins under that instead. */
+html.tmr-sbnext .sbn-railwrap,
+html.tmr-sbnext .sbn-slip { top: 84px; }
+html.tmr-sbnext .sbn-colhead { top: 84px; }
+html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
+
+@media (max-width: 1023px) {
+    html.tmr-sbnext .sbn-railwrap,
+    html.tmr-sbnext .sbn-slip,
+    html.tmr-sbnext .sbn-colhead { top: 0; }
+    /* the slip becomes a sheet on small screens, so the page needs room for the
+       fixed bar the same way the standalone shell did */
+    html.tmr-sbnext body { padding-bottom: 74px; }
+}

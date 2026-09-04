@@ -13,53 +13,17 @@ const crypto = require('crypto');
 const args = {}; for (let i = 2; i < process.argv.length; i++) { const a = process.argv[i]; if (a.startsWith('--')) { args[a.slice(2)] = process.argv[i + 1]; i++; } }
 
 // ---- member credential --------------------------------------------------
-// A saved token file expires, and a run that carries an expired one still
-// exercises the board but reports a false failure on /api/auth/me. So the
-// harness mints its own short-lived token the same way routes/auth.js does,
-// from the API's signing secret kept outside the repo. A saved token is still
-// honoured when it is given and still valid.
-function b64url(buf) {
-  return Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function signJwt(payload, secret) {
-  const head = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body = b64url(JSON.stringify(payload));
-  const sig = crypto.createHmac('sha256', secret).update(`${head}.${body}`).digest();
-  return `${head}.${body}.${b64url(sig)}`;
-}
-function jwtExpiry(tok) {
-  try {
-    const raw = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(Buffer.from(raw, 'base64').toString('utf8')).exp || 0;
-  } catch (_) { return 0; }
-}
-function firstFile(list) { for (const f of list) if (f && fs.existsSync(f)) return f; return ''; }
-
-const TOKEN_PATH = (args.token && args.token.trim()) || process.env.TMR_TEST_JWT_FILE || '';
-const SECRET_PATH = firstFile([
-  args['jwt-secret'] && args['jwt-secret'].trim(),
-  process.env.TMR_JWT_SECRET_FILE,
-  path.join(os.homedir(), '.tmr_jwt_secret'),
-]);
-const TEST_USER_ID = Number(args.user || process.env.TMR_TEST_USER_ID || 1);
-let TOKEN = '';
-let TOKEN_SOURCE = '';
-if (TOKEN_PATH && fs.existsSync(TOKEN_PATH)) {
-  const saved = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
-  if (jwtExpiry(saved) > Date.now() / 1000 + 120) { TOKEN = saved; TOKEN_SOURCE = `saved token ${TOKEN_PATH}`; }
-  else console.log(`NOTE: ${TOKEN_PATH} is expired; minting a fresh test token instead.`);
-}
-if (!TOKEN && SECRET_PATH) {
-  const secret = fs.readFileSync(SECRET_PATH, 'utf8').trim();
-  const now = Math.floor(Date.now() / 1000);
-  TOKEN = signJwt({ userId: TEST_USER_ID, sessionId: `sbn-verify-${now}`, iat: now, exp: now + 3600 }, secret);
-  TOKEN_SOURCE = `minted for user ${TEST_USER_ID} from ${SECRET_PATH}`;
-}
+// See credential.cjs: a saved token is used while valid, otherwise a fresh
+// short-lived one is minted the way routes/auth.js does.
+const { resolveCredential } = require('./credential.cjs');
+const CRED = resolveCredential(args);
+const TEST_USER_ID = CRED.userId;
+const TOKEN = CRED.token;
 if (!TOKEN) {
-  console.log('SKIP: no member credential (pass --token <valid jwt file> or --jwt-secret <file>, or set TMR_JWT_SECRET_FILE).');
+  console.log('SKIP: no member credential (pass --token <valid jwt file> or --jwt-secret <file>).');
   process.exit(0);
 }
-console.log(`CREDENTIAL: ${TOKEN_SOURCE}`);
+console.log(`CREDENTIAL: ${CRED.source}`);
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const BASE = args.url || 'https://trustmyrecord.com/sportsbook/next/';

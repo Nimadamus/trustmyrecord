@@ -23,15 +23,21 @@
     --sbn-red: #f87171;
     --sbn-font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-* { box-sizing: border-box; }
-html.sbn, body { margin: 0; padding: 0; background: var(--sbn-bg); }
-body {
+html.sbn *, html.tmr-sbnext .sbn-shell *, html.tmr-sbnext .sbn-drawer * { box-sizing: border-box; }
+html.sbn, html.sbn body { margin: 0; padding: 0; background: var(--sbn-bg); }
+html.sbn body {
     color: var(--sbn-text);
     font-family: var(--sbn-font);
     font-size: 14px;
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     padding-bottom: 0;
+}
+/* Embedded in the production sportsbook page the board keeps its own type and
+   colour, but takes them from the container rather than from body. */
+html.tmr-sbnext .sbn-shell, html.tmr-sbnext .sbn-drawer {
+    color: var(--sbn-text); font-family: var(--sbn-font); font-size: 14px; line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
 }
 .sbn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sbn-skip { position: absolute; left: -9999px; }

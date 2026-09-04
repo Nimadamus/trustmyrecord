@@ -858,6 +858,10 @@
     }
 
     function boot() {
+        // The engine only runs where it has a mount: the standalone preview
+        // shell, or the nodes the embed script inserts into the live page when
+        // its rollout flag is on. Loading this file alone changes nothing.
+        if (!el('sbnBoard')) return;
         document.addEventListener('click', onClick, false);
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.drawer) { state.drawer = null; render(); } }, false);
         document.addEventListener('change', onChange, false);

@@ -26,6 +26,9 @@ async function installOverlay(context) {
     OVERLAY['/sportsbook/index.html'] = ['sportsbook/index.html', 'text/html; charset=utf-8'];
     OVERLAY['/static/js/sportsbook-production-fix-persist-reliability.js'] = ['static/js/sportsbook-production-fix-persist-reliability.js', 'application/javascript; charset=utf-8'];
     OVERLAY['/static/js/sportsbook-multislip.js'] = ['static/js/sportsbook-multislip.js', 'application/javascript; charset=utf-8'];
+    // SPORTSBOOK_NEXT_EMBED_20260904: the flagged mount and its stylesheet
+    OVERLAY['/static/js/sportsbook-next-embed.js'] = ['static/js/sportsbook-next-embed.js', 'application/javascript; charset=utf-8'];
+    OVERLAY['/static/css/sportsbook-next-embed.css'] = ['static/css/sportsbook-next-embed.css', 'text/css; charset=utf-8'];
   }
   await context.route(/^https:\/\/trustmyrecord\.com\/.*/, async (route) => {
     const u = new URL(route.request().url());

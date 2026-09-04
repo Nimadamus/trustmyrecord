@@ -24,12 +24,14 @@ const URL_ = args.url || 'https://trustmyrecord.com/sportsbook/';
 // CI: these suites need a member session. Without TMR_TEST_JWT_FILE (or --token)
 // they SKIP rather than fail, so the sportsbook regression job stays meaningful
 // on forks and in environments without the secret.
-const TOKEN_PATH = (args.token && args.token.trim()) || process.env.TMR_TEST_JWT_FILE || '';
-if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) {
-  console.log('SKIP: no member JWT (pass --token <file> or set TMR_TEST_JWT_FILE).');
+const { resolveCredential } = require('./credential.cjs');
+const CRED = resolveCredential(args);
+if (!CRED.token) {
+  console.log('SKIP: no member credential (pass --token <valid jwt file> or --jwt-secret <file>).');
   process.exit(0);
 }
-const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+console.log(`CREDENTIAL: ${CRED.source}`);
+const TOKEN = CRED.token;
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const PICKS = args.picks ? JSON.parse(args.picks) : [];
