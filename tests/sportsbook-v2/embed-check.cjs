@@ -129,6 +129,25 @@ async function goto(page, qs) {
         check(`flag on: the stylesheet leaves the page body type alone (${s.chrome.bodyFont})`,
             s.chrome.bodyFont === CHROME.bodyFont, { on: s.chrome.bodyFont, off: CHROME.bodyFont });
 
+        // The page styles generic buttons and headings with !important at a
+        // specificity the board cannot out-write, so the board's own look is held
+        // by a cascade layer. If that layer ever stops winning, the chips revert
+        // to the site button style and this catches it.
+        const skin = await page.evaluate(() => {
+            const cs = (sel, ps) => { const e = document.querySelector(sel); if (!e) return null;
+                const c = getComputedStyle(e); const o = {}; ps.forEach((k) => { o[k] = c[k]; }); return o; };
+            return {
+                chip: cs('.sbn-chip', ['backgroundColor', 'borderRadius']),
+                cat: cs('.sbn-cat', ['borderRadius']),
+                slip: cs('.sbn-sliphead h3', ['fontSize', 'textTransform']),
+            };
+        });
+        check('flag on: the chips keep the board skin, not the site button skin',
+            skin.chip && skin.chip.backgroundColor === 'rgb(26, 33, 44)' && skin.chip.borderRadius === '6px', skin.chip);
+        check('flag on: the market tabs stay pills', skin.cat && skin.cat.borderRadius === '999px', skin.cat);
+        check('flag on: the pick-slip heading stays a compact label',
+            skin.slip && parseFloat(skin.slip.fontSize) <= 14 && skin.slip.textTransform === 'uppercase', skin.slip);
+
         // every market tab
         for (const key of s.tabs) {
             await page.evaluate((k) => document.querySelector(`.sbn-cat[data-cat="${k}"]`).click(), key);

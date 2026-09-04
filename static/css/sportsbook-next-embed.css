@@ -40,3 +40,115 @@ html.tmr-sbnext .sbn-slip { max-height: calc(100vh - 116px); }
        fixed bar the same way the standalone shell did */
     html.tmr-sbnext body { padding-bottom: 74px; }
 }
+
+/* ---- Hold the board's own look against the page's site-wide styles ---------
+   Measured on the live page after the cutover. The page carries an inline rule
+
+     body button:not(.sportsbook-sports-nav button):not(.close-modal)
+              :not(.ds-nav *):not(.ds-footer *):not(.tmrlh-related *) {
+         background: var(--dk-surface-2) !important; border-radius: 10px !important; }
+
+   at specificity (0,5,3), because every :not() argument counts, plus more
+   important radii in tmr-sitewide.css. Out-specifying that is a losing game, so
+   these rules sit in a CASCADE LAYER instead: for !important declarations a
+   layered rule outranks an unlayered one whatever the specificity. Nothing else
+   declares a layer named sbnext, and the only other layer on the page, sbv2,
+   carries no .sbn-* rules to conflict with.
+
+   Without this the chips render at 10px on rgb(22,36,63) instead of 6px on
+   #1a212c, and the pick-slip heading comes out at 37px in Barlow Condensed. */
+@layer sbnext {
+    html.tmr-sbnext .sbn-chip,
+    html.tmr-sbnext .sbn-cat,
+    html.tmr-sbnext .sbn-deep,
+    html.tmr-sbnext .sbn-railbtn,
+    html.tmr-sbnext .sbn-more,
+    html.tmr-sbnext .sbn-striprest,
+    html.tmr-sbnext .sbn-dclose,
+    html.tmr-sbnext .sbn-slip button {
+        font-family: var(--sbn-font) !important;
+        text-transform: none !important;
+        box-shadow: none !important;
+        letter-spacing: 0 !important;
+        text-shadow: none !important;
+    }
+    html.tmr-sbnext .sbn-chip {
+        background: #1a212c !important;
+        border: 1px solid rgba(255, 255, 255, 0.10) !important;
+        border-radius: 6px !important;
+        padding: 0 6px !important;
+        min-height: 0 !important;
+    }
+    html.tmr-sbnext .sbn-chip:hover {
+        background: #212b3a !important;
+        border-color: rgba(34, 211, 238, 0.42) !important;
+    }
+    html.tmr-sbnext .sbn-chip.is-sel {
+        background: #1ec6e0 !important;
+        border-color: #2fd4ec !important;
+    }
+    html.tmr-sbnext .sbn-chip.is-off {
+        background: rgba(255, 255, 255, 0.015) !important;
+        border-color: rgba(255, 255, 255, 0.055) !important;
+        border-radius: 6px !important;
+    }
+    html.tmr-sbnext .sbn-cat {
+        background: var(--sbn-panel) !important;
+        border: 1px solid var(--sbn-line2) !important;
+        border-radius: 999px !important;
+        padding: 7px 12px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        color: var(--sbn-text2) !important;
+    }
+    html.tmr-sbnext .sbn-cat.is-on {
+        background: var(--sbn-accent) !important;
+        border-color: var(--sbn-accent) !important;
+        color: var(--sbn-ink) !important;
+    }
+    html.tmr-sbnext .sbn-deep,
+    html.tmr-sbnext .sbn-more {
+        background: transparent !important;
+        border: 1px solid var(--sbn-line2) !important;
+        border-radius: 999px !important;
+        color: var(--sbn-accent) !important;
+    }
+    html.tmr-sbnext .sbn-striprest {
+        background: transparent !important;
+        border: 1px dashed var(--sbn-line2) !important;
+        border-radius: 8px !important;
+        color: var(--sbn-accent) !important;
+    }
+    html.tmr-sbnext .sbn-railbtn {
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        border-radius: 8px !important;
+        padding: 7px 9px !important;
+        color: var(--sbn-text2) !important;
+    }
+    html.tmr-sbnext .sbn-railbtn.is-on {
+        background: rgba(34, 211, 238, 0.12) !important;
+        border-color: rgba(34, 211, 238, 0.35) !important;
+        color: var(--sbn-text) !important;
+    }
+    /* the slip is a compact panel, not a page section */
+    html.tmr-sbnext .sbn-sliphead h3 {
+        margin: 0 !important;
+        font-family: var(--sbn-font) !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        line-height: 18px !important;
+        letter-spacing: .02em !important;
+        text-transform: uppercase !important;
+        color: var(--sbn-text) !important;
+    }
+    html.tmr-sbnext .sbn-dsec h4,
+    html.tmr-sbnext .sbn-dmatch,
+    html.tmr-sbnext .sbn-boardname {
+        font-family: var(--sbn-font) !important;
+    }
+    html.tmr-sbnext input[data-unitsinput] {
+        font-family: var(--sbn-font) !important;
+        border-radius: 6px !important;
+    }
+}
