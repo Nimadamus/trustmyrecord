@@ -53,7 +53,7 @@
         loading: false,
         picks: [],            // [{ key, game, market, betType, selection, label, line, odds, units, book }]
         stakeMode: 'risk',
-        expanded: {},         // gameId -> { spreads:bool, totals:bool, more:bool }
+        drawer: null,         // gameId whose full market list is open
         error: null,
         reqId: 0
     };
@@ -342,10 +342,17 @@
         return findPick([g.id, marketType, selection, line == null ? '' : line].join('|')) >= 0;
     }
 
-    function primaryRow(g, team, isAway) {
+    // ---- Main board: one compact row per game --------------------------------
+    // The board is for SCANNING. It carries only the three primary markets, at a
+    // fixed row height, with the column headers printed once above the list.
+    // Every deeper market lives behind More markets, which opens a drawer.
+    function marketCols(g) {
         var m = g.main || {};
-        var fixed = !!FIXED_LINE_SPORTS[state.sport];
-        var find = function (arr, name) { if (!arr) return null; for (var i = 0; i < arr.length; i++) if (arr[i].selection === name) return arr[i]; return null; };
+        var find = function (arr, name) {
+            if (!arr) return null;
+            for (var i = 0; i < arr.length; i++) if (arr[i].selection === name) return arr[i];
+            return null;
+        };
         var side = function (over) {
             if (!m.total) return null;
             for (var i = 0; i < m.total.length; i++) {
@@ -355,120 +362,118 @@
             }
             return null;
         };
-        var sp = find(m.spread, team), ml = find(m.h2h, team), to = isAway ? side(true) : side(false);
-        var cells = '';
-        cells += sp && validOdds(sp.odds)
-            ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true), bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true,
+        return { find: find, side: side };
+    }
+    function rowCells(g, team, isAway) {
+        var m = g.main || {};
+        var c = marketCols(g);
+        var fixed = !!FIXED_LINE_SPORTS[state.sport];
+        var sp = c.find(m.spread, team), ml = c.find(m.h2h, team), to = isAway ? c.side(true) : c.side(false);
+        var out = '';
+        out += sp && validOdds(sp.odds)
+            ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
+                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true,
                 sel: isSel(g, 'spreads', team, sp.line),
                 data: pickData(g, 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, 'Full Game') })
             : chip({ disabled: true });
-        cells += ml && validOdds(ml.odds)
-            ? chip({ top: fmtOdds(ml.odds), bottom: 'ML', heroTop: true, sel: isSel(g, 'h2h', team, null),
-                data: pickData(g, 'h2h', team, team + ' ML', null, ml.odds, 'Full Game') })
-            : chip({ disabled: true });
-        cells += to && validOdds(to.odds)
+        out += to && validOdds(to.odds)
             ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds), heroTop: true,
                 sel: isSel(g, 'totals', isAway ? 'Over' : 'Under', to.line),
                 data: pickData(g, 'totals', isAway ? 'Over' : 'Under', (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, 'Full Game') })
             : chip({ disabled: true });
-        return '<div class="sbn-prow"><span class="sbn-team">' + esc(team) + '</span>' + cells + '</div>';
+        out += ml && validOdds(ml.odds)
+            ? chip({ top: fmtOdds(ml.odds), bottom: 'ML', heroTop: true, sel: isSel(g, 'h2h', team, null),
+                data: pickData(g, 'h2h', team, team + ' ML', null, ml.odds, 'Full Game') })
+            : chip({ disabled: true });
+        return out;
     }
-
-    // Every ladder renders the SAME shape for every game: one row per fixed side
-    // (away/home for spreads, Over/Under for totals) plus a footer control, even
-    // when a side has nothing posted. That is what keeps alternate totals at an
-    // identical offset in every card no matter how many lines a game carries.
-    function ladder(g, groupKey, title) {
-        var grp = g.groups[groupKey];
-        var open = (state.expanded[g.id] || {})[groupKey];
-        var isTotal = groupKey === 'alt_totals';
-        var sides = isTotal ? ['Over', 'Under'] : [g.away, g.home];
-        var buckets = {};
-        var count = 0, book = null;
-        if (grp && grp.items.length) {
-            book = grp.book;
-            grp.items.forEach(function (i) {
-                var side = isTotal ? (String(i.selection).toLowerCase() === 'under' ? 'Under' : 'Over') : i.selection;
-                if (sides.indexOf(side) === -1) return;   // never invent a row
-                (buckets[side] = buckets[side] || []).push(i);
-                count++;
-            });
-        }
-        var body = sides.map(function (side) {
-            var list = (buckets[side] || []).slice().sort(function (a, b) { return a.line - b.line; });
-            var cells = list.length
-                ? list.map(function (i, idx) {
-                    var top = isTotal ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line)) : fmtLine(i.line, true);
-                    var mt = isTotal ? 'totals' : 'spreads';
-                    var sel = isTotal ? side : i.selection;
-                    var label = isTotal ? (side + ' ' + fmtLine(i.line)) : (i.selection + ' ' + fmtLine(i.line, true));
-                    return '<span class="sbn-cell' + (idx >= ALT_PREVIEW ? ' sbn-cell--extra' : '') + '">' +
-                        chip({ top: top, bottom: fmtOdds(i.odds), sel: isSel(g, mt, sel, i.line),
-                            data: pickData(g, mt, sel, label, i.line, i.odds, title, book) }) + '</span>';
-                }).join('')
-                : '<span class="sbn-none">None posted</span>';
-            return '<div class="sbn-lrow"><span class="sbn-lname">' + esc(side) + '</span><div class="sbn-lgrid">' + cells + '</div></div>';
-        }).join('');
-        var expandable = sides.some(function (side) { return (buckets[side] || []).length > ALT_PREVIEW; });
-        var foot = '<button type="button" class="sbn-more' + (expandable ? '' : ' is-hidden') + '"' +
-            (expandable ? '' : ' tabindex="-1" aria-hidden="true"') +
-            ' data-expand="' + esc(groupKey) + '" data-game="' + esc(g.id) + '">' +
-            (expandable ? (open ? 'Show fewer' : 'Show all ' + count + ' ' + esc(title.toLowerCase())) : 'Show all') + '</button>';
-        return '<section class="sbn-sec sbn-sec--ladder" data-open="' + (open ? '1' : '0') + '">' +
-            '<h4 class="sbn-sec-title">' + esc(title) +
-            '<span class="sbn-count">' + count + '</span>' +
-            (book ? '<span class="sbn-book">' + esc(book) + '</span>' : '<span class="sbn-book"></span>') + '</h4>' +
-            '<div class="sbn-sec-body">' + body + '</div>' + foot + '</section>';
-    }
-
-    var EXTRA_LABELS = {
-        team_totals: 'Team totals', f5_h2h: 'First 5 moneyline', f5_spreads: 'First 5 run line',
-        f5_totals: 'First 5 total', f5_team_totals: 'First 5 team totals',
-        first_inning_totals: 'First inning (NRFI / YRFI)', first_half_h2h: 'First half moneyline',
-        first_half_spreads: 'First half spread', first_half_totals: 'First half total',
-        second_half_h2h: 'Second half moneyline', second_half_spreads: 'Second half spread',
-        second_half_totals: 'Second half total', mma_total_rounds: 'Total rounds'
-    };
-    function moreMarkets(g) {
-        var open = (state.expanded[g.id] || {}).more;
-        var keys = Object.keys(g.groups).filter(function (k) {
-            return k !== 'alt_spreads' && k !== 'alt_totals' && g.groups[k].items.length;
+    // The board row already carries h2h / spreads / totals, so the drawer lists
+    // only the markets you cannot reach from the row.
+    var PRIMARY_KEYS = { h2h: 1, spreads: 1, totals: 1, moneyline: 1,
+        full_game: 1, spread: 1, total: 1, run_line: 1, puck_line: 1, game_total: 1 };
+    function deepKeys(g) {
+        return Object.keys(g.groups).filter(function (k) {
+            return !PRIMARY_KEYS[k] && g.groups[k].items.length;
         });
-        var head = '<button type="button" class="sbn-morebtn" data-expand="more" data-game="' + esc(g.id) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
-            (keys.length ? (open ? 'Hide additional markets' : 'More markets') : 'No additional markets') +
-            (keys.length ? ' <span class="sbn-count">' + keys.length + '</span>' : '') + '</button>';
-        if (!open || !keys.length) return '<section class="sbn-sec sbn-sec--more">' + head + '</section>';
-        var body = keys.map(function (k) {
-            var grp = g.groups[k];
-            var title = EXTRA_LABELS[k] || grp.label || k;
-            var cells = grp.items.slice(0, 12).map(function (i) {
-                var mt = k;
-                var label = (i.label || (i.selection + ' ' + fmtLine(i.line, true)));
-                return '<span class="sbn-cell">' + chip({
-                    top: esc(String(label).replace(/\s+/g, ' ')).slice(0, 26), bottom: fmtOdds(i.odds),
-                    sel: isSel(g, mt, i.selection, i.line),
-                    data: pickData(g, mt, i.selection, label, i.line, i.odds, title, grp.book)
+    }
+    function countDeep(g) { return deepKeys(g).length; }
+    function gameCard(g) {
+        var deep = countDeep(g);
+        return '<article class="sbn-row" data-game="' + esc(g.id) + '">' +
+            '<div class="sbn-rowtop">' +
+            '<span class="sbn-rowtime">' + esc(whenText(g.when)) + '</span>' +
+            '<button type="button" class="sbn-deep" data-drawer="' + esc(g.id) + '">' +
+            'More markets' + (deep ? ' <b>' + deep + '</b>' : '') + '</button>' +
+            '</div>' +
+            '<div class="sbn-teams">' +
+            '<div class="sbn-trow"><span class="sbn-tname">' + esc(g.away) + '</span>' + rowCells(g, g.away, true) + '</div>' +
+            '<div class="sbn-trow"><span class="sbn-tname">' + esc(g.home) + '</span>' + rowCells(g, g.home, false) + '</div>' +
+            '</div></article>';
+    }
+
+    // ---- Drawer: the whole market inventory for one game ---------------------
+    var GROUP_ORDER = [
+        ['alt_spreads', 'Alternate spreads'],
+        ['alt_totals', 'Alternate totals'],
+        ['team_totals', 'Team totals'],
+        ['f5_h2h', 'First 5 moneyline'], ['f5_spreads', 'First 5 run line'],
+        ['f5_totals', 'First 5 total'], ['f5_team_totals', 'First 5 team totals'],
+        ['first_inning_totals', 'First inning (NRFI / YRFI)'],
+        ['first_half_h2h', 'First half moneyline'], ['first_half_spreads', 'First half spread'],
+        ['first_half_totals', 'First half total'],
+        ['second_half_h2h', 'Second half moneyline'], ['second_half_spreads', 'Second half spread'],
+        ['second_half_totals', 'Second half total'],
+        ['first_5', 'First 5 innings'],
+        ['first_inning', 'First inning (NRFI / YRFI)'],
+        ['mma_total_rounds', 'Total rounds']
+    ];
+    function drawerGroup(g, key, title) {
+        var grp = g.groups[key];
+        if (!grp || !grp.items.length) return '';
+        var buckets = {}, order = [];
+        grp.items.forEach(function (i) {
+            var sl = String(i.selection).toLowerCase();
+            var side = (sl === 'over' || sl === 'under') ? (sl === 'under' ? 'Under' : 'Over') : i.selection;
+            if (!buckets[side]) { buckets[side] = []; order.push(side); }
+            buckets[side].push(i);
+        });
+        var body = order.map(function (side) {
+            var list = buckets[side].slice().sort(function (a, b) { return (a.line || 0) - (b.line || 0); });
+            var cells = list.map(function (i) {
+                var mt = key === 'alt_spreads' ? 'spreads' : (key === 'alt_totals' ? 'totals' : key);
+                var isOU = (side === 'Over' || side === 'Under');
+                var noLine = (i.line == null || Number(i.line) === 0);
+                var top = isOU ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
+                    : (noLine ? 'ML' : fmtLine(i.line, true));
+                var sel = isOU ? side : i.selection;
+                var label = isOU ? (side + ' ' + fmtLine(i.line))
+                    : (i.label || (i.selection + (noLine ? ' ML' : ' ' + fmtLine(i.line, true))));
+                return '<span class="sbn-dcell">' + chip({
+                    top: top, bottom: fmtOdds(i.odds), sel: isSel(g, mt, sel, i.line),
+                    data: pickData(g, mt, sel, label, i.line, i.odds, title, grp.book)
                 }) + '</span>';
             }).join('');
-            return '<div class="sbn-lrow sbn-lrow--wide"><span class="sbn-lname">' + esc(title) +
-                (grp.book ? '<em class="sbn-book">' + esc(grp.book) + '</em>' : '') + '</span><div class="sbn-lgrid">' + cells + '</div></div>';
+            return '<div class="sbn-drow"><span class="sbn-dside">' + esc(side) + '</span><div class="sbn-dgrid">' + cells + '</div></div>';
         }).join('');
-        return '<section class="sbn-sec sbn-sec--more" data-open="1">' + head + '<div class="sbn-sec-body">' + body + '</div></section>';
+        return '<section class="sbn-dsec"><h4>' + esc(title) +
+            '<span class="sbn-count">' + grp.items.length + '</span>' +
+            (grp.book ? '<span class="sbn-book">' + esc(grp.book) + '</span>' : '') + '</h4>' + body + '</section>';
     }
-
-    function gameCard(g) {
-        var spreadLabel = SPREAD_LABEL[state.sport] || 'Spread';
-        return '<article class="sbn-card" data-game="' + esc(g.id) + '">' +
-            '<header class="sbn-head"><span class="sbn-match">' + esc(g.away) + ' <i>@</i> ' + esc(g.home) + '</span>' +
-            '<span class="sbn-when">' + esc(whenText(g.when)) + '</span></header>' +
-            '<section class="sbn-sec sbn-sec--primary">' +
-            '<div class="sbn-phead"><span></span><span>' + esc(spreadLabel) + '</span><span>Moneyline</span><span>Total</span></div>' +
-            primaryRow(g, g.away, true) + primaryRow(g, g.home, false) +
-            '</section>' +
-            ladder(g, 'alt_spreads', 'Alternate ' + (spreadLabel === 'Spread' ? 'spreads' : spreadLabel.toLowerCase() + 's')) +
-            ladder(g, 'alt_totals', 'Alternate totals') +
-            moreMarkets(g) +
-            '</article>';
+    function drawerHtml() {
+        var g = null;
+        for (var i = 0; i < state.games.length; i++) if (state.games[i].id === state.drawer) g = state.games[i];
+        if (!g) return '';
+        var secs = GROUP_ORDER.filter(function (p) { return !PRIMARY_KEYS[p[0]]; })
+            .map(function (p) { return drawerGroup(g, p[0], p[1]); }).join('');
+        var known = {}; GROUP_ORDER.forEach(function (p) { known[p[0]] = 1; });
+        secs += deepKeys(g).filter(function (k) { return !known[k]; })
+            .map(function (k) { return drawerGroup(g, k, g.groups[k].label || k); }).join('');
+        return '<div class="sbn-drawer-back" data-drawerclose="1"></div>' +
+            '<div class="sbn-drawer-panel" role="dialog" aria-modal="true" aria-label="All markets">' +
+            '<header class="sbn-dhead"><div><div class="sbn-dmatch">' + esc(g.away) + ' <i>@</i> ' + esc(g.home) + '</div>' +
+            '<div class="sbn-dwhen">' + esc(whenText(g.when)) + '</div></div>' +
+            '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
+            '<div class="sbn-dbody">' + (secs || '<div class="sbn-empty">No additional markets are posted for this game.</div>') + '</div></div>';
     }
 
     function slipHtml() {
@@ -521,9 +526,12 @@
             if (state.loading) board.innerHTML = '<div class="sbn-note">Loading ' + esc(sportMeta(state.sport).label) + ' odds…</div>';
             else if (state.error) board.innerHTML = '<div class="sbn-note">' + esc(state.error) + '</div>';
             else if (!state.games.length) board.innerHTML = '<div class="sbn-note">No upcoming ' + esc(sportMeta(state.sport).label) + ' games with posted odds right now.</div>';
-            else board.innerHTML = state.games.map(gameCard).join('');
+            else board.innerHTML = '<div class="sbn-colhead"><span></span><span>' + esc(SPREAD_LABEL[state.sport] || 'Spread') + '</span><span>Total</span><span>Moneyline</span></div>' + state.games.map(gameCard).join('');
         }
         var slip = el('sbnSlip'); if (slip) slip.innerHTML = slipHtml();
+        var dw = el('sbnDrawer');
+        if (dw) { dw.innerHTML = state.drawer ? drawerHtml() : ''; dw.classList.toggle('is-open', !!state.drawer); }
+        document.documentElement.classList.toggle('sbn-locked', !!state.drawer);
         var bar = el('sbnBar');
         if (bar) {
             bar.classList.toggle('is-on', state.picks.length > 0);
@@ -545,14 +553,9 @@
             togglePick(data);
             return;
         }
-        var exp = t.closest && t.closest('[data-expand]');
-        if (exp) {
-            var gid = exp.getAttribute('data-game'), k = exp.getAttribute('data-expand');
-            state.expanded[gid] = state.expanded[gid] || {};
-            state.expanded[gid][k] = !state.expanded[gid][k];
-            render();
-            return;
-        }
+        var dOpen = t.closest && t.closest('[data-drawer]');
+        if (dOpen) { state.drawer = dOpen.getAttribute('data-drawer'); render(); return; }
+        if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; render(); return; }
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');
@@ -584,6 +587,7 @@
 
     function boot() {
         document.addEventListener('click', onClick, false);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.drawer) { state.drawer = null; render(); } }, false);
         document.addEventListener('change', onChange, false);
         var q = new URLSearchParams(location.search || '');
         var s = q.get('sport');

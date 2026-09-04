@@ -58,35 +58,33 @@ async function pickSport(page, sport) {
 (async () => {
   const browser = await chromium.launch({ headless: true });
 
-  // ---- 1. structure and ordering, every sport ----------------------------
+  // ---- 1. compact board: identical row shape everywhere -------------------
   {
     const { ctx, page, errs, bad } = await open(browser, { width: 1440, height: 1000 });
     for (const sport of ['MLB', 'NFL', 'NCAAF', 'Soccer', 'NHL', 'UFC']) {
       await goto(page, sport);
       const st = await page.evaluate(() => {
-        const cards = [...document.querySelectorAll('.sbn-card')];
-        if (!cards.length) return { none: true, note: (document.querySelector('.sbn-note') || {}).textContent };
-        const shape = (c) => [...c.querySelectorAll(':scope > .sbn-sec')].map((s) =>
-          s.classList.contains('sbn-sec--primary') ? 'PRIMARY'
-            : s.classList.contains('sbn-sec--more') ? 'MORE'
-              : ((s.querySelector('.sbn-sec-title') || {}).textContent || '').replace(/\s*\d+\s*/g, ' ').replace(/FanDuel|Bovada|DraftKings/gi, '').trim().toUpperCase());
-        const shapes = cards.map(shape).map((a) => a.join(' > '));
-        const offsets = cards.map((c) => {
-          const top = c.getBoundingClientRect().top;
-          return [...c.querySelectorAll(':scope > .sbn-sec')].map((s) => Math.round(s.getBoundingClientRect().top - top)).join(',');
-        });
+        const rows = [...document.querySelectorAll('.sbn-row')];
+        if (!rows.length) return { none: true, note: (document.querySelector('.sbn-note') || {}).textContent };
+        const shape = (r) => [r.querySelector('.sbn-rowtop') ? 'TOP' : '', r.querySelectorAll('.sbn-trow').length + 'TEAMS',
+          [...r.querySelectorAll('.sbn-trow')].map((t) => t.querySelectorAll('.sbn-chip').length).join('/')].join('|');
         return {
-          cards: cards.length,
-          distinctShapes: [...new Set(shapes)],
-          distinctOffsets: [...new Set(offsets)],
-          heights: [...new Set(cards.map((c) => Math.round(c.getBoundingClientRect().height)))],
+          rows: rows.length,
+          heights: [...new Set(rows.map((r) => Math.round(r.getBoundingClientRect().height)))],
+          shapes: [...new Set(rows.map(shape))],
+          colhead: !!document.querySelector('.sbn-colhead'),
+          deepBtns: document.querySelectorAll('.sbn-deep').length,
+          ladderInRow: document.querySelectorAll('.sbn-row .sbn-dsec, .sbn-row .sbn-lgrid').length,
+          visible: rows.filter((r) => r.getBoundingClientRect().top < innerHeight).length,
         };
       });
       if (st.none) { console.log(`SKIP  ${sport}: ${String(st.note).trim()}`); continue; }
-      check(`${sport}: every one of ${st.cards} cards has the identical section order`, st.distinctShapes.length === 1, st.distinctShapes);
-      check(`${sport}: sections sit at the identical offset in every card`, st.distinctOffsets.length === 1, st.distinctOffsets.slice(0, 3));
-      check(`${sport}: every card is the same height (${st.heights.join('/')})`, st.heights.length === 1, st.heights);
-      check(`${sport}: order is PRIMARY then alternates then MORE`, /^PRIMARY > ALTERNATE .* > ALTERNATE TOTALS > MORE$/.test(st.distinctShapes[0] || ''), st.distinctShapes[0]);
+      check(`${sport}: every one of ${st.rows} rows is the same height (${st.heights.join('/')})`, st.heights.length === 1, st.heights);
+      check(`${sport}: every row has the identical shape`, st.shapes.length === 1, st.shapes);
+      check(`${sport}: column headers are printed once above the board`, st.colhead);
+      check(`${sport}: no alternate ladder is rendered inside a board row`, st.ladderInRow === 0, st.ladderInRow);
+      check(`${sport}: every row exposes More markets`, st.deepBtns === st.rows, { deepBtns: st.deepBtns, rows: st.rows });
+      check(`${sport}: the board is compact enough to scan (${st.visible} games in view)`, st.visible >= 5, st.visible);
     }
     check('no uncaught JS errors while touring the sports', errs.length === 0, errs.slice(0, 4));
     check('no failing API calls while touring the sports', bad.length === 0, bad.slice(0, 4));
@@ -97,8 +95,7 @@ async function pickSport(page, sport) {
   {
     const { ctx, page } = await open(browser, { width: 1440, height: 1000 });
     await goto(page, 'MLB');
-    await page.evaluate(() => { document.querySelectorAll('.sbn-more:not(.is-hidden)').forEach((b) => b.click()); });
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(400);
     // Compare the DOM against the EXACT payload the page rendered from
     // (window.__sbNext.state.games[].raw), so a live price move between two
     // fetches cannot masquerade as a mismatch.
@@ -209,18 +206,24 @@ async function pickSport(page, sport) {
     await ctx.close();
   }
 
-  // ---- 5. More Markets ----------------------------------------------------
+  // ---- 5. More Markets drawer ---------------------------------------------
   {
     const { ctx, page } = await open(browser, { width: 1440, height: 1000 });
     await goto(page, 'MLB');
-    const before = await page.evaluate(() => document.querySelectorAll('.sbn-card .sbn-chip[data-pick]').length);
-    await page.evaluate(() => document.querySelector('.sbn-morebtn').click());
-    await page.waitForTimeout(600);
-    const after = await page.evaluate(() => {
-      const c = document.querySelector('.sbn-card');
-      return { chips: document.querySelectorAll('.sbn-card .sbn-chip[data-pick]').length, groups: c.querySelectorAll('.sbn-sec--more .sbn-lrow').length, labels: [...c.querySelectorAll('.sbn-sec--more .sbn-lname')].map((e) => e.textContent.replace(/\s+/g, ' ').trim().slice(0, 30)) };
-    });
-    check(`More Markets expands additional market groups inline (${after.groups})`, after.chips > before && after.groups > 0, after.labels);
+    await page.evaluate(() => document.querySelector('.sbn-deep').click());
+    await page.waitForTimeout(800);
+    const d = await page.evaluate(() => ({
+      open: !!document.querySelector('.sbn-drawer-panel'),
+      secs: [...document.querySelectorAll('.sbn-dsec h4')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
+      chips: document.querySelectorAll('.sbn-drawer-panel .sbn-chip[data-pick]').length,
+      dupPrimary: [...document.querySelectorAll('.sbn-dsec h4')].filter((h) => /^(full game|run line|game total|spread|total|moneyline)/i.test(h.textContent.trim())).length,
+    }));
+    check(`More markets opens a drawer with the deeper inventory (${d.secs.length} categories, ${d.chips} prices)`, d.open && d.secs.length >= 2 && d.chips > 10, d.secs.slice(0, 6));
+    check('the drawer does not repeat the markets already on the row', d.dupPrimary === 0, d.secs);
+    await page.evaluate(() => document.querySelector('.sbn-dclose').click());
+    await page.waitForTimeout(400);
+    const closed = await page.evaluate(() => !document.querySelector('.sbn-drawer-panel'));
+    check('the drawer closes again', closed);
     await ctx.close();
   }
 

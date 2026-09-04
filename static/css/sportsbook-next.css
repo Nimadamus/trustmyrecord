@@ -39,8 +39,8 @@ body {
 
 /* ---- Chrome ---------------------------------------------------------------- */
 .sbn-topbar {
-    display: flex; align-items: center; gap: 14px;
-    padding: 12px 20px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 16px;
     background: var(--sbn-panel);
     border-bottom: 1px solid var(--sbn-line);
     position: sticky; top: 0; z-index: 20;
@@ -62,7 +62,7 @@ body {
 .sbn-back { margin-left: auto; color: var(--sbn-muted); font-size: 12.5px; font-weight: 600; text-decoration: none; }
 .sbn-back:hover { color: var(--sbn-accent); }
 .sbn-notice {
-    margin: 12px 20px 0; padding: 9px 14px; border-radius: 10px;
+    margin: 8px 16px 0; padding: 6px 12px; border-radius: 10px;
     background: rgba(245, 184, 46, 0.07); border: 1px solid rgba(245, 184, 46, 0.28);
     color: var(--sbn-text2); font-size: 12.5px;
 }
@@ -71,15 +71,15 @@ body {
 /* ---- Three-column stage ---------------------------------------------------- */
 .sbn-shell {
     display: grid;
-    grid-template-columns: 196px minmax(0, 1fr) 340px;
+    grid-template-columns: 152px minmax(0, 1fr) 316px;
     gap: 16px;
     align-items: start;
-    max-width: 1480px;
+    max-width: 1560px;
     margin: 0 auto;
-    padding: 16px 20px 40px;
+    padding: 12px 16px 40px;
 }
 .sbn-railwrap {
-    position: sticky; top: 68px;
+    position: sticky; top: 56px;
     max-height: calc(100vh - 88px); overflow-y: auto;
     padding: 10px 8px;
     background: var(--sbn-panel); border: 1px solid var(--sbn-line); border-radius: 12px;
@@ -98,77 +98,55 @@ body {
 .sbn-railbtn b { font-size: 13px; font-weight: 700; }
 .sbn-railbtn small { font-size: 10.5px; color: var(--sbn-muted); }
 
-.sbn-boardhead { margin: 0 0 12px; }
-.sbn-boardhead h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.sbn-boardhead { margin: 0 0 8px; }
+.sbn-boardhead h1 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
 .sbn-boardhead p { margin: 3px 0 0; color: var(--sbn-muted); font-size: 12.5px; }
 .sbn-note { padding: 40px 16px; text-align: center; color: var(--sbn-muted); background: var(--sbn-panel); border: 1px solid var(--sbn-line); border-radius: 12px; }
 
-/* ---- Game card: identical structure for every game ------------------------- */
-.sbn-card {
-    margin: 0 0 12px;
+/* ---- Compact board: one scannable row per game ----------------------------- */
+/* Column geometry is declared once and shared by the header strip and every
+   team row, so prices line up down the whole board. */
+.sbn-colhead, .sbn-trow { display: grid; grid-template-columns: minmax(0, 1fr) 92px 92px 92px; gap: 6px; align-items: center; }
+.sbn-colhead {
+    position: sticky; top: 56px; z-index: 8;
+    padding: 7px 12px; margin: 0 0 6px;
+    background: var(--sbn-bg);
+    border-bottom: 1px solid var(--sbn-line);
+    color: var(--sbn-muted); font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+}
+.sbn-colhead span { text-align: center; }
+.sbn-colhead span:first-child { text-align: left; }
+.sbn-row {
+    padding: 6px 12px 8px;
     background: var(--sbn-panel);
     border: 1px solid var(--sbn-line);
-    border-radius: 12px;
-    overflow: hidden;
+    border-radius: 8px;
+    margin: 0 0 5px;
 }
-.sbn-head {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    height: 46px; padding: 0 14px;
-    background: var(--sbn-panel2);
-    border-bottom: 1px solid var(--sbn-line);
+.sbn-row:hover { border-color: rgba(255, 255, 255, 0.16); }
+.sbn-rowtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 20px; }
+.sbn-rowtime { color: var(--sbn-muted); font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.sbn-deep {
+    padding: 2px 8px; border: 1px solid var(--sbn-line2); border-radius: 999px;
+    background: transparent; color: var(--sbn-accent);
+    font-family: inherit; font-size: 10.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
 }
-.sbn-match { min-width: 0; font-size: 15px; font-weight: 800; letter-spacing: -0.01em;
-    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-.sbn-match i { color: var(--sbn-muted); font-style: normal; font-weight: 600; margin: 0 3px; }
-.sbn-when { flex: 0 0 auto; color: var(--sbn-muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-
-.sbn-sec { padding: 10px 14px 12px; border-top: 1px solid var(--sbn-line); }
-.sbn-sec:first-of-type { border-top: 0; }
-.sbn-sec--primary { background: rgba(34, 211, 238, 0.035); }
-.sbn-sec-title {
-    display: flex; align-items: center; gap: 7px; margin: 0 0 8px;
-    color: var(--sbn-muted); font-size: 10.5px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+.sbn-deep:hover { background: rgba(34, 211, 238, 0.12); border-color: rgba(34, 211, 238, 0.45); }
+.sbn-deep b { font-weight: 800; opacity: .8; }
+.sbn-teams { margin-top: 4px; }
+.sbn-trow { height: 42px; }
+.sbn-trow + .sbn-trow { margin-top: 4px; }
+.sbn-tname {
+    min-width: 0; padding-right: 8px;
+    font-size: 13px; font-weight: 700; line-height: 1.15;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.sbn-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 20px; height: 17px; padding: 0 6px; border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07); color: var(--sbn-muted);
-    font-size: 10px; font-weight: 800; letter-spacing: .02em;
-}
-/* Which sportsbook a ladder came from, so a blended board can never recur. */
-.sbn-book { margin-left: auto; color: var(--sbn-muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: none; font-style: normal; }
-.sbn-empty { padding: 10px 0 2px; color: var(--sbn-muted); font-size: 12px; }
-
-.sbn-phead, .sbn-prow { display: grid; grid-template-columns: minmax(0, 1fr) 108px 108px 108px; gap: 8px; align-items: center; }
-.sbn-phead { margin-bottom: 6px; color: var(--sbn-muted); font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.sbn-phead span { text-align: center; }
-.sbn-phead span:first-child { text-align: left; }
-.sbn-prow + .sbn-prow { margin-top: 7px; }
-.sbn-team { min-width: 0; padding-right: 8px; font-size: 13.5px; font-weight: 700; overflow-wrap: anywhere; }
-
-.sbn-lrow { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; }
-.sbn-lrow + .sbn-lrow { margin-top: 8px; }
-.sbn-lrow--wide { grid-template-columns: 132px minmax(0, 1fr); }
-.sbn-lname {
-    height: 54px; padding-top: 2px;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-    font-size: 12px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere;
-}
-.sbn-lname .sbn-book { display: block; margin: 2px 0 0; }
-.sbn-lgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
-.sbn-sec[data-open="0"] .sbn-cell--extra { display: none; }
-.sbn-sec--ladder[data-open="0"] .sbn-lgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.sbn-lrow { min-height: 54px; }
-/* A side with nothing posted still occupies its row, so the section below it
-   never moves up. */
-.sbn-none { display: inline-flex; align-items: center; min-height: 54px; color: var(--sbn-muted); font-size: 12px; }
-.sbn-more.is-hidden { visibility: hidden; pointer-events: none; }
 
 /* ---- Price chip: line on top, price under, both tabular -------------------- */
 .sbn-chip {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    width: 100%; min-height: 54px; padding: 6px 5px;
-    border: 1px solid var(--sbn-line2); border-radius: 9px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+    width: 100%; height: 42px; padding: 3px 4px;
+    border: 1px solid var(--sbn-line2); border-radius: 6px;
     background: var(--sbn-chip); color: var(--sbn-text);
     font-family: inherit; cursor: pointer;
     transition: background .1s ease, border-color .1s ease, transform .05s ease;
@@ -176,13 +154,13 @@ body {
 .sbn-chip:hover { background: var(--sbn-chip-hi); border-color: rgba(34, 211, 238, 0.55); }
 .sbn-chip:active { transform: scale(.97); }
 .sbn-chip:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: 2px; }
-.sbn-chip-top { font-size: 13px; font-weight: 700; line-height: 1.1; color: var(--sbn-text2); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.sbn-chip-bot { font-size: 17px; font-weight: 800; line-height: 1.05; letter-spacing: -0.01em; color: var(--sbn-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sbn-chip-top { font-size: 12px; font-weight: 700; line-height: 1.15; color: var(--sbn-text2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sbn-chip-bot { font-size: 11px; font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; color: var(--sbn-green); font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* When the LINE is the bet (spread, total) it takes the hero weight and the
    price supports it. When the price is the bet (moneyline, fixed run line) the
    card passes hero-top and the two swap. */
-.sbn-chip.hero-top .sbn-chip-top { font-size: 19px; font-weight: 800; color: var(--sbn-text); }
-.sbn-chip.hero-top .sbn-chip-bot { font-size: 13px; font-weight: 700; }
+.sbn-chip.hero-top .sbn-chip-top { font-size: 15px; font-weight: 800; color: var(--sbn-text); }
+.sbn-chip.hero-top .sbn-chip-bot { font-size: 11px; font-weight: 700; color: var(--sbn-green); }
 .sbn-chip.is-sel { background: var(--sbn-accent); border-color: var(--sbn-accent); box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28); }
 .sbn-chip.is-sel .sbn-chip-top, .sbn-chip.is-sel .sbn-chip-bot { color: var(--sbn-ink); }
 .sbn-chip.is-off { cursor: default; opacity: .4; }
@@ -201,7 +179,7 @@ body {
 
 /* ---- Pick slip ------------------------------------------------------------- */
 .sbn-slip {
-    position: sticky; top: 68px;
+    position: sticky; top: 56px;
     max-height: calc(100vh - 88px); overflow-y: auto;
     padding: 0 0 12px;
     background: var(--sbn-panel); border: 1px solid var(--sbn-line); border-radius: 12px;
@@ -345,4 +323,74 @@ body {
     .sbn-chip.hero-top .sbn-chip-top { font-size: 16px; }
     .sbn-chip-bot { font-size: 14px; }
     .sbn-chip-top { font-size: 11.5px; }
+}
+
+/* ---- Drawer: the full market inventory for one game ------------------------ */
+html.sbn-locked, html.sbn-locked body { overflow: hidden; }
+.sbn-drawer { display: none; }
+.sbn-drawer.is-open { display: block; }
+.sbn-drawer-back { position: fixed; inset: 0; z-index: 60; background: rgba(3, 6, 10, 0.66); }
+.sbn-drawer-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 61;
+    width: min(660px, 94vw);
+    display: flex; flex-direction: column;
+    background: var(--sbn-panel);
+    border-left: 1px solid var(--sbn-line2);
+    box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+}
+.sbn-dhead {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 16px; background: var(--sbn-panel2); border-bottom: 1px solid var(--sbn-line);
+}
+.sbn-dmatch { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+.sbn-dmatch i { color: var(--sbn-muted); font-style: normal; margin: 0 3px; }
+.sbn-dwhen { margin-top: 2px; color: var(--sbn-muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.sbn-dclose {
+    width: 34px; height: 34px; flex: 0 0 34px;
+    border: 1px solid var(--sbn-line2); border-radius: 8px; background: transparent;
+    color: var(--sbn-text); font-size: 21px; line-height: 1; cursor: pointer;
+}
+.sbn-dclose:hover { background: rgba(255, 255, 255, 0.07); }
+.sbn-dbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px 16px 24px; scrollbar-width: thin; }
+.sbn-dsec { padding: 12px 0; border-top: 1px solid var(--sbn-line); }
+.sbn-dsec:first-child { border-top: 0; padding-top: 4px; }
+.sbn-dsec h4 {
+    display: flex; align-items: center; gap: 7px; margin: 0 0 9px;
+    color: var(--sbn-muted); font-size: 10.5px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+}
+.sbn-drow { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 10px; align-items: start; }
+.sbn-drow + .sbn-drow { margin-top: 7px; }
+.sbn-dside {
+    padding-top: 12px; font-size: 12px; font-weight: 700; line-height: 1.2;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.sbn-dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 5px; }
+.sbn-dcell .sbn-chip { height: 44px; }
+
+@media (max-width: 1360px) {
+    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 86px 86px 86px; }
+}
+@media (max-width: 1180px) {
+    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 80px 80px 80px; gap: 5px; }
+    .sbn-chip.hero-top .sbn-chip-top { font-size: 14px; }
+}
+@media (max-width: 1023px) {
+    .sbn-colhead { top: 0; }
+}
+@media (max-width: 720px) {
+    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 72px 72px 72px; gap: 4px; }
+    .sbn-row { padding: 5px 9px 7px; }
+    .sbn-tname { font-size: 12px; }
+    .sbn-chip { height: 40px; }
+    .sbn-chip.hero-top .sbn-chip-top { font-size: 13.5px; }
+    .sbn-drawer-panel { width: 100vw; }
+    .sbn-drow { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+    .sbn-dside { padding-top: 0; font-size: 11px; color: var(--sbn-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .sbn-dgrid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+}
+@media (max-width: 420px) {
+    .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 64px 64px 64px; gap: 3px; }
+    .sbn-chip.hero-top .sbn-chip-top { font-size: 12.5px; }
+    .sbn-chip-top { font-size: 11px; }
+    .sbn-chip-bot { font-size: 10px; }
 }
