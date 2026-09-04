@@ -367,6 +367,70 @@ async function pickSport(page, sport) {
     await ctx.close();
   }
 
+
+  // ---- 8. crisp numbers: whole-pixel text, one hierarchy ------------------
+  // Text drawn at a fractional y is what makes numbers look soft on a normal
+  // display. The chip grid and everything stacked above the board therefore has
+  // to land on whole pixels. This measures the rendered page, not the CSS.
+  {
+    const { ctx, page, errs } = await open(browser, { width: 1440, height: 1000 });
+    for (const sport of ['MLB', 'NFL']) {
+      await goto(page, sport);
+      const tabs = await page.$$eval('.sbn-cat', (ns) => ns.map((n) => n.getAttribute('data-cat')));
+      for (const key of tabs) {
+        await page.evaluate((k) => document.querySelector(`.sbn-cat[data-cat="${k}"]`).click(), key);
+        await page.waitForTimeout(250);
+        const m = await page.evaluate(() => {
+          const frac = (v) => Math.abs(v - Math.round(v)) > 0.01;
+          const chips = [...document.querySelectorAll('.sbn-row .sbn-chip')];
+          let fracY = 0, fracX = 0, fracChip = 0, gap = new Set(), pad = new Set(), hero = new Set(), sub = new Set();
+          chips.forEach((c) => {
+            const r = c.getBoundingClientRect();
+            if (frac(r.top) || frac(r.height)) fracChip++;
+            const t = c.querySelector('.sbn-chip-top'), b = c.querySelector('.sbn-chip-bot');
+            if (!t || !b) return;
+            const tr = t.getBoundingClientRect(), br = b.getBoundingClientRect();
+            [tr, br].forEach((x) => { if (frac(x.top)) fracY++; if (frac(x.left)) fracX++; });
+            gap.add(Math.round(br.top - tr.bottom));
+            pad.add(`${Math.round(tr.top - r.top)}/${Math.round(r.bottom - br.bottom)}`);
+            const cs = getComputedStyle(t), bs = getComputedStyle(b);
+            hero.add(`${cs.fontSize}/${cs.fontWeight}`);
+            sub.add(`${bs.fontSize}/${bs.fontWeight}/${b.classList.contains('is-label') ? 'label' : b.classList.contains('is-line') ? 'line' : 'price'}`);
+          });
+          return { chips: chips.length, fracChip, fracY, fracX, gap: [...gap], pad: [...pad], hero: [...hero], sub: [...sub] };
+        });
+        check(`${sport}/${key}: every chip sits on a whole pixel`, m.fracChip === 0, m.fracChip);
+        check(`${sport}/${key}: every number is drawn at a whole-pixel y (${m.chips} chips)`, m.fracY === 0, m.fracY);
+        check(`${sport}/${key}: the gap between the two rows is identical in every box`, m.gap.length === 1, m.gap);
+        check(`${sport}/${key}: internal top and bottom padding is identical in every box`, m.pad.length === 1, m.pad);
+        check(`${sport}/${key}: one hero type size across the board`, m.hero.length === 1, m.hero);
+        check(`${sport}/${key}: the second row is only ever a price, a line or a label`,
+          m.sub.every((x) => /\/(price|line|label)$/.test(x)) && m.sub.length <= 3, m.sub);
+      }
+    }
+    // the hero must actually dominate, and a label must never look like a price
+    await goto(page, 'MLB');
+    const h = await page.evaluate(() => {
+      const c = [...document.querySelectorAll('.sbn-row .sbn-chip.hero-top')][0];
+      const t = getComputedStyle(c.querySelector('.sbn-chip-top'));
+      const b = getComputedStyle(c.querySelector('.sbn-chip-bot'));
+      const lab = document.querySelector('.sbn-chip-bot.is-label');
+      return {
+        heroPx: parseFloat(t.fontSize), heroW: +t.fontWeight, heroColour: t.color,
+        subPx: parseFloat(b.fontSize), subW: +b.fontWeight,
+        labelPx: lab ? parseFloat(getComputedStyle(lab).fontSize) : null,
+        labelTrack: lab ? getComputedStyle(lab).letterSpacing : null,
+        labelUpper: lab ? getComputedStyle(lab).textTransform : null,
+      };
+    });
+    check(`the hero number is clearly the largest and heaviest (${h.heroPx}px/${h.heroW} vs ${h.subPx}px/${h.subW})`,
+      h.heroPx >= h.subPx + 5 && h.heroW > h.subW, h);
+    check('the hero number is pure white for maximum contrast', /rgb\(255,\s*255,\s*255\)/.test(h.heroColour), h.heroColour);
+    check('a label is set as a label, not as a number', h.labelPx < h.subPx && h.labelUpper === 'uppercase' && parseFloat(h.labelTrack) > 0.5, h);
+    check('no JS errors through the typography audit', errs.length === 0, errs.slice(0, 4));
+    await ctx.close();
+  }
+
   await browser.close();
   if (args.report) fs.writeFileSync(args.report, JSON.stringify({ failures, log }, null, 2));
   console.log(`== next-preview: ${log.length - failures} passed, ${failures} failed`);

@@ -330,14 +330,19 @@
     // ---- rendering ----------------------------------------------------------
     function chip(opts) {
         // opts: { top, bottom, heroTop, sel, disabled, data }
-        var cls = 'sbn-chip' + (opts.sel ? ' is-sel' : '') + (opts.disabled ? ' is-off' : '') + (opts.heroTop ? ' hero-top' : '');
+        var cls = 'sbn-chip' + (opts.sel ? ' is-sel' : '') + (opts.disabled ? ' is-off hero-top' : '') + (opts.heroTop ? ' hero-top' : '');
         if (opts.disabled) {
             return '<span class="' + cls + '" aria-hidden="true"><span class="sbn-chip-top">&mdash;</span><span class="sbn-chip-bot"></span></span>';
         }
+        // A second row holding a word rather than a price is a LABEL, and is set
+        // as one: smaller, tracked out and muted, so it never reads as a number.
+        var botCls = 'sbn-chip-bot' + (/[0-9]/.test(String(opts.bottom))
+            ? (opts.botLine ? ' is-line' : '')
+            : ' is-label');
         return '<button type="button" class="' + cls + '"' + (opts.sel ? ' aria-pressed="true"' : '') +
             ' data-pick="' + esc(JSON.stringify(opts.data)) + '">' +
             '<span class="sbn-chip-top">' + esc(opts.top) + '</span>' +
-            '<span class="sbn-chip-bot">' + esc(opts.bottom) + '</span></button>';
+            '<span class="' + botCls + '">' + esc(opts.bottom) + '</span></button>';
     }
     function pickData(g, marketType, selection, label, line, odds, groupLabel, book) {
         return {
@@ -509,7 +514,7 @@
         var cell = {};
         cell.spread = sp && validOdds(sp.odds)
             ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
-                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true,
+                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true, botLine: fixed,
                 sel: isSel(g, sp.marketType || 'spreads', team, sp.line),
                 data: pickData(g, sp.marketType || 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, gl, bk) })
             : chip({ disabled: true });
