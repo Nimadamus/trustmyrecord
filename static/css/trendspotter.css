@@ -314,11 +314,13 @@ body.ts-page .ts-card-head h2 {
 /* --- Market tabs ---------------------------------------------------------- */
 .ts-tabs {
   display: flex;
+  /* The locked markets carry a "no data" pill, which pushes the row past the
+     card on a 1280px layout. Wrapping keeps all seven markets on screen and
+     clickable instead of hiding Props behind a horizontal scrollbar. */
+  flex-wrap: wrap;
   gap: 7px;
-  overflow-x: auto;
   padding-bottom: 4px;
   margin-bottom: 16px;
-  scrollbar-width: thin;
 }
 
 .ts-tab {
@@ -336,19 +338,45 @@ body.ts-page .ts-card-head h2 {
   cursor: pointer;
   white-space: nowrap;
 }
-.ts-tab:hover:not(:disabled) { border-color: var(--brand); color: var(--ink); }
+.ts-tab:hover:not(:disabled):not([aria-disabled="true"]) { border-color: var(--brand); color: var(--ink); }
 .ts-tab[aria-selected="true"] {
   background: var(--brand);
   border-color: var(--brand);
   color: #fff;
 }
-.ts-tab:disabled {
+/* A locked market has to read as locked at a glance, otherwise a visitor
+   clicks it, nothing selects, and the whole tablist looks broken. */
+.ts-tab:disabled,
+.ts-tab[aria-disabled="true"] {
   color: var(--muted);
-  background: var(--panel-2);
+  background: transparent;
   border-style: dashed;
+  border-color: var(--line);
+  opacity: .62;
   cursor: not-allowed;
 }
-.ts-tab-lock { font-size: 11px; opacity: .8; }
+.ts-tab[aria-disabled="true"]:hover { opacity: .82; border-color: var(--muted); }
+.ts-tab-lock { font-size: 9px; opacity: .75; }
+.ts-tab-tag {
+  margin-left: 2px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ts-tab-notice {
+  margin: -8px 0 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.ts-tab-notice[hidden] { display: none; }
 
 /* --- Filter fields -------------------------------------------------------- */
 .ts-fields {

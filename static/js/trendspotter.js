@@ -241,10 +241,40 @@
           ' aria-selected="' + (state.market === id ? 'true' : 'false') + '"' +
           ' tabindex="' + (state.market === id ? '0' : '-1') + '">' + esc(label) + '</button>';
       }
-      return '<button class="ts-tab" type="button" role="tab" disabled aria-selected="false" tabindex="-1"' +
+      // aria-disabled rather than the disabled attribute: a disabled button
+      // swallows the click, so a visitor who taps a locked market gets no
+      // response at all and reads the whole tablist as broken. This stays
+      // unselectable but still reports why it is unavailable.
+      return '<button class="ts-tab ts-tab-locked" type="button" role="tab" data-market="' + esc(id) + '"' +
+        ' aria-disabled="true" aria-selected="false" tabindex="-1"' +
+        ' data-locked-reason="' + esc(reason) + '"' +
         ' title="' + esc(reason) + '" aria-label="' + esc(label + ', not available. ' + reason) + '">' +
-        '<span class="ts-tab-lock" aria-hidden="true">○</span>' + esc(label) + '</button>';
+        '<span class="ts-tab-lock" aria-hidden="true">●</span>' + esc(label) +
+        '<span class="ts-tab-tag">No data</span></button>';
     }).join('');
+    renderMarketNotice();
+  }
+
+  // The reason a market is locked, shown under the tablist. It lives outside
+  // #marketTabs so re-rendering the tabs does not wipe it, and outside
+  // #validationMessage so it does not fight the "choose a team" validator.
+  function marketNoticeEl() {
+    var node = document.getElementById('marketNotice');
+    if (!node) {
+      node = document.createElement('p');
+      node.id = 'marketNotice';
+      node.className = 'ts-tab-notice';
+      node.setAttribute('role', 'status');
+      node.setAttribute('aria-live', 'polite');
+      el.marketTabs.parentNode.insertBefore(node, el.marketTabs.nextSibling);
+    }
+    return node;
+  }
+
+  function renderMarketNotice(reason) {
+    var node = marketNoticeEl();
+    node.textContent = reason || '';
+    node.hidden = !reason;
   }
 
   // --- filter fields -------------------------------------------------------
@@ -920,7 +950,7 @@
     container.addEventListener('keydown', function (e) {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
       var tabs = Array.prototype.slice.call(container.querySelectorAll(selector))
-        .filter(function (t) { return !t.disabled; });
+        .filter(function (t) { return !t.disabled && t.getAttribute('aria-disabled') !== 'true'; });
       var i = tabs.indexOf(document.activeElement);
       if (i === -1) return;
       e.preventDefault();
@@ -960,7 +990,22 @@
     el.marketTabs.addEventListener('click', function (e) {
       var b = e.target.closest('button[data-market]');
       if (!b || b.disabled) return;
-      state.market = b.getAttribute('data-market');
+      if (b.getAttribute('aria-disabled') === 'true') {
+        // Locked market: say why instead of doing nothing.
+        renderMarketNotice(b.getAttribute('data-locked-reason') || '');
+        return;
+      }
+      var next = b.getAttribute('data-market');
+      if (state.market === next) return;
+      state.market = next;
+      // Every market has its own line/price control, so the previous market's
+      // range would otherwise carry over and silently filter the new query.
+      state.priceMin = ''; state.priceMax = '';
+      state.lineMin = ''; state.lineMax = '';
+      state.totalMin = ''; state.totalMax = '';
+      if (state.market !== 'total') state.side = 'over';
+      lastRunKey = '';
+      renderMarketNotice('');
       rerenderControls();
     });
 

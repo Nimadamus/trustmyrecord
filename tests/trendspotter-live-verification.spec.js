@@ -78,11 +78,45 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
   expect(clear, 'the page title must not sit behind the sticky header').toBe(true);
 
   // Capability-driven chrome.
-  await expect(page.locator('.ts-tab:not([disabled])').first()).toBeVisible({ timeout: 20000 });
-  const lockedTabs = page.locator('.ts-tab[disabled]');
+  await expect(page.locator('.ts-tab:not([aria-disabled="true"])').first()).toBeVisible({ timeout: 20000 });
+  const lockedTabs = page.locator('.ts-tab[aria-disabled="true"]');
   expect(await lockedTabs.count(), 'unavailable markets must be shown as locked').toBeGreaterThan(0);
   const firstLockedReason = await lockedTabs.first().getAttribute('title');
   expect(firstLockedReason.length).toBeGreaterThan(40);
+
+  // Every market tab has to answer a real click. The open ones select and
+  // swap the filter row; the locked ones stay unselected but say why, which
+  // is what a disabled attribute could never do (it eats the click).
+  const openTabs = page.locator('.ts-tab:not([aria-disabled="true"])');
+  const openCount = await openTabs.count();
+  expect(openCount, 'at least the three settleable markets must be open').toBeGreaterThan(2);
+  for (let i = 0; i < openCount; i += 1) {
+    const tab = openTabs.nth(i);
+    const id = await tab.getAttribute('data-market');
+    await tab.click();
+    await expect(page.locator(`.ts-tab[data-market="${id}"]`)).toHaveAttribute('aria-selected', 'true');
+    const chip = (await page.locator('#queryChips').textContent()).replace(/\s+/g, ' ');
+    expect(chip, 'Your query must follow the selected market').toContain(
+      await page.locator(`.ts-tab[data-market="${id}"]`).textContent(),
+    );
+    // The previous market's line/price box must not carry over.
+    const ranges = await page.locator('#filterFields input[id$="Min"], #filterFields input[id$="Max"]')
+      .evaluateAll((els) => els.map((e) => e.value));
+    expect(ranges.every((v) => v === ''), 'range boxes must reset with the market').toBe(true);
+  }
+
+  const before = await page.locator('.ts-tab[aria-selected="true"]').textContent();
+  await lockedTabs.first().click({ force: true });
+  await expect(page.locator('#marketNotice')).toHaveText(/\S/);
+  expect(await page.locator('.ts-tab[aria-selected="true"]').textContent(),
+    'a locked market must not become the selection').toBe(before);
+
+  // Back and forth, twice, to prove nothing sticks.
+  for (const id of ['moneyline', 'total', 'spread', 'moneyline', 'spread', 'total']) {
+    await page.locator(`.ts-tab[data-market="${id}"]`).click();
+    await expect(page.locator(`.ts-tab[data-market="${id}"]`)).toHaveAttribute('aria-selected', 'true');
+    expect(await page.locator('.ts-tab[aria-selected="true"]').count()).toBe(1);
+  }
 
   // Slate.
   await expect(page.locator('#matchupList')).not.toHaveText(/^\s*$/, { timeout: 30000 });
