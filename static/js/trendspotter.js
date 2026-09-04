@@ -158,9 +158,37 @@
         ' aria-selected="' + (state.sport === id ? 'true' : 'false') + '"' +
         ' tabindex="' + (state.sport === id ? '0' : '-1') + '">' + esc(id) + '</button>';
     }).concat(locked.map(function (s) {
-      return '<button type="button" role="tab" disabled aria-selected="false" tabindex="-1" title="' +
-        esc(s.reason) + '">' + esc(s.id) + '</button>';
+      // aria-disabled, not disabled: a disabled button eats the click, so a
+      // visitor tapping NCAAF got no response at all. Same contract as the
+      // market tabs - unselectable, but it says why.
+      return '<button type="button" role="tab" class="ts-league-locked" data-locked-league="' + esc(s.id) + '"' +
+        ' aria-disabled="true" aria-selected="false" tabindex="-1"' +
+        ' data-locked-reason="' + esc(s.reason) + '"' +
+        ' title="' + esc(s.reason) + '"' +
+        ' aria-label="' + esc(s.id + ', not available. ' + s.reason) + '">' + esc(s.id) + '</button>';
     })).join('');
+    renderLeagueNotice();
+  }
+
+  // Mirrors #marketNotice: the reason a league is locked, printed under the
+  // league row so a click on NCAAB is answered instead of ignored.
+  function leagueNoticeEl() {
+    var node = document.getElementById('leagueNotice');
+    if (!node) {
+      node = document.createElement('p');
+      node.id = 'leagueNotice';
+      node.className = 'ts-tab-notice';
+      node.setAttribute('role', 'status');
+      node.setAttribute('aria-live', 'polite');
+      el.leagueTabs.parentNode.insertBefore(node, el.leagueTabs.nextSibling);
+    }
+    return node;
+  }
+
+  function renderLeagueNotice(reason) {
+    var node = leagueNoticeEl();
+    node.textContent = reason || '';
+    node.hidden = !reason;
   }
 
   // --- matchup slate -------------------------------------------------------
@@ -292,10 +320,12 @@
     }).join('') + '</select>';
   }
 
-  function numberInput(id, value, placeholder, step) {
+  function numberInput(id, value, placeholder, step, label) {
     return '<input type="number" id="' + id + '" data-bind="' + id + '" value="' + esc(value) + '"' +
       ' placeholder="' + esc(placeholder || '') + '" step="' + esc(step || 'any') + '" inputmode="decimal"' +
-      ' aria-label="' + esc(placeholder || id) + '">';
+      // The moneyline boxes are placeholdered with example odds, so falling back
+      // to the placeholder announced them as "-170" and "-110".
+      ' aria-label="' + esc(label || placeholder || id) + '">';
   }
 
   function renderFields() {
@@ -342,22 +372,25 @@
     if (state.market === 'spread') {
       parts.push('<div class="ts-field"><span class="ts-field-label" id="lbl_spread">' +
         esc(c.spread_label + ' range') + '</span><div class="ts-range" role="group" aria-labelledby="lbl_spread">' +
-        numberInput('f_lineMin', state.lineMin, 'min', '0.5') + '<span>to</span>' +
-        numberInput('f_lineMax', state.lineMax, 'max', '0.5') + '</div>' +
+        numberInput('f_lineMin', state.lineMin, 'min', '0.5', 'Minimum ' + c.spread_label.toLowerCase()) +
+        '<span>to</span>' +
+        numberInput('f_lineMax', state.lineMax, 'max', '0.5', 'Maximum ' + c.spread_label.toLowerCase()) + '</div>' +
         '<span class="ts-hint">Negative means laying points.</span></div>');
     }
     if (state.market === 'total') {
       parts.push('<div class="ts-field"><span class="ts-field-label" id="lbl_total">Posted total range</span>' +
         '<div class="ts-range" role="group" aria-labelledby="lbl_total">' +
-        numberInput('f_totalMin', state.totalMin, 'min', '0.5') + '<span>to</span>' +
-        numberInput('f_totalMax', state.totalMax, 'max', '0.5') + '</div>' +
+        numberInput('f_totalMin', state.totalMin, 'min', '0.5', 'Minimum posted total') +
+        '<span>to</span>' +
+        numberInput('f_totalMax', state.totalMax, 'max', '0.5', 'Maximum posted total') + '</div>' +
         '<span class="ts-hint">The total each game closed at.</span></div>');
     }
     if (state.market === 'moneyline') {
       parts.push('<div class="ts-field"><span class="ts-field-label" id="lbl_price">Price range</span>' +
         '<div class="ts-range" role="group" aria-labelledby="lbl_price">' +
-        numberInput('f_priceMin', state.priceMin, '-170', '5') + '<span>to</span>' +
-        numberInput('f_priceMax', state.priceMax, '-110', '5') + '</div>' +
+        numberInput('f_priceMin', state.priceMin, '-170', '5', 'Minimum price') +
+        '<span>to</span>' +
+        numberInput('f_priceMax', state.priceMax, '-110', '5', 'Maximum price') + '</div>' +
         '<span class="ts-hint">American odds on this team.</span></div>');
     }
 
@@ -444,6 +477,13 @@
   var URL_KEYS = ['sport', 'team', 'opponent', 'market', 'side', 'venue', 'situation',
     'seasonFrom', 'lastN', 'lineMin', 'lineMax', 'totalMin', 'totalMax', 'priceMin', 'priceMax', 'minGames'];
 
+  // True when the URL currently in the address bar was PUT there by a run or
+  // by the back/forward button. Overwriting one of those with replaceState is
+  // what made the back button need two presses: the entry a run had pushed was
+  // silently rewritten by the next dropdown change, and the following run then
+  // pushed a second, identical entry.
+  var urlEntryIsNavigable = false;
+
   function writeUrl(replace) {
     var params = new URLSearchParams();
     URL_KEYS.forEach(function (k) {
@@ -456,8 +496,15 @@
       params.set(k, v);
     });
     var url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-    if (replace) window.history.replaceState(null, '', url);
+    if (url === window.location.pathname + window.location.search) {
+      // Nothing moved. Pushing here is what produced two adjacent, identical
+      // history entries, so one back press looked like it did nothing.
+      if (!replace) urlEntryIsNavigable = true;
+      return;
+    }
+    if (replace && !urlEntryIsNavigable) window.history.replaceState(null, '', url);
     else window.history.pushState(null, '', url);
+    urlEntryIsNavigable = !replace;
   }
 
   /** Read and VALIDATE every URL parameter before it touches state. */
@@ -968,8 +1015,14 @@
 
   function bind() {
     el.leagueTabs.addEventListener('click', function (e) {
+      var locked = e.target.closest('button[data-locked-league]');
+      if (locked) {
+        renderLeagueNotice(locked.getAttribute('data-locked-reason') || '');
+        return;
+      }
       var b = e.target.closest('button[data-league]');
       if (!b || b.disabled) return;
+      renderLeagueNotice('');
       var next = b.getAttribute('data-league');
       if (state.sport === next) return;
       state.sport = next;
@@ -1039,15 +1092,25 @@
     el.runTrendSide.addEventListener('click', runQuery);
 
     el.resetFilters.addEventListener('click', function () {
+      // Reset has to clear the team and the result too. Leaving either behind
+      // left a result on screen describing conditions the form no longer shows.
+      state.team = '';
       state.venue = 'any';
       state.situation = 'any';
       state.opponent = '';
+      state.side = 'over';
       state.seasonFrom = '';
       state.lastN = '';
       state.lineMin = state.lineMax = state.totalMin = state.totalMax = state.priceMin = state.priceMax = '';
       state.minGames = 10;
       lastRunKey = '';
+      lastResult = null;
+      tableExpanded = false;
+      renderMarketNotice('');
       rerenderControls();
+      renderSlate();
+      renderEmptyState();
+      el.teamSearch.value = '';
     });
 
     el.resultsBody.addEventListener('click', function (e) {
@@ -1164,6 +1227,9 @@
     });
 
     window.addEventListener('popstate', function () {
+      // The entry we just landed on is one the user navigated to; the next
+      // control change must add an entry rather than rewrite this one.
+      urlEntryIsNavigable = true;
       readUrl();
       renderLeagueTabs();
       rerenderControls();

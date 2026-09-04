@@ -214,3 +214,121 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
     screenshot: SCREENSHOT_PATH,
   }, null, 2));
 });
+
+/* --- Controls that were found broken by the 2026-09-03 live audit. --- */
+
+async function ready(page) {
+  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.ts-tab[data-market="moneyline"]')).toBeVisible({ timeout: 45000 });
+  await expect(page.locator('#matchupList')).not.toHaveText(/^\s*$/, { timeout: 45000 });
+}
+
+test('reset clears the team and the stale result', async ({ page }) => {
+  await ready(page);
+  await page.selectOption('#f_team', 'NYY');
+  await page.selectOption('#f_venue', 'away');
+  await page.selectOption('#f_situation', 'favorite');
+  await page.selectOption('#f_seasonFrom', '2024');
+  await page.fill('#f_minGames', '15');
+  await page.click('#runTrend');
+  await page.waitForSelector('.ts-result', { timeout: 60000 });
+  expect(await page.locator('.ts-statement').count()).toBe(1);
+
+  await page.click('#resetFilters');
+  expect(await page.locator('#f_team').inputValue(), 'team must reset').toBe('');
+  expect(await page.locator('#f_venue').inputValue()).toBe('any');
+  expect(await page.locator('#f_situation').inputValue()).toBe('any');
+  expect(await page.locator('#f_seasonFrom').inputValue()).toBe('');
+  expect(await page.locator('#f_minGames').inputValue()).toBe('10');
+  expect(await page.locator('.ts-statement').count(), 'stale result must be cleared').toBe(0);
+  await expect(page.locator('#resultsBody')).toContainText('Your result will appear here');
+  expect(await page.locator('.ts-matchup[aria-checked="true"]').count(), 'slate selection must clear').toBe(0);
+  await expect(page.locator('#runTrend')).toBeDisabled();
+});
+
+test('one back press moves state', async ({ page }) => {
+  await ready(page);
+  await page.selectOption('#f_team', 'NYY');
+  await page.selectOption('#f_venue', 'away');
+  await page.click('#runTrend');
+  await page.waitForSelector('.ts-result', { timeout: 60000 });
+  const away = new URL(page.url()).searchParams.get('venue');
+  expect(away).toBe('away');
+
+  await page.selectOption('#f_venue', 'home');
+  await page.click('#runTrend');
+  await page.waitForSelector('.ts-result', { timeout: 60000 });
+  expect(new URL(page.url()).searchParams.get('venue')).toBe('home');
+
+  await page.goBack();
+  await page.waitForTimeout(600);
+  expect(new URL(page.url()).searchParams.get('venue'), 'ONE back press must return to away').toBe('away');
+  expect(await page.locator('#f_venue').inputValue(), 'the control must follow the URL').toBe('away');
+
+  await page.goForward();
+  await page.waitForTimeout(600);
+  expect(new URL(page.url()).searchParams.get('venue')).toBe('home');
+});
+
+test('locked league tabs answer a click', async ({ page }) => {
+  await ready(page);
+  const locked = page.locator('#leagueTabs button[aria-disabled="true"]');
+  const n = await locked.count();
+  expect(n, 'at least one locked league is expected').toBeGreaterThan(0);
+
+  const before = await page.locator('#leagueTabs button[aria-selected="true"]').textContent();
+  const reasons = new Set();
+  for (let i = 0; i < n; i += 1) {
+    const b = locked.nth(i);
+    expect(await b.getAttribute('aria-label')).toMatch(/not available\..+\S/);
+    await b.click({ force: true });
+    await expect(page.locator('#leagueNotice')).toHaveText(/\S/);
+    reasons.add(await page.locator('#leagueNotice').textContent());
+    expect(await page.locator('#leagueTabs button[aria-selected="true"]').textContent(),
+      'a locked league must not become the selection').toBe(before);
+  }
+  expect(reasons.size, 'each locked league states its own reason').toBe(n);
+
+  // Visually locked: struck through and faded relative to an open league.
+  const style = await locked.first().evaluate((e) => {
+    const c = getComputedStyle(e);
+    return { o: parseFloat(c.opacity), d: c.textDecorationLine, cur: c.cursor };
+  });
+  expect(style.o).toBeLessThan(1);
+  expect(style.d).toContain('line-through');
+  expect(style.cur).toBe('not-allowed');
+
+  // An open league still selects.
+  await page.locator('#leagueTabs button[data-league="NBA"]').click();
+  await expect(page.locator('#leagueTabs button[data-league="NBA"]')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#leagueNotice')).toBeHidden();
+});
+
+test('range inputs are labelled by role, not by their placeholder', async ({ page }) => {
+  await ready(page);
+  const expected = {
+    moneyline: [['#f_priceMin', 'Minimum price'], ['#f_priceMax', 'Maximum price']],
+    spread: [['#f_lineMin', 'Minimum run line'], ['#f_lineMax', 'Maximum run line']],
+    total: [['#f_totalMin', 'Minimum posted total'], ['#f_totalMax', 'Maximum posted total']],
+  };
+  for (const [market, pairs] of Object.entries(expected)) {
+    await page.locator(`.ts-tab[data-market="${market}"]`).click();
+    for (const [sel, label] of pairs) {
+      expect(await page.locator(sel).getAttribute('aria-label'), `${sel} label`).toBe(label);
+    }
+  }
+});
+
+test('market tabs still behave (regression guard)', async ({ page }) => {
+  await ready(page);
+  for (const id of ['moneyline', 'spread', 'total', 'moneyline', 'total', 'spread']) {
+    await page.locator(`.ts-tab[data-market="${id}"]`).click();
+    await expect(page.locator(`.ts-tab[data-market="${id}"]`)).toHaveAttribute('aria-selected', 'true');
+    expect(await page.locator('.ts-tab[aria-selected="true"]').count()).toBe(1);
+  }
+  const lockedMarket = page.locator('.ts-tab[aria-disabled="true"]').first();
+  const sel = await page.locator('.ts-tab[aria-selected="true"]').textContent();
+  await lockedMarket.click({ force: true });
+  await expect(page.locator('#marketNotice')).toHaveText(/\S/);
+  expect(await page.locator('.ts-tab[aria-selected="true"]').textContent()).toBe(sel);
+});

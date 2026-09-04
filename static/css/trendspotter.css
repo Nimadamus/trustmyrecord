@@ -186,13 +186,24 @@ body.ts-page .ts-card-head h2 {
   cursor: pointer;
   white-space: nowrap;
 }
-.ts-segment button:hover:not([aria-selected="true"]):not(:disabled) { color: var(--ink); }
+.ts-segment button:hover:not([aria-selected="true"]):not(:disabled):not([aria-disabled="true"]) { color: var(--ink); }
 .ts-segment button[aria-selected="true"] {
   background: var(--panel);
   color: var(--ink);
   box-shadow: var(--sh);
 }
-.ts-segment button:disabled { color: var(--muted); cursor: not-allowed; opacity: .65; }
+/* A locked league is aria-disabled rather than disabled, so its click still
+   reaches the handler and prints the reason. It must still read as locked. */
+.ts-segment button:disabled,
+.ts-segment button[aria-disabled="true"] {
+  color: var(--muted); cursor: not-allowed; opacity: .55;
+  text-decoration: line-through; text-decoration-thickness: 1px;
+}
+.ts-segment button[aria-disabled="true"]:hover { opacity: .75; }
+
+/* .ts-slate-tools is a flex row, so the notice needs a full-width line of its
+   own or it would sit beside the league pills. */
+#leagueNotice { flex-basis: 100%; margin: 2px 0 0; }
 
 .ts-search { position: relative; }
 
