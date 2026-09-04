@@ -410,3 +410,17 @@
     html.tmr-sbnext .sbn-clear, html.tmr-sbnext .sbn-slipx { border-radius: 5px !important; }
     html.tmr-sbnext .sbn-shell { padding-bottom: 28px !important; }
 }
+
+@layer sbnext {
+    /* The tab sizing above is !important, so the v3 phone override could not win
+       and the live board was showing desktop-sized tabs at 390px. Restate the
+       phone values here so live and the preview render identically. */
+    @media (max-width: 720px) {
+        html.tmr-sbnext .sbn-cat {
+            height: 38px !important;
+            padding: 0 12px !important;
+            gap: 6px !important;
+            font-size: 12.5px !important;
+        }
+    }
+}
