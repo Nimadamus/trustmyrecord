@@ -12,7 +12,7 @@
 <link rel="canonical" href="https://trustmyrecord.com/sportsbook/">
 <meta name="description" content="Preview of the redesigned TrustMyRecord sportsbook board.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/sportsbook-next.css?v=b64ba2ce24b6">
+<link rel="stylesheet" href="/static/css/sportsbook-next.css?v=b66c5a9deb0e">
 <!-- SPORTSBOOK_NEXT_V3_20260904: refinement pass, preview only. Scoped to
      html.sbn-v3, which the live board neither loads nor carries. -->
 <link rel="stylesheet" href="/static/css/sportsbook-next-v3.css?v=d2bb4a33bdf9">
@@ -60,57 +60,10 @@
 <script src="/static/js/config.js?v=738db2dd80a5"></script>
 <script src="/static/js/backend-api.js?v=68c9d15dbed8"></script>
 <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
-<script src="/static/js/sportsbook-next.js?v=87fda9565bfd"></script>
+<script src="/static/js/sportsbook-next.js?v=532037272b6d"></script>
 <!-- SPORTSBOOK_NEXT_V3_20260904: preview only. Moves the game/price tally out of
      the market tab row and into the empty first column header, so all eight market
      tabs fit on one line instead of the last one clipping. -->
-<script>
-(function () {
-    function moveTally() {
-        var tally = document.querySelector('.sbn-toolbar .sbn-tally');
-        if (!tally) return;
-        var slot = document.querySelector('.sbn-colhead span:first-child');
-        if (!slot) {
-            // ladder tabs print no column header, so the count gets a strip of its
-            // own rather than staying in the tab row and wrapping it onto two lines
-            var board = document.getElementById('sbnBoard');
-            if (!board) return;
-            slot = board.querySelector('.sbn-loosetally');
-            if (!slot) {
-                slot = document.createElement('div');
-                slot.className = 'sbn-loosetally';
-                board.insertBefore(slot, board.firstChild);
-            }
-        }
-        slot.textContent = tally.textContent;
-        if (!/loose/.test(slot.className)) slot.className = 'sbn-headtally';
-        tally.style.display = 'none';
-    }
-    // The engine writes a player prop label as one string, "Name . Prop Type".
-    // Split it so the player reads first and the market supports it.
-    function splitPropLabels() {
-        var on = document.querySelector('.sbn-cat.is-on');
-        if (!on || on.getAttribute('data-cat') !== 'player_props') return;
-        [].forEach.call(document.querySelectorAll('.sbn-striplabel > b'), function (b) {
-            if (b.querySelector('i')) return;
-            var parts = b.textContent.split('·');
-            if (parts.length < 2) return;
-            b.innerHTML = '';
-            var who = document.createElement('span');
-            who.className = 'sbn-propwho';
-            who.textContent = parts[0].trim();
-            var what = document.createElement('i');
-            what.textContent = parts.slice(1).join('·').trim();
-            b.appendChild(who); b.appendChild(what);
-            b.parentNode.classList.add('is-prop');
-        });
-    }
-    function tidy() { moveTally(); splitPropLabels(); }
-    var board = document.getElementById('sbnBoard');
-    if (board && window.MutationObserver) new MutationObserver(tidy).observe(board, { childList: true });
-    document.addEventListener('DOMContentLoaded', tidy);
-    setTimeout(tidy, 400); setTimeout(tidy, 1500);
-})();
-</script>
+<script src="/static/js/sportsbook-next-tidy.js?v=3916c7950c1c"></script>
 </body>
 </html>

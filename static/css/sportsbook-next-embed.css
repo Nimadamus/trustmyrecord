@@ -310,3 +310,98 @@
         border-color: rgba(34, 211, 238, 0.45) !important;
     }
 }
+
+/* ============================================================================
+ * V3 PARITY, 2026-09-04.
+ * The live page styles generic buttons and headings with unlayered !important
+ * at a specificity the board cannot out-write, so the approved v3 values for
+ * those exact properties are restated here, in the layer, where an !important
+ * declaration outranks an unlayered one. Everything else in v3 applies directly
+ * from sportsbook-next-v3.css. Values are copied from that file; if one is
+ * changed there it must be changed here too, which is why the list is kept to
+ * the properties the page actually fights over.
+ * ========================================================================== */
+@layer sbnext {
+    html.tmr-sbnext .sbn-chip {
+        height: 36px !important;
+        padding: 0 10px !important;
+        border-radius: 3px !important;
+        border: 1px solid rgba(255, 255, 255, 0.055) !important;
+        background: #1a212b !important;
+        color: #eef2f7 !important;
+        font-weight: 700 !important;
+    }
+    html.tmr-sbnext .sbn-chip:hover {
+        background: #212a37 !important;
+        border-color: rgba(255, 255, 255, 0.13) !important;
+    }
+    html.tmr-sbnext .sbn-chip.is-sel {
+        background: rgba(34, 211, 238, 0.13) !important;
+        border: 1px solid var(--sbn-accent) !important;
+        box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.28) !important;
+    }
+    html.tmr-sbnext .sbn-chip.is-off {
+        background: rgba(255, 255, 255, 0.012) !important;
+        border-color: rgba(255, 255, 255, 0.045) !important;
+    }
+    html.tmr-sbnext .sbn-striptrack .sbn-chip,
+    html.tmr-sbnext .sbn-striptrack .sbn-more { height: 36px !important; padding: 0 8px !important; }
+    html.tmr-sbnext .sbn-strip.is-prop .sbn-chip,
+    html.tmr-sbnext .sbn-strip.is-prop .sbn-more { height: 42px !important; }
+    html.tmr-sbnext .sbn-striptrack .sbn-more {
+        border: 1px dashed rgba(255, 255, 255, 0.14) !important;
+        border-radius: 3px !important;
+        background: transparent !important;
+    }
+
+    /* the underlined tab bar, not a row of pills */
+    html.tmr-sbnext .sbn-cat {
+        height: 36px !important;
+        padding: 0 11px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: var(--sbn-muted) !important;
+    }
+    html.tmr-sbnext .sbn-cat:hover { background: rgba(255, 255, 255, 0.035) !important; color: var(--sbn-text2) !important; }
+    html.tmr-sbnext .sbn-cat.is-on { background: transparent !important; color: var(--sbn-text) !important; font-weight: 700 !important; }
+    html.tmr-sbnext .sbn-cats { gap: 0 !important; }
+
+    html.tmr-sbnext .sbn-deep {
+        padding: 1px 8px !important;
+        border-radius: 4px !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        background: transparent !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #7f8c9e !important;
+    }
+    html.tmr-sbnext .sbn-striprest { border-radius: 5px !important; }
+    html.tmr-sbnext .sbn-railbtn {
+        padding: 8px 10px !important;
+        border-radius: 9px !important;
+        font-weight: 400 !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+    }
+    html.tmr-sbnext .sbn-railbtn.is-on {
+        background: rgba(34, 211, 238, 0.12) !important;
+        border-color: rgba(34, 211, 238, 0.35) !important;
+    }
+    html.tmr-sbnext .sbn-rail { gap: 2px !important; }
+
+    /* pick slip controls */
+    html.tmr-sbnext .sbn-sliphead h3 { font-size: 12.5px !important; line-height: 18px !important; }
+    html.tmr-sbnext .sbn-modebtn { height: 30px !important; border-radius: 4px !important; font-size: 11.5px !important; }
+    html.tmr-sbnext .sbn-modebtn.is-on {
+        background: rgba(34, 211, 238, 0.16) !important;
+        color: #8ff0ff !important;
+        box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.5) !important;
+    }
+    html.tmr-sbnext .sbn-step { width: 26px !important; height: 26px !important; border-radius: 4px !important; }
+    html.tmr-sbnext .sbn-submit { height: 44px !important; border-radius: 6px !important; font-size: 13.5px !important; }
+    html.tmr-sbnext .sbn-clear, html.tmr-sbnext .sbn-slipx { border-radius: 5px !important; }
+    html.tmr-sbnext .sbn-shell { padding-bottom: 28px !important; }
+}

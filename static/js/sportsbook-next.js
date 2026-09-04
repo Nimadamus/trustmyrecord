@@ -439,7 +439,9 @@
     // the same way the primary board is split so every category reads alike.
     function isH2H(mt) { return /(^|_)h2h$/.test(mt); }
     function isSpread(mt) { return /spreads$/.test(mt) && !/team/.test(mt); }
-    function isTotal(mt) { return /totals$/.test(mt) && !/team/.test(mt); }
+    // UFC posts its round market as mma_total_rounds, which does not end in
+    // "totals", so it matched no column and the tab priced nothing at all.
+    function isTotal(mt) { return (/totals$/.test(mt) || /_rounds$/.test(mt)) && !/team/.test(mt); }
     function catLines(g, key) {
         if (key === 'game_lines') return g.main;
         var grp = g.groups[key];

@@ -105,6 +105,9 @@
         // The classic board is hidden, never removed. Rolling back is a class
         // away, and its scripts keep running untouched underneath.
         document.documentElement.classList.add('tmr-sbnext');
+        // the approved v3 skin is scoped to this class, the same one the preview
+        // shell sets, so the live board and the preview render identically
+        document.documentElement.classList.add('sbn-v3');
         // The v2 skin lives in @layer sbv2, and a LAYERED !important beats an
         // unlayered one, so its `display: block !important` on the classic
         // layout wins over any rule this stylesheet could write. An inline

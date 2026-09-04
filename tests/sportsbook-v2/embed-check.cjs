@@ -142,9 +142,13 @@ async function goto(page, qs) {
                 slip: cs('.sbn-sliphead h3', ['fontSize', 'textTransform']),
             };
         });
-        check('flag on: the chips keep the board skin, not the site button skin',
-            skin.chip && skin.chip.backgroundColor === 'rgb(26, 33, 44)' && skin.chip.borderRadius === '6px', skin.chip);
-        check('flag on: the market tabs stay pills', skin.cat && skin.cat.borderRadius === '999px', skin.cat);
+        // the approved v3 skin: a flat 3px quote cell and an underlined tab bar.
+        // If the page's own button styles ever win again, these revert to a 10px
+        // radius on rgb(22,36,63) and rounded pills, which is what this catches.
+        check('flag on: the chips keep the v3 quote-cell skin, not the site button skin',
+            skin.chip && skin.chip.backgroundColor === 'rgb(26, 33, 43)' && skin.chip.borderRadius === '3px', skin.chip);
+        check('flag on: the market tabs stay underlined tabs, not pills',
+            skin.cat && skin.cat.borderRadius === '0px', skin.cat);
         check('flag on: the pick-slip heading stays a compact label',
             skin.slip && parseFloat(skin.slip.fontSize) <= 14 && skin.slip.textTransform === 'uppercase', skin.slip);
 
