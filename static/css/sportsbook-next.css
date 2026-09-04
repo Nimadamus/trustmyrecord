@@ -106,10 +106,10 @@ body {
 /* ---- Compact board: one scannable row per game ----------------------------- */
 /* Column geometry is declared once and shared by the header strip and every
    team row, so prices line up down the whole board. */
-.sbn-colhead, .sbn-trow { display: grid; grid-template-columns: minmax(190px, 1fr) repeat(3, minmax(150px, 210px)); gap: 10px; align-items: center; }
+.sbn-colhead, .sbn-trow { display: grid; grid-template-columns: minmax(0, 215px) repeat(3, minmax(110px, 1fr)); gap: 8px; align-items: center; }
 .sbn-colhead {
     position: sticky; top: 56px; z-index: 8;
-    padding: 9px 14px; margin: 0 0 8px;
+    padding: 9px 13px; margin: 0 0 8px;
     background: var(--sbn-bg);
     border-bottom: 1px solid var(--sbn-line);
     color: var(--sbn-muted); font-size: 10.5px; line-height: 15px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
@@ -134,8 +134,7 @@ body {
 }
 .sbn-deep:hover { background: rgba(34, 211, 238, 0.12); border-color: rgba(34, 211, 238, 0.45); }
 .sbn-deep b { font-weight: 800; opacity: .8; }
-.sbn-teams { margin-top: 3px; }
-.sbn-trow { height: 54px; }
+.sbn-trow { height: 50px; }
 .sbn-trow + .sbn-trow { margin-top: 5px; }
 .sbn-tname { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 10px; }
 .sbn-tname b {
@@ -154,21 +153,20 @@ body {
    the same space in every chip whatever the text, so nothing sits high, low or
    off to one side, and an empty second row still holds its place. */
 .sbn-chip {
-    display: grid; grid-template-rows: 23px 15px; align-content: center; justify-items: stretch;
-    width: 100%; height: 54px; padding: 0 6px;
-    border: 1px solid var(--sbn-line2); border-radius: 8px;
-    background: linear-gradient(180deg, #1e2735 0%, #19212d 100%);
+    display: grid; grid-template-rows: 20px 14px; row-gap: 6px;
+    align-content: center; justify-items: stretch;
+    width: 100%; height: 50px; padding: 0 6px;
+    border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 6px;
+    background: #1a212c;
     color: var(--sbn-text);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
     font-family: inherit; cursor: pointer;
-    transition: background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .05s ease;
+    transition: background .12s ease, border-color .12s ease, transform .05s ease;
 }
-.sbn-chip:hover {
-    background: linear-gradient(180deg, #27354a 0%, #202b3b 100%);
-    border-color: rgba(34, 211, 238, 0.55);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-.sbn-chip:active { transform: scale(.97); }
+/* A moneyline has no line to support it, so the price is centred on its own
+   rather than sitting high over an empty row. */
+.sbn-chip.is-single { grid-template-rows: 20px; row-gap: 0; }
+.sbn-chip:hover { background: #212b3a; border-color: rgba(34, 211, 238, 0.42); }
+.sbn-chip:active { transform: scale(.98); }
 .sbn-chip:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: 2px; }
 .sbn-chip-top, .sbn-chip-bot {
     display: flex; align-items: center; justify-content: center;
@@ -179,38 +177,29 @@ body {
 }
 /* line-height matches the grid row exactly, so the line box cannot introduce a
    half pixel of its own on top of the row position. */
-.sbn-chip-top { line-height: 23px; font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--sbn-text2); }
-.sbn-chip-bot { line-height: 15px; font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--sbn-green); }
-/* When the LINE is the bet (spread, total) it takes the hero weight and the
-   price supports it. When the price is the bet (moneyline, fixed run line) the
-   card passes hero-top and the two swap. */
-/* The hero number carries the weight and the tighter tracking large numerals
-   want; the supporting row stays clearly readable but visibly secondary. */
-.sbn-chip.hero-top .sbn-chip-top { font-size: 19px; font-weight: 800; letter-spacing: -0.015em; color: #ffffff; }
-.sbn-chip.hero-top .sbn-chip-bot { font-size: 12.5px; font-weight: 600; letter-spacing: 0; color: var(--sbn-green); }
-/* A word in the second row is a label. It is tracked out and muted so it never
-   competes with a price for attention. */
-.sbn-chip .sbn-chip-bot.is-label {
-    font-size: 10px; font-weight: 700; letter-spacing: .14em; text-indent: .14em;
-    text-transform: uppercase; color: var(--sbn-muted);
+/* One system for every market: a hero number on top, a supporting number under
+   it. The hero is set at a weight that reads as authoritative rather than
+   chunky, in an off-white that sits on the dark ground instead of glaring off
+   it. */
+.sbn-chip-top {
+    line-height: 20px; font-size: 17px; font-weight: 650; letter-spacing: -0.008em;
+    color: #e9eef4;
 }
-.sbn-chip.is-sel .sbn-chip-bot.is-label { color: rgba(6, 32, 41, 0.72); }
-/* Green means money. A line in the second row is not a price, so it takes
-   the neutral secondary colour rather than borrowing the price colour. */
-.sbn-chip .sbn-chip-bot.is-line { color: var(--sbn-text2); font-weight: 600; }
-.sbn-chip.is-sel .sbn-chip-bot.is-line { color: rgba(6, 32, 41, 0.8); }
-.sbn-chip.is-sel {
-    background: linear-gradient(180deg, #3ddcf2 0%, #1ec6e0 100%);
-    border-color: #56e3f6;
-    box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+.sbn-chip-bot {
+    line-height: 14px; font-size: 12.5px; font-weight: 600; letter-spacing: 0;
+    color: #84c39d;
 }
-.sbn-chip.is-sel .sbn-chip-top, .sbn-chip.is-sel .sbn-chip-bot { color: var(--sbn-ink); }
-.sbn-chip.is-off {
-    cursor: default; opacity: 1;
-    background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.07);
-    box-shadow: none; color: var(--sbn-muted);
+/* Green means money. A line in the second row is not a price, so it takes a
+   neutral grey rather than borrowing the price colour. */
+.sbn-chip .sbn-chip-bot.is-line { color: #aab6c6; }
+.sbn-chip.is-sel .sbn-chip-top { color: var(--sbn-ink); }
+.sbn-chip.is-sel .sbn-chip-bot { color: rgba(6, 32, 41, 0.78); }
+.sbn-chip.is-off .sbn-chip-top { font-weight: 550; color: #566173; }
+.sbn-chip.is-sel { background: #1ec6e0; border-color: #2fd4ec; }
+.sbn-chip.is-off {
+    cursor: default;
+    background: rgba(255, 255, 255, 0.015); border-color: rgba(255, 255, 255, 0.055);
 }
-.sbn-chip.is-off .sbn-chip-bot { color: var(--sbn-muted); }
 
 .sbn-more, .sbn-morebtn {
     display: inline-flex; align-items: center; gap: 6px; margin-top: 9px;
@@ -219,9 +208,6 @@ body {
     font-family: inherit; font-size: 11.5px; font-weight: 700; letter-spacing: .03em; cursor: pointer;
 }
 .sbn-more:hover, .sbn-morebtn:hover { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.45); }
-.sbn-sec--more { padding-top: 10px; }
-.sbn-morebtn { margin-top: 0; }
-.sbn-sec--more .sbn-sec-body { margin-top: 10px; }
 
 /* ---- Pick slip ------------------------------------------------------------- */
 .sbn-slip {
@@ -289,20 +275,12 @@ body {
 
 /* ---- Laptop ---------------------------------------------------------------- */
 @media (max-width: 1360px) {
-    .sbn-sec--ladder[data-open="0"] .sbn-lgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .sbn-sec--ladder[data-open="0"] .sbn-cell:nth-child(n+6) { display: none; }
     .sbn-shell { grid-template-columns: 176px minmax(0, 1fr) 312px; gap: 12px; }
-    .sbn-phead, .sbn-prow { grid-template-columns: minmax(0, 1fr) 96px 96px 96px; gap: 6px; }
-    .sbn-lgrid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
-    .sbn-lrow { grid-template-columns: 84px minmax(0, 1fr); }
 }
 @media (max-width: 1180px) {
-    .sbn-sec--ladder[data-open="0"] .sbn-lgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .sbn-sec--ladder[data-open="0"] .sbn-cell:nth-child(n+5) { display: none; }
     .sbn-shell { grid-template-columns: 160px minmax(0, 1fr) 292px; }
-    .sbn-phead, .sbn-prow { grid-template-columns: minmax(0, 1fr) 88px 88px 88px; }
-    .sbn-chip-top { font-size: 12.5px; }
-    .sbn-chip.hero-top .sbn-chip-top { font-size: 18px; }
+
+
 }
 
 /* ---- Tablet and phone: slip becomes a sheet -------------------------------- */
@@ -344,31 +322,11 @@ body {
     .sbn-bar.is-on .sbn-barcta { background: linear-gradient(180deg, var(--sbn-gold), var(--sbn-gold2)); color: #1a1200; }
 }
 @media (max-width: 720px) {
-    .sbn-sec--ladder[data-open="0"] .sbn-lgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .sbn-sec--ladder[data-open="0"] .sbn-cell:nth-child(n+4) { display: none; }
     .sbn-topbar { padding: 10px 12px; gap: 10px; }
     .sbn-back { display: none; }
     .sbn-notice { margin: 10px 12px 0; font-size: 12px; }
-    .sbn-head { flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; height: 50px; padding: 0 11px; }
     .sbn-match { font-size: 13.5px; }
-    .sbn-sec { padding: 9px 11px 11px; }
-    .sbn-phead { display: none; }
-    .sbn-prow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-    .sbn-team { grid-column: 1 / -1; padding: 0 0 2px; font-size: 13px; }
-    .sbn-lrow, .sbn-lrow--wide { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-    .sbn-lname { height: auto; padding-top: 0; font-size: 11.5px; color: var(--sbn-muted); text-transform: uppercase; letter-spacing: .06em; -webkit-line-clamp: 2; }
-    .sbn-lgrid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 5px; }
-    .sbn-chip { min-height: 50px; }
-    .sbn-chip.hero-top .sbn-chip-top { font-size: 17px; }
-    .sbn-chip-bot { font-size: 15px; }
-}
-@media (max-width: 420px) {
-    .sbn-sec--ladder[data-open="0"] .sbn-lgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .sbn-lgrid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
-    .sbn-chip { min-height: 48px; padding: 5px 3px; }
-    .sbn-chip.hero-top .sbn-chip-top { font-size: 16px; }
-    .sbn-chip-bot { font-size: 14px; }
-    .sbn-chip-top { font-size: 11.5px; }
+
 }
 
 /* ---- Drawer: the full market inventory for one game ------------------------ */
@@ -419,7 +377,7 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 }
 @media (max-width: 1180px) {
     .sbn-colhead, .sbn-trow { grid-template-columns: minmax(120px, 1fr) repeat(3, minmax(104px, 150px)); gap: 8px; }
-    .sbn-chip.hero-top .sbn-chip-top { font-size: 18px; }
+
 }
 @media (max-width: 1023px) {
     .sbn-colhead { top: 0; }
@@ -430,8 +388,7 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
     .sbn-tname { gap: 7px; padding-right: 6px; }
     .sbn-tname b { font-size: 13px; -webkit-line-clamp: 3; overflow-wrap: anywhere; }
     .sbn-crest { flex-basis: 22px; width: 22px; height: 22px; }
-    .sbn-chip { height: 50px; }
-    .sbn-chip.hero-top .sbn-chip-top { font-size: 17px; }
+
     .sbn-drawer-panel { width: 100vw; }
     .sbn-drow { grid-template-columns: minmax(0, 1fr); gap: 3px; }
     .sbn-dside { padding-top: 0; font-size: 11px; color: var(--sbn-muted); text-transform: uppercase; letter-spacing: .06em; }
@@ -439,12 +396,11 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 }
 @media (max-width: 420px) {
     .sbn-colhead, .sbn-trow { grid-template-columns: minmax(0, 1fr) 74px 74px 74px; gap: 4px; }
-    .sbn-chip.hero-top .sbn-chip-top { font-size: 15px; }
+
     .sbn-tname { gap: 6px; }
     .sbn-tname b { font-size: 12px; }
     .sbn-crest { flex-basis: 20px; width: 20px; height: 20px; }
-    .sbn-chip-top { font-size: 12px; }
-    .sbn-chip-bot { font-size: 11.5px; }
+
 }
 
 /* ---- Market category toolbar ----------------------------------------------
@@ -486,19 +442,19 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 .sbn-colhead { top: 56px; }
 
 /* ---- Two-column category (team totals) ------------------------------------ */
-.sbn-colhead--ou, .sbn-row--ou .sbn-trow { grid-template-columns: minmax(190px, 1fr) repeat(2, minmax(150px, 210px)); }
+.sbn-colhead--ou, .sbn-row--ou .sbn-trow { grid-template-columns: minmax(0, 215px) repeat(2, minmax(110px, 1fr)); }
 
 /* ---- Ladder categories: alt lines, alt totals, player props ---------------- */
 /* One track per side or per player. Rungs stay on the row up to a fixed count;
    the rest live behind the +N, which opens the drawer at this category. */
-.sbn-strip { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: center; height: 54px; }
+.sbn-strip { display: grid; grid-template-columns: 215px minmax(0, 1fr); gap: 8px; align-items: center; height: 50px; }
 .sbn-strip + .sbn-strip { margin-top: 6px; }
 .sbn-striplabel { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .sbn-striplabel b {
     min-width: 0; font-size: 13px; font-weight: 700; line-height: 15px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.sbn-striptrack { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, 190px); justify-content: start; gap: 6px; min-width: 0; }
+.sbn-striptrack { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
 .sbn-strip.is-blank { visibility: hidden; }
 .sbn-striprest {
     display: block; width: 100%; margin: 8px 0 0; padding: 8px 12px;
@@ -506,7 +462,7 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
     color: var(--sbn-accent); font-family: inherit; font-size: 12px; line-height: 16px; font-weight: 700; cursor: pointer;
 }
 .sbn-striprest:hover { background: rgba(34, 211, 238, 0.1); border-style: solid; }
-.sbn-striptrack .sbn-more { margin: 0; height: 54px; justify-content: center; }
+.sbn-striptrack .sbn-more { margin: 0; height: 50px; justify-content: center; }
 .sbn-norow { padding: 16px 2px; color: var(--sbn-muted); font-size: 12.5px; line-height: 18px; }
 
 @media (max-width: 1180px) {
@@ -530,9 +486,9 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 
 /* Column count follows the inventory: a category that posts only a total gets
    one column, not three, so no board ever prints a row of dead placeholders. */
-.sbn-cols3 { grid-template-columns: minmax(190px, 1fr) repeat(3, minmax(150px, 210px)); }
-.sbn-cols2 { grid-template-columns: minmax(190px, 1fr) repeat(2, minmax(150px, 210px)); }
-.sbn-cols1 { grid-template-columns: minmax(190px, 1fr) minmax(150px, 210px); }
+.sbn-cols3 { grid-template-columns: minmax(0, 215px) repeat(3, minmax(110px, 1fr)); }
+.sbn-cols2 { grid-template-columns: minmax(0, 215px) repeat(2, minmax(110px, 1fr)); }
+.sbn-cols1 { grid-template-columns: minmax(0, 215px) minmax(110px, 1fr); }
 @media (max-width: 1360px) {
     .sbn-cols3 { grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(126px, 180px)); }
     .sbn-cols2 { grid-template-columns: minmax(150px, 1fr) repeat(2, minmax(126px, 180px)); }
@@ -562,3 +518,24 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 .sbn-colhead { padding-top: 7px; padding-bottom: 7px; }
 .sbn-cat { padding: 7px 12px; font-size: 12px; }
 @media (max-width: 720px) { .sbn-boardname { display: none; } }
+
+/* ---- Price cell at every width ---------------------------------------------
+   Sizes are chosen so (cell height - rows) stays even at each breakpoint, which
+   is what keeps every number on a whole pixel. Rows are 20 + 4 + 14 = 38. */
+@media (max-width: 1180px) {
+    .sbn-chip-top { font-size: 16px; }
+    .sbn-chip-bot { font-size: 11.5px; }
+}
+@media (max-width: 1023px) {
+    .sbn-chip { height: 48px; }
+}
+@media (max-width: 720px) {
+    .sbn-chip { height: 46px; padding: 0 3px; }
+    .sbn-chip-top { font-size: 15px; }
+    .sbn-chip-bot { font-size: 11px; }
+}
+@media (max-width: 420px) {
+    .sbn-chip { height: 44px; }
+    .sbn-chip-top { font-size: 13.5px; }
+    .sbn-chip-bot { font-size: 10.5px; }
+}

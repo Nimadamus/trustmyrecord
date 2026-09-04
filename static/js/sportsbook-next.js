@@ -329,20 +329,16 @@
 
     // ---- rendering ----------------------------------------------------------
     function chip(opts) {
-        // opts: { top, bottom, heroTop, sel, disabled, data }
-        var cls = 'sbn-chip' + (opts.sel ? ' is-sel' : '') + (opts.disabled ? ' is-off hero-top' : '') + (opts.heroTop ? ' hero-top' : '');
+        // opts: { top, bottom, sel, disabled, data, botLine, single }
+        var single = opts.single || opts.bottom == null || opts.bottom === '';
+        var cls = 'sbn-chip' + (opts.sel ? ' is-sel' : '') + (opts.disabled ? ' is-off' : '') + (single ? ' is-single' : '');
         if (opts.disabled) {
-            return '<span class="' + cls + '" aria-hidden="true"><span class="sbn-chip-top">&mdash;</span><span class="sbn-chip-bot"></span></span>';
+            return '<span class="' + cls + '" aria-hidden="true"><span class="sbn-chip-top">&mdash;</span></span>';
         }
-        // A second row holding a word rather than a price is a LABEL, and is set
-        // as one: smaller, tracked out and muted, so it never reads as a number.
-        var botCls = 'sbn-chip-bot' + (/[0-9]/.test(String(opts.bottom))
-            ? (opts.botLine ? ' is-line' : '')
-            : ' is-label');
+        var body = '<span class="sbn-chip-top">' + esc(opts.top) + '</span>' +
+            (single ? '' : '<span class="sbn-chip-bot' + (opts.botLine ? ' is-line' : '') + '">' + esc(opts.bottom) + '</span>');
         return '<button type="button" class="' + cls + '"' + (opts.sel ? ' aria-pressed="true"' : '') +
-            ' data-pick="' + esc(JSON.stringify(opts.data)) + '">' +
-            '<span class="sbn-chip-top">' + esc(opts.top) + '</span>' +
-            '<span class="' + botCls + '">' + esc(opts.bottom) + '</span></button>';
+            ' data-pick="' + esc(JSON.stringify(opts.data)) + '">' + body + '</button>';
     }
     function pickData(g, marketType, selection, label, line, odds, groupLabel, book) {
         return {
@@ -514,17 +510,17 @@
         var cell = {};
         cell.spread = sp && validOdds(sp.odds)
             ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
-                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), heroTop: true, botLine: fixed,
+                bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), botLine: fixed,
                 sel: isSel(g, sp.marketType || 'spreads', team, sp.line),
                 data: pickData(g, sp.marketType || 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, gl, bk) })
             : chip({ disabled: true });
         cell.total = to && validOdds(to.odds)
-            ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds), heroTop: true,
+            ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds),
                 sel: isSel(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', to.line),
                 data: pickData(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, gl, bk) })
             : chip({ disabled: true });
         cell.h2h = ml && validOdds(ml.odds)
-            ? chip({ top: fmtOdds(ml.odds), bottom: 'ML', heroTop: true,
+            ? chip({ top: fmtOdds(ml.odds), single: true,
                 sel: isSel(g, ml.marketType || 'h2h', team, null),
                 data: pickData(g, ml.marketType || 'h2h', team, team + ' ML', null, ml.odds, gl, bk) })
             : chip({ disabled: true });
@@ -542,7 +538,7 @@
             var it = pick(over);
             if (!it || !validOdds(it.odds)) return chip({ disabled: true });
             var selName = team + (over ? ' Over' : ' Under');
-            return chip({ top: (over ? 'O ' : 'U ') + fmtLine(it.line), bottom: fmtOdds(it.odds), heroTop: true,
+            return chip({ top: (over ? 'O ' : 'U ') + fmtLine(it.line), bottom: fmtOdds(it.odds),
                 sel: isSel(g, it.marketType, selName, it.line),
                 data: pickData(g, it.marketType, selName, it.label || selName + ' ' + fmtLine(it.line), it.line, it.odds, cat.long, grp.book) });
         }).join('');
@@ -591,7 +587,7 @@
                 : (cat.key === 'alt_totals' ? (row.label === 'Under' ? 'U ' : 'O ') + fmtLine(i.line)
                     : ((i.side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line)));
             if (cat.key === 'player_props') sel = i.selection;
-            return chip({ top: top, bottom: fmtOdds(i.odds), heroTop: true,
+            return chip({ top: top, bottom: fmtOdds(i.odds),
                 sel: isSel(g, i.marketType, sel, i.line),
                 data: pickData(g, i.marketType, sel, i.label || (sel + ' ' + fmtLine(i.line)), i.line, i.odds, cat.long, row.book) });
         }).join('');
@@ -696,11 +692,11 @@
                 var noLine = i.line == null;
                 var top = ou ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
                     : (noLine ? fmtOdds(i.odds) : fmtLine(i.line, !isTotal(String(mt))));
-                var bottom = noLine ? 'ML' : fmtOdds(i.odds);
+                var bottom = noLine ? '' : fmtOdds(i.odds);
                 var sel = ou && key !== 'player_props' ? side : i.selection;
                 var label = i.label || (sel + (noLine ? '' : ' ' + fmtLine(i.line)));
                 return '<span class="sbn-dcell">' + chip({
-                    top: top, bottom: bottom, heroTop: true, sel: isSel(g, mt, sel, i.line),
+                    top: top, bottom: bottom, sel: isSel(g, mt, sel, i.line),
                     data: pickData(g, mt, sel, label, i.line, i.odds, title, book)
                 }) + '</span>';
             }).join('');
