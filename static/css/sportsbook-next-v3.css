@@ -1152,3 +1152,128 @@ html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13px; }
     html.sbn-v3 .sbn-chip-top,
     html.sbn-v3 .sbn-chip-bot { font-size: 11px; }
 }
+
+/* ============================================================================
+ * PASS 4 — the quote cell, applied coherently everywhere.
+ * ========================================================================== */
+
+/* ---- 2. Moneyline balance --------------------------------------------------
+   A moneyline has no line, so nothing is invented to fill the left. Instead the
+   lone price is aligned RIGHT, so all three columns share one price edge and the
+   column reads as deliberate rather than stranded. */
+html.sbn-v3 .sbn-chip.is-single .sbn-chip-top {
+    width: 100%;
+    justify-content: flex-end;
+}
+
+/* ---- 3-7. Every secondary market speaks the same cell ---------------------
+   Alt lines, alt totals, team totals, player props, First 5 and 1st Inning all
+   render through the same chip, so they inherit selection-left / price-right.
+   These rules only size the ladder so the pair fits its narrower rung. */
+html.sbn-v3 .sbn-striptrack .sbn-chip {
+    padding: 0 9px;
+    gap: 6px;
+    border-radius: 3px;
+}
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13px; font-weight: 700; }
+html.sbn-v3 .sbn-striptrack .sbn-more {
+    border-radius: 3px;
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* the ladder label column lines up with the matchup column on the main board */
+html.sbn-v3 .sbn-strip { grid-template-columns: 205px minmax(0, 1fr); gap: 6px; }
+html.sbn-v3 .sbn-striplabel b { font-size: 13.5px; line-height: 17px; }
+
+/* player props: the player leads, the market is a caption under it */
+html.sbn-v3 .sbn-propwho { font-size: 13px; line-height: 16px; font-weight: 700; }
+html.sbn-v3 .sbn-striplabel b i { font-size: 10px; line-height: 12px; letter-spacing: .07em; }
+
+/* ---- 9. Pick slip, matched to the flatter board --------------------------- */
+html.sbn-v3 .sbn-slip { border-radius: 8px; }
+html.sbn-v3 .sbn-sliphead { border-radius: 8px 8px 0 0; padding: 13px 15px; }
+html.sbn-v3 .sbn-sliprow { border-radius: 6px; padding: 11px 12px; }
+html.sbn-v3 .sbn-slipsel { font-size: 14px; line-height: 18px; }
+html.sbn-v3 .sbn-slipgame { font-size: 11.5px; line-height: 15px; }
+html.sbn-v3 .sbn-slipmeta { margin-top: 5px; font-size: 10.5px; line-height: 14px; }
+html.sbn-v3 .sbn-slipmeta b { font-size: 13px; font-weight: 800; }
+html.sbn-v3 .sbn-mode { border-radius: 6px; padding: 3px; }
+html.sbn-v3 .sbn-modebtn { height: 30px; border-radius: 4px; font-size: 11.5px; }
+html.sbn-v3 .sbn-step { width: 26px; height: 26px; border-radius: 4px; font-size: 14px; line-height: 24px; }
+html.sbn-v3 .sbn-slipunits input { width: 48px; height: 26px; border-radius: 4px; font-size: 13px; }
+html.sbn-v3 .sbn-sliptotals { border-radius: 6px; padding: 11px 12px; }
+html.sbn-v3 .sbn-sliptotals b { font-size: 18px; }
+html.sbn-v3 .sbn-submit { height: 44px; border-radius: 6px; font-size: 13.5px; }
+html.sbn-v3 .sbn-slipempty { border-radius: 6px; padding: 26px 16px; }
+html.sbn-v3 .sbn-clear { border-radius: 5px; }
+html.sbn-v3 .sbn-slipx { border-radius: 5px; }
+html.sbn-v3 .sbn-striprest { border-radius: 5px; }
+
+/* ---- 8. Mobile, restated last so nothing above overrides it ----------------
+   The compromise: the quote columns keep the 74px they need for a readable
+   pair, and the matchup gets a two-line name instead of an ellipsis. A 40px row
+   holds two 14px lines, which fits every club name in the feed without cutting
+   one mid-word. */
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-colhead,
+    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 1fr) repeat(3, 74px); gap: 3px; }
+    html.sbn-v3 .sbn-trow { height: 40px; }
+    html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 3px; }
+    html.sbn-v3 .sbn-chip { height: 36px; padding: 0 6px; gap: 3px; border-radius: 3px; }
+    html.sbn-v3 .sbn-chip.is-single { height: 36px; }
+    html.sbn-v3 .sbn-chip-top,
+    html.sbn-v3 .sbn-chip-bot { line-height: 16px; font-size: 11.5px; }
+    html.sbn-v3 .sbn-tname { gap: 7px; padding-right: 6px; }
+    html.sbn-v3 .sbn-tname b {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: clip;
+        font-size: 12px;
+        line-height: 14px;
+    }
+    html.sbn-v3 .sbn-crest { flex-basis: 20px; width: 20px; height: 20px; }
+    html.sbn-v3 .sbn-colhead span:not(:first-child) { padding-left: 6px; }
+
+    html.sbn-v3 .sbn-strip { grid-template-columns: 104px minmax(0, 1fr); gap: 4px; height: 40px; }
+    html.sbn-v3 .sbn-strip.is-prop { height: 44px; }
+    html.sbn-v3 .sbn-striplabel b { font-size: 11.5px; line-height: 14px; }
+    html.sbn-v3 .sbn-propwho { font-size: 11.5px; line-height: 14px; }
+    html.sbn-v3 .sbn-striplabel b i { font-size: 9.5px; line-height: 11px; }
+    html.sbn-v3 .sbn-striptrack {
+        grid-auto-columns: 92px;
+        gap: 3px;
+        justify-content: start;
+        align-items: stretch;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    html.sbn-v3 .sbn-striptrack::-webkit-scrollbar { display: none; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip,
+    html.sbn-v3 .sbn-striptrack .sbn-more { height: 36px; }
+    html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
+    html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 40px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 7px; gap: 4px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 11.5px; }
+}
+@media (max-width: 420px) {
+    html.sbn-v3 .sbn-colhead,
+    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 1fr) repeat(3, 70px); gap: 2px; }
+    html.sbn-v3 .sbn-chip { padding: 0 5px; gap: 2px; }
+    html.sbn-v3 .sbn-chip-top,
+    html.sbn-v3 .sbn-chip-bot { font-size: 11px; }
+    html.sbn-v3 .sbn-strip { grid-template-columns: 96px minmax(0, 1fr); }
+}
+
+/* A six-rung NFL alt-totals track gives each rung about 93px, and "O 41.5" plus
+   "-172" at 13px needs 93 exactly, so the price kept crossing the right inset.
+   The ladder takes 12.5px and a tighter inset, which fits with room to spare. */
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(88px, 150px); }
+html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
