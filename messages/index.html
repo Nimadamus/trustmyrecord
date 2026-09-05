@@ -1362,8 +1362,11 @@
                     '</div>'
                 );
             });
+            // A live refresh must not throw away half-typed edits.
+            const openEdit = captureOpenEdit(container);
             container.innerHTML = parts.join('');
             paintEmoji(container);
+            restoreOpenEdit(openEdit);
         }
 
         // Emoji in freshly rendered messages and chips: convert to Twemoji
@@ -1680,6 +1683,23 @@
                 console.error('Failed to react:', e);
                 alert((e && e.message) ? e.message : 'Failed to react. Please try again.');
             }
+        }
+
+        function captureOpenEdit(container) {
+            const ta = container && container.querySelector('.msg-edit-text');
+            if (!ta) return null;
+            const bubble = ta.closest('.msg-bubble');
+            if (!bubble || !bubble.id) return null;
+            return { id: bubble.id.replace('msg-', ''), value: ta.value, at: ta.selectionStart };
+        }
+
+        function restoreOpenEdit(state) {
+            if (!state) return;
+            startEditMessage(state.id);
+            const ta = document.querySelector('#msg-' + state.id + ' .msg-edit-text');
+            if (!ta) return;
+            ta.value = state.value;
+            try { ta.selectionStart = ta.selectionEnd = state.at; } catch (e) {}
         }
 
         // ---- Editing your own message ----
