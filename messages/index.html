@@ -1181,7 +1181,7 @@
                         '<div class="msg-avatar">' + avatarInner(conv) + '</div>' +
                         '<div class="msg-row-mid">' +
                             '<div class="msg-row-name">' + escapeHtml(name) + '</div>' +
-                            '<div class="msg-row-preview">' + escapeHtml(preview) + '</div>' +
+                            '<div class="msg-row-preview">' + smilieHtml(escapeHtml(preview)) + '</div>' +
                         '</div>' +
                         '<div class="msg-row-right">' +
                             '<div class="msg-row-time">' + escapeHtml(time) + '</div>' +
@@ -1193,6 +1193,7 @@
                         '</div>' +
                     '</div>';
             }).join('');
+            paintEmoji(list);
         }
 
         async function selectConversation(userId, username) {
@@ -1326,6 +1327,16 @@
                 );
             });
             container.innerHTML = parts.join('');
+            paintEmoji(container);
+        }
+
+        // Emoji in freshly rendered messages and chips: convert to Twemoji
+        // right away rather than waiting on the picker's shared observer, and
+        // load smilies eagerly so a chip is never a bare count for a beat.
+        function paintEmoji(root) {
+            if (!root) return;
+            root.querySelectorAll('img.tmr-smilie').forEach(function (img) { img.loading = 'eager'; });
+            if (window.TMREmoji && typeof TMREmoji.parse === 'function') TMREmoji.parse(root);
         }
 
         // ---- Replies ----
