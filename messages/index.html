@@ -1301,7 +1301,12 @@
                     '</button>' : '';
                 const canReact = msg.id && api && typeof api.reactToMessage === 'function';
                 const reactBtn = canReact ?
-                    '<button type="button" class="msg-bubble-react" title="React" aria-label="React to message" onclick="openReactionPalette(event, ' + jsStr(msg.id) + ')">' +
+                    '<button type="button" class="msg-bubble-react" title="React" aria-label="React to message" ' +
+                        // Taking focus on mousedown makes the browser scroll the
+                        // button into view, which yanks the page out from under
+                        // the palette the click is about to open.
+                        'onmousedown="event.preventDefault()" ' +
+                        'onclick="openReactionPalette(event, ' + jsStr(msg.id) + ')">' +
                         '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
                     '</button>' : '';
                 const canReply = msg.id && api && typeof api.request === 'function';
