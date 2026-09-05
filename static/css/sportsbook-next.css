@@ -564,3 +564,82 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
     .sbn-rowmatch b { font-size: 11.5px; }
     .sbn-rowmatch i { font-size: 9.5px; }
 }
+
+/* ============================================================================
+ * THE EXPANDED MARKET VIEW — a wide panel, not a sidebar.
+ * A game posts hundreds of prices. At 660px they were stacked into 84px cells
+ * with no hierarchy, which reads as a data dump. The panel now takes most of
+ * the screen, carries its own category tabs, and shows one category at a time
+ * in cells the size of the ones on the board.
+ * ========================================================================== */
+.sbn-drawer-panel {
+    width: min(1280px, 72vw);
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
+}
+.sbn-dhead { align-items: flex-start; padding: 18px 24px; gap: 16px; }
+.sbn-dmatch { gap: 10px; font-size: 21px; font-weight: 800; }
+.sbn-dmatch b { font-weight: 800; }
+.sbn-dmatch .sbn-crest { flex-basis: 30px; width: 30px; height: 30px; }
+.sbn-dmatch i { margin: 0 2px; font-size: 14px; font-weight: 700; color: var(--sbn-muted); }
+.sbn-dwhen { display: flex; align-items: center; gap: 10px; margin-top: 7px; font-size: 12.5px; }
+.sbn-dwhen em {
+    font-style: normal; padding: 2px 8px; border-radius: 999px;
+    background: rgba(34, 211, 238, 0.12); color: var(--sbn-accent);
+    font-size: 11px; font-weight: 800; letter-spacing: .1em;
+}
+.sbn-dclose { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 10px; font-size: 24px; }
+
+/* category tabs: one market at a time, the same underlined bar as the board */
+.sbn-dcats {
+    display: flex; flex-wrap: wrap; align-items: stretch; gap: 0;
+    padding: 0 16px; background: var(--sbn-panel2);
+    border-bottom: 1px solid var(--sbn-line);
+}
+.sbn-dcat {
+    position: relative; height: 44px; padding: 0 14px; border: 0; border-radius: 0;
+    background: transparent; color: var(--sbn-muted);
+    font-family: inherit; font-size: 14px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.sbn-dcat::after {
+    content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px;
+    border-radius: 2px 2px 0 0; background: transparent;
+}
+.sbn-dcat:hover { color: var(--sbn-text2); background: rgba(255, 255, 255, 0.04); }
+.sbn-dcat.is-on { color: var(--sbn-text); }
+.sbn-dcat.is-on::after { background: var(--sbn-accent); }
+.sbn-dcat:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: -2px; }
+
+/* the section, its rows and its prices, all at board scale */
+.sbn-dbody { padding: 18px 24px 32px; }
+.sbn-dsec { padding: 0; border-top: 0; }
+.sbn-dsec h4 {
+    margin: 0 0 14px; gap: 9px;
+    color: var(--sbn-text2); font-size: 13px; letter-spacing: .12em;
+}
+.sbn-dsec h4 .sbn-count, .sbn-dsec h4 .sbn-book {
+    padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.06);
+    color: var(--sbn-muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: none;
+}
+.sbn-drow {
+    grid-template-columns: 190px minmax(0, 1fr); gap: 16px; align-items: center;
+    padding: 12px 0; border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.sbn-drow:first-of-type { border-top: 0; }
+.sbn-drow + .sbn-drow { margin-top: 0; }
+.sbn-dside {
+    padding-top: 0; font-size: 15px; font-weight: 700; line-height: 19px;
+    -webkit-line-clamp: 2; color: var(--sbn-text);
+}
+.sbn-dgrid { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+.sbn-dcell .sbn-chip { height: 46px; padding: 0 12px; }
+@media (max-width: 1023px) {
+    .sbn-drawer-panel { width: 100vw; border-left: 0; }
+    .sbn-dhead { padding: 14px 16px; }
+    .sbn-dmatch { font-size: 17px; }
+    .sbn-dbody { padding: 14px 16px 28px; }
+    .sbn-drow { grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
+    .sbn-dside { font-size: 13.5px; }
+    .sbn-dgrid { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
+    .sbn-dcats { padding: 0 10px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .sbn-dcats::-webkit-scrollbar { display: none; }
+}

@@ -806,9 +806,11 @@
                 // A moneyline has no line to lead with, so the price is the hero there,
                 // exactly as it is in the Moneyline column on the board.
                 var noLine = i.line == null;
+                // a moneyline has no line, and an empty left half reads as a
+                // broken cell in a panel this wide, so it says what it is
                 var top = ou ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
-                    : (noLine ? fmtOdds(i.odds) : fmtLine(i.line, !isTotal(String(mt))));
-                var bottom = noLine ? '' : fmtOdds(i.odds);
+                    : (noLine ? 'ML' : fmtLine(i.line, !isTotal(String(mt))));
+                var bottom = fmtOdds(i.odds);
                 var sel = ou && key !== 'player_props' ? side : i.selection;
                 var label = i.label || (sel + (noLine ? '' : ' ' + fmtLine(i.line)));
                 return '<span class="sbn-dcell">' + chip({
@@ -822,34 +824,57 @@
             '<span class="sbn-count">' + items.length + '</span>' +
             (book ? '<span class="sbn-book">' + esc(book) + '</span>' : '') + '</h4>' + body + '</section>';
     }
-    function drawerHtml() {
-        var g = null;
-        for (var i = 0; i < state.games.length; i++) if (state.games[i].id === state.drawer) g = state.games[i];
-        if (!g) return '';
-        var secs = '';
-        if (g.main) {
-            var mainItems = [];
-            (g.main.spread || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line, true), line: x.line, odds: x.odds, marketType: 'spreads' }); });
-            (g.main.total || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line), line: x.line, odds: x.odds, marketType: 'totals', side: x.selection }); });
-            (g.main.h2h || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ML', line: null, odds: x.odds, marketType: 'h2h' }); });
-            secs += drawerGroup(g, 'game_lines', 'Game Lines', g.main.book, mainItems, state.drawerCat === 'game_lines' || !state.drawerCat);
-        }
-        var keys = Object.keys(g.groups).filter(function (k) { return !LINE_GROUPS[k] && g.groups[k].items.length; })
+    // The expanded view is a wide panel, not a sidebar: it carries the whole
+    // market inventory for one game, so it gets category tabs of its own and
+    // shows one category at a time rather than stacking every price in a
+    // column 84px wide.
+    function drawerCats(g) {
+        var out = [];
+        if (g.main && ((g.main.spread || []).length + (g.main.total || []).length + (g.main.h2h || []).length))
+            out.push({ key: 'game_lines', label: 'Game Lines' });
+        Object.keys(g.groups).filter(function (k) { return !LINE_GROUPS[k] && g.groups[k].items.length; })
             .sort(function (a, b) {
                 var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
                 if (ia < 0) ia = 99; if (ib < 0) ib = 99;
                 return ia - ib || a.localeCompare(b);
-            });
-        keys.forEach(function (k) {
-            var grp = g.groups[k];
-            secs += drawerGroup(g, k, grp.label || k, grp.book, grp.items, state.drawerCat === k);
-        });
+            })
+            .forEach(function (k) { out.push({ key: k, label: g.groups[k].label || k }); });
+        return out;
+    }
+    function drawerHtml() {
+        var g = null;
+        for (var i = 0; i < state.games.length; i++) if (state.games[i].id === state.drawer) g = state.games[i];
+        if (!g) return '';
+        var cats = drawerCats(g);
+        var on = null;
+        for (var c = 0; c < cats.length; c++) if (cats[c].key === state.drawerCat) on = cats[c];
+        if (!on) on = cats[0];
+        var secs = '';
+        if (on && on.key === 'game_lines') {
+            var mainItems = [];
+            (g.main.spread || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line, true), line: x.line, odds: x.odds, marketType: 'spreads' }); });
+            (g.main.total || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line), line: x.line, odds: x.odds, marketType: 'totals', side: x.selection }); });
+            (g.main.h2h || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ML', line: null, odds: x.odds, marketType: 'h2h' }); });
+            secs = drawerGroup(g, 'game_lines', 'Game Lines', g.main.book, mainItems, true);
+        } else if (on) {
+            var grp = g.groups[on.key];
+            secs = drawerGroup(g, on.key, grp.label || on.key, grp.book, grp.items, true);
+        }
+        var nav = cats.map(function (c) {
+            return '<button type="button" class="sbn-dcat' + (on && c.key === on.key ? ' is-on' : '') +
+                '" data-dcat="' + esc(c.key) + '">' + esc(c.label) + '</button>';
+        }).join('');
         return '<div class="sbn-drawer-back" data-drawerclose="1"></div>' +
             '<div class="sbn-drawer-panel" role="dialog" aria-modal="true" aria-label="All markets">' +
-            '<header class="sbn-dhead"><div><div class="sbn-dmatch">' + crest(g.away) + esc(g.away) + ' <i>@</i> ' + crest(g.home) + esc(g.home) + '</div>' +
-            '<div class="sbn-dwhen">' + esc(whenText(g.when)) + ' \u00b7 ' + countPrices(g) + ' prices</div></div>' +
+            '<header class="sbn-dhead">' +
+            '<div class="sbn-dheadmain">' +
+            '<div class="sbn-dmatch">' + crest(g.away) + '<b>' + esc(g.away) + '</b><i>vs</i>' + crest(g.home) + '<b>' + esc(g.home) + '</b></div>' +
+            '<div class="sbn-dwhen"><span>' + esc(whenText(g.when)) + '</span><em>' + esc(sportMeta(state.sport).label) + '</em>' +
+            '<span>' + countPrices(g) + ' prices</span></div>' +
+            '</div>' +
             '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
-            '<div class="sbn-dbody">' + (secs || '<div class="sbn-empty">No markets are posted for this game.</div>') + '</div></div>';
+            (cats.length ? '<nav class="sbn-dcats" aria-label="Market categories">' + nav + '</nav>' : '') +
+            '<div class="sbn-dbody">' + (secs || '<div class="sbn-note">No markets are posted for this game.</div>') + '</div></div>';
     }
 
     function slipHtml() {
@@ -921,7 +946,16 @@
         }
         var slip = el('sbnSlip'); if (slip) slip.innerHTML = slipHtml();
         var dw = el('sbnDrawer');
-        if (dw) { dw.innerHTML = state.drawer ? drawerHtml() : ''; dw.classList.toggle('is-open', !!state.drawer); }
+        if (dw) {
+            // The board is mounted inside the page's own layout, and an ancestor
+            // there opens a stacking context, which capped the panel under the
+            // site nav however high its z-index went. Reparenting the drawer to
+            // the body puts it in the root stacking context, where its z-index
+            // means what it says.
+            if (dw.parentNode !== document.body) document.body.appendChild(dw);
+            dw.innerHTML = state.drawer ? drawerHtml() : '';
+            dw.classList.toggle('is-open', !!state.drawer);
+        }
         document.documentElement.classList.toggle('sbn-locked', !!state.drawer);
         var bar = el('sbnBar');
         if (bar) {
@@ -984,6 +1018,8 @@
             render();
             return;
         }
+        var dcat = t.closest && t.closest('[data-dcat]');
+        if (dcat) { state.drawerCat = dcat.getAttribute('data-dcat'); render(); return; }
         if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; state.drawerCat = null; render(); return; }
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
