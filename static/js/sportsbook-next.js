@@ -57,7 +57,11 @@
         drawer: null,         // gameId whose full market list is open
         drawerCat: null,      // category the drawer scrolled to
         error: null,
-        reqId: 0
+        reqId: 0,
+        // SECOND_HALF_20260905 — the halftime board, kept in its own slice of
+        // state so nothing about the pre-game board changes.
+        live: { games: [], loading: false, error: null, at: null, reqId: 0 },
+        liveTimer: null
     };
 
     // ---- small helpers -----------------------------------------------------
@@ -268,7 +272,10 @@
         var meta = sportMeta(sportKey);
         var id = ++state.reqId;
         state.sport = sportKey; state.cat = 'game_lines'; state.loading = true; state.error = null; state.games = [];
+        state.live = { games: [], loading: !!LIVE_SPORTS[sportKey], error: null, at: null, reqId: state.live.reqId };
         render();
+        loadLive(sportKey);
+        startLivePolling(sportKey);
         fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, { cache: 'no-store' })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
@@ -284,6 +291,107 @@
                 state.loading = false; state.error = 'The odds feed did not respond. Try again in a moment.';
                 render();
             });
+    }
+
+    /* ========================================================================
+     * SECOND_HALF_20260905 — the halftime board.
+     *
+     * TMR does not offer live betting and this does not change that. A second
+     * half is the one market that cannot exist before kickoff: it is priced at
+     * the halftime break and it settles on the half nobody has played yet.
+     *
+     * The rules this surface holds to:
+     *   - only SECOND-HALF markets ever appear here. The backend endpoint
+     *     serves nothing else, so a live full-game price cannot reach the page.
+     *   - whether a game is at halftime is decided server side against the live
+     *     scoreboard. Nothing on this page can assert it.
+     *   - a game drops off this board the moment the second half kicks off, so
+     *     entry closes on its own without anyone having to remember to close it.
+     * ===================================================================== */
+    var LIVE_SPORTS = { NFL: 1, NCAAF: 1, NBA: 1, NCAAB: 1, WNBA: 1 };
+    var LIVE_REFRESH_MS = 30000;
+
+    // A live second-half moneyline on a game already decided is a real price
+    // (-2500 on a three-touchdown lead is what the book is actually posting).
+    // The -500 floor exists for ALTERNATE ladders, where a short price is a
+    // symptom of a bad rung; applying it here would hide the market instead.
+    function validLiveOdds(o) {
+        var n = num(o);
+        if (n == null) return false;
+        if (n > -100 && n < 100) return false;
+        if (Math.abs(n) > 20000) return false;
+        return true;
+    }
+
+    function normaliseLive(g) {
+        var grp = (g.market_groups || [])[0];
+        var items = ((grp && grp.items) || []).map(function (i) {
+            return {
+                selection: i.selection != null ? i.selection : i.selection_label,
+                label: i.selection_label || i.selection,
+                line: num(i.line),
+                odds: num(i.odds),
+                book: i.book_title || null,
+                side: i.side || null,
+                marketType: i.market_type || i.market_key
+            };
+        }).filter(function (i) {
+            if (!i.selection || !validLiveOdds(i.odds)) return false;
+            // A moneyline has no line; everything else must carry one.
+            if (!/(^|_)h2h$/.test(String(i.marketType)) && !validLine(i.line)) return false;
+            return true;
+        });
+        return {
+            id: g.id,
+            sportKey: g.sport_key,
+            away: g.away_team,
+            home: g.home_team,
+            when: g.commence_time,
+            live: g.live || {},
+            secondHalfOpen: g.second_half_open === true,
+            main: null,
+            groups: items.length
+                ? { second_half: { key: 'second_half', label: 'Second Half', book: (items[0] || {}).book, items: items } }
+                : {},
+            raw: { bookmakers: g.bookmakers || [] }
+        };
+    }
+
+    function loadLive(sportKey) {
+        var meta = sportMeta(sportKey);
+        if (!LIVE_SPORTS[sportKey]) {
+            state.live = { games: [], loading: false, error: null, at: null, reqId: state.live.reqId };
+            return;
+        }
+        var id = ++state.live.reqId;
+        state.live.loading = state.live.games.length === 0;
+        fetch(API.replace(/\/$/, '') + '/games/live/' + encodeURIComponent(meta.api), { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (id !== state.live.reqId || state.sport !== sportKey) return;
+                var games = ((d && d.games) || [])
+                    .filter(function (g) { return g && g.second_half_open; })
+                    .map(normaliseLive)
+                    .filter(function (g) { return Object.keys(g.groups).length > 0; });
+                var had = state.live.games.length;
+                state.live = { games: games, loading: false, error: null, at: Date.now(), reqId: id };
+                if (games.length && !had) {
+                    announce(games.length + ' game' + (games.length === 1 ? ' is' : 's are') +
+                        ' at halftime. Second-half lines are open.');
+                }
+                render();
+            })
+            .catch(function () {
+                if (id !== state.live.reqId) return;
+                state.live.loading = false;
+                render();
+            });
+    }
+
+    function startLivePolling(sportKey) {
+        if (state.liveTimer) { clearInterval(state.liveTimer); state.liveTimer = null; }
+        if (!LIVE_SPORTS[sportKey]) return;
+        state.liveTimer = setInterval(function () { loadLive(sportKey); }, LIVE_REFRESH_MS);
     }
 
     // ---- pick slip ----------------------------------------------------------
@@ -572,6 +680,12 @@
         if (has.h2h) cols.push('h2h');
         return cols.length ? cols : ['spread', 'total', 'h2h'];
     }
+    // The halftime panel prices a live market, where a short moneyline is real
+    // rather than a broken ladder rung; every other category keeps the board's
+    // standing price gate exactly as it was.
+    function oddsOk(cat, odds) {
+        return (cat && cat.live) ? validLiveOdds(odds) : validOdds(odds);
+    }
     function linesCells(g, cat, team, isAway, cols) {
         var m = catLines(g, cat.key);
         var blank = cols.map(function () { return chip({ disabled: true }); }).join('');
@@ -580,18 +694,18 @@
         var sp = findSel(m.spread, team), ml = findSel(m.h2h, team), to = findSide(m.total, isAway);
         var gl = cat.long, bk = m.book;
         var cell = {};
-        cell.spread = sp && validOdds(sp.odds)
+        cell.spread = sp && oddsOk(cat, sp.odds)
             ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
                 bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), botLine: fixed,
                 sel: isSel(g, sp.marketType || 'spreads', team, sp.line),
                 data: pickData(g, sp.marketType || 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, gl, bk) })
             : chip({ disabled: true });
-        cell.total = to && validOdds(to.odds)
+        cell.total = to && oddsOk(cat, to.odds)
             ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds),
                 sel: isSel(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', to.line),
                 data: pickData(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, gl, bk) })
             : chip({ disabled: true });
-        cell.h2h = ml && validOdds(ml.odds)
+        cell.h2h = ml && oddsOk(cat, ml.odds)
             ? chip({ top: fmtOdds(ml.odds), single: true,
                 sel: isSel(g, ml.marketType || 'h2h', team, null),
                 data: pickData(g, ml.marketType || 'h2h', team, team + ' ML', null, ml.odds, gl, bk) })
@@ -920,6 +1034,77 @@
                 '<button type="button" class="sbn-submit" id="sbnSubmit">Lock ' + n + (n === 1 ? ' pick' : ' picks') + '</button>' : '');
     }
 
+    /* ---- The 2ND HALF panel -------------------------------------------------
+       Sits at the top of the board so a game reaching halftime is impossible to
+       miss, and reads exactly like every other lines category underneath it. */
+    var LIVE_CAT = { key: 'second_half', label: '2nd Half', long: 'Second Half', layout: 'lines', live: true };
+
+    function liveScoreLine(g) {
+        var ht = g.live && g.live.halftime_score;
+        if (ht && Number.isFinite(Number(ht.home)) && Number.isFinite(Number(ht.away))) {
+            return esc(g.away) + ' ' + ht.away + ', ' + esc(g.home) + ' ' + ht.home + ' at the half';
+        }
+        var live = g.live || {};
+        if (live.away_score != null && live.home_score != null) {
+            return esc(g.away) + ' ' + live.away_score + ', ' + esc(g.home) + ' ' + live.home_score;
+        }
+        return '';
+    }
+
+    function liveCard(g, cols) {
+        var body = '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' +
+            linesCells(g, LIVE_CAT, g.away, true, cols) + '</div>' +
+            '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' +
+            linesCells(g, LIVE_CAT, g.home, false, cols) + '</div>';
+        var book = (g.groups.second_half || {}).book;
+        return '<article class="sbn-row sbn-row--lines sbn-cols' + cols.length + ' is-2h" data-game="' + esc(g.id) + '">' +
+            '<div class="sbn-rowtop">' +
+            '<span class="sbn-2hpill">Halftime</span>' +
+            '<span class="sbn-rowtime">' + liveScoreLine(g) + '</span>' +
+            (book ? '<span class="sbn-2hbook">' + esc(book) + '</span>' : '') +
+            '</div>' +
+            '<div class="sbn-teams">' + body + '</div></article>';
+    }
+
+    function liveHtml() {
+        if (!LIVE_SPORTS[state.sport]) return '';
+        var games = state.live.games;
+        if (!games.length) {
+            if (state.live.loading) {
+                return '<section class="sbn-2h is-quiet"><div class="sbn-2hhead">' +
+                    '<span class="sbn-2hbadge">2nd Half</span>' +
+                    '<span class="sbn-2hsub">Checking for games at halftime\u2026</span></div></section>';
+            }
+            return '';
+        }
+        // Only the columns the books have actually posted across these games.
+        var has = { spread: false, total: false, h2h: false };
+        games.forEach(function (g) {
+            var m = catLines(g, 'second_half');
+            if (!m) return;
+            if ((m.spread || []).length) has.spread = true;
+            if ((m.total || []).length) has.total = true;
+            if ((m.h2h || []).length) has.h2h = true;
+        });
+        var cols = [];
+        if (has.spread) cols.push('spread');
+        if (has.total) cols.push('total');
+        if (has.h2h) cols.push('h2h');
+        if (!cols.length) return '';
+        var names = cols.map(function (c) { return COL_NAME[c]; });
+        return '<section class="sbn-2h" aria-label="Second half betting">' +
+            '<div class="sbn-2hhead">' +
+            '<span class="sbn-2hbadge">2nd Half</span>' +
+            '<h2 class="sbn-2htitle">Second half is open</h2>' +
+            '<span class="sbn-2hsub">' + games.length + (games.length === 1 ? ' game' : ' games') +
+            ' at halftime. These settle on the second half only, and they close when it kicks off.</span>' +
+            '</div>' +
+            '<div class="sbn-colhead sbn-colhead--lines sbn-colhead--2h sbn-cols' + cols.length + '"><span></span>' +
+            names.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>' +
+            games.map(function (g) { return liveCard(g, cols); }).join('') +
+            '</section>';
+    }
+
     function render() {
         var rail = el('sbnRail');
         if (rail && !rail.dataset.built) {
@@ -937,16 +1122,20 @@
         var title = el('sbnTitle'); if (title) title.textContent = sportMeta(state.sport).label + ' board';
         var board = el('sbnBoard');
         if (board) {
-            if (state.loading) board.innerHTML = '<div class="sbn-note">Loading ' + esc(sportMeta(state.sport).label) + ' odds…</div>';
-            else if (state.error) board.innerHTML = '<div class="sbn-note">' + esc(state.error) + '</div>';
-            else if (!state.games.length) board.innerHTML = '<div class="sbn-note">No upcoming ' + esc(sportMeta(state.sport).label) + ' games with posted odds right now.</div>';
+            // The halftime panel renders in every board state, including the ones
+            // with no pre-game slate left to show: a game reaching halftime is
+            // exactly when the rest of the board has emptied out.
+            var liveSection = liveHtml();
+            if (state.loading) board.innerHTML = liveSection + '<div class="sbn-note">Loading ' + esc(sportMeta(state.sport).label) + ' odds…</div>';
+            else if (state.error) board.innerHTML = liveSection + '<div class="sbn-note">' + esc(state.error) + '</div>';
+            else if (!state.games.length) board.innerHTML = liveSection + '<div class="sbn-note">No upcoming ' + esc(sportMeta(state.sport).label) + ' games with posted odds right now.</div>';
             else {
                 var cat = activeCat();
                 var cols = cat.layout === 'lines' ? linesCols(cat) : null;
                 // The rows are the tab's panel. An unstyled block wrapper: it
                 // adds no padding, border or display of its own, so the column
                 // header and the rows lay out exactly as they did.
-                board.innerHTML = catNav() +
+                board.innerHTML = liveSection + catNav() +
                     '<div id="' + BOARD_PANEL_ID + '" role="tabpanel" aria-labelledby="' +
                     catTabId(cat.key) + '">' +
                     colHead(cat, cols) +
@@ -1073,7 +1262,8 @@
         var s = q.get('sport');
         load(s && sportMeta(s).key === s ? s : 'MLB');
         window.__sbNext = { state: state, load: load, validOdds: validOdds, singleBook: singleBook,
-            monotonic: monotonic, categories: categories, render: render };
+            monotonic: monotonic, categories: categories, render: render,
+            loadLive: loadLive, normaliseLive: normaliseLive, liveHtml: liveHtml, validLiveOdds: validLiveOdds };
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();

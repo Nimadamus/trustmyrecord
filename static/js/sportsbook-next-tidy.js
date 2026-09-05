@@ -11,7 +11,17 @@
     function moveTally() {
         var tally = document.querySelector('.sbn-toolbar .sbn-tally');
         if (!tally) return;
-        var slot = document.querySelector('.sbn-colhead span:first-child');
+        // SECOND_HALF_20260905: the halftime panel prints a column header of
+        // its own and sits ABOVE the board, so 'the first .sbn-colhead on the
+        // page' is no longer the board's. The tally counts the pre-game slate;
+        // it belongs in the board's header, never in the 2H one.
+        var slot = null;
+        var heads = document.querySelectorAll('.sbn-colhead');
+        for (var h = 0; h < heads.length; h++) {
+            if (heads[h].closest && heads[h].closest('.sbn-2h')) continue;
+            slot = heads[h].querySelector('span:first-child');
+            if (slot) break;
+        }
         if (!slot) {
             // ladder tabs print no column header, so the count gets a strip of its
             // own rather than staying in the tab row and wrapping it onto two lines

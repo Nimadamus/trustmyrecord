@@ -3255,6 +3255,19 @@
                     <div class="breakdown-grid" id="altLinesGrid"></div>
                 </div>
 
+                <!-- SECOND_HALF_20260905: a second half is its own wager
+                     category, so it gets its own record. Leagues are kept
+                     apart: an NFL 2H record and a college football 2H record
+                     are two different records and are never added together
+                     here. -->
+                <div class="support-module" id="secondHalfModule" style="display:none;">
+                    <div class="support-module-head">
+                        <div class="section-title">Second Half</div>
+                        <div class="support-module-note">Second-half record by league, market, side and venue. Settled on second-half scoring only.</div>
+                    </div>
+                    <div class="breakdown-grid" id="secondHalfGrid"></div>
+                </div>
+
                 <div class="support-module">
                     <div class="support-module-head">
                         <div class="section-title">Performance by Unit Size</div>
@@ -6356,6 +6369,148 @@
     // Dedicated depth breakdown (Player Props by stat type, Alternate Lines by
     // alt type). Computed client-side from the user's own graded picks — no
     // fabricated data; the module hides itself when the user has no such picks.
+    /* ========================================================================
+     * SECOND_HALF_20260905 — the standalone second-half record.
+     *
+     * A second-half wager is a permanent wager category, not a variation on the
+     * full-game one, so it is reported the way every other wager type is:
+     * overall W-L-P, win %, units and ROI, then split by market, by price side,
+     * by over/under and by venue.
+     *
+     * NFL and college football are reported SEPARATELY. The only combined row
+     * is the explicit "All leagues" line at the bottom, and it is labelled as
+     * one so it can never be read as a single league's record.
+     * ===================================================================== */
+    const SECOND_HALF_MARKETS = {
+        second_half_spreads: '2H Spread',
+        second_half_h2h: '2H Moneyline',
+        second_half_totals: '2H Total'
+    };
+
+    function isSecondHalfPick(p) {
+        return /^second_half_/.test(String((p && p.market_type) || ''));
+    }
+
+    function shRecord(picks) {
+        const wins = picks.filter(p => p.status === 'won').length;
+        const losses = picks.filter(p => p.status === 'lost').length;
+        const pushes = picks.filter(p => {
+            const st = String(p.status || '').toLowerCase();
+            return st === 'push' || st === 'pushed';
+        }).length;
+        const net = picks.reduce((sum, p) => sum + pickPL(p), 0);
+        const risked = picks.reduce((sum, p) => {
+            const r = Number(p.risk_units);
+            if (Number.isFinite(r) && r > 0) return sum + r;
+            const u = Number(p.units);
+            return sum + (Number.isFinite(u) ? u : 0);
+        }, 0);
+        const decisions = wins + losses;
+        const oddsList = picks.map(p => Number(p.odds_snapshot)).filter(o => Number.isFinite(o) && o !== 0);
+        return {
+            total: picks.length,
+            wins, losses, pushes, net, risked,
+            winRate: decisions > 0 ? ((wins / decisions) * 100).toFixed(1) : '0.0',
+            roi: risked > 0 ? ((net / risked) * 100).toFixed(1) : null,
+            avgOdds: oddsList.length ? Math.round(oddsList.reduce((a, b) => a + b, 0) / oddsList.length) : null
+        };
+    }
+
+    function shSideOf(p) {
+        const sel = String((p && (p.selection || p.selection_label)) || '').toLowerCase();
+        if (/\bover\b/.test(sel)) return 'over';
+        if (/\bunder\b/.test(sel)) return 'under';
+        return null;
+    }
+    function shVenueOf(p) {
+        const key = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        const sel = key(p && (p.selected_team || p.selection));
+        const home = key(p && p.home_team);
+        const away = key(p && p.away_team);
+        if (!sel) return null;
+        const isHome = home && sel.indexOf(home) !== -1;
+        const isAway = away && sel.indexOf(away) !== -1;
+        if (isHome && !isAway) return 'home';
+        if (isAway && !isHome) return 'away';
+        return null;
+    }
+
+    function shSummaryText(rec) {
+        const parts = [rec.wins + '-' + rec.losses + '-' + rec.pushes + ' (' + rec.total + (rec.total === 1 ? ' wager)' : ' wagers)')];
+        if (rec.roi !== null) parts.push(rec.roi + '% ROI');
+        if (rec.avgOdds !== null) parts.push('avg ' + (rec.avgOdds > 0 ? '+' : '') + rec.avgOdds);
+        return parts.join(' \u00b7 ');
+    }
+
+    function renderSecondHalfBreakdown(picksArr) {
+        const moduleEl = document.getElementById('secondHalfModule');
+        const grid = document.getElementById('secondHalfGrid');
+        if (!grid) return;
+        const src = Array.isArray(picksArr) ? picksArr : allLoadedPicks;
+        const graded = (src || []).filter(p => {
+            const st = String(p.status || '').toLowerCase();
+            return ['won', 'lost', 'push', 'pushed'].indexOf(st) !== -1;
+        }).filter(isSecondHalfPick);
+
+        if (!graded.length) {
+            if (moduleEl) moduleEl.style.display = 'none';
+            grid.innerHTML = '';
+            return;
+        }
+
+        // One block per league, in order of how much has been bet there.
+        const byLeague = new Map();
+        graded.forEach(p => {
+            const key = String(p.sport_key || 'unknown');
+            if (!byLeague.has(key)) byLeague.set(key, []);
+            byLeague.get(key).push(p);
+        });
+        const leagues = [...byLeague.entries()].sort((a, b) => b[1].length - a[1].length);
+
+        const subhead = (txt) => '<div class="breakdown-subhead" style="grid-column:1/-1;margin-top:10px;'
+            + 'font-weight:800;letter-spacing:.04em;text-transform:uppercase;opacity:.85;">'
+            + escapeHtml(txt) + '</div>';
+
+        const rows = [];
+        leagues.forEach(([sportKey, leaguePicks]) => {
+            const overall = shRecord(leaguePicks);
+            rows.push(subhead(pmSportLabel(sportKey) + ' Second Half'));
+            rows.push(bRowExtended('Overall', shSummaryText(overall), overall.winRate, overall.net));
+
+            Object.keys(SECOND_HALF_MARKETS).forEach(marketType => {
+                const mp = leaguePicks.filter(p => p.market_type === marketType);
+                if (!mp.length) return;
+                const rec = shRecord(mp);
+                rows.push(bRowExtended(SECOND_HALF_MARKETS[marketType], shSummaryText(rec), rec.winRate, rec.net));
+            });
+
+            const splits = [
+                ['Favorites', leaguePicks.filter(p => Number(p.odds_snapshot) < 0)],
+                ['Underdogs', leaguePicks.filter(p => Number(p.odds_snapshot) > 0)],
+                ['Overs', leaguePicks.filter(p => shSideOf(p) === 'over')],
+                ['Unders', leaguePicks.filter(p => shSideOf(p) === 'under')],
+                ['Home', leaguePicks.filter(p => shVenueOf(p) === 'home')],
+                ['Away', leaguePicks.filter(p => shVenueOf(p) === 'away')]
+            ];
+            splits.forEach(([splitLabel, sp]) => {
+                if (!sp.length) return;
+                const rec = shRecord(sp);
+                rows.push(bRowExtended(splitLabel, shSummaryText(rec), rec.winRate, rec.net));
+            });
+        });
+
+        // The only aggregate, and it says so. Shown only when there is more
+        // than one league to aggregate.
+        if (leagues.length > 1) {
+            const all = shRecord(graded);
+            rows.push(subhead('All leagues combined'));
+            rows.push(bRowExtended('All leagues \u00b7 Second Half', shSummaryText(all), all.winRate, all.net));
+        }
+
+        grid.innerHTML = rows.join('');
+        if (moduleEl) moduleEl.style.display = '';
+    }
+
     function renderDepthBreakdown(picksArr, groups, moduleId, gridId) {
         const moduleEl = document.getElementById(moduleId);
         const grid = document.getElementById(gridId);
@@ -12329,6 +12484,8 @@
         // Dedicated depth panels: Player Props (by stat type) + Alternate Lines (by alt type)
         renderDepthBreakdown(picksArr, PROP_TYPE_GROUPS, 'playerPropsModule', 'playerPropsGrid');
         renderDepthBreakdown(picksArr, ALT_LINE_GROUPS, 'altLinesModule', 'altLinesGrid');
+        // SECOND_HALF_20260905: standalone second-half record, split by league.
+        renderSecondHalfBreakdown(picksArr);
 
         // By Unit Size
         renderUnitSizeBreakdown(picksArr);
