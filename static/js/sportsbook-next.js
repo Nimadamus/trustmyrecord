@@ -663,9 +663,11 @@
                 sel: isSel(g, i.marketType, sel, i.line),
                 data: pickData(g, i.marketType, sel, i.label || (sel + ' ' + fmtLine(i.line)), i.line, i.odds, cat.long, i.book || row.book) });
         }).join('');
-        var isTeamRow = cat.key === 'alt_spreads' && (row.label === g.away || row.label === g.home);
+        // no crest on the rung label: a ladder card carries its crests once, in
+        // the matchup header, so every strip market reads the same way and no
+        // card ever shows two sets
         return '<div class="sbn-strip">' +
-            '<span class="sbn-striplabel">' + (isTeamRow ? crest(row.label) : '') + '<b>' + esc(row.label) + '</b></span>' +
+            '<span class="sbn-striplabel"><b>' + esc(row.label) + '</b></span>' +
             '<div class="sbn-striptrack">' + cells +
             (rest > 0 ? '<button type="button" class="sbn-more" data-drawer="' + esc(g.id) + '" data-drawercat="' + esc(cat.key) + '">+' + rest + '</button>' : '') +
             '</div></div>';
@@ -683,18 +685,25 @@
         Object.keys(g.groups).forEach(function (k) { if (!LINE_GROUPS[k]) n += g.groups[k].items.length; });
         return n;
     }
-    /* Every card names its own matchup, whatever market it is showing. On Game
+    /* The logo rule for the whole board: a matchup shows exactly ONE set of
+       crests. Game Lines, Team Totals, First 5, 1st Inning and Alt Lines put a
+       crest on every team row, so their header is names only. Every ladder
+       market (Alt Lines, Alt Totals, Team Totals ladders, Player Props, and
+       any strip market added later) labels its rungs with a side, a line or a
+       player, so the crests go in the header there and the rung labels carry
+       none. One set per matchup either way.
+       Every card names its own matchup, whatever market it is showing. On Game
        Lines the two club names are the rows themselves, but on Alt Totals the
        rows are Over and Under, on Player Props they are players, and the card
        had nothing on it that said which game those prices belonged to. The
        header is built from the same game object the prices come from, so it
        cannot drift onto the wrong card. It rides in the existing top line, so
        the card does not get taller. */
-    function matchHead(g) {
+    function matchHead(g, withCrests) {
         return '<span class="sbn-rowmatch">' +
-            '<b>' + esc(g.away) + '</b>' +
+            (withCrests ? crest(g.away) : '') + '<b>' + esc(g.away) + '</b>' +
             '<i>vs</i>' +
-            '<b>' + esc(g.home) + '</b>' +
+            (withCrests ? crest(g.home) : '') + '<b>' + esc(g.home) + '</b>' +
             '</span>';
     }
     function gameCard(g, cat, cols) {
@@ -721,7 +730,7 @@
         var ncol = cat.layout === 'ou' ? 2 : (cols ? cols.length : 3);
         return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol + '" data-game="' + esc(g.id) + '">' +
             '<div class="sbn-rowtop">' +
-            matchHead(g) +
+            matchHead(g, cat.layout === 'strip') +
             '<span class="sbn-rowtime">' + esc(whenText(g.when)) + '</span>' +
             '<button type="button" class="sbn-deep" data-drawer="' + esc(g.id) + '">' +
             'All markets <b>' + countPrices(g) + '</b></button>' +
