@@ -1587,6 +1587,7 @@
             // it has to be re-pinned to the button afterwards and on any later
             // scroll, or it ends up floating somewhere else on the page.
             reactPaletteAnchor = ev.currentTarget;
+            reactPaletteMessageId = messageId;
             positionReactPalette();
             requestAnimationFrame(positionReactPalette);
             window.addEventListener('scroll', positionReactPalette, true);
@@ -1594,9 +1595,20 @@
         }
 
         let reactPaletteAnchor = null;
+        let reactPaletteMessageId = null;
         function positionReactPalette() {
             const pal = document.getElementById('reactPalette');
-            if (!pal || !reactPaletteAnchor || !reactPaletteAnchor.isConnected) return;
+            if (!pal) return;
+            // A live refresh re-renders the thread and throws the old button
+            // away. Re-anchor to the same message's button, and close if that
+            // message is gone, rather than pinning to a detached element.
+            if (!reactPaletteAnchor || !reactPaletteAnchor.isConnected || !reactPaletteAnchor.getBoundingClientRect().width) {
+                const bubble = reactPaletteMessageId != null
+                    ? document.getElementById('msg-' + reactPaletteMessageId) : null;
+                const fresh = bubble ? bubble.querySelector('.msg-bubble-react') : null;
+                if (!fresh) { closeReactionPalette(); return; }
+                reactPaletteAnchor = fresh;
+            }
             const rect = reactPaletteAnchor.getBoundingClientRect();
             const palWidth = pal.offsetWidth || ((QUICK_REACTIONS.length + 1) * 34 + 12);
             let left = rect.left + rect.width / 2 - palWidth / 2;
@@ -1620,6 +1632,7 @@
             const pal = document.getElementById('reactPalette');
             if (pal) pal.remove();
             reactPaletteAnchor = null;
+            reactPaletteMessageId = null;
             window.removeEventListener('scroll', positionReactPalette, true);
             window.removeEventListener('resize', positionReactPalette);
         }
