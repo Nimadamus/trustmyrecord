@@ -166,7 +166,10 @@
     /* --- link sets -------------------------------------------------------- */
 
     var SPORT_HUB = {
-        mlb: ['/handicapping/mlb/', 'MLB Handicapping Hub'],
+        /* One destination, one wording sitewide (2026-09-05): this was
+           'MLB Handicapping Hub', a third name for the page the nav calls
+           'MLB Matchups Today'. */
+        mlb: ['/handicapping/mlb/', 'MLB Matchups Today'],
         nba: ['/nba-pick-tracker/', 'NBA Pick Tracker'],
         nfl: ['/nfl-pick-tracker/', 'NFL Pick Tracker'],
         nhl: ['/nhl-pick-tracker/', 'NHL Pick Tracker'],
