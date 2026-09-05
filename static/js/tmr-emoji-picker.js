@@ -23,7 +23,7 @@
   var VER = '20260722a';
   var TW_JS = '/static/js/twemoji.min.js?v=a66c8ae9383e';
   var DATA_JS = '/static/js/tmr-emoji-data.js?v=4f708f32d48e';
-  var SMILIE_JS = '/static/js/tmr-smilies.js?v=89bc6c7d70d7' + VER;
+  var SMILIE_JS = '/static/js/tmr-smilies.js?v=89bc6c7d70d7';
   var NOTO = 'https://fonts.gstatic.com/s/e/notoemoji/latest/';
   var TW_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/';
   var LS_RECENT = 'tmrEmojiRecent2';
@@ -162,6 +162,9 @@
   /* ---------- insertion ---------- */
   function insertAtCursor(el, text) {
     if (!el) return;
+    // Virtual target: TMREmoji.pick() passes { onPick } instead of a textarea,
+    // so the same cells feed a reaction picker without inserting any text.
+    if (typeof el.onPick === 'function') { el.onPick(String(text).trim()); return; }
     el.focus();
     var s = el.selectionStart, e = el.selectionEnd, v = el.value;
     if (typeof s === 'number') {
@@ -700,7 +703,16 @@
     anchor.parentNode.insertBefore(bar, anchor);
   }
 
-  window.TMREmoji = { attach: attach, insert: insertAtCursor, watch: watch, v2: true };
+  // pick(anchorEl, onPick, opts) - open the full library as a chooser. onPick
+  // gets the raw value a cell would have inserted (a unicode emoji, or a
+  // ':shortcode:' for the board smilie pack), trimmed.
+  function pick(anchorEl, onPick, opts) {
+    opts = opts || {};
+    if (opts.anim === undefined) opts.anim = false; // BBCode makes no sense as a reaction
+    openFor(anchorEl, { onPick: function (v) { closePanel(); try { onPick(v); } catch (e) {} } }, opts);
+  }
+
+  window.TMREmoji = { attach: attach, insert: insertAtCursor, watch: watch, pick: pick, parse: parseNode, v2: true };
 
   function init() {
     injectCSS();
