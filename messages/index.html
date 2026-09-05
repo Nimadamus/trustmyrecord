@@ -384,7 +384,7 @@
             display: flex; gap: 4px; z-index: 2;
         }
         .msg-bubble.received .msg-bubble-actions { right: 6px; }
-        .msg-bubble-delete, .msg-bubble-react, .msg-bubble-reply {
+        .msg-bubble-delete, .msg-bubble-react, .msg-bubble-reply, .msg-bubble-edit {
             width: 22px; height: 22px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.30); border: 1px solid rgba(255,255,255,0.55);
@@ -392,20 +392,22 @@
             font-size: 0.8rem; line-height: 1; opacity: 0.8;
             transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
         }
-        .msg-bubble.received .msg-bubble-delete, .msg-bubble.received .msg-bubble-react, .msg-bubble.received .msg-bubble-reply {
+        .msg-bubble.received .msg-bubble-delete, .msg-bubble.received .msg-bubble-react, .msg-bubble.received .msg-bubble-reply, .msg-bubble.received .msg-bubble-edit {
             background: #0E1B27; border-color: var(--msg-border-strong); color: var(--msg-text-soft);
         }
         .msg-bubble.received .msg-bubble-delete:hover, .msg-bubble.received .msg-bubble-react:hover, .msg-bubble.received .msg-bubble-reply:hover {
             background: var(--msg-accent-soft); border-color: var(--msg-accent); color: var(--msg-accent-strong);
         }
-        .msg-bubble.sent .msg-bubble-delete:hover, .msg-bubble.sent .msg-bubble-react:hover, .msg-bubble.sent .msg-bubble-reply:hover {
+        .msg-bubble.sent .msg-bubble-delete:hover, .msg-bubble.sent .msg-bubble-react:hover, .msg-bubble.sent .msg-bubble-reply:hover, .msg-bubble.sent .msg-bubble-edit:hover {
             background: rgba(0,0,0,0.46); border-color: #FFFFFF;
         }
-        .msg-bubble-delete:focus-visible, .msg-bubble-react:focus-visible, .msg-bubble-reply:focus-visible {
+        .msg-bubble-delete:focus-visible, .msg-bubble-react:focus-visible, .msg-bubble-reply:focus-visible, .msg-bubble-edit:focus-visible {
             opacity: 1; outline: 2px solid var(--msg-accent-strong); outline-offset: 1px;
         }
-        .msg-bubble:hover .msg-bubble-delete, .msg-bubble:hover .msg-bubble-react, .msg-bubble:hover .msg-bubble-reply,
-        .msg-bubble:focus-within .msg-bubble-delete, .msg-bubble:focus-within .msg-bubble-react, .msg-bubble:focus-within .msg-bubble-reply { opacity: 1; }
+        .msg-bubble:hover .msg-bubble-delete, .msg-bubble:hover .msg-bubble-react, .msg-bubble:hover .msg-bubble-reply, .msg-bubble:hover .msg-bubble-edit,
+        .msg-bubble:focus-within .msg-bubble-delete, .msg-bubble:focus-within .msg-bubble-react, .msg-bubble:focus-within .msg-bubble-reply, .msg-bubble:focus-within .msg-bubble-edit { opacity: 1; }
+        .msg-bubble-edit svg { width: 12px; height: 12px; }
+        .msg-bubble-edit:hover { opacity: 1; }
         .msg-bubble-delete svg { width: 13px; height: 13px; }
         .msg-bubble-delete:hover { color: var(--msg-danger); border-color: var(--msg-danger); opacity: 1; }
         .msg-bubble-react:hover { opacity: 1; }
@@ -415,6 +417,26 @@
         .msg-bubble.has-actions { padding-top: 9px; padding-right: 40px; }
         .msg-bubble.has-actions.two-actions { padding-right: 66px; }
         .msg-bubble.has-actions.three-actions { padding-right: 92px; }
+        .msg-bubble.has-actions.four-actions { padding-right: 118px; }
+        /* In-place editor: sits inside the bubble, changes nothing around it */
+        .msg-edit-box { display: block; }
+        .msg-edit-text {
+            width: 100%; box-sizing: border-box; resize: vertical; min-height: 46px;
+            font: inherit; color: inherit; line-height: 1.4;
+            background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px; padding: 6px 8px;
+        }
+        .msg-bubble.received .msg-edit-text { background: rgba(255,255,255,0.08); border-color: var(--msg-border-strong); }
+        .msg-edit-text:focus { outline: 2px solid var(--msg-accent); outline-offset: 1px; }
+        .msg-edit-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 5px; }
+        .msg-edit-actions button {
+            font: inherit; font-size: 0.72rem; font-weight: 700; cursor: pointer;
+            padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.35);
+            background: transparent; color: inherit;
+        }
+        .msg-edit-actions .msg-edit-save { background: var(--msg-accent); border-color: var(--msg-accent); color: #06121F; }
+        .msg-edit-actions button[disabled] { opacity: 0.6; cursor: default; }
+        .msg-edited { font-style: italic; opacity: 0.85; }
         /* Quoted parent shown inside a reply bubble */
         .msg-reply-quote {
             display: block; width: 100%; text-align: left;
@@ -887,7 +909,7 @@
     </div>
 
     <script src="/static/js/config.js?v=738db2dd80a5"></script>
-    <script src="/static/js/backend-api.js?v=68c9d15dbed8"></script>
+    <script src="/static/js/backend-api.js?v=365fae38a6a5"></script>
     <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
     <script>
         let currentUser = null;
@@ -1309,16 +1331,23 @@
                         'onclick="openReactionPalette(event, ' + jsStr(msg.id) + ')">' +
                         '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
                     '</button>' : '';
+                const canEdit = msg.id && isSent && api && typeof api.editMessage === 'function';
+                const editBtn = canEdit ?
+                    '<button type="button" class="msg-bubble-edit" title="Edit message" aria-label="Edit message" ' +
+                        'onmousedown="event.preventDefault()" ' +
+                        'onclick="startEditMessage(' + jsStr(msg.id) + ')">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>' +
+                    '</button>' : '';
                 const canReply = msg.id && api && typeof api.request === 'function';
                 const replyBtn = canReply ?
                     '<button type="button" class="msg-bubble-reply" title="Reply" aria-label="Reply to message" onclick="startReply(' + jsStr(msg.id) + ')">' +
                         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>' +
                     '</button>' : '';
-                const actionCount = (deleteBtn ? 1 : 0) + (reactBtn ? 1 : 0) + (replyBtn ? 1 : 0);
+                const actionCount = (deleteBtn ? 1 : 0) + (reactBtn ? 1 : 0) + (replyBtn ? 1 : 0) + (editBtn ? 1 : 0);
                 const actionsWrap = actionCount ?
-                    '<div class="msg-bubble-actions">' + replyBtn + reactBtn + deleteBtn + '</div>' : '';
+                    '<div class="msg-bubble-actions">' + replyBtn + reactBtn + editBtn + deleteBtn + '</div>' : '';
                 const actionCls = actionCount
-                    ? ' has-actions' + (actionCount > 2 ? ' three-actions' : actionCount > 1 ? ' two-actions' : '')
+                    ? ' has-actions' + (actionCount > 3 ? ' four-actions' : actionCount > 2 ? ' three-actions' : actionCount > 1 ? ' two-actions' : '')
                     : '';
                 parts.push(
                     '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + actionCls + '"' +
@@ -1327,7 +1356,9 @@
                         replyQuote(msg) +
                         '<div class="msg-bubble-content">' + linkify(msg.content) + '</div>' +
                         reactionChips(msg) +
-                        '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + (isSent ? readTicks(msg) : '') + '</div>' +
+                        '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) +
+                            (msg.edited_at ? '<span class="msg-edited" title="Edited ' + escapeAttr(formatTime(msg.edited_at)) + '">edited</span>' : '') +
+                            (isSent ? readTicks(msg) : '') + '</div>' +
                     '</div>'
                 );
             });
@@ -1648,6 +1679,61 @@
             } catch (e) {
                 console.error('Failed to react:', e);
                 alert((e && e.message) ? e.message : 'Failed to react. Please try again.');
+            }
+        }
+
+        // ---- Editing your own message ----
+        // The bubble swaps its text for a textarea in place; nothing around it
+        // moves, and Escape or Cancel puts the original text straight back.
+        function startEditMessage(messageId) {
+            const bubble = document.getElementById('msg-' + messageId);
+            if (!bubble || bubble.querySelector('.msg-edit-box')) return;
+            const msg = currentMessages.find(m => idEq(m.id, messageId));
+            const body = bubble.querySelector('.msg-bubble-content');
+            if (!msg || !body) return;
+            body.dataset.original = body.innerHTML;
+            body.innerHTML =
+                '<div class="msg-edit-box">' +
+                    '<textarea class="msg-edit-text" rows="2" aria-label="Edit message"></textarea>' +
+                    '<div class="msg-edit-actions">' +
+                        '<button type="button" class="msg-edit-cancel" onclick="cancelEditMessage(' + jsStr(messageId) + ')">Cancel</button>' +
+                        '<button type="button" class="msg-edit-save" onclick="saveEditMessage(' + jsStr(messageId) + ')">Save</button>' +
+                    '</div>' +
+                '</div>';
+            const ta = body.querySelector('.msg-edit-text');
+            ta.value = msg.content || '';
+            ta.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { e.preventDefault(); cancelEditMessage(messageId); }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditMessage(messageId); }
+            });
+            ta.focus();
+            ta.selectionStart = ta.selectionEnd = ta.value.length;
+        }
+
+        function cancelEditMessage(messageId) {
+            const bubble = document.getElementById('msg-' + messageId);
+            const body = bubble && bubble.querySelector('.msg-bubble-content');
+            if (!body || body.dataset.original === undefined) return;
+            body.innerHTML = body.dataset.original;
+            delete body.dataset.original;
+        }
+
+        async function saveEditMessage(messageId) {
+            const bubble = document.getElementById('msg-' + messageId);
+            const ta = bubble && bubble.querySelector('.msg-edit-text');
+            if (!ta) return;
+            const content = ta.value.trim();
+            if (!content) { alert('A message cannot be empty. Delete it instead.'); return; }
+            const save = bubble.querySelector('.msg-edit-save');
+            if (save) { save.disabled = true; save.textContent = 'Saving…'; }
+            try {
+                await api.editMessage(messageId, content);
+                await loadChatMessages(activeConversationUserId, false);
+                await loadConversations();
+            } catch (e) {
+                console.error('Failed to edit message:', e);
+                if (save) { save.disabled = false; save.textContent = 'Save'; }
+                alert((e && e.message) ? e.message : 'Failed to save the edit. Please try again.');
             }
         }
 

@@ -1031,6 +1031,13 @@ class TrustMyRecordAPI {
         });
     }
 
+    async editMessage(messageId, content) {
+        return this.request(`/messages/message/${messageId}`, {
+            method: 'PATCH',
+            body: { content }
+        });
+    }
+
     async reactToMessage(messageId, reaction) {
         return this.request(`/messages/message/${messageId}/reactions`, {
             method: 'POST',
