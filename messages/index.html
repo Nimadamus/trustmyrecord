@@ -420,13 +420,14 @@
         .msg-bubble.has-actions.four-actions { padding-right: 118px; }
         /* In-place editor: sits inside the bubble, changes nothing around it */
         .msg-edit-box { display: block; }
-        .msg-edit-text {
+        .msg-bubble .msg-edit-text {
             width: 100%; box-sizing: border-box; resize: vertical; min-height: 46px;
-            font: inherit; color: inherit; line-height: 1.4;
-            background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.35);
+            font: inherit; line-height: 1.4;
+            color: var(--msg-sent-ink);
+            background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.35);
             border-radius: 8px; padding: 6px 8px;
         }
-        .msg-bubble.received .msg-edit-text { background: rgba(255,255,255,0.08); border-color: var(--msg-border-strong); }
+        .msg-bubble.received .msg-edit-text { background: rgba(255,255,255,0.08); border-color: var(--msg-border-strong); color: var(--msg-text); }
         .msg-edit-text:focus { outline: 2px solid var(--msg-accent); outline-offset: 1px; }
         .msg-edit-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 5px; }
         .msg-edit-actions button {
@@ -1748,6 +1749,10 @@
             if (save) { save.disabled = true; save.textContent = 'Saving…'; }
             try {
                 await api.editMessage(messageId, content);
+                // Drop the editor before the refresh, or it gets carried over
+                // by the same restore that protects a half-typed edit.
+                const body = bubble.querySelector('.msg-bubble-content');
+                if (body) { body.innerHTML = linkify(content); delete body.dataset.original; }
                 await loadChatMessages(activeConversationUserId, false);
                 await loadConversations();
             } catch (e) {
