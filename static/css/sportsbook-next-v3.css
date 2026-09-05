@@ -1372,7 +1372,7 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
 
     /* ---- Team names: +10% and a heavier stroke --------------------------- */
     html.sbn-v3 .sbn-tname b { font-size: 16px; line-height: 18px; font-weight: 800; }
-    html.sbn-v3 .sbn-crest { flex-basis: 28px; width: 28px; height: 28px; }
+    html.sbn-v3 .sbn-crest { flex-basis: 22px; width: 22px; height: 22px; }
     /* 16px at 800 needs 176px for "San Francisco Giants", and the 205px column
        left 156px, which broke every long club name onto a second line. The
        matchup column takes the 30px back from the quote columns, which are
@@ -1453,9 +1453,14 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
    so this line is the only thing that says whose game it is */
 html.sbn-v3 .sbn-rowmatch b { font-size: 15px; line-height: 20px; color: #f2f6fb; }
 html.sbn-v3 .sbn-rowmatch i { font-size: 11px; color: #75818f; }
-html.sbn-v3 .sbn-rowtop { height: 22px; }
+html.sbn-v3 .sbn-rowtop { height: 24px; }
 html.sbn-v3 .sbn-rowtime { color: #7b8798; }
-html.sbn-v3 .sbn-rowmatch .sbn-crest { flex: 0 0 20px; width: 20px; height: 20px; }
+/* one crest size everywhere on the board: the header of a ladder card and the
+   team row of a lines card render the same 22px mark, so switching tabs or
+   sports never changes the size of a club badge */
+html.sbn-v3 .sbn-rowmatch .sbn-crest,
+html.sbn-v3 .sbn-tname .sbn-crest,
+html.sbn-v3 .sbn-striplabel .sbn-crest { flex: 0 0 22px; width: 22px; height: 22px; }
 html.sbn-v3 .sbn-rowtop .sbn-rowtime::before { content: '\00b7'; margin-right: 6px; color: #5f6b7c; }
 @media (max-width: 720px) {
     html.sbn-v3 .sbn-rowmatch b { font-size: 11.5px; }
