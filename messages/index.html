@@ -1566,8 +1566,23 @@
                     'onclick="openReactionLibrary(event, ' + jsStr(messageId) + ')">+</button>';
             document.body.appendChild(pal);
             if (window.TMREmoji && TMREmoji.parse) TMREmoji.parse(pal);
-            const rect = ev.currentTarget.getBoundingClientRect();
-            const palWidth = (QUICK_REACTIONS.length + 1) * 34 + 12;
+            // Clicking the button focuses it, and the browser can scroll the
+            // thread to bring it into view. The palette is position:fixed, so
+            // it has to be re-pinned to the button afterwards and on any later
+            // scroll, or it ends up floating somewhere else on the page.
+            reactPaletteAnchor = ev.currentTarget;
+            positionReactPalette();
+            requestAnimationFrame(positionReactPalette);
+            window.addEventListener('scroll', positionReactPalette, true);
+            window.addEventListener('resize', positionReactPalette);
+        }
+
+        let reactPaletteAnchor = null;
+        function positionReactPalette() {
+            const pal = document.getElementById('reactPalette');
+            if (!pal || !reactPaletteAnchor || !reactPaletteAnchor.isConnected) return;
+            const rect = reactPaletteAnchor.getBoundingClientRect();
+            const palWidth = pal.offsetWidth || ((QUICK_REACTIONS.length + 1) * 34 + 12);
             let left = rect.left + rect.width / 2 - palWidth / 2;
             left = Math.max(8, Math.min(left, window.innerWidth - palWidth - 8));
             pal.style.left = left + 'px';
@@ -1588,6 +1603,9 @@
         function closeReactionPalette() {
             const pal = document.getElementById('reactPalette');
             if (pal) pal.remove();
+            reactPaletteAnchor = null;
+            window.removeEventListener('scroll', positionReactPalette, true);
+            window.removeEventListener('resize', positionReactPalette);
         }
         document.addEventListener('click', closeReactionPalette);
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeReactionPalette(); });
