@@ -24,9 +24,11 @@
                 board.insertBefore(slot, board.firstChild);
             }
         }
-        slot.textContent = tally.textContent;
+        // idempotent: the observer below watches the subtree these lines write
+        // into, so writing unconditionally would feed itself
+        if (slot.textContent !== tally.textContent) slot.textContent = tally.textContent;
         if (!/loose/.test(slot.className)) slot.className = 'sbn-headtally';
-        tally.style.display = 'none';
+        if (tally.style.display !== 'none') tally.style.display = 'none';
     }
     // The engine writes a player prop label as one string, "Name . Prop Type".
     // Split it so the player reads first and the market supports it.
@@ -47,9 +49,28 @@
             b.parentNode.classList.add('is-prop');
         });
     }
-    function tidy() { moveTally(); splitPropLabels(); }
-    var board = document.getElementById('sbnBoard');
-    if (board && window.MutationObserver) new MutationObserver(tidy).observe(board, { childList: true });
+    var busy = false;
+    function tidy() {
+        if (busy) return;
+        busy = true;
+        try { moveTally(); splitPropLabels(); } finally { busy = false; }
+    }
+    // The board is mounted by the embed after this file runs, so looking for it
+    // once found nothing and the observer was never attached: the tally was
+    // moved by the two timeouts below and then walked back into the tab row by
+    // the next render, which is what wraps the tabs onto a second line. Wait
+    // for the board, then watch the subtree, because a re-render replaces the
+    // toolbar and the column header rather than the board's own children.
+    var tries = 0;
+    (function attach() {
+        var board = document.getElementById('sbnBoard');
+        if (board && window.MutationObserver) {
+            new MutationObserver(tidy).observe(board, { childList: true, subtree: true });
+            tidy();
+            return;
+        }
+        if (++tries < 120) setTimeout(attach, 250);
+    })();
     document.addEventListener('DOMContentLoaded', tidy);
     setTimeout(tidy, 400); setTimeout(tidy, 1500);
 })();

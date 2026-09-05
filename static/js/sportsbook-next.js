@@ -692,9 +692,9 @@
        the card does not get taller. */
     function matchHead(g) {
         return '<span class="sbn-rowmatch">' +
-            crest(g.away) + '<b>' + esc(g.away) + '</b>' +
+            '<b>' + esc(g.away) + '</b>' +
             '<i>vs</i>' +
-            crest(g.home) + '<b>' + esc(g.home) + '</b>' +
+            '<b>' + esc(g.home) + '</b>' +
             '</span>';
     }
     function gameCard(g, cat, cols) {
