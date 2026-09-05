@@ -1411,7 +1411,10 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
     }
 
     /* ---- Market tabs: MLB, Game Lines, Alt Lines, Player Props, +11% ----- */
-    html.sbn-v3 .sbn-cat { font-size: 15px; }
+    /* 15px labels need the inset back: the toolbar also carries the game/price
+       tally, and at 14px of inset the last two markets wrapped to a second row
+       in the states where that tally is present. */
+    html.sbn-v3 .sbn-cat { font-size: 15px; padding: 0 9px; gap: 5px; }
     html.sbn-v3 .sbn-cat i { font-size: 11.5px; }
     html.sbn-v3 .sbn-boardname { font-size: 13px; }
     html.sbn-v3 .sbn-tally { font-size: 11.5px; }
