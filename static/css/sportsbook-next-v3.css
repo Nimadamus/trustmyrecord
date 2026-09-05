@@ -1353,3 +1353,103 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
     html.sbn-v3 .sbn-cat { height: 38px; padding: 0 12px; font-size: 12.5px; gap: 6px; }
     html.sbn-v3 .sbn-cat i { font-size: 11px; }
 }
+
+/* ============================================================================
+ * PASS 5 - READABILITY ONLY (2026-09-05).
+ * Same board, same grid, same density model: the type comes up to a size that
+ * reads at a glance on a large desktop screen. Names +10%, prices +14%, market
+ * tabs +11%, rail +8%, a brighter kickoff line and All markets pill, and a
+ * couple of pixels of air between rows. Nothing here moves a column, changes a
+ * control or touches behaviour.
+ * The cells keep their 36px height on purpose: a 16px number in a 36px control
+ * still centres on a whole pixel (36 - 20 line box = 16, even) and holding the
+ * height is what keeps the same number of games on screen.
+ * Guarded above the phone breakpoint so every mobile rule above still wins.
+ * The values the production page fights over with !important are restated in
+ * the sbnext layer in sportsbook-next-embed.css; change one, change both.
+ * ========================================================================== */
+@media (min-width: 721px) {
+
+    /* ---- Team names: +10% and a heavier stroke --------------------------- */
+    html.sbn-v3 .sbn-tname b { font-size: 16px; line-height: 18px; font-weight: 800; }
+    html.sbn-v3 .sbn-crest { flex-basis: 28px; width: 28px; height: 28px; }
+    /* 16px at 800 needs 176px for "San Francisco Giants", and the 205px column
+       left 156px, which broke every long club name onto a second line. The
+       matchup column takes the 30px back from the quote columns, which are
+       1fr and already wider than the pair inside them. */
+    html.sbn-v3 .sbn-colhead,
+    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 235px) repeat(3, minmax(104px, 1fr)); }
+    html.sbn-v3 .sbn-strip { grid-template-columns: 235px minmax(0, 1fr); }
+
+    /* ---- The quote: prices, spreads, totals, moneylines, +14% ------------ */
+    html.sbn-v3 .sbn-chip-top,
+    html.sbn-v3 .sbn-chip-bot { line-height: 20px; }
+    html.sbn-v3 .sbn-chip-top,
+    html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { font-size: 16px; }
+    html.sbn-v3 .sbn-chip-bot,
+    html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top { font-size: 16px; }
+    html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { font-size: 16px; }
+
+    /* ---- A little air between the matchup rows ---------------------------
+       A 38px row holds a two-line club name at 18px without clipping it, and
+       costs the card 10px against the 110px it measured before. */
+    html.sbn-v3 .sbn-trow { height: 38px; }
+    html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 4px; }
+    html.sbn-v3 .sbn-row { padding: 7px 12px 8px; }
+    html.sbn-v3 .sbn-teams { margin-top: 4px; }
+
+    /* ---- Kickoff line and the All markets button ------------------------- */
+    html.sbn-v3 .sbn-rowtop { height: 20px; }
+    html.sbn-v3 .sbn-rowtime { font-size: 11.5px; line-height: 15px; letter-spacing: .06em; color: #8d9aac; }
+    html.sbn-v3 .sbn-deep {
+        padding: 2px 10px;
+        font-size: 11.5px;
+        line-height: 15px;
+        border-radius: 5px;
+        border-color: rgba(255, 255, 255, 0.13);
+        color: #9fb0c2;
+    }
+
+    /* ---- Market tabs: MLB, Game Lines, Alt Lines, Player Props, +11% ----- */
+    html.sbn-v3 .sbn-cat { font-size: 15px; }
+    html.sbn-v3 .sbn-cat i { font-size: 11.5px; }
+    html.sbn-v3 .sbn-boardname { font-size: 13px; }
+    html.sbn-v3 .sbn-tally { font-size: 11.5px; }
+    html.sbn-v3 .sbn-colhead { padding: 7px 12px; font-size: 12.5px; }
+    html.sbn-v3 .sbn-headtally,
+    html.sbn-v3 .sbn-loosetally { font-size: 11.5px; }
+
+    /* ---- Left sports rail: +8% ------------------------------------------ */
+    html.sbn-v3 .sbn-railhead { font-size: 11.5px; }
+    html.sbn-v3 .sbn-railbtn b { font-size: 14.5px; }
+    html.sbn-v3 .sbn-railbtn small { font-size: 11.5px; }
+
+    /* ---- The ladder is the same quote cell, so it moves with it ----------
+       "O 41.5" plus "-172" at 14px measures 84px inside an 18px inset, so the
+       rung floor goes to 104px and the pair still clears the right edge. The
+       rung keeps its 36px height. */
+    html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(96px, 152px); }
+    html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13.5px; }
+    html.sbn-v3 .sbn-striptrack .sbn-more { font-size: 11px; }
+    html.sbn-v3 .sbn-striplabel b { font-size: 14.5px; line-height: 18px; }
+    html.sbn-v3 .sbn-propwho { font-size: 14px; line-height: 17px; }
+    html.sbn-v3 .sbn-striplabel b i { font-size: 11px; line-height: 13px; }
+
+    /* ---- Pick slip: the type only, the column keeps its 322px ------------ */
+    html.sbn-v3 .sbn-slipsel { font-size: 15px; line-height: 19px; }
+    html.sbn-v3 .sbn-slipgame { font-size: 12px; }
+    html.sbn-v3 .sbn-slipmeta { font-size: 11.5px; }
+    html.sbn-v3 .sbn-slipmeta b { font-size: 14px; }
+}
+
+/* ---- PASS 6: the matchup header, sized to the readability pass ------------ */
+html.sbn-v3 .sbn-rowmatch b { font-size: 13.5px; line-height: 18px; }
+html.sbn-v3 .sbn-rowmatch i { font-size: 11px; color: #7b8798; }
+html.sbn-v3 .sbn-rowmatch .sbn-crest { flex: 0 0 19px; width: 19px; height: 19px; }
+html.sbn-v3 .sbn-rowtop .sbn-rowtime::before { content: '\00b7'; margin-right: 6px; color: #5f6b7c; }
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-rowmatch b { font-size: 11.5px; }
+    html.sbn-v3 .sbn-rowmatch .sbn-crest { display: none; }
+}

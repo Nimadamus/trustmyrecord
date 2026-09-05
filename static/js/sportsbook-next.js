@@ -683,6 +683,20 @@
         Object.keys(g.groups).forEach(function (k) { if (!LINE_GROUPS[k]) n += g.groups[k].items.length; });
         return n;
     }
+    /* Every card names its own matchup, whatever market it is showing. On Game
+       Lines the two club names are the rows themselves, but on Alt Totals the
+       rows are Over and Under, on Player Props they are players, and the card
+       had nothing on it that said which game those prices belonged to. The
+       header is built from the same game object the prices come from, so it
+       cannot drift onto the wrong card. It rides in the existing top line, so
+       the card does not get taller. */
+    function matchHead(g) {
+        return '<span class="sbn-rowmatch">' +
+            crest(g.away) + '<b>' + esc(g.away) + '</b>' +
+            '<i>vs</i>' +
+            crest(g.home) + '<b>' + esc(g.home) + '</b>' +
+            '</span>';
+    }
     function gameCard(g, cat, cols) {
         var body;
         if (cat.layout === 'strip') {
@@ -707,6 +721,7 @@
         var ncol = cat.layout === 'ou' ? 2 : (cols ? cols.length : 3);
         return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol + '" data-game="' + esc(g.id) + '">' +
             '<div class="sbn-rowtop">' +
+            matchHead(g) +
             '<span class="sbn-rowtime">' + esc(whenText(g.when)) + '</span>' +
             '<button type="button" class="sbn-deep" data-drawer="' + esc(g.id) + '">' +
             'All markets <b>' + countPrices(g) + '</b></button>' +
