@@ -393,6 +393,27 @@
     html.tmr-sbnext .sbn-dcat:hover { background: rgba(255, 255, 255, 0.045) !important; color: var(--sbn-text2) !important; }
     html.tmr-sbnext .sbn-dcat.is-on { background: rgba(34, 211, 238, 0.08) !important; color: #ffffff !important; font-weight: 800 !important; }
     html.tmr-sbnext .sbn-dmatch b { font-family: var(--sbn-font) !important; }
+    /* the page wraps navs by default with an !important the panel cannot
+       out-specify, which broke the category bar onto a second line */
+    html.tmr-sbnext .sbn-dcats {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 0 !important;
+        overflow-x: auto !important;
+        background: var(--sbn-panel2) !important;
+    }
+    html.tmr-sbnext .sbn-dslip,
+    html.tmr-sbnext .sbn-dfootbtn {
+        font-family: var(--sbn-font) !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+        border-radius: 8px !important;
+    }
+    html.tmr-sbnext .sbn-dslip { background: rgba(255, 255, 255, 0.04) !important; border: 1px solid var(--sbn-line2) !important; color: var(--sbn-text2) !important; font-size: 12.5px !important; }
+    html.tmr-sbnext .sbn-dfootbtn { background: var(--sbn-accent) !important; border: 0 !important; color: var(--sbn-ink) !important; font-size: 13px !important; }
     /* the expanded view's prices are the board's cell, one size up */
     html.tmr-sbnext .sbn-dcell .sbn-chip { height: 46px !important; padding: 0 12px !important; }
 

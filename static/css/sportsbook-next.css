@@ -591,10 +591,12 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 
 /* category tabs: one market at a time, the same underlined bar as the board */
 .sbn-dcats {
-    display: flex; flex-wrap: wrap; align-items: stretch; gap: 0;
+    display: flex; flex-wrap: nowrap; align-items: stretch; gap: 0;
     padding: 0 16px; background: var(--sbn-panel2);
     border-bottom: 1px solid var(--sbn-line);
+    overflow-x: auto; scrollbar-width: none;
 }
+.sbn-dcats::-webkit-scrollbar { display: none; }
 .sbn-dcat {
     position: relative; height: 44px; padding: 0 14px; border: 0; border-radius: 0;
     background: transparent; color: var(--sbn-muted);
@@ -643,3 +645,26 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
     .sbn-dcats { padding: 0 10px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
     .sbn-dcats::-webkit-scrollbar { display: none; }
 }
+
+/* the expanded view reports the one pick slip; it never holds picks itself */
+.sbn-dslip {
+    margin-left: auto; padding: 9px 14px; border: 1px solid var(--sbn-line2); border-radius: 9px;
+    background: rgba(255, 255, 255, 0.04); color: var(--sbn-text2);
+    font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.sbn-dslip b { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--sbn-accent); color: var(--sbn-ink); font-weight: 800; }
+.sbn-dslip:hover { border-color: rgba(34, 211, 238, 0.45); color: var(--sbn-text); }
+.sbn-dfoot {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    /* the page's live-chat bubble sits in the bottom right corner and was
+       covering the button, so the bar keeps clear of it */
+    padding: 12px 96px 12px 24px; background: var(--sbn-panel2); border-top: 1px solid var(--sbn-line);
+    color: var(--sbn-text2); font-size: 13px;
+}
+.sbn-dfoot b { color: var(--sbn-accent); font-size: 15px; font-weight: 800; }
+.sbn-dfootbtn {
+    padding: 10px 18px; border: 0; border-radius: 8px; background: var(--sbn-accent); color: var(--sbn-ink);
+    font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.sbn-dfootbtn:hover { filter: brightness(1.06); }
+@media (max-width: 1023px) { .sbn-dfoot { padding: 12px 88px 12px 16px; } .sbn-dslip { padding: 8px 11px; } }

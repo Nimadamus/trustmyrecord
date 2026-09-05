@@ -872,9 +872,19 @@
             '<div class="sbn-dwhen"><span>' + esc(whenText(g.when)) + '</span><em>' + esc(sportMeta(state.sport).label) + '</em>' +
             '<span>' + countPrices(g) + ' prices</span></div>' +
             '</div>' +
+            '<button type="button" class="sbn-dslip" data-drawerclose="1">Pick slip <b>' + state.picks.length + '</b></button>' +
             '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
             (cats.length ? '<nav class="sbn-dcats" aria-label="Market categories">' + nav + '</nav>' : '') +
-            '<div class="sbn-dbody">' + (secs || '<div class="sbn-note">No markets are posted for this game.</div>') + '</div></div>';
+            '<div class="sbn-dbody">' + (secs || '<div class="sbn-note">No markets are posted for this game.</div>') + '</div>' +
+            // The panel covers the slip, so a price added from here changed
+            // something the user could not see. This is the same slip, reported:
+            // it reads state.picks, it does not hold any of its own.
+            (state.picks.length
+                ? '<div class="sbn-dfoot"><span><b>' + state.picks.length + '</b> ' +
+                  (state.picks.length === 1 ? 'selection' : 'selections') + ' in your pick slip</span>' +
+                  '<button type="button" class="sbn-dfootbtn" data-drawerclose="1">View pick slip</button></div>'
+                : '') +
+            '</div>';
     }
 
     function slipHtml() {
