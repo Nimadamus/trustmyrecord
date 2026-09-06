@@ -9,6 +9,9 @@
  * out-write, and for !important a layered rule outranks an unlayered one
  * whatever the specificity. That is the only reliable way to win here.
  * ========================================================================== */
+/* Rev 2026-09-06b: the edge cached the previous tag URL before the deploy
+   landed, so it served the old bytes under the new name. A byte change
+   re-pins the asset to a URL nothing has fetched yet. */
 @layer sbnext {
     /* The classic board is hidden, not removed: its markup and its scripts stay
        in place so rolling back is a single class. */
