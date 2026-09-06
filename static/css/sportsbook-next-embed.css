@@ -354,25 +354,79 @@
         background: transparent !important;
     }
 
-    /* the underlined tab bar, not a row of pills */
+    /* the underlined tab bar, not a row of pills.
+       The row was reading as one run of gray words: 9px of padding on a zero
+       gap left the categories touching, and #98a5b6 gave the active market no
+       more presence than the rest. It now breathes at 18px a side, the labels
+       carry the brand blue-gray, and the active market is the accent itself
+       with a hairline rule under it. Nothing here is a box. */
     html.tmr-sbnext .sbn-cat {
+        position: relative !important;
         height: 40px !important;
-        padding: 0 9px !important;
-        gap: 5px !important;
+        padding: 0 18px !important;
+        gap: 8px !important;
         border: 0 !important;
         border-radius: 0 !important;
         background: transparent !important;
         font-size: 15px !important;
-        font-weight: 700 !important;
-        color: #98a5b6 !important;
+        font-weight: 600 !important;
+        color: #8ba3bd !important;
     }
-    html.tmr-sbnext .sbn-cat:hover { background: rgba(255, 255, 255, 0.045) !important; color: var(--sbn-text2) !important; }
+    /* a faint rule between neighbours, short enough to read as a separator
+       rather than a border, and never on the first tab of a line */
+    html.tmr-sbnext .sbn-cat + .sbn-cat::before {
+        content: '' !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 50% !important;
+        width: 1px !important;
+        height: 16px !important;
+        transform: translateY(-50%) !important;
+        background: rgba(255, 255, 255, 0.07) !important;
+    }
+    html.tmr-sbnext .sbn-cat::after {
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        right: 14px !important;
+        bottom: 0 !important;
+        height: 2px !important;
+        border-radius: 2px 2px 0 0 !important;
+        background: transparent !important;
+    }
+    html.tmr-sbnext .sbn-cat:hover {
+        background: rgba(34, 211, 238, 0.055) !important;
+        color: #cfe6f4 !important;
+    }
     html.tmr-sbnext .sbn-cat.is-on {
-        background: rgba(34, 211, 238, 0.08) !important;
-        color: #ffffff !important;
-        font-weight: 800 !important;
+        background: transparent !important;
+        color: var(--sbn-accent) !important;
+        font-weight: 700 !important;
     }
-    html.tmr-sbnext .sbn-cats { gap: 0 !important; }
+    html.tmr-sbnext .sbn-cat.is-on::after { background: var(--sbn-accent) !important; }
+    /* the count is a figure beside the label, not a badge on a button */
+    html.tmr-sbnext .sbn-cat i {
+        padding: 0 !important;
+        border-radius: 0 !important;
+        background: none !important;
+        color: #66788f !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+    html.tmr-sbnext .sbn-cat.is-on i { background: none !important; color: rgba(34, 211, 238, 0.78) !important; }
+    html.tmr-sbnext .sbn-cats { gap: 2px !important; }
+
+    /* the padding comes back in as the toolbar narrows, so ten markets still
+       fit a line before the bar has to wrap */
+    @media (max-width: 1360px) {
+        html.tmr-sbnext .sbn-cat { padding: 0 14px !important; gap: 7px !important; }
+        html.tmr-sbnext .sbn-cat::after { left: 11px !important; right: 11px !important; }
+    }
+    @media (max-width: 1180px) {
+        html.tmr-sbnext .sbn-cat { padding: 0 12px !important; font-size: 14px !important; }
+        html.tmr-sbnext .sbn-cat::after { left: 9px !important; right: 9px !important; }
+    }
 
     /* the expanded view's own tabs, same treatment as the board's */
     html.tmr-sbnext .sbn-dcat {
@@ -467,9 +521,13 @@
     @media (max-width: 720px) {
         html.tmr-sbnext .sbn-cat {
             height: 38px !important;
-            padding: 0 12px !important;
+            padding: 0 13px !important;
             gap: 6px !important;
             font-size: 12.5px !important;
         }
+        html.tmr-sbnext .sbn-cat::after { left: 10px !important; right: 10px !important; }
+        /* the row scrolls at this width, so the dividers would land mid-swipe */
+        html.tmr-sbnext .sbn-cat + .sbn-cat::before { display: none !important; }
+        html.tmr-sbnext .sbn-cat i { font-size: 10.5px !important; }
     }
 }

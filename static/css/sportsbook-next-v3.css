@@ -44,7 +44,7 @@ html.sbn-v3 .sbn-boardname {
    sport only and keeps every market discoverable, which is the point of the
    bar. Phones still scroll, where a second line costs too much. */
 html.sbn-v3 .sbn-cats {
-    gap: 0;
+    gap: 2px;
     flex-wrap: wrap;
     align-self: stretch;
     align-items: stretch;
@@ -53,23 +53,35 @@ html.sbn-v3 .sbn-cats::-webkit-scrollbar { display: none; }
 html.sbn-v3 .sbn-cat {
     position: relative;
     align-items: baseline;
-    gap: 5px;
+    gap: 8px;
     height: 40px;
-    padding: 0 13px;
+    padding: 0 18px;
     border: 0;
     border-radius: 0;
     background: transparent;
-    color: var(--sbn-muted);
+    color: #8ba3bd;
     font-size: 12.5px;
     font-weight: 600;
     letter-spacing: 0;
     transition: color .12s ease, background .12s ease;
 }
+/* a faint rule between neighbours, short enough to read as a separator rather
+   than a border, and never on the first tab of a line */
+html.sbn-v3 .sbn-cat + .sbn-cat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 1px;
+    height: 16px;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.07);
+}
 html.sbn-v3 .sbn-cat::after {
     content: '';
     position: absolute;
-    left: 9px;
-    right: 9px;
+    left: 14px;
+    right: 14px;
     bottom: 0;
     height: 2px;
     border-radius: 2px 2px 0 0;
@@ -77,12 +89,12 @@ html.sbn-v3 .sbn-cat::after {
     transition: background .12s ease;
 }
 html.sbn-v3 .sbn-cat:hover {
-    background: rgba(255, 255, 255, 0.035);
-    color: var(--sbn-text2);
+    background: rgba(34, 211, 238, 0.055);
+    color: #cfe6f4;
 }
 html.sbn-v3 .sbn-cat.is-on {
     background: transparent;
-    color: var(--sbn-text);
+    color: var(--sbn-accent);
     font-weight: 700;
 }
 html.sbn-v3 .sbn-cat.is-on::after { background: var(--sbn-accent); }
@@ -92,11 +104,29 @@ html.sbn-v3 .sbn-cat i {
     padding: 0;
     border-radius: 0;
     background: none;
-    color: #6f7c8e;
-    font-size: 10.5px;
+    color: #66788f;
+    font-size: 11px;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
-html.sbn-v3 .sbn-cat.is-on i { background: none; color: var(--sbn-accent); }
+html.sbn-v3 .sbn-cat.is-on i { background: none; color: rgba(34, 211, 238, 0.78); }
+
+/* the padding comes back in as the toolbar narrows, so ten markets still fit a
+   line before the bar has to wrap */
+@media (max-width: 1360px) {
+    html.sbn-v3 .sbn-cat { padding: 0 14px; gap: 7px; }
+    html.sbn-v3 .sbn-cat::after { left: 11px; right: 11px; }
+}
+@media (max-width: 1180px) {
+    html.sbn-v3 .sbn-cat { padding: 0 12px; }
+    html.sbn-v3 .sbn-cat::after { left: 9px; right: 9px; }
+}
+@media (max-width: 720px) {
+    html.sbn-v3 .sbn-cat { padding: 0 13px; gap: 6px; }
+    html.sbn-v3 .sbn-cat::after { left: 10px; right: 10px; }
+    html.sbn-v3 .sbn-cat + .sbn-cat::before { display: none; }
+    html.sbn-v3 .sbn-cat i { font-size: 10.5px; }
+}
 
 /* the count moves into the header row, where the matchup column is otherwise
    blank, which frees the whole toolbar width for the market tabs */
@@ -1331,27 +1361,30 @@ html.sbn-v3 .sbn-loosetally { font-size: 11px; color: #8d99aa; }
    all. Height stays even so the board below keeps landing on whole pixels. */
 html.sbn-v3 .sbn-cat {
     height: 40px;
-    padding: 0 14px;
-    gap: 7px;
+    padding: 0 18px;
+    gap: 8px;
     font-size: 13.5px;
-    font-weight: 700;
-    color: #98a5b6;
+    font-weight: 600;
+    color: #8ba3bd;
 }
-html.sbn-v3 .sbn-cat i { font-size: 11.5px; font-weight: 700; color: #6c7889; }
-html.sbn-v3 .sbn-cat:hover { background: rgba(255, 255, 255, 0.045); color: var(--sbn-text2); }
-html.sbn-v3 .sbn-cat:hover i { color: #8794a6; }
+html.sbn-v3 .sbn-cat i { font-size: 11.5px; font-weight: 600; color: #66788f; }
+html.sbn-v3 .sbn-cat:hover { background: rgba(34, 211, 238, 0.055); color: #cfe6f4; }
+html.sbn-v3 .sbn-cat:hover i { color: #8fa6bd; }
 html.sbn-v3 .sbn-cat.is-on {
-    background: rgba(34, 211, 238, 0.08);
-    color: #ffffff;
-    font-weight: 800;
+    background: transparent;
+    color: var(--sbn-accent);
+    font-weight: 700;
 }
-html.sbn-v3 .sbn-cat.is-on i { color: var(--sbn-accent); }
-html.sbn-v3 .sbn-cat::after { left: 6px; right: 6px; height: 3px; }
+html.sbn-v3 .sbn-cat.is-on i { color: rgba(34, 211, 238, 0.78); }
+html.sbn-v3 .sbn-cat::after { left: 14px; right: 14px; height: 2px; }
 html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
 
 @media (max-width: 720px) {
-    html.sbn-v3 .sbn-cat { height: 38px; padding: 0 12px; font-size: 12.5px; gap: 6px; }
+    html.sbn-v3 .sbn-cat { height: 38px; padding: 0 13px; font-size: 12.5px; gap: 6px; }
     html.sbn-v3 .sbn-cat i { font-size: 11px; }
+    html.sbn-v3 .sbn-cat::after { left: 10px; right: 10px; }
+    /* the row scrolls at this width, so the dividers would land mid-swipe */
+    html.sbn-v3 .sbn-cat + .sbn-cat::before { display: none; }
 }
 
 /* ============================================================================
@@ -1414,8 +1447,18 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
     /* 15px labels need the inset back: the toolbar also carries the game/price
        tally, and at 14px of inset the last two markets wrapped to a second row
        in the states where that tally is present. */
-    html.sbn-v3 .sbn-cat { font-size: 15px; padding: 0 9px; gap: 5px; }
-    html.sbn-v3 .sbn-cat i { font-size: 11.5px; }
+    html.sbn-v3 .sbn-cat { font-size: 15px; padding: 0 18px; gap: 8px; }
+    html.sbn-v3 .sbn-cat i { font-size: 11px; }
+    /* the inset comes back in as the toolbar narrows, so the markets still fit
+       a line before the bar has to wrap */
+    @media (max-width: 1360px) {
+        html.sbn-v3 .sbn-cat { padding: 0 14px; gap: 7px; }
+        html.sbn-v3 .sbn-cat::after { left: 11px; right: 11px; }
+    }
+    @media (max-width: 1180px) {
+        html.sbn-v3 .sbn-cat { padding: 0 12px; font-size: 14px; }
+        html.sbn-v3 .sbn-cat::after { left: 9px; right: 9px; }
+    }
     html.sbn-v3 .sbn-boardname { font-size: 13px; }
     html.sbn-v3 .sbn-tally { font-size: 11.5px; }
     html.sbn-v3 .sbn-colhead { padding: 7px 12px; font-size: 12.5px; }
