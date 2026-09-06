@@ -114,6 +114,89 @@ def stadium(away_hex, home_hex, out_name="g1000-stadium.svg"):
     write(out_name, s)
 
 
+# The three surfaces the tour plays on, as the colours they actually are.
+# These are the court itself, not a brand palette: a clay court is not "orange",
+# it is that orange, and a reader who watches tennis will know instantly if the
+# hero behind a Roland Garros preview is blue.
+SURFACE_PAINT = {
+    "hard":  {"court": "#2C6BB5", "apron": "#1B4A80", "line": "#F4F8FC", "glow": "#4C8FD8"},
+    "clay":  {"court": "#B4623A", "apron": "#8A4526", "line": "#F6EFE7", "glow": "#D2814F"},
+    "grass": {"court": "#3F7A46", "apron": "#2A5730", "line": "#F3F8F1", "glow": "#5FA268"},
+}
+
+
+def court(surface, away_hex, home_hex, out_name="g1000-court.svg"):
+    """Hero backdrop for a tennis Game File: the court, in the surface's colour.
+
+    The team-sport hero is a floodlit stand, which is atmosphere for a stadium
+    sport and simply wrong here. This draws the thing the match is played on,
+    in perspective, painted the colour that surface actually is, with the two
+    players' accent colours as the only borrowed element.
+
+    Same contract as stadium(): low contrast, because headline type sits on top
+    of it, and no identifiable person or venue anywhere in it.
+    """
+    W, H = 1600, 620
+    paint = SURFACE_PAINT.get(str(surface or "").strip().lower(), SURFACE_PAINT["hard"])
+    s = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
+         f'preserveAspectRatio="xMidYMid slice" role="presentation" aria-hidden="true">')
+    s += '<defs>'
+    s += ('<linearGradient id="air" x1="0" y1="0" x2="0" y2="1">'
+          '<stop offset="0%" stop-color="#070B11"/><stop offset="60%" stop-color="#0A0F16"/>'
+          '<stop offset="100%" stop-color="#05080C"/></linearGradient>')
+    s += (f'<linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">'
+          f'<stop offset="0%" stop-color="{paint["apron"]}" stop-opacity=".55"/>'
+          f'<stop offset="100%" stop-color="{paint["court"]}" stop-opacity=".92"/></linearGradient>')
+    s += (f'<radialGradient id="lamp" cx="50%" cy="-10%" r="80%">'
+          f'<stop offset="0%" stop-color="{paint["glow"]}" stop-opacity=".30"/>'
+          f'<stop offset="100%" stop-color="{paint["glow"]}" stop-opacity="0"/></radialGradient>')
+    s += (f'<linearGradient id="tintA" x1="0" y1="0" x2="1" y2="0">'
+          f'<stop offset="0%" stop-color="{away_hex}" stop-opacity=".16"/>'
+          f'<stop offset="45%" stop-color="{away_hex}" stop-opacity="0"/></linearGradient>')
+    s += (f'<linearGradient id="tintH" x1="1" y1="0" x2="0" y2="0">'
+          f'<stop offset="0%" stop-color="{home_hex}" stop-opacity=".16"/>'
+          f'<stop offset="45%" stop-color="{home_hex}" stop-opacity="0"/></linearGradient>')
+    s += ('<linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">'
+          '<stop offset="0%" stop-color="#04070A" stop-opacity=".62"/>'
+          '<stop offset="55%" stop-color="#04070A" stop-opacity=".18"/>'
+          '<stop offset="100%" stop-color="#04070A" stop-opacity=".72"/></linearGradient>')
+    s += '</defs>'
+
+    s += f'<rect width="{W}" height="{H}" fill="url(#air)"/>'
+    s += f'<rect width="{W}" height="{H}" fill="url(#lamp)"/>'
+
+    # The apron, then the court inside it, both in one-point perspective with
+    # the vanishing point above the middle of the frame.
+    s += f'<path d="M120,{H} L{W-120},{H} L{W-470},250 L470,250 Z" fill="url(#floor)"/>'
+    s += (f'<path d="M250,{H} L{W-250},{H} L{W-520},292 L520,292 Z" '
+          f'fill="{paint["court"]}" opacity=".85"/>')
+
+    ln = paint["line"]
+    # Baseline, service line, centre service line, singles tramlines, net.
+    s += f'<path d="M250,{H-24} L{W-250},{H-24}" stroke="{ln}" stroke-opacity=".34" stroke-width="5"/>'
+    s += f'<path d="M405,436 L{W-405},436" stroke="{ln}" stroke-opacity=".26" stroke-width="4"/>'
+    s += f'<path d="M{W//2},436 L{W//2},{H-24}" stroke="{ln}" stroke-opacity=".20" stroke-width="3"/>'
+    s += f'<path d="M300,{H} L545,292" stroke="{ln}" stroke-opacity=".24" stroke-width="4"/>'
+    s += f'<path d="M{W-300},{H} L{W-545},292" stroke="{ln}" stroke-opacity=".24" stroke-width="4"/>'
+    s += f'<path d="M520,292 L{W-520},292" stroke="{ln}" stroke-opacity=".30" stroke-width="4"/>'
+
+    # The net: a band of cord, a tape along the top, and the two posts.
+    s += f'<rect x="470" y="243" width="{W-940}" height="52" fill="#05080C" opacity=".55"/>'
+    for i in range(56):
+        x = 470 + i * ((W - 940) / 55.0)
+        s += f'<path d="M{x:.0f},243 L{x:.0f},295" stroke="{ln}" stroke-opacity=".10" stroke-width="1"/>'
+    for y in (255, 268, 281):
+        s += f'<path d="M470,{y} L{W-470},{y}" stroke="{ln}" stroke-opacity=".08" stroke-width="1"/>'
+    s += f'<rect x="470" y="238" width="{W-940}" height="7" fill="{ln}" opacity=".30"/>'
+    s += f'<rect x="462" y="236" width="10" height="62" fill="{ln}" opacity=".22"/>'
+    s += f'<rect x="{W-472}" y="236" width="10" height="62" fill="{ln}" opacity=".22"/>'
+
+    s += f'<rect width="{W}" height="{H}" fill="url(#tintA)"/>'
+    s += f'<rect width="{W}" height="{H}" fill="url(#tintH)"/>'
+    s += f'<rect width="{W}" height="{H}" fill="url(#fade)"/>'
+    write(out_name, s)
+
+
 def player_card(slug, name, mono, team, pos, hand, accent, sample, out_name=None):
     """Identity card for a starter. Deliberately NOT a stat card.
 
@@ -234,7 +317,13 @@ def build_for_article(slug, spec):
     away_hex = spec.get("away_color") or "#FF5910"
     home_hex = spec.get("home_color") or "#CE1141"
 
-    stadium(away_hex, home_hex, out_name="%s-stadium.svg" % slug)
+    # Tennis gets the court it is played on, under the same file name the
+    # article already references, so the hero improves without the article
+    # having to know anything changed.
+    if str(spec.get("sport") or "").lower() == "tennis":
+        court(spec.get("surface"), away_hex, home_hex, out_name="%s-stadium.svg" % slug)
+    else:
+        stadium(away_hex, home_hex, out_name="%s-stadium.svg" % slug)
 
     # No monogram cards. They existed to stand in for photography the article
     # was not using; the starters' real headshots are now on the page, and a

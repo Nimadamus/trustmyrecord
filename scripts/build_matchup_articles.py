@@ -851,6 +851,11 @@ def graphics_spec(article):
             if kind == "herolines":
                 spec["away_color"] = block.get("away_color")
                 spec["home_color"] = block.get("home_color")
+                # Which sport, and for tennis which surface. Read off the hero
+                # for the same reason every other value here is: there is one
+                # copy, so the artwork cannot disagree with the article.
+                spec["sport"] = block.get("sport")
+                spec["surface"] = block.get("surface")
                 spec["away_team"] = ("%s %s" % (block.get("away_city", ""), block.get("away_nick", ""))).strip()
                 spec["home_team"] = ("%s %s" % (block.get("home_city", ""), block.get("home_nick", ""))).strip()
             elif kind == "showdown":
