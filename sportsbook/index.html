@@ -948,13 +948,30 @@
                     {key:'tennis_set_1', label:'Set 1', hint:'First set winner + games'},
                     {key:'tennis_set_2', label:'Set 2', hint:'Second set winner + games'},
                     {key:'tennis_set_3', label:'Set 3', hint:'Deciding set, best of five'},
-                    {key:'tennis_specials', label:'Set Betting', hint:'Correct set score'},
+                    // TENNIS_MARKETS_20260906. Everything below arrives from
+                    // Bovada via services/tennis/bovadaTennisMarkets.js, which
+                    // is additive and fail-open: on a match Bovada does not
+                    // carry, these tabs simply do not appear.
+                    {key:'tennis_set_betting', label:'Set Betting', hint:'Correct set score'},
+                    {key:'tennis_set_handicap', label:'Set Handicap', hint:'Set spread'},
+                    {key:'tennis_total_sets', label:'Total Sets', hint:'O/U sets'},
+                    {key:'tennis_player_games', label:'Player Games', hint:'A player's own total'},
+                    {key:'tennis_game_totals', label:'Alt Total Games', hint:'Every games line'},
+                    {key:'tennis_game_handicap', label:'Alt Game Spread', hint:'Every games handicap'},
+                    {key:'tennis_service', label:'Serve & Break', hint:'Holds, breaks, first game'},
+                    {key:'tennis_aces', label:'Aces', hint:'Most aces, most double faults'},
+                    {key:'tennis_set_score', label:'Set Score', hint:'Correct score in a set'},
+                    {key:'tennis_match_props', label:'Match Props', hint:'Tiebreaks, races, comebacks'},
+                    {key:'tennis_specials', label:'Specials', hint:'Everything else'},
                     {key:'live', label:'Live', hint:'Coming soon'} ],
     };
     // Markets that filter the standard 3-col board instead of pulling from market_groups.
     window.TMR._fullGameFilterMarkets = ['game', 'moneyline', 'spread', 'total'];
     // Markets that pull items from game.market_groups via _renderMarketBoard.
-    window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'first_inning', 'alts', 'first_half', 'second_half', 'tennis_set_1', 'tennis_set_2', 'tennis_set_3', 'tennis_specials'];
+    window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'first_inning', 'alts', 'first_half', 'second_half', 'tennis_set_1', 'tennis_set_2', 'tennis_set_3', 'tennis_specials',
+        'tennis_set_betting', 'tennis_set_handicap', 'tennis_total_sets', 'tennis_player_games',
+        'tennis_game_totals', 'tennis_game_handicap', 'tennis_service', 'tennis_aces',
+        'tennis_set_score', 'tennis_match_props'];
     window.TMR.selectedMarket = 'game';
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
@@ -1293,7 +1310,17 @@
             tennis_set_1: 'Set 1 &middot; Winner &amp; Games',
             tennis_set_2: 'Set 2 &middot; Winner &amp; Games',
             tennis_set_3: 'Set 3 &middot; Winner &amp; Games',
-            tennis_specials: 'Set Betting'
+            tennis_specials: 'Specials',
+            tennis_set_betting: 'Set Betting &middot; Correct Set Score',
+            tennis_set_handicap: 'Set Handicap',
+            tennis_total_sets: 'Total Sets',
+            tennis_player_games: 'Player Total Games',
+            tennis_game_totals: 'Alternate Total Games',
+            tennis_game_handicap: 'Alternate Game Spread',
+            tennis_service: 'Serve &amp; Break Props',
+            tennis_aces: 'Aces &amp; Double Faults',
+            tennis_set_score: 'Set Correct Score',
+            tennis_match_props: 'Match Props'
         };
         var headerLabel = labelByMarket[marketKey] || marketKey;
         var esc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };

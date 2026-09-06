@@ -231,6 +231,8 @@
     <div class="tn-note">
         <b>Where these numbers come from.</b> Matches, draws, results and rankings are read from the ESPN tennis feed; prices are the tennis board TrustMyRecord already carries in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>. Surfaces come from the published ATP and WTA tour calendars. Records, surface splits, games, sets, tiebreaks, deciding sets and head to head are counted here from every completed singles match of the season.
         <br><br>
+        <b>More markets.</b> Set betting, set handicaps, total sets, a player's own total games, and the serve, break and ace props come from Bovada and appear on a match when they carry it. The full boards are in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>.
+        <br><br>
         <b>What is deliberately missing.</b> Serve and return statistics. Aces, first serve percentage, hold and break rates are not carried by the feed behind this page, so they are not published here rather than estimated. When a match has no price it is because the board has no market for it, usually a qualifying or lower tier event, and the card says so.
         <br><br>
         <b>Read the daily piece.</b> One tennis match gets a full write up every day: <a href="/matchup-of-the-day/tennis/">Tennis Matchup of the Day</a>.
@@ -350,6 +352,25 @@
         return '<div class="tn-box"><h4>The rest of the market</h4>' + rows + '</div>';
     }
 
+    /* Every extra market group the board carries, the same depth the sportsbook
+       shows. Bovada supplies set betting, set handicaps, total sets, per-player
+       total games and the serve, break and ace props; on a match it does not
+       carry, this simply renders nothing. */
+    function depthBoxes(m) {
+        var groups = (m.market && m.market.groups) || [];
+        if (!groups.length) return '';
+        return groups.map(function (g) {
+            var rows = g.items.slice(0, 6).map(function (it) {
+                return '<div class="row"><span>' + esc(it.selection) + '</span><b>'
+                    + esc(american(it.odds)) + '</b></div>';
+            }).join('');
+            var more = g.count > 6
+                ? '<div class="row"><span>' + (g.count - 6) + ' more in the sportsbook</span><b></b></div>'
+                : '';
+            return '<div class="tn-box"><h4>' + esc(g.label) + '</h4>' + rows + more + '</div>';
+        }).join('');
+    }
+
     function h2hBox(h) {
         if (!h) return '';
         var rows = '<div class="row"><span>This season</span><b>' + esc(h.record) + '</b></div>';
@@ -383,7 +404,7 @@
             + playerBlock(m.players[0], m.market, 0, m.surface, m.completed)
             + playerBlock(m.players[1], m.market, 1, m.surface, m.completed)
             + '</div>';
-        var extras = marketBox(m.market) + h2hBox(m.head_to_head);
+        var extras = marketBox(m.market) + h2hBox(m.head_to_head) + depthBoxes(m);
         if (m.completed && m.result) {
             extras += '<div class="tn-box"><h4>Result</h4><div class="row"><span>' + esc(m.result) + '</span></div></div>';
         }
