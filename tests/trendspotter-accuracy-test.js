@@ -324,8 +324,8 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert.strictEqual(metrics['Avg closing price'], '-157');
     assert.strictEqual(metrics.Sample, '143');
 
-    assert($(doc, '.ts-chart-plot svg'), 'a chart must render');
-    assert($$(doc, '.ts-chart-axis span').length === 3, 'the chart must carry legible HTML axis labels');
+    assert($(doc, '.ts-plot-svg'), 'a chart must render');
+    assert($$(doc, '.ts-plot-y span').length >= 3, 'the chart must carry legible HTML axis labels');
     assert.strictEqual($$(doc, '.ts-table tbody tr').length, 1, 'the evidence table lists the games');
     const row = txt(doc, '.ts-table tbody tr');
     assert(/2026-07-29/.test(row) && /Milwaukee Brewers/.test(row) && /-111/.test(row) && /16-3/.test(row) && /\+1\.00u/.test(row), row);

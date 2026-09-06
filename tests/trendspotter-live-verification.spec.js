@@ -143,12 +143,12 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
 
   // Evidence, chart, interpretation, provenance.
   expect(await page.locator('.ts-table tbody tr').count()).toBeGreaterThan(0);
-  await expect(page.locator('.ts-chart-plot svg')).toBeVisible();
+  await expect(page.locator('.ts-plot-svg')).toBeVisible();
   // Axis labels are HTML precisely so they stay readable on a phone; guard the
   // rendered font size, not just their presence.
-  const axis = await page.$$eval('.ts-chart-axis span', (els) =>
+  const axis = await page.$eval('.ts-plot-y span', (els) =>
     els.map((e) => ({ text: e.textContent, px: parseFloat(getComputedStyle(e).fontSize) })));
-  expect(axis.length, 'the chart must carry three axis labels').toBe(3);
+  expect(axis.length, 'the chart must carry a labelled y axis').toBeGreaterThanOrEqual(3);
   expect(Math.min(...axis.map((a) => a.px)), 'axis labels must stay legible').toBeGreaterThanOrEqual(10);
   // A column of dashes is not evidence: no column may be empty on every row.
   const heads = await page.$$eval('.ts-table thead th', (els) => els.map((e) => e.textContent));

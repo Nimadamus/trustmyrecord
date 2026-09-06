@@ -642,34 +642,153 @@ body.ts-page .ts-card-head h2 {
 }
 
 /* Chart — axis labels are HTML so they stay legible while the plot stretches */
-.ts-chart-wrap { display: flex; gap: 10px; align-items: stretch; }
-
-.ts-chart-axis {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex: none;
-  width: 46px;
-  padding: 2px 0 20px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
+.ts-chart-head {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 0 0 14px;
 }
 
-.ts-chart-plot { flex: 1; min-width: 0; }
-.ts-chart-plot svg { width: 100%; height: 170px; display: block; }
+.ts-chart-toggle {
+  display: inline-flex; padding: 3px; gap: 3px;
+  background: var(--panel-3); border: 1px solid var(--line); border-radius: 999px;
+}
+.ts-ctab {
+  appearance: none; border: 0; cursor: pointer;
+  padding: 7px 15px; border-radius: 999px;
+  font: inherit; font-size: 12.5px; font-weight: 800; letter-spacing: .01em;
+  color: var(--muted); background: transparent;
+}
+.ts-ctab:hover:not([disabled]) { color: var(--ink); }
+.ts-ctab[aria-selected="true"] { background: var(--brand); color: #FFFFFF; }
+.ts-ctab[disabled] { opacity: .38; cursor: not-allowed; }
 
-.ts-chart-foot {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 5px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
+.ts-chart-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.ts-cstat {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 12px; border-radius: var(--ts-radius-sm);
+  background: var(--panel-3); border: 1px solid var(--line);
+}
+.ts-cstat span {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+}
+.ts-cstat strong {
+  font-size: 14px; font-weight: 800; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
+.ts-cstat[data-tone="up"] strong { color: var(--green); }
+.ts-cstat[data-tone="down"] strong { color: var(--red); }
+
+.ts-plot {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-rows: 340px 24px;
+  column-gap: 10px;
+}
+.ts-plot-y { position: relative; grid-column: 1; grid-row: 1; }
+.ts-plot-y span {
+  position: absolute; right: 0; transform: translateY(-50%);
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ts-plot-y span[data-ref] { color: var(--ink-2); }
+.ts-plot-y span.ts-y-alt { color: var(--amber, #C9862B); font-size: 10px; }
+
+.ts-plot-area {
+  position: relative; grid-column: 2; grid-row: 1;
+  border: 1px solid var(--line); border-radius: var(--ts-radius-sm);
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.ts-plot-svg { display: block; width: 100%; height: 100%; }
+.ts-grid { stroke: var(--line); stroke-width: 1; opacity: .55; }
+.ts-zero { stroke: var(--line-2); stroke-width: 1.5; stroke-dasharray: 6 5; }
+/* Fair-price envelope: where the same bets finish 95% of the time if the
+   closing price is right. Inside it the curve is noise. */
+.ts-band { fill: var(--ink-2); opacity: .07; }
+.ts-band-edge { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; opacity: .5; }
+.ts-ref-2 { stroke: var(--amber, #C9862B); stroke-width: 1.5; stroke-dasharray: 7 4; }
+.ts-area-up { fill: var(--green); opacity: .16; }
+.ts-area-dn { fill: var(--red); opacity: .16; }
+.ts-area-flat { fill: var(--brand); opacity: .13; }
+.ts-line-up, .ts-line-dn, .ts-line-flat {
+  fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round;
+}
+.ts-line-up { stroke: var(--green); }
+.ts-line-dn { stroke: var(--red); }
+.ts-line-flat { stroke: var(--brand); }
+
+.ts-plot-hit { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
+.ts-plot-hit:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.ts-plot-cursor { position: absolute; inset: 0; pointer-events: none; }
+.ts-plot-rule {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--line-2); transform: translateX(-.5px);
+}
+.ts-plot-dot {
+  position: absolute; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--brand); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--brand);
+  transform: translate(-50%, -50%);
+}
+.ts-plot-tip {
+  position: absolute; z-index: 3; pointer-events: none;
+  display: flex; flex-direction: column;
+  min-width: 170px; padding: 9px 11px;
+  border: 1px solid var(--line-2); border-radius: var(--ts-radius-sm);
+  background: var(--panel); box-shadow: 0 10px 26px rgba(0, 0, 0, .28);
+  font-size: 12px; line-height: 1.5; color: var(--ink-2);
+}
+.ts-plot-tip[data-vert="above"] { top: 12px; }
+.ts-plot-tip[data-vert="below"] { bottom: 12px; }
+.ts-plot-tip[data-side="right"] { transform: translateX(-8px); }
+.ts-plot-tip[data-side="left"] { transform: translateX(calc(-100% + 8px)); }
+.ts-plot-tip b { font-size: 12.5px; color: var(--ink); }
+.ts-plot-tip .ts-tip-wager { font-weight: 800; color: var(--ink); }
+.ts-plot-tip span { font-variant-numeric: tabular-nums; }
+.ts-plot-tip span[data-tone="up"] { color: var(--green); font-weight: 700; }
+.ts-plot-tip span[data-tone="down"] { color: var(--red); font-weight: 700; }
+
+.ts-plot-x { position: relative; grid-column: 2; grid-row: 2; }
+.ts-plot-x span {
+  position: absolute; top: 6px; transform: translateX(-50%);
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ts-plot-x span[data-edge="start"] { transform: none; }
+.ts-plot-x span[data-edge="end"] { transform: translateX(-100%); }
+
+/* Below this width the toggle and the stat strip stop sharing a line. The
+   strip then scrolls sideways rather than wrapping: six tiles stacked into
+   three ragged rows looked broken. */
+@media (max-width: 1080px) {
+  .ts-chart-head { flex-direction: column; align-items: stretch; gap: 10px; }
+  .ts-chart-toggle { align-self: flex-start; }
+  .ts-chart-stats {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; padding-bottom: 2px;
+  }
+  .ts-chart-stats::-webkit-scrollbar { display: none; }
+  .ts-cstat { flex: 0 0 auto; }
+}
+
+@media (max-width: 640px) {
+  .ts-plot { grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: 250px 24px; }
+  .ts-chart-legend { margin-left: 54px; gap: 10px; }
+  .ts-cstat { padding: 5px 9px; }
+  .ts-cstat strong { font-size: 13px; }
+}
+
+.ts-chart-legend {
+  display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0 68px;
+  font-size: 11.5px; font-weight: 600; color: var(--muted);
+}
+.ts-chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ts-chart-legend span::before {
+  content: ""; width: 14px; height: 3px; border-radius: 2px; background: var(--muted);
+}
+.ts-chart-legend span[data-key="line"]::before { background: linear-gradient(90deg, var(--green), var(--red)); }
+.ts-chart-legend span[data-key="flat"]::before { background: var(--brand); }
+.ts-chart-legend span[data-key="band"]::before { height: 10px; border-radius: 3px; background: var(--ink-2); opacity: .18; }
+.ts-chart-legend span[data-key="ref2"]::before { background: var(--amber, #C9862B); }
 
 .ts-chart-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 
