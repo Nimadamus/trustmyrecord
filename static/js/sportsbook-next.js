@@ -121,8 +121,15 @@
     // Alt ladders mix books by rung (Bovada posts the whole numbers, FanDuel the
     // half points), so the same rule dropped every whole number line. Scope the
     // rule to what is actually one market.
+    // ALT_TEAM_TOTALS_20260906: a team-total group is a ladder too. The feed
+    // posts the main number at one book and the alternate rungs at another
+    // (DraftKings prices Braves 4.5, FanDuel prices 2.5 through 11.5), so the
+    // one-book rule threw the main line away and left the tab showing whichever
+    // rung happened to come first. Merge the rungs instead, exactly as the alt
+    // spread and alt total ladders already do.
+    function isTeamTotalKey(key) { return /team[_ -]?totals?$/.test(String(key || '')); }
     function scopeBooks(key, items) {
-        if (key === 'alt_spreads' || key === 'alt_totals') return mergeLadder(items);
+        if (key === 'alt_spreads' || key === 'alt_totals' || isTeamTotalKey(key)) return mergeLadder(items);
         var buckets = {}, order = [];
         items.forEach(function (i) {
             var k = i.marketType || key;
@@ -582,7 +589,7 @@
         return CAT_SHORT[key] || long || key;
     }
     function catLayout(key) {
-        if (key === 'team_totals') return 'ou';
+        if (isTeamTotalKey(key)) return 'ttgrid';
         if (key === 'alt_spreads' || key === 'alt_totals' || key === 'player_props') return 'strip';
         return 'lines';   // game lines, halves, periods, First 5: h2h + spread + total
     }
@@ -729,6 +736,94 @@
                 data: pickData(g, it.marketType, selName, it.label || selName + ' ' + fmtLine(it.line), it.line, it.odds, cat.long, it.book || grp.book) });
         }).join('');
     }
+    /* ---- Team totals: every posted rung, grouped by club ---------------------
+     * ALT_TEAM_TOTALS_20260906 (Nima). The feed already carries the alternate
+     * team totals; the board only ever read the first Over and the first Under
+     * per club, so a ten-rung ladder rendered as a single number. These read
+     * every rung the group holds and lay it out the way a book does: one block
+     * per club, one row per number, lowest to highest, Over and Under as the
+     * two price columns.
+     *
+     * A team total is priced on ONE club's runs (or points), so it is never
+     * folded in with the game total: the rungs stay in their own group_key and
+     * carry their own market_type straight from the feed, which is what the
+     * grader reads back.
+     */
+    function ttTeamOf(sel) {
+        return String(sel == null ? '' : sel).replace(/\s+(over|under)\s*$/i, '').trim();
+    }
+    function ttSideOf(sel) {
+        var m = /\s+(over|under)\s*$/i.exec(String(sel == null ? '' : sel));
+        return m ? m[1].toLowerCase() : '';
+    }
+    // Away block first, then home — the same order every other card uses.
+    function ttLadder(g, cat) {
+        var grp = g.groups[cat.key];
+        var teams = [{ team: g.away }, { team: g.home }];
+        teams.forEach(function (t) {
+            t.rows = []; t.byLine = {}; t.main = null; t.key = String(t.team || '').toLowerCase();
+        });
+        if (!grp) return teams;
+        grp.items.forEach(function (i) {
+            var side = ttSideOf(i.selection);
+            if (side !== 'over' && side !== 'under') return;
+            if (!validOdds(i.odds) || !validLine(i.line)) return;
+            var who = ttTeamOf(i.selection).toLowerCase();
+            var t = null;
+            for (var n = 0; n < teams.length; n++) if (teams[n].key === who) t = teams[n];
+            if (!t) return;
+            var row = t.byLine[i.line];
+            if (!row) { row = { line: i.line, over: null, under: null }; t.byLine[i.line] = row; t.rows.push(row); }
+            // mergeLadder already settled which book prices a rung, so the first
+            // item for a side is the only one: never overwrite it here.
+            if (!row[side]) row[side] = i;
+            // The main number is the first rung the feed prices on both sides.
+            // The alternates are hung off it by every book we read.
+            if (t.main == null && row.over && row.under) t.main = row.line;
+        });
+        teams.forEach(function (t) {
+            t.rows.sort(function (a, b) { return a.line - b.line; });
+            delete t.byLine;
+        });
+        return teams;
+    }
+    function ttCell(g, cat, team, row, over) {
+        var i = over ? row.over : row.under;
+        if (!i) return chip({ disabled: true });
+        var sel = team + (over ? ' Over' : ' Under');
+        return chip({
+            top: fmtOdds(i.odds), single: true,
+            sel: isSel(g, i.marketType, sel, i.line),
+            data: pickData(g, i.marketType, sel, sel + ' ' + fmtLine(i.line), i.line, i.odds,
+                cat.long, i.book || (g.groups[cat.key] && g.groups[cat.key].book))
+        });
+    }
+    function ttBlock(g, cat, t) {
+        if (!t.rows.length) {
+            return '<div class="sbn-ttteam"><div class="sbn-ttname">' + crest(t.team) + '<b>' + esc(t.team) + '</b></div>' +
+                '<div class="sbn-ttnone">Not posted for this club.</div></div>';
+        }
+        var rows = t.rows.map(function (row) {
+            var isMain = t.main != null && row.line === t.main;
+            return '<div class="sbn-ttrow' + (isMain ? ' is-main' : '') + '">' +
+                '<span class="sbn-ttline">' + esc(fmtLine(row.line)) +
+                (isMain ? '<i class="sbn-ttmain">Main</i>' : '') + '</span>' +
+                ttCell(g, cat, t.team, row, true) + ttCell(g, cat, t.team, row, false) +
+                '</div>';
+        }).join('');
+        return '<div class="sbn-ttteam">' +
+            '<div class="sbn-ttname">' + crest(t.team) + '<b>' + esc(t.team) + '</b></div>' +
+            '<div class="sbn-tthead"><span>Team total</span><span>Over</span><span>Under</span></div>' +
+            rows + '</div>';
+    }
+    function ttGrid(g, cat) {
+        var teams = ttLadder(g, cat);
+        if (!teams[0].rows.length && !teams[1].rows.length) {
+            return '<div class="sbn-norow">Not posted for this game.</div>';
+        }
+        return teams.map(function (t) { return ttBlock(g, cat, t); }).join('');
+    }
+
     var STRIP_MAX = 6;
     // A ladder holds far more rungs than a row can show. Pick the window around
     // the line the game is actually priced at rather than the first six, which
@@ -834,14 +929,13 @@
             if (rows.length) body += '<button type="button" class="sbn-striprest" data-drawer="' + esc(g.id) +
                 '" data-drawercat="' + esc(cat.key) + '">' +
                 (restRows > 0 ? restRows + ' more in ' + cat.label : 'See every ' + cat.label + ' price') + '</button>';
-        } else if (cat.layout === 'ou') {
-            body = '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + ouCells(g, cat, g.away) + '</div>' +
-                '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + ouCells(g, cat, g.home) + '</div>';
+        } else if (cat.layout === 'ttgrid') {
+            body = ttGrid(g, cat);
         } else {
             body = '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + linesCells(g, cat, g.away, true, cols) + '</div>' +
                 '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + linesCells(g, cat, g.home, false, cols) + '</div>';
         }
-        var ncol = cat.layout === 'ou' ? 2 : (cols ? cols.length : 3);
+        var ncol = cat.layout === 'ttgrid' ? 2 : (cols ? cols.length : 3);
         return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol + '" data-game="' + esc(g.id) + '">' +
             '<div class="sbn-rowtop">' +
             matchHead(g, cat.layout === 'strip') +
@@ -853,12 +947,10 @@
     }
     var COL_NAME = { spread: 'Spread', total: 'Total', h2h: 'Moneyline' };
     function colHead(cat, cols) {
-        if (cat.layout === 'strip') return '';
-        var names = cat.layout === 'ou'
-            ? ['Over', 'Under']
-            : cols.map(function (c) {
-                return c === 'spread' && cat.key === 'game_lines' ? (SPREAD_LABEL[state.sport] || 'Spread') : COL_NAME[c];
-            });
+        if (cat.layout === 'strip' || cat.layout === 'ttgrid') return '';
+        var names = cols.map(function (c) {
+            return c === 'spread' && cat.key === 'game_lines' ? (SPREAD_LABEL[state.sport] || 'Spread') : COL_NAME[c];
+        });
         return '<div class="sbn-colhead sbn-colhead--' + cat.layout + ' sbn-cols' + names.length + '"><span></span>' +
             names.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>';
     }

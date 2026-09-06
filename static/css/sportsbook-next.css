@@ -450,6 +450,58 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
 /* ---- Two-column category (team totals) ------------------------------------ */
 .sbn-colhead--ou, .sbn-row--ou .sbn-trow { grid-template-columns: minmax(0, 215px) repeat(2, minmax(110px, 1fr)); }
 
+/* ---- Team totals: one block per club, one row per number ------------------- */
+/* ALT_TEAM_TOTALS_20260906 (Nima). A club's ladder is read down a column, not
+   across a row: the number leads, Over and Under are the two prices beside it,
+   and the rungs run lowest to highest. Three tracks and nothing else means the
+   grid fits a phone at its narrowest without a horizontal scroller. */
+.sbn-ttteam { min-width: 0; }
+.sbn-ttteam + .sbn-ttteam { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sbn-line); }
+.sbn-ttname { display: flex; align-items: center; gap: 10px; min-width: 0; margin: 0 0 7px; }
+.sbn-ttname b {
+    min-width: 0; font-size: 15px; font-weight: 700; line-height: 18px;
+    text-transform: uppercase; letter-spacing: .02em; overflow-wrap: anywhere;
+}
+.sbn-tthead, .sbn-ttrow {
+    display: grid; grid-template-columns: minmax(96px, 215px) repeat(2, minmax(110px, 180px));
+    gap: 8px; align-items: center;
+}
+.sbn-tthead {
+    height: 22px; color: var(--sbn-muted);
+    font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+}
+.sbn-tthead span { text-align: center; }
+.sbn-tthead span:first-child { text-align: left; }
+.sbn-ttrow { min-height: 42px; }
+.sbn-ttrow + .sbn-ttrow { margin-top: 4px; }
+/* A rung cell carries one figure, the price, and the column above it already
+   says Over or Under. Centre it so the two price columns read as columns. */
+.sbn-ttrow .sbn-chip.is-single,
+html.sbn-v3 .sbn-ttrow .sbn-chip.is-single { justify-content: center; }
+.sbn-ttrow .sbn-chip.is-single .sbn-chip-top,
+html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: center; }
+.sbn-ttline {
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+    font-size: 16px; font-weight: 700; line-height: 20px; color: var(--sbn-text);
+    font-variant-numeric: tabular-nums lining-nums;
+}
+.sbn-ttmain {
+    flex: 0 0 auto; padding: 2px 6px; border-radius: 4px;
+    background: rgba(34, 211, 238, 0.14); color: var(--sbn-accent);
+    font-size: 9.5px; font-style: normal; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+}
+.sbn-ttrow.is-main .sbn-ttline { color: #f2f6fb; }
+.sbn-ttnone { color: var(--sbn-muted); font-size: 12.5px; line-height: 18px; padding: 6px 0 2px; }
+@media (max-width: 900px) {
+    .sbn-tthead, .sbn-ttrow { grid-template-columns: minmax(0, 1fr) minmax(88px, 150px) minmax(88px, 150px); }
+}
+@media (max-width: 560px) {
+    .sbn-tthead, .sbn-ttrow { grid-template-columns: minmax(56px, 1fr) minmax(0, 1.15fr) minmax(0, 1.15fr); gap: 5px; }
+    .sbn-ttname b { font-size: 13px; line-height: 16px; }
+    .sbn-ttline { font-size: 15px; gap: 5px; }
+    .sbn-ttmain { padding: 2px 4px; font-size: 8.5px; letter-spacing: .05em; }
+}
+
 /* ---- Ladder categories: alt lines, alt totals, player props ---------------- */
 /* One track per side or per player. Rungs stay on the row up to a fixed count;
    the rest live behind the +N, which opens the drawer at this category. */
