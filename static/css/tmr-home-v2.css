@@ -1254,6 +1254,28 @@ a.tkact-item:focus-visible{outline:3px solid rgba(34,210,192,.55);outline-offset
 .tkact-act{color:#9FBCD6;font-size:18px;font-weight:600;line-height:1.2;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;transition:color .15s ease}
 
+/* A signup is the only event here that is about the person rather than about
+   something they did, so it is announced rather than narrated: the headline on
+   top, the member under it. Two lines, same 60px slot, same 45px-tall visual
+   mass as every other item - the ticker row does not move when one comes up. */
+.tkact-welcome{gap:0}
+.tkact-wrap{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px}
+.tkact-hail{display:flex;align-items:center;min-width:0;color:var(--brand-lt);
+  font-size:13px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
+  white-space:nowrap;line-height:1}
+.tkact-hail .tkact-ago{font-size:14px}
+.tkact-mem{display:flex;align-items:center;gap:11px;min-width:0}
+/* Slightly smaller than the sentence layout's tile because it sits under a
+   line rather than beside two, and ringed so the face is the thing the eye
+   lands on. The fallback (initials on the tile) is the same node either way,
+   so the avatar area is never blank. */
+.tkact-mem .tkact-av{width:38px;height:38px;border-radius:11px;font-size:14px;
+  box-shadow:0 0 0 2px rgba(34,210,192,.30)}
+.tkact-mem b{color:#F2F8FC;font-weight:800;font-size:21px;line-height:1.1;
+  letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+  transition:color .15s ease}
+a.tkact-welcome:hover .tkact-mem b{color:#fff}
+
 /* Narrower desktops: give the games lane its width back first, and let the
    team abbreviation go before the handle does — the mark still carries the
    personality, and the username is the part that must stay readable. */
