@@ -176,7 +176,17 @@
       .signup .slogos img{display:block;max-width:132px;max-height:26px;width:auto;height:auto}
       .signup .sfine{font-size:11.5px;line-height:1.5;margin:0}
 
-      @media (max-width:760px){.whytwo{grid-template-columns:1fr;padding:17px 16px}}
+      /* ---- sticky mobile CTA ---- */
+      .stickycta{position:fixed;left:0;right:0;bottom:0;z-index:60;display:none;gap:8px;padding:9px 10px calc(9px + env(safe-area-inset-bottom));background:rgba(6,12,20,.94);backdrop-filter:blur(10px);border-top:1px solid var(--as-border);box-shadow:0 -6px 22px rgba(0,0,0,.42)}
+      .stickycta a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800;font-size:14.5px;padding:13px 8px;border-radius:11px;text-decoration:none;color:#04101C;line-height:1.1}
+      .stickycta .sjb{background:#FFC93C}
+      .stickycta .syw{background:#4DA3FF}
+      .stickycta a i{font-size:13px}
+      body.has-stickycta{padding-bottom:74px}
+      @media (max-width:760px){
+        .stickycta.on{display:flex}
+        .whytwo{grid-template-columns:1fr;padding:17px 16px}
+      }
       @media (max-width:700px){
         .bk-banner{padding:22px 16px 18px}
         .bk-banner img{max-height:46px}
@@ -579,6 +589,69 @@
         </div>
 
     </div>
+
+<div class="stickycta" id="stickyCta" aria-hidden="true">
+    <a class="sjb" href="https://www.justbet.co/?aff=BETLEGEND" target="_blank" rel="nofollow sponsored noopener"><i class="fas fa-bolt"></i> Join JustBet</a>
+    <a class="syw" href="https://www.youwager.lv/join-now?affid=BABS123" target="_blank" rel="nofollow sponsored noopener"><i class="fas fa-chart-line"></i> Join YouWager</a>
+</div>
+
+<script>
+/* AFFILIATE_INSTRUMENTATION_20260906
+   Every affiliate link on this page reports to GA4 so the page can be judged on
+   what it actually does: which book gets picked, and which placement earned the
+   click. Book and placement are derived from the DOM rather than stamped on ten
+   separate links, so a new CTA is tracked the moment it is added.
+
+   Placements: hero, card_body (the whole-card hit link), card_cta_top,
+   card_cta_bottom, signup_block, sticky_mobile. */
+(function () {
+  'use strict';
+
+  function bookOf(href) {
+    if (!href) return 'unknown';
+    if (href.indexOf('justbet') > -1) return 'justbet';
+    if (href.indexOf('youwager') > -1) return 'youwager';
+    return 'unknown';
+  }
+
+  function placementOf(a) {
+    if (a.classList.contains('bk-hit')) return 'card_body';
+    if (a.closest('.stickycta')) return 'sticky_mobile';
+    if (a.closest('.bk-go')) return 'card_cta_top';
+    if (a.closest('.bk-cta')) return 'card_cta_bottom';
+    if (a.closest('.signup')) return 'signup_block';
+    if (a.closest('.as-hero')) return 'hero';
+    return 'other';
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href*="justbet"], a[href*="youwager"]');
+    if (!a) return;
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', 'affiliate_click', {
+      book: bookOf(a.getAttribute('href')),
+      placement: placementOf(a),
+      page: 'best-online-sportsbooks'
+    });
+  }, true);
+
+  /* Sticky bar appears once the reader is past the first card, so it never
+     covers the hero CTA it would only be duplicating. */
+  var bar = document.getElementById('stickyCta');
+  var first = document.getElementById('justbet');
+  if (!bar || !first) return;
+
+  function sync() {
+    var past = first.getBoundingClientRect().bottom < 0;
+    bar.classList.toggle('on', past);
+    bar.setAttribute('aria-hidden', past ? 'false' : 'true');
+    document.body.classList.toggle('has-stickycta', past);
+  }
+  addEventListener('scroll', sync, { passive: true });
+  addEventListener('resize', sync, { passive: true });
+  sync();
+})();
+</script>
 
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.de8bf4606544.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
