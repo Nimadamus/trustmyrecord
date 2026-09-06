@@ -41,7 +41,23 @@
       .m2{color:inherit;opacity:.62}
 
       .bk-wrap{display:grid;gap:18px}
-      .bk{background:var(--as-card);border:1px solid var(--accent,var(--as-border));border-radius:20px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--glow,transparent)}
+      .bk{background:var(--as-card);border:1px solid var(--accent,var(--as-border));border-radius:20px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--glow,transparent);transition:box-shadow .15s ease,transform .15s ease}
+      .bk:hover{transform:translateY(-2px);box-shadow:0 0 0 2px var(--accent,transparent),0 16px 40px rgba(0,0,0,.34)}
+      /* Whole-card hit area. Sits under the content, above the background, so
+         any dead space on the card opens the book. Genuinely interactive
+         children are lifted above it below. */
+      .bk-hit{position:absolute;inset:0;z-index:1;text-indent:-9999px;overflow:hidden;white-space:nowrap}
+      .bk-body,.bk-intro{position:relative}
+      .bk .more,.bk .bk-cta,.bk .bk-go,.bk-banner .bk-stars{position:relative;z-index:2}
+      .bk .more,.bk .bk-cta a,.bk .bk-go a{pointer-events:auto}
+
+      /* ---- big CTA, high on the card ---- */
+      .bk-go{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 0 0}
+      .bk-go .gobtn{display:inline-flex;align-items:center;gap:10px;background:var(--accent,#FFC93C);color:#04101C;font-weight:800;font-size:16.5px;letter-spacing:.01em;padding:15px 30px;border-radius:12px;text-decoration:none;border:0;box-shadow:0 6px 20px var(--glow,rgba(0,0,0,.3));transition:filter .15s ease,transform .15s ease}
+      .bk-go .gobtn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+      .bk-go .gobtn i{font-size:15px}
+      .bk-go .gonote{font-size:12.4px;line-height:1.45}
+      @media (max-width:560px){.bk-go .gobtn{width:100%;justify-content:center;font-size:16px;padding:15px 20px}}
 
       /* ---- big logo banner ---- */
       .bk-banner{position:relative;background:#03080F;border-bottom:1px solid var(--as-border);padding:26px 26px 22px;text-align:center;overflow:hidden}
@@ -217,6 +233,7 @@
 
                 <!-- ========================= JUSTBET ========================= -->
                 <section class="bk top" id="justbet" style="--accent:#FFC93C;--glow:rgba(255,201,60,.22)">
+                    <a class="bk-hit" href="https://www.justbet.co/?aff=BETLEGEND" target="_blank" rel="nofollow sponsored noopener" tabindex="-1" aria-hidden="true">Join JustBet</a>
                     <div class="bk-banner">
                         <span class="bk-ribbon"><i class="fas fa-crown"></i> Our top book</span>
                         <span class="bk-stars"><b>4.8</b><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-stroke"></i><span>Our rating</span></span>
@@ -226,6 +243,10 @@
                     <div class="bk-intro">
                         <h2>JustBet</h2>
                         <p class="lede2 m">A genuine industry veteran, taking action since the 1990s and serving bettors in more than 100 countries. Crypto payouts are ready in under 12 hours, the online ceiling is a real $20,000, the bonus menu is one of the most generous offshore, and the prop and exotic board goes deeper than almost anything else out there. If you want one account that does everything well, this is it.</p>
+                        <div class="bk-go">
+                            <a class="gobtn" href="https://www.justbet.co/?aff=BETLEGEND" target="_blank" rel="nofollow sponsored noopener"><i class="fas fa-arrow-right"></i> Join JustBet and claim the bonus</a>
+                            <span class="gonote m2">Opens JustBet. Affiliate link, costs you nothing.</span>
+                        </div>
                     </div>
 
                     <div class="bk-body">
@@ -323,6 +344,7 @@
 
                 <!-- ========================= YOUWAGER ========================= -->
                 <section class="bk" id="youwager" style="--accent:#4DA3FF;--glow:rgba(77,163,255,.22)">
+                    <a class="bk-hit" href="https://www.youwager.lv/join-now?affid=BABS123" target="_blank" rel="nofollow sponsored noopener" tabindex="-1" aria-hidden="true">Join YouWager</a>
                     <div class="bk-banner">
                         <span class="bk-ribbon"><i class="fas fa-tags"></i> Best prices</span>
                         <span class="bk-stars"><b>4.7</b><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-stroke"></i><span>Our rating</span></span>
@@ -332,6 +354,10 @@
                     <div class="bk-intro">
                         <h2>YouWager</h2>
                         <p class="lede2 m">The value book, and it is not a close call on the markets it targets. A true dime line on baseball all the way to -190, a 5% juice option instead of standard -110, a no vig Monday Night Football game every single week, and a 5% monthly rebate sitting on top of all of it. Add free same day payouts and a rewards programme whose free plays carry no rollover at all, and you have a book built for people who actually bet volume.</p>
+                        <div class="bk-go">
+                            <a class="gobtn" href="https://www.youwager.lv/join-now?affid=BABS123" target="_blank" rel="nofollow sponsored noopener"><i class="fas fa-arrow-right"></i> Join YouWager and claim the bonus</a>
+                            <span class="gonote m2">Opens YouWager. Affiliate link, costs you nothing.</span>
+                        </div>
                     </div>
 
                     <div class="bk-body">
