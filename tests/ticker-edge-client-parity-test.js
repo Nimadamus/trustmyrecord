@@ -74,6 +74,64 @@ const client = new Function(
   + ';return {insightStrip:insightStrip,pitcherLine:pitcherLine,postgameDwell:postgameDwell};'
 )();
 
+/* ---- the scorebug, both implementations ----------------------------------
+   The college card is the THIRD thing rendered twice (2026-09-05), and it is
+   the biggest of the three: a header, two club rows and a status chip that
+   deliberately drops the score. Lifted the same way, so this can only pass if
+   the shipped client function agrees with the shipped worker byte for byte. */
+const SCOREBUG_FNS = ['logoImg', 'isFootball', 'footballStatus', 'statusChip',
+  'rankedName', 'bugRow', 'postgameDwell', 'insightStrip', 'scorebugCard'];
+
+function clientArray(name) {
+  const m = new RegExp('var ' + name + ' = (\\[[^\\]]*\\]);').exec(csrc);
+  if (!m) throw new Error(`client array not found: ${name}`);
+  return m[1];
+}
+function clientObject(name) {
+  const m = new RegExp('var ' + name + ' = (\\{[^}]*\\});').exec(csrc);
+  if (!m) throw new Error(`client object not found: ${name}`);
+  return m[1];
+}
+
+const clientBug = new Function(
+  ['INSIGHT_ROTATE_MS', 'POSTGAME_DWELL_MIN_MS', 'POSTGAME_DWELL_STEP_MS', 'POSTGAME_DWELL_STEPS']
+    .map((n) => `var ${n} = ${constOf(n)};`).join('')
+  + ESC
+  + `var TICKER_ORD_Q = ${clientArray('TICKER_ORD_Q')};`
+  + `var SCOREBUG_SPORTS = ${clientObject('SCOREBUG_SPORTS')};`
+  + `var SPORT_LABEL = ${clientObject('SPORT_LABEL')};`
+  + SCOREBUG_FNS.map(grab).join('')
+  + ';return {scorebugCard:scorebugCard,statusChip:statusChip,SCOREBUG_SPORTS:SCOREBUG_SPORTS};'
+)();
+
+const edgeBug = new Function(
+  `${wsrc.slice(0, cut)};return {scorebugCard,statusChip,SCOREBUG_SPORTS};`
+)();
+
+/* Every card state the college row can be in, plus the two shapes that only
+   college has: a poll rank, and a school whose short form differs from its
+   name. `day_label` is the carryover card (see mlbNavSlateService). */
+const BUG_CARDS = [
+  { sport: 'cfb', away: 'New Hampshire', home: 'Syracuse', away_abbr: 'UNH', home_abbr: 'SYR',
+    away_logo: 'https://a.espncdn.com/x.png', home_logo: 'https://a.espncdn.com/y.png',
+    away_score: 3, home_score: 66, status: 'final', status_detail: 'Final', period: 4,
+    href: '/sportsbook/', insights: [{ category: 'cfb_headline', group: 'headline',
+      text: 'Syracuse routs New Hampshire, 66-3' }], insight_mode: 'postgame', espn_event_id: '401700001' },
+  { sport: 'cfb', away: 'Boise St', home: 'Oregon', home_rank: 2, away_abbr: 'BSU', home_abbr: 'ORE',
+    away_score: 27, home_score: 34, status: 'final', status_detail: 'Final/OT', period: 5,
+    insights: [], espn_event_id: '401700002' },
+  { sport: 'cfb', away: 'Ohio', home: 'Nebraska', away_score: 21, home_score: 21,
+    status: 'live', status_detail: '8:42 - 3rd', period: 3, clock: '8:42',
+    insights: [{ category: 'live_state', group: 'context', text: 'Level at 21' }],
+    insight_mode: 'live', espn_event_id: '401700003' },
+  { sport: 'cfb', away: 'Portland St', home: 'San Diego St', status: 'scheduled',
+    start_time_pt: '7:30 PM', espn_event_id: '401700004' },
+  { sport: 'cfb', away: 'Miami', home: 'Stanford', away_rank: 7, away_score: 45, home_score: 6,
+    status: 'final', status_detail: 'Final', period: 4, carryover: true, day_label: 'Sat',
+    insights: [], espn_event_id: '401700005' },
+  { sport: 'cfb', away: 'Tulane', home: 'Duke', status: 'postponed', espn_event_id: '401700006' }
+];
+
 /* ---- diff ---------------------------------------------------------------- */
 const slate = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
 const games = slate.games || [];
@@ -125,6 +183,49 @@ liveCards.forEach((g) => {
     failures.push(`live card ${g.away}@${g.home} rotates on ${dwell}ms, not the postgame dwell - a stat line cannot be read on the pregame beat`);
   }
 });
+
+/* THE SCOREBUG. Same diff, over the states the college row actually reaches. */
+BUG_CARDS.forEach((g) => {
+  compared += 1;
+  const a = edgeBug.scorebugCard(g, 'cfb');
+  const b = clientBug.scorebugCard(g, 'cfb');
+  if (a !== b) {
+    failures.push(`scorebugCard differs for ${g.away}@${g.home} (${g.status})
+`
+      + `    edge  : ${a.slice(0, 300)}
+`
+      + `    client: ${b.slice(0, 300)}`);
+  }
+  /* THE SCORE IS NEVER IN THE CHIP ON A SCOREBUG. That is the whole of Nima's
+     2026-09-05 objection to "FINAL 3-66", and it is one boolean away from
+     coming back. */
+  if (typeof g.away_score === 'number'
+      && new RegExp(`${g.away_score}\s*-\s*${g.home_score}`).test(
+        /<span class="gb-hd">[\s\S]*?<\/span><\/span>/.exec(b) ? b.slice(b.indexOf('<span class="gb-hd">'), b.indexOf('<span class="gb-r')) : '')) {
+    failures.push(`scorebug chip repeats the score for ${g.away}@${g.home}`);
+  }
+  /* Each score sits on its own club's row, in that club's own cell. */
+  const cells = b.match(/<span class="gb-sc">([^<]*)<\/span>/g) || [];
+  const want = (v) => (typeof v === 'number' ? `<span class="gb-sc">${v}</span>` : '<span class="gb-sc"></span>');
+  if (cells.length !== 2 || cells[0] !== want(g.away_score) || cells[1] !== want(g.home_score)) {
+    failures.push(`scorebug score cells wrong for ${g.away}@${g.home}: ${cells.join(' ')}`);
+  }
+  /* The winner is marked on the winning row and only on a completed game. */
+  const rows = b.match(/<span class="gb-r[^"]*"/g) || [];
+  const winIdx = rows.map((r, i) => (r.indexOf('is-win') > -1 ? i : -1)).filter((i) => i >= 0);
+  const expected = (g.status === 'final' && typeof g.away_score === 'number'
+    && g.away_score !== g.home_score) ? [g.away_score > g.home_score ? 0 : 1] : [];
+  if (String(winIdx) !== String(expected)) {
+    failures.push(`scorebug winner emphasis wrong for ${g.away}@${g.home}: rows ${winIdx} expected ${expected}`);
+  }
+});
+
+/* THE ROW THAT OPTS IN. NFL must keep the one-line card until somebody decides
+   otherwise, and this is the switch that decides it - in two files. */
+if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
+    !== String(Object.keys(clientBug.SCOREBUG_SPORTS).sort())) {
+  failures.push('SCOREBUG_SPORTS differs between the edge and the client');
+}
 
 /* THE BOTTOM LINE LABEL. The client and the worker each join `team_label` to
    the text themselves, so a fixture carrying no labels would compare two

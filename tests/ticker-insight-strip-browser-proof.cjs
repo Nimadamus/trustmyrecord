@@ -87,7 +87,7 @@ function readStrip(page) {
         const live = on[0] || null;
         const body = live ? live.querySelector('b') : null;
         return {
-          teams: [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join(' @ '),
+          teams: [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join(' @ '),
           w: round(r.width), h: round(r.height), top: round(r.top),
           hasStrip: !!strip,
           stripH: strip ? round(strip.getBoundingClientRect().height) : 0,

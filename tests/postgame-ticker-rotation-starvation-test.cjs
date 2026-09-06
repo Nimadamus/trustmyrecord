@@ -92,8 +92,8 @@ function sample(page) {
         const pageEl = c.closest('.ticker-page');
         return {
           key: (c.getAttribute('data-game-pk') || c.getAttribute('data-espn-event-id')
-            || [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@')),
-          teams: [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join(' @ '),
+            || [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join('@')),
+          teams: [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join(' @ '),
           isFinal: !!c.querySelector('.st.is-final'),
           mode: strip ? strip.getAttribute('data-mode') : null,
           lines: strip ? strip.querySelectorAll('.gm-in-l').length : 0,

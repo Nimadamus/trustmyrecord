@@ -364,12 +364,14 @@ function footballStatus(g, short) {
 /* TWO WORDINGS, ONE MARKUP - see the long note in tmr-home-live.js. The edge
    has no viewport to read, so the choice cannot be made here; both are baked
    and CSS shows one. Baseball chips stay a bare text node. */
-function statusChip(g) {
+function statusChip(g, noScore) {
   const s = String(g.status || 'scheduled');
   if (s === 'scheduled') {
     return `<span class="st">${esc(g.start_time_tbd ? 'TBD' : (g.start_time_pt || ''))}</span>`;
   }
-  const score = (typeof g.away_score === 'number' && typeof g.home_score === 'number')
+  /* `noScore` is the scorebug's flag - each club owns its own number there, so
+     the chip must not repeat them. Lockstep with tmr-home-live.js. */
+  const score = (!noScore && typeof g.away_score === 'number' && typeof g.home_score === 'number')
     ? ` ${g.away_score}-${g.home_score}` : '';
   const fb = isFootball(g);
   const fin = (fb && /\bot\b|overtime/i.test(String(g.status_detail || ''))) ? 'Final/OT' : 'Final';
@@ -404,6 +406,48 @@ function nameSpan(logo, rank, name, abbr) {
   const inner = brief === full ? esc(full)
     : `<span class="sf">${esc(full)}</span><span class="sa">${esc(brief)}</span>`;
   return `<span class="t">${logoImg(logo)}<span class="tn">${inner}</span></span>`;
+}
+
+/* ---------------------------------------------------- THE SCOREBUG CARD
+   A byte-for-byte port of scorebugCard() in tmr-home-live.js, and in lockstep
+   with it for the same reason every other builder in this file is: the edge
+   bakes this markup with no viewport to read, and any difference between the
+   two shows up as a flicker the moment the client re-renders. See the long note
+   on the client side for why the college card is shaped this way. */
+const SCOREBUG_SPORTS = { cfb: 1 };
+const SPORT_LABEL = { cfb: 'CFB', nfl: 'NFL', nba: 'NBA', nhl: 'NHL' };
+
+function bugRow(logo, rank, name, abbr, score, win) {
+  const full = rankedName(rank, name);
+  const brief = abbr ? rankedName(rank, abbr) : full;
+  const inner = brief === full ? esc(full)
+    : `<span class="sf">${esc(full)}</span><span class="sa">${esc(brief)}</span>`;
+  return `<span class="gb-r${win ? ' is-win' : ''}">` +
+    logoImg(logo) +
+    `<span class="gb-tn">${inner}</span>` +
+    `<span class="gb-sc">${typeof score === 'number' ? esc(String(score)) : ''}</span>` +
+    '</span>';
+}
+
+function scorebugCard(g, key) {
+  const done = g.status === 'final';
+  const aw = typeof g.away_score === 'number' ? g.away_score : null;
+  const hm = typeof g.home_score === 'number' ? g.home_score : null;
+  const scored = aw !== null && hm !== null;
+  const awWin = done && scored && aw > hm;
+  const hmWin = done && scored && hm > aw;
+  const label = (SPORT_LABEL[key] || String(key).toUpperCase())
+    + (g.day_label ? ` · ${g.day_label}` : '');
+  const off = g.status === 'postponed' || g.status === 'cancelled';
+  return `<a class="gm gm--${key} gm--bug${off ? ' is-off' : ''}"` +
+    ` data-sport="${key}"` +
+    ` href="${esc(g.href || '/sportsbook/')}">` +
+    `<span class="gb-hd"><span class="gb-lbl">${esc(label)}</span>` +
+      statusChip(g, true) + '</span>' +
+    bugRow(g.away_logo, g.away_rank, g.away, g.away_abbr, aw, awWin) +
+    bugRow(g.home_logo, g.home_rank, g.home, g.home_abbr, hm, hmWin) +
+    insightStrip(g) +
+    '</a>';
 }
 
 /* Probables are a PREGAME element: a FINAL card carries the real decisions in
@@ -505,6 +549,9 @@ function tickerHtml(games) {
    The recap strip is rendered here too. It was missing from the football row,
    so a finished game arrived carrying insights and the card discarded them. */
 function espnTickerHtml(games, key) {
+  if (SCOREBUG_SPORTS[key]) {
+    return (games || []).map((g) => scorebugCard(g, key)).join('');
+  }
   return (games || []).map((g) => (
     `<a class="gm gm--${key}" data-sport="${key}"` +
     ` href="${esc(g.href || '/sportsbook/')}">` +

@@ -177,10 +177,10 @@ function serve(html) {
           const pageEl = c.closest('.ticker-page');
           return {
             key: c.getAttribute('data-game-pk')
-              || [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@'),
+              || [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join('@'),
             onPage: pageEl ? pages.indexOf(pageEl) : -1,
             shownPage: m ? Math.abs(Number(m[0])) / 100 : 0,
-            teams: [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@'),
+            teams: [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join('@'),
             final: /is-final/.test((c.querySelector('.st') || {}).className || ''),
             mode: s && s.getAttribute('data-mode'),
             dwell: s && Number(s.getAttribute('data-dwell')),

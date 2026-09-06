@@ -70,7 +70,7 @@ const read = (page) => page.evaluate(() => {
       return {
         key: c.getAttribute('data-game-pk')
           || (c.getAttribute('data-sport') || 'mlb') + ':'
-            + [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@'),
+            + [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join('@'),
         i: strip ? Number(strip.getAttribute('data-i') || 0) : -1,
         text: on ? on.textContent.trim() : null,
         lines: strip ? strip.querySelectorAll('.gm-in-l').length : 0,

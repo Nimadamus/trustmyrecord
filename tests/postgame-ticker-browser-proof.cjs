@@ -81,8 +81,8 @@ function readCards(page) {
         const stripRect = strip ? strip.getBoundingClientRect() : null;
         return {
           key: c.getAttribute('data-game-pk')
-            || [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join('@'),
-          teams: [...c.querySelectorAll('.gm-top .t')].map((t) => t.textContent.trim()).join(' @ '),
+            || [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join('@'),
+          teams: [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join(' @ '),
           onPage: c.closest('.ticker-page') ? pages.indexOf(c.closest('.ticker-page')) : -1,
           shownPage,
           status: c.querySelector('.st') ? c.querySelector('.st').className : '',
