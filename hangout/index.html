@@ -871,6 +871,12 @@
         .poll-card,
         .empty-state { border-radius: 24px !important; }
 
+        /* The light-conversion pass above hands .empty-state the same #0E1620
+           fill it gives the other cards, but every sibling card is repainted
+           light later and .empty-state was missed: a black box on a light page
+           with its own heading at 1.02:1. Match the cards around it. */
+        body.tmr-light .empty-state { background: #FFFFFF !important; border: 1px solid #D2DEEA !important; }
+
         .user-stats-card { padding: 18px !important; }
         .stat-value { color: #07182A !important; }
 

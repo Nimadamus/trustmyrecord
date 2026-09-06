@@ -108,7 +108,7 @@
     '  border-radius: 50%; background: #35d07f; border: 2px solid var(--lc-raised);',
     '}',
     '.tmr-lc-label > span { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }',
-    '.tmr-lc-label small { font-size: 11px; font-weight: 600; color: var(--lc-muted); }',
+    '.tmr-lc-launcher .tmr-lc-label small { font-size: 11px; font-weight: 600; color: var(--lc-muted) !important; }',
     '.tmr-lc-panel {',
     '  display: none; flex-direction: column; width: 360px; max-width: calc(100vw - 32px);',
     '  height: 520px; max-height: calc(100vh - 120px); background: var(--lc-surface);',
