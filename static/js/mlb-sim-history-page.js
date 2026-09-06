@@ -21,7 +21,8 @@
     loading: false,
     total: 0,
     filters: { matchup: '', team: '', sort: 'newest', scope: 'all', authored: '' },
-    games: []
+    games: [],
+    consensus: null
   };
 
   function qs(id) { return document.getElementById(id); }
@@ -178,6 +179,93 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Cumulative consensus                                               */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * One compact card per matchup simulated two or more times on the selected
+   * date. Grouping is done server side off the real game id, so a doubleheader
+   * never collapses into one summary. Deliberately no aggregated box score:
+   * the full detail already lives one click away on each individual run.
+   */
+  function num1(v) { return (Number(v) || 0).toFixed(1); }
+
+  function consensusHtml(g) {
+    var lead = g.margin_leader;
+    var marginText = lead && g.avg_margin > 0
+      ? '<span class="sh-cons-nw"><span class="sh-cons-lead">' + esc(lead) + '</span> +' + esc(num1(g.avg_margin)) + '</span>'
+      : 'Even';
+    var record = '<span class="sh-cons-nw">' + esc(g.away_abbr) + ' ' + esc(g.away_wins) + '-' +
+      esc(g.home_wins) + ' ' + esc(g.home_abbr) + '</span>' +
+      (g.ties ? ' <span class="sh-cons-nw">(' + esc(g.ties) + ' tied)</span>' : '');
+    var awayPct = Number(g.away_win_pct) || 0;
+    var homePct = Number(g.home_win_pct) || 0;
+
+    return '' +
+      '<div class="sh-cons">' +
+        '<div class="sh-cons-top">' +
+          '<span class="sh-cons-teams">' +
+            (g.away_logo ? '<img src="' + esc(g.away_logo) + '" alt="" loading="lazy" width="17" height="17">' : '') +
+            esc(g.away_abbr) + '<span class="sh-at">@</span>' +
+            (g.home_logo ? '<img src="' + esc(g.home_logo) + '" alt="" loading="lazy" width="17" height="17">' : '') +
+            esc(g.home_abbr) +
+            (g.game_number > 1 ? ' <span class="sh-at">G' + esc(g.game_number) + '</span>' : '') +
+          '</span>' +
+          '<span class="sh-cons-n">' + esc(g.simulations) + ' simulations</span>' +
+        '</div>' +
+        '<div class="sh-cons-grid">' +
+          '<div class="sh-cons-stat is-wide"><span>Avg score</span><b>' +
+            '<span class="sh-cons-nw">' + esc(g.away_abbr) + ' ' + esc(num1(g.avg_away_score)) + '</span> &ndash; ' +
+            '<span class="sh-cons-nw">' + esc(g.home_abbr) + ' ' + esc(num1(g.avg_home_score)) + '</span></b></div>' +
+          '<div class="sh-cons-stat"><span>Simulation record</span><b>' + record + '</b></div>' +
+          '<div class="sh-cons-stat"><span>Win rate</span><b>' +
+            '<span class="sh-cons-nw">' + esc(g.away_abbr) + ' ' + esc(num1(awayPct)) + '%</span> ' +
+            '<i class="sh-cons-sep">/</i> ' +
+            '<span class="sh-cons-nw">' + esc(g.home_abbr) + ' ' + esc(num1(homePct)) + '%</span></b></div>' +
+          '<div class="sh-cons-stat"><span>Avg total</span><b>' + esc(num1(g.avg_total)) + '</b></div>' +
+          '<div class="sh-cons-stat"><span>Avg margin</span><b>' + marginText + '</b></div>' +
+        '</div>' +
+        '<div class="sh-cons-bar">' +
+          '<i class="sh-cons-away" style="width:' + awayPct + '%"></i>' +
+          '<i class="sh-cons-home" style="width:' + homePct + '%"></i>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderConsensus(data) {
+    state.consensus = data || null;
+    var panel = qs('shConsensusPanel');
+    var box = qs('shConsensus');
+    var groups = (data && data.groups) || [];
+    if (box) box.innerHTML = groups.map(consensusHtml).join('');
+    // A single run of a matchup is not a consensus, so the panel simply is not
+    // there until some game on the date has been simulated at least twice.
+    if (panel) panel.hidden = !groups.length;
+    var count = qs('shConsensusCount');
+    if (count) count.textContent = groups.length === 1 ? '1 matchup' : groups.length + ' matchups';
+
+    var most = data && data.most_simulated;
+    var mm = qs('shMostSimmed');
+    if (mm) mm.textContent = most ? most.matchup : '—';
+    var ml = qs('shMostSimmedLabel');
+    if (ml) {
+      ml.textContent = most
+        ? 'Most simulated · ' + most.simulations + (most.simulations === 1 ? ' simulation' : ' simulations')
+        : 'Most simulated';
+    }
+  }
+
+  function loadConsensus() {
+    var scope = state.filters.scope && state.filters.scope !== 'all' ? state.filters.scope : 'all';
+    api('/consensus?date=' + encodeURIComponent(state.date) + '&scope=' + encodeURIComponent(scope))
+      .then(renderConsensus)
+      .catch(function () {
+        var panel = qs('shConsensusPanel');
+        if (panel) panel.hidden = true;
+      });
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Right-hand day panel                                               */
   /* ------------------------------------------------------------------ */
 
@@ -261,15 +349,9 @@
     if (totals) totals.textContent = (data.total_simulations || 0).toLocaleString();
     var gm = qs('shGamesMetric');
     if (gm) gm.textContent = String(state.games.length);
-    var most = state.games.slice().sort(function (a, b) {
-      return ((b.stats && b.stats.total_simulations) || 0) - ((a.stats && a.stats.total_simulations) || 0);
-    })[0];
-    var mm = qs('shMostSimmed');
-    if (mm) {
-      mm.textContent = most && most.stats && most.stats.total_simulations
-        ? most.away_abbr + ' @ ' + most.home_abbr
-        : '—';
-    }
+    // "Most simulated" is filled by /consensus, which groups the runs
+    // themselves. Reading it off the slate missed every matchup that was
+    // simulated without being on that day's schedule.
   }
 
   function loadDay() {
@@ -295,6 +377,7 @@
         state.filters.scope = (qs('shScope') || {}).value || 'all';
         state.filters.authored = (qs('shAuthored') || {}).value || '';
         state.offset = 0;
+        loadConsensus();
         loadRuns(false);
       });
     });
@@ -311,9 +394,17 @@
         var label = qs('shDateLabel');
         if (label) label.textContent = niceDate(state.date);
         loadDay();
+        loadConsensus();
         loadRuns(false);
       });
     }
+
+    // A simulation is completed on the simulator itself, not here, so the
+    // cumulative numbers are recomputed whenever this tab is looked at again.
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible' || !state.date) return;
+      loadConsensus();
+    });
   }
 
   function init() {
@@ -342,6 +433,7 @@
       var dateInput = qs('shDate');
       if (dateInput) dateInput.value = state.date;
       loadDay();
+      loadConsensus();
       loadRuns(false);
     });
   }

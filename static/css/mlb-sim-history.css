@@ -541,8 +541,100 @@ html body.simhist-page .sh-split-card h3 {
 .sh-table tbody td { color: var(--sh-text-2); }
 .sh-table tbody td:first-child { color: var(--sh-text); font-weight: 600; }
 
+/* ------------------------------------------------- Cumulative consensus -- */
+/* One compact card per matchup that was simulated more than once. Deliberately
+   five short stats, not a box score: the point is to read the whole thing in a
+   glance and open a single run below for the detail. */
+.sh-consensus {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+    gap: 10px;
+    padding: 12px 13px;
+}
+.sh-cons {
+    background: var(--sh-s2);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius-sm);
+    padding: 10px 12px 11px;
+}
+.sh-cons-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+    margin-bottom: 9px;
+    border-bottom: 1px solid var(--sh-border);
+}
+.sh-cons-teams {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--sh-text);
+    letter-spacing: 0.01em;
+}
+.sh-cons-teams img { width: 17px; height: 17px; object-fit: contain; }
+.sh-cons-teams .sh-at { color: var(--sh-muted); font-weight: 600; }
+.sh-cons-n {
+    margin-left: auto;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sh-accent);
+    background: var(--sh-accent-dim);
+    border: 1px solid var(--sh-accent-border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+.sh-cons-grid {
+    display: grid;
+    /* Two columns at every width. auto-fit squeezed a third column in on a
+       narrow card and the values ran into each other. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+}
+.sh-cons-stat { min-width: 0; }
+/* Each value is one or more nowrap atoms, so a long stat wraps between them
+   instead of overflowing the cell. */
+.sh-cons-nw { white-space: nowrap; }
+.sh-cons-stat > span {
+    display: block;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sh-muted);
+    margin-bottom: 2px;
+}
+.sh-cons-stat b {
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--sh-text);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+.sh-cons-stat.is-wide { grid-column: 1 / -1; }
+.sh-cons-stat .sh-cons-lead { color: var(--sh-win); }
+.sh-cons-sep { font-style: normal; color: var(--sh-muted); font-weight: 400; }
+.sh-cons-bar {
+    display: flex;
+    height: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--sh-bg-deep);
+    margin-top: 10px;
+}
+.sh-cons-bar i { display: block; height: 100%; }
+.sh-cons-bar .sh-cons-away { background: var(--sh-accent); }
+.sh-cons-bar .sh-cons-home { background: var(--sh-accent-2); opacity: 0.55; }
+
 @media (max-width: 620px) {
     .sh-shell { padding: 16px 13px 52px; }
+    .sh-consensus { grid-template-columns: minmax(0, 1fr); padding: 10px 11px; }
     .sh-row { grid-template-columns: minmax(0, 1fr); }
     .sh-row-actions { justify-content: flex-start; }
     .sh-filters { gap: 7px; }

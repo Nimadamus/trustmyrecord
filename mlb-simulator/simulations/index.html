@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
-    <link rel="stylesheet" href="/static/css/mlb-sim-history.css?v=328675229773">
+    <link rel="stylesheet" href="/static/css/mlb-sim-history.css?v=edff0774d9de">
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=235f4a803b77">
     <script src="/static/js/config.js?v=738db2dd80a5"></script>
     <script src="/static/js/backend-api.js?v=365fae38a6a5"></script>
@@ -54,12 +54,20 @@
     <div class="sh-metrics">
         <div class="sh-metric is-accent"><b id="shTotalSims">&mdash;</b><span>Simulations today</span></div>
         <div class="sh-metric"><b id="shGamesMetric">&mdash;</b><span>Games scheduled</span></div>
-        <div class="sh-metric"><b id="shMostSimmed">&mdash;</b><span>Most simulated</span></div>
+        <div class="sh-metric"><b id="shMostSimmed">&mdash;</b><span id="shMostSimmedLabel">Most simulated</span></div>
         <div class="sh-metric"><b id="shDateLabel">&mdash;</b><span>Slate date</span></div>
     </div>
 
     <div class="sh-layout">
         <div class="sh-main">
+            <section class="sh-panel" id="shConsensusPanel" aria-labelledby="shConsensusHeading" hidden>
+                <div class="sh-panel-head">
+                    <h2 id="shConsensusHeading">Cumulative Results</h2>
+                    <span class="sh-count" id="shConsensusCount">&mdash;</span>
+                </div>
+                <div class="sh-consensus" id="shConsensus"></div>
+            </section>
+
             <section class="sh-panel" aria-labelledby="shResultsHeading">
                 <div class="sh-panel-head">
                     <h2 id="shResultsHeading">Completed Simulations</h2>
@@ -143,7 +151,7 @@
 
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
 <script src="/static/js/tmr-ds-nav.4558f760879b.js"></script>
-<script defer src="/static/js/mlb-sim-history-page.js?v=bcdd223cc8ab"></script>
+<script defer src="/static/js/mlb-sim-history-page.js?v=3ddbb5f76059"></script>
     <script src="/static/js/tmr-live-chat.js?v=0f1655b8bb00"></script>
 </body>
 </html>
