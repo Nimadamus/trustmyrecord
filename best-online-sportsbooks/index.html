@@ -128,6 +128,15 @@
 
       .disc{font-size:11.8px;line-height:1.58;background:rgba(255,255,255,.04);border:1px solid var(--as-border);border-radius:12px;padding:14px 16px}
 
+      .more{border:1px solid var(--as-border);border-radius:12px;margin:0 0 20px;background:rgba(255,255,255,.025)}
+      .more>summary{cursor:pointer;list-style:none;padding:11px 14px;font-size:12.2px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+      .more>summary::-webkit-details-marker{display:none}
+      .more>summary i{color:var(--accent,#FFC93C)}
+      .more>summary::after{content:"+";margin-left:auto;color:var(--accent,#FFC93C);font-weight:800;font-size:15px}
+      .more[open]>summary::after{content:"\2013"}
+      .more[open]>summary{border-bottom:1px solid var(--as-border)}
+      .more .offer{margin:0;padding:13px}
+
       /* ---- why only two ---- */
       .whytwo{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center;background:linear-gradient(135deg,rgba(255,201,60,.10),rgba(77,163,255,.08));border:1px solid var(--as-border);border-radius:16px;padding:20px 22px;margin:0 0 18px}
       .whytwo h3{margin:0 0 8px;font-size:19px;line-height:1.2}
@@ -233,27 +242,27 @@
                         <div class="bk-why">
                             <div>
                                 <h4><i class="fas fa-bolt"></i> Payouts that actually clear</h4>
-                                <p class="m">This is the whole ballgame with an offshore book, and it is where JustBet separates itself. Bitcoin and other crypto withdrawals are listed as ready in under 12 hours. You can request one crypto payout a day, and on the Bitcoin side up to five payouts a week at up to $10,000 a time, with funds in hand inside 48 hours. Payouts run Monday to Friday. No stalling, no rotating excuses, no verification review that quietly eats a week.</p>
+                                <p class="m">This is the whole ballgame offshore, and it is where JustBet separates itself. Crypto withdrawals are listed as ready in under 12 hours: one crypto payout a day, up to five Bitcoin payouts a week at $10,000 each, funds in hand inside 48 hours. No stalling, no verification review that quietly eats a week.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-arrow-up-right-dots"></i> Limits a real bettor can use</h4>
-                                <p class="m">The minimum is $1 online, which matters when you are building a record in small units. The maximum is $20,000 online or by phone, and JustBet states higher limits may be granted on request. A book willing to take twenty thousand on a side is a book that is not planning to shave your account the first week you win.</p>
+                                <p class="m">A $1 minimum online, which matters when you are building a record in small units, and a $20,000 maximum with higher limits on request. A book willing to take twenty thousand on a side is not planning to shave your account the first week you win.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-layer-group"></i> One of the deepest boards offshore</h4>
-                                <p class="m">Sides, totals, parlays, teasers, if-bets, reverses, futures, moneylines and buying points across every major league, then halves, quarters, team totals and special teasers on top. The MLB prop menu alone runs to team strikeout matchups, team to hit more home runs, first team to score, whether there is a run in the first inning, and hits runs and errors. You are rarely forced into a bet you did not want.</p>
+                                <p class="m">Sides, totals, parlays, teasers, if-bets, reverses, futures and buying points across every major league, plus halves, quarters and team totals. The MLB props alone run to strikeout matchups, team to hit more home runs and first team to score. You are rarely forced into a bet you did not want.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-coins"></i> Crypto handled properly</h4>
-                                <p class="m">Bitcoin, Ethereum, Litecoin, USDT and USDC, with no added fees on deposits and a genuinely useful beginner guide covering wallets, exchanges and security. Crypto depositors also sit in the better bonus tier, which is the right way round.</p>
+                                <p class="m">Bitcoin, Ethereum, Litecoin, USDT and USDC, no added deposit fees, and a genuinely useful beginner guide on wallets and security. Crypto depositors also sit in the better bonus tier, which is the right way round.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-headset"></i> Support that connects you to your money</h4>
-                                <p class="m">A properly staffed help centre, live chat and phone support, with house rules and loyalty terms published openly rather than buried three clicks deep. Wagers are graded immediately after the match finishes, so your balance is right the moment the game is final.</p>
+                                <p class="m">A staffed help centre, live chat and phone, with house rules and loyalty terms published openly rather than buried. Wagers grade immediately at the final whistle, so your balance is right the moment the game ends.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-sliders"></i> Built the way bettors think</h4>
-                                <p class="m">American, fractional or decimal odds, your choice. Bet online or over the phone. A loyalty programme that actually moves your reload percentage up as you play. Small things, but they are the difference between a book you tolerate and a book you enjoy.</p>
+                                <p class="m">American, fractional or decimal odds. Bet online or by phone. A loyalty programme that actually lifts your reload percentage as you play. Small things, but they separate a book you tolerate from one you enjoy.</p>
                             </div>
                         </div>
 
@@ -268,7 +277,7 @@
                         </div>
                         <p class="terms m"><strong>The honest bonus note:</strong> every JustBet bonus is optional and is only applied if you enter the code in the cashier. The 15% sports free play carries a 5x rollover on deposit plus bonus, and the casino bonus carries 40x. If you plan to withdraw quickly, skip the code and keep your money completely free. That JustBet says this plainly on its own promotions page, rather than hiding it, is a point in its favour.</p>
 
-                        <div class="sub"><i class="fas fa-table-list"></i> Everything on offer</div>
+                        <details class="more"><summary><i class="fas fa-table-list"></i> Everything on offer: products, sports, wager types and banking</summary>
                         <div class="offer">
                             <div class="ocard">
                                 <h5><i class="fas fa-dice"></i> Products</h5>
@@ -286,15 +295,14 @@
                                 <h5><i class="fas fa-building-columns"></i> Banking</h5>
                                 <p class="m">Deposits in Bitcoin, Ethereum, Litecoin, USDT and USDC with no added fees, plus card and alternative methods. Withdrawals in crypto ready under 12 hours, one crypto payout a day, up to five Bitcoin payouts a week at $10,000 each, one payout a week on other methods. Processing Monday to Friday.</p>
                             </div>
-                        </div>
+                        </div></details>
 
                         <div class="sub"><i class="fas fa-shield-halved"></i> Reputation</div>
                         <div class="rep">
                             <span class="repic"><i class="fas fa-award"></i></span>
                             <div>
                                 <h5>Three decades in, and still paying</h5>
-                                <p class="m">Longevity is the closest thing to a credential in the offshore market, and JustBet has it. The book has been serving online bettors since the 1990s across more than 100 countries, which is a very long time to survive in an industry where books fold quietly and often. It publishes its house rules, its loyalty terms and its bonus rollovers openly, runs a real staffed help centre rather than an email form, and grades wagers immediately at the final whistle.</p>
-                                <p class="m">The reputation that matters most, though, is on withdrawals, and that is exactly where JustBet leads. A book that publishes an under-12-hour crypto payout window and a $20,000 wager ceiling is a book confident enough to invite winning players. That is why it sits at the top of this page.</p>
+                                <p class="m">Longevity is the closest thing to a credential offshore, and JustBet has it: online since the 1990s across more than 100 countries, in an industry where books fold quietly and often. House rules, loyalty terms and bonus rollovers are all published openly. But the reputation that matters is on withdrawals, and that is where JustBet leads. A book publishing an under-12-hour payout window and a $20,000 ceiling is confident enough to invite winning players. That is why it tops this page.</p>
                                 <div class="repchips">
                                     <span><i class="fas fa-check"></i> Operating since the 1990s</span>
                                     <span><i class="fas fa-check"></i> 100+ countries served</span>
@@ -305,19 +313,6 @@
                             </div>
                         </div>
 
-                        <table class="bk-spec">
-                            <tbody>
-                                <tr><th class="m">Crypto payout speed</th><td>Ready in under 12 hours, funds in hand inside 48 hours on Bitcoin</td></tr>
-                                <tr><th class="m">Payout frequency</th><td>One crypto payout per day, one per week on other methods, up to 5 Bitcoin payouts weekly at $10K each</td></tr>
-                                <tr><th class="m">Wager limits</th><td>$1 minimum online, $100 by phone, $20,000 maximum, higher on request</td></tr>
-                                <tr><th class="m">Welcome bonus</th><td>Up to $1,600 combined, promo code 5017, sports 5x rollover, casino 40x, all optional</td></tr>
-                                <tr><th class="m">Reload bonuses</th><td>Crypto 15% to 25% cash, other methods 10% to 20% cash, by loyalty tier</td></tr>
-                                <tr><th class="m">Crypto supported</th><td>Bitcoin, Ethereum, Litecoin, USDT, USDC</td></tr>
-                                <tr><th class="m">Odds formats</th><td>American, fractional, decimal</td></tr>
-                                <tr><th class="m">Also on site</th><td>Racebook with up to 8% rebate, casino, poker, live betting</td></tr>
-                                <tr><th class="m">Track record</th><td>Operating since the 1990s, customers in 100+ countries</td></tr>
-                            </tbody>
-                        </table>
 
                         <div class="bk-cta">
                             <a class="as-btn as-btn-gold" href="https://www.justbet.co/?aff=BETLEGEND" target="_blank" rel="nofollow sponsored noopener"><i class="fas fa-arrow-right"></i> Open a JustBet account</a>
@@ -353,27 +348,27 @@
                         <div class="bk-why">
                             <div>
                                 <h4><i class="fas fa-chart-line"></i> Pricing is the entire pitch</h4>
-                                <p class="m">Most books make you choose: good lines, or good bonuses. YouWager runs both at once. The MLB true dime line holds all the way to -190, which is a real edge if you play favourites, because a twenty cent line on a -170 favourite costs you money on every single ticket. The 5% juice option replaces standard -110 pricing, and there is a no vig Monday Night Football game every week. Across a season those three things are worth more than any signup bonus you will ever clear.</p>
+                                <p class="m">Most books make you choose: good lines or good bonuses. YouWager runs both. The MLB true dime line holds to -190, a real edge on favourites, because a twenty cent line on a -170 favourite costs you on every ticket. Add the 5% juice option and a no vig Monday Night Football game weekly, and across a season that beats any signup bonus you will ever clear.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-rotate-left"></i> A 5% monthly rebate, every month</h4>
-                                <p class="m">A flat 5% free play rebate paid to active players every month. That is effectively a permanent reduction in your cost of doing business rather than a one-off promotion you have to grind through. The casino side runs its own daily rebate of up to 5% of losses, capped at $2,000 a day.</p>
+                                <p class="m">A flat 5% free play rebate every month for active players: a permanent cut in your cost of doing business, not a one-off you have to grind through. The casino side runs its own daily rebate up to 5% of losses, capped at $2,000.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-wallet"></i> Free same day payouts</h4>
-                                <p class="m">All Bitcoin payouts are free. Crypto requests made Monday through Saturday before 12 noon ET are processed no later than 5:00 PM ET the same day, and YouWager states most payouts land inside 24 hours. Play at least $200 in action four weeks running with no payouts in the last 30 days and you earn an extra free payout on top.</p>
+                                <p class="m">All Bitcoin payouts are free. Crypto requests in before 12 noon ET, Monday to Saturday, are processed by 5:00 PM ET that day, and most land inside 24 hours. Four straight weeks of $200 action with no payouts earns another free one.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-star"></i> Rewards points with no rollover</h4>
-                                <p class="m">Every wager you make earns rewards points, redeemable for free plays with no rollover attached. That last part is genuinely rare. Most books hand you a bonus and then bury a playthrough requirement underneath it. Here the points you earn are simply yours.</p>
+                                <p class="m">Every wager earns rewards points, redeemable for free plays with no rollover attached. That last part is genuinely rare: most books hand you a bonus and bury a playthrough under it. Here the points are simply yours.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-heart-crack"></i> A bad beat special that means it</h4>
-                                <p class="m">Lose two straight wagers by half a point inside 30 days and YouWager refunds the lesser of the two. Nobody else is rushing to write that promotion, because half point losses are exactly the ones that make players quit. Paying them back is a book betting on you sticking around.</p>
+                                <p class="m">Lose two straight by half a point inside 30 days and YouWager refunds the lesser one. Nobody else rushes to write that promotion, because half point losses are exactly what make players quit.</p>
                             </div>
                             <div>
                                 <h4><i class="fas fa-comments"></i> 24/7 support and your own rep</h4>
-                                <p class="m">Round the clock service on 1-800-968-9243 plus live chat, and every player gets a personal account representative to walk them through bonuses and payouts. There is a free Thursday Night Football contest with a $10,000 top prize for active players, and event driven promos sent to anyone with a good email on file.</p>
+                                <p class="m">Round the clock service on 1-800-968-9243 plus live chat, and every player gets a personal account rep for bonuses and payouts. There is also a free $10,000 Thursday Night Football contest for active players.</p>
                             </div>
                         </div>
 
@@ -390,7 +385,7 @@
                         </div>
                         <p class="terms m"><strong>Why this list is unusual:</strong> most of what YouWager offers is recurring rather than one-off. A dime line, a 5% juice option, a monthly rebate and no-rollover reward points keep paying every month you play, where a signup bonus pays once and then asks for rollover. That is the more valuable structure by a distance, and it is the reason a price-focused bettor should have this account.</p>
 
-                        <div class="sub"><i class="fas fa-table-list"></i> Everything on offer</div>
+                        <details class="more"><summary><i class="fas fa-table-list"></i> Everything on offer: products, sports, wager types and banking</summary>
                         <div class="offer">
                             <div class="ocard">
                                 <h5><i class="fas fa-dice"></i> Products</h5>
@@ -408,15 +403,14 @@
                                 <h5><i class="fas fa-building-columns"></i> Banking</h5>
                                 <p class="m">Deposits in Bitcoin, Litecoin, Bitcoin Cash, Ripple, Dash and Ethereum with up to 40% free play, plus credit, debit, prepaid and gift cards. Payouts by crypto, e-check or person to person money transfer. Crypto requests Monday to Saturday before 12 noon ET are processed by 5:00 PM ET the same day, and all Bitcoin payouts are free.</p>
                             </div>
-                        </div>
+                        </div></details>
 
                         <div class="sub"><i class="fas fa-shield-halved"></i> Reputation</div>
                         <div class="rep">
                             <span class="repic"><i class="fas fa-hand-holding-dollar"></i></span>
                             <div>
                                 <h5>Known for two things: prices and paying fast</h5>
-                                <p class="m">YouWager has been a staple of the offshore industry for years, and the reputation it has built is a specific one. It is the book people name when the conversation turns to line quality, because a true dime line to -190 and a 5% juice option are structural commitments, not a promotion that quietly disappears in March. Books that shade their numbers do not advertise a no vig game every Monday night.</p>
-                                <p class="m">The second half of that reputation is the cashier. Free Bitcoin payouts, same day processing on anything requested before noon Eastern, and a published promise that most payouts land within 24 hours. Add 24/7 support with a named account rep for every player and open house rules, and you have a book that behaves like it wants a long relationship rather than a fast deposit.</p>
+                                <p class="m">A staple of the offshore industry for years, with a very specific reputation. It is the book people name when the talk turns to line quality, because a dime line to -190 and a 5% juice option are structural commitments, not promotions that vanish in March, and books that shade their numbers do not advertise a no vig game every Monday night. The other half is the cashier: free Bitcoin payouts, same day processing before noon Eastern, 24/7 support and a named rep for every player. This is a book angling for a long relationship, not a fast deposit.</p>
                                 <div class="repchips">
                                     <span><i class="fas fa-check"></i> Long-standing industry name</span>
                                     <span><i class="fas fa-check"></i> Free same day payouts</span>
@@ -427,19 +421,6 @@
                             </div>
                         </div>
 
-                        <table class="bk-spec">
-                            <tbody>
-                                <tr><th class="m">Signature pricing</th><td>MLB true dime line to -190, 5% juice option, no vig Monday Night Football weekly</td></tr>
-                                <tr><th class="m">Rebates</th><td>5% monthly free play rebate, plus up to 5% daily casino rebate capped at $2,000</td></tr>
-                                <tr><th class="m">Rewards</th><td>Points on every wager, redeemable for free plays with no rollover</td></tr>
-                                <tr><th class="m">Crypto payout speed</th><td>Requests Monday to Saturday before 12 noon ET processed by 5:00 PM ET, most inside 24 hours</td></tr>
-                                <tr><th class="m">Payout cost</th><td>All Bitcoin payouts free, extra free payout for four consecutive $200 action weeks</td></tr>
-                                <tr><th class="m">Deposit bonus</th><td>Up to 40% free play on crypto deposits</td></tr>
-                                <tr><th class="m">Crypto supported</th><td>Bitcoin, Litecoin, Bitcoin Cash, Ripple, Dash, Ethereum</td></tr>
-                                <tr><th class="m">Other banking</th><td>Credit, debit, prepaid and gift cards, e-checks, person to person money transfer</td></tr>
-                                <tr><th class="m">Support</th><td>24/7 live chat and phone on 1-800-968-9243, personal account rep</td></tr>
-                            </tbody>
-                        </table>
 
                         <div class="bk-cta">
                             <a class="as-btn as-btn-primary" href="https://www.youwager.lv/join-now?affid=BABS123" target="_blank" rel="nofollow sponsored noopener"><i class="fas fa-arrow-right"></i> Open a YouWager account</a>
@@ -467,6 +448,8 @@
                         <tr><th class="m">Reload bonuses</th><td>10% to 25% cash by loyalty tier</td><td>Event driven promos, Profits Out</td></tr>
                         <tr><th class="m">Ongoing rebate</th><td>Up to 8% racebook cash rebate</td><td>5% monthly free play rebate</td></tr>
                         <tr><th class="m">Loyalty programme</th><td>Gold, Platinum and Diamond reload tiers</td><td>Rewards points, free plays with no rollover</td></tr>
+                        <tr><th class="m">Crypto supported</th><td>Bitcoin, Ethereum, Litecoin, USDT, USDC</td><td>Bitcoin, Litecoin, Bitcoin Cash, Ripple, Dash, Ethereum</td></tr>
+                        <tr><th class="m">Odds formats</th><td>American, fractional, decimal</td><td>American</td></tr>
                         <tr><th class="m">Live betting</th><td>Yes</td><td>Yes, updating play by play</td></tr>
                         <tr><th class="m">Racebook</th><td>Yes, with up to 8% rebate</td><td>Yes</td></tr>
                         <tr><th class="m">Casino and poker</th><td>Both</td><td>Both, plus live dealer</td></tr>
