@@ -2387,28 +2387,33 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 
   <!-- WHERE WE BET (affiliate sportsbooks) -->
   <style>
-  .books{margin:34px 0 0;border:1px solid rgba(255,201,60,.34);border-radius:18px;background:linear-gradient(135deg,rgba(255,201,60,.10),rgba(31,111,235,.08));padding:26px 26px 24px;overflow:hidden}
-  .books .bh{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px}
-  .books .bh h3{margin:0 0 4px;font-size:24px;line-height:1.1}
-  .books .bh p{margin:0;font-size:14px;line-height:1.55;opacity:.78;max-width:640px}
-  .books .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .books .bcard{display:flex;flex-direction:column;gap:12px;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.09);border-radius:14px;padding:18px;text-decoration:none;color:inherit;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
-  .books .bcard:hover{transform:translateY(-2px);border-color:rgba(255,201,60,.7);box-shadow:0 10px 26px rgba(0,0,0,.10)}
-  .books .blogo{background:#07182A;border-radius:10px;padding:13px 16px;display:flex;align-items:center;justify-content:center;min-height:62px}
-  .books .blogo img{display:block;max-width:168px;max-height:34px;width:auto;height:auto}
-  .books .btag{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8a6a00}
-  .books .bcard h4{margin:0;font-size:17px}
-  .books .bcard p{margin:0;font-size:13.5px;line-height:1.55;opacity:.8;flex:1}
-  .books .bgo{font-weight:800;font-size:13.5px;color:#1f6feb}
-  .books .bfoot{margin:16px 0 0;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-  .books .bfoot a{font-weight:800;font-size:14px}
-  .books .bdisc{font-size:11.5px;line-height:1.5;opacity:.62;margin:0}
-  @media (max-width:760px){.books{padding:20px 18px}.books .bgrid{grid-template-columns:1fr}}
+  .books{margin-top:27px;background:var(--panel);border:1px solid rgba(255,201,60,.30);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;position:relative}
+  .books::before{content:"";position:absolute;inset:0;background:radial-gradient(900px 240px at 12% 0%,rgba(255,201,60,.11),transparent 70%);pointer-events:none}
+  .books .binner{position:relative;padding:32px}
+  .books .bh{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 22px}
+  .books .bh h3{margin:0 0 6px;font-size:26px;line-height:1.12;color:var(--ink)}
+  .books .bh h3 em{font-style:normal;color:var(--gold)}
+  .books .bh p{margin:0;font-size:15px;line-height:1.55;color:var(--muted);max-width:660px}
+  .books .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .books .bcard{display:flex;flex-direction:column;gap:13px;background:var(--panel-3);border:1px solid var(--edge);border-radius:var(--r);padding:22px;text-decoration:none;color:inherit;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+  .books .bcard:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:var(--sh-up)}
+  .books .blogo{background:#02070E;border:1px solid var(--edge);border-radius:var(--r-sm);padding:15px 18px;display:flex;align-items:center;justify-content:center;min-height:70px}
+  .books .blogo img{display:block;max-width:180px;max-height:38px;width:auto;height:auto}
+  .books .btag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+  .books .bcard h4{margin:0;font-size:19px;color:var(--ink)}
+  .books .bcard p{margin:0;font-size:14px;line-height:1.58;color:var(--muted);flex:1}
+  .books .bgo{font-weight:800;font-size:14px;color:var(--brand-lt)}
+  .books .bfoot{margin:20px 0 0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .books .bfoot a{font-weight:800;font-size:15px;color:var(--gold);text-decoration:none}
+  .books .bfoot a:hover{text-decoration:underline}
+  .books .bdisc{font-size:12px;line-height:1.5;color:var(--muted);margin:0;opacity:.85}
+  @media (max-width:900px){.books .binner{padding:20px}.books .bgrid{grid-template-columns:1fr}.books .bh h3{font-size:22px}}
   </style>
   <section class="books" id="whereWeBet">
+   <div class="binner">
     <div class="bh">
       <div>
-        <h3>Where we bet</h3>
+        <h3>Where we <em>bet</em></h3>
         <p>Every play posted on this site is graded at the exact price it was taken, so the book you use decides what your record is worth. These are the two we recommend, judged on payout speed, line quality and limits.</p>
       </div>
       <a class="tlink" href="/best-online-sportsbooks/">Read the full reviews &rarr;</a>
@@ -2423,7 +2428,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
       </a>
       <a class="bcard" href="/best-online-sportsbooks/#youwager">
         <span class="blogo"><img src="/static/media/youwager-logo.png" alt="YouWager sportsbook logo" width="1221" height="234" loading="lazy"></span>
-        <span class="btag" style="color:#1f6feb">Best prices</span>
+        <span class="btag" style="color:var(--brand-lt)">Best prices</span>
         <h4>YouWager</h4>
         <p>MLB true dime line to -190, a 5% juice option instead of -110, no vig Monday Night Football, free same day payouts and a 5% monthly rebate.</p>
         <span class="bgo">Read the review &rarr;</span>
@@ -2433,6 +2438,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
       <a href="/best-online-sportsbooks/">Compare both books side by side &rarr;</a>
       <p class="bdisc">Affiliate links. Costs you nothing and does not change your price. 21+, offshore books, bet responsibly.</p>
     </div>
+   </div>
   </section>
 
   <!-- PLATFORM STRIP -->
