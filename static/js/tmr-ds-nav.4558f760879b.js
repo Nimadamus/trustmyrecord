@@ -735,7 +735,7 @@
      anywhere on the site. This nav is the only file 684 pages already load, so
      it is the carrier; the module itself is independent of the nav and guards
      against being loaded twice. */
-  loadChain(['/static/js/tmr-ds-avatar.010125bbc6ea.js']);
+  loadChain(['/static/js/tmr-ds-avatar.dd29f94d5e74.js']);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

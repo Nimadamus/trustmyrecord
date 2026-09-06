@@ -296,12 +296,24 @@
     }
     var img = el.tagName === 'IMG' ? el : el.querySelector('img[alt]');
     if (img && img.alt && img.alt.trim() && !/avatar/i.test(img.alt)) return { username: img.alt.trim(), id: null };
+    /* The row around the slot names the member three different ways across the
+       site: /u/<name>/, /profile/?user=<name>, and an @handle. All three are
+       read, because a feed row and a leaderboard row do not agree. */
     var row = el.closest ? el.closest('li,tr,article,.row,div') : null;
     for (var j = 0; row && j < 4; j += 1) {
-      var link = row.querySelector('a[href*="/u/"]');
-      if (link) {
-        var m = link.getAttribute('href').match(/\/u\/([^/?#]+)/);
+      var links = row.querySelectorAll('a[href]');
+      for (var k = 0; k < links.length; k += 1) {
+        var href = links[k].getAttribute('href') || '';
+        var m = href.match(/\/u\/([^/?#]+)/) || href.match(/[?&](?:user|username|u)=([^&#]+)/);
         if (m) return { username: decodeURIComponent(m[1]), id: null };
+      }
+      var handle = row.querySelector('[class*="handle"]');
+      if (handle && /^@\S{2,}/.test((handle.textContent || '').trim())) {
+        return { username: handle.textContent.trim().replace(/^@/, ''), id: null };
+      }
+      var named = row.querySelector('[class*="username"],[class*="-name"]');
+      if (named && (named.textContent || '').trim().length >= 2) {
+        return { username: named.textContent.trim(), id: null };
       }
       row = row.parentElement;
     }
@@ -375,9 +387,11 @@
       if (!(t && t.length <= 3 && !el.querySelector('img,svg,canvas,picture'))) return;
     }
 
+    /* An avatar slot whose member cannot be identified at all still gets the
+       TMR mark rather than a hole in the layout — blank is never the answer. */
     var subject = subjectFor(el);
+    var ident = paint(el, { username: subject ? subject.username : '', id: subject ? subject.id : null });
     if (!subject) return;
-    var ident = paint(el, { username: subject.username, id: subject.id });
     if (!ident) return;
     var img = document.createElement('img');
     img.alt = subject.username;
