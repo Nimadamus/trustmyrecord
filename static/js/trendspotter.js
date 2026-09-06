@@ -58,6 +58,8 @@
   var running = false;
   var lastResult = null;
   var tableExpanded = false;
+  var chartView = 'units';
+  var chartData = null;
   var slateExpanded = false;
   var touched = false;   // no red validation copy before the user has tried anything
   var inflight = null;   // AbortController for the query in flight
@@ -676,82 +678,612 @@
   }
 
   /**
-   * One chart, drawn inline as SVG so the page loads no charting library.
-   * Cumulative units when the sample carries prices; otherwise a per-season
-   * wins-out-of-games chart, because a units line would be a fiction.
-   */
-  /**
-   * One chart, drawn inline as SVG so the page loads no charting library.
-   * Cumulative units when the sample carries prices; otherwise a per-season
-   * wins-out-of-games chart, because a units line would be a fiction.
+   * Performance chart. Three views over the same sample, drawn inline as SVG so
+   * the page loads no charting library.
+   *
+   * "Cumulative units" plots ONLY the games that carry a closing price. A game
+   * with no recorded price cannot move a units line, and padding the series
+   * with flat points stretched a five-season price history across a sixteen-
+   * season date axis, which read as a broken chart.
+   *
+   * A bare equity curve is not worth much on its own: every -110 line drifts
+   * down, so a losing line proves nothing by itself. The curve is therefore
+   * drawn against the range a bettor taking these exact closing prices would
+   * finish inside 95% of the time if the closing line were fair. Inside the
+   * band is noise. Outside it is a result the price does not explain.
+   *
+   * "Rolling form" answers the other question a record cannot: whether the
+   * result is one bad stretch or a standing tendency.
+   *
+   * "Win rate" plots the running win percentage over every decided game, which
+   * is available for the whole history even where old prices are not, against
+   * the break-even rate the prices actually demanded.
    *
    * Axis labels are HTML, not SVG <text>: the plot stretches to the container
    * with preserveAspectRatio="none", which would squash any text inside it to
-   * an unreadable smear on a phone.
+   * an unreadable smear on a phone. Horizontal gridlines survive that stretch,
+   * so they stay in the SVG.
    */
-  function chartHtml(summary) {
-    var series = summary.cumulative_units || [];
-    var priced = summary.priced_games > 0;
-    var w = 720, h = 170, padT = 6, padB = 6;
+  var TS_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var ROLL_WINDOWS = [10, 25, 50, 100];
 
-    function frame(axisTop, axisMid, axisBottom, svg, foot, note) {
-      return '<div class="ts-chart-wrap">' +
-        '<div class="ts-chart-axis" aria-hidden="true">' +
-          '<span>' + esc(axisTop) + '</span>' +
-          '<span>' + esc(axisMid) + '</span>' +
-          '<span>' + esc(axisBottom) + '</span>' +
-        '</div>' +
-        '<div class="ts-chart-plot">' + svg +
-          (foot ? '<div class="ts-chart-foot" aria-hidden="true">' + foot + '</div>' : '') +
-        '</div></div>' +
-        '<p class="ts-chart-note">' + note + '</p>';
+  function chartDay(iso) {
+    var p = String(iso || '').split('-');
+    if (p.length !== 3) return String(iso || '');
+    return TS_MONTHS[Number(p[1]) - 1] + ' ' + Number(p[2]) + ', ' + p[0];
+  }
+
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  /**
+   * House convention (services/gradingMath.js): a favorite risks to win one
+   * unit, an underdog risks one unit. Returned as the win and the loss legs so
+   * the same numbers drive both the units line and its fair-price band.
+   */
+  function payoutLegs(price) {
+    var p = Number(price);
+    if (!isFinite(p) || p === 0) return null;
+    return p < 0 ? { win: 1, loss: Math.abs(p) / 100 } : { win: p / 100, loss: 1 };
+  }
+
+  // Fallback only: the API already sends per-game units. Kept so the chart
+  // still draws if a future payload omits them.
+  function americanUnits(price, won) {
+    var legs = payoutLegs(price);
+    if (!legs) return 0;
+    return round2(won ? legs.win : -legs.loss);
+  }
+
+  // Candidate tick steps: the axis walks the 1/2/2.5/5 ladder and keeps the
+  // step that fills the plot best without printing more than eight labels.
+  function chooseStep(lo, hi) {
+    var span = hi - lo;
+    if (!(span > 0)) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log(span / 8) / Math.LN10));
+    var ladder = [1, 2, 2.5, 5];
+    var best = null;
+    for (var e = 0; e < 4; e++) {
+      for (var i = 0; i < ladder.length; i++) {
+        var step = ladder[i] * mag * Math.pow(10, e);
+        var a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
+        var intervals = Math.round((b - a) / step);
+        if (intervals < 3 || intervals > 7) continue;
+        var fill = span / (b - a);
+        if (!best || fill > best.fill + 1e-9) best = { step: step, fill: fill };
+      }
+    }
+    return best ? best.step : span / 5;
+  }
+
+  /**
+   * Y axis: clean round ticks around the real range, always including the
+   * values in `must` (0 for units, 50 for win rate), with padding above and
+   * below so the line never touches the frame.
+   */
+  function axisTicks(min, max, must, target) {
+    (must || []).forEach(function (v) {
+      if (v === null || v === undefined || !isFinite(v)) return;
+      min = Math.min(min, v); max = Math.max(max, v);
+    });
+    if (!isFinite(min) || !isFinite(max)) { min = 0; max = 1; }
+    if (max - min < 1e-9) { max += 1; min -= 1; }
+    var pad = (max - min) * 0.08;
+    var step = chooseStep(min - pad, max + pad);
+    var lo = Math.floor((min - pad) / step) * step;
+    var hi = Math.ceil((max + pad) / step) * step;
+    var ticks = [];
+    for (var v = lo; v <= hi + step * 1e-6; v += step) {
+      ticks.push(Math.abs(v) < step * 1e-6 ? 0 : Number(v.toFixed(6)));
+    }
+    return { min: lo, max: hi, ticks: ticks };
+  }
+
+  /**
+   * X axis: date ticks taken from the plotted points only, so a units chart
+   * whose prices start in 2021 never prints a 2010 label. Points are spaced by
+   * sequence; each tick sits at the first point on or after its boundary.
+   */
+  function dateTicks(points, target) {
+    var n = points.length;
+    if (n < 1) return [];
+    if (n === 1) return [{ x: 0.5, label: chartDay(points[0].date) }];
+    var a = String(points[0].date), b = String(points[n - 1].date);
+    var y0 = Number(a.slice(0, 4)), m0 = Number(a.slice(5, 7));
+    var y1 = Number(b.slice(0, 4)), m1 = Number(b.slice(5, 7));
+    if (!y0 || !y1) return [];
+    var span = (y1 - y0) * 12 + (m1 - m0);
+    var steps = [1, 2, 3, 6, 12, 24, 36, 60, 120];
+    var stepM = steps[steps.length - 1];
+    for (var i = 0; i < steps.length; i++) {
+      if (span / steps[i] <= (target || 6)) { stepM = steps[i]; break; }
+    }
+    // Start on a boundary that is a whole number of steps from January.
+    var startIdx = Math.ceil(((y0 * 12) + (m0 - 1)) / stepM) * stepM;
+    var endIdx = (y1 * 12) + (m1 - 1);
+    var out = [];
+    var p = 0;
+    for (var mi = startIdx; mi <= endIdx; mi += stepM) {
+      var yy = Math.floor(mi / 12), mm = (mi % 12) + 1;
+      var boundary = yy + '-' + (mm < 10 ? '0' : '') + mm + '-01';
+      while (p < n && String(points[p].date) < boundary) p++;
+      if (p >= n) break;
+      out.push({
+        x: p / (n - 1),
+        label: stepM >= 12 ? String(yy) : TS_MONTHS[mm - 1] + ' ' + String(yy).slice(2)
+      });
+    }
+    return out;
+  }
+
+  function wagerLabel(g, q) {
+    var market = (q && q.market) || '';
+    var line = (g.line === null || g.line === undefined) ? null : g.line;
+    if (market === 'total' || market === 'team_total' || market === 'first_five' || market === 'first_half') {
+      var side = ((q && q.side) || 'over').toUpperCase();
+      return line === null ? side : side + ' ' + line;
+    }
+    if (market === 'spread') return line === null ? 'Spread' : 'Spread ' + (line > 0 ? '+' : '') + line;
+    if (market === 'moneyline') return 'Moneyline';
+    return (q && q.market_label) || g.market || 'Wager';
+  }
+
+  /**
+   * Turn one API result into the plottable series plus the numbers printed
+   * above the plot. Returns null when there is nothing worth drawing.
+   *
+   * The band: under the null that each closing price is fair, one bet pays
+   * +win with probability q and -loss with probability 1-q, where q is the
+   * price's implied probability. Because q = loss / (win + loss) for American
+   * odds, that bet's expected units are exactly zero, so the zero line IS the
+   * fair-price expectation and the only thing left to measure is spread.
+   * Variance is q(1-q)(win+loss)^2, and the standard deviations add across
+   * independent bets, which is what makes the band widen as the square root of
+   * the bet count rather than linearly.
+   */
+  function buildChartData(summary, games, q) {
+    var chrono = (games || []).slice().sort(function (a, b) {
+      var d = String(a.date).localeCompare(String(b.date));
+      return d !== 0 ? d : (a.game_num || 0) - (b.game_num || 0);
+    });
+
+    var unitPts = [], cum = 0, varSum = 0, impliedSum = 0;
+    var winPts = [], wins = 0, decided = 0;
+    var totalDecided = 0;
+    chrono.forEach(function (g) { if (g.outcome !== 'push') totalDecided++; });
+    var seed = Math.min(10, Math.max(1, totalDecided));
+
+    chrono.forEach(function (g) {
+      var legs = (g.price === null || g.price === undefined) ? null : payoutLegs(g.price);
+      if (legs && g.outcome !== 'push') {
+        var u = (g.units === null || g.units === undefined)
+          ? americanUnits(g.price, g.outcome === 'win') : Number(g.units);
+        cum = round2(cum + u);
+        var implied = legs.loss / (legs.win + legs.loss);
+        impliedSum += implied;
+        varSum += implied * (1 - implied) * Math.pow(legs.win + legs.loss, 2);
+        unitPts.push({
+          date: g.date, value: cum, gameUnits: u, sd: Math.sqrt(varSum),
+          won: g.outcome === 'win', game: g
+        });
+      }
+      if (g.outcome !== 'push') {
+        decided++;
+        if (g.outcome === 'win') wins++;
+        if (decided >= seed) {
+          winPts.push({
+            date: g.date, value: (100 * wins) / decided,
+            wins: wins, losses: decided - wins, decided: decided, game: g
+          });
+        }
+      }
+    });
+
+    // Rolling form. The window is the largest round size the sample can carry
+    // six of, so the line shows form rather than redrawing the equity curve.
+    var rollWindow = 0;
+    for (var i = ROLL_WINDOWS.length - 1; i >= 0; i--) {
+      if (unitPts.length >= ROLL_WINDOWS[i] * 6) { rollWindow = ROLL_WINDOWS[i]; break; }
+    }
+    var rollPts = [];
+    if (rollWindow) {
+      for (var k = rollWindow - 1; k < unitPts.length; k++) {
+        var sum = 0, w = 0;
+        for (var j = k - rollWindow + 1; j <= k; j++) {
+          sum += unitPts[j].gameUnits;
+          if (unitPts[j].won) w++;
+        }
+        rollPts.push({
+          date: unitPts[k].date, value: round2(sum),
+          wins: w, losses: rollWindow - w, game: unitPts[k].game
+        });
+      }
     }
 
-    if (priced && series.length > 1) {
-      var vals = series.map(function (p) { return p.units; }).concat([0]);
-      var min = Math.min.apply(null, vals);
-      var max = Math.max.apply(null, vals);
-      if (max === min) { max += 1; min -= 1; }
-      var x = function (i) { return (i / (series.length - 1)) * w; };
-      var y = function (v) { return padT + (1 - (v - min) / (max - min)) * (h - padT - padB); };
-      var line = series.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.units).toFixed(1); }).join(' ');
-      var zero = y(0);
-      // Area between the curve and the zero line, so gains and drawdowns read
-      // at a glance instead of as a bare squiggle.
-      var area = 'M0 ' + zero.toFixed(1) + ' L' + line.slice(1) + ' L' + w + ' ' + zero.toFixed(1) + ' Z';
-      var last = series[series.length - 1].units;
-      var stroke = last >= 0 ? 'var(--green)' : 'var(--red)';
-      var first = series[0].date;
-      var latest = series[series.length - 1].date;
-      // The area is split at the zero line: the stretch spent in profit is
-      // shaded green and the stretch spent under water red. Shading the whole
-      // area one colour would paint a winning run as if it were a loss.
-      var uid = 'tsclip' + Math.abs(Math.round(zero * 1000));
+    var views = [];
+    if (unitPts.length) views.push('units');
+    if (rollPts.length > 1) views.push('rolling');
+    if (winPts.length) views.push('winrate');
+    if (!views.length) return null;
 
-      var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img"' +
-        ' aria-label="Cumulative units from ' + esc(first) + ' to ' + esc(latest) +
-        ', peaking at ' + max.toFixed(2) + ' and finishing at ' + last.toFixed(2) + ' units">' +
-        '<defs>' +
-          '<clipPath id="' + uid + '-up"><rect x="0" y="0" width="' + w + '" height="' + zero.toFixed(1) + '"/></clipPath>' +
-          '<clipPath id="' + uid + '-dn"><rect x="0" y="' + zero.toFixed(1) + '" width="' + w + '" height="' + (h - zero).toFixed(1) + '"/></clipPath>' +
-        '</defs>' +
-        '<path d="' + area + '" fill="var(--green)" opacity="0.16" clip-path="url(#' + uid + '-up)"/>' +
-        '<path d="' + area + '" fill="var(--red)" opacity="0.16" clip-path="url(#' + uid + '-dn)"/>' +
-        '<line x1="0" x2="' + w + '" y1="' + zero.toFixed(1) + '" y2="' + zero.toFixed(1) +
-        '" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>' +
-        '<path d="' + line + '" fill="none" stroke="' + stroke +
-        '" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
-        '</svg>';
+    return {
+      q: q, summary: summary, seed: seed,
+      views: views,
+      units: unitPts,
+      rolling: rollPts,
+      rollWindow: rollWindow,
+      winrate: winPts,
+      breakEven: unitPts.length ? (100 * impliedSum) / unitPts.length : null
+    };
+  }
 
-      return frame(
-        max.toFixed(1) + 'u', '0u', min.toFixed(1) + 'u', svg,
-        '<span>' + esc(first) + '</span><span>' + esc(latest) + '</span>',
-        'Cumulative units, oldest game on the left.' + (summary.unpriced_games
-          ? ' Only the ' + summary.priced_games + ' games with a recorded closing price move this line.'
-          : '')
-      );
+  function statTile(label, value, tone) {
+    return '<div class="ts-cstat"' + (tone ? ' data-tone="' + esc(tone) + '"' : '') + '>' +
+      '<span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>';
+  }
+
+
+  /**
+   * The plot. `ref` is the reference line the area is split on: 0 for units and
+   * rolling form, 50 for win rate. `band` is an optional fair-price envelope,
+   * `extraRef` an optional second dashed line (the break-even win rate).
+   */
+  function plotHtml(points, opts) {
+    var n = points.length;
+    var vals = points.map(function (p) { return p.value; });
+    var must = [opts.ref];
+    if (opts.extraRef) must.push(opts.extraRef.value);
+    if (opts.band) {
+      must.push(Math.max.apply(null, points.map(function (p) { return opts.band * p.sd; })));
+      must.push(-Math.max.apply(null, points.map(function (p) { return opts.band * p.sd; })));
+    }
+    var axis = axisTicks(Math.min.apply(null, vals), Math.max.apply(null, vals), must, 5);
+    var W = 1000, H = 400, padT = 10, padB = 10;
+    var xAt = n > 1 ? function (i) { return (i / (n - 1)) * W; } : function () { return W / 2; };
+    var yAt = function (v) { return padT + (1 - (v - axis.min) / (axis.max - axis.min)) * (H - padT - padB); };
+    var pct = function (v) { return (100 * (1 - (v - axis.min) / (axis.max - axis.min))).toFixed(4); };
+
+    // A 2,400-point path is drawn one pixel at a time for no gain; thin it for
+    // the stroke only. Hover still reads every game.
+    var stride = Math.max(1, Math.ceil(n / 900));
+    var idxs = [];
+    for (var i = 0; i < n; i += stride) idxs.push(i);
+    if (idxs[idxs.length - 1] !== n - 1) idxs.push(n - 1);
+
+    var d;
+    if (n === 1) {
+      // A single point cannot be a line; draw it flat across the plot so the
+      // panel still reads as a chart rather than as an empty box.
+      d = 'M0 ' + yAt(points[0].value).toFixed(2) + ' L' + W + ' ' + yAt(points[0].value).toFixed(2);
+    } else {
+      d = idxs.map(function (k, j) {
+        return (j ? 'L' : 'M') + xAt(k).toFixed(2) + ' ' + yAt(points[k].value).toFixed(2);
+      }).join(' ');
     }
 
+    var refY = yAt(opts.ref);
+    var area = 'M0 ' + refY.toFixed(2) + ' L' + d.slice(1) + ' L' + W + ' ' + refY.toFixed(2) + ' Z';
+    var uid = 'tsc' + Math.abs(Math.round(refY * 100)) + '-' + n;
+
+    var bandPath = '';
+    if (opts.band && n > 1) {
+      var up = idxs.map(function (k, j) {
+        return (j ? 'L' : 'M') + xAt(k).toFixed(2) + ' ' + yAt(opts.band * points[k].sd).toFixed(2);
+      }).join(' ');
+      var dn = idxs.slice().reverse().map(function (k) {
+        return 'L' + xAt(k).toFixed(2) + ' ' + yAt(-opts.band * points[k].sd).toFixed(2);
+      }).join(' ');
+      bandPath = '<path class="ts-band" d="' + up + ' ' + dn + ' Z"/>' +
+        '<path class="ts-band-edge" d="' + up + '" vector-effect="non-scaling-stroke"/>' +
+        '<path class="ts-band-edge" d="' + dn.replace(/^L/, 'M') + '" vector-effect="non-scaling-stroke"/>';
+    }
+
+    var grid = axis.ticks.map(function (t) {
+      if (t === opts.ref) return '';
+      return '<line class="ts-grid" x1="0" x2="' + W + '" y1="' + yAt(t).toFixed(2) +
+        '" y2="' + yAt(t).toFixed(2) + '" vector-effect="non-scaling-stroke"/>';
+    }).join('');
+
+    var body;
+    if (opts.split) {
+      body =
+        '<path d="' + area + '" class="ts-area-up" clip-path="url(#' + uid + '-up)"/>' +
+        '<path d="' + area + '" class="ts-area-dn" clip-path="url(#' + uid + '-dn)"/>' +
+        '<path d="' + d + '" class="ts-line-up" clip-path="url(#' + uid + '-up)" vector-effect="non-scaling-stroke"/>' +
+        '<path d="' + d + '" class="ts-line-dn" clip-path="url(#' + uid + '-dn)" vector-effect="non-scaling-stroke"/>';
+    } else {
+      body =
+        '<path d="' + area + '" class="ts-area-flat"/>' +
+        '<path d="' + d + '" class="ts-line-flat" vector-effect="non-scaling-stroke"/>';
+    }
+
+    var extra = opts.extraRef
+      ? '<line class="ts-ref-2" x1="0" x2="' + W + '" y1="' + yAt(opts.extraRef.value).toFixed(2) +
+        '" y2="' + yAt(opts.extraRef.value).toFixed(2) + '" vector-effect="non-scaling-stroke"/>'
+      : '';
+
+    var svg = '<svg class="ts-plot-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img"' +
+      ' aria-label="' + esc(opts.label) + '">' +
+      '<defs>' +
+        '<clipPath id="' + uid + '-up"><rect x="0" y="0" width="' + W + '" height="' + Math.max(0, refY).toFixed(2) + '"/></clipPath>' +
+        '<clipPath id="' + uid + '-dn"><rect x="0" y="' + refY.toFixed(2) + '" width="' + W + '" height="' + Math.max(0, H - refY).toFixed(2) + '"/></clipPath>' +
+      '</defs>' + grid + bandPath + body + extra +
+      '<line class="ts-zero" x1="0" x2="' + W + '" y1="' + refY.toFixed(2) + '" y2="' + refY.toFixed(2) + '" vector-effect="non-scaling-stroke"/>' +
+      '</svg>';
+
+    var yLabels = axis.ticks.map(function (t) {
+      return '<span style="top:' + pct(t) + '%"' + (t === opts.ref ? ' data-ref="1"' : '') + '>' +
+        esc(opts.fmtTick(t)) + '</span>';
+    }).join('');
+    if (opts.extraRef) {
+      yLabels += '<span class="ts-y-alt" style="top:' + pct(opts.extraRef.value) + '%">' +
+        esc(opts.extraRef.label) + '</span>';
+    }
+
+    var xLabels = dateTicks(points, 6).map(function (t) {
+      var align = t.x < 0.03 ? ' data-edge="start"' : t.x > 0.97 ? ' data-edge="end"' : '';
+      return '<span style="left:' + (100 * t.x).toFixed(3) + '%"' + align + '>' + esc(t.label) + '</span>';
+    }).join('');
+
+    return '<div class="ts-plot">' +
+      '<div class="ts-plot-y" aria-hidden="true">' + yLabels + '</div>' +
+      '<div class="ts-plot-area">' + svg +
+        '<div class="ts-plot-cursor" hidden><i class="ts-plot-rule"></i><i class="ts-plot-dot"></i></div>' +
+        '<div class="ts-plot-tip" role="status" hidden></div>' +
+        '<div class="ts-plot-hit" tabindex="0" role="application" aria-label="' + esc(opts.label) + '"></div>' +
+      '</div>' +
+      '<div class="ts-plot-x" aria-hidden="true">' + xLabels + '</div>' +
+      '</div>';
+  }
+
+  function legend(items) {
+    return '<div class="ts-chart-legend" aria-hidden="true">' + items.map(function (it) {
+      return '<span data-key="' + it.key + '">' + esc(it.text) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  var VIEW_LABELS = { units: 'Cumulative Units', rolling: 'Rolling Form', winrate: 'Win Rate' };
+
+  function chartInner(data) {
+    var s = data.summary;
+    var view = chartView;
+    var points = data[view];
+    var toggle = '<div class="ts-chart-toggle" role="tablist" aria-label="Chart view">' +
+      ['units', 'rolling', 'winrate'].map(function (v) {
+        var can = data.views.indexOf(v) !== -1;
+        return '<button type="button" role="tab" class="ts-ctab" data-chart-view="' + v + '"' +
+          ' aria-selected="' + (v === view ? 'true' : 'false') + '"' + (can ? '' : ' disabled') + '>' +
+          VIEW_LABELS[v] + '</button>';
+      }).join('') + '</div>';
+
+    var vals = points.map(function (p) { return p.value; });
+    var peak = Math.max.apply(null, vals), low = Math.min.apply(null, vals);
+    var current = points[points.length - 1].value;
+    var stats, plot, note, key;
+
+    if (view === 'units') {
+      // Everything here is said in plain words. The band is a normal run of
+      // luck at these prices; the tile says whether the finish sits outside it.
+      var band = round2(2 * points[points.length - 1].sd);
+      var beyond = band > 0 && Math.abs(current) > band;
+      var past = round2(beyond ? Math.abs(current) - band : 0);
+      stats =
+        statTile('Current', fmtUnits(round2(current)), current > 0 ? 'up' : current < 0 ? 'down' : null) +
+        statTile('Peak', fmtUnits(round2(peak)), peak > 0 ? 'up' : null) +
+        statTile('Low', fmtUnits(round2(low)), low < 0 ? 'down' : null) +
+        (band > 0 ? statTile('Normal luck range', '±' + band.toFixed(2) + 'u') : '') +
+        (band > 0 ? statTile('Luck check', beyond ? 'Beyond luck' : 'Normal luck',
+          beyond ? (current > 0 ? 'up' : 'down') : null) : '') +
+        statTile('Odds-covered games', points.length.toLocaleString() + ' / ' + s.sample.toLocaleString());
+      plot = plotHtml(points, {
+        ref: 0, split: true, band: 2,
+        fmtTick: function (t) { return (t > 0 ? '+' : '') + (Math.round(t) === t ? t : t.toFixed(1)) + 'u'; },
+        label: 'Cumulative units from ' + chartDay(points[0].date) + ' to ' + chartDay(points[points.length - 1].date) +
+          ', peaking at ' + round2(peak) + ' and finishing at ' + round2(current) + ' units' +
+          (band > 0 ? ', against a normal luck range of plus or minus ' + band.toFixed(2) + ' units' : '')
+      });
+      key = legend([
+        { key: 'line', text: 'Cumulative units' },
+        { key: 'band', text: 'Normal run of luck at these prices (95% of the time you finish inside it)' }
+      ]);
+      note = (s.unpriced_games
+        ? 'Unit performance is calculated from ' + points.length.toLocaleString() +
+          ' games with verified closing odds. Record and win-rate statistics above include all ' +
+          s.sample.toLocaleString() + ' qualifying games. '
+        : 'Unit performance is calculated from all ' + points.length.toLocaleString() +
+          ' qualifying games, every one of which carries a verified closing price. ') +
+        (band <= 0 ? '' : 'The grey band is how far ahead or behind you would normally end up at these exact ' +
+          'prices on luck alone: 95% of the time you finish inside it, so a line that stays in the band has ' +
+          'shown nothing the price did not already say. ' +
+          (beyond
+            ? 'This line ends ' + past.toFixed(2) + 'u ' + (current > 0 ? 'above the top' : 'below the bottom') +
+              ' of that band, which is more than luck on its own explains.'
+            : 'This line finishes inside the band, so read it as a normal swing, not as an edge.'));
+    } else if (view === 'rolling') {
+      var wname = data.rollWindow + ' bets';
+      stats =
+        statTile('Current ' + wname, fmtUnits(round2(current)), current > 0 ? 'up' : current < 0 ? 'down' : null) +
+        statTile('Best ' + wname, fmtUnits(round2(peak)), peak > 0 ? 'up' : null) +
+        statTile('Worst ' + wname, fmtUnits(round2(low)), low < 0 ? 'down' : null) +
+        statTile('Windows above 0', points.filter(function (p) { return p.value > 0; }).length.toLocaleString() +
+          ' / ' + points.length.toLocaleString());
+      plot = plotHtml(points, {
+        ref: 0, split: true,
+        fmtTick: function (t) { return (t > 0 ? '+' : '') + (Math.round(t) === t ? t : t.toFixed(1)) + 'u'; },
+        label: 'Units over each trailing ' + wname + ', from ' + chartDay(points[0].date) +
+          ' to ' + chartDay(points[points.length - 1].date)
+      });
+      key = legend([{ key: 'line', text: 'Units over the trailing ' + wname }]);
+      note = 'Each point is the net units of the ' + data.rollWindow + ' priced bets ending on that date, ' +
+        'so a stretch above the line is a run of form and a stretch below it is a drawdown. ' +
+        'This is where a one-off cold spell separates from a standing tendency.';
+    } else {
+      var be = data.breakEven;
+      stats =
+        statTile('Current', current.toFixed(1) + '%', be === null ? null : (current > be ? 'up' : 'down')) +
+        (be === null ? '' : statTile('Break-even', be.toFixed(1) + '%')) +
+        (be === null ? '' : statTile('Edge', (current - be > 0 ? '+' : '') + (current - be).toFixed(1) + ' pts',
+          current > be ? 'up' : 'down')) +
+        statTile('Peak', peak.toFixed(1) + '%') +
+        statTile('Decided games', points[points.length - 1].decided.toLocaleString() + ' / ' + s.sample.toLocaleString());
+      plot = plotHtml(points, {
+        ref: 50, split: false,
+        extraRef: be === null ? null : { value: be, label: be.toFixed(1) + '%' },
+        fmtTick: function (t) { return (Math.round(t) === t ? t : t.toFixed(1)) + '%'; },
+        label: 'Running win rate from ' + chartDay(points[0].date) + ' to ' + chartDay(points[points.length - 1].date) +
+          ', finishing at ' + current.toFixed(1) + ' percent' +
+          (be === null ? '' : ' against a break-even rate of ' + be.toFixed(1) + ' percent')
+      });
+      key = legend([{ key: 'flat', text: 'Running win rate' }]
+        .concat(be === null ? [] : [{ key: 'ref2', text: 'Break-even at the prices actually paid' }]));
+      note = 'Running win rate across every decided game in this sample, pushes excluded. ' +
+        'The line starts once ' + data.seed + ' games have been decided, so a one-game sample does not read as 100%. ' +
+        (be === null
+          ? 'No closing price is recorded for these games, so there is no break-even rate to measure it against.'
+          : 'Beating 50% is not the bar: at the prices actually paid this side had to win ' + be.toFixed(1) +
+            '% to break even, and it is running at ' + current.toFixed(1) + '%.') +
+        ' This view uses all ' + s.sample.toLocaleString() + ' qualifying games, not only the ones with a recorded price.';
+    }
+
+    return '<div class="ts-chart-head">' + toggle + '<div class="ts-chart-stats">' + stats + '</div></div>' +
+      plot + key + '<p class="ts-chart-note">' + esc(note) + '</p>';
+  }
+
+  function chartHtml(summary, games, q) {
+    chartData = buildChartData(summary, games, q);
+    if (!chartData) return seasonBarsHtml(summary);
+    if (chartData.views.indexOf(chartView) === -1) chartView = chartData.views[0];
+    return '<div class="ts-chart2" id="tsChart">' + chartInner(chartData) + '</div>';
+  }
+
+  // Hover readout. The plot stretches, so the dot and the tooltip are HTML
+  // positioned in percentages rather than SVG shapes, which would be squashed.
+  function wireChart() {
+    var host = document.getElementById('tsChart');
+    if (!host || !chartData) return;
+    var hit = host.querySelector('.ts-plot-hit');
+    var cursor = host.querySelector('.ts-plot-cursor');
+    var dot = host.querySelector('.ts-plot-dot');
+    var rule = host.querySelector('.ts-plot-rule');
+    var tip = host.querySelector('.ts-plot-tip');
+    if (!hit || !cursor || !tip) return;
+
+    // Date labels are placed as percentages, so their spacing in pixels is only
+    // known once the plot has a width. Two passes fix what that can produce on a
+    // phone: an outer label hanging past the frame, and neighbours colliding.
+    var xWrap = host.querySelector('.ts-plot-x');
+    if (xWrap) {
+      var wrapBox = xWrap.getBoundingClientRect();
+      var labels = Array.prototype.slice.call(xWrap.children);
+      labels.forEach(function (el) {
+        el.hidden = false;
+        var box = el.getBoundingClientRect();
+        if (!box.width) return;
+        if (box.right > wrapBox.right) el.setAttribute('data-edge', 'end');
+        else if (box.left < wrapBox.left) el.setAttribute('data-edge', 'start');
+      });
+      var keptBox = null, keptEl = null;
+      labels.forEach(function (el, i) {
+        var box = el.getBoundingClientRect();
+        if (!box.width) return;
+        if (keptBox && box.left < keptBox.right + 6) {
+          // The newest date is the one worth keeping, so a collision at the far
+          // right drops the label before it rather than the end of the axis.
+          if (i === labels.length - 1) { keptEl.hidden = true; keptBox = box; keptEl = el; }
+          else el.hidden = true;
+          return;
+        }
+        keptBox = box; keptEl = el;
+      });
+    }
+
+    var points = chartData[chartView];
+    var n = points.length;
+    var vals = points.map(function (p) { return p.value; });
+    var ref = chartView === 'winrate' ? 50 : 0;
+    var must = [ref];
+    if (chartView === 'winrate' && chartData.breakEven !== null) must.push(chartData.breakEven);
+    if (chartView === 'units') {
+      var widest = Math.max.apply(null, points.map(function (p) { return 2 * p.sd; }));
+      must.push(widest); must.push(-widest);
+    }
+    var axis = axisTicks(Math.min.apply(null, vals), Math.max.apply(null, vals), must, 5);
+    var idx = -1;
+
+    function tipHtml(p) {
+      var g = p.game;
+      var rows = [];
+      rows.push('<b>' + esc(chartDay(g.date)) + (g.game_num > 1 ? ' (G' + esc(g.game_num) + ')' : '') + '</b>');
+      if (chartView === 'rolling') {
+        rows.push('<span>Trailing ' + chartData.rollWindow + ' bets</span>');
+        rows.push('<span>Record: ' + p.wins + '-' + p.losses + '</span>');
+        rows.push('<span data-tone="' + (p.value >= 0 ? 'up' : 'down') + '">Units: ' + esc(fmtUnits(p.value)) + '</span>');
+        return rows.join('');
+      }
+      rows.push('<span>' + esc((g.is_home ? 'vs ' : '@ ') + g.opponent) + '</span>');
+      rows.push('<span class="ts-tip-wager">' + esc(wagerLabel(g, chartData.q)) + '</span>');
+      if (g.line !== null && g.line !== undefined && (chartData.q || {}).market !== 'moneyline') {
+        rows.push('<span>Closing line: ' + esc(String(g.line)) + '</span>');
+      }
+      rows.push('<span>Price: ' + (g.price === null || g.price === undefined ? '&mdash;' : esc(signed(g.price))) + '</span>');
+      rows.push('<span>Result: ' + esc(g.outcome.charAt(0).toUpperCase() + g.outcome.slice(1)) + '</span>');
+      if (chartView === 'units') {
+        rows.push('<span data-tone="' + (p.gameUnits >= 0 ? 'up' : 'down') + '">Game units: ' + esc(fmtUnits(p.gameUnits)) + '</span>');
+        rows.push('<span data-tone="' + (p.value >= 0 ? 'up' : 'down') + '">Cumulative: ' + esc(fmtUnits(round2(p.value))) + '</span>');
+        rows.push('<span class="ts-tip-band">Normal luck range here: ' + fmtUnits(round2(-2 * p.sd)) +
+          ' to ' + fmtUnits(round2(2 * p.sd)) + '</span>');
+      } else {
+        rows.push('<span>Record: ' + p.wins + '-' + p.losses + '</span>');
+        rows.push('<span data-tone="' + (chartData.breakEven === null
+          ? (p.value >= 50 ? 'up' : 'down')
+          : (p.value >= chartData.breakEven ? 'up' : 'down')) + '">Win rate: ' + p.value.toFixed(1) + '%</span>');
+      }
+      return rows.join('');
+    }
+
+    function show(i) {
+      if (i < 0) i = 0;
+      if (i > n - 1) i = n - 1;
+      if (i === idx) return;
+      idx = i;
+      var p = points[i];
+      var left = n > 1 ? (100 * i) / (n - 1) : 50;
+      var top = 100 * (1 - (p.value - axis.min) / (axis.max - axis.min));
+      cursor.hidden = false;
+      tip.hidden = false;
+      dot.style.left = left + '%';
+      dot.style.top = top + '%';
+      rule.style.left = left + '%';
+      tip.innerHTML = tipHtml(p);
+      tip.style.left = Math.min(96, Math.max(4, left)) + '%';
+      tip.setAttribute('data-side', left > 55 ? 'left' : 'right');
+      tip.setAttribute('data-vert', top < 45 ? 'below' : 'above');
+    }
+
+    function hide() { idx = -1; cursor.hidden = true; tip.hidden = true; }
+
+    function fromEvent(e) {
+      var r = hit.getBoundingClientRect();
+      if (!r.width) return;
+      var f = (e.clientX - r.left) / r.width;
+      show(Math.round(f * (n - 1)));
+    }
+
+    hit.addEventListener('pointermove', fromEvent);
+    hit.addEventListener('pointerdown', fromEvent);
+    hit.addEventListener('pointerleave', hide);
+    hit.addEventListener('blur', hide);
+    hit.addEventListener('keydown', function (e) {
+      var jump = e.shiftKey ? 10 : 1;
+      if (e.key === 'ArrowRight') { e.preventDefault(); show((idx < 0 ? -1 : idx) + jump); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); show((idx < 0 ? n : idx) - jump); }
+      else if (e.key === 'Home') { e.preventDefault(); show(0); }
+      else if (e.key === 'End') { e.preventDefault(); show(n - 1); }
+      else if (e.key === 'Escape') hide();
+    });
+  }
+
+  // Per-season bars, used only when the sample cannot support any line at all.
+  function seasonBarsHtml(summary) {
     var seasons = summary.by_season || [];
     if (!seasons.length) return '';
     // Bars are HTML, not SVG: a three-season sample stretched across a 720-unit
@@ -775,7 +1307,7 @@
       esc(seasons.map(function (b) { return b.season + ' ' + b.wins + '-' + b.losses; }).join(', ')) + '">' +
       bars + '</div>' +
       '<p class="ts-chart-note">Wins (teal) out of qualifying games, by season. ' +
-      'This market has no recorded closing price in our data, so there is no units line to draw.</p>';
+      'This sample is too short to draw a line.</p>';
   }
 
   /**
@@ -936,7 +1468,7 @@
         '</div>' +
       '</div>' +
       '<dl class="ts-metrics">' + metrics + '</dl>' +
-      '<div class="ts-section"><h3>' + (s.priced_games > 0 ? 'Performance over time' : 'Record by season') + '</h3>' + chartHtml(s) + '</div>' +
+      '<div class="ts-section"><h3>' + (s.priced_games > 0 || s.decided_games > 1 ? 'Performance over time' : 'Record by season') + '</h3>' + chartHtml(s, data.games, q) + '</div>' +
       '<div class="ts-section" id="gamesSection"><h3>Games in this trend</h3>' +
         tableHtml(data.games, marketLabel, q.market === 'total') + '</div>' +
       '<div class="ts-section"><h3>What this means</h3><ul class="ts-notes">' +
@@ -944,6 +1476,8 @@
       '</ul></div>' +
       '<div class="ts-section">' + detailsHtml(data) + '</div>' +
       '</article>';
+
+    wireChart();
   }
 
   // --- share ---------------------------------------------------------------
@@ -1138,6 +1672,21 @@
         rerenderControls();
         renderSlate();
         runQuery();
+        return;
+      }
+      var viewBtn = e.target.closest('[data-chart-view]');
+      if (viewBtn) {
+        var nextView = viewBtn.getAttribute('data-chart-view');
+        if (nextView === chartView || !chartData || chartData.views.indexOf(nextView) === -1) return;
+        chartView = nextView;
+        var chartHost = document.getElementById('tsChart');
+        if (!chartHost) return;
+        chartHost.innerHTML = chartInner(chartData);
+        wireChart();
+        // The button just clicked was replaced with the re-render, so focus
+        // its stand-in or the keyboard user loses their place.
+        var again = chartHost.querySelector('[data-chart-view="' + nextView + '"]');
+        if (again) again.focus();
         return;
       }
       if (e.target.closest('#toggleTable')) {
