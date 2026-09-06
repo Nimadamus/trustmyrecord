@@ -20,6 +20,12 @@
         // baseball and college football once each had its own daily lane.
         ["/matchup-of-the-day/mlb/", "MLB Matchup of the Day"],
         ["/matchup-of-the-day/ncaaf/", "NCAAF Matchup of the Day"],
+        // Tennis joined 2026-09-06, in step with tmr-ds-nav.js and
+        // tmr-linkhub.js. All three tables carry the same three per-sport
+        // doors; a menu that lists two of the three lanes is the bug this
+        // comment exists to stop.
+        ["/matchup-of-the-day/tennis/", "Tennis Matchup of the Day"],
+        ["/tennis/", "Tennis Hub"],
         ["/handicapping/", "Handicapping Hub"]
     ];
     // Kept in sync with static/js/tmr-ds-nav.js's route tables so every page

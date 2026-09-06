@@ -932,16 +932,29 @@
                     {key:'first_half', label:'1H', hint:'First-half lines'},
                     {key:'second_half', label:'2H', hint:'Second-half lines'},
                     {key:'live', label:'Live', hint:'Coming soon'} ],
+        // TENNIS_20260906: the set markets. The board has always carried
+        // tennis_set1_h2h / _totals, tennis_set2_* and, in a best of five,
+        // tennis_set3_*, and none of them were reachable from this catalog, so
+        // a tennis reader got a moneyline, a game handicap and a total and
+        // nothing that is actually specific to tennis. They arrive as
+        // market_groups keyed tennis_set_1 / _2 / _3, which the backend has
+        // built all along (EXTRA_MARKET_GROUPS in services/marketBoardService.js).
+        // The gap was never the data, it was that this catalog offered no tab
+        // that asked for it.
         'Tennis': [ {key:'game', label:'Match', hint:'ML + Spread + Total'},
                     {key:'moneyline', label:'Moneyline', hint:'ML only'},
-                    {key:'spread', label:'Set Spread', hint:'Game spread'},
+                    {key:'spread', label:'Game Spread', hint:'Games handicap'},
                     {key:'total', label:'Total', hint:'O/U games'},
+                    {key:'tennis_set_1', label:'Set 1', hint:'First set winner + games'},
+                    {key:'tennis_set_2', label:'Set 2', hint:'Second set winner + games'},
+                    {key:'tennis_set_3', label:'Set 3', hint:'Deciding set, best of five'},
+                    {key:'tennis_specials', label:'Set Betting', hint:'Correct set score'},
                     {key:'live', label:'Live', hint:'Coming soon'} ],
     };
     // Markets that filter the standard 3-col board instead of pulling from market_groups.
     window.TMR._fullGameFilterMarkets = ['game', 'moneyline', 'spread', 'total'];
     // Markets that pull items from game.market_groups via _renderMarketBoard.
-    window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'first_inning', 'alts', 'first_half', 'second_half'];
+    window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'first_inning', 'alts', 'first_half', 'second_half', 'tennis_set_1', 'tennis_set_2', 'tennis_set_3', 'tennis_specials'];
     window.TMR.selectedMarket = 'game';
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
@@ -1272,7 +1285,15 @@
             first_5: '5 Inning Lines',
             first_inning: '1st Inning &middot; NRFI / YRFI',
             team_totals: 'Team Totals',
-            alts: 'Alt Spreads &amp; Totals'
+            alts: 'Alt Spreads &amp; Totals',
+            // Tennis set betting. The fallback pill grid below renders these
+            // from each item's own selection_label ("Pegula to win set 1",
+            // "Over 9.5 games in set 1"), which reads correctly without a
+            // bespoke board of its own.
+            tennis_set_1: 'Set 1 &middot; Winner &amp; Games',
+            tennis_set_2: 'Set 2 &middot; Winner &amp; Games',
+            tennis_set_3: 'Set 3 &middot; Winner &amp; Games',
+            tennis_specials: 'Set Betting'
         };
         var headerLabel = labelByMarket[marketKey] || marketKey;
         var esc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };
@@ -35169,7 +35190,7 @@ document.addEventListener('DOMContentLoaded', function() {
      window.TMR.setSport the visible tab calls. An explicit choice always wins.
      Kill: window.SB_DEFAULT_BOARD_FLAGS = { enabled: false }. -->
 <script defer src="/static/js/sportsbook-default-board.js?v=8bc4c765f703"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.4558f760879b.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.1e844176998a.js"></script>
 
 
 <script>

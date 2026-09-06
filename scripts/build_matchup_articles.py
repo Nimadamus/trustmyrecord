@@ -123,6 +123,7 @@ def article_abs(article):
 SPORT_LABEL = {
     "mlb": "MLB", "nba": "NBA", "nfl": "NFL", "nhl": "NHL",
     "soccer": "Soccer", "ncaaf": "College Football", "ncaab": "College Basketball",
+    "tennis": "Tennis",
 }
 
 # The governing body that actually stages the fixture, for the leagues where
