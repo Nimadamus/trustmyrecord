@@ -229,6 +229,13 @@
         if (user.avatar || user.avatarUrl || user.avatar_url) {
             return user.avatar || user.avatarUrl || user.avatar_url;
         }
+        /* ONE RESOLVER (2026-09-05). tmr-ds-avatar.js owns what a member with
+           no picture looks like, so the nav, the feeds and the member lists all
+           show the same face for the same person: the API's avatar route
+           resolves their favourite-team badge, and the generated initials mark
+           is what paints if it never arrives. The letter tile below is the
+           pre-2026-09-05 fallback, kept for a page without the resolver. */
+        if (window.TMRAvatar) return window.TMRAvatar.src(user);
         const seed = String(user.username || user.displayName || user.email || "U");
         const colors = ["0ea5e9", "22c55e", "ef4444", "f59e0b", "8b5cf6"];
         const color = colors[seed.length % colors.length];

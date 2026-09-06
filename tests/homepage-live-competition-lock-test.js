@@ -145,7 +145,7 @@ ok(js.includes('if (comp.paused || document.hidden) return;'),
   'the rotation must not advance in a hidden tab or while the card is being read');
 
 /* ---------- 7. client and edge produce the same markup -------------------- */
-for (const fn of ['compRowHtml', 'compDelta', 'compAvatar']) {
+for (const fn of ['compRowHtml', 'compDelta', 'compAvatar', 'compBadge']) {
   ok(js.includes('function ' + fn) || js.includes(fn + ' ='),
     `tmr-home-live.js is missing ${fn}`);
   ok(worker.includes('function ' + fn), `workers/home-ssr/worker.mjs is missing ${fn}`);
@@ -184,7 +184,7 @@ function lift(source, names) {
   return new Function([PRELUDE, ...parts, 'return compRowHtml;'].join('\n'))();
 }
 
-const LIFT = ['compAvatar', 'compDelta', 'compRowHtml'];
+const LIFT = ['compBadge', 'compAvatar', 'compDelta', 'compRowHtml'];
 const clientRow = lift(js, LIFT);
 const edgeRow = lift(worker, LIFT);
 
@@ -195,6 +195,10 @@ const FIXTURES = [
   // A points or post count is 'neutral': never coloured as a profit.
   [{ tone: 'neutral' }, { rank: 1, competitor: { id: 9, username: 'c<user>', avatar_url: null, href: '/u/c/' }, value: 28511, value_text: '28,511 pts', meta: '91/134 correct · 67.9%', delta: null, is_new: false }, 0],
   [{ tone: 'neutral' }, { rank: 2, competitor: { id: 10, username: 'd_user', avatar_url: null, href: '/u/d_user/' }, value: 69, value_text: '69 posts', meta: '51 threads · 18 replies', delta: null, is_new: false }, 1],
+  // A member with no uploaded picture still renders a face: the badge the API
+  // resolved for them (favourite-team colours here) rides on the payload.
+  [{ tone: 'signed' }, { rank: 1, competitor: { id: 11, username: 'steelfan', avatar_url: null, avatar: { kind: 'team', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers' }, href: '/u/steelfan/' }, value: 12.5, value_text: '+12.50u', meta: '9-4', delta: 1, is_new: false }, 0],
+  [{ tone: 'neutral' }, { rank: 2, competitor: { id: 12, username: 'makaveli66', avatar_url: null, avatar: { kind: 'initials', mark: 'MA', primary: '#0F766E', secondary: '#5EEAD4', ink: '#FFFFFF', team: null }, href: '/u/makaveli66/' }, value: 400, value_text: '400 pts', meta: '12/20 correct', delta: null, is_new: false }, 1],
 ];
 for (const [view, row, i] of FIXTURES) {
   const a = clientRow(view, row, i);

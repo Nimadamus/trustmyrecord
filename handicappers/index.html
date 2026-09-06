@@ -1265,6 +1265,13 @@
         function getAvatar(user) {
             const src = user.avatar_url || user.avatarUrl || user.avatar || user.profile_image || user.image_url;
             if (src) return src;
+            /* ONE RESOLVER (2026-09-05). tmr-ds-avatar.js owns what a member
+               with no picture looks like, so a member's face on this directory
+               is the same face the homepage, the forum and their profile show:
+               the API's avatar route resolves their favourite-team badge, and
+               the generated initials mark paints if it never arrives. The
+               letter tile below is the pre-2026-09-05 fallback. */
+            if (window.TMRAvatar) return window.TMRAvatar.src(user);
             const seed = normalizeUsername(user) || 'U';
             const colors = ['1d4ed8', '0f766e', 'b45309', '7c3aed', 'be123c', '047857'];
             const color = colors[Math.abs(seed.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)) % colors.length];
@@ -3390,7 +3397,7 @@
         });
     })();
     </script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.4f6b2b0808f2.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.2e5c530d3c03.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=0f1655b8bb00"></script>
 </body>
 </html>

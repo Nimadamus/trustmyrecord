@@ -30,7 +30,7 @@ SKIP_DIRS = {".git", "node_modules", "_qa_baseline", "artifacts", "test-results"
              "playwright-report", ".playwright-mcp"}
 
 # Sources whose old `?v=` references must also be collapsed onto the hashed name.
-QUERY_REPOINT = {"tmr-profile-hydrate.js"}
+QUERY_REPOINT = {"tmr-profile-hydrate.js", "tmr-ds-avatar.js"}
 
 # Files that build script URLs in JavaScript rather than in markup.
 JS_LOADERS = ("static/js/tmr-ds-nav.js", "static/js/tmr-sitewide.js")

@@ -432,6 +432,13 @@ class PersistentAuthSystem {
     }
 
     getDefaultAvatar(seed) {
+        /* ONE RESOLVER (2026-09-05). tmr-ds-avatar.js owns what a member with
+           no picture looks like — their favourite-team badge, or their
+           deterministic initials mark — so the same member is the same face on
+           every surface. The letter tile below is the pre-2026-09-05 fallback,
+           kept only for a page that somehow loads this file without the
+           resolver; it is never reached on a design-system page. */
+        if (window.TMRAvatar) return window.TMRAvatar.dataUri(window.TMRAvatar.identity({ username: seed }));
         const colors = ['0ea5e9', '22c55e', 'ef4444', 'f59e0b', '8b5cf6'];
         const color = colors[(seed ? seed.length : 0) % colors.length];
         const letter = seed ? seed.charAt(0).toUpperCase() : 'U';

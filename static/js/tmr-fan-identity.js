@@ -131,6 +131,81 @@
       '<div class="tmr-fi-chips">' + chips + '</div></div>';
   }
 
+  /* PROFILE COMPLETION (2026-09-05). The three things that make a member feel
+     like a member. The API sends this on the profile payload; it is recomputed
+     here so an older cached payload still shows something sensible. Nothing on
+     the site is gated on it — it is a nudge, never a gate. */
+  function completionOf(p) {
+    if (p && p.profile_completion && Array.isArray(p.profile_completion.items)) return p.profile_completion;
+    function filled(v) { return Array.isArray(v) && v.some(function (x) { return x && String(x).trim(); }); }
+    var items = [
+      { key: 'avatar', label: 'Photo', done: !!(p && p.avatar_url && String(p.avatar_url).trim()) },
+      { key: 'favorite_team', label: 'Team', done: filled(p && p.favorite_teams) },
+      { key: 'favorite_sport', label: 'Sport', done: filled(p && p.favorite_sports) }
+    ];
+    var done = items.filter(function (i) { return i.done; }).length;
+    return { items: items, complete: done === items.length, percent: Math.round((done / items.length) * 100) };
+  }
+
+  /* The member's own face, drawn the same way the rest of the site draws it. */
+  function facePreview(p) {
+    if (p && p.avatar_url) return '<img class="tmr-fi-face" src="' + esc(p.avatar_url) + '" alt="">';
+    if (!window.TMRAvatar) return '';
+    var id = window.TMRAvatar.identity(p || {});
+    return '<span class="tmr-fi-face" style="background-image:url(&quot;'
+      + window.TMRAvatar.dataUri(id, 96).replace(/"/g, '&quot;') + '&quot;)"></span>';
+  }
+
+  /* "Who do you rep?" — shown to the owner while they are still on the
+     automatic fallback. Two ways out of it, neither of them mandatory: pick a
+     team or upload a picture. A member who has done one but not the other gets
+     the quieter one-line version. */
+  function repPromptHtml(p, owner) {
+    if (!owner) return '';
+    var hasAvatar = !!(p.avatar_url && String(p.avatar_url).trim());
+    if (hasAvatar) return '';
+    var hasTeam = Array.isArray(p.favorite_teams) && p.favorite_teams.some(function (t) { return t && String(t).trim(); });
+    var c = completionOf(p);
+    var dots = c.items.map(function (i) {
+      return '<span class="tmr-fi-dot' + (i.done ? ' is-on' : '') + '">' + esc(i.label) + '</span>';
+    }).join('');
+    var title = hasTeam ? 'Make TMR yours' : 'Who do you rep?';
+    var sub = hasTeam
+      ? 'You are running on your ' + esc(p.favorite_teams[0]) + ' badge. Add a photo whenever you want your own face on the board.'
+      : 'Choose your favorite team or upload your own avatar. Until you do, this is the badge the site shows for you.';
+    return '<div class="tmr-fi-rep' + (hasTeam ? ' is-quiet' : '') + '" id="tmrFiRep">' +
+      facePreview(p) +
+      '<div class="tmr-fi-rep-copy"><div class="tmr-fi-rep-title">' + esc(title) + '</div>' +
+      '<div class="tmr-fi-rep-sub">' + sub + '</div>' +
+      '<div class="tmr-fi-rep-meter"><span class="tmr-fi-rep-pct">Profile ' + c.percent + '% complete</span>' + dots + '</div></div>' +
+      '<div class="tmr-fi-rep-acts">' +
+      (hasTeam ? '' : '<button type="button" class="tmr-fi-rep-btn is-primary" id="tmrFiRepTeam">Choose your team</button>') +
+      '<button type="button" class="tmr-fi-rep-btn" id="tmrFiRepPhoto">Add a photo</button>' +
+      '</div></div>';
+  }
+
+  function wireRepPrompt() {
+    var teamBtn = document.getElementById('tmrFiRepTeam');
+    if (teamBtn) {
+      teamBtn.addEventListener('click', function () {
+        var edit = document.getElementById('tmrFiEditBtn');
+        if (edit) edit.click();
+        var sport = document.getElementById('tmrFiSport');
+        if (sport) { try { sport.focus(); sport.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
+      });
+    }
+    var photoBtn = document.getElementById('tmrFiRepPhoto');
+    if (photoBtn) {
+      photoBtn.addEventListener('click', function () {
+        // The profile page keeps the file input mounted for exactly this: the
+        // visible uploader card was retired, the picker was not.
+        var file = document.getElementById('profileAvatarFile');
+        if (file) { file.click(); return; }
+        window.location.href = '/profile/';
+      });
+    }
+  }
+
   function render(p, catalog) {
     var owner = isOwner(p);
     var fav = Array.isArray(p.favorite_teams) ? p.favorite_teams.slice() : [];
@@ -188,6 +263,7 @@
       (owner ? '<button type="button" class="tmr-fi-edit-btn" id="tmrFiEditBtn"><i class="fas fa-pen"></i> <span>Edit teams</span></button>' : '') +
       '</div>' +
       '<div class="tmr-fi-badges">' + badgeHtml + personalityPill + '</div>' +
+      repPromptHtml(p, owner) +
       editorHtml +
       '<div class="tmr-fi-teams" id="tmrFiTeams">' +
       columnHtml('Favorite Teams', 'fa-star', 'fav', fav, catalog, false, 'No favorite teams added yet.') +
@@ -208,7 +284,7 @@
     if (header && header.parentNode) header.parentNode.insertBefore(card, header.nextSibling);
     else document.body.appendChild(card);
 
-    if (owner) wireEditor(p, catalog);
+    if (owner) { wireEditor(p, catalog); wireRepPrompt(); }
   }
 
   function wireEditor(p, catalog) {
@@ -404,6 +480,24 @@
       '.tmr-fi-chip-sport{padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.12);color:#cfd5e6;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}',
       '.tmr-fi-chip-x{background:none;border:0;color:inherit;opacity:.7;font-size:16px;line-height:1;cursor:pointer;padding:0 0 0 1px;font-weight:700}.tmr-fi-chip-x:hover{opacity:1}',
       '.tmr-fi-empty{color:#6b7280;font-size:12.5px;padding:8px 0;font-style:italic}',
+      // "Who do you rep?" — the fallback-avatar nudge. Encouragement, not a gate.
+      '.tmr-fi-rep{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 16px;padding:14px 16px;background:#0f1320;border:1px solid #232a3b;border-radius:12px}',
+      '.tmr-fi-rep.is-quiet{padding:11px 14px;background:rgba(15,19,32,.6)}',
+      '.tmr-fi-face{width:52px;height:52px;border-radius:50%;flex:0 0 auto;display:block;object-fit:cover;background-size:cover;background-position:center;box-shadow:0 0 0 1px rgba(255,255,255,.08)}',
+      '.tmr-fi-rep.is-quiet .tmr-fi-face{width:40px;height:40px}',
+      '.tmr-fi-rep-copy{flex:1 1 260px;min-width:0}',
+      '.tmr-fi-rep-title{font-size:15px;font-weight:800;color:#fff}',
+      '.tmr-fi-rep.is-quiet .tmr-fi-rep-title{font-size:13.5px}',
+      '.tmr-fi-rep-sub{font-size:12.5px;color:#9aa3b8;margin-top:3px}',
+      '.tmr-fi-rep-meter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}',
+      '.tmr-fi-rep-pct{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#7cd4ff}',
+      '.tmr-fi-dot{font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#6b7280;padding:2px 8px;border-radius:999px;border:1px solid #2c3346}',
+      '.tmr-fi-dot.is-on{color:#04210f;background:#00d27a;border-color:#00d27a}',
+      '.tmr-fi-rep-acts{display:flex;gap:8px;flex-wrap:wrap}',
+      '.tmr-fi-rep-btn{cursor:pointer;border-radius:9px;padding:8px 14px;font-weight:700;font-size:12.5px;background:rgba(255,255,255,.06);border:1px solid #2c3346;color:#cfd5e6}',
+      '.tmr-fi-rep-btn:hover{background:rgba(255,255,255,.11)}',
+      '.tmr-fi-rep-btn.is-primary{background:rgba(0,174,255,.14);border-color:rgba(0,174,255,.42);color:#7cd4ff}',
+      '.tmr-fi-rep-btn.is-primary:hover{background:rgba(0,174,255,.22)}',
       '.tmr-fi-empty-inline{color:#6b7280;font-size:12px;font-style:italic}',
       // stats
       '.tmr-fi-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}',

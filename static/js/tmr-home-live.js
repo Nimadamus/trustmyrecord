@@ -1461,13 +1461,33 @@
   } catch (e) {}
 
 
-  /* A competitor with no avatar gets initials, not a request that 404s into
+  /* The TMR badge for a competitor with no uploaded picture: their favourite
+     team's colours and abbreviation, or their deterministic initials mark. The
+     identity is resolved server-side (utils/avatarIdentity.js) and travels ON
+     the payload as competitor.avatar, so the edge and the page draw the exact
+     same face with no extra request and no flash of an empty circle.
+     Kept identical in workers/home-ssr/worker.mjs. */
+  function compBadge(a, username) {
+    var mark = esc(String(a.mark || initials(username) || 'TM').slice(0, 3));
+    var font = mark.length >= 3 ? 34 : 41;
+    return '<svg class="comp-av" viewBox="0 0 100 100" role="img" aria-label="' + esc(username || mark) + '">' +
+      '<circle cx="50" cy="50" r="50" fill="' + esc(a.primary) + '"/>' +
+      '<path d="M0 50a50 50 0 0 1 100 0Z" fill="#FFFFFF" opacity=".12"/>' +
+      '<path d="M0 50a50 50 0 0 0 100 0Z" fill="#000000" opacity=".16"/>' +
+      '<circle cx="50" cy="50" r="45.5" fill="none" stroke="' + esc(a.secondary || '#FFFFFF') + '" stroke-opacity=".85" stroke-width="3.5"/>' +
+      '<text x="50" y="50" text-anchor="middle" dominant-baseline="central" fill="' + esc(a.ink || '#FFFFFF') + '"' +
+      ' font-size="' + font + '" font-weight="800" letter-spacing="1">' + mark + '</text>' +
+      '</svg>';
+  }
+
+  /* A competitor with no avatar gets their badge, not a request that 404s into
      initials. The homepage has been bitten before by an <img> whose onerror
      raced the edge bake and rewrote the card after first paint; there is no
-     reason to fire that request when the payload already says there is no
-     avatar. Kept identical in workers/home-ssr/worker.mjs. */
+     reason to fire that request when the payload already carries the identity.
+     Kept identical in workers/home-ssr/worker.mjs. */
   function compAvatar(c) {
     if (!c) return '<span class="comp-avl"></span>';
+    if (!c.avatar_url && c.avatar && c.avatar.primary) return compBadge(c.avatar, c.username);
     // The fallback markup inside the onerror attribute is entity-encoded rather
     // than written with raw angle brackets. Both parse to the same JS string,
     // but only one of them is BYTE-identical to what the edge renderer emits,
