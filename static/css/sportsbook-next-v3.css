@@ -1515,3 +1515,50 @@ html.sbn-v3 .sbn-dcell .sbn-chip .sbn-chip-top,
 html.sbn-v3 .sbn-dcell .sbn-chip .sbn-chip-bot { font-size: 15px; font-weight: 700; line-height: 20px; }
 html.sbn-v3 .sbn-dcat { font-size: 14px; }
 html.sbn-v3 .sbn-dsec h4 { color: #c6cfdb; }
+
+/* ---- MLB starting pitcher under the club name -----------------------------
+   MLB_STARTERS_20260907. The starter is a caption on the club, not a second
+   headline: the club name keeps its size and weight, the arm sits under it a
+   third smaller in the muted blue-grey the rest of the board uses for secondary
+   text. No badge, no box, no pill.
+   The row does NOT grow. The name and the caption stack inside the SAME cell
+   height the price chips already occupy (17 + 13 = 30 in a 36-40 row), so the
+   grid template, the column widths and the Run Line / Total / Moneyline
+   alignment are byte for byte what they were. The club name clamps to one line
+   on these rows, which is what keeps the stack inside that height. */
+.sbn-tname--sp { align-items: center; }
+.sbn-tstack { display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 0; }
+@media (min-width: 721px) {
+    .sbn-tname--sp b { -webkit-line-clamp: 1; line-clamp: 1; }
+}
+/* The name may be clipped by a narrow column; the hand may not, so it is its
+   own cell that never shrinks. */
+.sbn-sp {
+    display: flex; align-items: baseline; gap: 4px; min-width: 0;
+    font-size: 11.5px; line-height: 14px; font-weight: 600; letter-spacing: .01em;
+    color: #8fa2b8;
+    white-space: nowrap;
+}
+.sbn-spname { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sbn-sp i { flex: 0 0 auto; font-style: normal; color: #75879c; font-weight: 700; }
+.sbn-sp i::before { content: '·'; margin-right: 4px; color: #5d6d80; }
+.sbn-sp.is-tbd { color: #6f7f92; font-weight: 500; font-style: italic; }
+html.sbn-v3 .sbn-sp { font-size: 11px; line-height: 13px; color: #8ba0b7; }
+html.sbn-v3 .sbn-sp i { color: #74889f; }
+html.sbn-v3 .sbn-sp.is-tbd { color: #6d7d90; }
+/* A club name that cannot fit one line at the desktop width still may not push
+   the caption out of the row, so the row is allowed to find its own height with
+   the old height as its floor. Nothing changes for a row that already fits. */
+.sbn-trow--sp { height: auto; min-height: 46px; }
+html.sbn-v3 .sbn-trow--sp { height: auto; min-height: 36px; }
+@media (max-width: 720px) {
+    .sbn-sp, html.sbn-v3 .sbn-sp { font-size: 10.5px; line-height: 13px; }
+    .sbn-trow--sp { min-height: 42px; }
+    /* a phone lets a long club name take two lines, so the floor is the taller
+       of the two and every MLB row on the board is the same height as its
+       neighbours rather than some 36 and some 40. */
+    html.sbn-v3 .sbn-trow--sp { min-height: 40px; }
+}
+@media (max-width: 420px) {
+    .sbn-sp, html.sbn-v3 .sbn-sp { font-size: 10px; line-height: 12px; }
+}

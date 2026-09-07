@@ -61,7 +61,10 @@
         // SECOND_HALF_20260905 — the halftime board, kept in its own slice of
         // state so nothing about the pre-game board changes.
         live: { games: [], loading: false, error: null, at: null, reqId: 0 },
-        liveTimer: null
+        liveTimer: null,
+        // MLB_STARTERS_20260907 - probable pitchers, its own slice so nothing
+        // about the odds board's own state changes.
+        starters: { games: [], hands: {}, at: null, reqId: 0, timer: null }
     };
 
     // ---- small helpers -----------------------------------------------------
@@ -280,9 +283,12 @@
         var id = ++state.reqId;
         state.sport = sportKey; state.cat = 'game_lines'; state.loading = true; state.error = null; state.games = [];
         state.live = { games: [], loading: !!LIVE_SPORTS[sportKey], error: null, at: null, reqId: state.live.reqId };
+        state.starters = { games: [], hands: state.starters.hands, at: null, reqId: state.starters.reqId, timer: state.starters.timer };
         render();
         loadLive(sportKey);
         startLivePolling(sportKey);
+        loadStarters(sportKey);
+        startStartersPolling(sportKey);
         fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, { cache: 'no-store' })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
@@ -399,6 +405,123 @@
         if (state.liveTimer) { clearInterval(state.liveTimer); state.liveTimer = null; }
         if (!LIVE_SPORTS[sportKey]) return;
         state.liveTimer = setInterval(function () { loadLive(sportKey); }, LIVE_REFRESH_MS);
+    }
+
+
+    /* ---- MLB starting pitchers ---------------------------------------------
+       MLB_STARTERS_20260907. A baseball price is read against who is throwing,
+       and the row named the two clubs and nothing else. The pitcher comes from
+       the SAME MLB feed the simulator already uses (statsapi schedule,
+       hydrate=probablePitcher) plus one batched people lookup for the throwing
+       hand, so no new data source enters the site. It is matched by CLUB PAIR
+       AND FIRST PITCH, never by club alone, so a doubleheader or the next game
+       of a series cannot put the wrong arm on a card, and a game the feed has no
+       arm for reads "Starter TBD" rather than leaving a gap. MLB only: every
+       other board keeps the untouched one-line name cell. */
+    var MLB_STATS = 'https://statsapi.mlb.com/api/v1';
+    var STARTERS_REFRESH_MS = 300000;           // probables move; re-read every 5 min
+    var STARTERS_WINDOW_MS = 8 * 3600 * 1000;   // board time may drift from the feed
+    function mlbKey(name) {
+        var s = String(name == null ? '' : name).toLowerCase();
+        if (s.normalize) s = s.normalize('NFD');
+        return s.replace(/[^a-z0-9]/g, '');
+    }
+    function mlbDay(offset) {
+        var d = new Date(Date.now() + offset * 86400000);
+        var m = String(d.getMonth() + 1), day = String(d.getDate());
+        return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
+    }
+    function loadStarters(sportKey) {
+        if (sportKey !== 'MLB') return;
+        var id = ++state.starters.reqId;
+        var url = MLB_STATS + '/schedule?sportId=1&startDate=' + mlbDay(-1) + '&endDate=' + mlbDay(5) +
+            '&hydrate=' + encodeURIComponent('probablePitcher');
+        fetch(url, { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (id !== state.starters.reqId || state.sport !== 'MLB') return;
+                var list = [];
+                ((d && d.dates) || []).forEach(function (dt) {
+                    (dt.games || []).forEach(function (g) {
+                        var t = g.teams || {};
+                        var away = (t.away && t.away.team) || {}, home = (t.home && t.home.team) || {};
+                        if (!away.name || !home.name) return;
+                        list.push({
+                            away: mlbKey(away.name), home: mlbKey(home.name),
+                            at: Date.parse(g.gameDate),
+                            pp: {
+                                away: (t.away && t.away.probablePitcher) || null,
+                                home: (t.home && t.home.probablePitcher) || null
+                            }
+                        });
+                    });
+                });
+                state.starters.games = list;
+                state.starters.at = Date.now();
+                render();
+                loadPitchHands(list);
+            })
+            .catch(function () { /* the board is complete without it; rows read TBD */ });
+    }
+    function loadPitchHands(list) {
+        var want = [];
+        list.forEach(function (g) {
+            ['away', 'home'].forEach(function (side) {
+                var p = g.pp[side];
+                if (p && p.id && state.starters.hands[p.id] === undefined && want.indexOf(p.id) < 0) want.push(p.id);
+            });
+        });
+        if (!want.length) return;
+        fetch(MLB_STATS + '/people?personIds=' + want.join(',') + '&fields=people,id,pitchHand,code', { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                var got = (d && d.people) || [];
+                if (!got.length) return;
+                got.forEach(function (p) { state.starters.hands[p.id] = (p.pitchHand && p.pitchHand.code) || null; });
+                if (state.sport === 'MLB') render();
+            })
+            .catch(function () { /* the name still shows, only the hand is missing */ });
+    }
+    function startStartersPolling(sportKey) {
+        if (state.starters.timer) { clearInterval(state.starters.timer); state.starters.timer = null; }
+        if (sportKey !== 'MLB') return;
+        state.starters.timer = setInterval(function () { loadStarters(sportKey); }, STARTERS_REFRESH_MS);
+    }
+    /* The board game and the feed game have to be the SAME game: the same two
+       clubs and a first pitch inside the window. Nearest start wins, which is
+       what settles a doubleheader. */
+    function startersFor(g) {
+        var away = mlbKey(g.away), home = mlbKey(g.home), when = Date.parse(g.when);
+        if (!away || !home || !isFinite(when)) return null;
+        var best = null, bestGap = Infinity;
+        for (var i = 0; i < state.starters.games.length; i++) {
+            var f = state.starters.games[i];
+            if (f.away !== away || f.home !== home) continue;
+            var gap = Math.abs(f.at - when);
+            if (!isFinite(gap) || gap > STARTERS_WINDOW_MS) continue;
+            if (gap < bestGap) { bestGap = gap; best = f; }
+        }
+        return best;
+    }
+    function starterHtml(g, isAway) {
+        if (state.sport !== 'MLB') return '';
+        var f = startersFor(g);
+        var p = f && f.pp[isAway ? 'away' : 'home'];
+        if (!p || !p.fullName) return '<span class="sbn-sp is-tbd">Starter TBD</span>';
+        var hand = p.id != null ? state.starters.hands[p.id] : null;
+        // The hand is its own cell and never shrinks: on a phone the column is
+        // narrow enough to clip the name, and a clipped "RHP" is the half worth
+        // keeping.
+        return '<span class="sbn-sp"><span class="sbn-spname">' + esc(p.fullName) + '</span>' +
+            (hand === 'R' || hand === 'L' ? '<i>' + hand + 'HP</i>' : '') + '</span>';
+    }
+    /* The name cell. MLB stacks the starter under the club; every other board
+       gets exactly the markup it had. */
+    function tnameCell(g, team, isAway) {
+        var sp = starterHtml(g, isAway);
+        if (!sp) return '<span class="sbn-tname">' + crest(team) + '<b>' + esc(team) + '</b></span>';
+        return '<span class="sbn-tname sbn-tname--sp">' + crest(team) +
+            '<span class="sbn-tstack"><b>' + esc(team) + '</b>' + sp + '</span></span>';
     }
 
     // ---- pick slip ----------------------------------------------------------
@@ -932,8 +1055,9 @@
         } else if (cat.layout === 'ttgrid') {
             body = ttGrid(g, cat);
         } else {
-            body = '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.away) + '<b>' + esc(g.away) + '</b></span>' + linesCells(g, cat, g.away, true, cols) + '</div>' +
-                '<div class="sbn-trow"><span class="sbn-tname">' + crest(g.home) + '<b>' + esc(g.home) + '</b></span>' + linesCells(g, cat, g.home, false, cols) + '</div>';
+            var sp = state.sport === 'MLB' ? ' sbn-trow--sp' : '';
+            body = '<div class="sbn-trow' + sp + '">' + tnameCell(g, g.away, true) + linesCells(g, cat, g.away, true, cols) + '</div>' +
+                '<div class="sbn-trow' + sp + '">' + tnameCell(g, g.home, false) + linesCells(g, cat, g.home, false, cols) + '</div>';
         }
         var ncol = cat.layout === 'ttgrid' ? 2 : (cols ? cols.length : 3);
         return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol + '" data-game="' + esc(g.id) + '">' +
@@ -1355,7 +1479,8 @@
         load(s && sportMeta(s).key === s ? s : 'MLB');
         window.__sbNext = { state: state, load: load, validOdds: validOdds, singleBook: singleBook,
             monotonic: monotonic, categories: categories, render: render,
-            loadLive: loadLive, normaliseLive: normaliseLive, liveHtml: liveHtml, validLiveOdds: validLiveOdds };
+            loadLive: loadLive, normaliseLive: normaliseLive, liveHtml: liveHtml, validLiveOdds: validLiveOdds,
+            loadStarters: loadStarters, startersFor: startersFor, starterHtml: starterHtml, mlbKey: mlbKey };
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
