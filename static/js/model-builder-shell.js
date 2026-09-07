@@ -17,7 +17,12 @@
     soccer_argentina_liga_profesional: 'Argentine Primera',
     soccer_conmebol_sudamericana: 'Copa Sudamericana',
     soccer_netherlands_eredivisie: 'Eredivisie',
-    soccer_nwsl: 'NWSL'
+    soccer_nwsl: 'NWSL',
+    // Present in the ledger and previously unlabelled, so the picker printed
+    // the raw database key at the user.
+    americanfootball_ncaaf: 'NCAAF', mma_ufc: 'UFC / MMA', soccer: 'Soccer (other)',
+    soccer_portugal_primeira_liga: 'Primeira Liga', baseball_npb: 'NPB',
+    baseball_kbo: 'KBO', soccer_uefa_champs_league: 'Champions League'
   };
   var MARKET_LABELS = {
     h2h: 'Moneyline', spreads: 'Spread / run line', totals: 'Total', team_totals: 'Team total',
@@ -25,10 +30,30 @@
     first_inning_totals: '1st inning total', batter_hits: 'Batter hits',
     batter_rbi: 'Batter RBI', batter_total_bases: 'Batter total bases',
     pitcher_strikeouts: 'Pitcher Ks', pitcher_outs: 'Pitcher outs',
+    pitcher_walks: 'Pitcher walks', alt_spreads: 'Alt spread', alt_totals: 'Alt total',
+    first_half_spreads: '1st half spread', first_half_totals: '1st half total',
+    period_1_totals: '1st period total',
     nba_points: 'NBA points', nba_rebounds: 'NBA rebounds', nba_assists: 'NBA assists'
   };
+  // Which shelf a market sits on in the picker. Anything unlisted falls through
+  // to "Other markets" rather than disappearing.
+  var MARKET_GROUPS = [
+    { title: 'Core markets', keys: ['h2h', 'spreads', 'totals', 'team_totals'] },
+    { title: 'Periods & alternates', keys: ['f5_h2h', 'f5_spreads', 'f5_totals', 'first_inning_totals', 'first_half_spreads', 'first_half_totals', 'period_1_totals', 'alt_spreads', 'alt_totals'] },
+    { title: 'Player props', keys: ['batter_hits', 'batter_rbi', 'batter_total_bases', 'pitcher_strikeouts', 'pitcher_outs', 'pitcher_walks', 'nba_points', 'nba_rebounds', 'nba_assists'] }
+  ];
+  // Quick starts are only a shortcut for filling the form: each sets the same
+  // fields a user would set by hand, then the normal run path takes over.
+  var PRESETS = [
+    { label: 'MLB moneyline favorites', sport: 'baseball_mlb', markets: ['h2h'], side: 'favorite' },
+    { label: 'Home underdogs', sport: 'baseball_mlb', markets: ['h2h'], side: 'underdog', home_away: 'home' },
+    { label: 'MLB unders', sport: 'baseball_mlb', markets: ['totals'], contains: 'Under' },
+    { label: 'Run line picks', sport: 'baseball_mlb', markets: ['spreads'] },
+    { label: 'Big favorites', sport: 'baseball_mlb', markets: ['h2h'], side: 'favorite', max_odds: -200 },
+    { label: 'Pitcher strikeouts', sport: 'baseball_mlb', markets: ['pitcher_strikeouts'] }
+  ];
 
-  var state = { catalog: null, models: [], forwardOpenId: null, dataset: 'picks' };
+  var state = { catalog: null, models: [], forwardOpenId: null, dataset: 'picks', lastDescribe: '' };
 
   function api() { return window.api; }
   function el(id) { return document.getElementById(id); }
@@ -45,7 +70,7 @@
     return String(k || '')
       .replace(/^(soccer|basketball|americanfootball|icehockey|baseball)_/, '')
       .replace(/_/g, ' ')
-      .replace(/\w/g, function (c) { return c.toUpperCase(); });
+      .replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
   // Same fallback as sportLabel: an unlabelled market key printed verbatim,
   // which is how "first_five_totals" sat in the picker beside "F5 total".
@@ -53,13 +78,18 @@
   // next new market never shows a raw key either.
   function marketLabel(k) {
     if (MARKET_LABELS[k]) return MARKET_LABELS[k];
-    return String(k || '').replace(/_/g, ' ').replace(/\w/g, function (c) { return c.toUpperCase(); });
+    return String(k || '').replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
   function num(v) { return (v === null || v === undefined || v === '') ? null : Number(v); }
   function fmtOdds(o) { if (o == null) return '-'; return o > 0 ? '+' + o : String(o); }
   function fmtUnits(u) { if (u == null) return '-'; return (u > 0 ? '+' : '') + Number(u).toFixed(2) + 'u'; }
   function fmtPct(p) { return p == null ? '-' : Number(p).toFixed(1) + '%'; }
   function signClass(v) { if (v == null) return ''; return v > 0 ? 'pos' : (v < 0 ? 'neg' : ''); }
+  // Coverage chip: the number reads first, the label sits under it. Callers
+  // escape their own value because some pass pre-built markup-free text.
+  function covBadge(value, label, cls) {
+    return '<span class="badge' + (cls ? ' ' + cls : '') + '"><b>' + value + '</b>' + esc(label) + '</span>';
+  }
 
   function hasSession() {
     try {
@@ -94,11 +124,11 @@
     var fresh = cat.generated_at ? new Date(cat.generated_at).toLocaleString() : '-';
     var latest = researchable.map(function (s) { return s.last_date; }).filter(Boolean).sort().pop();
     el('sourceBadges').innerHTML = [
-      '<span class="badge"><span class="dot"></span>Source: <b>' + esc(cat.data_source || 'Verified graded picks') + '</b></span>',
-      '<span class="badge"><b>' + totalGraded.toLocaleString() + '</b> verified graded picks</span>',
-      '<span class="badge"><b>' + researchable.length + '</b> researchable sports</span>',
-      latest ? '<span class="badge">Data through <b>' + esc(String(latest).slice(0, 10)) + '</b></span>' : '',
-      '<span class="badge">Loaded ' + esc(fresh) + '</span>'
+      covBadge(esc(cat.data_source || 'Verified graded picks'), 'Data source', 'badge-source'),
+      covBadge(totalGraded.toLocaleString(), 'Verified graded picks'),
+      covBadge(String(researchable.length), 'Researchable sports'),
+      latest ? covBadge(esc(String(latest).slice(0, 10)), 'Data through') : '',
+      covBadge(esc(fresh), 'Coverage loaded')
     ].join('');
   }
 
@@ -122,6 +152,23 @@
     return (state.catalog.sports || []).find(function (s) { return s.sport_key === key; }) || null;
   }
 
+  // The picker used to be one flat pile of tiny pills, most of them greyed
+  // out with no explanation. Same checkboxes and same values, now shelved by
+  // family with the thin ones kept visible and labelled.
+  function marketCard(m) {
+    var thin = m.graded < 30;
+    return '<label class="mkt' + (thin ? ' disabled' : '') + '" title="' + m.graded + ' graded picks">'
+      + '<input type="checkbox" value="' + esc(m.market_type) + '"' + (thin ? ' disabled' : '') + '>'
+      + '<span class="mkt-text"><span class="mkt-name">' + esc(marketLabel(m.market_type)) + '</span>'
+      + '<span class="mkt-n">' + (thin ? m.graded + ' graded, too thin' : m.graded.toLocaleString() + ' graded')
+      + '</span></span></label>';
+  }
+
+  function marketGroupHtml(g) {
+    return '<div class="mkt-group"><p class="mkt-group-title"><span>' + esc(g.title) + '</span></p><div class="mkt-row">'
+      + g.items.map(marketCard).join('') + '</div></div>';
+  }
+
   function renderMarketChips() {
     var host = el('marketChips');
     var sport = currentSport();
@@ -129,17 +176,112 @@
       host.innerHTML = '<span class="placeholder">No graded markets for this sport</span>';
       return;
     }
-    host.innerHTML = sport.markets.map(function (m) {
-      var thin = m.graded < 30;
-      return '<label class="' + (thin ? 'disabled' : '') + '" title="' + m.graded + ' graded">'
-        + '<input type="checkbox" value="' + esc(m.market_type) + '"' + (thin ? ' disabled' : '') + '>'
-        + esc(marketLabel(m.market_type)) + ' <span style="color:#64748b">' + m.graded + '</span></label>';
-    }).join('');
+    var byKey = {};
+    sport.markets.forEach(function (m) { byKey[m.market_type] = m; });
+    var used = {};
+    var primary = [];
+    var secondary = [];
+    MARKET_GROUPS.forEach(function (g, gi) {
+      var items = g.keys.filter(function (k) { return byKey[k]; }).map(function (k) { used[k] = 1; return byKey[k]; });
+      if (!items.length) return;
+      (gi === 0 ? primary : secondary).push({ title: g.title, items: items });
+    });
+    var rest = sport.markets.filter(function (m) { return !used[m.market_type]; });
+    if (rest.length) secondary.push({ title: 'Other markets', items: rest });
+    // A sport with no core market still needs something on the top shelf.
+    if (!primary.length && secondary.length) primary.push(secondary.shift());
+
+    var extra = secondary.reduce(function (a, g) { return a + g.items.length; }, 0);
+    var thinAny = sport.markets.some(function (m) { return m.graded < 30; });
+    host.innerHTML = primary.map(marketGroupHtml).join('')
+      + (extra ? '<details class="mkt-more"><summary>More markets (' + extra + ')</summary>'
+          + secondary.map(marketGroupHtml).join('') + '</details>' : '')
+      + (thinAny ? '<p class="mkt-hint">Markets under 30 graded picks are shown but not selectable. The sample is too small to say anything honest about them.</p>' : '');
+    syncMarketState();
+  }
+
+  // Selected state is a class on the card, not a bare checkbox tick.
+  function syncMarketState() {
+    Array.prototype.forEach.call(document.querySelectorAll('#marketChips label.mkt'), function (l) {
+      var cb = l.querySelector('input');
+      l.classList.toggle('on', Boolean(cb && cb.checked));
+    });
   }
 
   function selectedMarkets() {
     return Array.prototype.slice.call(document.querySelectorAll('#marketChips input:checked'))
       .map(function (c) { return c.value; });
+  }
+
+  // ---------------- Quick starts ----------------
+  // A preset only fills the same form fields a user would fill by hand, then
+  // hands off to the normal run path. Presets whose sport or market lacks
+  // enough graded data are never offered.
+  function renderPresets() {
+    var host = el('presetRow');
+    if (!host) return;
+    var sports = (state.catalog && state.catalog.sports) || [];
+    state.presets = PRESETS.filter(function (p) {
+      var s = sports.find(function (x) { return x.sport_key === p.sport; });
+      if (!s || !s.researchable) return false;
+      return (p.markets || []).every(function (k) {
+        var m = (s.markets || []).find(function (x) { return x.market_type === k; });
+        return m && m.graded >= 30;
+      });
+    });
+    if (!state.presets.length) {
+      host.innerHTML = '<span class="mkt-hint">Quick starts appear once a sport has enough graded data.</span>';
+      return;
+    }
+    host.innerHTML = state.presets.map(function (p, i) {
+      return '<button type="button" class="preset" data-preset="' + i + '">' + esc(p.label) + '</button>';
+    }).join('');
+  }
+
+  function applyPreset(p) {
+    if (!p) return;
+    if (state.dataset !== 'picks') switchDataset('picks');
+    el('modelBuilderForm').reset();
+    el('modelSport').value = p.sport;
+    renderMarketChips();
+    (p.markets || []).forEach(function (k) {
+      var cb = document.querySelector('#marketChips input[value="' + k + '"]');
+      if (cb && !cb.disabled) cb.checked = true;
+    });
+    syncMarketState();
+    el('modelSide').value = p.side || 'any';
+    el('modelHomeAway').value = p.home_away || 'any';
+    el('minOdds').value = p.min_odds != null ? p.min_odds : '';
+    el('maxOdds').value = p.max_odds != null ? p.max_odds : '';
+    el('selectionContains').value = p.contains || '';
+    if (p.contains) {
+      var d = el('selectionContains').parentNode;
+      while (d && d.tagName !== 'DETAILS') d = d.parentNode;
+      if (d) d.open = true;
+    }
+    setMessage('Loaded the "' + p.label + '" quick start. Change anything you like, then run it again.', 'ok');
+    runBacktest();
+  }
+
+  // A one-line, plain-language restatement of what was actually run, so the
+  // numbers on screen are never orphaned from the filters that produced them.
+  function describeFilters(f) {
+    var bits = [sportLabel(f.sport_key)];
+    bits.push((f.market_types && f.market_types.length)
+      ? f.market_types.map(marketLabel).join(', ') : 'all markets');
+    if (f.side && f.side !== 'any') bits.push(f.side === 'favorite' ? 'favorites only' : 'underdogs only');
+    if (f.home_away && f.home_away !== 'any') bits.push(f.home_away + ' side');
+    if (f.min_odds != null || f.max_odds != null) {
+      bits.push('odds ' + (f.min_odds != null ? fmtOdds(f.min_odds) : 'any')
+        + ' to ' + (f.max_odds != null ? fmtOdds(f.max_odds) : 'any'));
+    }
+    if (f.min_line != null || f.max_line != null) {
+      bits.push('line ' + (f.min_line != null ? f.min_line : 'any')
+        + ' to ' + (f.max_line != null ? f.max_line : 'any'));
+    }
+    if (f.date_from || f.date_to) bits.push((f.date_from || 'earliest') + ' to ' + (f.date_to || 'today'));
+    if (f.selection_contains) bits.push('selection contains "' + f.selection_contains + '"');
+    return bits.join('  |  ');
   }
 
   // ---------------- Filters from form ----------------
@@ -164,10 +306,13 @@
   // ---------------- Backtest run ----------------
   function skeletonResults() {
     el('resultFreshness').textContent = 'Running...';
+    var hero = '';
+    for (var h = 0; h < 3; h++) hero += '<div class="kpi skeleton" style="height:112px"></div>';
     var tiles = '';
-    for (var i = 0; i < 6; i++) tiles += '<div class="metric skeleton" style="height:78px"></div>';
-    el('resultsBody').innerHTML = '<div class="metric-grid">' + tiles + '</div>'
-      + '<div class="skeleton" style="height:150px;border-radius:10px;margin-top:18px"></div>';
+    for (var i = 0; i < 4; i++) tiles += '<div class="metric skeleton" style="height:84px"></div>';
+    el('resultsBody').innerHTML = '<div class="kpi-hero">' + hero + '</div>'
+      + '<div class="metric-grid">' + tiles + '</div>'
+      + '<div class="skeleton" style="height:160px;border-radius:12px;margin-top:22px"></div>';
   }
 
   async function runBacktest(ev) {
@@ -179,14 +324,24 @@
     el('runBtn').disabled = true;
     skeletonResults();
     try {
-      var res = await api().runBacktest(filtersFromForm());
+      var filters = filtersFromForm();
+      state.lastDescribe = describeFilters(filters);
+      var res = await api().runBacktest(filters);
       renderResults(res);
+      if (window.innerWidth <= 1000) {
+        el('resultsBody').parentNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (e) {
       el('resultFreshness').textContent = '';
       el('resultsBody').innerHTML = '<p class="notice error">' + esc((e && e.message) || 'Backtest failed. Try again.') + '</p>';
     } finally {
       el('runBtn').disabled = false;
     }
+  }
+
+  function kpiTile(k, v, sub, cls) {
+    return '<div class="kpi"><div class="k">' + esc(k) + '</div><div class="v ' + (cls || '') + '">'
+      + esc(v) + '</div>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
   }
 
   function metricTile(k, v, sub, cls) {
@@ -251,10 +406,13 @@
       return;
     }
 
+    // Three headline numbers carry the result; the rest support them.
+    var hero = '<div class="kpi-hero">'
+      + kpiTile('Record', m.record, m.sample_size + ' graded picks')
+      + kpiTile('ROI', m.roi == null ? '-' : m.roi.toFixed(2) + '%', 'return on risk', signClass(m.roi))
+      + kpiTile('Net units', fmtUnits(m.net_units), 'on ' + m.staked_units + 'u staked', signClass(m.net_units))
+      + '</div>';
     var tiles = [
-      metricTile('Record', m.record, m.sample_size + ' graded'),
-      metricTile('Net units', fmtUnits(m.net_units), 'on ' + m.staked_units + 'u staked', signClass(m.net_units)),
-      metricTile('ROI', m.roi == null ? '-' : m.roi.toFixed(2) + '%', 'return on risk', signClass(m.roi)),
       metricTile('Win rate', fmtPct(m.win_rate), m.wins + 'W / ' + m.losses + 'L' + (m.pushes ? ' / ' + m.pushes + 'P' : '')),
       metricTile('Avg odds', fmtOdds(m.avg_odds), 'American'),
       metricTile('Sample', String(m.sample_size), 'matching picks'),
@@ -262,7 +420,8 @@
     ].join('');
 
     var c = res.comparisons || {};
-    var table = '<div class="table-scroll"><table class="compare"><thead><tr>'
+    var table = '<h3 class="section-title">How it compares</h3>'
+      + '<div class="table-scroll"><table class="compare"><thead><tr>'
       + '<th>Comparison</th><th>Record</th><th>Win%</th><th>Units</th><th>ROI</th><th>Avg odds</th><th>N</th></tr></thead><tbody>'
       + comparisonRow('Your model', m)
       + comparisonRow((c.baseline && c.baseline.label) || 'Baseline', c.baseline)
@@ -271,9 +430,12 @@
       + '<p class="model-meta" style="margin-top:8px">Closing line value (CLV): your model ' + clvCell(m)
       + (c.baseline ? ' &middot; baseline ' + clvCell(c.baseline) : '') + '. Positive CLV means picks beat the closing price.</p>';
 
+    var summary = state.lastDescribe
+      ? '<p class="result-summary"><b>You ran:</b> ' + esc(state.lastDescribe) + '</p>' : '';
     el('resultsBody').innerHTML = tiles
-      ? ('<div class="metric-grid">' + tiles + '</div>' + warningsHtml(res.warnings) + table + unitsChart(res.units_series)
-        + '<p class="model-meta" style="margin-top:12px">Data source: ' + esc(res.data_source) + ' &middot; dataset ' + esc(res.dataset_version)
+      ? (summary + hero + '<div class="metric-grid">' + tiles + '</div>' + warningsHtml(res.warnings)
+        + table + unitsChart(res.units_series)
+        + '<p class="model-meta" style="margin-top:14px">Data source: ' + esc(res.data_source) + ' &middot; dataset ' + esc(res.dataset_version)
         + ' &middot; ' + res.sport_graded_total + ' graded picks in this sport.</p>')
       : warningsHtml(res.warnings);
   }
@@ -348,6 +510,7 @@
       var cb = document.querySelector('#marketChips input[value="' + mt + '"]');
       if (cb && !cb.disabled) cb.checked = true;
     });
+    syncMarketState();
     el('modelSide').value = f.side || 'any';
     el('modelHomeAway').value = f.home_away || 'any';
     el('minOdds').value = f.min_odds != null ? f.min_odds : '';
@@ -488,11 +651,11 @@
     var latest = researchable.map(function (s) { return s.last_date; }).filter(Boolean).sort().pop();
     var fresh = cat.generated_at ? new Date(cat.generated_at).toLocaleString() : '-';
     el('sourceBadges').innerHTML = [
-      '<span class="badge"><span class="dot"></span>Source: <b>Real game results (loaded daily)</b></span>',
-      '<span class="badge"><b>' + totalGames.toLocaleString() + '</b> completed games</span>',
-      '<span class="badge"><b>' + researchable.length + '</b> researchable sports</span>',
-      latest ? '<span class="badge">Data through <b>' + esc(String(latest).slice(0, 10)) + '</b></span>' : '',
-      '<span class="badge">Loaded ' + esc(fresh) + '</span>'
+      covBadge('Real game results, loaded daily', 'Data source', 'badge-source'),
+      covBadge(totalGames.toLocaleString(), 'Completed games'),
+      covBadge(String(researchable.length), 'Researchable sports'),
+      latest ? covBadge(esc(String(latest).slice(0, 10)), 'Data through') : '',
+      covBadge(esc(fresh), 'Coverage loaded')
     ].join('');
   }
 
@@ -551,7 +714,7 @@
       return '<div style="margin-top:12px"><p class="model-meta" style="margin:0 0 4px">' + esc(g.date) + ' &middot; Total ' + g.total
         + (g.ou ? ' (' + String(g.ou).toUpperCase() + ')' : '') + '</p><div class="table-scroll">' + line + '</div></div>';
     }).join('');
-    return '<h3 style="margin:20px 0 0;font-size:15px">Recent box scores</h3>' + blocks;
+    return '<h3 class="section-title">Recent box scores</h3>' + blocks;
   }
 
   function renderGameResults(res) {
@@ -581,12 +744,18 @@
     if (m.over_under) tiles.push(metricTile('O/U ' + m.over_under.line, m.over_under.record, (m.over_under.over_pct == null ? '-' : m.over_under.over_pct + '% over')));
 
     var c = res.comparisons || {};
-    var table = '<div class="table-scroll"><table class="compare"><thead><tr><th>Comparison</th><th>Home win%</th><th>Avg total</th><th>Avg margin</th><th>N</th></tr></thead><tbody>'
+    var table = '<h3 class="section-title">How it compares</h3>'
+      + '<div class="table-scroll"><table class="compare"><thead><tr><th>Comparison</th><th>Home win%</th><th>Avg total</th><th>Avg margin</th><th>N</th></tr></thead><tbody>'
       + gameCompareRow('Your filter', m)
       + gameCompareRow((c.baseline && c.baseline.label) || 'Baseline', c.baseline)
       + '</tbody></table></div>';
 
-    el('gameResultsBody').innerHTML = '<div class="metric-grid">' + tiles.join('') + '</div>'
+    var gHero = '<div class="kpi-hero">'
+      + kpiTile('Games', String(m.sample_size), 'completed')
+      + kpiTile('Home win', m.home_win_pct == null ? '-' : m.home_win_pct + '%', m.home_wins + '-' + m.away_wins + (m.ties ? '-' + m.ties : ''))
+      + kpiTile('Avg total', m.avg_total == null ? '-' : String(m.avg_total), 'per game')
+      + '</div>';
+    el('gameResultsBody').innerHTML = gHero + '<div class="metric-grid">' + tiles.slice(3).join('') + '</div>'
       + warningsHtml(res.warnings) + table
       + boxScoreBlocks(res.filters.sport_key, res.box_scores)
       + '<p class="model-meta" style="margin-top:12px">Data source: ' + esc(res.data_source) + ' &middot; ' + res.sport_games_total + ' completed games in this sport.</p>';
@@ -617,7 +786,21 @@
       el('modelBuilderForm').reset();
       renderMarketChips();
       setMessage('');
+      state.lastDescribe = '';
+      if (state.emptyResults) {
+        el('resultsBody').innerHTML = state.emptyResults;
+        el('resultFreshness').textContent = '';
+      }
     });
+    el('marketChips').addEventListener('change', syncMarketState);
+    var pr = el('presetRow');
+    if (pr) {
+      pr.addEventListener('click', function (ev) {
+        var b = ev.target.closest('.preset');
+        if (!b) return;
+        applyPreset((state.presets || [])[Number(b.getAttribute('data-preset'))]);
+      });
+    }
     el('modelList').addEventListener('click', function (ev) {
       var b = ev.target.closest('[data-act]');
       if (!b) return;
@@ -634,14 +817,25 @@
     var gf = el('gameForm');
     if (gf) gf.addEventListener('submit', runGameBacktest);
     var grb = el('gameResetBtn');
-    if (grb) grb.addEventListener('click', function () { el('gameForm').reset(); setGameMessage(''); });
+    if (grb) grb.addEventListener('click', function () {
+      el('gameForm').reset();
+      setGameMessage('');
+      if (state.emptyGameResults) {
+        el('gameResultsBody').innerHTML = state.emptyGameResults;
+        el('gameFreshness').textContent = '';
+      }
+    });
   }
 
   async function init() {
     if (!window.api) { return; }
     try { if (api().loadTokens) api().loadTokens(); } catch (e) {}
+    // Keep the authored empty states so Reset can put them back verbatim.
+    state.emptyResults = el('resultsBody').innerHTML;
+    state.emptyGameResults = el('gameResultsBody') ? el('gameResultsBody').innerHTML : '';
     wire();
     await loadCatalog();
+    renderPresets();
     loadModels();
     loadPublicTracked();
   }
