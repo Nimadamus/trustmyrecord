@@ -755,8 +755,10 @@ class TrustMyRecordAPI {
         return this.request(`/models/${encodeURIComponent(id)}`, { method: 'DELETE' });
     }
 
-    async trackModel(id) {
-        return this.request(`/models/${encodeURIComponent(id)}/track`, { method: 'POST' });
+    async trackModel(id, options = {}) {
+        return this.request(`/models/${encodeURIComponent(id)}/track`, {
+            method: 'POST', body: options,
+        });
     }
 
     async untrackModel(id) {

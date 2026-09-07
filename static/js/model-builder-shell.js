@@ -574,15 +574,26 @@
       var taken = 0;
       if (newId) {
         try {
-          var tr = await api().trackModel(newId);
+          var stakeEl = el('stakeUnits');
+          var untilEl = el('trackUntil');
+          var opts = {};
+          if (stakeEl && stakeEl.value !== '') opts.stake_units = Number(stakeEl.value);
+          // A date input gives a bare day. Run to the end of it, not its
+          // midnight, or "track until the 30th" drops the 30th's card.
+          if (untilEl && untilEl.value) opts.track_until = untilEl.value + 'T23:59:59';
+          var tr = await api().trackModel(newId, opts);
           tracking = true;
           taken = (tr && tr.board_picks_taken) || 0;
         } catch (e) { tracking = false; }
       }
       closeSaveBox();
       if (el('modelName')) el('modelName').value = '';
+      var stakeTxt = (el('stakeUnits') && el('stakeUnits').value) || '1';
+      var untilTxt = (el('trackUntil') && el('trackUntil').value) || '';
       setMessage(tracking
-        ? ('Model saved and running. It read the live board straight away and took '
+        ? ('Model saved and running at ' + stakeTxt + 'u a bet'
+            + (untilTxt ? ', through ' + untilTxt : '')
+            + '. It read the live board straight away and took '
             + taken + ' position' + (taken === 1 ? '' : 's') + '. From here it scans on its own and settles each one on the final score.')
         : 'Model saved. It is listed under Your models below.', 'ok');
       await loadModels();
@@ -628,6 +639,12 @@
         + (f.side && f.side !== 'any' ? ' &middot; ' + esc(f.side) : '') + '</div>'
         + (tracked && m.auto_scan === false
             ? '<div class="model-meta">Paused. Positions already open still settle, but nothing new is taken.</div>'
+            : '')
+        + (tracked
+            ? '<div class="model-meta">'
+              + (m.stake_units ? Number(m.stake_units) + 'u a bet' : '1u a bet')
+              + (m.track_until ? ' &middot; through ' + esc(new Date(m.track_until).toLocaleDateString()) : ' &middot; no end date')
+              + '</div>'
             : '')
         + (tracked
             ? '<div class="model-meta">Scanning the board since ' + esc(new Date(m.tracked_from).toLocaleDateString())
@@ -767,12 +784,19 @@
     }
     var s = data.summary || {};
     var scanned = data.last_scanned_at ? new Date(data.last_scanned_at).toLocaleString() : 'just now';
+    var until = data.track_until ? new Date(data.track_until) : null;
+    var windowTxt = until
+      ? (data.window_open
+          ? ' Capturing until ' + until.toLocaleDateString() + '.'
+          : ' The tracking window closed on ' + until.toLocaleDateString() + ', so nothing new is taken. Open positions still settle.')
+      : ' It runs until you stop it.';
     var head = '<div class="results-head" style="margin-top:18px"><div>'
       + '<p class="panel-label">The model\'s own book</p>'
       + '<h2>Positions it took off the board</h2></div>'
       + '<span class="freshness">Board last scanned ' + esc(scanned) + '</span></div>'
-      + '<p class="panel-sub">Nobody enters these. The model reads the live board on its own, takes every selection that matches its filters at the price posted, and each one is settled on the final score by the same grader that grades the site. Flat '
-      + (data.units_per_pick || 1) + ' unit a position.</p>';
+      + '<p class="panel-sub">Nobody enters these. The model reads the live board on its own, takes every selection that matches its filters at the price posted, and each one is settled on the final score by the same grader that grades the site. '
+      + (data.units_per_pick || 1) + ' unit' + ((data.units_per_pick || 1) === 1 ? '' : 's') + ' a position.'
+      + esc(windowTxt) + '</p>';
 
     var tiles = '<div class="kpi-hero">'
       + kpiTile('Record', s.record || '0-0', s.sample_size + ' settled'
