@@ -142,20 +142,31 @@
   // Two thirds of the ledger's leagues are below the research threshold. Left
   // in one flat list they read as a broken picker, so they get their own
   // labelled group and say plainly why they are not selectable.
+  // Backtesting and tracking are different questions. A sport with a live
+  // board can always be tracked forward, even with no graded history to
+  // backtest, so it is offered rather than disabled. Only a sport with
+  // neither is unusable.
   function sportOptions(sports, countWord) {
     var ok = sports.filter(function (s) { return s.researchable; });
-    var thin = sports.filter(function (s) { return !s.researchable; });
-    function opt(s, disabled) {
+    var track = sports.filter(function (s) { return !s.researchable && s.trackable; });
+    var dead = sports.filter(function (s) { return !s.researchable && !s.trackable; });
+    function opt(s, disabled, suffix) {
       var n = (s.graded != null ? s.graded : s.games) || 0;
+      var label = sportLabel(s.sport_key) + ' (' + n.toLocaleString() + ' ' + countWord + ')';
+      if (suffix) label += suffix;
       return '<option value="' + esc(s.sport_key) + '"' + (disabled ? ' disabled' : '') + '>'
-        + esc(sportLabel(s.sport_key) + ' (' + n.toLocaleString() + ' ' + countWord + ')') + '</option>';
+        + esc(label) + '</option>';
     }
     return {
-      first: ok.length ? ok[0].sport_key : null,
-      html: (ok.length ? '<optgroup label="Ready to research">'
+      first: ok.length ? ok[0].sport_key : (track.length ? track[0].sport_key : null),
+      html: (ok.length ? '<optgroup label="Backtest and track">'
               + ok.map(function (s) { return opt(s, false); }).join('') + '</optgroup>' : '')
-        + (thin.length ? '<optgroup label="Not enough graded data yet">'
-              + thin.map(function (s) { return opt(s, true); }).join('') + '</optgroup>' : '')
+        + (track.length ? '<optgroup label="Track forward only, no backtest history yet">'
+              + track.map(function (s) {
+                  return opt(s, false, ' · ' + s.upcoming_games + ' games on the board');
+                }).join('') + '</optgroup>' : '')
+        + (dead.length ? '<optgroup label="Nothing to work with yet">'
+              + dead.map(function (s) { return opt(s, true); }).join('') + '</optgroup>' : '')
     };
   }
 
@@ -195,7 +206,23 @@
   function renderMarketChips() {
     var host = el('marketChips');
     var sport = currentSport();
-    if (!sport || !sport.markets || !sport.markets.length) {
+    if (!sport) { host.innerHTML = '<span class="placeholder">Select a sport first</span>'; return; }
+    // No graded history is not the same as nothing to bet. A trackable sport
+    // offers the markets a model can take off the board and settle, with no
+    // counts because there is no history to count.
+    if (!sport.researchable && sport.trackable) {
+      var autoMarkets = sport.auto_markets || ['h2h', 'spreads', 'totals', 'team_totals'];
+      host.innerHTML = '<div class="mkt-group"><p class="mkt-group-title"><span>Markets it can take and settle</span></p>'
+        + '<div class="mkt-row">' + autoMarkets.map(function (k) {
+            return '<label class="mkt"><input type="checkbox" value="' + esc(k) + '">'
+              + '<span class="mkt-text"><span class="mkt-name">' + esc(marketLabelFor(k, sport.sport_key)) + '</span>'
+              + '<span class="mkt-n">live board</span></span></label>';
+          }).join('') + '</div></div>'
+        + '<p class="mkt-hint">This sport has no graded pick history yet, so there is nothing to backtest. Save the model and it still runs forward on the live board.</p>';
+      syncMarketState();
+      return;
+    }
+    if (!sport.markets || !sport.markets.length) {
       host.innerHTML = '<span class="placeholder">No graded markets for this sport</span>';
       return;
     }
@@ -342,7 +369,21 @@
     if (ev) ev.preventDefault();
     var sport = currentSport();
     if (!sport) { setMessage('Pick a sport first.', 'error'); return; }
-    if (!sport.researchable) { setMessage('This sport has insufficient verified data to backtest.', 'error'); return; }
+    if (!sport.researchable) {
+      el('resultFreshness').textContent = '';
+      state.lastDescribe = describeFilters(filtersFromForm());
+      el('resultsBody').innerHTML = '<p class="result-summary"><b>You built:</b> ' + esc(state.lastDescribe) + '</p>'
+        + '<div class="warn warn-warn" style="margin-top:14px">There is no graded pick history for '
+        + esc(sportLabel(sport.sport_key)) + ' yet, so there is nothing honest to backtest it against. '
+        + 'The model still works: save it and it starts taking these selections off the live board '
+        + 'at the posted price and settling them on final scores, building its record from today forward.</div>'
+        + (sport.upcoming_games
+            ? '<p class="model-meta" style="margin-top:12px">' + sport.upcoming_games
+              + ' games on the board for this sport right now.</p>'
+            : '');
+      setMessage('No backtest history for this sport. Save the model to start tracking it forward.', 'ok');
+      return;
+    }
     setMessage('');
     el('runBtn').disabled = true;
     skeletonResults();
