@@ -7,7 +7,7 @@
     <meta name="robots" content="index,follow,max-image-preview:large">
     <link rel="canonical" href="https://trustmyrecord.com/model-builder/">
     <title>Model Builder | Backtest Betting Models on Verified Results | TrustMyRecord</title>
-    <meta name="description" content="Build and backtest a sports betting model against TrustMyRecord's verified graded-pick database. Real record, units, ROI, win rate, average odds, sample size and CLV, with clear data-source labels and forward tracking.">
+    <meta name="description" content="Build and backtest a sports betting model against TrustMyRecord's verified graded-pick database, then let it run itself: it scans the live board every 20 minutes, takes every selection matching your filters at the posted price and settles each one on the final score. Real record, units, ROI, win rate, average odds, sample size and CLV.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -271,7 +271,7 @@
         <section class="model-builder-top mb-hero">
             <p class="kicker">Research Tools</p>
             <h1><span class="accent">Model Builder</span></h1>
-            <p class="lede">Describe a betting angle with real filters, then run it against TrustMyRecord's <b>verified graded-pick database</b>. In one click you get the true record of every pick that matched: units, ROI, win rate, average odds and sample size, measured against a baseline and a random control. Nothing is simulated and no record is invented.</p>
+            <p class="lede">Describe a betting angle with real filters and backtest it against TrustMyRecord's <b>verified graded-pick database</b>: the true record of every pick that matched, with units, ROI, win rate and sample size against a baseline and a random control. Then save it, and <b>the model runs itself</b>. It reads the live board every 20 minutes, takes every selection that fits its filters at the posted price, and settles each one on the final score. Nobody enters a pick.</p>
             <div class="source-badges" id="sourceBadges">
                 <span class="badge"><span class="dot"></span>Loading data coverage...</span>
             </div>
@@ -402,14 +402,14 @@
                             <div class="save-box" id="saveBox" hidden>
                                 <label for="modelName">Name this model
                                     <input id="modelName" type="text" maxlength="120" placeholder="e.g. MLB home dogs, +120 to +200">
-                                    <span class="hint">Saving also starts live tracking. Every future graded pick that matches is recorded on its own from now on.</span>
+                                    <span class="hint">Saving switches the model on. It reads the live board straight away, then every 20 minutes, and settles what it took on final scores.</span>
                                 </label>
                                 <div class="button-row split">
                                     <button type="button" class="primary" id="saveConfirmBtn">Save it</button>
                                     <button type="button" id="saveCancelBtn">Cancel</button>
                                 </div>
                             </div>
-                            <p class="run-note">Saving a model starts tracking it automatically. Needs a free account.</p>
+                            <p class="run-note">Saving switches the model on so it scans the board by itself. Needs a free account.</p>
                             <p class="notice" id="builderMessage"></p>
                         </li>
                     </ol>
@@ -441,7 +441,7 @@
                             <li><span><b>Real graded results only.</b> Every number is an aggregate of picks that were posted, closed and graded on TrustMyRecord.</span></li>
                             <li><span><b>Measured against a control.</b> Your angle is shown beside the sport baseline and a random control, so you can see whether the edge is real or just the market.</span></li>
                             <li><span><b>Honest about thin data.</b> Small samples and limited coverage are flagged on the result, not hidden.</span></li>
-                            <li><span><b>It tracks itself after that.</b> Save a model and every future graded pick that matches is recorded automatically, live, kept separate from the backtest.</span></li>
+                            <li><span><b>Then it runs itself.</b> Save a model and it scans the live board on its own, takes what matches at the posted price and grades it on the final score. No pick entry, ever.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -451,7 +451,7 @@
             <section class="builder-panel full" aria-label="Saved models">
                 <p class="panel-label">Your models</p>
                 <h2>Saved models &amp; forward tracking</h2>
-                <p class="panel-sub">Saved models are private, and they track themselves. From the moment you save one, every future graded pick that matches its filters is recorded automatically and kept separate from the backtest history, so the live record builds with no further clicks.</p>
+                <p class="panel-sub">Saved models are private, and they run on their own. From the moment you save one it scans the live board every 20 minutes, books every selection that matches its filters at the price on the board, and settles each one on the final score. You also see which picks real handicappers posted that fit the same filters. Both records are kept apart from the backtest and from the verified ledger.</p>
                 <div id="savedModelsHost">
                     <div class="login-hint" id="loginHint" hidden>Log in to save models and track them forward. <a href="/login/?next=/model-builder/">Log in</a> or <a href="/register/">create a free account</a>.</div>
                     <div class="model-list" id="modelList"></div>

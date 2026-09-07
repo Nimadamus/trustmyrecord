@@ -530,14 +530,19 @@
       var created = await api().createModel(payload);
       var newId = created && created.model && created.model.id;
       var tracking = false;
+      var taken = 0;
       if (newId) {
-        try { await api().trackModel(newId); tracking = true; }
-        catch (e) { tracking = false; }
+        try {
+          var tr = await api().trackModel(newId);
+          tracking = true;
+          taken = (tr && tr.board_picks_taken) || 0;
+        } catch (e) { tracking = false; }
       }
       closeSaveBox();
       if (el('modelName')) el('modelName').value = '';
       setMessage(tracking
-        ? 'Model saved and now tracking. Every future graded pick that matches these filters is recorded automatically, under Your models below.'
+        ? ('Model saved and running. It read the live board straight away and took '
+            + taken + ' position' + (taken === 1 ? '' : 's') + '. From here it scans on its own and settles each one on the final score.')
         : 'Model saved. It is listed under Your models below.', 'ok');
       await loadModels();
       if (newId && tracking) viewForward(newId);
@@ -576,11 +581,15 @@
         + '<h3>' + esc(m.name) + ' ' + (tracked ? '<span class="tag live">Tracking live</span>' : '<span class="tag hist">Not tracking</span>') + '</h3>'
         + '<div class="model-meta">' + esc(sportLabel(m.sport_key)) + ' &middot; ' + esc(markets)
         + (f.side && f.side !== 'any' ? ' &middot; ' + esc(f.side) : '') + '</div>'
-        + (tracked ? '<div class="model-meta">Tracking since ' + esc(new Date(m.tracked_from).toLocaleDateString()) + '</div>' : '')
+        + (tracked
+            ? '<div class="model-meta">Scanning the board since ' + esc(new Date(m.tracked_from).toLocaleDateString())
+              + (m.last_scanned_at ? ' &middot; last read ' + esc(new Date(m.last_scanned_at).toLocaleString()) : '')
+              + '</div>'
+            : '')
         + '<div class="button-row">'
         + '<button type="button" data-act="load" data-id="' + m.id + '">Load</button>'
         + (tracked
-            ? '<button type="button" data-act="forward" data-id="' + m.id + '">View live record</button>'
+            ? '<button type="button" class="primary" data-act="forward" data-id="' + m.id + '">View live record</button>'
             : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
         + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
         + '</div></div>';
@@ -634,33 +643,106 @@
     } catch (e) { setMessage((e && e.message) || 'Could not delete.', 'error'); }
   }
 
+  // A tracked model has two live records and they answer different questions:
+  // the positions it took off the board by itself, and the human picks that
+  // happened to match it. The model's own book leads.
   async function viewForward(id) {
     var panel = el('forwardPanel');
     state.forwardOpenId = id;
     panel.hidden = false;
-    panel.innerHTML = '<div class="skeleton" style="height:120px;border-radius:10px;margin-top:14px"></div>';
+    panel.innerHTML = '<div class="skeleton" style="height:150px;border-radius:12px;margin-top:16px"></div>';
+    var autoHtml = '';
+    var fwdHtml = '';
+    try {
+      var auto = await api().getModelAuto(id);
+      autoHtml = renderAuto(auto);
+    } catch (e) {
+      autoHtml = '<p class="notice error">' + esc((e && e.message) || 'Could not load the model\'s positions.') + '</p>';
+    }
     try {
       var data = await api().getModelForward(id);
-      renderForward(data);
+      fwdHtml = forwardHtml(data);
     } catch (e) {
-      panel.innerHTML = '<p class="notice error">' + esc((e && e.message) || 'Could not load tracking.') + '</p>';
+      fwdHtml = '<p class="notice error">' + esc((e && e.message) || 'Could not load matching picks.') + '</p>';
     }
+    panel.innerHTML = autoHtml + fwdHtml;
+  }
+
+  function autoPickRow(p, showResult) {
+    var when = p.commence_time ? new Date(p.commence_time) : null;
+    var sel = esc(p.selection) + (p.line != null ? ' ' + p.line : '');
+    return '<tr><td>' + esc(when ? when.toLocaleDateString() + ' ' + when.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '-')
+      + '</td><td>' + esc(p.game || '-') + '</td><td>' + esc(marketLabel(p.market)) + '</td>'
+      + '<td>' + sel + '</td><td>' + fmtOdds(p.odds) + '</td><td>' + esc(p.book || '-') + '</td>'
+      + (showResult
+          ? '<td>' + statusPill(p.status) + '</td><td>' + (p.result_units == null ? '-' : fmtUnits(p.result_units)) + '</td>'
+          : '<td>' + p.units + 'u</td>')
+      + '</tr>';
+  }
+
+  function renderAuto(data) {
+    if (!data || data.tracking === false) {
+      return '<p class="notice">' + esc((data && data.message) || 'Not tracking yet.') + '</p>';
+    }
+    var s = data.summary || {};
+    var scanned = data.last_scanned_at ? new Date(data.last_scanned_at).toLocaleString() : 'just now';
+    var head = '<div class="results-head" style="margin-top:18px"><div>'
+      + '<p class="panel-label">The model\'s own book</p>'
+      + '<h2>Positions it took off the board</h2></div>'
+      + '<span class="freshness">Board last scanned ' + esc(scanned) + '</span></div>'
+      + '<p class="panel-sub">Nobody enters these. The model reads the live board on its own, takes every selection that matches its filters at the price posted, and each one is settled on the final score by the same grader that grades the site. Flat '
+      + (data.units_per_pick || 1) + ' unit a position.</p>';
+
+    var tiles = '<div class="kpi-hero">'
+      + kpiTile('Record', s.record || '0-0', s.sample_size + ' settled'
+          + (s.pending ? ', ' + s.pending + ' live' : ''))
+      + kpiTile('ROI', s.roi == null ? '-' : s.roi.toFixed(2) + '%', 'on ' + (s.staked_units || 0) + 'u staked', signClass(s.roi))
+      + kpiTile('Net units', fmtUnits(s.net_units), 'settled only', signClass(s.net_units))
+      + '</div>'
+      + '<div class="metric-grid">'
+      + metricTile('Win rate', fmtPct(s.win_rate), (s.wins || 0) + 'W / ' + (s.losses || 0) + 'L')
+      + metricTile('Avg odds', fmtOdds(s.avg_odds), 'American')
+      + metricTile('Open', String(s.pending || 0), 'not settled yet')
+      + '</div>';
+
+    var upcoming = (data.upcoming || []);
+    var upcomingHtml = upcoming.length
+      ? '<h3 class="section-title">On the board now (' + upcoming.length + ')</h3>'
+        + '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Starts</th><th>Game</th>'
+        + '<th>Market</th><th>Selection</th><th>Price taken</th><th>Book</th><th>Stake</th></tr></thead><tbody>'
+        + upcoming.map(function (p) { return autoPickRow(p, false); }).join('') + '</tbody></table></div>'
+      : '<p class="model-meta" style="margin-top:14px">Nothing on the current board matches these filters. The next scan runs within 20 minutes, and new positions appear here on their own.</p>';
+
+    var settled = (data.picks || []).filter(function (p) { return p.status !== 'pending'; }).slice(0, 40);
+    var settledHtml = settled.length
+      ? '<h3 class="section-title">Settled positions</h3>'
+        + '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Date</th><th>Game</th>'
+        + '<th>Market</th><th>Selection</th><th>Price</th><th>Book</th><th>Result</th><th>Units</th></tr></thead><tbody>'
+        + settled.map(function (p) { return autoPickRow(p, true); }).join('') + '</tbody></table></div>'
+      : '';
+
+    var caps = data.caps || {};
+    var note = '<p class="model-meta" style="margin-top:14px">Data source: ' + esc(data.data_source || 'live board')
+      + '. Up to ' + (caps.per_scan || 25) + ' new positions a scan and ' + (caps.per_day || 50)
+      + ' a day, from games starting inside ' + (caps.lookahead_hours || 72)
+      + ' hours. These positions are the model\'s own and never touch the verified graded ledger.</p>';
+
+    return head + tiles + upcomingHtml + settledHtml + note;
   }
 
   function statusPill(s) {
     return '<span class="status-pill status-' + esc(s) + '">' + esc(s) + '</span>';
   }
 
-  function renderForward(data) {
-    var panel = el('forwardPanel');
+  function forwardHtml(data) {
     if (!data || !data.tracking) {
-      panel.innerHTML = '<p class="notice">' + esc((data && data.message) || 'Not tracking.') + '</p>';
-      return;
+      return '<p class="notice">' + esc((data && data.message) || 'Not tracking.') + '</p>';
     }
     var s = data.summary || {};
     var updated = data.last_updated ? new Date(data.last_updated).toLocaleString() : 'just now';
-    var head = '<div class="results-head" style="margin-top:14px"><div><p class="panel-label">Forward tracked (live)</p>'
-      + '<h2>Since ' + esc(new Date(data.tracked_from).toLocaleDateString()) + '</h2></div>'
+    var head = '<div class="results-head" style="margin-top:26px;padding-top:22px;border-top:1px solid var(--line)"><div>'
+      + '<p class="panel-label">Matching handicapper picks</p>'
+      + '<h2>Human picks that fit, since ' + esc(new Date(data.tracked_from).toLocaleDateString()) + '</h2></div>'
       + '<span class="freshness">Last updated ' + esc(updated) + '</span></div>';
     var tiles = '<div class="metric-grid">'
       + metricTile('Record', s.record || '0-0', s.sample_size + ' picks' + (s.pending ? ' (' + s.pending + ' pending)' : ''))
@@ -679,7 +761,7 @@
     var table = rows
       ? '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Date</th><th>Game</th><th>Market</th><th>Selection</th><th>Odds</th><th>Source</th><th>Result</th><th>Units</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
       : '<p class="model-meta" style="margin-top:12px">No matching graded picks yet since tracking began. New picks appear here automatically as they are graded.</p>';
-    panel.innerHTML = head + tiles
+    return head + tiles
       + '<p class="model-meta">Data source: ' + esc(data.data_source) + ' &middot; forward only, never mixed with backtest history.</p>'
       + table;
   }

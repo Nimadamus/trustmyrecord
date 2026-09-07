@@ -763,6 +763,10 @@ class TrustMyRecordAPI {
         return this.request(`/models/${encodeURIComponent(id)}/untrack`, { method: 'POST' });
     }
 
+    async getModelAuto(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/auto`);
+    }
+
     async getModelForward(id) {
         return this.request(`/models/${encodeURIComponent(id)}/forward`);
     }
