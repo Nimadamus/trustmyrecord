@@ -753,6 +753,24 @@
         + upcoming.map(function (p) { return autoPickRow(p, false); }).join('') + '</tbody></table></div>'
       : '<p class="model-meta" style="margin-top:14px">Nothing on the current board matches these filters. The next scan runs within 20 minutes, and new positions appear here on their own.</p>';
 
+    // The day is the unit a bettor thinks in, so the day by day table sits
+    // between the headline totals and the individual positions.
+    var days = (data.by_day || []);
+    var dayHtml = days.length
+      ? '<h3 class="section-title">Day by day</h3>'
+        + '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Date</th><th>Taken</th>'
+        + '<th>Record</th><th>Win%</th><th>Units</th><th>ROI</th><th>Open</th></tr></thead><tbody>'
+        + days.map(function (d) {
+            return '<tr><td>' + esc(d.date) + '</td><td>' + d.taken + '</td>'
+              + '<td>' + esc(d.settled ? d.record : '-') + '</td>'
+              + '<td>' + fmtPct(d.win_rate) + '</td>'
+              + '<td class="' + signClass(d.net_units) + '">' + (d.settled ? fmtUnits(d.net_units) : '-') + '</td>'
+              + '<td>' + (d.roi == null ? '-' : d.roi.toFixed(2) + '%') + '</td>'
+              + '<td>' + (d.pending || 0) + '</td></tr>';
+          }).join('')
+        + '</tbody></table></div>'
+      : '';
+
     var settled = (data.picks || []).filter(function (p) { return p.status !== 'pending'; }).slice(0, 40);
     var settledHtml = settled.length
       ? '<h3 class="section-title">Settled positions</h3>'
@@ -767,7 +785,7 @@
       + ' a day, from games starting inside ' + (caps.lookahead_hours || 72)
       + ' hours. These positions are the model\'s own and never touch the verified graded ledger.</p>';
 
-    return head + tiles + upcomingHtml + settledHtml + note;
+    return head + tiles + upcomingHtml + dayHtml + settledHtml + note;
   }
 
   function statusPill(s) {
