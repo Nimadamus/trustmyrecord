@@ -647,6 +647,20 @@
               + '</div>'
             : '')
         + (tracked
+            ? '<div class="save-box terms-box" data-terms="' + m.id + '" hidden>'
+              + '<div class="two-col">'
+              + '<label>Units per bet<input type="number" min="0.1" max="100" step="0.5" data-f="stake" value="'
+              + (m.stake_units ? Number(m.stake_units) : 1) + '"></label>'
+              + '<label>Track until<input type="date" data-f="until" value="'
+              + (m.track_until ? esc(new Date(m.track_until).toISOString().slice(0, 10)) : '') + '"></label>'
+              + '</div>'
+              + '<span class="hint">Clear the date to run until you stop it. Positions already taken keep the stake they were booked at.</span>'
+              + '<div class="button-row split">'
+              + '<button type="button" class="primary" data-act="terms-save" data-id="' + m.id + '">Save terms</button>'
+              + '<button type="button" data-act="terms-cancel" data-id="' + m.id + '">Cancel</button>'
+              + '</div></div>'
+            : '')
+        + (tracked
             ? '<div class="model-meta">Scanning the board since ' + esc(new Date(m.tracked_from).toLocaleDateString())
               + (m.last_scanned_at ? ' &middot; last read ' + esc(new Date(m.last_scanned_at).toLocaleString()) : '')
               + '</div>'
@@ -658,6 +672,7 @@
               + '<button type="button" data-act="scan" data-id="' + m.id + '" data-enable="'
               + (m.auto_scan === false ? '1' : '0') + '">'
               + (m.auto_scan === false ? 'Resume scanning' : 'Pause scanning') + '</button>'
+              + '<button type="button" data-act="terms" data-id="' + m.id + '">Edit terms</button>'
               + '<button type="button" data-act="publish" data-id="' + m.id + '">Submit for public listing</button>'
             : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
         + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
@@ -694,6 +709,27 @@
     el('selectionContains').value = f.selection_contains || '';
     setMessage('Loaded "' + m.name + '". Run backtest to see results.', 'ok');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Terms are editable while a model runs. The stake applies to what it takes
+  // from now on; positions already booked keep the stake they were taken at.
+  async function saveTerms(id) {
+    var box = document.querySelector('[data-terms="' + id + '"]');
+    if (!box) return;
+    var stake = box.querySelector('[data-f="stake"]').value;
+    var until = box.querySelector('[data-f="until"]').value;
+    var payload = { track_until: until ? until + 'T23:59:59' : null };
+    if (stake !== '') payload.stake_units = Number(stake);
+    try {
+      var res = await api().trackModel(id, payload);
+      box.hidden = true;
+      setMessage('Terms updated: ' + (res.stake_units || 1) + 'u a bet'
+        + (res.track_until ? ', through ' + new Date(res.track_until).toLocaleDateString() : ', no end date')
+        + '.', 'ok');
+      await loadModels();
+    } catch (e) {
+      setMessage((e && e.message) || 'Could not update terms.', 'error');
+    }
   }
 
   // Listing is a request, not a switch: an admin reviews it, and the public
@@ -1112,6 +1148,12 @@
       if (act === 'forward') { viewForward(id); return; }
       if (act === 'scan') { toggleScan(id, b.getAttribute('data-enable') === '1'); return; }
       if (act === 'publish') { requestPublic(id); return; }
+      if (act === 'terms' || act === 'terms-cancel') {
+        var box = document.querySelector('[data-terms="' + id + '"]');
+        if (box) box.hidden = act !== 'terms';
+        return;
+      }
+      if (act === 'terms-save') { saveTerms(id); return; }
       // Tracking and deleting are one-way, so they arm first and fire on the
       // second click. Same guard a confirm() gave, without the modal.
       if (act === 'track' || act === 'delete') {
