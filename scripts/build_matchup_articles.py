@@ -1827,10 +1827,16 @@ def main():
         for sport, articles in sorted(by_sport.items()):
             lead = articles[0]
             s_label = SPORT_LABEL.get(sport, sport.upper())
-            # The day the newest piece belongs to, and everything else from it.
-            lead_day = str(lead.get("featured_on") or lead.get("published_at") or "")[:10]
-            same_day = [a for a in articles
-                        if str(a.get("featured_on") or a.get("published_at") or "")[:10] == lead_day]
+            # THE DAY IS THE FIXTURE'S DAY, not the minute we pressed publish.
+            # Grouping on published_at split one afternoon's three tennis pieces
+            # across two days, because they landed at 23:35Z, 23:39Z and 00:01Z:
+            # same slate, same session, two UTC dates. featured_on is no good on
+            # its own either, since only one article per sport holds it.
+            def day_of(a):
+                return str(a.get("featured_on") or a.get("game_time_utc")
+                           or a.get("published_at") or "")[:10]
+            lead_day = day_of(lead)
+            same_day = [a for a in articles if day_of(a) == lead_day]
             door = os.path.join(MOTD_DIR, sport, "index.html")
 
             if len(same_day) > 1:
