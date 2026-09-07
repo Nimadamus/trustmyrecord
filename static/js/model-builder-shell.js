@@ -578,9 +578,16 @@
       var f = (m.criteria_json && m.criteria_json.filters) || {};
       var markets = (f.market_types || []).map(function (k) { return marketLabelFor(k, m.sport_key); }).join(', ') || 'all markets';
       return '<div class="model-card" data-id="' + m.id + '">'
-        + '<h3>' + esc(m.name) + ' ' + (tracked ? '<span class="tag live">Tracking live</span>' : '<span class="tag hist">Not tracking</span>') + '</h3>'
+        + '<h3>' + esc(m.name) + ' ' + (tracked
+            ? (m.auto_scan === false
+                ? '<span class="tag hist">Paused</span>'
+                : '<span class="tag live">Tracking live</span>')
+            : '<span class="tag hist">Not tracking</span>') + '</h3>'
         + '<div class="model-meta">' + esc(sportLabel(m.sport_key)) + ' &middot; ' + esc(markets)
         + (f.side && f.side !== 'any' ? ' &middot; ' + esc(f.side) : '') + '</div>'
+        + (tracked && m.auto_scan === false
+            ? '<div class="model-meta">Paused. Positions already open still settle, but nothing new is taken.</div>'
+            : '')
         + (tracked
             ? '<div class="model-meta">Scanning the board since ' + esc(new Date(m.tracked_from).toLocaleDateString())
               + (m.last_scanned_at ? ' &middot; last read ' + esc(new Date(m.last_scanned_at).toLocaleString()) : '')
@@ -590,6 +597,9 @@
         + '<button type="button" data-act="load" data-id="' + m.id + '">Load</button>'
         + (tracked
             ? '<button type="button" class="primary" data-act="forward" data-id="' + m.id + '">View live record</button>'
+              + '<button type="button" data-act="scan" data-id="' + m.id + '" data-enable="'
+              + (m.auto_scan === false ? '1' : '0') + '">'
+              + (m.auto_scan === false ? 'Resume scanning' : 'Pause scanning') + '</button>'
             : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
         + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
         + '</div></div>';
@@ -625,6 +635,22 @@
     el('selectionContains').value = f.selection_contains || '';
     setMessage('Loaded "' + m.name + '". Run backtest to see results.', 'ok');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Pausing is the off switch that is not "delete it": open positions still
+  // settle, nothing new is taken.
+  async function toggleScan(id, enable) {
+    try {
+      var res = await api().setModelAutoScan(id, enable);
+      setMessage(enable
+        ? ('Scanning resumed. It read the board straight away and took '
+            + ((res && res.board_picks_taken) || 0) + ' new position'
+            + (((res && res.board_picks_taken) || 0) === 1 ? '' : 's') + '.')
+        : 'Scanning paused. Positions already open still settle, but nothing new is taken.', 'ok');
+      await loadModels();
+    } catch (e) {
+      setMessage((e && e.message) || 'Could not change scanning.', 'error');
+    }
   }
 
   async function trackModel(id) {
@@ -987,6 +1013,7 @@
       var model = state.models.find(function (m) { return m.id === id; });
       if (act === 'load' && model) { loadModelIntoForm(model); return; }
       if (act === 'forward') { viewForward(id); return; }
+      if (act === 'scan') { toggleScan(id, b.getAttribute('data-enable') === '1'); return; }
       // Tracking and deleting are one-way, so they arm first and fire on the
       // second click. Same guard a confirm() gave, without the modal.
       if (act === 'track' || act === 'delete') {
