@@ -57,7 +57,7 @@
         .badge.badge-source b::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(52,211,153,0.15); }
 
         /* ---------------- Toolbar: dataset switch + presets ---------------- */
-        .mb-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px; margin-top: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+        .mb-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 28px; margin-top: 28px; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(180deg, rgba(17,29,45,0.7), rgba(8,13,22,0.6)); }
         .tool-block { min-width: 0; }
         .tool-label { margin: 0 0 9px; color: var(--muted-2); font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
         .dataset-toggle { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line-2); border-radius: 12px; background: rgba(8,14,24,0.8); }
@@ -192,6 +192,17 @@
         .empty-points li::before { content: ""; flex: 0 0 auto; width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 3px rgba(29,127,232,0.16); }
         .empty-points b { color: #fff; font-weight: 700; }
 
+        .verdict { margin: 14px 0 0; padding: 13px 15px; border: 1px solid var(--line-2); border-left: 3px solid var(--muted-2); border-radius: 10px; background: rgba(5,9,18,0.45); color: #d6e3f2; font-size: 13.5px; line-height: 1.55; }
+        .verdict.verdict-pos { border-left-color: var(--green); background: rgba(52,211,153,0.07); }
+        .verdict.verdict-neg { border-left-color: var(--red); background: rgba(248,113,113,0.06); }
+
+        .save-box { margin-top: 12px; padding: 14px; border: 1px solid rgba(29,127,232,0.32); border-radius: 12px; background: rgba(29,127,232,0.07); }
+        .save-box .button-row { margin-top: 10px; }
+
+        .ghost-bar { display: block; width: 62%; height: 14px; border-radius: 999px; background: linear-gradient(90deg, rgba(148,163,184,0.22), rgba(148,163,184,0.08)); }
+
+        button.armed { border-color: rgba(248,113,113,0.65); background: rgba(248,113,113,0.16); color: #fff; }
+
         /* ---------------- Saved / tracked models ---------------- */
         .model-list { display: grid; gap: 12px; margin-top: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
         .model-card { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(5,9,18,0.5); }
@@ -275,7 +286,7 @@
                 </div>
             </div>
             <div class="tool-block">
-                <p class="tool-label">Quick starts</p>
+                <p class="tool-label">Or start from an example</p>
                 <div class="preset-row" id="presetRow"></div>
             </div>
         </div>
@@ -375,7 +386,7 @@
                             </div>
                         </li>
 
-                        <li class="step">
+                        <li class="step step-run">
                             <div class="step-head">
                                 <span class="step-n" aria-hidden="true">3</span>
                                 <div>
@@ -388,7 +399,17 @@
                                 <button type="button" id="saveBtn">Save model</button>
                                 <button type="button" id="resetBtn">Reset filters</button>
                             </div>
-                            <p class="run-note">Saving a model and tracking it forward needs a free account.</p>
+                            <div class="save-box" id="saveBox" hidden>
+                                <label for="modelName">Name this model
+                                    <input id="modelName" type="text" maxlength="120" placeholder="e.g. MLB home dogs, +120 to +200">
+                                    <span class="hint">Saving also starts live tracking. Every future graded pick that matches is recorded on its own from now on.</span>
+                                </label>
+                                <div class="button-row split">
+                                    <button type="button" class="primary" id="saveConfirmBtn">Save it</button>
+                                    <button type="button" id="saveCancelBtn">Cancel</button>
+                                </div>
+                            </div>
+                            <p class="run-note">Saving a model starts tracking it automatically. Needs a free account.</p>
                             <p class="notice" id="builderMessage"></p>
                         </li>
                     </ol>
@@ -409,18 +430,18 @@
                         <h3>Your results will appear here</h3>
                         <p class="placeholder">Select your filters and run a model to see how similar bets have actually performed, using verified graded results from the TrustMyRecord ledger.</p>
                         <div class="ghost-grid" aria-hidden="true">
-                            <div class="ghost"><div class="k">Record</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">ROI</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Net units</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Win rate</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Avg odds</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Sample</div><div class="v">--</div></div>
+                            <div class="ghost"><div class="k">Record</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">ROI</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Net units</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Win rate</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Avg odds</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Sample</div><div class="v"><i class="ghost-bar"></i></div></div>
                         </div>
                         <ul class="empty-points">
                             <li><span><b>Real graded results only.</b> Every number is an aggregate of picks that were posted, closed and graded on TrustMyRecord.</span></li>
                             <li><span><b>Measured against a control.</b> Your angle is shown beside the sport baseline and a random control, so you can see whether the edge is real or just the market.</span></li>
                             <li><span><b>Honest about thin data.</b> Small samples and limited coverage are flagged on the result, not hidden.</span></li>
-                            <li><span><b>Then track it forward.</b> Save a model and every future graded pick that matches is recorded live, kept separate from the backtest.</span></li>
+                            <li><span><b>It tracks itself after that.</b> Save a model and every future graded pick that matches is recorded automatically, live, kept separate from the backtest.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -430,7 +451,7 @@
             <section class="builder-panel full" aria-label="Saved models">
                 <p class="panel-label">Your models</p>
                 <h2>Saved models &amp; forward tracking</h2>
-                <p class="panel-sub">Saved models are private. Start forward tracking to record every future graded pick that matches your filters from that moment on, kept separate from the backtest history.</p>
+                <p class="panel-sub">Saved models are private, and they track themselves. From the moment you save one, every future graded pick that matches its filters is recorded automatically and kept separate from the backtest history, so the live record builds with no further clicks.</p>
                 <div id="savedModelsHost">
                     <div class="login-hint" id="loginHint" hidden>Log in to save models and track them forward. <a href="/login/?next=/model-builder/">Log in</a> or <a href="/register/">create a free account</a>.</div>
                     <div class="model-list" id="modelList"></div>
@@ -510,7 +531,7 @@
                             </div>
                         </li>
 
-                        <li class="step">
+                        <li class="step step-run">
                             <div class="step-head">
                                 <span class="step-n" aria-hidden="true">3</span>
                                 <div>
@@ -540,12 +561,12 @@
                         <h3>Your results will appear here</h3>
                         <p class="placeholder">Pick a sport and run a model to see real game outcomes: win rates, average totals and margins, Over/Under against your line, first-five splits and recent box scores. Loaded daily from completed games.</p>
                         <div class="ghost-grid" aria-hidden="true">
-                            <div class="ghost"><div class="k">Games</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Home win</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Avg total</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Avg margin</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">1-run games</div><div class="v">--</div></div>
-                            <div class="ghost"><div class="k">Blowouts</div><div class="v">--</div></div>
+                            <div class="ghost"><div class="k">Games</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Home win</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Avg total</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Avg margin</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">1-run games</div><div class="v"><i class="ghost-bar"></i></div></div>
+                            <div class="ghost"><div class="k">Blowouts</div><div class="v"><i class="ghost-bar"></i></div></div>
                         </div>
                         <ul class="empty-points">
                             <li><span><b>Final scores, not projections.</b> Every game in this dataset already finished.</span></li>

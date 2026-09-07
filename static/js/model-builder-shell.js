@@ -25,7 +25,7 @@
     baseball_kbo: 'KBO', soccer_uefa_champs_league: 'Champions League'
   };
   var MARKET_LABELS = {
-    h2h: 'Moneyline', spreads: 'Spread / run line', totals: 'Total', team_totals: 'Team total',
+    h2h: 'Moneyline', spreads: 'Spread', totals: 'Total', team_totals: 'Team total',
     f5_h2h: 'F5 moneyline', f5_totals: 'F5 total', f5_spreads: 'F5 spread',
     first_inning_totals: '1st inning total', batter_hits: 'Batter hits',
     batter_rbi: 'Batter RBI', batter_total_bases: 'Batter total bases',
@@ -80,6 +80,13 @@
     if (MARKET_LABELS[k]) return MARKET_LABELS[k];
     return String(k || '').replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
+  // Baseball calls the spread a run line; everywhere else it is just a spread.
+  function marketLabelFor(k, sportKey) {
+    var baseball = /^baseball/.test(String(sportKey || ''));
+    if (baseball && k === 'spreads') return 'Run line';
+    if (baseball && k === 'alt_spreads') return 'Alt run line';
+    return marketLabel(k);
+  }
   function num(v) { return (v === null || v === undefined || v === '') ? null : Number(v); }
   function fmtOdds(o) { if (o == null) return '-'; return o > 0 ? '+' + o : String(o); }
   function fmtUnits(u) { if (u == null) return '-'; return (u > 0 ? '+' : '') + Number(u).toFixed(2) + 'u'; }
@@ -132,16 +139,31 @@
     ].join('');
   }
 
+  // Two thirds of the ledger's leagues are below the research threshold. Left
+  // in one flat list they read as a broken picker, so they get their own
+  // labelled group and say plainly why they are not selectable.
+  function sportOptions(sports, countWord) {
+    var ok = sports.filter(function (s) { return s.researchable; });
+    var thin = sports.filter(function (s) { return !s.researchable; });
+    function opt(s, disabled) {
+      var n = (s.graded != null ? s.graded : s.games) || 0;
+      return '<option value="' + esc(s.sport_key) + '"' + (disabled ? ' disabled' : '') + '>'
+        + esc(sportLabel(s.sport_key) + ' (' + n.toLocaleString() + ' ' + countWord + ')') + '</option>';
+    }
+    return {
+      first: ok.length ? ok[0].sport_key : null,
+      html: (ok.length ? '<optgroup label="Ready to research">'
+              + ok.map(function (s) { return opt(s, false); }).join('') + '</optgroup>' : '')
+        + (thin.length ? '<optgroup label="Not enough graded data yet">'
+              + thin.map(function (s) { return opt(s, true); }).join('') + '</optgroup>' : '')
+    };
+  }
+
   function populateSports(cat) {
     var sel = el('modelSport');
-    var sports = (cat.sports || []);
-    sel.innerHTML = sports.map(function (s) {
-      var label = sportLabel(s.sport_key) + ' (' + s.graded + ' graded)';
-      if (!s.researchable) label += ' - insufficient data';
-      return '<option value="' + esc(s.sport_key) + '"' + (s.researchable ? '' : ' disabled') + '>' + esc(label) + '</option>';
-    }).join('');
-    var firstOk = sports.find(function (s) { return s.researchable; });
-    if (firstOk) { sel.value = firstOk.sport_key; }
+    var built = sportOptions(cat.sports || [], 'graded');
+    sel.innerHTML = built.html;
+    if (built.first) sel.value = built.first;
     renderMarketChips();
     sel.addEventListener('change', renderMarketChips);
   }
@@ -157,9 +179,10 @@
   // family with the thin ones kept visible and labelled.
   function marketCard(m) {
     var thin = m.graded < 30;
+    var sk = el('modelSport') ? el('modelSport').value : '';
     return '<label class="mkt' + (thin ? ' disabled' : '') + '" title="' + m.graded + ' graded picks">'
       + '<input type="checkbox" value="' + esc(m.market_type) + '"' + (thin ? ' disabled' : '') + '>'
-      + '<span class="mkt-text"><span class="mkt-name">' + esc(marketLabel(m.market_type)) + '</span>'
+      + '<span class="mkt-text"><span class="mkt-name">' + esc(marketLabelFor(m.market_type, sk)) + '</span>'
       + '<span class="mkt-n">' + (thin ? m.graded + ' graded, too thin' : m.graded.toLocaleString() + ' graded')
       + '</span></span></label>';
   }
@@ -349,6 +372,25 @@
       + esc(v) + '</div>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
   }
 
+  // One factual sentence so the numbers are not left to interpret themselves.
+  // Strictly a comparison of what happened, never a recommendation.
+  function verdictHtml(m, c) {
+    var b = c && c.baseline;
+    if (!m || m.roi == null || !b || b.roi == null) return '';
+    var d = m.roi - b.roi;
+    var word = d > 0 ? 'ahead of' : (d < 0 ? 'behind' : 'level with');
+    var cls = d > 0 ? 'verdict-pos' : (d < 0 ? 'verdict-neg' : '');
+    var txt = 'Over ' + m.sample_size + ' graded picks this angle returned '
+      + m.roi.toFixed(2) + '% ROI, ' + Math.abs(d).toFixed(2) + ' points '
+      + word + ' the ' + (b.label || 'baseline').toLowerCase() + ' at ' + b.roi.toFixed(2) + '%.';
+    var rc = c && c.random_control;
+    if (rc && rc.roi != null) {
+      txt += ' A same-size random sample of the same picks returned ' + rc.roi.toFixed(2) + '%.';
+    }
+    if (m.sample_size < 100) txt += ' The sample is small, so treat the gap as directional.';
+    return '<p class="verdict ' + cls + '">' + esc(txt) + '</p>';
+  }
+
   function warningsHtml(warnings) {
     if (!warnings || !warnings.length) return '';
     return '<div class="warnings">' + warnings.map(function (w) {
@@ -433,7 +475,7 @@
     var summary = state.lastDescribe
       ? '<p class="result-summary"><b>You ran:</b> ' + esc(state.lastDescribe) + '</p>' : '';
     el('resultsBody').innerHTML = tiles
-      ? (summary + hero + '<div class="metric-grid">' + tiles + '</div>' + warningsHtml(res.warnings)
+      ? (summary + hero + '<div class="metric-grid">' + tiles + '</div>' + verdictHtml(m, c) + warningsHtml(res.warnings)
         + table + unitsChart(res.units_series)
         + '<p class="model-meta" style="margin-top:14px">Data source: ' + esc(res.data_source) + ' &middot; dataset ' + esc(res.dataset_version)
         + ' &middot; ' + res.sport_graded_total + ' graded picks in this sport.</p>')
@@ -441,10 +483,39 @@
   }
 
   // ---------------- Saved models ----------------
+  // window.prompt was the last piece of admin-panel furniture on the page.
+  // Same payload, same endpoint, asked for inline instead.
+  function openSaveBox() {
+    if (!hasSession()) {
+      setMessage('Log in to save a model and track it forward.', 'error');
+      return;
+    }
+    var box = el('saveBox');
+    if (!box) { saveModel(); return; }
+    box.hidden = false;
+    var input = el('modelName');
+    if (!input.value) {
+      var f = filtersFromForm();
+      input.value = describeFilters(f).replace(/  \|  /g, ' ').slice(0, 120);
+    }
+    input.focus();
+    input.select();
+  }
+
+  function closeSaveBox() {
+    var box = el('saveBox');
+    if (box) box.hidden = true;
+  }
+
   async function saveModel() {
     if (!hasSession()) { setMessage('Log in to save models.', 'error'); return; }
-    var name = window.prompt('Name this model:');
-    if (!name) return;
+    var input = el('modelName');
+    var name = input ? input.value.trim() : window.prompt('Name this model:');
+    if (!name) {
+      setMessage('Give the model a name first.', 'error');
+      if (input) input.focus();
+      return;
+    }
     var payload = {
       name: name.slice(0, 120),
       sport_key: el('modelSport').value,
@@ -453,9 +524,23 @@
       bankroll_json: {}
     };
     try {
-      await api().createModel(payload);
-      setMessage('Model saved.', 'ok');
+      // A saved model tracks itself from the moment it is saved. The server
+      // reconciles every future graded pick that matches on each read, so the
+      // user never has to arm anything for the live record to accumulate.
+      var created = await api().createModel(payload);
+      var newId = created && created.model && created.model.id;
+      var tracking = false;
+      if (newId) {
+        try { await api().trackModel(newId); tracking = true; }
+        catch (e) { tracking = false; }
+      }
+      closeSaveBox();
+      if (el('modelName')) el('modelName').value = '';
+      setMessage(tracking
+        ? 'Model saved and now tracking. Every future graded pick that matches these filters is recorded automatically, under Your models below.'
+        : 'Model saved. It is listed under Your models below.', 'ok');
       await loadModels();
+      if (newId && tracking) viewForward(newId);
     } catch (e) {
       setMessage((e && e.message) || 'Could not save model.', 'error');
     }
@@ -480,26 +565,35 @@
 
   function renderModels() {
     if (!state.models.length) {
-      el('modelList').innerHTML = '<div class="model-card"><h3>No saved models yet</h3><p class="model-meta">Run a backtest, then Save model to keep it and track it forward.</p></div>';
+      el('modelList').innerHTML = '<div class="model-card"><h3>No saved models yet</h3><p class="model-meta">Run a model, then Save model. Saving starts live tracking straight away, so every future graded pick that matches is recorded here on its own.</p></div>';
       return;
     }
     el('modelList').innerHTML = state.models.map(function (m) {
       var tracked = Boolean(m.tracked_from);
       var f = (m.criteria_json && m.criteria_json.filters) || {};
-      var markets = (f.market_types || []).map(marketLabel).join(', ') || 'all markets';
+      var markets = (f.market_types || []).map(function (k) { return marketLabelFor(k, m.sport_key); }).join(', ') || 'all markets';
       return '<div class="model-card" data-id="' + m.id + '">'
-        + '<h3>' + esc(m.name) + ' ' + (tracked ? '<span class="tag live">Tracking</span>' : '<span class="tag hist">Backtest only</span>') + '</h3>'
+        + '<h3>' + esc(m.name) + ' ' + (tracked ? '<span class="tag live">Tracking live</span>' : '<span class="tag hist">Not tracking</span>') + '</h3>'
         + '<div class="model-meta">' + esc(sportLabel(m.sport_key)) + ' &middot; ' + esc(markets)
         + (f.side && f.side !== 'any' ? ' &middot; ' + esc(f.side) : '') + '</div>'
         + (tracked ? '<div class="model-meta">Tracking since ' + esc(new Date(m.tracked_from).toLocaleDateString()) + '</div>' : '')
         + '<div class="button-row">'
         + '<button type="button" data-act="load" data-id="' + m.id + '">Load</button>'
         + (tracked
-            ? '<button type="button" data-act="forward" data-id="' + m.id + '">View tracking</button>'
-            : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Track forward</button>')
+            ? '<button type="button" data-act="forward" data-id="' + m.id + '">View live record</button>'
+            : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
         + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
         + '</div></div>';
     }).join('');
+  }
+
+  function disarmActions() {
+    Array.prototype.forEach.call(document.querySelectorAll('#modelList [data-armed]'), function (b) {
+      b.textContent = b.getAttribute('data-label') || b.textContent;
+      b.removeAttribute('data-armed');
+      b.removeAttribute('data-label');
+      b.classList.remove('armed');
+    });
   }
 
   function loadModelIntoForm(m) {
@@ -525,7 +619,6 @@
   }
 
   async function trackModel(id) {
-    if (!window.confirm('Start forward tracking this model? From now on, every new graded pick matching its filters is recorded and kept separate from backtest history.')) return;
     try {
       await api().trackModel(id);
       setMessage('Forward tracking started.', 'ok');
@@ -534,7 +627,6 @@
   }
 
   async function deleteModel(id) {
-    if (!window.confirm('Delete this model and its tracking history? This cannot be undone.')) return;
     try {
       await api().deleteModel(id);
       if (state.forwardOpenId === id) { el('forwardPanel').hidden = true; state.forwardOpenId = null; }
@@ -635,14 +727,9 @@
 
   function populateGameSports(cat) {
     var sel = el('gameSport');
-    var sports = (cat.sports || []);
-    sel.innerHTML = sports.map(function (s) {
-      var label = sportLabel(s.sport_key) + ' (' + s.games + ' games)';
-      if (!s.researchable) label += ' - insufficient';
-      return '<option value="' + esc(s.sport_key) + '"' + (s.researchable ? '' : ' disabled') + '>' + esc(label) + '</option>';
-    }).join('');
-    var firstOk = sports.find(function (s) { return s.researchable; });
-    if (firstOk) sel.value = firstOk.sport_key;
+    var built = sportOptions(cat.sports || [], 'games');
+    sel.innerHTML = built.html;
+    if (built.first) sel.value = built.first;
   }
 
   function renderGameBadges(cat) {
@@ -781,11 +868,20 @@
   // ---------------- Wiring ----------------
   function wire() {
     el('modelBuilderForm').addEventListener('submit', runBacktest);
-    el('saveBtn').addEventListener('click', saveModel);
+    el('saveBtn').addEventListener('click', openSaveBox);
+    if (el('saveConfirmBtn')) el('saveConfirmBtn').addEventListener('click', saveModel);
+    if (el('saveCancelBtn')) el('saveCancelBtn').addEventListener('click', function () {
+      closeSaveBox();
+      setMessage('');
+    });
+    if (el('modelName')) el('modelName').addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); saveModel(); }
+    });
     el('resetBtn').addEventListener('click', function () {
       el('modelBuilderForm').reset();
       renderMarketChips();
       setMessage('');
+      closeSaveBox();
       state.lastDescribe = '';
       if (state.emptyResults) {
         el('resultsBody').innerHTML = state.emptyResults;
@@ -807,10 +903,25 @@
       var id = Number(b.getAttribute('data-id'));
       var act = b.getAttribute('data-act');
       var model = state.models.find(function (m) { return m.id === id; });
-      if (act === 'load' && model) loadModelIntoForm(model);
-      if (act === 'track') trackModel(id);
-      if (act === 'forward') viewForward(id);
-      if (act === 'delete') deleteModel(id);
+      if (act === 'load' && model) { loadModelIntoForm(model); return; }
+      if (act === 'forward') { viewForward(id); return; }
+      // Tracking and deleting are one-way, so they arm first and fire on the
+      // second click. Same guard a confirm() gave, without the modal.
+      if (act === 'track' || act === 'delete') {
+        if (b.getAttribute('data-armed')) {
+          disarmActions();
+          if (act === 'track') trackModel(id); else deleteModel(id);
+          return;
+        }
+        disarmActions();
+        b.setAttribute('data-armed', '1');
+        b.setAttribute('data-label', b.textContent);
+        b.textContent = act === 'track' ? 'Confirm tracking' : 'Confirm delete';
+        b.classList.add('armed');
+        setMessage(act === 'track'
+          ? 'Tracking records every future graded pick that matches, from now on. Click again to confirm.'
+          : 'This deletes the model and its tracking history. Click again to confirm.', 'error');
+      }
     });
     var dt = el('datasetToggle');
     if (dt) dt.addEventListener('click', function (ev) { var b = ev.target.closest('.ds-btn'); if (b) switchDataset(b.getAttribute('data-ds')); });
