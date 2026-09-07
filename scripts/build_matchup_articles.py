@@ -544,13 +544,24 @@ def b_showdown(block):
                         esc(photo["src"]), esc(photo["alt"]),
                         esc(photo.get("width", 480)), esc(photo.get("height", 480))))
 
+        # The nationality, beside the name rather than instead of the face.
+        # A tennis card carrying a headshot and no flag is missing the first
+        # thing anybody asks about a player they do not recognise.
+        flag = p.get("flag") or {}
+        flag_html = ""
+        if flag.get("src"):
+            check_image(flag["src"], "player flag")
+            flag_html = ('<img class="gf-showflag" src="%s" alt="%s" width="24" height="16" '
+                         'loading="lazy" decoding="async">' % (
+                             esc(flag["src"]), esc(flag.get("alt") or "")))
+
         cards.append(
             '<div class="gf-showcard%s" data-t="%s" data-mono="%s">'
-            '%s<div class="gf-showwho"><p class="gf-showname">%s</p>'
+            '%s<div class="gf-showwho"><p class="gf-showname">%s%s</p>'
             '<p class="gf-showmeta">%s</p></div>'
             '<div class="gf-showstats">%s</div></div>' % (
                 " has-shot" if shot else "", side, esc(p.get("mono")), shot,
-                esc(p.get("name")), esc(p.get("meta")), "".join(stats)))
+                flag_html, esc(p.get("name")), esc(p.get("meta")), "".join(stats)))
     note = ('<p class="gf-chart-note">%s</p>' % esc(block.get("note"))) if block.get("note") else ""
     return '<div class="gf-show">%s</div>%s' % ("".join(cards), note)
 

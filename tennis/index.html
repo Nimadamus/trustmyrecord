@@ -62,6 +62,17 @@
         .tn-hero p { margin: 0; max-width: 68ch; color: var(--tn-muted); font-size: 1.05rem; line-height: 1.55; }
         .tn-hero p + p { margin-top: 12px; }
 
+        /* The eight players at the top of each tour, with their faces and their
+           season records. It is the first thing a tennis reader scans for, and
+           it says at a glance that this page knows the sport. */
+        .tn-top { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--tn-border); }
+        .tn-top-h { margin: 0 0 12px; font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-muted); }
+        .tn-top-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+        .tn-top-p { flex: none; width: 88px; text-align: center; text-decoration: none; color: inherit; }
+        .tn-top-p .tn-face { width: 64px; height: 64px; margin: 0 auto 7px; }
+        .tn-top-p b { display: block; font: 700 .78rem/1.25 "Inter", sans-serif; }
+        .tn-top-p span { display: block; margin-top: 2px; font-size: .72rem; color: var(--tn-muted); font-variant-numeric: tabular-nums; }
+
         .tn-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; }
         .tn-tab {
             appearance: none; cursor: pointer;
@@ -75,6 +86,14 @@
         .tn-section-head h2 { margin: 0; font: 800 1.4rem/1.1 "Barlow Condensed", sans-serif; letter-spacing: .02em; }
         .tn-section-head p { margin: 0; color: var(--tn-muted); font-size: .88rem; }
 
+        .tn-event { margin-bottom: 26px; }
+        .tn-event h3 {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+            margin: 0 0 10px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--tn-border);
+            font: 800 1.05rem/1.2 "Barlow Condensed", sans-serif; letter-spacing: .03em;
+        }
+        .tn-event h3 em { font: 600 .74rem/1 "Inter", sans-serif; font-style: normal; color: var(--tn-muted); white-space: nowrap; }
         .tn-card {
             background: var(--tn-panel); border: 1px solid var(--tn-border);
             border-radius: 16px; padding: 18px; margin-bottom: 14px;
@@ -99,9 +118,22 @@
             border-radius: 12px; padding: 14px;
         }
         .tn-player.won { border-color: rgba(34,197,94,.45); }
-        .tn-pname { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
-        .tn-pname img { width: 22px; height: 15px; object-fit: cover; border-radius: 2px; flex: none; }
-        .tn-pname b { font: 800 1.02rem/1.2 "Inter", sans-serif; }
+        .tn-pname { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+        .tn-pname b { font: 800 1.05rem/1.2 "Inter", sans-serif; }
+        .tn-pname .tn-flag { width: 22px; height: 15px; object-fit: cover; border-radius: 2px; flex: none; }
+        /* The player's face, with their initials behind it. The initials are
+           not a placeholder that flashes: they are what a player ESPN has never
+           photographed keeps, which on the Challenger circuit is most of them. */
+        .tn-face {
+            position: relative; flex: none;
+            width: 46px; height: 46px; border-radius: 50%;
+            background: linear-gradient(150deg, rgba(56,189,248,.22), rgba(29,127,232,.10));
+            border: 1px solid var(--tn-border);
+            display: grid; place-items: center; overflow: hidden;
+        }
+        .tn-face span { font: 800 .82rem/1 "Barlow Condensed", sans-serif; letter-spacing: .04em; color: var(--tn-muted); }
+        .tn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; background: #0d1726; }
+        .tn-face img[data-missing] { display: none; }
         .tn-prank { color: var(--tn-muted); font-size: .78rem; margin-bottom: 10px; }
         .tn-price { font: 800 1.35rem/1 "Barlow Condensed", sans-serif; color: var(--tn-blue); margin-bottom: 10px; }
         .tn-price small { display: block; font: 600 .72rem/1.4 "Inter", sans-serif; color: var(--tn-muted); margin-top: 3px; }
@@ -157,6 +189,10 @@
         <h1 id="tn-title">Every ATP and WTA match, with the price and the record behind it.</h1>
         <p>Today's singles board, both tours, with the moneyline, the game handicap, the total games line and the set markets that most books bury. Beside every price is what the season actually says: the win and loss record, the record on the surface being played on, games won, tiebreaks, deciding sets, the last ten matches and the head to head.</p>
         <p>Every number on this page is counted from completed 2026 matches. Nothing is modelled, projected or estimated, and where a figure does not exist the space is left empty rather than filled.</p>
+        <div class="tn-top" id="tn-top" hidden>
+            <p class="tn-top-h">Top of the tour right now</p>
+            <div class="tn-top-row" id="tn-toprow"></div>
+        </div>
         <div class="tn-tabs" role="tablist" aria-label="Sections">
             <button class="tn-tab" role="tab" aria-selected="true" data-view="board">Today's board</button>
             <button class="tn-tab" role="tab" aria-selected="false" data-view="rankings">Rankings</button>
@@ -288,10 +324,18 @@
         var novig = market && market.moneyline && market.moneyline.noVigA != null
             ? (100 * (side === 0 ? market.moneyline.noVigA : market.moneyline.noVigB)).toFixed(1) + '%'
             : null;
+        var initials = String(p.name || '').split(' ').map(function (w) { return w[0]; })
+            .join('').slice(0, 2).toUpperCase();
+        var shot = c && c.headshot ? c.headshot : null;
         var html = '<div class="tn-player' + (completed && p.winner ? ' won' : '') + '">';
         html += '<div class="tn-pname">';
-        if (p.flag) html += '<img src="' + esc(p.flag) + '" alt="' + esc(p.country || '') + '" loading="lazy">';
-        html += '<b>' + esc(p.name) + '</b></div>';
+        html += '<span class="tn-face"><span>' + esc(initials) + '</span>'
+            + (shot ? '<img src="' + esc(shot) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async"'
+                + ' onerror=\"this.dataset.missing=1\">' : '')
+            + '</span>';
+        html += '<b>' + esc(p.name) + '</b>';
+        if (p.flag) html += '<img class="tn-flag" src="' + esc(p.flag) + '" alt="' + esc(p.country || '') + '" loading="lazy">';
+        html += '</div>';
         var rankBits = [];
         if (c && c.rank) rankBits.push('No. ' + c.rank);
         if (p.country) rankBits.push(p.country);
@@ -436,16 +480,57 @@
         document.getElementById('tn-boardmeta').textContent =
             rows.length + ' of ' + d.count + ' singles matches on ' + d.date
             + (d.sources && d.sources.season_built_at ? ' · season counted through ' + d.sources.season_built_at.slice(0, 10) : '');
-        host.innerHTML = rows.length
-            ? rows.map(matchCard).join('')
-            : '<p class="tn-empty">Nothing matches that filter on this date.</p>';
+        if (!rows.length) {
+            host.innerHTML = '<p class="tn-empty">Nothing matches that filter on this date.</p>';
+            return;
+        }
+        /* Grouped by tournament. A hundred and twenty matches in one flat list
+           is a wall; the same hundred and twenty under the events they belong
+           to is a calendar, which is what a reader is actually reading. */
+        var order = [];
+        var groups = {};
+        rows.forEach(function (m) {
+            var key = m.event || 'Tennis';
+            if (!groups[key]) { groups[key] = []; order.push(key); }
+            groups[key].push(m);
+        });
+        host.innerHTML = order.map(function (key) {
+            var list = groups[key];
+            var surf = (list[0].surface || '').toLowerCase();
+            return '<div class="tn-event"><h3>' + esc(key)
+                + '<em>' + list.length + (list.length === 1 ? ' match' : ' matches')
+                + (surf ? ' · ' + esc(list[0].surface) : '') + '</em></h3>'
+                + list.map(matchCard).join('') + '</div>';
+        }).join('');
     }
 
-    function loadBoard() {
+    function nextDay(iso) {
+        var d = new Date(iso + 'T12:00:00Z');
+        d.setUTCDate(d.getUTCDate() + 1);
+        return d.toISOString().slice(0, 10);
+    }
+
+    /* ROLL FORWARD WHEN TODAY IS OVER.
+       A reader arriving late in the evening was landing on a date whose matches
+       had all finished, and the default filter is "matches with a price", so the
+       board read as empty when the tour had a full card the next morning. One
+       automatic step forward, once, and the date field says which day is being
+       shown. */
+    function loadBoard(opts) {
+        var rolled = opts && opts.rolled;
         var date = document.getElementById('tn-date').value;
         document.getElementById('tn-board').innerHTML = '<p class="tn-empty">Loading the board.</p>';
         get('/tennis/slate' + (date ? '?date=' + encodeURIComponent(date) : ''))
-            .then(function (d) { boardState.data = d; renderBoard(); })
+            .then(function (d) {
+                var playable = (d.matches || []).filter(function (m) { return m.market && !m.completed; });
+                if (!rolled && date && !playable.length) {
+                    document.getElementById('tn-date').value = nextDay(date);
+                    return loadBoard({ rolled: true });
+                }
+                boardState.data = d;
+                renderBoard();
+                return null;
+            })
             .catch(function () {
                 document.getElementById('tn-board').innerHTML =
                     '<p class="tn-empty">The tennis feed did not answer. Reload in a moment.</p>';
@@ -530,8 +615,38 @@
         });
     });
 
+    /* The top of both tours, faces first. Two calls, once, and the strip stays
+       hidden rather than showing an empty rail if either does not answer. */
+    function loadTopPlayers() {
+        Promise.all([get('/tennis/rankings?tour=atp&limit=6'), get('/tennis/rankings?tour=wta&limit=6')])
+            .then(function (res) {
+                var rows = [];
+                res.forEach(function (d) { if (d && d.ok) rows = rows.concat(d.rows.slice(0, 6)); });
+                if (!rows.length) return;
+                var host = document.getElementById('tn-toprow');
+                host.innerHTML = rows.map(function (r) {
+                    var initials = String(r.name || '').split(' ').map(function (w) { return w[0]; })
+                        .join('').slice(0, 2).toUpperCase();
+                    var rec = r.record ? r.record.wins + '-' + r.record.losses : '';
+                    return '<a class="tn-top-p" href="/sportsbook/?sport=Tennis">'
+                        + '<span class="tn-face"><span>' + esc(initials) + '</span>'
+                        + '<img src="https://a.espncdn.com/i/headshots/tennis/players/full/' + esc(r.id) + '.png"'
+                        + ' alt="' + esc(r.name) + '" loading="lazy" decoding="async"'
+                        + ' onerror=\"this.dataset.missing=1\"></span>'
+                        + '<b>' + esc(r.name) + '</b>'
+                        + '<span>' + esc(r.tour ? r.tour.toUpperCase() + ' ' : '') + 'No. ' + esc(r.rank) + (rec ? ' · ' + esc(rec) : '') + '</span>'
+                        + '</a>';
+                }).join('');
+                document.getElementById('tn-top').hidden = false;
+            })
+            .catch(function () { /* the strip is a flourish, never a blocker */ });
+    }
+
     document.getElementById('tn-date').value = todayLocal();
-    document.getElementById('tn-date').addEventListener('change', loadBoard);
+    document.getElementById('tn-date').addEventListener('change', function () {
+        /* A date somebody chose is the date they get, empty or not. */
+        loadBoard({ rolled: true });
+    });
     document.getElementById('tn-tour').addEventListener('change', renderBoard);
     document.getElementById('tn-filter').addEventListener('change', renderBoard);
     document.getElementById('tn-ranktour').addEventListener('change', loadRankings);
@@ -540,6 +655,7 @@
     });
 
     loadBoard();
+    loadTopPlayers();
 })();
 </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.de8bf4606544.js"></script>

@@ -820,6 +820,19 @@ body.tmr-ds .gf-showshot {
 }
 body.tmr-ds .gf-showcard[data-t="away"] .gf-showshot { border-color: color-mix(in srgb, var(--ed-away) 55%, transparent); }
 body.tmr-ds .gf-showcard[data-t="home"] .gf-showshot { border-color: color-mix(in srgb, var(--ed-home) 55%, transparent); }
+/* TENNIS_20260907. The nationality sits with the name, because a tennis
+   player without a flag beside them is the first question a reader asks. Sized
+   to the cap height of the name so it reads as part of the line rather than as
+   a second image on the card. */
+body.tmr-ds .gf-showflag {
+  width: 1.35em;
+  height: .9em;
+  object-fit: cover;
+  border-radius: 2px;
+  margin-right: .45em;
+  vertical-align: -.06em;
+  box-shadow: 0 0 0 1px var(--ed-line-2);
+}
 body.tmr-ds .gf-showcard.has-shot .gf-showwho { grid-area: who; min-width: 0; }
 body.tmr-ds .gf-showcard.has-shot .gf-showstats { grid-area: stats; }
 
