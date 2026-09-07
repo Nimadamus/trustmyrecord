@@ -534,3 +534,13 @@
         html.tmr-sbnext .sbn-cat i { font-size: 10.5px !important; }
     }
 }
+
+@layer sbnext {
+    /* SBNEXT_CENTER_20260907. The rail is 150 and the slip is 322, so the board
+       sat 86px left of the page centre. 40px of extra left padding on desktop
+       moves the board and the slip together and evens the composition up.
+       Phone and tablet keep the symmetric 12/16px gutters. */
+    @media (min-width: 1024px) {
+        html.tmr-sbnext .sbn-shell { padding-left: 56px !important; }
+    }
+}
