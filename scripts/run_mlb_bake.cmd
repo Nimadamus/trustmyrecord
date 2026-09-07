@@ -18,7 +18,18 @@ node tests\seo-indexability-regression-test.js  >> "%LOG%" 2>&1 || goto :fail
 git add -A ":!.github/workflows/mlb-matchup-pages.yml"  >> "%LOG%" 2>&1
 git diff --cached --quiet && (echo no change >> "%LOG%" & goto :done)
 git commit -q -m "chore(mlb): bake matchup pages + crawlable slate" >> "%LOG%" 2>&1 || goto :fail
-git push -q origin HEAD:main                            >> "%LOG%" 2>&1 || goto :fail
+REM origin/main moves while this runs: the site pushes assets and other lanes
+REM commit their own bakes. Rebasing only at the start left the push rejected as
+REM non-fast-forward, and the run then died holding a commit nobody ever saw.
+REM Re-fetch and replay onto whatever landed, then push, once more if it moved
+REM again in between.
+git fetch origin -q                                     || goto :fail
+git rebase origin/main                 >> "%LOG%" 2>&1  || goto :fail
+git push -q origin HEAD:main                            >> "%LOG%" 2>&1 || (
+  git fetch origin -q                                   >> "%LOG%" 2>&1
+  git rebase origin/main                                >> "%LOG%" 2>&1 || goto :fail
+  git push -q origin HEAD:main                          >> "%LOG%" 2>&1 || goto :fail
+)
 echo pushed >> "%LOG%"
 :done
 echo OK >> "%LOG%"
