@@ -2264,7 +2264,7 @@
                           <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
                           <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
                           <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Favorite (-110 to -200)</option><option value="underdog">Dog (+100 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
-                          <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
+                          <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5–1u</option><option value="1.5_to_2u">1.5–2u</option><option value="2.5_to_3u">2.5–3u</option><option value="3u_plus">3u+</option></select></label>
                           <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
                           <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
                           <label><span>Min Units</span><input type="number" min="0" step="0.5" placeholder="0.0" data-tmrx-filter="min_units" style="width:90px"></label>
@@ -5847,6 +5847,7 @@
             return false;
         };
     </script>
+    <script src="/static/js/tmr-bucket-labels.js?v=3738644f59b9"></script>
     <script src="/static/js/config.js?v=738db2dd80a5"></script>
     <script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
     <script src="/static/js/tmr-team-logo.js?v=b22c284b0da5"></script>
@@ -7689,8 +7690,13 @@
             underdog: 'Dog (+100 to +200)',
             big_underdog: 'Longshot (+201+)',
             // unit buckets
-            '0.5_to_1u': '0.5u – 1u', '1.5_to_2u': '1.5u – 2u',
-            '2.5_to_3u': '2.5u – 3u', '3u_plus': '3u +',
+            // Unit buckets. The API does not agree with itself on the key for the
+            // lowest bucket -- /metrics sends 0_5_to_1u, the analytics service sends
+            // 0.5_to_1u -- so both spellings live in the shared table and both land
+            // on the same label. static/js/tmr-bucket-labels.js is the one source.
+            '0_5_to_1u': '0.5–1u', '0.5_to_1u': '0.5–1u',
+            '1_5_to_2u': '1.5–2u', '1.5_to_2u': '1.5–2u',
+            '2_5_to_3u': '2.5–3u', '2.5_to_3u': '2.5–3u', '3u_plus': '3u+',
             // day of week
             sun: 'Sunday', mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday',
             thu: 'Thursday', fri: 'Friday', sat: 'Saturday',
@@ -7746,10 +7752,10 @@
             const rows = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= minSample);
             if (!rows.length) return;
             if (splitKey === 'unit_size') {
-                const unitOrder = { '3u_plus': 0, '2.5_to_3u': 1, '1.5_to_2u': 2, '0.5_to_1u': 3 };
+                const unitRank = (k) => window.TMR_BUCKET_LABELS ? window.TMR_BUCKET_LABELS.unitSizeRank(k) : 99;
                 rows.sort((a, b) => {
-                    const ai = unitOrder[String(a.key)] != null ? unitOrder[String(a.key)] : 99;
-                    const bi = unitOrder[String(b.key)] != null ? unitOrder[String(b.key)] : 99;
+                    const ai = unitRank(a.key);
+                    const bi = unitRank(b.key);
                     return ai - bi;
                 });
             } else {
@@ -8746,25 +8752,31 @@
     window.formatBucketLabel = (typeof formatBucketLabel === 'function') ? formatBucketLabel : function(splitKey, bucketKey) {
         if (bucketKey == null || bucketKey === '') return '—';
         const k = String(bucketKey);
-        if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
-        if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)',even:'Even',even_money:'Even'})[k] || k;
-        if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
-        if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
-        if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
-        return k;
+        // RAW_BUCKET_KEY_LEAK_20260907: every branch below used to end in `|| k`,
+        // so any bucket key the local table did not know -- 0_5_to_1u, the spelling
+        // /metrics actually sends for the lowest unit bucket -- was printed to the
+        // user verbatim. Labels now come from the shared table, which knows both
+        // backend spellings and humanises anything it has never seen. The key
+        // itself is untouched: callers still filter and sort on b.key.
+        const shared = window.TMR_BUCKET_LABELS;
+        const split = shared ? shared.normalizeSplitKey(splitKey) : String(splitKey || '').replace(/^by_/, '');
+        if (split === 'market')             return marketTypeLabel(k);
+        return shared ? shared.format(split, k) : k;
     };
 
     function formatBucketLabel(splitKey, bucketKey) {
         if (bucketKey == null || bucketKey === '') return '—';
         const k = String(bucketKey);
-        if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
-        if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)',even:'Even',even_money:'Even'})[k] || k;
-        if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
-        if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
-        if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
-        return k;
+        // RAW_BUCKET_KEY_LEAK_20260907: every branch below used to end in `|| k`,
+        // so any bucket key the local table did not know -- 0_5_to_1u, the spelling
+        // /metrics actually sends for the lowest unit bucket -- was printed to the
+        // user verbatim. Labels now come from the shared table, which knows both
+        // backend spellings and humanises anything it has never seen. The key
+        // itself is untouched: callers still filter and sort on b.key.
+        const shared = window.TMR_BUCKET_LABELS;
+        const split = shared ? shared.normalizeSplitKey(splitKey) : String(splitKey || '').replace(/^by_/, '');
+        if (split === 'market')             return marketTypeLabel(k);
+        return shared ? shared.format(split, k) : k;
     }
 
     function renderAdvancedSplits(splits) {
@@ -8909,10 +8921,10 @@
         if (!el || !Array.isArray(splitArr)) return;
         let ordered = splitArr;
         if (splitKey === 'by_unit_size') {
-            const unitOrder = { '3u_plus': 0, '2.5_to_3u': 1, '1.5_to_2u': 2, '0.5_to_1u': 3 };
+            const unitRank = (k) => window.TMR_BUCKET_LABELS ? window.TMR_BUCKET_LABELS.unitSizeRank(k) : 99;
             ordered = splitArr.slice().sort((a, b) => {
-                const ai = unitOrder[String(a.key)] != null ? unitOrder[String(a.key)] : 99;
-                const bi = unitOrder[String(b.key)] != null ? unitOrder[String(b.key)] : 99;
+                const ai = unitRank(a.key);
+                const bi = unitRank(b.key);
                 return ai - bi;
             });
         }
@@ -12198,7 +12210,7 @@
             big_underdog: 'Longshot (+201+)',
             even: 'Even',
             even_money: 'Even'
-        }[value] || value || 'Odds Range';
+        }[value] || (window.TMR_BUCKET_LABELS ? window.TMR_BUCKET_LABELS.format('odds_bucket', value) : value) || 'Odds Range';
     }
 
     function filterTypeLabel(value) {
