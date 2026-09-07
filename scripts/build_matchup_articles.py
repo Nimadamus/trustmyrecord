@@ -1292,6 +1292,53 @@ TEMPLATE = """<!DOCTYPE html>
 
 
 
+# A DOOR FOR A SPORT THAT PUBLISHES SEVERAL A DAY.
+#
+# The redirect door below is right for one piece a day: the reader wanted the
+# article, so hand them the article. Tennis writes the day's prominent matchups,
+# plural, and a redirect to whichever landed last hides the rest of them behind
+# a page nobody knows exists. So a sport with more than one piece on its newest
+# day gets a list instead: same address, same promise, every piece on it.
+#
+# Deliberately NOT canonicalised to any one article, because it is not a copy of
+# one any more, and still out of the sitemap for the same reason as the
+# redirect: the articles are the destinations search should hold.
+MOTD_LIST_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{eyebrow} | TrustMyRecord</title>
+<meta name="description" content="{eyebrow}: {count} matchups written today, with the odds, the season records and the head to head.">
+<link rel="canonical" href="{self_abs}">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<style>
+  html,body{{margin:0;background:#070910;color:#CBD5E1;
+    font:500 15px/1.6 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}}
+  .t{{max-width:44rem;margin:0 auto;padding:12vh 24px 8vh}}
+  .t>p.k{{color:#8A97A8;margin:0 0 6px;font-size:12px;font-weight:800;
+    letter-spacing:.16em;text-transform:uppercase}}
+  .t h1{{margin:0 0 6px;font-size:1.5rem;line-height:1.25;letter-spacing:-.02em;color:#F7F9FC}}
+  .t>p.s{{margin:0 0 28px;color:#8A97A8;font-size:14px}}
+  .t ol{{list-style:none;margin:0;padding:0}}
+  .t li{{padding:16px 0;border-top:1px solid rgba(148,163,184,.16)}}
+  .t li a{{color:#F7F9FC;font-size:1.15rem;font-weight:800;line-height:1.3;
+    letter-spacing:-.01em;text-decoration:none;border-bottom:2px solid #35E0CB}}
+  .t li p{{margin:6px 0 0;color:#8A97A8;font-size:13px}}
+</style>
+</head>
+<body>
+<main class="t">
+  <p class="k">{eyebrow}</p>
+  <h1>{count} matchups written today</h1>
+  <p class="s">Each one carries the market, both players&#39; season records, the record on the surface being played, and every meeting between them.</p>
+  <ol>{items}</ol>
+</main>
+</body>
+</html>
+"""
+
+
 TODAY_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1776,12 +1823,34 @@ def main():
         # link on it.
         by_sport = {}
         for a in daily:
-            by_sport.setdefault(a["sport"], a)      # `daily` is already newest-first
-        for sport, lead in sorted(by_sport.items()):
-            s_target = article_href(lead)
+            by_sport.setdefault(a["sport"], []).append(a)   # `daily` is newest-first
+        for sport, articles in sorted(by_sport.items()):
+            lead = articles[0]
             s_label = SPORT_LABEL.get(sport, sport.upper())
+            # The day the newest piece belongs to, and everything else from it.
+            lead_day = str(lead.get("featured_on") or lead.get("published_at") or "")[:10]
+            same_day = [a for a in articles
+                        if str(a.get("featured_on") or a.get("published_at") or "")[:10] == lead_day]
+            door = os.path.join(MOTD_DIR, sport, "index.html")
+
+            if len(same_day) > 1:
+                items = "".join(
+                    '<li><a href="%s">%s</a><p>%s vs. %s</p></li>' % (
+                        esc(article_href(a)),
+                        esc(a.get("h1") or ("%s vs. %s" % (a["away_team"], a["home_team"]))),
+                        esc(a["away_team"]), esc(a["home_team"]))
+                    for a in same_day)
+                writes.append((door, MOTD_LIST_TEMPLATE.format(
+                    eyebrow=esc("%s Matchup of the Day" % s_label),
+                    count=len(same_day),
+                    items=items,
+                    self_abs=esc("%s/matchup-of-the-day/%s/" % (SITE, sport)),
+                )))
+                continue
+
+            s_target = article_href(lead)
             s_headline = lead.get("h1") or ("%s vs. %s" % (lead["away_team"], lead["home_team"]))
-            writes.append((os.path.join(MOTD_DIR, sport, "index.html"), TODAY_TEMPLATE.format(
+            writes.append((door, TODAY_TEMPLATE.format(
                 target=esc(s_target),
                 target_abs=esc(SITE + s_target),
                 headline=esc(s_headline),
