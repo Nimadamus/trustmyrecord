@@ -87,42 +87,21 @@
         return 0;
     }
 
+    /* The streak is NOT defined here. static/js/streaks.js is the one client
+       implementation and a port of services/canonicalStreak.js: settlement
+       time clamped against a late regrade, one settlement per event and wager
+       period, duplicate wagers collapsed, a game that split ending the run.
+       This file used to carry its own loop over the raw picks, which agreed
+       with none of that, so whichever formula ran first won the profile. A
+       missing module now reports no streak rather than a different one. */
     function calculateCanonicalStreaks(picks) {
-        const ordered = (Array.isArray(picks) ? picks : [])
-            .filter(function(pick) {
-                return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push' || pick.status === 'pushed';
-            })
-            .sort(function(a, b) {
-                return localPickTimestamp(a) - localPickTimestamp(b);
-            });
-        let longestWinStreak = 0;
-        let longestLossStreak = 0;
-        let winRun = 0;
-        let lossRun = 0;
-        ordered.forEach(function(pick) {
-            if (pick.status === 'won') {
-                winRun += 1;
-                lossRun = 0;
-                longestWinStreak = Math.max(longestWinStreak, winRun);
-            } else if (pick.status === 'lost') {
-                lossRun += 1;
-                winRun = 0;
-                longestLossStreak = Math.max(longestLossStreak, lossRun);
-            } else {
-                // Pushes are graded but neutral for active W/L streaks.
-            }
-        });
-        let currentStreak = 0;
-        const latest = ordered[ordered.length - 1];
-        if (latest && latest.status !== 'push') {
-            currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = ordered.length - 2; i >= 0; i -= 1) {
-                if (ordered[i].status === 'push' || ordered[i].status === 'pushed') continue;
-                if (ordered[i].status !== latest.status) break;
-                currentStreak += latest.status === 'won' ? 1 : -1;
-            }
+        if (window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+            return window.TMR.calculateStreaks(picks || []);
         }
-        return { currentStreak, longestWinStreak, longestLossStreak };
+        if (console && console.warn) {
+            console.warn('[TMR] static/js/streaks.js is not loaded; streaks reported as 0.');
+        }
+        return { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0, currentType: 'none' };
     }
 
     /* AVERAGE AMERICAN ODDS -- the correct method (AOP_20260901).
@@ -183,9 +162,7 @@
         const risked = graded.reduce(function(sum, pick) {
             return sum + calculatePickRisk(pick);
         }, 0);
-        const streaks = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(normalized)
-            : calculateCanonicalStreaks(normalized);
+        const streaks = calculateCanonicalStreaks(normalized);
 
         /* Odds and stake averages describe the GRADED record, which is what every
            label around them says. Sampling `normalized` swept pending picks into

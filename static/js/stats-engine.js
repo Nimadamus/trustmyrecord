@@ -332,6 +332,14 @@ class StatsEngine {
      * Calculate current and best streaks
      */
     calculateStreaks(picks) {
+        /* ONE streak formula on the client, in static/js/streaks.js, which is
+           itself a port of services/canonicalStreak.js. This used to carry a
+           second copy for when that file had not loaded, and the copy was a
+           different formula: no settlement grouping, no duplicate collapsing,
+           no clamp on a late regrade. A page that fell back to it printed a
+           streak the server would never have sent. There is nothing to fall
+           back to now: a missing module reports no streak rather than a
+           made-up one. */
         if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
             const streaks = window.TMR.calculateStreaks(picks || []);
             return {
@@ -343,71 +351,10 @@ class StatsEngine {
             };
         }
 
-        const graded = (picks || [])
-            .filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed')
-            .sort((a, b) => new Date(a.commence_time || a.event_start_time || a.start_time || a.event_completed_at || a.completed_at || a.settled_at || a.graded_at || a.locked_at || a.created_at || 0) - new Date(b.commence_time || b.event_start_time || b.start_time || b.event_completed_at || b.completed_at || b.settled_at || b.graded_at || b.locked_at || b.created_at || 0));
-
-        if (graded.length === 0) {
-            return { current: 0, best: 0, worst: 0, type: 'none' };
+        if (typeof console !== 'undefined' && console.warn) {
+            console.warn('[TMR Stats] static/js/streaks.js is not loaded; streaks reported as 0.');
         }
-
-        let currentStreak = 0;
-        let currentType = 'none';
-        let bestStreak = 0;
-        let worstStreak = 0;
-        let tempStreak = 0;
-        let tempType = 'none';
-
-        // Calculate best and worst streaks
-        for (const pick of graded) {
-            if (pick.status === 'won') {
-                if (tempType === 'win') {
-                    tempStreak++;
-                } else {
-                    tempStreak = 1;
-                    tempType = 'win';
-                }
-                bestStreak = Math.max(bestStreak, tempStreak);
-            } else if (pick.status === 'lost') {
-                if (tempType === 'loss') {
-                    tempStreak++;
-                } else {
-                    tempStreak = 1;
-                    tempType = 'loss';
-                }
-                worstStreak = Math.max(worstStreak, tempStreak);
-            } else {
-                continue;
-            }
-        }
-
-        /* Pushes are graded but NEUTRAL for the current W/L streak: they never
-           reset it and they never end it. This used to read graded[last]
-           directly, so a push as the most recent settled pick reported "no
-           streak" while the server (statsAggregator.calculateStreakFromOrdered-
-           Statuses and CURRENT_STREAK_SUBQUERY, both of which filter to
-           won/lost) still reported the run. Trailing pushes are skipped. */
-        const isPush = (status) => status === 'push' || status === 'pushed';
-        let latestIndex = graded.length - 1;
-        while (latestIndex >= 0 && isPush(graded[latestIndex].status)) latestIndex--;
-        const latest = latestIndex >= 0 ? graded[latestIndex] : null;
-        if (latest) {
-            currentType = latest.status === 'won' ? 'win' : 'loss';
-            currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = latestIndex - 1; i >= 0; i--) {
-                const status = graded[i].status;
-                if (isPush(status)) continue;
-                if (status !== latest.status) break;
-                currentStreak += latest.status === 'won' ? 1 : -1;
-            }
-        }
-
-        return {
-            current: currentStreak,
-            best: bestStreak,
-            worst: worstStreak,
-            type: currentType
-        };
+        return { current: 0, best: 0, worst: 0, type: 'none' };
     }
 
     /**

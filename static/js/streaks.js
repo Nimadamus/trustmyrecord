@@ -1,3 +1,19 @@
+/* THE client streak, and the only one on the site.
+ *
+ * This is a port of services/canonicalStreak.js in the backend, rule for rule,
+ * so a page that falls back to computing a member streak from their pick list
+ * prints the same number the server would have sent. Keep the two in step:
+ *
+ *   order   settlement time, clamped into [first pitch, first pitch + 6h] so a
+ *           late regrade cannot teleport an old game to the top
+ *   group   one event (league, first pitch, both teams) and one wager period is
+ *           ONE settlement; the same real game under two feed ids is still one
+ *   dedupe  the same wager inside a settlement counts once, whatever price each
+ *           copy was taken at
+ *   runs    a settlement holding both a win and a loss ends the run; a push is
+ *           neutral; N counts deduplicated picks, so four winners on one game
+ *           is W4
+ */
 (function(root) {
     const STATUS_MAP = {
         win: 'won',
@@ -19,8 +35,40 @@
         return STATUS_MAP[key] || key;
     }
 
+    // A result graded more than this long after first pitch is a backfill, not a
+    // settlement -- same constant, same reason, as the backend.
+    const GRADING_LAG_CLAMP_MS = 6 * 3600 * 1000;
+
+    function timeMs(value) {
+        if (value == null || value === '') return null;
+        const time = new Date(value).getTime();
+        return Number.isFinite(time) && time > 0 ? time : null;
+    }
+
+    function firstTime(values) {
+        for (const value of values) {
+            const time = timeMs(value);
+            if (time != null) return time;
+        }
+        return null;
+    }
+
+    /* The canonical order key: when the game ENDED, as closely as the data can
+       say. graded_at is an excellent proxy while grading is timely, so it is
+       used, clamped into the six-hour window after first pitch so a month-late
+       backfill stays in its own slot instead of jumping to the top of a run. */
     function pickTimestamp(pick) {
-        const candidates = [
+        const start = firstTime([
+            pick && pick.commence_time,
+            pick && pick.event_start_time,
+            pick && pick.start_time,
+            pick && pick.game && pick.game.commence_time,
+            pick && pick.game && pick.game.start_time,
+            pick && pick.locked_at,
+            pick && pick.graded_at,
+            pick && pick.created_at
+        ]);
+        const settled = firstTime([
             pick && pick.graded_at,
             pick && pick.grade_verified_at,
             pick && pick.finalized_at,
@@ -28,20 +76,89 @@
             pick && pick.completed_at,
             pick && pick.game_final_at,
             pick && pick.analytics_settled_at,
-            pick && pick.settled_at,
-            pick && pick.commence_time,
-            pick && pick.event_start_time,
-            pick && pick.start_time,
-            pick && pick.game && pick.game.commence_time,
-            pick && pick.game && pick.game.start_time,
-            pick && pick.locked_at,
-            pick && pick.created_at
-        ];
-        for (const value of candidates) {
-            const time = new Date(value || 0).getTime();
-            if (Number.isFinite(time) && time > 0) return time;
+            pick && pick.settled_at
+        ]);
+        if (start == null) return settled == null ? 0 : settled;
+        if (settled == null) return start;
+        return Math.max(start, Math.min(settled, start + GRADING_LAG_CLAMP_MS));
+    }
+
+    const PERIOD_FALLBACK = 'full_game';
+    const PERIOD_PREFIXES = [
+        ['second_half_', 'second_half'],
+        ['first_half_', 'first_half'],
+        ['f5_', 'first_five'],
+        ['period_1_', 'period_1'],
+        ['period_2_', 'period_2'],
+        ['period_3_', 'period_3'],
+        ['period_4_', 'period_4'],
+        ['tennis_set1_', 'set_1'],
+        ['tennis_set2_', 'set_2'],
+        ['tennis_set3_', 'set_3']
+    ];
+
+    function lower(value) {
+        return value == null ? '' : String(value).trim().toLowerCase();
+    }
+
+    function numeric(value) {
+        if (value == null || value === '') return '';
+        const n = Number(value);
+        return Number.isFinite(n) ? String(n) : lower(value);
+    }
+
+    // picks.wager_period is generated from market_type on the server; derive it
+    // the same way when a projection did not carry the column.
+    function wagerPeriod(pick) {
+        const declared = lower(pick && pick.wager_period);
+        if (declared) return declared;
+        const market = lower(pick && pick.market_type);
+        if (market === 'first_inning_totals') return 'first_inning';
+        for (const entry of PERIOD_PREFIXES) {
+            if (market.indexOf(entry[0]) === 0) return entry[1];
         }
-        return 0;
+        return PERIOD_FALLBACK;
+    }
+
+    function gameOf(pick) {
+        return (pick && pick.game) || {};
+    }
+
+    /* The settlement a pick belongs to. Keyed on the matchup rather than the
+       game id, because one real fixture can arrive under two feed ids and would
+       otherwise read as two separate results. A doubleheader keeps its own slot
+       because first pitch is part of the key. */
+    function settlementGroupKey(pick, index) {
+        const game = gameOf(pick);
+        const period = wagerPeriod(pick);
+        const home = lower(pick && pick.home_team) || lower(game.home_team);
+        const away = lower(pick && pick.away_team) || lower(game.away_team);
+        const start = firstTime([
+            pick && pick.commence_time,
+            game.commence_time,
+            pick && pick.event_start_time,
+            pick && pick.start_time
+        ]);
+        const sport = lower(pick && pick.sport_key) || lower(game.sport_key);
+        if (home && away && start != null) {
+            return 'event:' + sport + '|' + start + '|' + away + '@' + home + '|' + period;
+        }
+        const gameId = lower((pick && pick.game_id) || game.id);
+        if (gameId) return 'game:' + gameId + '|' + period;
+        const id = pick && (pick.id || pick.pick_id);
+        return id ? 'pick:' + id : 'pick:index:' + index;
+    }
+
+    /* The identity of the BET. Price is deliberately not part of it: a second
+       ticket on the same side at a different number is the same outcome. */
+    function wagerKey(pick, index) {
+        return [
+            settlementGroupKey(pick, index),
+            lower(pick && pick.market_type),
+            lower(pick && pick.player_name),
+            lower(pick && pick.selection),
+            numeric(pick && pick.line_snapshot)
+        ].join('|');
     }
 
     function pickId(pick, index) {
@@ -54,8 +171,47 @@
             id: pickId(pick, index),
             status: normalizePickStatus(pick && (pick.status || pick.result || pick.pick_result || pick.outcome)),
             timestamp: pickTimestamp(pick),
+            groupKey: settlementGroupKey(pick, index),
+            wagerKey: wagerKey(pick, index),
             index: index
         };
+    }
+
+    /* Collapse picks into settlements, oldest first. Each group carries its
+       deduplicated win and loss counts and sits at the newest order key any of
+       its rows has. A group with only pushes is dropped, which is what keeps a
+       push neutral. */
+    function buildSettlementGroups(ordered) {
+        const map = new Map();
+        for (const pick of ordered) {
+            let group = map.get(pick.groupKey);
+            if (!group) {
+                group = { key: pick.groupKey, timestamp: pick.timestamp, index: pick.index, wins: [], losses: [] };
+                map.set(pick.groupKey, group);
+            }
+            if (pick.timestamp > group.timestamp) group.timestamp = pick.timestamp;
+            const bucket = pick.status === 'won' ? group.wins : pick.status === 'lost' ? group.losses : null;
+            if (bucket && bucket.indexOf(pick.wagerKey) === -1) bucket.push(pick.wagerKey);
+        }
+        const groups = [];
+        map.forEach(function(group) {
+            const wins = group.wins.length;
+            const losses = group.losses.length;
+            if (!wins && !losses) return;
+            groups.push({
+                key: group.key,
+                timestamp: group.timestamp,
+                index: group.index,
+                wins: wins,
+                losses: losses,
+                status: wins && losses ? 'mixed' : (wins ? 'won' : 'lost'),
+                count: wins && losses ? 0 : (wins || losses)
+            });
+        });
+        return groups.sort(function(a, b) {
+            if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+            return a.index - b.index;
+        });
     }
 
     function compareChronological(a, b) {
@@ -75,44 +231,30 @@
             pick.indexInOrdered = index;
         });
 
+        const groups = buildSettlementGroups(ordered);
+
         let longestWinStreak = 0;
         let longestLossStreak = 0;
-        let winRun = 0;
-        let lossRun = 0;
+        let runType = null;
+        let runLength = 0;
 
-        ordered.forEach(function(pick) {
-            if (pick.status === 'won') {
-                winRun += 1;
-                lossRun = 0;
-                longestWinStreak = Math.max(longestWinStreak, winRun);
-            } else if (pick.status === 'lost') {
-                lossRun += 1;
-                winRun = 0;
-                longestLossStreak = Math.max(longestLossStreak, lossRun);
-            } else {
-                // Pushes are neutral for W/L streaks.
+        groups.forEach(function(group) {
+            // A game that produced both a win and a loss settled them together.
+            // Nothing inside a settlement is after anything else inside it, so
+            // a mixed one ends whatever run was running.
+            if (group.status === 'mixed') {
+                runType = null;
+                runLength = 0;
+                return;
             }
+            if (runType === group.status) runLength += group.count;
+            else { runType = group.status; runLength = group.count; }
+            if (group.status === 'won') longestWinStreak = Math.max(longestWinStreak, runLength);
+            else longestLossStreak = Math.max(longestLossStreak, runLength);
         });
 
-        let currentStreak = 0;
-        let currentType = 'none';
-        let latest = null;
-        for (let i = ordered.length - 1; i >= 0; i -= 1) {
-            if (ordered[i].status === 'won' || ordered[i].status === 'lost') {
-                latest = ordered[i];
-                break;
-            }
-        }
-        if (latest) {
-            currentType = latest.status === 'won' ? 'win' : 'loss';
-            currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = latest.indexInOrdered - 1; i >= 0; i -= 1) {
-                const status = ordered[i].status;
-                if (status === 'push' || status === 'pushed') continue;
-                if (status !== latest.status) break;
-                currentStreak += latest.status === 'won' ? 1 : -1;
-            }
-        }
+        const currentStreak = runType === 'won' ? runLength : runType === 'lost' ? -runLength : 0;
+        const currentType = runType === 'won' ? 'win' : runType === 'lost' ? 'loss' : 'none';
 
         const sequence = ordered.map(function(pick) {
             return {
@@ -130,6 +272,7 @@
             longestLossStreak: longestLossStreak,
             currentType: currentType,
             gradedCount: ordered.length,
+            settlements: groups.length,
             sequence: sequence
         };
 
@@ -177,6 +320,8 @@
 
     const api = {
         normalizePickStatus: normalizePickStatus,
+        settlementGroupKey: settlementGroupKey,
+        wagerKey: wagerKey,
         calculateStreaks: calculateStreaks,
         formatStreak: formatStreak,
         debugStreakSequence: debugStreakSequence
