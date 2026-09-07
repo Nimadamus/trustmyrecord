@@ -149,27 +149,105 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  function url(name) {
-    var ref = ABBR[slugify(name)];
-    if (!ref) return null;
-    var p = ref.split('/');
-    return 'https://a.espncdn.com/i/teamlogos/' + p[0] + '/500/' + p[1] + '.png';
+  /* 500px ESPN artwork, in the DARK variant. Every TMR surface that shows these
+     marks is dark, and the light variant hides navy-on-navy clubs (Yankees,
+     Cowboys, Duke, Texas) almost completely at row size. Same convention the
+     Game File logo pipeline already uses. All 127 pro marks and a 60-school
+     college sample were HEAD-checked at 200 before this switched over, and a
+     miss still falls back to the light mark before the initials badge. */
+  function variant(name, kind) {
+    var slug = slugify(name);
+    var ref = ABBR[slug];
+    if (ref) {
+      var p = ref.split('/');
+      return 'https://a.espncdn.com/i/teamlogos/' + p[0] + '/' + kind + '/' + p[1] + '.png';
+    }
+    /* College: the same artwork the Game File pipeline bakes, from the generated
+       slug -> team id map. That file is optional - a page that does not load it
+       just gets the standardised initials badge, exactly as before. */
+    var cat = window.TMRTeamLogoCatalog;
+    var id = cat && Object.prototype.hasOwnProperty.call(cat, slug) ? cat[slug] : null;
+    if (id) return 'https://a.espncdn.com/i/teamlogos/ncaa/' + kind + '/' + id + '.png';
+    return null;
   }
+  function url(name) { return variant(name, '500-dark'); }
+  function urlLight(name) { return variant(name, '500'); }
+
+  /* One delegated capture listener instead of a second inline handler: the FIRST
+     failure of a mark retries the light artwork and is stopped here, so the
+     inline onerror (initials badge) only ever sees a genuine second failure. */
+  function onMarkError(e) {
+    var t = e && e.target;
+    if (!t || !t.classList || !t.classList.contains('tmr-tl-mark-img')) return;
+    var alt = t.getAttribute('data-tmr-tl-alt');
+    if (alt && !t.getAttribute('data-tmr-tl-retried')) {
+      t.setAttribute('data-tmr-tl-retried', '1');
+      t.src = alt;
+      e.stopPropagation();
+    }
+  }
+  try { document.addEventListener('error', onMarkError, true); } catch (e) { /* no DOM */ }
   function initials(name) {
     var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return '?';
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
-  // Reusable logo mark. cls defaults to 'tmr-tl'; view supplies matching CSS.
+  /* Shared presentation, owned by the component so every view gets the same
+     mark without copying sizes into its own stylesheet. Injected once, as the
+     FIRST thing in <head>, so a view that genuinely wants a different size can
+     still override it (or, better, just re-point --tmr-tl-box/--tmr-tl-art).
+
+     The mark is a fixed-size flex box and the artwork is capped on BOTH axes
+     with object-fit:contain, so a tall crest, a wide wordmark and a circular
+     roundel all land on the same visual footprint: centred, never stretched,
+     never clipped. The fallback badge fills the exact same box, so a missing
+     logo never collapses the row or shifts the team name off its column. */
+  var CSS = [
+    '.tmr-tl-mark{position:relative;display:inline-flex;align-items:center;justify-content:center;',
+    'box-sizing:border-box;width:var(--tmr-tl-box,34px);height:var(--tmr-tl-box,34px);',
+    'flex:0 0 var(--tmr-tl-box,34px);line-height:1;vertical-align:middle}',
+    '.tmr-tl-mark-img{display:block;width:auto;height:auto;',
+    'max-width:var(--tmr-tl-art,28px);max-height:var(--tmr-tl-art,28px);',
+    'object-fit:contain;object-position:center}',
+    '.tmr-tl-mark-fb{display:none;box-sizing:border-box;align-items:center;justify-content:center;',
+    'width:var(--tmr-tl-box,34px);height:var(--tmr-tl-box,34px);border-radius:8px;',
+    /* Box, centring and type only. The badge skin (border/bed) is left to the
+       view, so a surface that already draws its own fallback is not restyled. */
+    'border:0;background:transparent;color:#9BA7B8;',
+    "font-family:'Inter',sans-serif;font-weight:900;font-size:calc(var(--tmr-tl-box,34px)*.34);",
+    'line-height:1;letter-spacing:.02em;text-transform:uppercase}',
+    '.tmr-tl-mark.is-fallback .tmr-tl-mark-fb{display:inline-flex}',
+    '.tmr-tl-row{display:inline-flex;align-items:center;gap:var(--tmr-tl-gap,9px);min-width:0;vertical-align:middle}',
+    '.tmr-tl-row-name{min-width:0;overflow:hidden;text-overflow:ellipsis}',
+    /* Tokens are set on the MARK only: the img and the badge inherit them, so a
+       view that re-points a token on its own mark still wins on small screens. */
+    '@media (max-width:640px){.tmr-tl-mark{--tmr-tl-box:30px;--tmr-tl-art:25px}}'
+  ].join('');
+  function injectCss() {
+    try {
+      var d = document;
+      if (!d || !d.head || d.getElementById('tmr-tl-css')) return;
+      var st = d.createElement('style');
+      st.id = 'tmr-tl-css';
+      st.textContent = CSS;
+      d.head.insertBefore(st, d.head.firstChild);
+    } catch (e) { /* styling is never worth breaking a render over */ }
+  }
+  injectCss();
+
+  // Reusable logo mark. cls defaults to 'tmr-tl'; the shared tmr-tl-mark*
+  // classes ride along on every mark so the sizing above reaches every view.
   function html(name, opts) {
     opts = opts || {};
     var cls = opts.className || 'tmr-tl';
     var u = url(name);
-    var ini = '<span class="' + cls + '-fallback" aria-hidden="true">' + esc(initials(name)) + '</span>';
-    if (!u) return '<span class="' + cls + ' is-fallback">' + ini + '</span>';
-    return '<span class="' + cls + '">' +
-      '<img class="' + cls + '-img" src="' + esc(u) + '" alt="" loading="lazy" ' +
+    var ini = '<span class="' + cls + '-fallback tmr-tl-mark-fb" aria-hidden="true">' + esc(initials(name)) + '</span>';
+    if (!u) return '<span class="' + cls + ' tmr-tl-mark is-fallback">' + ini + '</span>';
+    var alt = urlLight(name);
+    return '<span class="' + cls + ' tmr-tl-mark">' +
+      '<img class="' + cls + '-img tmr-tl-mark-img" src="' + esc(u) + '" alt="" loading="lazy" ' +
+      'data-tmr-tl-alt="' + esc(alt || '') + '" ' +
       'onerror="this.style.display=\'none\';this.parentNode.classList.add(\'is-fallback\');" />' +
       ini + '</span>';
   }
@@ -189,7 +267,7 @@
   }
 
   window.TMRTeamLogo = {
-    slugify: slugify, url: url, html: html, initials: initials,
+    slugify: slugify, url: url, urlLight: urlLight, html: html, initials: initials,
     leagueUrl: leagueUrl, league: league
   };
 })();

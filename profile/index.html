@@ -4520,8 +4520,9 @@
             color: #f0abfc;
         }
         .profile-aff-league {
-            width: 15px; height: 15px; object-fit: contain;
+            width: 20px; height: 20px; object-fit: contain;
             border-radius: 3px; display: inline-block; opacity: .95;
+            vertical-align: -5px; margin-right: 2px;
         }
         /* Favorite Teams block -- labeled row of team pills with logos. */
         .profile-fav-teams { margin: 4px 0 14px; }
@@ -4534,7 +4535,7 @@
         .profile-team-pills { display: flex; flex-wrap: wrap; gap: 8px; }
         .profile-team-pill {
             display: inline-flex; align-items: center; gap: 8px;
-            height: 32px; padding: 0 12px 0 6px; border-radius: 999px;
+            height: 36px; padding: 0 14px 0 4px; border-radius: 999px;
             background: rgba(10,19,34,0.76);
             border: 1px solid rgba(148,163,184,0.20);
             color: #e6e9f2;
@@ -4542,21 +4543,19 @@
             white-space: nowrap; max-width: 100%;
         }
         .profile-team-pill-name { overflow: hidden; text-overflow: ellipsis; }
+        /* Size and centring come from the shared TeamLogo mark (tmr-team-logo.js);
+           the chip only re-points the size tokens and adds its own round bed. */
         .profile-team-logo {
-            position: relative; display: inline-flex; align-items: center;
-            justify-content: center; flex: 0 0 22px; width: 22px; height: 22px;
-            border-radius: 50%; overflow: hidden;
+            --tmr-tl-box: 28px; --tmr-tl-art: 24px;
+            border-radius: 50%;
             background: rgba(255,255,255,0.08);
         }
-        .profile-team-logo-img { width: 22px; height: 22px; object-fit: contain; display: block; }
         .profile-team-logo-fallback {
-            display: none; font: 800 8.5px/1 'Inter', sans-serif;
-            letter-spacing: .02em; color: #cfd5e6; text-transform: uppercase;
+            border: 0; background: transparent; color: #cfd5e6;
         }
-        .profile-team-logo.is-fallback .profile-team-logo-fallback { display: block; }
         @media (max-width: 560px) {
-            .profile-team-pill { height: 30px; font-size: 12px; }
-            .profile-team-logo, .profile-team-logo-img { width: 20px; height: 20px; flex-basis: 20px; }
+            .profile-team-pill { height: 32px; font-size: 12px; }
+            .profile-team-logo { --tmr-tl-box: 26px; --tmr-tl-art: 22px; }
         }
         .profile-affiliation-row--empty {
             background: rgba(255,255,255,0.02);
@@ -6255,7 +6254,8 @@
         };
     </script>
     <script src="/static/js/config.js?v=738db2dd80a5"></script>
-    <script src="/static/js/tmr-team-logo.js?v=913429d69d70"></script>
+    <script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
+    <script src="/static/js/tmr-team-logo.js?v=a507f97b767c"></script>
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
     <script src="/static/js/backend-api.js?v=365fae38a6a5"></script>
     <script src="/static/js/nav-badges.js?v=e5bfe5d9e8b9"></script>
@@ -11015,7 +11015,7 @@
             // (shared TeamLogo helper; clean initials fallback when no logo).
             const teamPills = favTeamsArr.slice(0, 8).map(function (t) {
                 const logo = TL ? TL.html(t, { className: 'profile-team-logo' })
-                    : '<span class="profile-team-logo is-fallback"><span class="profile-team-logo-fallback">' + escTxt(String(t).slice(0, 2).toUpperCase()) + '</span></span>';
+                    : '<span class="profile-team-logo tmr-tl-mark is-fallback"><span class="profile-team-logo-fallback tmr-tl-mark-fb">' + escTxt(String(t).slice(0, 2).toUpperCase()) + '</span></span>';
                 return '<span class="profile-team-pill">' + logo + '<span class="profile-team-pill-name">' + escTxt(t) + '</span></span>';
             }).join('');
             if (sportChips) affiliationRow += '<div class="profile-affiliation-row">' + sportChips + '</div>';
@@ -13923,8 +13923,8 @@
                 /* The club is named once per group; its remaining market rows
                    sit under it, so the block reads as one team. */
                 const head = i === 0
-                    ? '<td class="name">' + tmrxTeamLogoHtml(entry.team) +
-                      escapeHtml(entry.team) + '</td>' +
+                    ? '<td class="name"><span class="tmr-tl-row">' + tmrxTeamLogoHtml(entry.team) +
+                      '<span class="tmr-tl-row-name">' + escapeHtml(entry.team) + '</span></span></td>' +
                       '<td class="league">' + escapeHtml(sport[1]) + '</td>'
                     : '<td class="name"></td><td class="league"></td>';
                 html.push(tmrxDepthRow(item.row, [head,
@@ -14052,7 +14052,8 @@
                 const parts = tmrxSplitScoped(row.bucket);
                 const sport = tmrxSportParts(parts.sportKey);
                 return [
-                    '<td class="name">' + tmrxTeamLogoHtml(parts.rest) + escapeHtml(parts.rest) + '</td>',
+                    '<td class="name"><span class="tmr-tl-row">' + tmrxTeamLogoHtml(parts.rest) +
+                        '<span class="tmr-tl-row-name">' + escapeHtml(parts.rest) + '</span></span></td>',
                     '<td class="league">' + escapeHtml(sport[1]) + '</td>'
                 ];
             }
@@ -15676,12 +15677,19 @@
         padding: 7px 10px; font-size: 12px; font-weight: 700; min-width: 132px; cursor: pointer;
       }
       .tmrx-team-filter select:focus { outline: none; border-color: #4DA3FF; }
-      .tmrx-team-cell { display: inline-flex; align-items: center; gap: 9px; }
-      .tmrx-team-name { font-weight: 800; color: #f1f5fb; white-space: nowrap; }
-      .tmrx-tl { width: 22px; height: 22px; flex: 0 0 22px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
-      .tmrx-tl-img { width: 22px; height: 22px; object-fit: contain; }
-      .tmrx-tl-fallback { display: none; font-size: 9px; font-weight: 900; color: #9BA7B8; border: 1px solid #1F3350; border-radius: 5px; width: 22px; height: 22px; align-items: center; justify-content: center; }
-      .tmrx-tl.is-fallback .tmrx-tl-fallback { display: inline-flex; }
+      /* Logo + club name are ONE flex row, so the mark is vertically centred on
+         the name instead of riding its shoulder, and every name in the column
+         starts at the same x. Box size/centring/fallback come from the shared
+         TeamLogo mark (static/js/tmr-team-logo.js); only the badge colour is
+         re-skinned for the dark table here. */
+      .tmrx-team-cell, .tmrx-table td.name > .tmr-tl-row { display: inline-flex; align-items: center; gap: 9px; }
+      .tmrx-team-name, .tmrx-table td.name > .tmr-tl-row > .tmr-tl-row-name { font-weight: 800; color: #f1f5fb; white-space: nowrap; }
+      .tmrx-tl-fallback { border: 1px solid #1F3350; background: rgba(31,51,80,.35); }
+      /* 34px marks in a 12px-padded row would add 12px of height for nothing;
+         8px keeps these three tables at a scannable 50px row. */
+      #tmrxTableTeamTop tbody td,
+      #tmrxTableTeamMarketTop tbody td,
+      #tmrxTableOpponentTop tbody td { padding-top: 8px; padding-bottom: 8px; }
       @media (max-width: 640px) {
         #tmrxTeamSection .tmrx-section-head { align-items: stretch; }
         .tmrx-team-filter { width: 100%; }
@@ -16446,6 +16454,14 @@
         font-size: 12px !important;
         letter-spacing: .08em !important;
         border-bottom: 1px solid rgba(96, 125, 166, .65) !important;
+      }
+      /* Logo rows: the 34px mark already sets the row height, so the 16px bed
+         below is trimmed to 10px on the three team tables. They then measure
+         exactly as tall as they did with the old 22px marks. */
+      body.profile-page.tmr-social-profile #tmrxTableTeamTop tbody td,
+      body.profile-page.tmr-social-profile #tmrxTableTeamMarketTop tbody td,
+      body.profile-page.tmr-social-profile #tmrxTableOpponentTop tbody td {
+        padding-top: 10px !important; padding-bottom: 10px !important;
       }
       body.profile-page.tmr-social-profile .tmrx-table tbody td {
         padding: 16px 18px !important;
@@ -18512,7 +18528,7 @@
 })();
 </script>
 
-    <script defer src="/static/js/tmr-fan-identity.js?v=4846aaee25e3"></script>
+    <script defer src="/static/js/tmr-fan-identity.js?v=b813756e3bd3"></script>
 <script src="/static/js/first-pick-onboarding.js?v=ceb09eef6250"></script>
 <script>
 (function(){

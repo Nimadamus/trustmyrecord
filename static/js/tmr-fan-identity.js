@@ -477,14 +477,15 @@
       '.tmr-fi-teamcol:nth-child(1) .tmr-fi-col-head i{color:#00aeff}.tmr-fi-teamcol:nth-child(2) .tmr-fi-col-head i{color:#ff6b78}',
       '.tmr-fi-count{background:rgba(255,255,255,.07);color:#aab2c6;border-radius:20px;min-width:20px;text-align:center;padding:1px 7px;font-size:11px}',
       '.tmr-fi-chips{display:flex;flex-wrap:wrap;gap:8px}',
-      '.tmr-fi-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;line-height:1.1}',
+      '.tmr-fi-chip{display:inline-flex;align-items:center;gap:9px;padding:5px 12px 5px 6px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;line-height:1.1}',
       'a.tmr-fi-chip:hover{filter:brightness(1.12)}',
       '.tmr-fi-chip.is-fav{background:rgba(0,174,255,.12);border:1px solid rgba(0,174,255,.4);color:#7cd4ff}',
       '.tmr-fi-chip.is-rival{background:rgba(255,77,90,.12);border:1px solid rgba(255,77,90,.4);color:#ff8e97}',
-      '.tmr-fi-logo{position:relative;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.06)}',
-      '.tmr-fi-logo-img{width:20px;height:20px;object-fit:contain;display:block}',
-      '.tmr-fi-logo-fallback{display:none;font-size:9px;font-weight:800;letter-spacing:.02em;color:#cfd5e6;text-transform:uppercase}',
-      '.tmr-fi-logo.is-fallback .tmr-fi-logo-fallback{display:block}',
+      // Size, centring and the fallback badge belong to the shared TeamLogo mark
+      // (static/js/tmr-team-logo.js). The chip only re-points the size tokens
+      // and keeps its own rounded bed, so club marks match the stat tables.
+      '.tmr-fi-logo{--tmr-tl-box:28px;--tmr-tl-art:24px;border-radius:7px;background:rgba(255,255,255,.06)}',
+      '.tmr-fi-logo-fallback{border:0;background:transparent;color:#cfd5e6}',
       '.tmr-fi-chip-sport{padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.12);color:#cfd5e6;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}',
       '.tmr-fi-chip-x{background:none;border:0;color:inherit;opacity:.7;font-size:16px;line-height:1;cursor:pointer;padding:0 0 0 1px;font-weight:700}.tmr-fi-chip-x:hover{opacity:1}',
       '.tmr-fi-empty{color:#6b7280;font-size:12.5px;padding:8px 0;font-style:italic}',
