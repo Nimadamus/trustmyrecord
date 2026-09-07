@@ -484,7 +484,7 @@
       // Size, centring and the fallback badge belong to the shared TeamLogo mark
       // (static/js/tmr-team-logo.js). The chip only re-points the size tokens
       // and keeps its own rounded bed, so club marks match the stat tables.
-      '.tmr-fi-logo{--tmr-tl-box:28px;--tmr-tl-art:24px;border-radius:7px;background:rgba(255,255,255,.06)}',
+      '.tmr-fi-logo{--tmr-tl-box:30px;--tmr-tl-art:26px;border-radius:8px;background:rgba(255,255,255,.06)}',
       '.tmr-fi-logo-fallback{border:0;background:transparent;color:#cfd5e6}',
       '.tmr-fi-chip-sport{padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.12);color:#cfd5e6;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}',
       '.tmr-fi-chip-x{background:none;border:0;color:inherit;opacity:.7;font-size:16px;line-height:1;cursor:pointer;padding:0 0 0 1px;font-weight:700}.tmr-fi-chip-x:hover{opacity:1}',
