@@ -152,6 +152,14 @@
     if (p && p.avatar_url) return '<img class="tmr-fi-face" src="' + esc(p.avatar_url) + '" alt="">';
     if (!window.TMRAvatar) return '';
     var id = window.TMRAvatar.identity(p || {});
+    /* A club mark goes in as its own <img>, contained inside the disc: it is a
+       remote file, and an SVG used as a CSS background cannot fetch one. */
+    if (id.logo) {
+      return '<span class="tmr-fi-face" style="background-image:url(&quot;'
+        + window.TMRAvatar.dataUri(id, 96).replace(/"/g, '&quot;') + '&quot;)">'
+        + '<img src="' + esc(id.logo) + '" alt="' + esc(id.team || '') + '" data-tmr-logo="1" '
+        + 'onerror="this.remove()"></span>';
+    }
     return '<span class="tmr-fi-face" style="background-image:url(&quot;'
       + window.TMRAvatar.dataUri(id, 96).replace(/"/g, '&quot;') + '&quot;)"></span>';
   }

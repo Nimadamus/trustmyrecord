@@ -286,6 +286,23 @@ function compBadge(a, username) {
     '</svg>';
 }
 
+/* The club mark for a competitor whose face is their favourite team. The disc
+   and the inset are inline rather than a class because this markup is baked at
+   the edge and re-rendered by the page script: a style that lives in the CSS
+   file would have to reach both, and the homepage's critical CSS is generated.
+   CONTAINED, not cropped - a crest sliced to fill a circle is not a badge -
+   and the inset is a percentage, so every breakpoint frames it identically.
+   Kept identical in static/js/tmr-home-live.js. */
+function compMark(a, username) {
+  var name = esc(a.team || username || '');
+  return '<span class="comp-av" style="background:#FFFFFF;box-sizing:border-box;'
+    + 'border:2px solid ' + esc(a.primary || '#1D4ED8') + ';display:inline-flex;'
+    + 'align-items:center;justify-content:center;overflow:hidden">'
+    + '<img src="' + esc(a.logo) + '" alt="' + name + '" loading="lazy" '
+    + 'style="width:100%;height:100%;object-fit:contain;padding:14%;box-sizing:border-box;display:block" '
+    + 'onerror="this.remove()"></span>';
+}
+
 /* A competitor with no avatar gets their badge, not a request that 404s into
    initials. The homepage has been bitten before by an <img> whose onerror
    raced the edge bake and rewrote the card after first paint; there is no
@@ -293,6 +310,7 @@ function compBadge(a, username) {
    Kept identical in static/js/tmr-home-live.js. */
 function compAvatar(c) {
   if (!c) return '<span class="comp-avl"></span>';
+  if (!c.avatar_url && c.avatar && c.avatar.logo) return compMark(c.avatar, c.username);
   if (!c.avatar_url && c.avatar && c.avatar.primary) return compBadge(c.avatar, c.username);
   if (c.avatar_url) return `<img class="comp-av" src="${esc(c.avatar_url)}" alt="" ` +
     `onerror="this.outerHTML='&lt;span class=&quot;comp-avl&quot;&gt;${initials(c.username)}&lt;/span&gt;'">`;

@@ -3,8 +3,8 @@
  * MEMBER IDENTITY — no blank avatars, one resolver.
  *
  * static/js/tmr-ds-avatar.js is the site's single answer to "what does this
- * member look like": uploaded picture -> favourite-team badge -> generated
- * initials. Three things must not regress, and none of them is visible in a
+ * member look like": uploaded picture -> favourite-team LOGO (the lettered
+ * badge only where the club has no mark) -> generated initials. Three things must not regress, and none of them is visible in a
  * screenshot of a member who happens to have uploaded a photo:
  *
  *   1. EVERY BRANCH DRAWS SOMETHING. There is no input — no username, no
@@ -55,6 +55,7 @@ assert.ok(AV, 'tmr-ds-avatar.js must publish window.TMRAvatar');
 const CASES = [
   ['an uploaded picture', { username: 'a', avatar_url: 'https://cdn/x.png' }],
   ['a favourite-team badge', { username: 'a', avatar: { kind: 'team', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers' } }],
+  ['a favourite-team logo', { username: 'a', avatar: { kind: 'team-logo', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png' } }],
   ['neither', { username: 'makaveli66' }],
   ['an empty row', {}],
   ['null', null],
@@ -76,6 +77,18 @@ ok(/\/api\/users\/5\/avatar$/.test(AV.src({ username: 'a', id: 5 })),
 ok(AV.src({ username: '' }).startsWith('data:image/svg+xml'),
   'with nothing to key off, the generated badge is drawn inline');
 
+/* The club mark is a FALLBACK. An uploaded picture keeps it off the row, and
+   the disc it sits on carries no lettering to read through a transparent PNG. */
+const LOGO_ROW = { kind: 'team-logo', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png' };
+const marked = AV.identity({ username: 'a', avatar: LOGO_ROW });
+ok(marked.logo === LOGO_ROW.logo, 'a member with a club and no picture falls back to the mark');
+ok(AV.identity({ username: 'a', avatar_url: 'https://cdn/x.png', avatar: LOGO_ROW }).logo === null,
+  'an uploaded picture is never replaced by a club mark');
+ok(AV.svg(marked).indexOf('<text') === -1, 'the disc under a mark carries no lettering to read through it');
+ok(AV.html({ username: 'a', avatar: LOGO_ROW }).indexOf('data-tmr-logo="1"') !== -1,
+  'the mark is rendered as its own image, so it can be contained rather than cropped');
+ok(AV.identity({ username: 'nobody' }).logo === null, 'no team, no mark');
+
 /* ---------- 2. deterministic, and distinguishable -------------------------- */
 ok(AV.dataUri(AV.identity({ username: 'makaveli66' })) === AV.dataUri(AV.identity({ username: 'makaveli66' })),
   'the same member always gets the same face');
@@ -92,6 +105,15 @@ ok(AV.initials('', '') === 'TM', 'a nameless row still renders a mark');
 // Both files are the same three steps. Rather than re-implementing the check,
 // assert the geometry that has to match, byte for byte, in both sources.
 const clientSrc = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-ds-avatar.js'), 'utf8');
+// The disc a club mark sits on, byte for byte the same as avatarLogoSvg().
+for (const piece of [
+  '<circle cx="50" cy="50" r="50" fill="#FFFFFF"/>',
+  'r="48.2" fill="none" stroke=',
+  'stroke-opacity=".9" stroke-width="3.6"',
+]) {
+  ok(clientSrc.includes(piece), `the club-mark disc must stay in lockstep with the API: ${piece}`);
+}
+
 for (const piece of [
   '<circle cx="50" cy="50" r="50" fill="',
   '<path d="M0 50a50 50 0 0 1 100 0Z" fill="#FFFFFF" opacity=".12"/>',
@@ -108,6 +130,9 @@ const edge = fs.readFileSync(path.join(ROOT, 'workers', 'home-ssr', 'worker.mjs'
 for (const [name, src] of [['tmr-home-live.js', home], ['workers/home-ssr/worker.mjs', edge]]) {
   ok(src.includes('function compBadge'), `${name} must render the badge, not an empty circle`);
   ok(src.includes('c.avatar && c.avatar.primary'), `${name} must read the identity off the payload`);
+  ok(src.includes('function compMark'), `${name} must render the club mark`);
+  ok(src.includes('c.avatar && c.avatar.logo'), `${name} must prefer the club mark over the lettered badge`);
+  ok(src.includes('object-fit:contain'), `${name} must contain the mark, not crop it to the circle`);
 }
 
 /* Every leaderboard row is a circle at the size Nima asked for (40-44px). */
