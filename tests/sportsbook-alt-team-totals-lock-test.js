@@ -36,14 +36,18 @@ assert(/max-width: 560px\)[\s\S]{0,600}\.sbn-ttrow/.test(css), 'the ttgrid needs
 // ---- the feed fixture -------------------------------------------------------
 const AWAY = 'Boston Red Sox';
 const HOME = 'Baltimore Orioles';
-function rung(book, team, side, line, odds) {
-    return {
+function rung(book, team, side, line, odds, isMain) {
+    const item = {
         selection: team + ' ' + side,
         selection_label: team + ' ' + side + ' +' + line,
         line: line, odds: odds, book_title: book,
         market_type: 'team_totals', market_key: 'team_totals', group_key: 'team_totals',
         source: 'sportsbook',
     };
+    // ALT_TEAM_TOTALS_COVERAGE_20260907: the backend names the rung the book
+    // leads with, so the renderer no longer has to guess it from feed order.
+    if (isMain) item.is_main_line = true;
+    return item;
 }
 const GAME = {
     id: 'fixture_1', sport_key: 'baseball_mlb', away_team: AWAY, home_team: HOME,
@@ -55,8 +59,8 @@ const GAME = {
     }],
     market_groups: [{
         key: 'team_totals', label: 'Team Totals', items: [
-            rung('DraftKings', AWAY, 'Over', 3.5, -130), rung('DraftKings', AWAY, 'Under', 3.5, -102),
-            rung('DraftKings', HOME, 'Over', 3.5, 110), rung('DraftKings', HOME, 'Under', 3.5, -150),
+            rung('DraftKings', AWAY, 'Over', 3.5, -130, true), rung('DraftKings', AWAY, 'Under', 3.5, -102, true),
+            rung('DraftKings', HOME, 'Over', 3.5, 110, true), rung('DraftKings', HOME, 'Under', 3.5, -150, true),
             rung('FanDuel', AWAY, 'Over', 2.5, -245), rung('FanDuel', AWAY, 'Under', 2.5, 186),
             rung('FanDuel', AWAY, 'Over', 3.5, -128),
             rung('FanDuel', AWAY, 'Over', 4.5, 140), rung('FanDuel', AWAY, 'Under', 4.5, -180),
@@ -82,7 +86,7 @@ assert.deepStrictEqual(away.find((r) => r.line === 3.5).prices, ['-128', '-102']
 assert.deepStrictEqual(away.find((r) => r.line === 2.5).prices, ['-245', '+186'], 'alternate prices come straight from the feed');
 assert.deepStrictEqual(away.find((r) => r.line === 11.5).prices, ['+2200', null], 'a one-sided rung shows the side it has');
 assert.strictEqual(away.filter((r) => r.main).length, 1, 'exactly one rung is tagged Main');
-assert.strictEqual(away.find((r) => r.main).line, 3.5, 'the main number is the first rung the feed prices on both sides');
+assert.strictEqual(away.find((r) => r.main).line, 3.5, 'the main number is the rung the backend flags, not the first one in feed order');
 
 const home = readRows(blocks[1]);
 assert.deepStrictEqual(home.map((r) => r.line), [3.5, 4.5], 'the other club reads the same way');
@@ -107,7 +111,9 @@ assert.strictEqual(new Set(keys).size, keys.length, 'no duplicate markets');
 console.log('sportsbook alt team totals lock test passed');
 
 // ---- harness ---------------------------------------------------------------
-function renderTeamTotals(game) {
+function renderTeamTotals(game, sportKey, sportParam) {
+    const boardKey = sportKey || 'baseball_mlb';
+    const boardRe = new RegExp('games/board/' + boardKey);
     let html = '';
     const stub = () => ({
         className: '', style: {}, dataset: {}, textContent: '', innerHTML: '', parentNode: null,
@@ -138,11 +144,11 @@ function renderTeamTotals(game) {
         console, JSON, Math, Date, Number, String, Object, Array, URLSearchParams, RegExp, isNaN, parseInt, parseFloat,
         setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
         document: doc,
-        location: { search: '?sport=MLB', pathname: '/sportsbook/next/' },
+        location: { search: '?sport=' + (sportParam || 'MLB'), pathname: '/sportsbook/next/' },
         localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
         fetch: (url) => settled({
-            ok: /games\/board\/baseball_mlb/.test(String(url)),
-            json: () => settled(/games\/board\/baseball_mlb/.test(String(url)) ? { games: [game] } : { games: [] }),
+            ok: boardRe.test(String(url)),
+            json: () => settled(boardRe.test(String(url)) ? { games: [game] } : { games: [] }),
         }),
     };
     ctx.window = ctx;
@@ -157,6 +163,36 @@ function renderTeamTotals(game) {
     assert(/sbn-ttteam/.test(html), 'the Team Totals tab must render the per-club grid');
     return html;
 }
+// ALT_TEAM_TOTALS_COVERAGE_20260907. NFL and NCAAF reach the board with the
+// book's whole 21-rung ladder and no main number named anywhere, because the
+// primary feed posts no football team total to name one from. The old rule
+// called the FIRST two-sided rung the main number, which on an ascending ladder
+// would have stamped "Main" on the longest shot on the board. A ladder nobody
+// flagged shows no badge at all rather than a wrong one.
+(function unflaggedLadderIsNeverBadged() {
+    const NFL_AWAY = 'Chicago Bears';
+    const NFL_HOME = 'Carolina Panthers';
+    const items = [];
+    [12.5, 17.5, 20.5, 24.5].forEach(function (line, i) {
+        items.push(rung('DraftKings', NFL_AWAY, 'Over', line, -200 + i * 40));
+        items.push(rung('DraftKings', NFL_AWAY, 'Under', line, 150 + i * 10));
+    });
+    const nflBoard = renderTeamTotals({
+        id: 'fixture_nfl', sport_key: 'americanfootball_nfl',
+        away_team: NFL_AWAY, home_team: NFL_HOME,
+        commence_time: new Date(Date.now() + 6 * 3600 * 1000).toISOString(),
+        bookmakers: [{ key: 'draftkings', title: 'DraftKings', markets: [
+            { key: 'h2h', outcomes: [{ name: NFL_AWAY, price: 150 }, { name: NFL_HOME, price: -175 }] },
+        ] }],
+        market_groups: [{ key: 'team_totals', label: 'Team Totals', items: items }],
+    }, 'americanfootball_nfl', 'NFL');
+    const nflRows = readRows(nflBoard.split('<div class="sbn-ttteam">')[1]);
+    assert.deepStrictEqual(nflRows.map((r) => r.line), [12.5, 17.5, 20.5, 24.5],
+        'the whole football ladder renders, ascending');
+    assert.strictEqual(nflRows.filter((r) => r.main).length, 0,
+        'no rung is badged Main when the feed named none');
+}());
+
 function readRows(block) {
     const chunks = block.split('<div class="sbn-ttrow').slice(1);
     return chunks.map((row) => {

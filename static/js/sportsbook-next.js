@@ -217,6 +217,9 @@
                     playerTeam: i.player_team || null,
                     propLabel: i.prop_label || null,
                     marketType: i.market_type || i.market_key || grp.key,
+                    // ALT_TEAM_TOTALS_COVERAGE_20260907: which rung is the main
+                    // number is the backend's answer now, not a guess made here.
+                    mainLine: i.is_main_line === true,
                     displayOnly: i.display_only === true,
                     pickable: i.pickable !== false
                 };
@@ -900,9 +903,15 @@
             // mergeLadder already settled which book prices a rung, so the first
             // item for a side is the only one: never overwrite it here.
             if (!row[side]) row[side] = i;
-            // The main number is the first rung the feed prices on both sides.
-            // The alternates are hung off it by every book we read.
-            if (t.main == null && row.over && row.under) t.main = row.line;
+            /* ALT_TEAM_TOTALS_COVERAGE_20260907. This used to call the FIRST
+               two-sided rung in feed order the main number, which held only
+               while a club had one or two rungs. A club now carries the book's
+               whole ladder, ordered by line, so that rule would have pinned the
+               "Main" badge on the lowest rung of every game. The backend flags
+               the rung the book leads with, and only that rung is badged: a
+               ladder nobody posted a main number for shows none rather than a
+               wrong one. */
+            if (i.mainLine) t.main = row.line;
         });
         teams.forEach(function (t) {
             t.rows.sort(function (a, b) { return a.line - b.line; });
