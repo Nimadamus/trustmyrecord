@@ -762,7 +762,10 @@
       // The club's own colour, taken from its own logo: a blurred copy behind
       // the tile. Decorative and aria-hidden; if the logo will not resolve the
       // tile simply has no bloom.
-      var bloomUrl = (TL && typeof TL.url === 'function') ? TL.url(team) : null;
+      // urlLight, not url: the bloom is a colour wash, and the dark artwork
+      // whitens exactly the clubs whose colour this is meant to carry.
+      var bloomUrl = (TL && typeof TL.urlLight === 'function') ? TL.urlLight(team)
+        : ((TL && typeof TL.url === 'function') ? TL.url(team) : null);
       var bloom = bloomUrl
         ? '<img class="td-team-bloom" src="' + esc(bloomUrl) + '" alt="" aria-hidden="true" loading="eager">'
         : '';

@@ -238,7 +238,7 @@
           ' vs ' + esc((m.starters.home || 'TBD') + (m.starters.home_hand ? ' (' + m.starters.home_hand + ')' : '')));
       }
       function row(name, price) {
-        return '<span class="ts-mu-row">' + logo(name, 24) +
+        return '<span class="ts-mu-row">' + logo(name, 28) +
           '<span class="ts-mu-team">' + esc(name) + '</span>' +
           (price === null || price === undefined ? '' : '<span class="ts-mu-price">' + esc(signed(price)) + '</span>') +
           '</span>';

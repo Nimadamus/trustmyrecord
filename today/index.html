@@ -457,10 +457,12 @@
         background:linear-gradient(100deg, rgba(11, 79, 168,0.13), rgba(7,24,42,0.02) 62%);
         box-shadow:inset 0 1px 0 rgba(7,24,42,0.04), 0 0 30px rgba(7,24,42,0.04);
       }
-      .td-tl{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;
-             width:50px;height:50px;flex:0 0 50px;border-radius:13px;overflow:hidden;
+      /* Box and artwork come from the shared TeamLogo mark; this tile only
+         re-points the tokens. A hard width/height here would fight the mark's
+         max-width/max-height cap and squash the artwork. */
+      .td-tl{--tmr-tl-box:50px;--tmr-tl-art:40px;position:relative;z-index:1;
+             border-radius:13px;overflow:hidden;
              background:rgba(7,24,42,0.025);border:1px solid #D2DEEA}
-      .td-tl-img{width:40px;height:40px;object-fit:contain;display:block}
       .td-tl-fallback{display:none;font-size:14px;font-weight:900;color:var(--ink-2)}
       .td-tl.is-fallback .td-tl-fallback{display:block}
       .td-team-b{position:relative;z-index:1;flex:1 1 auto;min-width:0}
@@ -511,9 +513,9 @@
       }
       .td-g-ml.fav{color:var(--green);border-color:rgba(10,139,78,.28);background:rgba(10,139,78,0.1)}
       .td-g-ml.pending{color:var(--muted);font-size:10.5px;font-weight:800;letter-spacing:.05em;min-width:0}
-      .td-mu-l{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;
+      .td-mu-l{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
                border-radius:7px;background:rgba(7,24,42,0.025);overflow:hidden}
-      .td-mu-l-img{width:20px;height:20px;object-fit:contain;display:block}
+      .td-mu-l-img{width:24px;height:24px;object-fit:contain;display:block}
       .td-mu-l-fallback{display:none;font-size:9px;font-weight:900;color:var(--ink-2)}
       .td-mu-l.is-fallback .td-mu-l-fallback{display:block}
 
@@ -1019,8 +1021,9 @@
 </main>
 
 <script src="/static/js/config.js?v=738db2dd80a5"></script>
-<script src="/static/js/tmr-team-logo.js?v=a507f97b767c"></script>
-<script src="/static/js/today-card.js?v=a62a90e242ca"></script>
+<script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
+<script src="/static/js/tmr-team-logo.js?v=b22c284b0da5"></script>
+<script src="/static/js/today-card.js?v=bd16506869e9"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.0a3f72134d6b.js"></script>
   <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=df4043fd5769"></script>

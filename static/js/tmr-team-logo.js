@@ -170,8 +170,39 @@
     if (id) return 'https://a.espncdn.com/i/teamlogos/ncaa/' + kind + '/' + id + '.png';
     return null;
   }
-  function url(name) { return variant(name, '500-dark'); }
+  /* WHICH artwork, decided from the surface the page actually paints. TMR runs
+     dark pages (profile, homepage) and light ones (/today/, /trendspotter/) off
+     the same component: dark art on a light card is a white logo on white, and
+     light art on a dark table hides every navy club. So read the page's own
+     background once, at first use, and default to dark - the site default -
+     when nothing paints a colour. window.TMR_TL_ART forces it either way. */
+  var artKind = null;
+  function surfaceArt() {
+    if (artKind) return artKind;
+    var forced = window.TMR_TL_ART;
+    if (forced === '500' || forced === '500-dark') { artKind = forced; return artKind; }
+    var lum = null;
+    try {
+      var els = [document.body, document.documentElement];
+      for (var i = 0; i < els.length && lum === null; i++) {
+        if (!els[i]) continue;
+        var bg = window.getComputedStyle(els[i]).backgroundColor || '';
+        var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(bg);
+        // A transparent or near-transparent layer paints nothing: keep looking.
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+          lum = 0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3];
+        }
+      }
+    } catch (e) { /* no DOM yet */ }
+    var kind = (lum !== null && lum > 140) ? '500' : '500-dark';
+    // Only cache once there is a body to have measured; an early call must not
+    // freeze a guess for the life of the page.
+    try { if (document.body) artKind = kind; } catch (e) {}
+    return kind;
+  }
+  function url(name) { return variant(name, surfaceArt()); }
   function urlLight(name) { return variant(name, '500'); }
+  function urlDark(name) { return variant(name, '500-dark'); }
 
   /* One delegated capture listener instead of a second inline handler: the FIRST
      failure of a mark retries the light artwork and is stopped here, so the
@@ -244,7 +275,9 @@
     var u = url(name);
     var ini = '<span class="' + cls + '-fallback tmr-tl-mark-fb" aria-hidden="true">' + esc(initials(name)) + '</span>';
     if (!u) return '<span class="' + cls + ' tmr-tl-mark is-fallback">' + ini + '</span>';
-    var alt = urlLight(name);
+    // The retry is always the OTHER variant, so a surface that picked dark
+    // falls back to light and a light surface falls back to dark.
+    var alt = surfaceArt() === '500' ? urlDark(name) : urlLight(name);
     return '<span class="' + cls + ' tmr-tl-mark">' +
       '<img class="' + cls + '-img tmr-tl-mark-img" src="' + esc(u) + '" alt="" loading="lazy" ' +
       'data-tmr-tl-alt="' + esc(alt || '') + '" ' +
@@ -267,7 +300,7 @@
   }
 
   window.TMRTeamLogo = {
-    slugify: slugify, url: url, urlLight: urlLight, html: html, initials: initials,
+    slugify: slugify, url: url, urlLight: urlLight, urlDark: urlDark, html: html, initials: initials,
     leagueUrl: leagueUrl, league: league
   };
 })();
