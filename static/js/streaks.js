@@ -120,6 +120,23 @@
         return PERIOD_FALLBACK;
     }
 
+    /* Which segment of a fixture settles first, for the one case pick order used
+       to decide: two settlements of the SAME game whose keys tie because the
+       grader wrote them in one loop. A first-five leg is decided in the fifth
+       inning and the full game at the end of it. Mirrors PERIOD_RANK in
+       services/canonicalStreak.js. */
+    const PERIOD_RANK = {
+        first_inning: 10, period_1: 10, set_1: 10,
+        first_five: 20, first_half: 20, period_2: 20, set_2: 20,
+        period_3: 30, set_3: 30,
+        second_half: 40, period_4: 40,
+        full_game: 100
+    };
+
+    function periodRank(period) {
+        return PERIOD_RANK[period] == null ? 100 : PERIOD_RANK[period];
+    }
+
     function gameOf(pick) {
         return (pick && pick.game) || {};
     }
@@ -173,6 +190,7 @@
             timestamp: pickTimestamp(pick),
             groupKey: settlementGroupKey(pick, index),
             wagerKey: wagerKey(pick, index),
+            rank: periodRank(wagerPeriod(pick)),
             index: index
         };
     }
@@ -186,12 +204,20 @@
         for (const pick of ordered) {
             let group = map.get(pick.groupKey);
             if (!group) {
-                group = { key: pick.groupKey, timestamp: pick.timestamp, index: pick.index, wins: [], losses: [] };
+                group = {
+                    key: pick.groupKey, timestamp: null, index: pick.index,
+                    rank: pick.rank, wins: [], losses: []
+                };
                 map.set(pick.groupKey, group);
             }
-            if (pick.timestamp > group.timestamp) group.timestamp = pick.timestamp;
             const bucket = pick.status === 'won' ? group.wins : pick.status === 'lost' ? group.losses : null;
-            if (bucket && bucket.indexOf(pick.wagerKey) === -1) bucket.push(pick.wagerKey);
+            /* A PUSH DOES NOT TIME THE GROUP. It is not a result, so it cannot
+               move when the group settled - and the server's SQL never sees one,
+               because it selects only won/lost rows. */
+            if (bucket) {
+                if (group.timestamp == null || pick.timestamp > group.timestamp) group.timestamp = pick.timestamp;
+                if (bucket.indexOf(pick.wagerKey) === -1) bucket.push(pick.wagerKey);
+            }
         }
         const groups = [];
         map.forEach(function(group) {
@@ -202,6 +228,7 @@
                 key: group.key,
                 timestamp: group.timestamp,
                 index: group.index,
+                rank: group.rank,
                 wins: wins,
                 losses: losses,
                 status: wins && losses ? 'mixed' : (wins ? 'won' : 'lost'),
@@ -210,6 +237,7 @@
         });
         return groups.sort(function(a, b) {
             if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+            if (a.rank !== b.rank) return a.rank - b.rank;
             return a.index - b.index;
         });
     }
