@@ -763,6 +763,10 @@ class TrustMyRecordAPI {
         return this.request(`/models/${encodeURIComponent(id)}/untrack`, { method: 'POST' });
     }
 
+    async requestPublicModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/request-public`, { method: 'POST' });
+    }
+
     async setModelAutoScan(id, enabled) {
         return this.request(`/models/${encodeURIComponent(id)}/auto-scan`, {
             method: 'POST', body: { enabled: Boolean(enabled) },

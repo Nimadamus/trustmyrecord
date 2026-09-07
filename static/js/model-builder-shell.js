@@ -600,6 +600,7 @@
               + '<button type="button" data-act="scan" data-id="' + m.id + '" data-enable="'
               + (m.auto_scan === false ? '1' : '0') + '">'
               + (m.auto_scan === false ? 'Resume scanning' : 'Pause scanning') + '</button>'
+              + '<button type="button" data-act="publish" data-id="' + m.id + '">Submit for public listing</button>'
             : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
         + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
         + '</div></div>';
@@ -635,6 +636,19 @@
     el('selectionContains').value = f.selection_contains || '';
     setMessage('Loaded "' + m.name + '". Run backtest to see results.', 'ok');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Listing is a request, not a switch: an admin reviews it, and the public
+  // page only shows a model once its own positions have settled results.
+  async function requestPublic(id) {
+    try {
+      var res = await api().requestPublicModel(id);
+      setMessage((res && res.note)
+        || 'Submitted. It appears publicly only after an admin verifies it and its own positions have settled.', 'ok');
+      loadPublicTracked();
+    } catch (e) {
+      setMessage((e && e.message) || 'Could not submit for listing.', 'error');
+    }
   }
 
   // Pausing is the off switch that is not "delete it": open positions still
@@ -799,7 +813,7 @@
       var data = await api().getPublicTrackedModels();
       var models = (data && data.models) || [];
       if (!models.length) {
-        host.innerHTML = '<p class="placeholder">No publicly verified tracked models yet. Models appear here only after they accumulate real forward-tracked graded results and pass admin review.</p>';
+        host.innerHTML = '<p class="placeholder">No publicly listed models yet. A model appears here only once it has taken its own positions off the board, those positions have settled on final scores, and an admin has reviewed it. Submit one from its card above.</p>';
         return;
       }
       host.innerHTML = '<div class="model-list">' + models.map(function (m) {
@@ -808,7 +822,7 @@
           + '<div class="model-meta">' + esc(sportLabel(m.sport_key)) + (m.owner ? ' &middot; by ' + esc(m.owner) : '')
           + ' &middot; since ' + esc(String(m.tracked_from).slice(0, 10)) + '</div>'
           + '<div class="metric-grid" style="margin-top:10px">'
-          + metricTile('Record', s.record || '0-0', s.sample_size + ' picks')
+          + metricTile('Record', s.record || '0-0', s.sample_size + ' positions it took')
           + metricTile('Units', fmtUnits(s.net_units), '', signClass(s.net_units))
           + metricTile('ROI', s.roi == null ? '-' : s.roi.toFixed(2) + '%', '', signClass(s.roi))
           + '</div>'
@@ -1014,6 +1028,7 @@
       if (act === 'load' && model) { loadModelIntoForm(model); return; }
       if (act === 'forward') { viewForward(id); return; }
       if (act === 'scan') { toggleScan(id, b.getAttribute('data-enable') === '1'); return; }
+      if (act === 'publish') { requestPublic(id); return; }
       // Tracking and deleting are one-way, so they arm first and fire on the
       // second click. Same guard a confirm() gave, without the modal.
       if (act === 'track' || act === 'delete') {
