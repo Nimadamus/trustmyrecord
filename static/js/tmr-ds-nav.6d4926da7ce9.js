@@ -121,7 +121,12 @@
        generic hub and never /today/, so three lanes publishing on one morning
        cannot collapse onto whichever piece was newest. */
     ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
-    ['/tennis/', 'Tennis Hub'],
+    /* 'Tennis Hub' left this menu on 2026-09-08. The tennis section is no
+       longer a separate top-level destination: it moved into the Handicapping
+       Hub as /handicapping/tennis/ and is reached from the hub's sport tabs,
+       exactly like MLB, NFL, NBA and NHL. /tennis/ 301s there, nothing was
+       removed from the site. 'Tennis Matchup of the Day' above stays: that is
+       one featured matchup, not a section. */
     /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
        sport whose research hub is actually built, so every member who picked
        'Handicapping Hub' from this menu landed on a page whose only real

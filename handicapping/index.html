@@ -118,9 +118,27 @@
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<style>
+/* Handicapping Hub sport tabs. Added 2026-09-08 when the standalone Tennis Hub
+   at /tennis/ was folded into the Handicapping Hub as /handicapping/tennis/, so
+   every sport in the hub is reached the same way from inside the hub. */
+.hh-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+.hh-tabs .hh-tab{display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;border:1px solid rgba(148,163,184,0.22);background:rgba(255,255,255,0.04);color:#cfe0f0;text-decoration:none;font:800 0.82rem/1 "Barlow Condensed",sans-serif;letter-spacing:0.1em;text-transform:uppercase;transition:border-color .15s ease,background .15s ease,color .15s ease}
+.hh-tabs .hh-tab:hover{border-color:rgba(29,127,232,0.55);color:#f8fafc}
+.hh-tabs .hh-tab.is-active{background:#1D7FE8;border-color:#1D7FE8;color:#041014}
+</style>
 </head>
 <body class="tmr-ds tmr-site-shell">
     <main class="hh-shell">
+        <nav class="hh-tabs" aria-label="Handicapping Hub sports">
+        <a class="hh-tab is-active" href="/handicapping/" aria-current="page">All Sports</a>
+        <a class="hh-tab" href="/handicapping/nfl/">NFL</a>
+        <a class="hh-tab" href="/handicapping/mlb/">MLB</a>
+        <a class="hh-tab" href="/handicapping/nba/">NBA</a>
+        <a class="hh-tab" href="/handicapping/nhl/">NHL</a>
+        <a class="hh-tab" href="/handicapping/tennis/">Tennis</a>
+        </nav>
+
         <section class="hh-hero" aria-labelledby="hh-title">
             <span class="hh-kicker">Handicapping Hub</span>
             <h1 id="hh-title">Research every matchup before you make a pick.</h1>
@@ -161,7 +179,7 @@
         // flags which have a dedicated research sub-hub live today.
         var SPORTS = [
             { key: "baseball_mlb", name: "MLB", league: "Major League Baseball", icon: "⚾", built: true, href: "/handicapping/mlb/" },
-            { key: "tennis", name: "Tennis", league: "ATP & WTA tours", icon: "🎾", built: true, href: "/tennis/" },
+            { key: "tennis", name: "Tennis", league: "ATP & WTA tours", icon: "🎾", built: true, href: "/handicapping/tennis/" },
             { key: "basketball_nba_summer", name: "NBA Summer League", league: "Las Vegas Summer League", icon: "🏀", built: false },
             { key: "basketball_wnba", name: "WNBA", league: "Women's National Basketball", icon: "🏀", built: false },
             { key: "soccer", name: "Soccer", league: "Global leagues & cups", icon: "⚽", built: false },

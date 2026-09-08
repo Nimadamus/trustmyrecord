@@ -123,7 +123,12 @@
        the two above: /matchup-of-the-day/tennis/ bakes with the newest tennis Game
        File, /tennis/ is the section itself. */
     ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
-    ['/tennis/', 'Tennis Hub'],
+    /* 'Tennis Hub' left this menu on 2026-09-08. The tennis section is no
+       longer a separate top-level destination: it moved into the Handicapping
+       Hub as /handicapping/tennis/ and is reached from the hub's sport tabs,
+       exactly like MLB, NFL, NBA and NHL. /tennis/ 301s there, nothing was
+       removed from the site. 'Tennis Matchup of the Day' above stays: that is
+       one featured matchup, not a section. */
     /* Added 2026-09-08. The NFL Game of the Week lane shipped 2026-09-07 with a
        hub and its first deep dive, both live and both in the sitemap, and the only
        routes to it were a strip on /sportsbook/ and a callout on /handicapping/nfl/.
@@ -286,7 +291,7 @@
       /* Added 2026-09-07 with the Sportsbook menu entries. One destination, one
          wording sitewide: the footer takes the section's own name, Tennis; the
          menu keeps the two sport-scoped door labels. */
-      ['/tennis/', 'Tennis'],
+      ['/handicapping/tennis/', 'Tennis'],
       /* Added 2026-09-08 with the Sportsbook menu entry above. Same wording in
          both places, same destination, per the one-destination-one-wording rule. */
       ['/nfl-game-of-the-week/', 'NFL Game of the Week'],

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/handicapping/tennis/">
+    <title>Tennis Handicapping | Handicapping Hub | ATP &amp; WTA Matches, Odds, Rankings and Form | TrustMyRecord</title>
+    <meta name="description" content="Every ATP and WTA singles match on the board today, with the moneyline, the game handicap, the total and the set markets, next to each player's 2026 record, their record on this surface, their tiebreak and deciding set numbers, recent form and head to head.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Tennis | Handicapping Hub | TrustMyRecord">
+    <meta property="og:description" content="Today's ATP and WTA board with prices, surface splits, form and head to head. Rankings and season leaders, measured from every completed match of 2026.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/handicapping/tennis/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tn-bg: #06101f;
+            --tn-panel: rgba(15, 27, 46, 0.9);
+            --tn-panel-2: rgba(18, 31, 52, 0.96);
+            --tn-border: rgba(148, 163, 184, 0.18);
+            --tn-text: #f8fafc;
+            --tn-muted: #9aa8bc;
+            --tn-teal: #1D7FE8;
+            --tn-blue: #38bdf8;
+            --tn-gold: #d4a72c;
+            --tn-green: #22c55e;
+            --tn-red: #f87171;
+            --tn-clay: #d97757;
+            --tn-grass: #4ea45f;
+            --tn-hard: #3f83d6;
+        }
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(29, 127, 232, 0.14), transparent 34%),
+                radial-gradient(circle at 88% 6%, rgba(56, 189, 248, 0.12), transparent 30%),
+                linear-gradient(180deg, var(--tn-bg) 0%, #0b1220 100%);
+            color: var(--tn-text);
+            font-family: "Inter", system-ui, sans-serif;
+        }
+        .tn-shell { width: min(1200px, calc(100% - 32px)); margin: 0 auto; padding: 108px 0 72px; }
+        @media (max-width: 620px) { .tn-shell { padding-top: 92px; } }
+
+        .tn-hero {
+            background: linear-gradient(135deg, rgba(29, 127, 232, 0.12), rgba(56, 189, 248, 0.06));
+            border: 1px solid var(--tn-border);
+            border-radius: 20px;
+            padding: clamp(24px, 4vw, 44px);
+            margin-bottom: 30px;
+        }
+        .tn-kicker {
+            display: inline-block; margin: 0 0 12px;
+            font: 800 0.72rem/1 "Barlow Condensed", sans-serif;
+            letter-spacing: 0.18em; text-transform: uppercase; color: var(--tn-teal);
+        }
+        .tn-hero h1 {
+            margin: 0 0 14px; font: 800 clamp(1.9rem, 4vw, 3rem)/1.05 "Barlow Condensed", sans-serif;
+        }
+        .tn-hero p { margin: 0; max-width: 68ch; color: var(--tn-muted); font-size: 1.05rem; line-height: 1.55; }
+        .tn-hero p + p { margin-top: 12px; }
+
+        /* The eight players at the top of each tour, with their faces and their
+           season records. It is the first thing a tennis reader scans for, and
+           it says at a glance that this page knows the sport. */
+        .tn-top { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--tn-border); }
+        .tn-top-h { margin: 0 0 12px; font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-muted); }
+        .tn-top-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+        .tn-top-p { flex: none; width: 88px; text-align: center; text-decoration: none; color: inherit; }
+        .tn-top-p .tn-face { width: 64px; height: 64px; margin: 0 auto 7px; }
+        .tn-top-p b { display: block; font: 700 .78rem/1.25 "Inter", sans-serif; }
+        .tn-top-p span { display: block; margin-top: 2px; font-size: .72rem; color: var(--tn-muted); font-variant-numeric: tabular-nums; }
+
+        .tn-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; }
+        .tn-tab {
+            appearance: none; cursor: pointer;
+            background: var(--tn-panel); color: var(--tn-muted);
+            border: 1px solid var(--tn-border); border-radius: 999px;
+            padding: 9px 16px; font: 700 0.85rem/1 "Inter", sans-serif;
+        }
+        .tn-tab[aria-selected="true"] { background: var(--tn-teal); color: #04101f; border-color: transparent; }
+
+        .tn-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 30px 0 14px; }
+        .tn-section-head h2 { margin: 0; font: 800 1.4rem/1.1 "Barlow Condensed", sans-serif; letter-spacing: .02em; }
+        .tn-section-head p { margin: 0; color: var(--tn-muted); font-size: .88rem; }
+
+        .tn-event { margin-bottom: 26px; }
+        .tn-event h3 {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+            margin: 0 0 10px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--tn-border);
+            font: 800 1.05rem/1.2 "Barlow Condensed", sans-serif; letter-spacing: .03em;
+        }
+        .tn-event h3 em { font: 600 .74rem/1 "Inter", sans-serif; font-style: normal; color: var(--tn-muted); white-space: nowrap; }
+        .tn-card {
+            background: var(--tn-panel); border: 1px solid var(--tn-border);
+            border-radius: 16px; padding: 18px; margin-bottom: 14px;
+        }
+        .tn-matchhead { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .tn-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--tn-muted); font-size: .8rem; }
+        .tn-pill {
+            display: inline-block; padding: 3px 9px; border-radius: 999px;
+            border: 1px solid var(--tn-border); font: 700 .72rem/1.5 "Inter", sans-serif;
+            letter-spacing: .04em; text-transform: uppercase;
+        }
+        .tn-pill.hard { color: var(--tn-hard); border-color: rgba(63,131,214,.5); }
+        .tn-pill.clay { color: var(--tn-clay); border-color: rgba(217,119,87,.5); }
+        .tn-pill.grass { color: var(--tn-grass); border-color: rgba(78,164,95,.5); }
+        .tn-pill.live { color: var(--tn-gold); border-color: rgba(212,167,44,.55); }
+        .tn-pill.final { color: var(--tn-muted); }
+
+        .tn-players { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 760px) { .tn-players { grid-template-columns: 1fr; } }
+        .tn-player {
+            background: var(--tn-panel-2); border: 1px solid var(--tn-border);
+            border-radius: 12px; padding: 14px;
+        }
+        .tn-player.won { border-color: rgba(34,197,94,.45); }
+        .tn-pname { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+        .tn-pname b { font: 800 1.05rem/1.2 "Inter", sans-serif; }
+        .tn-pname .tn-flag { width: 22px; height: 15px; object-fit: cover; border-radius: 2px; flex: none; }
+        /* The player's face, with their initials behind it. The initials are
+           not a placeholder that flashes: they are what a player ESPN has never
+           photographed keeps, which on the Challenger circuit is most of them. */
+        .tn-face {
+            position: relative; flex: none;
+            width: 46px; height: 46px; border-radius: 50%;
+            background: linear-gradient(150deg, rgba(56,189,248,.22), rgba(29,127,232,.10));
+            border: 1px solid var(--tn-border);
+            display: grid; place-items: center; overflow: hidden;
+        }
+        .tn-face span { font: 800 .82rem/1 "Barlow Condensed", sans-serif; letter-spacing: .04em; color: var(--tn-muted); }
+        .tn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; background: #0d1726; }
+        .tn-face img[data-missing] { display: none; }
+        .tn-prank { color: var(--tn-muted); font-size: .78rem; margin-bottom: 10px; }
+        .tn-price { font: 800 1.35rem/1 "Barlow Condensed", sans-serif; color: var(--tn-blue); margin-bottom: 10px; }
+        .tn-price small { display: block; font: 600 .72rem/1.4 "Inter", sans-serif; color: var(--tn-muted); margin-top: 3px; }
+        .tn-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 12px; }
+        .tn-stat { display: flex; justify-content: space-between; gap: 8px; font-size: .8rem; border-bottom: 1px dashed rgba(148,163,184,.16); padding-bottom: 4px; }
+        .tn-stat span { color: var(--tn-muted); }
+        .tn-stat b { font-variant-numeric: tabular-nums; }
+        .tn-form { display: flex; gap: 3px; margin-top: 10px; flex-wrap: wrap; }
+        .tn-form i {
+            font-style: normal; width: 17px; height: 17px; border-radius: 4px;
+            display: grid; place-items: center; font-size: .62rem; font-weight: 800;
+            background: rgba(248,113,113,.18); color: var(--tn-red);
+        }
+        .tn-form i.w { background: rgba(34,197,94,.18); color: var(--tn-green); }
+
+        .tn-extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
+        .tn-box { background: rgba(9,18,33,.6); border: 1px solid var(--tn-border); border-radius: 10px; padding: 11px 12px; }
+        .tn-box h4 { margin: 0 0 7px; font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--tn-muted); }
+        .tn-box .row { display: flex; justify-content: space-between; gap: 10px; font-size: .82rem; padding: 2px 0; }
+        .tn-box .row b { font-variant-numeric: tabular-nums; }
+
+        table.tn-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+        .tn-scroll { overflow-x: auto; }
+        table.tn-table th, table.tn-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(148,163,184,.12); white-space: nowrap; }
+        table.tn-table th { color: var(--tn-muted); font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+        table.tn-table td b { font-variant-numeric: tabular-nums; }
+        .tn-up { color: var(--tn-green); }
+        .tn-down { color: var(--tn-red); }
+
+        /* Game Files list, added 2026-09-07. The section published seven tennis
+           Game Files with no link to any of them from the hub they belong to. */
+        .tn-gf { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+        .tn-gf-card { display: block; background: rgba(9,18,33,.6); border: 1px solid var(--tn-border); border-radius: 12px; padding: 14px 16px; text-decoration: none; color: inherit; }
+        .tn-gf-card:hover { border-color: rgba(53,224,203,.5); }
+        .tn-gf-card .k { display: block; font: 800 .68rem/1 "Inter", sans-serif; letter-spacing: .13em; text-transform: uppercase; color: var(--tn-muted); margin-bottom: 8px; }
+        .tn-gf-card h3 { margin: 0 0 7px; font: 800 1.02rem/1.3 "Inter", sans-serif; }
+        .tn-gf-card p { margin: 0; color: var(--tn-muted); font-size: .84rem; line-height: 1.5; }
+        .tn-gf-card .d { display: block; margin-top: 9px; font-size: .74rem; color: var(--tn-muted); font-variant-numeric: tabular-nums; }
+        .tn-note { background: rgba(9,18,33,.6); border: 1px solid var(--tn-border); border-radius: 12px; padding: 15px 17px; color: var(--tn-muted); font-size: .87rem; line-height: 1.6; margin-top: 20px; }
+        .tn-note b { color: var(--tn-text); }
+        .tn-note a { color: var(--tn-blue); font-weight: 700; text-decoration: none; }
+        .tn-empty { color: var(--tn-muted); padding: 26px 4px; }
+        .tn-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .tn-controls select, .tn-controls input {
+            background: var(--tn-panel-2); color: var(--tn-text);
+            border: 1px solid var(--tn-border); border-radius: 8px; padding: 7px 10px; font: 600 .82rem "Inter", sans-serif;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=460815f40ca2">
+<script defer src="/static/js/tmr-linkhub.js?v=21c69051f4b9"></script>
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<style>
+/* Handicapping Hub sport tabs. Added 2026-09-08 when the standalone Tennis Hub
+   at /tennis/ was folded into the Handicapping Hub as /handicapping/tennis/, so
+   every sport in the hub is reached the same way from inside the hub. */
+.hh-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+.hh-tabs .hh-tab{display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;border:1px solid rgba(148,163,184,0.22);background:rgba(255,255,255,0.04);color:#cfe0f0;text-decoration:none;font:800 0.82rem/1 "Barlow Condensed",sans-serif;letter-spacing:0.1em;text-transform:uppercase;transition:border-color .15s ease,background .15s ease,color .15s ease}
+.hh-tabs .hh-tab:hover{border-color:rgba(29,127,232,0.55);color:#f8fafc}
+.hh-tabs .hh-tab.is-active{background:#1D7FE8;border-color:#1D7FE8;color:#041014}
+</style>
+</head>
+<body class="tmr-ds tmr-site-shell">
+<main class="tn-shell">
+        <nav class="hh-tabs" aria-label="Handicapping Hub sports">
+        <a class="hh-tab" href="/handicapping/">All Sports</a>
+        <a class="hh-tab" href="/handicapping/nfl/">NFL</a>
+        <a class="hh-tab" href="/handicapping/mlb/">MLB</a>
+        <a class="hh-tab" href="/handicapping/nba/">NBA</a>
+        <a class="hh-tab" href="/handicapping/nhl/">NHL</a>
+        <a class="hh-tab is-active" href="/handicapping/tennis/" aria-current="page">Tennis</a>
+        </nav>
+
+    <section class="tn-hero" aria-labelledby="tn-title">
+        <span class="tn-kicker">Tennis Hub</span>
+        <h1 id="tn-title">Every ATP and WTA match, with the price and the record behind it.</h1>
+        <p>Today's singles board, both tours, with the moneyline, the game handicap, the total games line and the set markets that most books bury. Beside every price is what the season actually says: the win and loss record, the record on the surface being played on, games won, tiebreaks, deciding sets, the last ten matches and the head to head.</p>
+        <p>Every number on this page is counted from completed 2026 matches. Nothing is modelled, projected or estimated, and where a figure does not exist the space is left empty rather than filled.</p>
+        <div class="tn-top" id="tn-top" hidden>
+            <p class="tn-top-h">Top of the tour right now</p>
+            <div class="tn-top-row" id="tn-toprow"></div>
+        </div>
+        <div class="tn-tabs" role="tablist" aria-label="Sections">
+            <button class="tn-tab" role="tab" aria-selected="true" data-view="board">Today's board</button>
+            <button class="tn-tab" role="tab" aria-selected="false" data-view="rankings">Rankings</button>
+            <button class="tn-tab" role="tab" aria-selected="false" data-view="leaders">Season leaders</button>
+        </div>
+    </section>
+
+    <section id="tn-view-board">
+        <div class="tn-section-head">
+            <h2>The board</h2>
+            <div class="tn-controls">
+                <label class="tn-pill" for="tn-date" style="border:none;padding:0;color:var(--tn-muted)">Date</label>
+                <input type="date" id="tn-date">
+                <select id="tn-tour">
+                    <option value="">ATP and WTA</option>
+                    <option value="atp">ATP only</option>
+                    <option value="wta">WTA only</option>
+                </select>
+                <select id="tn-filter">
+                    <option value="priced">Matches with a price</option>
+                    <option value="all">Every match on the schedule</option>
+                    <option value="upcoming">Not started yet</option>
+                </select>
+            </div>
+        </div>
+        <p class="tn-section-head" style="margin-top:0"><span id="tn-boardmeta" style="color:var(--tn-muted);font-size:.85rem"></span></p>
+        <div id="tn-board"><p class="tn-empty">Loading the board.</p></div>
+    </section>
+
+    <section id="tn-view-rankings" hidden>
+        <div class="tn-section-head">
+            <h2>Rankings</h2>
+            <div class="tn-controls">
+                <select id="tn-ranktour">
+                    <option value="atp">ATP singles</option>
+                    <option value="wta">WTA singles</option>
+                </select>
+            </div>
+        </div>
+        <div class="tn-card tn-scroll" id="tn-rankings"><p class="tn-empty">Loading rankings.</p></div>
+    </section>
+
+    <section id="tn-view-leaders" hidden>
+        <div class="tn-section-head">
+            <h2>Season leaders</h2>
+            <div class="tn-controls">
+                <select id="tn-lmetric">
+                    <option value="wins">Match wins</option>
+                    <option value="win_pct">Match win percentage</option>
+                    <option value="game_win_pct">Share of games won</option>
+                    <option value="tiebreak_win_pct">Tiebreak win percentage</option>
+                    <option value="deciding_set_wins">Deciding sets won</option>
+                    <option value="straight_sets_wins">Straight sets wins</option>
+                    <option value="titles">Titles</option>
+                </select>
+                <select id="tn-ltour">
+                    <option value="">ATP and WTA</option>
+                    <option value="atp">ATP</option>
+                    <option value="wta">WTA</option>
+                </select>
+                <select id="tn-lsurface">
+                    <option value="">Every surface</option>
+                    <option value="Hard">Hard</option>
+                    <option value="Clay">Clay</option>
+                    <option value="Grass">Grass</option>
+                </select>
+            </div>
+        </div>
+        <div class="tn-card tn-scroll" id="tn-leaders"><p class="tn-empty">Loading leaders.</p></div>
+    </section>
+
+    <section id="tn-gamefiles">
+        <div class="tn-section-head">
+            <h2>Tennis Game Files</h2>
+            <p>Every full write up we have published on a tennis match. <a href="/tennis/rundown/">Today&rsquo;s rundown</a> &middot; <a href="/matchup-of-the-day/tennis/">Newest Game File</a></p>
+        </div>
+        <div class="tn-gf"><!--MK:tennisGameFiles--><a class="tn-gf-card" href="/matchup-of-the-day/barthel-ferro-one-closes-clean-one-grinds/"><span class="k">How they close</span><h3>Mona Barthel vs. Fiona Ferro</h3><p>Two players who win at different speeds meet in the Montreux first round, and the way each of them finishes a match is the whole story.</p><span class="d">Published September 8, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/michelsen-tiafoe-the-ranking-gap-decides-it/"><span class="k">The ranking gap</span><h3>Alex Michelsen vs. Frances Tiafoe</h3><p>We picked this one because the ranking gap between these two is enormous and the game by game numbers underneath it barely notice.</p><span class="d">Published September 8, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/lamens-day-the-games-say-something-else/"><span class="k">Games won</span><h3>Suzan Lamens vs. Kayla Day</h3><p>Two players sitting on the same fourteen wins, and the game share says one of them has been clearly the better player all season.</p><span class="d">Published September 7, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/alcaraz-shelton-the-games-say-something-else/"><span class="k">Games won</span><h3>Carlos Alcaraz vs. Ben Shelton</h3><p>We picked this one because the game level numbers, 60.6% for Alcaraz against 53.6% for Shelton, open a wider gap than the two match records suggest.</p><span class="d">Published September 6, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/noskova-sabalenka-the-hard-record-splits-them/"><span class="k">The surface split</span><h3>Linda Noskova vs. Aryna Sabalenka</h3><p>We picked this one because the surface split is enormous: Sabalenka&#x27;s hard court season and Noskova&#x27;s hard court season are not the same season, and this quarterfinal is on hard.</p><span class="d">Published September 6, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/zandschulp-gea-the-hard-record-splits-them/"><span class="k">The surface split</span><h3>Botic Van De Zandschulp vs. Arthur Gea</h3><p>Two men arrive in the second week with similar looking seasons and completely different hard court records, and the surface they are about to play on is the one that separates them.</p><span class="d">Published September 6, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/tien-khachanov-the-tiebreaks-favour-one-side/"><span class="k">Tiebreaks</span><h3>Learner Tien vs. Karen Khachanov</h3><p>We picked this one because a fourth round on Louis Armstrong tends to run long, and the two men walking out have had opposite seasons in the moments that end sets.</p><span class="d">Published September 6, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/qinwen-swiatek-the-hard-record-splits-them/"><span class="k">The surface split</span><h3>Zheng Qinwen vs. Iga Swiatek</h3><p>We picked this one because the fourth round in New York is played on the exact surface where these two seasons diverge most.</p><span class="d">Published September 6, 2026</span></a><a class="tn-gf-card" href="/matchup-of-the-day/tsitsipas-shelton-the-hard-record-splits-them/"><span class="k">The surface split</span><h3>Stefanos Tsitsipas vs. Ben Shelton</h3><p>Two players who look a division apart on hard courts meet at Arthur Ashe, and the surface record is doing most of the talking.</p><span class="d">Published September 6, 2026</span></a><!--/MK:tennisGameFiles--></div>
+    </section>
+
+    <div class="tn-note">
+        <b>Where these numbers come from.</b> Matches, draws, results and rankings are read from the ESPN tennis feed; prices are the tennis board TrustMyRecord already carries in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>. Surfaces come from the published ATP and WTA tour calendars. Records, surface splits, games, sets, tiebreaks, deciding sets and head to head are counted here from every completed singles match of the season.
+        <br><br>
+        <b>More markets.</b> Set betting, set handicaps, total sets, a player's own total games, and the serve, break and ace props come from Bovada and appear on a match when they carry it. The full boards are in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>.
+        <br><br>
+        <b>What is deliberately missing.</b> Serve and return statistics. Aces, first serve percentage, hold and break rates are not carried by the feed behind this page, so they are not published here rather than estimated. When a match has no price it is because the board has no market for it, usually a qualifying or lower tier event, and the card says so.
+        <br><br>
+        <b>Read the daily piece.</b> One tennis match gets a full write up every day: <a href="/matchup-of-the-day/tennis/">Tennis Matchup of the Day</a>.
+    </div>
+</main>
+
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script>
+(function () {
+    'use strict';
+    var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+
+    function esc(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function get(path) {
+        return fetch(API + path, { headers: { accept: 'application/json' } })
+            .then(function (r) { return r.json(); });
+    }
+    function rec(r) { return r ? r.wins + '-' + r.losses : ''; }
+    function pctOf(a, b) {
+        var t = (a || 0) + (b || 0);
+        return t ? (100 * a / t).toFixed(1) + '%' : '';
+    }
+    function american(v) {
+        if (v == null) return '';
+        return v > 0 ? '+' + v : String(v);
+    }
+    function localTime(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+    function todayLocal() {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    /* ------------------------------------------------------------- board -- */
+
+    function statRow(label, value) {
+        if (value == null || value === '') return '';
+        return '<div class="tn-stat"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
+    }
+
+    function playerBlock(p, market, side, surface, completed) {
+        var c = p.card;
+        var price = market && market.moneyline
+            ? american(side === 0 ? market.moneyline.a : market.moneyline.b) : null;
+        var novig = market && market.moneyline && market.moneyline.noVigA != null
+            ? (100 * (side === 0 ? market.moneyline.noVigA : market.moneyline.noVigB)).toFixed(1) + '%'
+            : null;
+        var initials = String(p.name || '').split(' ').map(function (w) { return w[0]; })
+            .join('').slice(0, 2).toUpperCase();
+        var shot = c && c.headshot ? c.headshot : null;
+        var html = '<div class="tn-player' + (completed && p.winner ? ' won' : '') + '">';
+        html += '<div class="tn-pname">';
+        html += '<span class="tn-face"><span>' + esc(initials) + '</span>'
+            + (shot ? '<img src="' + esc(shot) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async"'
+                + ' onerror=\"this.dataset.missing=1\">' : '')
+            + '</span>';
+        html += '<b>' + esc(p.name) + '</b>';
+        if (p.flag) html += '<img class="tn-flag" src="' + esc(p.flag) + '" alt="' + esc(p.country || '') + '" loading="lazy">';
+        html += '</div>';
+        var rankBits = [];
+        if (c && c.rank) rankBits.push('No. ' + c.rank);
+        if (p.country) rankBits.push(p.country);
+        if (c && c.titles) rankBits.push(c.titles + (c.titles === 1 ? ' title' : ' titles'));
+        html += '<div class="tn-prank">' + esc(rankBits.join(' · ') || 'Unranked') + '</div>';
+        if (price) {
+            html += '<div class="tn-price">' + esc(price)
+                + (novig ? '<small>' + esc(novig) + ' to win, vig removed</small>' : '') + '</div>';
+        }
+        if (c) {
+            html += '<div class="tn-stats">';
+            html += statRow('Season', rec(c.record));
+            if (c.surface_record) {
+                html += statRow(surface, rec(c.surface_record));
+            }
+            html += statRow('Games won', pctOf(c.games.won, c.games.lost));
+            html += statRow('Sets won', pctOf(c.sets.won, c.sets.lost));
+            html += statRow('Tiebreaks', c.tiebreaks.won + '-' + c.tiebreaks.lost);
+            html += statRow('Deciding sets', c.deciding_sets.wins + '-' + c.deciding_sets.losses);
+            html += '</div>';
+            if (c.form && c.form.matches.length) {
+                html += '<div class="tn-form" title="Last ten matches, most recent on the right">';
+                c.form.matches.forEach(function (m) {
+                    html += '<i class="' + (m.won ? 'w' : 'l') + '" title="'
+                        + esc((m.date || '').slice(0, 10) + ' ' + m.event + ' ' + m.round + ' vs ' + m.opponent + ' ' + m.sets)
+                        + '">' + (m.won ? 'W' : 'L') + '</i>';
+                });
+                html += '</div>';
+            }
+        } else {
+            html += '<div class="tn-prank">No completed matches recorded this season.</div>';
+        }
+        return html + '</div>';
+    }
+
+    function marketBox(m) {
+        if (!m) return '';
+        var rows = '';
+        if (m.gameSpread && m.gameSpread.pointA != null) {
+            rows += '<div class="row"><span>Game handicap</span><b>'
+                + esc((m.gameSpread.pointA > 0 ? '+' : '') + m.gameSpread.pointA) + ' / '
+                + esc((m.gameSpread.pointB > 0 ? '+' : '') + m.gameSpread.pointB) + '</b></div>';
+        }
+        if (m.total && m.total.point != null) {
+            rows += '<div class="row"><span>Total games</span><b>' + esc(m.total.point)
+                + ' (o ' + esc(american(m.total.over)) + ' / u ' + esc(american(m.total.under)) + ')</b></div>';
+        }
+        (m.sets || []).forEach(function (s) {
+            if (s.moneyline) {
+                rows += '<div class="row"><span>Set ' + s.set + '</span><b>'
+                    + esc(american(s.moneyline.a)) + ' / ' + esc(american(s.moneyline.b)) + '</b></div>';
+            }
+            if (s.total && s.total.point != null) {
+                rows += '<div class="row"><span>Set ' + s.set + ' games</span><b>' + esc(s.total.point) + '</b></div>';
+            }
+        });
+        if (!rows) return '';
+        return '<div class="tn-box"><h4>The rest of the market</h4>' + rows + '</div>';
+    }
+
+    /* Every extra market group the board carries, the same depth the sportsbook
+       shows. Bovada supplies set betting, set handicaps, total sets, per-player
+       total games and the serve, break and ace props; on a match it does not
+       carry, this simply renders nothing. */
+    function depthBoxes(m) {
+        var groups = (m.market && m.market.groups) || [];
+        if (!groups.length) return '';
+        return groups.map(function (g) {
+            var rows = g.items.slice(0, 6).map(function (it) {
+                return '<div class="row"><span>' + esc(it.selection) + '</span><b>'
+                    + esc(american(it.odds)) + '</b></div>';
+            }).join('');
+            var more = g.count > 6
+                ? '<div class="row"><span>' + (g.count - 6) + ' more in the sportsbook</span><b></b></div>'
+                : '';
+            return '<div class="tn-box"><h4>' + esc(g.label) + '</h4>' + rows + more + '</div>';
+        }).join('');
+    }
+
+    function h2hBox(h) {
+        if (!h) return '';
+        var rows = '<div class="row"><span>This season</span><b>' + esc(h.record) + '</b></div>';
+        Object.keys(h.by_surface || {}).forEach(function (s) {
+            var v = h.by_surface[s];
+            rows += '<div class="row"><span>On ' + esc(s.toLowerCase()) + '</span><b>' + v.wins + '-' + v.losses + '</b></div>';
+        });
+        if (h.last) {
+            rows += '<div class="row"><span>Last meeting</span><b>' + esc((h.last.date || '').slice(0, 10)) + '</b></div>';
+            rows += '<div class="row"><span>Won by</span><b>' + esc(h.last.winner) + '</b></div>';
+        }
+        return '<div class="tn-box"><h4>Head to head</h4>' + rows + '</div>';
+    }
+
+    function matchCard(m) {
+        var surfaceClass = (m.surface || '').toLowerCase();
+        var bits = '<span class="tn-pill ' + esc(surfaceClass) + '">' + esc(m.surface || 'Surface unlisted') + '</span>'
+            + '<span class="tn-pill">' + esc(m.tour.toUpperCase()) + '</span>';
+        if (m.completed) bits += '<span class="tn-pill final">Final</span>';
+        else if (m.status === 'STATUS_IN_PROGRESS') bits += '<span class="tn-pill live">In progress</span>';
+
+        var meta = [m.event, m.round];
+        if (m.court) meta.push(m.court);
+        if (m.best_of) meta.push('best of ' + m.best_of);
+        if (!m.completed && m.start_utc) meta.push(localTime(m.start_utc));
+
+        var html = '<article class="tn-card">';
+        html += '<div class="tn-matchhead"><div class="tn-meta">' + bits
+            + '<span>' + esc(meta.filter(Boolean).join(' · ')) + '</span></div></div>';
+        html += '<div class="tn-players">'
+            + playerBlock(m.players[0], m.market, 0, m.surface, m.completed)
+            + playerBlock(m.players[1], m.market, 1, m.surface, m.completed)
+            + '</div>';
+        var extras = marketBox(m.market) + h2hBox(m.head_to_head) + depthBoxes(m);
+        if (m.completed && m.result) {
+            extras += '<div class="tn-box"><h4>Result</h4><div class="row"><span>' + esc(m.result) + '</span></div></div>';
+        }
+        if (!m.market && !m.completed) {
+            extras += '<div class="tn-box"><h4>No price</h4><div class="row"><span>'
+                + esc(m.market_note || 'the board carries no market for this match') + '</span></div></div>';
+        }
+        if (extras) html += '<div class="tn-extra">' + extras + '</div>';
+        return html + '</article>';
+    }
+
+    var boardState = { data: null };
+
+    function renderBoard() {
+        var host = document.getElementById('tn-board');
+        var d = boardState.data;
+        if (!d || !d.ok) {
+            host.innerHTML = '<p class="tn-empty">The tennis feed did not answer. Reload in a moment.</p>';
+            return;
+        }
+        var tour = document.getElementById('tn-tour').value;
+        var mode = document.getElementById('tn-filter').value;
+        var rows = d.matches.filter(function (m) {
+            if (tour && m.tour !== tour) return false;
+            if (mode === 'priced') return Boolean(m.market);
+            if (mode === 'upcoming') return !m.completed;
+            return true;
+        });
+        document.getElementById('tn-boardmeta').textContent =
+            rows.length + ' of ' + d.count + ' singles matches on ' + d.date
+            + (d.sources && d.sources.season_built_at ? ' · season counted through ' + d.sources.season_built_at.slice(0, 10) : '');
+        if (!rows.length) {
+            host.innerHTML = '<p class="tn-empty">Nothing matches that filter on this date.</p>';
+            return;
+        }
+        /* Grouped by tournament. A hundred and twenty matches in one flat list
+           is a wall; the same hundred and twenty under the events they belong
+           to is a calendar, which is what a reader is actually reading. */
+        var order = [];
+        var groups = {};
+        rows.forEach(function (m) {
+            var key = m.event || 'Tennis';
+            if (!groups[key]) { groups[key] = []; order.push(key); }
+            groups[key].push(m);
+        });
+        host.innerHTML = order.map(function (key) {
+            var list = groups[key];
+            var surf = (list[0].surface || '').toLowerCase();
+            return '<div class="tn-event"><h3>' + esc(key)
+                + '<em>' + list.length + (list.length === 1 ? ' match' : ' matches')
+                + (surf ? ' · ' + esc(list[0].surface) : '') + '</em></h3>'
+                + list.map(matchCard).join('') + '</div>';
+        }).join('');
+    }
+
+    function nextDay(iso) {
+        var d = new Date(iso + 'T12:00:00Z');
+        d.setUTCDate(d.getUTCDate() + 1);
+        return d.toISOString().slice(0, 10);
+    }
+
+    /* ROLL FORWARD WHEN TODAY IS OVER.
+       A reader arriving late in the evening was landing on a date whose matches
+       had all finished, and the default filter is "matches with a price", so the
+       board read as empty when the tour had a full card the next morning. One
+       automatic step forward, once, and the date field says which day is being
+       shown. */
+    function loadBoard(opts) {
+        var rolled = opts && opts.rolled;
+        var date = document.getElementById('tn-date').value;
+        document.getElementById('tn-board').innerHTML = '<p class="tn-empty">Loading the board.</p>';
+        get('/tennis/slate' + (date ? '?date=' + encodeURIComponent(date) : ''))
+            .then(function (d) {
+                var playable = (d.matches || []).filter(function (m) { return m.market && !m.completed; });
+                if (!rolled && date && !playable.length) {
+                    document.getElementById('tn-date').value = nextDay(date);
+                    return loadBoard({ rolled: true });
+                }
+                boardState.data = d;
+                renderBoard();
+                return null;
+            })
+            .catch(function () {
+                document.getElementById('tn-board').innerHTML =
+                    '<p class="tn-empty">The tennis feed did not answer. Reload in a moment.</p>';
+            });
+    }
+
+    /* --------------------------------------------------------- rankings -- */
+
+    function loadRankings() {
+        var tour = document.getElementById('tn-ranktour').value;
+        var host = document.getElementById('tn-rankings');
+        host.innerHTML = '<p class="tn-empty">Loading rankings.</p>';
+        get('/tennis/rankings?limit=100&tour=' + encodeURIComponent(tour)).then(function (d) {
+            if (!d.ok || !d.rows.length) { host.innerHTML = '<p class="tn-empty">No rankings returned.</p>'; return; }
+            var html = '<table class="tn-table"><thead><tr><th>#</th><th>Move</th><th>Player</th><th>Points</th>'
+                + '<th>2026</th><th>Hard</th><th>Clay</th><th>Grass</th><th>Titles</th></tr></thead><tbody>';
+            d.rows.forEach(function (r) {
+                var move = r.move == null || r.move === 0 ? '—'
+                    : (r.move > 0 ? '<span class="tn-up">▲ ' + r.move + '</span>' : '<span class="tn-down">▼ ' + Math.abs(r.move) + '</span>');
+                var s = r.surfaces || {};
+                html += '<tr><td><b>' + r.rank + '</b></td><td>' + move + '</td>'
+                    + '<td>' + (r.flag ? '<img src="' + esc(r.flag) + '" alt="" style="width:18px;height:12px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:6px">' : '')
+                    + esc(r.name) + '</td>'
+                    + '<td><b>' + (r.points == null ? '' : r.points) + '</b></td>'
+                    + '<td><b>' + esc(rec(r.record)) + '</b></td>'
+                    + '<td>' + esc(s.Hard ? s.Hard.wins + '-' + s.Hard.losses : '') + '</td>'
+                    + '<td>' + esc(s.Clay ? s.Clay.wins + '-' + s.Clay.losses : '') + '</td>'
+                    + '<td>' + esc(s.Grass ? s.Grass.wins + '-' + s.Grass.losses : '') + '</td>'
+                    + '<td>' + (r.titles == null ? '' : r.titles) + '</td></tr>';
+            });
+            host.innerHTML = html + '</tbody></table>';
+        }).catch(function () { host.innerHTML = '<p class="tn-empty">Rankings did not load.</p>'; });
+    }
+
+    /* ---------------------------------------------------------- leaders -- */
+
+    function loadLeaders() {
+        var metric = document.getElementById('tn-lmetric').value;
+        var tour = document.getElementById('tn-ltour').value;
+        var surface = document.getElementById('tn-lsurface').value;
+        var host = document.getElementById('tn-leaders');
+        host.innerHTML = '<p class="tn-empty">Loading leaders.</p>';
+        var q = '/tennis/leaders?limit=25&metric=' + encodeURIComponent(metric)
+            + (tour ? '&tour=' + encodeURIComponent(tour) : '')
+            + (surface ? '&surface=' + encodeURIComponent(surface) : '');
+        get(q).then(function (d) {
+            if (!d.ok) {
+                host.innerHTML = '<p class="tn-empty">'
+                    + esc(surface ? 'On a single surface only match wins and win percentage are measured.' : 'That leaderboard is not available.')
+                    + '</p>';
+                return;
+            }
+            if (!d.rows.length) { host.innerHTML = '<p class="tn-empty">Nobody clears the minimum sample for that split yet.</p>'; return; }
+            var html = '<table class="tn-table"><thead><tr><th>#</th><th>Player</th><th>Tour</th><th>Rank</th><th>Value</th><th>Record</th></tr></thead><tbody>';
+            d.rows.forEach(function (r, i) {
+                html += '<tr><td>' + (i + 1) + '</td>'
+                    + '<td>' + (r.flag ? '<img src="' + esc(r.flag) + '" alt="" style="width:18px;height:12px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:6px">' : '')
+                    + esc(r.name) + '</td>'
+                    + '<td>' + esc(r.tour.toUpperCase()) + '</td>'
+                    + '<td>' + (r.rank == null ? '' : 'No. ' + r.rank) + '</td>'
+                    + '<td><b>' + esc(r.display) + '</b></td>'
+                    + '<td>' + esc(r.record) + '</td></tr>';
+            });
+            host.innerHTML = html + '</tbody></table>';
+        }).catch(function () { host.innerHTML = '<p class="tn-empty">Leaders did not load.</p>'; });
+    }
+
+    /* ------------------------------------------------------------- wiring */
+
+    var loaded = { rankings: false, leaders: false };
+    document.querySelectorAll('.tn-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var view = tab.getAttribute('data-view');
+            document.querySelectorAll('.tn-tab').forEach(function (t) {
+                t.setAttribute('aria-selected', String(t === tab));
+            });
+            ['board', 'rankings', 'leaders'].forEach(function (v) {
+                document.getElementById('tn-view-' + v).hidden = (v !== view);
+            });
+            if (view === 'rankings' && !loaded.rankings) { loaded.rankings = true; loadRankings(); }
+            if (view === 'leaders' && !loaded.leaders) { loaded.leaders = true; loadLeaders(); }
+        });
+    });
+
+    /* The top of both tours, faces first. Two calls, once, and the strip stays
+       hidden rather than showing an empty rail if either does not answer. */
+    function loadTopPlayers() {
+        Promise.all([get('/tennis/rankings?tour=atp&limit=6'), get('/tennis/rankings?tour=wta&limit=6')])
+            .then(function (res) {
+                var rows = [];
+                res.forEach(function (d) { if (d && d.ok) rows = rows.concat(d.rows.slice(0, 6)); });
+                if (!rows.length) return;
+                var host = document.getElementById('tn-toprow');
+                host.innerHTML = rows.map(function (r) {
+                    var initials = String(r.name || '').split(' ').map(function (w) { return w[0]; })
+                        .join('').slice(0, 2).toUpperCase();
+                    var rec = r.record ? r.record.wins + '-' + r.record.losses : '';
+                    return '<a class="tn-top-p" href="/sportsbook/?sport=Tennis">'
+                        + '<span class="tn-face"><span>' + esc(initials) + '</span>'
+                        + '<img src="https://a.espncdn.com/i/headshots/tennis/players/full/' + esc(r.id) + '.png"'
+                        + ' alt="' + esc(r.name) + '" loading="lazy" decoding="async"'
+                        + ' onerror=\"this.dataset.missing=1\"></span>'
+                        + '<b>' + esc(r.name) + '</b>'
+                        + '<span>' + esc(r.tour ? r.tour.toUpperCase() + ' ' : '') + 'No. ' + esc(r.rank) + (rec ? ' · ' + esc(rec) : '') + '</span>'
+                        + '</a>';
+                }).join('');
+                document.getElementById('tn-top').hidden = false;
+            })
+            .catch(function () { /* the strip is a flourish, never a blocker */ });
+    }
+
+    document.getElementById('tn-date').value = todayLocal();
+    document.getElementById('tn-date').addEventListener('change', function () {
+        /* A date somebody chose is the date they get, empty or not. */
+        loadBoard({ rolled: true });
+    });
+    document.getElementById('tn-tour').addEventListener('change', renderBoard);
+    document.getElementById('tn-filter').addEventListener('change', renderBoard);
+    document.getElementById('tn-ranktour').addEventListener('change', loadRankings);
+    ['tn-lmetric', 'tn-ltour', 'tn-lsurface'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', loadLeaders);
+    });
+
+    loadBoard();
+    loadTopPlayers();
+})();
+</script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.e6bc3a1e8b3a.js"></script>
+    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+</body>
+</html>

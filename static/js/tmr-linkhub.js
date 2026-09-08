@@ -237,7 +237,6 @@
             ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
             ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
             ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
-            ['/tennis/', 'Tennis Hub'],
             ['/handicapping/mlb/', 'MLB Matchups Today'],
             ['/handicapping/', 'Handicapping Hub'],
             ['/my-record/', 'My record'],

@@ -1845,7 +1845,7 @@ def main():
         # reachable only from the all-sports archive, which is sorted by date and
         # mixes three sports, so from inside the tennis section they did not exist.
         # One entry per sport hub: add the path and the marker and the list fills.
-        SPORT_HUBS = {"tennis": (os.path.join(ROOT, "tennis", "index.html"),
+        SPORT_HUBS = {"tennis": (os.path.join(ROOT, "handicapping", "tennis", "index.html"),
                                  "tennisGameFiles")}
         for hub_sport, (hub_file, hub_marker) in sorted(SPORT_HUBS.items()):
             if not os.path.exists(hub_file):

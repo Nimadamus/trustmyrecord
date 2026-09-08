@@ -123,7 +123,12 @@
        the two above: /matchup-of-the-day/tennis/ bakes with the newest tennis Game
        File, /tennis/ is the section itself. */
     ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
-    ['/tennis/', 'Tennis Hub'],
+    /* 'Tennis Hub' left this menu on 2026-09-08. The tennis section is no
+       longer a separate top-level destination: it moved into the Handicapping
+       Hub as /handicapping/tennis/ and is reached from the hub's sport tabs,
+       exactly like MLB, NFL, NBA and NHL. /tennis/ 301s there, nothing was
+       removed from the site. 'Tennis Matchup of the Day' above stays: that is
+       one featured matchup, not a section. */
     /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
        sport whose research hub is actually built, so every member who picked
        'Handicapping Hub' from this menu landed on a page whose only real
@@ -279,7 +284,7 @@
       /* Added 2026-09-07 with the Sportsbook menu entries. One destination, one
          wording sitewide: the footer takes the section's own name, Tennis; the
          menu keeps the two sport-scoped door labels. */
-      ['/tennis/', 'Tennis'],
+      ['/handicapping/tennis/', 'Tennis'],
       /* Sitewide crawlable entry for the video-game vertical, added
          2026-08-27 alongside the Sports Gaming dropdown. */
       ['/online-gaming/', 'Online Gaming'],

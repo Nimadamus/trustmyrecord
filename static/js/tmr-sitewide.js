@@ -25,7 +25,6 @@
         // doors; a menu that lists two of the three lanes is the bug this
         // comment exists to stop.
         ["/matchup-of-the-day/tennis/", "Tennis Matchup of the Day"],
-        ["/tennis/", "Tennis Hub"],
         ["/handicapping/", "Handicapping Hub"]
     ];
     // Kept in sync with static/js/tmr-ds-nav.js's route tables so every page
