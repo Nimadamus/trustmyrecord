@@ -445,7 +445,7 @@
     function logoMark(name, cls) {
       cls = cls || 'td-tl';
       if (TL && typeof TL.html === 'function') return TL.html(name, { className: cls });
-      return '<span class="' + cls + ' is-fallback"><span class="' + cls + '-fallback">?</span></span>';
+      return '';
     }
     function leagueOf(name) {
       return (TL && typeof TL.league === 'function') ? TL.league(name) : null;

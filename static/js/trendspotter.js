@@ -86,10 +86,11 @@
   function logo(name, size) {
     if (window.TMRTeamLogo && window.TMRTeamLogo.url) {
       var url = window.TMRTeamLogo.url(name);
-      if (url) return '<img src="' + esc(url) + '" alt="" width="' + size + '" height="' + size + '" loading="lazy">';
+      if (url) return '<img src="' + esc(url) + '" alt="" width="' + size + '" height="' + size + '" loading="lazy" ' +
+        'onerror="if(this.parentNode){this.parentNode.removeChild(this);}">';
     }
-    var initials = String(name || '').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(-3).toUpperCase();
-    return '<span class="ts-mu-fallback" aria-hidden="true">' + esc(initials) + '</span>';
+    // No artwork: show nothing. The team name beside this stands on its own.
+    return '';
   }
 
   function signed(n) { return Number(n) > 0 ? '+' + n : String(n); }

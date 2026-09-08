@@ -218,9 +218,12 @@
     }
 
     function logoImg(url, abbr) {
-        if (!url) return '<span class="simv2-logo-fallback">' + esc(abbr || '?') + '</span>';
+        // NO_LOGO_NO_PLACEHOLDER_20260907: no artwork means no mark, never a
+        // letter block. The team name beside it stands on its own.
+        void abbr;
+        if (!url) return '';
         return '<img class="simv2-g-logo" src="' + esc(url) + '" alt="" loading="lazy" width="30" height="30" ' +
-            'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'simv2-logo-fallback\',textContent:\'' + esc(abbr || '?') + '\'}))">';
+            'onerror="if(this.parentNode){this.parentNode.removeChild(this);}">';
     }
 
     function selectByLabel(sel, name) {

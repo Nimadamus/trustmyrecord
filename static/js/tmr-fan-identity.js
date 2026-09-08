@@ -73,19 +73,20 @@
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
-  // Reusable team-logo mark: real logo with graceful initials fallback.
+  // Reusable team-logo mark: the real logo, or nothing at all. A club or
+  // country with no artwork shows its NAME alone - no initials, no badge, no
+  // empty bed - so the chip closes up instead of reserving a hole.
   // Used by every team chip so it stays consistent across profile/public/edit views.
   function teamLogoHtml(name, catalog) {
     if (window.TMRTeamLogo && typeof window.TMRTeamLogo.html === 'function') {
       return window.TMRTeamLogo.html(name, { className: 'tmr-fi-logo' });
     }
     var url = logoForName(name, catalog);
-    var initials = '<span class="tmr-fi-logo-fallback" aria-hidden="true">' + esc(initialsFor(name)) + '</span>';
-    if (!url) return '<span class="tmr-fi-logo is-fallback">' + initials + '</span>';
+    if (!url) return '';
     return '<span class="tmr-fi-logo">' +
       '<img class="tmr-fi-logo-img" src="' + esc(url) + '" alt="" loading="lazy" ' +
-      'onerror="this.style.display=\'none\';this.parentNode.classList.add(\'is-fallback\');" />' +
-      initials + '</span>';
+      'onerror="var m=this.parentNode;if(m&&m.parentNode){m.parentNode.removeChild(m);}" />' +
+      '</span>';
   }
 
   function isOwner(p) {
@@ -109,16 +110,21 @@
   function chipHtml(name, catalog, kind, listKey, idx, editable) {
     var lbl = sportLabelForName(name, catalog);
     var sportBadge = lbl ? '<span class="tmr-fi-chip-sport">' + esc(lbl) + '</span>' : '';
+    var mark = teamLogoHtml(name, catalog);
+    /* The chip's 6px left padding only exists to sit flush against the round
+       logo bed. With no logo there is nothing to hug, so the name gets the
+       normal 12px inset instead of starting hard against the chip edge. */
+    var cls = 'tmr-fi-chip is-' + kind + (mark ? '' : ' has-no-logo');
     var inner =
-      teamLogoHtml(name, catalog) +
+      mark +
       '<span class="tmr-fi-chip-name">' + esc(name) + '</span>' + sportBadge +
       (editable ? '<button type="button" class="tmr-fi-chip-x" data-list="' + listKey + '" data-i="' + idx + '" aria-label="Remove ' + esc(name) + '">&times;</button>' : '');
     if (editable) {
-      return '<span class="tmr-fi-chip is-' + kind + '">' + inner + '</span>';
+      return '<span class="' + cls + '">' + inner + '</span>';
     }
     var href = teamHref(name, catalog);
-    if (href) return '<a class="tmr-fi-chip is-' + kind + '" href="' + href + '">' + inner + '</a>';
-    return '<span class="tmr-fi-chip is-' + kind + '">' + inner + '</span>';
+    if (href) return '<a class="' + cls + '" href="' + href + '">' + inner + '</a>';
+    return '<span class="' + cls + '">' + inner + '</span>';
   }
 
   function columnHtml(title, icon, kind, names, catalog, editable, emptyText) {
@@ -478,6 +484,7 @@
       '.tmr-fi-count{background:rgba(255,255,255,.07);color:#aab2c6;border-radius:20px;min-width:20px;text-align:center;padding:1px 7px;font-size:11px}',
       '.tmr-fi-chips{display:flex;flex-wrap:wrap;gap:8px}',
       '.tmr-fi-chip{display:inline-flex;align-items:center;gap:9px;padding:5px 12px 5px 6px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;line-height:1.1}',
+      '.tmr-fi-chip.has-no-logo{padding-left:12px}',
       'a.tmr-fi-chip:hover{filter:brightness(1.12)}',
       '.tmr-fi-chip.is-fav{background:rgba(0,174,255,.12);border:1px solid rgba(0,174,255,.4);color:#7cd4ff}',
       '.tmr-fi-chip.is-rival{background:rgba(255,77,90,.12);border:1px solid rgba(255,77,90,.4);color:#ff8e97}',

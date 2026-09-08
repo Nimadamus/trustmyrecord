@@ -664,15 +664,16 @@
         if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
         return (parts[parts.length - 2].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
     }
+    /* NO_LOGO_NO_PLACEHOLDER_20260907: a club, country or player with no crest
+       gets NOTHING - no initials badge, no empty 26px box. The crest is a flex
+       item beside the name, so removing it closes the gap and the name simply
+       starts at the left edge of its cell. */
     function crest(team) {
         var api = sportMeta(state.sport).api;
         var url = crestUrl(api, team);
-        if (url) {
-            return '<img class="sbn-crest" src="' + url + '" alt="" loading="lazy" ' +
-                'onerror="this.replaceWith(Object.assign(document.createElement(&#39;span&#39;),{className:&#39;sbn-crest sbn-crest--fb&#39;,textContent:this.getAttribute(&#39;data-i&#39;)||&#39;&#39;}))" ' +
-                'data-i="' + esc(initials(team)) + '">';
-        }
-        return '<span class="sbn-crest sbn-crest--fb">' + esc(initials(team)) + '</span>';
+        if (!url) return '';
+        return '<img class="sbn-crest" src="' + url + '" alt="" loading="lazy" ' +
+            'onerror="if(this.parentNode){this.parentNode.removeChild(this);}">';
     }
     // The generated map (sportsbook-next-logos.js) covers every league; the small
     // hand map below stays as a fallback if that file ever fails to load.

@@ -2872,17 +2872,16 @@
     function renderTeamLogo(teamName, sportKey, suppliedLogo, abbr) {
         const initials = initialsForTeam(teamName, abbr);
         const logoUrl = resolveTeamLogo(teamName, sportKey, suppliedLogo);
-        const initialsHtml = '<span class="team-logo__initials tmr-team-logo-initials">' + escapeHtml(initials) + '</span>';
+        void initials;
 
-        // Protected sportsbook logo system: render through the canonical map first,
-        // then fall back to a clean initials badge. Do not remove during UI edits.
-        if (!logoUrl) {
-            return '<span class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + initialsHtml + '</span>';
-        }
+        // Protected sportsbook logo system: render through the canonical map first.
+        // NO_LOGO_NO_PLACEHOLDER_20260907: when there is no real artwork the mark
+        // is omitted entirely - no initials badge, no empty box - so the team name
+        // stands alone and closes up against its own cell edge.
+        if (!logoUrl) return '';
 
         return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true">' +
-            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" data-tmr-logo-src="' + escapeHtml(logoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">' +
-            initialsHtml +
+            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" data-tmr-logo-src="' + escapeHtml(logoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="var b=this.parentElement;if(b&&b.parentNode){b.parentNode.removeChild(b);}">' +
             '</span>';
     }
 

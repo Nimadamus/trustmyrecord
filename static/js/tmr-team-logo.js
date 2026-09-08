@@ -1,5 +1,6 @@
 /* TrustMyRecord - shared TeamLogo helper (single source of truth).
- * window.TMRTeamLogo.html(name, {className}) -> logo mark with initials fallback.
+ * window.TMRTeamLogo.html(name, {className}) -> logo mark, or '' when there is
+ * no real artwork (no badge, no initials, no empty box).
  * Self-contained: team name -> slug -> ESPN CDN logo. No network needed.
  * Used by the profile header affiliation chips AND the fan-identity favorite/
  * rival chips so the logo logic is never duplicated.
@@ -154,7 +155,7 @@
      Cowboys, Duke, Texas) almost completely at row size. Same convention the
      Game File logo pipeline already uses. All 127 pro marks and a 60-school
      college sample were HEAD-checked at 200 before this switched over, and a
-     miss still falls back to the light mark before the initials badge. */
+     miss still falls back to the light mark before the mark is dropped. */
   function variant(name, kind) {
     var slug = slugify(name);
     var ref = ABBR[slug];
@@ -164,7 +165,7 @@
     }
     /* College: the same artwork the Game File pipeline bakes, from the generated
        slug -> team id map. That file is optional - a page that does not load it
-       just gets the standardised initials badge, exactly as before. */
+       just shows the club name on its own, with no mark at all. */
     var cat = window.TMRTeamLogoCatalog;
     var id = cat && Object.prototype.hasOwnProperty.call(cat, slug) ? cat[slug] : null;
     if (id) return 'https://a.espncdn.com/i/teamlogos/ncaa/' + kind + '/' + id + '.png';
@@ -255,6 +256,10 @@
        view that re-points a token on its own mark still wins on small screens. */
     '@media (max-width:640px){.tmr-tl-mark{--tmr-tl-box:30px;--tmr-tl-art:25px}}'
   ].join('');
+  /* Both artwork variants failed: take the whole mark out of the DOM so the
+     row is left with the name alone, no reserved box and no badge. */
+  var REMOVE_MARK = 'var m=this.parentNode;if(m&&m.parentNode){m.parentNode.removeChild(m);}';
+
   function injectCss() {
     try {
       var d = document;
@@ -273,16 +278,19 @@
     opts = opts || {};
     var cls = opts.className || 'tmr-tl';
     var u = url(name);
-    var ini = '<span class="' + cls + '-fallback tmr-tl-mark-fb" aria-hidden="true">' + esc(initials(name)) + '</span>';
-    if (!u) return '<span class="' + cls + ' tmr-tl-mark is-fallback">' + ini + '</span>';
+    /* NO_LOGO_NO_PLACEHOLDER_20260907: a club or country with no artwork gets
+       NOTHING back - no initials badge, no empty bed, not even a sized box. An
+       empty string is not a flex item, so it cannot earn a gap either, and the
+       name closes up naturally against whatever sits beside it. */
+    if (!u) return '';
     // The retry is always the OTHER variant, so a surface that picked dark
     // falls back to light and a light surface falls back to dark.
     var alt = surfaceArt() === '500' ? urlDark(name) : urlLight(name);
     return '<span class="' + cls + ' tmr-tl-mark">' +
       '<img class="' + cls + '-img tmr-tl-mark-img" src="' + esc(u) + '" alt="" loading="lazy" ' +
       'data-tmr-tl-alt="' + esc(alt || '') + '" ' +
-      'onerror="this.style.display=\'none\';this.parentNode.classList.add(\'is-fallback\');" />' +
-      ini + '</span>';
+      'onerror="' + REMOVE_MARK + '" />' +
+      '</span>';
   }
   // League badge logo for sport chips (NFL/MLB/NBA/NHL); null otherwise.
   var LEAGUES = { nfl: 1, mlb: 1, nba: 1, nhl: 1 };

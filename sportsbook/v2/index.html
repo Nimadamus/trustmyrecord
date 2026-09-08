@@ -998,15 +998,15 @@
             // "Los Angeles Chargers"): both city initials, then the nickname's.
             else initials = (parts[0][0] + parts[1][0] + parts[parts.length - 1][0]).toUpperCase();
         }
-        var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
-        if (resolvedLogoUrl) {
-            return '<div class="team-logo tmr-team-logo-badge" aria-hidden="true">'
-                + '<img class="team-logo__img tmr-team-logo-img" src="' + safeAttr(resolvedLogoUrl) + '" data-tmr-logo-src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer"'
-                + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
-                + initialsHtml
-                + '</div>';
-        }
-        return '<div class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + initialsHtml + '</div>';
+        /* NO_LOGO_NO_PLACEHOLDER_20260907: no real artwork means no mark at all.
+           The badge is a flex item next to the name, so dropping it closes the
+           gap instead of leaving an initials block or an empty bed. */
+        void initials;
+        if (!resolvedLogoUrl) return '';
+        return '<div class="team-logo tmr-team-logo-badge" aria-hidden="true">'
+            + '<img class="team-logo__img tmr-team-logo-img" src="' + safeAttr(resolvedLogoUrl) + '" data-tmr-logo-src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer"'
+            + ' onerror="var b=this.parentElement;if(b&&b.parentNode){b.parentNode.removeChild(b);}">'
+            + '</div>';
     };
     window.TMR._teamLogo = legacyTeamLogoRenderer;
     try {
@@ -11373,7 +11373,8 @@ window.toggleSportFamily = function (family) {
     function sportsbookTeamLogoMarkup(teamName, logoUrl, abbr) {
         var src = sportsbookTeamLogoUrl(teamName, logoUrl);
         if (window.TMR && typeof window.TMR._teamLogo === 'function') return window.TMR._teamLogo(src, abbr, teamName);
-        return '<span class="sb-team-tag">' + _sbEsc(abbr || String(teamName || '?').slice(0, 2).toUpperCase()) + '</span>';
+        // No artwork and no shared renderer: show nothing, never a letter block.
+        return '';
     }
 
     // ---- MLB probable pitcher (lobby board) -------------------------------
@@ -23549,7 +23550,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=fc377f3e814e&cb=20260901interlock"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=4662efde1767"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
@@ -23587,13 +23588,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     url = window.TMR.resolveSportsbookTeamLogo(teamName, sportKey(), '');
                 }
             } catch (_) {}
-            var fallback = '<span class="team-logo__initials tmr-team-logo-initials">' + esc(initials(teamName)) + '</span>';
-            if (!url) {
-                return '<span class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + fallback + '</span>';
-            }
+            // NO_LOGO_NO_PLACEHOLDER_20260907: no artwork, no mark. The badge is
+            // a flex item beside the name, so removing it closes the gap.
+            if (!url) return '';
             return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true">'
-                + '<img class="team-logo__img tmr-team-logo-img" src="' + esc(url) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
-                + fallback
+                + '<img class="team-logo__img tmr-team-logo-img" src="' + esc(url) + '" alt="" loading="lazy" decoding="async" onerror="var b=this.parentElement;if(b&&b.parentNode){b.parentNode.removeChild(b);}">'
                 + '</span>';
         }
 
