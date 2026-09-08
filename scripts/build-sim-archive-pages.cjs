@@ -49,7 +49,7 @@ const DEFAULT_API = 'https://trustmyrecord-api.onrender.com/api';
 
 const CSS_DS = '/static/css/tmr-ds.f85a4f83fb7b.css';
 const JS_SESSION = '/static/js/tmr-session.63f50f4d0988.js';
-const JS_NAV = '/static/js/tmr-ds-nav.6a5aef783912.js';
+const JS_NAV = '/static/js/tmr-ds-nav.41ec65370d4b.js';
 const CSS_ARCHIVE = '/static/css/tmr-sim-archive.css';
 const JS_ARCHIVE = '/static/js/tmr-sim-archive.js';
 const JS_CONFIG = '/static/js/config.js';

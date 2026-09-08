@@ -225,7 +225,7 @@ ${o.faq.map((f) => `    <div class="qa"><h3>${esc(f.q)}</h3><p>${esc(f.a)}</p></
 
   <p class="disc">${esc(o.disclaimer)}</p>
 </main>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.6a5aef783912.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.41ec65370d4b.js"></script>
 </body>
 </html>
 `;

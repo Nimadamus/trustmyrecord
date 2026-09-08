@@ -89,6 +89,23 @@ ok(AV.html({ username: 'a', avatar: LOGO_ROW }).indexOf('data-tmr-logo="1"') !==
   'the mark is rendered as its own image, so it can be contained rather than cropped');
 ok(AV.identity({ username: 'nobody' }).logo === null, 'no team, no mark');
 
+/* THE NEUTRAL FACE (2026-09-07). No picture and no favourite team is the only
+   case left that draws neither a club mark nor a club abbreviation, and it must
+   not print the member's two letters: a leaderboard of "MA" and "FI" tiles is
+   exactly what this replaced. Same disc and ring as the club-mark face, so the
+   two sit at the same size in the same row. */
+for (const who of ['makaveli66', 'Firelink', 'henrywalllace', '11space']) {
+  const face = AV.svg(AV.identity({ username: who }));
+  ok(face.indexOf('<text') === -1, `${who} must not get a lettered tile`);
+  ok(face.indexOf('>' + AV.initials('', who) + '<') === -1, `${who} must not get their initials`);
+  ok(face.includes('<circle cx="50" cy="50" r="50" fill="#FFFFFF"/>') && face.includes('r="48.2"'),
+    `${who} must get the same disc and ring as a club mark, so the sizes match`);
+  ok(face.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
+    `${who} must get the silhouette the API draws`);
+}
+ok(AV.svg(AV.identity({ username: 'a', avatar: { kind: 'team', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers' } })).includes('>PIT<'),
+  'a CLUB abbreviation is still lettering that belongs on the badge');
+
 /* ---------- 2. deterministic, and distinguishable -------------------------- */
 ok(AV.dataUri(AV.identity({ username: 'makaveli66' })) === AV.dataUri(AV.identity({ username: 'makaveli66' })),
   'the same member always gets the same face');
@@ -129,7 +146,14 @@ const home = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js')
 const edge = fs.readFileSync(path.join(ROOT, 'workers', 'home-ssr', 'worker.mjs'), 'utf8');
 for (const [name, src] of [['tmr-home-live.js', home], ['workers/home-ssr/worker.mjs', edge]]) {
   ok(src.includes('function compBadge'), `${name} must render the badge, not an empty circle`);
-  ok(src.includes('c.avatar && c.avatar.primary'), `${name} must read the identity off the payload`);
+  ok(src.includes('c.avatar && c.avatar.team'), `${name} must read the identity off the payload`);
+  /* 2026-09-07: no picture and no favourite team is the neutral silhouette, and
+     the two-letter tile ("MA", "FI") that used to fill that slot is gone. */
+  ok(src.includes('function compNeutral'), `${name} must draw the neutral face`);
+  ok(!/comp-avl">' \\+ initials|comp-avl">\\$\\{initials/.test(src),
+    `${name} must not fall back to a lettered chip`);
+  ok(src.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
+    `${name} must draw the same silhouette as the API`);
   ok(src.includes('function compMark'), `${name} must render the club mark`);
   ok(src.includes('c.avatar && c.avatar.logo'), `${name} must prefer the club mark over the lettered badge`);
   ok(src.includes('object-fit:contain'), `${name} must contain the mark, not crop it to the circle`);

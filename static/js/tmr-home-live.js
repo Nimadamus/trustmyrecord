@@ -63,7 +63,25 @@
   function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
   function sign(n) { return (n > 0 ? '+' : '') + n.toFixed(2); }
   function initials(name) { return String(name || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(); }
-  /* The initials chip, as an onerror attribute. EVERY avatar <img> this module
+  /* THE NEUTRAL MEMBER FACE (2026-09-07). A member with no uploaded picture and
+     no favourite team used to get a two-letter tile cut out of their username -
+     "MA" for makaveli66, "FI" for Firelink - and a leaderboard of those is what
+     this replaces. Same white disc and ring as the club-mark face, so a neutral
+     row is exactly the same size and weight as a row wearing a club logo.
+     Byte-identical in utils/avatarIdentity.js (avatarNeutralSvg), in
+     static/js/tmr-ds-avatar.js and in workers/home-ssr/worker.mjs. */
+  var NEUTRAL_BODY = '<circle cx="50" cy="50" r="50" fill="#FFFFFF"/>'
+    + '<circle cx="50" cy="50" r="48.2" fill="none" stroke="#94A3B8" stroke-opacity=".9" stroke-width="3.6"/>'
+    + '<circle cx="50" cy="37" r="15" fill="#94A3B8"/>'
+    + '<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>';
+  /* As a data URI, for the <img> slots: swapping an <img> src keeps the element
+     and therefore the .ava rule that sizes and rounds it, so the neutral face
+     lands in exactly the same box as every other avatar in the row. */
+  var NEUTRAL_URI = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="96" height="96"'
+    + ' role="img" aria-label="TrustMyRecord member">' + NEUTRAL_BODY + '</svg>');
+
+  /* The neutral face, as an onerror attribute. EVERY avatar <img> this module
      emits carries it - including the one built from a stored avatar_url, which
      until now was the one branch that shipped a bare <img>.
      A stored avatar_url is not always a plain hosted file: an account whose
@@ -71,14 +89,16 @@
      /users/:id/avatar proxy, and that route answers 204 for an empty avatar and
      404 for any query error. With no onerror that row painted the browser's
      broken-image glyph and kept it. TMRPolls in Sports Talk was exactly that. */
-  function avatarFallback(u, cls) {
-    return ' onerror="this.outerHTML=\'<span class=&quot;' + cls.replace('ava', 'avl') + '&quot;>' +
-      initials(u && u.username) + '</span>\'"';
+  /* The swap is on the <img> itself rather than an outerHTML replacement into
+     a lettered chip: the element survives, so the class that sized it survives
+     with it and a failed avatar cannot come back a different size. */
+  function avatarFallback() {
+    return ' onerror="this.onerror=null;this.src=\'' + NEUTRAL_URI + '\'"';
   }
   function avatar(u, cls) {
-    if (u && u.avatar_url) return '<img class="' + cls + '" src="' + esc(u.avatar_url) + '" alt=""' + avatarFallback(u, cls) + '>';
-    if (u && u.id) return '<img class="' + cls + '" src="' + API + '/users/' + u.id + '/avatar" alt=""' + avatarFallback(u, cls) + '>';
-    return '<span class="' + cls.replace('ava', 'avl') + '">' + initials(u && u.username) + '</span>';
+    if (u && u.avatar_url) return '<img class="' + cls + '" src="' + esc(u.avatar_url) + '" alt=""' + avatarFallback() + '>';
+    if (u && u.id) return '<img class="' + cls + '" src="' + API + '/users/' + u.id + '/avatar" alt=""' + avatarFallback() + '>';
+    return '<img class="' + cls + '" src="' + NEUTRAL_URI + '" alt="">';
   }
   function timeAgo(ts) {
     if (!ts) return '';
@@ -1568,8 +1588,9 @@
   } catch (e) {}
 
 
-  /* The TMR badge for a competitor with no uploaded picture: their favourite
-     team's colours and abbreviation, or their deterministic initials mark. The
+  /* The TMR badge for a competitor whose favourite team has no club mark (a
+     tennis player, an unmapped program): the club's colours and abbreviation.
+     A member with NO team never reaches here - they get the neutral face. The
      identity is resolved server-side (utils/avatarIdentity.js) and travels ON
      the payload as competitor.avatar, so the edge and the page draw the exact
      same face with no extra request and no flash of an empty circle.
@@ -1609,18 +1630,27 @@
      raced the edge bake and rewrote the card after first paint; there is no
      reason to fire that request when the payload already carries the identity.
      Kept identical in workers/home-ssr/worker.mjs. */
+  /* The neutral competitor face. Inline rather than a request, for the same
+     reason the badge is: the payload already says there is nothing to fetch. */
+  function compNeutral(username) {
+    return '<svg class="comp-av" viewBox="0 0 100 100" role="img" aria-label="' + esc(username || 'TrustMyRecord member') + '">' +
+      NEUTRAL_BODY + '</svg>';
+  }
+
   function compAvatar(c) {
     if (!c) return '<span class="comp-avl"></span>';
     if (!c.avatar_url && c.avatar && c.avatar.logo) return compMark(c.avatar, c.username);
-    if (!c.avatar_url && c.avatar && c.avatar.primary) return compBadge(c.avatar, c.username);
+    /* A CLUB abbreviation, only where there is a club. No team means the
+       neutral mark below, never the member's initials. */
+    if (!c.avatar_url && c.avatar && c.avatar.team) return compBadge(c.avatar, c.username);
     // The fallback markup inside the onerror attribute is entity-encoded rather
     // than written with raw angle brackets. Both parse to the same JS string,
     // but only one of them is BYTE-identical to what the edge renderer emits,
     // and byte-identical is the contract between the two (see
     // tests/homepage-live-competition-lock-test.js, which diffs them).
     if (c.avatar_url) return '<img class="comp-av" src="' + esc(c.avatar_url) + '" alt="" ' +
-      'onerror="this.outerHTML=\'&lt;span class=&quot;comp-avl&quot;&gt;' + initials(c.username) + '&lt;/span&gt;\'">';
-    return '<span class="comp-avl">' + initials(c.username) + '</span>';
+      'onerror="this.onerror=null;this.src=\'' + NEUTRAL_URI + '\'">';
+    return compNeutral(c.username);
   }
 
   /* The movement chip. `delta` is positions gained against the same standings

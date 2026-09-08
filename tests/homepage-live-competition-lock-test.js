@@ -145,7 +145,7 @@ ok(js.includes('if (comp.paused || document.hidden) return;'),
   'the rotation must not advance in a hidden tab or while the card is being read');
 
 /* ---------- 7. client and edge produce the same markup -------------------- */
-for (const fn of ['compRowHtml', 'compDelta', 'compAvatar', 'compBadge']) {
+for (const fn of ['compRowHtml', 'compDelta', 'compAvatar', 'compBadge', 'compNeutral']) {
   ok(js.includes('function ' + fn) || js.includes(fn + ' ='),
     `tmr-home-live.js is missing ${fn}`);
   ok(worker.includes('function ' + fn), `workers/home-ssr/worker.mjs is missing ${fn}`);
@@ -170,6 +170,19 @@ const PRELUDE = [
   "const COMP_ICON = { win: 'W', loss: 'L', lock: '&#128274;', streak: '&#128293;', up: '&#9650;' };",
 ].join('\n');
 
+/* The neutral face is a pair of module constants rather than a function, so it
+   is lifted the same way and compared by what it draws: if the two files ever
+   drew a different silhouette, the row diff below would catch it. */
+const CONSTS = ['NEUTRAL_BODY', 'NEUTRAL_URI'];
+function liftConsts(source) {
+  return CONSTS.map((name) => {
+    const re = new RegExp('\\n {0,2}(?:var|const) (' + name + ' = [\\s\\S]*?;)(?=\\r?\\n)');
+    const m = re.exec(source);
+    assert.ok(m, `could not lift ${name} out of the source under test`);
+    return 'const ' + m[1];
+  });
+}
+
 function lift(source, names) {
   const parts = names.map((name) => {
     // Function declarations in both files are either top-level (worker.mjs) or
@@ -181,10 +194,10 @@ function lift(source, names) {
     return m[2];
   });
   // eslint-disable-next-line no-new-func
-  return new Function([PRELUDE, ...parts, 'return compRowHtml;'].join('\n'))();
+  return new Function([PRELUDE, ...liftConsts(source), ...parts, 'return compRowHtml;'].join('\n'))();
 }
 
-const LIFT = ['compBadge', 'compAvatar', 'compDelta', 'compRowHtml'];
+const LIFT = ['compBadge', 'compNeutral', 'compAvatar', 'compDelta', 'compRowHtml'];
 const clientRow = lift(js, LIFT);
 const edgeRow = lift(worker, LIFT);
 
