@@ -1165,6 +1165,11 @@
 
         function avatarHtml(displayName, avatarUrl) {
             const letter = escapeHtml(String(displayName || '?').charAt(0).toUpperCase());
+            /* NO_LETTER_FLASH_20260907: no picture means the resolver route -
+               the member's club mark, or the neutral face - never an initial. */
+            if (!avatarUrl) {
+                return '<span class="person-avatar"><img src="' + escapeHtml((((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(displayName || '') + '/avatar')) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"></span>';
+            }
             if (avatarUrl) {
                 return '<span class="person-avatar"><img src="' + escapeHtml(avatarUrl) + '" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(\'' + letter + '\'));this.parentNode &amp;&amp; (this.parentNode.textContent=\'' + letter + '\');"></span>';
             }

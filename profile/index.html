@@ -11164,7 +11164,16 @@
                escaping that profile-source-regression-test was written to hold;
                rendering is byte-identical for a legitimate URL. loading/decoding
                keep the header avatar off the lazy path -- it is above the fold. */
-            '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">' : letter) + '</div>' +
+            /* NO_LETTER_FLASH_20260907: this used to print `letter` - a single
+               initial on a gradient - and wait for the site's avatar repair pass
+               to swap it. The repair lands ~3s after first paint on a profile,
+               and for those three seconds the member wore a letter tile: the
+               thing every other surface stopped drawing. The slot now renders
+               the resolver route immediately, which answers the upload, else the
+               favourite-team club mark, else the neutral silhouette. */
+            '<div class="profile-avatar">' + (p.avatar_url
+              ? '<img src="' + escapeHtml(p.avatar_url) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">'
+              : '<img src="' + escapeHtml(((window.TMRAvatar && window.TMRAvatar.src) ? window.TMRAvatar.src({ username: p.username, id: p.id }) : (((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(p.username || '') + '/avatar'))) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">') + '</div>' +
             '<div class="profile-identity-copy">' +
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
             // SOFT404_20260818: this is the profile document's only page-level
@@ -12013,7 +12022,8 @@
             if (empty) empty.style.display = 'none';
             if (reply) reply.hidden = false;
             if (messages) { messages.hidden = false; messages.innerHTML = '<div style="padding:18px;color:#9fb0c4;font-size:.86rem;">Loading messages...</div>'; }
-            if (avatarBox) avatarBox.innerHTML = avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">' : escapeHtml((username || '?')[0].toUpperCase());
+            /* NO_LETTER_FLASH_20260907: the resolver route, never an initial. */
+            if (avatarBox) avatarBox.innerHTML = '<img src="' + escapeHtml(avatarUrl || (((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar')) + '" alt="">';
             if (nameLink) { nameLink.textContent = username; nameLink.href = '/profile/?user=' + encodeURIComponent(username); }
             if (handle) handle.textContent = '@' + username;
             setShowingThread(true);
@@ -14772,9 +14782,9 @@
         const name = escapeHtml(user.display_name || user.username || 'User');
         const handle = escapeHtml(user.username || '');
         const initial = (user.display_name || user.username || 'U').charAt(0).toUpperCase();
-        const avatar = user.avatar_url
-            ? '<img src="' + escapeHtml(user.avatar_url) + '" alt="" class="tmr-social-avatar" loading="lazy">'
-            : '<span class="tmr-social-avatar tmr-social-avatar--letter">' + escapeHtml(initial) + '</span>';
+        /* NO_LETTER_FLASH_20260907: an avatar-less member gets the resolver
+           route (upload -> club mark -> neutral), not their first initial. */
+        const avatar = '<img src="' + escapeHtml(user.avatar_url || (((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar')) + '" alt="" class="tmr-social-avatar" loading="lazy">';
         // Same canonical /u/<username>/ route as the directory, forum, and
         // newest-member links -- not /profile/?user=, which is a different
         // (also-working) page for the same member and shouldn't exist as a

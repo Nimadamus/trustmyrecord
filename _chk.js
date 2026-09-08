@@ -1,0 +1,9231 @@
+
+    // ============================================================
+    // Profile v2 - Pick Monitor Layout
+    // Single source of truth for all statistics
+    // ============================================================
+
+    let currentUser = null;
+    let profileData = null;
+    let isOwnProfile = false;
+    let isFollowingProfile = false;
+    let isBlockedProfile = false;
+    let hasBlockedViewer = false;
+    let profileUserId = null;
+    let allLoadedPicks = [];
+    let currentRenderedPicks = [];
+    let currentTablePage = 1;
+    let latestAdvancedStats = null;
+    let currentLeaderboardRank = null;
+    let currentTableSort = 'date_desc';
+    let currentPageSize = 100; // 100 default, Max 500 per page (Nima Apr 30, 2026)
+    let usingRecoveredLocalPicks = false;
+    const MARKET_TYPE_GROUPS = [
+        { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
+        { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
+        { key: 'totals', label: 'Totals', types: ['totals', 'total'] },
+        { key: 'team_totals', label: 'Team Totals', types: ['team_totals'] },
+        { key: 'first5', label: 'First 5', types: ['f5_h2h', 'f5_spreads', 'f5_totals'] },
+        { key: 'first_half', label: 'First Half', types: ['first_half_h2h', 'first_half_spreads', 'first_half_totals'] },
+        { key: 'second_half', label: 'Second Half', types: ['second_half_h2h', 'second_half_spreads', 'second_half_totals'] },
+        { key: 'period_1', label: '1st Period', types: ['period_1_h2h', 'period_1_spreads', 'period_1_totals'] },
+        { key: 'alt_lines', label: 'Alt Lines', types: ['alt_spreads', 'alt_totals'] },
+        { key: 'player_props', label: 'Player Props', types: ['pitcher_strikeouts', 'batter_hits', 'batter_total_bases', 'batter_rbi'] }
+    ];
+    // Depth dimensions for the dedicated Player Props / Alternate Lines panels.
+    const PROP_TYPE_GROUPS = [
+        { key: 'strikeouts', label: 'Strikeouts', types: ['pitcher_strikeouts'] },
+        { key: 'hits', label: 'Hits', types: ['batter_hits'] },
+        { key: 'total_bases', label: 'Total Bases', types: ['batter_total_bases'] },
+        { key: 'rbi', label: 'RBI', types: ['batter_rbi'] }
+    ];
+    const ALT_LINE_GROUPS = [
+        { key: 'alt_spread', label: 'Alt Spread', types: ['alt_spreads'] },
+        { key: 'alt_total', label: 'Alt Total', types: ['alt_totals'] }
+    ];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    // /u/<username>/ static public pages load this same app in place (via
+    // tmr-profile-hydrate.js), so accept the username from the /u/ path or the
+    // window.__TMR_PROFILE_USERNAME the baked page sets, not only ?user=.
+    const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i)
+        || (window.location.pathname || '').match(/^\/u\/([^/?#]+)/i);
+    const requestedProfileLookup = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || (typeof window.__TMR_PROFILE_USERNAME === 'string' ? window.__TMR_PROFILE_USERNAME : '') || '').trim();
+    let profileUsername = normalizeProfileLookup(requestedProfileLookup) || null;
+    const profileView = (urlParams.get('view') || '').trim().toLowerCase();
+    const SPORT_QUERY_ALIASES = {
+        mlb: 'baseball_mlb',
+        baseball: 'baseball_mlb',
+        baseball_mlb: 'baseball_mlb',
+        nba: 'basketball_nba',
+        basketball_nba: 'basketball_nba',
+        nba_summer: 'basketball_nba_summer',
+        basketball_nba_summer: 'basketball_nba_summer',
+        nfl: 'americanfootball_nfl',
+        americanfootball_nfl: 'americanfootball_nfl',
+        nhl: 'icehockey_nhl',
+        hockey: 'icehockey_nhl',
+        icehockey_nhl: 'icehockey_nhl',
+        ncaab: 'basketball_ncaab',
+        basketball_ncaab: 'basketball_ncaab',
+        ncaaf: 'americanfootball_ncaaf',
+        americanfootball_ncaaf: 'americanfootball_ncaaf',
+        wnba: 'basketball_wnba',
+        basketball_wnba: 'basketball_wnba',
+        epl: 'soccer_epl',
+        soccer_epl: 'soccer_epl',
+        mls: 'soccer_usa_mls',
+        soccer_usa_mls: 'soccer_usa_mls'
+    };
+    const initialSportFilter = normalizeProfileSportParam(urlParams.get('sport') || urlParams.get('league') || '');
+
+    // ======================== UNIFIED STATS ========================
+    function getMarketTypeGroup(marketType) {
+        return MARKET_TYPE_GROUPS.find(group => group.types.includes(marketType)) || null;
+    }
+
+    function buildMarketTypeBreakdown(picks) {
+        const graded = (picks || []).filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        return MARKET_TYPE_GROUPS.map(group => {
+            const groupPicks = graded.filter(p => group.types.includes(p.market_type));
+            const wins = groupPicks.filter(p => p.status === 'won').length;
+            const losses = groupPicks.filter(p => p.status === 'lost').length;
+            const pushes = groupPicks.filter(p => p.status === 'push' || p.status === 'pushed').length;
+            return {
+                key: group.key,
+                label: group.label,
+                wins,
+                losses,
+                pushes,
+                total: groupPicks.length,
+                netUnits: groupPicks.reduce((sum, pick) => sum + pickPL(pick), 0)
+            };
+        }).filter(group => group.total > 0);
+    }
+
+    // Dedicated depth breakdown (Player Props by stat type, Alternate Lines by
+    // alt type). Computed client-side from the user's own graded picks — no
+    // fabricated data; the module hides itself when the user has no such picks.
+    /* ========================================================================
+     * SECOND_HALF_20260905 — the standalone second-half record.
+     *
+     * A second-half wager is a permanent wager category, not a variation on the
+     * full-game one, so it is reported the way every other wager type is:
+     * overall W-L-P, win %, units and ROI, then split by market, by price side,
+     * by over/under and by venue.
+     *
+     * NFL and college football are reported SEPARATELY. The only combined row
+     * is the explicit "All leagues" line at the bottom, and it is labelled as
+     * one so it can never be read as a single league's record.
+     * ===================================================================== */
+    const SECOND_HALF_MARKETS = {
+        second_half_spreads: '2H Spread',
+        second_half_h2h: '2H Moneyline',
+        second_half_totals: '2H Total'
+    };
+
+    function isSecondHalfPick(p) {
+        return /^second_half_/.test(String((p && p.market_type) || ''));
+    }
+
+    function shRecord(picks) {
+        const wins = picks.filter(p => p.status === 'won').length;
+        const losses = picks.filter(p => p.status === 'lost').length;
+        const pushes = picks.filter(p => {
+            const st = String(p.status || '').toLowerCase();
+            return st === 'push' || st === 'pushed';
+        }).length;
+        const net = picks.reduce((sum, p) => sum + pickPL(p), 0);
+        const risked = picks.reduce((sum, p) => {
+            const r = Number(p.risk_units);
+            if (Number.isFinite(r) && r > 0) return sum + r;
+            const u = Number(p.units);
+            return sum + (Number.isFinite(u) ? u : 0);
+        }, 0);
+        const decisions = wins + losses;
+        const oddsList = picks.map(p => Number(p.odds_snapshot)).filter(o => Number.isFinite(o) && o !== 0);
+        return {
+            total: picks.length,
+            wins, losses, pushes, net, risked,
+            winRate: decisions > 0 ? ((wins / decisions) * 100).toFixed(1) : '0.0',
+            roi: risked > 0 ? ((net / risked) * 100).toFixed(1) : null,
+            avgOdds: oddsList.length ? Math.round(oddsList.reduce((a, b) => a + b, 0) / oddsList.length) : null
+        };
+    }
+
+    function shSideOf(p) {
+        const sel = String((p && (p.selection || p.selection_label)) || '').toLowerCase();
+        if (/\bover\b/.test(sel)) return 'over';
+        if (/\bunder\b/.test(sel)) return 'under';
+        return null;
+    }
+    function shVenueOf(p) {
+        const key = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        const sel = key(p && (p.selected_team || p.selection));
+        const home = key(p && p.home_team);
+        const away = key(p && p.away_team);
+        if (!sel) return null;
+        const isHome = home && sel.indexOf(home) !== -1;
+        const isAway = away && sel.indexOf(away) !== -1;
+        if (isHome && !isAway) return 'home';
+        if (isAway && !isHome) return 'away';
+        return null;
+    }
+
+    function shSummaryText(rec) {
+        const parts = [rec.wins + '-' + rec.losses + '-' + rec.pushes + ' (' + rec.total + (rec.total === 1 ? ' wager)' : ' wagers)')];
+        if (rec.roi !== null) parts.push(rec.roi + '% ROI');
+        if (rec.avgOdds !== null) parts.push('avg ' + (rec.avgOdds > 0 ? '+' : '') + rec.avgOdds);
+        return parts.join(' \u00b7 ');
+    }
+
+    function renderSecondHalfBreakdown(picksArr) {
+        const moduleEl = document.getElementById('secondHalfModule');
+        const grid = document.getElementById('secondHalfGrid');
+        if (!grid) return;
+        const src = Array.isArray(picksArr) ? picksArr : allLoadedPicks;
+        const graded = (src || []).filter(p => {
+            const st = String(p.status || '').toLowerCase();
+            return ['won', 'lost', 'push', 'pushed'].indexOf(st) !== -1;
+        }).filter(isSecondHalfPick);
+
+        if (!graded.length) {
+            if (moduleEl) moduleEl.style.display = 'none';
+            grid.innerHTML = '';
+            return;
+        }
+
+        // One block per league, in order of how much has been bet there.
+        const byLeague = new Map();
+        graded.forEach(p => {
+            const key = String(p.sport_key || 'unknown');
+            if (!byLeague.has(key)) byLeague.set(key, []);
+            byLeague.get(key).push(p);
+        });
+        const leagues = [...byLeague.entries()].sort((a, b) => b[1].length - a[1].length);
+
+        const subhead = (txt) => '<div class="breakdown-subhead" style="grid-column:1/-1;margin-top:10px;'
+            + 'font-weight:800;letter-spacing:.04em;text-transform:uppercase;opacity:.85;">'
+            + escapeHtml(txt) + '</div>';
+
+        const rows = [];
+        leagues.forEach(([sportKey, leaguePicks]) => {
+            const overall = shRecord(leaguePicks);
+            rows.push(subhead(pmSportLabel(sportKey) + ' Second Half'));
+            rows.push(bRowExtended('Overall', shSummaryText(overall), overall.winRate, overall.net));
+
+            Object.keys(SECOND_HALF_MARKETS).forEach(marketType => {
+                const mp = leaguePicks.filter(p => p.market_type === marketType);
+                if (!mp.length) return;
+                const rec = shRecord(mp);
+                rows.push(bRowExtended(SECOND_HALF_MARKETS[marketType], shSummaryText(rec), rec.winRate, rec.net));
+            });
+
+            const splits = [
+                ['Favorites', leaguePicks.filter(p => Number(p.odds_snapshot) < 0)],
+                ['Underdogs', leaguePicks.filter(p => Number(p.odds_snapshot) > 0)],
+                ['Overs', leaguePicks.filter(p => shSideOf(p) === 'over')],
+                ['Unders', leaguePicks.filter(p => shSideOf(p) === 'under')],
+                ['Home', leaguePicks.filter(p => shVenueOf(p) === 'home')],
+                ['Away', leaguePicks.filter(p => shVenueOf(p) === 'away')]
+            ];
+            splits.forEach(([splitLabel, sp]) => {
+                if (!sp.length) return;
+                const rec = shRecord(sp);
+                rows.push(bRowExtended(splitLabel, shSummaryText(rec), rec.winRate, rec.net));
+            });
+        });
+
+        // The only aggregate, and it says so. Shown only when there is more
+        // than one league to aggregate.
+        if (leagues.length > 1) {
+            const all = shRecord(graded);
+            rows.push(subhead('All leagues combined'));
+            rows.push(bRowExtended('All leagues \u00b7 Second Half', shSummaryText(all), all.winRate, all.net));
+        }
+
+        grid.innerHTML = rows.join('');
+        if (moduleEl) moduleEl.style.display = '';
+    }
+
+    function renderDepthBreakdown(picksArr, groups, moduleId, gridId) {
+        const moduleEl = document.getElementById(moduleId);
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+        const src = Array.isArray(picksArr) ? picksArr : allLoadedPicks;
+        const graded = (src || []).filter(function (p) {
+            return ['won', 'lost', 'push', 'pushed'].indexOf(String(p.status || '').toLowerCase()) !== -1;
+        });
+        const rows = groups.map(function (group) {
+            const gp = graded.filter(function (p) { return group.types.indexOf(p.market_type) !== -1; });
+            if (!gp.length) return null;
+            const wins = gp.filter(function (p) { return p.status === 'won'; }).length;
+            const losses = gp.filter(function (p) { return p.status === 'lost'; }).length;
+            const pushes = gp.filter(function (p) { const s = String(p.status || '').toLowerCase(); return s === 'push' || s === 'pushed'; }).length;
+            const net = gp.reduce(function (sum, pick) { return sum + pickPL(pick); }, 0);
+            const wr = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
+            return bRowExtended(group.label, wins + '-' + losses + '-' + pushes + ' (' + gp.length + ' picks)', wr, net);
+        }).filter(Boolean);
+        if (!rows.length) {
+            if (moduleEl) moduleEl.style.display = 'none';
+            grid.innerHTML = '';
+            return;
+        }
+        if (moduleEl) moduleEl.style.display = '';
+        grid.innerHTML = rows.join('');
+    }
+
+    function computeUnifiedStats(picks) {
+        if (typeof window.computeCanonicalRecordStats === 'function') {
+            const base = window.computeCanonicalRecordStats(picks);
+            return {
+                wins: base.wins,
+                losses: base.losses,
+                pushes: base.pushes,
+                pending: base.pending,
+                total: base.total,
+                winRate: Number(base.winRate || 0),
+                netUnits: Number(base.totalUnits || 0),
+                roi: Number(base.roi || 0),
+                currentStreak: base.currentStreak,
+                bestStreak: base.bestStreak,
+                worstStreak: base.worstStreak,
+                avgOdds: base.avgOdds,
+                avgUnits: base.avgUnits,
+                marketTypeRecords: buildMarketTypeBreakdown((picks || []).filter(function(pick) {
+                    return ['won', 'lost', 'push', 'pushed'].indexOf(String(pick.status || '').toLowerCase()) !== -1;
+                }))
+            };
+        }
+        const graded = picks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const wins = graded.filter(p => p.status === 'won');
+        const losses = graded.filter(p => p.status === 'lost');
+        const pushes = graded.filter(p => p.status === 'push' || p.status === 'pushed');
+        const pending = picks.filter(p => p.status === 'pending' || !p.status);
+
+        const w = wins.length, l = losses.length, pu = pushes.length;
+        const total = picks.length;
+        const winRate = (w + l) > 0 ? (w / (w + l)) * 100 : 0;
+
+        // Net units using result_units if available, else calculate
+        let netUnits = 0;
+        graded.forEach(pick => {
+            if (pick.result_units != null && !isNaN(pick.result_units)) {
+                netUnits += parseFloat(pick.result_units);
+            } else {
+                const units = pick.units || 1;
+                const odds = pick.odds_snapshot || pick.odds || -110;
+                if (pick.status === 'won') netUnits += odds < 0 ? units : (units * odds / 100);
+                else if (pick.status === 'lost') netUnits += odds < 0 ? -(units * Math.abs(odds) / 100) : -units;
+            }
+        });
+
+        // ROI
+        let totalRisked = 0;
+        graded.forEach(pick => {
+            const units = pick.units || 1;
+            const odds = pick.odds_snapshot || pick.odds || -110;
+            totalRisked += odds < 0 ? (units * Math.abs(odds) / 100) : units;
+        });
+        const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
+
+        // Streaks
+        const sorted = [...graded].sort((a, b) =>
+            new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        let bestStreak = 0, worstStreak = 0, tempWin = 0, tempLoss = 0;
+        sorted.forEach(pick => {
+            if (pick.status === 'won') { tempWin++; tempLoss = 0; if (tempWin > bestStreak) bestStreak = tempWin; }
+            else if (pick.status === 'lost') { tempLoss++; tempWin = 0; if (tempLoss > worstStreak) worstStreak = tempLoss; }
+            else { tempWin = 0; tempLoss = 0; }
+        });
+        const reversed = [...sorted].reverse();
+        let cStreak = 0, cType = '';
+        for (const pick of reversed) {
+            if (pick.status === 'push' || pick.status === 'pushed') continue;
+            if (!cType) { cType = pick.status; cStreak = 1; }
+            else if (pick.status === cType) { cStreak++; }
+            else break;
+        }
+        const currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
+
+        // Averages
+        const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
+        const avgOdds = oddsArr.length > 0 ? Math.round(oddsArr.reduce((a, b) => a + b, 0) / oddsArr.length) : null;
+        const unitsArr = picks.filter(p => p.units != null).map(p => Number(p.units));
+        const avgUnits = unitsArr.length > 0 ? (unitsArr.reduce((a, b) => a + b, 0) / unitsArr.length) : 0;
+
+        const marketTypeRecords = buildMarketTypeBreakdown(graded);
+
+        return {
+            wins: w, losses: l, pushes: pu, pending: pending.length,
+            total, winRate, netUnits, roi, currentStreak,
+            bestStreak, worstStreak, avgOdds, avgUnits,
+            marketTypeRecords
+        };
+    }
+
+    function oddsToProbability(odds) {
+        const value = Number(odds);
+        if (!Number.isFinite(value) || Math.abs(value) < 100) return null;
+        return value > 0 ? 100 / (value + 100) : Math.abs(value) / (Math.abs(value) + 100);
+    }
+
+    function probabilityToAmerican(probability) {
+        const value = Number(probability);
+        if (!Number.isFinite(value) || value <= 0 || value >= 1) return null;
+        return value >= 0.5
+            ? -Math.round((100 * value) / (1 - value))
+            : Math.round((100 * (1 - value)) / value);
+    }
+
+    function getPickOdds(pick) {
+        const value = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds));
+        return Number.isFinite(value) ? value : -110;
+    }
+
+    function getPickUnits(pick) {
+        const value = Number(pick && pick.units);
+        return Number.isFinite(value) && value > 0 ? value : 1;
+    }
+
+    function getPickRiskUnits(pick) {
+        const units = getPickUnits(pick);
+        const odds = getPickOdds(pick);
+        return odds < 0 ? units * Math.abs(odds) / 100 : units;
+    }
+
+    function computeCoreLedgerStatsFromPicks(picks) {
+        const source = Array.isArray(picks) ? picks : [];
+        const graded = source.filter(function(pick) {
+            const status = normalizeStatus(pick && pick.status);
+            return status === 'won' || status === 'lost' || status === 'push';
+        });
+        const decisions = graded.filter(function(pick) {
+            const status = normalizeStatus(pick && pick.status);
+            return status === 'won' || status === 'lost';
+        });
+        const wins = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'won'; }).length;
+        const losses = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'lost'; }).length;
+        const pushes = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'push'; }).length;
+        const pending = source.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'pending'; }).length;
+        const netUnits = graded.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
+        const riskedUnits = graded.reduce(function(total, pick) { return total + getPickRiskUnits(pick); }, 0);
+        const avgUnits = graded.length
+            ? graded.reduce(function(total, pick) { return total + getPickUnits(pick); }, 0) / graded.length
+            : 0;
+        const validProbabilities = graded
+            .map(function(pick) { return oddsToProbability(getPickOdds(pick)); })
+            .filter(function(value) { return value != null; });
+        const avgOdds = validProbabilities.length
+            ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
+            : null;
+        const effectiveUnits = graded.reduce(function(total, pick) {
+            const units = getPickUnits(pick);
+            if (!units) return total;
+            return total + (pickPL(pick) / units) * 3;
+        }, 0);
+
+        const chronological = graded.slice().sort(function(a, b) {
+            return new Date(a.locked_at || a.created_at || a.graded_at || 0) - new Date(b.locked_at || b.created_at || b.graded_at || 0);
+        });
+        let bestStreak = 0;
+        let currentWinRun = 0;
+        chronological.forEach(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'won') {
+                currentWinRun += 1;
+                bestStreak = Math.max(bestStreak, currentWinRun);
+            } else if (status === 'lost') {
+                currentWinRun = 0;
+            }
+        });
+
+        let streakType = '';
+        let streakCount = 0;
+        chronological.slice().reverse().some(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'push') return false;
+            if (!streakType) {
+                streakType = status;
+                streakCount = 1;
+                return false;
+            }
+            if (status === streakType) {
+                streakCount += 1;
+                return false;
+            }
+            return true;
+        });
+
+        const lastGraded = chronological.length
+            ? chronological[chronological.length - 1].graded_at || chronological[chronological.length - 1].locked_at || chronological[chronological.length - 1].created_at
+            : null;
+
+        return {
+            wins,
+            losses,
+            pushes,
+            pending,
+            graded: graded.length,
+            decisions: decisions.length,
+            record: wins + '-' + losses + '-' + pushes,
+            winRate: decisions.length ? wins / decisions.length * 100 : 0,
+            netUnits,
+            riskedUnits,
+            roi: riskedUnits > 0 ? netUnits / riskedUnits * 100 : 0,
+            avgOdds,
+            avgUnits,
+            effectiveUnits,
+            currentStreak: streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0,
+            bestStreak,
+            lastGraded
+        };
+    }
+
+    function getProfileLedgerStats() {
+        return profileData && profileData.__ledgerStats ? profileData.__ledgerStats : null;
+    }
+
+    function getProfileDeclaredGradedCount(profile) {
+        if (!profile) return 0;
+        const candidates = [profile.graded_picks, profile.total_picks, profile.totalPicks];
+        for (const value of candidates) {
+            const n = Number(value);
+            if (Number.isFinite(n) && n >= 0) return n;
+        }
+        return 0;
+    }
+
+    /* The ledger view is kept for the picks table and for the header's
+       "stats have arrived" gate, but it NO LONGER overwrites the canonical
+       record the API returned (2026-08-16). It used to assign wins, losses,
+       pushes, win_rate, net_units and roi straight onto profileData from
+       computeCoreLedgerStatsFromPicks, whose risked-units math is not identical
+       to the server's -- that is how the same page ended up able to report two
+       different ROIs. Canonical values (services/canonicalUserStats.js, via
+       /api/users/:username) win; a ledger number is written only where the API
+       gave us nothing, so a profile whose stats call was thin still renders. */
+    function applyVerifiedLedgerStatsToProfile(picks) {
+        if (!profileData) return null;
+        const stats = computeCoreLedgerStatsFromPicks(picks);
+        profileData.__ledgerStats = stats;
+        const fillIfMissing = function(key, value) {
+            if (profileData[key] == null || profileData[key] === '') profileData[key] = value;
+        };
+        fillIfMissing('graded_picks', stats.graded);
+        fillIfMissing('total_picks', stats.graded);
+        fillIfMissing('wins', stats.wins);
+        fillIfMissing('losses', stats.losses);
+        fillIfMissing('pushes', stats.pushes);
+        fillIfMissing('win_rate', stats.decisions ? stats.winRate : null);
+        fillIfMissing('net_units', stats.netUnits);
+        fillIfMissing('roi', stats.graded ? stats.roi : null);
+        return stats;
+    }
+
+    function renderProfileStatsLoadError(message) {
+        const statusText = message || 'Verified pick stats could not be loaded. Refresh or try again shortly.';
+        if (profileData) profileData.__statsLoadError = statusText;
+        try { renderProfileHeader(profileData || {}); } catch (e) {}
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        if (statusEl) statusEl.textContent = 'Verified stats unavailable';
+        const countEl = document.getElementById('picksCount');
+        if (countEl) countEl.textContent = statusText;
+        const wrapper = document.getElementById('picksTableWrapper');
+        if (wrapper) wrapper.style.display = 'none';
+        const tableBody = document.getElementById('picksTableBody');
+        if (tableBody) tableBody.innerHTML = '';
+    }
+
+    function renderCoreHandicapperStatsFromPicks(picks) {
+        const stats = computeCoreLedgerStatsFromPicks(picks);
+        const fmtSigned = function(value, suffix, decimals) {
+            const n = Number(value) || 0;
+            return (n >= 0 ? '+' : '') + n.toFixed(decimals == null ? 2 : decimals) + (suffix || '');
+        };
+        const fmtAmerican = function(value) {
+            const n = Number(value);
+            if (!Number.isFinite(n) || n === 0) return 'N/A';
+            return (n > 0 ? '+' : '') + Math.round(n);
+        };
+        /* FALLBACK ONLY (2026-08-16). These tiles belong to tmrxRenderRedesign,
+           which fills them from the canonical /api/users/:username/metrics
+           summary -- the same numbers the feed, the leaderboard and the
+           directory read. This function recomputes them in the browser from the
+           fetched pick rows, and its risked-units math is not identical to the
+           server's, so it was repainting the ribbon's ROI as +0.68% over the
+           canonical +0.71% on the very same page. It now writes a tile only
+           while that tile is still an unfilled placeholder, so a profile whose
+           metrics call never lands still shows a record, and a profile whose
+           metrics call succeeds shows exactly one ROI. */
+        const setBoth = function(baseId, text, signed) {
+            [baseId, baseId + 'Top'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (!el.classList.contains('is-placeholder')) return;
+                el.textContent = text;
+                el.classList.remove('is-placeholder');
+                el.classList.toggle('is-pos', signed != null && signed > 0);
+                el.classList.toggle('is-neg', signed != null && signed < 0);
+            });
+        };
+        const winRateSigned = stats.decisions ? stats.winRate - 50 : 0;
+        setBoth('tmrxRecord', stats.graded ? stats.record : '0-0-0', winRateSigned);
+        setBoth('tmrxWinRate', stats.decisions ? stats.winRate.toFixed(1) + '%' : 'N/A', stats.decisions ? winRateSigned : null);
+        setBoth('tmrxNetUnits', fmtSigned(stats.netUnits, 'u', 2), stats.netUnits);
+        setBoth('tmrxRoi', fmtSigned(stats.roi, '%', 2), stats.roi);
+        setBoth('tmrxAvgOdds', fmtAmerican(stats.avgOdds));
+        setBoth('tmrxAvgUnits', stats.avgUnits.toFixed(2) + 'u');
+        setBoth('tmrxEffectiveUnits', fmtSigned(stats.effectiveUnits, 'u', 2), stats.effectiveUnits);
+        setBoth('tmrxPending', String(stats.pending));
+        setBoth('tmrxGraded', String(stats.graded));
+        setBoth('tmrxStreak', stats.currentStreak > 0 ? stats.currentStreak + 'W' : stats.currentStreak < 0 ? Math.abs(stats.currentStreak) + 'L' : '0', stats.currentStreak);
+        setBoth('tmrxBestStreak', stats.bestStreak + 'W', stats.bestStreak);
+
+        ['tmrxLastGraded', 'tmrxLastGradedTop'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (!stats.graded) {
+                el.textContent = stats.pending ? 'No graded picks yet · ' + stats.pending + ' pending' : 'No graded picks yet';
+                return;
+            }
+            try {
+                const ageMs = Date.now() - new Date(stats.lastGraded).getTime();
+                const ageHr = Math.max(0, Math.floor(ageMs / 3600000));
+                const ageDay = Math.floor(ageHr / 24);
+                el.textContent = ageHr < 1 ? 'Last graded · just now' : ageHr < 24 ? 'Last graded · ' + ageHr + 'h ago' : 'Last graded · ' + ageDay + 'd ago';
+            } catch (_) {
+                el.textContent = stats.graded + ' graded picks';
+            }
+        });
+    }
+
+    // ======================== PROFIT/LOSS FOR A SINGLE PICK ========================
+    function pickPL(pick) {
+        if (pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
+        const u = pick.units || 1, o = pick.odds_snapshot || pick.odds || -110;
+        if (pick.status === 'won') return o < 0 ? u : (u * o / 100);
+        if (pick.status === 'lost') return o < 0 ? -(u * Math.abs(o) / 100) : -u;
+        return 0;
+    }
+
+    function getPickTimestamp(pick) {
+        return new Date(pick.locked_at || pick.created_at || 0).getTime();
+    }
+
+    function formatOddsValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        return num > 0 ? '+' + num : String(num);
+    }
+
+    function formatLineValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        // Trim trailing zeros: 5.50 -> "5.5", 9.00 -> "9", -3.50 -> "-3.5".
+        let s = String(num);
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return num > 0 ? '+' + s : s;
+    }
+    function formatTotalLineValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        let s = String(Math.abs(num));
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return s;
+    }
+
+    function formatPickLineValue(pick) {
+        if (window.TMR && typeof window.TMR.formatPickLine === 'function') {
+            return window.TMR.formatPickLine(pick);
+        }
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        const isTotal = market === 'totals' || market === 'total' || market === 'team_totals' || market === 'team_total' || market.endsWith('_totals');
+        return isTotal ? formatTotalLineValue(pick && pick.line_snapshot) : formatLineValue(pick && pick.line_snapshot);
+    }
+
+    function formatPickDisplayValue(pick) {
+        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+            const formatted = window.TMR.formatPickDisplay(pick);
+            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) return formatted;
+        }
+        const selection = String(pick && pick.selection || 'Pick').trim();
+        const line = formatLineValue(pick && pick.line_snapshot);
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        const home = String(pick && pick.home_team || '').trim();
+        const away = String(pick && pick.away_team || '').trim();
+        const matchup = away && home ? away + ' @ ' + home : '';
+        const selectionOnlySide = /^(over|under)$/i.test(selection);
+        const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
+        const isMoneyline = market === 'h2h';
+        const isSpread = market === 'spreads' || market.indexOf('spread') !== -1;
+        const sport = String(pick && pick.sport_key || '').toLowerCase();
+        const spreadLabel = sport.indexOf('icehockey') !== -1 ? 'Puck Line' : sport.indexOf('baseball') !== -1 ? 'Run Line' : 'Spread';
+        if (isTotal && selectionOnlySide) {
+            const totalLine = formatTotalLineValue(pick && pick.line_snapshot);
+            const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
+            return totalLine !== '--' ? base + ' ' + totalLine : base;
+        }
+        if (isMoneyline && selection && !/\b(moneyline|ml)\b/i.test(selection)) {
+            return selection + ' Moneyline';
+        }
+        if (isSpread && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
+            return selection + ' ' + spreadLabel + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : '');
+        }
+        if (line !== '--' && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) {
+            return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
+        }
+        return selection || 'Pick';
+    }
+
+    function formatUnitsValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        return Number(value).toFixed(Number(value) % 1 === 0 ? 0 : 2) + 'u';
+    }
+
+    function formatSignedUnits(value) {
+        if (value == null || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        return (num >= 0 ? '+' : '') + num.toFixed(2) + 'u';
+    }
+
+    function normalizeStatus(status) {
+        const raw = String(status || 'pending').toLowerCase();
+        if (raw === 'pushed') return 'push';
+        if (raw === 'cancelled') return 'canceled';
+        if (raw === 'voided') return 'void';
+        return raw;
+    }
+
+    function getProfileIdentityCandidates() {
+        const candidates = new Set();
+        const addCandidate = function(value) {
+            const normalized = String(value || '').trim().toLowerCase();
+            if (normalized) candidates.add(normalized);
+        };
+
+        addCandidate(profileUsername);
+        addCandidate(currentUser && currentUser.username);
+        addCandidate(currentUser && currentUser.id);
+        addCandidate(profileData && profileData.username);
+        addCandidate(profileData && profileData.id);
+
+        try {
+            const localCurrentUser = JSON.parse(localStorage.getItem('tmr_user') || 'null');
+            if (localCurrentUser) {
+                addCandidate(localCurrentUser.username);
+                addCandidate(localCurrentUser.id);
+            }
+        } catch (error) {}
+
+        try {
+            const localUsers = JSON.parse(localStorage.getItem('tmr_users') || '[]');
+            localUsers.forEach(function(user) {
+                if (String(user && user.username || '').trim().toLowerCase() === String(profileUsername || '').trim().toLowerCase()) {
+                    addCandidate(user.username);
+                    addCandidate(user.id);
+                }
+            });
+        } catch (error) {}
+
+        try {
+            const legacyUsers = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            legacyUsers.forEach(function(user) {
+                if (String(user && user.username || '').trim().toLowerCase() === String(profileUsername || '').trim().toLowerCase()) {
+                    addCandidate(user.username);
+                    addCandidate(user.id);
+                }
+            });
+        } catch (error) {}
+
+        return candidates;
+    }
+
+    function readLegacyPickStorage() {
+        // DISABLED Apr 30, 2026 — see anti-recovery safeguard in loadAndRender.
+        // Local picks must never appear on a "Trust My Record" profile.
+        return [];
+    }
+
+    function normalizeLegacyProfilePick(rawPick, index) {
+        if (!rawPick || typeof rawPick !== 'object') return null;
+
+        const createdAt = rawPick.locked_at || rawPick.created_at || rawPick.createdAt || rawPick.timestamp || new Date().toISOString();
+        const status = normalizeStatus(rawPick.status || rawPick.result || rawPick.pick_result || rawPick.outcome || 'pending');
+        const unitsValue = Number(
+            rawPick.units != null ? rawPick.units :
+            rawPick.betUnits != null ? rawPick.betUnits :
+            rawPick.unit_size != null ? rawPick.unit_size :
+            1
+        );
+        const oddsValue = Number(
+            rawPick.odds_snapshot != null ? rawPick.odds_snapshot :
+            rawPick.odds != null ? rawPick.odds :
+            rawPick.price != null ? rawPick.price :
+            -110
+        );
+        const resultUnits = rawPick.result_units != null
+            ? Number(rawPick.result_units)
+            : rawPick.unitsWon != null
+                ? Number(rawPick.unitsWon)
+                : null;
+        const awayTeam = rawPick.away_team || rawPick.awayTeam || rawPick.team_away || '';
+        const homeTeam = rawPick.home_team || rawPick.homeTeam || rawPick.team_home || '';
+
+        return {
+            id: rawPick.id || ('legacy_pick_' + index + '_' + createdAt),
+            userId: rawPick.userId || rawPick.user_id || rawPick.user || '',
+            username: rawPick.username || rawPick.user_name || rawPick.authorUsername || profileUsername || '',
+            sport_key: rawPick.sport_key || rawPick.sportKey || rawPick.sport || rawPick.league || 'unknown',
+            away_team: awayTeam,
+            home_team: homeTeam,
+            event_name: rawPick.event_name || rawPick.matchup || rawPick.game || rawPick.gameName || [awayTeam, homeTeam].filter(Boolean).join(' @ '),
+            selection: rawPick.selection || rawPick.pick || rawPick.pickName || rawPick.label || rawPick.team || rawPick.side || 'Tracked pick',
+            market_type: rawPick.market_type || rawPick.marketType || rawPick.pickType || rawPick.betType || 'h2h',
+            line_snapshot: rawPick.line_snapshot != null ? rawPick.line_snapshot : (rawPick.line != null ? rawPick.line : (rawPick.point != null ? rawPick.point : null)),
+            odds_snapshot: Number.isFinite(oddsValue) ? oddsValue : -110,
+            units: Number.isFinite(unitsValue) ? unitsValue : 1,
+            status: status,
+            locked_at: createdAt,
+            created_at: createdAt,
+            result_units: Number.isFinite(resultUnits) ? resultUnits : null,
+            book_title: rawPick.book_title || rawPick.book || rawPick.sportsbook || 'Legacy tracker',
+            notes: rawPick.notes || rawPick.writeup || ''
+        };
+    }
+
+    function getRecoveredLocalPicks() {
+        // DISABLED Apr 30, 2026 — see anti-recovery safeguard in loadAndRender.
+        return [];
+    }
+
+    function applyRecoveredProfileStats(picks) {
+        // DISABLED Apr 30, 2026 — local picks no longer hydrate profile stats.
+        return;
+    }
+
+    function getClosingLineValue(pick) {
+        return pick.closing_line != null ? pick.closing_line :
+            pick.closing_line_snapshot != null ? pick.closing_line_snapshot :
+            pick.closing_spread != null ? pick.closing_spread :
+            null;
+    }
+
+    function deriveBookName(pick) {
+        return pick.book || pick.sportsbook || pick.sportsbook_name || pick.source_book || 'Tracked';
+    }
+
+    function calculatePickClv(pick) {
+        const opening = Number(pick.line_snapshot);
+        const closing = Number(getClosingLineValue(pick));
+        if (!Number.isFinite(opening) || !Number.isFinite(closing)) return null;
+
+        const selection = String(pick.selection || '').toLowerCase();
+        const market = String(pick.market_type || '').toLowerCase();
+
+        if (selection.includes('under')) return parseFloat((closing - opening).toFixed(2));
+        if (selection.includes('over')) return parseFloat((opening - closing).toFixed(2));
+
+        if (market.includes('spread') || market.includes('total') || market.includes('f5') || market.includes('half') || market.includes('period')) {
+            return parseFloat((closing - opening).toFixed(2));
+        }
+
+        return parseFloat((closing - opening).toFixed(2));
+    }
+
+    function formatClvValue(value) {
+        if (value == null || !Number.isFinite(Number(value))) return '--';
+        const num = Number(value);
+        return (num >= 0 ? '+' : '') + num.toFixed(2);
+    }
+
+    function computeAggregateClv(picks) {
+        const values = (Array.isArray(picks) ? picks : [])
+            .map(calculatePickClv)
+            .filter(function(value) { return value != null && Number.isFinite(value); });
+        if (values.length === 0) {
+            return { display: '--', note: 'CLV unavailable', className: 'neutral' };
+        }
+        const avg = values.reduce(function(total, value) { return total + value; }, 0) / values.length;
+        return {
+            display: formatClvValue(avg),
+            note: values.length + ' picks with closing data',
+            className: avg > 0 ? 'positive' : avg < 0 ? 'negative' : 'neutral'
+        };
+    }
+
+    function computeLedgerMetrics(picks) {
+        const source = Array.isArray(picks) ? picks : [];
+        const graded = source.filter(p => ['won', 'lost', 'push', 'pushed'].includes(normalizeStatus(p.status)));
+        const decisions = graded.filter(p => ['won', 'lost'].includes(normalizeStatus(p.status)));
+        const wins = graded.filter(p => normalizeStatus(p.status) === 'won').length;
+        const losses = graded.filter(p => normalizeStatus(p.status) === 'lost').length;
+        const pushes = graded.filter(p => normalizeStatus(p.status) === 'push').length;
+        const pending = source.filter(p => normalizeStatus(p.status) === 'pending').length;
+        const favorites = decisions.filter(p => Number(p.odds_snapshot || p.odds || -110) < 0);
+        const underdogs = decisions.filter(p => Number(p.odds_snapshot || p.odds || -110) > 0);
+        const home = decisions.filter(p => (p.selection || '').toLowerCase().includes(String(p.home_team || '').toLowerCase()));
+        const away = decisions.filter(p => (p.selection || '').toLowerCase().includes(String(p.away_team || '').toLowerCase()));
+        const spreads = graded.filter(p => ['spread', 'spreads', 'alt_spreads'].includes(String(p.market_type || '').toLowerCase()));
+        const moneyline = graded.filter(p => ['h2h', 'moneyline'].includes(String(p.market_type || '').toLowerCase()));
+        const totals = graded.filter(p => ['totals', 'total', 'team_totals', 'alt_totals'].includes(String(p.market_type || '').toLowerCase()));
+        const firstSegment = graded.filter(p => String(p.market_type || '').toLowerCase().includes('first_half') || String(p.market_type || '').toLowerCase().includes('f5'));
+        const last10 = graded.slice(0, 10);
+        const settledWithPL = graded.map(function(pick) { return { pick: pick, pl: pickPL(pick) }; });
+        const bestWin = settledWithPL.filter(x => x.pl > 0).sort((a, b) => b.pl - a.pl)[0] || null;
+        const biggestLoss = settledWithPL.filter(x => x.pl < 0).sort((a, b) => a.pl - b.pl)[0] || null;
+        return {
+            wins: wins,
+            losses: losses,
+            pushes: pushes,
+            pending: pending,
+            favoriteRecord: formatRecordFromArray(favorites),
+            underdogRecord: formatRecordFromArray(underdogs),
+            homeRecord: formatRecordFromArray(home),
+            awayRecord: formatRecordFromArray(away),
+            spreadRecord: formatRecordFromArray(spreads),
+            moneylineRecord: formatRecordFromArray(moneyline),
+            totalRecord: formatRecordFromArray(totals),
+            firstSegmentRecord: formatRecordFromArray(firstSegment),
+            last10Record: formatRecordFromArray(last10),
+            bestWin: bestWin,
+            biggestLoss: biggestLoss
+        };
+    }
+
+    function formatRecordFromArray(picks) {
+        const source = Array.isArray(picks) ? picks : [];
+        const wins = source.filter(p => normalizeStatus(p.status) === 'won').length;
+        const losses = source.filter(p => normalizeStatus(p.status) === 'lost').length;
+        const pushes = source.filter(p => normalizeStatus(p.status) === 'push').length;
+        return wins + '-' + losses + '-' + pushes;
+    }
+
+    function analyticsTrack(eventName, params) {
+        if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+            window.TMRAnalytics.track(eventName, params || {});
+        }
+    }
+
+    function analyticsTrackPickHistoryView(context) {
+        if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.pickHistoryViewed === 'function') {
+            window.TMRAnalytics.pickHistoryViewed(context || {});
+            return;
+        }
+        analyticsTrack('pick_history_viewed', context || {});
+    }
+
+    function withTimeout(promise, ms, label) {
+        let timeoutId;
+        const timeout = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+                const error = new Error((label || 'Request') + ' timed out');
+                error.code = 'TMR_TIMEOUT';
+                reject(error);
+            }, ms);
+        });
+        return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+    }
+
+    function setProfileHeaderFallback(message, heading) {
+        const el = document.getElementById('profileHeader');
+        if (!el) return;
+        const myProfileUrl = buildMyProfileUrl();
+        el.innerHTML = '<div class="error-message"><h3>' + escapeHtml(heading || 'Profile not found.') + '</h3><p>' + escapeHtml(message || 'This profile could not be loaded right now.') + '</p>' +
+            (myProfileUrl ? '<a class="btn btn-primary" href="' + escapeHtml(myProfileUrl) + '" style="margin-top:14px;">Go to my profile</a>' : '') +
+            '</div>';
+        // Not-found is a terminal state: nothing below the header should render.
+        // Hide every profile content section (advanced capper metrics strip, tabs,
+        // body, glossary) so a missing user never shows empty/fabricated metrics.
+        [
+            '#profileAdvancedMetricsSection',
+            '.profile-tabs-section',
+            '.profile-body-section',
+            '#advancedMetricsGlossaryBottom',
+            '.summary-bar', '.picks-section', '.analytics-section'
+        ].forEach(function(sel) {
+            document.querySelectorAll(sel).forEach(function(node) { node.style.display = 'none'; });
+        });
+    }
+
+    function normalizeProfileLookup(value) {
+        return String(value == null ? '' : value).trim().replace(/^@+/, '').trim();
+    }
+
+    function profileLookupKey(value) {
+        return normalizeProfileLookup(value).toLowerCase();
+    }
+
+    function profileLookupSlug(value) {
+        return profileLookupKey(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function profileLookupMatchesUser(value, user) {
+        const key = profileLookupKey(value);
+        if (!key || !user) return false;
+        return [user.username, user.displayName, user.display_name, user.handle, user.slug].some(function(candidate) {
+            return profileLookupKey(candidate) === key || profileLookupSlug(candidate) === key;
+        });
+    }
+
+    function buildMyProfileUrl() {
+        const user = currentUser || (typeof auth !== 'undefined' && auth.getCurrentUser ? auth.getCurrentUser() : null);
+        const username = normalizeProfileLookup(user && (user.username || user.handle || user.displayName || user.display_name));
+        return username ? '/profile/?user=' + encodeURIComponent(username) : '';
+    }
+
+    function profileLookupCandidates() {
+        const candidates = [];
+        const add = function(value) {
+            const cleaned = normalizeProfileLookup(value);
+            if (!cleaned) return;
+            if (!candidates.some(function(existing) { return profileLookupKey(existing) === profileLookupKey(cleaned); })) {
+                candidates.push(cleaned);
+            }
+        };
+        add(requestedProfileLookup);
+        add(profileUsername);
+        if (profileUsername) add(profileUsername.toLowerCase());
+        if (currentUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, currentUser)) {
+            add(currentUser.username || currentUser.handle || currentUser.displayName || currentUser.display_name);
+        }
+        return candidates;
+    }
+
+    // A profile is ABSENT only when the API says so (404). A timeout, an abort,
+    // a 5xx or a dead connection means "we could not ask" -- rendering those as
+    // "Profile not found" is what makes a live, resolvable member read as
+    // deleted, and it is the failure the /u/ path has now shipped twice
+    // (2026-08-11 edge fetch timeout, 2026-08-12 a 231KB avatar payload losing
+    // the race below). Never let a transient error claim a member is missing.
+    function isDefinitiveMiss(error) {
+        return !!(error && Number(error.status) === 404);
+    }
+
+    async function fetchProfileWithFallbacks() {
+        let lastError = null;
+        const candidates = profileLookupCandidates();
+        for (const candidate of candidates) {
+            // One retry on a transient failure only. A 404 is answered, not
+            // retried, so a genuinely unknown username still fails fast.
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
+                    profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
+                    return data;
+                } catch (error) {
+                    lastError = error;
+                    console.warn('[Profile] Profile lookup failed for "' + candidate + '" (attempt ' + (attempt + 1) + '):', error && error.message ? error.message : error);
+                    if (isDefinitiveMiss(error)) break;
+                }
+            }
+            try {
+                if (typeof api.searchUsers === 'function') {
+                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 9000, 'Profile search request');
+                    const users = (searchData && searchData.users) || [];
+                    const match = users.find(function(user) {
+                        return profileLookupMatchesUser(candidate, user);
+                    });
+                    if (match) {
+                        profileUsername = normalizeProfileLookup(match.username || candidate);
+                        return { user: match };
+                    }
+                }
+            } catch (error) {
+                lastError = error;
+                console.warn('[Profile] Profile search fallback failed for "' + candidate + '":', error && error.message ? error.message : error);
+            }
+        }
+        if (currentUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, currentUser)) {
+            profileUsername = normalizeProfileLookup(currentUser.username || currentUser.handle || currentUser.displayName || currentUser.display_name);
+            return { user: currentUser };
+        }
+        throw lastError || new Error('Profile not found');
+    }
+
+    function setAdvancedMetricsEmpty(message) {
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        if (statusEl) statusEl.textContent = message || 'No verified metrics yet';
+        document.querySelectorAll('.profile-advanced-metric__value').forEach(function(el) {
+            if (!el || !el.id) return;
+            // The static shell now boots every tile as a loading ellipsis ("…")
+            // so visitors never see the "Not enough data yet" claim flash before
+            // real values land. That loading state (and true emptiness) is what
+            // this fallback replaces; anything else is real resolved content.
+            var current = el.textContent.trim();
+            if (current && current !== '…') return;
+            el.textContent = 'Not enough data yet';
+            el.className = 'profile-advanced-metric__value is-empty';
+            el.removeAttribute('aria-busy');
+        });
+    }
+
+    function applyProfileDeepLinkView() {
+        let target = null;
+        if (profileView === 'picks' || profileView === 'ledger' || profileView === 'history') {
+            target = document.querySelector('.picks-section');
+        } else if (profileView === 'analytics' || profileView === 'stats') {
+            target = document.getElementById('analyticsSection');
+        }
+
+        if (!target) return;
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.style.boxShadow = '0 0 0 2px rgba(29, 127, 232, 0.65)';
+        target.style.borderRadius = '12px';
+        setTimeout(function() {
+            target.style.boxShadow = '';
+            target.style.borderRadius = '';
+        }, 2200);
+    }
+
+    function getActiveFilterState() {
+        return {
+            search: document.getElementById('filterSearch') ? document.getElementById('filterSearch').value.trim() : '',
+            sport: document.getElementById('filterSport') ? document.getElementById('filterSport').value : '',
+            bet_type: document.getElementById('filterType') ? document.getElementById('filterType').value : '',
+            result: document.getElementById('filterResult') ? document.getElementById('filterResult').value : '',
+            odds_bucket: document.getElementById('filterOdds') ? document.getElementById('filterOdds').value : '',
+            unit_range: document.getElementById('filterUnits') ? document.getElementById('filterUnits').value : '',
+            period_days: document.getElementById('filterPeriod') ? document.getElementById('filterPeriod').value : '',
+            date_from: document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '',
+            date_to: document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '',
+            sort: document.getElementById('filterSort') ? document.getElementById('filterSort').value : 'date_desc',
+            quick_filter: activeQuickFilter || '',
+            username: profileUsername || ''
+        };
+    }
+
+    // ======================== INIT ========================
+    async function init() {
+        try {
+            if (!api || typeof api.getUserProfile !== 'function') {
+                throw new Error('Profile service is unavailable. Please refresh and try again.');
+            }
+
+            // Get current user from auth system. AuthSystem's own session hydration
+            // runs on DOMContentLoaded, which can fire AFTER this inline init() (both
+            // race the same event on script position/cache timing), so auth.isLoggedIn()
+            // can still read false here even though a session is already stored. Read
+            // the same localStorage key AuthSystem itself hydrates from as a direct
+            // fallback so ownership detection (isOwnProfile) doesn't depend on that race.
+            if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
+                currentUser = auth.getCurrentUser();
+            } else {
+                try {
+                    const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('currentUser');
+                    if (stored) currentUser = JSON.parse(stored);
+                } catch (e) {}
+            }
+            if (currentUser) window.currentUser = currentUser;
+
+            if (!profileUsername && currentUser) profileUsername = currentUser.username;
+
+            if (!profileUsername) {
+                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+                return;
+            }
+
+            isOwnProfile = currentUser && currentUser.username && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
+            await loadProfile();
+        } catch (e) {
+            setProfileHeaderFallback(e.message);
+        }
+    }
+
+    // ======================== LOAD PROFILE ========================
+    async function loadProfile() {
+        try {
+            if (!api || typeof api.getUserProfile !== 'function') {
+                throw new Error('Profile service is unavailable.');
+            }
+
+            const data = await fetchProfileWithFallbacks();
+            profileData = data.user || data;
+            if (!profileData) {
+                throw new Error('User not found.');
+            }
+            // Expose globally so inline onclick handlers (affiliation CTA, etc)
+            // can read the username for per-user localStorage keys.
+            window.profileData = profileData;
+            profileUserId = profileData.id;
+
+            if (currentUser && !isOwnProfile) {
+                isFollowingProfile = !!profileData.is_following;
+                isBlockedProfile = !!profileData.is_blocked_by_viewer;
+                hasBlockedViewer = !!profileData.has_blocked_viewer;
+            }
+
+            renderProfileHeader(profileData);
+            loadProfileSecondaryData();
+            loadAllPicks().catch(function(error) {
+                console.warn('[Profile] Verified pick history unavailable:', error);
+                renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
+            });
+            loadAdvancedMetrics(profileData.username || profileUsername || '');
+            loadPollPoints(profileData.username || profileUsername || '');
+            loadCommunityActivity(profileData.username || profileUsername || '');
+            loadChallengeRecord(profileData.username || profileUsername || '');
+            loadForumActivity(profileData.username || profileUsername || '');
+            analyticsTrackPickHistoryView({
+                view_type: isOwnProfile ? 'own' : 'public',
+                username: profileData.username || profileUsername || '',
+                display_name: profileData.display_name || profileData.username || ''
+            });
+        } catch (error) {
+            console.error('[Profile] Profile load failed:', error);
+            document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
+            const who = requestedProfileLookup || profileUsername || 'this user';
+            if (isDefinitiveMiss(error)) {
+                setProfileHeaderFallback('We could not find a profile for "' + who + '".');
+            } else {
+                setProfileHeaderFallback('"' + who + '" could not be loaded right now -- the profile service did not answer in time. The account is not missing; reload to try again.', 'Profile could not be loaded.');
+            }
+        }
+    }
+
+    async function loadProfileSecondaryData() {
+        if (!profileData || !profileUsername) return;
+        const renderUpdatedHeader = function() {
+            try { renderProfileHeader(profileData); } catch (e) { console.warn('[Profile] Secondary header refresh failed:', e); }
+        };
+
+        // Owner-only setup enrichments. Public profiles should not make these
+        // optional gaming calls because they are not needed for the public card
+        // and a backend miss would show as a failed profile-adjacent request.
+        if (isOwnProfile) {
+            try {
+                const teamsData = await withTimeout(api.request('/gaming/teams/' + encodeURIComponent(profileUsername)), 4500, 'Favorite teams request');
+                if (teamsData && Array.isArray(teamsData.favorite_teams)) {
+                    const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
+                    profileData._fav_teams = {};
+                    teamRows.forEach(t => {
+                        if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
+                    });
+                    // users.favorite_teams/favorite_sports (Sports Identity card, PUT
+                    // /users/profile) is the canonical source the public profile reads.
+                    // This legacy per-sport gaming table is only a fallback for older
+                    // accounts that never migrated -- it must never clobber real,
+                    // already-saved data with an empty/stale gaming-table result.
+                    if (!Array.isArray(profileData.favorite_teams) || profileData.favorite_teams.length === 0) {
+                        profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                    }
+                    if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
+                        profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+                    }
+                    renderUpdatedHeader();
+                }
+            } catch(e) { profileData._fav_teams = {}; }
+
+            try {
+                const coinData = await withTimeout(api.getCoinBalance(), 4500, 'Coin balance request');
+                if (coinData && typeof coinData.balance === 'number') {
+                    const coinSection = document.getElementById('tmrxCoinSection');
+                    const coinCell = document.getElementById('tmrxCoinBalance');
+                    if (coinCell) {
+                        coinCell.textContent = coinData.balance.toLocaleString('en-US');
+                        coinCell.classList.remove('is-placeholder');
+                    }
+                    // Frozen is now its own badge instead of a '(frozen)' suffix glued to
+                    // the balance number -- the number is the focal point of the card.
+                    const frozenBadge = document.getElementById('tmrxCoinFrozen');
+                    if (frozenBadge) frozenBadge.hidden = !coinData.is_frozen;
+                    if (coinSection) coinSection.hidden = false;
+                }
+            } catch (e) { /* wallet is a soft enrichment -- never blocks the profile */ }
+
+            try {
+                const txData = await withTimeout(api.getCoinTransactions({ limit: 5 }), 4500, 'Coin transaction history request');
+                const entries = (txData && Array.isArray(txData.entries)) ? txData.entries : [];
+                if (entries.length) {
+                    const escTx = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (ch) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+                    const fmtTxDate = (iso) => {
+                        const d = new Date(iso);
+                        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    };
+                    // One <li> per entry, on a single line: description | date | signed
+                    // amount, right-aligned. Colours come from the .is-pos/.is-neg classes in
+                    // the wallet-card CSS so they follow the theme tokens, not hard-coded hex.
+                    const rows = entries.map((entry) => {
+                        const sign = entry.amount > 0 ? '+' : '';
+                        const cls = entry.amount > 0 ? ' is-pos' : (entry.amount < 0 ? ' is-neg' : '');
+                        const count = entry.consolidated_count > 1 ? ' (' + entry.consolidated_count + ')' : '';
+                        return '<li>' +
+                            '<span class="tmrw-tx-desc" title="' + escTx(entry.description) + '">' + escTx(entry.description) + count + '</span>' +
+                            '<span class="tmrw-tx-date">' + fmtTxDate(entry.created_at) + '</span>' +
+                            '<span class="tmrw-tx-amt' + cls + '">' + sign + entry.amount.toLocaleString('en-US') + '</span>' +
+                            '</li>';
+                    }).join('');
+                    const recentList = document.getElementById('tmrxCoinRecentList');
+                    const recentWrap = document.getElementById('tmrxCoinRecent');
+                    if (recentList) recentList.innerHTML = rows;
+                    if (recentWrap) recentWrap.hidden = false;
+                }
+            } catch (e) { /* recent-activity list is a soft enrichment -- never blocks the profile */ }
+
+            try {
+                const gamerData = await withTimeout(api.request('/gaming/profile/' + encodeURIComponent(profileUsername)), 4500, 'Gamer profile request');
+                if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
+                else profileData._gamer = {};
+            } catch(e) { profileData._gamer = {}; }
+        }
+
+        try {
+            await withTimeout(refreshLeaderboardRank(), 4500, 'Leaderboard request');
+            renderUpdatedHeader();
+        } catch(e) {
+            console.warn('[Profile] Leaderboard rank unavailable:', e && e.message ? e.message : e);
+        }
+    }
+
+    function renderEmptyProfileHistory() {
+        allLoadedPicks = [];
+        try {
+            const stats = computeUnifiedStats([]);
+            renderCoreHandicapperStatsFromPicks([]);
+            renderSummaryBar(stats);
+            renderPicksTable([]);
+            renderAnalytics(stats);
+            renderCapperMetrics([]);
+            applyProfileDeepLinkView();
+        } catch (e) {
+            console.warn('[Profile] Empty pick history render failed:', e);
+        }
+    }
+
+    // ======================== ADVANCED METRICS ========================
+    /* RAIL_AVG_ODDS_20260901. The header rail reads its Avg Odds from the users
+       row (`p.avg_odds`), which does not carry that column, and its fallback is a
+       ledger calculation that has not run yet when the header first paints. So a
+       profile with 675 graded picks and a perfectly good average price of -130 in
+       the aggregator rendered "N/A" in the rail while the correct figure sat in a
+       payload this page had already fetched.
+
+       /metrics is the authority for this number -- it is the average implied
+       probability converted back to American, computed server-side over the graded
+       set -- so when it lands, it fills the cell. Display only; nothing else about
+       the header changes. */
+    function applyRailAvgOdds(data) {
+        const odds = data && data.summary ? data.summary.avg_odds : null;
+        if (odds == null || !Number.isFinite(Number(odds)) || Number(odds) === 0) return;
+        const n = Math.round(Number(odds));
+        const text = (n > 0 ? '+' : '') + n;
+        /* The metrics fetch and the header render race, and metrics usually wins
+           -- the rail card does not exist yet when this first runs, and a single
+           attempt therefore did nothing at all. Poll briefly for the cell, and
+           keep watching a little longer in case the header re-renders over us. */
+        let tries = 0;
+        const fill = function () {
+            tries += 1;
+            const card = document.querySelector('.profile-rail-card--avg-odds .profile-rail-value');
+            if (card) {
+                const current = (card.textContent || '').trim();
+                // Only fill a placeholder. A real value already on screen is left alone.
+                if (!current || current === 'N/A' || current === 'Loading...' ||
+                    current === 'Unavailable' || current === '—' || current === '-') {
+                    card.textContent = text;
+                }
+            }
+            if (tries < 40) setTimeout(fill, 250);
+        };
+        fill();
+    }
+
+    // Calls the new /api/users/:username/metrics aggregator and fills the
+    // Advanced Metrics tab placeholders. Anything the aggregator returns
+    // null for stays as the '—' placeholder per the no-fake-data rule.
+    // Prediction quiz / poll points for the Polls tab. Reads the public
+    // per-user poll stats (points earned from the daily MLB quiz + other polls).
+    // ======================== FORUM ACTIVITY ========================
+    // Full, paginated forum history for the profile: Posts (every reply the
+    // member wrote) and Threads (every thread they started), newest first.
+    //
+    // Every row is a live read of the forum tables through
+    // GET /api/users/:username/forum-activity -- there is no placeholder count,
+    // no sample row, and no client-side cache to go stale. The server owns
+    // visibility (deactivated sections excluded; forum rows are hard-deleted so
+    // removed content is already gone) and owns the sort and the paging, so a
+    // member with hundreds of posts still loads one small page at a time.
+    var FA_PER_PAGE = 10;
+    var faState = { username: '', tab: 'posts', page: { posts: 1, threads: 1 }, loading: false, seq: 0 };
+
+    function faEsc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    // Exact date AND time -- a forum history is a timeline, so "3 days ago" is
+    // not enough to place a post against a game or a line move.
+    function faStamp(value) {
+        if (!value) return '';
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit'
+        });
+    }
+
+    function faPlural(n, one, many) {
+        return Number(n).toLocaleString() + ' ' + (Number(n) === 1 ? one : many);
+    }
+
+    function faRenderItems(items, tab) {
+        if (!items.length) {
+            return '<div class="fa-empty">' + (tab === 'threads'
+                ? 'No threads started yet.'
+                : 'No forum replies yet.') + '</div>';
+        }
+        return items.map(function (it) {
+            var meta = [faEsc(faStamp(it.created_at))];
+            if (tab === 'threads') {
+                meta.push('<span class="fa-stat">' + faPlural(it.reply_count || 0, 'reply', 'replies') + '</span>');
+                meta.push('<span class="fa-stat">' + faPlural(it.view_count || 0, 'view', 'views') + '</span>');
+            } else {
+                if (it.like_count) meta.push('<span class="fa-stat">' + faPlural(it.like_count, 'like', 'likes') + '</span>');
+                meta.push('in ' + faEsc(it.title || 'thread'));
+            }
+            var label = tab === 'threads'
+                ? 'Open thread: ' + (it.title || '')
+                : 'Open this reply in: ' + (it.title || '');
+            return '<a class="fa-item" href="' + faEsc(it.url) + '" aria-label="' + faEsc(label) + '">'
+                + '<div class="fa-item-top">'
+                +   '<span class="fa-item-title">' + faEsc(it.title || 'Untitled thread') + '</span>'
+                +   (it.category_name ? '<span class="fa-cat">' + faEsc(it.category_name) + '</span>' : '')
+                + '</div>'
+                + (it.preview ? '<div class="fa-preview">' + faEsc(it.preview) + '</div>' : '')
+                + '<div class="fa-meta">' + meta.join('<span aria-hidden="true">&middot;</span>') + '</div>'
+                + '</a>';
+        }).join('');
+    }
+
+    function faRenderPager(p) {
+        var pager = document.getElementById('faPagination');
+        if (!pager) return;
+        var pages = p && p.pages ? p.pages : 1;
+        if (pages <= 1) { pager.hidden = true; pager.innerHTML = ''; return; }
+        var cur = p.page;
+        var from = ((cur - 1) * p.limit) + 1;
+        var to = Math.min(cur * p.limit, p.total);
+        var html = '<div class="tmrx-page-info">Showing ' + from + '&ndash;' + to + ' of '
+            + Number(p.total).toLocaleString() + ' &middot; Page ' + cur + ' of ' + pages + '</div>';
+        html += '<button type="button" data-fa-page="' + (cur - 1) + '"' + (cur === 1 ? ' disabled' : '') + '>Previous</button>';
+        var nums = [];
+        for (var i = 1; i <= pages; i++) {
+            if (i === 1 || i === pages || (i >= cur - 1 && i <= cur + 1)) nums.push(i);
+        }
+        var prev = 0;
+        nums.forEach(function (i) {
+            if (i - prev > 1) html += '<span class="tmrx-page-gap">&hellip;</span>';
+            html += '<button type="button" class="' + (i === cur ? 'is-active' : '') + '" data-fa-page="' + i + '"'
+                + (i === cur ? ' disabled' : '') + '>' + i + '</button>';
+            prev = i;
+        });
+        html += '<button type="button" data-fa-page="' + (cur + 1) + '"' + (cur === pages ? ' disabled' : '') + '>Next</button>';
+        pager.hidden = false;
+        pager.innerHTML = html;
+    }
+
+    async function faFetch(tab, page) {
+        var list = document.getElementById('faList');
+        if (!list || !faState.username) return;
+        // Guard against an out-of-order response overwriting a newer tab/page.
+        var seq = ++faState.seq;
+        faState.loading = true;
+        list.innerHTML = '<div class="fa-empty">Loading&hellip;</div>';
+        try {
+            var resp = await window.api.request('/users/' + encodeURIComponent(faState.username)
+                + '/forum-activity?tab=' + encodeURIComponent(tab)
+                + '&page=' + encodeURIComponent(page)
+                + '&limit=' + FA_PER_PAGE);
+            if (seq !== faState.seq) return;
+            var items = (resp && Array.isArray(resp.items)) ? resp.items : [];
+            list.innerHTML = faRenderItems(items, tab);
+            faRenderPager(resp && resp.pagination);
+            var meta = document.getElementById('faTotalMeta');
+            if (meta && resp && resp.pagination) {
+                meta.textContent = Number(resp.pagination.total).toLocaleString()
+                    + (tab === 'threads' ? ' threads started' : ' replies posted');
+            }
+        } catch (err) {
+            if (seq !== faState.seq) return;
+            // Never fake a zero on failure -- an empty list and "no activity"
+            // mean different things and the difference matters on a profile.
+            list.innerHTML = '<div class="fa-empty fa-error">Forum activity could not be loaded. '
+                + '<button type="button" data-fa-retry="1">Retry</button></div>';
+            var pgr = document.getElementById('faPagination');
+            if (pgr) { pgr.hidden = true; pgr.innerHTML = ''; }
+        } finally {
+            if (seq === faState.seq) faState.loading = false;
+        }
+    }
+
+    function faSetTab(tab) {
+        faState.tab = tab;
+        var tabs = document.getElementById('faTabs');
+        if (tabs) {
+            tabs.querySelectorAll('.tmr-cap-tab').forEach(function (b) {
+                var on = b.getAttribute('data-fa-tab') === tab;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+        faFetch(tab, faState.page[tab] || 1);
+    }
+
+    async function loadForumActivity(username) {
+        var section = document.getElementById('forumActivity');
+        if (!section || !username) return;
+        faState.username = username;
+        section.hidden = false;
+        faSetTab('posts');
+    }
+
+    // Delegated, bound once: tab switches, pager clicks, retry, and the
+    // Community Activity counts, which now scroll down to this section instead
+    // of bouncing the visitor out to /forum/.
+    if (!window.__faBound) {
+        window.__faBound = true;
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest) return;
+            var tabBtn = e.target.closest('#faTabs .tmr-cap-tab');
+            if (tabBtn) { faSetTab(tabBtn.getAttribute('data-fa-tab')); return; }
+            var pageBtn = e.target.closest('#faPagination button[data-fa-page]');
+            if (pageBtn && !pageBtn.disabled) {
+                var p = parseInt(pageBtn.getAttribute('data-fa-page'), 10);
+                if (!Number.isFinite(p) || p < 1) return;
+                faState.page[faState.tab] = p;
+                faFetch(faState.tab, p);
+                var sec = document.getElementById('forumActivity');
+                if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            if (e.target.closest('[data-fa-retry]')) {
+                faFetch(faState.tab, faState.page[faState.tab] || 1);
+                return;
+            }
+            var caCell = e.target.closest('#caForumPostsCell, #caThreadsCell');
+            if (caCell) {
+                var sect = document.getElementById('forumActivity');
+                if (!sect || sect.hidden) return;
+                e.preventDefault();
+                faSetTab(caCell.id === 'caThreadsCell' ? 'threads' : 'posts');
+                sect.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    // ======================== COMMUNITY ACTIVITY ========================
+    // Fills the Overview "Community Activity" ribbon from the aggregator that
+    // counts by permanent account id (forum vs feed kept separate; deleted /
+    // hidden / auto pick-share / bot content excluded server-side). No activity
+    // renders as clean zeros, never a fake number and never a big empty card.
+    /**
+     * Head to head challenge record. Public: a signed out visitor sees the same figures the
+     * member does, because a challenge record is a public claim.
+     *
+     * The section stays hidden unless the member has actually taken a challenge. A row of
+     * zeroes on every profile would read as a dead feature, and worse, would imply a record
+     * exists where none does.
+     */
+    async function loadChallengeRecord(username) {
+        var section = document.getElementById('tmrxChallengeSection');
+        if (!section || !username) return;
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var setText = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+        var num = function (v) { return (Number(v) || 0).toLocaleString('en-US'); };
+        try {
+            var resp = await fetch(apiBase + '/api/tmr-challenges/stats/by-username/' + encodeURIComponent(username),
+                { headers: { Accept: 'application/json' } });
+            if (!resp.ok) return;
+            var s = await resp.json();
+            if (!s || !Number(s.total)) return;
+
+            setText('tmrxChRecord', s.record || '0-0');
+            setText('tmrxChRecordSub', s.win_rate == null
+                ? 'no challenge has been decided yet'
+                : s.win_rate + '% of decided challenges won');
+            setText('tmrxChWon', num(s.tmr_won) + ' TMR');
+            setText('tmrxChLost', num(s.tmr_lost) + ' TMR');
+            var net = Number(s.tmr_net) || 0;
+            setText('tmrxChNet', (net > 0 ? '+' : '') + num(net) + ' TMR');
+            setText('tmrxChActive', num(s.active));
+            // Pending offers are not active challenges: nothing is staked until one is
+            // accepted, so they are named separately rather than counted in.
+            setText('tmrxChActiveSub', Number(s.tmr_in_escrow)
+                ? num(s.tmr_in_escrow) + ' TMR held in escrow'
+                : (Number(s.pending) ? num(s.pending) + ' offer(s) awaiting an answer' : 'live right now'));
+            setText('tmrxChCompleted', num(s.completed));
+            section.hidden = false;
+        } catch (e) {
+            // A profile must still render without this. Staying hidden is the honest failure:
+            // it says nothing rather than reporting a record of zero.
+        }
+    }
+
+    async function loadCommunityActivity(username) {
+        var section = document.getElementById('communityActivity');
+        if (!section || !username) return;
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
+        var fmtDate = function (v) {
+            if (!v) return '—';
+            var d = new Date(v);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+        var setText = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+        var setCount = function (id, n) { setText(id, (Number(n) || 0).toLocaleString('en-US')); };
+        // Wire a stat cell as a link only when there is a real destination and a
+        // non-zero count; otherwise it stays a plain, non-clickable stat.
+        var wireCell = function (id, url) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            if (url) { el.setAttribute('href', url); el.classList.remove('ca-disabled'); }
+            else { el.removeAttribute('href'); el.classList.add('ca-disabled'); }
+        };
+        try {
+            var resp = await fetch(apiBase + '/api/users/' + encodeURIComponent(username) + '/community-activity', {
+                headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
+            });
+            if (!resp.ok) { wireCell('caForumPostsCell', null); wireCell('caThreadsCell', null); return; }
+            var d = await resp.json();
+            var forum = d.forum || {}, feed = d.feed || {};
+            setCount('caForumPosts', forum.posts);
+            setCount('caThreads', forum.threads);
+            setCount('caFeedPosts', feed.posts);
+            setCount('caComments', feed.comments);
+            setCount('caLikes', d.likes_received);
+            setText('caMemberSince', fmtDate(d.member_since));
+            setText('caLastActive', fmtDate(d.last_active));
+            var meta = document.getElementById('caLastActiveMeta');
+            if (meta) meta.textContent = d.last_active ? ('Last active ' + fmtDate(d.last_active)) : '';
+            // Point the two forum counts at the Forum Activity section on this
+            // page (the click handler intercepts and switches tabs); fall back to
+            // the server's /forum/ URL if that section never rendered.
+            wireCell('caForumPostsCell', forum.posts ? '#forumActivity' : (forum.posts_url || null));
+            wireCell('caThreadsCell', forum.threads ? '#forumActivity' : (forum.threads_url || null));
+            var faPc = document.getElementById('faPostsCount');
+            if (faPc) faPc.textContent = forum.posts ? '(' + Number(forum.posts).toLocaleString() + ')' : '';
+            var faTc = document.getElementById('faThreadsCount');
+            if (faTc) faTc.textContent = forum.threads ? '(' + Number(forum.threads).toLocaleString() + ')' : '';
+
+            // Up to three highlights, only when the data exists.
+            var h = d.highlights || {};
+            var cards = [];
+            if (h.recent_thread && h.recent_thread.title) {
+                cards.push('<a class="ca-hl" href="' + esc(h.recent_thread.url) + '">'
+                    + '<div class="ca-hl-label">Most Recent Thread</div>'
+                    + '<div class="ca-hl-body">' + esc(h.recent_thread.title) + '</div>'
+                    + '<div class="ca-hl-meta">' + fmtDate(h.recent_thread.created_at)
+                    + (h.recent_thread.likes ? ' · ' + h.recent_thread.likes + ' likes' : '') + '</div></a>');
+            }
+            if (h.top_post && h.top_post.excerpt) {
+                cards.push('<a class="ca-hl" href="' + esc(h.top_post.url) + '">'
+                    + '<div class="ca-hl-label">Most-Liked Post</div>'
+                    + '<div class="ca-hl-body">' + esc(h.top_post.excerpt) + '</div>'
+                    + '<div class="ca-hl-meta">' + (Number(h.top_post.likes) || 0) + ' likes · ' + fmtDate(h.top_post.created_at) + '</div></a>');
+            }
+            if (h.latest_forum_post && h.latest_forum_post.excerpt) {
+                cards.push('<a class="ca-hl" href="' + esc(h.latest_forum_post.url) + '">'
+                    + '<div class="ca-hl-label">Latest Forum Contribution</div>'
+                    + '<div class="ca-hl-body">' + esc(h.latest_forum_post.excerpt) + '</div>'
+                    + '<div class="ca-hl-meta">' + (h.latest_forum_post.thread_title ? 'in ' + esc(h.latest_forum_post.thread_title) + ' · ' : '')
+                    + fmtDate(h.latest_forum_post.created_at) + '</div></a>');
+            }
+            var hl = document.getElementById('caHighlights');
+            if (hl) {
+                if (cards.length) { hl.innerHTML = cards.slice(0, 3).join(''); hl.hidden = false; }
+                else { hl.innerHTML = ''; hl.hidden = true; }
+            }
+        } catch (e) {
+            console.warn('[Profile] Community activity unavailable:', e && e.message ? e.message : e);
+            wireCell('caForumPostsCell', null);
+            wireCell('caThreadsCell', null);
+        }
+    }
+
+    async function loadPollPoints(username) {
+        var host = document.getElementById('profilePollPoints');
+        var empty = document.getElementById('profilePollEmpty');
+        if (!host || !username) return;
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        try {
+            var resp = await fetch(apiBase + '/api/polls/users/' + encodeURIComponent(username) + '/stats');
+            if (!resp.ok) return;
+            var data = await resp.json();
+            var o = (data && data.overall) || {};
+            var qr = data && data.quiz_rating;
+            var pts = parseInt(o.total_points || 0) || 0;
+            var voted = parseInt(o.polls_voted || 0) || 0;
+            var correct = parseInt(o.polls_correct || 0) || 0;
+            var pending = parseInt(o.pending_predictions || 0) || 0;
+            if (pts <= 0 && voted <= 0) return; // keep the empty state
+            var qualified = !!o.qualified;
+            var accRaw = (o.prediction_accuracy != null) ? (Math.round(parseFloat(o.prediction_accuracy) * 10) / 10) : (voted > 0 ? Math.round(correct / voted * 1000) / 10 : 0);
+            // Below the 5-scored-prediction ranking minimum, show the raw
+            // fraction alongside the percentage instead of a bare number that
+            // looks more stable than it is (e.g. "1/1 -- 100%").
+            var accDisplay = qualified ? (accRaw + '%') : (correct + '/' + voted + ' &mdash; ' + accRaw + '%');
+            var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
+            var cats = (data.by_category || []).filter(function (c) { return parseInt(c.total_points || 0) > 0; })
+                .sort(function (a, b) { return (parseInt(b.total_points) || 0) - (parseInt(a.total_points) || 0); }).slice(0, 4);
+            var catHtml = cats.length ? ('<div class="pollpts-cats">' + cats.map(function (c) {
+                return '<span class="pollpts-cat">' + esc(c.category_name || c.name || c.slug || 'Category') + ' <b>' + (parseInt(c.total_points) || 0) + '</b></span>';
+            }).join('') + '</div>') : '';
+            host.innerHTML =
+                '<div class="pollpts-card">' +
+                    '<div class="pollpts-head"><i class="fas fa-square-poll-vertical"></i> Prediction Quiz &amp; Poll Points</div>' +
+                    (qr ? ('<div class="pollpts-rating">' +
+                        '<span class="pollpts-elo">' + (parseInt(qr.rating) || 1000) + '</span>' +
+                        '<span class="pollpts-elolbl">Quiz skill rating' + (qr.global_rank ? ' &middot; #' + qr.global_rank + ' overall' : '') + '</span>' +
+                        (qr.quizzes_played ? '<span class="pollpts-elometa">' + qr.quizzes_played + ' quizzes &middot; ' + (qr.wins || 0) + ' wins' + (qr.sharp_rating ? ' &middot; Sharp ' + qr.sharp_rating + 'x' : '') + '</span>' : '') +
+                    '</div>') : '') +
+                    '<div class="pollpts-grid">' +
+                        '<div class="pollpts-stat"><span class="pollpts-num" style="color:#4DA3FF;">' + pts.toLocaleString() + '</span><span class="pollpts-lbl">Poll Points</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + voted.toLocaleString() + '</span><span class="pollpts-lbl">Scored Predictions</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + correct.toLocaleString() + '</span><span class="pollpts-lbl">Correct Predictions</span></div>' +
+                        // Submitted but not yet resolved (or voided). Kept as its
+                        // own number so a pending pick is never silently counted
+                        // as a miss, nor as a point already banked.
+                        (pending > 0 ? '<div class="pollpts-stat"><span class="pollpts-num" style="color:#93A4BA;">' + pending.toLocaleString() + '</span><span class="pollpts-lbl">Awaiting Results</span></div>' : '') +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + accDisplay + '</span><span class="pollpts-lbl">Prediction Accuracy' + (qualified ? '' : ' &middot; not yet qualified') + '</span></div>' +
+                    '</div>' + catHtml +
+                    '<a class="pollpts-link" href="/polls/">Play today\'s prediction quiz <i class="fas fa-arrow-right"></i></a>' +
+                '</div>';
+            if (empty) empty.style.display = 'none';
+        } catch (e) { /* leave empty state on any error */ }
+    }
+
+    async function loadAdvancedMetrics(username) {
+        if (!username || !api || typeof api.request !== 'function') {
+            setAdvancedMetricsEmpty('Metrics unavailable');
+            return;
+        }
+        let data;
+        /* BOOT_20260806 -- /u/<username>/ preload handoff.
+           A public profile page issues this exact request inline in its <head>,
+           before its own body is parsed, and parks the promise on window (globals
+           survive the document.open()/write() swap that mounts this app at the /u/
+           URL). Consuming it here is what removes the multi-second "Loading
+           verified metrics..." beat after the swap: on its own this app does not
+           reach this line until its boot chain gets here, measured live at ~1.65s
+           after navigation start. The preload carries the visitor's own bearer
+           token, because GET /api/users/:username/metrics is viewer-dependent
+           (routes/users.js gates non-public picks on isOwner), so an owner still
+           gets the owner view. Anything that did not produce a usable payload
+           falls through to the normal request below. */
+        try {
+            /* SHARED, NOT SINGLE-USE (DUPLICATE_READ_20260901). This used to null
+               the preload after consuming it, which sounds right -- one payload,
+               one consumer -- but this page has TWO independent metrics boot
+               chains: this one, and bootstrapProfileAdvancedMetricsStrip() lower
+               down. Nulling it here guaranteed the second one missed the preload
+               and issued a request of its own, which is why a single profile view
+               was measured making /users/:name/metrics TWICE.
+
+               The preload is a promise, and a promise can be awaited any number
+               of times for the same answer at no extra cost. Both chains now read
+               the same one. It is still scoped to a username and still not reused
+               across a later render of a DIFFERENT member, because the username
+               guard below is what actually enforces that -- not the nulling. */
+            const pre = window.__TMR_PROFILE_PRELOAD;
+            if (pre && pre.username === username && pre.metrics) {
+                data = await withTimeout(pre.metrics, 10000, 'Metrics preload');
+            }
+        } catch (err) { data = null; }
+        try {
+            if (!data) data = await withTimeout(
+                api.request('/users/' + encodeURIComponent(username) + '/metrics'),
+                10000,
+                'Metrics request'
+            );
+        } catch (err) {
+            console.warn('[Profile] /metrics aggregator unavailable:', err && err.message ? err.message : err);
+            setAdvancedMetricsEmpty(err && err.code === 'TMR_TIMEOUT' ? 'Metrics still processing' : 'Metrics unavailable');
+            return;
+        }
+        if (!data) {
+            setAdvancedMetricsEmpty('No verified metrics yet');
+            return;
+        }
+        try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
+        try { applyRailAvgOdds(data); } catch (e) { console.warn('[Profile] rail avg odds failed:', e); }
+        const set = (id, value, opts) => {
+            const el = document.getElementById(id);
+            if (!el || value == null) return;
+            opts = opts || {};
+            el.textContent = value;
+            el.classList.remove('is-placeholder');
+            if (opts.signed != null) {
+                el.classList.toggle('is-pos', opts.signed > 0);
+                el.classList.toggle('is-neg', opts.signed < 0);
+            }
+        };
+        const s = data.summary || {};
+        if (s.total_picks > 0) {
+            // Record + win % color from win-rate ONLY (independent of units per Apr 29 rule:
+            // a 7-3 record stays green even when units are negative).
+            const wr = Number(s.win_rate || 0);
+            const wrSigned = (Number(s.wins || 0) + Number(s.losses || 0)) > 0 ? (wr - 50) : 0;
+            set('advRecord', s.record, { signed: wrSigned });
+            set('advTotal', String(s.total_picks));
+            set('advPushes', String(s.pushes || 0));
+            set('advPending', String(s.pending_picks || 0));
+            set('advWinPct', wr.toFixed(1) + '%', { signed: wrSigned });
+            const roi = Number(s.roi || 0);
+            set('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', { signed: roi });
+            const u = Number(s.net_units || 0);
+            set('advUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', { signed: u });
+            set('advPlUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', { signed: u });
+            const flat = Number(s.pl_flat_dollars || 0);
+            set('advPlFlat', (flat >= 0 ? '+$' : '-$') + Math.abs(flat).toFixed(0), { signed: flat });
+            if (s.avg_odds != null) {
+                const aopFmt = (s.avg_odds > 0 ? '+' : '') + s.avg_odds;
+                set('advAvgOdds', aopFmt);
+                set('advAop', aopFmt);
+            }
+            if (s.avg_units != null) {
+                const aurFmt = Number(s.avg_units).toFixed(2) + 'u';
+                set('advAvgUnit', aurFmt);
+                set('advAur', aurFmt);
+            }
+            if (s.largest_unit != null) set('advMaxUnit', Number(s.largest_unit).toFixed(2) + 'u');
+            // PickMonitor metrics: eU / eWP / Z / ADP. Each is independently
+            // signed (color-coded from its OWN value).
+            if (s.effective_units != null) {
+                const eu = Number(s.effective_units);
+                set('advEffectiveUnits', (eu >= 0 ? '+' : '') + eu.toFixed(2) + 'u', { signed: eu });
+            }
+            if (s.effective_win_rate != null) {
+                const ewp = Number(s.effective_win_rate);
+                // Breakeven at -110 = 52.38%; color from threshold not units.
+                set('advEffectiveWP', ewp.toFixed(1) + '%', { signed: ewp - 52.38 });
+            }
+            if (s.z_score != null) {
+                const z = Number(s.z_score);
+                set('advZScore', (z >= 0 ? '+' : '') + z.toFixed(2), { signed: z });
+            }
+            if (s.avg_daily_picks != null) {
+                set('advAdp', Number(s.avg_daily_picks).toFixed(2));
+            }
+            // Sample size lives next to scores cards too.
+            if (s.total_picks != null) set('advSampleSize', String(s.total_picks));
+        }
+        // ===== Scores card extras =====
+        const scores = data.scores || {};
+        if (scores.capper_rating != null) {
+            const cr = Number(scores.capper_rating);
+            set('advCapperRating', String(cr) + ' / 100', { signed: cr - 50 });
+        }
+        if (scores.push_rate != null) set('advPushRate', Number(scores.push_rate).toFixed(1) + '%');
+        if (scores.days_since_last_pick != null) {
+            const d = Number(scores.days_since_last_pick);
+            set('advDaysSince', d === 0 ? 'today' : d === 1 ? '1 day' : (d + ' days'));
+        }
+        if (scores.clv != null) {
+            const c = Number(scores.clv);
+            set('advClv', (c >= 0 ? '+' : '') + c.toFixed(2) + ' bps', { signed: c });
+        }
+        // Drawdown card cells.
+        const dd = data.drawdown || {};
+        if (dd.max_drawdown != null) set('advMaxDrawdown', Number(dd.max_drawdown).toFixed(2) + 'u', { signed: -1 });
+        if (dd.peak_units   != null) set('advPeakUnits',   Number(dd.peak_units).toFixed(2) + 'u',   { signed: 1 });
+
+        // ===== Rolling form (last 25 / 50 / 100) =====
+        const form = data.rolling_form || {};
+        const renderForm = (key, valId, subId) => {
+            const f = form['last_' + key];
+            if (!f || !f.total) return;
+            const u = Number(f.net_units || 0);
+            const r = Number(f.roi || 0);
+            const valEl = document.getElementById(valId);
+            const subEl = document.getElementById(subId);
+            if (!valEl) return;
+            valEl.textContent = (u >= 0 ? '+' : '') + u.toFixed(2) + 'u';
+            valEl.classList.remove('is-placeholder');
+            valEl.classList.toggle('is-pos', u > 0);
+            valEl.classList.toggle('is-neg', u < 0);
+            if (subEl) subEl.textContent = (r >= 0 ? '+' : '') + r.toFixed(1) + '% ROI · ' + f.wins + '-' + f.losses;
+        };
+        renderForm(25,  'advForm25',  'advForm25Sub');
+        renderForm(50,  'advForm50',  'advForm50Sub');
+        renderForm(100, 'advForm100', 'advForm100Sub');
+
+        // ===== Best / Worst =====
+        const bw = data.best_worst || {};
+        const fmtBucketLabel = (typeof window.formatBucketLabel === 'function') ? window.formatBucketLabel : (k, v) => String(v || '—');
+        const setBW = (split, kind, valId, subId) => {
+            const grp = bw[split];
+            if (!grp || !grp[kind]) return;
+            const b = grp[kind];
+            const valEl = document.getElementById(valId);
+            const subEl = document.getElementById(subId);
+            if (!valEl) return;
+            valEl.textContent = fmtBucketLabel('by_' + split, b.key);
+            valEl.classList.remove('is-placeholder');
+            const net = Number(b.net) || 0;
+            valEl.classList.toggle('is-pos', net > 0);
+            valEl.classList.toggle('is-neg', net < 0);
+            if (subEl) subEl.textContent = (net >= 0 ? '+' : '') + net.toFixed(2) + 'u · ' + (b.roi >= 0 ? '+' : '') + Number(b.roi).toFixed(1) + '% (' + b.total + ')';
+        };
+        setBW('sport',       'best',  'advBestSport',   'advBestSportSub');
+        setBW('sport',       'worst', 'advWorstSport',  'advWorstSportSub');
+        setBW('market',      'best',  'advBestMarket',  'advBestMarketSub');
+        setBW('market',      'worst', 'advWorstMarket', 'advWorstMarketSub');
+        setBW('day_of_week', 'best',  'advBestDow',     'advBestDowSub');
+        setBW('day_of_week', 'worst', 'advWorstDow',    'advWorstDowSub');
+
+        // ===== PickMonitor-style sport + market tables =====
+        renderPmTable('advTableBySport',   data.splits && data.splits.by_sport,   'by_sport');
+        renderPmTable('advTableByMarket',  data.splits && data.splits.by_market,  'by_market');
+
+        // ===== Streaks / periods / splits cards / charts (original tail) =====
+        const st = data.streaks || {};
+        if (st.current != null) {
+            const cs = Number(st.current);
+            set('advStreak', cs > 0 ? cs + 'W' : cs < 0 ? Math.abs(cs) + 'L' : '0', { signed: cs });
+        }
+        if (st.best != null) set('advBestStreak', Math.abs(Number(st.best)) + 'W', { signed: 1 });
+        if (st.worst != null) set('advWorstStreak', Math.abs(Number(st.worst)) + 'L', { signed: -1 });
+        const sc = data.scores || {};
+        if (sc.consistency != null) set('advTrust', Number(sc.consistency).toFixed(1));
+        // Period rollups: fill any matching `data-period="..."` slots if present.
+        const periods = data.periods || {};
+        document.querySelectorAll('[data-period]').forEach(el => {
+            const key = el.getAttribute('data-period');
+            const p = periods[key];
+            if (p && p.total > 0) {
+                el.classList.remove('is-placeholder');
+                const r = Number(p.roi || 0);
+                el.textContent = (r >= 0 ? '+' : '') + r.toFixed(1) + '%';
+                el.classList.toggle('is-pos', r > 0);
+                el.classList.toggle('is-neg', r < 0);
+            }
+        });
+        renderAdvancedSplits(data.splits || {});
+        renderEquityCurveChart(data.equity_curve || []);
+        renderDrawdownChart(data.equity_curve || []);
+        renderRecentFormChart(data.equity_curve || []);
+        renderSplitBars('advChartRoiSport',    data.splits && data.splits.by_sport,        'by_sport');
+        renderSplitBars('advChartMarket',      data.splits && data.splits.by_market,       'by_market');
+        renderSplitBars('advChartOdds',        data.splits && data.splits.by_odds_bucket,  'by_odds_bucket');
+        renderSplitBars('advChartUnitSize',    data.splits && data.splits.by_unit_size,    'by_unit_size');
+        renderSplitBars('advChartDayOfWeek',   data.splits && data.splits.by_day_of_week,  'by_day_of_week');
+        renderSplitBars('advChartFavDog',      data.splits && data.splits.by_fav_dog,      'by_fav_dog');
+
+        // ===== TMRX REDESIGN: populate the universal wide layout. Same data,
+        // cleaner display. No new calculations — purely a render pass. =====
+        try { tmrxRenderRedesign(data); } catch (e) { console.warn('[tmrx] render failed:', e); }
+        try { tmrxRenderPickHistory(username); } catch (e) { console.warn('[tmrx] pick history failed:', e); }
+    }
+
+    function renderProfileAdvancedMetricsStrip(data) {
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        if (statusEl) statusEl.textContent = 'Verified backend metrics';
+        const s = (data && data.summary) || {};
+        const scores = (data && data.scores) || {};
+        const dd = (data && data.drawdown) || {};
+        const decisions = Number(s.wins || 0) + Number(s.losses || 0);
+        const graded = Number(s.total_picks || decisions + Number(s.pushes || 0) || 0);
+
+        const fmtSigned = (n, suffix, decimals) => {
+            const x = Number(n);
+            if (!Number.isFinite(x)) return null;
+            return (x >= 0 ? '+' : '') + x.toFixed(decimals == null ? 2 : decimals) + (suffix || '');
+        };
+        const fmtAmericanOdds = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return null;
+            return (x > 0 ? '+' : '') + Math.round(x);
+        };
+        const setCard = (id, value, sub, signed) => {
+            const el = document.getElementById(id);
+            const subEl = document.getElementById(id + 'Sub');
+            if (!el) return;
+            el.removeAttribute('aria-busy');
+            if (value == null || value === '') {
+                el.textContent = id === 'profileAdvClv'
+                    ? 'Coming once enough graded data is available'
+                    : 'Not enough data yet';
+                el.className = 'profile-advanced-metric__value is-empty';
+            } else {
+                el.textContent = value;
+                el.className = 'profile-advanced-metric__value';
+                if (signed != null) {
+                    el.classList.toggle('is-pos', signed > 0);
+                    el.classList.toggle('is-neg', signed < 0);
+                }
+            }
+            if (subEl && sub) subEl.textContent = sub;
+        };
+
+        setCard(
+            'profileAdvRecord',
+            graded > 0 ? Number(s.wins || 0) + '-' + Number(s.losses || 0) + '-' + Number(s.pushes || 0) : null,
+            graded > 0 ? graded + ' graded public picks' : 'Requires graded picks',
+            decisions > 0 ? Number(s.wins || 0) - Number(s.losses || 0) : null
+        );
+        setCard(
+            'profileAdvZScore',
+            s.z_score != null ? fmtSigned(s.z_score, '', 2) : null,
+            s.z_score != null ? 'Odds-adjusted skill-vs-luck signal' : 'Requires larger graded sample',
+            s.z_score != null ? Number(s.z_score) : null
+        );
+        setCard(
+            'profileAdvRoi',
+            graded > 0 && s.roi != null ? fmtSigned(s.roi, '%', 1) : null,
+            graded > 0 ? 'Return on risked units' : 'Requires graded picks',
+            s.roi != null ? Number(s.roi) : null
+        );
+        setCard(
+            'profileAdvUnits',
+            graded > 0 && s.net_units != null ? fmtSigned(s.net_units, 'u', 2) : null,
+            graded > 0 ? graded + ' graded picks' : 'Requires graded picks',
+            s.net_units != null ? Number(s.net_units) : null
+        );
+        setCard(
+            'profileAdvWinRate',
+            decisions > 0 && s.win_rate != null ? Number(s.win_rate).toFixed(1) + '%' : null,
+            decisions > 0 ? Number(s.wins || 0) + '-' + Number(s.losses || 0) + ' decisions' : 'Requires wins and losses',
+            decisions > 0 && s.win_rate != null ? Number(s.win_rate) - 50 : null
+        );
+        setCard(
+            'profileAdvAvgOdds',
+            s.avg_odds != null ? fmtAmericanOdds(s.avg_odds) : null,
+            s.avg_odds != null ? 'Average backend odds' : 'Coming once enough graded data is available',
+            null
+        );
+        setCard(
+            'profileAdvAvgUnitSize',
+            s.avg_units != null ? Number(s.avg_units).toFixed(2) + 'u' : null,
+            s.avg_units != null ? 'Mean stake per graded pick' : 'Coming once enough graded data is available',
+            null
+        );
+        setCard(
+            'profileAdvAvgDailyPicks',
+            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) : null,
+            s.avg_daily_picks != null
+                ? (Number(s.active_pick_days || 0) > 0 ? Number(s.active_pick_days) + ' active pick dates' : 'Active pick dates only')
+                : 'Coming once enough graded data is available',
+            null
+        );
+        const clv = scores.clv != null ? Number(scores.clv) : null;
+        const clvAvailable = clv != null && Number.isFinite(clv);
+        const clvCard = document.querySelector('[data-advanced-metric-card="clv"]');
+        if (clvCard) {
+            clvCard.hidden = !clvAvailable;
+            clvCard.toggleAttribute('hidden', !clvAvailable);
+        }
+        if (clvAvailable) {
+            setCard(
+                'profileAdvClv',
+                fmtSigned(clv, ' bps', 2),
+                'Closing-line value',
+                clv
+            );
+        }
+        const maxDd = dd.max_drawdown != null ? Number(dd.max_drawdown) : null;
+        setCard(
+            'profileAdvMaxDrawdown',
+            maxDd != null && Number.isFinite(maxDd) ? '-' + Math.abs(maxDd).toFixed(2) + 'u' : null,
+            maxDd != null && Number.isFinite(maxDd) ? 'Peak-to-trough units' : 'Requires enough graded picks',
+            maxDd != null && Number.isFinite(maxDd) && maxDd > 0 ? -1 : null
+        );
+
+        // PICK_CORRELATION_20260607: correlated-picks accountability stat now lives in the
+        // TOP profile rail (next to Avg Odds), not buried in the advanced grid. Cache the
+        // payload and render the rail card. (The old advanced-grid card was removed.)
+        window.__tmrCorrelation = (data && data.correlation) || null;
+        try { applyRailCorrelation(); } catch (_) {}
+    }
+
+    async function bootstrapProfileAdvancedMetricsStrip() {
+        const section = document.getElementById('profileAdvancedMetricsSection');
+        if (!section || section.dataset.metricsBootstrapped === '1') return;
+        if (!window.profileData) return;
+        const params = new URLSearchParams(window.location.search || '');
+        const username = params.get('user') || params.get('username') || profileUsername;
+        if (!username) return;
+        section.dataset.metricsBootstrapped = '1';
+        let data = null;
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        try {
+            for (let i = 0; i < 20; i++) {
+                if (window.api && typeof window.api.request === 'function') break;
+                await new Promise(resolve => setTimeout(resolve, 150));
+            }
+            /* Prefer the head preload for exactly the reason described at the
+               other metrics boot chain above: it is already in flight before
+               this page's body was parsed, and reading it here is what stops
+               this strip issuing a second identical request. */
+            const pre = window.__TMR_PROFILE_PRELOAD;
+            if (pre && pre.username === username && pre.metrics) {
+                data = await withTimeout(pre.metrics, 10000, 'Metrics preload');
+            }
+            if (!data && window.api && typeof window.api.request === 'function') {
+                data = await withTimeout(window.api.request('/users/' + encodeURIComponent(username) + '/metrics'), 10000, 'Metrics request');
+            }
+        } catch (err) {
+            console.warn('[Profile] independent metrics API unavailable:', err && err.message ? err.message : err);
+        }
+        if (!data) {
+            try {
+                const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', {
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(10000),
+                    headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
+                });
+                if (resp.ok) data = await resp.json();
+            } catch (err) {
+                console.warn('[Profile] direct metrics fetch unavailable:', err && err.message ? err.message : err);
+            }
+        }
+        if (data) renderProfileAdvancedMetricsStrip(data);
+        else setAdvancedMetricsEmpty(statusEl && statusEl.textContent === 'Loading verified metrics...' ? 'Metrics unavailable' : statusEl.textContent);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrapProfileAdvancedMetricsStrip);
+    } else {
+        bootstrapProfileAdvancedMetricsStrip();
+    }
+
+    // ============================================================
+    // TMRX REDESIGN — wide universal stats view (May 1 2026)
+    // Renders the redesign block from the same /api/users/:username/metrics
+    // payload. Display layer only — autograder, statsAggregator, and
+    // categorization logic are untouched. CLV stays "—" until the picks
+    // table actually stores closing odds (backend already returns null).
+    // ============================================================
+    function tmrxRenderRedesign(data) {
+        if (!data) return;
+        const s = data.summary || {};
+        const sc = data.scores || {};
+        const dd = data.drawdown || {};
+        const st = data.streaks || {};
+        const periods = data.periods || {};
+        const form = data.rolling_form || {};
+        const splits = data.splits || {};
+
+        const fmtSigned = (n, suffix, decimals) => {
+            const x = Number(n) || 0;
+            return (x >= 0 ? '+' : '') + x.toFixed(decimals != null ? decimals : 2) + (suffix || '');
+        };
+        const fmtAmericanOdds = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return '—';
+            return (x > 0 ? '+' : '') + Math.round(x);
+        };
+        /* Writes the tile AND its `...Top` twin. Several ribbon values are
+           rendered twice on this page (once per tab layout). Filling only one
+           of the pair left the twin showing whatever the browser-side
+           recomputation in renderCoreHandicapperStatsFromPicks had put there --
+           on 2026-08-16 that was ROI +0.68% beside the canonical +0.71%. The
+           canonical /metrics summary now owns both copies. */
+        const setVal = (id, text, signed) => {
+            [id, id + 'Top'].forEach((elementId) => {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                el.textContent = text;
+                el.classList.remove('is-placeholder');
+                if (signed != null) {
+                    el.classList.toggle('is-pos', signed > 0);
+                    el.classList.toggle('is-neg', signed < 0);
+                }
+            });
+        };
+
+        if (s.total_picks > 0) {
+            const wr = Number(s.win_rate || 0);
+            const decisions = Number(s.wins || 0) + Number(s.losses || 0);
+            const wrSigned = decisions > 0 ? wr - 50 : 0;
+            setVal('tmrxRecord', s.record || '—', wrSigned);
+            setVal('tmrxWinRate', wr.toFixed(1) + '%', wrSigned);
+            const u = Number(s.net_units || 0);
+            setVal('tmrxNetUnits', fmtSigned(u, 'u', 2), u);
+            const r = Number(s.roi || 0);
+            setVal('tmrxRoi', fmtSigned(r, '%', 2), r);
+            if (s.avg_odds != null) setVal('tmrxAvgOdds', fmtAmericanOdds(s.avg_odds));
+            if (s.avg_units != null) setVal('tmrxAvgUnits', Number(s.avg_units).toFixed(2) + 'u');
+            setVal('tmrxPending', String(s.pending_picks || 0));
+            setVal('tmrxGraded', String(s.total_picks));
+        }
+        if (st.current != null) {
+            const cs = Number(st.current);
+            const txt = cs > 0 ? cs + 'W' : cs < 0 ? Math.abs(cs) + 'L' : '0';
+            setVal('tmrxStreak', txt, cs);
+        }
+        if (st.best != null) setVal('tmrxBestStreak', Math.abs(Number(st.best)) + 'W', 1);
+
+        // eU ribbon cell (Picks tab default view) — replaces "Pending" so the
+        // first-row ribbon shows a real performance metric instead of an
+        // unresolved-count.
+        if (s.effective_units != null) {
+            const v = Number(s.effective_units);
+            const display = (v >= 0 ? '+' : '') + v.toFixed(2) + 'u';
+            ['tmrxEffectiveUnits', 'tmrxEffectiveUnitsTop'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = display;
+                el.classList.remove('is-placeholder');
+                el.classList.toggle('is-pos', v > 0);
+                el.classList.toggle('is-neg', v < 0);
+            });
+        }
+
+        if (s.last_pick_at) {
+            try {
+                const ageMs = Date.now() - new Date(s.last_pick_at).getTime();
+                const ageHr = Math.floor(ageMs / 3600000);
+                const ageDay = Math.floor(ageHr / 24);
+                let txt = '';
+                if (ageHr < 1) txt = 'Last graded · just now';
+                else if (ageHr < 24) txt = 'Last graded · ' + ageHr + 'h ago';
+                else txt = 'Last graded · ' + ageDay + 'd ago';
+                const lg = document.getElementById('tmrxLastGraded');
+                if (lg) lg.textContent = txt;
+            } catch (_) {}
+        }
+
+        document.querySelectorAll('#tmrxPeriodStrip [data-tmrx-period]').forEach(cell => {
+            const key = cell.getAttribute('data-tmrx-period');
+            const v = cell.querySelector('.v');
+            const sub = cell.querySelector('.s');
+            if (key === 'all') {
+                if (s.total_picks > 0) {
+                    const u = Number(s.net_units || 0);
+                    if (v) { v.textContent = fmtSigned(u, 'u', 2); v.classList.remove('is-placeholder'); v.classList.toggle('is-pos', u > 0); v.classList.toggle('is-neg', u < 0); }
+                    if (sub) sub.textContent = fmtSigned(s.roi || 0, '%', 1) + ' · ' + s.total_picks + ' picks';
+                }
+                return;
+            }
+            const p = periods[key];
+            if (!p || !p.total) return;
+            const u = Number(p.net_units || 0);
+            if (v) {
+                v.textContent = fmtSigned(u, 'u', 2);
+                v.classList.remove('is-placeholder');
+                v.classList.toggle('is-pos', u > 0);
+                v.classList.toggle('is-neg', u < 0);
+            }
+            if (sub) sub.textContent = fmtSigned(p.roi || 0, '%', 1) + ' · ' + p.total + ' picks';
+        });
+
+        // Bucket-label resolver. Prefer the global formatBucketLabel from the
+        // existing fill code; otherwise apply a small built-in mapping so live
+        // data renders human-readable even before sample-gating relaxes.
+        const TMRX_LABELS = {
+            // sports
+            baseball_mlb: 'MLB', baseball_npb: 'Japan NPB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', icehockey_nhl: 'NHL',
+            americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
+            basketball_ncaab: 'NCAAB', soccer_epl: 'EPL', soccer_intl_friendly: 'Soccer (Intl Friendly)', mma_mixed_martial_arts: 'MMA',
+            // markets
+            h2h: 'Moneyline', spreads: 'Spreads', totals: 'Totals',
+            team_totals: 'Team Totals',
+            f5_h2h: 'F5 ML', f5_spreads: 'F5 Spread', f5_totals: 'F5 Total',
+            first_half_h2h: '1H ML', first_half_spreads: '1H Spread', first_half_totals: '1H Total',
+            second_half_h2h: '2H ML', second_half_spreads: '2H Spread', second_half_totals: '2H Total',
+            period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
+            alt_spreads: 'Alt Spread', alt_totals: 'Alt Total',
+            // odds buckets
+            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
+            big_underdog: 'Longshot (+201+)',
+            // unit buckets
+            // Unit buckets. The API does not agree with itself on the key for the
+            // lowest bucket -- /metrics sends 0_5_to_1u, the analytics service sends
+            // 0.5_to_1u -- so both spellings live in the shared table and both land
+            // on the same label. static/js/tmr-bucket-labels.js is the one source.
+            '0_5_to_1u': '0.5–1u', '0.5_to_1u': '0.5–1u',
+            '1_5_to_2u': '1.5–2u', '1.5_to_2u': '1.5–2u',
+            '2_5_to_3u': '2.5–3u', '2.5_to_3u': '2.5–3u', '3u_plus': '3u+',
+            // day of week
+            sun: 'Sunday', mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday',
+            thu: 'Thursday', fri: 'Friday', sat: 'Saturday',
+        };
+        const labelOf = (k, v) => {
+            if (typeof window.formatBucketLabel === 'function') {
+                const out = window.formatBucketLabel(k, v);
+                if (out && out !== '—') return out;
+            }
+            const key = String(v || '').toLowerCase();
+            if (TMRX_LABELS[key]) return TMRX_LABELS[key];
+            return String(v || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        };
+        const sportLeagueOf = (raw) => {
+            const key = String(raw || '').toLowerCase();
+            const known = {
+                baseball_mlb: ['Baseball', 'MLB'], baseball_npb: ['Baseball', 'Japan NPB', 'NPB'],
+                basketball_nba: ['Basketball', 'NBA'],
+                basketball_ncaab: ['Basketball', 'NCAAB'],
+                icehockey_nhl: ['Hockey', 'NHL'],
+                americanfootball_nfl: ['Football', 'NFL'],
+                americanfootball_ncaaf: ['Football', 'NCAAF'],
+                soccer_epl: ['Soccer', 'EPL'],
+                soccer_intl_friendly: ['Soccer', 'Intl Friendly'],
+                soccer_fifa_world_cup: ['Soccer', 'FIFA World Cup'],
+                soccer_world_cup: ['Soccer', 'World Cup'],
+                soccer_fifa_club_world_cup: ['Soccer', 'FIFA Club World Cup'],
+                soccer_club_world_cup: ['Soccer', 'Club World Cup'],
+                soccer_uefa_champs_league: ['Soccer', 'Champions League'],
+                soccer_usa_mls: ['Soccer', 'MLS'],
+                mma_mixed_martial_arts: ['MMA', 'MMA']
+            };
+            if (known[key]) return known[key];
+            const parts = key.split('_').filter(Boolean);
+            if (parts.length > 1) {
+                const league = parts[parts.length - 1].toUpperCase();
+                const sport = parts.slice(0, -1).join(' ').replace(/\b\w/g, c => c.toUpperCase());
+                return [sport || 'Other', league || 'Other'];
+            }
+            return [labelOf('by_sport', raw), '—'];
+        };
+        const renderSplitTable = (tableId, splitKey, arr, opts) => {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            opts = opts || {};
+            // Show every real row at any sample size; "—" reserved only for
+            // metrics the backend explicitly returns as null (CLV / Z-score
+            // / capper rating). No more "No rows yet" when data exists.
+            const minSample = opts.minSample != null ? opts.minSample : 1;
+            const cols = opts.cols || 7;
+            const rows = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= minSample);
+            if (!rows.length) return;
+            if (splitKey === 'unit_size') {
+                const unitRank = (k) => window.TMR_BUCKET_LABELS ? window.TMR_BUCKET_LABELS.unitSizeRank(k) : 99;
+                rows.sort((a, b) => {
+                    const ai = unitRank(a.key);
+                    const bi = unitRank(b.key);
+                    return ai - bi;
+                });
+            } else {
+                rows.sort((a, b) => Number(b.net || 0) - Number(a.net || 0));
+            }
+            const cellFor = (b) => {
+                const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
+                const dec = w + l;
+                const winPct = dec > 0 ? (w / dec) * 100 : 0;
+                const winCls = dec > 0 ? (winPct >= 50 ? 'pos' : 'neg') : 'zero';
+                const net = Number(b.net) || 0;
+                const roi = Number(b.roi) || 0;
+                const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
+                const roiCls = roi > 0 ? 'pos' : roi < 0 ? 'neg' : 'zero';
+                const labelCells = opts.sportLeague
+                    ? (function() {
+                        const parts = sportLeagueOf(b.key);
+                        const sportHref = escapeHtml(buildProfileSportBreakdownUrl(b.key));
+                        const sportKey = escapeHtml(String(b.key || ''));
+                        const sportLabel = escapeHtml(parts[0]);
+                        const leagueLabel = escapeHtml(parts[1]);
+                        const linkedSport = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + sportLabel + '</a>';
+                        const linkedLeague = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + leagueLabel + '<span class="profile-sport-view-indicator">View Breakdown</span></a>';
+                        return [
+                            '<td class="name">' + linkedSport + '</td>',
+                            '<td class="league">' + linkedLeague + '</td>'
+                        ];
+                    })()
+                    : opts.drill
+                        ? ['<td class="name"><span class="tmrx-drill-caret" aria-hidden="true">▸</span>' + labelOf('by_' + splitKey, b.key) + '<span class="breakdown-row-indicator">View Breakdown</span></td>']
+                        : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
+                const cells = labelCells.concat([
+                    '<td class="num">' + b.total + '</td>',
+                    '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>',
+                    '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>',
+                ]);
+                if (cols >= 7) {
+                    // AVG_ODDS_PARENT_FALLBACK_20260627: the backend's by_market
+                    // rows often omit avg_odds, leaving "—" on the parent while the
+                    // expanded breakdown shows a real number. When the field is
+                    // missing, recompute it from the already-loaded graded picks
+                    // using the SAME logic as the drilldown child rows so parent and
+                    // children agree.
+                    let avgOddsVal = (b.avg_odds != null && Number.isFinite(Number(b.avg_odds)) && Number(b.avg_odds) !== 0)
+                        ? Number(b.avg_odds) : null;
+                    if (avgOddsVal == null && opts.drill && Array.isArray(allLoadedPicks)
+                        && typeof tmrxMarketKeyMatches === 'function' && typeof tmrxAggregatePicks === 'function') {
+                        const mp = allLoadedPicks.filter(function(p) {
+                            const st = normalizeStatus(p && p.status);
+                            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, b.key);
+                        });
+                        if (mp.length) {
+                            const a = tmrxAggregatePicks(mp);
+                            if (a.avgOdds != null && Number.isFinite(a.avgOdds) && a.avgOdds !== 0) avgOddsVal = a.avgOdds;
+                        }
+                    }
+                    cells.push('<td class="num">' + (avgOddsVal != null ? fmtAmericanOdds(avgOddsVal) : '—') + '</td>');
+                }
+                cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
+                cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
+                const rowAttrs = opts.sportLeague
+                    ? ' class="profile-sport-breakdown-row" role="link" tabindex="0" data-sport-key="' + escapeHtml(String(b.key || '')) + '" data-href="' + escapeHtml(buildProfileSportBreakdownUrl(b.key)) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&!event.target.closest(\'a\')){event.preventDefault();window.location.href=this.dataset.href;}"'
+                    : opts.drill
+                        ? ' class="tmrx-market-drill-row" role="button" tabindex="0" aria-expanded="false" data-market-key="' + escapeHtml(String(b.key || '')) + '" data-market-label="' + escapeHtml(labelOf('by_' + splitKey, b.key)) + '"'
+                        : '';
+                return '<tr' + rowAttrs + '>' + cells.join('') + '</tr>';
+            };
+            tbody.innerHTML = rows.map(cellFor).join('');
+        };
+        // SPORT_GROUPING_20260627: Group "Performance by Sport & League" by
+        // top-level sport first. Soccer (and any multi-league sport) collapses
+        // to ONE parent row whose totals equal the sum of its league children;
+        // clicking it expands an inline league/competition breakdown. No more
+        // split top-level rows like "Soccer / Intl Friendly" + "Soccer Fifa World".
+        const renderSportLeagueTable = (tableId, arr) => {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            const buckets = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= 1);
+            if (!buckets.length) return;
+            const groups = {};
+            const order = [];
+            buckets.forEach(b => {
+                const gk = String(b.key || '').toLowerCase().split('_')[0] || 'other';
+                const sl = sportLeagueOf(b.key);
+                if (!groups[gk]) { groups[gk] = { key: gk, sportLabel: sl[0], children: [] }; order.push(gk); }
+                groups[gk].children.push({
+                    key: String(b.key || ''),
+                    leagueLabel: sl[1] && sl[1] !== '—' ? sl[1] : sl[0],
+                    total: Number(b.total) || 0,
+                    wins: Number(b.wins) || 0,
+                    losses: Number(b.losses) || 0,
+                    pushes: Number(b.pushes) || 0,
+                    net: Number(b.net) || 0,
+                    roi: Number(b.roi) || 0,
+                    avgOdds: (b.avg_odds != null && Number.isFinite(Number(b.avg_odds)) && Number(b.avg_odds) !== 0) ? Number(b.avg_odds) : null
+                });
+            });
+            const aggOf = (children) => {
+                let t = 0, w = 0, l = 0, p = 0, net = 0, risked = 0, oddsSum = 0, oddsW = 0;
+                children.forEach(c => {
+                    t += c.total; w += c.wins; l += c.losses; p += c.pushes; net += c.net;
+                    if (c.roi) risked += Math.abs(c.net / (c.roi / 100));
+                    if (c.avgOdds != null) { oddsSum += c.avgOdds * c.total; oddsW += c.total; }
+                });
+                const dec = w + l;
+                return {
+                    total: t, wins: w, losses: l, pushes: p, dec: dec,
+                    winPct: dec > 0 ? (w / dec) * 100 : 0,
+                    net: net,
+                    roi: risked > 0 ? (net / risked) * 100 : 0,
+                    avgOdds: oddsW > 0 ? Math.round(oddsSum / oddsW) : null
+                };
+            };
+            const list = order.map(gk => Object.assign({}, groups[gk], { agg: aggOf(groups[gk].children) }));
+            list.sort((a, b) => b.agg.net - a.agg.net);
+            window.__tmrxSportGroups = {};
+            list.forEach(g => { window.__tmrxSportGroups[g.key] = { sportLabel: g.sportLabel, children: g.children.slice() }; });
+            const rowHtml = (g) => {
+                const a = g.agg;
+                const multi = g.children.length > 1;
+                const winCls = a.dec > 0 ? (a.winPct >= 50 ? 'pos' : 'neg') : 'zero';
+                const netCls = a.net > 0 ? 'pos' : a.net < 0 ? 'neg' : 'zero';
+                const roiCls = a.roi > 0 ? 'pos' : a.roi < 0 ? 'neg' : 'zero';
+                const sportCell = '<td class="name"><span class="tmrx-drill-caret" aria-hidden="true">&#9656;</span>' + escapeHtml(g.sportLabel) + '<span class="breakdown-row-indicator">View Breakdown</span></td>';
+                const cells = sportCell +
+                    '<td class="num">' + a.total + '</td>' +
+                    '<td class="num">' + a.wins + '-' + a.losses + (a.pushes ? '-' + a.pushes : '') + '</td>' +
+                    '<td class="num ' + winCls + '">' + (a.dec > 0 ? a.winPct.toFixed(1) + '%' : '&mdash;') + '</td>' +
+                    '<td class="num">' + (a.avgOdds != null ? fmtAmericanOdds(a.avgOdds) : '&mdash;') + '</td>' +
+                    '<td class="num ' + netCls + '">' + fmtSigned(a.net, 'u', 2) + '</td>' +
+                    '<td class="num ' + roiCls + '">' + fmtSigned(a.roi, '%', 2) + '</td>';
+                const attrs = ' class="tmrx-sport-drill-row" role="button" tabindex="0" aria-expanded="false" data-sport-group="' + escapeHtml(g.key) + '"';
+                return '<tr' + attrs + '>' + cells + '</tr>';
+            };
+            tbody.innerHTML = list.map(rowHtml).join('');
+        };
+        renderSportLeagueTable('tmrxTableSport', splits.by_sport);
+        renderSplitTable('tmrxTableMarket',     'market',      splits.by_market,      { cols: 7, drill: true });
+        renderSplitTable('tmrxTableUnitSize',   'unit_size',   splits.by_unit_size,   { cols: 6 });
+        renderSplitTable('tmrxTableOddsBucket', 'odds_bucket', splits.by_odds_bucket, { cols: 6 });
+        renderSplitTable('tmrxTableFavDog',     'fav_dog',     splits.by_fav_dog,     { cols: 6, minSample: 1 });
+        renderSplitTable('tmrxTableDow',        'day_of_week', splits.by_day_of_week, { cols: 6 });
+
+        // Picks column = every settled pick in the window (W + L + Pushes), so
+        // the W-L(-P) cell always reconciles to the Picks total. Net units + ROI
+        // come straight from the backend (same ledger math as the summary/splits);
+        // this widget never re-derives them.
+        const setFormRow = (sel, label, w, l, p, net, roi) => {
+            const tr = document.querySelector(sel);
+            if (!tr) return;
+            w = Number(w) || 0; l = Number(l) || 0; p = Number(p) || 0;
+            const dec = w + l;
+            const total = w + l + p;
+            const wp = dec > 0 ? (w / dec) * 100 : 0;
+            const wpCls = dec > 0 ? (wp >= 50 ? 'pos' : 'neg') : 'zero';
+            const netN = Number(net) || 0;
+            const roiN = Number(roi) || 0;
+            const wlText = total > 0 ? (w + '-' + l + (p ? '-' + p : '')) : '—';
+            tr.innerHTML =
+                '<td class="name">' + label + '</td>' +
+                '<td class="num">' + (total > 0 ? total : '—') + '</td>' +
+                '<td class="num">' + wlText + '</td>' +
+                '<td class="num ' + wpCls + '">' + (dec > 0 ? wp.toFixed(1) + '%' : '—') + '</td>' +
+                '<td class="num ' + (netN > 0 ? 'pos' : netN < 0 ? 'neg' : 'zero') + '">' + (total > 0 ? fmtSigned(netN, 'u', 2) : '—') + '</td>' +
+                '<td class="num ' + (roiN > 0 ? 'pos' : roiN < 0 ? 'neg' : 'zero') + '">' + (total > 0 ? fmtSigned(roiN, '%', 2) : '—') + '</td>';
+        };
+        for (const N of [25, 50, 100]) {
+            const f = form['last_' + N];
+            if (f && f.total) setFormRow('[data-tmrx-form="' + N + '"]', 'Last ' + N, f.wins || 0, f.losses || 0, f.pushes || 0, f.net_units, f.roi);
+        }
+        // Streak rows carry the real net units + ROI of the picks inside each
+        // streak (backend *_detail). Fallback to length-only if an older backend
+        // response lacks the detail objects.
+        const bd = st.best_detail, wd = st.worst_detail, cd = st.current_detail;
+        if (bd && bd.length) {
+            setFormRow('[data-tmrx-streak="best"]', 'Best Win Streak', bd.wins, bd.losses, bd.pushes, bd.net_units, bd.roi);
+        } else if (st.best != null && Math.abs(Number(st.best)) > 0) {
+            setFormRow('[data-tmrx-streak="best"]', 'Best Win Streak', Math.abs(Number(st.best)), 0, 0, null, null);
+        }
+        if (wd && wd.length) {
+            setFormRow('[data-tmrx-streak="worst"]', 'Worst Loss Streak', wd.wins, wd.losses, wd.pushes, wd.net_units, wd.roi);
+        } else if (st.worst != null && Math.abs(Number(st.worst)) > 0) {
+            setFormRow('[data-tmrx-streak="worst"]', 'Worst Loss Streak', 0, Math.abs(Number(st.worst)), 0, null, null);
+        }
+        if (cd && cd.length) {
+            const label = cd.direction === 'won' ? 'Current Streak (W)' : cd.direction === 'lost' ? 'Current Streak (L)' : 'Current Streak';
+            setFormRow('[data-tmrx-streak="current"]', label, cd.wins, cd.losses, cd.pushes, cd.net_units, cd.roi);
+        } else if (st.current != null) {
+            const cs = Number(st.current);
+            if (cs > 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (W)', cs, 0, 0, null, null);
+            else if (cs < 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (L)', 0, Math.abs(cs), 0, null, null);
+            else setFormRow('[data-tmrx-streak="current"]', 'Current Streak', 0, 0, 0, null, null);
+        }
+
+        const setAdv = (key, valueText, signed) => {
+            const tr = document.querySelector('[data-tmrx-adv="' + key + '"]');
+            if (!tr) return;
+            const td = tr.querySelector('td.num');
+            if (!td) return;
+            td.textContent = valueText;
+            td.classList.remove('zero');
+            td.classList.toggle('pos', signed != null && signed > 0);
+            td.classList.toggle('neg', signed != null && signed < 0);
+        };
+        if (s.effective_units != null) {
+            const v = Number(s.effective_units);
+            setAdv('effective_units', fmtSigned(v, 'u', 2), v);
+        }
+        if (s.effective_win_rate != null) {
+            const v = Number(s.effective_win_rate);
+            // Math correctly emits values outside 0-100 at extreme ROI on
+            // small samples (e.g. 104.76% at +100% ROI on 1 pick), but the
+            // literal number reads as fake. Display "100%+" / "<0%" for the
+            // edges; the underlying value is unchanged.
+            const display = v > 100 ? '100%+' : v < 0 ? '<0%' : v.toFixed(2) + '%';
+            setAdv('effective_win_rate', display, v - 52.38);
+        }
+        if (s.z_score != null) {
+            const v = Number(s.z_score);
+            setAdv('z_score', fmtSigned(v, '', 2), v);
+        }
+        if (s.avg_odds != null) setAdv('avg_odds', fmtAmericanOdds(s.avg_odds));
+        if (s.avg_units != null) setAdv('avg_units', Number(s.avg_units).toFixed(2) + 'u');
+        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2));
+        if (sc.push_rate != null) setAdv('push_rate', Number(sc.push_rate).toFixed(2) + '%');
+        if (sc.consistency != null) {
+            const v = Number(sc.consistency);
+            setAdv('consistency', v.toFixed(1), v - 50);
+        }
+        if (sc.capper_rating != null) {
+            const v = Number(sc.capper_rating);
+            setAdv('capper_rating', String(v) + ' / 100', v - 50);
+        }
+        if (dd.max_drawdown != null) {
+            const v = Number(dd.max_drawdown);
+            setAdv('max_drawdown', '-' + v.toFixed(2) + 'u', -1);
+        }
+        if (dd.peak_units != null) {
+            const v = Number(dd.peak_units);
+            setAdv('peak_units', fmtSigned(v, 'u', 2), v);
+        }
+
+        // ---- Sample honesty + closing line value (2026-08-15) ----
+        // Each of these stays "—" unless the backend returned a real number:
+        // an interval needs 5+ decisions, and CLV needs a pick that was made
+        // after closing-line capture went live.
+        const wri = sc.win_rate_interval;
+        if (wri && wri.low != null && wri.high != null) {
+            setAdv('win_rate_interval', wri.low.toFixed(1) + '% – ' + wri.high.toFixed(1) + '%', null);
+        }
+        const be = sc.break_even;
+        if (be && be.gap_points != null) {
+            const g = Number(be.gap_points);
+            setAdv('break_even', fmtSigned(g, ' pts', 2) + ' (need ' + Number(be.break_even_win_rate).toFixed(2) + '%)', g);
+        }
+        const clvDetail = sc.clv_detail;
+        if (clvDetail && clvDetail.available) {
+            if (clvDetail.avg_clv != null) {
+                const c = Number(clvDetail.avg_clv);
+                setAdv('clv', fmtSigned(c, ' pts', 2) + ' · ' + clvDetail.sample_size + ' tracked', c);
+            }
+            if (clvDetail.beat_close_rate != null) {
+                const r = Number(clvDetail.beat_close_rate);
+                setAdv('clv_beat_rate', r.toFixed(1) + '% (' + clvDetail.beat_close_count + '/' + clvDetail.priced_sample_size + ')', r - 50);
+            }
+            const moved = clvDetail.line_moved_your_way;
+            if (moved && moved.rate != null) {
+                const r = Number(moved.rate);
+                setAdv('clv_line_moved', r.toFixed(1) + '% (' + moved.count + '/' + moved.sample_size + ')', r - 50);
+            }
+            // Say WHEN tracking started, on the CLV row itself, so a small
+            // sample is never read as a small record.
+            if (clvDetail.tracked_since) {
+                const since = new Date(clvDetail.tracked_since);
+                if (!isNaN(since.getTime())) {
+                    ['[data-tmrx-adv="clv"]', '[data-tmrx-adv-top="clv"]'].forEach(sel => {
+                        const tr = document.querySelector(sel);
+                        const cell = tr && tr.querySelectorAll('td')[2];
+                        if (!cell) return;
+                        const stamp = since.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                        if (!cell.querySelector('.tmrx-clv-since')) {
+                            const note = document.createElement('span');
+                            note.className = 'tmrx-clv-since';
+                            note.textContent = ' Tracking on this record since ' + stamp + '.';
+                            cell.appendChild(note);
+                        }
+                    });
+                }
+            }
+        }
+
+        // ---- Equity curve + drawdown strip ----
+        // Render directly into BOTH the Advanced-tab SVG (#tmrxEquitySvg) and
+        // the default Picks-tab SVG (#tmrxEquitySvgTop). Mirror-via-innerHTML
+        // can drop the SVG content silently because of namespace edge cases,
+        // so we just paint the same markup into both targets.
+        const eqShells = [document.getElementById('tmrxEquityShell'), document.getElementById('tmrxEquityShellTop')];
+        const eqSvgs = [document.getElementById('tmrxEquitySvg'), document.getElementById('tmrxEquitySvgTop')];
+        const eq = Array.isArray(data.equity_curve) ? data.equity_curve : [];
+        const eqShell = eqShells.find(Boolean);
+        const eqSvg = eqSvgs.find(Boolean);
+        if (eqShell && eqSvg) {
+            if (eq.length < 2) {
+                eqShells.forEach(el => el && el.classList.add('tmrx-equity-shell--empty'));
+                eqSvgs.forEach(el => { if (el) el.innerHTML = ''; });
+            } else {
+                eqShells.forEach(el => el && el.classList.remove('tmrx-equity-shell--empty'));
+                const W = 1440, H = 220, padX = 16, padY = 16;
+                const ys = eq.map(p => Number(p.units) || 0);
+                const yMax = Math.max(0, Math.max.apply(null, ys));
+                const yMin = Math.min(0, Math.min.apply(null, ys));
+                const yRng = (yMax - yMin) || 1;
+                const xRng = eq.length - 1 || 1;
+                const sx = i => padX + (i / xRng) * (W - padX * 2);
+                const sy = y => H - padY - ((y - yMin) / yRng) * (H - padY * 2);
+                const last = ys[ys.length - 1];
+                const stroke = last >= 0 ? '#4DA3FF' : '#fca5a5';
+                const fillTop = last >= 0 ? 'rgba(77, 163, 255,0.40)' : 'rgba(252,165,165,0.30)';
+                const d = eq.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
+                const zeroY = sy(0).toFixed(2);
+                const fillPath = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY + ' L' + sx(0).toFixed(2) + ' ' + zeroY + ' Z';
+                const guideY1 = (padY).toFixed(2);
+                const guideY2 = (H - padY).toFixed(2);
+                const svgMarkup =
+                    '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
+                    '<stop offset="0" stop-color="' + (last >= 0 ? '#4DA3FF' : '#fca5a5') + '" stop-opacity=".40"/>' +
+                    '<stop offset="1" stop-color="' + (last >= 0 ? '#4DA3FF' : '#fca5a5') + '" stop-opacity="0"/>' +
+                    '</linearGradient></defs>' +
+                    '<line x1="0" y1="' + guideY1 + '" x2="' + W + '" y2="' + guideY1 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
+                    '<line x1="0" y1="' + zeroY + '" x2="' + W + '" y2="' + zeroY + '" stroke="rgba(148,163,184,0.32)" stroke-dasharray="3 4"/>' +
+                    '<line x1="0" y1="' + guideY2 + '" x2="' + W + '" y2="' + guideY2 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
+                    '<path d="' + fillPath + '" fill="url(#tmrxEqGrad)" stroke="none"/>' +
+                    '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="2.4"/>';
+                eqSvgs.forEach(el => { if (el) el.innerHTML = svgMarkup; });
+            }
+        }
+        const setDd = (id, text, signed) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+            el.classList.toggle('is-pos', signed != null && signed > 0);
+            el.classList.toggle('is-neg', signed != null && signed < 0);
+        };
+        if (dd.peak_units != null) {
+            const v = Number(dd.peak_units);
+            setDd('tmrxDdPeak', fmtSigned(v, 'u', 2), v);
+        }
+        if (dd.max_drawdown != null) {
+            const v = Number(dd.max_drawdown);
+            setDd('tmrxDdMax', '-' + v.toFixed(2) + 'u', -1);
+        }
+        if (st.worst != null) {
+            const v = Math.abs(Number(st.worst));
+            setDd('tmrxDdWorst', v ? 'L' + v : '0', v ? -1 : null);
+        }
+        if (s.first_pick_at && s.last_pick_at) {
+            try {
+                const span = Math.max(1, Math.ceil((new Date(s.last_pick_at).getTime() - new Date(s.first_pick_at).getTime()) / 86400000) + 1);
+                setDd('tmrxDdDays', String(span));
+            } catch (_) {}
+        } else if (s.first_pick_at || s.last_pick_at) {
+            setDd('tmrxDdDays', '1');
+        }
+
+        // ---- Best & Worst categories ----
+        const bw = data.best_worst || {};
+        const setBw = (selector, bucket) => {
+            const tr = document.querySelector('[data-tmrx-bw="' + selector + '"]');
+            if (!tr) return;
+            const tds = tr.querySelectorAll('td');
+            if (tds.length < 5) return;
+            if (!bucket || bucket.key == null) return;
+            const splitKey = selector.split('.')[1];
+            const net = Number(bucket.net) || 0;
+            const roi = Number(bucket.roi) || 0;
+            tds[1].textContent = labelOf('by_' + splitKey, bucket.key);
+            tds[1].classList.remove('zero');
+            tds[2].textContent = fmtSigned(net, 'u', 2);
+            tds[2].classList.remove('zero');
+            tds[2].classList.toggle('pos', net > 0);
+            tds[2].classList.toggle('neg', net < 0);
+            tds[3].textContent = fmtSigned(roi, '%', 2);
+            tds[3].classList.remove('zero');
+            tds[3].classList.toggle('pos', roi > 0);
+            tds[3].classList.toggle('neg', roi < 0);
+            tds[4].textContent = String(bucket.total != null ? bucket.total : '—');
+            tds[4].classList.remove('zero');
+        };
+        ['sport', 'market', 'day_of_week', 'odds_bucket'].forEach(k => {
+            const grp = bw[k];
+            if (!grp) return;
+            if (grp.best) setBw('best.' + k, grp.best);
+            if (grp.worst) setBw('worst.' + k, grp.worst);
+        });
+
+        // ===== Mirror everything into the *Top IDs (the new Picks-tab block).
+        // Single fill → both copies stay in sync. Picks tab is the default
+        // view; the Advanced-tab block stays for backward compat / direct
+        // links to #advanced. =====
+        const TMRX_MIRROR_IDS = [
+            'Record','WinRate','NetUnits','Roi','AvgOdds','AvgUnits',
+            'Pending','Graded','Streak','BestStreak','LastGraded',
+            'DdPeak','DdMax','DdWorst','DdDays','EffectiveUnits'
+        ];
+        TMRX_MIRROR_IDS.forEach(k => {
+            const src = document.getElementById('tmrx' + k);
+            const dst = document.getElementById('tmrx' + k + 'Top');
+            if (src && dst) {
+                dst.textContent = src.textContent;
+                dst.className = src.className;
+            }
+        });
+        const TMRX_MIRROR_TABLES = [
+            ['tmrxTableSport','tmrxTableSportTop'],
+            ['tmrxTableMarket','tmrxTableMarketTop'],
+            ['tmrxTableUnitSize','tmrxTableUnitSizeTop'],
+            ['tmrxTableOddsBucket','tmrxTableOddsBucketTop'],
+            ['tmrxTableFavDog','tmrxTableFavDogTop'],
+            ['tmrxTableDow','tmrxTableDowTop'],
+            ['tmrxTableForm','tmrxTableFormTop'],
+            ['tmrxTableAdvanced','tmrxTableAdvancedTop'],
+            ['tmrxTableBest','tmrxTableBestTop'],
+            ['tmrxTableWorst','tmrxTableWorstTop'],
+        ];
+        TMRX_MIRROR_TABLES.forEach(([srcId, dstId]) => {
+            const src = document.getElementById(srcId);
+            const dst = document.getElementById(dstId);
+            if (src && dst) {
+                const sBody = src.querySelector('tbody');
+                const dBody = dst.querySelector('tbody');
+                if (sBody && dBody) dBody.innerHTML = sBody.innerHTML;
+            }
+        });
+        // Backfill parent-row Avg Odds now that both tables exist (no-op until
+        // the graded ledger is loaded; re-run from the ledger load callback).
+        try { if (typeof tmrxFillMarketAvgOddsFromPicks === 'function') tmrxFillMarketAvgOddsFromPicks(); } catch (_) {}
+        // Period strip mirror
+        document.querySelectorAll('#tmrxPeriodStripTop [data-tmrx-period]').forEach(dst => {
+            const key = dst.getAttribute('data-tmrx-period');
+            const src = document.querySelector('#tmrxPeriodStrip [data-tmrx-period="' + key + '"]');
+            if (src) dst.innerHTML = src.innerHTML;
+        });
+        // Equity SVG mirror
+        const eqSrc = document.getElementById('tmrxEquitySvg');
+        const eqDst = document.getElementById('tmrxEquitySvgTop');
+        if (eqSrc && eqDst) eqDst.innerHTML = eqSrc.innerHTML;
+        const eqShellSrc = document.getElementById('tmrxEquityShell');
+        const eqShellDst = document.getElementById('tmrxEquityShellTop');
+        if (eqShellSrc && eqShellDst) {
+            eqShellDst.classList.toggle('tmrx-equity-shell--empty',
+                eqShellSrc.classList.contains('tmrx-equity-shell--empty'));
+        }
+    }
+
+    // ============================================================
+    // MARKET-TYPE DRILLDOWN — expands a clickable "Performance by
+    // Market Type" row into a sport + side (Over/Under or Fav/Dog)
+    // breakdown computed entirely from the already-loaded graded
+    // picks (allLoadedPicks). No new backend call, no fabricated
+    // rows — empty subsections render "No qualifying picks yet."
+    // Works on every profile (data is per-user allLoadedPicks).
+    // ============================================================
+    function tmrxMarketKeyMatches(pick, key) {
+        const mk = String(pick && pick.market_type || '').toLowerCase().trim();
+        const k = String(key || '').toLowerCase().trim();
+        if (!mk || !k) return false;
+        if (mk === k) return true;
+        // Mirror the backend's by_market normalization so each drilldown row
+        // sums the exact same picks as its summary row. The backend folds
+        // alternate spellings (e.g. first_five_totals -> f5_totals) into one
+        // key; the drilldown must too or the expanded totals won't match.
+        const aliases = {
+            h2h: ['h2h', 'moneyline', 'ml'],
+            spreads: ['spreads', 'spread', 'run_line', 'runline', 'puck_line', 'puckline'],
+            totals: ['totals', 'total'],
+            team_totals: ['team_totals', 'team_total'],
+            f5_h2h: ['f5_h2h', 'first_five_h2h', 'first_five_ml', 'f5_ml'],
+            f5_totals: ['f5_totals', 'f5_total', 'first_five_totals', 'first_five_total'],
+            f5_spreads: ['f5_spreads', 'f5_spread', 'first_five_spreads', 'first_five_spread', 'f5_run_line']
+        };
+        const set = aliases[k];
+        return Array.isArray(set) ? set.indexOf(mk) !== -1 : false;
+    }
+
+    function tmrxIsTotalMarket(key) {
+        const k = String(key || '').toLowerCase();
+        return k.indexOf('total') !== -1;
+    }
+
+    function tmrxPickSide(pick, marketKey) {
+        // Returns { label, order } for the directional sub-split, or null
+        // when the market has no natural Over/Under or Fav/Dog axis.
+        if (tmrxIsTotalMarket(marketKey)) {
+            const sel = String(pick && pick.selection || '').toLowerCase();
+            if (/\bunder\b|^u\b|^u /.test(sel) || sel === 'u') return { label: 'Under', order: 1 };
+            if (/\bover\b|^o\b|^o /.test(sel) || sel === 'o') return { label: 'Over', order: 0 };
+            return { label: 'Other', order: 2 };
+        }
+        // ML / spread / run line / puck line → favorite vs underdog by price.
+        const o = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds));
+        if (!Number.isFinite(o) || o === 0) return { label: 'Unknown', order: 2 };
+        return o < 0 ? { label: 'Favorite', order: 0 } : { label: 'Underdog', order: 1 };
+    }
+
+    function tmrxSubtypeLabel(marketKey) {
+        const k = String(marketKey || '').toLowerCase();
+        if (k.indexOf('f5_') === 0) return 'First Five';
+        if (k.indexOf('first_half_') === 0) return 'First Half';
+        if (k.indexOf('second_half_') === 0) return 'Second Half';
+        if (k.indexOf('period_1_') === 0) return '1st Period';
+        if (k.indexOf('period_') === 0) return 'Period';
+        if (k.indexOf('alt_') === 0) return 'Alternate Line';
+        return 'Full Game';
+    }
+
+    function tmrxAggregatePicks(picks) {
+        let w = 0, l = 0, p = 0, net = 0, risked = 0, oddsSum = 0, oddsN = 0;
+        picks.forEach(function(pk) {
+            const st = normalizeStatus(pk.status);
+            if (st === 'won') w++;
+            else if (st === 'lost') l++;
+            else if (st === 'push') p++;
+            net += pickPL(pk);
+            const u = Number(pk.units) || 1;
+            const o = Number(pk.odds_snapshot != null ? pk.odds_snapshot : (pk.odds != null ? pk.odds : -110));
+            if (st === 'won' || st === 'lost') {
+                risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+            }
+            if (Number.isFinite(o) && o !== 0) { oddsSum += o; oddsN++; }
+        });
+        const dec = w + l;
+        return {
+            total: picks.length,
+            wins: w, losses: l, pushes: p, dec: dec,
+            winPct: dec > 0 ? (w / dec) * 100 : 0,
+            net: net,
+            roi: risked > 0 ? (net / risked) * 100 : 0,
+            avgOdds: oddsN > 0 ? Math.round(oddsSum / oddsN) : null
+        };
+    }
+
+    function tmrxBuildMarketDrilldownHtml(marketKey, marketLabel) {
+        const fmtSigned = function(n, suffix, dec) {
+            const x = Number(n) || 0;
+            return (x >= 0 ? '+' : '') + x.toFixed(dec != null ? dec : 2) + (suffix || '');
+        };
+        const fmtOdds = function(o) {
+            return (o == null || !Number.isFinite(Number(o)) || Number(o) === 0) ? '—' : (Number(o) > 0 ? '+' : '') + Math.round(Number(o));
+        };
+        const sportName = function(k) {
+            const known = {
+                baseball_mlb: 'MLB', baseball_npb: 'Japan NPB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', icehockey_nhl: 'NHL',
+                americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
+                basketball_ncaab: 'NCAAB', basketball_wnba: 'WNBA',
+                soccer_epl: 'EPL', soccer_usa_mls: 'MLS', mma_mixed_martial_arts: 'MMA'
+            };
+            const key = String(k || '').toLowerCase();
+            if (known[key]) return known[key];
+            return key ? key.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); }) : 'Other';
+        };
+
+        const graded = (Array.isArray(allLoadedPicks) ? allLoadedPicks : []).filter(function(p) {
+            const st = normalizeStatus(p && p.status);
+            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, marketKey);
+        });
+
+        if (!graded.length) {
+            return '<div class="tmrx-drill-empty">No qualifying picks yet for ' + escapeHtml(marketLabel || 'this market') + '.</div>';
+        }
+
+        const isTotal = tmrxIsTotalMarket(marketKey);
+        const sideHeader = isTotal ? 'Over / Under' : 'Favorite / Underdog';
+
+        // Group by sport, then by directional side within each sport.
+        const sportMap = {};
+        graded.forEach(function(pk) {
+            const sk = String(pk.sport_key || 'other').toLowerCase();
+            if (!sportMap[sk]) sportMap[sk] = [];
+            sportMap[sk].push(pk);
+        });
+
+        const statCells = function(agg) {
+            const winCls = agg.dec > 0 ? (agg.winPct >= 50 ? 'pos' : 'neg') : 'zero';
+            const netCls = agg.net > 0 ? 'pos' : agg.net < 0 ? 'neg' : 'zero';
+            const roiCls = agg.roi > 0 ? 'pos' : agg.roi < 0 ? 'neg' : 'zero';
+            return '<td class="num">' + agg.total + '</td>' +
+                '<td class="num">' + agg.wins + '-' + agg.losses + (agg.pushes ? '-' + agg.pushes : '') + '</td>' +
+                '<td class="num ' + winCls + '">' + (agg.dec > 0 ? agg.winPct.toFixed(1) + '%' : '—') + '</td>' +
+                '<td class="num">' + fmtOdds(agg.avgOdds) + '</td>' +
+                '<td class="num ' + netCls + '">' + fmtSigned(agg.net, 'u', 2) + '</td>' +
+                '<td class="num ' + roiCls + '">' + fmtSigned(agg.roi, '%', 2) + '</td>';
+        };
+
+        const sportKeys = Object.keys(sportMap).sort(function(a, b) {
+            return tmrxAggregatePicks(sportMap[b]).net - tmrxAggregatePicks(sportMap[a]).net;
+        });
+
+        // DRILL_DEDUP_20260627: only render breakdown rows that add information.
+        // Split by sport only when >1 sport; split by side only when both sides
+        // exist. A single sport with a single side would just repeat the parent.
+        const multiSport = sportKeys.length > 1;
+        let bodyRows = '';
+        let meaningfulRows = 0;
+        sportKeys.forEach(function(sk) {
+            const sportPicks = sportMap[sk];
+            const sportAgg = tmrxAggregatePicks(sportPicks);
+            const subtype = tmrxSubtypeLabel(marketKey);
+            const sportContext = (subtype && subtype !== 'Full Game') ? subtype : (marketLabel || '');
+            const sportTitle = sportName(sk) + (sportContext ? ' · ' + sportContext : '');
+
+            const sideMap = {};
+            sportPicks.forEach(function(pk) {
+                const side = tmrxPickSide(pk, marketKey);
+                if (!side) return;
+                if (!sideMap[side.label]) sideMap[side.label] = { order: side.order, picks: [] };
+                sideMap[side.label].picks.push(pk);
+            });
+            const sideLabels = Object.keys(sideMap).sort(function(a, b) {
+                return sideMap[a].order - sideMap[b].order;
+            });
+            const multiSide = sideLabels.length > 1;
+
+            if (multiSport) {
+                bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(sportTitle) + '</td>' + statCells(sportAgg) + '</tr>';
+                meaningfulRows++;
+                if (multiSide) {
+                    sideLabels.forEach(function(lbl) {
+                        const agg = tmrxAggregatePicks(sideMap[lbl].picks);
+                        bodyRows += '<tr class="tmrx-drill-side"><td class="name">' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
+                    });
+                }
+            } else if (multiSide) {
+                // Single sport: skip the redundant sport header; the directional
+                // split becomes the primary rows.
+                sideLabels.forEach(function(lbl) {
+                    const agg = tmrxAggregatePicks(sideMap[lbl].picks);
+                    bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
+                    meaningfulRows++;
+                });
+            }
+        });
+
+        if (!meaningfulRows) {
+            // One sport, one side: every row would equal the parent. Explain
+            // instead of repeating identical numbers.
+            const oneSport = sportName(sportKeys[0]);
+            let oneSide = '';
+            graded.some(function(pk) { const s = tmrxPickSide(pk, marketKey); if (s) { oneSide = s.label; return true; } return false; });
+            return '<div class="tmrx-drill-panel"><div class="tmrx-drill-empty">All ' + graded.length +
+                ' graded pick' + (graded.length === 1 ? '' : 's') + ' are ' + escapeHtml(oneSport) +
+                (oneSide ? ' &middot; ' + escapeHtml(oneSide) : '') + ' &mdash; no further breakdown.</div></div>';
+        }
+
+        return '<div class="tmrx-drill-panel">' +
+            '<div class="tmrx-drill-head">' + escapeHtml(marketLabel || 'Market') + ' — breakdown by sport &amp; ' + escapeHtml(sideHeader) +
+            ' <span class="tmrx-drill-count">' + graded.length + ' graded pick' + (graded.length === 1 ? '' : 's') + '</span></div>' +
+            '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-drill-table">' +
+            '<thead><tr><th>Breakdown</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>' +
+            '<tbody>' + bodyRows + '</tbody></table></div></div>';
+    }
+
+    function tmrxToggleMarketDrilldown(row) {
+        if (!row) return;
+        const tbody = row.parentNode;
+        if (!tbody) return;
+        const open = row.classList.contains('tmrx-drill-open');
+        // Close any open drilldown in this table (one at a time).
+        tbody.querySelectorAll('tr.tmrx-drill-open').forEach(function(r) {
+            r.classList.remove('tmrx-drill-open');
+            r.setAttribute('aria-expanded', 'false');
+        });
+        tbody.querySelectorAll('tr.tmrx-drill-expansion').forEach(function(r) { r.remove(); });
+        if (open) return; // was open → now collapsed
+        row.classList.add('tmrx-drill-open');
+        row.setAttribute('aria-expanded', 'true');
+        const colCount = row.children.length;
+        const exp = document.createElement('tr');
+        exp.className = 'tmrx-drill-expansion';
+        const td = document.createElement('td');
+        td.colSpan = colCount;
+        td.innerHTML = tmrxBuildMarketDrilldownHtml(row.getAttribute('data-market-key'), row.getAttribute('data-market-label'));
+        exp.appendChild(td);
+        if (row.nextSibling) tbody.insertBefore(exp, row.nextSibling);
+        else tbody.appendChild(exp);
+    }
+
+    // AVG_ODDS_PARENT_BACKFILL_20260627: the Performance by Market Type parent
+    // rows render from the stats summary (which often omits avg_odds) BEFORE the
+    // graded-pick ledger finishes loading, so the render-time fallback can't see
+    // any picks and leaves "—". Once allLoadedPicks is populated, walk every
+    // market parent row in both the main and mirrored ("Top") tables and fill any
+    // "—" Avg Odds cell using the SAME pick math as the drilldown children. Safe
+    // to call repeatedly — it only fills cells that are still empty.
+    function tmrxFillMarketAvgOddsFromPicks() {
+        if (!Array.isArray(allLoadedPicks) || !allLoadedPicks.length) return;
+        if (typeof tmrxMarketKeyMatches !== 'function' || typeof tmrxAggregatePicks !== 'function') return;
+        const fmt = function(x) { return (x > 0 ? '+' : '') + Math.round(x); };
+        const isEmpty = function(cell) {
+            if (!cell) return false;
+            const cur = (cell.textContent || '').trim();
+            return cur === '' || cur === '—' || cur === '-';
+        };
+        const fillCell = function(cell, picks) {
+            if (!isEmpty(cell) || !picks.length) return;
+            const a = tmrxAggregatePicks(picks);
+            if (a.avgOdds != null && Number.isFinite(a.avgOdds) && a.avgOdds !== 0) cell.textContent = fmt(a.avgOdds);
+        };
+        // Performance by Market Type — Avg Odds is children[4] (single label col).
+        ['tmrxTableMarket', 'tmrxTableMarketTop'].forEach(function(id) {
+            const tb = document.querySelector('#' + id + ' tbody');
+            if (!tb) return;
+            tb.querySelectorAll('tr.tmrx-market-drill-row').forEach(function(row) {
+                const cell = row.children && row.children[4]; // name, picks, w-l-p, win%, AVG ODDS, net, roi
+                const key = row.getAttribute('data-market-key');
+                if (!cell || !key || !isEmpty(cell)) return;
+                fillCell(cell, allLoadedPicks.filter(function(p) {
+                    const st = normalizeStatus(p && p.status);
+                    return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, key);
+                }));
+            });
+        });
+        // Performance by Sport — Avg Odds is children[4] (single sport label col).
+        // Parent rows are now grouped by top-level sport; match every pick whose
+        // sport_key shares the row's group prefix (e.g. all soccer_* under Soccer).
+        ['tmrxTableSport', 'tmrxTableSportTop'].forEach(function(id) {
+            const tb = document.querySelector('#' + id + ' tbody');
+            if (!tb) return;
+            tb.querySelectorAll('tr.tmrx-sport-drill-row, tr.tmrx-sport-row-static').forEach(function(row) {
+                const cell = row.children && row.children[4]; // sport, picks, w-l-p, win%, AVG ODDS, net, roi
+                const grp = String(row.getAttribute('data-sport-group') || '').toLowerCase();
+                if (!cell || !grp || !isEmpty(cell)) return;
+                fillCell(cell, allLoadedPicks.filter(function(p) {
+                    const st = normalizeStatus(p && p.status);
+                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase().split('_')[0] === grp;
+                }));
+            });
+        });
+    }
+    window.tmrxFillMarketAvgOddsFromPicks = tmrxFillMarketAvgOddsFromPicks;
+
+    if (!window.__tmrxMarketDrillBound) {
+        window.__tmrxMarketDrillBound = true;
+        document.addEventListener('click', function(e) {
+            const row = e.target.closest && e.target.closest('tr.tmrx-market-drill-row');
+            if (row) tmrxToggleMarketDrilldown(row);
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const row = e.target.closest && e.target.closest('tr.tmrx-market-drill-row');
+            if (row) { e.preventDefault(); tmrxToggleMarketDrilldown(row); }
+        });
+    }
+
+    // ============================================================
+    // SPORT DRILLDOWN — expands a "Performance by Sport & League"
+    // parent (e.g. Soccer) into its league / competition children.
+    // Children data is stashed on window.__tmrxSportGroups at render
+    // time; parent totals already equal the sum of these children.
+    // ============================================================
+    function tmrxBuildSportDrilldownHtml(groupKey) {
+        const fmtSigned = function(n, suffix, dec) {
+            const x = Number(n) || 0;
+            return (x >= 0 ? '+' : '') + x.toFixed(dec != null ? dec : 2) + (suffix || '');
+        };
+        const fmtOdds = function(o) {
+            return (o == null || !Number.isFinite(Number(o)) || Number(o) === 0) ? '—' : (Number(o) > 0 ? '+' : '') + Math.round(Number(o));
+        };
+        const grp = (window.__tmrxSportGroups || {})[groupKey];
+        const children = grp && Array.isArray(grp.children) ? grp.children : [];
+        const sportLabel = (grp && grp.sportLabel) || 'Sport';
+        if (!children.length) {
+            return '<div class="tmrx-drill-panel"><div class="tmrx-drill-empty">No league breakdown available.</div></div>';
+        }
+        const rows = children.slice().sort(function(a, b) { return b.net - a.net; }).map(function(c) {
+            let avg = c.avgOdds;
+            if (avg == null && Array.isArray(allLoadedPicks) && allLoadedPicks.length && typeof tmrxAggregatePicks === 'function') {
+                const mp = allLoadedPicks.filter(function(p) {
+                    const st = normalizeStatus(p && p.status);
+                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase() === String(c.key).toLowerCase();
+                });
+                if (mp.length) { const a = tmrxAggregatePicks(mp); if (a.avgOdds != null) avg = a.avgOdds; }
+            }
+            const dec = c.wins + c.losses;
+            const winPct = dec > 0 ? (c.wins / dec) * 100 : 0;
+            const winCls = dec > 0 ? (winPct >= 50 ? 'pos' : 'neg') : 'zero';
+            const netCls = c.net > 0 ? 'pos' : c.net < 0 ? 'neg' : 'zero';
+            const roiCls = c.roi > 0 ? 'pos' : c.roi < 0 ? 'neg' : 'zero';
+            return '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(c.leagueLabel) + '</td>' +
+                '<td class="num">' + c.total + '</td>' +
+                '<td class="num">' + c.wins + '-' + c.losses + (c.pushes ? '-' + c.pushes : '') + '</td>' +
+                '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>' +
+                '<td class="num">' + fmtOdds(avg) + '</td>' +
+                '<td class="num ' + netCls + '">' + fmtSigned(c.net, 'u', 2) + '</td>' +
+                '<td class="num ' + roiCls + '">' + fmtSigned(c.roi, '%', 2) + '</td></tr>';
+        }).join('');
+        return '<div class="tmrx-drill-panel">' +
+            '<div class="tmrx-drill-head">' + escapeHtml(sportLabel) + ' — breakdown by league / competition' +
+            ' <span class="tmrx-drill-count">' + children.length + ' competition' + (children.length === 1 ? '' : 's') + '</span></div>' +
+            '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-drill-table">' +
+            '<thead><tr><th>League / Competition</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody></table></div></div>';
+    }
+
+    function tmrxToggleSportDrilldown(row) {
+        if (!row) return;
+        const tbody = row.parentNode;
+        if (!tbody) return;
+        const open = row.classList.contains('tmrx-drill-open');
+        tbody.querySelectorAll('tr.tmrx-drill-open').forEach(function(r) {
+            r.classList.remove('tmrx-drill-open');
+            r.setAttribute('aria-expanded', 'false');
+        });
+        tbody.querySelectorAll('tr.tmrx-drill-expansion').forEach(function(r) { r.remove(); });
+        if (open) return;
+        row.classList.add('tmrx-drill-open');
+        row.setAttribute('aria-expanded', 'true');
+        const exp = document.createElement('tr');
+        exp.className = 'tmrx-drill-expansion';
+        const td = document.createElement('td');
+        td.colSpan = row.children.length;
+        td.innerHTML = tmrxBuildSportDrilldownHtml(row.getAttribute('data-sport-group'));
+        exp.appendChild(td);
+        if (row.nextSibling) tbody.insertBefore(exp, row.nextSibling);
+        else tbody.appendChild(exp);
+    }
+
+    if (!window.__tmrxSportDrillBound) {
+        window.__tmrxSportDrillBound = true;
+        document.addEventListener('click', function(e) {
+            const row = e.target.closest && e.target.closest('tr.tmrx-sport-drill-row');
+            if (row) tmrxToggleSportDrilldown(row);
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const row = e.target.closest && e.target.closest('tr.tmrx-sport-drill-row');
+            if (row) { e.preventDefault(); tmrxToggleSportDrilldown(row); }
+        });
+    }
+
+    // ============================================================
+    // TMRX PICK HISTORY — Fetches the last N picks for this user from
+    // /api/picks?username=... and renders into the wide history table.
+    // Same endpoint the Records ledger already uses; no new backend calls.
+    // ============================================================
+    const TMRX_PICKS_PER_PAGE = 15;
+    const SETTLED_RE = /^(won|lost|push|void|cancelled)$/i;
+    let tmrxLedgerPicks = [];   // full settled public history, newest first
+    let tmrxLedgerPage = 1;
+
+    async function tmrxRenderPickHistory(username) {
+        const tbody = document.querySelector('#tmrxTablePicks tbody');
+        const meta = document.getElementById('tmrxPickMeta');
+        const pager = document.getElementById('tmrxPicksPagination');
+        if (!tbody) return;
+        if (pager) { pager.hidden = true; pager.innerHTML = ''; }
+        if (!username || !window.api || typeof window.api.request !== 'function') {
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">Pick history unavailable.</td></tr>';
+            return;
+        }
+        // Pull the user's FULL settled public history by paging the API until
+        // exhausted (no new backend call; same /picks endpoint with offset).
+        const PAGE = 100;
+        let all = [];
+        try {
+            for (let offset = 0, guard = 0; guard < 200; offset += PAGE, guard++) {
+                const resp = await window.api.request('/picks' + '?username=' + encodeURIComponent(username) + '&limit=' + PAGE + '&offset=' + offset);
+                const batch = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
+                all = all.concat(batch);
+                if (!resp || !resp.pagination || !resp.pagination.hasMore || batch.length < PAGE) break;
+            }
+        } catch (err) {
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">Pick history unavailable.</td></tr>';
+            return;
+        }
+        // Public Ledger = settled picks only; pending stays hidden until graded.
+        tmrxLedgerPicks = all
+            .filter(p => !p.redacted && SETTLED_RE.test(p.status))
+            .sort((a, b) => new Date(b.created_at || b.locked_at || 0) - new Date(a.created_at || a.locked_at || 0));
+        tmrxLedgerPage = 1;
+        if (meta) meta.textContent = tmrxLedgerPicks.length + ' settled public pick' + (tmrxLedgerPicks.length === 1 ? '' : 's');
+        if (!tmrxLedgerPicks.length) {
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">No settled picks yet.</td></tr>';
+            return;
+        }
+        tmrxRenderLedgerPage();
+    }
+
+    function tmrxRenderLedgerPage() {
+        const tbody = document.querySelector('#tmrxTablePicks tbody');
+        const pager = document.getElementById('tmrxPicksPagination');
+        if (!tbody) return;
+        const total = tmrxLedgerPicks.length;
+        const totalPages = Math.max(1, Math.ceil(total / TMRX_PICKS_PER_PAGE));
+        if (tmrxLedgerPage > totalPages) tmrxLedgerPage = totalPages;
+        if (tmrxLedgerPage < 1) tmrxLedgerPage = 1;
+        const start = (tmrxLedgerPage - 1) * TMRX_PICKS_PER_PAGE;
+        const picks = tmrxLedgerPicks.slice(start, start + TMRX_PICKS_PER_PAGE);
+        const fmtDate = (iso) => {
+            if (!iso) return '—';
+            try {
+                const d = new Date(iso);
+                if (isNaN(d.getTime())) return '—';
+                return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) +
+                    ' · ' + d.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() + ' ET';
+            } catch (_) { return '—'; }
+        };
+        const fmtAmericanOdds = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return '—';
+            return (x > 0 ? '+' : '') + Math.round(x);
+        };
+        const sportLabel = (k) => {
+            const m = { baseball_mlb:'MLB', baseball_npb:'Japan NPB', basketball_nba:'NBA', basketball_nba_summer:'NBA Summer League', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB' };
+            return m[String(k||'').toLowerCase()] || (k || '—').toUpperCase();
+        };
+        const marketLabel = (k) => {
+            return marketTypeLabel(k);
+        };
+        const resultTag = (status) => {
+            const raw = String(status || 'pending').toLowerCase();
+            const s = raw === 'pushed' ? 'push' : raw === 'cancelled' ? 'canceled' : raw === 'voided' ? 'void' : raw;
+            return '<span class="tmrx-result-badge tmrx-result-' + s + '">' + s + '</span>';
+        };
+        const rowStatusClass = (status) => {
+            const raw = String(status || 'pending').toLowerCase();
+            const s = raw === 'pushed' ? 'push' : raw === 'cancelled' ? 'canceled' : raw === 'voided' ? 'void' : raw;
+            return 'tmrx-row-' + s;
+        };
+        // Share cell for a ledger row. Only rendered when the pick has a real
+        // numeric id AND is either settled or owned by the profile owner --
+        // another member's pending pick must never expose a share link.
+        const shareCell = (p) => {
+            const pid = Number(p && p.id);
+            if (!Number.isFinite(pid) || pid <= 0) return '<td class="tmrx-share-col"></td>';
+            const settled = SETTLED_RE.test(String(p.status || ''));
+            if (!settled && !isOwnProfile) return '<td class="tmrx-share-col"></td>';
+            if (!window.TMRShare || typeof window.TMRShare.buttonHtml !== 'function') return '<td class="tmrx-share-col"></td>';
+            return '<td class="tmrx-share-col">' + window.TMRShare.buttonHtml({
+                type: 'pick',
+                id: pid,
+                url: 'https://trustmyrecord.com/pick/?id=' + pid,
+                compact: true,
+                tooltip: 'Share this pick',
+                ariaLabel: 'Share this pick'
+            }) + '</td>';
+        };
+        tbody.innerHTML = picks.map(p => {
+            if (p.redacted) {
+                return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td>' + shareCell(p) + '</tr>';
+            }
+            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '')) : '—';
+            const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
+            const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
+            const result = String(p.status || 'pending').toLowerCase();
+            const net = p.result_units != null ? Number(p.result_units) : null;
+            const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
+            const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
+            return '<tr class="' + rowStatusClass(p.status) + '">' +
+                '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
+                '<td>' + sportLabel(p.sport_key) + '</td>' +
+                '<td>' + game + '</td>' +
+                '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
+                '<td>' + marketLabel(p.market_type) + '</td>' +
+                '<td class="num">' + line + '</td>' +
+                '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
+                '<td class="num">' + units + '</td>' +
+                '<td>' + resultTag(p.status) + '</td>' +
+                '<td class="num ' + netCls + '">' + netTxt + '</td>' +
+                shareCell(p) +
+            '</tr>';
+        }).join('');
+
+        // Pagination controls
+        if (pager) {
+            if (totalPages <= 1) {
+                pager.hidden = true;
+                pager.innerHTML = '';
+                return;
+            }
+            pager.hidden = false;
+            const cur = tmrxLedgerPage;
+            const showFrom = start + 1;
+            const showTo = Math.min(start + picks.length, total);
+            let html = '<div class="tmrx-page-info">Showing ' + showFrom + '&ndash;' + showTo + ' of ' + total + ' &middot; Page ' + cur + ' of ' + totalPages + '</div>';
+            html += '<button type="button" data-tmrx-page="' + (cur - 1) + '"' + (cur === 1 ? ' disabled' : '') + '>Previous</button>';
+            // Page numbers: first, last, and a window around current.
+            const nums = [];
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= cur - 1 && i <= cur + 1)) nums.push(i);
+            }
+            let prev = 0;
+            nums.forEach(i => {
+                if (i - prev > 1) html += '<span class="tmrx-page-gap">&hellip;</span>';
+                html += '<button type="button" class="' + (i === cur ? 'is-active' : '') + '" data-tmrx-page="' + i + '"' + (i === cur ? ' disabled' : '') + '>' + i + '</button>';
+                prev = i;
+            });
+            html += '<button type="button" data-tmrx-page="' + (cur + 1) + '"' + (cur === totalPages ? ' disabled' : '') + '>Next</button>';
+            pager.innerHTML = html;
+        }
+    }
+
+    // Pagination clicks (delegated, bound once).
+    if (!window.__tmrxLedgerPagerBound) {
+        window.__tmrxLedgerPagerBound = true;
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest && e.target.closest('#tmrxPicksPagination button[data-tmrx-page]');
+            if (!btn || btn.disabled) return;
+            const p = parseInt(btn.getAttribute('data-tmrx-page'), 10);
+            if (!Number.isFinite(p)) return;
+            tmrxLedgerPage = p;
+            tmrxRenderLedgerPage();
+            const sec = document.getElementById('tmrxTablePicks');
+            if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    }
+
+    function renderPmTable(tableId, splitArr, splitKey) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const rows = (Array.isArray(splitArr) ? splitArr : []).filter(b => Number(b.total) >= 3 && !(splitKey === 'by_odds_bucket' && String(b.key || '').toLowerCase() === 'even'));
+        if (!rows.length) return; // keep the empty-state row
+        const labelOf = (typeof window.formatBucketLabel === 'function') ? (k, v) => window.formatBucketLabel(k, v) : (k, v) => String(v || '—');
+        // Per PickMonitor: rows sorted by net units desc (best at top).
+        rows.sort((a, b) => Number(b.net || 0) - Number(a.net || 0));
+        tbody.innerHTML = rows.map(b => {
+            const net = Number(b.net) || 0;
+            const roi = Number(b.roi) || 0;
+            const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
+            const decisions = w + l;
+            const wr = decisions > 0 ? (w / decisions) : 0;
+            // eWP = (110/210) * (1 + ROI_fraction)
+            const ewp = (110/210) * (1 + (roi / 100));
+            // Z = (W - n*p_breakeven) / sqrt(n*p*(1-p)) where p is the
+            // PickMonitor breakeven of 0.5238 (matches the per-row eWP scale).
+            let z = '';
+            const pBe = 110/210;
+            if (decisions >= 5) {
+                const variance = decisions * pBe * (1 - pBe);
+                if (variance > 0) z = ((w - decisions * pBe) / Math.sqrt(variance)).toFixed(2);
+            }
+            const netCls = net > 0 ? 'pm-pos' : net < 0 ? 'pm-neg' : '';
+            const roiCls = roi > 0 ? 'pm-pos' : roi < 0 ? 'pm-neg' : '';
+            const recCls = decisions === 0 ? '' : (wr >= 0.5 ? 'pm-pos' : 'pm-neg');
+            const ewpCls = ewp >= 0.5238 ? 'pm-pos' : 'pm-neg';
+            return '<tr>'
+                + '<td class="pm-row__name">' + labelOf(splitKey, b.key) + '</td>'
+                + '<td class="num">' + b.total + '</td>'
+                + '<td class="num"><span class="' + recCls + '">' + w + '&ndash;' + l + (p ? '&ndash;' + p : '') + '</span></td>'
+                + '<td class="num ' + netCls + '">' + (net >= 0 ? '+' : '') + net.toFixed(2) + 'u</td>'
+                + '<td class="num ' + roiCls + '">' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%</td>'
+                + '<td class="num ' + ewpCls + '">' + (ewp * 100).toFixed(1) + '%</td>'
+                + '<td class="num">' + (z || '&mdash;') + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    // Expose formatBucketLabel for renderPmTable + best/worst helpers.
+    window.formatBucketLabel = (typeof formatBucketLabel === 'function') ? formatBucketLabel : function(splitKey, bucketKey) {
+        if (bucketKey == null || bucketKey === '') return '—';
+        const k = String(bucketKey);
+        // RAW_BUCKET_KEY_LEAK_20260907: every branch below used to end in `|| k`,
+        // so any bucket key the local table did not know -- 0_5_to_1u, the spelling
+        // /metrics actually sends for the lowest unit bucket -- was printed to the
+        // user verbatim. Labels now come from the shared table, which knows both
+        // backend spellings and humanises anything it has never seen. The key
+        // itself is untouched: callers still filter and sort on b.key.
+        const shared = window.TMR_BUCKET_LABELS;
+        const split = shared ? shared.normalizeSplitKey(splitKey) : String(splitKey || '').replace(/^by_/, '');
+        if (split === 'market')             return marketTypeLabel(k);
+        return shared ? shared.format(split, k) : k;
+    };
+
+    function formatBucketLabel(splitKey, bucketKey) {
+        if (bucketKey == null || bucketKey === '') return '—';
+        const k = String(bucketKey);
+        // RAW_BUCKET_KEY_LEAK_20260907: every branch below used to end in `|| k`,
+        // so any bucket key the local table did not know -- 0_5_to_1u, the spelling
+        // /metrics actually sends for the lowest unit bucket -- was printed to the
+        // user verbatim. Labels now come from the shared table, which knows both
+        // backend spellings and humanises anything it has never seen. The key
+        // itself is untouched: callers still filter and sort on b.key.
+        const shared = window.TMR_BUCKET_LABELS;
+        const split = shared ? shared.normalizeSplitKey(splitKey) : String(splitKey || '').replace(/^by_/, '');
+        if (split === 'market')             return marketTypeLabel(k);
+        return shared ? shared.format(split, k) : k;
+    }
+
+    function renderAdvancedSplits(splits) {
+        const cards = document.querySelectorAll('#advSplitsGrid [data-split]');
+        cards.forEach(card => {
+            const key  = card.getAttribute('data-split');
+            const body = card.querySelector('[data-split-body]');
+            if (!body) return;
+            const arr = Array.isArray(splits[key]) ? splits[key].filter(b => Number(b.total) >= 3) : [];
+            if (!arr.length) return;
+
+            const cell = (label, b) => {
+                const net = Number(b.net) || 0;
+                const roi = Number(b.roi) || 0;
+                const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
+                const recordWinning = (w + l) > 0 && (w / (w + l)) >= 0.5;
+                const recordCls = recordWinning ? 'is-pos' : (w + l > 0 ? 'is-neg' : '');
+                const netCls    = net > 0 ? 'is-pos' : net < 0 ? 'is-neg' : '';
+                const record    = w + '-' + l + (p ? '-' + p : '');
+                return '<div class="tmr-cap-metric">'
+                    + '<span class="tmr-cap-metric__label">' + label + '</span>'
+                    + '<span class="tmr-cap-metric__value ' + netCls + '">' + (net >= 0 ? '+' : '') + net.toFixed(2) + 'u</span>'
+                    + '<span class="tmr-cap-metric__sub"><span class="' + recordCls + '">' + record + '</span> · ' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '% ROI</span>'
+                    + '</div>';
+            };
+
+            if (key === 'by_fav_dog') {
+                const fav = arr.find(b => b.key === 'favorite');
+                const dog = arr.find(b => b.key === 'underdog');
+                const cells = [];
+                if (fav) cells.push(cell(formatBucketLabel(key, 'favorite'),  fav));
+                if (dog) cells.push(cell(formatBucketLabel(key, 'underdog'), dog));
+                if (cells.length) body.innerHTML = cells.join('');
+                return;
+            }
+
+            // Best is sorted-by-net desc (already sorted by aggregator), worst is the bottom
+            const top = arr.slice(0, Math.min(3, arr.length));
+            body.innerHTML = top.map(b => cell(formatBucketLabel(key, b.key), b)).join('');
+        });
+    }
+
+    function renderEquityCurveChart(equityCurve) {
+        const el = document.getElementById('advChartEquity');
+        if (!el || !Array.isArray(equityCurve) || equityCurve.length < 2) return;
+        const w = 320, h = 180, padX = 24, padY = 16;
+        const ys = equityCurve.map(p => Number(p.units) || 0);
+        const yMax = Math.max(0, Math.max.apply(null, ys));
+        const yMin = Math.min(0, Math.min.apply(null, ys));
+        const yRng = (yMax - yMin) || 1;
+        const xRng = equityCurve.length - 1 || 1;
+        const sx = i => padX + (i / xRng) * (w - padX * 2);
+        const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
+        const d  = equityCurve.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
+        const last = ys[ys.length - 1];
+        const stroke = last >= 0 ? '#4ade80' : '#f87171';
+        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(248,113,113,0.18)';
+        const zeroY = sy(0);
+        const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY.toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + zeroY.toFixed(2) + ' Z';
+        el.style.padding = '0';
+        el.style.background = 'transparent';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.color = 'inherit';
+        el.style.font = 'inherit';
+        el.style.letterSpacing = '0';
+        el.style.textTransform = 'none';
+        el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
+            + '<line x1="' + padX + '" x2="' + (w - padX) + '" y1="' + zeroY.toFixed(2) + '" y2="' + zeroY.toFixed(2) + '" stroke="rgba(255,255,255,0.16)" stroke-dasharray="3 4"/>'
+            + '<path d="' + fill + '" fill="' + fillStop + '" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="2"/>'
+            + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
+            + (last >= 0 ? '+' : '') + last.toFixed(2) + 'u</text>'
+            + '</svg>';
+    }
+
+    function renderDrawdownChart(equityCurve) {
+        const el = document.getElementById('advChartDrawdown');
+        if (!el || !Array.isArray(equityCurve) || equityCurve.length < 2) return;
+        let peak = 0;
+        const dd = equityCurve.map(p => {
+            const u = Number(p.units) || 0;
+            if (u > peak) peak = u;
+            return -(peak - u);
+        });
+        const w = 320, h = 180, padX = 24, padY = 16;
+        const yMin = Math.min.apply(null, dd.concat([0]));
+        const yMax = 0;
+        const yRng = (yMax - yMin) || 1;
+        const xRng = dd.length - 1 || 1;
+        const sx = i => padX + (i / xRng) * (w - padX * 2);
+        const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
+        const d  = dd.map((y, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(y).toFixed(2)).join(' ');
+        const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + sy(0).toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + sy(0).toFixed(2) + ' Z';
+        const maxDd = Math.abs(Math.min.apply(null, dd));
+        el.style.padding = '0'; el.style.background = 'transparent';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.color = 'inherit'; el.style.font = 'inherit';
+        el.style.letterSpacing = '0'; el.style.textTransform = 'none';
+        el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
+            + '<path d="' + fill + '" fill="rgba(248,113,113,0.18)" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="#f87171" stroke-width="2"/>'
+            + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
+            + 'Max DD ' + maxDd.toFixed(2) + 'u</text>'
+            + '</svg>';
+    }
+
+    function renderRecentFormChart(equityCurve) {
+        const el = document.getElementById('advChartRecentForm');
+        if (!el || !Array.isArray(equityCurve) || equityCurve.length < 2) return;
+        const slice = equityCurve.slice(-21);
+        const deltas = [];
+        for (let i = 1; i < slice.length; i++) {
+            deltas.push(Number(slice[i].units) - Number(slice[i - 1].units));
+        }
+        if (!deltas.length) return;
+        const w = 320, h = 180, padX = 16, padY = 18;
+        const maxAbs = Math.max(1, Math.max.apply(null, deltas.map(v => Math.abs(v))));
+        const barW = (w - padX * 2) / deltas.length;
+        const zeroY = h / 2;
+        const bars = deltas.map((v, i) => {
+            const x = padX + i * barW;
+            const bh = (Math.abs(v) / maxAbs) * (h / 2 - padY);
+            const y  = v >= 0 ? zeroY - bh : zeroY;
+            const c  = v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
+            return '<rect x="' + (x + 1).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, barW - 2).toFixed(1) + '" height="' + Math.max(1, bh).toFixed(1) + '" fill="' + c + '"/>';
+        }).join('');
+        const wins = deltas.filter(v => v > 0).length;
+        const losses = deltas.filter(v => v < 0).length;
+        el.style.padding = '0'; el.style.background = 'transparent';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.color = 'inherit'; el.style.font = 'inherit';
+        el.style.letterSpacing = '0'; el.style.textTransform = 'none';
+        el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
+            + '<line x1="' + padX + '" x2="' + (w - padX) + '" y1="' + zeroY + '" y2="' + zeroY + '" stroke="rgba(255,255,255,0.16)"/>'
+            + bars
+            + '<text x="' + padX + '" y="' + (padY - 4) + '" font-size="10" fill="#94a3b8">Last ' + deltas.length + ' graded · ' + wins + 'W ' + losses + 'L</text>'
+            + '</svg>';
+    }
+
+    function renderSplitBars(elementId, splitArr, splitKey) {
+        const el = document.getElementById(elementId);
+        if (!el || !Array.isArray(splitArr)) return;
+        let ordered = splitArr;
+        if (splitKey === 'by_unit_size') {
+            const unitRank = (k) => window.TMR_BUCKET_LABELS ? window.TMR_BUCKET_LABELS.unitSizeRank(k) : 99;
+            ordered = splitArr.slice().sort((a, b) => {
+                const ai = unitRank(a.key);
+                const bi = unitRank(b.key);
+                return ai - bi;
+            });
+        }
+        const data = ordered.filter(b => Number(b.total) >= 3).slice(0, 8);
+        if (!data.length) return;
+        const maxAbs = Math.max(1, Math.max.apply(null, data.map(b => Math.abs(Number(b.roi) || 0))));
+        const rows = data.map(b => {
+            const roi   = Number(b.roi) || 0;
+            const pct   = Math.min(100, (Math.abs(roi) / maxAbs) * 100);
+            const color = roi >= 0 ? '#4ade80' : '#f87171';
+            const label = formatBucketLabel(splitKey, b.key);
+            const meta  = (Number(b.wins) || 0) + '-' + (Number(b.losses) || 0) + (b.pushes ? '-' + b.pushes : '');
+            return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+                + '<div style="flex:0 0 110px;font-size:.72rem;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + label + '">' + label + '</div>'
+                + '<div style="flex:1;background:rgba(255,255,255,0.04);border-radius:4px;height:14px;position:relative;overflow:hidden;">'
+                + '<div style="width:' + pct.toFixed(1) + '%;background:' + color + ';height:100%;opacity:0.78;"></div>'
+                + '</div>'
+                + '<div style="flex:0 0 96px;text-align:right;font-size:.72rem;color:' + color + ';font-weight:700;">' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%<span style="color:#64748b;font-weight:500;"> · ' + meta + '</span></div>'
+                + '</div>';
+        }).join('');
+        el.style.padding = '10px 12px';
+        el.style.background = 'rgba(11,23,42,0.4)';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.display = 'block';
+        el.style.color = 'inherit'; el.style.font = 'inherit';
+        el.style.letterSpacing = '0'; el.style.textTransform = 'none';
+        el.style.alignItems = 'stretch'; el.style.justifyContent = 'flex-start';
+        el.innerHTML = rows;
+    }
+
+    // ======================== LOAD ALL PICKS ========================
+    // ============================================================
+    // PICK_DIVERSITY_20260604 — Pick Diversity Score (additive analytics).
+    // Groups graded picks into unique handicapping opinions:
+    //   sport | game | period scope | market family | participant | direction.
+    // Alt lines fold into their base market, so Over 6.5 / 7.5 / 8.5 on the
+    // same game = one opinion with correlated (alt-line) extras. Yankees ML +
+    // Yankees -1.5 = related exposure (half penalty). Over + Under the same
+    // total = a conflict flag, never a duplicate. Unparseable legacy picks
+    // count as their own opinion (safe fallback — never penalized). Mirrors
+    // services/pickDiversity.js on the backend (/users/:username/metrics).
+    // Contest picks live in tmr_contest_picks and never reach this feed.
+    // ============================================================
+    function tmrComputePickDiversity(picks) {
+        var KNOWN_BASES = { h2h: 1, spreads: 1, totals: 1, team_totals: 1 };
+        function dvNorm(v) { return String(v == null ? '' : v).toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+        function dvDirection(sel) {
+            var s = dvNorm(sel);
+            if (/\bover\b/.test(s) || /\bo\s*\d/.test(s)) return 'over';
+            if (/\bunder\b/.test(s) || /\bu\s*\d/.test(s)) return 'under';
+            return null;
+        }
+        function dvBefore(sel) { var m = dvNorm(sel).match(/^(.*?)(?:\bover\b|\bunder\b|\bo\s*\d|\bu\s*\d)/); return m ? dvNorm(m[1]) : ''; }
+        function dvTeam(sel, home, away) {
+            var s = dvNorm(sel), h = dvNorm(home), a = dvNorm(away);
+            if (!s) return null;
+            if (h && (s === h || h.indexOf(s) !== -1 || s.indexOf(h) !== -1)) return 'home:' + h;
+            if (a && (s === a || a.indexOf(s) !== -1 || s.indexOf(a) !== -1)) return 'away:' + a;
+            return 'team:' + s;
+        }
+        function dvMarket(mt) {
+            var m = dvNorm(mt).replace(/ /g, '_');
+            if (!m) return null;
+            if (m === 'alt_totals') m = 'totals';
+            if (m === 'alt_spreads') m = 'spreads';
+            var period = 'full';
+            var prefixes = [['f5_', 'f5'], ['first_half_', 'h1'], ['second_half_', 'h2'], ['period_1_', 'p1']];
+            for (var i = 0; i < prefixes.length; i++) {
+                if (m.indexOf(prefixes[i][0]) === 0) { period = prefixes[i][1]; m = m.slice(prefixes[i][0].length); break; }
+            }
+            return { period: period, family: KNOWN_BASES[m] ? m : 'prop_' + m };
+        }
+        function dvGameKey(p) {
+            if (p.game_id != null && String(p.game_id).trim() !== '') return 'g:' + String(p.game_id).trim();
+            var h = dvNorm(p.home_team), a = dvNorm(p.away_team);
+            var day = String(p.commence_time || p.locked_at || p.created_at || '').slice(0, 10);
+            return (h && a && day) ? ('m:' + a + '@' + h + ':' + day) : null;
+        }
+        function dvLabelSport(k) {
+            var m = {
+                baseball_mlb: 'MLB', baseball_npb: 'Japan NPB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League',
+                basketball_wnba: 'WNBA', basketball_ncaab: 'NCAAB', icehockey_nhl: 'NHL',
+                americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF', mma_mixed_martial_arts: 'MMA',
+                boxing_boxing: 'Boxing', tennis_atp: 'Tennis (ATP)', tennis_wta: 'Tennis (WTA)'
+            };
+            var kk = String(k || '').trim().replace(/\s+/g, '_');
+            if (m[kk]) return m[kk];
+            var s = kk.replace(/^[a-z]+_/, '').replace(/_/g, ' ').trim();
+            if (!s) return 'Unknown';
+            return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }
+        function dvLabelFamily(f) {
+            if (f === 'h2h') return 'Moneyline';
+            if (f === 'spreads') return 'Spread / Run Line';
+            if (f === 'totals') return 'Game Total (O/U)';
+            if (f === 'team_totals') return 'Team Total';
+            if (f && f.indexOf('prop_') === 0) return (f.slice(5).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) + ' Prop').trim();
+            return f || 'Other';
+        }
+        function dvTitle(s) { return String(s || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+        // Effective number of distinct categories (exp of Shannon entropy) for a count Map.
+        // Captures BOTH breadth (how many categories) and balance (how evenly split).
+        function dvEff(map) {
+            var totalN = 0; map.forEach(function (v) { totalN += v; });
+            if (totalN <= 0) return { eff: 0, total: 0, top: null, topShare: 0, k: 0 };
+            var H = 0, topN = -1, topK = null, k = 0;
+            map.forEach(function (v, key) {
+                if (v <= 0) return; k++;
+                var pr = v / totalN; H += -pr * Math.log(pr);
+                if (v > topN) { topN = v; topK = key; }
+            });
+            return { eff: Math.exp(H), total: totalN, top: topK, topShare: totalN > 0 ? topN / totalN : 0, k: k };
+        }
+        // Per-dimension diversity 0..1. Kref = category count treated as "fully spread out".
+        // One category only => 0 (fully concentrated). No data => null (dimension dropped).
+        function dvDim(stat, Kref) {
+            if (!stat || stat.total <= 0) return null;
+            if (stat.k <= 1) return 0;
+            return Math.max(0, Math.min(1, (stat.eff - 1) / (Kref - 1)));
+        }
+        function classify(p, i) {
+            var sport = dvNorm(p.sport_key) || 'unknown';
+            var market = dvMarket(p.market_type);
+            var gameKey = dvGameKey(p);
+            if (!market || !gameKey) return null;
+            var participant = '', direction = null, family = market.family;
+            if (family === 'totals') {
+                direction = dvDirection(p.selection);
+            } else if (family === 'team_totals' || family.indexOf('prop_') === 0) {
+                direction = dvDirection(p.selection);
+                participant = dvBefore(p.selection);
+                if (!participant) return null;
+            } else {
+                direction = dvTeam(p.selection, p.home_team, p.away_team);
+            }
+            if (!direction) return null;
+            var base = sport + '|' + gameKey + '|' + market.period + '|' + family + '|' + participant;
+            var relatedKey;
+            if (family === 'h2h' || family === 'spreads') relatedKey = sport + '|' + gameKey + '|teamside|' + direction.replace(/^(home|away|team):/, '');
+            else if (family === 'totals') relatedKey = sport + '|' + gameKey + '|total|' + direction;
+            else if (family === 'team_totals') relatedKey = sport + '|' + gameKey + '|tt|' + participant + '|' + direction;
+            else relatedKey = sport + '|' + gameKey + '|' + family + '|' + participant + '|' + direction;
+            var lineRaw = p.line_snapshot != null ? Number(p.line_snapshot) : (p.line != null ? Number(p.line) : null);
+            // Concentration categories (independent of same-game redundancy):
+            var teamCat = null, sideCat = null;
+            if (family === 'h2h' || family === 'spreads') {
+                teamCat = direction.replace(/^(home|away|team):/, '') || null;
+                sideCat = /^home:/.test(direction) ? 'home' : (/^away:/.test(direction) ? 'away' : null);
+            } else if (family === 'totals') {
+                sideCat = (direction === 'over' || direction === 'under') ? direction : null;
+            } else {
+                teamCat = participant || null;
+                sideCat = (direction === 'over' || direction === 'under') ? direction : null;
+            }
+            return {
+                exactKey: base + '|' + direction, conflictKey: base, relatedKey: relatedKey,
+                line: Number.isFinite(lineRaw) ? lineRaw : null,
+                sport: sport, family: family, teamCat: teamCat, sideCat: sideCat
+            };
+        }
+        var rows = (Array.isArray(picks) ? picks : []).filter(Boolean);
+        var total = rows.length;
+        var exact = new Map(), conflict = new Map(), related = new Map();
+        var sportCounts = new Map(), familyCounts = new Map(), teamCounts = new Map();
+        // Side lean is two INDEPENDENT axes; never merge them into one distribution
+        // or a heavy over/under lean gets masked by balanced home/away (and vice versa).
+        var ouCounts = new Map(), hoaCounts = new Map();
+        function bump(map, key) { if (key == null || key === '') return; map.set(key, (map.get(key) || 0) + 1); }
+        rows.forEach(function (p, i) {
+            var c = classify(p, i);
+            if (!c) {
+                var k = 'pick:' + (p && p.id != null ? p.id : 'i' + i);
+                exact.set(k, (exact.get(k) || []).concat([{ line: null }]));
+                return;
+            }
+            exact.set(c.exactKey, (exact.get(c.exactKey) || []).concat([{ line: c.line }]));
+            if (!conflict.has(c.conflictKey)) conflict.set(c.conflictKey, new Set());
+            conflict.get(c.conflictKey).add(c.exactKey);
+            if (!related.has(c.relatedKey)) related.set(c.relatedKey, new Set());
+            related.get(c.relatedKey).add(c.exactKey);
+            bump(sportCounts, dvLabelSport(c.sport));
+            bump(familyCounts, dvLabelFamily(c.family));
+            bump(teamCounts, c.teamCat ? dvTitle(c.teamCat) : null);
+            if (c.sideCat === 'over' || c.sideCat === 'under') bump(ouCounts, c.sideCat);
+            else if (c.sideCat === 'home' || c.sideCat === 'away') bump(hoaCounts, c.sideCat);
+        });
+        var correlated = 0, altExtras = 0;
+        exact.forEach(function (members) {
+            if (members.length <= 1) return;
+            correlated += members.length - 1;
+            var lines = new Set(members.map(function (m) { return m.line == null ? 'x' : String(m.line); }));
+            if (lines.size > 1) altExtras += members.length - 1;
+        });
+        var relatedExtras = 0;
+        related.forEach(function (set) { if (set.size > 1) relatedExtras += set.size - 1; });
+        var conflicts = 0;
+        conflict.forEach(function (set) { if (set.size > 1) conflicts += 1; });
+        function rate(n) { return total > 0 ? Number(((n / total) * 100).toFixed(2)) : 0; }
+
+        // ---- Blended diversity score --------------------------------------
+        // Two independent failure modes lower the score:
+        //  (1) Same-game redundancy: alt lines / correlated positions on ONE game
+        //      (the original signal — rarely triggered for normal records, which is
+        //      why every record used to read ~100/100).
+        //  (2) Concentration: leaning heavily on one sport, market type, team, or
+        //      side (over/under). A capper who fires 400 unique-but-identical-shape
+        //      MLB overs is NOT diverse, and now scores accordingly.
+        var sportStat = dvEff(sportCounts), familyStat = dvEff(familyCounts),
+            teamStat = dvEff(teamCounts);
+        var ouStat = dvEff(ouCounts), hoaStat = dvEff(hoaCounts);
+        // Side lean is a BINARY axis (over/under, home/away). Shannon effective-
+        // categories over 2 buckets saturates fast — 66/34 reads ~0.90 — so a
+        // heavy one-sided lean looked "perfectly spread". Use a non-saturating
+        // linear balance: 50/50 => 1.0, 66/34 => 0.68, 100/0 => 0.
+        function dvSideBalance(stat) { if (!stat || stat.total <= 0) return null; if (stat.k <= 1) return 0; return Math.max(0, Math.min(1, 1 - Math.abs(2 * stat.topShare - 1))); }
+        var ouDiv = dvSideBalance(ouStat), hoaDiv = dvSideBalance(hoaStat);
+        // Combine the two side axes weighted by how many picks fall on each.
+        var sideN = (ouStat.total || 0) + (hoaStat.total || 0);
+        var sideDivCombined = sideN > 0
+            ? (((ouDiv == null ? 0 : ouDiv * ouStat.total) + (hoaDiv == null ? 0 : hoaDiv * hoaStat.total)) / sideN)
+            : null;
+        // Headline the MORE one-sided axis so a lopsided lean is what users see.
+        var sideAxes = [];
+        if (ouStat.total > 0) sideAxes.push(ouStat);
+        if (hoaStat.total > 0) sideAxes.push(hoaStat);
+        sideAxes.sort(function (a, b) { return b.topShare - a.topShare; });
+        var sideHead = sideAxes.length ? sideAxes[0] : null;
+        var sportDiv = dvDim(sportStat, 4), familyDiv = dvDim(familyStat, 4),
+            teamDiv = dvDim(teamStat, 8), sideDiv = sideDivCombined;
+        var redundancyDiv = total > 0 ? Math.max(0, Math.min(1, 1 - ((correlated + 0.5 * relatedExtras) / total))) : null;
+        // Team/player dimension only applies to picks that HAVE a participant
+        // (ML, spread, team totals, props). Straight game totals have none, so a
+        // totals-heavy record was being inflated by the incidental spread of its
+        // few team-bearing picks at full 25% weight. Weight team by coverage and
+        // drop it entirely below 15% coverage.
+        var teamCoverage = total > 0 ? (teamStat.total || 0) / total : 0;
+        var teamWeight = 0.25 * teamCoverage;
+        var teamDivScore = (teamCoverage < 0.15) ? null : teamDiv;
+        var parts = [
+            { w: 0.20, d: sportDiv }, { w: 0.25, d: familyDiv },
+            { w: teamWeight, d: teamDivScore }, { w: 0.15, d: sideDiv },
+            { w: 0.15, d: redundancyDiv }
+        ];
+        var wSum = 0, dSum = 0;
+        parts.forEach(function (x) { if (x.d != null) { wSum += x.w; dSum += x.w * x.d; } });
+        var score = (total > 0 && wSum > 0) ? Math.max(0, Math.min(100, Math.round((dSum / wSum) * 100))) : null;
+
+        function conc(stat, div, prettySide) {
+            if (!stat || stat.total <= 0) return null;
+            var lbl = stat.top;
+            if (prettySide && lbl) lbl = dvTitle(lbl);
+            return {
+                top_label: lbl, top_share: Number((stat.topShare * 100).toFixed(1)),
+                categories: stat.k, diversity: div == null ? null : Math.round(div * 100)
+            };
+        }
+        return {
+            total_graded_picks: total,
+            unique_opinion_count: exact.size,
+            correlated_pick_count: correlated,
+            correlated_pick_rate: rate(correlated),
+            alt_line_exposure_count: altExtras,
+            alt_line_exposure_rate: rate(altExtras),
+            related_exposure_count: relatedExtras,
+            conflict_count: conflicts,
+            has_conflicts: conflicts > 0,
+            redundancy_score: redundancyDiv == null ? null : Math.round(redundancyDiv * 100),
+            sport_concentration: conc(sportStat, sportDiv),
+            market_concentration: conc(familyStat, familyDiv),
+            team_concentration: conc(teamStat, teamDiv),
+            team_coverage_pct: Math.round(teamCoverage * 100),
+            side_concentration: sideHead ? {
+                top_label: dvTitle(sideHead.top),
+                top_share: Number((sideHead.topShare * 100).toFixed(1)),
+                categories: (ouStat.k || 0) + (hoaStat.k || 0),
+                diversity: sideDivCombined == null ? null : Math.round(sideDivCombined * 100)
+            } : null,
+            pick_diversity_score: score
+        };
+    }
+
+    function renderPickDiversity(picks) {
+        var valueEl = document.getElementById('profileAdvPickDiversity');
+        var subEl = document.getElementById('profileAdvPickDiversitySub');
+        var detailEl = document.getElementById('profileDiversityDetail');
+        var listEl = document.getElementById('profileDiversityDetailList');
+        if (!valueEl || !subEl) return;
+        var graded = (Array.isArray(picks) ? picks : []).filter(function (p) {
+            var st = normalizeStatus(p && p.status);
+            return st === 'won' || st === 'lost' || st === 'push';
+        });
+        var d = tmrComputePickDiversity(graded);
+        // Never advertise a confident score on a thin sample — a handful of picks
+        // can look "perfectly diverse" by accident. Show a conservative placeholder.
+        var MIN_SAMPLE = 15;
+        if (!d.total_graded_picks) {
+            valueEl.textContent = 'Not enough data yet';
+            valueEl.classList.remove('is-pos', 'is-neg');
+            valueEl.classList.add('is-empty');
+            if (detailEl) detailEl.hidden = true;
+            return;
+        }
+        if (d.pick_diversity_score == null || d.total_graded_picks < MIN_SAMPLE) {
+            valueEl.textContent = 'Needs review';
+            valueEl.classList.remove('is-pos', 'is-neg');
+            valueEl.classList.add('is-empty');
+            subEl.textContent = 'Sample too small for a reliable score (' + d.total_graded_picks + ' graded pick' + (d.total_graded_picks === 1 ? '' : 's') + ', need ' + MIN_SAMPLE + '+)';
+            if (detailEl) detailEl.hidden = true;
+            return;
+        }
+        valueEl.textContent = d.pick_diversity_score + '/100';
+        valueEl.classList.remove('is-empty', 'is-pos', 'is-neg');
+        if (d.pick_diversity_score >= 80) valueEl.classList.add('is-pos');
+        else if (d.pick_diversity_score <= 45) valueEl.classList.add('is-neg');
+        // Plain-language read of WHY the score is what it is.
+        var tag = d.pick_diversity_score >= 80 ? 'Broad range of opinions'
+            : d.pick_diversity_score >= 60 ? 'Fairly varied'
+            : d.pick_diversity_score >= 40 ? 'Somewhat concentrated'
+            : 'Heavily concentrated';
+        var lead = null;
+        var conc = [d.sport_concentration, d.market_concentration, d.team_concentration, d.side_concentration]
+            .filter(Boolean).filter(function (c) { return c.top_share >= 60; })
+            .sort(function (a, b) { return b.top_share - a.top_share; });
+        if (conc.length) lead = 'mostly ' + conc[0].top_label + ' (' + conc[0].top_share + '%)';
+        subEl.textContent = tag + (lead ? ' — ' + lead : '') + ' · ' + d.total_graded_picks + ' graded picks';
+        if (detailEl && listEl) {
+            function concLi(name, c, unit) {
+                if (!c) return '';
+                var flag = c.top_share >= 60 ? ' class="is-conflict"' : '';
+                return '<li' + flag + '>' + name + ': <strong>' + c.top_label + '</strong> = ' + c.top_share + '% of picks'
+                    + ' <span style="opacity:.7">(' + c.categories + ' distinct ' + unit + (c.categories === 1 ? '' : 's')
+                    + (c.diversity == null ? '' : ', spread score ' + c.diversity + '/100') + ')</span></li>';
+            }
+            // Team/player only shown when it actually applies. Dropped below 15%
+            // coverage (e.g. an all-totals record); otherwise annotated with the
+            // share of picks that carry a team/player so it never reads as a
+            // full-weight dimension when most picks have no participant.
+            var teamCov = d.team_coverage_pct;
+            var teamLine = '';
+            if (d.team_concentration) {
+                if (teamCov != null && teamCov < 15) {
+                    teamLine = '<li style="opacity:.7">Team / player concentration: <strong>not scored</strong> &mdash; only ' + teamCov + '% of picks have a team/player (straight totals have none)</li>';
+                } else {
+                    teamLine = concLi('Team / player concentration', d.team_concentration, 'team/player');
+                    if (teamCov != null && teamCov < 100 && teamLine) teamLine = teamLine.replace('</li>', ' <span style="opacity:.6">&middot; applies to ' + teamCov + '% of picks</span></li>');
+                }
+            }
+            var items = [
+                '<li>Overall Pick Diversity: <strong>' + d.pick_diversity_score + '/100</strong> — ' + tag + '</li>',
+                concLi('Sport concentration', d.sport_concentration, 'sport'),
+                concLi('Market-type concentration', d.market_concentration, 'market'),
+                teamLine,
+                concLi('Side lean (over/under, home/away)', d.side_concentration, 'side'),
+                '<li>Same-game non-redundancy: <strong>' + (d.redundancy_score == null ? 'n/a' : d.redundancy_score + '/100') + '</strong> ('
+                    + d.correlated_pick_count + ' correlated, ' + d.alt_line_exposure_count + ' stacked alt-line picks)</li>'
+            ].filter(Boolean);
+            if (d.related_exposure_count > 0) items.push('<li>Related same-game exposure: <strong>' + d.related_exposure_count + '</strong> overlapping position' + (d.related_exposure_count === 1 ? '' : 's') + ' (e.g. ML + run line on the same team)</li>');
+            if (d.has_conflicts) items.push('<li class="is-conflict">Opposite-side conflicts: <strong>' + d.conflict_count + '</strong> (both sides of the same market in one game)</li>');
+            items.push('<li style="opacity:.75">How it is scored: sport 20%, market type 25%, team/player up to 25% (scaled by how many picks actually have a team/player, and dropped below 15%), side lean 15% (a binary over/under and home/away axis, so a heavy one-sided lean scores low, not high), same-game non-redundancy 15%. A high score needs a genuinely even spread across the dimensions that apply.</li>');
+            listEl.innerHTML = items.join('');
+            detailEl.hidden = false;
+        }
+        var info = document.getElementById('profileDiversityInfo');
+        if (info && detailEl && !info.__tmrBound) {
+            info.__tmrBound = true;
+            var openDetail = function () { detailEl.hidden = false; detailEl.open = true; detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+            info.addEventListener('click', openDetail);
+            info.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(); } });
+        }
+    }
+
+    async function loadAllPicks() {
+        let picks = [];
+        let pickRequestSucceeded = false;
+
+        if (api && typeof api.getPicks === 'function') {
+            let hasMore = true, offset = 0;
+            while (hasMore) {
+                try {
+                    const data = await withTimeout(api.getPicks({ userId: profileUserId, limit: 100, offset }), 7000, 'Pick history request');
+                    const batch = data.picks || [];
+                    pickRequestSucceeded = true;
+                    picks = picks.concat(batch);
+                    hasMore = data.pagination ? data.pagination.hasMore : (batch.length === 100);
+                    offset += batch.length;
+                    if (batch.length === 0) hasMore = false;
+                } catch (e) {
+                    if (!pickRequestSucceeded) console.warn('[Profile] Pick lookup by user id failed:', e && e.message ? e.message : e);
+                    hasMore = false;
+                }
+            }
+        } else {
+            console.error('[Profile] API unavailable for picks loading.');
+        }
+
+        if (!picks.length && api && typeof api.request === 'function' && profileData && profileData.username) {
+            let hasMoreByUsername = true, usernameOffset = 0;
+            while (hasMoreByUsername) {
+                try {
+                    const data = await withTimeout(api.request('/picks' + '?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset), 7000, 'Pick history request');
+                    const batch = data && Array.isArray(data.picks) ? data.picks : [];
+                    pickRequestSucceeded = true;
+                    picks = picks.concat(batch);
+                    hasMoreByUsername = data && data.pagination ? data.pagination.hasMore : (batch.length === 100);
+                    usernameOffset += batch.length;
+                    if (batch.length === 0) hasMoreByUsername = false;
+                } catch (e) {
+                    hasMoreByUsername = false;
+                }
+            }
+        }
+
+        // SAFEGUARD (Apr 30, 2026): Never inject picks from localStorage as if
+        // they were tracked picks. Stale demo/seed data lingering in
+        // tmr_picks / trustmyrecord_picks was being shown on real profiles
+        // stale browser-only sample picks. The DB is the
+        // single source of truth — empty backend -> empty table.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+        } catch (e) {}
+        usingRecoveredLocalPicks = false;
+
+        // Normalize status on every loaded pick so downstream widgets
+        // (unit-size breakdown, odds-range, market-type, performance
+        // timeline, etc.) all use the same source of truth — the canonical
+        // values are won/lost/push/pending. Backend or legacy values like
+        // 'win' / 'loss' / 'pushed' / 'PENDING' would otherwise slip past
+        // raw === comparisons and cause "No data" empty states even when
+        // graded picks exist.
+        picks.forEach(function (p) {
+            if (!p || typeof p !== 'object') return;
+            try { p.status = normalizeStatus(p.status); } catch (e) {}
+            // Also coerce units to a Number once so widgets that bucket by
+            // unit value don't mis-bucket "1.00" string vs 1 number.
+            if (p.units != null && p.units !== '') {
+                const n = Number(p.units);
+                if (Number.isFinite(n)) p.units = n;
+            }
+        });
+
+        picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
+        allLoadedPicks = picks;
+        // Fill any "—" Avg Odds on the Performance by Market Type parent rows
+        // now that the graded ledger is available (see AVG_ODDS_PARENT_BACKFILL).
+        try { if (typeof tmrxFillMarketAvgOddsFromPicks === 'function') tmrxFillMarketAvgOddsFromPicks(); } catch (_) {}
+        setTimeout(function () { try { tmrxFillMarketAvgOddsFromPicks(); } catch (_) {} }, 1200);
+
+        const declaredGraded = getProfileDeclaredGradedCount(profileData);
+        if (!pickRequestSucceeded && declaredGraded > 0) {
+            throw new Error('Ledger request failed for a profile with ' + declaredGraded + ' declared graded picks.');
+        }
+
+        // Hydrate the PickMonitor-style filterable table on the Picks tab.
+        try { initPmPicksTable(picks); } catch (e) { console.warn('[pm-picks] init failed', e); }
+        try { initCapperMonitor(picks); } catch (e) { console.warn('[capper-monitor] init failed', e); }
+
+        applyVerifiedLedgerStatsToProfile(picks);
+        try { renderProfileHeader(profileData); } catch (e) { console.warn('[Profile] Ledger-backed header refresh failed:', e); }
+        const stats = computeUnifiedStats(picks);
+        renderCoreHandicapperStatsFromPicks(picks);
+        renderSummaryBar(stats);
+        renderPicksTable(picks);
+        renderAnalytics(stats);
+        renderCapperMetrics(picks);
+        try { renderPickDiversity(picks); } catch (e) { console.warn('[Profile] Pick diversity render failed:', e); }
+        if (initialSportFilter) {
+            ensureSportFilterOption(initialSportFilter);
+            const sportSelect = document.getElementById('filterSport');
+            if (sportSelect) sportSelect.value = initialSportFilter;
+            applyFilters();
+        } else {
+            await refreshAdvancedBreakdowns();
+        }
+        applyProfileDeepLinkView();
+    }
+
+    // ============================================================
+    // PickMonitor-style filterable picks table (Picks tab)
+    // ============================================================
+    window.__pmFilters = window.__pmFilters || { from:'', to:'', sport:'', market:'', side:'', odds:'', result:'' };
+    let __pmPicks = [];
+
+    function initPmPicksTable(picks) {
+        __pmPicks = Array.isArray(picks) ? picks.slice() : [];
+        // Newest first by locked_at.
+        __pmPicks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
+
+        const filtersEl = document.getElementById('pmFilters');
+        const summaryEl = document.getElementById('pmSummaryBar');
+        if (filtersEl) filtersEl.hidden = false;
+        if (summaryEl) summaryEl.hidden = false;
+
+        // Populate the dynamic option lists (sports + markets) from the data.
+        const sportSel  = document.getElementById('pmFilterSport');
+        const marketSel = document.getElementById('pmFilterMarket');
+        if (sportSel && marketSel) {
+            const sports  = Array.from(new Set(__pmPicks.map(p => String(p.sport_key || '').toLowerCase()).filter(Boolean))).sort();
+            const markets = Array.from(new Set(__pmPicks.map(p => String(p.market_type || '').toLowerCase()).filter(Boolean))).sort();
+            sportSel.innerHTML  = '<option value="">All sports</option>'  + sports.map(s => '<option value="' + s + '">' + pmSportLabel(s) + '</option>').join('');
+            marketSel.innerHTML = '<option value="">All markets</option>' + markets.map(m => '<option value="' + m + '">' + pmMarketLabel(m) + '</option>').join('');
+        }
+
+        // Wire all filter inputs.
+        const ids = [['pmFilterFrom','from'],['pmFilterTo','to'],['pmFilterSport','sport'],['pmFilterMarket','market'],['pmFilterSide','side'],['pmFilterOdds','odds'],['pmFilterResult','result']];
+        ids.forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (!el || el.dataset._pmWired) return;
+            el.dataset._pmWired = '1';
+            el.addEventListener('change', () => { window.__pmFilters[key] = el.value; renderPmPicksTable(); });
+        });
+        const resetBtn = document.getElementById('pmFilterReset');
+        if (resetBtn && !resetBtn.dataset._pmWired) {
+            resetBtn.dataset._pmWired = '1';
+            resetBtn.addEventListener('click', () => {
+                window.__pmFilters = { from:'', to:'', sport:'', market:'', side:'', odds:'', result:'' };
+                ids.forEach(([id]) => { const el = document.getElementById(id); if (el) el.value = ''; });
+                renderPmPicksTable();
+            });
+        }
+        const pendingLink = document.getElementById('viewPendingPicksLink');
+        if (pendingLink && !pendingLink.dataset._pmWired) {
+            pendingLink.dataset._pmWired = '1';
+            pendingLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.__pmFilters = Object.assign({}, window.__pmFilters || {}, { result: 'pending' });
+                const resultEl = document.getElementById('pmFilterResult');
+                if (resultEl) resultEl.value = 'pending';
+                renderPmPicksTable();
+                const table = document.getElementById('pmPicksTable');
+                if (table && typeof table.scrollIntoView === 'function') {
+                    table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', 'picks');
+                    url.searchParams.set('result', 'pending');
+                    history.replaceState(null, '', url.toString());
+                } catch (e) {}
+            });
+        }
+
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('result') === 'pending' || params.get('filter') === 'pending') {
+                window.__pmFilters.result = 'pending';
+                const resultEl = document.getElementById('pmFilterResult');
+                if (resultEl) resultEl.value = 'pending';
+            }
+        } catch (e) {}
+
+        renderPmPicksTable();
+    }
+
+    function pmSportLabel(s) {
+        if (!s) return '—';
+        const map = { 'baseball_mlb':'MLB','baseball_npb':'Japan NPB', 'basketball_nba':'NBA', 'basketball_nba_summer':'NBA Summer League', 'basketball_ncaab':'NCAAB', 'icehockey_nhl':'NHL', 'americanfootball_nfl':'NFL', 'americanfootball_ncaaf':'NCAAF' };
+        if (map[s]) return map[s];
+        return String(s).toUpperCase().replace(/_/g, ' ');
+    }
+    function pmMarketLabel(m) {
+        return marketTypeLabel(m);
+    }
+    function pmOddsBucket(odds) {
+        const o = Number(odds);
+        if (!Number.isFinite(o)) return null;
+        if (o < -200) return 'heavy_favorite';
+        if (o < 0) return 'favorite';
+        if (o <= 200) return 'underdog';
+        return 'big_underdog';
+    }
+    function pmResultClass(p) {
+        const r = String(p.result || p.status || '').toLowerCase();
+        if (r === 'won' || r === 'win')  return 'won';
+        if (r === 'lost' || r === 'loss') return 'lost';
+        if (r === 'push' || r === 'pushed') return 'push';
+        return 'pending';
+    }
+
+    const capperFilters = { sport:'', market:'', status:'', time:'all', sort:'date_desc' };
+    let capperPicks = [];
+
+    function initCapperMonitor(picks) {
+        capperPicks = Array.isArray(picks) ? picks.slice() : [];
+        populateCapperFilters();
+        wireCapperFilters();
+        renderCapperMonitor();
+    }
+
+    function populateCapperFilters() {
+        const sportSel = document.getElementById('capFilterSport');
+        if (!sportSel) return;
+        const sports = Array.from(new Set(capperPicks.map(p => String(p.sport_key || '').toLowerCase()).filter(Boolean))).sort();
+        const defaults = ['baseball_mlb','americanfootball_nfl','basketball_nba','icehockey_nhl','basketball_ncaab','americanfootball_ncaaf'];
+        const merged = Array.from(new Set(defaults.concat(sports)));
+        sportSel.innerHTML = '<option value="">All</option>' + merged.map(s => '<option value="' + s + '">' + pmSportLabel(s) + '</option>').join('');
+    }
+
+    function wireCapperFilters() {
+        [
+            ['capFilterSport','sport'], ['capFilterMarket','market'], ['capFilterStatus','status'],
+            ['capFilterTime','time'], ['capFilterSort','sort']
+        ].forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (!el || el.dataset.capperWired) return;
+            el.dataset.capperWired = '1';
+            el.addEventListener('change', function() { capperFilters[key] = el.value; renderCapperMonitor(); });
+        });
+        const reset = document.getElementById('capFilterReset');
+        if (reset && !reset.dataset.capperWired) {
+            reset.dataset.capperWired = '1';
+            reset.addEventListener('click', function() {
+                Object.assign(capperFilters, { sport:'', market:'', status:'', time:'all', sort:'date_desc' });
+                [['capFilterSport',''],['capFilterMarket',''],['capFilterStatus',''],['capFilterTime','all'],['capFilterSort','date_desc']].forEach(([id, v]) => {
+                    const el = document.getElementById(id); if (el) el.value = v;
+                });
+                renderCapperMonitor();
+            });
+        }
+    }
+
+    function normalizeCapMarket(market) {
+        const m = String(market || '').toLowerCase();
+        if (['h2h','moneyline'].includes(m)) return 'moneyline';
+        if (m.includes('spread')) return 'spread';
+        if (m === 'team_totals' || m === 'team_total') return 'team_total';
+        if (m.includes('total')) return 'total';
+        if (m.includes('f5') || m.includes('first_five')) return 'first_five';
+        if (m.includes('prop')) return 'props';
+        return m || 'other';
+    }
+
+    function capMarketLabel(key) {
+        return {
+            moneyline:'Moneyline', spread:'Spread', total:'Totals', team_total:'Team Totals',
+            first_five:'First Five', props:'Props', other:'Other'
+        }[key] || pmMarketLabel(key);
+    }
+
+    function capStatus(p) { return normalizeStatus(p && p.status); }
+    function isCapGraded(p) { return ['won','lost','push'].includes(capStatus(p)); }
+    function capDateMs(p) { return new Date((p && (p.locked_at || p.created_at || p.graded_at)) || 0).getTime(); }
+    // Canonical streak chronology, ported from services/canonicalStreak.js.
+    // capDateMs() above is SUBMISSION time and must never order a streak: this
+    // panel's picks arrive without locked_at, so it fell back to created_at, and
+    // a slate submitted in one click shares one timestamp -- the "streak" was
+    // really insertion order. The canonical key is settlement time (graded_at)
+    // clamped into [commence_time, commence_time + 6h], so timely grading orders
+    // by when the result landed while a late regrade cannot jump an old game to
+    // the top of the run. Keep this in step with the backend module.
+    var CAP_STREAK_CLAMP_MS = 6 * 3600 * 1000;
+    function capMs(v) { var n = v ? new Date(v).getTime() : NaN; return isFinite(n) ? n : null; }
+    function capStreakOrderMs(p) {
+        p = p || {};
+        var start = capMs(p.commence_time);
+        if (start === null) start = capMs(p.locked_at);
+        if (start === null) start = capMs(p.graded_at);
+        if (start === null) start = capMs(p.created_at);
+        var settled = capMs(p.graded_at);
+        if (start === null) return settled;
+        if (settled === null) return start;
+        return Math.max(start, Math.min(settled, start + CAP_STREAK_CLAMP_MS));
+    }
+    // Oldest to newest, ties by pick id ascending -- identical to the backend's
+    // ORDER BY, so the client can never disagree about "most recent".
+    function capStreakSortAsc(rows) {
+        return (rows || []).slice().sort(function (a, b) {
+            var ta = capStreakOrderMs(a), tb = capStreakOrderMs(b);
+            if (ta === null && tb === null) return Number(a.id || 0) - Number(b.id || 0);
+            if (ta === null) return 1;
+            if (tb === null) return -1;
+            return (ta - tb) || (Number(a.id || 0) - Number(b.id || 0));
+        });
+    }
+    function capOdds(p) { return Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds)); }
+    function capUnits(p) { const n = Number(p && p.units); return Number.isFinite(n) ? n : 0; }
+    function capPL(p) { const n = Number(p && p.result_units); return Number.isFinite(n) ? n : 0; }
+
+    function getCapperFilteredPicks() {
+        const now = new Date();
+        const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const seasonStart = new Date(now.getFullYear(), 0, 1).getTime();
+        return capperPicks.filter(p => {
+            if (capperFilters.sport && String(p.sport_key || '').toLowerCase() !== capperFilters.sport) return false;
+            if (capperFilters.market && normalizeCapMarket(p.market_type) !== capperFilters.market) return false;
+            if (capperFilters.status) {
+                if (capperFilters.status === 'graded' && !isCapGraded(p)) return false;
+                else if (capperFilters.status !== 'graded' && capStatus(p) !== capperFilters.status) return false;
+            }
+            const ts = capDateMs(p);
+            if (capperFilters.time === 'today' && ts < startToday) return false;
+            if (capperFilters.time === '7' && ts < Date.now() - 7 * 86400000) return false;
+            if (capperFilters.time === '30' && ts < Date.now() - 30 * 86400000) return false;
+            if (capperFilters.time === 'season' && ts < seasonStart) return false;
+            return true;
+        });
+    }
+
+    function calcCapStats(picks) {
+        const graded = (picks || []).filter(isCapGraded);
+        let wins = 0, losses = 0, pushes = 0, risked = 0, net = 0;
+        graded.forEach(p => {
+            const s = capStatus(p);
+            if (s === 'won') wins++;
+            else if (s === 'lost') losses++;
+            else if (s === 'push') pushes++;
+            risked += capUnits(p);
+            net += capPL(p);
+        });
+        const decisions = wins + losses;
+        return {
+            picks: graded.length,
+            wins, losses, pushes,
+            record: wins + '-' + losses + '-' + pushes,
+            winRate: decisions ? (wins / decisions) * 100 : 0,
+            units: net,
+            roi: risked > 0 ? (net / risked) * 100 : 0,
+            risked
+        };
+    }
+
+    function capValueClass(value, neutralAtZero) {
+        const n = Number(value) || 0;
+        if (n > 0) return 'capper-pos';
+        if (n < 0) return 'capper-neg';
+        return neutralAtZero === false ? '' : 'capper-neutral';
+    }
+    function capPct(v) { const n = Number(v) || 0; return (n > 0 ? '+' : '') + n.toFixed(1) + '%'; }
+    function capUnitsText(v) { const n = Number(v) || 0; return (n > 0 ? '+' : '') + n.toFixed(2) + 'u'; }
+    function capEsc(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+            return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+        });
+    }
+    function escapeHtml(value) {
+        return capEsc(value);
+    }
+
+    // ===== Helpers used by the Performance Overview card =====
+    function formatAvgOddsForOverview(rows) {
+        // Average implied probability -> back to American (per memory rule:
+        // never arithmetic-mean American odds directly; always implied prob).
+        const valid = (rows || []).map(p => Number(capOdds(p))).filter(o => Number.isFinite(o) && Math.abs(o) >= 100);
+        if (!valid.length) return 'N/A';
+        const probs = valid.map(o => o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100));
+        const avgP = probs.reduce((s, p) => s + p, 0) / probs.length;
+        if (avgP <= 0 || avgP >= 1) return 'N/A';
+        // Convert prob back to American odds.
+        const american = avgP >= 0.5 ? -Math.round(100 * avgP / (1 - avgP)) : Math.round(100 * (1 - avgP) / avgP);
+        if (Math.abs(american) < 100) return 'N/A';
+        return american > 0 ? '+' + american : String(american);
+    }
+    function computeBestStreak(rows) {
+        const chrono = capStreakSortAsc(rows);
+        let cur = 0, best = 0;
+        for (const p of chrono) {
+            const s = capStatus(p);
+            // Pushes are neutral: they neither extend nor reset a run.
+            if (s === 'won') { cur++; if (cur > best) best = cur; }
+            else if (s === 'lost') { cur = 0; }
+        }
+        return best;
+    }
+
+    function renderCapperMonitor() {
+        const rows = getCapperFilteredPicks();
+        const sorted = sortCapperRows(rows.slice(), capperFilters.sort);
+        const stats = calcCapStats(rows);
+        const rankText = profileData && profileData.ranking_status
+            ? profileData.ranking_status
+            : (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
+
+        // Pending picks count from the same filtered ledger.
+        const pendingCount = rows.filter(p => capStatus(p) === 'pending').length;
+        const pendingUnits = rows.filter(p => capStatus(p) === 'pending').reduce((s, p) => s + capUnits(p), 0);
+
+        const main = document.getElementById('capperMainRow');
+        if (main) {
+            const cards = [
+                ['Tracked Picks', String(stats.picks), 'capper-neutral', '\u{1F4CB}'],            // clipboard
+                ['Record',        stats.record,         capValueClass(stats.wins - stats.losses), '\u{1F3C6}'], // trophy
+                ['Win Rate',      (stats.wins + stats.losses) ? stats.winRate.toFixed(1) + '%' : 'N/A',
+                                  (stats.wins + stats.losses) ? capValueClass(stats.winRate - 50) : 'capper-neutral', '\u{1F4CA}'], // chart
+                ['Units',         capUnitsText(stats.units), capValueClass(stats.units), '\u{1F4B0}'],          // bag
+                ['ROI',           stats.picks ? stats.roi.toFixed(1) + '%' : 'N/A',
+                                  stats.picks ? capValueClass(stats.roi) : 'capper-neutral', '\u{1F4C8}'],      // up chart
+                ['Rank',          rankText, 'capper-neutral', '\u{1F947}'],                                     // gold medal
+                ['Pending Picks', String(pendingCount), 'capper-neutral', '\u{23F3}']                           // hourglass
+            ];
+            main.innerHTML = cards.map(([label, value, cls, icon]) =>
+                '<div class="capper-stat">' +
+                    '<span class="capper-stat-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<div class="capper-stat-text">' +
+                        '<span class="capper-stat-label">' + label + '</span>' +
+                        '<strong class="' + cls + '">' + value + '</strong>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        // Secondary KPI strip — six more stats LTR.
+        const second = document.getElementById('capperSecondRow');
+        if (second) {
+            const decided = stats.wins + stats.losses;
+            const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
+            const bestStreak = computeBestStreak(rows);
+            const currentStreak = (function () {
+                const chrono = capStreakSortAsc(rows).reverse(); // newest first
+                let n = 0, last = '';
+                for (const p of chrono) {
+                    const s = capStatus(p);
+                    if (s !== 'won' && s !== 'lost') continue; // pushes neutral
+                    if (!last) last = s;
+                    if (s === last) n++; else break;
+                }
+                return last === 'won' ? n + 'W' : last === 'lost' ? n + 'L' : '0';
+            })();
+            const sCards = [
+                ['Avg Odds',       formatAvgOddsForOverview(rows),       'capper-neutral', '\u{1F3AF}'],
+                ['Avg Units',      stats.picks ? avgUnitsVal.toFixed(2) + 'u' : 'N/A', 'capper-neutral', '\u{1F4D0}'],
+                ['Best Streak',    bestStreak ? bestStreak + 'W' : '0',  'capper-pos',     '\u{1F525}'],
+                ['Current Streak', currentStreak,                         currentStreak.endsWith('W') && parseInt(currentStreak) > 0 ? 'capper-pos' : (currentStreak.endsWith('L') && parseInt(currentStreak) > 0 ? 'capper-neg' : 'capper-neutral'), '\u{1F4AB}'],
+                ['Graded',         String(decided + (stats.pushes || 0)), 'capper-neutral', '\u{2705}'],
+                ['Pushes',         String(stats.pushes || 0),             'capper-neutral', '\u{27F0}']
+            ];
+            second.innerHTML = sCards.map(([label, value, cls, icon]) =>
+                '<div class="capper-stat">' +
+                    '<span class="capper-stat-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<div class="capper-stat-text">' +
+                        '<span class="capper-stat-label">' + label + '</span>' +
+                        '<strong class="' + cls + '">' + value + '</strong>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        // Performance Overview composite card — top metrics in a tidy table.
+        const overview = document.getElementById('capTableOverview');
+        if (overview) {
+            const decided = stats.wins + stats.losses;
+            const overviewRows = [
+                ['Total Picks',     String(stats.picks)],
+                ['Graded',          String(decided + (stats.pushes || 0))],
+                ['Pending',         String(pendingCount) + (pendingCount ? ' (' + pendingUnits.toFixed(2) + 'u open)' : '')],
+                ['Win Rate',        decided ? stats.winRate.toFixed(1) + '%' : 'N/A'],
+                ['Units',           capUnitsText(stats.units)],
+                ['ROI',             stats.picks ? stats.roi.toFixed(1) + '%' : 'N/A'],
+                ['Avg Odds',        formatAvgOddsForOverview(rows)],
+                ['Best Streak',     String(computeBestStreak(rows)) + 'W']
+            ];
+            overview.innerHTML = '<table class="capper-table"><tbody>' + overviewRows.map(function (r) {
+                return '<tr><td style="color:#94a3b8;">' + r[0] + '</td><td style="text-align:right;color:#f8fafc;font-weight:700;">' + r[1] + '</td></tr>';
+            }).join('') + '</tbody></table>';
+        }
+
+        renderCapBreakdown('capTableSport', rows, [
+            ['MLB', p => pmSportLabel(p.sport_key) === 'MLB'],
+            ['NFL', p => pmSportLabel(p.sport_key) === 'NFL'],
+            ['NBA', p => pmSportLabel(p.sport_key) === 'NBA'],
+            ['NHL', p => pmSportLabel(p.sport_key) === 'NHL'],
+            ['NCAAB', p => pmSportLabel(p.sport_key) === 'NCAAB']
+        ]);
+        renderCapBreakdown('capTableMarket', rows, [
+            ['Team Totals', p => normalizeCapMarket(p.market_type) === 'team_total'],
+            ['Totals', p => normalizeCapMarket(p.market_type) === 'total'],
+            ['Moneyline', p => normalizeCapMarket(p.market_type) === 'moneyline'],
+            ['Spread', p => normalizeCapMarket(p.market_type) === 'spread'],
+            ['First Five', p => normalizeCapMarket(p.market_type) === 'first_five'],
+            ['Props', p => normalizeCapMarket(p.market_type) === 'props']
+        ]);
+        renderCapBreakdown('capTableUnits', rows, [5,4,3,2,1].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
+        renderCapBreakdown('capTableOdds', rows, [
+            ['Heavy Favorite', p => capOdds(p) < -200],
+            ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
+            ['Dog (+100 to +200)', p => capOdds(p) >= 100 && capOdds(p) <= 200],
+            ['Big Underdog', p => capOdds(p) > 200]
+        ]);
+        renderCapBreakdown('capTableFavDog', rows, [
+            ['Favorites', p => capOdds(p) < 0],
+            ['Underdogs', p => capOdds(p) > 0]
+        ]);
+        renderPendingSummary(rows);
+        renderCapHistory(sorted);
+    }
+
+    function renderCapBreakdown(id, rows, buckets) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const hasAnyGraded = rows.some(isCapGraded);
+        if (!hasAnyGraded) {
+            el.innerHTML = '<div class="capper-empty">No graded picks yet.</div>';
+            return;
+        }
+        const body = buckets.map(([label, pred]) => {
+            const bucketRows = rows.filter(p => pred(p));
+            const s = calcCapStats(bucketRows);
+            const sportKeys = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab', NCAAF: 'americanfootball_ncaaf' };
+            const sportKey = id === 'capTableSport' ? sportKeys[label] : '';
+            /* Market drilldown link. A bucket here is coarser than a market type
+               (the Spread bucket holds spreads, f5_spreads and alt_spreads), while
+               the drilldown reports ONE market type. Linking a coarse bucket would
+               open a page whose totals disagree with the row that was clicked, so
+               the link is offered only when every graded pick in the bucket shares
+               a single market_type. Otherwise the label stays plain text. */
+            const bucketMarketTypes = id === 'capTableMarket'
+                ? bucketRows.filter(isCapGraded)
+                    .map(p => String((p && p.market_type) || '').toLowerCase())
+                    .filter(Boolean)
+                : [];
+            /* The ledger carries both spellings of some markets (team_total and
+               team_totals), which the API's canonicalMarketType treats as one
+               and the same - /stats/markets/team-total and /team-totals return
+               byte-identical payloads. Tolerating a trailing plural here keeps a
+               genuinely single-market bucket linkable. It is an identifier
+               alias, not a second stats calculation, and the drilldown's own
+               reconciliation block re-proves the agreement on every request. */
+            const marketIdentity = (t) => t.replace(/s$/, '');
+            const marketTypes = [...new Set(bucketMarketTypes.map(marketIdentity))];
+            const marketHref = marketTypes.length === 1
+                ? buildProfileMarketUrl(bucketMarketTypes[0])
+                : '';
+            const categoryLabel = sportKey
+                ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
+                : marketHref
+                    ? '<a class="profile-sport-filter-link" href="' + escapeHtml(marketHref) + '" title="View the ' + escapeHtml(label) + ' market breakdown">' + escapeHtml(label) + '<span class="profile-sport-view-indicator">View Breakdown</span></a>'
+                    : escapeHtml(label);
+            return '<tr><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
+        }).join('');
+        el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
+    }
+
+    function renderPendingSummary(rows) {
+        const el = document.getElementById('capTablePending');
+        if (!el) return;
+        const pending = rows.filter(p => capStatus(p) === 'pending');
+        const units = pending.reduce((sum, p) => sum + capUnits(p), 0);
+        el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>'
+            + '<tr><td>Open Tickets</td><td>' + pending.length + '</td><td>0-0-0</td><td class="capper-neutral">N/A</td><td class="capper-neutral">' + units.toFixed(2) + 'u pending</td><td class="capper-neutral">N/A</td></tr>'
+            + '</tbody></table>';
+    }
+
+    function sortCapperRows(rows, sort) {
+        const by = {
+            date_desc: (a,b) => capDateMs(b) - capDateMs(a),
+            units_desc: (a,b) => capUnits(b) - capUnits(a),
+            roi_desc: (a,b) => capPL(b) - capPL(a),
+            win_rate_desc: (a,b) => capPL(b) - capPL(a),
+            sport_asc: (a,b) => pmSportLabel(a.sport_key).localeCompare(pmSportLabel(b.sport_key)),
+            market_asc: (a,b) => capMarketLabel(normalizeCapMarket(a.market_type)).localeCompare(capMarketLabel(normalizeCapMarket(b.market_type)))
+        }[sort] || ((a,b) => capDateMs(b) - capDateMs(a));
+        return rows.sort(by);
+    }
+
+    function renderCapHistory(rows) {
+        const tbody = document.getElementById('capHistoryBody');
+        const meta = document.getElementById('capHistoryMeta');
+        if (meta) meta.textContent = rows.length + ' picks';
+        if (!tbody) return;
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="9">No picks match these filters.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.slice(0, 100).map(p => {
+            const status = capStatus(p);
+            const pl = isCapGraded(p) ? capPL(p) : 0;
+            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '')) : (p.game || p.game_name || '—');
+            const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
+            const odds = capOdds(p);
+            return '<tr>'
+                + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) : '—') + '</td>'
+                + '<td>' + pmSportLabel(p.sport_key) + '</td>'
+                + '<td>' + capEsc(String(game)) + '</td>'
+                + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
+                + '<td>' + line + '</td>'
+                + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
+                + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
+                + '<td><span class="capper-result ' + status + '">' + (status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : status === 'push' ? 'Push' : 'Pending') + '</span></td>'
+                + '<td class="' + capValueClass(pl) + '">' + (isCapGraded(p) ? capUnitsText(pl) : '—') + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function getPmFilteredPicks() {
+        const f = window.__pmFilters || {};
+        const fromMs = f.from ? new Date(f.from + 'T00:00:00').getTime() : null;
+        const toMs   = f.to   ? new Date(f.to   + 'T23:59:59').getTime() : null;
+        return __pmPicks.filter(p => {
+            const ts = new Date(p.locked_at || p.created_at || 0).getTime();
+            if (fromMs != null && (!Number.isFinite(ts) || ts < fromMs)) return false;
+            if (toMs   != null && (!Number.isFinite(ts) || ts > toMs))   return false;
+            if (f.sport  && String(p.sport_key || '').toLowerCase()  !== f.sport)  return false;
+            if (f.market && String(p.market_type || '').toLowerCase() !== f.market) return false;
+            if (f.side) {
+                const odds = Number(p.odds_snapshot);
+                const isFav = Number.isFinite(odds) && odds < 0;
+                if (f.side === 'favorite' && !isFav) return false;
+                if (f.side === 'underdog' &&  isFav) return false;
+            }
+            if (f.odds) {
+                if (pmOddsBucket(p.odds_snapshot) !== f.odds) return false;
+            }
+            if (f.result) {
+                if (pmResultClass(p) !== f.result) return false;
+            }
+            return true;
+        });
+    }
+
+    function renderPmPicksTable() {
+        const table = document.getElementById('pmPicksTable');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const rows = getPmFilteredPicks();
+
+        // Summary bar recomputes for the filtered subset.
+        let wins = 0, losses = 0, pushes = 0, risked = 0, net = 0, probSum = 0, probCount = 0;
+        let zSample = 0, zActualWins = 0, zExpectedWins = 0, zVariance = 0;
+        const impliedProb = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return null;
+            return x > 0 ? 100 / (x + 100) : (-x) / ((-x) + 100);
+        };
+        const probToAmerican = (p) => {
+            if (!Number.isFinite(p) || p <= 0 || p >= 1) return 0;
+            return p >= 0.5 ? -Math.round((p / (1 - p)) * 100) : Math.round(((1 - p) / p) * 100);
+        };
+        rows.forEach(p => {
+            const r = pmResultClass(p);
+            if (r === 'won') wins++;
+            else if (r === 'lost') losses++;
+            else if (r === 'push') pushes++;
+            const u = Number(p.units) || 0;
+            const ru = Number(p.result_units);
+            risked += u;
+            if (Number.isFinite(ru)) net += ru;
+            const ip = impliedProb(p.odds_snapshot);
+            if (ip != null) { probSum += ip; probCount++; }
+            if ((r === 'won' || r === 'lost') && ip != null && ip > 0 && ip < 1) {
+                zSample++;
+                zActualWins += r === 'won' ? 1 : 0;
+                zExpectedWins += ip;
+                zVariance += ip * (1 - ip);
+            }
+        });
+        const decisions = wins + losses;
+        const roiFrac = risked > 0 ? net / risked : 0;
+        const ewp = decisions > 0 ? (110/210) * (1 + roiFrac) : null;
+        const avgProb = probCount > 0 ? probSum / probCount : null;
+        const z = zSample >= 5 && zVariance > 0 ? (zActualWins - zExpectedWins) / Math.sqrt(zVariance) : null;
+        const setSum = (id, val, signed) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = val;
+            el.classList.toggle('pm-pos', signed != null && signed > 0);
+            el.classList.toggle('pm-neg', signed != null && signed < 0);
+        };
+        setSum('pmSumPicks',  String(rows.length));
+        setSum('pmSumRecord', wins + '-' + losses + (pushes ? '-' + pushes : ''), decisions > 0 ? (wins - losses) : null);
+        setSum('pmSumUnits',  (net >= 0 ? '+' : '') + net.toFixed(2) + 'u', net);
+        setSum('pmSumRoi',    risked > 0 ? (roiFrac >= 0 ? '+' : '') + (roiFrac * 100).toFixed(1) + '%' : '—', roiFrac);
+        setSum('pmSumEwp',    ewp != null ? (ewp * 100).toFixed(1) + '%' : '—', ewp != null ? (ewp - 0.5238) : null);
+        setSum('pmSumZ',      z   != null ? (z >= 0 ? '+' : '') + z.toFixed(2) : '—', z);
+        setSum('pmSumAop',    avgProb != null ? (probToAmerican(avgProb) > 0 ? '+' : '') + probToAmerican(avgProb) : '—');
+
+        // Table body.
+        if (!rows.length) {
+            tbody.innerHTML = '<tr class="pm-picks-empty"><td colspan="9">No picks match the active filters.</td></tr>';
+            return;
+        }
+        const fmtOdds = (o) => Number.isFinite(Number(o)) ? ((Number(o) > 0 ? '+' : '') + Number(o)) : '—';
+        const fmtLine = (l) => {
+            if (l == null || l === '') return '—';
+            const n = Number(l);
+            if (!Number.isFinite(n)) return String(l);
+            let s = String(n);
+            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+            return n > 0 ? '+' + s : s;
+        };
+        const fmtUnits = (u) => Number.isFinite(Number(u)) ? Number(u).toFixed(2) + 'u' : '—';
+        const fmtPL = (p) => {
+            const r = pmResultClass(p);
+            const ru = Number(p.result_units);
+            if (r === 'pending') return '<span class="pm-pending">—</span>';
+            if (!Number.isFinite(ru)) return '<span class="pm-pending">—</span>';
+            const cls = ru > 0 ? 'pm-pos' : ru < 0 ? 'pm-neg' : '';
+            return '<span class="' + cls + '">' + (ru >= 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
+        };
+        const escHtml = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const fmtDate = (ts) => {
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: '2-digit' });
+        };
+        tbody.innerHTML = rows.map(p => {
+            const r = pmResultClass(p);
+            const resultBadge = '<span class="pm-result pm-result--' + r + '">' + (r === 'pending' ? 'Pending' : r === 'push' ? 'Push' : r === 'won' ? 'Win' : 'Loss') + '</span>';
+            return '<tr>'
+                + '<td class="pm-cell-date">' + fmtDate(p.locked_at || p.created_at) + '</td>'
+                + '<td>' + escHtml(pmSportLabel(p.sport_key)) + '</td>'
+                + '<td>' + escHtml(pmMarketLabel(p.market_type)) + '</td>'
+                + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
+                + '<td class="num">' + escHtml(fmtLine(p.line_snapshot)) + '</td>'
+                + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
+                + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
+                + '<td>' + resultBadge + '</td>'
+                + '<td class="num">' + fmtPL(p) + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    async function refreshLeaderboardRank() {
+        currentLeaderboardRank = null;
+        if (!api || typeof api.getLeaderboard !== 'function' || !profileData || !profileData.username) return;
+        try {
+            const data = await api.getLeaderboard({ sortBy: 'net_units', limit: 250 });
+            const pool = Array.isArray(data) ? data :
+                Array.isArray(data.users) ? data.users :
+                Array.isArray(data.leaderboard) ? data.leaderboard :
+                Array.isArray(data.rankings) ? data.rankings :
+                [];
+            const username = String(profileData.username || '').toLowerCase();
+            const idx = pool.findIndex(function(entry) {
+                const candidate = String(entry.username || entry.user_name || entry.handle || '').toLowerCase();
+                return candidate === username;
+            });
+            if (idx !== -1) currentLeaderboardRank = idx + 1;
+        } catch (error) {
+            console.warn('[Profile] Leaderboard rank unavailable:', error);
+        }
+    }
+
+    // ======================== RENDER PROFILE HEADER ========================
+    function renderProfileHeader(p) {
+        const el = document.getElementById('profileHeader');
+        if (!el) return;
+        const joinDate = p.created_at
+            ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'N/A';
+        const name = p.display_name || p.username;
+        const letter = (p.username || '?').charAt(0).toUpperCase();
+        const rankText = p.ranking_status || (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
+        const ledgerStats = getProfileLedgerStats();
+        const statsLoadError = p.__statsLoadError || '';
+        const profileHasRecordFields = [p.wins, p.losses, p.pushes].some(function(value) {
+            return value !== undefined && value !== null && value !== '';
+        });
+        const gradedProfilePicks = ledgerStats ? ledgerStats.graded : getProfileDeclaredGradedCount(p);
+        const pendingProfilePicks = Number(p.pending_picks || p.pending || 0);
+        const totalPicks = Number(p.total_locked_picks || p.locked_picks || (gradedProfilePicks + pendingProfilePicks) || 0);
+        const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
+        /* Canonical first, ledger only as a fallback (2026-08-16). These used to
+           read ledgerStats whenever it existed, which meant the header rendered
+           a browser recomputation while the stats ribbon below rendered the
+           API's canonical numbers. Same page, two ROIs. The loading gates below
+           are unchanged -- ledgerStats still signals "the pick list has landed",
+           it just no longer supplies the number. */
+        const preferCanonical = (canonical, ledgerValue) => {
+            const n = Number(canonical);
+            if (canonical != null && canonical !== '' && Number.isFinite(n)) return n;
+            return Number(ledgerValue || 0);
+        };
+        const winsValue = preferCanonical(p.wins, ledgerStats ? ledgerStats.wins : 0);
+        const lossesValue = preferCanonical(p.losses, ledgerStats ? ledgerStats.losses : 0);
+        const pushesValue = preferCanonical(p.pushes, ledgerStats ? ledgerStats.pushes : 0);
+        const canShowRecordStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
+        const recordText = canShowRecordStats ? (winsValue + '-' + lossesValue + '-' + pushesValue) : (statsLoadError ? 'Unavailable' : 'Loading...');
+        const winLossSample = winsValue + lossesValue;
+        const derivedWinRate = preferCanonical(
+            p.win_rate,
+            ledgerStats ? ledgerStats.winRate : (winLossSample > 0 ? (winsValue / winLossSample) * 100 : 0)
+        );
+        const roiValue = preferCanonical(p.roi, ledgerStats ? ledgerStats.roi : 0);
+        const netUnitsValue = preferCanonical(p.net_units, ledgerStats ? ledgerStats.netUnits : 0);
+        const canShowFinancialStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
+        const signedClass = (value) => value > 0 ? ' is-positive' : value < 0 ? ' is-negative' : ' is-neutral';
+        const fmtSigned = (value, suffix, decimals) => (value > 0 ? '+' : '') + value.toFixed(decimals == null ? 1 : decimals) + (suffix || '');
+        // Avg Odds: same backend ledger-driven value used by Advanced Capper Metrics
+        // (p.avg_odds). Falls back to the unified ledger calc when the backend field
+        // is absent. Never hardcoded. Formatted as clean American odds (-124 / +105).
+        const avgOddsValue = (p && p.avg_odds != null && p.avg_odds !== '')
+            ? Number(p.avg_odds)
+            : (ledgerStats && ledgerStats.avgOdds != null ? Number(ledgerStats.avgOdds) : null);
+        const fmtAmericanOddsRail = (o) => (o == null || isNaN(o)) ? null : ((o > 0 ? '+' : '') + Math.round(o));
+        const avgOddsText = avgOddsValue != null
+            ? fmtAmericanOddsRail(avgOddsValue)
+            : (statsLoadError ? 'Unavailable' : (gradedProfilePicks > 0 ? 'N/A' : 'Loading...'));
+        const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
+        const trustPills = '<div class="profile-trust-row">' +
+            '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + gradedProfilePicks + ' graded picks</strong></span>' +
+            (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
+            '</div>';
+
+        // Affiliation row: favorite sport + team chips, visible to everyone.
+        // Pulls from p.favorite_sports / p.favorite_teams. If empty AND this
+        // is the user's own profile, show a single "Set your teams" CTA that
+        // jumps to the setup prompt (it always exists in the DOM; we just
+        // un-skip + scroll).
+        const favTeamsFromGaming = p._fav_teams && typeof p._fav_teams === 'object'
+            ? Object.values(p._fav_teams).filter(Boolean)
+            : [];
+        const favSportsFromGaming = p._fav_teams && typeof p._fav_teams === 'object'
+            ? Object.keys(p._fav_teams).filter(Boolean)
+            : [];
+        const favSportsArr = Array.isArray(p.favorite_sports) && p.favorite_sports.length ? p.favorite_sports
+            : (favSportsFromGaming.length ? favSportsFromGaming
+            : (p.favorite_sport ? [p.favorite_sport] : []));
+        const favTeamsArr  = Array.isArray(p.favorite_teams) && p.favorite_teams.length ? p.favorite_teams : favTeamsFromGaming;
+        const escTxt = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const TL = window.TMRTeamLogo;
+        let affiliationRow = '';
+        if (favSportsArr.length || favTeamsArr.length) {
+            // Row: fan-identity chips (favorite sports) with league badge logos.
+            const sportChips = favSportsArr.slice(0, 3).map(function (s) {
+                const lu = TL ? TL.leagueUrl(s) : null;
+                const icon = lu
+                    ? '<img class="profile-aff-league" src="' + escTxt(lu) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextSibling && (this.nextSibling.style.display=\'inline-block\');"><i class="fas fa-circle" style="display:none"></i>'
+                    : '<i class="fas fa-circle"></i>';
+                return '<span class="profile-affiliation-chip profile-affiliation-chip--sport">' + icon + ' ' + escTxt(s) + ' fan</span>';
+            }).join('');
+            // Row: Favorite Teams label + team pills, each with its team logo
+            // (shared TeamLogo helper; clean initials fallback when no logo).
+            const teamPills = favTeamsArr.slice(0, 8).map(function (t) {
+                const logo = TL ? TL.html(t, { className: 'profile-team-logo' }) : '';
+                // The pill's 4px left padding exists so the round logo bed sits
+                // flush inside it. No logo, no bed: give the name the same 15px
+                // inset as the right edge instead of an off-centre stub.
+                const pillCls = 'profile-team-pill' + (logo ? '' : ' has-no-logo');
+                return '<span class="' + pillCls + '">' + logo + '<span class="profile-team-pill-name">' + escTxt(t) + '</span></span>';
+            }).join('');
+            if (sportChips) affiliationRow += '<div class="profile-affiliation-row">' + sportChips + '</div>';
+            if (teamPills) affiliationRow += '<div class="profile-fav-teams">'
+                + '<span class="profile-fav-teams-label">Favorite Teams</span>'
+                + '<div class="profile-team-pills">' + teamPills + '</div></div>';
+        } else if (isOwnProfile) {
+            affiliationRow = '<div class="profile-affiliation-row profile-affiliation-row--empty">'
+                + '<span class="profile-affiliation-empty">No teams yet.</span>'
+                + '<button type="button" class="profile-affiliation-cta" onclick="(function(){var el=document.getElementById(\'profileSetupPrompt\');if(el){el.hidden=false;el.scrollIntoView({behavior:\'smooth\',block:\'center\'});var k=\'tmr_profile_setup_skipped_\'+(window.profileData&&window.profileData.username||\'\');try{localStorage.removeItem(k);}catch(_){}}})()">Set favorite sport &amp; teams &rarr;</button>'
+                + '</div>';
+        }
+        const emptyLedgerNote = showEmptyLedgerNote
+            ? '<div class="profile-empty-ledger">' +
+                '<p><strong>No picks yet.</strong></p>' +
+                '<p>Graded picks will build this public record after they are settled. Lock your first play to get started.</p>' +
+                '<p style="margin-top:12px;"><a href="/sportsbook/?first_pick=1" class="profile-empty-cta" ' +
+                  'onclick="if(window.TMRAnalytics){try{window.TMRAnalytics.firstPickCtaClicked({cta_location:\'profile_page_empty_ledger\'});}catch(e){}}" ' +
+                  'style="display:inline-block;background:linear-gradient(135deg,#1D7FE8,#1D7FE8);color:#06231f;font-weight:800;text-decoration:none;border-radius:10px;padding:10px 20px;font-size:14px;">Post Your First Pick</a></p>' +
+              '</div>'
+            : '';
+        const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Graded Picks</span><span class="profile-rail-value">' + gradedProfilePicks + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (canShowRecordStats ? (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + (canShowFinancialStats ? signedClass(netUnitsValue) : ' is-neutral') + '">' + (canShowFinancialStats ? fmtSigned(netUnitsValue, 'u', 2) : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
+            '<div class="profile-rail-card profile-rail-card--avg-odds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
+            '<div class="profile-rail-card profile-rail-card--corr"><span class="profile-rail-label">Correlated Picks <span class="profile-corr-info" id="railCorrInfo" role="button" tabindex="0" aria-label="What are correlated picks?" title="Correlated picks are multiple picks that depend on the SAME game outcome in the same direction (for example a team moneyline plus that team’s spread, or a game total over plus a team total over). It is NOT just any two picks on the same game. A high share means the record has less independent sample than the raw pick count suggests. Click to see details.">?</span></span><span class="profile-rail-value rail-corr-value" id="railCorrValue">&mdash;</span><span class="profile-rail-corr-sub" id="railCorrSub"></span></div>' +
+            '</div>' +
+            '<details class="profile-corr-panel" id="railCorrPanel" hidden>' +
+              '<summary>Correlated Picks &mdash; what this means &amp; how it was counted</summary>' +
+              '<div class="profile-corr-panel__body">' +
+                '<ul class="profile-corr-stats">' +
+                  '<li id="railCorrStatPicks"></li>' +
+                  '<li id="railCorrStatClusters"></li>' +
+                  '<li id="railCorrStatAvg"></li>' +
+                '</ul>' +
+                '<h4 class="profile-corr-h4">Correlated clusters</h4>' +
+                '<div id="railCorrList" class="profile-corr-list"></div>' +
+                '<h4 class="profile-corr-h4">What this stat means</h4>' +
+                '<p id="railCorrExplain" class="profile-corr-explain"></p>' +
+              '</div>' +
+            '</details>';
+        const overview = '<div class="profile-overview-grid">' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Location</span><span class="profile-overview-value">' + (p.location || 'N/A') + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
+            '</div>';
+
+        let primaryActions = '';
+        // May 22, 2026 (HARD RULE): account-management actions (Edit Profile / Change Avatar /
+        // Change Password) live ONLY in the authenticated top-right avatar/username dropdown
+        // (static/js/tmr-sitewide.js?v=20260729navclean1). Do not re-render the body "Edit Profile" button — it
+        // exposes private account controls inside the public profile card.
+        if (isOwnProfile) {
+            primaryActions = '';
+        } else if (currentUser) {
+            if (hasBlockedViewer) {
+                primaryActions = '<span style="color:var(--text-muted,#9aacbf);font-size:0.85rem;">You can\'t interact with this profile.</span>';
+            } else if (isBlockedProfile) {
+                primaryActions = '<button class="btn btn-secondary" onclick="doUnblock(' + profileUserId + ')"><i class="fas fa-user-check" style="margin-right:6px;"></i>Unblock</button>';
+            } else {
+                const followBtn = isFollowingProfile
+                    ? '<span class="tmr-follow-wrap" style="position:relative;display:inline-block;">'
+                        + '<button class="btn btn-secondary" onclick="toggleFollowPrefs(' + profileUserId + ')"><i class="fas fa-check" style="margin-right:6px;"></i>Following <i class="fas fa-caret-down" style="margin-left:5px;"></i></button>'
+                        + '<div id="followPrefsPop" class="tmr-follow-pop" style="display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:200;width:290px;background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,0.45);"></div>'
+                        + '</span>'
+                    : '<button class="btn btn-primary" onclick="doFollow(' + profileUserId + ')"><i class="fas fa-plus" style="margin-right:6px;"></i>Follow</button>';
+                primaryActions = followBtn +
+                    '<button class="btn btn-secondary" onclick="location.href=\'/messages/?to=' + encodeURIComponent(p.username) + '\'">Send Message</button>' +
+                    '<button class="btn btn-secondary" onclick="location.href=\'/arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>' +
+                    '<button class="btn btn-secondary" onclick="doBlock(' + profileUserId + ')" title="Block this user"><i class="fas fa-ban" style="margin-right:6px;"></i>Block</button>';
+            }
+        }
+        // PROFILE_SHARE_OWNER_ONLY_20260722: Share renders only on your OWN
+        // profile. A visitor can still read, follow, message or challenge a
+        // public profile - broadcasting it is the owner's call, not theirs.
+        // Embed is unchanged (it publishes the same public widget either way).
+        const shareActions =
+            (isOwnProfile
+                ? '<button class="btn btn-secondary" onclick="openShareModal()" title="Share your profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>'
+                : '') +
+            '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
+        const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
+        const awardsPreview = '<section class="profile-awards-preview" id="profileAwardsPreview" aria-labelledby="profileAwardsPreviewTitle" aria-busy="true">' +
+            '<div class="profile-awards-preview__head">' +
+                '<h2 id="profileAwardsPreviewTitle">Awards</h2>' +
+                '<div class="profile-awards-preview__head-right">' +
+                    '<span class="profile-awards-preview__stat"><strong id="profileAwardsPreviewCount">&mdash;</strong> Awards</span>' +
+                    '<a class="profile-awards-preview__all" id="profileAwardsPreviewAll" href="/profile/?user=' + encodeURIComponent(p.username || '') + '#awards">View all awards</a>' +
+                '</div>' +
+            '</div>' +
+            '<div class="profile-awards-preview__grid" id="profileAwardsPreviewGrid">' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+            '</div>' +
+        '</section>';
+
+        // Headline (Twitter-style 140-char tagline). Always rendered; empty
+        // state prompts own-profile owner to add one.
+        var headline = (p && typeof p.headline === 'string') ? p.headline.trim() : '';
+        var isOwn = !!(typeof isOwnProfile !== 'undefined' && isOwnProfile);
+        var headlineHtml = headline
+            ? '<div class="profile-headline" style="margin-top:6px;color:var(--tmr-cyan,#5bd6dc);font-style:italic;font-size:0.95rem;line-height:1.4;">' + headline + '</div>'
+            : (isOwn
+                ? '<div class="profile-headline profile-headline-empty" style="margin-top:6px;color:var(--text-muted,#9aacbf);font-size:0.85rem;"><a href="#" onclick="event.preventDefault();openProfileEditor && openProfileEditor();" style="color:inherit;text-decoration:underline;">Add a headline</a> &mdash; one line that defines you (140 chars).</div>'
+                : '');
+
+        // Compact, always-visible Followers/Following control in the header summary.
+        // Single source of truth (the hidden legacy overview grid + sidebar rows do
+        // not render these as clickable counts). Works for logged-out visitors;
+        // the drawer itself gates any follow action on auth.
+        var fcN = Number(p.follower_count) || 0;
+        var fgN = Number(p.following_count) || 0;
+        var fcWho = escapeHtml(p.display_name || p.username || 'this user');
+        var followCounts = '<div class="profile-followcounts">' +
+            '<button type="button" class="profile-fc" onclick="openSocialList(\'followers\')" aria-label="View ' + fcWho + '’s ' + fcN + ' followers"><span class="profile-fc-n">' + fcN + '</span> <span class="profile-fc-l">Followers</span></button>' +
+            '<button type="button" class="profile-fc" onclick="openSocialList(\'following\')" aria-label="View who ' + fcWho + ' is following (' + fgN + ')"><span class="profile-fc-n">' + fgN + '</span> <span class="profile-fc-l">Following</span></button>' +
+            '</div>';
+
+        el.innerHTML = '<div class="profile-info">' +
+            '<div class="profile-identity-row">' +
+            /* avatar_url and the display name are user-supplied, so both are
+               escaped before they go into attributes. A refactor had dropped the
+               escaping that profile-source-regression-test was written to hold;
+               rendering is byte-identical for a legitimate URL. loading/decoding
+               keep the header avatar off the lazy path -- it is above the fold. */
+            /* NO_LETTER_FLASH_20260907: this used to print `letter` - a single
+               initial on a gradient - and wait for the site's avatar repair pass
+               to swap it. The repair lands ~3s after first paint on a profile,
+               and for those three seconds the member wore a letter tile: the
+               thing every other surface stopped drawing. The slot now renders
+               the resolver route immediately, which answers the upload, else the
+               favourite-team club mark, else the neutral silhouette. */
+            '<div class="profile-avatar">' + (p.avatar_url
+              ? '<img src="' + escapeHtml(p.avatar_url) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">'
+              : '<img src="' + escapeHtml(((window.TMRAvatar && window.TMRAvatar.src) ? window.TMRAvatar.src({ username: p.username, id: p.id }) : (((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(p.username || '') + '/avatar'))) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">') + '</div>' +
+            '<div class="profile-identity-copy">' +
+            '<div class="profile-eyebrow">Trust My Record profile</div>' +
+            // SOFT404_20260818: this is the profile document's only page-level
+            // heading. It shipped as a <div>, so every /u/<name>/ and
+            // /profile/?user=<name> rendered with NO <h1> at all -- half of what
+            // put the /u/ family under "Soft 404" in Search Console. Styling is
+            // class-based and unchanged; .profile-name now carries margin-top:0
+            // so the h1 UA margin cannot shift the header.
+            '<h1 class="profile-name">' + name + '</h1>' +
+            '<div class="profile-handle">@' + p.username + '</div>' +
+            (p.is_admin ? '<div><span class="profile-admin-badge">ADMIN</span></div>' : (p.is_moderator ? '<div><span class="profile-admin-badge">MOD</span></div>' : '')) +
+            (p.has_early_access_badge ? '<div><span class="profile-early-access-badge">🪙 TMR Early Access</span></div>' : '') +
+            headlineHtml +
+            '</div>' +
+            '</div>' +
+            followCounts +
+            trustPills +
+            affiliationRow +
+            (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '<div class="profile-bio profile-bio-empty">No bio added yet.</div>') +
+            overview +
+            '<div class="profile-meta">' +
+            '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'followers\')">View followers</button>' +
+            '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'following\')">View following</button>' +
+            '</div>' +
+            actions +
+            awardsPreview +
+            emptyLedgerNote +
+            '</div>' + rail;
+
+        updateWorkspaceLinks(p.username);
+        updateProfileSidebar(p);
+        // Fill the top-rail Correlated Picks card if correlation data already
+        // arrived (metrics fetch and profile render race; whichever lands last wins).
+        try { applyRailCorrelation(); } catch (_) {}
+        try { if (window.TMRRenderProfileAwardsPreview) window.TMRRenderProfileAwardsPreview(); } catch (_) {}
+    }
+
+    // Populates the top-rail "Correlated Picks" stat (next to Avg Odds) from the
+    // /metrics correlation payload. Idempotent; safe to call before or after the
+    // data loads. Source: services/pickCorrelation.js (regular ledger picks only).
+    function applyRailCorrelation() {
+        const corr = window.__tmrCorrelation || null;
+        const v = document.getElementById('railCorrValue');
+        const s = document.getElementById('railCorrSub');
+        if (!v) return; // rail not rendered yet
+        if (corr && corr.display) {
+            const level = corr.level || null;
+            const cnt = (corr.correlated_picks != null) ? Number(corr.correlated_picks) : null;
+            const tot = (corr.total_picks != null) ? Number(corr.total_picks) : null;
+            const primary = (cnt != null && tot != null) ? (cnt + ' / ' + tot)
+                          : (cnt != null ? String(cnt) : (level || '—'));
+            const badge = level
+                ? ' <span class="rail-corr-badge corr-' + String(level).toLowerCase() + '">' + level + '</span>'
+                : '';
+            v.innerHTML = primary + badge;
+            v.className = 'profile-rail-value rail-corr-value';
+            if (s) {
+                if (corr.pct_correlated != null && corr.clusters != null) {
+                    const pct = (Math.round(Number(corr.pct_correlated) * 10) / 10);
+                    s.textContent = pct + '% of graded picks are part of ' + corr.clusters + ' correlated ' + (corr.clusters === 1 ? 'cluster' : 'clusters');
+                } else {
+                    s.textContent = '';
+                }
+            }
+            applyCorrPanel(corr, cnt, tot);
+        } else {
+            v.textContent = corr ? 'Not enough data' : '—';
+            v.className = 'profile-rail-value rail-corr-value' + (corr ? ' is-neutral' : '');
+            if (s) s.textContent = '';
+            const panel = document.getElementById('railCorrPanel');
+            if (panel) panel.hidden = true;
+        }
+    }
+
+    // Fills the expandable Correlated Picks detail panel (counts, average cluster
+    // size, the actual clusters, and the full explanation) so the number is fully
+    // auditable. Insert-only; safe no-op if the panel isn't in the DOM.
+    function applyCorrPanel(corr, cnt, tot) {
+        const panel = document.getElementById('railCorrPanel');
+        if (!panel) return;
+        const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+        const clusters = Number(corr.clusters || 0);
+        const correlated = (cnt != null ? cnt : Number(corr.correlated_picks || 0));
+        const total = (tot != null ? tot : Number(corr.total_picks || 0));
+        const avg = (corr.avg_cluster_size != null) ? Number(corr.avg_cluster_size)
+                  : (clusters ? Math.round((correlated / clusters) * 10) / 10 : null);
+        setText('railCorrStatPicks', correlated + ' correlated picks out of ' + total + ' graded picks');
+        setText('railCorrStatClusters', clusters + ' correlated ' + (clusters === 1 ? 'cluster' : 'clusters') + ' found');
+        setText('railCorrStatAvg', 'Average cluster size: ' + (avg != null ? avg : '—') + ' picks');
+        setText('railCorrExplain', corr.explanation || corr.tooltip || '');
+        const list = document.getElementById('railCorrList');
+        if (list) {
+            const details = Array.isArray(corr.cluster_details) ? corr.cluster_details : [];
+            if (!details.length) {
+                list.innerHTML = '<p class="profile-corr-empty">No correlated clusters in this record.</p>';
+            } else {
+                list.innerHTML = details.map((c) => {
+                    const legs = (c.picks || []).map((pk) =>
+                        '<li><span class="profile-corr-ticket">' + esc(pk.ticket || '') + '</span> ' +
+                        esc(pk.market_type || '') + ' &mdash; <strong>' + esc(pk.selection || '') + '</strong>' +
+                        (pk.line ? ' (' + esc(pk.line) + ')' : '') +
+                        ' <span class="profile-corr-status profile-corr-status--' + esc((pk.status || '').toLowerCase()) + '">' + esc(pk.status || '') + '</span></li>'
+                    ).join('');
+                    return '<div class="profile-corr-cluster">' +
+                        '<div class="profile-corr-cluster__head"><strong>' + esc(c.game || 'Game') + '</strong>' +
+                        ' <span class="profile-corr-cluster__meta">' + esc(c.size) + ' legs &middot; ' + esc(c.reason || '') + '</span></div>' +
+                        '<ul class="profile-corr-cluster__legs">' + legs + '</ul>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+        panel.hidden = false;
+        const info = document.getElementById('railCorrInfo');
+        if (info && !info.__tmrBound) {
+            info.__tmrBound = true;
+            const open = function () { panel.hidden = false; panel.open = true; panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+            info.addEventListener('click', open);
+            info.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+        }
+    }
+
+    function updateProfileSidebar(p) {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        const setMetric = (id, value, isPlaceholder, isPos, isNeg) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = value;
+            el.classList.toggle('is-placeholder', !!isPlaceholder);
+            el.classList.toggle('is-pos', !!isPos);
+            el.classList.toggle('is-neg', !!isNeg);
+        };
+        const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
+        set('sidebarTrackedPicks', String(totalPicks));
+        set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
+
+        // Advanced Metrics top-line panel — populate from real fields where they exist;
+        // never fabricate. Anything missing keeps its '—' placeholder.
+        const wins = Number((p && p.wins) || 0);
+        const losses = Number((p && p.losses) || 0);
+        const pushes = Number((p && p.pushes) || 0);
+        const pending = Number((p && p.pending) || 0);
+        const winRate = (p && p.win_rate != null) ? Number(p.win_rate) : null;
+        const roi = (p && p.roi != null) ? Number(p.roi) : null;
+        const units = (p && (p.net_units != null ? p.net_units : p.units)) ?? null;
+
+        if (totalPicks > 0) {
+            // Record + win % colored from win-rate ONLY, independent of units.
+            const wrForColor = winRate != null ? winRate : ((wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 50);
+            const recordIsWinning = (wins + losses) > 0 && wrForColor > 50;
+            const recordIsLosing  = (wins + losses) > 0 && wrForColor < 50;
+            setMetric('advRecord', wins + '-' + losses + (pushes ? ('-' + pushes) : ''), false, recordIsWinning, recordIsLosing);
+            setMetric('advTotal', String(totalPicks), false);
+            setMetric('advPushes', String(pushes), false);
+            setMetric('advPending', String(pending), false);
+        }
+        if (winRate != null) {
+            setMetric('advWinPct', winRate.toFixed(1) + '%', false, winRate > 50, winRate < 50);
+        }
+        if (roi != null) setMetric('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', false, roi > 0, roi < 0);
+        if (units != null) {
+            const u = Number(units);
+            setMetric('advUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', false, u > 0, u < 0);
+            setMetric('advPlUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', false, u > 0, u < 0);
+            setMetric('advPlFlat', (u >= 0 ? '+$' : '-$') + Math.abs(u * 100).toFixed(0), false, u > 0, u < 0);
+        }
+        if (p && p.avg_odds != null) setMetric('advAvgOdds', String(p.avg_odds), false);
+        if (p && p.avg_units != null) setMetric('advAvgUnit', Number(p.avg_units).toFixed(2) + 'u', false);
+        if (p && p.current_streak != null) {
+            const cs = Number(p.current_streak);
+            setMetric('advStreak', (cs > 0 ? cs + 'W' : cs < 0 ? Math.abs(cs) + 'L' : '0'), false, cs > 0, cs < 0);
+        }
+        if (p && p.best_streak != null) setMetric('advBestStreak', Math.abs(Number(p.best_streak)) + 'W', false, true);
+        if (p && p.worst_streak != null) setMetric('advWorstStreak', Math.abs(Number(p.worst_streak)) + 'L', false, false, true);
+    }
+
+    function updateWorkspaceLinks(username) {
+        // Tabs are now in-page panels (data-tab) rather than navigation links.
+        // Setting .href on a button is a harmless no-op; preserved here to avoid breaking
+        // any downstream caller that still references these element IDs.
+        const safeUser = encodeURIComponent(username || profileUsername || '');
+        const performanceTab = document.getElementById('profilePerformanceTab');
+        const triviaTab = document.getElementById('profileTriviaTab');
+        const pollsTab = document.getElementById('profilePollsTab');
+        if (performanceTab) performanceTab.href = '/profile/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (triviaTab) triviaTab.href = '/trivia/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (pollsTab) pollsTab.href = '/hangout/' + (safeUser ? ('?user=' + safeUser) : '');
+    }
+
+    // ======================== TAB SWITCHING ========================
+    (function initProfileTabs() {
+        const onReady = function () {
+            const bar = document.getElementById('profileTabsBar');
+            if (!bar) return;
+            const TMRX_FULLWIDTH_TABS = { picks: 1, advanced: 1, charts: 1, splits: 1, record: 1 };
+            const tmrxApplyFullwidth = (tab) => {
+                document.body.classList.toggle('tmrx-stats-fullwidth', !!TMRX_FULLWIDTH_TABS[tab]);
+            };
+            bar.addEventListener('click', function (e) {
+                const btn = e.target.closest('.profile-tab');
+                if (!btn) return;
+                const tab = btn.getAttribute('data-tab');
+                if (!tab) return;
+                bar.querySelectorAll('.profile-tab').forEach(function (b) {
+                    const isActive = b.getAttribute('data-tab') === tab;
+                    b.classList.toggle('active', isActive);
+                    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                document.querySelectorAll('.profile-tab-panel').forEach(function (p) {
+                    p.classList.toggle('active', p.getAttribute('data-panel') === tab);
+                });
+                const recordPanel = document.querySelector('.profile-tab-panel[data-panel="record"]');
+                if (recordPanel) {
+                    recordPanel.classList.toggle('profile-flow-record', tab === 'picks' || tab === 'record');
+                }
+                tmrxApplyFullwidth(tab);
+                try { history.replaceState(null, '', '#' + tab); } catch (_) {}
+            });
+            const initialActive = bar.querySelector('.profile-tab.active');
+            if (initialActive) {
+                const initialTab = initialActive.getAttribute('data-tab');
+                tmrxApplyFullwidth(initialTab);
+                const recordPanel = document.querySelector('.profile-tab-panel[data-panel="record"]');
+                if (recordPanel) {
+                    recordPanel.classList.toggle('profile-flow-record', initialTab === 'picks' || initialTab === 'record');
+                }
+            }
+            // Honour deep link (#record, #picks, etc.) on load
+            const hash = (location.hash || '').replace('#', '');
+            if (hash) {
+                const target = bar.querySelector('.profile-tab[data-tab="' + hash + '"]');
+                if (target) target.click();
+            }
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+    })();
+
+    // ---- Awards Received tab: isolated loader, read-only, never touches record ----
+    (function initProfileAwards() {
+        const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        // Palette identity by award type: Best ROI = emerald, Most Units =
+        // gold, Most Active = cyan, Admin Discretion = violet/platinum-holo.
+        const STYLE_BY_TYPE = {
+            best_roi: { cls: 'awd-emerald', metal: 'awdMetalEm', dark: 'awdDarkEm', rim: 'awdRimEm' },
+            most_units: { cls: 'awd-gold', metal: 'awdMetalAu', dark: 'awdDarkAu', rim: 'awdRimAu' },
+            most_active: { cls: 'awd-cyan', metal: 'awdMetalCy', dark: 'awdDarkCy', rim: 'awdRimCy' },
+            admin_discretion: { cls: 'awd-violet', metal: 'awdMetalVi', dark: 'awdDarkVi', rim: 'awdRimVi' }
+        };
+        function awdEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function awdUsername() {
+            try {
+                const qs = new URLSearchParams(location.search);
+                const q = qs.get('user') || qs.get('username');
+                if (q) return q;
+            } catch (_) {}
+            const m = location.pathname.match(/\/profile\/([^\/?#]+)/);
+            if (m && m[1] && m[1] !== 'index.html') return decodeURIComponent(m[1]);
+            if (window.__TMR_PROFILE_USERNAME) return window.__TMR_PROFILE_USERNAME;
+            try { if (window.auth && auth.currentUser && auth.currentUser.username) return auth.currentUser.username; } catch (_) {}
+            return null;
+        }
+        // Dimensional trophy: back-lit handles, elliptical mouth with dark
+        // interior, vertical metal gradient, specular streak, restrained
+        // iridescent sheen band, medallion emblem per award type, knurled
+        // stem, two-tier plinth with engraved plate, soft ground shadow.
+        function trophyEmblem(type) {
+            if (type === 'best_roi') {
+                return '<path d="M51.5 57.5l6.5-6.5 3.5 3.5 7-7.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".95" fill="none"/>' +
+                       '<path d="M63.5 46.5h5v5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".95" fill="none"/>';
+            }
+            if (type === 'most_units') {
+                return '<ellipse cx="60" cy="47.5" rx="7.2" ry="2.7" stroke="#fff" stroke-width="1.9" opacity=".95" fill="none"/>' +
+                       '<path d="M52.8 47.5v4.5c0 1.5 3.2 2.7 7.2 2.7s7.2-1.2 7.2-2.7v-4.5" stroke="#fff" stroke-width="1.9" opacity=".95" fill="none"/>' +
+                       '<path d="M52.8 52v4.5c0 1.5 3.2 2.7 7.2 2.7s7.2-1.2 7.2-2.7V52" stroke="#fff" stroke-width="1.9" opacity=".95" fill="none"/>';
+            }
+            if (type === 'most_active') {
+                return '<path d="M62 43.5L53.5 54h5.5l-1.8 8.5L66 51.5h-5.7l1.7-8z" fill="#fff" opacity=".95"/>';
+            }
+            return '<path d="M60 43.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8-5.2-2.75-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z" fill="#fff" opacity=".95"/>';
+        }
+        function trophySvg(st, type) {
+            const metal = 'url(#' + st.metal + ')', dark = 'url(#' + st.dark + ')', rim = 'url(#' + st.rim + ')';
+            return '<svg class="awd-trophy" viewBox="0 0 120 132" fill="none" aria-hidden="true">' +
+                // ground shadow
+                '<ellipse cx="60" cy="123" rx="33" ry="5.5" fill="rgba(0,0,0,.5)"/>' +
+                // handles (dark body + bright rim pass = dimensional)
+                '<path d="M30 35C12 37 10 58 31 64" stroke="' + dark + '" stroke-width="7" stroke-linecap="round"/>' +
+                '<path d="M90 35c18 2 20 23-1 29" stroke="' + dark + '" stroke-width="7" stroke-linecap="round"/>' +
+                '<path d="M30 35C12 37 10 58 31 64" stroke="' + metal + '" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+                '<path d="M90 35c18 2 20 23-1 29" stroke="' + metal + '" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+                // cup body
+                '<path d="M30 30h60v16c0 22-12.5 36-30 36S30 68 30 46z" fill="' + metal + '"/>' +
+                // right-side shade for roundness
+                '<path d="M74 31c9 1 14 2 16 5v10c0 20-11 33-26 35 13-6 19-20 17-38-1-6-4-9-7-12z" fill="rgba(4,10,18,.28)"/>' +
+                // restrained iridescent sheen band
+                '<path d="M70 33c11 3 16 11 13 22-3 11-11 19-21 22 11-12 14-31 8-44z" fill="url(#awdIri)" opacity=".28"/>' +
+                // left specular streak
+                '<path d="M39 38c-2 12 0 23 6 31" stroke="rgba(255,255,255,.6)" stroke-width="4.5" stroke-linecap="round" opacity=".5"/>' +
+                '<ellipse cx="44" cy="40" rx="3" ry="5.5" fill="rgba(255,255,255,.5)" opacity=".55"/>' +
+                // mouth: bright rim + dark interior
+                '<ellipse cx="60" cy="30" rx="30" ry="7" fill="' + rim + '"/>' +
+                '<ellipse cx="60" cy="30.7" rx="25.5" ry="5.1" fill="rgba(5,9,17,.82)"/>' +
+                '<ellipse cx="60" cy="29.4" rx="25.5" ry="4.6" fill="rgba(14,21,34,.9)"/>' +
+                // medallion emblem
+                '<circle cx="60" cy="52" r="13" fill="rgba(4,8,15,.5)"/>' +
+                '<circle cx="60" cy="52" r="13" stroke="rgba(255,255,255,.4)" stroke-width="1.3"/>' +
+                '<circle cx="60" cy="52" r="10.6" stroke="rgba(255,255,255,.14)" stroke-width=".8"/>' +
+                trophyEmblem(type) +
+                // stem: flared neck + collar
+                '<path d="M53 82c2.5 6 1.5 10-3.5 13h21c-5-3-6-7-3.5-13z" fill="' + dark + '"/>' +
+                '<ellipse cx="60" cy="83.5" rx="9.5" ry="3" fill="' + metal + '"/>' +
+                '<rect x="52.5" y="88.5" width="15" height="2.4" rx="1.2" fill="rgba(255,255,255,.25)"/>' +
+                // base tier 1 (metal bevel)
+                '<path d="M40 95h40l3.5 9h-47z" fill="' + metal + '"/>' +
+                '<path d="M40 95h40l1 2.6H39z" fill="rgba(255,255,255,.3)"/>' +
+                // base tier 2 (dark plinth) + top light + engraved plate
+                '<rect x="32" y="104" width="56" height="13" rx="2.5" fill="' + dark + '"/>' +
+                '<rect x="32" y="104" width="56" height="3.4" rx="1.7" fill="rgba(255,255,255,.2)"/>' +
+                '<rect x="44" y="107" width="32" height="7" rx="1.5" fill="rgba(7,11,19,.88)" stroke="rgba(255,255,255,.28)" stroke-width=".8"/>' +
+                '<rect x="47" y="109.6" width="26" height="1.1" rx=".55" fill="rgba(255,255,255,.22)"/>' +
+                '<rect x="50" y="111.6" width="20" height="1.1" rx=".55" fill="rgba(255,255,255,.14)"/>' +
+            '</svg>';
+        }
+        function previewTrophySvg(type) {
+            const accent = type === 'best_roi' ? '#34d399'
+                : (type === 'most_active' ? '#38bdf8'
+                : (type === 'admin_discretion' ? '#c084fc' : '#ffd24a'));
+            const shadow = type === 'best_roi' ? '#047857'
+                : (type === 'most_active' ? '#075985'
+                : (type === 'admin_discretion' ? '#6d28d9' : '#a16207'));
+            return '<svg class="profile-awards-preview__trophy" viewBox="0 0 64 64" fill="none" aria-hidden="true">' +
+                '<path d="M20 13h24v10c0 10.2-5.1 18-12 18s-12-7.8-12-18V13Z" fill="' + accent + '"/>' +
+                '<path d="M22 15h20v8.2c0 8.8-4.1 15.1-10 15.1s-10-6.3-10-15.1V15Z" fill="url(#profileAwardMiniGold)" opacity=".92"/>' +
+                '<path d="M20.5 17H10c.2 8.7 4.1 14.1 11.7 16.1M43.5 17H54c-.2 8.7-4.1 14.1-11.7 16.1" stroke="' + accent + '" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<path d="M20.5 17H10c.2 8.7 4.1 14.1 11.7 16.1M43.5 17H54c-.2 8.7-4.1 14.1-11.7 16.1" stroke="#fff7c2" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>' +
+                '<path d="M26 42h12v7H26z" fill="' + shadow + '"/>' +
+                '<path d="M21 50h22l4 8H17l4-8Z" fill="' + shadow + '"/>' +
+                '<path d="M24 50h16M21 55h22" stroke="#fff7c2" stroke-width="2" stroke-linecap="round" opacity=".65"/>' +
+                '<path d="M32 18.7l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2-3.8-3.7 5.2-.8 2.3-4.7Z" fill="#fff8d1"/>' +
+                '<path d="M26.5 17.5c-1 5.6-.2 10.7 2.4 15.4" stroke="#fffbe8" stroke-width="3" stroke-linecap="round" opacity=".62"/>' +
+                '<defs><linearGradient id="profileAwardMiniGold" x1="32" y1="15" x2="32" y2="41" gradientUnits="userSpaceOnUse"><stop stop-color="#fff8c9"/><stop offset=".48" stop-color="#ffd24a"/><stop offset="1" stop-color="#b7791f"/></linearGradient></defs>' +
+            '</svg>';
+        }
+        function fmtDate(d) {
+            try { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { return ''; }
+        }
+        function awardsHref() {
+            const u = awdUsername();
+            return '/profile/' + (u ? '?user=' + encodeURIComponent(u) : '') + '#awards';
+        }
+        // Real winning stats from the award metadata (set by the monthly run)
+        // so monthly trophies show WHY they were earned.
+        function awdStatLine(a) {
+            if (a.description) return a.description;
+            const m = a.metadata || {};
+            try {
+                if (a.award_type === 'best_roi' && m.roi_pct != null) return Number(m.roi_pct).toFixed(2) + '% ROI across ' + m.graded + ' graded picks';
+                if (a.award_type === 'most_units' && m.net_units != null) return (Number(m.net_units) >= 0 ? '+' : '') + Number(m.net_units).toFixed(2) + ' units across ' + m.graded + ' graded picks';
+                if (a.award_type === 'most_active' && m.score != null) {
+                    const posts = (Number(m.forum_posts) || 0) + (Number(m.feed_posts) || 0) + (Number(m.comments) || 0);
+                    return (Number(m.picks) || 0) + ' picks and ' + posts + ' community posts';
+                }
+            } catch (_) {}
+            return '';
+        }
+        let awardsCache = [];
+        function renderPreview(list) {
+            const mount = document.getElementById('profileAwardsPreview');
+            const grid = document.getElementById('profileAwardsPreviewGrid');
+            const all = document.getElementById('profileAwardsPreviewAll');
+            const count = document.getElementById('profileAwardsPreviewCount');
+            if (!mount || !grid) return;
+            const awards = Array.isArray(list) ? list : [];
+            const href = awardsHref();
+            mount.setAttribute('aria-busy', 'false');
+            if (count) count.textContent = String(awards.length);
+            if (all) {
+                all.href = href;
+                all.hidden = awards.length === 0;
+                all.textContent = awards.length > 5 ? 'View all ' + awards.length + ' awards' : 'View all awards';
+            }
+            if (!awards.length) {
+                grid.innerHTML = '<div class="profile-awards-preview__empty">No awards earned yet.</div>';
+                return;
+            }
+            const preview = awards.slice(0, 5);
+            grid.innerHTML = preview.map(function (a) {
+                const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
+                const title = awdEsc(a.title || 'TrustMyRecord Award');
+                const meta = awdEsc(a.period_label || (a.awarded_at ? 'Awarded ' + fmtDate(a.awarded_at) : 'Special Recognition'));
+                const label = title + (meta ? ' - ' + meta : '');
+                return '<a class="profile-awards-preview__item" href="' + href + '" title="' + label + '" aria-label="' + label + '">' +
+                    '<span class="profile-awards-preview__badge" role="img" aria-label="' + title + ' trophy badge">' + previewTrophySvg(a.award_type) + '</span>' +
+                    '<span><span class="profile-awards-preview__name">' + title + '</span>' +
+                    '<span class="profile-awards-preview__meta">' + meta + '</span></span>' +
+                '</a>';
+            }).join('') + (awards.length > preview.length
+                ? '<a class="profile-awards-preview__item profile-awards-preview__item--more" href="' + href + '" aria-label="View all ' + awards.length + ' awards for this user"><span class="profile-awards-preview__badge" aria-hidden="true">+' + (awards.length - preview.length) + '</span><span><span class="profile-awards-preview__name">View all awards</span><span class="profile-awards-preview__meta">' + awards.length + ' total earned</span></span></a>'
+                : '');
+        }
+        window.TMRRenderProfileAwardsPreview = function () {
+            renderPreview(awardsCache);
+        };
+        function openAwdModal(idx) {
+            const a = awardsCache[idx];
+            if (!a) return;
+            const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
+            const body = document.getElementById('awdModalBody');
+            body.innerHTML = trophySvg(st, a.award_type) +
+                '<div class="awd-modal-title">' + awdEsc(a.title) + '</div>' +
+                '<div class="awd-modal-meta">' +
+                    (a.period_label ? '<div><strong>' + awdEsc(a.period_label) + '</strong></div>' : '') +
+                    (awdStatLine(a) ? '<div style="margin-top:6px;">' + awdEsc(awdStatLine(a)) + '</div>' : '') +
+                    '<div style="margin-top:6px;">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + (a.award_type === 'admin_discretion' ? ' &bull; Special recognition, issued by TrustMyRecord staff' : '') + '</div>' +
+                '</div>';
+            document.getElementById('awdModalOverlay').classList.add('show');
+        }
+        function render(list) {
+            const grid = document.getElementById('awdGrid');
+            const empty = document.getElementById('awdEmpty');
+            const summary = document.getElementById('awdSummary');
+            const badge = document.getElementById('profileAwardsBadge');
+            awardsCache = list;
+            renderPreview(list);
+            if (!grid) return;
+            if (badge && list.length) { badge.textContent = String(list.length); badge.hidden = false; }
+            if (!list.length) { empty.style.display = 'block'; grid.innerHTML = ''; summary.style.display = 'none'; return; }
+            empty.style.display = 'none';
+            summary.style.display = 'flex';
+            summary.innerHTML = '<strong>' + list.length + '</strong> award' + (list.length === 1 ? '' : 's') + ' earned &bull; latest: ' + awdEsc(list[0].title) + (list[0].period_label ? ' (' + awdEsc(list[0].period_label) + ')' : '');
+            grid.innerHTML = list.map(function (a, i) {
+                const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
+                return '<div class="awd-card ' + st.cls + '" data-awd="' + i + '" role="button" tabindex="0" aria-label="' + awdEsc(a.title) + '">' +
+                    trophySvg(st, a.award_type) +
+                    '<div class="awd-name">' + awdEsc(a.title) + '</div>' +
+                    (a.period_label ? '<div class="awd-period">' + awdEsc(a.period_label) + '</div>' : '<div class="awd-period">Special Recognition</div>') +
+                    (awdStatLine(a) ? '<div class="awd-desc">' + awdEsc(awdStatLine(a)) + '</div>' : '') +
+                    '<div class="awd-date">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + '</div>' +
+                '</div>';
+            }).join('');
+            grid.querySelectorAll('.awd-card').forEach(function (el) {
+                el.addEventListener('click', function () { openAwdModal(Number(el.getAttribute('data-awd'))); });
+                el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAwdModal(Number(el.getAttribute('data-awd'))); } });
+            });
+        }
+        async function load() {
+            const u = awdUsername();
+            if (!u) { render([]); return; }
+            try {
+                const res = await fetch(API_BASE + '/awards/user/' + encodeURIComponent(u), {
+                    cache: 'no-store',
+                    headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
+                });
+                if (!res.ok) { render([]); return; }
+                const data = await res.json();
+                render(Array.isArray(data.awards) ? data.awards : []);
+            } catch (error) {
+                console.warn('Profile awards request failed', error);
+                render([]);
+            }
+        }
+        // The pick-ledger ("record") panel stays rendered in flow on this page
+        // even when it is not the active tab, which buries the trophies under
+        // a long table. Scoped fix: while the Awards tab is selected, force
+        // every non-awards panel hidden; restore untouched styles on leave.
+        function enforceAwardsOnly(tab) {
+            document.querySelectorAll('.profile-tab-panel').forEach(function (p) {
+                const isAwards = p.getAttribute('data-panel') === 'awards';
+                if (tab === 'awards') {
+                    if (!isAwards && getComputedStyle(p).display !== 'none') {
+                        p.setAttribute('data-awd-hidden', '1');
+                        p.style.setProperty('display', 'none', 'important');
+                    }
+                } else if (p.hasAttribute('data-awd-hidden')) {
+                    p.removeAttribute('data-awd-hidden');
+                    p.style.removeProperty('display');
+                }
+            });
+        }
+        function onReady() {
+            const overlay = document.getElementById('awdModalOverlay');
+            const closeBtn = document.getElementById('awdModalClose');
+            if (overlay) overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('show'); });
+            if (closeBtn) closeBtn.addEventListener('click', function () { overlay.classList.remove('show'); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay) overlay.classList.remove('show'); });
+            const bar = document.getElementById('profileTabsBar');
+            if (bar) bar.addEventListener('click', function (e) {
+                const btn = e.target.closest('.profile-tab');
+                if (!btn) return;
+                // run after the site's own tab switcher has toggled panels
+                setTimeout(function () { enforceAwardsOnly(btn.getAttribute('data-tab')); }, 0);
+            });
+            if ((location.hash || '').replace('#', '') === 'awards') {
+                setTimeout(function () { enforceAwardsOnly('awards'); }, 250);
+            }
+            load();
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+        else onReady();
+    })();
+
+    // ---- Online Gaming tab: isolated loader, never touches betting record ----
+    (function initProfileGaming() {
+        let loaded = false;
+        function gamingUsername() {
+            try {
+                const p = new URLSearchParams(location.search);
+                let u = p.get('user') || p.get('username');
+                if (!u) { const m = location.pathname.match(/\/profile\/([^\/?#]+)/); if (m) u = decodeURIComponent(m[1]); }
+                if (!u && window.profileData && window.profileData.username) u = window.profileData.username;
+                if (!u && window.currentUser && window.currentUser.username) u = window.currentUser.username;
+                return (u || '').trim();
+            } catch (e) { return ''; }
+        }
+        function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        const GAME_ICON = { 'mlb-the-show-26':'fa-baseball','nba-2k26':'fa-basketball','madden-26':'fa-football','nhl-26':'fa-hockey-puck','ea-fc-26':'fa-futbol' };
+        function emptyState() {
+            return '<div class="profile-feed-empty profile-feed-empty-compact">' +
+                '<div class="profile-empty-icon"><i class="fas fa-gamepad"></i></div>' +
+                '<p class="profile-empty-title">No online gaming record yet</p>' +
+                '<p class="profile-empty-body">Game challenges this member completes will show up here, separate from their picks.</p></div>';
+        }
+        // ARENA_PHASE1_20260605: public Arena extras - free prediction record,
+        // Arena Points balance, streamer approval status. Appended under the
+        // gaming record; never mixed into the sports pick record above.
+        async function loadArenaExtras(uname, body) {
+            try {
+                const parts = [];
+                try {
+                    const rec = await api.request('/arena/predictions/record/' + encodeURIComponent(uname));
+                    const r = (rec && rec.record) || {};
+                    if (((r.wins || 0) + (r.losses || 0) + (r.pending || 0)) > 0 || rec.balance != null) {
+                        parts.push('<span><b style="color:var(--text,#f1f6fc);">' + (r.wins || 0) + '-' + (r.losses || 0) + '</b> Arena Pick record</span>');
+                        if (r.pending) parts.push('<span><b style="color:var(--text,#f1f6fc);">' + r.pending + '</b> pending</span>');
+                        if (rec.balance != null) parts.push('<span><b style="color:var(--text,#f1f6fc);">' + Number(rec.balance).toLocaleString() + '</b> Arena Points</span>');
+                    }
+                } catch (e) {}
+                try {
+                    const st = await api.request('/arena/streamer/status/' + encodeURIComponent(uname));
+                    if (st && st.streamer_status && st.streamer_status !== 'none') {
+                        parts.push('<span>Streamer status: <b style="color:var(--text,#f1f6fc);">' + esc(st.streamer_status) + '</b></span>');
+                    }
+                } catch (e) {}
+                if (!parts.length) return;
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'margin-top:14px;padding:12px 14px;border:1px solid rgba(148,163,184,0.18);border-radius:12px;background:rgba(255,255,255,0.02);';
+                wrap.innerHTML = '<div style="font-weight:800;margin-bottom:8px;color:var(--text,#f1f6fc);"><i class="fas fa-bullseye" style="color:var(--cyan,#1D7FE8);margin-right:6px;"></i>Arena</div>' +
+                    '<div style="display:flex;gap:18px;flex-wrap:wrap;color:var(--muted,#9fb0c3);font-size:13px;">' + parts.join('') + '</div>' +
+                    '<div style="margin-top:8px;color:var(--muted,#9fb0c3);font-size:11.5px;">Free predictions are for entertainment only. Arena Points have no cash value and cannot be purchased or withdrawn.</div>';
+                body.appendChild(wrap);
+            } catch (e) {}
+        }
+        // ---- render helpers ----
+        function fmtDate(ts) {
+            if (!ts) return '';
+            try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+        }
+        function streakTxt(s) { s = parseInt(s) || 0; return s > 0 ? 'W' + s : (s < 0 ? 'L' + Math.abs(s) : '—'); }
+        function resBadge(r) { const k = r === 'win' ? 'w' : (r === 'loss' ? 'l' : 'd'); const t = r === 'win' ? 'W' : (r === 'loss' ? 'L' : 'D'); return '<span class="og-badge ' + k + '">' + t + '</span>'; }
+        function recBadge(w, l, d) { d = d || 0; return '<span class="og-badge w">' + w + '</span>-<span class="og-badge l">' + l + '</span>' + (d ? '-<span class="og-badge d">' + d + '</span>' : ''); }
+        function statCell(v, l, cls) { return '<div class="og-stat"><div class="v ' + (cls || '') + '">' + v + '</div><div class="l">' + l + '</div></div>'; }
+        function mini(v, l, cls) { return '<div class="og-mini"><div class="v ' + (cls || '') + '">' + v + '</div><div class="l">' + l + '</div></div>'; }
+        function signed(n) { n = parseInt(n) || 0; return (n > 0 ? '+' : '') + n; }
+        function oppLink(o) {
+            const nm = esc(o.display_name || o.username || 'Unknown');
+            if (o && o.public && o.username) return '<a href="/profile/?user=' + encodeURIComponent(o.username) + '">' + nm + '</a>';
+            return nm;
+        }
+
+        function renderOverall(ov) {
+            const rec = recBadge(ov.wins, ov.losses, ov.draws);
+            const diffCls = ov.differential > 0 ? 'pos' : (ov.differential < 0 ? 'neg' : '');
+            const fav = ov.favorite_game ? esc(ov.favorite_game.title) : '—';
+            return '<div class="og-stat-grid">' +
+                statCell(rec, 'Record (W-L' + (ov.draws ? '-D' : '') + ')') +
+                statCell(ov.win_pct + '%', 'Win %') +
+                statCell(streakTxt(ov.current_streak), 'Current Streak', ov.current_streak > 0 ? 'pos' : (ov.current_streak < 0 ? 'neg' : '')) +
+                statCell('W' + (ov.longest_win_streak || 0), 'Longest Win Streak') +
+                statCell(ov.games, 'Games Completed') +
+                statCell(ov.points_for, 'Runs / Pts For') +
+                statCell(ov.points_against, 'Runs / Pts Allowed') +
+                statCell(signed(ov.differential), 'Differential', diffCls) +
+                statCell(ov.unique_opponents, 'Unique Opponents') +
+                statCell(fav, 'Most-Played Game') +
+                '</div>';
+        }
+
+        function renderGameCard(g, idx) {
+            const icon = GAME_ICON[g.slug] || 'fa-gamepad';
+            const head = '<div class="og-gcard-head" data-og-toggle="' + idx + '">' +
+                '<div class="og-gicon"><i class="fas ' + icon + '"></i></div>' +
+                '<div class="og-gtitle">' + esc(g.title) + '<small>' + esc(g.sport || '') + '</small></div>' +
+                '<div class="og-ghead-stats">' +
+                    '<span>' + recBadge(g.wins, g.losses, g.draws) + '</span>' +
+                    '<span><b>' + g.win_pct + '%</b> win</span>' +
+                    '<span><b>' + streakTxt(g.current_streak) + '</b> streak</span>' +
+                    '<span><b>' + g.games + '</b> GP</span>' +
+                    '<i class="fas fa-chevron-down og-chev"></i>' +
+                '</div></div>';
+
+            let body = '<div class="og-gcard-body">';
+            body += '<div class="og-mini-grid">' +
+                mini(g.avg_score, 'Avg Score') +
+                mini(g.avg_opp_score, 'Avg Opp Score') +
+                mini('+' + g.avg_margin_win, 'Avg Margin (W)', 'pos') +
+                mini('-' + g.avg_margin_loss, 'Avg Margin (L)', 'neg') +
+                mini('W' + Math.abs(g.longest_win_streak || 0), 'Longest Win Streak') +
+                mini(g.close_record.wins + '-' + g.close_record.losses, 'Close Games (1)') +
+                mini(g.best_win ? g.best_win.line : '—', 'Best Win', 'pos') +
+                mini(g.worst_loss ? g.worst_loss.line : '—', 'Worst Loss', 'neg') +
+                '</div>';
+            if (g.most_used_team) body += '<div style="margin-top:12px;color:#9fb0c3;font-size:12.5px;">Most-used team: <b style="color:var(--text,#f1f6fc);">' + esc(g.most_used_team) + '</b></div>';
+
+            // MLB deep stats
+            if (g.mlb) {
+                const d = g.mlb;
+                body += '<div class="og-sub-head" style="margin-top:18px;"><i class="fas fa-baseball"></i>MLB The Show Box-Score Stats</div>';
+                body += '<div class="og-mini-grid">' +
+                    mini(d.runs, 'Runs') + mini(d.hits, 'Hits') + mini(d.errors, 'Errors') + mini(d.home_runs, 'Home Runs') +
+                    mini(d.strikeouts, 'Strikeouts') + mini(d.runs_pg, 'Runs / G') + mini(d.hits_pg, 'Hits / G') + mini(d.hr_pg, 'HR / G') +
+                    mini(d.k_pg, 'K / G') + mini(d.runs_allowed, 'Runs Allowed') + mini(d.runs_allowed_pg, 'RA / G') + mini(signed(d.run_diff), 'Run Diff', d.run_diff > 0 ? 'pos' : (d.run_diff < 0 ? 'neg' : '')) +
+                    mini(d.extra_innings.wins + '-' + d.extra_innings.losses, 'Extra Innings') + mini(d.shutouts, 'Shutouts') + mini(d.one_run.wins + '-' + d.one_run.losses, 'One-Run Games') + mini(d.largest_comeback, 'Largest Comeback') +
+                    mini(d.largest_lead, 'Largest Lead') +
+                    mini(d.highest_scoring ? d.highest_scoring.total : '—', 'Highest-Scoring') +
+                    mini(d.lowest_scoring ? d.lowest_scoring.total : '—', 'Lowest-Scoring') +
+                    '</div>';
+            }
+
+            // Record by team used
+            if (g.by_team && g.by_team.length) {
+                body += '<div class="og-sub-head"><i class="fas fa-shirt"></i>Record by Team Used</div><table class="og-tbl"><thead><tr><th>Team</th><th>W-L-D</th><th>Games</th></tr></thead><tbody>';
+                g.by_team.forEach(function (t) { body += '<tr><td><b>' + esc(t.team) + '</b></td><td>' + t.wins + '-' + t.losses + (t.draws ? '-' + t.draws : '') + '</td><td>' + t.games + '</td></tr>'; });
+                body += '</tbody></table>';
+            }
+
+            // Record vs each opponent
+            if (g.vs_opponents && g.vs_opponents.length) {
+                body += '<div class="og-sub-head"><i class="fas fa-users"></i>Record vs Opponent</div><table class="og-tbl"><thead><tr><th>Opponent</th><th>W-L-D</th><th>Win %</th><th>Diff</th><th>Last</th></tr></thead><tbody>';
+                g.vs_opponents.forEach(function (o) {
+                    body += '<tr><td>' + oppLink(o) + '</td><td>' + o.wins + '-' + o.losses + (o.draws ? '-' + o.draws : '') + '</td><td>' + o.win_pct + '%</td><td>' + signed(o.diff) + '</td><td>' + resBadge(o.last_result) + '</td></tr>';
+                });
+                body += '</tbody></table>';
+            }
+            body += '</div>';
+            return '<div class="og-gcard" data-og-card="' + idx + '">' + head + body + '</div>';
+        }
+
+        function renderRecent(recent) {
+            if (!recent || !recent.length) return '';
+            let html = '<div class="og-sub-head"><i class="fas fa-clock-rotate-left"></i>Recent Games</div><div class="og-recent">';
+            recent.forEach(function (m) {
+                const teams = (m.my_team || m.opp_team) ? ('<span> · ' + esc(m.my_team || '?') + ' vs ' + esc(m.opp_team || '?') + '</span>') : '';
+                let ks = '';
+                if (m.key_stats) { ks = ' · ' + m.key_stats.hits + 'H, ' + m.key_stats.home_runs + 'HR, ' + m.key_stats.strikeouts + 'K'; }
+                const link = m.box_score_url ? '<a class="og-rlink" href="' + esc(m.box_score_url) + '">Box score &rarr;</a>' : '';
+                html += '<div class="og-rrow">' +
+                    '<div class="og-rres">' + resBadge(m.result) + '</div>' +
+                    '<div class="og-rmid"><div class="top">' + esc(m.game.title) + ' vs ' + oppLink(m.opponent) + '</div>' +
+                        '<div class="sub">' + fmtDate(m.played_at) + teams + ks + '</div></div>' +
+                    '<div class="og-rscore">' + m.my_score + '–' + m.opp_score + '</div>' +
+                    link + '</div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function renderH2H(h2h) {
+            if (!h2h || !h2h.length) return '';
+            let html = '<div class="og-sub-head"><i class="fas fa-swords"></i>Head-to-Head</div>';
+            html += '<input type="text" class="og-h2h-search" id="ogH2HSearch" placeholder="Search opponents…" autocomplete="off">';
+            html += '<table class="og-tbl" id="ogH2HTable"><thead><tr><th>Opponent</th><th>Record</th><th>Win %</th><th>Meetings</th><th>Diff</th><th>Last</th><th></th></tr></thead><tbody>';
+            h2h.forEach(function (o) {
+                const nm = (o.display_name || o.username || '').toLowerCase();
+                const mh = o.matchup_url ? '<a href="' + esc(o.matchup_url) + '">History</a>' : '';
+                html += '<tr data-og-opp="' + esc(nm) + '"><td>' + oppLink(o) + '</td><td>' + recBadge(o.wins, o.losses, o.draws) + '</td><td>' + o.win_pct + '%</td><td>' + o.games + '</td><td>' + signed(o.diff) + '</td><td>' + resBadge(o.last_result) + '</td><td>' + mh + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function wire(body) {
+            body.addEventListener('click', function (e) {
+                const h = e.target.closest('[data-og-toggle]');
+                if (h) { const card = h.closest('.og-gcard'); if (card) card.classList.toggle('open'); }
+            });
+            const search = body.querySelector('#ogH2HSearch');
+            if (search) {
+                search.addEventListener('input', function () {
+                    const q = this.value.trim().toLowerCase();
+                    body.querySelectorAll('#ogH2HTable tbody tr').forEach(function (tr) {
+                        tr.style.display = (!q || (tr.getAttribute('data-og-opp') || '').indexOf(q) !== -1) ? '' : 'none';
+                    });
+                });
+            }
+        }
+
+        async function load() {
+            if (loaded) return; loaded = true;
+            const body = document.getElementById('profileGamingBody');
+            const uname = gamingUsername();
+            if (!body || !uname || typeof api === 'undefined' || !api || typeof api.request !== 'function') {
+                if (body) body.innerHTML = emptyState(); return;
+            }
+            try {
+                const data = await api.request('/gaming/online-stats/' + encodeURIComponent(uname));
+                const ov = (data && data.overall) ? data.overall : null;
+                const games = (data && data.by_game) ? data.by_game : [];
+                if (!ov || (!ov.games && !games.length)) { body.innerHTML = emptyState(); loadArenaExtras(uname, body); return; }
+                let html = '<div class="og-sep-note"><i class="fas fa-shield-halved"></i>Online gaming challenges only. This record is kept completely separate from betting picks, units, ROI, and handicapping stats.</div>';
+                html += renderOverall(ov);
+                if (games.length) {
+                    html += '<div class="og-sub-head"><i class="fas fa-gamepad"></i>By Game</div>';
+                    games.forEach(function (g, i) { html += renderGameCard(g, i); });
+                }
+                html += renderRecent(data.recent);
+                html += renderH2H(data.h2h);
+                body.innerHTML = html;
+                wire(body);
+                loadArenaExtras(uname, body);
+            } catch (err) {
+                body.innerHTML = emptyState();
+                loadArenaExtras(uname, body);
+            }
+        }
+        function onReady() {
+            const bar = document.getElementById('profileTabsBar');
+            if (!bar) return;
+            bar.addEventListener('click', function (e) {
+                const btn = e.target.closest('.profile-tab');
+                if (btn && btn.getAttribute('data-tab') === 'gaming') load();
+            });
+            if ((location.hash || '').replace('#', '') === 'gaming') load();
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+        else onReady();
+    })();
+
+    (function initProfileInbox() {
+        const state = { conversations: [], activeId: null, activeName: null, activeAvatar: null, lastMessages: [], pollTimer: null };
+
+        function fmtTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            const diff = (Date.now() - d.getTime()) / 1000;
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+            if (diff < 604800) return Math.floor(diff / 86400) + 'd';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        function escapeHtml(t) {
+            if (t == null) return '';
+            const d = document.createElement('div');
+            d.textContent = String(t);
+            return d.innerHTML;
+        }
+        function getViewerId() {
+            const u = (window.currentUser || (window.auth && window.auth.currentUser) || {});
+            return u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || null));
+        }
+        function setShowingThread(showing) {
+            const root = document.getElementById('profileInboxRoot');
+            if (!root) return;
+            root.classList.toggle('is-showing-thread', !!showing);
+        }
+        function renderConvoList() {
+            const list = document.getElementById('profileInboxList');
+            if (!list) return;
+            if (!state.conversations.length) {
+                list.innerHTML = '<div style="padding:18px;text-align:center;color:#9fb0c4;border:1px dashed rgba(148,163,184,.18);border-radius:12px;"><i class="fas fa-envelope-open" style="display:block;font-size:1.4rem;color:#7dd3fc;margin-bottom:6px;"></i><p style="margin:0 0 4px;color:#dbe7f5;font-weight:700;font-size:.92rem;">No conversations yet.</p><p style="margin:0;font-size:.8rem;">Click "New Message" to start one.</p></div>';
+                return;
+            }
+            let unreadTotal = 0;
+            list.innerHTML = state.conversations.map(c => {
+                const other = c.other_username || c.username || 'User';
+                const display = c.other_display_name || c.display_name || other;
+                const preview = c.last_message || c.preview || c.last_content || '(no messages)';
+                const unread = Number(c.unread_count || c.unread || 0);
+                if (unread > 0) unreadTotal += unread;
+                const initial = (display[0] || '?').toUpperCase();
+                const isActive = String(c.other_user_id) === String(state.activeId);
+                const av = c.other_avatar_url || c.avatar_url;
+                const avatarHtml = av ? '<img src="' + escapeHtml(av) + '" alt="">' : escapeHtml(initial);
+                return '<button type="button" class="profile-inbox-convo' + (isActive ? ' is-active' : '') + (unread > 0 ? ' is-unread' : '') + '" data-uid="' + escapeHtml(String(c.other_user_id || '')) + '" data-uname="' + escapeHtml(other) + '" data-avatar="' + escapeHtml(av || '') + '">' +
+                    '<div class="profile-inbox-convo-avatar">' + avatarHtml + '</div>' +
+                    '<div class="profile-inbox-convo-meta">' +
+                        '<div class="profile-inbox-convo-name">' + escapeHtml(display) + (unread > 0 ? '<span class="profile-inbox-convo-badge">' + (unread > 99 ? '99+' : unread) + '</span>' : '') + '</div>' +
+                        '<div class="profile-inbox-convo-preview">' + escapeHtml(preview) + '</div>' +
+                    '</div>' +
+                    '<div class="profile-inbox-convo-time">' + escapeHtml(fmtTime(c.last_message_at || c.updated_at || c.created_at)) + '</div>' +
+                '</button>';
+            }).join('');
+            const badge = document.getElementById('profileInboxBadge');
+            if (badge) {
+                if (unreadTotal > 0) { badge.textContent = unreadTotal > 99 ? '99+' : String(unreadTotal); badge.hidden = false; }
+                else { badge.hidden = true; }
+            }
+        }
+        function renderMessages() {
+            const box = document.getElementById('profileInboxMessages');
+            if (!box) return;
+            box.hidden = false;
+            const viewerId = getViewerId();
+            if (!state.lastMessages.length) {
+                box.innerHTML = '<div style="padding:18px;text-align:center;color:#9fb0c4;font-size:.86rem;">No messages yet. Say hello.</div>';
+                return;
+            }
+            box.innerHTML = state.lastMessages.map(m => {
+                const sid = m.sender_id != null ? m.sender_id : m.senderId;
+                const isSent = viewerId != null && String(sid) === String(viewerId);
+                return '<div class="profile-inbox-msg ' + (isSent ? 'sent' : 'recv') + '">' +
+                    escapeHtml(m.content || m.body || '') +
+                    '<div class="profile-inbox-msg-time">' + escapeHtml(fmtTime(m.created_at || m.timestamp)) + '</div>' +
+                '</div>';
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+        async function loadConversations() {
+            const list = document.getElementById('profileInboxList');
+            if (!list) return;
+            try {
+                if (!window.api || typeof window.api.getConversations !== 'function') throw new Error('api unavailable');
+                const data = await window.api.getConversations();
+                state.conversations = data.conversations || data.threads || [];
+                renderConvoList();
+            } catch (e) {
+                list.innerHTML = '<div style="padding:14px;color:#ff8aa3;font-size:.86rem;border:1px solid rgba(255,7,58,.25);border-radius:11px;background:rgba(255,7,58,.06);">Inbox is temporarily unavailable. <a href="/messages/" style="color:#7dd3fc;text-decoration:underline;">Open full inbox</a></div>';
+            }
+        }
+        async function openThread(userId, username, avatarUrl) {
+            state.activeId = userId;
+            state.activeName = username;
+            state.activeAvatar = avatarUrl || null;
+            const head = document.getElementById('profileInboxThreadHead');
+            const empty = document.getElementById('profileInboxThreadEmpty');
+            const reply = document.getElementById('profileInboxReply');
+            const messages = document.getElementById('profileInboxMessages');
+            const avatarBox = document.getElementById('profileInboxThreadAvatar');
+            const nameLink = document.getElementById('profileInboxThreadName');
+            const handle = document.getElementById('profileInboxThreadHandle');
+            if (head) head.hidden = false;
+            if (empty) empty.style.display = 'none';
+            if (reply) reply.hidden = false;
+            if (messages) { messages.hidden = false; messages.innerHTML = '<div style="padding:18px;color:#9fb0c4;font-size:.86rem;">Loading messages...</div>'; }
+            if (avatarBox) avatarBox.innerHTML = avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">' : escapeHtml((username || '?')[0].toUpperCase());
+            if (nameLink) { nameLink.textContent = username; nameLink.href = '/profile/?user=' + encodeURIComponent(username); }
+            if (handle) handle.textContent = '@' + username;
+            setShowingThread(true);
+            renderConvoList();
+            try {
+                if (window.api && typeof window.api.markAsRead === 'function') await window.api.markAsRead(userId);
+                const conv = state.conversations.find(c => String(c.other_user_id) === String(userId));
+                if (conv) { conv.unread_count = 0; renderConvoList(); }
+                if (window.api && typeof window.api.getMessages === 'function') {
+                    const data = await window.api.getMessages(userId);
+                    state.lastMessages = (data.messages || []).slice().sort((a,b) => new Date(a.created_at || a.timestamp || 0) - new Date(b.created_at || b.timestamp || 0));
+                    renderMessages();
+                } else if (messages) {
+                    messages.innerHTML = '<div style="padding:18px;color:#ff8aa3;font-size:.86rem;">Messaging API is not available.</div>';
+                }
+            } catch (e) {
+                if (messages) messages.innerHTML = '<div style="padding:18px;color:#ff8aa3;font-size:.86rem;">Failed to load messages. <a href="/messages/?to=' + encodeURIComponent(username) + '" style="color:#7dd3fc;">Open full thread</a></div>';
+            }
+        }
+        async function sendReply(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('profileInboxReplyInput');
+            const sendBtn = document.getElementById('profileInboxReplySend');
+            if (!input || !state.activeId) return;
+            const content = input.value.trim();
+            if (!content) return;
+            sendBtn.disabled = true;
+            try {
+                if (window.api && typeof window.api.sendMessage === 'function') {
+                    await window.api.sendMessage(state.activeId, content);
+                    input.value = '';
+                    input.style.height = 'auto';
+                    await Promise.all([
+                        window.api.getMessages(state.activeId).then(d => { state.lastMessages = (d.messages || []).slice().sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)); renderMessages(); }).catch(() => {}),
+                        loadConversations()
+                    ]);
+                }
+            } catch (err) {
+                alert('Failed to send message.');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+        function wireConvoClicks() {
+            const list = document.getElementById('profileInboxList');
+            if (!list) return;
+            list.addEventListener('click', (e) => {
+                const btn = e.target.closest('.profile-inbox-convo');
+                if (!btn) return;
+                const uid = btn.getAttribute('data-uid');
+                const uname = btn.getAttribute('data-uname');
+                const av = btn.getAttribute('data-avatar') || null;
+                openThread(uid, uname, av || null);
+            });
+        }
+        function wireReplyAndBack() {
+            const form = document.getElementById('profileInboxReply');
+            const back = document.getElementById('profileInboxBack');
+            const ta = document.getElementById('profileInboxReplyInput');
+            if (form) form.addEventListener('submit', sendReply);
+            if (back) back.addEventListener('click', () => setShowingThread(false));
+            if (ta) {
+                ta.addEventListener('input', () => {
+                    ta.style.height = 'auto';
+                    ta.style.height = Math.min(140, ta.scrollHeight) + 'px';
+                });
+                ta.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
+                });
+            }
+        }
+        function wireToolbar() {
+            const refresh = document.getElementById('profileInboxRefresh');
+            const newBtn = document.getElementById('profileInboxNew');
+            const modal = document.getElementById('profileInboxModal');
+            const close = document.getElementById('profileInboxModalClose');
+            const search = document.getElementById('profileInboxModalUser');
+            const results = document.getElementById('profileInboxModalResults');
+            if (refresh) refresh.addEventListener('click', () => { loadConversations(); if (state.activeId) openThread(state.activeId, state.activeName, state.activeAvatar); });
+            if (newBtn && modal) newBtn.addEventListener('click', () => { modal.hidden = false; if (search) { search.value = ''; setTimeout(() => search.focus(), 30); } if (results) results.innerHTML = ''; });
+            if (close && modal) close.addEventListener('click', () => { modal.hidden = true; });
+            if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+            if (search && results) {
+                let timer = null;
+                search.addEventListener('input', () => {
+                    const q = search.value.trim();
+                    clearTimeout(timer);
+                    if (q.length < 2) { results.innerHTML = ''; return; }
+                    timer = setTimeout(async () => {
+                        try {
+                            if (!window.api || typeof window.api.searchUsers !== 'function') { results.innerHTML = '<div style="padding:8px;color:#9fb0c4;">Search unavailable.</div>'; return; }
+                            const data = await window.api.searchUsers(q, { limit: 6 });
+                            const me = getViewerId();
+                            const users = (data.users || []).filter(u => String(u.id) !== String(me));
+                            if (!users.length) { results.innerHTML = '<div style="padding:8px;color:#9fb0c4;">No matches.</div>'; return; }
+                            results.innerHTML = users.map(u => '<div class="profile-inbox-modal-result" data-uid="' + escapeHtml(String(u.id)) + '" data-uname="' + escapeHtml(u.username || '') + '" data-avatar="' + escapeHtml(u.avatar_url || '') + '"><div class="av">' + (u.avatar_url ? '<img src="' + escapeHtml(u.avatar_url) + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : escapeHtml((u.display_name || u.username || '?')[0].toUpperCase())) + '</div><div style="flex:1;"><div style="color:#f1f6fb;font-weight:700;font-size:.88rem;">' + escapeHtml(u.display_name || u.username || 'User') + '</div><div style="color:#9fb0c4;font-size:.78rem;">@' + escapeHtml(u.username || '') + '</div></div></div>').join('');
+                        } catch (e) {
+                            results.innerHTML = '<div style="padding:8px;color:#ff8aa3;">Search failed.</div>';
+                        }
+                    }, 280);
+                });
+                results.addEventListener('click', (e) => {
+                    const item = e.target.closest('.profile-inbox-modal-result');
+                    if (!item) return;
+                    modal.hidden = true;
+                    openThread(item.getAttribute('data-uid'), item.getAttribute('data-uname'), item.getAttribute('data-avatar') || null);
+                });
+            }
+        }
+        function startPolling() {
+            if (state.pollTimer) return;
+            state.pollTimer = setInterval(() => {
+                loadConversations();
+                if (state.activeId) {
+                    window.api && window.api.getMessages && window.api.getMessages(state.activeId).then(d => {
+                        const msgs = (d.messages || []).slice().sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+                        if (msgs.length !== state.lastMessages.length) { state.lastMessages = msgs; renderMessages(); }
+                    }).catch(() => {});
+                }
+            }, 30000);
+        }
+        function onReady() {
+            const tab = document.getElementById('profileInboxTab');
+            if (!tab) return;
+            wireConvoClicks();
+            wireReplyAndBack();
+            wireToolbar();
+            const showInbox = () => {
+                try {
+                    const own = (window.profileData && window.currentUser && window.profileData.username && window.currentUser.username && window.profileData.username.toLowerCase() === window.currentUser.username.toLowerCase());
+                    if (own || document.body.classList.contains('tmrx-is-own-profile')) {
+                        tab.hidden = false;
+                        loadConversations();
+                        const toParam = new URLSearchParams(location.search).get('to');
+                        if (toParam) {
+                            if (window.api && typeof window.api.searchUsers === 'function') {
+                                window.api.searchUsers(toParam, { limit: 5 }).then(d => {
+                                    const u = (d.users || []).find(x => (x.username || '').toLowerCase() === toParam.toLowerCase());
+                                    if (u) openThread(u.id, u.username, u.avatar_url || null);
+                                }).catch(() => {});
+                            }
+                        }
+                        startPolling();
+                        return true;
+                    }
+                } catch (_) {}
+                return false;
+            };
+            if (!showInbox()) {
+                const obs = new MutationObserver(() => { if (showInbox()) obs.disconnect(); });
+                obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+                setTimeout(() => obs.disconnect(), 15000);
+            }
+            tab.addEventListener('click', () => { loadConversations(); if (state.activeId) openThread(state.activeId, state.activeName, state.activeAvatar); });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+    })();
+
+    (function initAdvancedMetricTabs() {
+        const onReady = function () {
+            const panel = document.querySelector('.profile-tab-panel[data-panel="advanced"] .profile-feed-card');
+            if (!panel || panel.querySelector('.tmr-cap-tabs')) return;
+            const cards = Array.from(panel.querySelectorAll(':scope > .tmr-cap-card'));
+            if (!cards.length) return;
+            const groups = [
+                { key: 'overview', label: 'Overview' },
+                { key: 'recent', label: 'Recent Form' },
+                { key: 'risk', label: 'Risk Scores' },
+                { key: 'sport', label: 'Sports' },
+                { key: 'market', label: 'Markets' }
+            ];
+            const tabs = document.createElement('div');
+            tabs.className = 'tmr-cap-tabs';
+            tabs.setAttribute('role', 'tablist');
+            groups.forEach(function (group, idx) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tmr-cap-tab' + (idx === 0 ? ' is-active' : '');
+                btn.dataset.capTab = group.key;
+                btn.textContent = group.label;
+                tabs.appendChild(btn);
+            });
+            const head = panel.querySelector('.profile-feed-head');
+            if (head && head.nextSibling) panel.insertBefore(tabs, head.nextSibling);
+            else panel.insertBefore(tabs, panel.firstChild);
+
+            cards.forEach(function (card, idx) {
+                const text = (card.textContent || '').toLowerCase();
+                let key = 'overview';
+                if (card.querySelector('#advTableBySport') || text.indexOf('performance by sport') !== -1) key = 'sport';
+                else if (card.querySelector('#advTableByMarket') || text.indexOf('performance by market') !== -1) key = 'market';
+                else if (text.indexOf('period performance') !== -1 || text.indexOf('rolling') !== -1 || text.indexOf('last 10') !== -1) key = 'recent';
+                else if (text.indexOf('scores') !== -1 || text.indexOf('z-score') !== -1 || text.indexOf('clv') !== -1 || text.indexOf('drawdown') !== -1) key = 'risk';
+                card.dataset.capPanel = key;
+                card.style.marginTop = idx === 0 ? '0' : '14px';
+            });
+
+            const setActive = function (key) {
+                tabs.querySelectorAll('.tmr-cap-tab').forEach(function (btn) {
+                    btn.classList.toggle('is-active', btn.dataset.capTab === key);
+                });
+                cards.forEach(function (card) {
+                    card.hidden = card.dataset.capPanel !== key;
+                });
+            };
+            tabs.addEventListener('click', function (e) {
+                const btn = e.target.closest('.tmr-cap-tab');
+                if (btn) setActive(btn.dataset.capTab);
+            });
+            setActive('overview');
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+    })();
+
+    // ======================== SUMMARY BAR ========================
+    function renderSummaryBar(s) {
+        document.getElementById('summaryBar').style.display = 'block';
+        const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
+            ? latestAdvancedStats.summary
+            : null;
+        const merged = {
+            wins: summary ? Number(summary.wins || s.wins || 0) : s.wins,
+            losses: summary ? Number(summary.losses || s.losses || 0) : s.losses,
+            pushes: summary ? Number(summary.pushes || s.pushes || 0) : s.pushes,
+            roi: summary ? Number(summary.roi || s.roi || 0) : s.roi,
+            netUnits: summary ? Number(summary.net_units || s.netUnits || 0) : s.netUnits,
+            winRate: summary ? Number(summary.win_rate || s.winRate || 0) : s.winRate,
+            avgOdds: summary && summary.avg_odds != null ? Number(summary.avg_odds) : s.avgOdds
+        };
+        const ledger = computeLedgerMetrics(getFilteredPicks());
+        const clv = computeAggregateClv(getFilteredPicks());
+        const gradedPicks = merged.wins + merged.losses + merged.pushes;
+        const nc = merged.netUnits > 0 ? 'positive' : merged.netUnits < 0 ? 'negative' : 'neutral';
+        const rc = merged.roi > 0 ? 'positive' : merged.roi < 0 ? 'negative' : 'neutral';
+        // Win rate: green > .500, red < .500, neutral when no graded sample or exactly .500
+        const wrSample = merged.wins + merged.losses;
+        const wc = wrSample === 0 ? 'neutral'
+                 : merged.winRate > 50 ? 'positive'
+                 : merged.winRate < 50 ? 'negative' : 'neutral';
+        document.getElementById('summaryGrid').innerHTML =
+            summaryStat('Win %', merged.winRate.toFixed(1) + '%', merged.wins + ' wins / ' + merged.losses + ' losses', wc) +
+            summaryStat('Units Won', formatSignedUnits(merged.netUnits), gradedPicks + ' graded picks', nc) +
+            summaryStat('ROI', (merged.roi >= 0 ? '+' : '') + merged.roi.toFixed(1) + '%', 'Return on risked units', rc) +
+            summaryStat('Total Picks', String(s.total), usingRecoveredLocalPicks ? 'Recovered from this browser' : (ledger.pending ? ledger.pending + ' pending' : 'All visible picks')) +
+            summaryStat('Graded', String(gradedPicks), 'Settled record sample') +
+            summaryStat('Pending', String(ledger.pending), 'Open picks awaiting grade') +
+            summaryStat('Average Odds', merged.avgOdds != null ? formatOddsValue(merged.avgOdds) : '--', 'Average market price') +
+            summaryStat('Average Units', (summary ? Number(summary.avg_units || s.avgUnits || 0) : s.avgUnits).toFixed(2) + 'u', 'Average size per pick') +
+            summaryStat('Best Streak', s.bestStreak + 'W', 'Longest win streak') +
+            summaryStat('CLV', clv.display, clv.note, clv.className);
+    }
+
+    function renderSummaryBarFromAdvanced(summary, fallbackStats) {
+        renderSummaryBar(fallbackStats);
+    }
+
+    function summaryStat(label, value, note, valueClass) {
+        return '<div class="summary-stat">' +
+            '<div class="summary-stat-value ' + (valueClass || '') + '">' + value + '</div>' +
+            '<div class="summary-stat-label">' + label + '</div>' +
+            (note ? '<div class="summary-stat-note">' + note + '</div>' : '') +
+            '</div>';
+    }
+
+    // ======================== PICKS TABLE ========================
+    function renderPicksTable(picks) {
+        const wrapper = document.getElementById('picksTableWrapper');
+        const tbody = document.getElementById('picksTableBody');
+        const empty = document.getElementById('picksEmptyState');
+        const countEl = document.getElementById('picksCount');
+
+        if (!picks || picks.length === 0) {
+            currentRenderedPicks = [];
+            currentTablePage = 1;
+            wrapper.style.display = 'none';
+            empty.style.display = 'block';
+            countEl.textContent = '';
+            renderTablePagination(0, 0, 0);
+            return;
+        }
+        wrapper.style.display = 'block';
+        empty.style.display = 'none';
+        currentRenderedPicks = [...picks];
+        syncTableSortUI();
+
+        const graded = picks.filter(p => normalizeStatus(p.status) !== 'pending').length;
+        const pend = picks.length - graded;
+        countEl.textContent = graded + ' graded' + (pend > 0 ? ' + ' + pend + ' pending' : '') + ' | sorted by ' + sortLabel(currentTableSort);
+
+        // Cumulative totals (oldest first)
+        const chrono = [...picks].sort((a, b) => getPickTimestamp(a) - getPickTimestamp(b));
+        let rt = 0;
+        const rtMap = new Map();
+        chrono.forEach(p => {
+            if (normalizeStatus(p.status) !== 'pending') rt += pickPL(p);
+            rtMap.set(p.id || (p.game_id + '|' + p.selection), parseFloat(rt.toFixed(2)));
+        });
+
+        const totalPages = Math.max(1, Math.ceil(picks.length / currentPageSize));
+        if (currentTablePage > totalPages) currentTablePage = totalPages;
+        const startIndex = (currentTablePage - 1) * currentPageSize;
+        const endIndex = startIndex + currentPageSize;
+        const display = picks.slice(startIndex, endIndex);
+
+        tbody.innerHTML = display.map(p => pickRow(p, rtMap)).join('');
+        renderTablePagination(picks.length, startIndex, endIndex);
+    }
+
+    function pickRow(p, rtMap) {
+        // TICKET_ID_20260605 (Nima): sportsbook-style ticket number derived
+        // from the immutable backend pick id — shown on every wager row.
+        const _ticketNum = Number(p.id);
+        const ticket = (Number.isFinite(_ticketNum) && _ticketNum > 0) ? String(Math.floor(_ticketNum)).padStart(7, '0') : '';
+        const date = p.locked_at || p.created_at || '';
+        const _pd = date ? new Date(date) : null;
+        const _pdET = _pd ? (function() {
+            try {
+                var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'numeric', day: 'numeric', year: '2-digit' }).formatToParts(_pd);
+                var get = function(t) { var f = parts.find(function(x) { return x.type === t; }); return f ? f.value : ''; };
+                return { m: get('month'), d: get('day'), y: get('year') };
+            } catch (_) { return null; }
+        })() : null;
+        const dateStr = _pdET ? (_pdET.m + '/' + _pdET.d + '/' + _pdET.y) : (_pd ? ((_pd.getMonth()+1) + '/' + _pd.getDate() + '/' + String(_pd.getFullYear()).slice(-2)) : '--');
+        const timeStr = _pd ? _pd.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }) + ' ET' : '';
+        const sport = fmtSport(p.sport_key);
+        const sc = sport.toLowerCase().replace(/\s/g, '');
+        const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
+        const line = formatPickLineValue(p);
+        const sel = formatPickDisplayValue(p);
+        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '') : (p.event_name || '--');
+        const units = formatUnitsValue(p.units);
+        const status = normalizeStatus(p.status);
+        const market = marketTypeLabel(p.market_type);
+        const closingLine = getClosingLineValue(p);
+        const clvValue = calculatePickClv(p);
+        const book = deriveBookName(p);
+
+        let pl = '', plc = 'zero';
+        if (status === 'won' || status === 'lost') {
+            const v = pickPL(p);
+            pl = formatSignedUnits(v);
+            plc = v > 0 ? 'positive' : v < 0 ? 'negative' : 'zero';
+        } else if (status === 'push') { pl = '+0.00u'; }
+        else { pl = '--'; }
+
+        const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
+        const rd = status === 'pending' ? '' : (r != null ? formatSignedUnits(r) : '--');
+        const netUnitsSubline = status === 'pending' ? '' : '<div class="ledger-subline">' + rd + '</div>';
+        const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
+
+        const rowClass = 'row-' + status;
+        return '<tr class="' + rowClass + '">' +
+            '<td data-label="Submitted"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
+            '<td data-label="Sport"><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
+            '<td data-label="Game" class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
+            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (ticket ? '<span style="color:#ffd700;font-weight:700;">Ticket #' + ticket + '</span>' + (p.notes ? ' · ' : '') : '') + (p.notes || '') + '</div></td>' +
+            '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
+            '<td data-label="Line">' + line + '</td>' +
+            '<td data-label="Odds">' + odds + '</td>' +
+            '<td data-label="Units">' + units + '</td>' +
+            '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
+            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + netUnitsSubline + '</td>' +
+            '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
+            '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
+            '<td data-label="Book">' + book + '</td>' +
+            '<td data-label="Status"><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
+            '</tr>';
+    }
+
+    function loadMorePicks() {
+        changeTablePage(currentTablePage + 1);
+    }
+
+    function renderTablePagination(totalItems, startIndex, endIndex) {
+        const row = document.getElementById('loadMoreRow');
+        const container = document.getElementById('ledgerPagination');
+        if (!row || !container) return;
+
+        if (!totalItems) {
+            row.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.max(1, Math.ceil(totalItems / currentPageSize));
+        row.style.display = totalPages > 1 ? 'block' : 'none';
+
+        const buttons = [];
+        buttons.push('<button type="button" onclick="changeTablePage(' + (currentTablePage - 1) + ')"' + (currentTablePage === 1 ? ' disabled' : '') + '>Prev</button>');
+        for (let page = 1; page <= totalPages; page++) {
+            if (page === 1 || page === totalPages || Math.abs(page - currentTablePage) <= 1) {
+                buttons.push('<button type="button" class="' + (page === currentTablePage ? 'is-active' : '') + '" onclick="changeTablePage(' + page + ')">' + page + '</button>');
+            } else if (buttons[buttons.length - 1] !== '<span class="ledger-page-ellipsis">...</span>') {
+                buttons.push('<span class="ledger-page-ellipsis">...</span>');
+            }
+        }
+        buttons.push('<button type="button" onclick="changeTablePage(' + (currentTablePage + 1) + ')"' + (currentTablePage === totalPages ? ' disabled' : '') + '>Next</button>');
+
+        container.innerHTML =
+            '<div class="ledger-pagination-summary">Showing ' + (startIndex + 1) + '-' + Math.min(endIndex, totalItems) + ' of ' + totalItems + ' picks</div>' +
+            '<div class="ledger-pagination-controls">' + buttons.join('') + '</div>';
+    }
+
+    function changeTablePage(page) {
+        const totalPages = Math.max(1, Math.ceil(currentRenderedPicks.length / currentPageSize));
+        currentTablePage = Math.min(totalPages, Math.max(1, Number(page) || 1));
+        renderPicksTable(currentRenderedPicks);
+    }
+
+    function changePageSize(value) {
+        // Hard cap 500 per Nima — beyond that, paginate naturally.
+        currentPageSize = Math.min(500, Math.max(1, Number(value) || 100));
+        currentTablePage = 1;
+        renderPicksTable(currentRenderedPicks.length ? currentRenderedPicks : getFilteredPicks());
+    }
+
+    function setTableSort(key) {
+        const currentKey = String(currentTableSort || 'date_desc').split('_')[0];
+        const currentDirection = String(currentTableSort || 'date_desc').endsWith('_asc') ? 'asc' : 'desc';
+        const nextDirection = currentKey === key && currentDirection === 'desc' ? 'asc' : 'desc';
+        currentTableSort = key + '_' + nextDirection;
+
+        const sortSelect = document.getElementById('filterSort');
+        if (sortSelect) {
+            const option = Array.from(sortSelect.options).find(function(item) { return item.value === currentTableSort; });
+            if (option) sortSelect.value = currentTableSort;
+        }
+        currentTablePage = 1;
+        applyFilters();
+    }
+
+    function syncTableSortUI() {
+        document.querySelectorAll('.ledger-sort-button').forEach(function(button) {
+            const key = button.getAttribute('data-sort-key');
+            const isActive = String(currentTableSort || '').startsWith(key + '_');
+            button.classList.toggle('is-active', isActive);
+            if (isActive) {
+                button.setAttribute('aria-sort', String(currentTableSort).endsWith('_asc') ? 'ascending' : 'descending');
+            } else {
+                button.removeAttribute('aria-sort');
+            }
+        });
+    }
+
+    // ======================== ANALYTICS ========================
+    function renderAnalytics(s, picksArr) {
+        const section = document.getElementById('analyticsSection');
+        if (s.total === 0) return;
+        section.style.display = 'block';
+
+        const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
+            ? latestAdvancedStats.summary
+            : null;
+        const avgOddsValue = summary ? Number(summary.avg_odds || 0) : s.avgOdds;
+        const avgUnitsValue = summary ? Number(summary.avg_units || 0) : s.avgUnits;
+        const pendingValue = summary ? Number(summary.pending_picks || 0) : s.pending;
+        const ao = avgOddsValue != null ? (avgOddsValue > 0 ? '+' + avgOddsValue : '' + avgOddsValue) : 'N/A';
+        const st = s.currentStreak > 0 ? s.currentStreak + 'W' : s.currentStreak < 0 ? Math.abs(s.currentStreak) + 'L' : '0';
+        const stc = s.currentStreak > 0 ? 'positive' : s.currentStreak < 0 ? 'negative' : '';
+
+        document.getElementById('analyticsGrid').innerHTML =
+            ac('Average Odds', ao, '') + ac('Avg Units / Pick', avgUnitsValue.toFixed(2) + 'u', '') +
+            ac('Best Streak', s.bestStreak + 'W', 'positive') + ac('Worst Streak', s.worstStreak + 'L', 'negative') +
+            ac('Current Streak', st, stc) + ac('Pending', '' + pendingValue, '');
+
+        renderAdvancedStatsTable(s, picksArr);
+
+        // By Bet Type
+        const btg = document.getElementById('betTypeGrid');
+        const types = Array.isArray(s.marketTypeRecords) ? s.marketTypeRecords : [];
+        btg.innerHTML = types.map(t => {
+            const wr = (t.wins + t.losses) > 0 ? ((t.wins / (t.wins + t.losses)) * 100).toFixed(1) : '0.0';
+            return bRowExtended(t.label, t.wins + '-' + t.losses + '-' + t.pushes + ' (' + t.total + ' picks)', wr, t.netUnits);
+        }).join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+
+        // Dedicated depth panels: Player Props (by stat type) + Alternate Lines (by alt type)
+        renderDepthBreakdown(picksArr, PROP_TYPE_GROUPS, 'playerPropsModule', 'playerPropsGrid');
+        renderDepthBreakdown(picksArr, ALT_LINE_GROUPS, 'altLinesModule', 'altLinesGrid');
+        // SECOND_HALF_20260905: standalone second-half record, split by league.
+        renderSecondHalfBreakdown(picksArr);
+
+        // By Unit Size
+        renderUnitSizeBreakdown(picksArr);
+        // By Odds Range
+        renderOddsRangeBreakdown(picksArr);
+        renderPriceProfile(picksArr);
+        renderPendingSummary(picksArr);
+        // Recent Form
+        renderRecentForm(picksArr);
+        // Performance Over Time
+        renderPerformanceTimeline(picksArr);
+        // Populate filter dropdowns
+        populateFilterDropdowns();
+    }
+
+    function renderAdvancedStatsTable(s, picksArr) {
+        const body = document.getElementById('advancedStatsTableBody');
+        if (!body) return;
+
+        const source = picksArr || allLoadedPicks;
+        const adv = computeAdvancedStats(source);
+        const ledger = computeLedgerMetrics(source);
+        const clv = computeAggregateClv(source);
+        const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
+            ? latestAdvancedStats.summary
+            : null;
+        const avgOddsValue = summary ? Number(summary.avg_odds || 0) : s.avgOdds;
+        const avgUnitsValue = summary ? Number(summary.avg_units || 0) : s.avgUnits;
+        const pendingValue = summary ? Number(summary.pending_picks || 0) : s.pending;
+        const record = summary
+            ? [Number(summary.wins || 0), Number(summary.losses || 0), Number(summary.pushes || 0)].join('-')
+            : [s.wins, s.losses, s.pushes].join('-');
+        const currentStreak = s.currentStreak > 0 ? s.currentStreak + 'W' : s.currentStreak < 0 ? Math.abs(s.currentStreak) + 'L' : '0';
+        const rows = [
+            ['Record', record, 'Wins-Losses-Pushes after filters'],
+            ['ROI', (s.roi >= 0 ? '+' : '') + s.roi.toFixed(1) + '%', 'Return on risked units'],
+            ['Net Units', (s.netUnits >= 0 ? '+' : '') + s.netUnits.toFixed(2) + 'u', 'Total profit/loss'],
+            ['Win Rate', s.winRate.toFixed(1) + '%', 'Wins divided by decisions'],
+            ['Total Picks', String(s.total), 'All picks matching current filters'],
+            ['Pending Picks', String(pendingValue), 'Open picks not graded yet'],
+            ['Average Odds', avgOddsValue != null ? (avgOddsValue > 0 ? '+' : '') + avgOddsValue : 'N/A', 'Average American price'],
+            ['Average Units', avgUnitsValue.toFixed(2) + 'u', 'Average risk per pick'],
+            ['CLV', clv.display, clv.note],
+            ['Favorite Record', ledger.favoriteRecord, 'All negative-price decisions'],
+            ['Underdog Record', ledger.underdogRecord, 'All plus-money decisions'],
+            ['Home Record', ledger.homeRecord, 'Selections tied to home side'],
+            ['Away Record', ledger.awayRecord, 'Selections tied to away side'],
+            ['Spread Record', ledger.spreadRecord, 'Spread and alt spread markets'],
+            ['Moneyline Record', ledger.moneylineRecord, 'Straight side winners'],
+            ['Total Record', ledger.totalRecord, 'Totals and team totals'],
+            ['First Half / First 5', ledger.firstSegmentRecord, 'Segment markets only'],
+            ['Last 10', ledger.last10Record, 'Most recent 10 graded picks'],
+            ['Current Streak', currentStreak, 'Current graded streak'],
+            ['Best Streak', s.bestStreak + 'W', 'Longest winning streak'],
+            ['Worst Streak', s.worstStreak + 'L', 'Longest losing streak'],
+            ['Highest Unit Win', ledger.bestWin ? formatSignedUnits(ledger.bestWin.pl) : '--', ledger.bestWin ? formatPickDisplayValue(ledger.bestWin.pick) : 'No winning picks yet'],
+            ['Biggest Loss', ledger.biggestLoss ? formatSignedUnits(ledger.biggestLoss.pl) : '--', ledger.biggestLoss ? formatPickDisplayValue(ledger.biggestLoss.pick) : 'No losing picks yet']
+        ];
+
+        if (adv) {
+            rows.push(
+                ['Effective Units', (adv.eU >= 0 ? '+' : '') + adv.eU.toFixed(2), 'Normalized to 3u sizing'],
+                ['Effective Win %', adv.eWP.toFixed(1) + '%', 'Equivalent win rate at -110'],
+                ['Odds-Adjusted Z-Score', adv.zScore == null ? 'N/A' : adv.zScore.toFixed(2), 'Signal strength versus break-even odds'],
+                ['Confidence', adv.confidence.toFixed(1) + '%', 'Confidence in edge estimate'],
+                ['Projected ROI', (adv.pROI >= 0 ? '+' : '') + adv.pROI.toFixed(1) + '%', 'Confidence-weighted projection'],
+                ['Profit Factor', adv.profitFactor, 'Gross won units divided by gross lost units'],
+                ['Sharpe Ratio', adv.sharpe.toFixed(3), 'Return relative to variance'],
+                ['Sortino Ratio', adv.sortino.toFixed(3), 'Downside-adjusted return'],
+                ['Max Drawdown', adv.maxDD.toFixed(2) + 'u', 'Largest peak-to-trough slide'],
+                ['Kelly %', adv.kelly.toFixed(1) + '%', 'Suggested sizing baseline']
+            );
+        }
+
+        // Color-code metric values per Nima's spec: green when winning/positive,
+        // red when losing/negative, neutral on .500/zero/insufficient sample.
+        function metricSignClass(label, value) {
+            var lab = String(label || '').toLowerCase();
+            var val = String(value || '');
+            // Records like "12-7-1" -> green if W>L, red if W<L
+            var recMatch = val.match(/^(\d+)[\-–](\d+)/);
+            if (recMatch && (lab.indexOf('record') !== -1 || lab.indexOf('streak') === -1)) {
+                var w = parseInt(recMatch[1], 10), l = parseInt(recMatch[2], 10);
+                if (w + l === 0) return '';
+                if (w > l) return 'is-positive';
+                if (w < l) return 'is-negative';
+                return '';
+            }
+            // Signed numerics (+1.5u, -2.3u, +5%, -1.4%, +145, -110)
+            if (/^[+\-]/.test(val)) {
+                if (val.charAt(0) === '+' && parseFloat(val.slice(1)) !== 0) return 'is-positive';
+                if (val.charAt(0) === '-' && parseFloat(val.slice(1)) !== 0) return 'is-negative';
+                return '';
+            }
+            // Win Rate: green > 50, red < 50
+            if (lab === 'win rate' || lab === 'effective win %') {
+                var pct = parseFloat(val);
+                if (!isFinite(pct)) return '';
+                if (pct > 50) return 'is-positive';
+                if (pct < 50) return 'is-negative';
+                return '';
+            }
+            return '';
+        }
+
+        body.innerHTML = rows.map(function(row) {
+            var valClass = metricSignClass(row[0], row[1]);
+            return '<tr>' +
+                '<td class="stats-metric-label">' + row[0] + '</td>' +
+                '<td' + (valClass ? ' class="' + valClass + '"' : '') + '>' + row[1] + '</td>' +
+                '<td class="stats-metric-context">' + row[2] + '</td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    function renderPriceProfile(picksArr) {
+        const grid = document.getElementById('priceProfileGrid');
+        if (!grid) return;
+        const source = (picksArr || []).filter(function(pick) {
+            return ['won', 'lost', 'push', 'pushed'].includes(normalizeStatus(pick.status));
+        });
+        const favorites = source.filter(function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) < 0; });
+        const underdogs = source.filter(function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) > 0; });
+
+        const groups = [
+            { label: 'Favorites', picks: favorites },
+            { label: 'Underdogs', picks: underdogs }
+        ];
+
+        grid.innerHTML = groups.map(function(group) {
+            const wins = group.picks.filter(function(pick) { return normalizeStatus(pick.status) === 'won'; }).length;
+            const losses = group.picks.filter(function(pick) { return normalizeStatus(pick.status) === 'lost'; }).length;
+            const pushes = group.picks.filter(function(pick) { return normalizeStatus(pick.status) === 'push'; }).length;
+            const netUnits = group.picks.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
+            const wr = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
+            return bRowExtended(group.label, wins + '-' + losses + '-' + pushes + ' (' + group.picks.length + ' picks)', wr, netUnits);
+        }).join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+    }
+
+    function renderPendingSummary(picksArr) {
+        const grid = document.getElementById('pendingSummaryGrid');
+        if (!grid) return;
+        const pending = (picksArr || []).filter(function(pick) {
+            return normalizeStatus(pick.status) === 'pending';
+        });
+
+        if (!pending.length) {
+            grid.innerHTML = '<div class="empty-state" style="padding:16px;">No pending picks</div>';
+            return;
+        }
+
+        const bySport = {};
+        let pendingUnits = 0;
+        pending.forEach(function(pick) {
+            const sport = fmtSport(pick.sport_key || 'unknown');
+            bySport[sport] = (bySport[sport] || 0) + 1;
+            pendingUnits += Number(pick.units || 0);
+        });
+        const topSport = Object.entries(bySport).sort(function(a, b) { return b[1] - a[1]; })[0];
+        const cards = [
+            ['Open Tickets', pending.length + ' pending', 'Awaiting grade'],
+            ['Pending Units', pendingUnits.toFixed(2) + 'u', 'Still exposed'],
+            ['Most Active Sport', topSport ? topSport[0] : 'N/A', topSport ? (topSport[1] + ' open picks') : 'No open picks']
+        ];
+
+        grid.innerHTML = cards.map(function(card) {
+            return '<div class="breakdown-row"><div style="flex:1;"><div class="breakdown-name">' + card[0] + '</div><div class="breakdown-record">' + card[2] + '</div></div><div style="text-align:right;"><div class="breakdown-winrate">' + card[1] + '</div></div></div>';
+        }).join('');
+    }
+
+    function renderUnitSizeBreakdown(picksArr) {
+        const g = document.getElementById('unitSizeGrid');
+        if (!g) return;
+        const src = picksArr || allLoadedPicks;
+        // Use normalizeStatus to catch every graded variant the backend emits
+        // (won/lost/push/pushed/win/loss). The previous raw === comparison
+        // missed graded picks whose status came back as 'win' or 'pushed',
+        // which is why profiles could show "No data" with graded
+        // pick on the books.
+        const graded = src.filter(function (p) {
+            const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : String(p.status || '').toLowerCase());
+            return s === 'won' || s === 'lost' || s === 'push';
+        });
+        if (graded.length === 0) {
+            g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>';
+            return;
+        }
+
+        // Whole-unit buckets (1u..5u). The system enforces whole units 1-5 at
+        // submit time so we never need half-unit buckets. Each bucket counts
+        // a pick whose unit value rounds to that integer (so a legacy 1.0 or
+        // 1.00 string still lands in 1u). 5u+ is a soft cap so any data
+        // drift past 5 still surfaces.
+        const buckets = [
+            { label: '5u Picks', test: function (u) { return u >= 5; } },
+            { label: '4u Picks', test: function (u) { return u > 3 && u <= 4; } },
+            { label: '3u Picks', test: function (u) { return u > 2 && u <= 3; } },
+            { label: '2u Picks', test: function (u) { return u > 1 && u <= 2; } },
+            { label: '1u Picks', test: function (u) { return u <= 1; } }
+        ];
+
+        const rows = [];
+        for (const b of buckets) {
+            const picks = graded.filter(function (p) {
+                const raw = (p.units != null && p.units !== '' ? p.units : 1);
+                const u = Number(raw);
+                return Number.isFinite(u) ? b.test(u) : b.test(1);
+            });
+            if (picks.length === 0) continue;
+            const w = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'won'; }).length;
+            const l = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'lost'; }).length;
+            const ph = picks.filter(function (p) { const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status); return s === 'push'; }).length;
+            const decided = w + l;
+            const wr = decided > 0 ? ((w / decided) * 100).toFixed(1) : '—';
+            let units = 0;
+            picks.forEach(function (p) { units += pickPL(p); });
+            const recordCell = w + '-' + l + (ph ? '-' + ph : '') + ' (' + picks.length + ')';
+            rows.push(bRowExtended(b.label, recordCell, wr, units));
+        }
+        g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+    }
+
+    function renderOddsRangeBreakdown(picksArr) {
+        const g = document.getElementById('oddsRangeGrid');
+        if (!g) return;
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(function (p) {
+            const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : String(p.status || '').toLowerCase());
+            return s === 'won' || s === 'lost';
+        });
+        const ranges = [
+            { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
+            { label: 'Favorite (-110 to -200)', test: o => o <= -110 && o >= -200 },
+            { label: 'Dog (+100 to +200)', test: o => o >= 100 && o <= 200 },
+            { label: 'Longshot (+201+)', test: o => o >= 201 }
+        ];
+        const rows = [];
+        for (const range of ranges) {
+            const picks = graded.filter(function (p) { const o = Number(p.odds_snapshot != null ? p.odds_snapshot : (p.odds != null ? p.odds : -110)); return Number.isFinite(o) && range.test(o); });
+            if (picks.length === 0) continue;
+            const w = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'won'; }).length;
+            const l = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'lost'; }).length;
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            let units = 0;
+            picks.forEach(function (p) { units += pickPL(p); });
+            rows.push(bRowExtended(range.label, w + '-' + l + ' (' + picks.length + ')', wr, units));
+        }
+        g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+    }
+
+    function renderRecentForm(picksArr) {
+        const g = document.getElementById('recentFormGrid');
+        if (!g) return;
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const recent = graded.slice(0, 20);
+        if (recent.length === 0) { g.innerHTML = '<div style="color:var(--text-muted);padding:8px;">No graded picks yet</div>'; return; }
+        g.innerHTML = recent.map(p => {
+            const c = p.status === 'won' ? '#22c55e' : p.status === 'lost' ? '#ef4444' : '#6b7280';
+            const l = p.status === 'won' ? 'W' : p.status === 'lost' ? 'L' : 'P';
+            const tip = formatPickDisplayValue(p) + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
+        }).join('');
+    }
+
+    function renderPerformanceTimeline(picksArr) {
+        const el = document.getElementById('performanceTimeline');
+        if (!el) return;
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        if (graded.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;">No data</div>'; return; }
+
+        // Group by week
+        const chrono = [...graded].sort((a, b) => new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        const weeks = {};
+        chrono.forEach(p => {
+            const d = new Date(p.locked_at || p.created_at || 0);
+            const weekStart = new Date(d); weekStart.setDate(d.getDate() - d.getDay());
+            const key = weekStart.toISOString().slice(0, 10);
+            if (!weeks[key]) weeks[key] = { wins: 0, losses: 0, units: 0, picks: 0 };
+            weeks[key].picks++;
+            if (p.status === 'won') weeks[key].wins++;
+            else if (p.status === 'lost') weeks[key].losses++;
+            weeks[key].units += pickPL(p);
+        });
+
+        const keys = Object.keys(weeks).sort();
+        if (keys.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;">No data</div>'; return; }
+
+        // Build a simple bar chart
+        let runningUnits = 0;
+        const maxAbs = Math.max(...keys.map(k => { runningUnits += weeks[k].units; return Math.abs(runningUnits); }), 1);
+        runningUnits = 0;
+
+        let html = '<div style="display:flex;align-items:flex-end;gap:4px;height:120px;min-width:' + (keys.length * 36) + 'px;">';
+        keys.forEach(k => {
+            runningUnits += weeks[k].units;
+            const pct = Math.abs(runningUnits) / maxAbs * 100;
+            const c = runningUnits >= 0 ? '#22c55e' : '#ef4444';
+            const bottom = runningUnits >= 0 ? '50%' : (50 - pct / 2) + '%';
+            const dt = new Date(k);
+            const lbl = (dt.getMonth() + 1) + '/' + dt.getDate();
+            html += '<div style="flex:1;min-width:30px;position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;">' +
+                '<div title="Week of ' + k + ': ' + (runningUnits >= 0 ? '+' : '') + runningUnits.toFixed(1) + 'u (' + weeks[k].wins + 'W-' + weeks[k].losses + 'L)" style="width:100%;max-width:28px;height:' + Math.max(pct / 2, 4) + '%;background:' + c + ';border-radius:3px 3px 0 0;cursor:default;"></div>' +
+                '<div style="font-size:0.6rem;color:var(--text-muted);margin-top:4px;white-space:nowrap;">' + lbl + '</div></div>';
+        });
+        html += '</div>';
+        html += '<div style="text-align:right;margin-top:8px;color:var(--text-secondary);font-size:.8rem;">Cumulative: ' + (runningUnits >= 0 ? '+' : '') + runningUnits.toFixed(2) + 'u over ' + keys.length + ' weeks</div>';
+        el.innerHTML = html;
+    }
+
+    // ======================== CAPPERMETRICS - ADVANCED ANALYTICS ========================
+    let currentPeriod = 'all';
+
+    function filterByPeriod(picks, days) {
+        if (days === 'all') return picks;
+        const cutoff = Date.now() - (parseInt(days) * 24 * 60 * 60 * 1000);
+        return picks.filter(p => {
+            const d = new Date(p.locked_at || p.created_at || 0).getTime();
+            return d >= cutoff;
+        });
+    }
+
+    function switchPeriod(period) {
+        currentPeriod = period;
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === period));
+        // Sync the filter period dropdown
+        document.getElementById('filterPeriod').value = period;
+        // Apply all filters together (period + any active pick filters)
+        applyFilters();
+    }
+
+    function computeAdvancedStats(picks) {
+        const graded = picks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const wl = graded.filter(p => p.status === 'won' || p.status === 'lost');
+        const w = wl.filter(p => p.status === 'won').length;
+        const l = wl.filter(p => p.status === 'lost').length;
+        const n = w + l;
+        if (n === 0) return null;
+
+        // Basic
+        const winRate = w / n;
+        let netUnits = 0, totalRisked = 0;
+        graded.forEach(p => { netUnits += pickPL(p); });
+        graded.forEach(p => {
+            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
+            totalRisked += o < 0 ? (u * Math.abs(o) / 100) : u;
+        });
+        const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
+
+        // Average Units Risked (AUR)
+        const aur = graded.length > 0 ? graded.reduce((s, p) => s + (p.units || 1), 0) / graded.length : 1;
+
+        // Effective Units (eU) - normalize all bets to 3 units
+        const eU = aur > 0 ? (netUnits / aur) * 3 : 0;
+
+        // Effective Win% (eWP) - what win% would produce this ROI at -110
+        // At -110: ROI = (WP * 1 - (1-WP) * 1.1) / ((WP * 1.1 + (1-WP) * 1) * ... )
+        // Simplified: eWP = (roi/100 + 1.1) / 2.1 roughly
+        const eWP = Math.min(100, Math.max(0, ((roi / 100 + 1.1) / 2.1) * 100));
+
+        // Average Odds per Pick (AOP)
+        const oddsArr = wl.map(p => p.odds_snapshot || p.odds || -110);
+        const aop = oddsArr.length > 0 ? Math.round(oddsArr.reduce((a, b) => a + b, 0) / oddsArr.length) : -110;
+
+        // Odds-adjusted Z-score: expected wins and variance are summed per pick.
+        const zParts = wl.reduce((acc, p) => {
+            const o = Number(p.odds_snapshot || p.odds || -110);
+            if (!Number.isFinite(o) || o === 0) return acc;
+            const prob = o < 0 ? Math.abs(o) / (Math.abs(o) + 100) : 100 / (o + 100);
+            if (prob <= 0 || prob >= 1) return acc;
+            acc.sample += 1;
+            acc.actual += String(p.status || p.result || '').toLowerCase() === 'won' ? 1 : 0;
+            acc.expected += prob;
+            acc.variance += prob * (1 - prob);
+            return acc;
+        }, { sample: 0, actual: 0, expected: 0, variance: 0 });
+        const zScore = zParts.sample >= 5 && zParts.variance > 0
+            ? (zParts.actual - zParts.expected) / Math.sqrt(zParts.variance)
+            : null;
+        const zScoreForConfidence = zScore == null ? 0 : zScore;
+
+        // Confidence metric (PickMonitor-style)
+        // confidence = prob(z) * r^2 * min(500, n) / 500
+        const probZ = 1 - 0.5 * Math.exp(-0.717 * zScoreForConfidence - 0.416 * zScoreForConfidence * zScoreForConfidence); // approx CDF
+        const rSquared = n > 1 ? 1 - (1 / (1 + (zScoreForConfidence * zScoreForConfidence / n))) : 0;
+        const confidence = Math.max(0, Math.min(100, probZ * rSquared * Math.min(500, n) / 500 * 100));
+
+        // Projected ROI (always less than actual ROI, weighted by confidence)
+        const pROI = roi * (confidence / 100);
+
+        // Sharpe Ratio (returns / std dev of returns)
+        const returns = graded.map(p => pickPL(p));
+        const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+        const variance = returns.reduce((s, r) => s + Math.pow(r - avgReturn, 2), 0) / returns.length;
+        const stdDev = Math.sqrt(variance);
+        const sharpe = stdDev > 0 ? (avgReturn / stdDev) : 0;
+        const grossWon = returns.filter(r => r > 0).reduce((sum, value) => sum + value, 0);
+        const grossLostAbs = Math.abs(returns.filter(r => r < 0).reduce((sum, value) => sum + value, 0));
+        const profitFactorValue = grossLostAbs > 0 ? (grossWon / grossLostAbs) : (grossWon > 0 ? Infinity : 0);
+        const profitFactor = Number.isFinite(profitFactorValue) ? profitFactorValue.toFixed(2) : 'INF';
+        const profitFactorClass = !Number.isFinite(profitFactorValue) || profitFactorValue > 1 ? 'positive' : profitFactorValue < 1 ? 'negative' : 'neutral';
+
+        // Sortino Ratio (only downside deviation)
+        const downReturns = returns.filter(r => r < 0);
+        const downVar = downReturns.length > 0 ? downReturns.reduce((s, r) => s + r * r, 0) / downReturns.length : 0;
+        const downDev = Math.sqrt(downVar);
+        const sortino = downDev > 0 ? (avgReturn / downDev) : 0;
+
+        // Max Drawdown
+        const chrono = [...graded].sort((a, b) => new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        let peak = 0, cumPL = 0, maxDD = 0;
+        const equityPoints = [{ x: 0, y: 0 }];
+        chrono.forEach((p, i) => {
+            cumPL += pickPL(p);
+            equityPoints.push({ x: i + 1, y: cumPL });
+            if (cumPL > peak) peak = cumPL;
+            const dd = peak - cumPL;
+            if (dd > maxDD) maxDD = dd;
+        });
+
+        // Kelly Criterion: f* = (bp - q) / b where b = decimal odds - 1, p = win rate, q = 1 - p
+        const avgDecimal = aop < 0 ? (100 / Math.abs(aop)) + 1 : (aop / 100) + 1;
+        const b = avgDecimal - 1;
+        const kelly = b > 0 ? ((b * winRate - (1 - winRate)) / b) * 100 : 0;
+
+        // Day of week stats
+        const dow = [0, 1, 2, 3, 4, 5, 6].map(day => {
+            const dayPicks = graded.filter(p => {
+                const d = new Date(p.locked_at || p.created_at || 0);
+                return d.getDay() === day;
+            });
+            const dw = dayPicks.filter(p => p.status === 'won').length;
+            const dl = dayPicks.filter(p => p.status === 'lost').length;
+            let du = 0; dayPicks.forEach(p => { du += pickPL(p); });
+            return { day, picks: dayPicks.length, wins: dw, losses: dl, units: du };
+        });
+
+        // Monthly returns
+        const months = {};
+        chrono.forEach(p => {
+            const d = new Date(p.locked_at || p.created_at || 0);
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (!months[key]) months[key] = { wins: 0, losses: 0, pushes: 0, units: 0, picks: 0 };
+            months[key].picks++;
+            if (p.status === 'won') months[key].wins++;
+            else if (p.status === 'lost') months[key].losses++;
+            else months[key].pushes++;
+            months[key].units += pickPL(p);
+        });
+
+        // Sport breakdown with units
+        const sportMap = {};
+        graded.forEach(p => {
+            const sk = p.sport_key || 'unknown';
+            if (!sportMap[sk]) sportMap[sk] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0 };
+            sportMap[sk].picks++;
+            if (p.status === 'won') sportMap[sk].wins++;
+            else if (p.status === 'lost') sportMap[sk].losses++;
+            else sportMap[sk].pushes++;
+            sportMap[sk].units += pickPL(p);
+            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
+            sportMap[sk].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+        });
+
+        // Bet type breakdown with units
+        const typeMap = {};
+        graded.forEach(p => {
+            const mt = p.market_type || 'unknown';
+            const group = getMarketTypeGroup(mt);
+            const label = group ? group.label : marketTypeLabel(mt);
+            if (!typeMap[label]) typeMap[label] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0 };
+            typeMap[label].picks++;
+            if (p.status === 'won') typeMap[label].wins++;
+            else if (p.status === 'lost') typeMap[label].losses++;
+            else typeMap[label].pushes++;
+            typeMap[label].units += pickPL(p);
+            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
+            typeMap[label].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+        });
+
+        return {
+            w, l, n, winRate, netUnits, totalRisked, roi, aur, eU, eWP, aop,
+            zScore, confidence, pROI, sharpe, sortino, maxDD, kelly,
+            equityPoints, dow, months, sportMap, typeMap, graded,
+            profitFactor, profitFactorClass
+        };
+    }
+
+    function renderCapperMetrics(picks) {
+        const section = document.getElementById('capperMetricsSection');
+        const adv = computeAdvancedStats(picks);
+        if (!adv) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+
+        // CapperMetrics cards
+        const grid = document.getElementById('capperMetricsGrid');
+        const fmtPct = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+        const fmtU = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
+        const zCls = adv.zScore > 1.5 ? 'cc-positive' : adv.zScore < -1.5 ? 'cc-negative' : 'cc-neutral';
+        const confCls = adv.confidence > 30 ? 'cc-positive' : adv.confidence > 10 ? 'cc-gold' : 'cc-neutral';
+        const kellyCls = adv.kelly > 0 ? 'cc-positive' : adv.kelly < -5 ? 'cc-negative' : 'cc-neutral';
+
+        grid.innerHTML =
+            cc('Record', adv.w + '-' + adv.l, adv.n + ' graded', '') +
+            cc('Win Rate', adv.winRate.toFixed(1) + '%', 'W / (W+L)', adv.winRate >= 52 ? 'cc-positive' : adv.winRate < 48 ? 'cc-negative' : '') +
+            cc('ROI', fmtPct(adv.roi), 'Return on Investment', adv.roi > 0 ? 'cc-positive' : adv.roi < 0 ? 'cc-negative' : '') +
+            cc('Net Units', fmtU(adv.netUnits), 'Total P/L', adv.netUnits > 0 ? 'cc-positive' : adv.netUnits < 0 ? 'cc-negative' : '') +
+            cc('Eff. Units (eU)', fmtU(adv.eU), 'Normalized to 3u/pick', adv.eU > 0 ? 'cc-positive' : adv.eU < 0 ? 'cc-negative' : '') +
+            cc('Eff. Win% (eWP)', adv.eWP.toFixed(1) + '%', 'Win% equiv at -110', adv.eWP > 52 ? 'cc-positive' : adv.eWP < 48 ? 'cc-negative' : '') +
+            cc('Avg Odds (AOP)', (adv.aop > 0 ? '+' : '') + adv.aop, 'Per pick average', 'cc-blue') +
+            cc('Avg Risked (AUR)', adv.aur.toFixed(2) + 'u', 'Per pick average', '') +
+            cc('Odds-Adjusted Z', adv.zScore == null ? 'N/A' : adv.zScore.toFixed(2), adv.zScore > 2 ? 'Strong skill signal' : adv.zScore > 1 ? 'Possible skill' : 'Inconclusive', zCls) +
+            cc('Confidence', adv.confidence.toFixed(1) + '%', 'Skill probability', confCls) +
+            cc('Projected ROI', fmtPct(adv.pROI), 'Forward-looking estimate', adv.pROI > 0 ? 'cc-positive' : 'cc-negative') +
+            cc('Sharpe Ratio', adv.sharpe.toFixed(3), adv.sharpe > 0.5 ? 'Strong' : adv.sharpe > 0.2 ? 'Moderate' : 'Weak', adv.sharpe > 0.3 ? 'cc-positive' : '') +
+            cc('Sortino Ratio', adv.sortino.toFixed(3), 'Downside-adjusted', adv.sortino > 0.5 ? 'cc-positive' : '') +
+            cc('Max Drawdown', adv.maxDD.toFixed(2) + 'u', 'Peak-to-trough loss', adv.maxDD > 10 ? 'cc-negative' : 'cc-gold') +
+            cc('Kelly %', adv.kelly.toFixed(1) + '%', 'Optimal bet sizing', kellyCls);
+
+        // Equity Curve
+        renderEquityCurve(adv.equityPoints);
+        // Day of Week
+        renderDayOfWeek(adv.dow);
+        // Monthly Returns
+        renderMonthlyReturns(adv.months);
+        // Sport Detail
+        renderDetailBreakdown('sportDetailGrid', adv.sportMap, true);
+        // Bet Type Detail
+        renderDetailBreakdown('betTypeDetailGrid', adv.typeMap, false);
+    }
+
+    function cc(label, value, sub, cls) {
+        return '<div class="capper-card"><div class="cc-label">' + label + '</div><div class="cc-value ' + cls + '">' + value + '</div><div class="cc-sub">' + sub + '</div></div>';
+    }
+
+    function renderEquityCurve(points) {
+        const el = document.getElementById('equityCurve');
+        if (!points || points.length < 2) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">Not enough data</div>'; return; }
+
+        const W = 700, H = 200, pad = { t: 10, r: 20, b: 30, l: 50 };
+        const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+        const maxX = points.length - 1;
+        const ys = points.map(p => p.y);
+        const minY = Math.min(0, ...ys), maxY = Math.max(0, ...ys);
+        const rangeY = maxY - minY || 1;
+
+        const sx = (x) => pad.l + (x / maxX) * iw;
+        const sy = (y) => pad.t + ih - ((y - minY) / rangeY) * ih;
+
+        let pathD = 'M' + sx(0) + ',' + sy(0);
+        let areaD = 'M' + sx(0) + ',' + sy(0);
+        let dots = '';
+        points.forEach((p, i) => {
+            if (i > 0) pathD += ' L' + sx(i) + ',' + sy(p.y);
+            areaD += ' L' + sx(i) + ',' + sy(p.y);
+            dots += '<circle class="eq-dot" cx="' + sx(i) + '" cy="' + sy(p.y) + '" r="3"><title>Pick #' + i + ': ' + (p.y >= 0 ? '+' : '') + p.y.toFixed(2) + 'u</title></circle>';
+        });
+        areaD += ' L' + sx(maxX) + ',' + sy(0) + ' L' + sx(0) + ',' + sy(0) + ' Z';
+
+        // Zero line
+        const zeroY = sy(0);
+
+        // Y axis labels
+        const ySteps = 5;
+        let yLabels = '';
+        for (let i = 0; i <= ySteps; i++) {
+            const v = minY + (rangeY * i / ySteps);
+            const yPos = sy(v);
+            yLabels += '<text x="' + (pad.l - 8) + '" y="' + (yPos + 4) + '" text-anchor="end" fill="#6b7280" font-size="10">' + (v >= 0 ? '+' : '') + v.toFixed(1) + '</text>';
+            yLabels += '<line x1="' + pad.l + '" y1="' + yPos + '" x2="' + (W - pad.r) + '" y2="' + yPos + '" stroke="#1c1f2a" stroke-width="1"/>';
+        }
+
+        el.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;">' +
+            '<defs><linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/></linearGradient></defs>' +
+            yLabels +
+            '<line class="eq-zero" x1="' + pad.l + '" y1="' + zeroY + '" x2="' + (W - pad.r) + '" y2="' + zeroY + '"/>' +
+            '<path class="eq-area" d="' + areaD + '"/>' +
+            '<path class="eq-line" d="' + pathD + '"/>' +
+            dots +
+            '</svg>';
+    }
+
+    function renderDayOfWeek(dow) {
+        const el = document.getElementById('dayOfWeekGrid');
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        el.innerHTML = dow.map((d, i) => {
+            if (d.picks === 0) return '<div class="dow-cell"><div class="dow-label">' + days[i] + '</div><div class="dow-record" style="color:var(--text-muted);">--</div></div>';
+            const wr = (d.wins + d.losses) > 0 ? ((d.wins / (d.wins + d.losses)) * 100).toFixed(0) : '0';
+            const uc = d.units >= 0 ? 'cc-positive' : 'cc-negative';
+            return '<div class="dow-cell"><div class="dow-label">' + days[i] + '</div>' +
+                '<div class="dow-record">' + d.wins + '-' + d.losses + '</div>' +
+                '<div class="dow-units ' + uc + '">' + (d.units >= 0 ? '+' : '') + d.units.toFixed(1) + 'u</div>' +
+                '<div style="font-size:.7rem;color:var(--text-muted);">' + wr + '% (' + d.picks + ')</div></div>';
+        }).join('');
+    }
+
+    function renderMonthlyReturns(months) {
+        const el = document.getElementById('monthlyReturns');
+        const keys = Object.keys(months).sort().reverse();
+        if (keys.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);padding:16px;text-align:center;">No data</div>'; return; }
+
+        let cumUnits = 0;
+        // Calculate cumulative from oldest to newest
+        const sortedKeys = [...keys].reverse();
+        const cumMap = {};
+        sortedKeys.forEach(k => { cumUnits += months[k].units; cumMap[k] = cumUnits; });
+
+        let rows = '';
+        keys.forEach(k => {
+            const m = months[k];
+            const wr = (m.wins + m.losses) > 0 ? ((m.wins / (m.wins + m.losses)) * 100).toFixed(1) : '0.0';
+            const uc = m.units >= 0 ? 'cc-positive' : 'cc-negative';
+            const cc2 = cumMap[k] >= 0 ? 'cc-positive' : 'cc-negative';
+            const d = new Date(k + '-01');
+            const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+            rows += '<tr><td style="font-weight:600;">' + label + '</td><td>' + m.wins + '-' + m.losses + '-' + m.pushes + '</td>' +
+                '<td>' + wr + '%</td><td class="' + uc + '" style="font-weight:700;">' + (m.units >= 0 ? '+' : '') + m.units.toFixed(2) + 'u</td>' +
+                '<td class="' + cc2 + '">' + (cumMap[k] >= 0 ? '+' : '') + cumMap[k].toFixed(2) + 'u</td><td>' + m.picks + '</td></tr>';
+        });
+
+        el.innerHTML = '<table class="monthly-table"><thead><tr><th>Month</th><th>Record</th><th>Win%</th><th>Units</th><th>Cumulative</th><th>Picks</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    function renderDetailBreakdown(containerId, dataMap, isSport) {
+        const el = document.getElementById(containerId);
+        const entries = Object.entries(dataMap).sort((a, b) => b[1].units - a[1].units);
+        if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No data</div>'; return; }
+
+        el.innerHTML = entries.map(([key, d]) => {
+            const label = isSport ? fmtSport(key) : key;
+            const wr = (d.wins + d.losses) > 0 ? ((d.wins / (d.wins + d.losses)) * 100).toFixed(1) : '0.0';
+            const roi = d.risked > 0 ? ((d.units / d.risked) * 100).toFixed(1) : '0.0';
+            const uc = d.units >= 0 ? 'cc-positive' : 'cc-negative';
+            const rc = parseFloat(roi) > 0 ? 'cc-positive' : parseFloat(roi) < 0 ? 'cc-negative' : '';
+            const wrBar = Math.min(100, Math.max(0, parseFloat(wr)));
+
+            return '<div class="sport-detail-card">' +
+                '<div class="sd-header"><span class="sd-name">' + label + '</span><span class="' + uc + '" style="font-weight:800;font-size:1.1rem;">' + (d.units >= 0 ? '+' : '') + d.units.toFixed(2) + 'u</span></div>' +
+                '<div class="sd-row"><span class="sd-label">Record</span><span class="sd-val">' + d.wins + '-' + d.losses + '-' + d.pushes + '</span></div>' +
+                '<div class="sd-row"><span class="sd-label">Win Rate</span><span class="sd-val">' + wr + '%</span></div>' +
+                '<div style="height:4px;background:var(--border-color);border-radius:2px;margin:4px 0;"><div style="height:100%;width:' + wrBar + '%;background:' + (wrBar >= 52 ? 'var(--accent-green)' : wrBar < 48 ? 'var(--accent-red)' : 'var(--accent-blue,#3b82f6)') + ';border-radius:2px;"></div></div>' +
+                '<div class="sd-row"><span class="sd-label">ROI</span><span class="sd-val ' + rc + '">' + (parseFloat(roi) >= 0 ? '+' : '') + roi + '%</span></div>' +
+                '<div class="sd-row"><span class="sd-label">Total Picks</span><span class="sd-val">' + d.picks + '</span></div></div>';
+        }).join('');
+    }
+
+    function bRowExtended(name, record, wr, units, href) {
+        const c = parseFloat(wr) >= 50 ? 'positive' : parseFloat(wr) > 0 ? 'negative' : '';
+        const uc = units >= 0 ? 'positive' : 'negative';
+        const tag = href ? 'a' : 'div';
+        const attr = href ? ' href="' + escapeHtml(href) + '" title="View breakdown" aria-label="View breakdown"' : '';
+        const indicator = href ? '<span class="breakdown-row-indicator">View Breakdown <span aria-hidden="true">&rsaquo;</span></span>' : '';
+        return '<' + tag + ' class="breakdown-row' + (href ? ' is-clickable' : '') + '"' + attr + '><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
+            '<div style="text-align:right;"><div class="breakdown-winrate ' + c + '">' + wr + '%</div>' +
+            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div>' + indicator + '</div></' + tag + '>';
+    }
+
+    function populateFilterDropdowns() {
+        const sportSelect = document.getElementById('filterSport');
+        if (!sportSelect) return;
+        const currentValue = sportSelect.value || '';
+        const sports = new Set();
+        allLoadedPicks.forEach(p => { if (p.sport_key) sports.add(p.sport_key); });
+        if (currentValue) sports.add(currentValue);
+        let opts = '<option value="">All Sports</option>';
+        sports.forEach(sk => { opts += '<option value="' + sk + '">' + fmtSport(sk) + '</option>'; });
+        sportSelect.innerHTML = opts;
+        if (currentValue) sportSelect.value = currentValue;
+    }
+
+    function getAdvancedStatsFilters() {
+        const oddsMap = {
+            'heavy-fav': 'heavy_favorite',
+            'fav': 'favorite',
+            'dog': 'underdog',
+            'longshot': 'big_underdog'
+        };
+        return {
+            sport: document.getElementById('filterSport').value || '',
+            market_type: document.getElementById('filterType').value || '',
+            result: document.getElementById('filterResult').value || '',
+            odds_bucket: oddsMap[document.getElementById('filterOdds').value] || '',
+            period_days: document.getElementById('filterPeriod').value || 'all'
+        };
+    }
+
+    function hasLocalOnlyFiltersActive() {
+        const search = document.getElementById('filterSearch');
+        const units = document.getElementById('filterUnits');
+        const dateFrom = document.getElementById('filterDateFrom');
+        const dateTo = document.getElementById('filterDateTo');
+        const sort = document.getElementById('filterSort');
+        return !!((search && search.value) || (units && units.value) || (dateFrom && dateFrom.value) || (dateTo && dateTo.value) || (sort && sort.value && sort.value !== 'date_desc') || activeQuickFilter);
+    }
+
+    function marketTypeLabel(value) {
+        const key = String(value || '').toLowerCase();
+        return {
+            h2h: 'Moneyline',
+            moneyline: 'Moneyline',
+            first5: 'First 5',
+            spreads: 'Spreads',
+            spread: 'Spreads',
+            totals: 'Totals',
+            total: 'Totals',
+            team_totals: 'Team Totals',
+            first_half: 'First Half',
+            second_half: 'Second Half',
+            period_1: '1st Period',
+            alt_lines: 'Alt Lines',
+            f5_h2h: 'First 5 ML',
+            f5_spreads: 'First 5 Spread',
+            f5_totals: 'First 5 Totals',
+            first_half_h2h: 'First Half ML',
+            first_half_spreads: 'First Half Spread',
+            first_half_totals: 'First Half Totals',
+            second_half_h2h: 'Second Half ML',
+            second_half_spreads: 'Second Half Spread',
+            second_half_totals: 'Second Half Totals',
+            period_1_h2h: '1st Period ML',
+            period_1_spreads: '1st Period Spread',
+            period_1_totals: '1st Period Totals',
+            alt_spreads: 'Alt Spreads',
+            alt_totals: 'Alt Totals'
+        }[key] || String(value || 'Bet Type').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function oddsBucketLabel(value) {
+        return {
+            heavy_favorite: 'Heavy Fav (-200+)',
+            favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
+            big_underdog: 'Longshot (+201+)',
+            even: 'Even',
+            even_money: 'Even'
+        }[value] || (window.TMR_BUCKET_LABELS ? window.TMR_BUCKET_LABELS.format('odds_bucket', value) : value) || 'Odds Range';
+    }
+
+    function filterTypeLabel(value) {
+        const labels = {
+            'h2h,moneyline': 'Moneyline',
+            'spreads,spread': 'Spreads',
+            'totals,total': 'Totals',
+            'team_totals': 'Team Totals',
+            'f5_h2h,f5_spreads,f5_totals': 'First 5',
+            'first_half_h2h,first_half_spreads,first_half_totals': 'First Half',
+            'second_half_h2h,second_half_spreads,second_half_totals': 'Second Half',
+            'period_1_h2h,period_1_spreads,period_1_totals': '1st Period',
+            'alt_spreads,alt_totals': 'Alt Lines'
+        };
+        return labels[value] || value;
+    }
+
+    function sortLabel(value) {
+        return {
+            'date_desc': 'Newest first',
+            'date_asc': 'Oldest first',
+            'units_desc': 'Highest units',
+            'units_asc': 'Lowest units',
+            'odds_desc': 'Highest odds',
+            'odds_asc': 'Lowest odds',
+            'net_units_desc': 'Best net units',
+            'net_units_asc': 'Worst net units',
+            'clv_desc': 'Best CLV',
+            'clv_asc': 'Worst CLV',
+            'market_asc': 'Market A-Z',
+            'market_desc': 'Market Z-A',
+            'sport_asc': 'Sport A-Z',
+            'sport_desc': 'Sport Z-A',
+            'line_desc': 'Highest line',
+            'line_asc': 'Lowest line',
+            'closing_line_desc': 'Highest closing line',
+            'closing_line_asc': 'Lowest closing line',
+            'book_asc': 'Book A-Z',
+            'book_desc': 'Book Z-A',
+            'status_asc': 'Status A-Z',
+            'status_desc': 'Status Z-A',
+            'result_desc': 'Best result',
+            'result_asc': 'Worst result'
+        }[value] || 'Newest first';
+    }
+
+    let teamSortInited = false;
+    async function refreshAdvancedBreakdowns() {
+        // Performance by Team is backend-sourced and filter-independent; load it
+        // on every refresh regardless of which advanced-stats branch runs.
+        if (!teamSortInited) { initTeamBreakdownSort(); teamSortInited = true; }
+        loadTeamBreakdown();
+        loadDepthBreakdowns();
+        if (!profileUsername || !api || typeof api.getUserAdvancedStats !== 'function') {
+            await loadSportBreakdown();
+            renderBetTypeBreakdownFromPicks();
+            renderOddsRangeBreakdown();
+            renderRecentForm();
+            return;
+        }
+
+        if (hasLocalOnlyFiltersActive()) {
+            latestAdvancedStats = null;
+            renderSportGridFromPicks(getFilteredPicks());
+            renderBetTypeBreakdownFromPicks();
+            renderOddsRangeBreakdown();
+            renderRecentForm();
+            return;
+        }
+
+        try {
+            const data = await api.getUserAdvancedStats(profileUsername, getAdvancedStatsFilters());
+            latestAdvancedStats = data;
+            const filtered = getFilteredPicks();
+            const stats = computeUnifiedStats(filtered);
+            renderSummaryBar(stats);
+            renderAnalytics(stats, filtered);
+            renderSportGrid(data.bySport || []);
+            renderMarketGrid(data.byMarket || []);
+            renderOddsBucketGrid(data.byOddsBucket || []);
+            renderRecentFormFromAdvanced(data.recentForm || []);
+        } catch (error) {
+            console.error('[Profile] Advanced stats refresh failed:', error);
+            latestAdvancedStats = null;
+            await loadSportBreakdown();
+            renderBetTypeBreakdownFromPicks();
+            renderOddsRangeBreakdown();
+            renderRecentForm();
+        }
+    }
+
+    let activeQuickFilter = null; // 'fav' or 'dog' or null
+
+    function toggleQuickFilter(which) {
+        if (activeQuickFilter === which) {
+            activeQuickFilter = null;
+        } else {
+            activeQuickFilter = which;
+        }
+        document.getElementById('btnFavOnly').style.background = activeQuickFilter === 'fav' ? 'var(--accent-blue)' : '';
+        document.getElementById('btnFavOnly').style.color = activeQuickFilter === 'fav' ? '#fff' : '';
+        document.getElementById('btnDogOnly').style.background = activeQuickFilter === 'dog' ? 'var(--accent-green)' : '';
+        document.getElementById('btnDogOnly').style.color = activeQuickFilter === 'dog' ? '#fff' : '';
+        analyticsTrack('profile_quick_filter_toggled', {
+            username: profileUsername || '',
+            filter_name: which,
+            filter_state: activeQuickFilter || 'off'
+        });
+        applyFilters();
+    }
+
+    function getFilteredPicks() {
+        const search = document.getElementById('filterSearch').value.trim().toLowerCase();
+        const sport = document.getElementById('filterSport').value;
+        const type = document.getElementById('filterType').value;
+        const result = document.getElementById('filterResult').value;
+        const odds = document.getElementById('filterOdds').value;
+        const units = document.getElementById('filterUnits').value;
+        const period = document.getElementById('filterPeriod').value;
+        const dateFrom = document.getElementById('filterDateFrom').value;
+        const dateTo = document.getElementById('filterDateTo').value;
+        const sort = document.getElementById('filterSort').value || currentTableSort || 'date_desc';
+        currentTableSort = sort;
+
+        let filtered = [...allLoadedPicks];
+
+        // Time period filter
+        if (period && period !== 'all') {
+            filtered = filterByPeriod(filtered, period);
+        }
+
+        if (dateFrom) {
+            const from = new Date(dateFrom + 'T00:00:00').getTime();
+            filtered = filtered.filter(p => getPickTimestamp(p) >= from);
+        }
+        if (dateTo) {
+            const to = new Date(dateTo + 'T23:59:59').getTime();
+            filtered = filtered.filter(p => getPickTimestamp(p) <= to);
+        }
+
+        if (sport) filtered = filtered.filter(p => p.sport_key === sport);
+        if (type) { const types = type.split(','); filtered = filtered.filter(p => types.includes(p.market_type)); }
+        if (result) filtered = filtered.filter(p => p.status === result || (result === 'push' && p.status === 'pushed'));
+        if (search) {
+            filtered = filtered.filter(function(p) {
+                return [
+                    p.away_team,
+                    p.home_team,
+                    p.event_name,
+                    p.selection,
+                    p.notes,
+                    p.market_type,
+                    p.book,
+                    p.sportsbook,
+                    p.sportsbook_name
+                ].some(function(value) {
+                    return String(value || '').toLowerCase().includes(search);
+                });
+            });
+        }
+        if (odds) {
+            filtered = filtered.filter(p => {
+                const o = p.odds_snapshot || p.odds || -110;
+                if (odds === 'heavy-fav') return o <= -200;
+                if (odds === 'fav') return o < 0 && o >= -200;
+                if (odds === 'dog') return o >= 100 && o <= 200;
+                if (odds === 'longshot') return o >= 201;
+                return true;
+            });
+        }
+        if (units) {
+            filtered = filtered.filter(p => {
+                const u = Number(p.units || 0);
+                if (units === '0-1') return u > 0 && u <= 1;
+                if (units === '1.5-2') return u >= 1.5 && u <= 2;
+                if (units === '2.5-3') return u >= 2.5 && u <= 3;
+                if (units === '3plus') return u >= 3;
+                return true;
+            });
+        }
+
+        // Quick filter: favorites/underdogs
+        if (activeQuickFilter === 'fav') {
+            filtered = filtered.filter(p => { const o = p.odds_snapshot || p.odds || -110; return o < 0; });
+        } else if (activeQuickFilter === 'dog') {
+            filtered = filtered.filter(p => { const o = p.odds_snapshot || p.odds || -110; return o > 0; });
+        }
+
+        filtered.sort(function(a, b) {
+            const [sortKey, sortDirection = 'desc'] = String(sort).split('_');
+            const direction = sortDirection === 'asc' ? 1 : -1;
+            const resultRank = { won: 3, push: 2, pending: 1, lost: 0 };
+            const aStatus = normalizeStatus(a.status);
+            const bStatus = normalizeStatus(b.status);
+            const aValue = {
+                date: getPickTimestamp(a),
+                sport: fmtSport(a.sport_key || ''),
+                market: marketTypeLabel(a.market_type || ''),
+                line: Number(a.line_snapshot || 0),
+                odds: Number(a.odds_snapshot || a.odds || -110),
+                units: Number(a.units || 0),
+                result: resultRank[aStatus] || 0,
+                net: pickPL(a),
+                net_units: pickPL(a),
+                closing: Number(getClosingLineValue(a) || 0),
+                closing_line: Number(getClosingLineValue(a) || 0),
+                clv: Number(calculatePickClv(a) || 0),
+                book: deriveBookName(a),
+                status: aStatus
+            };
+            const bValue = {
+                date: getPickTimestamp(b),
+                sport: fmtSport(b.sport_key || ''),
+                market: marketTypeLabel(b.market_type || ''),
+                line: Number(b.line_snapshot || 0),
+                odds: Number(b.odds_snapshot || b.odds || -110),
+                units: Number(b.units || 0),
+                result: resultRank[bStatus] || 0,
+                net: pickPL(b),
+                net_units: pickPL(b),
+                closing: Number(getClosingLineValue(b) || 0),
+                closing_line: Number(getClosingLineValue(b) || 0),
+                clv: Number(calculatePickClv(b) || 0),
+                book: deriveBookName(b),
+                status: bStatus
+            };
+            const left = aValue[sortKey];
+            const right = bValue[sortKey];
+
+            if (typeof left === 'string' || typeof right === 'string') {
+                const compare = String(left || '').localeCompare(String(right || ''));
+                if (compare !== 0) return compare * direction;
+            } else if (left !== right) {
+                return ((left || 0) - (right || 0)) * direction;
+            }
+            return getPickTimestamp(b) - getPickTimestamp(a);
+        });
+
+        return filtered;
+    }
+
+    function applyFilters() {
+        const filtered = getFilteredPicks();
+
+        // Check if any filter is active
+        const search = document.getElementById('filterSearch').value;
+        const sport = document.getElementById('filterSport').value;
+        const type = document.getElementById('filterType').value;
+        const result = document.getElementById('filterResult').value;
+        const odds = document.getElementById('filterOdds').value;
+        const units = document.getElementById('filterUnits').value;
+        const period = document.getElementById('filterPeriod').value;
+        const dateFrom = document.getElementById('filterDateFrom').value;
+        const dateTo = document.getElementById('filterDateTo').value;
+        const sort = document.getElementById('filterSort').value || 'date_desc';
+        const hasFilter = search || sport || type || result || odds || units || dateFrom || dateTo || (period && period !== 'all') || activeQuickFilter || sort !== 'date_desc';
+        const filterState = getActiveFilterState();
+        currentTablePage = 1;
+        const statusEl = document.getElementById('ledgerFilterStatus');
+
+        // Update filter banner (FIX 5)
+        const banner = document.getElementById('filterBanner');
+        if (hasFilter) {
+            const parts = [];
+            if (search) parts.push('Search: ' + search);
+            if (sport) parts.push(fmtSport(sport));
+            if (type) {
+                parts.push(filterTypeLabel(type));
+            }
+            if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
+            if (odds) {
+                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'dog': 'Dogs', 'longshot': 'Longshots' };
+                parts.push(oddsLabels[odds] || odds);
+            }
+            if (units) {
+                const unitLabels = { '0-1': '0.5u to 1u', '1.5-2': '1.5u to 2u', '2.5-3': '2.5u to 3u', '3plus': '3u and up' };
+                parts.push(unitLabels[units] || units);
+            }
+            if (period && period !== 'all') {
+                const periodLabels = { '7': 'Last 7 Days', '30': 'Last 30 Days', '90': 'Last 90 Days', '365': 'Last Year' };
+                parts.push(periodLabels[period] || period);
+            }
+            if (dateFrom) parts.push('From ' + dateFrom);
+            if (dateTo) parts.push('To ' + dateTo);
+            if (sort && sort !== 'date_desc') parts.push(sortLabel(sort));
+            if (activeQuickFilter === 'fav') parts.push('Favorites Only');
+            if (activeQuickFilter === 'dog') parts.push('Underdogs Only');
+            document.getElementById('filterBannerText').textContent = 'Active filters: ' + parts.join(' | ') + ' | ' + filtered.length + ' picks shown';
+            if (statusEl) statusEl.textContent = parts.length + ' filter' + (parts.length === 1 ? '' : 's') + ' active';
+            banner.style.display = 'flex';
+        } else {
+            if (statusEl) statusEl.textContent = 'All picks shown';
+            banner.style.display = 'none';
+        }
+
+        // Update filter results text
+        const el = document.getElementById('filterResults');
+        const graded = filtered.filter(p => p.status === 'won' || p.status === 'lost');
+        const w = graded.filter(p => p.status === 'won').length;
+        const l = graded.filter(p => p.status === 'lost').length;
+        const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+        let netUnitsFiltered = 0;
+        graded.forEach(p => { netUnitsFiltered += pickPL(p); });
+        el.textContent = 'Visible record: ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% win rate | ' + (netUnitsFiltered >= 0 ? '+' : '') + netUnitsFiltered.toFixed(2) + 'u';
+
+        // Update picks table
+        renderPicksTable(filtered);
+
+        // FIX 4: Update ALL analytics sections with filtered data
+        const stats = computeUnifiedStats(filtered);
+        renderSummaryBar(stats);
+        renderAnalytics(stats, filtered);
+        renderCapperMetrics(filtered);
+        refreshAdvancedBreakdowns();
+
+        // Sync time period buttons with filter dropdown
+        if (document.getElementById('filterPeriod').value !== 'all') {
+            currentPeriod = document.getElementById('filterPeriod').value;
+        } else if (!hasFilter) {
+            currentPeriod = 'all';
+        }
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === currentPeriod));
+
+        analyticsTrack('profile_filters_applied', {
+            ...filterState,
+            filtered_count: filtered.length,
+            has_filter: !!hasFilter
+        });
+    }
+
+    function clearFilters() {
+        const previousFilterState = getActiveFilterState();
+        document.getElementById('filterSearch').value = '';
+        document.getElementById('filterSport').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterResult').value = '';
+        document.getElementById('filterOdds').value = '';
+        document.getElementById('filterUnits').value = '';
+        document.getElementById('filterPeriod').value = 'all';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        document.getElementById('filterSort').value = 'date_desc';
+        activeQuickFilter = null;
+        currentTableSort = 'date_desc';
+        currentTablePage = 1;
+        document.getElementById('btnFavOnly').style.background = '';
+        document.getElementById('btnFavOnly').style.color = '';
+        document.getElementById('btnDogOnly').style.background = '';
+        document.getElementById('btnDogOnly').style.color = '';
+        document.getElementById('filterResults').textContent = '';
+        document.getElementById('filterBanner').style.display = 'none';
+        currentPeriod = 'all';
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === 'all'));
+
+        // Reset all sections to full data
+        const stats = computeUnifiedStats(allLoadedPicks);
+        renderSummaryBar(stats);
+        renderAnalytics(stats, allLoadedPicks);
+        renderPicksTable(allLoadedPicks);
+        renderCapperMetrics(allLoadedPicks);
+        refreshAdvancedBreakdowns();
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.has('sport') || params.has('league')) {
+                params.delete('sport');
+                params.delete('league');
+                const query = params.toString();
+                history.pushState(null, '', window.location.pathname + (query ? '?' + query : ''));
+            }
+        } catch (e) {}
+        analyticsTrack('profile_filters_cleared', {
+            username: profileUsername || '',
+            previous_filters: JSON.stringify(previousFilterState)
+        });
+    }
+
+    function ac(label, value, cls) {
+        return '<div class="analytics-card"><div class="analytics-card-label">' + label + '</div><div class="analytics-card-value ' + cls + '">' + value + '</div></div>';
+    }
+
+    function bRow(name, record, wr) {
+        const c = parseFloat(wr) >= 50 ? 'positive' : parseFloat(wr) > 0 ? 'negative' : '';
+        return '<div class="breakdown-row"><div><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div><div class="breakdown-winrate ' + c + '">' + wr + '%</div></div>';
+    }
+
+    // ======================== SPORT BREAKDOWN ========================
+    async function loadSportBreakdown() {
+        const grid = document.getElementById('sportBreakdownGrid');
+        if (!grid) return;
+        try {
+            const data = await api.request('/users/' + profileUsername + '/stats/sports');
+            renderSportGrid(data.sportStats || []);
+        } catch (e) {
+            // Fallback from picks
+            const sm = {};
+            allLoadedPicks.forEach(p => {
+                const sk = p.sport_key || 'unknown';
+                if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0, net_units: 0 };
+                sm[sk].total_picks++;
+                if (p.status === 'won') sm[sk].wins++;
+                else if (p.status === 'lost') sm[sk].losses++;
+                else if (p.status === 'push' || p.status === 'pushed') sm[sk].pushes++;
+                sm[sk].net_units += pickPL(p);
+            });
+            renderSportGrid(Object.values(sm));
+        }
+    }
+
+    function renderSportGridFromPicks(picksArr) {
+        const sm = {};
+        (picksArr || []).forEach(function(p) {
+            const sk = p.sport_key || 'unknown';
+            if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0, net_units: 0 };
+            sm[sk].total_picks++;
+            if (p.status === 'won') sm[sk].wins++;
+            else if (p.status === 'lost') sm[sk].losses++;
+            else if (p.status === 'push' || p.status === 'pushed') sm[sk].pushes++;
+            sm[sk].net_units += pickPL(p);
+        });
+        renderSportGrid(Object.values(sm));
+    }
+
+    function renderMarketGrid(stats) {
+        const g = document.getElementById('betTypeGrid');
+        if (!g) return;
+        if (!stats || stats.length === 0) { g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>'; return; }
+        g.innerHTML = stats.map(i => {
+            const w = Number(i.wins) || 0, l = Number(i.losses) || 0, p = Number(i.pushes) || 0;
+            const t = Number(i.total_picks) || (w + l + p);
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            const units = Number(i.net_units) || 0;
+            return bRowExtended(marketTypeLabel(i.market_type), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
+        }).join('');
+    }
+
+    function renderBetTypeBreakdownFromPicks(picksArr) {
+        const groups = buildMarketTypeBreakdown(picksArr || getFilteredPicks()).map(group => ({
+            market_type: group.key,
+            wins: group.wins,
+            losses: group.losses,
+            pushes: group.pushes,
+            total_picks: group.total,
+            net_units: group.netUnits
+        }));
+        renderMarketGrid(groups);
+    }
+
+    function renderOddsBucketGrid(stats) {
+        const g = document.getElementById('oddsRangeGrid');
+        if (!g) return;
+        if (!stats || stats.length === 0) { g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>'; return; }
+        g.innerHTML = stats.map(i => {
+            const w = Number(i.wins) || 0, l = Number(i.losses) || 0, p = Number(i.pushes) || 0;
+            const t = Number(i.total_picks) || (w + l + p);
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            const units = Number(i.net_units) || 0;
+            return bRowExtended(oddsBucketLabel(i.odds_bucket), w + '-' + l + '-' + p + ' (' + t + ')', wr, units);
+        }).join('');
+    }
+
+    function renderRecentFormFromAdvanced(rows) {
+        const g = document.getElementById('recentFormGrid');
+        if (!g) return;
+        if (!rows || rows.length === 0) {
+            g.innerHTML = '<div style="color:var(--text-muted);padding:8px;">No graded picks yet</div>';
+            return;
+        }
+        g.innerHTML = rows.map(p => {
+            const status = p.status === 'pushed' ? 'push' : p.status;
+            const c = status === 'won' ? '#22c55e' : status === 'lost' ? '#ef4444' : '#6b7280';
+            const l = status === 'won' ? 'W' : status === 'lost' ? 'L' : 'P';
+            const tip = marketTypeLabel(p.market_type) + ': ' + formatPickDisplayValue(p) + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
+        }).join('');
+    }
+
+    function renderSportGrid(stats) {
+        const g = document.getElementById('sportBreakdownGrid');
+        if (!stats || stats.length === 0) { g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>'; return; }
+        g.innerHTML = stats.map(i => {
+            const w = Number(i.wins) || 0, l = Number(i.losses) || 0, p = Number(i.pushes) || 0;
+            const t = Number(i.total_picks) || (w + l + p);
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            const units = Number(i.net_units || i.units || 0);
+            const sportKey = String(i.sport_key || '').trim();
+            const sportLabel = fmtSport(sportKey);
+            return bRowExtended(escapeHtml(sportLabel), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileSportBreakdownUrl(sportKey));
+        }).join('');
+    }
+
+    // ======================== PERFORMANCE BY TEAM ========================
+    // Source of truth: backend `team` breakdown category (bucket = "sportKey|team").
+    // Settled-only aggregate; totals/props/futures never appear (backend derivation).
+    let teamBreakdownRows = [];
+    let teamSort = { key: 'units', dir: 'desc' };
+
+    // sport_key -> [sport, league] so the stats table can filter on each
+    // independently ("Soccer" vs "FIFA World Cup"). Unknown keys fall back to
+    // splitting at the first underscore.
+    const TMRX_SPORT_KEY_MAP = {
+        americanfootball_nfl: ['Football', 'NFL'], americanfootball_ncaaf: ['Football', 'NCAAF'],
+        basketball_nba: ['Basketball', 'NBA'], basketball_nba_summer: ['Basketball', 'NBA Summer League'],
+        basketball_wnba: ['Basketball', 'WNBA'], basketball_ncaab: ['Basketball', 'NCAAB'],
+        baseball_mlb: ['Baseball', 'MLB'], baseball_npb: ['Baseball', 'Japan NPB', 'NPB'], icehockey_nhl: ['Hockey', 'NHL'],
+        soccer_epl: ['Soccer', 'EPL'], soccer_usa_mls: ['Soccer', 'MLS']
+    };
+    const TMRX_SPORT_PREFIX = {
+        americanfootball: 'Football', basketball: 'Basketball', baseball: 'Baseball',
+        icehockey: 'Hockey', soccer: 'Soccer', mma: 'MMA', boxing: 'Boxing',
+        tennis: 'Tennis', golf: 'Golf', cricket: 'Cricket', rugbyleague: 'Rugby',
+        rugbyunion: 'Rugby', aussierules: 'Aussie Rules'
+    };
+    const TMRX_WORD_CASE = { fifa: 'FIFA', uefa: 'UEFA', mls: 'MLS', epl: 'EPL', usa: 'USA', intl: "Int'l", ncaa: 'NCAA', wc: 'WC' };
+    function tmrxTitleize(v) {
+        return String(v || '').split('_').filter(Boolean).map(function (w) {
+            return TMRX_WORD_CASE[w] || (w.charAt(0).toUpperCase() + w.slice(1));
+        }).join(' ');
+    }
+    function tmrxSportParts(sportKey) {
+        const key = String(sportKey || '').trim().toLowerCase();
+        if (TMRX_SPORT_KEY_MAP[key]) return TMRX_SPORT_KEY_MAP[key];
+        if (!key) return ['Other', 'Other'];
+        const i = key.indexOf('_');
+        const prefix = i > 0 ? key.slice(0, i) : key;
+        const rest = i > 0 ? key.slice(i + 1) : '';
+        const sport = TMRX_SPORT_PREFIX[prefix] || tmrxTitleize(prefix);
+        const league = rest ? (rest.length <= 5 && rest.indexOf('_') < 0 ? rest.toUpperCase() : tmrxTitleize(rest)) : sport;
+        return [sport || 'Other', league || 'Other'];
+    }
+
+    /* ---- DEPTH PANELS (2026-08-15) --------------------------------------
+       Home/away, over/under, prop stat, bet timing, day vs night, teams faded,
+       exact line number, month and season. All nine come from
+       user_stat_breakdowns in ONE request; each renders into the same
+       .tmrx-table markup the panels above it use, and a panel with no rows
+       stays hidden rather than showing an empty shell. Nothing here computes a
+       record - it renders what the aggregator already counted. */
+    const TMRX_DEPTH_CATEGORIES = [
+        'home_away', 'home_away_sport', 'side_total', 'prop_type', 'bet_timing',
+        'daypart', 'opponent', 'line_number', 'month', 'season', 'team_market'
+    ];
+    const TMRX_DEPTH_LABELS = {
+        home: 'Home side', away: 'Away side',
+        over: 'Over', under: 'Under',
+        day: 'Day games (before 5 PM ET)', night: 'Night games (5 PM ET on)',
+        under_1h: 'Under 1 hour out', '1_to_6h': '1 – 6 hours out',
+        '6_to_24h': '6 – 24 hours out', '24h_plus': 'A day or more out',
+        strikeouts: 'Strikeouts', hits_allowed: 'Hits allowed', pitcher_walks: 'Walks',
+        earned_runs: 'Earned runs', outs: 'Outs recorded', hits: 'Hits',
+        total_bases: 'Total bases', rbi: 'RBI', runs: 'Runs', home_runs: 'Home runs',
+        spread: 'Spread', total: 'Total', team_total: 'Team total', first_five: 'First five',
+        moneyline: 'Moneyline', player_props: 'Player props',
+        team_total_over: 'Team total Over', team_total_under: 'Team total Under',
+        game_total_over: 'Game total Over', game_total_under: 'Game total Under'
+    };
+    /* Bet timing reads as a sequence, not a leaderboard - keep it in clock
+       order however the buckets happen to sort by net units. */
+    const TMRX_DEPTH_ORDER = {
+        bet_timing: ['24h_plus', '6_to_24h', '1_to_6h', 'under_1h'],
+        daypart: ['day', 'night'],
+        home_away: ['home', 'away'],
+        side_total: ['over', 'under']
+    };
+
+    function tmrxDepthLabel(value) {
+        const key = String(value == null ? '' : value).toLowerCase();
+        if (TMRX_DEPTH_LABELS[key]) return TMRX_DEPTH_LABELS[key];
+        return String(value || '—').replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    }
+
+    /* "2026-08" -> "August 2026". Parsed as a plain date string, never through
+       the visitor's clock, so the month can never slip by a timezone. */
+    function tmrxMonthLabel(value) {
+        const m = /^(\d{4})-(\d{2})$/.exec(String(value || ''));
+        if (!m) return String(value || '—');
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+        const idx = Number(m[2]) - 1;
+        return (MONTHS[idx] || m[2]) + ' ' + m[1];
+    }
+
+    /* Line-number buckets arrive as `sport|market|number` and render as
+       "Spread -1.5" so the number itself is the row, exactly as it was bet. */
+    function tmrxLineNumberLabel(rest) {
+        const parts = String(rest || '').split('|');
+        if (parts.length < 2) return tmrxDepthLabel(rest);
+        const market = tmrxDepthLabel(parts[0]);
+        const number = parts.slice(1).join('|').replace(/\b(over|under)\b/i, function (w) {
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        });
+        return market + ' ' + number;
+    }
+
+    /* Same signed formatting the other tmrx tables use (+1.25u / -3.40%);
+       their own fmtSigned lives inside the render closures, so this block
+       carries its own copy rather than reaching into one of them. */
+    function tmrxDepthSigned(value, suffix, decimals) {
+        const n = Number(value) || 0;
+        const d = decimals == null ? 2 : decimals;
+        return (n > 0 ? '+' : '') + n.toFixed(d) + (suffix || '');
+    }
+
+    function tmrxDepthRow(row, labelCells) {
+        const w = Number(row.wins) || 0, l = Number(row.losses) || 0, p = Number(row.pushes) || 0;
+        const dec = w + l;
+        const winPct = dec > 0 ? (w / dec) * 100 : 0;
+        const winCls = dec > 0 ? (winPct >= 50 ? 'pos' : 'neg') : 'zero';
+        const net = Number(row.net_units) || 0;
+        const wagered = Number(row.total_units_wagered) || 0;
+        const roi = Number(row.roi) || (wagered > 0 ? (net / wagered) * 100 : 0);
+        const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
+        const roiCls = roi > 0 ? 'pos' : roi < 0 ? 'neg' : 'zero';
+        return '<tr>' + labelCells.join('') +
+            '<td class="num">' + (Number(row.total_picks) || dec + p) + '</td>' +
+            '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>' +
+            '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>' +
+            '<td class="num ' + netCls + '">' + tmrxDepthSigned(net, 'u', 2) + '</td>' +
+            '<td class="num ' + roiCls + '">' + tmrxDepthSigned(roi, '%', 2) + '</td>' +
+            '</tr>';
+    }
+
+    /* One table + the section that owns it. Empty data leaves the section
+       hidden: an "Over vs Under" panel on a record with no totals is noise. */
+    function tmrxRenderDepthTable(tableId, sectionId, rows, opts) {
+        const table = document.getElementById(tableId);
+        const section = sectionId ? document.getElementById(sectionId) : null;
+        if (!table) return false;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return false;
+        opts = opts || {};
+        const list = (Array.isArray(rows) ? rows : []).slice();
+        if (!list.length) return false;
+
+        if (opts.order) {
+            list.sort(function (a, b) {
+                const ai = opts.order.indexOf(String(a.bucket));
+                const bi = opts.order.indexOf(String(b.bucket));
+                return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+            });
+        } else if (opts.sort === 'bucket_desc') {
+            list.sort(function (a, b) { return String(b.bucket).localeCompare(String(a.bucket)); });
+        } else {
+            list.sort(function (a, b) { return (Number(b.net_units) || 0) - (Number(a.net_units) || 0); });
+        }
+        if (opts.limit) list.length = Math.min(list.length, opts.limit);
+
+        tbody.innerHTML = list.map(function (row) {
+            return tmrxDepthRow(row, opts.labelCells(row));
+        }).join('');
+        if (section) section.hidden = false;
+        return true;
+    }
+
+    /* Team splits arrive flat as `sport|Team|market`. They are grouped so every
+       market for one club sits together instead of clubs interleaving by net
+       units, clubs ordered by how much was bet on them, and the markets inside
+       a club held in a fixed reading order rather than sorted by result. */
+    const TMRX_TEAM_MARKET_ORDER = ['moneyline', 'spread', 'team_total_over',
+        'team_total_under', 'game_total_over', 'game_total_under',
+        'first_five', 'player_props'];
+    const TMRX_TEAM_MARKET_LIMIT = 12;
+
+    function tmrxRenderTeamMarket(rows) {
+        const table = document.getElementById('tmrxTableTeamMarketTop');
+        const section = document.getElementById('tmrxTeamMarketSection');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) return;
+
+        const clubs = new Map();
+        list.forEach(function (row) {
+            const parts = String(row.bucket || '').split('|');
+            if (parts.length < 3) return;
+            const key = parts[0] + '|' + parts[1];
+            const entry = clubs.get(key) ||
+                { sportKey: parts[0], team: parts[1], picks: 0, markets: [] };
+            entry.picks += Number(row.total_picks) || 0;
+            entry.markets.push({ market: parts.slice(2).join('|'), row: row });
+            clubs.set(key, entry);
+        });
+
+        const ordered = Array.from(clubs.values())
+            .sort(function (a, b) { return b.picks - a.picks; })
+            .slice(0, TMRX_TEAM_MARKET_LIMIT);
+        if (!ordered.length) return;
+
+        const html = [];
+        ordered.forEach(function (entry) {
+            entry.markets.sort(function (a, b) {
+                const ai = TMRX_TEAM_MARKET_ORDER.indexOf(a.market);
+                const bi = TMRX_TEAM_MARKET_ORDER.indexOf(b.market);
+                return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+            });
+            const sport = tmrxSportParts(entry.sportKey);
+            entry.markets.forEach(function (item, i) {
+                /* The club is named once per group; its remaining market rows
+                   sit under it, so the block reads as one team. */
+                const head = i === 0
+                    ? '<td class="name"><span class="tmr-tl-row">' + tmrxTeamLogoHtml(entry.team) +
+                      '<span class="tmr-tl-row-name">' + escapeHtml(entry.team) + '</span></span></td>' +
+                      '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                    : '<td class="name"></td><td class="league"></td>';
+                html.push(tmrxDepthRow(item.row, [head,
+                    '<td>' + escapeHtml(tmrxDepthLabel(item.market)) + '</td>']));
+            });
+        });
+        tbody.innerHTML = html.join('');
+        if (section) section.hidden = false;
+    }
+
+    /* `sport_key|value` buckets: the team panel's own encoding, reused so a
+       club or a number never merges across leagues. */
+    function tmrxSplitScoped(bucket) {
+        const raw = String(bucket || '');
+        const sep = raw.indexOf('|');
+        return sep < 0
+            ? { sportKey: '', rest: raw }
+            : { sportKey: raw.slice(0, sep), rest: raw.slice(sep + 1) };
+    }
+
+    /* Home/away split by league. Buckets arrive flat as `sport_key|home` and
+       `sport_key|away`; they are grouped so both sides of one league sit
+       together, leagues ordered by how many qualifying picks they hold, and the
+       sides held in a fixed home then away order rather than sorted by result.
+       Nothing is recomputed here: these are the aggregator's own counts, and a
+       league with no qualifying pick simply has no row. */
+    function tmrxRenderHomeAwaySport(rows) {
+        const table = document.getElementById('tmrxTableHomeAwaySport');
+        const section = document.getElementById('tmrxHomeAwaySportSection');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) return;
+
+        const leagues = new Map();
+        list.forEach(function (row) {
+            const parts = tmrxSplitScoped(row.bucket);
+            const side = String(parts.rest || '').toLowerCase();
+            if (side !== 'home' && side !== 'away') return;
+            const entry = leagues.get(parts.sportKey) ||
+                { sportKey: parts.sportKey, picks: 0, sides: [] };
+            entry.picks += Number(row.total_picks) || 0;
+            entry.sides.push({ side: side, row: row });
+            leagues.set(parts.sportKey, entry);
+        });
+
+        const ordered = Array.from(leagues.values())
+            .sort(function (a, b) { return b.picks - a.picks; });
+        if (!ordered.length) return;
+
+        const html = [];
+        ordered.forEach(function (entry) {
+            entry.sides.sort(function (a, b) {
+                return (a.side === 'home' ? 0 : 1) - (b.side === 'home' ? 0 : 1);
+            });
+            const sport = tmrxSportParts(entry.sportKey);
+            entry.sides.forEach(function (item, i) {
+                /* The league is named once per group; its second side sits
+                   under it, so the block reads as one league. */
+                const head = i === 0
+                    ? '<td class="name">' + escapeHtml(sport[1]) + '</td>'
+                    : '<td class="name"></td>';
+                html.push(tmrxDepthRow(item.row, [head,
+                    '<td>' + escapeHtml(tmrxDepthLabel(item.side)) + '</td>']));
+            });
+        });
+        tbody.innerHTML = html.join('');
+        if (section) section.hidden = false;
+    }
+
+    async function loadDepthBreakdowns() {
+        if (!profileUsername || !api || typeof api.request !== 'function') return;
+        let rows = [];
+        try {
+            const data = await api.request('/users/' + encodeURIComponent(profileUsername) +
+                '/stats/breakdowns?category=' + TMRX_DEPTH_CATEGORIES.join(','));
+            rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+        } catch (e) {
+            // Non-fatal: the panels stay hidden, the rest of the profile is untouched.
+            return;
+        }
+        if (!rows.length) return;
+
+        const byCategory = {};
+        rows.forEach(function (r) {
+            if (!r || !r.category) return;
+            (byCategory[r.category] = byCategory[r.category] || []).push(r);
+        });
+        const plain = function (labeller) {
+            return function (row) { return ['<td class="name">' + escapeHtml(labeller(row.bucket)) + '</td>']; };
+        };
+
+        const venue = tmrxRenderDepthTable('tmrxTableHomeAwayTop', null, byCategory.home_away,
+            { order: TMRX_DEPTH_ORDER.home_away, labelCells: plain(tmrxDepthLabel) });
+        const sides = tmrxRenderDepthTable('tmrxTableSideTotalTop', null, byCategory.side_total,
+            { order: TMRX_DEPTH_ORDER.side_total, labelCells: plain(tmrxDepthLabel) });
+        const venueSection = document.getElementById('tmrxVenueSideSection');
+        /* Each half follows its own data. Over/Under rows used to unhide the
+           whole section, which left a member with no qualifying venue picks
+           reading an empty Home vs Away table under a paragraph explaining a
+           split they do not have. */
+        const venueHalf = document.getElementById('tmrxHomeAwayHalf');
+        if (venueHalf) venueHalf.hidden = !venue;
+        const sideHalf = document.getElementById('tmrxSideTotalHalf');
+        if (sideHalf) sideHalf.hidden = !sides;
+        if (venueSection && (venue || sides)) venueSection.hidden = false;
+        tmrxRenderHomeAwaySport(byCategory.home_away_sport);
+
+        const timing = tmrxRenderDepthTable('tmrxTableBetTimingTop', null, byCategory.bet_timing,
+            { order: TMRX_DEPTH_ORDER.bet_timing, labelCells: plain(tmrxDepthLabel) });
+        const daypart = tmrxRenderDepthTable('tmrxTableDaypartTop', null, byCategory.daypart,
+            { order: TMRX_DEPTH_ORDER.daypart, labelCells: plain(tmrxDepthLabel) });
+        const timingSection = document.getElementById('tmrxTimingSection');
+        if (timingSection && (timing || daypart)) timingSection.hidden = false;
+
+        tmrxRenderDepthTable('tmrxTablePropTypeTop', 'tmrxPropTypeSection', byCategory.prop_type,
+            { labelCells: plain(tmrxDepthLabel) });
+
+        /* Teams faded and exact numbers both carry a league column, same as the
+           team panel, and both are capped so the page stays scannable. */
+        tmrxRenderDepthTable('tmrxTableOpponentTop', 'tmrxOpponentSection', byCategory.opponent, {
+            limit: 25,
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name"><span class="tmr-tl-row">' + tmrxTeamLogoHtml(parts.rest) +
+                        '<span class="tmr-tl-row-name">' + escapeHtml(parts.rest) + '</span></span></td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+
+        tmrxRenderTeamMarket(byCategory.team_market);
+
+        tmrxRenderDepthTable('tmrxTableLineNumberTop', 'tmrxLineNumberSection', byCategory.line_number, {
+            limit: 25,
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + escapeHtml(tmrxLineNumberLabel(parts.rest)) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+
+        const months = tmrxRenderDepthTable('tmrxTableMonthTop', 'tmrxMonthSection', byCategory.month,
+            { sort: 'bucket_desc', labelCells: plain(tmrxMonthLabel) });
+        const seasonShell = document.getElementById('tmrxSeasonShell');
+        const seasons = tmrxRenderDepthTable('tmrxTableSeasonTop', null, byCategory.season, {
+            sort: 'bucket_desc',
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + escapeHtml(parts.rest) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+        if (seasonShell && seasons) seasonShell.hidden = false;
+        if (months || seasons) {
+            const monthSection = document.getElementById('tmrxMonthSection');
+            if (monthSection) monthSection.hidden = false;
+        }
+    }
+
+    async function loadTeamBreakdown() {
+        const hasLegacy = !!document.getElementById('teamBreakdownModule');
+        const hasStats = !!document.getElementById('tmrxTableTeamTop');
+        if ((!hasLegacy && !hasStats) || !profileUsername || !api || typeof api.request !== 'function') return;
+        try {
+            const data = await api.request('/users/' + encodeURIComponent(profileUsername) + '/stats/breakdowns?category=team');
+            const rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+            teamBreakdownRows = rows.map(function (r) {
+                const bucket = String(r.bucket || '');
+                const sep = bucket.indexOf('|');
+                const sportKey = sep >= 0 ? bucket.slice(0, sep) : '';
+                const team = sep >= 0 ? bucket.slice(sep + 1) : bucket;
+                const w = Number(r.wins) || 0, l = Number(r.losses) || 0, p = Number(r.pushes) || 0;
+                const parts = tmrxSportParts(sportKey);
+                const wagered = Number(r.total_units_wagered) || 0;
+                const net = Number(r.net_units) || 0;
+                return {
+                    team: team,
+                    sport_key: sportKey,
+                    sport: parts[0],
+                    // Legacy record-tab table keeps its single "League" column label.
+                    league: parts[1],
+                    wins: w, losses: l, pushes: p,
+                    picks: Number(r.total_picks) || (w + l + p),
+                    wagered: wagered,
+                    units: net,
+                    // Decisions only: pushes are picks but not wins or losses.
+                    win_rate: (w + l) > 0 ? (w / (w + l)) * 100 : 0,
+                    roi: Number(r.roi) || (wagered > 0 ? (net / wagered) * 100 : 0),
+                    avg_odds: Number(r.avg_odds) || 0
+                };
+            });
+            renderTeamBreakdown();
+            renderTmrxTeamTable(true);
+        } catch (e) {
+            // Non-fatal: leave the panel empty rather than breaking the profile.
+            teamBreakdownRows = [];
+            renderTeamBreakdown();
+            renderTmrxTeamTable(true);
+        }
+    }
+
+    function renderTeamBreakdown() {
+        const body = document.getElementById('teamBreakdownBody');
+        const empty = document.getElementById('teamBreakdownEmpty');
+        const table = document.getElementById('teamBreakdownTable');
+        if (!body) return;
+        if (!teamBreakdownRows.length) {
+            body.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            if (table) table.style.display = 'none';
+            return;
+        }
+        if (empty) empty.style.display = 'none';
+        if (table) table.style.display = '';
+
+        const dir = teamSort.dir === 'asc' ? 1 : -1;
+        const key = teamSort.key;
+        const sorted = teamBreakdownRows.slice().sort(function (a, b) {
+            let av, bv;
+            if (key === 'team' || key === 'league') { av = String(a[key]).toLowerCase(); bv = String(b[key]).toLowerCase(); }
+            else if (key === 'record') { av = a.wins + a.losses + a.pushes ? a.wins / (a.wins + a.losses || 1) : 0; bv = b.wins + b.losses + b.pushes ? b.wins / (b.wins + b.losses || 1) : 0; }
+            else { av = Number(a[key]) || 0; bv = Number(b[key]) || 0; }
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+        });
+
+        body.innerHTML = sorted.map(function (r) {
+            const rec = r.wins + '-' + r.losses + (r.pushes ? '-' + r.pushes : '');
+            const uCls = r.units >= 0 ? 'tb-pos' : 'tb-neg';
+            const uTxt = (r.units >= 0 ? '+' : '') + r.units.toFixed(2) + 'u';
+            const roiCls = r.roi >= 0 ? 'tb-pos' : 'tb-neg';
+            const roiTxt = (r.roi >= 0 ? '+' : '') + r.roi.toFixed(1) + '%';
+            const odds = r.avg_odds ? (r.avg_odds > 0 ? '+' + Math.round(r.avg_odds) : Math.round(r.avg_odds)) : '--';
+            return '<tr>' +
+                '<td class="tb-left tb-team">' + escapeHtml(r.team) + '</td>' +
+                '<td class="tb-left tb-league">' + escapeHtml(r.league) + '</td>' +
+                '<td>' + rec + '</td>' +
+                '<td class="' + uCls + '">' + uTxt + '</td>' +
+                '<td class="' + roiCls + '">' + roiTxt + '</td>' +
+                '<td>' + odds + '</td>' +
+                '<td>' + r.picks + '</td>' +
+                '</tr>';
+        }).join('');
+        updateTeamSortArrows();
+    }
+
+    function updateTeamSortArrows() {
+        const ths = document.querySelectorAll('#teamBreakdownTable th[data-team-sort]');
+        ths.forEach(function (th) {
+            const arrow = th.querySelector('.tb-arrow');
+            if (!arrow) return;
+            arrow.textContent = (th.getAttribute('data-team-sort') === teamSort.key)
+                ? (teamSort.dir === 'asc' ? '▲' : '▼') : '';
+        });
+    }
+
+    function initTeamBreakdownSort() {
+        const ths = document.querySelectorAll('#teamBreakdownTable th[data-team-sort]');
+        ths.forEach(function (th) {
+            th.addEventListener('click', function () {
+                const key = th.getAttribute('data-team-sort');
+                if (teamSort.key === key) teamSort.dir = (teamSort.dir === 'asc' ? 'desc' : 'asc');
+                else { teamSort.key = key; teamSort.dir = (key === 'team' || key === 'league') ? 'asc' : 'desc'; }
+                renderTeamBreakdown();
+            });
+        });
+    }
+
+    // ---- Stats-tab (Overview) Performance by Team ----
+    // One sport at a time: the sport picker is the entry point, so a member with
+    // picks in five sports never gets one long mixed list. Rows expand into that
+    // team's full pick history (dates, matchup, market, odds, risk, result).
+    let tmrxTeamSort = { key: 'units', dir: 'desc' };
+    let tmrxTeamFilters = { sport: '', league: '' };
+    let tmrxTeamWired = false;
+
+    function tmrxTeamLogoHtml(name) {
+        if (window.TMRTeamLogo && typeof window.TMRTeamLogo.html === 'function') {
+            return window.TMRTeamLogo.html(name, { className: 'tmrx-tl' });
+        }
+        return '';
+    }
+
+    function tmrxTeamSportGroups() {
+        const order = [];
+        const map = {};
+        teamBreakdownRows.forEach(function (r) {
+            if (!map[r.sport]) { map[r.sport] = { sport: r.sport, teams: 0, picks: 0 }; order.push(r.sport); }
+            map[r.sport].teams += 1;
+            map[r.sport].picks += r.picks;
+        });
+        // Busiest sport first: that is the one the member actually bets.
+        return order.map(function (s) { return map[s]; }).sort(function (a, b) {
+            return b.picks - a.picks || a.sport.localeCompare(b.sport);
+        });
+    }
+
+    function tmrxTeamFiltered() {
+        return teamBreakdownRows.filter(function (r) {
+            if (r.sport !== tmrxTeamFilters.sport) return false;
+            if (tmrxTeamFilters.league && r.league !== tmrxTeamFilters.league) return false;
+            return true;
+        });
+    }
+
+    function tmrxTeamSyncControls() {
+        const picker = document.getElementById('tmrxTeamSportPicker');
+        const leagueSel = document.getElementById('tmrxTeamLeagueFilter');
+        const leagueWrap = document.getElementById('tmrxTeamLeagueWrap');
+        const groups = tmrxTeamSportGroups();
+        if (!groups.length) tmrxTeamFilters.sport = '';
+        else if (!tmrxTeamFilters.sport || !groups.some(function (g) { return g.sport === tmrxTeamFilters.sport; })) {
+            tmrxTeamFilters.sport = groups[0].sport;
+            tmrxTeamFilters.league = '';
+        }
+        if (picker) {
+            picker.innerHTML = groups.map(function (g) {
+                const on = g.sport === tmrxTeamFilters.sport;
+                return '<button type="button" role="tab" class="tmrx-sport-pill' + (on ? ' is-active' : '') +
+                    '" aria-selected="' + (on ? 'true' : 'false') + '" data-tmrx-team-sport="' + escapeHtml(g.sport) + '">' +
+                    escapeHtml(g.sport) + '<span class="tmrx-sport-pill-count">' + g.teams + '</span></button>';
+            }).join('');
+        }
+
+        // League selector only appears when the chosen sport really has more than
+        // one competition (soccer does; MLB does not).
+        const leagues = [];
+        teamBreakdownRows.forEach(function (r) {
+            if (r.sport !== tmrxTeamFilters.sport) return;
+            if (leagues.indexOf(r.league) < 0) leagues.push(r.league);
+        });
+        leagues.sort();
+        if (tmrxTeamFilters.league && leagues.indexOf(tmrxTeamFilters.league) < 0) tmrxTeamFilters.league = '';
+        if (leagueWrap) leagueWrap.hidden = leagues.length < 2;
+        if (leagueSel) {
+            leagueSel.innerHTML = '<option value="">All leagues</option>' + leagues.map(function (s) {
+                return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>';
+            }).join('');
+            leagueSel.value = tmrxTeamFilters.league;
+        }
+        const table = document.getElementById('tmrxTableTeamTop');
+        if (table) table.classList.toggle('tmrx-hide-league', leagues.length < 2);
+    }
+
+    function renderTmrxTeamTable(syncControls) {
+        const table = document.getElementById('tmrxTableTeamTop');
+        if (!table) return;
+        if (!tmrxTeamWired) { tmrxTeamWireControls(); tmrxTeamWired = true; }
+        if (syncControls) tmrxTeamSyncControls();
+        const body = table.querySelector('tbody');
+        if (!body) return;
+
+        const rows = tmrxTeamFiltered();
+        if (!rows.length) {
+            body.innerHTML = '<tr class="empty"><td colspan="8">' +
+                (teamBreakdownRows.length ? 'No teams in this selection.' : 'No settled team-based picks yet.') +
+                '</td></tr>';
+            tmrxTeamSyncArrows();
+            return;
+        }
+
+        const dir = tmrxTeamSort.dir === 'asc' ? 1 : -1;
+        const key = tmrxTeamSort.key;
+        const sorted = rows.slice().sort(function (a, b) {
+            let av, bv;
+            if (key === 'team' || key === 'league') {
+                av = String(a[key]).toLowerCase(); bv = String(b[key]).toLowerCase();
+            } else if (key === 'record') {
+                // Record sorts by wins, then by fewest losses.
+                av = a.wins * 1000 - a.losses; bv = b.wins * 1000 - b.losses;
+            } else {
+                av = Number(a[key]) || 0; bv = Number(b[key]) || 0;
+            }
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return String(a.team).localeCompare(String(b.team));
+        });
+
+        body.innerHTML = sorted.map(function (r) {
+            const rec = r.wins + '-' + r.losses + '-' + r.pushes;
+            const uCls = r.units > 0 ? 'pos' : (r.units < 0 ? 'neg' : '');
+            const roiCls = r.roi > 0 ? 'pos' : (r.roi < 0 ? 'neg' : '');
+            const odds = r.avg_odds ? (r.avg_odds > 0 ? '+' + Math.round(r.avg_odds) : String(Math.round(r.avg_odds))) : '&mdash;';
+            return '<tr class="tmrx-team-drill-row" role="button" tabindex="0" aria-expanded="false"' +
+                ' data-tmrx-team="' + escapeHtml(r.team) + '" data-tmrx-sport-key="' + escapeHtml(r.sport_key) + '">' +
+                '<td><span class="tmrx-team-cell"><span class="tmrx-drill-caret" aria-hidden="true">▶</span>' +
+                    tmrxTeamLogoHtml(r.team) + '<span class="tmrx-team-name">' + escapeHtml(r.team) + '</span></span></td>' +
+                '<td class="tmrx-team-league-col">' + escapeHtml(r.league) + '</td>' +
+                '<td class="num">' + r.picks + '</td>' +
+                '<td class="num">' + rec + '</td>' +
+                '<td class="num">' + r.win_rate.toFixed(1) + '%</td>' +
+                '<td class="num">' + odds + '</td>' +
+                '<td class="num ' + uCls + '">' + (r.units >= 0 ? '+' : '') + r.units.toFixed(2) + 'u</td>' +
+                '<td class="num ' + roiCls + '">' + (r.roi >= 0 ? '+' : '') + r.roi.toFixed(1) + '%</td>' +
+                '</tr>';
+        }).join('');
+        tmrxTeamSyncArrows();
+    }
+
+    function tmrxTeamSyncArrows() {
+        document.querySelectorAll('#tmrxTableTeamTop th[data-tmrx-team-sort]').forEach(function (th) {
+            const arrow = th.querySelector('.tmrx-sort-arrow');
+            const active = th.getAttribute('data-tmrx-team-sort') === tmrxTeamSort.key;
+            th.classList.toggle('is-sorted', active);
+            if (arrow) arrow.textContent = active ? (tmrxTeamSort.dir === 'asc' ? '▲' : '▼') : '';
+        });
+    }
+
+    // ---- Team drill-down: every pick backing that team, from the ledger that
+    // the Public Ledger already loaded (tmrxLedgerPicks) - no extra API call. ----
+    function tmrxTeamPicksFor(team, sportKey) {
+        const all = Array.isArray(tmrxLedgerPicks) ? tmrxLedgerPicks : [];
+        const want = String(team || '').toLowerCase();
+        return all.filter(function (p) {
+            if (String(p.sport_key || '') !== String(sportKey || '')) return false;
+            const sel = p.selected_team ? String(p.selected_team).toLowerCase() : '';
+            if (sel) return sel === want;
+            // Older rows predate selected_team: fall back to the same certainty
+            // rule the backend uses - the selection must name exactly one side.
+            const selection = String(p.selection || '').toLowerCase();
+            const home = String(p.home_team || '').toLowerCase();
+            const away = String(p.away_team || '').toLowerCase();
+            const other = want === home ? away : (want === away ? home : '');
+            if (!other) return false;
+            return selection.indexOf(want) >= 0 && selection.indexOf(other) < 0;
+        }).sort(function (a, b) {
+            return new Date(b.commence_time || b.created_at || 0) - new Date(a.commence_time || a.created_at || 0);
+        });
+    }
+
+    function tmrxTeamDrillHtml(team, sportKey) {
+        const picks = tmrxTeamPicksFor(team, sportKey);
+        if (!picks.length) {
+            return '<div class="tmrx-team-drill"><div class="tmrx-team-drill-empty">' +
+                (Array.isArray(tmrxLedgerPicks) && tmrxLedgerPicks.length
+                    ? 'No individual picks found for ' + escapeHtml(team) + '.'
+                    : 'Loading pick history…') +
+                '</div></div>';
+        }
+        const fmtDate = function (iso) {
+            if (!iso) return '&mdash;';
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '&mdash;';
+            return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric' });
+        };
+        const fmtOdds = function (o) {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return '&mdash;';
+            return (x > 0 ? '+' : '') + Math.round(x);
+        };
+        const fmtMarket = function (m) {
+            const map = {
+                h2h: 'Moneyline', spreads: 'Spread', totals: 'Total', team_totals: 'Team Total',
+                f5_h2h: 'F5 Moneyline', f5_spreads: 'F5 Spread', f5_totals: 'F5 Total',
+                alternate_spreads: 'Alt Spread', alternate_totals: 'Alt Total'
+            };
+            const k = String(m || '').toLowerCase();
+            return map[k] || k.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) || '&mdash;';
+        };
+        const rows = picks.map(function (p) {
+            const status = String(p.status || '').toLowerCase();
+            const net = Number(p.result_units || 0);
+            const risk = Number(p.risk_units || p.units || 0);
+            const counted = (status === 'won' || status === 'lost' || status === 'push');
+            const resultCls = status === 'won' ? 'pos' : (status === 'lost' ? 'neg' : '');
+            const matchup = (p.away_team && p.home_team)
+                ? (escapeHtml(p.away_team) + ' @ ' + escapeHtml(p.home_team) + escapeHtml((window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : ''))) : '&mdash;';
+            return '<tr' + (counted ? '' : ' class="tmrx-team-drill-excluded"') + '>' +
+                '<td>' + fmtDate(p.commence_time || p.created_at) + '</td>' +
+                '<td>' + matchup + '</td>' +
+                '<td>' + fmtMarket(p.market_type) + '</td>' +
+                '<td>' + escapeHtml(p.selection || '') + '</td>' +
+                '<td class="num">' + fmtOdds(p.odds_snapshot) + '</td>' +
+                '<td class="num">' + (risk ? risk.toFixed(2) + 'u' : '&mdash;') + '</td>' +
+                '<td><span class="tmrx-result-badge tmrx-result-' + escapeHtml(status || 'pending') + '">' +
+                    escapeHtml((status || 'pending').toUpperCase()) + '</span></td>' +
+                '<td class="num ' + resultCls + '">' + (counted ? (net >= 0 ? '+' : '') + net.toFixed(2) + 'u' : '&mdash;') + '</td>' +
+                '</tr>';
+        }).join('');
+        const excluded = picks.filter(function (p) {
+            const s = String(p.status || '').toLowerCase();
+            return s !== 'won' && s !== 'lost' && s !== 'push';
+        }).length;
+        return '<div class="tmrx-team-drill">' +
+            '<div class="tmrx-team-drill-head">' + escapeHtml(team) + ' &mdash; ' + picks.length + ' pick' +
+                (picks.length === 1 ? '' : 's') +
+                (excluded ? ' <span class="tmrx-team-drill-note">(' + excluded + ' void/cancelled, excluded from the totals above)</span>' : '') +
+            '</div>' +
+            '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-team-drill-table">' +
+            '<thead><tr><th>Date</th><th>Matchup</th><th>Market</th><th>Selection</th>' +
+            '<th class="num">Odds</th><th class="num">Risk</th><th>Result</th><th class="num">Units</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody></table></div></div>';
+    }
+
+    function tmrxToggleTeamDrilldown(row) {
+        if (!row) return;
+        const tbody = row.parentNode;
+        if (!tbody) return;
+        const open = row.classList.contains('tmrx-drill-open');
+        tbody.querySelectorAll('tr.tmrx-drill-open').forEach(function (r) {
+            r.classList.remove('tmrx-drill-open');
+            r.setAttribute('aria-expanded', 'false');
+        });
+        tbody.querySelectorAll('tr.tmrx-team-drill-expansion').forEach(function (r) { r.remove(); });
+        if (open) return;
+        row.classList.add('tmrx-drill-open');
+        row.setAttribute('aria-expanded', 'true');
+        const exp = document.createElement('tr');
+        exp.className = 'tmrx-drill-expansion tmrx-team-drill-expansion';
+        const td = document.createElement('td');
+        td.colSpan = row.children.length;
+        const team = row.getAttribute('data-tmrx-team');
+        const sportKey = row.getAttribute('data-tmrx-sport-key');
+        td.innerHTML = tmrxTeamDrillHtml(team, sportKey);
+        exp.appendChild(td);
+        if (row.nextSibling) tbody.insertBefore(exp, row.nextSibling);
+        else tbody.appendChild(exp);
+        // The ledger normally lands before anyone clicks; if it has not, load it
+        // once and repaint this expansion in place.
+        if (!(Array.isArray(tmrxLedgerPicks) && tmrxLedgerPicks.length)) {
+            Promise.resolve(tmrxRenderPickHistory(profileUsername)).then(function () {
+                if (exp.isConnected) td.innerHTML = tmrxTeamDrillHtml(team, sportKey);
+            }).catch(function () {});
+        }
+    }
+
+    function tmrxTeamWireControls() {
+        document.querySelectorAll('#tmrxTableTeamTop th[data-tmrx-team-sort]').forEach(function (th) {
+            th.addEventListener('click', function () {
+                const key = th.getAttribute('data-tmrx-team-sort');
+                if (tmrxTeamSort.key === key) tmrxTeamSort.dir = (tmrxTeamSort.dir === 'asc' ? 'desc' : 'asc');
+                else { tmrxTeamSort.key = key; tmrxTeamSort.dir = (key === 'team' || key === 'league') ? 'asc' : 'desc'; }
+                renderTmrxTeamTable(false);
+            });
+        });
+        const picker = document.getElementById('tmrxTeamSportPicker');
+        if (picker) picker.addEventListener('click', function (e) {
+            const btn = e.target.closest && e.target.closest('[data-tmrx-team-sport]');
+            if (!btn) return;
+            tmrxTeamFilters.sport = btn.getAttribute('data-tmrx-team-sport');
+            tmrxTeamFilters.league = '';
+            renderTmrxTeamTable(true);
+        });
+        const leagueSel = document.getElementById('tmrxTeamLeagueFilter');
+        if (leagueSel) leagueSel.addEventListener('change', function () {
+            tmrxTeamFilters.league = leagueSel.value;
+            renderTmrxTeamTable(false);
+        });
+        const table = document.getElementById('tmrxTableTeamTop');
+        if (table) {
+            table.addEventListener('click', function (e) {
+                const row = e.target.closest && e.target.closest('tr.tmrx-team-drill-row');
+                if (row) tmrxToggleTeamDrilldown(row);
+            });
+            table.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                const row = e.target.closest && e.target.closest('tr.tmrx-team-drill-row');
+                if (row) { e.preventDefault(); tmrxToggleTeamDrilldown(row); }
+            });
+        }
+    }
+
+    // ======================== UTILITY ========================
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function normalizeProfileSportParam(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const key = raw.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+        return SPORT_QUERY_ALIASES[key] || raw;
+    }
+
+    /* Market drilldown navigation (restored 2026-08-16). profile-market.html has
+       always existed and is linked from the Performance by Market Type table;
+       the two helpers that built its URL were dropped in a refactor, orphaning
+       the page. Slug form ("team-totals") is what the API's canonicalMarketType
+       normalizer accepts, same as before. */
+    function marketSlug(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/&/g, 'and')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function buildProfileMarketUrl(marketType) {
+        const user = (profileData && profileData.username) || profileUsername
+            || new URLSearchParams(window.location.search || '').get('user') || '';
+        if (!user || !marketType) return '';
+        return '/profile-market.html?user=' + encodeURIComponent(user)
+            + '&market=' + encodeURIComponent(marketSlug(marketType));
+    }
+
+    function buildProfileSportFilterUrl(sportKey) {
+        const params = new URLSearchParams(window.location.search || '');
+        if (profileUsername && !params.get('user') && !params.get('username')) {
+            params.set('user', profileUsername);
+        }
+        if (sportKey) params.set('sport', fmtSport(sportKey));
+        else params.delete('sport');
+        params.delete('league');
+        params.set('view', 'ledger');
+        return window.location.pathname + '?' + params.toString();
+    }
+
+    function profileSportSlug(sportKey) {
+        const canonical = normalizeProfileSportParam(sportKey);
+        const map = {
+            baseball_mlb: 'mlb',
+            basketball_nba: 'nba',
+            basketball_nba_summer: 'nba_summer',
+            icehockey_nhl: 'nhl',
+            americanfootball_nfl: 'nfl',
+            basketball_ncaab: 'ncaab',
+            americanfootball_ncaaf: 'ncaaf'
+        };
+        return map[canonical] || String(canonical || sportKey || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function buildProfileSportBreakdownUrl(sportKey) {
+        const params = new URLSearchParams();
+        const username = profileUsername || new URLSearchParams(window.location.search || '').get('user') || '';
+        if (username) params.set('user', username);
+        params.set('sport', profileSportSlug(sportKey));
+        return '/profile/sport/?' + params.toString();
+    }
+
+    function ensureSportFilterOption(sportKey) {
+        const select = document.getElementById('filterSport');
+        if (!select || !sportKey) return;
+        const exists = Array.from(select.options).some(function(option) {
+            return option.value === sportKey;
+        });
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = sportKey;
+            option.textContent = fmtSport(sportKey);
+            select.appendChild(option);
+        }
+    }
+
+    function setProfileSportFilter(sportKey, options) {
+        options = options || {};
+        const normalizedSport = normalizeProfileSportParam(sportKey);
+        const sportSelect = document.getElementById('filterSport');
+        if (!sportSelect) return false;
+
+        if (options.clearOtherFilters) {
+            ['filterSearch', 'filterType', 'filterResult', 'filterOdds', 'filterUnits', 'filterDateFrom', 'filterDateTo'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const period = document.getElementById('filterPeriod');
+            if (period) period.value = 'all';
+            const sort = document.getElementById('filterSort');
+            if (sort) sort.value = 'date_desc';
+            activeQuickFilter = null;
+            currentTableSort = 'date_desc';
+        }
+
+        if (normalizedSport) ensureSportFilterOption(normalizedSport);
+        sportSelect.value = normalizedSport || '';
+
+        if (options.updateUrl) {
+            const nextUrl = buildProfileSportFilterUrl(normalizedSport);
+            history.pushState(null, '', nextUrl);
+        }
+
+        applyFilters();
+
+        if (options.scroll) {
+            const target = document.querySelector('.picks-section') || document.getElementById('picksTableWrapper');
+            if (target && typeof target.scrollIntoView === 'function') {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        return false;
+    }
+
+    function fmtSport(k) {
+        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', baseball_mlb: 'MLB', baseball_npb: 'Japan NPB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', soccer_usa_mls: 'MLS', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF', basketball_wnba: 'WNBA' }[k] || k || 'Pick';
+    }
+
+    function showToast(msg, type) {
+        let c = document.getElementById('toastC');
+        if (!c) { c = document.createElement('div'); c.id = 'toastC'; c.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;'; document.body.appendChild(c); }
+        const colors = { success: '#22c55e', error: '#ef4444', info: '#3b82f6' };
+        const t = document.createElement('div');
+        t.style.cssText = 'background:' + (colors[type] || colors.info) + ';color:#fff;padding:12px 20px;border-radius:8px;font-weight:500;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+        t.textContent = msg; c.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    async function doFollow(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        try {
+            await api.followUser(id);
+            isFollowingProfile = true;
+            profileData.follower_count = Number(profileData.follower_count || 0) + 1;
+            showToast('Followed!', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+    async function doUnfollow(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        try {
+            await api.unfollowUser(id);
+            isFollowingProfile = false;
+            profileData.follower_count = Math.max(0, Number(profileData.follower_count || 0) - 1);
+            showToast('Unfollowed', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function doBlock(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        if (!confirm('Block this user? They will be unfollowed, can no longer message you, and their forum posts will be hidden from you.')) return;
+        try {
+            await api.blockUser(id);
+            isBlockedProfile = true;
+            isFollowingProfile = false;
+            showToast('User blocked', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+    async function doUnblock(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        try {
+            await api.unblockUser(id);
+            isBlockedProfile = false;
+            showToast('User unblocked', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ---- Follow notification preferences popover ----
+    const FOLLOW_PREF_ROWS = [
+        { key: 'notify_new_thread', label: 'New threads', hint: 'When they start a new forum thread' },
+        { key: 'notify_post', label: 'Posts &amp; replies', hint: 'When they reply in the forum (batched)' },
+        { key: 'notify_pick', label: 'New picks', hint: 'When they publish a pick' },
+        { key: 'digest_mode', label: 'Digest mode', hint: 'Collapse into one daily alert' },
+        { key: 'email_enabled', label: 'Email me', hint: 'Also send email (off by default)' },
+        { key: 'paused', label: 'Pause this person', hint: 'Temporarily mute their alerts' }
+    ];
+    async function toggleFollowPrefs(id) {
+        const pop = document.getElementById('followPrefsPop');
+        if (!pop) return;
+        if (pop.style.display === 'block') { pop.style.display = 'none'; return; }
+        pop.style.display = 'block';
+        pop.innerHTML = '<div style="padding:14px;color:#9ba3b5;">Loading...</div>';
+        try {
+            const data = await api.getFollowPreferences(id);
+            renderFollowPrefsPopover(id, data.preferences || {});
+        } catch (e) {
+            pop.innerHTML = '<div style="padding:14px;color:#ef4444;">Could not load preferences.</div>';
+        }
+    }
+    function renderFollowPrefsPopover(id, prefs) {
+        const pop = document.getElementById('followPrefsPop');
+        if (!pop) return;
+        const rows = FOLLOW_PREF_ROWS.map(function(r) {
+            const on = prefs[r.key] === true;
+            return '<label style="display:flex;align-items:flex-start;gap:10px;padding:9px 6px;border-radius:8px;cursor:pointer;">' +
+                '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="setFollowPref(' + id + ',\'' + r.key + '\',this.checked)" style="margin-top:3px;">' +
+                '<span style="min-width:0;"><span style="display:block;font-weight:700;color:#eef2f7;font-size:.9rem;">' + r.label + '</span>' +
+                '<span style="display:block;color:#8b98ad;font-size:.76rem;">' + r.hint + '</span></span>' +
+                '</label>';
+        }).join('');
+        pop.innerHTML =
+            '<div style="padding:12px 14px;border-bottom:1px solid #2a2e3d;font-weight:800;font-size:.82rem;letter-spacing:.04em;color:#8b98ad;text-transform:uppercase;">Notify me when</div>' +
+            '<div style="padding:6px 8px;">' + rows + '</div>' +
+            '<div style="padding:10px 14px;border-top:1px solid #2a2e3d;">' +
+            '<button class="btn btn-secondary" style="width:100%;color:#f87171;border-color:#3a2530;" onclick="doUnfollow(' + id + ')"><i class="fas fa-user-minus" style="margin-right:6px;"></i>Unfollow</button>' +
+            '</div>';
+    }
+    async function setFollowPref(id, key, value) {
+        try {
+            const body = {}; body[key] = value;
+            await api.updateFollowPreferences(id, body);
+            showToast('Preference saved', 'success');
+        } catch (e) { showToast('Could not save preference', 'error'); }
+    }
+    // Close the popover on outside click.
+    document.addEventListener('click', function(e) {
+        const wrap = e.target.closest && e.target.closest('.tmr-follow-wrap');
+        const pop = document.getElementById('followPrefsPop');
+        if (pop && pop.style.display === 'block' && !wrap) pop.style.display = 'none';
+    });
+
+    // ---- Followers / Following social list drawer ----
+    // Right-side drawer (modal on small screens) that never replaces the page or
+    // loses scroll position. Rows carry avatar, display name, @handle, a
+    // verification/role badge, a live Follow/Following button (hidden for the
+    // viewer's own row and for logged-out visitors), and a link to the public
+    // profile. Progressive "load more" pagination; loading / empty / error
+    // states. Server already excludes deleted/suspended/blocked/private rows and
+    // sorts newest-relationship-first.
+    const SOCIAL_PAGE = 25;
+    let socialListState = null; // { type, offset, total, done, loading, prevFocus }
+
+    function socialBadge(user) {
+        if (user.is_admin) return '<span class="tmr-social-badge tmr-social-badge--admin">ADMIN</span>';
+        if (user.is_moderator) return '<span class="tmr-social-badge tmr-social-badge--mod">MOD</span>';
+        if (user.verification_status === 'verified') return '<span class="tmr-social-badge tmr-social-badge--verified" title="Verified record"><i class="fas fa-check-circle"></i> Verified</span>';
+        return '';
+    }
+
+    function socialRowHtml(user) {
+        const uid = Number(user.id);
+        const name = escapeHtml(user.display_name || user.username || 'User');
+        const handle = escapeHtml(user.username || '');
+        const initial = (user.display_name || user.username || 'U').charAt(0).toUpperCase();
+        const avatar = user.avatar_url
+            ? '<img src="' + escapeHtml(user.avatar_url) + '" alt="" class="tmr-social-avatar" loading="lazy">'
+            : '<span class="tmr-social-avatar tmr-social-avatar--letter">' + escapeHtml(initial) + '</span>';
+        // Same canonical /u/<username>/ route as the directory, forum, and
+        // newest-member links -- not /profile/?user=, which is a different
+        // (also-working) page for the same member and shouldn't exist as a
+        // second convention for "view this member's profile".
+        const profileHref = '/u/' + encodeURIComponent(user.username || '') + '/';
+        // No follow button for the viewer's own row or for logged-out visitors.
+        const isSelf = currentUser && Number(currentUser.id) === uid;
+        let followBtn = '';
+        if (currentUser && !isSelf) {
+            followBtn = user.is_following
+                ? '<button type="button" class="btn btn-secondary tmr-social-follow" data-uid="' + uid + '" data-following="1" onclick="toggleSocialFollow(' + uid + ', this)">Following</button>'
+                : '<button type="button" class="btn btn-primary tmr-social-follow" data-uid="' + uid + '" data-following="0" onclick="toggleSocialFollow(' + uid + ', this)">Follow</button>';
+        }
+        return '<li class="tmr-social-row">' +
+            '<a class="tmr-social-main" href="' + profileHref + '">' +
+            avatar +
+            '<span class="tmr-social-copy">' +
+            '<span class="tmr-social-name">' + name + socialBadge(user) + '</span>' +
+            '<span class="tmr-social-handle">@' + handle + '</span>' +
+            '</span>' +
+            '</a>' +
+            followBtn +
+            '</li>';
+    }
+
+    async function toggleSocialFollow(uid, btn) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        const wasFollowing = btn.getAttribute('data-following') === '1';
+        btn.disabled = true;
+        try {
+            if (wasFollowing) {
+                await api.unfollowUser(uid);
+                btn.setAttribute('data-following', '0');
+                btn.textContent = 'Follow';
+                btn.className = 'btn btn-primary tmr-social-follow';
+            } else {
+                await api.followUser(uid);
+                btn.setAttribute('data-following', '1');
+                btn.textContent = 'Following';
+                btn.className = 'btn btn-secondary tmr-social-follow';
+            }
+            // Live-sync the profile's own counts when the viewer is looking at
+            // their own following list (following someone from here adds to it).
+            if (isOwnProfile && socialListState && socialListState.type === 'following') {
+                const delta = wasFollowing ? -1 : 1;
+                profileData.following_count = Math.max(0, Number(profileData.following_count || 0) + delta);
+                renderProfileHeader(profileData);
+            }
+            // If the viewer unfollows/follows the very profile being viewed, keep
+            // that profile's header follow-state + follower count in sync too.
+            if (Number(uid) === Number(profileUserId)) {
+                isFollowingProfile = !wasFollowing;
+                profileData.follower_count = Math.max(0, Number(profileData.follower_count || 0) + (wasFollowing ? -1 : 1));
+                renderProfileHeader(profileData);
+            }
+        } catch (e) {
+            showToast((e && e.message) || 'Action failed', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function loadSocialPage() {
+        const st = socialListState;
+        if (!st || st.loading || st.done) return;
+        st.loading = true;
+        const listEl = document.getElementById('socialListItems');
+        const moreBtn = document.getElementById('socialListMore');
+        const status = document.getElementById('socialListStatus');
+        if (moreBtn) { moreBtn.disabled = true; moreBtn.textContent = 'Loading...'; }
+        try {
+            const data = st.type === 'followers'
+                ? await api.getFollowers(profileUserId, { limit: SOCIAL_PAGE, offset: st.offset })
+                : await api.getFollowing(profileUserId, { limit: SOCIAL_PAGE, offset: st.offset });
+            const users = data[st.type] || [];
+            const firstPage = st.offset === 0;
+            st.total = Number(data.total || 0);
+            st.offset += users.length;
+            st.done = !data.has_more || users.length === 0;
+
+            if (firstPage && users.length === 0) {
+                listEl.innerHTML = '<li class="tmr-social-empty">' +
+                    (st.type === 'followers' ? 'No followers yet' : 'Not following anyone yet') + '</li>';
+            } else {
+                listEl.insertAdjacentHTML('beforeend', users.map(socialRowHtml).join(''));
+            }
+            if (status) status.textContent = st.total + ' ' + (st.type === 'followers' ? 'followers' : 'following');
+            if (moreBtn) {
+                if (st.done) { moreBtn.remove(); }
+                else { moreBtn.disabled = false; moreBtn.textContent = 'Load more'; }
+            }
+        } catch (error) {
+            const hidden = error && /hidden/i.test(error.message || '');
+            if (st.offset === 0) {
+                listEl.innerHTML = '<li class="tmr-social-empty tmr-social-error">' +
+                    (hidden ? 'This list is private.' : 'Could not load this list. Please try again.') + '</li>';
+            }
+            if (moreBtn) { moreBtn.disabled = false; moreBtn.textContent = 'Retry'; }
+        } finally {
+            st.loading = false;
+        }
+    }
+
+    function openSocialList(type) {
+        if (!profileUserId) return;
+        closeSocialList();
+
+        socialListState = { type: type, offset: 0, total: null, done: false, loading: false, prevFocus: document.activeElement };
+
+        const titleName = escapeHtml((profileData && (profileData.display_name || profileData.username)) || 'this user');
+        const heading = type === 'followers' ? 'Followers' : 'Following';
+
+        const modal = document.createElement('div');
+        modal.id = 'socialListModal';
+        modal.className = 'tmr-social-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', heading + ' of ' + titleName);
+        modal.innerHTML =
+            '<div class="tmr-social-drawer" role="document">' +
+            '<div class="tmr-social-head">' +
+            '<div><h3 class="tmr-social-title">' + heading + '</h3>' +
+            '<div id="socialListStatus" class="tmr-social-count">Loading...</div></div>' +
+            '<button type="button" class="tmr-social-close" aria-label="Close" onclick="closeSocialList()">&times;</button>' +
+            '</div>' +
+            '<ul id="socialListItems" class="tmr-social-items" aria-busy="true"></ul>' +
+            '<div class="tmr-social-foot"><button type="button" id="socialListMore" class="btn btn-secondary" onclick="loadSocialPage()">Load more</button></div>' +
+            '</div>';
+
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeSocialList(); });
+        document.addEventListener('keydown', socialEscHandler);
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+
+        const closeBtn = modal.querySelector('.tmr-social-close');
+        if (closeBtn) closeBtn.focus();
+
+        loadSocialPage().then(function () {
+            const items = document.getElementById('socialListItems');
+            if (items) items.setAttribute('aria-busy', 'false');
+        });
+    }
+
+    function socialEscHandler(e) { if (e.key === 'Escape') closeSocialList(); }
+
+    function closeSocialList() {
+        const modal = document.getElementById('socialListModal');
+        if (!modal) return;
+        modal.remove();
+        document.removeEventListener('keydown', socialEscHandler);
+        document.body.style.overflow = '';
+        const st = socialListState;
+        if (st && st.prevFocus && typeof st.prevFocus.focus === 'function') { try { st.prevFocus.focus({ preventScroll: true }); } catch (_) { st.prevFocus.focus(); } }
+        socialListState = null;
+    }
+
+    // ======================== CSV EXPORT ========================
+    function exportCSV() {
+        if (!allLoadedPicks || allLoadedPicks.length === 0) return showToast('No picks to export', 'error');
+
+        const chrono = [...allLoadedPicks].reverse();
+        let rt = 0;
+        const rows = [['Date', 'Sport', 'Matchup', 'Pick', 'Line', 'Odds', 'Units', 'Result', 'P/L', 'Cumulative Total']];
+
+        chrono.forEach(p => {
+            const date = p.locked_at || p.created_at || '';
+            const d = date ? new Date(date).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) : '';
+            const sport = fmtSport(p.sport_key);
+            const matchup = (p.away_team || '') + ' @ ' + (p.home_team || '') + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '');
+            const pick = p.selection || '';
+            const line = p.line_snapshot != null ? p.line_snapshot : '';
+            const odds = p.odds_snapshot != null ? p.odds_snapshot : '';
+            const units = p.units || 1;
+            const status = (p.status || 'pending').toUpperCase();
+            const pl = (p.status === 'won' || p.status === 'lost') ? pickPL(p).toFixed(2) : (p.status === 'push' || p.status === 'pushed') ? '0.00' : '';
+            if (p.status && p.status !== 'pending') rt += pickPL(p);
+            const running = (p.status && p.status !== 'pending') ? rt.toFixed(2) : '';
+
+            rows.push([d, sport, matchup, pick, line, odds, units, status, pl, running].map(v => {
+                const s = String(v);
+                return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g, '""') + '"' : s;
+            }));
+        });
+
+        const csv = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'trustmyrecord_' + (profileUsername || 'picks') + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        analyticsTrack('profile_csv_exported', {
+            username: profileUsername || '',
+            export_count: allLoadedPicks.length,
+            filtered_count: currentRenderedPicks.length || allLoadedPicks.length
+        });
+        showToast('CSV downloaded', 'success');
+    }
+
+    // ======================== SHARE PROFILE MODAL ========================
+    // Builds a canonical profile URL with UTM params, then renders a
+    // popover with X / Facebook / Reddit / Threads / Copy Link options.
+    // Tweet/post text auto-pulls live record + ROI from the visible
+    // ribbon so the share preview reads "78-42, +18.4u, +14.2% ROI".
+    function buildShareUrl(source) {
+        const user = profileUsername || (profileData && profileData.username) || '';
+        const params = new URLSearchParams({
+            utm_source: source || 'trustmyrecord',
+            utm_medium: 'profile_share',
+            utm_campaign: 'user_profile',
+            utm_content: user
+        });
+        // Share the BAKED profile page (/u/<username>/), not /profile/?user=.
+        // /profile/ is the interactive shell: it renders after JS runs and
+        // carries only the generic site og:image, so a shared link previews
+        // with no member card. /u/<username>/ is pre-rendered and crawlable
+        // and now ships a per-member og:image, which is what social unfurlers
+        // and search engines actually read. Same profile, same content.
+        return 'https://trustmyrecord.com/u/' + encodeURIComponent(user) + '/?' + params.toString();
+    }
+
+    function buildShareText() {
+        // Pull live ribbon text -- never fabricate. If a value is still
+        // a placeholder (mdash) we just omit it from the share text.
+        const grab = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            const t = (el.textContent || '').trim();
+            if (!t || t === '—' || /placeholder/.test(el.className || '')) return null;
+            return t;
+        };
+        const user = profileUsername || (profileData && profileData.username) || 'this handicapper';
+        const record = grab('tmrxRecordTop');
+        const roi = grab('tmrxRoiTop');
+        const units = grab('tmrxNetUnitsTop');
+        const bits = [];
+        if (record) bits.push(record);
+        if (units) bits.push(units);
+        if (roi) bits.push(roi + ' ROI');
+        const stats = bits.length ? ' (' + bits.join(' · ') + ')' : '';
+        return 'Track @' + user + '’s verified betting record on TrustMyRecord' + stats + '.';
+    }
+
+    // Delegates to the sitewide share component (tmr-share.js) so a profile
+    // shares through exactly the same menu as picks, threads and posts.
+    // buildShareText() still scrapes the live ribbon, so the copy is always
+    // the real, currently-displayed record -- never a cached number.
+    function openShareModal() {
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+
+        // Soft dependency: if tmr-share.js failed to load, fall back to the
+        // original in-page modal rather than leaving the button dead.
+        if (!window.TMRShare || typeof window.TMRShare.open !== 'function') {
+            return openLegacyShareModal();
+        }
+
+        window.TMRShare.open({
+            type: 'profile',
+            id: user,
+            url: buildShareUrl(),
+            // No `title` override on purpose: the component then uses the live
+            // title from /api/share/meta, which is what becomes the Reddit
+            // submission title and the email subject. A static "Share profile"
+            // string would post to Reddit under that meaningless headline.
+            text: buildShareText()
+        });
+
+        analyticsTrack('profile_share_modal_opened', { username: user });
+    }
+
+    // Original pre-component modal. Kept as the fallback path only.
+    function openLegacyShareModal() {
+        const existing = document.getElementById('shareModal');
+        if (existing) existing.remove();
+
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+
+        const text = buildShareText();
+        const xUrl       = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(buildShareUrl('twitter'));
+        const fbUrl      = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(buildShareUrl('facebook'));
+        const redditUrl  = 'https://www.reddit.com/submit?url=' + encodeURIComponent(buildShareUrl('reddit')) + '&title=' + encodeURIComponent(text);
+        const threadsUrl = 'https://www.threads.net/intent/post?text=' + encodeURIComponent(text + ' ' + buildShareUrl('threads'));
+        const copyUrl    = buildShareUrl('trustmyrecord');
+
+        const modal = document.createElement('div');
+        modal.id = 'shareModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
+
+        const btnRow = (label, icon, color, href, source) =>
+            '<a href="' + href + '" target="_blank" rel="noopener noreferrer" '
+            + 'onclick="window.tmrTrackShare && window.tmrTrackShare(\'' + source + '\')" '
+            + 'style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,0.18);background:rgba(15,22,36,0.7);color:#eef4fb;text-decoration:none;font-weight:600;font-size:.92rem;transition:background .15s, border-color .15s;" '
+            + 'onmouseover="this.style.background=\'rgba(29, 127, 232,0.12)\';this.style.borderColor=\'#1D7FE8\'" '
+            + 'onmouseout="this.style.background=\'rgba(15,22,36,0.7)\';this.style.borderColor=\'rgba(148,163,184,0.18)\'">'
+            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:' + color + ';color:#fff;flex:0 0 auto;"><i class="' + icon + '"></i></span>'
+            + '<span style="flex:1;">' + label + '</span>'
+            + '<i class="fas fa-arrow-up-right-from-square" style="opacity:.55;font-size:.78rem;"></i>'
+            + '</a>';
+
+        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:440px;width:min(100%,440px);box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Share profile</h2>'
+            +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'shareModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
+            + '</div>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 18px 0;">Send <strong style="color:#1D7FE8;">@' + user + '</strong>’s verified record anywhere.</p>'
+            + '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;">'
+            +   btnRow('Share on X (Twitter)', 'fa-brands fa-x-twitter', '#000000', xUrl,       'twitter')
+            +   btnRow('Share on Facebook',    'fa-brands fa-facebook',   '#1877F2', fbUrl,      'facebook')
+            +   btnRow('Share on Reddit',      'fa-brands fa-reddit',     '#FF4500', redditUrl,  'reddit')
+            +   btnRow('Share on Threads',     'fa-brands fa-threads',    '#000000', threadsUrl, 'threads')
+            + '</div>'
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Profile link</div>'
+            + '<div style="display:flex;gap:8px;align-items:stretch;">'
+            +   '<input id="shareCopyInput" readonly value="' + copyUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#1D7FE8;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;outline:none;">'
+            +   '<button class="btn btn-primary" onclick="(function(){var el=document.getElementById(\'shareCopyInput\');el.select();document.execCommand(\'copy\');window.tmrTrackShare && window.tmrTrackShare(\'copy_link\');showToast(\'Profile link copied!\',\'success\');})()" style="padding:10px 16px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
+            + '</div>'
+            + '</div>';
+
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        // ESC closes
+        document.addEventListener('keydown', function escClose(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escClose); } });
+
+        analyticsTrack('profile_share_modal_opened', { username: user });
+    }
+    window.openShareModal = openShareModal;
+    window.tmrTrackShare = function(source) {
+        try { analyticsTrack('profile_share_clicked', { username: profileUsername || '', source: source }); } catch(_) {}
+    };
+
+    // ======================== EMBEDDABLE WIDGET ========================
+    // Sizes per spec: Small 400x160, Medium 600x220 (default), Large 800x320.
+    const TMR_EMBED_SIZES = {
+        sm: { w: 400, h: 160, label: 'Small (400 × 160)' },
+        md: { w: 600, h: 220, label: 'Medium (600 × 220)' },
+        lg: { w: 800, h: 320, label: 'Large (800 × 320)' }
+    };
+
+    function tmrEmbedIframeUrl(user, size) {
+        // Direct query-string form (no 404 redirect, no flicker inside an
+        // iframe). The clean /embed/<username> URL still works for direct
+        // browser navigation -- 404.html catches it and forwards here.
+        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&size=' + (size || 'md') + '&theme=dark';
+    }
+
+    function tmrBuildEmbedCode(user, size) {
+        const dim = TMR_EMBED_SIZES[size] || TMR_EMBED_SIZES.md;
+        const url = tmrEmbedIframeUrl(user, size);
+        return '<!-- TrustMyRecord verified profile widget -->\n'
+            + '<iframe\n'
+            + '  src="' + url + '"\n'
+            + '  title="TrustMyRecord verified profile for ' + user + '"\n'
+            + '  width="' + dim.w + '"\n'
+            + '  height="' + dim.h + '"\n'
+            + '  frameborder="0"\n'
+            + '  loading="lazy"\n'
+            + '  referrerpolicy="strict-origin-when-cross-origin"\n'
+            + '  style="border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;"\n'
+            + '  scrolling="no">\n'
+            + '</iframe>';
+    }
+
+    function tmrBuildScriptCode(user) {
+        const open  = String.fromCharCode(60) + 'script';
+        const close = String.fromCharCode(60) + '/script>';
+        return [
+            '<!-- TrustMyRecord auto-resizing widget -->',
+            open,
+            '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js?v=6fe36463083e"',
+            '  data-username="' + user + '"',
+            '  data-theme="dark"',
+            '  data-refresh="15000"',
+            '  data-max-width="600px">',
+            close
+        ].join('\n');
+    }
+
+    function showEmbedModal() {
+        const existing = document.getElementById('embedModal');
+        if (existing) existing.remove();
+
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+        const profileShareUrl = (typeof buildShareUrl === 'function') ? buildShareUrl('trustmyrecord') : 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user);
+
+        const modal = document.createElement('div');
+        modal.id = 'embedModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
+
+        const sizeBtn = (key) => {
+            const s = TMR_EMBED_SIZES[key];
+            return '<button type="button" data-tmr-size="' + key + '" '
+                + 'style="flex:1;padding:9px 10px;border-radius:9px;border:1px solid rgba(148,163,184,0.22);background:#0b1422;color:#cfdbe8;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s;letter-spacing:.02em;">'
+                + s.label
+                + '</button>';
+        };
+
+        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:720px;width:min(100%,720px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Embed verified profile</h2>'
+            +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'embedModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
+            + '</div>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Drop a live auto-updating <strong style="color:#1D7FE8;">@' + user + '</strong> badge on any website. Pick a size, copy the snippet.</p>'
+
+            // Size selector
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Size</div>'
+            + '<div id="tmrEmbedSizeRow" style="display:flex;gap:8px;margin-bottom:18px;">'
+            +   sizeBtn('sm') + sizeBtn('md') + sizeBtn('lg')
+            + '</div>'
+
+            // Live preview
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Live preview</div>'
+            + '<div id="tmrEmbedPreviewBox" style="background:#070d18;border:1px dashed rgba(148,163,184,0.18);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;min-height:200px;overflow:auto;">'
+            +   '<div id="tmrEmbedPreviewSlot" style="display:flex;align-items:center;justify-content:center;"></div>'
+            + '</div>'
+
+            // Iframe snippet
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Iframe snippet</div>'
+            + '<textarea id="embedCodeArea" readonly style="width:100%;height:170px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#1D7FE8;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;margin-bottom:8px;outline:none;"></textarea>'
+            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy iframe</button></div>'
+
+            // Auto-resize script (advanced)
+            + '<details style="margin-bottom:14px;">'
+            +   '<summary style="cursor:pointer;font-size:.78rem;color:#cfdbe8;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">Advanced &mdash; auto-resizing script</summary>'
+            +   '<p style="color:#97a8bc;font-size:.78rem;margin:8px 0 8px 0;">Drops a JS tag that auto-fits height as picks load. Use when you don’t want a fixed height.</p>'
+            +   '<textarea id="scriptEmbedCodeArea" readonly style="width:100%;height:140px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#1D7FE8;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;outline:none;"></textarea>'
+            +   '<div style="display:flex;justify-content:flex-end;margin-top:8px;"><button class="btn btn-secondary" onclick="copyTextValue(\'scriptEmbedCodeArea\', \'Script embed code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy script</button></div>'
+            + '</details>'
+
+            // Profile link with UTM
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Public profile link</div>'
+            + '<div style="display:flex;gap:8px;align-items:stretch;margin-bottom:14px;">'
+            +   '<input id="profileShareLinkArea" readonly value="' + profileShareUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#1D7FE8;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;outline:none;">'
+            +   '<button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')" style="padding:10px 14px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
+            + '</div>'
+
+            + '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">'
+            +   '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>'
+            + '</div>'
+            + '</div>';
+
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        document.addEventListener('keydown', function escClose(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escClose); } });
+
+        // Default to medium. Re-render iframe + preview on size change.
+        let currentSize = 'md';
+        const refresh = () => {
+            const dim = TMR_EMBED_SIZES[currentSize];
+            // Snippets
+            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize);
+            document.getElementById('scriptEmbedCodeArea').value = tmrBuildScriptCode(user);
+            // Live preview iframe (rebuild so size attrs apply cleanly)
+            const slot = document.getElementById('tmrEmbedPreviewSlot');
+            slot.innerHTML = '';
+            const ifr = document.createElement('iframe');
+            ifr.src = tmrEmbedIframeUrl(user, currentSize);
+            ifr.title = 'TrustMyRecord profile preview for ' + user;
+            ifr.width = String(dim.w);
+            ifr.height = String(dim.h);
+            ifr.setAttribute('frameborder', '0');
+            ifr.loading = 'lazy';
+            ifr.referrerPolicy = 'strict-origin-when-cross-origin';
+            ifr.scrolling = 'no';
+            ifr.style.cssText = 'border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;';
+            slot.appendChild(ifr);
+            // Highlight selected size button
+            modal.querySelectorAll('[data-tmr-size]').forEach(b => {
+                const active = b.getAttribute('data-tmr-size') === currentSize;
+                b.style.background      = active ? 'rgba(29, 127, 232,0.16)' : '#0b1422';
+                b.style.borderColor     = active ? '#1D7FE8' : 'rgba(148,163,184,0.22)';
+                b.style.color           = active ? '#1D7FE8' : '#cfdbe8';
+            });
+        };
+        modal.querySelectorAll('[data-tmr-size]').forEach(b => {
+            b.addEventListener('click', () => {
+                currentSize = b.getAttribute('data-tmr-size');
+                refresh();
+                analyticsTrack('profile_embed_size_changed', { username: user, size: currentSize });
+            });
+        });
+        refresh();
+
+        analyticsTrack('profile_embed_modal_opened', {
+            username: user,
+            profile_url: profileShareUrl
+        });
+    }
+
+    function copyTextValue(elementId, successMessage) {
+        const ta = document.getElementById(elementId);
+        if (!ta) return;
+        ta.select();
+        document.execCommand('copy');
+        analyticsTrack('profile_embed_copy_clicked', {
+            username: profileUsername || '',
+            copy_target: elementId
+        });
+        showToast(successMessage || 'Copied!', 'success');
+    }
+
+    function profileEditString(value) {
+        return String(value == null ? '' : value).trim();
+    }
+
+    function profileEditSetIfChanged(target, key, next, current) {
+        if (profileEditString(next) !== profileEditString(current)) target[key] = next;
+    }
+
+    function openEditModal() {
+        const m = document.getElementById('editModal'); if (m) m.remove();
+        if (!profileData || typeof profileData !== 'object') {
+            showToast('Profile is still loading. Try again in a moment.', 'info');
+            return;
+        }
+        analyticsTrack('profile_edit_modal_opened', {
+            username: profileUsername || ''
+        });
+        const modal = document.createElement('div'); modal.id = 'editModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.76);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
+        const is = 'width:100%;padding:12px 14px;border-radius:10px;border:1px solid #d8dde6;background:#ffffff;color:#162231;font-family:inherit;font-size:.92rem;margin-bottom:14px;outline:none;';
+        const ls = 'display:block;color:#637389;margin-bottom:6px;font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;';
+        const currentAvatar = profileData.avatar_url || '';
+        const avatarPreviewSrc = currentAvatar || 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#2a2e3d"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="#6b7280">?</text></svg>');
+
+        modal.innerHTML = '<div style="background:#ffffff;border:1px solid #d8dde6;border-radius:16px;padding:28px;max-width:560px;width:min(100%,560px);max-height:88vh;overflow-y:auto;box-shadow:0 24px 70px rgba(6,18,34,.28);color:#162231;">' +
+            '<h2 style="font-size:1.35rem;font-weight:800;margin-bottom:6px;color:#162231;">Edit Profile</h2>' +
+            '<p style="font-size:.9rem;color:#637389;margin-bottom:22px;">Update your public identity, avatar, favorite teams, and gaming profile.</p>' +
+            '<form id="editForm">' +
+            '<label style="' + ls + '">Profile Image</label>' +
+            '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">' +
+            '<img id="eAvatarPreview" src="' + avatarPreviewSrc + '" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #d8dde6;background:#f8fafc;">' +
+            '<div style="flex:1;">' +
+            '<input type="file" id="eAvatarFile" accept="image/png,image/jpeg,image/webp" style="display:none;">' +
+            '<button type="button" id="eAvatarBtn" class="btn btn-secondary" style="padding:9px 16px;font-size:.82rem;margin-bottom:7px;border-radius:999px;background:#f8fafc;color:#162231;border:1px solid #d8dde6;">Upload Image</button>' +
+            '<div style="color:#637389;font-size:.78rem;">JPG, PNG, or WebP. Max 5MB.</div>' +
+            '</div></div>' +
+            '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
+            '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
+            '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
+            '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
+            '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#ffd700;">Gamer Profile</h3></div>' +
+            '<label style="' + ls + '">PSN Username</label><input id="eGamerPSN" value="' + ((profileData._gamer && profileData._gamer.psn_username) || '') + '" placeholder="Your PlayStation Network ID" style="' + is + '">' +
+            '<label style="' + ls + '">Xbox Gamertag</label><input id="eGamerXbox" value="' + ((profileData._gamer && profileData._gamer.xbox_gamertag) || '') + '" placeholder="Your Xbox Gamertag" style="' + is + '">' +
+            '<label style="' + ls + '">Preferred Console</label><select id="eGamerConsole" style="' + is + '"><option value="">Select...</option><option value="PS5"' + ((profileData._gamer && profileData._gamer.preferred_console === 'PS5') ? ' selected' : '') + '>PS5</option><option value="Xbox"' + ((profileData._gamer && profileData._gamer.preferred_console === 'Xbox') ? ' selected' : '') + '>Xbox</option><option value="PC"' + ((profileData._gamer && profileData._gamer.preferred_console === 'PC') ? ' selected' : '') + '>PC</option></select>' +
+            '<label style="' + ls + '">Favorite Game</label><input id="eGamerFavGame" value="' + ((profileData._gamer && profileData._gamer.favorite_game) || '') + '" placeholder="Favorite game" style="' + is + '">' +
+            '<label style="' + ls + '">Skill Level</label><select id="eGamerSkill" style="' + is + '"><option value="">Select...</option><option value="Beginner"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Beginner') ? ' selected' : '') + '>Beginner</option><option value="Intermediate"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Intermediate') ? ' selected' : '') + '>Intermediate</option><option value="Advanced"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Advanced') ? ' selected' : '') + '>Advanced</option><option value="Elite"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Elite') ? ' selected' : '') + '>Elite</option><option value="Pro"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Pro') ? ' selected' : '') + '>Pro</option></select>' +
+            '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="document.getElementById(\'editModal\').remove()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div>';
+        document.body.appendChild(modal);
+        let _editModalCloseArm = false;
+        modal.addEventListener('mousedown', e => { _editModalCloseArm = (e.target === modal); });
+        modal.addEventListener('click', e => { if (e.target === modal && _editModalCloseArm) modal.remove(); _editModalCloseArm = false; });
+
+        // Wire up file picker
+        let pendingAvatarData = null;
+        const fileInput = document.getElementById('eAvatarFile');
+        const preview = document.getElementById('eAvatarPreview');
+        document.getElementById('eAvatarBtn').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB', 'error'); return; }
+            if (!file.type.match(/^image\/(png|jpe?g|webp)$/)) { showToast('Please choose a PNG, JPG, or WebP image', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendingAvatarData = e.target.result;
+                preview.src = pendingAvatarData;
+                showToast('Image loaded. Click Save to apply.', 'info');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            try {
+                const updates = {};
+                profileEditSetIfChanged(updates, 'display_name', document.getElementById('eDN').value.trim(), profileData.display_name || profileData.username || '');
+                profileEditSetIfChanged(updates, 'bio', document.getElementById('eBio').value.trim(), profileData.bio || '');
+                profileEditSetIfChanged(updates, 'location', document.getElementById('eLoc').value.trim(), profileData.location || '');
+                profileEditSetIfChanged(updates, 'headline', (document.getElementById('eHeadline') ? document.getElementById('eHeadline').value.trim() : ''), profileData.headline || '');
+                if (pendingAvatarData && pendingAvatarData !== profileData.avatar_url) updates.avatar_url = pendingAvatarData;
+
+                // Try backend first
+                if (api && typeof api.updateProfile === 'function') {
+                    if (Object.keys(updates).length) {
+                        try {
+                            const profileResult = await api.updateProfile(updates);
+                            if (profileResult && profileResult.user) {
+                                profileData = { ...profileData, ...profileResult.user };
+                                window.profileData = profileData;
+                                if (currentUser && profileResult.user.username === currentUser.username) {
+                                    currentUser = { ...currentUser, ...profileResult.user };
+                                    window.currentUser = currentUser;
+                                }
+                            }
+                        } catch(err) {
+                            throw new Error((err && err.message) || 'Profile update failed. Please try again.');
+                        }
+                    }
+
+                    // Favorite teams are managed in the Sports Identity card on the
+                    // profile itself (catalog-backed multi-team picker writing
+                    // favorite_teams/favorite_sports via PUT /users/profile) -- this
+                    // modal no longer owns a separate, disconnected copy of that data.
+
+                    // Save gamer profile
+                    try {
+                        const gamerData = {
+                            psn_username: document.getElementById('eGamerPSN').value.trim() || null,
+                            xbox_gamertag: document.getElementById('eGamerXbox').value.trim() || null,
+                            preferred_console: document.getElementById('eGamerConsole').value || null,
+                            favorite_game: document.getElementById('eGamerFavGame').value.trim() || null,
+                            skill_tier: document.getElementById('eGamerSkill').value || null
+                        };
+                        const currentGamer = profileData._gamer && typeof profileData._gamer === 'object' ? profileData._gamer : {};
+                        const gamerChanged = Object.keys(gamerData).some(function(key) {
+                            return profileEditString(gamerData[key]) !== profileEditString(currentGamer[key]);
+                        });
+                        if (Object.values(gamerData).some(v => v) && gamerChanged) {
+                            await api.request('/gaming/profile', { method: 'PUT', body: gamerData });
+                            profileData._gamer = gamerData;
+                            window.profileData = profileData;
+                        }
+                    } catch(err) { console.warn('Failed to save gamer profile:', err); }
+                }
+                // Always update localStorage auth too
+                if (typeof auth !== 'undefined' && auth.currentUser) {
+                    const localUpdates = {};
+                    if (updates.display_name) localUpdates.displayName = updates.display_name;
+                    if (updates.bio !== undefined) localUpdates.bio = updates.bio;
+                    if (updates.location !== undefined) localUpdates.location = updates.location;
+                    if (updates.avatar_url) localUpdates.avatar = updates.avatar_url;
+                    // Store gamer profile locally too (favorite teams are handled by
+                    // the Sports Identity card, not this modal -- see above).
+                    const nextLocalGamer = {
+                        psn_username: document.getElementById('eGamerPSN').value.trim(),
+                        xbox_gamertag: document.getElementById('eGamerXbox').value.trim(),
+                        preferred_console: document.getElementById('eGamerConsole').value,
+                        favorite_game: document.getElementById('eGamerFavGame').value.trim(),
+                        skill_tier: document.getElementById('eGamerSkill').value
+                    };
+                    const currentLocalGamer = auth.currentUser._gamer || {};
+                    const localGamerChanged = Object.keys(nextLocalGamer).some(function(key) {
+                        return profileEditString(nextLocalGamer[key]) !== profileEditString(currentLocalGamer[key]);
+                    });
+                    if (localGamerChanged) localUpdates._gamer = nextLocalGamer;
+                    if (auth.currentUser.backendUser) {
+                        if (Object.keys(localUpdates).length) {
+                            auth.currentUser = { ...auth.currentUser, ...localUpdates };
+                            if (typeof auth.persistSession === 'function') auth.persistSession();
+                        }
+                    } else if (Object.keys(localUpdates).length) {
+                        auth.updateProfile(localUpdates);
+                    }
+                }
+                analyticsTrack('profile_updated_manual', {
+                    username: profileUsername || '',
+                    fields_updated: 'display_name,bio,location,gamer_profile,avatar'
+                });
+                showToast('Profile updated!', 'success'); modal.remove();
+                profileData = { ...profileData, ...updates };
+                window.profileData = profileData;
+                renderProfileHeader(profileData);
+                await loadProfile();
+            } catch(err) { showToast(err.message, 'error'); }
+        });
+    }
+
+    // Aliases for inline handlers. Assign direct references, not self-calling wrappers.
+    window.openProfileEditor = openEditModal;
+    window.openEditModal = openEditModal;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('loadMoreBtn');
+        if (btn) btn.addEventListener('click', loadMorePicks);
+    });
+
+    // ?action=edit / ?action=change-avatar deep links from the top-right user-menu dropdown
+    // (tmr-sitewide.js?v=20260729navclean1). Fires once profileData is loaded so openEditModal has its data.
+    (function wireProfileActionDeepLink() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const action = (params.get('action') || '').toLowerCase();
+            if (!action) return;
+            let tries = 0;
+            const timer = setInterval(function() {
+                tries++;
+                if (tries > 60) { clearInterval(timer); return; }
+                if (action === 'edit') {
+                    if (window.profileData && typeof window.openEditModal === 'function') {
+                        clearInterval(timer);
+                        try { window.openEditModal(); } catch (e) {}
+                    }
+                } else if (action === 'change-avatar') {
+                    const picker = document.getElementById('profileAvatarFile');
+                    if (picker && typeof picker.click === 'function') {
+                        clearInterval(timer);
+                        try { picker.click(); } catch (e) {}
+                    }
+                } else {
+                    clearInterval(timer);
+                }
+            }, 250);
+        } catch (e) {}
+    })();
+
+    init();
+    

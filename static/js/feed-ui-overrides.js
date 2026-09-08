@@ -31,7 +31,10 @@ function getAvatarHtml(item, className) {
     if (src) {
         return '<div class="' + className + '"><img src="' + esc(src) + '" alt="' + esc(display) + ' avatar" loading="lazy"></div>';
     }
-    return '<div class="' + className + '">' + esc((display || '?')[0].toUpperCase()) + '</div>';
+    /* NO_LETTER_FLASH_20260907: no picture is the resolver route, not an initial.
+       It answers the upload, else the favourite-team club mark, else the neutral
+       silhouette - the same face the member wears everywhere else. */
+    return '<div class="' + className + '"><img src="' + esc((((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent((item.username || display) || '') + '/avatar')) + '" alt="' + esc(display) + ' avatar" loading="lazy"></div>';
 }
 
 /* LIFETIME record only. Every field read here is attached by the backend from
@@ -476,7 +479,7 @@ async function toggleComments(id, type) {
             html += comments.map(c => {
                 const username = c.username || '';
                 return '<div class="cmt-item">' +
-                    '<div class="cmt-avatar">' + esc((c.display_name || c.username || '?')[0].toUpperCase()) + '</div>' +
+                    '<div class="cmt-avatar"><img src="' + esc(c.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar')) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>' +
                     '<div class="cmt-body">' +
                         '<div class="cmt-author"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + esc(c.display_name || c.username || 'User') + '</a></div>' +
                         '<div class="cmt-text">' + esc(c.content) + '</div>' +
@@ -532,8 +535,7 @@ async function initAuth() {
         if (composerCard) composerCard.style.display = 'block';
         if (compAvatar) {
             const avatar = user.avatar_url || user.avatar || user.profile_image_url;
-            if (avatar) compAvatar.innerHTML = '<img src="' + esc(avatar) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-            else compAvatar.textContent = (user.displayName || user.display_name || user.username || '?')[0].toUpperCase();
+            compAvatar.innerHTML = '<img src="' + esc(avatar || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar')) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
         }
         loadSidebarStats(user);
         await hydrateFollowingState();
