@@ -776,7 +776,7 @@
       : '';
 
     var perf = tracked && t && t.sample_size > 0
-      ? '<div class="metric-grid" style="margin-top:12px">'
+      ? '<div class="metric-grid" style="margin-top:10px">'
         + metricTile('Record', t.record, t.sample_size + ' graded')
         + metricTile('Win rate', fmtPct(t.win_rate), t.wins + 'W / ' + t.losses + 'L' + (t.pushes ? ' / ' + t.pushes + 'P' : ''))
         + metricTile('ROI', t.roi == null ? '-' : t.roi.toFixed(2) + '%', 'on ' + t.staked_units + 'u', signClass(t.roi))
@@ -788,16 +788,23 @@
           : '');
 
     return '<div class="model-card" data-id="' + m.id + '">'
-      + '<h3>' + esc(m.name) + ' <span class="tag ' + st.cls + '">' + esc(st.label) + '</span></h3>'
-      + conditionChips(f, m.sport_key)
-      + '<div class="model-meta" style="margin-top:10px">' + window_ + '</div>'
+      + '<div class="model-top"><div><h3>' + esc(m.name) + '</h3>'
+      + conditionChips(f, m.sport_key) + '</div>'
+      + '<span class="tag ' + st.cls + '">' + esc(st.label) + '</span></div>'
+      + '<div class="model-body">'
+      + '<div>'
+      + '<div class="model-meta" style="margin-top:4px">' + window_ + '</div>'
       + trackBar(m)
       + (st.key === 'paused'
           ? '<div class="model-meta">Paused. Wagers already logged still settle, but nothing new is added.</div>' : '')
       + (st.key === 'complete'
           ? '<div class="model-meta">The tracking window has closed. Nothing new is added. Anything still open settles normally.</div>' : '')
-      + counts
-      + perf
+      + (tracked && m.last_scanned_at
+          ? '<div class="model-meta">Board last checked ' + esc(new Date(m.last_scanned_at).toLocaleString()) + '</div>'
+          : '')
+      + '</div>'
+      + '<div>' + counts + perf + '</div>'
+      + '</div>'
       + (tracked
           ? '<div class="save-box terms-box" data-terms="' + m.id + '" hidden>'
             + '<div class="two-col">'
@@ -811,9 +818,6 @@
             + '<button type="button" class="primary" data-act="terms-save" data-id="' + m.id + '">Save period</button>'
             + '<button type="button" data-act="terms-cancel" data-id="' + m.id + '">Cancel</button>'
             + '</div></div>'
-          : '')
-      + (tracked && m.last_scanned_at
-          ? '<div class="model-meta" style="margin-top:10px">Board last checked ' + esc(new Date(m.last_scanned_at).toLocaleString()) + '</div>'
           : '')
       + '<div class="button-row">'
       + (tracked
