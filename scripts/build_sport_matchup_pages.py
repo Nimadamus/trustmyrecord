@@ -86,7 +86,7 @@ SPORTS = {
 # exactly as it did before, with no empty box.
 GAME_OF_THE_WEEK = {
     "nfl": {
-        "url": "/nfl-game-of-the-week/",
+        "url": "/nfl/49ers-vs-rams-week-1-2026/",
         "week": "Week 1",
         "matchup": "49ers at Rams, Melbourne Cricket Ground",
         "blurb": ("The first NFL regular season game ever played in Australia, taken apart in full: "
