@@ -78,6 +78,63 @@ SPORTS = {
 }
 
 
+# GAME_OF_THE_WEEK_20260907
+# The one long form deep dive we publish per week, surfaced at the top of the
+# sport hub. It lives at its own URL and is written by hand, so the hub links to
+# it rather than trying to generate it. Point this at the current week's article
+# and the callout follows; set it to None out of season and the hub renders
+# exactly as it did before, with no empty box.
+GAME_OF_THE_WEEK = {
+    "nfl": {
+        "url": "/nfl-game-of-the-week/week-1-49ers-rams-melbourne/",
+        "week": "Week 1",
+        "matchup": "49ers at Rams, Melbourne Cricket Ground",
+        "blurb": ("The first NFL regular season game ever played in Australia, taken apart in full: "
+                  "every 2025 number for both teams, what the Rams bought in Myles Garrett and Aaron "
+                  "Donald, the opener against the current line with the ticket and money splits, the "
+                  "live injury board, and the game simulated 1,000 times."),
+        "logos": ["sf", "lar"],
+        "index": "/nfl-game-of-the-week/",
+    },
+    "nba": None,
+    "nhl": None,
+}
+
+
+def gotw_block(sport):
+    """The featured deep dive callout, or nothing at all when none is set."""
+    g = GAME_OF_THE_WEEK.get(sport)
+    if not g:
+        return ""
+    logos = "".join(
+        '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/%s.png" alt="" width="34" height="34" '
+        'loading="lazy">' % a for a in g.get("logos", []))
+    return (
+        '        <section class="mm-sec mm-gotw">\n'
+        '            <a class="mm-gotw-card" href="%s">\n'
+        '                <span class="mm-gotw-tag">Game of the Week &middot; %s</span>\n'
+        '                <span class="mm-gotw-teams">%s<b>%s</b></span>\n'
+        '                <span class="mm-gotw-blurb">%s</span>\n'
+        '                <span class="mm-gotw-cta">Read the deep dive and the 1,000 simulations &rsaquo;</span>\n'
+        '            </a>\n'
+        '        </section>\n'
+        '        <style>\n'
+        '            .mm-gotw-card{display:block;text-decoration:none;color:inherit;padding:18px 20px;border-radius:16px;\n'
+        '                background:linear-gradient(120deg,rgba(255,201,60,.13),rgba(0,53,148,.16) 58%%,rgba(170,0,0,.15));\n'
+        '                border:1px solid rgba(255,201,60,.4)}\n'
+        '            .mm-gotw-card:hover{border-color:#FFC93C}\n'
+        '            .mm-gotw-tag{display:inline-block;font:800 .68rem/1 "Barlow Condensed",Inter,sans-serif;\n'
+        '                letter-spacing:.18em;text-transform:uppercase;color:#04101c;background:#FFC93C;\n'
+        '                padding:6px 10px;border-radius:5px}\n'
+        '            .mm-gotw-teams{display:flex;align-items:center;gap:10px;margin:13px 0 9px}\n'
+        '            .mm-gotw-teams img{width:34px;height:34px;object-fit:contain}\n'
+        '            .mm-gotw-teams b{font:900 1.25rem/1.1 "Barlow Condensed",Inter,sans-serif;text-transform:uppercase}\n'
+        '            .mm-gotw-blurb{display:block;max-width:78ch;line-height:1.6;opacity:.86;font-size:.94rem}\n'
+        '            .mm-gotw-cta{display:inline-block;margin-top:12px;font-weight:800;color:#FFC93C;font-size:.9rem}\n'
+        '        </style>\n'
+        % (g["url"], esc(g["week"]), logos, esc(g["matchup"]), esc(g["blurb"])))
+
+
 class BuildError(Exception):
     pass
 
@@ -515,6 +572,7 @@ def render_hub(sport, games, built_at):
          'research page per matchup: head to head record, against the spread and over/under '
          'splits, recent form, and what the data does not cover.</p>\n' % esc(label),
          '        </header>\n',
+         gotw_block(sport),
          '        <section class="mm-sec">\n            <h2>On the board</h2>\n',
          ('            <p class="mm-lede">%d game%s listed, %d priced by the sportsbook feed. '
           'Times are Eastern.</p>\n' % (len(games), "" if len(games) == 1 else "s", priced))
@@ -535,6 +593,8 @@ def render_hub(sport, games, built_at):
           '        <section class="mm-sec">\n            <h2>Elsewhere on TrustMyRecord</h2>\n',
           '            <ul>\n',
           '                <li><a href="/handicapping/">The handicapping hub, every sport</a></li>\n',
+          ('                <li><a href="%s">%s Game of the Week, the weekly deep dive</a></li>\n'
+           % (GAME_OF_THE_WEEK[sport]["index"], esc(SPORTS[sport]["label"]))) if GAME_OF_THE_WEEK.get(sport) else "",
           '                <li><a href="/handicapping/mlb/">MLB matchups, odds and probable pitchers</a></li>\n',
           ('                <li><a href="%s">%s simulator</a></li>\n' % (sim, esc(label))) if sim else "",
           '                <li><a href="/betlegend-pro/">BetLegend Pro, the research database '
