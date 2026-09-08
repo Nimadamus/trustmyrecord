@@ -180,8 +180,34 @@
          Bundesliga, Serie A, Ligue 1, the Champions League and MLS. */
       ['/matchup-of-the-day/soccer/', 'Soccer']
     ]],
-    ['/handicapping/mlb/', 'MLB Matchups Today'],
-    ['/handicapping/', 'Handicapping Hub'],
+    /* HANDICAPPING HUB, 2026-09-08. 'MLB Matchups Today' used to sit here as a
+       SIBLING of 'Handicapping Hub', and that read as two separate sections
+       when it is one: the MLB page is the hub's baseball room, not a rival of
+       it. Same shape as Featured Matchups above now, one row that opens a
+       submenu with a row per sport. Every row lands on that league's research
+       page, and each of those pages opens on today's board for its league, so
+       the destination is what the row promises.
+
+       Featured Matchups stays its own row on purpose. Those are the games we
+       spotlight; this is where a member researches every game on the board.
+
+       Five rows, not seven: /handicapping/ncaaf/ and /handicapping/soccer/ do
+       not exist. A menu entry pointing at a door that has not been built is a
+       dead link, so those two join this list the day their hub bakes and is
+       serving, the same way Soccer waited for its page in Featured Matchups.
+
+       '/handicapping/' itself is no longer a row: the submenu trigger is a
+       button, and the chooser's only job was to hand a member the league they
+       just picked here. It stays linked from the footer Explore block and from
+       tmr-linkhub.js, and it is passed as alsoCurrent below so that landing on
+       it still lights this dropdown. */
+    ['@sub', 'Handicapping Hub', [
+      ['/handicapping/mlb/', 'MLB'],
+      ['/handicapping/nfl/', 'NFL'],
+      ['/handicapping/nba/', 'NBA'],
+      ['/handicapping/nhl/', 'NHL'],
+      ['/handicapping/tennis/', 'Tennis']
+    ]],
     /* Added 2026-09-06. The affiliate sportsbook reviews shipped reachable
        only from a block partway down the homepage and the homepage footer,
        so on every other page on the site there was no way to reach it at
@@ -481,7 +507,7 @@
         '<div class="ds-nav-panel">' +
           '<div class="ds-mainnav">' +
             todayLink() +
-            menu('Sportsbook', SPORTSBOOK, null, true) +
+            menu('Sportsbook', SPORTSBOOK, ['/handicapping/'], true) +
             menu('Handicappers', HANDICAPPERS) +
             menu('Online Gaming', SPORTS_GAMING, SPORTS_GAMING_ALSO) +
             menu('Compete', COMPETE) +

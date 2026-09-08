@@ -7,25 +7,50 @@
     const sportsbookPicksHref = "/sportsbook/";
     // Sportsbook is now a dropdown (Make Picks + Handicapping Hub), an EXPANSION
     // of Sportsbook rather than a new permanent top-level item.
+    // SPORTSBOOK MENU. Two submenus, in step with SPORTSBOOK in
+    // static/js/tmr-ds-nav.js -- these two tables render the same menu on
+    // different halves of the site and must agree, or a member sees a
+    // different Sportsbook menu depending on which page they are standing on.
+    //
+    // Restructured 2026-09-08. This list was going to grow one row per sport
+    // forever, and worse, "MLB Matchups Today" sat as a SIBLING of
+    // "Handicapping Hub" when the MLB page IS the hub's baseball room. Both
+    // families are now one row each that opens a submenu: Featured Matchups
+    // for the games we spotlight, Handicapping Hub for researching every game
+    // on the board. Nothing was removed; the leaf URLs are unchanged.
+    //
+    // A submenu row is ["@sub", label, items]. See renderSportsbookRows().
     const sportsbookMenuRoutes = [
         ["/sportsbook/", "Make Picks"],
-        // Matchup of the Day joined this dropdown 2026-08-20. tmr-ds-nav.js has
-        // carried it since 2026-08-11, but the ~340 pages that still load THIS
-        // script showed a two-item Sportsbook menu, so the daily article had no
-        // nav entry point on any of them. /today/ (not the hub) for the same
-        // reason as in tmr-ds-nav.js: it is a stable address that hands off to
-        // the day's article, and the article's own URL changes daily.
-        // Split per sport 2026-09-04, in step with tmr-ds-nav.js: /today/ is
-        // newest-wins across every sport, so one entry could not serve both
-        // baseball and college football once each had its own daily lane.
-        ["/matchup-of-the-day/mlb/", "MLB Matchup of the Day"],
-        ["/matchup-of-the-day/ncaaf/", "NCAAF Matchup of the Day"],
-        // Tennis joined 2026-09-06, in step with tmr-ds-nav.js and
-        // tmr-linkhub.js. All three tables carry the same three per-sport
-        // doors; a menu that lists two of the three lanes is the bug this
-        // comment exists to stop.
-        ["/matchup-of-the-day/tennis/", "Tennis Matchup of the Day"],
-        ["/handicapping/", "Handicapping Hub"]
+        // The per-sport doors. Each is a stable address that bakes with its own
+        // sport's newest Game File, so two lanes can never collapse onto the
+        // same page. The rows are the sport name alone because the row that
+        // opens them already says Featured Matchups; NFL Game of the Week keeps
+        // its full name because that lane is a weekly deep dive and the name is
+        // the product.
+        ["@sub", "Featured Matchups", [
+            ["/nfl-game-of-the-week/", "NFL Game of the Week"],
+            ["/matchup-of-the-day/ncaaf/", "NCAAF"],
+            ["/matchup-of-the-day/mlb/", "MLB"],
+            ["/matchup-of-the-day/tennis/", "Tennis"],
+            ["/matchup-of-the-day/soccer/", "Soccer"]
+        ]],
+        // Each row lands on that league's research page, and each of those
+        // pages opens on today's board for its league. Five rows, not seven:
+        // /handicapping/ncaaf/ and /handicapping/soccer/ do not exist, and a
+        // menu entry pointing at a door that has not been built is a dead link.
+        // They join the day their hub bakes and is serving.
+        ["@sub", "Handicapping Hub", [
+            ["/handicapping/mlb/", "MLB"],
+            ["/handicapping/nfl/", "NFL"],
+            ["/handicapping/nba/", "NBA"],
+            ["/handicapping/nhl/", "NHL"],
+            ["/handicapping/tennis/", "Tennis"]
+        ]],
+        // Added here 2026-09-08. tmr-ds-nav.js has carried it since 2026-09-06,
+        // so on the ~300 pages that render their nav from THIS script the
+        // affiliate reviews had no nav entry at all.
+        ["/best-online-sportsbooks/", "Best Sportsbooks"]
     ];
     // Kept in sync with static/js/tmr-ds-nav.js's route tables so every page
     // shows the identical, simplified menu regardless of which nav script it
@@ -97,6 +122,61 @@
     const SPORTS_GAMING_GROUP = new Set(["sports-gaming.html", "arena.html", "online-gaming.html", "mlb-the-show-stat-league.html", "rankings.html", "leagues.html", "mlb-the-show.html", "madden.html", "nba-2k.html", "ea-fc.html", "nhl.html"]);
     const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "hangout.html"]);
     const TOOLS_GROUP = new Set(["tools.html", "sports-simulators.html", "mlb-simulator.html", "nfl-simulator.html", "nba-simulator.html", "nhl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
+    // --- Sportsbook dropdown rows ------------------------------------------
+    // A plain row is [href, label]; a submenu row is ["@sub", label, items].
+    // Mirrors .ds-sub in static/js/tmr-ds-nav.js so both nav scripts render the
+    // same menu with the same behaviour.
+    function sportsbookLeaves(rows) {
+        const out = [];
+        rows.forEach((r) => {
+            if (r[0] === "@sub") { sportsbookLeaves(r[2]).forEach((k) => out.push(k)); }
+            else { out.push(r); }
+        });
+        return out;
+    }
+    // ONE aria-current per menu. The path test is a prefix match, so on
+    // /handicapping/mlb/ both that row and any ancestor row would match; only
+    // the LONGEST matching href is the page you are standing on. The legacy
+    // currentFile test is limited to one-segment hrefs on purpose: two rows now
+    // end in the same segment (/matchup-of-the-day/mlb/ and /handicapping/mlb/)
+    // and a filename-only comparison lights both.
+    function sportsbookCurrentHref() {
+        const path = (location.pathname || "/").toLowerCase();
+        let best = null;
+        sportsbookLeaves(sportsbookMenuRoutes).forEach((r) => {
+            const h = r[0].split("#")[0].toLowerCase();
+            const segs = h.split("/").filter(Boolean);
+            const file = segs.length
+                ? (segs[segs.length - 1].endsWith(".html")
+                    ? segs[segs.length - 1]
+                    : segs[segs.length - 1] + ".html")
+                : "index.html";
+            const hit = path === h
+                || (h !== "/" && path.indexOf(h) === 0)
+                || (segs.length === 1 && currentFile === file);
+            if (hit && (best === null || h.length > best.length)) best = h;
+        });
+        return best;
+    }
+    function renderSportsbookRows(rows, current) {
+        return rows.map((r) => {
+            if (r[0] === "@sub") {
+                const kids = sportsbookLeaves(r[2]);
+                const on = kids.some((k) => k[0].split("#")[0].toLowerCase() === current);
+                return `<div class="tmr-sportsbook-sub${on ? " is-current" : ""}">`
+                    + `<button type="button" class="tmr-sportsbook-sub__trigger" aria-haspopup="true" aria-expanded="false">${r[1]}</button>`
+                    + `<div class="tmr-sportsbook-sub__panel" role="menu" aria-label="${r[1]} links">`
+                    + kids.map((k) => {
+                        const active = k[0].split("#")[0].toLowerCase() === current;
+                        return `<a href="${k[0]}" role="menuitem"${active ? ' aria-current="page"' : ""}>${k[1]}</a>`;
+                    }).join("")
+                    + `</div></div>`;
+            }
+            const active = r[0].split("#")[0].toLowerCase() === current;
+            return `<a href="${r[0]}" role="menuitem"${active ? ' aria-current="page"' : ""}>${r[1]}</a>`;
+        }).join("");
+    }
+
     const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
 
     const routeMeta = {
@@ -499,18 +579,7 @@
                         Sportsbook
                     </button>
                     <div class="tmr-sportsbook-menu__panel" role="menu" aria-label="Sportsbook links">
-                        ${sportsbookMenuRoutes.map(([href, label]) => {
-                            const hrefPath = href.split("#")[0].toLowerCase();
-                            const segs = hrefPath.split("/").filter(Boolean);
-                            const hrefFile = segs.length
-                                ? (segs[segs.length - 1].endsWith(".html")
-                                    ? segs[segs.length - 1]
-                                    : segs[segs.length - 1] + ".html")
-                                : "index.html";
-                            const active = currentFile === hrefFile
-                                || (href === "/handicapping/" && (location.pathname || "").indexOf("/handicapping") === 0);
-                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
-                        }).join("")}
+                        ${renderSportsbookRows(sportsbookMenuRoutes, sportsbookCurrentHref())}
                     </div>
                 </div>
                 <div class="tmr-support-menu tmr-handicappers-menu${HANDICAPPERS_GROUP.has(currentFile) ? " is-current" : ""}">
@@ -654,11 +723,22 @@
     const communityTrigger = nav.querySelector(".tmr-community-menu__trigger");
     const sportsbookMenu = nav.querySelector(".tmr-sportsbook-menu");
     const sportsbookTrigger = nav.querySelector(".tmr-sportsbook-menu__trigger");
+    // Closing the dropdown must also collapse whatever submenu was open inside
+    // it, or the next open re-renders with the submenu already expanded.
+    function closeSportsbookSubs() {
+        if (!sportsbookMenu) return;
+        sportsbookMenu.querySelectorAll(".tmr-sportsbook-sub.is-open").forEach((sub) => {
+            sub.classList.remove("is-open");
+            const trigger = sub.querySelector(".tmr-sportsbook-sub__trigger");
+            if (trigger) trigger.setAttribute("aria-expanded", "false");
+        });
+    }
     function closeSportsbookMenu() {
         if (sportsbookMenu && sportsbookTrigger) {
             sportsbookMenu.classList.remove("is-open");
             sportsbookTrigger.setAttribute("aria-expanded", "false");
         }
+        closeSportsbookSubs();
     }
     function closeCommunityMenu() {
         if (communityMenu && communityTrigger) {
@@ -1060,6 +1140,21 @@
                 closeAllSupportMenus();
                 const first = sportsbookMenu.querySelector(".tmr-sportsbook-menu__panel a");
                 if (first) { try { first.focus(); } catch (e) {} }
+            }
+            return;
+        }
+        // Featured Matchups / Handicapping Hub. On a pointer device the submenu
+        // opens on hover (CSS); this is the tap path and the keyboard path.
+        const sportsbookSubToggle = event.target.closest(".tmr-sportsbook-sub__trigger");
+        if (sportsbookSubToggle) {
+            event.preventDefault();
+            event.stopPropagation();
+            const sub = sportsbookSubToggle.closest(".tmr-sportsbook-sub");
+            const wasOpen = sub.classList.contains("is-open");
+            closeSportsbookSubs();
+            if (!wasOpen) {
+                sub.classList.add("is-open");
+                sportsbookSubToggle.setAttribute("aria-expanded", "true");
             }
             return;
         }

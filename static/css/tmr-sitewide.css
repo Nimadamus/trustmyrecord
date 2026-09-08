@@ -5174,6 +5174,102 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
     color: var(--tmr-teal);
     background: rgba(255, 255, 255, 0.06);
 }
+
+/* SUBMENUS inside the Sportsbook dropdown (Featured Matchups, Handicapping
+   Hub), 2026-09-08. Mirrors the .ds-sub rules that tmr-ds-nav.js injects, so
+   the menu behaves the same on both halves of the site. Opens on hover on a
+   pointer device and on tap/keyboard via .is-open, set by tmr-sitewide.js. */
+.tmr-sportsbook-sub {
+    position: relative;
+    display: block;
+}
+.tmr-sportsbook-sub__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #dce8f5;
+    font: 800 0.82rem/1.15 var(--tmr-font);
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    cursor: pointer;
+}
+.tmr-sportsbook-sub__trigger::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(45deg);
+    opacity: 0.7;
+}
+.tmr-sportsbook-sub.is-current > .tmr-sportsbook-sub__trigger {
+    color: var(--tmr-teal);
+    box-shadow: inset 3px 0 0 var(--tmr-teal);
+}
+.tmr-sportsbook-sub__trigger:focus-visible {
+    outline: 2px solid var(--tmr-teal);
+    outline-offset: -2px;
+}
+@media (hover: hover) {
+    .tmr-sportsbook-sub:hover > .tmr-sportsbook-sub__trigger,
+    .tmr-sportsbook-sub.is-open > .tmr-sportsbook-sub__trigger {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+.tmr-sportsbook-sub__panel {
+    display: none;
+    position: absolute;
+    top: -8px;
+    left: calc(100% + 6px);
+    z-index: 1300;
+    min-width: 178px;
+    flex-direction: column;
+    padding: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    background: rgba(8, 14, 26, 0.98);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+}
+/* keeps the pointer inside the menu while it crosses the 6px gap */
+.tmr-sportsbook-sub__panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -8px;
+    width: 8px;
+    height: 100%;
+}
+@media (hover: hover) {
+    .tmr-sportsbook-sub:hover > .tmr-sportsbook-sub__panel { display: flex; }
+}
+.tmr-sportsbook-sub.is-open > .tmr-sportsbook-sub__panel { display: flex; }
+.tmr-sportsbook-sub__panel a {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    color: #dce8f5;
+    text-decoration: none;
+    font: 800 0.82rem/1.15 var(--tmr-font);
+    letter-spacing: 0;
+    text-transform: none;
+}
+.tmr-sportsbook-sub__panel a:hover,
+.tmr-sportsbook-sub__panel a[aria-current="page"] {
+    color: var(--tmr-teal);
+    background: rgba(255, 255, 255, 0.06);
+}
 @media (max-width: 860px) {
     .tmr-sportsbook-menu {
         width: 100%;
@@ -5195,6 +5291,32 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 6px;
+    }
+    /* A fly-out has nowhere to fly to on a phone: the submenu opens in place,
+       under its own row, and spans both grid columns so the sport rows are not
+       squeezed into half the width. Hover-open is off here on purpose - a tap
+       is the only way in. */
+    .tmr-sportsbook-sub { grid-column: 1 / -1; }
+    .tmr-sportsbook-sub__panel {
+        position: static;
+        left: auto;
+        top: auto;
+        min-width: 0;
+        padding: 0 0 4px 14px;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        box-shadow: none;
+    }
+    .tmr-sportsbook-sub:hover > .tmr-sportsbook-sub__panel { display: none; }
+    .tmr-sportsbook-sub.is-open > .tmr-sportsbook-sub__panel { display: flex; }
+    .tmr-sportsbook-sub > .tmr-sportsbook-sub__trigger {
+        padding: 11px 0;
+        border-radius: 0;
+        background: none;
+    }
+    .tmr-sportsbook-sub.is-open > .tmr-sportsbook-sub__trigger::after {
+        transform: rotate(135deg);
     }
 }
 
