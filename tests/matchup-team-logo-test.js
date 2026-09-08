@@ -148,8 +148,13 @@ for (const dir of dirs) {
 
     /* The mark must belong to the club the card names. A logo pointing at the
        wrong team is the one failure worse than no logo at all. */
+    /* SEPARATOR-BLIND (2026-09-08): league marks are named min.png, the soccer
+       registry names them ita.inter_milan.png. Comparing a hyphenated slug
+       against an underscored filename can never match, so every soccer card
+       failed a check that was only ever about the mark belonging to the club. */
     const base = path.basename(src).replace(/-dark(\.\w+)$/, '$1');
-    if (!isFallback && base.indexOf(slug(name)) === -1) {
+    const flat = (v) => slug(v).replace(/-/g, '');
+    if (!isFallback && base.replace(/[^a-z0-9]+/gi, '').toLowerCase().indexOf(flat(name)) === -1) {
       bad(dir + ': the card says ' + JSON.stringify(name) +
           ' and the mark is ' + base);
     }

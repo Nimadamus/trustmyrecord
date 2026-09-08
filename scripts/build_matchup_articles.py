@@ -670,6 +670,43 @@ def module_id(module, index):
     return slug or ("section-%d" % index)
 
 
+def _collapse_team_name(city, nick):
+    """The fixture card prints CITY over NICK, which is right for a league whose
+    clubs are "Minnesota" + "Vikings" and wrong for one whose clubs have a single
+    name. The soccer feed hands back both fields filled with the SAME club, so
+    the card read "Real Madrid Real Madrid" and "Internazionale Inter Milan"
+    (2026-09-08), which also broke the logo guard, since no mark filename can
+    contain a doubled name. Collapse to one line whenever the two fields are the
+    same club and leave a genuine city/nickname pair alone.
+    """
+    c = (city or "").strip()
+    n = (nick or "").strip()
+    if not c:
+        return "", n
+    if not n:
+        return "", c
+    cl, nl = c.lower(), n.lower()
+    if cl == nl or cl in nl:
+        return "", n
+    if nl in cl:
+        return "", c
+    # "Internazionale" / "Inter Milan": one name is the long form of the other,
+    # so the first words share a stem. Four characters keeps "San" / "Santos"
+    # and other short city words out of it.
+    cf, nf = cl.split()[0], nl.split()[0]
+    if len(cf) >= 4 and len(nf) >= 4 and (cf.startswith(nf) or nf.startswith(cf)):
+        return "", n
+    return c, n
+
+
+def _city_line(city, nick):
+    return _collapse_team_name(city, nick)[0]
+
+
+def _nick_line(city, nick):
+    return _collapse_team_name(city, nick)[1]
+
+
 def render_body(article):
     """Render the sections, the jump nav, the hero rail and the hero lines.
 
@@ -1059,10 +1096,15 @@ def render_article(article, provenance, neighbours):
         authored = hero.get("%s_logo" % side) or {}
         if authored.get("src") and not authored.get("alt"):
             authored = dict(authored, alt=hero.get("%s_logo_alt" % side) or "")
+        # The SAME collapsed pair the card prints, so the alt text names the club
+        # the reader sees rather than the feed's other name for it ("Inter Milan"
+        # on the card, "Internazionale logo" in the alt).
+        _city, _nick = _collapse_team_name(
+            hero.get("%s_city" % side), hero.get("%s_nick" % side))
         return team_logo(
             sport,
-            city=hero.get("%s_city" % side),
-            nick=hero.get("%s_nick" % side),
+            city=_city,
+            nick=_nick,
             full_name=article.get("%s_team" % side),
             authored=authored,
             color=hero.get("%s_color" % side))
@@ -1157,8 +1199,10 @@ def render_article(article, provenance, neighbours):
         home_color=esc(hero.get("home_color", "#CE1141")),
         away_logo=away_logo_html, home_logo=home_logo_html, hero_faces=faces_html,
         logo_vars=logo_bits, venue_plate=venue_html,
-        away_city=esc(hero.get("away_city", "")), away_nick=esc(hero.get("away_nick", "")),
-        home_city=esc(hero.get("home_city", "")), home_nick=esc(hero.get("home_nick", "")),
+        away_city=esc(_city_line(hero.get("away_city"), hero.get("away_nick"))),
+        away_nick=esc(_nick_line(hero.get("away_city"), hero.get("away_nick"))),
+        home_city=esc(_city_line(hero.get("home_city"), hero.get("home_nick"))),
+        home_nick=esc(_nick_line(hero.get("home_city"), hero.get("home_nick"))),
         away_line=esc(hero.get("away_line", "")), home_line=esc(hero.get("home_line", "")),
         matchup_arrow=esc(hero.get("arrow", "at")),
         rail=rail_html, nav=nav_html, body=body_html, postgame=postgame_html,
