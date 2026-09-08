@@ -41,6 +41,8 @@
   var AGO_TICK_MS = 10000;     // "just now" -> "12 sec ago" while an item is up
   var FIRST_EVENT_GRACE_MS = 6000;
   var POLL_MS = 60000;         // fallback refresh when the stream is not up
+  var REFRESH_MS = 300000;     // backlog re-read, stream up or not (see startRotation)
+  var STALE_MS = 24 * 3600 * 1000;   // how far back the loop is allowed to cycle
   var BOOT_RETRY_MS = 20000;   // first fetch failed: try again before giving up
   var BOOT_RETRIES = 3;
   var MAX_SEEN = 400;          // the id set cannot grow for the life of a tab
@@ -48,12 +50,16 @@
   var root = null, slot = null;
   var queue = [];              // front = next to show
   var ring = [];               // every event we still hold, newest first — the loop
+  /* id -> freshness (ms) of the copy we hold, NOT a boolean. An event row can
+     be rewritten in place by the backend, keeping its id; the freshness marker
+     is the only way to tell "already have this" from "have a stale version of
+     this". See enqueue(). */
   var seen = Object.create(null);
   var seenOld = Object.create(null);   // previous generation, see enqueue()
   var current = null;          // { data, node }
   var rotateTimer = null, agoTimer = null, graceTimer = null;
   var stream = null, paused = false, dead = false;
-  var pollTimer = null, streamOk = false, bootTries = 0;
+  var pollTimer = null, refreshTimer = null, streamOk = false, bootTries = 0;
   var seenCount = 0;
   var reduced = false;
   try {
@@ -71,6 +77,7 @@
     if (rotateTimer) { clearInterval(rotateTimer); rotateTimer = null; }
     if (agoTimer) { clearInterval(agoTimer); agoTimer = null; }
     if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
     stopPolling();
   }
 
@@ -256,8 +263,20 @@
   function refill() {
     if (ring.length < 2) return;
     var id = current && current.data ? current.data.id : null;
-    for (var i = ring.length - 1; i >= 0; i--) {
-      if (ring[i].id !== id) queue.push(ring[i]);
+    /* The loop cycles the RECENT events it holds, not everything it has ever
+       held. Without this a visitor who leaves the homepage open long enough
+       watches yesterday come back round on a five second timer while today's
+       events are sitting in the same ring. The whole ring is still used when
+       there is nothing fresh enough to rotate through, so a genuinely quiet
+       site keeps a strip instead of freezing on one line. */
+    var cutoff = Date.now() - STALE_MS;
+    var fresh = [];
+    for (var i = 0; i < ring.length; i++) {
+      if ((Date.parse(ring[i].created_at) || 0) >= cutoff) fresh.push(ring[i]);
+    }
+    var loop = fresh.length >= 3 ? fresh : ring;
+    for (var k = loop.length - 1; k >= 0; k--) {
+      if (loop[k].id !== id) queue.push(loop[k]);
     }
   }
 
@@ -282,23 +301,59 @@
     show(queue.splice(nextIndex(), 1)[0]);
   }
 
+  /* What makes a held copy out of date. The backend bumps created_at when it
+     folds a new pick into a standing row, and bumps only updated_at when it
+     corrects a misgraded result in place; either one has to win over the copy
+     already in the queue. */
+  function freshnessOf(ev) {
+    return Date.parse(ev.updated_at || ev.created_at) || 0;
+  }
+
+  /* Remove every copy of an id we are about to supersede. */
+  function drop(id) {
+    for (var i = queue.length - 1; i >= 0; i--) if (queue[i].id === id) queue.splice(i, 1);
+    for (var j = ring.length - 1; j >= 0; j--) if (ring[j].id === id) ring.splice(j, 1);
+  }
+
+  /* If the superseded copy is the one being read right now, correct it where it
+     stands rather than yanking it: same node, new sentence, new age. */
+  function refreshCurrent(ev) {
+    if (!current || !current.data || current.data.id !== ev.id || !current.node) return;
+    var node = current.node;
+    var act = node.querySelector('.tkact-act');
+    if (act) { act.textContent = ev.text || ''; act.title = ev.text || ''; }
+    node.__at = ev.created_at;
+    if (node.__ago) node.__ago.textContent = timeAgo(ev.created_at);
+    current.data = ev;
+  }
+
   function enqueue(events, front) {
     if (!events || !events.length) return 0;
     var added = 0;
     for (var i = 0; i < events.length; i++) {
       var ev = events[i];
-      if (!ev || !ev.id || seen[ev.id] || seenOld[ev.id]) continue;  // shown at most once
-      /* The id set is the ONLY duplicate guard, and it cannot grow for the
-         life of a tab. TWO generations rather than one: when the young set
-         fills it becomes the old set and a fresh one starts, and a lookup
-         checks both. Clearing a single set instead would re-admit the whole
-         current backlog on the very next poll -- the visitor would watch the
-         same events cycle round a second time -- and an id now has to age out
-         of two full generations before that is even possible.
-         Memory is bounded at 2 x MAX_SEEN ids either way. */
+      if (!ev || !ev.id) continue;
+      var fresh = freshnessOf(ev);
+      var held = seen[ev.id] || seenOld[ev.id] || 0;
+      /* AN ID IS NOT AN IDENTITY HERE. The backend rewrites an event row in
+         place -- tmr_activity_emit() folds a second pick into the standing row,
+         keeps its id, sets created_at = now() and re-NOTIFYs that same id --
+         so treating a known id as a duplicate threw away the update and left
+         the superseded line on the strip with its old text and its old age.
+         That was the stale feed reported on 2026-09-08. An id is a duplicate
+         only while the copy we already hold is at least as fresh. */
+      if (held && fresh <= held) continue;
+      if (held) { refreshCurrent(ev); drop(ev.id); }
+      /* The id set is bounded for the life of a tab. TWO generations rather
+         than one: when the young set fills it becomes the old set and a fresh
+         one starts, and a lookup checks both. Clearing a single set instead
+         would re-admit the whole current backlog on the very next poll -- the
+         visitor would watch the same events cycle round a second time -- and an
+         id now has to age out of two full generations before that is even
+         possible. Memory is bounded at 2 x MAX_SEEN ids either way. */
       if (seenCount >= MAX_SEEN) { seenOld = seen; seen = Object.create(null); seenCount = 0; }
-      seen[ev.id] = 1;
-      seenCount++;
+      if (!seen[ev.id]) seenCount++;
+      seen[ev.id] = fresh;
       if (front) { queue.unshift(ev); ring.unshift(ev); }
       else { queue.push(ev); ring.push(ev); }
       added++;
@@ -316,6 +371,14 @@
         current.node.__ago.textContent = timeAgo(current.node.__at);
       }
     }, AGO_TICK_MS);
+    /* The stream is the fast path, not the only guarantee. A slow backlog
+       re-read runs whether or not the stream is up: it is what closes the gap
+       for anything a single NOTIFY could not deliver -- a notification lost
+       while the listener was reconnecting, an instance whose LISTEN dropped,
+       or a row corrected in place with no notify at all (the misgrade path
+       deliberately does not re-announce). Cheap enough to be unconditional:
+       the response is a few KB and this runs twelve times an hour. */
+    refreshTimer = setInterval(poll, REFRESH_MS);
   }
 
   /* ---- refresh without the stream ---------------------------------------
@@ -344,13 +407,12 @@
     fetchRecent().then(function (events) {
       if (dead || !events.length) return;
       /* Newest first on the wire; enqueue(front) unshifts, so hand it the
-         oldest first and the newest ends up at the head of the queue. */
-      var fresh = [];
-      for (var i = events.length - 1; i >= 0; i--) {
-        if (!seen[events[i].id]) fresh.push(events[i]);
-      }
-      if (!fresh.length) return;
-      if (enqueue(fresh, true) && !current) advance();
+         oldest first and the newest ends up at the head of the queue. No
+         pre-filter on `seen` here: enqueue decides, and it is the only place
+         that knows a known id can still carry a NEWER version of the event. */
+      var batch = [];
+      for (var i = events.length - 1; i >= 0; i--) batch.push(events[i]);
+      if (enqueue(batch, true) && !current) advance();
       if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
     }).catch(function () { /* one failed poll changes nothing */ });
   }
