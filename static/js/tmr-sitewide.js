@@ -1372,7 +1372,7 @@
     [
         ["/static/js/config.js?v=430b4bba7b37", "config.js"],
         ["/static/js/backend-api.js?v=30da23fc2105", "backend-api.js"],
-        ["/static/js/auth-persistent.js?v=11181f6ae12c", "auth-persistent.js"],
+        ["/static/js/auth-persistent.js?v=d479be477169", "auth-persistent.js"],
         ["/static/js/notifications.js?v=395be0dd8cdf", "notifications.js"]
     ].forEach(([src, name]) => {
         // REALM-LEVEL GUARD (2026-08-06). A DOM-only check is defeated by
