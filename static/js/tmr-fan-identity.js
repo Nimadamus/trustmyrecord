@@ -183,18 +183,25 @@
     var dots = c.items.map(function (i) {
       return '<span class="tmr-fi-dot' + (i.done ? ' is-on' : '') + '">' + esc(i.label) + '</span>';
     }).join('');
-    var title = hasTeam ? 'Make TMR yours' : 'Who do you rep?';
+    /* SAY WHAT ACTUALLY HAPPENS IF THEY DO NOTHING (2026-09-08). The old copy
+       said "this is the badge the site shows for you", which reads as a
+       description of a setting rather than a consequence. A member with no
+       photo and no team gets a face PICKED for them - the neutral silhouette
+       now, their club mark the moment they name one - and that is what the
+       prompt has to say plainly, because it is the reason the board is full of
+       identical grey faces. */
+    var title = hasTeam ? 'Make TMR yours' : 'Put up an avatar, or one gets picked for you';
     var sub = hasTeam
-      ? 'You are running on your ' + esc(p.favorite_teams[0]) + ' badge. Add a photo whenever you want your own face on the board.'
-      : 'Choose your favorite team or upload your own avatar. Until you do, this is the badge the site shows for you.';
+      ? 'Right now the site is picking your face for you: your ' + esc(p.favorite_teams[0]) + ' badge. Upload a photo whenever you want your own on the board.'
+      : 'Upload a photo, or choose your favorite team and wear its logo. Do neither and TrustMyRecord keeps picking for you, and what it picks is the blank grey silhouette next to your name everywhere on the site.';
     return '<div class="tmr-fi-rep' + (hasTeam ? ' is-quiet' : '') + '" id="tmrFiRep">' +
       facePreview(p) +
       '<div class="tmr-fi-rep-copy"><div class="tmr-fi-rep-title">' + esc(title) + '</div>' +
       '<div class="tmr-fi-rep-sub">' + sub + '</div>' +
       '<div class="tmr-fi-rep-meter"><span class="tmr-fi-rep-pct">Profile ' + c.percent + '% complete</span>' + dots + '</div></div>' +
       '<div class="tmr-fi-rep-acts">' +
-      (hasTeam ? '' : '<button type="button" class="tmr-fi-rep-btn is-primary" id="tmrFiRepTeam">Choose your team</button>') +
-      '<button type="button" class="tmr-fi-rep-btn" id="tmrFiRepPhoto">Add a photo</button>' +
+      '<button type="button" class="tmr-fi-rep-btn is-primary" id="tmrFiRepPhoto">Upload a photo</button>' +
+      (hasTeam ? '' : '<button type="button" class="tmr-fi-rep-btn" id="tmrFiRepTeam">Choose your team</button>') +
       '</div></div>';
   }
 

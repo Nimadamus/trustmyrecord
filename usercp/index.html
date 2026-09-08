@@ -56,6 +56,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .ucp-id-sub{color:#555;font-size:12px;margin-top:2px}
 .ucp-id-sub a{font-weight:bold}
 
+.ucp-avatar-nudge{margin:12px 0 0;padding:11px 13px;border-radius:10px;border:1px solid rgba(53,224,203,.34);background:rgba(53,224,203,.08);color:#cbd5e1;font-size:.86rem;line-height:1.5}
+.ucp-avatar-nudge b{color:#f1f6fb;display:block;margin-bottom:2px}
+.ucp-avatar-nudge a{color:#35e0cb;font-weight:700}
 .ucp-stats{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid var(--line-soft)}
 .ucp-stats li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:12px}
 .ucp-stats li span:first-child{color:#555}
@@ -128,13 +131,14 @@ a:hover{color:var(--link-hover);text-decoration:underline}
                 <div class="ucp-box-head">Your Account</div>
                 <div class="ucp-box-body">
                     <div class="ucp-id">
-                        <div class="ucp-avatar" id="ucpAvatar"><span id="ucpAvatarInitial">&middot;</span></div>
+                        <div class="ucp-avatar" id="ucpAvatar"></div>
                         <div>
                             <div class="ucp-id-name" id="ucpDisplayName">Loading...</div>
                             <div class="ucp-id-sub">@<span id="ucpUsername">...</span></div>
                             <div class="ucp-id-sub"><a href="/profile/" id="ucpViewProfile">View public profile &raquo;</a></div>
                         </div>
                     </div>
+                    <div class="ucp-avatar-nudge" id="ucpAvatarNudge" hidden></div>
                     <ul class="ucp-stats" id="ucpStats">
                         <li><span>Member since</span><b id="ucpJoined">&ndash;</b></li>
                         <li><span>Threads started</span><b id="ucpThreadCount">&ndash;</b></li>
@@ -266,8 +270,10 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     document.getElementById('ucpUsername').textContent = u.username || '';
     var avatar = u.avatar_url || u.avatar || '';
     var av = document.getElementById('ucpAvatar');
-    if(avatar){ av.innerHTML = '<img src="'+esc(avatar)+'" alt="">'; }
-    else { document.getElementById('ucpAvatarInitial').textContent = (dn||'?').charAt(0).toUpperCase(); }
+    /* ONE RESOLVER (2026-09-08): this chip printed the member's initial, which
+       is the one thing no avatar slot on the site is allowed to draw. */
+    av.innerHTML = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">';
+    renderAvatarNudge(u, avatar, prof0(u));
     var prof = currentUsername ? '/profile/?user='+encodeURIComponent(currentUsername) : '/profile/';
     document.getElementById('ucpViewProfile').href = prof;
     document.getElementById('ucpTopProfileLink').href = prof;
@@ -354,6 +360,33 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     if (key === '' || key == null) return '';
     var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
     return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+  }
+
+  function prof0(u){
+    var un = u.username || u.user_name || '';
+    return un ? '/profile/?user='+encodeURIComponent(un) : '/profile/';
+  }
+
+  /* PUT UP AN AVATAR OR ONE GETS PICKED FOR YOU (2026-09-08). 89 of 162 members
+     have neither a photo nor a favourite team, so the site picks their face and
+     what it picks is the neutral silhouette - which is why the boards read as
+     blank. The member only ever saw that prompt if they opened their own public
+     profile; the control panel is where they actually go, so it asks here too
+     and links straight at the editor that fixes it. */
+  function renderAvatarNudge(u, avatar, profileHref){
+    var host = document.getElementById('ucpAvatarNudge');
+    if(!host) return;
+    if(avatar){ host.hidden = true; host.innerHTML = ''; return; }
+    var teams = u.favorite_teams;
+    var hasTeam = Array.isArray(teams) && teams.some(function(x){ return x && String(x).trim(); });
+    host.hidden = false;
+    host.innerHTML = hasTeam
+      ? '<b>The site is picking your face for you.</b> You are wearing the '
+        + esc(String(teams.find(function(x){ return x && String(x).trim(); })).trim())
+        + ' badge. <a href="'+esc(profileHref)+'">Upload a photo</a> whenever you want your own on the board.'
+      : '<b>Put up an avatar, or one gets picked for you.</b> With no photo and no favourite team, '
+        + 'the blank grey silhouette is what shows next to your name everywhere on the site. '
+        + '<a href="'+esc(profileHref)+'">Upload a photo or choose your team</a>.';
   }
 
   function renderFollowing(list){
