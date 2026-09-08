@@ -125,9 +125,21 @@ for (const dir of dirs) {
       bad(dir + ' / ' + name + ': ' + src + ' is not in the repo (broken image)');
       continue;
     }
-    if (fs.statSync(onDisk).size < 512) {
-      bad(dir + ' / ' + name + ': ' + src + ' is a stub, ' +
-          fs.statSync(onDisk).size + ' bytes');
+    /* STUB GUARD BY CONTENT, NOT BYTE COUNT (2026-09-08). A raw 512-byte floor
+       reads every tennis fallback badge as a stub: those players have no club
+       mark, so the bake draws a lettered disc, and a hand-written SVG of a
+       circle and two letters is legitimately ~480 bytes. The failure this guard
+       exists for is an EMPTY or truncated file, so test for drawing content. */
+    const bytes = fs.statSync(onDisk).size;
+    if (/\.svg$/i.test(onDisk)) {
+      const svg = fs.readFileSync(onDisk, 'utf8');
+      const draws = /<(path|circle|rect|polygon|polyline|ellipse|text|image|use|g)[\s>]/i.test(svg);
+      if (!/<svg[\s>]/i.test(svg) || !draws) {
+        bad(dir + ' / ' + name + ': ' + src + ' is a stub, no drawing content (' + bytes + ' bytes)');
+        continue;
+      }
+    } else if (bytes < 512) {
+      bad(dir + ' / ' + name + ': ' + src + ' is a stub, ' + bytes + ' bytes');
       continue;
     }
 
