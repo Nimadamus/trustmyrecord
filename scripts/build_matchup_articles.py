@@ -325,14 +325,32 @@ SOURCE_LABEL = {
 }
 
 
+# Addresses that have MOVED, applied on every bake.
+#
+# A published article stores the links it was written with, so a section that
+# moves leaves every earlier piece pointing at the old address forever. Editing
+# the baked HTML does not hold: the next bake re-renders from the stored record
+# and puts the old link straight back, which is exactly what happened on
+# 2026-09-08, when ten tennis Game Files were repointed by hand in the morning
+# and were pointing at /tennis/ again by the afternoon. Rewriting here is the
+# only place the fix survives, because every page passes through it every time.
+#
+# These are redirects, not 404s, so nothing was ever broken. What this removes
+# is a hop on every internal link into a moved section.
+MOVED_HREFS = {
+    "/tennis/": "/handicapping/tennis/",
+}
+
+
 def safe_href(href):
-    """Internal, resolvable links only.
+    """Internal, resolvable links only, at their current address.
 
     tests/seo-indexability-regression-test.js fails the build if any page links
     to a path that does not exist, and it is right to: TMR must never hand
     Googlebot a 404. Anything not site-relative is dropped rather than shipped.
     """
     href = str(href or "").strip()
+    href = MOVED_HREFS.get(href, href)
     if href.startswith("/") and not href.startswith("//"):
         return href
     return None
