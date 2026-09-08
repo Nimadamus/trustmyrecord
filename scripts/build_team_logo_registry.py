@@ -40,11 +40,27 @@ OUT = os.path.join(ROOT, "data", "team-logos.json")
 CORE = "https://sports.core.api.espn.com/v2/sports"
 UA = {"User-Agent": "TrustMyRecord-bake/1.0 (+https://trustmyrecord.com)"}
 
-# TMR sport key -> ESPN "<sport>/leagues/<league>". Soccer is deliberately absent: it is
-# staged by dozens of competitions with overlapping club names, so a soccer
-# Game File resolves through the same fallback as any unknown club rather than
-# through a guess.
+# TMR sport key -> ESPN "<sport>/leagues/<league>", or a LIST of them for a
+# sport that is several competitions at once.
+#
+# Soccer was deliberately absent until 2026-09-08, on the grounds that it is
+# staged by dozens of competitions with overlapping club names. It is here now
+# because the soccer Matchup of the Day lane covers exactly seven of them, the
+# same seven services/soccer/espnSoccer.js reads, and inside that set the club
+# names are essentially unique. Where two of them do collide, _load() in
+# team_logos.py already deletes the ambiguous key and the club falls back to
+# its initials badge, which is the behaviour this comment used to describe for
+# every soccer club. Nothing is guessed either way.
 LEAGUES = {
+    "soccer": [
+        "soccer/leagues/eng.1",
+        "soccer/leagues/esp.1",
+        "soccer/leagues/ger.1",
+        "soccer/leagues/ita.1",
+        "soccer/leagues/fra.1",
+        "soccer/leagues/uefa.champions",
+        "soccer/leagues/usa.1",
+    ],
     "mlb": "baseball/leagues/mlb",
     "nba": "basketball/leagues/nba",
     "nfl": "football/leagues/nfl",
@@ -124,6 +140,30 @@ def team_row(ref):
     }
 
 
+def fetch_leagues(sport, leagues):
+    """One sport, one or more ESPN competitions, merged into one team list.
+
+    A club that plays in two of them, which every Champions League entrant
+    does, is kept once: the first competition to resolve it wins, and the row
+    is identical either way because it is the same ESPN team id.
+    """
+    if isinstance(leagues, str):
+        return fetch_league(sport, leagues)
+    merged, seen, names = [], set(), []
+    for league in leagues:
+        blob = fetch_league(sport, league)
+        names.append("%s@%s" % (league, blob["season"]))
+        for row in blob["teams"]:
+            if row["id"] in seen:
+                continue
+            seen.add(row["id"])
+            merged.append(row)
+    if not merged:
+        raise RuntimeError("no teams resolved for %s" % sport)
+    merged.sort(key=lambda r: (r["display"] or "").lower())
+    return {"espn": ", ".join(names), "season": None, "teams": merged}
+
+
 def fetch_league(sport, league):
     season = season_for(league)
     if not season:
@@ -169,7 +209,7 @@ def main():
         if sport not in LEAGUES:
             sys.exit("unknown sport %r" % sport)
         try:
-            out[sport] = fetch_league(sport, LEAGUES[sport])
+            out[sport] = fetch_leagues(sport, LEAGUES[sport])
             print("%-6s %4d teams (season %s)" % (
                 sport, len(out[sport]["teams"]), out[sport]["season"]))
         except Exception as e:                                    # noqa: BLE001

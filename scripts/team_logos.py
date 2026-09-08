@@ -96,6 +96,14 @@ def _load():
         _index[sport] = dict((k, v) for k, v in seen.items() if v)
 
 
+# A soccer club is written with and without its corporate suffix depending on
+# which ESPN endpoint you ask. The scoreboard says "Vancouver Whitecaps FC",
+# the core API that built the registry says "Vancouver Whitecaps", and the club
+# fell through to an initials badge on that alone. Stripping the suffix is a
+# second attempt, never a first, so it can only ever rescue a miss.
+_CLUB_SUFFIX = re.compile(r"[\s-]+(fc|cf|sc|afc|ac|as|ss|ssc|bk|bc)$", re.I)
+
+
 def lookup(sport, *names):
     """First name that lands on exactly one club in this sport."""
     _load()
@@ -104,6 +112,14 @@ def lookup(sport, *names):
         t = table.get(slugify(n))
         if t:
             return t
+    for n in names:
+        if not n:
+            continue
+        trimmed = _CLUB_SUFFIX.sub("", str(n)).strip()
+        if trimmed and trimmed.lower() != str(n).strip().lower():
+            t = table.get(slugify(trimmed))
+            if t:
+                return t
     return None
 
 
