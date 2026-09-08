@@ -64,6 +64,14 @@
         .how-t { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: 18px; font-weight: 800; line-height: 1.2; letter-spacing: -0.01em; }
         .how-b { margin: 8px 0 0; color: #a9bacd; font-size: 14px; line-height: 1.6; }
         .how-b b { color: #dbe8f7; font-weight: 600; }
+        /* The plain specification. Every row is a behaviour, never a number,
+           because a page that promises it invents nothing cannot open with an
+           invented example. */
+        .spec { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 30px; margin: 22px 0 0; padding: 0; }
+        .spec-row { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
+        .spec dt { color: #7f96b3; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding-top: 2px; }
+        .spec dd { margin: 0; color: #b3c3d5; font-size: 13.5px; line-height: 1.55; }
+        .spec dd a { font-weight: 600; }
         .hero-note { max-width: 900px; margin: 18px 0 0; padding: 15px 17px; border: 1px solid rgba(52,211,153,0.24); border-left: 3px solid var(--green); border-radius: 12px; background: rgba(52,211,153,0.06); color: #bfd3e6; font-size: 14px; line-height: 1.65; }
         .hero-note b { color: #fff; font-weight: 700; }
 
@@ -78,6 +86,7 @@
         #datasetToggle .ds-btn { min-height: 40px; padding: 0 20px; border: none; border-radius: 9px; background: transparent; color: var(--muted); font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; transition: color .15s ease, background .15s ease; }
         #datasetToggle .ds-btn:hover { color: #fff; }
         #datasetToggle .ds-btn.active { background: linear-gradient(135deg, var(--accent), #3EA0FF); color: #04121f; font-weight: 800; box-shadow: 0 6px 18px -8px rgba(29,127,232,0.9); }
+        .tool-hint { max-width: 460px; margin: 10px 0 0; color: var(--muted-2); font-size: 12.5px; line-height: 1.5; }
         .preset-row { display: flex; flex-wrap: wrap; gap: 8px; }
         .preset { min-height: 38px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(15,23,36,0.6); color: #cfe0f4; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .15s ease, background .15s ease, color .15s ease; }
         .preset:hover { border-color: rgba(77,163,255,0.55); background: rgba(29,127,232,0.14); color: #fff; }
@@ -243,6 +252,8 @@
         /* ---------------- Responsive ---------------- */
         @media (max-width: 900px) {
             .how { grid-template-columns: minmax(0, 1fr); }
+            .spec { grid-template-columns: minmax(0, 1fr); gap: 0; }
+            .spec-row { grid-template-columns: 100px minmax(0, 1fr); gap: 12px; }
             .how-step { padding: 18px 16px 16px; }
         }
         @media (max-width: 1000px) {
@@ -309,6 +320,17 @@
 
             <p class="hero-note"><b>It is a paper record, kept to one side.</b> Nothing is bet, nothing is charged, and none of it touches your profile, your pick history or the leaderboards. It answers one question: if you had actually been betting this idea, where would you stand? You can also backtest the idea first against every verified graded pick in the database before you switch it on.</p>
 
+            <dl class="spec">
+                <div class="spec-row"><dt>Prices</dt><dd>Taken from the TrustMyRecord sportsbook board, the same number shown on the <a href="/sportsbook/">sportsbook</a> at that moment, with the book named on every bet.</dd></div>
+                <div class="spec-row"><dt>Markets</dt><dd>Moneyline, spread and run line, total, and team total, plus their alternate lines. Only markets that can be settled from a final score.</dd></div>
+                <div class="spec-row"><dt>Stake</dt><dd>Flat, and you set it. Every bet stores the stake it was logged at, so changing it later never rewrites the record already built.</dd></div>
+                <div class="spec-row"><dt>Timing</dt><dd>Checked every 20 minutes. A bet is logged once, at the first qualifying price, and never re-priced or taken twice.</dd></div>
+                <div class="spec-row"><dt>Grading</dt><dd>On the final score, by the same grader that grades every pick on TrustMyRecord. A market it cannot settle is left open rather than guessed.</dd></div>
+                <div class="spec-row"><dt>Money</dt><dd>None. Nothing is wagered, nothing is charged, and no sportsbook account is involved.</dd></div>
+                <div class="spec-row"><dt>Where it lives</dt><dd>Under your model only. It never appears on your profile, your pick history, your record or the leaderboards.</dd></div>
+                <div class="spec-row"><dt>Stopping</dt><dd>Pause it whenever you like, or give it an end date. Bets already open still settle either way.</dd></div>
+            </dl>
+
             <div class="source-badges" id="sourceBadges">
                 <span class="badge"><span class="dot"></span>Loading data coverage...</span>
             </div>
@@ -321,6 +343,7 @@
                     <button type="button" class="ds-btn active" data-ds="picks" role="tab" aria-selected="true">Handicapper Picks</button>
                     <button type="button" class="ds-btn" data-ds="games" role="tab" aria-selected="false">Game Results</button>
                 </div>
+                <p class="tool-hint" id="datasetHint">Build a model on the bets handicappers posted, backtest it, then set it running on the live board.</p>
             </div>
             <div class="tool-block">
                 <p class="tool-label">Or start from an example</p>
@@ -442,7 +465,7 @@
                                 </label>
                                 <div class="two-col">
                                     <label for="stakeUnits">Units per bet
-                                        <input id="stakeUnits" type="number" min="0.1" max="100" step="0.5" value="1">
+                                        <input id="stakeUnits" type="number" min="0.1" max="100" step="any" value="1" inputmode="decimal">
                                     </label>
                                     <label for="trackUntil">Track until
                                         <input id="trackUntil" type="date">
@@ -637,7 +660,7 @@
   </div>
 </section>
 
-    <script src="/static/js/model-builder-shell.js?v=e65536bda8a4-redesign"></script>
+    <script src="/static/js/model-builder-shell.js?v=babe7a412176-redesign"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.0a3f72134d6b.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 </body>

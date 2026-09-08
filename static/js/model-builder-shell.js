@@ -649,7 +649,7 @@
         + (tracked
             ? '<div class="save-box terms-box" data-terms="' + m.id + '" hidden>'
               + '<div class="two-col">'
-              + '<label>Units per bet<input type="number" min="0.1" max="100" step="0.5" data-f="stake" value="'
+              + '<label>Units per bet<input type="number" min="0.1" max="100" step="any" data-f="stake" value="'
               + (m.stake_units ? Number(m.stake_units) : 1) + '"></label>'
               + '<label>Track until<input type="date" data-f="until" value="'
               + (m.track_until ? esc(new Date(m.track_until).toISOString().slice(0, 10)) : '') + '"></label>'
@@ -1098,6 +1098,12 @@
     });
     el('picksMode').hidden = isGames;
     el('gamesMode').hidden = !isGames;
+    var hint = el('datasetHint');
+    if (hint) {
+      hint.textContent = isGames
+        ? 'Study what actually happened in completed games: win rates, average totals and margins, Over/Under against a line you set, and recent box scores. Nothing is tracked forward from here.'
+        : 'Build a model on the bets handicappers posted, backtest it, then set it running on the live board.';
+    }
     if (isGames) {
       if (gameState.catalog) renderGameBadges(gameState.catalog);
       ensureGameCatalog();
