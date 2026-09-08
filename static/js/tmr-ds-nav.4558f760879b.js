@@ -171,7 +171,14 @@
       ['/matchup-of-the-day/mlb/', 'MLB'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      ['/matchup-of-the-day/tennis/', 'Tennis']
+      ['/matchup-of-the-day/tennis/', 'Tennis'],
+      /* Added 2026-09-08, the day the soccer lane published its first Game
+         File. The row went in only once /matchup-of-the-day/soccer/ was baked
+         and serving: a menu entry pointing at a door that does not exist yet
+         is a dead link, and this one waited for the page rather than the other
+         way round. Seven competitions feed it: the Premier League, LaLiga,
+         Bundesliga, Serie A, Ligue 1, the Champions League and MLS. */
+      ['/matchup-of-the-day/soccer/', 'Soccer']
     ]],
     ['/handicapping/mlb/', 'MLB Matchups Today'],
     ['/handicapping/', 'Handicapping Hub'],
