@@ -2330,3 +2330,25 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
+
+// PWA installability on the homepage: link the web manifest + register the
+// passthrough service worker (/sw.js). Idempotent, fail-safe, no markup impact. 20260908.
+(function () {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+    if (window.__tmrPwaInit) return; window.__tmrPwaInit = true;
+    try {
+        var head = document.head || document.documentElement;
+        if (!document.querySelector('link[rel="manifest"]')) {
+            var m = document.createElement('link'); m.rel = 'manifest'; m.href = '/manifest.webmanifest'; head.appendChild(m);
+        }
+        if (!document.querySelector('meta[name="theme-color"]')) {
+            var t = document.createElement('meta'); t.name = 'theme-color'; t.content = '#0b0f14'; head.appendChild(t);
+        }
+        if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+            var a = document.createElement('link'); a.rel = 'apple-touch-icon'; a.href = '/static/media/pwa-icon-192.png'; head.appendChild(a);
+        }
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+        }
+    } catch (e) {}
+})();
