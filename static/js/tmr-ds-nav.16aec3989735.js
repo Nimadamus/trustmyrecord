@@ -46,6 +46,54 @@
      /about/ painted its nav at +213ms and did not get the right type until
      +381ms, so every internal page flashed the wrong bar for 168ms. The
      injection stays for any page that gains the component without the link. */
+
+  /* Featured Matchups submenu. Shipped with the component rather than as a row
+     in tmr-navbar.css so it cannot be missing on a page that linked an older
+     copy of that sheet, and so 900+ baked pages need no new stylesheet URL.
+     Colours, type and hover states for the rows themselves come from the
+     existing .ds-menu-panel a rules, which match a descendant anchor; only the
+     trigger and the flyout box are new. */
+  var SUB_CSS =
+    '.ds-menu-panel .ds-sub{position:relative;display:block}' +
+    '.ds-menu-panel .ds-sub>.ds-sub-trigger{display:flex;align-items:center;justify-content:space-between;' +
+      'gap:12px;width:100%;font:inherit;font-size:14.5px;font-weight:700;line-height:inherit;' +
+      'color:#BBD0E6;background:none;border:0;cursor:pointer;text-align:left;' +
+      'padding:9px 12px;border-radius:8px;white-space:nowrap}' +
+    '.ds-menu-panel .ds-sub>.ds-sub-trigger::after{content:"";width:6px;height:6px;flex:none;' +
+      'border-right:2px solid currentColor;border-bottom:2px solid currentColor;' +
+      'transform:rotate(-45deg);opacity:.75}' +
+    '.ds-menu-panel .ds-sub.is-current>.ds-sub-trigger{color:#4DA3FF;box-shadow:inset 3px 0 0 #4DA3FF}' +
+    '@media (hover:hover){.ds-menu-panel .ds-sub:hover>.ds-sub-trigger,' +
+      '.ds-menu-panel .ds-sub.is-open>.ds-sub-trigger{background:rgba(43,140,255,.16);color:#fff}}' +
+    '.ds-menu-panel .ds-sub-trigger:focus-visible{outline:2px solid #4DA3FF;outline-offset:-2px}' +
+    /* the flyout. -8px cancels the parent panel's own padding so the first row
+       of the submenu lines up with the row that opened it. */
+    '.ds-menu-panel .ds-sub-panel{display:none;position:absolute;top:-8px;left:calc(100% + 6px);z-index:5;' +
+      'flex-direction:column;width:max-content;padding:8px;border-radius:12px;' +
+      'background:linear-gradient(180deg,#070F1A,#03080F);border:1px solid rgba(43,140,255,.42);' +
+      'box-shadow:0 24px 60px rgba(0,0,0,.8)}' +
+    /* the 6px gap is bridged so the pointer can cross it without the flyout closing */
+    '.ds-menu-panel .ds-sub-panel::before{content:"";position:absolute;top:0;left:-8px;width:8px;height:100%}' +
+    '@media (hover:hover){.ds-menu-panel .ds-sub:hover>.ds-sub-panel{display:flex}}' +
+    '.ds-menu-panel .ds-sub.is-open>.ds-sub-panel{display:flex}' +
+    /* mobile: the sheet is one column, so the submenu expands underneath its
+       trigger and indents, exactly like .ds-menu-panel does under its own. */
+    '@media (max-width:1259px){' +
+      '.ds-menu-panel .ds-sub-panel{position:static;left:auto;top:auto;padding:0 0 4px 14px;' +
+        'background:none;border:0;box-shadow:none;width:auto}' +
+      '.ds-menu-panel .ds-sub:hover>.ds-sub-panel{display:none}' +
+      '.ds-menu-panel .ds-sub.is-open>.ds-sub-panel{display:flex}' +
+      '.ds-menu-panel .ds-sub>.ds-sub-trigger{padding:11px 0;border-radius:0;background:none}' +
+      '.ds-menu-panel .ds-sub.is-open>.ds-sub-trigger::after{transform:rotate(45deg)}' +
+    '}';
+  function injectSubmenuCSS() {
+    if (document.getElementById('ds-sub-css')) return;
+    var st = document.createElement('style');
+    st.id = 'ds-sub-css';
+    st.textContent = SUB_CSS;
+    document.head.appendChild(st);
+  }
+
   function injectHeaderCSS() {
     var nav = document.querySelector('link[href*="tmr-navbar.css"]');
     /* A page that mounts this component but never linked the geometry sheet
@@ -88,61 +136,35 @@
      fit elsewhere. ------------------------------------------------------- */
   var SPORTSBOOK = [
     ['/sportsbook/', 'Make Picks'],
-    /* Added 2026-08-11. The daily article was reachable from the FOOTER and
-       from the homepage ticker card — and the ticker card only appears on days
-       an article is actually published, so on any day it is not, the section
-       had no entry point above the fold anywhere on the site. It sits in
-       Sportsbook next to the Handicapping Hub because it is game analysis,
-       which is what a reader is doing when they are in this menu.
-
-       Repointed 2026-08-13 from the hub to /today/. The hub opens by explaining
-       what the section is, so a reader who picked this menu item to read the
-       day's piece landed on a page about the idea of the piece and had to find
-       and click it. /today/ is a stable address that bakes with the day's
-       article and hands off to it; the hub keeps its own footer and Explore
-       entries, where an archive is what a reader is actually after.
-
-       Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/ and renamed
-       MLB Matchup of the Day. /today/ is newest-wins across every sport, so
-       once college football started publishing its own Game Files this entry
-       and the NCAAF one below both landed on whichever piece happened to be
-       newest, which on a Thursday in September is the football one. Each menu
-       item now points at its own sport's stable door, so the two can never
-       collapse onto the same page again. The name is permanent: this entry is
-       the baseball lane and says so. */
-    ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
-    /* Added 2026-09-03, the day college football got its first Game File.
-       /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
-       with the newest NCAAF Game File, canonicalised to it, and out of the
-       sitemap so search consolidates on the article's own URL. */
-    ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
-    /* Added 2026-09-07. The tennis section shipped 2026-09-06 with a hub, a
-       daily rundown and seven Game Files, all live and all in the sitemap, and
-       not one link to any of it in the sitewide nav, the footer or the homepage.
-       A reader could only reach it by typing the URL. Same stable-door pattern as
-       the two above: /matchup-of-the-day/tennis/ bakes with the newest tennis Game
-       File, /tennis/ is the section itself. */
-    ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
-    /* 'Tennis Hub' left this menu on 2026-09-08. The tennis section is no
-       longer a separate top-level destination: it moved into the Handicapping
-       Hub as /handicapping/tennis/ and is reached from the hub's sport tabs,
-       exactly like MLB, NFL, NBA and NHL. /tennis/ 301s there, nothing was
-       removed from the site. 'Tennis Matchup of the Day' above stays: that is
-       one featured matchup, not a section. */
-    /* Added 2026-09-08. The NFL Game of the Week lane shipped 2026-09-07 with a
-       hub and its first deep dive, both live and both in the sitemap, and the only
-       routes to it were a strip on /sportsbook/ and a callout on /handicapping/nfl/.
-       A reader on any other page had no way in. This is the sitewide route. It
-       points at the hub, not at the current week's article: the article URL changes
-       every week and a nav entry must not. */
-    ['/nfl-game-of-the-week/', 'NFL Game of the Week'],
-    /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
-       sport whose research hub is actually built, so every member who picked
-       'Handicapping Hub' from this menu landed on a page whose only real
-       destination was one more click away. This is that click, removed. The
-       chooser stays: it is where the other leagues appear as they ship. Named
-       for what the page is rather than for the product, because that is what a
-       member is looking for in this menu. */
+    /* FEATURED MATCHUPS, 2026-09-08. The four featured pages below used to be
+       four sibling rows in this dropdown, and the list was going to grow by one
+       row per sport forever. They are now one row that opens a submenu. Not one
+       destination was removed or renamed: every URL and every label below is
+       the one it had as a top-level row, and none of them appears anywhere else
+       in this menu. A submenu row is [label, items]; see menu() for how it
+       renders and flat() for how the current-page match still sees the leaves. */
+    ['@sub', 'Featured Matchups', [
+      /* Added 2026-09-08. The NFL Game of the Week lane shipped 2026-09-07 with a
+         hub and its first deep dive, both live and both in the sitemap, and the only
+         routes to it were a strip on /sportsbook/ and a callout on /handicapping/nfl/.
+         It points at the hub, not at the current week's article: the article URL
+         changes every week and a nav entry must not. */
+      ['/nfl-game-of-the-week/', 'NFL Game of the Week'],
+      /* Added 2026-09-03, the day college football got its first Game File.
+         /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
+         with the newest NCAAF Game File, canonicalised to it, and out of the
+         sitemap so search consolidates on the article's own URL. */
+      ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
+      /* Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/. /today/ is
+         newest-wins across every sport, so once college football started publishing
+         its own Game Files this entry and the NCAAF one both landed on whichever
+         piece happened to be newest. Each entry now points at its own sport's
+         stable door, so the two can never collapse onto the same page again. */
+      ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
+      /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
+         /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
+      ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day']
+    ]],
     ['/handicapping/mlb/', 'MLB Matchups Today'],
     ['/handicapping/', 'Handicapping Hub'],
     /* Added 2026-09-06. The affiliate sportsbook reviews shipped reachable
@@ -338,7 +360,16 @@
      matched and two rows of the same dropdown rendered as the current page at
      once, on top of whichever row the pointer was over. Only the longest
      matching href in a list is the page you are on; the rest are ancestors. */
+  /* A submenu row is ['@sub', label, items]. flat() returns only the leaves,
+     which is what every "is this the page I am on" question needs to ask. */
+  function isSub(r) { return r[0] === '@sub' && r[2] && r[2].length; }
+  function flat(list) {
+    var out = [];
+    list.forEach(function (r) { if (isSub(r)) { out = out.concat(flat(r[2])); } else { out.push(r); } });
+    return out;
+  }
   function currentIn(list) {
+    list = flat(list);
     var best = null;
     list.forEach(function (r) {
       if (isCurrent(r[0]) && (best === null || r[0].length > best.length)) best = r[0];
@@ -348,7 +379,7 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function links(list) {
     var cur = currentIn(list);
-    return list.map(function (r) {
+    return flat(list).map(function (r) {
       return '<a href="' + r[0] + '"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
     }).join('');
   }
@@ -390,7 +421,7 @@
      Requested 2026-08-31. */
   function menu(label, list, alsoCurrent, hideOnOwnPage) {
     if (hideOnOwnPage && list.length && isCurrent(list[0][0])) return '';
-    var on = list.some(function (r) { return isCurrent(r[0]); }) ||
+    var on = flat(list).some(function (r) { return isCurrent(r[0]); }) ||
       (alsoCurrent || []).some(function (h) { return isCurrent(h); });
     var cur = currentIn(list);
     /* data-menu names the dropdown for the stylesheet (tmr-navbar.css gives
@@ -399,7 +430,17 @@
       '<button type="button" class="ds-navitem ds-navitem--trigger" aria-expanded="false" aria-haspopup="true">' + label + '</button>' +
       '<div class="ds-menu-panel" role="menu" aria-label="' + label + ' links">' +
       list.map(function (r) {
-        return '<a href="' + r[0] + '" role="menuitem"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+        if (!isSub(r)) {
+          return '<a href="' + r[0] + '" role="menuitem"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+        }
+        var kids = flat(r[2]);
+        var subOn = kids.some(function (k) { return k[0] === cur; });
+        return '<div class="ds-sub' + (subOn ? ' is-current' : '') + '">' +
+          '<button type="button" class="ds-sub-trigger" aria-haspopup="true" aria-expanded="false">' + esc(r[1]) + '</button>' +
+          '<div class="ds-sub-panel" role="menu" aria-label="' + esc(r[1]) + ' links">' +
+          kids.map(function (k) {
+            return '<a href="' + k[0] + '" role="menuitem"' + (k[0] === cur ? ' aria-current="page"' : '') + '>' + esc(k[1]) + '</a>';
+          }).join('') + '</div></div>';
       }).join('') + '</div></div>';
   }
 
@@ -441,6 +482,18 @@
     // the nav (rather than bound per-.ds-menu at build time) so the account
     // dropdown — injected later by renderUser(), once identity resolves —
     // opens correctly without a second wiring pass.
+    /* Closing a dropdown must also collapse whatever submenu was open inside
+       it, or the next open re-renders with the submenu already expanded. */
+    function closeMenu(o) {
+      o.classList.remove('is-open');
+      var b = o.querySelector('button');
+      if (b) b.setAttribute('aria-expanded', 'false');
+      o.querySelectorAll('.ds-sub.is-open').forEach(function (sub) {
+        sub.classList.remove('is-open');
+        var t = sub.querySelector('.ds-sub-trigger');
+        if (t) t.setAttribute('aria-expanded', 'false');
+      });
+    }
     nav.addEventListener('click', function (e) {
       var m = e.target.closest('.ds-menu');
       if (!m) return;
@@ -448,28 +501,36 @@
       if (!btn || btn.parentElement !== m) return;   // ignore clicks on panel items
       e.stopPropagation();
       var open = m.classList.contains('is-open');
-      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
+      nav.querySelectorAll('.ds-menu.is-open').forEach(closeMenu);
       if (!open) { m.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
+    });
+    /* Featured Matchups. On a pointer device the submenu already opens on
+       hover (CSS); this is the tap path and the keyboard path, and it also
+       stops the click reaching the document listener that closes everything. */
+    nav.addEventListener('click', function (e) {
+      var t = e.target.closest('.ds-sub-trigger');
+      if (!t) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var sub = t.parentElement;
+      var open = sub.classList.contains('is-open');
+      sub.parentElement.querySelectorAll('.ds-sub.is-open').forEach(function (s2) {
+        s2.classList.remove('is-open');
+        var t2 = s2.querySelector('.ds-sub-trigger');
+        if (t2) t2.setAttribute('aria-expanded', 'false');
+      });
+      if (!open) { sub.classList.add('is-open'); t.setAttribute('aria-expanded', 'true'); }
     });
     nav.addEventListener('click', function (e) {
       var lo = e.target.closest('[data-tmr-logout]');
       if (lo) { e.stopPropagation(); doLogout(lo); }
     });
     document.addEventListener('click', function () {
-      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
+      nav.querySelectorAll('.ds-menu.is-open').forEach(closeMenu);
     });
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
-      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
+      nav.querySelectorAll('.ds-menu.is-open').forEach(closeMenu);
       nav.classList.remove('is-open');
     });
 
@@ -737,6 +798,7 @@
     var cl = document.body.classList;
     if (!cl.contains('tmr-ds') && !cl.contains('tmr-ds-shell')) return;
     injectHeaderCSS();
+    injectSubmenuCSS();
     buildNav();
     buildFooter();
 

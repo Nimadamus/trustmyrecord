@@ -24,6 +24,106 @@
 
   var API = 'https://trustmyrecord-api.onrender.com/api';
 
+  /* THE HEADER'S PLACE IN THE CASCADE (2026-08-31).
+
+     Two things have to be true for one shared navbar to actually render the
+     same on 671 documents, and neither of them is true by default:
+
+     1. tmr-navbar.css has to be the LAST word on the bar's geometry. It was not
+        everywhere: /profile/ links it and then links tmr-ds.css after it, so
+        tmr-ds.css's `--nav-h:70px` beat tmr-navbar.css's scaled
+        `calc(70px * var(--home-nav-scale))` on that page and its bar came out
+        71px against every other page's 83px. Moving the existing link to the
+        end of <head> fixes it for whatever page happens to have that order,
+        without touching 671 heads or caring which ones they are.
+
+     2. Page stylesheets must not be able to reach into the header at all — see
+        the measurements in tmr-ds-header.css, which is appended after it.
+
+     The tmr-ds-header.css injection here is now a FALLBACK. Every page that
+     mounts the bar links that sheet from its own <head>, because a stylesheet
+     added from script does not block rendering: measured on production,
+     /about/ painted its nav at +213ms and did not get the right type until
+     +381ms, so every internal page flashed the wrong bar for 168ms. The
+     injection stays for any page that gains the component without the link. */
+
+  /* Featured Matchups submenu. Shipped with the component rather than as a row
+     in tmr-navbar.css so it cannot be missing on a page that linked an older
+     copy of that sheet, and so 900+ baked pages need no new stylesheet URL.
+     Colours, type and hover states for the rows themselves come from the
+     existing .ds-menu-panel a rules, which match a descendant anchor; only the
+     trigger and the flyout box are new. */
+  var SUB_CSS =
+    '.ds-menu-panel .ds-sub{position:relative;display:block}' +
+    '.ds-menu-panel .ds-sub>.ds-sub-trigger{display:flex;align-items:center;justify-content:space-between;' +
+      'gap:12px;width:100%;font:inherit;font-size:14.5px;font-weight:700;line-height:inherit;' +
+      'color:#BBD0E6;background:none;border:0;cursor:pointer;text-align:left;' +
+      'padding:9px 12px;border-radius:8px;white-space:nowrap}' +
+    '.ds-menu-panel .ds-sub>.ds-sub-trigger::after{content:"";width:6px;height:6px;flex:none;' +
+      'border-right:2px solid currentColor;border-bottom:2px solid currentColor;' +
+      'transform:rotate(-45deg);opacity:.75}' +
+    '.ds-menu-panel .ds-sub.is-current>.ds-sub-trigger{color:#4DA3FF;box-shadow:inset 3px 0 0 #4DA3FF}' +
+    '@media (hover:hover){.ds-menu-panel .ds-sub:hover>.ds-sub-trigger,' +
+      '.ds-menu-panel .ds-sub.is-open>.ds-sub-trigger{background:rgba(43,140,255,.16);color:#fff}}' +
+    '.ds-menu-panel .ds-sub-trigger:focus-visible{outline:2px solid #4DA3FF;outline-offset:-2px}' +
+    /* the flyout. -8px cancels the parent panel's own padding so the first row
+       of the submenu lines up with the row that opened it. */
+    '.ds-menu-panel .ds-sub-panel{display:none;position:absolute;top:-8px;left:calc(100% + 6px);z-index:5;' +
+      'flex-direction:column;width:max-content;padding:8px;border-radius:12px;' +
+      'background:linear-gradient(180deg,#070F1A,#03080F);border:1px solid rgba(43,140,255,.42);' +
+      'box-shadow:0 24px 60px rgba(0,0,0,.8)}' +
+    /* the 6px gap is bridged so the pointer can cross it without the flyout closing */
+    '.ds-menu-panel .ds-sub-panel::before{content:"";position:absolute;top:0;left:-8px;width:8px;height:100%}' +
+    '@media (hover:hover){.ds-menu-panel .ds-sub:hover>.ds-sub-panel{display:flex}}' +
+    '.ds-menu-panel .ds-sub.is-open>.ds-sub-panel{display:flex}' +
+    /* mobile: the sheet is one column, so the submenu expands underneath its
+       trigger and indents, exactly like .ds-menu-panel does under its own. */
+    '@media (max-width:1259px){' +
+      '.ds-menu-panel .ds-sub-panel{position:static;left:auto;top:auto;padding:0 0 4px 14px;' +
+        'background:none;border:0;box-shadow:none;width:auto}' +
+      '.ds-menu-panel .ds-sub:hover>.ds-sub-panel{display:none}' +
+      '.ds-menu-panel .ds-sub.is-open>.ds-sub-panel{display:flex}' +
+      '.ds-menu-panel .ds-sub>.ds-sub-trigger{padding:11px 0;border-radius:0;background:none}' +
+      '.ds-menu-panel .ds-sub.is-open>.ds-sub-trigger::after{transform:rotate(45deg)}' +
+    '}';
+  function injectSubmenuCSS() {
+    if (document.getElementById('ds-sub-css')) return;
+    var st = document.createElement('style');
+    st.id = 'ds-sub-css';
+    st.textContent = SUB_CSS;
+    document.head.appendChild(st);
+  }
+
+  function injectHeaderCSS() {
+    var nav = document.querySelector('link[href*="tmr-navbar.css"]');
+    /* A page that mounts this component but never linked the geometry sheet
+       renders it against tmr-ds.css's unscaled --nav-h and comes out 5-12px
+       shorter than the rest of the site. That is not a per-page mistake to go
+       and fix 129 times -- including 82 baked forum threads -- it is a missing
+       dependency of the component, so the component supplies it. The homepage
+       is the one page that must not get it: it carries its own inline copy of
+       the same rules so that it cannot move, and it is identifiable by having
+       --home-nav-scale already defined. */
+    if (!nav) {
+      var scale = '';
+      try { scale = getComputedStyle(document.body).getPropertyValue('--home-nav-scale').trim(); } catch (e) {}
+      if (!scale) {
+        nav = document.createElement('link');
+        nav.rel = 'stylesheet';
+        nav.href = '/static/css/tmr-navbar.css?v=68ec3081d29a';
+      }
+    }
+    if (nav) document.head.appendChild(nav);
+
+    var HREF = '/static/css/tmr-ds-header.4de36f3898ee.css';
+    if (document.querySelector('link[href^="' + HREF + '"]')) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = HREF;
+    document.head.appendChild(l);
+  }
+  /* deferred to init(): it reads document.body */
+
   /* --- route tables --------------------------------------------------------
      Reconciled 2026-07-29: this nav had drifted from the homepage's own
      grouping (Handicappers/Compete/Community/Tools/TMR Coin) despite the
@@ -36,32 +136,116 @@
      fit elsewhere. ------------------------------------------------------- */
   var SPORTSBOOK = [
     ['/sportsbook/', 'Make Picks'],
-    /* Added 2026-08-11. The daily article was reachable from the FOOTER and
-       from the homepage ticker card — and the ticker card only appears on days
-       an article is actually published, so on any day it is not, the section
-       had no entry point above the fold anywhere on the site. It sits in
-       Sportsbook next to the Handicapping Hub because it is game analysis,
-       which is what a reader is doing when they are in this menu.
-
-       Repointed 2026-08-13 from the hub to /today/. The hub opens by explaining
-       what the section is, so a reader who picked this menu item to read the
-       day's piece landed on a page about the idea of the piece and had to find
-       and click it. /today/ is a stable address that bakes with the day's
-       article and hands off to it; the hub keeps its own footer and Explore
-       entries, where an archive is what a reader is actually after. */
-    ['/matchup-of-the-day/today/', 'Matchup of the Day'],
-    ['/handicapping/', 'Handicapping Hub']
+    /* FEATURED MATCHUPS, 2026-09-08. The four featured pages below used to be
+       four sibling rows in this dropdown, and the list was going to grow by one
+       row per sport forever. They are now one row that opens a submenu. Not one
+       destination was removed or renamed: every URL and every label below is
+       the one it had as a top-level row, and none of them appears anywhere else
+       in this menu. A submenu row is [label, items]; see menu() for how it
+       renders and flat() for how the current-page match still sees the leaves. */
+    ['@sub', 'Featured Matchups', [
+      /* Added 2026-09-08. The NFL Game of the Week lane shipped 2026-09-07 with a
+         hub and its first deep dive, both live and both in the sitemap, and the only
+         routes to it were a strip on /sportsbook/ and a callout on /handicapping/nfl/.
+         It points at the hub, not at the current week's article: the article URL
+         changes every week and a nav entry must not. */
+      ['/nfl-game-of-the-week/', 'NFL Game of the Week'],
+      /* Added 2026-09-03, the day college football got its first Game File.
+         /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
+         with the newest NCAAF Game File, canonicalised to it, and out of the
+         sitemap so search consolidates on the article's own URL. */
+      ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
+      /* Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/. /today/ is
+         newest-wins across every sport, so once college football started publishing
+         its own Game Files this entry and the NCAAF one both landed on whichever
+         piece happened to be newest. Each entry now points at its own sport's
+         stable door, so the two can never collapse onto the same page again. */
+      ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
+      /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
+         /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
+      ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day']
+    ]],
+    ['/handicapping/mlb/', 'MLB Matchups Today'],
+    ['/handicapping/', 'Handicapping Hub'],
+    /* Added 2026-09-06. The affiliate sportsbook reviews shipped reachable
+       only from a block partway down the homepage and the homepage footer,
+       so on every other page on the site there was no way to reach it at
+       all. It belongs in Sportsbook because choosing where to bet is the
+       same job as choosing what to bet. */
+    ['/best-online-sportsbooks/', 'Best Sportsbooks']
   ];
   var HANDICAPPERS = [
     ['/handicappers/', 'Find Handicappers'],
     ['/leaderboards/', 'Leaderboards'],
-    ['/marketplace/', 'Buy Picks'],
+    /* ONE marketplace entry, not three. 'Buy Picks' + 'Picks for TMR' as
+       siblings is what taught members there were two marketplaces: they are the
+       Cash and TMR Coin tabs of a single board over a single set of listings,
+       and /marketplace/ opens on either (?pay=cash | ?pay=tmr). Selling stays a
+       separate entry because it is a different job, not a different store. */
+    ['/marketplace/', 'Pick Marketplace'],
     ['/marketplace/sell/', 'Sell Your Picks']
+  ];
+  /* SPORTS GAMING, added 2026-08-27. The video-game side of the site used to
+     live as a single 'Arena' row inside Compete, which is a brand word: it told
+     nobody, member or crawler, that the section is head-to-head MLB The Show,
+     Madden, NBA 2K, EA FC and NHL. It also left /online-gaming/, the rankings,
+     the leagues and every game page with no nav entry at all -- reachable only
+     from the Arena page body and the crawlable directory.
+
+     This is its own top-level menu because the section is its own vertical, and
+     because keeping it inside Compete is what blurred it into the two PICK
+     competitions that also live there. Compete now holds only those: the
+     handicapper challenge (pick vs pick on real games) and the TMR Coin
+     challenge and its order book. Video games are here. Nothing was dropped:
+     /arena/ keeps its URL and its row, it is just named as the product it is. */
+  /* ONE small section, consolidated 2026-08-28. This menu had ten rows, then
+     six, and every one of them fronted the same /api/gaming area: a hub, a
+     directory, the Arena, the open board. A member reading 'Online Games',
+     'Online Gaming', 'Open Challenges' and 'Arena' as four separate rows cannot
+     tell which one lets them actually play, and the answer was all of them.
+     /online-gaming/ is the single destination now: the games and the live
+     challenge board on one page, with the create form on it. Rankings and
+     leagues stay as rows because they are genuinely different screens. The
+     Arena, the hub and the five game pages keep their URLs and are linked from
+     the body of /online-gaming/, so nothing was retired, only de-duplicated out
+     of the menu. /online-games/ is an alias stub to /online-gaming/. */
+  var SPORTS_GAMING = [
+    ['/online-gaming/', 'Online Gaming'],
+    ['/arena/rankings/', 'Gaming Rankings'],
+    ['/arena/leagues/', 'Gaming Leagues']
+  ];
+  /* Lights the Sports Gaming trigger from the section pages that are not rows
+     in the menu, so a visitor on one of them is not left with nothing lit. */
+  var SPORTS_GAMING_ALSO = [
+    '/sports-gaming/',
+    '/arena/',
+    '/online-games/',
+    '/mlb-the-show-stat-league/',
+    '/sports-gaming/mlb-the-show/',
+    '/sports-gaming/madden/',
+    '/sports-gaming/nba-2k/',
+    '/sports-gaming/ea-fc/',
+    '/sports-gaming/nhl/'
   ];
   var COMPETE = [
     ['/contests/justbet-mlb/', 'Contest'],
-    ['/arena/', 'Arena'],
-    ['/challenges/', 'Challenges'],
+    /* Named 'Handicapper Challenges' from 2026-08-27. The bare word 'Challenges'
+       meant three different products across this site -- pick vs pick here, TMR
+       Coin below, and console games in Sports Gaming -- and this menu was where
+       a member met all three under the same label. */
+    ['/challenges/', 'Handicapper Challenges'],
+    /* TMR Challenges is the head to head system that stakes TMR Coin, deployed
+       2026-08-18. It is a SEPARATE entry and deliberately not a replacement for
+       /challenges/ above: both run side by side until the TMR one has live
+       evidence behind it, so removing the older entry would retire a working
+       feature on nothing but optimism. Named for what distinguishes them -- one
+       stakes coin, the other does not -- rather than "Challenges (new)". */
+    ['/tmr-challenges/', 'TMR Challenges'],
+    /* TMR Match is the order book on top of TMR Challenges: post an offer at a
+       size and a price and let strangers take part of it, rather than agreeing
+       one bet with one person. Sits next to TMR Challenges because that is what
+       settles every fill, and a member who understands one understands the other. */
+    ['/tmr-match/', 'TMR Match'],
     ['/trivia/', 'Trivia'],
     ['/polls/', 'Polls']
   ];
@@ -73,27 +257,34 @@
     ['/chat/', 'Chat'],
     ['/messages/', 'Messages']
   ];
-  /* TMR Coin joined this list on 2026-08-10. It used to be a SEVENTH flat item
-     in the primary row while the signed-in cluster on the right ALSO carried a
-     coin balance pill — the same mark, twice, ~115px apart. The pill on the
-     right is now the single coin control (see userHTML()), and the route keeps
-     a plain crawlable <a> here, present in the logged-out nav exactly as
-     before, so nothing is dropped from the public link graph. */
+  /* TMR Coin was in this list from 2026-08-10 until 2026-08-27, when it was
+     removed: Tools is for the analytical products (simulators, TrendSpotter,
+     BetLegend Pro, Matchups, Handicapping Hub) and the coin belongs to the
+     economy, not to them. The coin pill in the signed-in cluster on the right
+     (see userHTML()) stays the single coin control, and /tmr-coin/ keeps its
+     other entry points (footer Platform column, sitewide nav). */
   var TOOLS = [
     ['/tools/', 'Tools Hub'],
-    ['/mlb-simulator/', 'MLB Simulator'],
-    ['/nfl-simulator/', 'NFL Simulator'],
+    /* The four game simulators used to sit here as four separate rows. They were
+       collapsed into one entry on 2026-08-27: the suite keeps growing, and a Tools
+       menu that grows a row per sport stops being a menu. /sports-simulators/ is
+       the hub that carries all four (and whatever comes next) with a card each, so
+       the menu stays one line while every simulator keeps its own indexed page at
+       its own unchanged URL. Nothing left the site - only the dropdown. */
+    ['/sports-simulators/', 'Sports Simulators'],
     ['/trendspotter/', 'TrendSpotter'],
-    ['/betlegend-pro/', 'BetLegend Pro'],
-    ['/handicapping/', 'Handicapping Hub'],
-    ['/tmr-coin/', 'TMR Coin']
+    ['/betlegend-pro/', 'BetLegend Pro']
+    /* 'MLB Matchups Today' and 'Handicapping Hub' left this menu on 2026-09-02.
+       Both already sit in SPORTSBOOK, and one destination in two dropdowns
+       taught members there were two different things. Tools is the four
+       products above; the handicapping pages are reached from Sportsbook. */
   ];
 
   var FOOTER = [
     ['Platform', [
       ['/sportsbook/', 'Sportsbook'],
-      ['/my-record/', 'My Record'],
-      ['/marketplace/', 'Sell Your Picks'],
+      ['/profile/', 'My Record'],
+      ['/marketplace/', 'Pick Marketplace'],
       ['/premium/', 'Premium']
     ]],
     ['Explore', [
@@ -108,7 +299,27 @@
          indexed archive of the Game Files published before the URL scheme
          changed, and it is linked from the new hub — but the sitewide nav entry
          belongs to the thing that publishes every day, not to the archive. */
-      ['/matchup-of-the-day/', 'Matchup of the Day'],
+      /* Relabelled 2026-09-05. These two carried 'Matchup of the Day' and 'MLB
+         Matchups', one word off the Sportsbook menu's 'MLB Matchup of the Day'
+         and 'MLB Matchups Today'. Near-identical labels on a screen that shows
+         both (on /sportsbook/ the menu's links render inline above this footer)
+         read as a duplicated menu, not as two sections. Rule now: one
+         destination, one wording sitewide, and a different destination gets a
+         visibly different name. /handicapping/mlb/ takes the menu's exact
+         words; the section index takes its own name, Game Files, which is what
+         the hub calls its pieces in its own copy. Neither link was removed. */
+      ['/matchup-of-the-day/', 'Game Files'],
+      ['/handicapping/mlb/', 'MLB Matchups Today'],
+      /* Added 2026-09-07 with the Sportsbook menu entries. One destination, one
+         wording sitewide: the footer takes the section's own name, Tennis; the
+         menu keeps the two sport-scoped door labels. */
+      ['/handicapping/tennis/', 'Tennis'],
+      /* Added 2026-09-08 with the Sportsbook menu entry above. Same wording in
+         both places, same destination, per the one-destination-one-wording rule. */
+      ['/nfl-game-of-the-week/', 'NFL Game of the Week'],
+      /* Sitewide crawlable entry for the video-game vertical, added
+         2026-08-27 alongside the Sports Gaming dropdown. */
+      ['/online-gaming/', 'Online Gaming'],
       ['/leaderboards/', 'Leaderboards'],
       ['/handicappers/', 'Browse Handicappers'],
       ['/verified-handicapper-records/', 'Verified Records'],
@@ -144,10 +355,32 @@
     var h = href.toLowerCase();
     return path === h || (h !== '/' && path.indexOf(h) === 0);
   }
+  /* ONE aria-current per list (2026-09-02). isCurrent() is a prefix match, so
+     on /handicapping/mlb/ both '/handicapping/mlb/' and '/handicapping/'
+     matched and two rows of the same dropdown rendered as the current page at
+     once, on top of whichever row the pointer was over. Only the longest
+     matching href in a list is the page you are on; the rest are ancestors. */
+  /* A submenu row is ['@sub', label, items]. flat() returns only the leaves,
+     which is what every "is this the page I am on" question needs to ask. */
+  function isSub(r) { return r[0] === '@sub' && r[2] && r[2].length; }
+  function flat(list) {
+    var out = [];
+    list.forEach(function (r) { if (isSub(r)) { out = out.concat(flat(r[2])); } else { out.push(r); } });
+    return out;
+  }
+  function currentIn(list) {
+    list = flat(list);
+    var best = null;
+    list.forEach(function (r) {
+      if (isCurrent(r[0]) && (best === null || r[0].length > best.length)) best = r[0];
+    });
+    return best;
+  }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function links(list) {
-    return list.map(function (r) {
-      return '<a href="' + r[0] + '"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+    var cur = currentIn(list);
+    return flat(list).map(function (r) {
+      return '<a href="' + r[0] + '"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
     }).join('');
   }
   /**
@@ -168,18 +401,46 @@
      comes from `.ds-navitem` in tmr-ds.css, and `--link` only tells that
      component to leave the trailing chevron slot empty. `ds-todaylink` is kept
      purely as a hook for tests/analytics; it carries no styling. */
+  /* REMOVED 2026-08-31 (requested): this rendered as the FIRST item in
+     .ds-mainnav, i.e. immediately beside the wordmark, where it read as
+     stray text rather than as part of the menu row. The /today/ route is
+     untouched; only its slot in the top bar is gone. */
   function todayLink() {
-    if (!hasTokens()) return '';
-    return '<a class="ds-navitem ds-navitem--link ds-todaylink" href="/today/"' +
-      (isCurrent('/today/') ? ' aria-current="page"' : '') + '>Today</a>';
+    return '';
   }
-  function menu(label, list) {
-    var on = list.some(function (r) { return isCurrent(r[0]); });
-    return '<div class="ds-menu' + (on ? ' is-current' : '') + '">' +
+  /* Routes that should light the Tools trigger even though they are no longer
+     rows in the menu. Collapsing the four simulators behind /sports-simulators/
+     would otherwise leave a visitor on /nhl-simulator/ with no lit trigger at
+     all, which reads as "you are nowhere". */
+  var TOOLS_ALSO = ['/sports-simulators/', '/mlb-simulator/', '/nfl-simulator/',
+                    '/nba-simulator/', '/nhl-simulator/'];
+  /* hideOnOwnPage: drop this trigger on the page it is named for. On
+     /sportsbook/ the word SPORTSBOOK is the page you are already reading, not a
+     destination. Opt-in per menu rather than a blanket rule, because
+     /handicappers/ is an approved locked page and must keep its own tab.
+     Requested 2026-08-31. */
+  function menu(label, list, alsoCurrent, hideOnOwnPage) {
+    if (hideOnOwnPage && list.length && isCurrent(list[0][0])) return '';
+    var on = flat(list).some(function (r) { return isCurrent(r[0]); }) ||
+      (alsoCurrent || []).some(function (h) { return isCurrent(h); });
+    var cur = currentIn(list);
+    /* data-menu names the dropdown for the stylesheet (tmr-navbar.css gives
+       Sportsbook and Tools one shared width); it carries no behaviour. */
+    return '<div class="ds-menu' + (on ? ' is-current' : '') + '" data-menu="' + esc(label.toLowerCase()) + '">' +
       '<button type="button" class="ds-navitem ds-navitem--trigger" aria-expanded="false" aria-haspopup="true">' + label + '</button>' +
       '<div class="ds-menu-panel" role="menu" aria-label="' + label + ' links">' +
       list.map(function (r) {
-        return '<a href="' + r[0] + '" role="menuitem"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+        if (!isSub(r)) {
+          return '<a href="' + r[0] + '" role="menuitem"' + (r[0] === cur ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
+        }
+        var kids = flat(r[2]);
+        var subOn = kids.some(function (k) { return k[0] === cur; });
+        return '<div class="ds-sub' + (subOn ? ' is-current' : '') + '">' +
+          '<button type="button" class="ds-sub-trigger" aria-haspopup="true" aria-expanded="false">' + esc(r[1]) + '</button>' +
+          '<div class="ds-sub-panel" role="menu" aria-label="' + esc(r[1]) + ' links">' +
+          kids.map(function (k) {
+            return '<a href="' + k[0] + '" role="menuitem"' + (k[0] === cur ? ' aria-current="page"' : '') + '>' + esc(k[1]) + '</a>';
+          }).join('') + '</div></div>';
       }).join('') + '</div></div>';
   }
 
@@ -205,11 +466,12 @@
         '<div class="ds-nav-panel">' +
           '<div class="ds-mainnav">' +
             todayLink() +
-            menu('Sportsbook', SPORTSBOOK) +
+            menu('Sportsbook', SPORTSBOOK, null, true) +
             menu('Handicappers', HANDICAPPERS) +
+            menu('Online Gaming', SPORTS_GAMING, SPORTS_GAMING_ALSO) +
             menu('Compete', COMPETE) +
             menu('Community', COMMUNITY) +
-            menu('Tools', TOOLS) +
+            menu('Tools', TOOLS, TOOLS_ALSO) +
           '</div>' +
           '<div class="ds-nav-right">' + initialNavRight() + '</div>' +
         '</div>' +
@@ -220,6 +482,18 @@
     // the nav (rather than bound per-.ds-menu at build time) so the account
     // dropdown — injected later by renderUser(), once identity resolves —
     // opens correctly without a second wiring pass.
+    /* Closing a dropdown must also collapse whatever submenu was open inside
+       it, or the next open re-renders with the submenu already expanded. */
+    function closeMenu(o) {
+      o.classList.remove('is-open');
+      var b = o.querySelector('button');
+      if (b) b.setAttribute('aria-expanded', 'false');
+      o.querySelectorAll('.ds-sub.is-open').forEach(function (sub) {
+        sub.classList.remove('is-open');
+        var t = sub.querySelector('.ds-sub-trigger');
+        if (t) t.setAttribute('aria-expanded', 'false');
+      });
+    }
     nav.addEventListener('click', function (e) {
       var m = e.target.closest('.ds-menu');
       if (!m) return;
@@ -227,28 +501,36 @@
       if (!btn || btn.parentElement !== m) return;   // ignore clicks on panel items
       e.stopPropagation();
       var open = m.classList.contains('is-open');
-      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
+      nav.querySelectorAll('.ds-menu.is-open').forEach(closeMenu);
       if (!open) { m.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
+    });
+    /* Featured Matchups. On a pointer device the submenu already opens on
+       hover (CSS); this is the tap path and the keyboard path, and it also
+       stops the click reaching the document listener that closes everything. */
+    nav.addEventListener('click', function (e) {
+      var t = e.target.closest('.ds-sub-trigger');
+      if (!t) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var sub = t.parentElement;
+      var open = sub.classList.contains('is-open');
+      sub.parentElement.querySelectorAll('.ds-sub.is-open').forEach(function (s2) {
+        s2.classList.remove('is-open');
+        var t2 = s2.querySelector('.ds-sub-trigger');
+        if (t2) t2.setAttribute('aria-expanded', 'false');
+      });
+      if (!open) { sub.classList.add('is-open'); t.setAttribute('aria-expanded', 'true'); }
     });
     nav.addEventListener('click', function (e) {
       var lo = e.target.closest('[data-tmr-logout]');
       if (lo) { e.stopPropagation(); doLogout(lo); }
     });
     document.addEventListener('click', function () {
-      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
+      nav.querySelectorAll('.ds-menu.is-open').forEach(closeMenu);
     });
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
-      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
+      nav.querySelectorAll('.ds-menu.is-open').forEach(closeMenu);
       nav.classList.remove('is-open');
     });
 
@@ -350,10 +632,10 @@
      would silently degrade to a plain link to /notifications/. Load the same
      chain the homepage loads, in order, and only what is actually missing. */
   var NOTIF_CHAIN = [
-    '/static/js/config.js?v=7e4b853bbb3d',
-    '/static/js/backend-api.js?v=0c7db839b982',
-    '/static/js/auth-persistent.js?v=533b6a5999e2',
-    '/static/js/notifications.js?v=b237c77f13ca'
+    '/static/js/config.js?v=430b4bba7b37',
+    '/static/js/backend-api.js?v=30da23fc2105',
+    '/static/js/auth-persistent.js?v=d479be477169',
+    '/static/js/notifications.js?v=395be0dd8cdf'
   ];
 
   /* REALM-LEVEL LOAD REGISTRY (2026-08-06)
@@ -422,7 +704,13 @@
         '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
         '<span class="v2nav-badge" id="homeNotifBadge" hidden></span></a>' +
-      '<a class="ds-btn p sm" href="/my-record/">My Record</a>' +
+      // ROUTE FIX 2026-09-01: this pointed at /my-record/, which is a redirect
+      // stub that forwarded to /sportsbook/#my-record -- the pick-entry board
+      // with a section anchor, not the member's record page. /profile/ IS the
+      // record page (record, win rate, units, ROI, advanced metrics, full pick
+      // history) and is where /dashboard/ and /account/ already resolve. Linked
+      // directly so the button costs no redirect hop.
+      '<a class="ds-btn p sm" href="/profile/">My Record</a>' +
       '<div class="ds-menu v2nav-menu">' +
         '<button type="button" class="v2nav-user" aria-expanded="false" aria-haspopup="true" title="' + esc(name) + '">' +
           av + '<span class="v2nav-name">' + esc(name) + '</span>' +
@@ -509,6 +797,8 @@
        /sportsbook/ before it shipped: dsNav=false, dsFooter=false. */
     var cl = document.body.classList;
     if (!cl.contains('tmr-ds') && !cl.contains('tmr-ds-shell')) return;
+    injectHeaderCSS();
+    injectSubmenuCSS();
     buildNav();
     buildFooter();
 
@@ -534,6 +824,13 @@
       .then(function (d) { if (d) renderUser(d.user || d); else signOutHeader(); })
       .catch(function () { signOutHeader(); });
   }
+
+  /* MEMBER IDENTITY (2026-09-05). Every page that adopts the design system also
+     gets the one avatar resolver, so no member renders as an empty circle
+     anywhere on the site. This nav is the only file 684 pages already load, so
+     it is the carrier; the module itself is independent of the nav and guards
+     against being loaded twice. */
+  loadChain(['/static/js/tmr-ds-avatar.67764d95bdd0.js']);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
