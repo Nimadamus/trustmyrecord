@@ -280,18 +280,28 @@
     }
   }
 
-  /* The backlog already arrives spread by the API, but live events jump the
-     queue in whatever order they happen, so the same account can end up next
-     to itself. Look a short way down the queue for someone else before giving
-     up — never further, so this cannot bury a genuinely new event. */
+  /* VARIETY LIVES HERE, and only here (2026-09-08). /api/activity/recent used
+     to spread its own answer before returning it, which meant an endpoint
+     called "recent" could hand back a 1 hr event ahead of a 37 min one. It is
+     strictly newest-first now, so the job of not reading the same account, or
+     the same category, out twice running belongs to the rotation, where
+     reordering two neighbours costs nothing. Look a short way down the queue
+     for someone else before giving up, and never further: this must not be
+     able to bury a genuinely new event that has just jumped the queue. */
   function nextIndex() {
+    if (!queue.length) return 0;
     var lastUser = current && current.data && current.data.user ? current.data.user.id : null;
-    if (lastUser == null) return 0;
-    for (var i = 0; i < Math.min(4, queue.length); i++) {
+    var lastType = current && current.data ? current.data.type : null;
+    if (lastUser == null && lastType == null) return 0;
+    var span = Math.min(4, queue.length);
+    var fallback = -1;
+    for (var i = 0; i < span; i++) {
       var u = queue[i].user ? queue[i].user.id : null;
-      if (u !== lastUser) return i;
+      if (u === lastUser) continue;
+      if (queue[i].type !== lastType) return i;   // different account AND category: ideal
+      if (fallback < 0) fallback = i;             // at least a different account
     }
-    return 0;
+    return fallback < 0 ? 0 : fallback;
   }
 
   function advance() {
