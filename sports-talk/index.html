@@ -394,9 +394,25 @@
     return Math.floor(mo / 12) + 'y ago';
   }
 
+  /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+     favourite-team club mark, resolved by the API's avatar route, and only a
+     member with neither an upload nor a team gets the neutral face. Never an
+     initial and never a local placeholder. */
+  function tmrAvaSrc(user) {
+      if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+      var u = user || {};
+      var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+      if (direct && typeof direct === 'string') return direct;
+      var key = u.id != null ? u.id : (u.username || '');
+      if (key === '' || key == null) return '';
+      var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+      return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+  }
+
   function avatarHtml(url, username) {
-    if (url) return '<img class="st-ava" src="' + esc(url) + '" alt="" loading="lazy" onerror="this.style.visibility=&quot;hidden&quot;">';
-    return '<span class="st-ava st-ava--txt">' + esc(String(username || '?').charAt(0).toUpperCase()) + '</span>';
+    var src = tmrAvaSrc({ username: username, avatar_url: url });
+    if (!src) return '<span class="st-ava st-ava--txt">' + esc(String(username || '?').charAt(0).toUpperCase()) + '</span>';
+    return '<img class="st-ava" src="' + esc(src) + '" alt="" loading="lazy">';
   }
 
   // Plain text + [quote=Name]...[/quote] blocks -> safe HTML.

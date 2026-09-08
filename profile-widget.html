@@ -294,6 +294,20 @@
             if (compact) {
                 root.classList.add('compact');
             }
+    /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+       favourite-team club mark, resolved by the API's avatar route; only a member
+       with neither an upload nor a team gets the neutral face. Never an initial. */
+    function tmrAvaSrc(user) {
+        if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+        const u = user || {};
+        const direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+        if (direct && typeof direct === 'string') return direct;
+        const key = u.id != null ? u.id : (u.username || '');
+        if (key === '' || key == null) return '';
+        const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+    }
+
 
             function escapeHtml(value) {
                 return String(value || '')
@@ -382,7 +396,7 @@
                     root.innerHTML =
                         '<div class="head">' +
                             '<div class="avatar">' +
-                                (profile.avatar_url ? '<img src="' + escapeHtml(profile.avatar_url) + '" alt="' + escapeHtml(displayName) + '">' : escapeHtml(initial)) +
+                                '<img src="' + escapeHtml(tmrAvaSrc({ username: handle, avatar_url: profile.avatar_url })) + '" alt="' + escapeHtml(displayName) + '" loading="lazy">' +
                             '</div>' +
                             '<div class="identity">' +
                                 '<div class="name">' + escapeHtml(displayName) + '</div>' +

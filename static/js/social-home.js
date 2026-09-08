@@ -472,6 +472,21 @@ function renderFeedItem(item) {
     return renderTextPost(item);
 }
 
+/* ONE RESOLVER (2026-09-08). A member with no upload wears their
+   favourite-team club mark, resolved by the API's avatar route, and only a
+   member with neither an upload nor a team gets the neutral face. Never an
+   initial and never a local placeholder. */
+function tmrAvaSrc(user) {
+    if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+    const u = user || {};
+    const direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+    if (direct && typeof direct === 'string') return direct;
+    const key = u.id != null ? u.id : (u.username || '');
+    if (key === '' || key == null) return '';
+    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+}
+
 // ==================== RENDER POLL-CREATED ACTIVITY CARD ====================
 function renderPollActivityCard(p) {
     const display = p.display_name || p.username || 'User';
@@ -484,7 +499,7 @@ function renderPollActivityCard(p) {
         : '<span class="pe-chip is-sport">OPEN</span>';
     return `<div class="feed-item" data-id="${p.item_id}" data-type="poll_activity">
         <div class="fi-header">
-            <div class="fi-avatar" style="background:linear-gradient(135deg,var(--neon-purple),var(--accent-blue));">${letter}</div>
+            <div class="fi-avatar"><img src="${tmrAvaSrc(p)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
             <div class="fi-meta">
                 <div class="fi-top-row">
                     <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username)}">${esc(display)}</a></span>
@@ -510,7 +525,7 @@ function renderTriviaActivityCard(p) {
     const title = p.content || 'New trivia question';
     return `<div class="feed-item" data-id="${p.item_id}" data-type="trivia_activity">
         <div class="fi-header">
-            <div class="fi-avatar" style="background:linear-gradient(135deg,var(--neon-cyan),var(--neon-green));color:#000;">${letter}</div>
+            <div class="fi-avatar"><img src="${tmrAvaSrc(p)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
             <div class="fi-meta">
                 <div class="fi-top-row">
                     <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username)}">${esc(display)}</a></span>
@@ -537,7 +552,7 @@ function renderTextPost(p) {
 
     return `<div class="feed-item${isHot ? ' hot-take' : ''}" data-id="${p.item_id}" data-type="feed_post">
         <div class="fi-header">
-            <div class="fi-avatar" style="${isHot ? 'background:var(--accent-red);' : ''}">${letter}</div>
+            <div class="fi-avatar"><img src="${tmrAvaSrc(p)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
             <div class="fi-meta">
                 <div class="fi-top-row">
             <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username || '')}">${p.display_name || p.username}</a></span>
@@ -606,7 +621,7 @@ function renderPickCard(p) {
 
     return `<div class="feed-item" data-id="${p.item_id}" data-type="${p.item_type || 'pick'}">
         <div class="fi-header">
-            <div class="fi-avatar">${letter}</div>
+            <div class="fi-avatar"><img src="${tmrAvaSrc(p)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
             <div class="fi-meta">
                 <div class="fi-top-row">
                     <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username)}">${esc(display)}</a></span>
@@ -636,7 +651,7 @@ function renderPollCard(p) {
     if (window.TMRPoll) {
         return `<div class="feed-item" data-id="${p.item_id}" data-type="poll">
         <div class="fi-header">
-            <div class="fi-avatar" style="background:var(--accent-purple);">${letter}</div>
+            <div class="fi-avatar"><img src="${tmrAvaSrc(p)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
             <div class="fi-meta">
                 <div class="fi-top-row">
             <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username || '')}">${p.display_name || p.username}</a></span>
@@ -668,7 +683,7 @@ function renderPollCard(p) {
 
     return `<div class="feed-item" data-id="${p.item_id}" data-type="poll">
         <div class="fi-header">
-            <div class="fi-avatar" style="background:var(--accent-purple);">${letter}</div>
+            <div class="fi-avatar"><img src="${tmrAvaSrc(p)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
             <div class="fi-meta">
                 <div class="fi-top-row">
             <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username || '')}">${p.display_name || p.username}</a></span>
@@ -790,7 +805,7 @@ async function toggleComments(id, type) {
         if (comments.length) {
             html += comments.map(c => `
                 <div class="cmt-item">
-                    <div class="cmt-avatar">${(c.display_name || c.username || '?')[0].toUpperCase()}</div>
+                    <div class="cmt-avatar"><img src="${tmrAvaSrc(c)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
                     <div class="cmt-body">
                     <div class="cmt-author"><a href="/profile/?user=${encodeURIComponent(c.username || '')}">${c.display_name || c.username}</a></div>
                         <div class="cmt-text">${esc(c.content)}</div>
@@ -995,7 +1010,7 @@ async function loadSuggested() {
             : `<a href="/profile/?user=${encodeURIComponent(u.username || '')}" class="rs-follow-btn">View</a>`;
                     return (
                     `<div class="rs-user">
-                        <div class="rs-user-avatar" style="background:var(--accent-blue);">${(u.display_name || u.username || '?')[0].toUpperCase()}</div>
+                        <div class="rs-user-avatar"><img src="${tmrAvaSrc(u)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>
                         <div class="rs-user-info">
                     <div class="rs-user-name"><a href="/profile/?user=${encodeURIComponent(u.username || '')}" style="color:inherit;text-decoration:none;">${u.display_name || u.username}</a></div>
                             <div class="rs-user-detail">${u.total_picks || 0} picks${u.roi != null ? ` • ${Number(u.roi).toFixed(1)}% ROI` : ''}</div>

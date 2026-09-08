@@ -3521,11 +3521,28 @@ function forumUserLinkHtml(username, extraClass) {
    becomes a real tab stop, so it drops aria-hidden and is labelled instead;
    the <img> keeps an empty alt because the adjacent username link already
    names the same destination. */
+function tmrAvaSrc(user) {
+    /* ONE RESOLVER (2026-09-08). Never an initial and never a placeholder: the
+       API's avatar route resolves upload -> favourite-team club mark -> neutral
+       face, so a member wears the same face here as on every other surface. */
+    if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+    var u = user || {};
+    var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+    if (direct && typeof direct === 'string') return direct;
+    var key = u.id != null ? u.id : (u.username || '');
+    if (key === '' || key == null) return '';
+    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+}
+
 function forumRowAvatarHtml(username, avatarUrl) {
     var name = String(username == null ? '' : username).trim();
     var initials = String(name || '?').slice(0, 1).toUpperCase();
-    var inner = avatarUrl
-        ? '<img src="' + escHtml(avatarUrl) + '" alt="" loading="lazy" onerror="this.parentNode.textContent=\'' + escHtml(initials) + '\';">'
+    /* ONE RESOLVER (2026-09-08): a member with no upload gets their
+       favourite-team club mark from the avatar route, never an initial. */
+    var resolved = tmrAvaSrc({ username: name, avatar_url: avatarUrl });
+    var inner = resolved
+        ? '<img src="' + escHtml(resolved) + '" alt="" loading="lazy">'
         : escHtml(initials);
     var href = forumProfileHref(name);
     if (!href) return '<span class="fthread-row-avatar" aria-hidden="true">' + inner + '</span>';
@@ -3927,7 +3944,8 @@ function renderAuthorPanel(post) {
     var profileUsername = author.username || author.display_name || '';
     var profileHref = profileUsername ? ('/u/' + encodeURIComponent(profileUsername) + '/') : '';
     var profileLabel = 'View ' + who + ' profile';
-    var avatarInner = avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials);
+    var avatarResolved = tmrAvaSrc({ username: author.username || who, avatar_url: avatar });
+    var avatarInner = avatarResolved ? '<img src="' + escHtml(avatarResolved) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials);
     var avatarHtml = profileHref
         ? '<a class="fthread-avatar" href="' + profileHref + '" title="' + escHtml(profileLabel) + '" aria-label="' + escHtml(profileLabel) + '">' + avatarInner + '</a>'
         : '<div class="fthread-avatar">' + avatarInner + '</div>';
@@ -5818,8 +5836,9 @@ function updateForumNavAuth() {
         if (unameEl) unameEl.textContent = name;
         var avEl = document.getElementById('tmrfhAvatar');
         if (avEl) {
-            if (av) {
-                avEl.innerHTML = '<img src="' + escHtml(av) + '" alt="" onerror="this.parentNode.textContent=\'' + escHtml(initial) + '\';">';
+            var avResolved = tmrAvaSrc({ username: un, avatar_url: av });
+            if (avResolved) {
+                avEl.innerHTML = '<img src="' + escHtml(avResolved) + '" alt="">';
             } else {
                 avEl.textContent = initial;
             }

@@ -39,6 +39,18 @@ DEFAULT_AVATAR    = "https://trustmyrecord.com/static/media/TMR-avatar-256.jpg"
 AVATAR_ONERROR    = (' onerror="this.onerror=null;this.src=&#39;'
                      + DEFAULT_AVATAR + '&#39;"')
 
+# AVATAR_ONERROR_20260908: the shared TMR jpg is a PICTURE, so a slot that fell
+# back to it read as painted and the repair pass left it alone - a member with a
+# favourite team kept the generic face for good. A failed row now retries the
+# resolver route for that member instead, which answers the upload, else the
+# club mark, else the neutral silhouette.
+def avatar_onerror(username=""):
+    username = (username or "").strip()
+    if not username:
+        return AVATAR_ONERROR
+    url = f"{API}/users/{urllib.parse.quote(username, safe='')}/avatar"
+    return ' onerror="this.onerror=null;this.src=&#39;' + url + '&#39;"'
+
 def clean_avatar(url, username=""):
     """Never bake giant inline data: URIs into the static HTML (one user's
     avatar is 160KB+).
@@ -276,7 +288,7 @@ def handi_row(r, now):
         f'<div class="hm-row hm-member-row" data-username="{e(r["username"])}" data-profile-href="{href}" role="link" tabindex="0" aria-label="{e(label)}">'
         f'<div class="hm-user">'
         f'<a class="hm-avatar-link" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
-        f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"{AVATAR_ONERROR}></a>'
+        f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"{avatar_onerror(r["username"])}></a>'
         f'<div class="hm-name"><a class="hm-profile-name" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
         f'<strong data-tmr-username="{e(r["username"])}">{e(r["display_name"])}</strong></a><span>@{e(r["username"])}</span>{badge_html}</div>'
         f'</div>'
@@ -294,11 +306,10 @@ def handi_row(r, now):
 def lead_row(r, idx):
     href = f"/u/{e(r['username'])}/"
     rank_cls = "gold" if idx == 0 else "silver" if idx == 1 else "bronze" if idx == 2 else ""
-    initial = e((r["display_name"] or "?")[:1].upper())
-    if r["avatar_url"]:
-        avatar = f'<img class="avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"{AVATAR_ONERROR}>'
-    else:
-        avatar = f'<span class="avatar avatar-initial">{initial}</span>'
+    # NO LETTER TILE (2026-09-08). Every row is an <img> on the member's own
+    # identity: clean_avatar() has already turned an absent upload into the
+    # resolver route, so a baked leaderboard row shows the club mark with no JS.
+    avatar = f'<img class="avatar" src="{e(r["avatar_url"] or clean_avatar("", r["username"]))}" alt="{e(r["display_name"])} avatar"{avatar_onerror(r["username"])}>'
     return (
         f'<tr>'
         f'<td><span class="rank {rank_cls}">#{idx + 1}</span></td>'

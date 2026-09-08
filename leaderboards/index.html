@@ -1163,15 +1163,22 @@
             return '';
         }
 
-        function avatarHtml(displayName, avatarUrl) {
+        /* ONE RESOLVER (2026-09-08): upload -> favourite-team club mark ->
+           neutral face, keyed on the USERNAME the route actually matches. A
+           display name is not an identifier and 404s the moment the two differ. */
+        function resolverAvatarUrl(identifier) {
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(identifier || '') + '/avatar';
+        }
+        function avatarHtml(displayName, avatarUrl, username) {
             const letter = escapeHtml(String(displayName || '?').charAt(0).toUpperCase());
             /* NO_LETTER_FLASH_20260907: no picture means the resolver route -
                the member's club mark, or the neutral face - never an initial. */
             if (!avatarUrl) {
-                return '<span class="person-avatar"><img src="' + escapeHtml((((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(displayName || '') + '/avatar')) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"></span>';
+                return '<span class="person-avatar"><img src="' + escapeHtml(resolverAvatarUrl(username || displayName)) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"></span>';
             }
             if (avatarUrl) {
-                return '<span class="person-avatar"><img src="' + escapeHtml(avatarUrl) + '" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(\'' + letter + '\'));this.parentNode &amp;&amp; (this.parentNode.textContent=\'' + letter + '\');"></span>';
+                return '<span class="person-avatar"><img src="' + escapeHtml(avatarUrl) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.src=&#39;' + escapeHtml(resolverAvatarUrl(username || displayName)) + '&#39;;"></span>';
             }
             return '<span class="person-avatar">' + letter + '</span>';
         }
@@ -1552,7 +1559,7 @@
                 const streakLabel = entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0';
                 return '<tr>'
                     + '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>'
-                    + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl)
+                    + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl, entry.username)
                     +     '<div class="person-meta">'
                     +       '<a class="person-name" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
                     +       '<span class="person-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(scopeLabel) + ' • streak ' + streakLabel + '</span>'

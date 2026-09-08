@@ -177,6 +177,19 @@
         tips_received: 'Nobody has been tipped yet.'
     };
 
+    /* ONE RESOLVER (2026-09-08). Never a local placeholder: the API's avatar
+       route resolves upload -> favourite-team club mark -> neutral face, so a
+       member wears the same face here as on every other surface. */
+    function tmrAvaSrc(user) {
+        if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+        var u = user || {};
+        var direct = u.avatar_url || u.avatarUrl || u.avatar || u.user_avatar || '';
+        if (direct && typeof direct === 'string') return direct;
+        var key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
+        if (key === '' || key == null) return '';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+    }
     function esc(v) {
         return String(v == null ? '' : v)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -233,7 +246,7 @@
             var value = e[board.value_field];
             return '<li class="tlb-row' + (e.rank <= 3 ? ' is-top' : '') + '">'
                  + '<span class="tlb-rank">' + e.rank + '</span>'
-                 + '<img class="tlb-ava" src="' + esc(e.avatar_url || '/static/img/default-avatar.png')
+                 + '<img class="tlb-ava" src="' + esc(tmrAvaSrc(e))
                  + '" alt="" loading="lazy" onerror="this.style.visibility=&#39;hidden&#39;">'
                  + '<span class="tlb-who">'
                  +   '<a class="tlb-name" href="' + esc(e.profile_url) + '">' + esc(e.display_name) + '</a>'

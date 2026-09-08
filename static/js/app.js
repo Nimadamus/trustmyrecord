@@ -1,3 +1,17 @@
+/* ONE RESOLVER (2026-09-08). Never a local placeholder: the API's avatar route
+   resolves upload -> favourite-team club mark -> neutral face, so a member wears
+   the same face here as on every other surface. */
+function tmrAvaSrc(user) {
+    if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+    const u = user || {};
+    const direct = u.avatar_url || u.avatarUrl || u.avatar || u.user_avatar || '';
+    if (direct && typeof direct === 'string') return direct;
+    const key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
+    if (key === '' || key == null) return '';
+    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+}
+
 ﻿/**
  * Trust My Record - Main Application
  * Handles routing, UI interactions, and page initialization
@@ -321,7 +335,7 @@ const App = {
         card.className = 'bg-slate-800 rounded-lg p-4 border border-slate-700 mb-4';
         card.innerHTML = `
             <div class="flex items-start gap-3">
-                <img src="${pick.user_avatar || '/static/images/default-avatar.png'}" 
+                <img src="${tmrAvaSrc({ username: pick.username, avatar_url: pick.user_avatar })}" 
                      alt="${pick.username}" 
                      class="w-10 h-10 rounded-full">
                 <div class="flex-1">
@@ -429,7 +443,7 @@ const App = {
         div.innerHTML = `
             <div class="flex items-center gap-3">
                 <span class="font-bold ${rank <= 3 ? 'text-yellow-400' : 'text-slate-400'} w-6">#${rank}</span>
-                <img src="${user.avatar_url || '/static/images/default-avatar.png'}" class="w-8 h-8 rounded-full">
+                <img src="${tmrAvaSrc(user)}" class="w-8 h-8 rounded-full">
                 <span class="font-medium">${user.username}</span>
             </div>
             <span class="${Number(user.net_units || 0) >= 0 ? 'text-green-400' : 'text-red-400'} font-semibold">${Number(user.net_units || 0) > 0 ? '+' : ''}${Number(user.net_units || 0).toFixed(1)}u</span>
@@ -509,7 +523,7 @@ const App = {
         row.innerHTML = `
             <div class="flex items-center gap-4">
                 <span class="font-bold text-lg ${medalColors[rank] || 'text-slate-400'} w-8">#${rank}</span>
-                <img src="${user.avatar_url || '/static/images/default-avatar.png'}" class="w-12 h-12 rounded-full">
+                <img src="${tmrAvaSrc(user)}" class="w-12 h-12 rounded-full">
                 <div>
                     <a href="/profile/?user=${encodeURIComponent(user.username)}" class="font-bold text-lg hover:text-blue-400">${user.username}</a>
                     <div class="text-sm text-slate-400">${user.total_picks || 0} picks</div>

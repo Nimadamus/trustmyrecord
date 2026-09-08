@@ -98,6 +98,19 @@
     const justPaid = q.get('status') === 'success';
     let pollCount = 0;
 
+    /* ONE RESOLVER (2026-09-08). Never a local placeholder: the API's avatar
+       route resolves upload -> favourite-team club mark -> neutral face, so a
+       member wears the same face here as on every other surface. */
+    function tmrAvaSrc(user) {
+        if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+        var u = user || {};
+        var direct = u.avatar_url || u.avatarUrl || u.avatar || u.user_avatar || '';
+        if (direct && typeof direct === 'string') return direct;
+        var key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
+        if (key === '' || key == null) return '';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+    }
     function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
     function isTmr(p) { return String(p.payment_method || 'cash') === 'tmr'; }
@@ -161,7 +174,7 @@
                      : '<div style="margin-top:11px;"><button class="btn btn-primary" data-reveal="' + p.pick_id + '" data-target="rv-' + esc(p.public_id) + '">View Pick</button> <a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent(p.seller_username) + '">Storefront</a></div>';
             return '<div class="order" data-order="' + esc(p.public_id) + '">' +
                 '<div class="o-head">' +
-                    '<img class="o-ava" src="' + esc(p.seller_avatar || '/static/img/default-avatar.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+                    '<img class="o-ava" src="' + esc(tmrAvaSrc({ username: p.seller_username, avatar_url: p.seller_avatar })) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
                     '<div><div class="o-name">' + esc(p.seller_display_name || p.seller_username) + '</div>' +
                     '<div class="o-meta">' + meta + '</div></div>' +
                     '<div class="o-right"><div class="o-price">' + priceOf(p) + '<span class="paylbl">' + payLabel(p) + '</span></div>' + pill(p.status, p.entitlement_status, p) + '</div>' +

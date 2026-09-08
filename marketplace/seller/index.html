@@ -131,6 +131,19 @@
     let store = null;
     let pendingPurchase = null;
 
+    /* ONE RESOLVER (2026-09-08). Never a local placeholder: the API's avatar
+       route resolves upload -> favourite-team club mark -> neutral face, so a
+       member wears the same face here as on every other surface. */
+    function tmrAvaSrc(user) {
+        if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+        var u = user || {};
+        var direct = u.avatar_url || u.avatarUrl || u.avatar || u.user_avatar || '';
+        if (direct && typeof direct === 'string') return direct;
+        var key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
+        if (key === '' || key == null) return '';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+    }
     function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
     function units(v) { const n = Number(v)||0; return (n>0?'+':'')+n.toFixed(1); }
@@ -154,7 +167,7 @@
         const rec = s.record || {};
         let html =
         '<div class="panel"><div class="sf-top">' +
-            '<img class="sf-ava" src="' + esc(s.avatar_url || '/static/img/default-avatar.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+            '<img class="sf-ava" src="' + esc(tmrAvaSrc(s)) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
             '<div><div class="sf-name">' + esc(s.display_name || s.username) + (s.verified ? ' <span class="sf-verified">&#10003;</span>' : '') + '</div>' +
             '<div class="sf-user">@' + esc(s.username) + ' &middot; ' + s.completed_sales + ' marketplace sale' + (s.completed_sales===1?'':'s') + ' &middot; <a href="/profile/?user=' + encodeURIComponent(s.username) + '">Full profile &amp; pick history &rarr;</a></div></div>' +
         '</div>' +

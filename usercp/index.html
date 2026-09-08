@@ -342,13 +342,27 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     {key:'paused', label:'Pause'}
   ];
   var _followingCache = [];
+  /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+     favourite-team club mark, resolved by the API's avatar route; only a member
+     with neither an upload nor a team gets the neutral face. Never an initial. */
+  function tmrAvaSrc(user) {
+    if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+    var u = user || {};
+    var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+    if (direct && typeof direct === 'string') return direct;
+    var key = u.id != null ? u.id : (u.username || '');
+    if (key === '' || key == null) return '';
+    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+  }
+
   function renderFollowing(list){
     var el = document.getElementById('ucpFollowingList');
     if(!el) return;
     if(!list || !list.length){ el.innerHTML = '<li class="ucp-empty">You are not following anyone yet. Find people on the <a href="/handicappers/">handicappers</a> page or in the <a href="/forum/">forum</a>.</li>'; return; }
     el.innerHTML = list.map(function(u){
       var name = esc(u.display_name || u.username || 'User');
-      var av = u.avatar_url ? '<img src="'+esc(u.avatar_url)+'" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">' : '<span style="width:34px;height:34px;border-radius:50%;background:#3b82f6;color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 34px;">'+name.charAt(0).toUpperCase()+'</span>';
+      var av = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" loading="lazy" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">';
       var toggles = FOLLOW_PREFS.map(function(p){
         var on = u[p.key]===true;
         return '<label style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;white-space:nowrap;">'+
@@ -391,7 +405,7 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     if(!list || !list.length){ el.innerHTML = '<li class="ucp-empty">You haven\'t blocked anyone.</li>'; return; }
     el.innerHTML = list.map(function(u){
       var name = esc(u.display_name || u.username || 'User');
-      var av = u.avatar_url ? '<img src="'+esc(u.avatar_url)+'" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">' : '<span style="width:34px;height:34px;border-radius:50%;background:#3b82f6;color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 34px;">'+name.charAt(0).toUpperCase()+'</span>';
+      var av = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" loading="lazy" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">';
       return '<li style="padding:10px 4px;">'+
         '<div style="display:flex;align-items:center;gap:10px;">'+
           av+

@@ -667,10 +667,25 @@
                     if (foot) foot.textContent = '';
                     return;
                 }
+                /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+                   favourite-team club mark, resolved by the API's avatar route, and only a
+                   member with neither an upload nor a team gets the neutral face. Never an
+                   initial and never a local placeholder. */
+                function tmrAvaSrc(user) {
+                    if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+                    const u = user || {};
+                    const direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+                    if (direct && typeof direct === 'string') return direct;
+                    const key = u.id != null ? u.id : (u.username || '');
+                    if (key === '' || key == null) return '';
+                    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                    return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+                }
+
                 grid.innerHTML = entries.map(e => {
                     const name = String(e.username || e.name);
-                    const initial = name.charAt(0).toUpperCase();
-                    return `<div class="member-chip" title="${escapeAttr(name)} — Registered"><span class="avatar">${escapeHtml(initial)}</span><span class="name">${escapeHtml(name)}</span><span class="ok" aria-label="Registered"><i class="fa-solid fa-circle-check"></i></span></div>`;
+                    const avaSrc = tmrAvaSrc({ username: name, avatar_url: e.avatar_url });
+                    return `<div class="member-chip" title="${escapeAttr(name)} — Registered"><span class="avatar"><img src="${escapeAttr(avaSrc)}" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></span><span class="name">${escapeHtml(name)}</span><span class="ok" aria-label="Registered"><i class="fa-solid fa-circle-check"></i></span></div>`;
                 }).join('');
                 if (foot) foot.innerHTML = `Showing all <strong>${entries.length} of ${entries.length}</strong> registered members. Detailed public stats: <a href="/contests/justbet-mlb/participants/">participants page</a>.`;
             } catch {

@@ -1272,6 +1272,13 @@
                the generated initials mark paints if it never arrives. The
                letter tile below is the pre-2026-09-05 fallback. */
             if (window.TMRAvatar) return window.TMRAvatar.src(user);
+            /* Resolver not loaded yet: the route is the same answer, so this
+               surface never falls back to a letter tile either. */
+            const key = user.id != null ? user.id : normalizeUsername(user);
+            if (key) {
+                const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+            }
             const seed = normalizeUsername(user) || 'U';
             const colors = ['1d4ed8', '0f766e', 'b45309', '7c3aed', 'be123c', '047857'];
             const color = colors[Math.abs(seed.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)) % colors.length];

@@ -162,11 +162,25 @@
             var s = (n > 0 ? '+' : '') + n.toFixed(1) + '%';
             return '<span class="' + cls + '">' + s + '</span>';
         }
+        /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+           favourite-team club mark, resolved by the API's avatar route, and only a
+           member with neither an upload nor a team gets the neutral face. Never an
+           initial and never a local placeholder. */
+        function tmrAvaSrc(user) {
+            if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+            var u = user || {};
+            var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+            if (direct && typeof direct === 'string') return direct;
+            var key = u.id != null ? u.id : (u.username || '');
+            if (key === '' || key == null) return '';
+            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+        }
+
         function avatarHtml(stats, u) {
-            if (stats && stats.avatar_url) {
-                return '<img class="member-avatar" src="' + escapeHtml(stats.avatar_url) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;member-avatar&quot;>' + escapeHtml(u.charAt(0).toUpperCase()) + '</span>\'">';
-            }
-            return '<span class="member-avatar">' + escapeHtml(u.charAt(0).toUpperCase()) + '</span>';
+            var src = tmrAvaSrc({ username: u, avatar_url: stats && stats.avatar_url });
+            if (!src) return '<span class="member-avatar">' + escapeHtml(u.charAt(0).toUpperCase()) + '</span>';
+            return '<img class="member-avatar" src="' + escapeHtml(src) + '" alt="" loading="lazy">';
         }
         function rowHtml(e, statsByName) {
             var u = e && e.username ? String(e.username) : '—';

@@ -10897,6 +10897,20 @@
             if (diff < 604800) return Math.floor(diff / 86400) + 'd';
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
+        /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+           favourite-team club mark, resolved by the API's avatar route; only a member
+           with neither an upload nor a team gets the neutral face. Never an initial. */
+        function tmrAvaSrc(user) {
+            if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+            const u = user || {};
+            const direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+            if (direct && typeof direct === 'string') return direct;
+            const key = u.id != null ? u.id : (u.username || '');
+            if (key === '' || key == null) return '';
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+        }
+
         function escapeHtml(t) {
             if (t == null) return '';
             const d = document.createElement('div');
@@ -10991,7 +11005,7 @@
             if (empty) empty.style.display = 'none';
             if (reply) reply.hidden = false;
             if (messages) { messages.hidden = false; messages.innerHTML = '<div style="padding:18px;color:#9fb0c4;font-size:.86rem;">Loading messages...</div>'; }
-            if (avatarBox) avatarBox.innerHTML = avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">' : escapeHtml((username || '?')[0].toUpperCase());
+            if (avatarBox) avatarBox.innerHTML = '<img src="' + escapeHtml(tmrAvaSrc({ username: username, avatar_url: avatarUrl })) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
             if (nameLink) { nameLink.textContent = username; nameLink.href = '/profile/?user=' + encodeURIComponent(username); }
             if (handle) handle.textContent = '@' + username;
             setShowingThread(true);
@@ -11087,7 +11101,7 @@
                             const me = getViewerId();
                             const users = (data.users || []).filter(u => String(u.id) !== String(me));
                             if (!users.length) { results.innerHTML = '<div style="padding:8px;color:#9fb0c4;">No matches.</div>'; return; }
-                            results.innerHTML = users.map(u => '<div class="profile-inbox-modal-result" data-uid="' + escapeHtml(String(u.id)) + '" data-uname="' + escapeHtml(u.username || '') + '" data-avatar="' + escapeHtml(u.avatar_url || '') + '"><div class="av">' + (u.avatar_url ? '<img src="' + escapeHtml(u.avatar_url) + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : escapeHtml((u.display_name || u.username || '?')[0].toUpperCase())) + '</div><div style="flex:1;"><div style="color:#f1f6fb;font-weight:700;font-size:.88rem;">' + escapeHtml(u.display_name || u.username || 'User') + '</div><div style="color:#9fb0c4;font-size:.78rem;">@' + escapeHtml(u.username || '') + '</div></div></div>').join('');
+                            results.innerHTML = users.map(u => '<div class="profile-inbox-modal-result" data-uid="' + escapeHtml(String(u.id)) + '" data-uname="' + escapeHtml(u.username || '') + '" data-avatar="' + escapeHtml(u.avatar_url || '') + '"><div class="av"><img src="' + escapeHtml(tmrAvaSrc(u)) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"></div><div style="flex:1;"><div style="color:#f1f6fb;font-weight:700;font-size:.88rem;">' + escapeHtml(u.display_name || u.username || 'User') + '</div><div style="color:#9fb0c4;font-size:.78rem;">@' + escapeHtml(u.username || '') + '</div></div></div>').join('');
                         } catch (e) {
                             results.innerHTML = '<div style="padding:8px;color:#ff8aa3;">Search failed.</div>';
                         }

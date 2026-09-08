@@ -339,6 +339,20 @@
         var siteBase = 'https://trustmyrecord.com';
         var card = document.getElementById('tmrCard');
 
+        /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+           favourite-team club mark, resolved by the API's avatar route; only a member
+           with neither an upload nor a team gets the neutral face. Never an initial. */
+        function tmrAvaSrc(user) {
+            if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+            var u = user || {};
+            var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+            if (direct && typeof direct === 'string') return direct;
+            var key = u.id != null ? u.id : (u.username || '');
+            if (key === '' || key == null) return '';
+            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+        }
+
         function escapeHtml(v) {
             return String(v == null ? '' : v)
                 .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -466,7 +480,7 @@
 
             if (pendingResp.public_pending_picks_enabled === false) {
                 card.innerHTML = '<div class="tmr-head">'
-                    + '<div class="tmr-avatar">' + escapeHtml(initial) + '</div>'
+                    + '<div class="tmr-avatar"><img src="' + escapeHtml(tmrAvaSrc({ username: handle, avatar_url: profile.avatar_url })) + '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>'
                     + '<div class="tmr-identity"><div class="tmr-name">' + escapeHtml(displayName) + '</div><div class="tmr-handle">@' + escapeHtml(handle) + '</div></div>'
                     + '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
                     + '</div><div class="tmr-error">This capper has chosen not to make pending picks public.</div>';
@@ -475,7 +489,7 @@
 
             var html = ''
                 + '<div class="tmr-head">'
-                + '<div class="tmr-avatar">' + (profile.avatar_url ? '<img src="' + escapeHtml(profile.avatar_url) + '" alt="' + escapeHtml(displayName) + '">' : escapeHtml(initial)) + '</div>'
+                + '<div class="tmr-avatar">' + '<img src="' + escapeHtml(tmrAvaSrc({ username: handle, avatar_url: profile.avatar_url })) + '" alt="' + escapeHtml(displayName) + '" loading="lazy">' + '</div>'
                 + '<div class="tmr-identity"><div class="tmr-name">' + escapeHtml(displayName) + '</div><div class="tmr-handle">@' + escapeHtml(handle) + (verified ? ' <span class="tmr-verified"><i>✓</i> Verified</span>' : '') + '</div></div>'
                 + '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
                 + '</div>'
@@ -527,7 +541,7 @@
                 var html = ''
                     + '<div class="tmr-head">'
                     +   '<div class="tmr-avatar">'
-                    +     (profile.avatar_url ? '<img src="' + escapeHtml(profile.avatar_url) + '" alt="' + escapeHtml(displayName) + '">' : escapeHtml(initial))
+                    +     '<img src="' + escapeHtml(tmrAvaSrc({ username: handle, avatar_url: profile.avatar_url })) + '" alt="' + escapeHtml(displayName) + '" loading="lazy">'
                     +   '</div>'
                     +   '<div class="tmr-identity">'
                     +     '<div class="tmr-name">' + escapeHtml(displayName) + '</div>'

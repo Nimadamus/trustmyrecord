@@ -116,10 +116,25 @@
                 });
             } catch (_) {}
         }
+        /* ONE RESOLVER (2026-09-08). Never a local placeholder: the API's avatar
+           route resolves upload -> favourite-team club mark -> neutral face. */
+        function tmrAvaSrc(user) {
+            if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+            var u = user || {};
+            var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+            if (direct && typeof direct === 'string') return direct;
+            var key = u.id != null ? u.id : (u.username || '');
+            if (key === '' || key == null) return '';
+            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+        }
         function sideHtml(username, score, isWin, isOpen) {
             if (isOpen) return '<div class="uname"><span style="color:var(--as-green)">Open Spot</span></div><div class="score">-</div>';
             var rec = recMap[String(username).toLowerCase()];
-            var av = (rec && rec.avatar) ? '<img src="' + A.esc(rec.avatar) + '" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px">' : '<div style="width:44px;height:44px;border-radius:50%;background:#1b2330;display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><i class="fas fa-user" style="color:#9aa4b2"></i></div>';
+            /* ONE RESOLVER (2026-09-08): no generic person icon. The avatar route
+               resolves upload -> favourite-team club mark -> neutral face. */
+            var avSrc = tmrAvaSrc({ username: username, avatar_url: rec && rec.avatar });
+            var av = '<img src="' + A.esc(avSrc) + '" alt="" loading="lazy" style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px">';
             var recLine = rec ? '<div class="meta" style="font-size:12px;margin-top:4px;color:#9aa4b2">' + rec.wins + '-' + rec.losses + ' &middot; ' + rec.win_pct + '% &middot; #' + rec.rank + '</div>' : '';
             return av + '<div class="uname"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + A.esc(username) + '</a></div><div class="score">' + score + '</div>' + (isWin ? '<span class="as-pill open">Winner</span>' : '') + recLine;
         }

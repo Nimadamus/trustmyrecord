@@ -110,11 +110,24 @@
         document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
         let apiRef = null, liveSet = {};
 
+        /* ONE RESOLVER (2026-09-08). A member with no upload wears their
+           favourite-team club mark, resolved by the API's avatar route, and only a
+           member with neither an upload nor a team gets the neutral face. Never an
+           initial and never a local placeholder. */
+        function tmrAvaSrc(user) {
+            if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+            const u = user || {};
+            const direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+            if (direct && typeof direct === 'string') return direct;
+            const key = u.id != null ? u.id : (u.username || '');
+            if (key === '' || key == null) return '';
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+        }
+
         function row(r, i) {
             const name = A.esc(r.display_name || r.username);
-            const av = r.avatar_url
-                ? '<img class="rk-av" src="' + A.esc(r.avatar_url) + '" alt="">'
-                : '<span class="rk-av" style="display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-user" style="color:#9aa4b2"></i></span>';
+            const av = '<img class="rk-av" src="' + A.esc(tmrAvaSrc(r)) + '" alt="" loading="lazy">';
             const isLive = liveSet[(r.username || '').toLowerCase()];
             const liveBadge = isLive ? '<span class="rk-live">LIVE</span>' : '';
             const wins = r.wins || 0, losses = r.losses || 0, draws = r.draws || 0;

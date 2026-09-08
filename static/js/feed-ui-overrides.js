@@ -915,7 +915,9 @@ async function loadTopCappers() {
                 const units = Number(u.net_units || 0);
                 const sign = units >= 0 ? '+' : '';
                 const display = u.display_name || u.username || 'User';
-                const avatar = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : esc(display[0] || '?');
+                /* NO_LETTER_FLASH: no upload is the resolver route, not an initial. */
+                const avaSrc = u.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(u.username || '') + '/avatar');
+                const avatar = '<img src="' + esc(avaSrc) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 return '<div class="rs-user"><div class="rs-user-avatar">' + avatar + '</div><div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=' + encodeURIComponent(u.username || '') + '">' + esc(display) + '</a></div><div class="rs-user-detail">' + esc(String(u.total_picks || 0)) + ' picks - <span style="color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';font-weight:700;">' + sign + units.toFixed(2) + 'u</span>' + (u.roi != null ? ' - ' + Number(u.roi).toFixed(1) + '% ROI' : '') + '</div></div></div>';
             }).join('');
             return;

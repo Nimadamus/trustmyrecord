@@ -370,7 +370,7 @@ class PersistentAuthSystem {
         if (!this.currentUser) return;
         
         const username = this.currentUser.username || this.currentUser.displayName || 'User';
-        const avatar = this.currentUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
+        const avatar = this.currentUser.avatar || this.getDefaultAvatar(username);
         const profileUrl = '/profile/?user=' + encodeURIComponent(username);
         
         // Update main navigation - modify "My Profile" link to show username
@@ -438,7 +438,11 @@ class PersistentAuthSystem {
            every surface. The letter tile below is the pre-2026-09-05 fallback,
            kept only for a page that somehow loads this file without the
            resolver; it is never reached on a design-system page. */
-        if (window.TMRAvatar) return window.TMRAvatar.dataUri(window.TMRAvatar.identity({ username: seed }));
+        if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src({ username: seed });
+        if (seed) {
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(seed) + '/avatar';
+        }
         const colors = ['0ea5e9', '22c55e', 'ef4444', 'f59e0b', '8b5cf6'];
         const color = colors[(seed ? seed.length : 0) % colors.length];
         const letter = seed ? seed.charAt(0).toUpperCase() : 'U';

@@ -214,6 +214,19 @@
     let marketplaceEnabled = false;
     let debounceTimer = null;
 
+    /* ONE RESOLVER (2026-09-08). Never a local placeholder: the API's avatar
+       route resolves upload -> favourite-team club mark -> neutral face, so a
+       member wears the same face here as on every other surface. */
+    function tmrAvaSrc(user) {
+        if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+        var u = user || {};
+        var direct = u.avatar_url || u.avatarUrl || u.avatar || u.user_avatar || '';
+        if (direct && typeof direct === 'string') return direct;
+        var key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
+        if (key === '' || key == null) return '';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+    }
     function esc(v) {
         return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
@@ -255,7 +268,7 @@
             const rec = s.record || {};
             return '<div class="sell-card">' +
                 '<div class="sc-top">' +
-                    '<img class="sc-ava" src="' + esc(s.avatar_url || '/static/img/default-avatar.png') + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+                    '<img class="sc-ava" src="' + esc(tmrAvaSrc(s)) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
                     '<div><div class="sc-name">' + esc(s.display_name || s.username) + (s.verified ? ' <span class="sc-verified" title="Verified">&#10003;</span>' : '') + '</div>' +
                     '<div class="sc-user">@' + esc(s.username) + ' &middot; ' + s.completed_sales + ' sale' + (s.completed_sales === 1 ? '' : 's') + '</div></div>' +
                 '</div>' +
@@ -391,7 +404,7 @@
             const rec = sel.has_verified_record ? (stt.wins + '-' + stt.losses + (stt.pushes ? '-' + stt.pushes : '')) : '&mdash;';
             return '<div class="sell-card">' +
                 '<div class="sc-top">' +
-                    '<img class="sc-ava" src="' + esc(sel.avatar_url || '/static/img/default-avatar.png') + '" alt="" loading="lazy" onerror="this.style.visibility=&#39;hidden&#39;">' +
+                    '<img class="sc-ava" src="' + esc(tmrAvaSrc(sel)) + '" alt="" loading="lazy" onerror="this.style.visibility=&#39;hidden&#39;">' +
                     '<div><div class="sc-name">' + esc(sel.username || '') + (sel.verified ? ' <span class="sc-verified" title="Verified">&#10003;</span>' : '') + '</div>' +
                     '<div class="sc-user">' + esc(l.product_label || l.product_type) + ' &middot; ' + (l.sold_count || 0) + ' sold</div></div>' +
                 '</div>' +
