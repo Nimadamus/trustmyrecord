@@ -55,7 +55,10 @@ const root = el('div'); root.className = 'tkact'; root.appendChild(slot);
 global.document = {
   hidden: false, readyState: 'complete',
   getElementById: (id) => (id === 'tmrActivity' ? root : null),
-  createElement: el, addEventListener() {},
+  createElement: el,
+  _on: {},
+  addEventListener(t, f) { (this._on[t] = this._on[t] || []).push(f); },
+  fire(t) { (this._on[t] || []).forEach((f) => f()); },
 };
 global.window = {
   addEventListener() {}, matchMedia: () => ({ matches: false }),
@@ -120,6 +123,33 @@ const ev = (id, uid, type, text, mins, upd) => ({
      texts.indexOf('Lost 2 picks - 10u') === -1, JSON.stringify(texts));
   ok('the two day old event is not cycled while fresher ones are held',
      texts.indexOf('Entered a contest') === -1, JSON.stringify(texts));
+
+  /* THE BACKGROUND TAB CASE. advance() refuses to paint while the tab is
+     hidden, so a homepage opened in a BACKGROUND tab had its very first item
+     refused outright, and the only thing left to retry was the five second
+     rotation interval, which a hidden tab throttles to roughly once a minute.
+     Switching to the tab therefore showed the labelled lane over an empty
+     slot. Boot a second instance, hidden this time, and prove it paints the
+     moment the tab comes forward rather than on some later tick. */
+  slot.children.length = 0;
+  root.classList._s.clear();
+  document._on = {};
+  timers.length = 0;
+  pending.length = 0;
+  window.__tmrActivityFeedBooted = false;
+  document.hidden = true;
+  eval(fs.readFileSync(path, 'utf8'));
+  tick(50); await flush();
+  pending.shift()({ ok: true, json: () => Promise.resolve({
+    events: [ev(400, 9, 'picks_entered', '2 MLB picks', 3)] }) });
+  await flush(); tick(100); await flush();
+  ok('a hidden tab paints nothing', shown() === null, String(shown()));
+  document.hidden = false;
+  document.fire('visibilitychange');
+  await flush(); tick(50); await flush();
+  ok('coming back to the tab paints at once, without waiting for a rotation tick',
+     shown() === '2 MLB picks', String(shown()));
+
   console.log(fail ? '\nFAILED (' + fail + ')' : '\nPASS');
   process.exit(fail ? 1 : 0);
 })();
