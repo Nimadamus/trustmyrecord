@@ -1355,7 +1355,7 @@
     // and messages icons get unread-count badges without each page importing it.
     if (!document.querySelector('script[data-tmr-nav-badges]')) {
         const navBadgesScript = document.createElement("script");
-        navBadgesScript.src = "/static/js/nav-badges.js?v=e5bfe5d9e8b9";
+        navBadgesScript.src = "/static/js/nav-badges.js?v=dca92f04da03";
         navBadgesScript.async = true;
         navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
         document.head.appendChild(navBadgesScript);
