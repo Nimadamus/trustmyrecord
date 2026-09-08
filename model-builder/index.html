@@ -92,6 +92,32 @@
         #datasetToggle .ds-btn.active { background: linear-gradient(135deg, var(--accent), #3EA0FF); color: #04121f; font-weight: 800; box-shadow: 0 6px 18px -8px rgba(29,127,232,0.9); }
         .tool-hint { max-width: 460px; margin: 10px 0 0; color: var(--muted-2); font-size: 12.5px; line-height: 1.5; }
         .preset-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* Four steps of the product loop: build, backtest, track, measure. */
+        .how-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .lede-2 { margin-top: 8px; color: var(--muted-2); font-size: 14px; }
+        /* Tracking period: the choice that turns a search into a model. */
+        .period-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .period { min-height: 38px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(15,23,36,0.6); color: #cfe0f4; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .15s ease, background .15s ease, color .15s ease; }
+        .period:hover { border-color: rgba(29,127,232,0.55); color: #eaf3ff; }
+        .period.active { border-color: rgba(29,127,232,0.85); background: var(--accent-soft); color: #eaf3ff; }
+        .period-note { margin: 10px 0 0; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
+        button.cta-secondary { background: rgba(15,23,36,0.6); border-color: var(--line-2); color: #dbe8f7; font-weight: 700; box-shadow: none; min-height: 46px; font-size: 14.5px; }
+        button.cta-secondary:hover { border-color: rgba(29,127,232,0.5); }
+        /* Backtest and forward record must never read as the same number. */
+        .ds-split { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+        .ds-flag { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+        .ds-flag.hist { border: 1px solid rgba(148,163,184,0.42); background: rgba(148,163,184,0.12); color: #c3d0e0; }
+        .ds-flag.fwd { border: 1px solid rgba(52,211,153,0.5); background: rgba(52,211,153,0.12); color: #86efc3; }
+        .model-conditions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+        .cond { padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(15,23,36,0.55); color: #cfe0f4; font-size: 11.5px; font-weight: 600; }
+        .track-bar { margin-top: 12px; }
+        .track-bar .track-line { height: 6px; border-radius: 999px; background: rgba(148,163,184,0.18); overflow: hidden; }
+        .track-bar .track-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #3EA0FF); }
+        .tag.done { border-color: rgba(148,163,184,0.45); background: rgba(148,163,184,0.14); color: #c3d0e0; }
+        .count-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .count { flex: 1 1 110px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(11,18,30,0.6); }
+        .count b { display: block; font-family: Barlow, Inter, sans-serif; font-size: 20px; font-weight: 800; line-height: 1; }
+        .count span { display: block; margin-top: 4px; color: var(--muted-2); font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
         .preset { min-height: 38px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(15,23,36,0.6); color: #cfe0f4; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .15s ease, background .15s ease, color .15s ease; }
         .preset:hover { border-color: rgba(77,163,255,0.55); background: rgba(29,127,232,0.14); color: #fff; }
 
@@ -255,7 +281,7 @@
 
         /* ---------------- Responsive ---------------- */
         @media (max-width: 900px) {
-            .how { grid-template-columns: minmax(0, 1fr); }
+            .how, .how-4 { grid-template-columns: minmax(0, 1fr); }
             .spec { grid-template-columns: minmax(0, 1fr); gap: 0; }
             .spec-row { grid-template-columns: 100px minmax(0, 1fr); gap: 12px; }
             .how-step { padding: 18px 16px 16px; }
@@ -302,23 +328,29 @@
         <section class="model-builder-top mb-hero">
             <p class="kicker">Research Tools</p>
             <h1>Model <span class="accent">Builder</span></h1>
-            <p class="lede">Describe the kind of bet you believe in. We watch the sportsbook for you, log every bet that fits, and keep the record honest.</p>
+            <p class="lede">Build a betting model, test it against historical TrustMyRecord results, then track every future wager that matches your conditions.</p>
+            <p class="lede lede-2">Once tracking begins, TrustMyRecord automatically records and grades every future qualifying wager for the duration you choose. You never have to come back and run it.</p>
 
-            <ol class="how">
+            <ol class="how how-4">
                 <li class="how-step">
                     <span class="how-n">1</span>
-                    <h2 class="how-t">You describe the bet</h2>
-                    <p class="how-b">Pick the sport, the market, the side and the price range. Something like <b>home underdogs at +200 or better</b>, or <b>MLB unders in games totalling 8 or less</b>. Set your stake and, if you want, an end date.</p>
+                    <h2 class="how-t">Build</h2>
+                    <p class="how-b">Define the conditions you believe in. Sport, market, side, home or away, price range, line range. Something like <b>home favorites -150 to -250</b>.</p>
                 </li>
                 <li class="how-step">
                     <span class="how-n">2</span>
-                    <h2 class="how-t">We watch the board</h2>
-                    <p class="how-b">Every 20 minutes your model reads the live TrustMyRecord sportsbook. Any bet that matches is logged automatically at the price posted at that moment. You never enter a pick and nothing is wagered.</p>
+                    <h2 class="how-t">Backtest</h2>
+                    <p class="how-b">Optional. See how those exact conditions did in the verified graded ledger, so you can decide whether the idea is worth tracking. This is history, not your model's record.</p>
                 </li>
                 <li class="how-step">
                     <span class="how-n">3</span>
-                    <h2 class="how-t">You get a real record</h2>
-                    <p class="how-b">Each one is graded on the final score by the same grader that grades the site. Open bets, settled bets, wins, losses, units, ROI and a day by day breakdown, all under your model.</p>
+                    <h2 class="how-t">Track</h2>
+                    <p class="how-b">Choose how long you want it monitored: 7, 14, 30, 60, 90 days, your own end date, or until you stop it. Then start it. That moment is where the model's own record begins.</p>
+                </li>
+                <li class="how-step">
+                    <span class="how-n">4</span>
+                    <h2 class="how-t">Measure</h2>
+                    <p class="how-b">From then on every future wager that meets your conditions is logged at the posted price and graded on the final score. Record, win rate, ROI, units, pending and settled, all out of sample.</p>
                 </li>
             </ol>
 
@@ -336,7 +368,7 @@
                     <button type="button" class="ds-btn active" data-ds="picks" role="tab" aria-selected="true">Handicapper Picks</button>
                     <button type="button" class="ds-btn" data-ds="games" role="tab" aria-selected="false">Game Results</button>
                 </div>
-                <p class="tool-hint" id="datasetHint">Build a model on the bets handicappers posted, backtest it, then set it running on the live board.</p>
+                <p class="tool-hint" id="datasetHint">Define conditions on the bets handicappers post, optionally backtest them, then track every future wager that matches.</p>
             </div>
             <div class="tool-block">
                 <p class="tool-label">Or start from an example</p>
@@ -355,8 +387,8 @@
                             <div class="step-head">
                                 <span class="step-n" aria-hidden="true">1</span>
                                 <div>
-                                    <div class="step-title">Choose what to analyze</div>
-                                    <div class="step-sub">Sport and the markets you care about</div>
+                                    <div class="step-title">Define the model</div>
+                                    <div class="step-sub">The sport and markets your conditions apply to</div>
                                 </div>
                             </div>
                             <div class="form-grid">
@@ -376,8 +408,8 @@
                             <div class="step-head">
                                 <span class="step-n" aria-hidden="true">2</span>
                                 <div>
-                                    <div class="step-title">Add your filters</div>
-                                    <div class="step-sub">Narrow the angle. Every field is optional.</div>
+                                    <div class="step-title">Set your conditions</div>
+                                    <div class="step-sub">Every field is optional. These are what a future wager has to meet to qualify.</div>
                                 </div>
                             </div>
                             <div class="form-grid">
@@ -439,38 +471,72 @@
                             </div>
                         </li>
 
-                        <li class="step step-run">
+                        <li class="step">
                             <div class="step-head">
                                 <span class="step-n" aria-hidden="true">3</span>
                                 <div>
-                                    <div class="step-title">Run the model</div>
-                                    <div class="step-sub">Backtested on verified graded results</div>
+                                    <div class="step-title">Backtest it first (optional)</div>
+                                    <div class="step-sub">See how these conditions performed historically</div>
                                 </div>
                             </div>
-                            <button type="submit" class="primary cta" id="runBtn">Run Model</button>
-                            <div class="button-row split">
-                                <button type="button" id="saveBtn">Save model</button>
-                                <button type="button" id="resetBtn">Reset filters</button>
+                            <button type="submit" class="cta cta-secondary" id="runBtn">Run historical backtest</button>
+                            <p class="run-note">A backtest is past results from the verified graded ledger. It is not your model's record and it never counts toward it.</p>
+                        </li>
+
+                        <li class="step">
+                            <div class="step-head">
+                                <span class="step-n" aria-hidden="true">4</span>
+                                <div>
+                                    <div class="step-title">Choose the tracking period</div>
+                                    <div class="step-sub">How long should we monitor these conditions?</div>
+                                </div>
                             </div>
-                            <div class="save-box" id="saveBox" hidden>
-                                <label for="modelName">Name this model
-                                    <input id="modelName" type="text" maxlength="120" placeholder="e.g. MLB home dogs, +120 to +200">
+                            <div class="period-row" id="periodRow" role="group" aria-label="Tracking period">
+                                <button type="button" class="period" data-days="7">7 days</button>
+                                <button type="button" class="period" data-days="14">14 days</button>
+                                <button type="button" class="period active" data-days="30">30 days</button>
+                                <button type="button" class="period" data-days="60">60 days</button>
+                                <button type="button" class="period" data-days="90">90 days</button>
+                                <button type="button" class="period" data-days="open">Until I stop it</button>
+                                <button type="button" class="period" data-days="custom">Custom end date</button>
+                            </div>
+                            <div class="two-col" style="margin-top:12px">
+                                <label for="trackUntil">Tracking ends
+                                    <input id="trackUntil" type="date">
                                 </label>
-                                <div class="two-col">
-                                    <label for="stakeUnits">Units per bet
-                                        <input id="stakeUnits" type="number" min="0.1" max="100" step="any" value="1" inputmode="decimal">
-                                    </label>
-                                    <label for="trackUntil">Track until
-                                        <input id="trackUntil" type="date">
-                                    </label>
-                                </div>
-                                <span class="hint">Saving switches the model on. It reads the live board straight away, then every 20 minutes, and settles what it took on final scores. Leave the date blank to run until you stop it.</span>
-                                <div class="button-row split">
-                                    <button type="button" class="primary" id="saveConfirmBtn">Save it</button>
-                                    <button type="button" id="saveCancelBtn">Cancel</button>
+                                <label for="stakeUnits">Units per qualifying wager
+                                    <input id="stakeUnits" type="number" min="0.1" max="100" step="any" value="1" inputmode="decimal">
+                                </label>
+                            </div>
+                            <p class="period-note" id="periodNote"></p>
+                        </li>
+
+                        <li class="step">
+                            <div class="step-head">
+                                <span class="step-n" aria-hidden="true">5</span>
+                                <div>
+                                    <div class="step-title">Name the model</div>
+                                    <div class="step-sub">We suggest one from your conditions. Change it if you like.</div>
                                 </div>
                             </div>
-                            <p class="run-note">Saving switches the model on so it scans the board by itself. Needs a free account.</p>
+                            <label for="modelName">Model name
+                                <input id="modelName" type="text" maxlength="120" placeholder="e.g. NFL Home Favorites -150 to -250">
+                            </label>
+                        </li>
+
+                        <li class="step step-run">
+                            <div class="step-head">
+                                <span class="step-n" aria-hidden="true">6</span>
+                                <div>
+                                    <div class="step-title">Start tracking</div>
+                                    <div class="step-sub">The model's own record starts the moment you do</div>
+                                </div>
+                            </div>
+                            <button type="button" class="primary cta" id="saveBtn">Start tracking model</button>
+                            <div class="button-row split">
+                                <button type="button" id="resetBtn">Reset conditions</button>
+                            </div>
+                            <p class="run-note">From here it reads the live board on its own, logs every future wager that meets your conditions at the price posted, and grades it on the final score. Nothing is wagered and nothing is charged. Needs a free account.</p>
                             <p class="notice" id="builderMessage"></p>
                         </li>
                     </ol>
@@ -481,15 +547,15 @@
             <section class="builder-panel" aria-label="Backtest results">
                 <div class="results-head">
                     <div>
-                        <p class="panel-label">Backtest result</p>
-                        <h2>Verified historical record</h2>
+                        <p class="panel-label">Step 3 &middot; Backtest</p>
+                        <h2>Historical results for these conditions</h2>
                     </div>
                     <span class="freshness" id="resultFreshness"></span>
                 </div>
                 <div id="resultsBody">
                     <div class="empty-state">
-                        <h3>Your results will appear here</h3>
-                        <p class="placeholder">Select your filters and run a model to see how similar bets have actually performed, using verified graded results from the TrustMyRecord ledger.</p>
+                        <h3>Your backtest will appear here</h3>
+                        <p class="placeholder">Set your conditions and run a backtest to see how wagers like these have actually performed in the verified graded ledger. A backtest is optional: you can start tracking a model without running one.</p>
                         <div class="ghost-grid" aria-hidden="true">
                             <div class="ghost"><div class="k">Record</div><div class="v"><i class="ghost-bar"></i></div></div>
                             <div class="ghost"><div class="k">ROI</div><div class="v"><i class="ghost-bar"></i></div></div>
@@ -502,7 +568,7 @@
                             <li><span><b>Real graded results only.</b> Every number is an aggregate of picks that were posted, closed and graded on TrustMyRecord.</span></li>
                             <li><span><b>Measured against a control.</b> Your angle is shown beside the sport baseline and a random control, so you can see whether the edge is real or just the market.</span></li>
                             <li><span><b>Honest about thin data.</b> Small samples and limited coverage are flagged on the result, not hidden.</span></li>
-                            <li><span><b>Then it runs itself.</b> Save a model and it scans the live board on its own, takes what matches at the posted price and grades it on the final score. No pick entry, ever.</span></li>
+                            <li><span><b>Backtest and live record stay apart.</b> Nothing on this panel ever counts toward a model's forward record. That record starts empty at the moment you press Start tracking.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -511,10 +577,10 @@
             <!-- SAVED MODELS -->
             <section class="builder-panel full" aria-label="Saved models">
                 <p class="panel-label">Your models</p>
-                <h2>Saved models &amp; forward tracking</h2>
-                <p class="panel-sub">Saved models are private, and they run on their own. From the moment you save one it scans the live board every 20 minutes, books every selection that matches its filters at the price on the board, and settles each one on the final score. You also see which picks real handicappers posted that fit the same filters. Both records are kept apart from the backtest and from the verified ledger.</p>
+                <h2>Active models</h2>
+                <p class="panel-sub">Your models are private and they run on their own. From the moment you start one it reads the live board every 20 minutes, logs every future wager that meets your conditions at the price posted, and grades it on the final score. This forward record begins empty at activation and is never mixed with the backtest.</p>
                 <div id="savedModelsHost">
-                    <div class="login-hint" id="loginHint" hidden>Log in to save models and track them forward. <a href="/login/?next=/model-builder/">Log in</a> or <a href="/register/">create a free account</a>.</div>
+                    <div class="login-hint" id="loginHint" hidden>Log in to build a model and track it forward. <a href="/login/?next=/model-builder/">Log in</a> or <a href="/register/">create a free account</a>.</div>
                     <div class="model-list" id="modelList"></div>
                 </div>
                 <div id="forwardPanel" hidden></div>
@@ -655,7 +721,7 @@
                 <div class="spec-row"><dt>Stopping</dt><dd>Pause it whenever you like, or give it an end date. Bets already open still settle either way.</dd></div>
             </dl>
 
-            <p class="detail-close">It answers one question: if you had actually been betting this idea, where would you stand? You can also backtest the idea against every verified graded pick already in the database before you switch it on, which is what the builder above does when you press Run Model.</p>
+            <p class="detail-close">It answers one question: if you had actually been betting this idea, where would you stand? You can also backtest the idea against every verified graded pick already in the database before you switch it on, which is what the builder above does when you press Run historical backtest. That backtest is a separate population and it never enters a model's forward record.</p>
         </section>
     </main>
 

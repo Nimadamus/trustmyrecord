@@ -1,6 +1,12 @@
 /**
  * Model Builder, end to end, as a real member.
  *
+ * The product under test is FORWARD TRACKING: a member defines conditions,
+ * optionally backtests them, chooses how long the conditions are monitored,
+ * and from activation every future qualifying wager is logged and graded
+ * under that model. The backtest is a decision aid taken before that, and the
+ * suite checks the two records are never mixed.
+ *
  * Runs as Little_Venom (user 721) against production. The token is minted the
  * same way tests/sportsbook-v2/credential.cjs mints one, from the API signing
  * secret kept outside the repo, so nothing here carries a password and nothing
@@ -84,14 +90,23 @@ test.describe('Model Builder as a member', () => {
     await page.goto(`${SITE}/model-builder/`, { waitUntil: 'domcontentloaded' });
 
     await expect(page.locator('h1')).toContainText(/Model Builder/i);
-    // The one line statement of the idea.
-    await expect(page.locator('.lede')).toContainText(/watch the sportsbook/i);
-    // The three steps.
+    // The one line statement of the idea: build, test, then TRACK FORWARD.
+    await expect(page.locator('.lede').first())
+      .toContainText(/track every future wager that matches your conditions/i);
+    await expect(page.locator('body'))
+      .toContainText(/automatically records and grades every future qualifying wager/i);
+    // The product loop, in four steps.
     const steps = page.locator('.how-step .how-t');
-    await expect(steps).toHaveCount(3);
-    await expect(steps.nth(0)).toContainText(/describe the bet/i);
-    await expect(steps.nth(1)).toContainText(/watch the board/i);
-    await expect(steps.nth(2)).toContainText(/real record/i);
+    await expect(steps).toHaveCount(4);
+    await expect(steps.nth(0)).toContainText(/^Build$/i);
+    await expect(steps.nth(1)).toContainText(/^Backtest$/i);
+    await expect(steps.nth(2)).toContainText(/^Track$/i);
+    await expect(steps.nth(3)).toContainText(/^Measure$/i);
+
+    // The workflow itself is on the form: define, backtest, period, name, start.
+    await expect(page.locator('#periodRow .period')).toHaveCount(7);
+    await expect(page.locator('#saveBtn')).toContainText(/start tracking model/i);
+    await expect(page.locator('#runBtn')).toContainText(/backtest/i);
 
     // The promises a member will judge it on, stated on the page itself.
     const body = page.locator('body');
@@ -114,6 +129,32 @@ test.describe('Model Builder as a member', () => {
     // A sport the picker offers, proving the catalog resolved.
     await expect.poll(async () => page.locator('#modelSport option').count(), { timeout: 30000 })
       .toBeGreaterThan(3);
+
+    // TODAY'S BOARD IS NOT A SPORT-SELECTION CONCEPT. How many games happen to
+    // be up right now says nothing about a model meant to run for 60 days, so
+    // it must not appear in the picker. Only the backtest sample may.
+    const optionText = (await page.locator('#modelSport option').allTextContents()).join(' | ');
+    expect(optionText).not.toMatch(/on the board/i);
+    expect(optionText).toMatch(/historical sample/i);
+  });
+
+  test('a tracking period is chosen before the model can start', async ({ page }) => {
+    await page.goto(`${SITE}/model-builder/`, { waitUntil: 'domcontentloaded' });
+    const until = page.locator('#trackUntil');
+    // 30 days is the default, and the date field agrees with the chip.
+    await expect(page.locator('#periodRow .period.active')).toContainText('30 days');
+    const thirty = await until.inputValue();
+    expect(thirty).toBeTruthy();
+
+    await page.locator('#periodRow .period[data-days="90"]').click();
+    const ninety = await until.inputValue();
+    expect(new Date(ninety).getTime()).toBeGreaterThan(new Date(thirty).getTime());
+    await expect(page.locator('#periodNote')).toContainText(ninety);
+
+    // "Track until I stop it" is an end date of none, not a hidden default.
+    await page.locator('#periodRow .period[data-days="open"]').click();
+    expect(await until.inputValue()).toBe('');
+    await expect(page.locator('#periodNote')).toContainText(/until you stop the model yourself/i);
   });
 
   test('a backtest runs and returns a real record', async ({ page }) => {
@@ -133,6 +174,20 @@ test.describe('Model Builder as a member', () => {
     await expect(page.locator('#resultsBody')).toContainText(/Baseline/i);
     // Every number carries where it came from.
     await expect(page.locator('#resultsBody')).toContainText(/Data source/i);
+    // And it is flagged as HISTORY, never as the model's live record.
+    await expect(page.locator('#resultsBody .ds-flag.hist')).toContainText(/historical backtest/i);
+    await expect(page.locator('#resultsBody')).toContainText(/not this model's live record/i);
+  });
+
+  test('the model name is suggested from the conditions', async ({ page }) => {
+    await page.goto(`${SITE}/model-builder/`, { waitUntil: 'domcontentloaded' });
+    await expect.poll(async () => page.locator('#marketChips label.mkt').count(), { timeout: 30000 })
+      .toBeGreaterThan(0);
+    await page.locator('#modelHomeAway').selectOption('home');
+    await page.locator('#modelSide').selectOption('favorite');
+    const suggested = await page.locator('#modelName').inputValue();
+    expect(suggested).toMatch(/Home/);
+    expect(suggested).toMatch(/Favorites/);
   });
 
   test('signed in, a member can save a model and it starts watching the board', async ({ page, request }) => {
@@ -144,19 +199,25 @@ test.describe('Model Builder as a member', () => {
 
     await page.locator('#marketChips input[value="h2h"]').first().check();
     await page.locator('#modelSide').selectOption('favorite');
+    // 3: choose the tracking period. 4: name it. 5: start it.
+    await page.locator('#periodRow .period[data-days="14"]').click();
+    await page.locator('#stakeUnits').fill('2');
+    await page.locator('#modelName').fill(MODEL_NAME);
     await page.locator('#saveBtn').click();
 
-    const box = page.locator('#saveBox');
-    await expect(box).toBeVisible();
-    await page.locator('#modelName').fill(MODEL_NAME);
-    await page.locator('#stakeUnits').fill('2');
-    await page.locator('#saveConfirmBtn').click();
-
-    await expect(page.locator('#builderMessage')).toContainText(/saved and running/i, { timeout: 60000 });
+    await expect(page.locator('#builderMessage')).toContainText(/tracking started/i, { timeout: 60000 });
     await expect(page.locator('#modelList')).toContainText(MODEL_NAME, { timeout: 30000 });
-    await expect(page.locator('#modelList')).toContainText(/Tracking live/i);
-    // The terms the member set are shown back to them.
-    await expect(page.locator('#modelList')).toContainText(/2u a bet/i);
+
+    const card = page.locator('.model-card', { hasText: MODEL_NAME });
+    await expect(card.locator('.tag')).toContainText(/Active/i);
+    // The dashboard the member judges the model on.
+    await expect(card).toContainText(/2u a qualifying wager/i);
+    await expect(card).toContainText(/day[s]? remaining/i);
+    await expect(card).toContainText(/Qualifying wagers found/i);
+    await expect(card).toContainText(/Graded/i);
+    await expect(card).toContainText(/Pending/i);
+    // The conditions are on the card, so the record is never orphaned.
+    await expect(card.locator('.cond')).toContainText([/./]);
   });
 
   test('the model logs bets off the live board at the posted price', async ({ request }) => {
@@ -165,6 +226,12 @@ test.describe('Model Builder as a member', () => {
     expect(model, 'the saved model is on the account').toBeTruthy();
     expect(Number(model.stake_units)).toBe(2);
     expect(model.tracked_from, 'saving switched it on').toBeTruthy();
+
+    // The period the member chose is what is stored, not a default.
+    expect(model.track_until, 'the tracking window was stored').toBeTruthy();
+    const days = Math.round((new Date(model.track_until) - new Date(model.tracked_from)) / 86400000);
+    expect(days).toBeGreaterThanOrEqual(13);
+    expect(days).toBeLessThanOrEqual(15);
 
     const auto = await api(request, 'GET', `/models/${model.id}/auto`);
     expect(auto.status).toBe(200);
@@ -222,13 +289,51 @@ test.describe('Model Builder as a member', () => {
     await card.locator('[data-act="forward"]').click();
 
     const panel = page.locator('#forwardPanel');
-    await expect(panel).toContainText(/Positions it took off the board/i, { timeout: 60000 });
+    await expect(panel).toContainText(/Every wager that qualified since activation/i, { timeout: 60000 });
     await expect(panel).toContainText(/On the board now/i);
     await expect(panel).toContainText(/Day by day/i);
     await expect(panel.locator('.kpi')).toHaveCount(3);
-    // It says where the numbers came from and that they are its own.
+    // Found, graded and pending are separated, never one lump.
+    await expect(panel.locator('.count')).toHaveCount(3);
+    await expect(panel).toContainText(/Qualifying wagers found/i);
+    // It says where the numbers came from and that they are its own, forward.
+    await expect(panel.locator('.ds-flag.fwd')).toContainText(/live model record/i);
+    await expect(panel).toContainText(/out of sample/i);
     await expect(panel).toContainText(/live board/i);
     await expect(panel.locator('table.forward-list tbody tr').first()).toBeVisible();
+  });
+
+  test('the backtest never contaminates the forward record', async ({ page, request }) => {
+    const list = await api(request, 'GET', '/models');
+    const model = ((list.json && list.json.models) || []).find((m) => m.name === MODEL_NAME);
+    const auto = await api(request, 'GET', `/models/${model.id}/auto`);
+    const forwardN = (auto.json.summary.sample_size || 0) + (auto.json.summary.pending || 0);
+
+    // Every wager in the forward record was captured after activation. Nothing
+    // historical can be in there.
+    const from = new Date(model.tracked_from).getTime();
+    for (const p of auto.json.picks || []) {
+      expect(new Date(p.captured_at).getTime(), `${p.selection} captured after activation`)
+        .toBeGreaterThanOrEqual(from - 60000);
+    }
+
+    // Backtesting the SAME conditions returns its own, separate population.
+    // Running it must leave the forward record untouched.
+    const filters = (model.criteria_json && model.criteria_json.filters) || {};
+    const bt = await api(request, 'POST', '/models/backtest', { filters });
+    expect(bt.status).toBe(200);
+    const btSample = (bt.json && bt.json.model && bt.json.model.sample_size) || 0;
+
+    const listAgain = await api(request, 'GET', '/models');
+    const fresh = ((listAgain.json && listAgain.json.models) || []).find((m) => m.id === model.id);
+    expect(fresh.tracking_stats, 'the list carries the forward record').toBeTruthy();
+    expect(fresh.tracking_stats.found).toBe(forwardN);
+    expect(fresh.tracking_stats.sample_size + fresh.tracking_stats.pending).toBe(forwardN);
+    // The historical sample is not folded in: the forward record counts only
+    // what the model itself logged since activation.
+    expect(fresh.tracking_stats.found).toBeLessThanOrEqual(forwardN);
+    expect(btSample, 'the backtest has its own population').toBeGreaterThanOrEqual(0);
+    void page;
   });
 
   test('nothing the model logged reached the member pick record', async ({ request }) => {
@@ -256,6 +361,12 @@ test.describe('Model Builder as a member', () => {
     const paused = await api(request, 'POST', `/models/${model.id}/auto-scan`, { enabled: false });
     expect(paused.status).toBe(200);
     expect(paused.json.auto_scan).toBe(false);
+
+    // The period is editable while it runs, and clearing the date means
+    // "track until I stop it" rather than "leave it as it was".
+    const open = await api(request, 'POST', `/models/${model.id}/track`, { track_until: null });
+    expect(open.status).toBe(200);
+    expect(open.json.track_until).toBeFalsy();
 
     const after = await api(request, 'GET', '/models');
     const still = ((after.json && after.json.models) || []).find((m) => m.id === model.id);

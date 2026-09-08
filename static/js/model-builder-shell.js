@@ -1,5 +1,11 @@
 /**
- * TrustMyRecord Model Builder shell (v2 - backtest + forward tracking).
+ * TrustMyRecord Model Builder shell (v3 - build, backtest, track, measure).
+ *
+ * The product is FORWARD TRACKING. A user defines conditions, optionally
+ * backtests them, chooses how long the conditions should be monitored, and
+ * from activation every future qualifying wager is logged and graded under
+ * that model. The backtest is a decision aid that comes before that and its
+ * numbers are never folded into the model's own record.
  *
  * Every displayed number comes fresh from the API over the verified graded-pick
  * ledger. We never render a cached/previous number: each run shows a skeleton
@@ -53,7 +59,11 @@
     { label: 'Pitcher strikeouts', sport: 'baseball_mlb', markets: ['pitcher_strikeouts'] }
   ];
 
-  var state = { catalog: null, models: [], forwardOpenId: null, dataset: 'picks', lastDescribe: '' };
+  var state = {
+    catalog: null, models: [], forwardOpenId: null, dataset: 'picks',
+    lastDescribe: '', period: '30', nameTouched: false
+  };
+  var DAY_MS = 86400000;
 
   function api() { return window.api; }
   function el(id) { return document.getElementById(id); }
@@ -139,44 +149,44 @@
     ].join('');
   }
 
-  // Two thirds of the ledger's leagues are below the research threshold. Left
-  // in one flat list they read as a broken picker, so they get their own
-  // labelled group and say plainly why they are not selectable.
-  // Backtesting and tracking are different questions. A sport with a live
-  // board can always be tracked forward, even with no graded history to
-  // backtest, so it is offered rather than disabled. Only a sport with
-  // neither is unusable.
+  // The dropdown identifies the SPORT. How many games happen to be on the
+  // board today says nothing about a model that is meant to run for the next
+  // sixty days, so it is not in here: a sport with zero games up right now is
+  // still a sport you can build a model on. The only secondary fact worth
+  // carrying is how much history exists to backtest against, and it is stated
+  // quietly after the name.
   function sportOptions(sports, countWord) {
-    var ok = sports.filter(function (s) { return s.researchable; });
-    var track = sports.filter(function (s) { return !s.researchable && s.trackable; });
+    var live = sports.filter(function (s) { return s.researchable || s.trackable; });
     var dead = sports.filter(function (s) { return !s.researchable && !s.trackable; });
-    function opt(s, disabled, suffix) {
+    function opt(s, disabled) {
       var n = (s.graded != null ? s.graded : s.games) || 0;
-      var label = sportLabel(s.sport_key) + ' (' + n.toLocaleString() + ' ' + countWord + ')';
-      if (suffix) label += suffix;
+      var label = sportLabel(s.sport_key);
+      if (n > 0) label += '  ·  historical sample: ' + n.toLocaleString() + ' ' + countWord;
+      else label += '  ·  no historical sample yet';
       return '<option value="' + esc(s.sport_key) + '"' + (disabled ? ' disabled' : '') + '>'
         + esc(label) + '</option>';
     }
+    live.sort(function (a, b) { return sportLabel(a.sport_key).localeCompare(sportLabel(b.sport_key)); });
     return {
-      first: ok.length ? ok[0].sport_key : (track.length ? track[0].sport_key : null),
-      html: (ok.length ? '<optgroup label="Backtest and track">'
-              + ok.map(function (s) { return opt(s, false); }).join('') + '</optgroup>' : '')
-        + (track.length ? '<optgroup label="Track forward only, no backtest history yet">'
-              + track.map(function (s) {
-                  return opt(s, false, ' · ' + s.upcoming_games + ' games on the board');
-                }).join('') + '</optgroup>' : '')
-        + (dead.length ? '<optgroup label="Nothing to work with yet">'
+      first: live.length ? live[0].sport_key : null,
+      html: live.map(function (s) { return opt(s, false); }).join('')
+        + (dead.length ? '<optgroup label="No history and nothing scheduled yet">'
               + dead.map(function (s) { return opt(s, true); }).join('') + '</optgroup>' : '')
     };
   }
 
   function populateSports(cat) {
     var sel = el('modelSport');
-    var built = sportOptions(cat.sports || [], 'graded');
+    var built = sportOptions(cat.sports || [], 'graded wagers');
     sel.innerHTML = built.html;
-    if (built.first) sel.value = built.first;
+    // Default to the sport with the most history so the optional backtest has
+    // something to say the first time the page opens.
+    var richest = (cat.sports || []).slice().sort(function (a, b) { return b.graded - a.graded; })[0];
+    if (richest && sel.querySelector('option[value="' + richest.sport_key + '"]:not([disabled])')) {
+      sel.value = richest.sport_key;
+    } else if (built.first) { sel.value = built.first; }
     renderMarketChips();
-    sel.addEventListener('change', renderMarketChips);
+    sel.addEventListener('change', function () { renderMarketChips(); refreshSuggestedName(); });
   }
 
   function currentSport() {
@@ -292,6 +302,7 @@
     if (!p) return;
     if (state.dataset !== 'picks') switchDataset('picks');
     el('modelBuilderForm').reset();
+    applyPeriod('30');
     el('modelSport').value = p.sport;
     renderMarketChips();
     (p.markets || []).forEach(function (k) {
@@ -309,7 +320,10 @@
       while (d && d.tagName !== 'DETAILS') d = d.parentNode;
       if (d) d.open = true;
     }
-    setMessage('Loaded the "' + p.label + '" quick start. Change anything you like, then run it again.', 'ok');
+    state.nameTouched = false;
+    applyPeriod(state.period);
+    refreshSuggestedName();
+    setMessage('Loaded the "' + p.label + '" example conditions. Change anything you like, then choose a tracking period and start the model.', 'ok');
     runBacktest();
   }
 
@@ -372,16 +386,12 @@
     if (!sport.researchable) {
       el('resultFreshness').textContent = '';
       state.lastDescribe = describeFilters(filtersFromForm());
-      el('resultsBody').innerHTML = '<p class="result-summary"><b>You built:</b> ' + esc(state.lastDescribe) + '</p>'
-        + '<div class="warn warn-warn" style="margin-top:14px">There is no graded pick history for '
-        + esc(sportLabel(sport.sport_key)) + ' yet, so there is nothing honest to backtest it against. '
-        + 'The model still works: save it and it starts taking these selections off the live board '
-        + 'at the posted price and settling them on final scores, building its record from today forward.</div>'
-        + (sport.upcoming_games
-            ? '<p class="model-meta" style="margin-top:12px">' + sport.upcoming_games
-              + ' games on the board for this sport right now.</p>'
-            : '');
-      setMessage('No backtest history for this sport. Save the model to start tracking it forward.', 'ok');
+      el('resultsBody').innerHTML = '<p class="result-summary"><b>Your conditions:</b> ' + esc(state.lastDescribe) + '</p>'
+        + '<div class="warn warn-warn" style="margin-top:14px">There is no graded wager history for '
+        + esc(sportLabel(sport.sport_key)) + ' yet, so there is nothing honest to backtest these conditions against. '
+        + 'That does not stop the model. The backtest is optional: choose a tracking period and start it, and it '
+        + 'builds its own record from today forward.</div>';
+      setMessage('No history to backtest for this sport. You can still start tracking it forward.', 'ok');
       return;
     }
     setMessage('');
@@ -513,48 +523,108 @@
       + '<p class="model-meta" style="margin-top:8px">Closing line value (CLV): your model ' + clvCell(m)
       + (c.baseline ? ' &middot; baseline ' + clvCell(c.baseline) : '') + '. Positive CLV means picks beat the closing price.</p>';
 
-    var summary = state.lastDescribe
-      ? '<p class="result-summary"><b>You ran:</b> ' + esc(state.lastDescribe) + '</p>' : '';
+    var summary = '<div class="ds-split"><span class="ds-flag hist">Historical backtest</span>'
+      + '<span class="model-meta">Past results only. Not this model\'s live record.</span></div>'
+      + (state.lastDescribe
+          ? '<p class="result-summary"><b>Conditions tested:</b> ' + esc(state.lastDescribe) + '</p>' : '');
     el('resultsBody').innerHTML = tiles
       ? (summary + hero + '<div class="metric-grid">' + tiles + '</div>' + verdictHtml(m, c) + warningsHtml(res.warnings)
         + table + unitsChart(res.units_series)
         + '<p class="model-meta" style="margin-top:14px">Data source: ' + esc(res.data_source) + ' &middot; dataset ' + esc(res.dataset_version)
-        + ' &middot; ' + res.sport_graded_total + ' graded picks in this sport.</p>')
+        + ' &middot; ' + res.sport_graded_total + ' graded picks in this sport.</p>'
+        + '<p class="model-meta" style="margin-top:10px"><b>This is a backtest.</b> To find out whether the '
+        + 'angle keeps working out of sample, choose a tracking period and start the model. Its forward record '
+        + 'begins empty at that moment and these historical numbers never enter it.</p>')
       : warningsHtml(res.warnings);
   }
 
+  // ---------------- Tracking period ----------------
+  // The period is the commitment: it says how long these conditions get
+  // monitored, and it is the difference between a saved search and a model.
+  function periodLabel(v) {
+    if (v === 'open') return 'until you stop it';
+    if (v === 'custom') return 'until the date you set';
+    return 'for ' + v + ' days';
+  }
+
+  function applyPeriod(v, keepDate) {
+    state.period = v;
+    Array.prototype.forEach.call(document.querySelectorAll('#periodRow .period'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-days') === v);
+    });
+    var until = el('trackUntil');
+    var note = el('periodNote');
+    if (v === 'open') {
+      until.value = '';
+      until.disabled = true;
+    } else if (v === 'custom') {
+      until.disabled = false;
+      if (!until.value) until.value = isoDay(Date.now() + 30 * DAY_MS);
+      if (!keepDate) until.focus();
+    } else {
+      until.disabled = false;
+      until.value = isoDay(Date.now() + Number(v) * DAY_MS);
+    }
+    if (note) {
+      note.textContent = v === 'open'
+        ? 'Every future qualifying wager is recorded and graded until you stop the model yourself.'
+        : 'Every future qualifying wager is recorded and graded through ' + until.value
+          + '. Wagers already open on that date still settle.';
+    }
+  }
+
+  function isoDay(ms) { return new Date(ms).toISOString().slice(0, 10); }
+
+  function trackUntilPayload() {
+    if (state.period === 'open') return null;
+    var v = el('trackUntil').value;
+    // A date input gives a bare day. Run to the end of it, not its midnight,
+    // or "track until the 30th" drops the 30th's card.
+    return v ? v + 'T23:59:59' : null;
+  }
+
+  // A name the user recognises later, built from the conditions themselves.
+  function suggestName(f) {
+    var bits = [sportLabel(f.sport_key)];
+    if (f.home_away === 'home') bits.push('Home');
+    else if (f.home_away === 'away') bits.push('Away');
+    if (f.side === 'favorite') bits.push('Favorites');
+    else if (f.side === 'underdog') bits.push('Underdogs');
+    var mk = (f.market_types || []).map(function (k) { return marketLabelFor(k, f.sport_key); });
+    if (mk.length && mk.length <= 2) bits.push(mk.join(' + '));
+    if (f.selection_contains) bits.push(f.selection_contains);
+    if (f.min_odds != null || f.max_odds != null) {
+      bits.push((f.min_odds != null ? fmtOdds(f.min_odds) : 'any') + ' to '
+        + (f.max_odds != null ? fmtOdds(f.max_odds) : 'any'));
+    }
+    if (bits.length === 1) bits.push('Model');
+    return bits.join(' ').slice(0, 120);
+  }
+
+  function refreshSuggestedName() {
+    var input = el('modelName');
+    if (!input || state.nameTouched) return;
+    input.value = suggestName(filtersFromForm());
+  }
+
   // ---------------- Saved models ----------------
-  // window.prompt was the last piece of admin-panel furniture on the page.
-  // Same payload, same endpoint, asked for inline instead.
-  function openSaveBox() {
-    if (!hasSession()) {
-      setMessage('Log in to save a model and track it forward.', 'error');
-      return;
-    }
-    var box = el('saveBox');
-    if (!box) { saveModel(); return; }
-    box.hidden = false;
+  // One action creates the model AND starts it. A model that exists but is
+  // not watching anything is not the product.
+  async function startTracking() {
+    if (!hasSession()) { setMessage('Log in to start tracking a model. It is free.', 'error'); return; }
     var input = el('modelName');
-    if (!input.value) {
-      var f = filtersFromForm();
-      input.value = describeFilters(f).replace(/  \|  /g, ' ').slice(0, 120);
+    var name = input ? input.value.trim() : '';
+    if (!name) {
+      name = suggestName(filtersFromForm());
+      if (input) input.value = name;
     }
-    input.focus();
-    input.select();
-  }
-
-  function closeSaveBox() {
-    var box = el('saveBox');
-    if (box) box.hidden = true;
-  }
-
-  async function saveModel() {
-    if (!hasSession()) { setMessage('Log in to save models.', 'error'); return; }
-    var input = el('modelName');
-    var name = input ? input.value.trim() : window.prompt('Name this model:');
     if (!name) {
       setMessage('Give the model a name first.', 'error');
       if (input) input.focus();
+      return;
+    }
+    if (state.period !== 'open' && !el('trackUntil').value) {
+      setMessage('Choose how long to track this model, or pick "Until I stop it".', 'error');
       return;
     }
     var payload = {
@@ -572,34 +642,32 @@
       var newId = created && created.model && created.model.id;
       var tracking = false;
       var taken = 0;
+      var trackError = '';
       if (newId) {
         try {
           var stakeEl = el('stakeUnits');
-          var untilEl = el('trackUntil');
-          var opts = {};
+          var opts = { track_until: trackUntilPayload() };
           if (stakeEl && stakeEl.value !== '') opts.stake_units = Number(stakeEl.value);
-          // A date input gives a bare day. Run to the end of it, not its
-          // midnight, or "track until the 30th" drops the 30th's card.
-          if (untilEl && untilEl.value) opts.track_until = untilEl.value + 'T23:59:59';
           var tr = await api().trackModel(newId, opts);
           tracking = true;
           taken = (tr && tr.board_picks_taken) || 0;
-        } catch (e) { tracking = false; }
+        } catch (e) { trackError = (e && e.message) || ''; }
       }
-      closeSaveBox();
-      if (el('modelName')) el('modelName').value = '';
+      state.nameTouched = false;
       var stakeTxt = (el('stakeUnits') && el('stakeUnits').value) || '1';
       var untilTxt = (el('trackUntil') && el('trackUntil').value) || '';
       setMessage(tracking
-        ? ('Model saved and running at ' + stakeTxt + 'u a bet'
-            + (untilTxt ? ', through ' + untilTxt : '')
-            + '. It read the live board straight away and took '
-            + taken + ' position' + (taken === 1 ? '' : 's') + '. From here it scans on its own and settles each one on the final score.')
-        : 'Model saved. It is listed under Your models below.', 'ok');
+        ? ('Tracking started at ' + stakeTxt + 'u a qualifying wager, '
+            + (untilTxt ? 'through ' + untilTxt : 'until you stop it')
+            + '. It read the board straight away and found '
+            + taken + ' qualifying wager' + (taken === 1 ? '' : 's')
+            + '. From here it checks on its own every 20 minutes and grades each one on the final score.')
+        : ('Model created but tracking did not start' + (trackError ? ': ' + trackError : '')
+            + '. Use Start tracking on its card below.'), tracking ? 'ok' : 'error');
       await loadModels();
       if (newId && tracking) viewForward(newId);
     } catch (e) {
-      setMessage((e && e.message) || 'Could not save model.', 'error');
+      setMessage((e && e.message) || 'Could not create the model.', 'error');
     }
   }
 
@@ -622,62 +690,143 @@
 
   function renderModels() {
     if (!state.models.length) {
-      el('modelList').innerHTML = '<div class="model-card"><h3>No saved models yet</h3><p class="model-meta">Run a model, then Save model. Saving starts live tracking straight away, so every future graded pick that matches is recorded here on its own.</p></div>';
+      el('modelList').innerHTML = '<div class="model-card"><h3>No models yet</h3><p class="model-meta">Set your conditions above, choose how long they should be monitored, then press Start tracking model. From that moment every future wager that meets them is logged here and graded on the final score, with no further work from you.</p></div>';
       return;
     }
-    el('modelList').innerHTML = state.models.map(function (m) {
-      var tracked = Boolean(m.tracked_from);
-      var f = (m.criteria_json && m.criteria_json.filters) || {};
-      var markets = (f.market_types || []).map(function (k) { return marketLabelFor(k, m.sport_key); }).join(', ') || 'all markets';
-      return '<div class="model-card" data-id="' + m.id + '">'
-        + '<h3>' + esc(m.name) + ' ' + (tracked
-            ? (m.auto_scan === false
-                ? '<span class="tag hist">Paused</span>'
-                : '<span class="tag live">Tracking live</span>')
-            : '<span class="tag hist">Not tracking</span>') + '</h3>'
-        + '<div class="model-meta">' + esc(sportLabel(m.sport_key)) + ' &middot; ' + esc(markets)
-        + (f.side && f.side !== 'any' ? ' &middot; ' + esc(f.side) : '') + '</div>'
-        + (tracked && m.auto_scan === false
-            ? '<div class="model-meta">Paused. Positions already open still settle, but nothing new is taken.</div>'
-            : '')
-        + (tracked
-            ? '<div class="model-meta">'
-              + (m.stake_units ? Number(m.stake_units) + 'u a bet' : '1u a bet')
-              + (m.track_until ? ' &middot; through ' + esc(new Date(m.track_until).toLocaleDateString()) : ' &middot; no end date')
-              + '</div>'
-            : '')
-        + (tracked
-            ? '<div class="save-box terms-box" data-terms="' + m.id + '" hidden>'
-              + '<div class="two-col">'
-              + '<label>Units per bet<input type="number" min="0.1" max="100" step="any" data-f="stake" value="'
-              + (m.stake_units ? Number(m.stake_units) : 1) + '"></label>'
-              + '<label>Track until<input type="date" data-f="until" value="'
-              + (m.track_until ? esc(new Date(m.track_until).toISOString().slice(0, 10)) : '') + '"></label>'
-              + '</div>'
-              + '<span class="hint">Clear the date to run until you stop it. Positions already taken keep the stake they were booked at.</span>'
-              + '<div class="button-row split">'
-              + '<button type="button" class="primary" data-act="terms-save" data-id="' + m.id + '">Save terms</button>'
-              + '<button type="button" data-act="terms-cancel" data-id="' + m.id + '">Cancel</button>'
-              + '</div></div>'
-            : '')
-        + (tracked
-            ? '<div class="model-meta">Scanning the board since ' + esc(new Date(m.tracked_from).toLocaleDateString())
-              + (m.last_scanned_at ? ' &middot; last read ' + esc(new Date(m.last_scanned_at).toLocaleString()) : '')
-              + '</div>'
-            : '')
-        + '<div class="button-row">'
-        + '<button type="button" data-act="load" data-id="' + m.id + '">Load</button>'
-        + (tracked
-            ? '<button type="button" class="primary" data-act="forward" data-id="' + m.id + '">View live record</button>'
-              + '<button type="button" data-act="scan" data-id="' + m.id + '" data-enable="'
-              + (m.auto_scan === false ? '1' : '0') + '">'
-              + (m.auto_scan === false ? 'Resume scanning' : 'Pause scanning') + '</button>'
-              + '<button type="button" data-act="terms" data-id="' + m.id + '">Edit terms</button>'
-              + '<button type="button" data-act="publish" data-id="' + m.id + '">Submit for public listing</button>'
-            : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
-        + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
-        + '</div></div>';
-    }).join('');
+    el('modelList').innerHTML = state.models.map(modelCardHtml).join('');
+  }
+
+  // Status is derived, never stored: a model whose end date has passed is
+  // COMPLETE even though nothing wrote that word anywhere.
+  function modelStatus(m) {
+    if (!m.tracked_from) return { key: 'idle', label: 'Not tracking', cls: 'hist' };
+    if (m.auto_scan === false) return { key: 'paused', label: 'Paused', cls: 'hist' };
+    if (m.track_until && new Date(m.track_until).getTime() <= Date.now()) {
+      return { key: 'complete', label: 'Complete', cls: 'done' };
+    }
+    return { key: 'active', label: 'Active', cls: 'live' };
+  }
+
+  function daysRemaining(m) {
+    if (!m.track_until) return null;
+    var left = new Date(m.track_until).getTime() - Date.now();
+    return left <= 0 ? 0 : Math.ceil(left / DAY_MS);
+  }
+
+  // The conditions the model is actually watching for, each on its own chip,
+  // so a card can be read without opening anything.
+  function conditionChips(f, sportKey) {
+    var out = [sportLabel(sportKey)];
+    out.push((f.market_types && f.market_types.length)
+      ? f.market_types.map(function (k) { return marketLabelFor(k, sportKey); }).join(' + ')
+      : 'All markets');
+    if (f.side && f.side !== 'any') out.push(f.side === 'favorite' ? 'Favorites' : 'Underdogs');
+    if (f.home_away && f.home_away !== 'any') out.push(f.home_away === 'home' ? 'Home side' : 'Away side');
+    if (f.min_odds != null || f.max_odds != null) {
+      out.push('Odds ' + (f.min_odds != null ? fmtOdds(f.min_odds) : 'any')
+        + ' to ' + (f.max_odds != null ? fmtOdds(f.max_odds) : 'any'));
+    }
+    if (f.min_line != null || f.max_line != null) {
+      out.push('Line ' + (f.min_line != null ? f.min_line : 'any')
+        + ' to ' + (f.max_line != null ? f.max_line : 'any'));
+    }
+    if (f.selection_contains) out.push('Contains "' + f.selection_contains + '"');
+    return '<div class="model-conditions">' + out.map(function (c) {
+      return '<span class="cond">' + esc(c) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function countTile(n, label) {
+    return '<div class="count"><b>' + esc(String(n)) + '</b><span>' + esc(label) + '</span></div>';
+  }
+
+  // Elapsed against the window the owner chose, so "how far in am I" is a
+  // glance rather than a subtraction.
+  function trackBar(m) {
+    if (!m.tracked_from || !m.track_until) return '';
+    var from = new Date(m.tracked_from).getTime();
+    var to = new Date(m.track_until).getTime();
+    if (!(to > from)) return '';
+    var pct = Math.max(0, Math.min(100, ((Date.now() - from) / (to - from)) * 100));
+    return '<div class="track-bar"><div class="track-line"><div class="track-fill" style="width:'
+      + pct.toFixed(1) + '%"></div></div></div>';
+  }
+
+  function modelCardHtml(m) {
+    var tracked = Boolean(m.tracked_from);
+    var st = modelStatus(m);
+    var f = (m.criteria_json && m.criteria_json.filters) || {};
+    var t = m.tracking_stats || null;
+    var left = daysRemaining(m);
+    var window_ = tracked
+      ? ('Tracking ' + new Date(m.tracked_from).toLocaleDateString()
+          + ' to ' + (m.track_until ? new Date(m.track_until).toLocaleDateString() : 'no end date')
+          + (left != null
+              ? ' &middot; ' + (left === 0 ? 'window closed' : left + ' day' + (left === 1 ? '' : 's') + ' remaining')
+              : '')
+          + ' &middot; ' + (m.stake_units ? Number(m.stake_units) : 1) + 'u a qualifying wager')
+      : 'Not started. Nothing is being recorded for this model yet.';
+
+    var counts = tracked && t
+      ? '<div class="count-row">'
+        + countTile(t.found, 'Qualifying wagers found')
+        + countTile(t.sample_size, 'Graded')
+        + countTile(t.pending, 'Pending')
+        + '</div>'
+      : '';
+
+    var perf = tracked && t && t.sample_size > 0
+      ? '<div class="metric-grid" style="margin-top:12px">'
+        + metricTile('Record', t.record, t.sample_size + ' graded')
+        + metricTile('Win rate', fmtPct(t.win_rate), t.wins + 'W / ' + t.losses + 'L' + (t.pushes ? ' / ' + t.pushes + 'P' : ''))
+        + metricTile('ROI', t.roi == null ? '-' : t.roi.toFixed(2) + '%', 'on ' + t.staked_units + 'u', signClass(t.roi))
+        + metricTile('Net units', fmtUnits(t.net_units), 'forward only', signClass(t.net_units))
+        + metricTile('Avg odds', fmtOdds(t.avg_odds), 'American')
+        + '</div>'
+      : (tracked
+          ? '<p class="model-meta" style="margin-top:12px">Nothing has been graded yet. Results appear here as qualifying games finish.</p>'
+          : '');
+
+    return '<div class="model-card" data-id="' + m.id + '">'
+      + '<h3>' + esc(m.name) + ' <span class="tag ' + st.cls + '">' + esc(st.label) + '</span></h3>'
+      + conditionChips(f, m.sport_key)
+      + '<div class="model-meta" style="margin-top:10px">' + window_ + '</div>'
+      + trackBar(m)
+      + (st.key === 'paused'
+          ? '<div class="model-meta">Paused. Wagers already logged still settle, but nothing new is added.</div>' : '')
+      + (st.key === 'complete'
+          ? '<div class="model-meta">The tracking window has closed. Nothing new is added. Anything still open settles normally.</div>' : '')
+      + counts
+      + perf
+      + (tracked
+          ? '<div class="save-box terms-box" data-terms="' + m.id + '" hidden>'
+            + '<div class="two-col">'
+            + '<label>Units per wager<input type="number" min="0.1" max="100" step="any" data-f="stake" value="'
+            + (m.stake_units ? Number(m.stake_units) : 1) + '"></label>'
+            + '<label>Tracking ends<input type="date" data-f="until" value="'
+            + (m.track_until ? esc(new Date(m.track_until).toISOString().slice(0, 10)) : '') + '"></label>'
+            + '</div>'
+            + '<span class="hint">Clear the date to run until you stop it. Wagers already logged keep the stake they were booked at.</span>'
+            + '<div class="button-row split">'
+            + '<button type="button" class="primary" data-act="terms-save" data-id="' + m.id + '">Save period</button>'
+            + '<button type="button" data-act="terms-cancel" data-id="' + m.id + '">Cancel</button>'
+            + '</div></div>'
+          : '')
+      + (tracked && m.last_scanned_at
+          ? '<div class="model-meta" style="margin-top:10px">Board last checked ' + esc(new Date(m.last_scanned_at).toLocaleString()) + '</div>'
+          : '')
+      + '<div class="button-row">'
+      + (tracked
+          ? '<button type="button" class="primary" data-act="forward" data-id="' + m.id + '">View tracked wagers</button>'
+            + '<button type="button" data-act="scan" data-id="' + m.id + '" data-enable="'
+            + (m.auto_scan === false ? '1' : '0') + '">'
+            + (m.auto_scan === false ? 'Resume tracking' : 'Pause tracking') + '</button>'
+            + '<button type="button" data-act="terms" data-id="' + m.id + '">Edit period</button>'
+            + '<button type="button" data-act="publish" data-id="' + m.id + '">Submit for public listing</button>'
+          : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
+      + '<button type="button" data-act="load" data-id="' + m.id + '">Backtest these conditions</button>'
+      + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
+      + '</div></div>';
   }
 
   function disarmActions() {
@@ -707,7 +856,10 @@
     el('dateFrom').value = f.date_from || '';
     el('dateTo').value = f.date_to || '';
     el('selectionContains').value = f.selection_contains || '';
-    setMessage('Loaded "' + m.name + '". Run backtest to see results.', 'ok');
+    state.nameTouched = true;
+    if (el('modelName')) el('modelName').value = m.name;
+    setMessage('Loaded the conditions from "' + m.name + '". Run the historical backtest, or change them and start a new model. '
+      + 'Nothing you do here changes the record of the model you loaded from.', 'ok');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -723,8 +875,8 @@
     try {
       var res = await api().trackModel(id, payload);
       box.hidden = true;
-      setMessage('Terms updated: ' + (res.stake_units || 1) + 'u a bet'
-        + (res.track_until ? ', through ' + new Date(res.track_until).toLocaleDateString() : ', no end date')
+      setMessage('Tracking period updated: ' + (res.stake_units || 1) + 'u a qualifying wager'
+        + (res.track_until ? ', through ' + new Date(res.track_until).toLocaleDateString() : ', until you stop it')
         + '.', 'ok');
       await loadModels();
     } catch (e) {
@@ -751,10 +903,10 @@
     try {
       var res = await api().setModelAutoScan(id, enable);
       setMessage(enable
-        ? ('Scanning resumed. It read the board straight away and took '
-            + ((res && res.board_picks_taken) || 0) + ' new position'
+        ? ('Tracking resumed. It read the board straight away and found '
+            + ((res && res.board_picks_taken) || 0) + ' new qualifying wager'
             + (((res && res.board_picks_taken) || 0) === 1 ? '' : 's') + '.')
-        : 'Scanning paused. Positions already open still settle, but nothing new is taken.', 'ok');
+        : 'Tracking paused. Wagers already logged still settle, but nothing new is added.', 'ok');
       await loadModels();
     } catch (e) {
       setMessage((e && e.message) || 'Could not change scanning.', 'error');
@@ -826,24 +978,32 @@
           ? ' Capturing until ' + until.toLocaleDateString() + '.'
           : ' The tracking window closed on ' + until.toLocaleDateString() + ', so nothing new is taken. Open positions still settle.')
       : ' It runs until you stop it.';
+    var found = (s.sample_size || 0) + (s.pending || 0);
     var head = '<div class="results-head" style="margin-top:18px"><div>'
-      + '<p class="panel-label">The model\'s own book</p>'
-      + '<h2>Positions it took off the board</h2></div>'
-      + '<span class="freshness">Board last scanned ' + esc(scanned) + '</span></div>'
-      + '<p class="panel-sub">Nobody enters these. The model reads the live board on its own, takes every selection that matches its filters at the price posted, and each one is settled on the final score by the same grader that grades the site. '
-      + (data.units_per_pick || 1) + ' unit' + ((data.units_per_pick || 1) === 1 ? '' : 's') + ' a position.'
+      + '<p class="panel-label">Forward tracking</p>'
+      + '<h2>Every wager that qualified since activation</h2></div>'
+      + '<span class="freshness">Board last checked ' + esc(scanned) + '</span></div>'
+      + '<div class="ds-split"><span class="ds-flag fwd">Live model record</span>'
+      + '<span class="model-meta">Out of sample. No backtest result is counted here.</span></div>'
+      + '<p class="panel-sub">Nobody enters these. The model reads the live board on its own, logs every wager that meets its conditions at the price posted, and each one is graded on the final score by the same grader that grades the site. '
+      + (data.units_per_pick || 1) + ' unit' + ((data.units_per_pick || 1) === 1 ? '' : 's') + ' a qualifying wager.'
       + esc(windowTxt) + '</p>';
 
-    var tiles = '<div class="kpi-hero">'
-      + kpiTile('Record', s.record || '0-0', s.sample_size + ' settled'
-          + (s.pending ? ', ' + s.pending + ' live' : ''))
+    var tiles = '<div class="count-row">'
+      + countTile(found, 'Qualifying wagers found')
+      + countTile(s.sample_size || 0, 'Graded')
+      + countTile(s.pending || 0, 'Pending')
+      + '</div>'
+      + '<div class="kpi-hero" style="margin-top:14px">'
+      + kpiTile('Record', s.record || '0-0', (s.sample_size || 0) + ' graded'
+          + (s.pending ? ', ' + s.pending + ' pending' : ''))
       + kpiTile('ROI', s.roi == null ? '-' : s.roi.toFixed(2) + '%', 'on ' + (s.staked_units || 0) + 'u staked', signClass(s.roi))
-      + kpiTile('Net units', fmtUnits(s.net_units), 'settled only', signClass(s.net_units))
+      + kpiTile('Net units', fmtUnits(s.net_units), 'graded only', signClass(s.net_units))
       + '</div>'
       + '<div class="metric-grid">'
       + metricTile('Win rate', fmtPct(s.win_rate), (s.wins || 0) + 'W / ' + (s.losses || 0) + 'L')
       + metricTile('Avg odds', fmtOdds(s.avg_odds), 'American')
-      + metricTile('Open', String(s.pending || 0), 'not settled yet')
+      + metricTile('Pending', String(s.pending || 0), 'not graded yet')
       + '</div>';
 
     var upcoming = (data.upcoming || []);
@@ -852,7 +1012,7 @@
         + '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Starts</th><th>Game</th>'
         + '<th>Market</th><th>Selection</th><th>Price taken</th><th>Book</th><th>Stake</th></tr></thead><tbody>'
         + upcoming.map(function (p) { return autoPickRow(p, false); }).join('') + '</tbody></table></div>'
-      : '<p class="model-meta" style="margin-top:14px">Nothing on the current board matches these filters. The next scan runs within 20 minutes, and new positions appear here on their own.</p>';
+      : '<p class="model-meta" style="margin-top:14px">Nothing on the current board meets these conditions. That is a normal day for a model, not a fault. The next check runs within 20 minutes and anything that qualifies appears here on its own.</p>';
 
     // The day is the unit a bettor thinks in, so the day by day table sits
     // between the headline totals and the individual positions.
@@ -874,7 +1034,7 @@
 
     var settled = (data.picks || []).filter(function (p) { return p.status !== 'pending'; }).slice(0, 40);
     var settledHtml = settled.length
-      ? '<h3 class="section-title">Settled positions</h3>'
+      ? '<h3 class="section-title">Graded wagers</h3>'
         + '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Date</th><th>Game</th>'
         + '<th>Market</th><th>Selection</th><th>Price</th><th>Book</th><th>Result</th><th>Units</th></tr></thead><tbody>'
         + settled.map(function (p) { return autoPickRow(p, true); }).join('') + '</tbody></table></div>'
@@ -884,7 +1044,7 @@
     var note = '<p class="model-meta" style="margin-top:14px">Data source: ' + esc(data.data_source || 'live board')
       + '. Up to ' + (caps.per_scan || 25) + ' new positions a scan and ' + (caps.per_day || 50)
       + ' a day, from games starting inside ' + (caps.lookahead_hours || 72)
-      + ' hours. These positions are the model\'s own and never touch the verified graded ledger.</p>';
+      + ' hours. These wagers are the model\'s own forward record: they never touch the verified graded ledger, your profile or the leaderboards, and no backtest result is ever added to them.</p>';
 
     return head + tiles + upcomingHtml + dayHtml + settledHtml + note;
   }
@@ -900,8 +1060,8 @@
     var s = data.summary || {};
     var updated = data.last_updated ? new Date(data.last_updated).toLocaleString() : 'just now';
     var head = '<div class="results-head" style="margin-top:26px;padding-top:22px;border-top:1px solid var(--line)"><div>'
-      + '<p class="panel-label">Matching handicapper picks</p>'
-      + '<h2>Human picks that fit, since ' + esc(new Date(data.tracked_from).toLocaleDateString()) + '</h2></div>'
+      + '<p class="panel-label">Also matching, for reference</p>'
+      + '<h2>Handicapper picks that fit, since ' + esc(new Date(data.tracked_from).toLocaleDateString()) + '</h2></div>'
       + '<span class="freshness">Last updated ' + esc(updated) + '</span></div>';
     var tiles = '<div class="metric-grid">'
       + metricTile('Record', s.record || '0-0', s.sample_size + ' picks' + (s.pending ? ' (' + s.pending + ' pending)' : ''))
@@ -968,7 +1128,7 @@
 
   function populateGameSports(cat) {
     var sel = el('gameSport');
-    var built = sportOptions(cat.sports || [], 'games');
+    var built = sportOptions(cat.sports || [], 'completed games');
     sel.innerHTML = built.html;
     if (built.first) sel.value = built.first;
   }
@@ -1115,27 +1275,49 @@
   // ---------------- Wiring ----------------
   function wire() {
     el('modelBuilderForm').addEventListener('submit', runBacktest);
-    el('saveBtn').addEventListener('click', openSaveBox);
-    if (el('saveConfirmBtn')) el('saveConfirmBtn').addEventListener('click', saveModel);
-    if (el('saveCancelBtn')) el('saveCancelBtn').addEventListener('click', function () {
-      closeSaveBox();
-      setMessage('');
+    el('saveBtn').addEventListener('click', startTracking);
+    var periodRow = el('periodRow');
+    if (periodRow) {
+      periodRow.addEventListener('click', function (ev) {
+        var b = ev.target.closest('.period');
+        if (b) applyPeriod(b.getAttribute('data-days'));
+      });
+    }
+    if (el('trackUntil')) el('trackUntil').addEventListener('change', function () {
+      // Typing a date IS choosing a custom period, so the chips follow the
+      // field rather than silently disagreeing with it.
+      applyPeriod('custom', true);
     });
-    if (el('modelName')) el('modelName').addEventListener('keydown', function (ev) {
-      if (ev.key === 'Enter') { ev.preventDefault(); saveModel(); }
+    if (el('modelName')) {
+      el('modelName').addEventListener('input', function () {
+        state.nameTouched = Boolean(this.value.trim());
+      });
+      el('modelName').addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); startTracking(); }
+      });
+    }
+    // The name is suggested from the conditions until the user writes one.
+    ['modelSide', 'modelHomeAway', 'minOdds', 'maxOdds', 'selectionContains'].forEach(function (id) {
+      var node = el(id);
+      if (node) node.addEventListener('change', refreshSuggestedName);
     });
     el('resetBtn').addEventListener('click', function () {
       el('modelBuilderForm').reset();
       renderMarketChips();
       setMessage('');
-      closeSaveBox();
       state.lastDescribe = '';
+      state.nameTouched = false;
+      applyPeriod('30');
+      refreshSuggestedName();
       if (state.emptyResults) {
         el('resultsBody').innerHTML = state.emptyResults;
         el('resultFreshness').textContent = '';
       }
     });
-    el('marketChips').addEventListener('change', syncMarketState);
+    el('marketChips').addEventListener('change', function () {
+      syncMarketState();
+      refreshSuggestedName();
+    });
     var pr = el('presetRow');
     if (pr) {
       pr.addEventListener('click', function (ev) {
@@ -1174,8 +1356,8 @@
         b.textContent = act === 'track' ? 'Confirm tracking' : 'Confirm delete';
         b.classList.add('armed');
         setMessage(act === 'track'
-          ? 'Tracking records every future graded pick that matches, from now on. Click again to confirm.'
-          : 'This deletes the model and its tracking history. Click again to confirm.', 'error');
+          ? 'Tracking logs every future wager that meets these conditions, from now on. Click again to confirm.'
+          : 'This deletes the model and its whole forward record. Click again to confirm.', 'error');
       }
     });
     var dt = el('datasetToggle');
@@ -1200,7 +1382,9 @@
     state.emptyResults = el('resultsBody').innerHTML;
     state.emptyGameResults = el('gameResultsBody') ? el('gameResultsBody').innerHTML : '';
     wire();
+    applyPeriod('30');
     await loadCatalog();
+    refreshSuggestedName();
     renderPresets();
     loadModels();
     loadPublicTracked();
