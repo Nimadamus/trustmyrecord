@@ -100,6 +100,26 @@
         } catch (_) { return ''; }
     }
     function started(iso) { var t = Date.parse(iso); return Number.isFinite(t) && t <= Date.now(); }
+    // A board can carry more than one calendar day: MLB posts tomorrow's slate
+    // beside tonight's, so the same matchup appears twice with a different
+    // starter and a different price. Rows are grouped under a day bar so the
+    // second copy can never read as a duplicate or an invented line. The keys
+    // are local-time, which is what every row's own time stamp already shows.
+    function dayKey(v) {
+        var d = (v instanceof Date) ? v : new Date(v);
+        if (isNaN(d.getTime())) return '';
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    }
+    function dayLabel(iso) {
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        var stamp = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        var now = new Date();
+        var key = dayKey(d);
+        if (key === dayKey(now)) return 'Today · ' + stamp;
+        if (key === dayKey(new Date(now.getTime() + 86400000))) return 'Tomorrow · ' + stamp;
+        return stamp;
+    }
     function el(id) { return document.getElementById(id); }
 
     // ---- validation --------------------------------------------------------
@@ -1492,7 +1512,17 @@
                     '<div id="' + BOARD_PANEL_ID + '" role="tabpanel" aria-labelledby="' +
                     catTabId(cat.key) + '">' +
                     colHead(cat, cols) +
-                    state.games.map(function (g) { return gameCard(g, cat, cols); }).join('') +
+                    (function () {
+                        var lastDay = '';
+                        return state.games.map(function (g) {
+                            var key = dayKey(g.when), bar = '';
+                            if (key && key !== lastDay) {
+                                lastDay = key;
+                                bar = '<div class="sbn-daybar">' + esc(dayLabel(g.when)) + '</div>';
+                            }
+                            return bar + gameCard(g, cat, cols);
+                        }).join('');
+                    })() +
                     '</div>';
             }
         }
