@@ -142,7 +142,15 @@
        destination was removed or renamed: every URL and every label below is
        the one it had as a top-level row, and none of them appears anywhere else
        in this menu. A submenu row is [label, items]; see menu() for how it
-       renders and flat() for how the current-page match still sees the leaves. */
+       renders and flat() for how the current-page match still sees the leaves.
+
+       Relabelled 2026-09-08: the rows are the sport name alone, because the row
+       that opens them already says Featured Matchups and repeating 'Matchup of
+       the Day' four times under it read as one phrase stuttered, not as four
+       destinations. NFL Game of the Week keeps its full name: that lane is a
+       weekly deep dive, not a daily Game File, and the name is the product.
+       This is the one place the one-destination-one-wording rule is relaxed,
+       and only because the parent row supplies the words that were dropped. */
     ['@sub', 'Featured Matchups', [
       /* Added 2026-09-08. The NFL Game of the Week lane shipped 2026-09-07 with a
          hub and its first deep dive, both live and both in the sitemap, and the only
@@ -154,16 +162,16 @@
          /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
          with the newest NCAAF Game File, canonicalised to it, and out of the
          sitemap so search consolidates on the article's own URL. */
-      ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
+      ['/matchup-of-the-day/ncaaf/', 'NCAAF'],
       /* Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/. /today/ is
          newest-wins across every sport, so once college football started publishing
          its own Game Files this entry and the NCAAF one both landed on whichever
          piece happened to be newest. Each entry now points at its own sport's
          stable door, so the two can never collapse onto the same page again. */
-      ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
+      ['/matchup-of-the-day/mlb/', 'MLB'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day']
+      ['/matchup-of-the-day/tennis/', 'Tennis']
     ]],
     ['/handicapping/mlb/', 'MLB Matchups Today'],
     ['/handicapping/', 'Handicapping Hub'],
