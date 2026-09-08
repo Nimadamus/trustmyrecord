@@ -779,3 +779,107 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
     .sbn-2hpill::before { animation: sbn2hPulse 2s ease-in-out infinite; }
 }
 @keyframes sbn2hPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ---- Submit confirmation --------------------------------------------------
+   SUBMIT_CONFIRMATION_20260907. A submit that the API confirmed used to leave
+   the slip reading "Your slip is empty", which is indistinguishable from a
+   submit that failed. This is the answer: a panel at the top of the slip naming
+   the picks that saved, and a toast at the top of the screen. Both are driven
+   by state the engine only sets from a confirmed response. */
+.sbn-ok {
+    margin: 10px 12px 0; padding: 11px 12px;
+    border: 1px solid rgba(34, 211, 238, 0.45); border-radius: 11px;
+    background:
+        linear-gradient(180deg, rgba(34, 211, 238, 0.14), rgba(34, 211, 238, 0.05)),
+        var(--sbn-panel2);
+    box-shadow: 0 10px 26px rgba(34, 211, 238, 0.14);
+    animation: sbn-okin .22s ease-out both;
+}
+@keyframes sbn-okin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.sbn-okhead { display: flex; align-items: center; gap: 8px; }
+.sbn-okhead strong {
+    color: var(--sbn-text); font-size: 12px; font-weight: 900;
+    letter-spacing: .07em; text-transform: uppercase;
+}
+.sbn-okico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; flex: 0 0 22px; border-radius: 999px;
+    background: var(--sbn-accent); color: var(--sbn-ink);
+}
+.sbn-oklist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sbn-okrow {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 7px 9px; border-radius: 8px;
+    background: rgba(0, 0, 0, 0.28); border: 1px solid var(--sbn-line);
+}
+.sbn-oksel { color: var(--sbn-text); font-size: 12.5px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+.sbn-oksel b { color: var(--sbn-green); font-variant-numeric: tabular-nums; }
+.sbn-okgame { color: var(--sbn-muted); font-size: 10.5px; overflow-wrap: anywhere; }
+.sbn-oknote { margin: 8px 0 0; color: var(--sbn-text2); font-size: 11.5px; }
+.sbn-okcta {
+    display: block; margin-top: 9px; padding: 9px 12px;
+    border-radius: 9px; border: 1px solid rgba(34, 211, 238, 0.5);
+    background: rgba(34, 211, 238, 0.12); color: var(--sbn-accent);
+    font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    text-align: center; text-decoration: none;
+}
+.sbn-okcta:hover { background: var(--sbn-accent); color: var(--sbn-ink); }
+
+/* The failure state. The slip keeps its selections, so this reads as "try
+   again", never as "your pick is gone". */
+.sbn-fail {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin: 10px 12px 0; padding: 10px 11px;
+    border: 1px solid rgba(248, 113, 113, 0.45); border-radius: 11px;
+    background: rgba(248, 113, 113, 0.1);
+    color: #fecaca; font-size: 11.5px; line-height: 1.4;
+}
+.sbn-failico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; flex: 0 0 18px; border-radius: 999px;
+    background: var(--sbn-red); color: #2a0707; font-size: 12px; font-weight: 900;
+}
+
+/* The toast. Reparented to <body> by the engine, so this z-index is measured
+   against the page root and not against whatever stacking context the
+   production sportsbook header opens. */
+.sbn-toast {
+    /* Below the site header, not across it: at the very top of the live
+       sportsbook a toast covers the main nav. */
+    position: fixed; top: 92px; left: 50%; z-index: 9999;
+    display: flex; align-items: center; gap: 9px;
+    max-width: min(92vw, 420px); padding: 11px 15px;
+    border-radius: 12px; border: 1px solid rgba(34, 211, 238, 0.45);
+    background: linear-gradient(180deg, #16212b, #101820);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    color: #f1f5f9; font-family: var(--sbn-font); font-size: 13px; font-weight: 700;
+    opacity: 0; transform: translate(-50%, -18px); pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.sbn-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.sbn-toast.is-bad { border-color: rgba(248, 113, 113, 0.55); }
+.sbn-toast-ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; flex: 0 0 20px; border-radius: 999px;
+    background: var(--sbn-accent); color: var(--sbn-ink); font-size: 12px; font-weight: 900;
+}
+.sbn-toast.is-bad .sbn-toast-ico { background: var(--sbn-red); color: #2a0707; }
+@media (prefers-reduced-motion: reduce) {
+    .sbn-toast { transition: none; }
+    .sbn-ok { animation: none; }
+}
+/* The mobile slip is a full-height overlay whose top edge is exactly where the
+   toast sits, so the panel is held below it while a toast is up. */
+@media (max-width: 1100px) {
+    .sbn-toast { top: 10px; }
+    .sbn-ok { transition: margin-top .2s ease; }
+    html.sbn-toasting .sbn-ok { margin-top: 66px; }
+}
+@media (max-width: 720px) {
+    .sbn-toast { top: 10px; left: 10px; right: 10px; max-width: none; transform: translateY(-18px); }
+    .sbn-toast.is-on { transform: translateY(0); }
+    /* The slip is a bottom sheet on a phone, so the panel has to be reachable
+       without the list under it pushing it off screen. */
+    .sbn-ok { margin-top: 8px; }
+    .sbn-bar.is-ok .sbn-bardot { background: var(--sbn-accent); box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2); }
+}

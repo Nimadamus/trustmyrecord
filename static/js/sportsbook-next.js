@@ -64,7 +64,16 @@
         liveTimer: null,
         // MLB_STARTERS_20260907 - probable pitchers, its own slice so nothing
         // about the odds board's own state changes.
-        starters: { games: [], hands: {}, at: null, reqId: 0, timer: null }
+        starters: { games: [], hands: {}, at: null, reqId: 0, timer: null },
+        // SUBMIT_CONFIRMATION_20260907 - what the slip shows after a submit.
+        // `confirm` is only ever set from a response the API confirmed saved,
+        // never optimistically, and it holds the confirmed rows so the panel can
+        // name the pick back to the user. `subError` is the visible failure
+        // message; the failed picks themselves stay on the slip.
+        confirm: null,        // { items: [{ label, game, odds, groupLabel }], failed: n }
+        confirmTimer: null,
+        subError: '',
+        submitting: false
     };
 
     // ---- small helpers -----------------------------------------------------
@@ -531,6 +540,9 @@
     function pickKey(p) { return [p.gameId, p.marketType, p.selection, p.line == null ? '' : p.line].join('|'); }
     function findPick(k) { for (var i = 0; i < state.picks.length; i++) if (state.picks[i].key === k) return i; return -1; }
     function togglePick(p) {
+        // A new selection is the user moving on from whatever the last submit
+        // said, so the failure message goes with it.
+        state.subError = '';
         p.key = pickKey(p);
         var i = findPick(p.key);
         if (i >= 0) { state.picks.splice(i, 1); }
@@ -552,6 +564,62 @@
     }
 
     // ---- submission ---------------------------------------------------------
+    /* SUBMIT_CONFIRMATION_20260907
+       A submit the API confirmed has to be unmistakable. Three things fire
+       together, and only once every confirmation is in:
+         - the success panel at the top of the slip, naming the picks,
+         - the toast at the top of the screen,
+         - the live region, for a screen reader.
+       Nothing here runs on an optimistic assumption: the panel is built from
+       the responses, with the count the responses actually gave. */
+    var TOAST_MS = 4200;      // the small banner
+    var CONFIRM_MS = 6500;    // the slip panel, inside the 5-8s asked for
+    var toastTimer = null;
+    function toastEl() {
+        var t = document.getElementById('sbnToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'sbnToast';
+            t.className = 'sbn-toast';
+            t.setAttribute('role', 'status');
+            document.body.appendChild(t);
+        }
+        // The board is mounted inside the production page, whose header opens a
+        // stacking context. Same reason the drawer is reparented: at the body
+        // the z-index means what it says.
+        if (t.parentNode !== document.body) document.body.appendChild(t);
+        return t;
+    }
+    function toast(msg, kind) {
+        var t = toastEl();
+        t.className = 'sbn-toast is-' + (kind || 'ok');
+        t.innerHTML = '<span class="sbn-toast-ico" aria-hidden="true">' + (kind === 'bad' ? '!' : '✓') + '</span>' +
+            '<span class="sbn-toast-msg">' + esc(msg) + '</span>';
+        void t.offsetWidth;   // restart the entry animation if one is already up
+        t.classList.add('is-on');
+        // On a phone the slip is a full-height overlay whose top edge is where
+        // the toast sits, so the panel would open underneath it. The flag lets
+        // the CSS hold the panel below the toast for as long as one is up, and
+        // release it the moment the toast goes.
+        document.documentElement.classList.add('sbn-toasting');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            t.classList.remove('is-on');
+            document.documentElement.classList.remove('sbn-toasting');
+            toastTimer = null;
+        }, TOAST_MS);
+    }
+    function clearConfirm() {
+        if (state.confirmTimer) { clearTimeout(state.confirmTimer); state.confirmTimer = null; }
+        state.confirm = null;
+    }
+    function showConfirm(items, failed) {
+        clearConfirm();
+        state.confirm = { items: items, failed: failed };
+        state.confirmTimer = setTimeout(function () {
+            state.confirmTimer = null; state.confirm = null; render();
+        }, CONFIRM_MS);
+    }
     function seed() {
         try { if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID(); } catch (_) {}
         return 'sbn-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
@@ -596,24 +664,53 @@
         return false;
     }
     function submitAll() {
-        if (!state.picks.length) return;
+        if (!state.picks.length || state.submitting) return;
         if (!loggedIn()) { announce('Log in to lock these picks to your record.'); window.location.href = '/login/?return=' + encodeURIComponent(location.pathname); return; }
         var btn = el('sbnSubmit'); if (btn) { btn.disabled = true; btn.textContent = 'Locking…'; }
         var client = window.api;
-        if (!client || typeof client.createPick !== 'function') { announce('The pick service is unavailable right now.'); if (btn) { btn.disabled = false; btn.textContent = 'Lock picks'; } return; }
-        var queue = state.picks.slice(), done = 0, failed = 0;
+        if (!client || typeof client.createPick !== 'function') {
+            state.subError = 'The pick service is unavailable right now. Your selections are still here, so press lock again in a moment.';
+            announce(state.subError);
+            toast('Pick could not be submitted. Your slip was kept.', 'bad');
+            if (btn) { btn.disabled = false; btn.textContent = 'Lock picks'; }
+            render();
+            return;
+        }
+        state.submitting = true;
+        state.subError = '';
+        clearConfirm();
+        var queue = state.picks.slice(), saved = [], failed = 0;
         (function next(i) {
             if (i >= queue.length) {
+                // Only the picks the API refused stay on the slip, so a retry is
+                // one press away and nothing the user chose is lost.
                 state.picks = state.picks.filter(function (p) { return p.__failed; });
                 state.picks.forEach(function (p) { delete p.__failed; });
-                announce(done + (done === 1 ? ' pick locked.' : ' picks locked.') + (failed ? ' ' + failed + ' could not be saved.' : ''));
+                state.submitting = false;
+                if (saved.length) {
+                    showConfirm(saved, failed);
+                    toast(saved.length === 1
+                        ? 'Pick successfully submitted to your record.'
+                        : saved.length + ' picks successfully submitted to your record.');
+                }
+                if (failed) {
+                    state.subError = failed + (failed === 1 ? ' pick could not be saved.' : ' picks could not be saved.') +
+                        ' The selection is still on your slip, so press lock to try again.';
+                    if (!saved.length) toast('Pick could not be submitted. Your slip was kept.', 'bad');
+                }
+                announce((saved.length ? saved.length + (saved.length === 1 ? ' pick submitted to your record.' : ' picks submitted to your record.') : '') +
+                    (failed ? ' ' + state.subError : ''));
                 if (btn) { btn.disabled = false; btn.textContent = 'Lock picks'; }
                 render();
                 return;
             }
             var p = queue[i];
             client.createPick(payloadFor(p)).then(function (res) {
-                if (res && res.pick && res.pick.id != null) done++; else { failed++; p.__failed = true; }
+                // The confirmation IS the saved row coming back with an id.
+                // Anything else is a failure, however the call resolved.
+                if (res && res.pick && res.pick.id != null) {
+                    saved.push({ id: res.pick.id, label: p.label, game: p.game, odds: p.odds, groupLabel: p.groupLabel, units: p.units });
+                } else { failed++; p.__failed = true; }
             }).catch(function () { failed++; p.__failed = true; })
                 .then(function () { next(i + 1); });
         })(0);
@@ -1227,6 +1324,35 @@
             '</div>';
     }
 
+    /* SUBMIT_CONFIRMATION_20260907
+       The panel that answers "did that work?". It sits at the top of the slip,
+       above everything else, and it is built from the confirmed rows, so it can
+       name the pick back rather than say something generic. Market-agnostic:
+       every board writes p.label and p.game the same way, so a total, a prop and
+       a moneyline all read correctly here with no per-sport branch. */
+    function confirmHtml() {
+        var c = state.confirm;
+        if (!c || !c.items.length) return '';
+        var rows = c.items.map(function (it) {
+            return '<li class="sbn-okrow"><span class="sbn-oksel">' + esc(it.label) + ' <b>' + fmtOdds(it.odds) + '</b></span>' +
+                '<span class="sbn-okgame">' + esc(it.game) + (it.groupLabel ? ' &middot; ' + esc(it.groupLabel) : '') + '</span></li>';
+        }).join('');
+        return '<div class="sbn-ok" role="status">' +
+            '<div class="sbn-okhead"><span class="sbn-okico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '</span><strong>Pick' + (c.items.length === 1 ? '' : 's') + ' submitted</strong></div>' +
+            '<ul class="sbn-oklist">' + rows + '</ul>' +
+            '<p class="sbn-oknote">' + (c.items.length === 1 ? 'Your pick has' : 'Your picks have') + ' been added to your record.</p>' +
+            '<a class="sbn-okcta" href="/my-pending-picks/">View pending picks</a>' +
+            '</div>';
+    }
+    function subErrorHtml() {
+        if (!state.subError) return '';
+        return '<div class="sbn-fail" role="alert">' +
+            '<span class="sbn-failico" aria-hidden="true">!</span>' +
+            '<span>' + esc(state.subError) + '</span></div>';
+    }
+
     function slipHtml() {
         var n = state.picks.length;
         var rows = state.picks.map(function (p, i) {
@@ -1249,7 +1375,8 @@
         }).join('');
         var totalRisk = state.picks.reduce(function (a, p) { return a + stakeFor(p).risk; }, 0);
         var totalWin = state.picks.reduce(function (a, p) { return a + stakeFor(p).win; }, 0);
-        return '<div class="sbn-sliphead"><h3>Pick slip</h3><span class="sbn-slipcount">' + n + '</span>' +
+        return confirmHtml() + subErrorHtml() +
+            '<div class="sbn-sliphead"><h3>Pick slip</h3><span class="sbn-slipcount">' + n + '</span>' +
             (n ? '<button type="button" class="sbn-clear" data-clear="1">Clear</button>' : '') + '</div>' +
             (n ? '<div class="sbn-mode" role="group" aria-label="Stake mode">' +
                 '<button type="button" class="sbn-modebtn' + (state.stakeMode === 'risk' ? ' is-on' : '') + '" data-mode="risk">Risk</button>' +
@@ -1387,7 +1514,8 @@
             bar.classList.toggle('is-on', state.picks.length > 0);
             bar.querySelector('.sbn-bartext').textContent = state.picks.length
                 ? state.picks.length + (state.picks.length === 1 ? ' pick' : ' picks') + ' on your slip'
-                : 'Tap a price to start';
+                : (state.confirm ? 'Pick submitted to your record' : 'Tap a price to start');
+            bar.classList.toggle('is-ok', !state.picks.length && !!state.confirm);
         }
     }
 
@@ -1449,7 +1577,7 @@
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');
-        if (clear) { state.picks = []; render(); return; }
+        if (clear) { state.picks = []; state.subError = ''; clearConfirm(); render(); return; }
         var mode = t.closest && t.closest('[data-mode]');
         if (mode) { state.stakeMode = mode.getAttribute('data-mode'); render(); return; }
         var step = t.closest && t.closest('[data-units]');
