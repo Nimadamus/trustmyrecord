@@ -36,16 +36,20 @@
             ["/matchup-of-the-day/soccer/", "Soccer"]
         ]],
         // Each row lands on that league's research page, and each of those
-        // pages opens on today's board for its league. Five rows, not seven:
-        // /handicapping/ncaaf/ and /handicapping/soccer/ do not exist, and a
-        // menu entry pointing at a door that has not been built is a dead link.
-        // They join the day their hub bakes and is serving.
+        // pages opens on today's board for its league. All seven leagues since
+        // 2026-09-08: NCAAF and Soccer had no hub, so their hubs were built and
+        // both rows went in with them. Those two are board-only pages -- the
+        // graded game database behind the matchup pages carries MLB, NBA, NFL
+        // and NHL and nothing else -- so they list the day's fixtures and
+        // markets and mint no per-matchup pages.
         ["@sub", "Handicapping Hub", [
             ["/handicapping/mlb/", "MLB"],
             ["/handicapping/nfl/", "NFL"],
+            ["/handicapping/ncaaf/", "NCAAF"],
             ["/handicapping/nba/", "NBA"],
             ["/handicapping/nhl/", "NHL"],
-            ["/handicapping/tennis/", "Tennis"]
+            ["/handicapping/tennis/", "Tennis"],
+            ["/handicapping/soccer/", "Soccer"]
         ]],
         // Added here 2026-09-08. tmr-ds-nav.js has carried it since 2026-09-06,
         // so on the ~300 pages that render their nav from THIS script the

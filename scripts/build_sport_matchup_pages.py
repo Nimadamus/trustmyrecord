@@ -75,6 +75,21 @@ SPORTS = {
             "unit": "points", "simulator": "/nba-simulator/"},
     "nhl": {"label": "NHL", "board": "icehockey_nhl", "engine": "NHL",
             "unit": "goals", "simulator": None},
+    # HUB ONLY, added 2026-09-08 on Nima's instruction that every sport in the
+    # Sportsbook menu's Handicapping Hub submenu has to be a real room.
+    #
+    # The BetLegend Pro engine answers "'NCAAF' has no historical data in this
+    # service. Supported sports are MLB, NBA, NFL, NHL." for both of these, so
+    # there is no head to head record, no ATS split and no recent form to put on
+    # a per matchup page. Minting 84 college football and 96 soccer permanent
+    # pages whose only content is a line the board already shows would be 180
+    # thin pages, so these two sports get the hub and stop there: the board, the
+    # markets and the start times, which is what the menu row promises. They
+    # gain matchup pages the day the engine carries their graded games.
+    "ncaaf": {"label": "NCAAF", "board": "americanfootball_ncaaf", "engine": None,
+              "unit": "points", "simulator": None, "hub_only": True},
+    "soccer": {"label": "Soccer", "board": "soccer", "engine": None,
+               "unit": "goals", "simulator": None, "hub_only": True},
 }
 
 
@@ -170,7 +185,10 @@ def fetch_board(sport):
             continue
         games.append({"home": home, "away": away, "commence": g.get("commence_time"),
                       "event_id": g.get("id"),
-                      "markets": best_markets(g), "priced": bool(g.get("has_sportsbook_odds"))})
+                      "markets": best_markets(g), "priced": bool(g.get("has_sportsbook_odds")),
+                      # Soccer's board is seven competitions in one list, so the
+                      # fixture alone does not say what a reader is looking at.
+                      "comp": g.get("tournament_name") or g.get("sport_title") or ""})
     games.sort(key=lambda x: (x["commence"] or "", x["away"]))
     return games
 
@@ -550,17 +568,26 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None):
 
 def render_hub(sport, games, built_at):
     label = SPORTS[sport]["label"]
-    title = "%s Handicapping: Odds, Head to Head and Betting Trends" % label
-    desc = ("Every %s game on the board with the current line, and a permanent research page for "
-            "each matchup carrying the head to head record, against the spread and over/under "
-            "splits and recent form." % label)
+    hub_only = bool(SPORTS[sport].get("hub_only"))
+    title = ("%s Handicapping: Today's Board, Odds and Totals" % label if hub_only
+             else "%s Handicapping: Odds, Head to Head and Betting Trends" % label)
+    desc = (("Every %s game on the board today with the moneyline, the spread and the total, "
+             "priced from the sportsbook feed." % label) if hub_only else
+            ("Every %s game on the board with the current line, and a permanent research page for "
+             "each matchup carrying the head to head record, against the spread and over/under "
+             "splits and recent form." % label))
     url = SITE + "/handicapping/%s/" % sport
+    # A hub-only sport has no matchup pages, so its ItemList must not advertise
+    # URLs that would answer 404. The fixtures are still listed.
+    items = [{"@type": "ListItem", "position": i + 1,
+              "name": "%s at %s" % (g["away"], g["home"])}
+             for i, g in enumerate(games)]
+    if not hub_only:
+        for i, g in enumerate(games):
+            items[i]["url"] = SITE + game_url(sport, g)
     ld = {"@context": "https://schema.org", "@graph": [
         breadcrumb_ld([("Handicapping", "/handicapping/"), (label, None)]),
-        {"@type": "ItemList", "itemListElement": [
-            {"@type": "ListItem", "position": i + 1,
-             "name": "%s at %s" % (g["away"], g["home"]),
-             "url": SITE + game_url(sport, g)} for i, g in enumerate(games)]}]}
+        {"@type": "ItemList", "itemListElement": items}]}
 
     priced = sum(1 for g in games if g["priced"])
     sim = SPORTS[sport]["simulator"]
@@ -568,9 +595,14 @@ def render_hub(sport, games, built_at):
          '        <header class="mm-head">\n',
          '            <span class="mm-kicker">Handicapping</span>\n',
          '            <h1>%s Handicapping</h1>\n' % esc(label),
-         '            <p class="mm-lede">Every %s game on the board with the line, and a permanent '
-         'research page per matchup: head to head record, against the spread and over/under '
-         'splits, recent form, and what the data does not cover.</p>\n' % esc(label),
+         (('            <p class="mm-lede">Every %s game on the board today with the moneyline, '
+           'the spread and the total, straight off the sportsbook feed. There are no permanent '
+           'matchup pages for this sport yet: the graded game database behind them does not carry '
+           '%s, and a page with no record on it is not research.</p>\n' % (esc(label), esc(label)))
+          if hub_only else
+          ('            <p class="mm-lede">Every %s game on the board with the line, and a permanent '
+           'research page per matchup: head to head record, against the spread and over/under '
+           'splits, recent form, and what the data does not cover.</p>\n' % esc(label))),
          '        </header>\n',
          gotw_block(sport),
          '        <section class="mm-sec">\n            <h2>On the board</h2>\n',
@@ -581,14 +613,20 @@ def render_hub(sport, games, built_at):
           'are built from the board, so none exist until the league schedule is posted; nothing '
           'is shown in the meantime rather than a stale or estimated slate.</p>\n' % esc(label)),
          '            <table class="mm-table">\n',
-         '                <thead><tr><th>Matchup</th><th>Start</th><th>Moneyline</th>'
-         '<th>Spread</th><th>Total</th></tr></thead>\n                <tbody>\n']
+         '                <thead><tr><th>Matchup</th>%s<th>Start</th><th>Moneyline</th>'
+         '<th>Spread</th><th>Total</th></tr></thead>\n                <tbody>\n'
+         % ('<th>Competition</th>' if sport == "soccer" else "")]
     for g in games:
         ml_txt, sp_txt, tot_txt = market_cells(g)
-        b.append('                    <tr><td><a href="%s">%s at %s</a></td><td>%s</td>'
+        # A hub-only sport has no matchup page to link to, so the fixture is
+        # plain text rather than a link into a 404.
+        fixture = ('%s at %s' % (esc(g["away"]), esc(g["home"])) if hub_only else
+                   '<a href="%s">%s at %s</a>' % (game_url(sport, g), esc(g["away"]),
+                                                  esc(g["home"])))
+        comp = '<td>%s</td>' % esc(g.get("comp") or "") if sport == "soccer" else ""
+        b.append('                    <tr><td>%s</td>%s<td>%s</td>'
                  '<td>%s</td><td>%s</td><td>%s</td></tr>\n'
-                 % (game_url(sport, g), esc(g["away"]), esc(g["home"]),
-                    esc(kickoff(g["commence"])), ml_txt, sp_txt, tot_txt))
+                 % (fixture, comp, esc(kickoff(g["commence"])), ml_txt, sp_txt, tot_txt))
     b += ['                </tbody>\n            </table>\n        </section>\n',
           '        <section class="mm-sec">\n            <h2>Elsewhere on TrustMyRecord</h2>\n',
           '            <ul>\n',
@@ -600,9 +638,12 @@ def render_hub(sport, games, built_at):
           '                <li><a href="/betlegend-pro/">BetLegend Pro, the research database '
           'behind these pages</a></li>\n',
           '            </ul>\n        </section>\n',
-          '        <p class="mm-note">Lines come from the sportsbook feed and history from the '
-          'graded game database. Nothing here is a projection: every number counts games already '
-          'played. Built %s.</p>\n' % esc(built_at[:16].replace("T", " ") + " UTC"),
+          ('        <p class="mm-note">Lines come from the sportsbook feed. Nothing here is a '
+           'projection and nothing is estimated: this page shows the board and nothing else. '
+           'Built %s.</p>\n' % esc(built_at[:16].replace("T", " ") + " UTC")) if hub_only else
+          ('        <p class="mm-note">Lines come from the sportsbook feed and history from the '
+           'graded game database. Nothing here is a projection: every number counts games already '
+           'played. Built %s.</p>\n' % esc(built_at[:16].replace("T", " ") + " UTC")),
           '    </main>\n', mlb.FOOT_SCRIPTS, '</body>\n</html>\n']
     return page_head(title, desc, url, ld) + "".join(b)
 
@@ -662,6 +703,14 @@ def write(path, html):
 
 def build(sport, built_at):
     games = fetch_board(sport)
+    # HUB ONLY. No engine, so no head to head, ATS or form to put on a matchup
+    # page; the hub is written with the live board and nothing else is minted.
+    if SPORTS[sport].get("hub_only"):
+        print("%s: hub only, %d game(s) on the board" % (sport.upper(), len(games)))
+        changed = 1 if write(os.path.join("handicapping", sport, "index.html"),
+                             render_hub(sport, games, built_at)) else 0
+        print("%s: %d file(s) written" % (sport.upper(), changed))
+        return changed, [("/handicapping/%s/" % sport, "0.8")]
     if not games:
         # Out of season the board is empty. The hub page is still written so
         # /handicapping/<sport>/ answers with the true state ("no games on the
