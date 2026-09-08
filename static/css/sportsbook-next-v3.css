@@ -43,11 +43,19 @@ html.sbn-v3 .sbn-boardname {
    last of them behind no affordance at all. A second line costs 40px on that
    sport only and keeps every market discoverable, which is the point of the
    bar. Phones still scroll, where a second line costs too much. */
+/* NAV_CENTERING_HID_THE_FIRST_MARKETS_20260908: .sbn-cats is a <nav>, and the
+   site-wide `nav { justify-content: center }` rule reached it. On a 393px phone
+   the strip overflows, and a CENTRED overflowing flex line spills past BOTH
+   edges: Game Lines sat at x=-184 with the scroller already at scrollLeft 0, so
+   the first two markets could not be scrolled to or tapped at all. `safe center`
+   keeps the centred look while it fits and falls back to start the moment it
+   does not, which is the only state where the overflow is unreachable. */
 html.sbn-v3 .sbn-cats {
     gap: 2px;
     flex-wrap: wrap;
     align-self: stretch;
     align-items: stretch;
+    justify-content: safe center;
 }
 html.sbn-v3 .sbn-cats::-webkit-scrollbar { display: none; }
 html.sbn-v3 .sbn-cat {

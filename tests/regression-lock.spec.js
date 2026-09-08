@@ -130,6 +130,22 @@ function marketTab(page, name) {
   return page.getByRole('tab', { name }).first();
 }
 
+/* MARKET_TAB_OFFSCREEN_20260908: this lock timed out clicking Game Lines on
+   mobile with "element is outside of the viewport", and it was telling the
+   truth -- the tab really was unreachable, at x=-184 with the strip already at
+   scrollLeft 0, because a site-wide `nav { justify-content: center }` centred
+   an overflowing flex line and spilled it past both edges. That is fixed in
+   sportsbook-next.css / sportsbook-next-v3.css with `safe center`. The
+   horizontal scrollIntoView stays as cheap insurance: Playwright only scrolls
+   vertically before a click, so any future strip that legitimately scrolls
+   would fail here for a reason that is not a regression. */
+async function clickMarketTab(page, name) {
+  const tab = marketTab(page, name);
+  await tab.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'center' }));
+  await tab.click();
+  return tab;
+}
+
 async function firstEnabledPickButton(page) {
   const button = page
     .locator('#sbnBoard button:not([disabled]), #lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
@@ -614,11 +630,11 @@ test.describe('sportsbook functional locks', () => {
     // The classic switcher was a tablist; the v2 switcher is a row of
     // button.sbn-cat with no role. marketTab() takes either, so the lock is on
     // the market being selectable, not on which element implements it.
-    await marketTab(page, /Game Lines/i).click();
+    await clickMarketTab(page, /Game Lines/i);
     await expect(visibleBoard(page)).toBeVisible();
     const teamTotals = marketTab(page, /Team Totals/i);
     if (await teamTotals.count()) {
-      await teamTotals.click();
+      await clickMarketTab(page, /Team Totals/i);
       await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|ML|O\s*\d|U\s*\d/i);
     }
     // PROPS_PICKABLE_20260608 made Player Props a real, pickable market tab —
