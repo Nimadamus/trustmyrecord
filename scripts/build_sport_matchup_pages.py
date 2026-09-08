@@ -752,8 +752,23 @@ def build(sport, built_at):
 def main():
     built_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
     wanted = [a.lower() for a in sys.argv[1:] if a.lower() in SPORTS] or list(SPORTS)
+    # FAIL CLOSED ON A MISSING KEY, 2026-09-08, the day this became a cron.
+    # Without BETLEGEND_PRO_SERVICE_KEY fetch_history() returns None for every
+    # matchup, and every engine-backed page would be REWRITTEN with its head to
+    # head record, ATS split and form gone. Unattended, that is silent data loss
+    # dressed up as a successful build. A sport that needs the engine is skipped
+    # entirely rather than rebuilt blind; yesterday's good pages stay live.
+    # hub_only sports never call the engine, so they still run.
     if not SERVICE_KEY:
-        print("WARN  BETLEGEND_PRO_SERVICE_KEY unset; pages will bake without history")
+        blocked = [x for x in wanted if not SPORTS[x].get("hub_only")]
+        if blocked:
+            print("WARN  BETLEGEND_PRO_SERVICE_KEY unset; skipping %s "
+                  "(their pages carry engine history and must not be rebuilt "
+                  "without it)" % ", ".join(sorted(b.upper() for b in blocked)))
+            wanted = [x for x in wanted if SPORTS[x].get("hub_only")]
+        if not wanted:
+            print("nothing to build")
+            return
     total, advertised = 0, []
     for sport in wanted:
         try:
