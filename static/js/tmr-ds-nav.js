@@ -116,6 +116,14 @@
        with the newest NCAAF Game File, canonicalised to it, and out of the
        sitemap so search consolidates on the article's own URL. */
     ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
+    /* Added 2026-09-07. The tennis section shipped 2026-09-06 with a hub, a
+       daily rundown and seven Game Files, all live and all in the sitemap, and
+       not one link to any of it in the sitewide nav, the footer or the homepage.
+       A reader could only reach it by typing the URL. Same stable-door pattern as
+       the two above: /matchup-of-the-day/tennis/ bakes with the newest tennis Game
+       File, /tennis/ is the section itself. */
+    ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
+    ['/tennis/', 'Tennis Hub'],
     /* Added 2026-08-23. /handicapping/ is a SPORT CHOOSER, and MLB is the only
        sport whose research hub is actually built, so every member who picked
        'Handicapping Hub' from this menu landed on a page whose only real
@@ -268,6 +276,10 @@
          the hub calls its pieces in its own copy. Neither link was removed. */
       ['/matchup-of-the-day/', 'Game Files'],
       ['/handicapping/mlb/', 'MLB Matchups Today'],
+      /* Added 2026-09-07 with the Sportsbook menu entries. One destination, one
+         wording sitewide: the footer takes the section's own name, Tennis; the
+         menu keeps the two sport-scoped door labels. */
+      ['/tennis/', 'Tennis'],
       /* Sitewide crawlable entry for the video-game vertical, added
          2026-08-27 alongside the Sports Gaming dropdown. */
       ['/online-gaming/', 'Online Gaming'],

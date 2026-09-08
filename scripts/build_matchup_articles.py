@@ -1835,6 +1835,39 @@ def main():
         by_sport = {}
         for a in daily:
             by_sport.setdefault(a["sport"], []).append(a)   # `daily` is newest-first
+
+        # A sport that has its own section hub gets that hub's Game File list
+        # filled here, from the same `daily` list the archive is built from.
+        #
+        # Added 2026-09-07. The tennis section shipped with a hub, a rundown and
+        # seven Game Files, every one of them live and in the sitemap, and the hub
+        # linked only to the stable door for the newest one. The other six were
+        # reachable only from the all-sports archive, which is sorted by date and
+        # mixes three sports, so from inside the tennis section they did not exist.
+        # One entry per sport hub: add the path and the marker and the list fills.
+        SPORT_HUBS = {"tennis": (os.path.join(ROOT, "tennis", "index.html"),
+                                 "tennisGameFiles")}
+        for hub_sport, (hub_file, hub_marker) in sorted(SPORT_HUBS.items()):
+            if not os.path.exists(hub_file):
+                print("WARN: %s hub is missing; its Game File list was not written"
+                      % hub_sport)
+                continue
+            hub_articles = [a for a in daily if a["sport"] == hub_sport]
+            cards = "".join(
+                '<a class="tn-gf-card" href="%s"><span class="k">%s</span>'
+                '<h3>%s vs. %s</h3><p>%s</p><span class="d">Published %s</span></a>' % (
+                    esc(article_href(a)),
+                    esc(a.get("angle_label") or "Game File"),
+                    esc(a["away_team"]), esc(a["home_team"]),
+                    esc(a.get("dek") or a.get("meta_description") or ""),
+                    esc(human_date(a.get("published_at"))))
+                for a in hub_articles)
+            hub_text = replace_marker(
+                read(hub_file), hub_marker,
+                cards or '<p class="tn-empty">The archive starts with our first '
+                         '%s Game File.</p>' % hub_sport,
+                hub_file)
+            writes.append((hub_file, hub_text))
         for sport, articles in sorted(by_sport.items()):
             lead = articles[0]
             s_label = SPORT_LABEL.get(sport, sport.upper())

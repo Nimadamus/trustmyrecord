@@ -161,6 +161,7 @@
         // flags which have a dedicated research sub-hub live today.
         var SPORTS = [
             { key: "baseball_mlb", name: "MLB", league: "Major League Baseball", icon: "⚾", built: true, href: "/handicapping/mlb/" },
+            { key: "tennis", name: "Tennis", league: "ATP & WTA tours", icon: "🎾", built: true, href: "/tennis/" },
             { key: "basketball_nba_summer", name: "NBA Summer League", league: "Las Vegas Summer League", icon: "🏀", built: false },
             { key: "basketball_wnba", name: "WNBA", league: "Women's National Basketball", icon: "🏀", built: false },
             { key: "soccer", name: "Soccer", league: "Global leagues & cups", icon: "⚽", built: false },
@@ -180,7 +181,7 @@
             var tag = live ? "a" : "div";
             var attrs = live ? ' href="' + s.href + '"' : '';
             var cls = "hh-card " + (live ? "is-live" : "is-soon");
-            var cta = live ? "Open MLB hub →" : "Counts only for now";
+            var cta = live ? ("Open " + s.name + " hub →") : "Counts only for now";
             return "<" + tag + ' class="' + cls + '"' + attrs + ' data-key="' + s.key + '">' +
                 '<div class="hh-card__top"><div class="hh-card__icon">' + s.icon + '</div>' + badge + '</div>' +
                 '<h3>' + s.name + '</h3>' +
