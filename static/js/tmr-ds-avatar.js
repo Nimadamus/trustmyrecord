@@ -214,7 +214,11 @@
     if (id.logo) return discSvg(id, size);
     /* Lettering is a CLUB abbreviation or nothing. No resolved team means the
        neutral mark, never the member's initials. */
-    if (!id.team) return neutralSvg(size);
+    /* NO_LETTERS_WITHOUT_A_REAL_CLUB_20260907: favourite teams are free text, so
+       a badge also needs a club that is in the logo map. Without this, 84Donkey's
+       "LaoAngelaRam" drew a "LAO" tile and Leslie's "DoBronx" a "DOB" - initials
+       by any other name. Mirrors utils/avatarIdentity.js avatarSvg(). */
+    if (!id.team || !id.logo) return neutralSvg(size);
     var mark = String(id.mark || id.initials || 'TM').slice(0, 3);
     var primary = id.primary || '#1D4ED8';
     var secondary = id.secondary || '#60A5FA';

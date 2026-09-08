@@ -103,8 +103,28 @@ for (const who of ['makaveli66', 'Firelink', 'henrywalllace', '11space']) {
   ok(face.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
     `${who} must get the silhouette the API draws`);
 }
-ok(AV.svg(AV.identity({ username: 'a', avatar: { kind: 'team', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers' } })).includes('>PIT<'),
-  'a CLUB abbreviation is still lettering that belongs on the badge');
+/* A real club always arrives WITH its logo url, so in the browser a club is
+   always drawn as its mark. The lettered badge survives only in the API, where
+   `logo` is the club we know and `logo_data` is the fetch that can fail; that
+   case is covered by tests/avatar-identity-unit-test.js. */
+const CLUB_FACE = AV.svg(AV.identity({ username: 'a', avatar: { kind: 'team-logo', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png' } }));
+ok(CLUB_FACE.indexOf('<text') === -1 && CLUB_FACE.includes('stroke="#101820"'),
+  "a real club gets its own disc, in the club's colour, and never letters");
+ok(CLUB_FACE.indexOf('fill="#94A3B8"') === -1,
+  'a member WITH a club never falls through to the neutral silhouette');
+
+/* NO_LETTERS_WITHOUT_A_REAL_CLUB_20260907: favourite teams are free text.
+   "LaoAngelaRam" and "DoBronx" are not clubs, they resolve to no logo, and a
+   "LAO" tile is initials wearing a club's clothes. Those go neutral. */
+for (const junk of [
+  { mark: 'LAO', team: 'LaoAngelaRam' },
+  { mark: 'DOB', team: 'DoBronx' },
+]) {
+  const face = AV.svg(AV.identity({ username: 'x', avatar: Object.assign({ kind: 'team', primary: '#1D4ED8', secondary: '#60A5FA', ink: '#FFFFFF', logo: null }, junk) }));
+  ok(face.indexOf('<text') === -1, `${junk.team} is not a club and must not letter`);
+  ok(face.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
+    `${junk.team} must fall through to the neutral silhouette`);
+}
 
 /* ---------- 2. deterministic, and distinguishable -------------------------- */
 ok(AV.dataUri(AV.identity({ username: 'makaveli66' })) === AV.dataUri(AV.identity({ username: 'makaveli66' })),
