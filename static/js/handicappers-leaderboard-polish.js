@@ -154,7 +154,15 @@
             const totalPicks = num(userStat(member, ['total_picks', 'totalPicks'], wins + losses + pushes));
             const hasGraded = wins + losses + pushes > 0;
             const units = num(userStat(member, ['net_units', 'netUnits', 'units'], 0));
-            const avatar = member.avatar_url || member.avatarUrl || '/static/media/TMR-avatar-256.jpg';
+            /* AVATAR_FALLBACK_20260907: an avatar-less member gets the resolver route,
+               not the generic TMR jpg. The route renders the upload, else the
+               member's favourite-team club mark, else the neutral silhouette, so a
+               hydrated row shows the same face as every other surface. */
+            const avatar = member.avatar_url || member.avatarUrl
+                || ((window.TMRAvatar && window.TMRAvatar.src)
+                    ? window.TMRAvatar.src({ username: username, id: member.id })
+                    : (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api')
+                        + '/users/' + encodeURIComponent(username) + '/avatar'));
             const profileHref = '/u/' + encodeURIComponent(username) + '/';
             const record = wins + '-' + losses + (pushes ? '-' + pushes : '');
             return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0">' +

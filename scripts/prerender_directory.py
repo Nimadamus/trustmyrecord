@@ -39,11 +39,23 @@ DEFAULT_AVATAR    = "https://trustmyrecord.com/static/media/TMR-avatar-256.jpg"
 AVATAR_ONERROR    = (' onerror="this.onerror=null;this.src=&#39;'
                      + DEFAULT_AVATAR + '&#39;"')
 
-def clean_avatar(url):
+def clean_avatar(url, username=""):
     """Never bake giant inline data: URIs into the static HTML (one user's
-    avatar is 160KB+). Fall back to the shared default static avatar."""
+    avatar is 160KB+).
+
+    AVATAR_FALLBACK_20260907: a member with no upload used to be baked with the
+    shared TMR jpg, which is a picture, so the client-side repair pass saw a
+    painted slot and left it alone. The member's favourite-team logo therefore
+    never appeared on a prerendered row - 20 of the 46 baked handicapper rows
+    were members WITH a favourite team showing the generic image. Point the
+    slot at the resolver route instead: it renders the upload, else the club
+    mark, else the neutral silhouette, so the baked HTML carries the same
+    identity the rest of the site does and needs no JS to be right."""
     url = (url or "").strip()
+    username = (username or "").strip()
     if not url or url.startswith("data:") or len(url) > 300:
+        if username:
+            return f"{API}/users/{urllib.parse.quote(username, safe='')}/avatar"
         return DEFAULT_AVATAR
     return url
 
@@ -161,7 +173,7 @@ def collect():
         rows.append({
             "username": un,
             "display_name": d.get("display_name") or un,
-            "avatar_url": clean_avatar(d.get("avatar_url")),
+            "avatar_url": clean_avatar(d.get("avatar_url"), un),
             "wins": int(num(d.get("wins"))),
             "losses": int(num(d.get("losses"))),
             "pushes": int(num(d.get("pushes"))),
@@ -394,7 +406,7 @@ def collect_leaderboard_view():
         r = {
             "username": u.get("username") or "",
             "display_name": u.get("display_name") or u.get("username") or "",
-            "avatar_url": clean_avatar(u.get("avatar_url")),
+            "avatar_url": clean_avatar(u.get("avatar_url"), u.get("username") or ""),
             "wins": int(num(u.get("wins"))),
             "losses": int(num(u.get("losses"))),
             "pushes": int(num(u.get("pushes"))),

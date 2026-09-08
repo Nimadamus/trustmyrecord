@@ -121,7 +121,10 @@
         return isNaN(d) ? '' : d.toLocaleDateString();
     }
     function avatarUrl(u) {
-        return u.avatar || u.avatar_url || ('https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(u.username || 'user'));
+        /* AVATAR_FALLBACK_20260907: no random identicon. The resolver route renders
+           the upload, else the member's favourite-team club mark, else the neutral
+           silhouette, so the arena shows the same face as the rest of TMR. */
+        return u.avatar || u.avatar_url || (window.TMRAvatar ? window.TMRAvatar.src({ username: u.username }) : 'https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(u.username || '') + '/avatar');
     }
 
     let currentUser = null;
