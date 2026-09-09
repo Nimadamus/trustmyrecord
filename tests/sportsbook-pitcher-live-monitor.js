@@ -23,7 +23,18 @@ const { chromium } = require('@playwright/test');
 const URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
 const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard';
 
-const key = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+/* FOLD ACCENTS BEFORE COMPARING (2026-09-09). `.replace(/[^a-z0-9]/g,'')` drops
+   an accented letter entirely, so the board's "Cristopher Sanchez" keyed as
+   "cristophersnchez" against ESPN's "cristophersanchez" and the monitor called a
+   correctly-spelled name a stale pitcher. Two of the four failures on the
+   2026-09-09 08:04 run were this, not drift: the board was right and carried the
+   better spelling. NFKD splits the accent off the letter, and stripping the
+   combining marks leaves the plain letter behind rather than nothing. */
+const key = (s) => String(s || '')
+  .normalize('NFKD')
+  .replace(/[̀-ͯ]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]/g, '');
 const etDate = (ms) => {
   const d = new Date(ms);
   if (isNaN(d.getTime())) return '';
@@ -191,7 +202,12 @@ function skip(msg) { console.log('SKIP: ' + msg); process.exit(0); }
       }
       return;
     }
-    if (names.size && !names.has(s.pitcher)) {
+    /* Compare on the folded key, not the raw string: the board carries the
+       correctly accented spelling ("Cristopher Sánchez") and ESPN's scoreboard
+       carries the plain one, so a raw Set.has() called the better spelling a
+       stale pitcher. */
+    const wanted = new Set([...names].map(key));
+    if (names.size && !wanted.has(key(s.pitcher))) {
       problems.push(s.team + ' (' + dk + ') shows "' + s.pitcher + '" but ESPN lists ' +
         [...names].join(' / ') + ' — stale or wrong-slate pitcher');
     } else if (!names.size) {
