@@ -161,13 +161,13 @@ function check(n, ok, d) {
         await page.evaluate(() => { const d = document.querySelector('.sbn-deep'); if (d) d.click(); });
         await page.waitForTimeout(900);
         const drawer = await page.evaluate(() => ({
-            open: !!document.querySelector('.sbn-drawer-panel'),
-            secs: [...document.querySelectorAll('.sbn-dsec h4')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
-            chips: document.querySelectorAll('.sbn-drawer-panel .sbn-chip[data-pick]').length,
+            open: !!document.querySelector('.sbn-row.is-expanded .sbn-expand'),
+            secs: [...document.querySelectorAll('.sbn-expand .sbn-dsec h4')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
+            chips: document.querySelectorAll('.sbn-expand .sbn-chip[data-pick]').length,
         }));
         check(`${key}: All markets still reaches the deeper inventory (${drawer.secs.length} sections, ${drawer.chips} prices)`,
             drawer.open && drawer.secs.length >= 1 && drawer.chips > 0, drawer.secs.slice(0, 8));
-        await page.evaluate(() => { const c = document.querySelector('.sbn-dclose'); if (c) c.click(); });
+        await page.evaluate(() => { const c = document.querySelector('.sbn-expclose'); if (c) c.click(); });
         await page.waitForTimeout(300);
     }
 

@@ -245,24 +245,36 @@ async function pickSport(page, sport) {
     await ctx.close();
   }
 
-  // ---- 5. More Markets drawer ---------------------------------------------
+  // ---- 5. All markets, expanded inline (INLINE_EXPAND_20260909) ------------
   {
     const { ctx, page } = await open(browser, { width: 1440, height: 1000 });
     await goto(page, 'MLB');
     await page.evaluate(() => document.querySelector('.sbn-deep').click());
     await page.waitForTimeout(800);
-    const d = await page.evaluate(() => ({
-      open: !!document.querySelector('.sbn-drawer-panel'),
-      secs: [...document.querySelectorAll('.sbn-dsec h4')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
-      chips: document.querySelectorAll('.sbn-drawer-panel .sbn-chip[data-pick]').length,
-      dupPrimary: [...document.querySelectorAll('.sbn-dsec h4')].filter((h) => /^(full game|run line|game total|spread|total|moneyline)/i.test(h.textContent.trim())).length,
-    }));
-    check(`More markets opens a drawer with the deeper inventory (${d.secs.length} categories, ${d.chips} prices)`, d.open && d.secs.length >= 2 && d.chips > 10, d.secs.slice(0, 6));
-    check('the drawer does not repeat the markets already on the row', d.dupPrimary === 0, d.secs);
-    await page.evaluate(() => document.querySelector('.sbn-dclose').click());
+    const d = await page.evaluate(() => {
+      const card = document.querySelector('.sbn-row.is-expanded');
+      const exp = card && card.querySelector('.sbn-expand');
+      return {
+        open: !!exp,
+        overlay: !!document.querySelector('.sbn-drawer-panel, .sbn-drawer-back'),
+        locked: document.documentElement.classList.contains('sbn-locked'),
+        otherCards: document.querySelectorAll('.sbn-row[data-game]').length - 1,
+        headerVisible: !!(card && card.querySelector('.sbn-rowtop').getBoundingClientRect().height > 0),
+        tabs: [...document.querySelectorAll('.sbn-expand .sbn-dcat')].map((t) => t.textContent.trim()),
+        secs: [...document.querySelectorAll('.sbn-expand .sbn-dsec h4')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
+        chips: document.querySelectorAll('.sbn-expand .sbn-chip[data-pick]').length,
+        dupPrimary: [...document.querySelectorAll('.sbn-expand .sbn-dsec h4')].filter((h) => /^(full game|run line|game total|spread|total|moneyline)/i.test(h.textContent.trim())).length,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    check(`All markets expands the card in place (${d.tabs.length} categories, ${d.chips} prices)`,
+      d.open && !d.overlay && !d.locked && d.tabs.length >= 2 && d.chips > 3, d.tabs.slice(0, 6));
+    check('the board and the matchup header stay on screen', d.otherCards > 0 && d.headerVisible, d);
+    check('the expansion adds no horizontal overflow', d.overflow <= 0, d);
+    await page.evaluate(() => document.querySelector('.sbn-expclose').click());
     await page.waitForTimeout(400);
-    const closed = await page.evaluate(() => !document.querySelector('.sbn-drawer-panel'));
-    check('the drawer closes again', closed);
+    const closed = await page.evaluate(() => !document.querySelector('.sbn-expand'));
+    check('the expansion collapses again', closed);
     await ctx.close();
   }
 

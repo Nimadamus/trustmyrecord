@@ -347,34 +347,53 @@ html.tmr-sbnext .sbn-shell, html.tmr-sbnext .sbn-drawer {
 
 }
 
-/* ---- Drawer: the full market inventory for one game ------------------------ */
-html.sbn-locked, html.sbn-locked body { overflow: hidden; }
-.sbn-drawer { display: none; }
-.sbn-drawer.is-open { display: block; }
-.sbn-drawer-back { position: fixed; inset: 0; z-index: 60; background: rgba(3, 6, 10, 0.66); }
-.sbn-drawer-panel {
-    position: fixed; top: 0; right: 0; bottom: 0; z-index: 61;
-    width: min(660px, 94vw);
-    display: flex; flex-direction: column;
-    background: var(--sbn-panel);
-    border-left: 1px solid var(--sbn-line2);
-    box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+/* ---- INLINE_EXPAND_20260909: the market inventory, inside the game card -----
+   The deep markets used to open a full-screen overlay that hid the board. They
+   now render inside the card that opened them, under the matchup header that is
+   already there, so the rest of the slate and the pick slip stay on screen. */
+.sbn-drawer { display: none; }               /* the old overlay mount, now empty */
+.sbn-expand {
+    /* inset inside the card's own padding, so it never depends on what that
+       padding is on a given board and can never overhang the card sideways */
+    margin: 8px 0 2px;
+    border: 1px solid var(--sbn-line);
+    border-radius: 8px;
+    background: var(--sbn-panel2);
+    overflow: hidden;
+    animation: sbn-expin .16s ease-out;
 }
-.sbn-dhead {
+@keyframes sbn-expin { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sbn-expand { animation: none; } }
+.sbn-row.is-expanded { border-color: rgba(34, 211, 238, 0.35); }
+.sbn-deep.is-on { background: rgba(34, 211, 238, 0.14); border-color: rgba(34, 211, 238, 0.5); }
+.sbn-deepcaret {
+    display: inline-block; width: 6px; height: 6px; margin: -3px 0 0 7px;
+    border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+    transform: rotate(45deg); transition: transform .15s ease; vertical-align: middle;
+}
+.sbn-deep.is-on .sbn-deepcaret { transform: rotate(225deg); margin-top: 1px; }
+/* the market list scrolls inside the card rather than pushing the next game a
+   screen and a half down: a player-prop group can carry 500 prices */
+.sbn-dbody {
+    max-height: min(66vh, 660px); overflow-y: auto; overscroll-behavior: contain;
+    padding: 12px 16px 16px; scrollbar-width: thin;
+}
+.sbn-expfoot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 14px 16px; background: var(--sbn-panel2); border-bottom: 1px solid var(--sbn-line);
+    padding: 9px 16px; border-top: 1px solid var(--sbn-line); color: var(--sbn-text2); font-size: 12.5px;
 }
-.sbn-dmatch { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
-.sbn-dmatch .sbn-crest { flex-basis: 24px; width: 24px; height: 24px; }
-.sbn-dmatch i { color: var(--sbn-muted); font-style: normal; margin: 0 3px; }
-.sbn-dwhen { margin-top: 2px; color: var(--sbn-muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-.sbn-dclose {
-    width: 34px; height: 34px; flex: 0 0 34px;
-    border: 1px solid var(--sbn-line2); border-radius: 8px; background: transparent;
-    color: var(--sbn-text); font-size: 21px; line-height: 1; cursor: pointer;
+.sbn-expclose {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border: 1px solid var(--sbn-line2); border-radius: 999px;
+    background: transparent; color: var(--sbn-text2);
+    font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.sbn-dclose:hover { background: rgba(255, 255, 255, 0.07); }
-.sbn-dbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px 16px 24px; scrollbar-width: thin; }
+.sbn-expclose:hover { color: var(--sbn-text); border-color: rgba(34, 211, 238, 0.45); background: rgba(34, 211, 238, 0.08); }
+.sbn-expclose:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: 2px; }
+.sbn-expmatch { overflow: hidden; text-overflow: ellipsis; }
+.sbn-expslip { white-space: nowrap; color: var(--sbn-muted); font-weight: 700; }
+.sbn-expslip b { color: var(--sbn-accent); font-size: 14px; font-weight: 800; }
 .sbn-dsec { padding: 12px 0; border-top: 1px solid var(--sbn-line); }
 .sbn-dsec:first-child { border-top: 0; padding-top: 4px; }
 .sbn-dsec h4 {
@@ -407,7 +426,7 @@ html.sbn-locked, html.sbn-locked body { overflow: hidden; }
     .sbn-tname b { font-size: 13px; line-height: 15px; -webkit-line-clamp: 3; overflow-wrap: anywhere; }
     .sbn-crest { flex-basis: 22px; width: 22px; height: 22px; }
 
-    .sbn-drawer-panel { width: 100vw; }
+    .sbn-expand { margin: 7px 0 2px; }
     .sbn-drow { grid-template-columns: minmax(0, 1fr); gap: 3px; }
     .sbn-dside { padding-top: 0; font-size: 11px; color: var(--sbn-muted); text-transform: uppercase; letter-spacing: .06em; }
     .sbn-dgrid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
@@ -637,32 +656,14 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
 }
 
 /* ============================================================================
- * THE EXPANDED MARKET VIEW — a wide panel, not a sidebar.
- * A game posts hundreds of prices. At 660px they were stacked into 84px cells
- * with no hierarchy, which reads as a data dump. The panel now takes most of
- * the screen, carries its own category tabs, and shows one category at a time
- * in cells the size of the ones on the board.
+ * THE EXPANDED MARKET VIEW — inside the card, never over the page.
+ * A game posts hundreds of prices, so the expansion carries its own category
+ * tabs and shows one category at a time in cells the size of the ones on the
+ * board. The card's own header stays above it, the slate stays around it.
  * ========================================================================== */
-.sbn-drawer-panel {
-    width: min(1280px, 72vw);
-    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
-}
-.sbn-dhead { align-items: flex-start; padding: 18px 24px; gap: 16px; }
-.sbn-dmatch { gap: 10px; font-size: 21px; font-weight: 800; }
-.sbn-dmatch b { font-weight: 800; }
-.sbn-dmatch .sbn-crest { flex-basis: 30px; width: 30px; height: 30px; }
-.sbn-dmatch i { margin: 0 2px; font-size: 14px; font-weight: 700; color: var(--sbn-muted); }
-.sbn-dwhen { display: flex; align-items: center; gap: 10px; margin-top: 7px; font-size: 12.5px; }
-.sbn-dwhen em {
-    font-style: normal; padding: 2px 8px; border-radius: 999px;
-    background: rgba(34, 211, 238, 0.12); color: var(--sbn-accent);
-    font-size: 11px; font-weight: 800; letter-spacing: .1em;
-}
-.sbn-dclose { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 10px; font-size: 24px; }
-
 /* category tabs: one market at a time, the same underlined bar as the board */
 .sbn-dcats {
-    display: flex; flex-wrap: nowrap; align-items: stretch; gap: 0;
+    display: flex; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; gap: 0;
     padding: 0 16px; background: var(--sbn-panel2);
     border-bottom: 1px solid var(--sbn-line);
     overflow-x: auto; scrollbar-width: none;
@@ -683,7 +684,7 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
 .sbn-dcat:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: -2px; }
 
 /* the section, its rows and its prices, all at board scale */
-.sbn-dbody { padding: 18px 24px 32px; }
+.sbn-dbody { padding: 14px 18px 18px; }
 .sbn-dsec { padding: 0; border-top: 0; }
 .sbn-dsec h4 {
     margin: 0 0 14px; gap: 9px;
@@ -706,10 +707,7 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
 .sbn-dgrid { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
 .sbn-dcell .sbn-chip { height: 46px; padding: 0 12px; }
 @media (max-width: 1023px) {
-    .sbn-drawer-panel { width: 100vw; border-left: 0; }
-    .sbn-dhead { padding: 14px 16px; }
-    .sbn-dmatch { font-size: 17px; }
-    .sbn-dbody { padding: 14px 16px 28px; }
+    .sbn-dbody { max-height: min(62vh, 560px); padding: 12px 14px 16px; }
     .sbn-drow { grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
     .sbn-dside { font-size: 13.5px; }
     .sbn-dgrid { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
@@ -717,28 +715,22 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
     .sbn-dcats::-webkit-scrollbar { display: none; }
 }
 
-/* the expanded view reports the one pick slip; it never holds picks itself */
-.sbn-dslip {
-    margin-left: auto; padding: 9px 14px; border: 1px solid var(--sbn-line2); border-radius: 9px;
-    background: rgba(255, 255, 255, 0.04); color: var(--sbn-text2);
-    font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+/* the expansion reports the one pick slip; it never holds picks itself, and on
+   a phone the slip bar owns the bottom of the screen, so the count is dropped
+   there rather than repeated */
+@media (max-width: 720px) {
+    /* an expanded card names its matchup in full: at 390px the two clubs share
+       the top line with the time and the toggle and get clipped to "C.. vs C..",
+       which is no header at all, so the names take a line of their own */
+    .sbn-row.is-expanded .sbn-rowtop { height: auto; flex-wrap: wrap; row-gap: 2px; }
+    .sbn-row.is-expanded .sbn-rowmatch { flex: 1 1 100%; }
+    .sbn-expslip { display: none; }
+    /* the club names would be cut mid-word in a 390px card, so the button
+       drops to the verb it performs */
+    .sbn-expmatch { display: none; }
+    .sbn-expfoot { padding: 8px 12px; }
+    .sbn-dcat { height: 40px; padding: 0 12px; font-size: 13px; }
 }
-.sbn-dslip b { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--sbn-accent); color: var(--sbn-ink); font-weight: 800; }
-.sbn-dslip:hover { border-color: rgba(34, 211, 238, 0.45); color: var(--sbn-text); }
-.sbn-dfoot {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    /* the page's live-chat bubble sits in the bottom right corner and was
-       covering the button, so the bar keeps clear of it */
-    padding: 12px 96px 12px 24px; background: var(--sbn-panel2); border-top: 1px solid var(--sbn-line);
-    color: var(--sbn-text2); font-size: 13px;
-}
-.sbn-dfoot b { color: var(--sbn-accent); font-size: 15px; font-weight: 800; }
-.sbn-dfootbtn {
-    padding: 10px 18px; border: 0; border-radius: 8px; background: var(--sbn-accent); color: var(--sbn-ink);
-    font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
-}
-.sbn-dfootbtn:hover { filter: brightness(1.06); }
-@media (max-width: 1023px) { .sbn-dfoot { padding: 12px 88px 12px 16px; } .sbn-dslip { padding: 8px 11px; } }
 
 /* ============================================================================
  * SECOND_HALF_20260905 — the halftime board.
@@ -909,7 +901,7 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
    category tabs and scroll sideways on a phone rather than wrapping into a
    four-line block that pushes the prices off the screen. */
 .sbn-dprops {
-    display: flex; flex-wrap: nowrap; align-items: center; gap: 8px;
+    display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-start; gap: 8px;
     padding: 10px 16px; background: var(--sbn-panel2);
     border-bottom: 1px solid var(--sbn-line);
     overflow-x: auto; scrollbar-width: none;

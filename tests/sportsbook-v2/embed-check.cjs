@@ -210,18 +210,20 @@ async function goto(page, qs) {
         const cleared = await page.evaluate(() => document.querySelectorAll('.sbn-slip [data-remove]').length);
         check('flag on: the slip empties after a lock', cleared === 0, cleared);
 
-        // drawer
+        // INLINE_EXPAND_20260909: All markets expands the card in place
         await page.evaluate(() => document.querySelector('.sbn-deep').click());
         await page.waitForTimeout(900);
         const d = await page.evaluate(() => ({
-            open: !!document.querySelector('.sbn-drawer-panel'),
-            secs: document.querySelectorAll('.sbn-dsec h4').length,
-            chips: document.querySelectorAll('.sbn-drawer-panel .sbn-chip[data-pick]').length,
+            open: !!document.querySelector('.sbn-row.is-expanded .sbn-expand'),
+            overlay: !!document.querySelector('.sbn-drawer-panel, .sbn-drawer-back'),
+            tabs: document.querySelectorAll('.sbn-expand .sbn-dcat').length,
+            chips: document.querySelectorAll('.sbn-expand .sbn-chip[data-pick]').length,
         }));
-        check(`flag on: All markets opens the full inventory (${d.secs} categories, ${d.chips} prices)`, d.open && d.secs >= 2 && d.chips > 10, d);
-        await page.evaluate(() => document.querySelector('.sbn-dclose').click());
+        check(`flag on: All markets expands the card in place (${d.tabs} categories, ${d.chips} prices)`,
+            d.open && !d.overlay && d.tabs >= 2 && d.chips > 3, d);
+        await page.evaluate(() => document.querySelector('.sbn-expclose').click());
         await page.waitForTimeout(400);
-        check('flag on: the drawer closes', await page.evaluate(() => !document.querySelector('.sbn-drawer-panel')));
+        check('flag on: the expansion collapses', await page.evaluate(() => !document.querySelector('.sbn-expand')));
 
         check('flag on: no JS errors on the live page', errs.length === 0, errs.slice(0, 5));
         check('flag on: no failing API calls', bad.length === 0, bad.slice(0, 5));

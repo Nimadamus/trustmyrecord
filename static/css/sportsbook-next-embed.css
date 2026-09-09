@@ -456,29 +456,55 @@
         display: flex !important;
         flex-wrap: nowrap !important;
         align-items: stretch !important;
+        /* the page centres its navs, and a centred flex row that overflows
+           spills off BOTH edges, which put the first market tabs off the left
+           of the strip where no amount of scrolling could reach them */
+        justify-content: flex-start !important;
         gap: 0 !important;
         overflow-x: auto !important;
         background: var(--sbn-panel2) !important;
     }
-    html.tmr-sbnext .sbn-dslip,
-    html.tmr-sbnext .sbn-dfootbtn {
+    /* the player-prop market chips are a nav too, so the page's centring and
+       wrapping rules reach them the same way */
+    html.tmr-sbnext .sbn-dprops {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        background: var(--sbn-panel2) !important;
+    }
+    html.tmr-sbnext .sbn-dprop {
         font-family: var(--sbn-font) !important;
         text-transform: none !important;
         letter-spacing: 0 !important;
         text-shadow: none !important;
         box-shadow: none !important;
-        border-radius: 8px !important;
+        border-radius: 999px !important;
     }
-    html.tmr-sbnext .sbn-dslip { background: rgba(255, 255, 255, 0.04) !important; border: 1px solid var(--sbn-line2) !important; color: var(--sbn-text2) !important; font-size: 12.5px !important; }
-    html.tmr-sbnext .sbn-dfootbtn { background: var(--sbn-accent) !important; border: 0 !important; color: var(--sbn-ink) !important; font-size: 13px !important; }
+    /* INLINE_EXPAND_20260909: the collapse control, held to the board's type
+       against the page's own button rules */
+    html.tmr-sbnext .sbn-expclose {
+        font-family: var(--sbn-font) !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+        border-radius: 999px !important;
+        border: 1px solid var(--sbn-line2) !important;
+        background: transparent !important;
+        color: var(--sbn-text2) !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+    }
+    html.tmr-sbnext .sbn-expclose:hover { color: #ffffff !important; border-color: rgba(34, 211, 238, 0.45) !important; background: rgba(34, 211, 238, 0.08) !important; }
+    html.tmr-sbnext .sbn-expfoot { font-family: var(--sbn-font) !important; }
     /* the expanded view's prices are the board's cell, one size up */
     html.tmr-sbnext .sbn-dcell .sbn-chip { height: 46px !important; padding: 0 12px !important; }
 
-    /* The production page's own chrome sits at four figures, so the panel's 61
-       put the matchup header underneath the site nav. It goes above everything
-       the page stacks except the live chat bubble. */
-    html.tmr-sbnext .sbn-drawer-back { z-index: 100001 !important; }
-    html.tmr-sbnext .sbn-drawer-panel { z-index: 100002 !important; }
+    /* INLINE_EXPAND_20260909: the deep markets open inside the card now, so
+       there is no overlay left to stack against the page's chrome. */
+    html.tmr-sbnext .sbn-expand { background: var(--sbn-panel2) !important; }
 
     html.tmr-sbnext .sbn-deep {
         padding: 2px 10px !important;
@@ -488,6 +514,11 @@
         font-size: 11.5px !important;
         font-weight: 700 !important;
         color: #9fb0c2 !important;
+    }
+    html.tmr-sbnext .sbn-deep.is-on {
+        background: rgba(34, 211, 238, 0.14) !important;
+        border-color: rgba(34, 211, 238, 0.5) !important;
+        color: var(--sbn-accent) !important;
     }
     html.tmr-sbnext .sbn-striprest { border-radius: 5px !important; }
     html.tmr-sbnext .sbn-railbtn {

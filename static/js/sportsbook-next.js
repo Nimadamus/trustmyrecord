@@ -1217,14 +1217,24 @@
                 '<div class="sbn-trow' + sp + '">' + tnameCell(g, g.home, false) + linesCells(g, cat, g.home, false, cols) + '</div>';
         }
         var ncol = cat.layout === 'ttgrid' ? 2 : (cols ? cols.length : 3);
-        return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol + '" data-game="' + esc(g.id) + '">' +
+        // INLINE_EXPAND_20260909. Deeper markets open inside the card, under the
+        // matchup header that is already there, with the rest of the board still
+        // on screen. Nothing here covers the page.
+        var open = state.drawer === g.id;
+        return '<article class="sbn-row sbn-row--' + cat.layout + ' sbn-cols' + ncol +
+            (open ? ' is-expanded' : '') + '" data-game="' + esc(g.id) + '">' +
             '<div class="sbn-rowtop">' +
             matchHead(g, cat.layout === 'strip') +
             '<span class="sbn-rowtime">' + esc(whenText(g.when)) + '</span>' +
-            '<button type="button" class="sbn-deep" data-drawer="' + esc(g.id) + '">' +
-            'All markets <b>' + countPrices(g) + '</b></button>' +
+            '<button type="button" class="sbn-deep' + (open ? ' is-on' : '') +
+            '" data-drawer="' + esc(g.id) + '" aria-expanded="' + (open ? 'true' : 'false') +
+            '" aria-controls="' + expId(g.id) + '">' +
+            (open ? 'Hide markets' : 'All markets <b>' + countPrices(g) + '</b>') +
+            '<i class="sbn-deepcaret" aria-hidden="true"></i></button>' +
             '</div>' +
-            '<div class="sbn-teams">' + body + '</div></article>';
+            '<div class="sbn-teams">' + body + '</div>' +
+            (open ? expandHtml(g) : '') +
+            '</article>';
     }
     var COL_NAME = { spread: 'Spread', total: 'Total', h2h: 'Moneyline' };
     function colHead(cat, cols) {
@@ -1400,10 +1410,18 @@
             .forEach(function (k) { out.push({ key: k, label: g.groups[k].label || k }); });
         return out;
     }
-    function drawerHtml() {
-        var g = null;
-        for (var i = 0; i < state.games.length; i++) if (state.games[i].id === state.drawer) g = state.games[i];
-        if (!g) return '';
+    // Stable ids so the toggle can name the region it opens and each tab can
+    // name the panel it labels.
+    function expId(gid) { return 'sbnExp-' + String(gid).replace(/[^A-Za-z0-9_-]/g, ''); }
+    function expTabId(gid, key) { return expId(gid) + '-t-' + String(key).replace(/[^A-Za-z0-9_-]/g, ''); }
+    function expPanelId(gid) { return expId(gid) + '-panel'; }
+
+    // INLINE_EXPAND_20260909. The market inventory renders INSIDE the game card,
+    // directly under the prices that card is already showing, so the matchup
+    // header, the rest of the slate and the pick slip all stay where they were.
+    // No overlay, no backdrop, no scroll lock: the only thing that changes on
+    // the page is that one card gets taller.
+    function expandHtml(g) {
         var cats = drawerCats(g);
         var on = null;
         for (var c = 0; c < cats.length; c++) if (cats[c].key === state.drawerCat) on = cats[c];
@@ -1445,35 +1463,33 @@
             secs = drawerGroup(g, on.key, grp.label || on.key, grp.book, grp.items, true);
         }
         var nav = cats.map(function (c) {
-            return '<button type="button" class="sbn-dcat' + (on && c.key === on.key ? ' is-on' : '') +
-                '" data-dcat="' + esc(c.key) + '">' + esc(c.label) + '</button>';
+            var isOn = !!(on && c.key === on.key);
+            return '<button type="button" role="tab" id="' + expTabId(g.id, c.key) +
+                '" class="sbn-dcat' + (isOn ? ' is-on' : '') +
+                '" data-dcat="' + esc(c.key) + '" data-dgame="' + esc(g.id) +
+                '" aria-selected="' + (isOn ? 'true' : 'false') +
+                '" aria-controls="' + expPanelId(g.id) +
+                '" tabindex="' + (isOn ? '0' : '-1') + '">' + esc(c.label) + '</button>';
         }).join('');
-        return '<div class="sbn-drawer-back" data-drawerclose="1"></div>' +
-            '<div class="sbn-drawer-panel" role="dialog" aria-modal="true" aria-label="All markets">' +
-            '<header class="sbn-dhead">' +
-            '<div class="sbn-dheadmain">' +
-            '<div class="sbn-dmatch">' + crest(g.away) + '<b>' + esc(g.away) + '</b><i>vs</i>' + crest(g.home) + '<b>' + esc(g.home) + '</b></div>' +
-            '<div class="sbn-dwhen"><span>' + esc(whenText(g.when)) + '</span><em>' + esc(sportMeta(state.sport).label) + '</em>' +
-            '<span>' + countPrices(g) + ' prices</span></div>' +
-            '</div>' +
-            '<button type="button" class="sbn-dslip" data-drawerclose="1">Pick slip <b>' + state.picks.length + '</b></button>' +
-            '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
-            (cats.length ? '<nav class="sbn-dcats" aria-label="Market categories">' + nav + '</nav>' : '') +
+        return '<div class="sbn-expand" id="' + expId(g.id) + '">' +
+            (cats.length ? '<nav class="sbn-dcats" role="tablist" aria-label="Markets for ' +
+                esc(g.away + ' vs ' + g.home) + '">' + nav + '</nav>' : '') +
             (pcats.length > 1 ? '<nav class="sbn-dprops" aria-label="Player prop markets">' + pcats.map(function (c) {
                 return '<button type="button" class="sbn-dprop' + (onProp && c.key === onProp.key ? ' is-on' : '') +
-                    '" data-dprop="' + esc(c.key) + '">' + esc(c.label) +
+                    '" data-dprop="' + esc(c.key) + '" data-dgame="' + esc(g.id) + '">' + esc(c.label) +
                     '<span class="sbn-dpropn">' + c.n + '</span></button>';
             }).join('') + '</nav>' : '') +
-            '<div class="sbn-dbody">' + (secs || '<div class="sbn-note">No markets are posted for this game.</div>') + '</div>' +
-            // The panel covers the slip, so a price added from here changed
-            // something the user could not see. This is the same slip, reported:
-            // it reads state.picks, it does not hold any of its own.
+            '<div class="sbn-dbody" id="' + expPanelId(g.id) + '" role="tabpanel"' +
+            (on ? ' aria-labelledby="' + expTabId(g.id, on.key) + '"' : '') + '>' +
+            (secs || '<div class="sbn-note">No markets are posted for this game.</div>') + '</div>' +
+            '<div class="sbn-expfoot">' +
+            '<button type="button" class="sbn-expclose" data-drawerclose="1">' +
+            'Collapse<span class="sbn-expmatch"> ' + esc(g.away) + ' vs ' + esc(g.home) + '</span></button>' +
             (state.picks.length
-                ? '<div class="sbn-dfoot"><span><b>' + state.picks.length + '</b> ' +
-                  (state.picks.length === 1 ? 'selection' : 'selections') + ' in your pick slip</span>' +
-                  '<button type="button" class="sbn-dfootbtn" data-drawerclose="1">View pick slip</button></div>'
+                ? '<span class="sbn-expslip"><b>' + state.picks.length + '</b> ' +
+                  (state.picks.length === 1 ? 'selection' : 'selections') + ' on your slip</span>'
                 : '') +
-            '</div>';
+            '</div></div>';
     }
 
     /* SUBMIT_CONFIRMATION_20260907
@@ -1659,18 +1675,13 @@
             }
         }
         var slip = el('sbnSlip'); if (slip) slip.innerHTML = slipHtml();
+        // INLINE_EXPAND_20260909. The deep markets render inside the game card
+        // now, so the old body-level overlay mount is emptied and the page is
+        // never scroll-locked.
         var dw = el('sbnDrawer');
-        if (dw) {
-            // The board is mounted inside the page's own layout, and an ancestor
-            // there opens a stacking context, which capped the panel under the
-            // site nav however high its z-index went. Reparenting the drawer to
-            // the body puts it in the root stacking context, where its z-index
-            // means what it says.
-            if (dw.parentNode !== document.body) document.body.appendChild(dw);
-            dw.innerHTML = state.drawer ? drawerHtml() : '';
-            dw.classList.toggle('is-open', !!state.drawer);
-        }
-        document.documentElement.classList.toggle('sbn-locked', !!state.drawer);
+        if (dw) { dw.innerHTML = ''; dw.classList.remove('is-open'); }
+        document.documentElement.classList.remove('sbn-locked');
+        if (state.drawer) showActiveTab();
         var bar = el('sbnBar');
         if (bar) {
             bar.classList.toggle('is-on', state.picks.length > 0);
@@ -1693,8 +1704,9 @@
         if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft'
             && ev.key !== 'Home' && ev.key !== 'End') return;
         var t = ev.target;
-        var current = t && t.closest && t.closest('.sbn-cats [role="tab"]');
+        var current = t && t.closest && t.closest('.sbn-cats [role="tab"], .sbn-dcats [role="tab"]');
         if (!current) return;
+        var inCard = !!current.getAttribute('data-dgame');
         var list = current.parentNode;
         var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
         var i = tabs.indexOf(current);
@@ -1705,12 +1717,92 @@
         else next = tabs[(i + (ev.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
         if (!next || next === current) return;
         ev.preventDefault();
+        if (inCard) {
+            var cardGame = next.getAttribute('data-dgame');
+            state.drawer = cardGame;
+            state.drawerCat = next.getAttribute('data-dcat');
+            state.drawerProp = null;
+            render();
+            var inCardNext = document.getElementById(expTabId(cardGame, state.drawerCat));
+            if (inCardNext) inCardNext.focus({ preventScroll: true });
+            return;
+        }
         var key = next.getAttribute('data-cat');
         next.focus();
         state.cat = key;
         render();
         var replacement = document.getElementById(catTabId(key));
         if (replacement && replacement !== document.activeElement) replacement.focus();
+    }
+
+    // Collapsing rebuilds the board, so the button that was clicked is gone.
+    // Focus goes back to the card's own toggle, which is where the user was.
+    function collapse(focusToggle) {
+        var gid = state.drawer;
+        state.drawer = null; state.drawerCat = null; state.drawerProp = null;
+        render();
+        if (!focusToggle || !gid) return;
+        var card = cardFor(gid);
+        var btn = card && card.querySelector('.sbn-deep');
+        if (btn) { btn.focus({ preventScroll: true }); nudgeIntoView(card); }
+    }
+    function cardFor(gid) {
+        var rows = document.querySelectorAll('.sbn-row[data-game]');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].getAttribute('data-game') === String(gid)) return rows[i];
+        }
+        return null;
+    }
+    // The tab strip scrolls sideways on a narrow board, so the selected tab is
+    // pulled into it. Only the strip moves: the page is never scrolled by this.
+    function showActiveTab() {
+        var on = document.querySelector('.sbn-expand .sbn-dcat.is-on');
+        if (!on || !on.parentNode) return;
+        var nav = on.parentNode;
+        if (nav.scrollWidth <= nav.clientWidth) return;
+        // measured off the boxes themselves: offsetLeft answers to whatever
+        // positioned ancestor the page happens to have, which is not this strip
+        var navR = nav.getBoundingClientRect(), r = on.getBoundingClientRect();
+        if (r.left < navR.left + 12) nav.scrollLeft -= (navR.left + 12 - r.left);
+        else if (r.right > navR.right - 12) nav.scrollLeft += (r.right - (navR.right - 12));
+    }
+    // Opening makes one card taller. If its header has scrolled off, bring it
+    // back so the user still sees which game they opened.
+    function keepInView(gid) { nudgeIntoView(cardFor(gid)); }
+    // Whatever is pinned across the top of the screen - the site's own nav, the
+    // board's column header - is MEASURED, not guessed at, so the matchup header
+    // of the card being opened never lands underneath it. The board is embedded
+    // in a page whose chrome it does not own, so the only reliable way to know
+    // what covers the top is to ask what is painted there.
+    function stickyPad() {
+        var pad = 12;
+        if (!document.elementsFromPoint) return pad + 72;
+        var x = Math.round(window.innerWidth / 2);
+        for (var y = 4; y <= 200; y += 8) {
+            var els = document.elementsFromPoint(x, y) || [];
+            var covered = false;
+            for (var i = 0; i < els.length; i++) {
+                var n = els[i];
+                if (n === document.body || n === document.documentElement) continue;
+                var pos = (window.getComputedStyle(n) || {}).position;
+                if (pos !== 'fixed' && pos !== 'sticky') continue;
+                var b = n.getBoundingClientRect().bottom;
+                if (b > window.innerHeight * 0.5) continue;   // a full-height rail is not a top bar
+                covered = true;
+                if (b > pad) pad = b;
+            }
+            if (!covered && y > pad) break;
+        }
+        return pad + 10;
+    }
+    function nudgeIntoView(card) {
+        if (!card || !card.getBoundingClientRect) return;
+        var top = card.getBoundingClientRect().top;
+        var pad = stickyPad();
+        if (top >= pad && top <= window.innerHeight * 0.55) return;
+        var y = window.pageYOffset + top - pad;
+        try { window.scrollTo({ top: y, behavior: 'smooth' }); }
+        catch (_) { window.scrollTo(0, y); }
     }
 
     function onClick(ev) {
@@ -1728,17 +1820,41 @@
         if (catBtn) { state.cat = catBtn.getAttribute('data-cat'); render(); return; }
         var dOpen = t.closest && t.closest('[data-drawer]');
         if (dOpen) {
-            state.drawer = dOpen.getAttribute('data-drawer');
-            state.drawerCat = dOpen.getAttribute('data-drawercat') || state.cat;
+            var gid = dOpen.getAttribute('data-drawer');
+            var want = dOpen.getAttribute('data-drawercat') || state.cat;
+            // One click opens, the same click closes. A "+3" or "See every"
+            // button on a card that is already open switches it to that market
+            // rather than collapsing, which is what it was clicked for.
+            var sameCard = state.drawer === gid;
+            var switching = sameCard && dOpen.hasAttribute('data-drawercat') && state.drawerCat !== want;
+            if (sameCard && !switching) { collapse(true); return; }
+            state.drawer = gid;
+            state.drawerCat = want;
             state.drawerProp = null;
             render();
+            keepInView(gid);
             return;
         }
         var dcat = t.closest && t.closest('[data-dcat]');
-        if (dcat) { state.drawerCat = dcat.getAttribute('data-dcat'); state.drawerProp = null; render(); return; }
+        if (dcat) {
+            var dgame = dcat.getAttribute('data-dgame');
+            if (dgame) state.drawer = dgame;
+            state.drawerCat = dcat.getAttribute('data-dcat');
+            state.drawerProp = null;
+            render();
+            var back = document.getElementById(expTabId(state.drawer, state.drawerCat));
+            if (back) back.focus({ preventScroll: true });
+            return;
+        }
         var dprop = t.closest && t.closest('[data-dprop]');
-        if (dprop) { state.drawerProp = dprop.getAttribute('data-dprop'); render(); return; }
-        if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; state.drawerCat = null; state.drawerProp = null; render(); return; }
+        if (dprop) {
+            var pgame = dprop.getAttribute('data-dgame');
+            if (pgame) state.drawer = pgame;
+            state.drawerProp = dprop.getAttribute('data-dprop');
+            render();
+            return;
+        }
+        if (t.closest && t.closest('[data-drawerclose]')) { collapse(true); return; }
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');
@@ -1774,7 +1890,7 @@
         // its rollout flag is on. Loading this file alone changes nothing.
         if (!el('sbnBoard')) return;
         document.addEventListener('click', onClick, false);
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.drawer) { state.drawer = null; render(); } }, false);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.drawer) { collapse(true); } }, false);
         document.addEventListener('keydown', onTabKey, false);
         document.addEventListener('change', onChange, false);
         var q = new URLSearchParams(location.search || '');
