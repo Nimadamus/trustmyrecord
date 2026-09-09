@@ -2517,6 +2517,7 @@
                           <label class="tmrx-team-filter" id="tmrxTeamLeagueWrap" hidden><span>League</span><select id="tmrxTeamLeagueFilter"><option value="">All leagues</option></select></label>
                         </div>
                         <div class="tmrx-sport-picker" id="tmrxTeamSportPicker" role="tablist" aria-label="Sport"></div>
+                        <div class="tmrx-drill-hint"><span class="tmrx-drill-hint-caret" aria-hidden="true">&#9654;</span><span>Click any row to open the bets behind it: every pick, with date, matchup, market, odds, risk and result.</span></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table tmrx-team-table" id="tmrxTableTeamTop">
                             <thead><tr>
@@ -2653,6 +2654,7 @@
                           </div>
                         </div>
                         <div class="tmrx-sport-picker" id="tmrxOpponentSportPicker" role="tablist" aria-label="Sport"></div>
+                        <div class="tmrx-drill-hint"><span class="tmrx-drill-hint-caret" aria-hidden="true">&#9654;</span><span>Click any row to open the bets behind it: every pick, with date, matchup, market, odds, risk and result.</span></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableOpponentTop">
                             <thead><tr><th>Faded</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -3179,6 +3181,7 @@
                     <div class="support-module-note">Settled record by the team you backed (moneyline, spread, team totals). Totals, props, and futures are excluded.</div>
                 </div>
                 <div class="tmrx-sport-picker" id="teamBreakdownSportPicker" role="tablist" aria-label="League"></div>
+                <div class="tmrx-drill-hint"><span class="tmrx-drill-hint-caret" aria-hidden="true">&#9654;</span><span>Click any row to open the bets behind it: every pick, with date, matchup, market, odds, risk and result.</span></div>
                 <div class="team-breakdown-wrap">
                     <table class="team-breakdown-table" id="teamBreakdownTable" aria-label="Performance by team">
                         <thead>
@@ -15989,6 +15992,14 @@
       }
       .tmrx-sport-pill.is-active .tmrx-sport-pill-count { background: rgba(0,0,0,.18); }
       #tmrxTableTeamTop.tmrx-hide-league .tmrx-team-league-col { display: none; }
+      /* Nobody clicks a table row that does not look clickable. */
+      .tmrx-drill-hint {
+        display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+        padding: 8px 12px; border: 1px dashed #2c4a72; border-radius: 10px;
+        background: rgba(77,163,255,.07); color: #a8bad2;
+        font-family: 'Barlow','Inter',sans-serif; font-size: 12.5px; font-weight: 700; letter-spacing: .01em;
+      }
+      .tmrx-drill-hint-caret { color: #4DA3FF; font-size: 9px; }
       .tmrx-team-drill-row { cursor: pointer; }
       .tmrx-team-drill-row .tmrx-drill-caret { font-size: 9px; color: #9BA7B8; transition: transform .15s ease; display: inline-block; }
       .tmrx-team-drill-row.tmrx-drill-open .tmrx-drill-caret { transform: rotate(90deg); color: #4DA3FF; }
