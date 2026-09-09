@@ -76,7 +76,7 @@
     </script>
     <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-<script defer src="/static/js/tmr-sitewide.js?v=888ac340bed8"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=2b7aa3695b39"></script>
 <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=bbf82edbece4">
 <script defer src="/static/js/tmr-share.js?v=eb28abdc3050"></script>
@@ -9136,7 +9136,92 @@
         };
     }
 
+    /* The Market Type expansion, rendered from the stored market x league and
+       market x league x side buckets. Same layout and the same "only show a row
+       that adds information" rule as the browser-side version below, but the
+       numbers are the aggregator's, so every row reconciles with the parent and
+       with the bets it opens. Returns null before the breakdown request lands
+       (or on a record with no stored crossing yet), and the caller falls back. */
+    const TMRX_CROSS_SIDE_LABELS = { over: 'Over', under: 'Under', favorite: 'Favorite', underdog: 'Underdog' };
+    const TMRX_CROSS_SIDE_ORDER = { over: 0, under: 1, favorite: 0, underdog: 1 };
+    function tmrxBuildMarketCrossHtml(marketKey, marketLabel) {
+        const key = String(marketKey || '').toLowerCase();
+        if (!key) return null;
+        const prefix = key + '|';
+        const startsWith = function (row) {
+            return String(row && row.bucket || '').toLowerCase().indexOf(prefix) === 0;
+        };
+        const sportRows = (tmrxMarketCrossRows.sport || []).filter(startsWith);
+        if (!sportRows.length) return null;
+        const sideRows = (tmrxMarketCrossRows.side || []).filter(startsWith);
+
+        const totalPicks = sportRows.reduce(function (a, r) { return a + (Number(r.total_picks) || 0); }, 0);
+        const isTotal = tmrxIsTotalMarket(key);
+        const sideHeader = isTotal ? 'Over / Under' : 'Favorite / Underdog';
+        const subtype = tmrxSubtypeLabel(key);
+        const context = (subtype && subtype !== 'Full Game') ? subtype : (marketLabel || '');
+
+        const ordered = sportRows.slice().sort(function (a, b) {
+            return (Number(b.net_units) || 0) - (Number(a.net_units) || 0);
+        });
+        const multiSport = ordered.length > 1;
+
+        let body = '';
+        let meaningful = 0;
+        ordered.forEach(function (row) {
+            const sportKey = String(row.bucket).split('|')[1] || '';
+            const league = tmrxSportParts(sportKey)[1];
+            const title = league + (context ? ' · ' + context : '');
+            const sides = sideRows.filter(function (r) {
+                const parts = String(r.bucket).split('|');
+                return parts.length >= 3 && parts[1] === sportKey;
+            }).sort(function (a, b) {
+                const ai = TMRX_CROSS_SIDE_ORDER[String(a.bucket).split('|')[2]];
+                const bi = TMRX_CROSS_SIDE_ORDER[String(b.bucket).split('|')[2]];
+                return (ai == null ? 9 : ai) - (bi == null ? 9 : bi);
+            });
+            const multiSide = sides.length > 1;
+            if (multiSport) {
+                body += tmrxDepthRow(row, ['<td class="name">' + escapeHtml(title) + '</td>'], { avgOdds: true });
+                meaningful++;
+                if (multiSide) {
+                    sides.forEach(function (sideRow) {
+                        const sideKey = String(sideRow.bucket).split('|')[2];
+                        const label = TMRX_CROSS_SIDE_LABELS[sideKey] || tmrxDepthLabel(sideKey);
+                        body += tmrxDepthRow(sideRow, ['<td class="name">' + escapeHtml(label) + '</td>'], { avgOdds: true });
+                    });
+                }
+            } else if (multiSide) {
+                sides.forEach(function (sideRow) {
+                    const sideKey = String(sideRow.bucket).split('|')[2];
+                    const label = TMRX_CROSS_SIDE_LABELS[sideKey] || tmrxDepthLabel(sideKey);
+                    body += tmrxDepthRow(sideRow, ['<td class="name">' + escapeHtml(label) + '</td>'], { avgOdds: true });
+                    meaningful++;
+                });
+            }
+        });
+
+        if (!meaningful) {
+            const onlySport = tmrxSportParts(String(ordered[0].bucket).split('|')[1] || '')[1];
+            const onlySide = sideRows.length === 1
+                ? (TMRX_CROSS_SIDE_LABELS[String(sideRows[0].bucket).split('|')[2]] || '')
+                : '';
+            return '<div class="tmrx-drill-panel"><div class="tmrx-drill-empty">All ' + totalPicks +
+                ' graded pick' + (totalPicks === 1 ? '' : 's') + ' are ' + escapeHtml(onlySport) +
+                (onlySide ? ' &middot; ' + escapeHtml(onlySide) : '') + ' &mdash; no further breakdown.</div></div>';
+        }
+
+        return '<div class="tmrx-drill-panel">' +
+            '<div class="tmrx-drill-head">' + escapeHtml(marketLabel || 'Market') + ' — breakdown by sport &amp; ' + escapeHtml(sideHeader) +
+            ' <span class="tmrx-drill-count">' + totalPicks + ' graded pick' + (totalPicks === 1 ? '' : 's') + '</span></div>' +
+            '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-drill-table">' +
+            '<thead><tr><th>Breakdown</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>' +
+            '<tbody>' + body + '</tbody></table></div></div>';
+    }
+
     function tmrxBuildMarketDrilldownHtml(marketKey, marketLabel) {
+        const stored = tmrxBuildMarketCrossHtml(marketKey, marketLabel);
+        if (stored) return stored;
         const fmtSigned = function(n, suffix, dec) {
             const x = Number(n) || 0;
             return (x >= 0 ? '+' : '') + x.toFixed(dec != null ? dec : 2) + (suffix || '');
@@ -13022,8 +13107,7 @@
             else if (p.status === 'lost') sportMap[sk].losses++;
             else sportMap[sk].pushes++;
             sportMap[sk].units += pickPL(p);
-            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
-            sportMap[sk].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+            sportMap[sk].risked += capperRiskUnits(p);
         });
 
         // Bet type breakdown with units
@@ -13032,14 +13116,16 @@
             const mt = p.market_type || 'unknown';
             const group = getMarketTypeGroup(mt);
             const label = group ? group.label : marketTypeLabel(mt);
-            if (!typeMap[label]) typeMap[label] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0 };
+            if (!typeMap[label]) typeMap[label] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0, types: [] };
             typeMap[label].picks++;
             if (p.status === 'won') typeMap[label].wins++;
             else if (p.status === 'lost') typeMap[label].losses++;
             else typeMap[label].pushes++;
             typeMap[label].units += pickPL(p);
-            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
-            typeMap[label].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+            typeMap[label].risked += capperRiskUnits(p);
+            /* The card groups several market types under one label; remembering
+               which ones lets it open exactly that group's bets. */
+            if (typeMap[label].types.indexOf(mt) < 0) typeMap[label].types.push(mt);
         });
 
         return {
@@ -13048,6 +13134,37 @@
             equityPoints, dow, months, sportMap, typeMap, graded,
             profitFactor, profitFactorClass
         };
+    }
+
+    /* The ledger row already carries the stake the backend actually risked
+       (risk_units, resolved from stake_mode at write time). These cards used to
+       re-derive it as units x price, which is only right for a to-win stake, so
+       their ROI drifted from every other panel and from the bets behind them.
+       Same number as the rest of the site now. */
+    function capperRiskUnits(pick) {
+        const stored = Number(pick && pick.risk_units);
+        if (Number.isFinite(stored) && stored > 0) return stored;
+        const u = Number(pick && pick.units) || 1;
+        const o = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds)) || -110;
+        return o < 0 ? (u * Math.abs(o) / 100) : u;
+    }
+
+    /* These cards render whatever the ledger filters currently select, so they
+       are only a drillable statistic while nothing is narrowing them. With a
+       filter engaged the card is still a real number, but it is not a number the
+       drilldown could reproduce from a bucket, and a link that might disagree is
+       worse than no link. */
+    function tmrxLedgerFiltersActive() {
+        const val = function (id) {
+            const el = document.getElementById(id);
+            return el ? String(el.value || '') : '';
+        };
+        if (typeof activeQuickFilter !== 'undefined' && activeQuickFilter) return true;
+        const period = val('filterPeriod');
+        return !!(val('filterSearch').trim() || val('filterSport') || val('filterType') ||
+            val('filterResult') || val('filterOdds') || val('filterUnits') ||
+            val('filterDateFrom') || val('filterDateTo') ||
+            (period && period !== 'all'));
     }
 
     function renderCapperMetrics(picks) {
@@ -13088,9 +13205,15 @@
         // Monthly Returns
         renderMonthlyReturns(adv.months);
         // Sport Detail
-        renderDetailBreakdown('sportDetailGrid', adv.sportMap, true);
+        renderDetailBreakdown('sportDetailGrid', adv.sportMap, true, function (key) {
+            return { category: 'split_sport', bucket: key, label: fmtSport(key) };
+        });
         // Bet Type Detail
-        renderDetailBreakdown('betTypeDetailGrid', adv.typeMap, false);
+        renderDetailBreakdown('betTypeDetailGrid', adv.typeMap, false, function (key, d) {
+            const types = (d && Array.isArray(d.types) && d.types.length) ? d.types : [];
+            if (!types.length) return null;
+            return { category: 'split_market', bucket: types.join(','), label: key };
+        });
     }
 
     function cc(label, value, sub, cls) {
@@ -13185,7 +13308,7 @@
         el.innerHTML = '<table class="monthly-table"><thead><tr><th>Month</th><th>Record</th><th>Win%</th><th>Units</th><th>Cumulative</th><th>Picks</th></tr></thead><tbody>' + rows + '</tbody></table>';
     }
 
-    function renderDetailBreakdown(containerId, dataMap, isSport) {
+    function renderDetailBreakdown(containerId, dataMap, isSport, drillFor) {
         const el = document.getElementById(containerId);
         const entries = Object.entries(dataMap).sort((a, b) => b[1].units - a[1].units);
         if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No data</div>'; return; }
@@ -13198,7 +13321,12 @@
             const rc = parseFloat(roi) > 0 ? 'cc-positive' : parseFloat(roi) < 0 ? 'cc-negative' : '';
             const wrBar = Math.min(100, Math.max(0, parseFloat(wr)));
 
-            return '<div class="sport-detail-card">' +
+            const drill = (typeof drillFor === 'function' && !tmrxLedgerFiltersActive())
+                ? drillFor(key, d) : null;
+            const openAttrs = drill
+                ? tmrxDrillAttrs(drill.category, drill.bucket, drill.label, 'sport-detail-card')
+                : ' class="sport-detail-card"';
+            return '<div' + openAttrs + '>' +
                 '<div class="sd-header"><span class="sd-name">' + label + '</span><span class="' + uc + '" style="font-weight:800;font-size:1.1rem;">' + (d.units >= 0 ? '+' : '') + d.units.toFixed(2) + 'u</span></div>' +
                 '<div class="sd-row"><span class="sd-label">Record</span><span class="sd-val">' + d.wins + '-' + d.losses + '-' + d.pushes + '</span></div>' +
                 '<div class="sd-row"><span class="sd-label">Win Rate</span><span class="sd-val">' + wr + '%</span></div>' +
@@ -13831,6 +13959,15 @@
         if (label) p.set('label', String(label).slice(0, 140));
         return '/pick-history/?' + p.toString();
     }
+    /* Some rows are a crossing rather than a single bucket (a market inside one
+       league) or a view the page's own filters have narrowed. Those carry the
+       extra query as data-drill-extra; the endpoint applies each `and=`
+       constraint with the SAME membership rule as the first bucket, so the
+       crossing reconciles exactly the way a plain row does. */
+    function tmrxDrillExtra(el) {
+        const extra = el && el.getAttribute ? el.getAttribute('data-drill-extra') : '';
+        return extra ? '&' + extra : '';
+    }
     /* Attribute string for a <tr>/<td> built as HTML. `cls` keeps the cell's
        existing class (usually "num") instead of replacing it. */
     function tmrxDrillAttrs(category, bucket, label, cls) {
@@ -13864,7 +14001,7 @@
         const cat = el.getAttribute('data-drill-category');
         if (!cat) return;
         window.location.href = tmrxDrillHref(cat, el.getAttribute('data-drill-bucket'),
-            el.getAttribute('data-drill-label') || '');
+            el.getAttribute('data-drill-label') || '') + tmrxDrillExtra(el);
     }
     /* Capture phase, so a drillable cell inside a row that also expands wins the
        click without the row toggling underneath it. */
@@ -13986,8 +14123,13 @@
        record - it renders what the aggregator already counted. */
     const TMRX_DEPTH_CATEGORIES = [
         'home_away', 'home_away_sport', 'side_total', 'prop_type', 'bet_timing',
-        'daypart', 'opponent', 'line_number', 'month', 'season', 'team_market'
+        'daypart', 'opponent', 'line_number', 'month', 'season', 'team_market',
+        /* The Market Type expansion below reads these two instead of counting
+           the loaded ledger in the browser, so its rows carry the aggregator's
+           own numbers and each one opens its own bets. */
+        'market_sport', 'market_sport_side'
     ];
+    let tmrxMarketCrossRows = { sport: [], side: [] };
     const TMRX_DEPTH_LABELS = {
         home: 'Home side', away: 'Away side',
         over: 'Over', under: 'Under',
@@ -14049,7 +14191,7 @@
         return (n > 0 ? '+' : '') + n.toFixed(d) + (suffix || '');
     }
 
-    function tmrxDepthRow(row, labelCells) {
+    function tmrxDepthRow(row, labelCells, opts) {
         /* Every depth panel renders through here, so attaching the drilldown at
            this one point makes Home/Away, Over/Under, Bet Timing, Day vs Night,
            Player Props, Teams Faded, Team Splits, By The Number, Month and
@@ -14067,10 +14209,19 @@
         const roi = Number(row.roi) || (wagered > 0 ? (net / wagered) * 100 : 0);
         const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
         const roiCls = roi > 0 ? 'pos' : roi < 0 ? 'neg' : 'zero';
+        /* The market crossing table carries an Avg Odds column the other depth
+           panels do not, so it is opted into rather than added everywhere. */
+        const avgOddsCell = (opts && opts.avgOdds)
+            ? '<td class="num">' + (function () {
+                const o = Number(row.avg_odds);
+                return (!Number.isFinite(o) || o === 0) ? '—' : (o > 0 ? '+' : '') + Math.round(o);
+            })() + '</td>'
+            : '';
         return '<tr' + drill + '>' + labelCells.join('') +
             '<td class="num">' + (Number(row.total_picks) || dec + p) + '</td>' +
             '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>' +
             '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>' +
+            avgOddsCell +
             '<td class="num ' + netCls + '">' + tmrxDepthSigned(net, 'u', 2) + '</td>' +
             '<td class="num ' + roiCls + '">' + tmrxDepthSigned(roi, '%', 2) + '</td>' +
             '</tr>';
@@ -14346,6 +14497,11 @@
 
         /* Teams faded and exact numbers both carry a league column, same as the
            team panel, and both are capped so the page stays scannable. */
+        tmrxMarketCrossRows = {
+            sport: byCategory.market_sport || [],
+            side: byCategory.market_sport_side || []
+        };
+
         tmrxRenderOpponent(byCategory.opponent);
 
         tmrxRenderTeamMarket(byCategory.team_market);
@@ -15777,7 +15933,7 @@
     init();
     </script>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=888ac340bed8 -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=2b7aa3695b39 -->
 
 
     <script src="/static/js/streaks.js?v=80cb1ee32df5"></script>
@@ -15963,6 +16119,7 @@
       td.tmrx-drillable:hover::after { opacity: .9; }
       .tmrx-cell.tmrx-drillable, .tmrx-period-cell.tmrx-drillable { transition: background .14s ease, border-color .14s ease; }
       .tmrx-cell.tmrx-drillable:hover, .tmrx-period-cell.tmrx-drillable:hover { border-color: #2c4a72; }
+      .sport-detail-card.tmrx-drillable:hover { border-color: var(--accent-blue, #3b82f6); }
 
       /* Performance by Team (Overview/stats tab): sortable headers, team logos,
          sport + league filters. */

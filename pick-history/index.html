@@ -19,7 +19,7 @@
 </script>
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-<script defer src="/static/js/tmr-sitewide.js?v=888ac340bed8"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=2b7aa3695b39"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -438,10 +438,17 @@
   }
 
   if (!USER || !CATEGORY) {
-    document.getElementById('phSub').textContent =
-      'Open this view by clicking any statistic on a member profile.';
+    /* Reached from the footer rather than from a statistic. Say what the page is
+       and hand over the two ways to get to a record. */
+    document.getElementById('phKicker').textContent = 'Bet history';
+    document.getElementById('phTitle').textContent = 'Every bet behind every number';
+    document.getElementById('phSub').innerHTML =
+      'On any TrustMyRecord profile, every statistic opens the individual graded bets that produced it: ' +
+      'the same picks, the same record, the same units and the same ROI. ' +
+      'Start from the <a href="/leaderboards/">leaderboards</a> or ' +
+      '<a href="/handicappers/">browse handicappers</a>, open a record, then click any row.';
     document.getElementById('phBody').innerHTML =
-      '<tr><td colspan="11"><div class="ph-msg">Nothing selected. Pick a stat on a profile to drill into it.</div></td></tr>';
+      '<tr><td colspan="11"><div class="ph-msg">Pick a member, then click any statistic on their record.</div></td></tr>';
   } else {
     ['phSort', 'phResult', 'phSport', 'phMarket', 'phFrom', 'phTo'].forEach(function (id) {
       document.getElementById(id).addEventListener('change', function () { reload(true); });

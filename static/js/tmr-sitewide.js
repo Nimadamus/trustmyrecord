@@ -1536,6 +1536,7 @@
                         <a href="/handicappers/">Browse Handicappers</a>
                         <a href="/verified-handicapper-records/">Verified Records</a>
                         <a href="/sports-betting-record-tracker/">Pick Trackers</a>
+                        <a href="/pick-history/">Bet History</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
