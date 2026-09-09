@@ -123,21 +123,28 @@ async function main() {
       }));
       /* One row per TEAM. The property under test is that a team shows its main
          total only, so the lines are read per team row and counted. */
-      const rows = [...node.querySelectorAll('.sbn-ttteam')].map((row) => ({
-        team: (row.querySelector('.sbn-ttname') || {}).textContent?.trim() || '',
-        lines: [...row.querySelectorAll('.sbn-ttline')].map((el) => el.textContent.trim()),
-        prices: [...row.querySelectorAll('.sbn-chip, .sbn-ttprice')].map((el) => el.textContent.trim()),
-      }));
-      // The property under test is "each team shows exactly ONE total, its
-      // main line" -- the alt-line regression showed a team's 3.5 and 4.5 side
-      // by side. Expressed against whatever teams are playing: every row that
-      // has any line must carry exactly one Over and one Under.
+      const rows = [...node.querySelectorAll('.sbn-ttteam')].map((row) => {
+        const lines = [...row.querySelectorAll('.sbn-ttline')].map((el) => el.textContent.trim());
+        return {
+          team: (row.querySelector('.sbn-ttname b') || {}).textContent?.trim() || '',
+          lines,
+          numbers: lines.map((l) => parseFloat(l)),
+          mainBadges: row.querySelectorAll('.sbn-ttmain').length,
+          prices: [...row.querySelectorAll('.sbn-chip')].map((el) => el.textContent.trim()),
+        };
+      });
+      /* THE CONTRACT CHANGED UNDER THIS PROOF (ALT_TEAM_TOTALS_COVERAGE_20260907).
+         It used to be "each team shows exactly ONE total, its main line",
+         because an alt-line regression had put a club's 3.5 and 4.5 side by
+         side. The board now carries the book's WHOLE ladder per club on
+         purpose, ascending, with the rung the book leads with badged Main - so
+         two rungs for a club is the feature working, not the old bug.
+
+         What is still true, and what this checks: the ladder is in ascending
+         order, and AT MOST ONE rung per club is badged Main. Two Main badges,
+         or a ladder out of order, is the failure that would actually mislead
+         somebody reading the board. */
       const pricedRows = rows.filter((row) => row.lines.length > 0);
-      /* v3 prints the number once with OVER/UNDER above it rather than "O 3.5"
-         and "U 3.5" as separate cells, so a main line is ONE .sbn-ttline on the
-         team's row. An alt-total regression shows up as more than one. */
-      const overs = (row) => row.lines.slice(0, 1);
-      const unders = (row) => row.lines.slice(0, 1);
       return {
         liveText: node.innerText,
         headers,
@@ -145,20 +152,23 @@ async function main() {
         rows,
         hasBoardHeader: headers.includes('Board') || headers.includes('Action'),
         pricedRowCount: pricedRows.length,
-        rowsWithMainTotal: pricedRows.filter((r) => r.lines.length === 1).length,
-        rowsWithStackedAltTotals: pricedRows
-          .filter((r) => r.lines.length > 1)
+        rowsWithMainTotal: pricedRows.filter((r) => r.mainBadges <= 1).length,
+        rowsOutOfOrder: pricedRows
+          .filter((r) => r.numbers.some((n, i) => i > 0 && n < r.numbers[i - 1]))
+          .map((r) => ({ team: r.team, lines: r.lines })),
+        rowsWithTwoMainBadges: pricedRows
+          .filter((r) => r.mainBadges > 1)
           .map((r) => ({ team: r.team, lines: r.lines })),
       };
     });
 
     const failures = [];
     if (!checks.pricedRowCount) failures.push('no team on this card shows a team total at all');
-    if (checks.pricedRowCount && checks.rowsWithMainTotal !== checks.pricedRowCount) {
-      failures.push(`${checks.pricedRowCount - checks.rowsWithMainTotal} of ${checks.pricedRowCount} team rows do not show exactly one main total line`);
+    if (checks.rowsWithTwoMainBadges.length) {
+      failures.push('a club has more than one rung badged Main: ' + JSON.stringify(checks.rowsWithTwoMainBadges));
     }
-    if (checks.rowsWithStackedAltTotals.length) {
-      failures.push('alternate team totals are stacked into the main row: ' + JSON.stringify(checks.rowsWithStackedAltTotals));
+    if (checks.rowsOutOfOrder.length) {
+      failures.push('a club ladder is not in ascending order: ' + JSON.stringify(checks.rowsOutOfOrder));
     }
     if (checks.hasBoardHeader) failures.push('empty Board/Action header is present');
     if (checks.teamNames.some((team) => team.clipped)) failures.push('one or more full team names are clipped');
