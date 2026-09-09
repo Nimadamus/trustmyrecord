@@ -191,7 +191,7 @@ ok(tickerAvatar.indexOf('box.appendChild(img)') !== -1, 'the ticker attaches the
   const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-ds-avatar.js'), 'utf8');
   ok(/NOT_A_MEMBER\s*=/.test(src), 'the resolver must keep a list of words that are never a member');
   for (const word of ['profile', 'account', 'settings', 'login', 'notifications']) {
-    ok(new RegExp('\b' + word + '\b', 'i').test(src.slice(src.indexOf('NOT_A_MEMBER'), src.indexOf('NOT_A_MEMBER') + 400)),
+    ok(src.slice(src.indexOf('NOT_A_MEMBER'), src.indexOf('NOT_A_MEMBER') + 400).includes(word),
       `"${word}" must be treated as a UI label, not a username`);
   }
   const guarded = src.slice(src.indexOf('function subjectFor'), src.indexOf('function hasVisibleContent'));
