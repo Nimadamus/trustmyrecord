@@ -1851,6 +1851,11 @@
                     </div>
                     <span id="profileAdvancedMetricsStatus">Loading verified metrics...</span>
                 </div>
+                <!-- ADV_SPORT_FILTER_20260909: every chip re-reads
+                     /users/:name/metrics?sport=, which recomputes the whole card
+                     set over only that sport's graded picks. Nothing here
+                     re-slices an already-combined total. -->
+                <div class="profile-advanced-sportbar" id="profileAdvancedSportBar" role="tablist" aria-label="Filter advanced metrics by sport" hidden></div>
                 <div class="profile-advanced-metric-grid">
                     <article class="profile-advanced-metric" data-advanced-metric-card="record">
                         <span class="profile-advanced-metric__label">Record</span>
@@ -1956,7 +1961,17 @@
         .profile-advanced-strip-head h2{margin:0;font:900 22px/1.1 'Barlow','Inter',sans-serif;letter-spacing:0;color:#f8fbff;}
         .profile-advanced-strip-head p{margin:5px 0 0;color:#91a0b5;font-size:13px;line-height:1.45;}
         .profile-advanced-strip-head span{flex:0 0 auto;padding:7px 10px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(2,6,23,.36);color:#aebbd0;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;}
-        .profile-advanced-metric-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;}
+        .profile-advanced-sportbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px;padding:6px;border:1px solid rgba(148,163,184,.14);border-radius:12px;background:rgba(2,6,23,.34);}
+        .profile-advanced-sportbar[hidden]{display:none;}
+        .profile-advanced-sportbar.is-busy{opacity:.55;pointer-events:none;}
+        .profile-advanced-sportchip{-webkit-appearance:none;appearance:none;cursor:pointer;padding:7px 13px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:transparent;color:#aebbd0;font:900 11px/1 'Barlow','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+        .profile-advanced-sportchip:hover{color:#e8f1ff;border-color:rgba(148,163,184,.42);background:rgba(148,163,184,.08);}
+        .profile-advanced-sportchip.is-active{background:linear-gradient(135deg,#2b8cff,#4DA3FF);border-color:transparent;color:#04111a;box-shadow:0 6px 16px rgba(43,140,255,.28);}
+        .profile-advanced-sportchip:focus-visible{outline:2px solid #4DA3FF;outline-offset:2px;}
+        .profile-advanced-sportchip .chip-n{margin-left:6px;font-weight:900;opacity:.7;letter-spacing:.04em;}
+        /* Ten cards over nine columns stranded a single card beside eight empty
+           ones. Five columns fills two complete rows instead. */
+        .profile-advanced-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;}
         .profile-advanced-metric{min-width:0;min-height:126px;padding:13px 12px;border:1px solid rgba(68,91,126,.72);border-radius:10px;background:linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
         .profile-advanced-metric__label{color:#afbdd0;font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;line-height:1.15;}
         .profile-advanced-metric__value{color:#f8fbff;font-size:clamp(17px,1.18vw,22px);font-weight:950;line-height:1.05;letter-spacing:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
@@ -1974,8 +1989,11 @@
         .profile-advanced-support-grid div{min-height:70px;padding:11px;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(2,6,23,.32);color:#e7eef8;font-size:12px;font-weight:850;line-height:1.2;}
         .profile-advanced-support-grid span{display:block;margin-top:5px;color:#8491a6;font-size:11px;font-weight:650;line-height:1.25;}
         @media(max-width:1180px){
-            .profile-advanced-metric-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+            .profile-advanced-metric-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
             .profile-advanced-support-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+        }
+        @media(max-width:980px){
+            .profile-advanced-metric-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
         }
         @media(max-width:720px){
             .profile-advanced-strip-section .container{width:min(100% - 28px,1260px);}
@@ -2445,24 +2463,15 @@
                         <div class="tmrx-pagination fa-pagination" id="faPagination" hidden></div>
                       </div>
 
-                      <div class="tmrx-section">
-                        <div class="tmrx-section-head">
-                          <div>
-                            <div class="tmrx-section-title">Filters</div>
-                            <div class="tmrx-section-sub">Use the Pick History controls for ledger filtering.</div>
-                          </div>
-                        </div>
-                        <div class="tmrx-filter-bar">
-                          <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
-                          <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
-                          <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
-                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Favorite (-110 to -200)</option><option value="underdog">Dog (+100 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
-                          <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5–1u</option><option value="1.5_to_2u">1.5–2u</option><option value="2.5_to_3u">2.5–3u</option><option value="3u_plus">3u+</option></select></label>
-                          <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
-                          <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
-                          <label><span>Min Units</span><input type="number" min="0" step="0.5" placeholder="0.0" data-tmrx-filter="min_units" style="width:90px"></label>
-                        </div>
-                      </div>
+                      <!-- FILTERS_MODULE_REMOVED_20260909: a "Filters" card sat here holding
+                           eight selects and a Min Units box that nothing on the
+                           page read. There is no data-tmrx-filter handler in any
+                           script, and choosing NHL in it left the ledger showing
+                           the same fifteen MLB rows. Its own subtitle pointed the
+                           reader at the Pick History controls, which are the ones
+                           that actually filter (Picks tab, "Filter And Sort
+                           Ledger"). A dead control panel reads as an unfinished
+                           section, so it is gone rather than explained. -->
 
                       <div class="tmrx-section">
                         <div class="tmrx-section-head">
@@ -7092,8 +7101,18 @@
     }
 
     function calculatePickClv(pick) {
-        const opening = Number(pick.line_snapshot);
-        const closing = Number(getClosingLineValue(pick));
+        /* CLV_NULL_GUARD_20260909: Number(null) is 0, not NaN, so a pick with no
+           stored closing line used to be scored against a closing number of
+           zero. A 4.5 total under printed "-4.50" in the CLV column while the
+           Closing Line column beside it correctly printed "--". A missing
+           opening OR closing line means no CLV exists, so return null and let
+           formatClvValue print the dash. */
+        const openingRaw = pick.line_snapshot;
+        const closingRaw = getClosingLineValue(pick);
+        if (openingRaw == null || openingRaw === '') return null;
+        if (closingRaw == null || closingRaw === '') return null;
+        const opening = Number(openingRaw);
+        const closing = Number(closingRaw);
         if (!Number.isFinite(opening) || !Number.isFinite(closing)) return null;
 
         const selection = String(pick.selection || '').toLowerCase();
@@ -8197,9 +8216,18 @@
         try { tmrxRenderPickHistory(username); } catch (e) { console.warn('[tmrx] pick history failed:', e); }
     }
 
-    function renderProfileAdvancedMetricsStrip(data) {
+    /* ADV_SPORT_FILTER_20260909: opts.sport names the sport_key or sport GROUP
+       the payload was computed for ('' = all sports). The payload IS the
+       backend's recomputation over that sport's graded picks, so every card
+       below is a real per-sport figure, not a share of an all-sports total. */
+    function renderProfileAdvancedMetricsStrip(data, opts) {
+        opts = opts || {};
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
-        if (statusEl) statusEl.textContent = 'Verified backend metrics';
+        if (statusEl) statusEl.textContent = opts.sport
+            ? (advSportLabel(opts.sport) + ' \u00b7 verified backend metrics')
+            : 'Verified backend metrics';
+        if (!opts.sport) window.__tmrAdvMetricsAll = data;
+        try { buildAdvancedSportBar(data, opts.sport || ''); } catch (e) { console.warn('[Profile] sport bar build failed:', e); }
         const s = (data && data.summary) || {};
         const scores = (data && data.scores) || {};
         const dd = (data && data.drawdown) || {};
@@ -8273,10 +8301,13 @@
             s.avg_odds != null ? 'Average backend odds' : 'Coming once enough graded data is available',
             null
         );
+        /* An empty set has an average of zero, which is not a fact about the
+           capper. Every value card stays on its empty state until there is at
+           least one graded pick in the current scope. */
         setCard(
             'profileAdvAvgUnitSize',
-            s.avg_units != null ? Number(s.avg_units).toFixed(2) + 'u' : null,
-            s.avg_units != null ? 'Mean stake per graded pick' : 'Coming once enough graded data is available',
+            graded > 0 && s.avg_units != null ? Number(s.avg_units).toFixed(2) + 'u' : null,
+            graded > 0 && s.avg_units != null ? 'Mean stake per graded pick' : 'Requires graded picks',
             null
         );
         setCard(
@@ -8295,14 +8326,20 @@
             clvCard.toggleAttribute('hidden', !clvAvailable);
         }
         if (clvAvailable) {
+            /* Say how many picks the number rests on. A sport view can land on
+               a CLV built from a single tracked pick, and "+0.00 bps" with no
+               sample beside it reads like a settled fact about the capper. */
+            const clvN = Number(((scores.clv_detail) || {}).sample_size || 0);
             setCard(
                 'profileAdvClv',
                 fmtSigned(clv, ' bps', 2),
-                'Closing-line value',
+                clvN > 0
+                    ? ('Closing-line value · ' + clvN + ' tracked pick' + (clvN === 1 ? '' : 's'))
+                    : 'Closing-line value',
                 clv
             );
         }
-        const maxDd = dd.max_drawdown != null ? Number(dd.max_drawdown) : null;
+        const maxDd = (graded > 0 && dd.max_drawdown != null) ? Number(dd.max_drawdown) : null;
         setCard(
             'profileAdvMaxDrawdown',
             maxDd != null && Number.isFinite(maxDd) ? '-' + Math.abs(maxDd).toFixed(2) + 'u' : null,
@@ -8313,8 +8350,143 @@
         // PICK_CORRELATION_20260607: correlated-picks accountability stat now lives in the
         // TOP profile rail (next to Avg Odds), not buried in the advanced grid. Cache the
         // payload and render the rail card. (The old advanced-grid card was removed.)
-        window.__tmrCorrelation = (data && data.correlation) || null;
-        try { applyRailCorrelation(); } catch (_) {}
+        /* Correlated Picks is an ALL-SPORTS header stat. A sport view must not
+           rewrite it, or switching to NHL would silently restate the profile
+           header as an NHL-only number. */
+        if (!opts.sport) {
+            window.__tmrCorrelation = (data && data.correlation) || null;
+            try { applyRailCorrelation(); } catch (_) {}
+        }
+        try { renderAdvancedSportDiversity(opts.sport || ''); } catch (e) { console.warn('[Profile] sport diversity failed:', e); }
+    }
+
+    /* ===================================================================
+       ADV_SPORT_FILTER_20260909 -- sport switcher for Advanced Capper Metrics.
+       Nine of the ten cards come straight from GET /users/:name/metrics?sport=,
+       which runs the SAME computeAdvancedMetrics over only that sport's graded
+       picks: record, net units, ROI, win rate, average odds, average stake,
+       picks per day, Z-Score, CLV and max drawdown are all recomputed server
+       side. Pick Diversity is the one card computed in the browser, so it is
+       recomputed here from the same picks filtered the same way, which is what
+       keeps that card consistent with the nine beside it.
+       =================================================================== */
+    const ADV_SPORT_LABELS = {
+        baseball_mlb: 'MLB', americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
+        basketball_nba: 'NBA', basketball_ncaab: 'NCAAB', icehockey_nhl: 'NHL',
+        soccer: 'Soccer', tennis: 'Tennis', mma: 'MMA', boxing: 'Boxing', golf: 'Golf',
+        baseball: 'Baseball', basketball: 'Basketball', americanfootball: 'Football',
+        icehockey: 'Hockey', cricket: 'Cricket', rugbyleague: 'Rugby League', aussierules: 'AFL'
+    };
+    /* These stay at LEAGUE level because their group would merge two genuinely
+       different records -- NFL and NCAAF are both americanfootball. Everything
+       else (soccer, tennis, mma) carries one key per competition and is grouped,
+       which is also what the backend ?sport= filter accepts. */
+    const ADV_SPORT_EXACT = ['baseball_mlb', 'americanfootball_nfl', 'americanfootball_ncaaf',
+        'basketball_nba', 'basketball_ncaab', 'icehockey_nhl'];
+    function advSportBucket(sportKey) {
+        const key = String(sportKey || '').toLowerCase();
+        if (!key) return '';
+        if (ADV_SPORT_EXACT.indexOf(key) !== -1) return key;
+        return key.split('_')[0] || key;
+    }
+    function advSportLabel(bucket) {
+        const b = String(bucket || '').toLowerCase();
+        if (!b) return 'All Sports';
+        if (ADV_SPORT_LABELS[b]) return ADV_SPORT_LABELS[b];
+        return b.split('_').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : w).join(' ');
+    }
+    function advSportMatches(pick, bucket) {
+        if (!bucket) return true;
+        const key = String((pick && pick.sport_key) || '').toLowerCase();
+        return key === bucket || key.split('_')[0] === bucket;
+    }
+    let advSportCurrent = '';
+    const advSportCache = Object.create(null);
+    function buildAdvancedSportBar(data, active) {
+        const bar = document.getElementById('profileAdvancedSportBar');
+        if (!bar) return;
+        /* Built ONCE, from the all-sports payload. A sport view's own splits
+           contain only that sport, so rebuilding from it would delete every
+           other chip the moment one was clicked. */
+        if (!bar.dataset.built) {
+            const source = window.__tmrAdvMetricsAll || data;
+            const rows = (source && source.splits && source.splits.by_sport) || [];
+            const totals = Object.create(null);
+            rows.forEach((row) => {
+                const bucket = advSportBucket(row && row.key);
+                if (!bucket) return;
+                totals[bucket] = (totals[bucket] || 0) + Number((row && row.total) || 0);
+            });
+            const buckets = Object.keys(totals).filter(k => totals[k] > 0).sort((a, b) => totals[b] - totals[a]);
+            if (!buckets.length) { bar.hidden = true; return; }
+            const all = Number(((source || {}).summary || {}).total_picks || 0);
+            const chips = [{ key: '', label: 'All Sports', n: all }]
+                .concat(buckets.map(k => ({ key: k, label: advSportLabel(k), n: totals[k] })));
+            bar.innerHTML = chips.map(ch =>
+                '<button type="button" role="tab" aria-selected="false" class="profile-advanced-sportchip"' +
+                ' data-adv-sport="' + ch.key + '">' + ch.label +
+                '<span class="chip-n">' + ch.n + '</span></button>'
+            ).join('');
+            bar.dataset.built = '1';
+            bar.hidden = false;
+            bar.addEventListener('click', (ev) => {
+                const btn = ev.target && ev.target.closest ? ev.target.closest('[data-adv-sport]') : null;
+                if (btn) selectAdvancedSport(btn.getAttribute('data-adv-sport') || '');
+            });
+        }
+        const want = String(active || '');
+        bar.querySelectorAll('[data-adv-sport]').forEach((btn) => {
+            const on = (btn.getAttribute('data-adv-sport') || '') === want;
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
+    function renderAdvancedSportDiversity(bucket) {
+        if (typeof allLoadedPicks === 'undefined' || !Array.isArray(allLoadedPicks) || !allLoadedPicks.length) return;
+        const picks = bucket ? allLoadedPicks.filter(p => advSportMatches(p, bucket)) : allLoadedPicks;
+        renderPickDiversity(picks);
+    }
+    async function fetchAdvancedMetricsForSport(username, bucket) {
+        const qs = bucket ? '?sport=' + encodeURIComponent(bucket) : '';
+        if (window.api && typeof window.api.request === 'function') {
+            return await withTimeout(
+                window.api.request('/users/' + encodeURIComponent(username) + '/metrics' + qs),
+                12000,
+                'Metrics request'
+            );
+        }
+        const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics' + qs, {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(12000),
+            headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
+        });
+        if (!resp.ok) throw new Error('metrics ' + resp.status);
+        return await resp.json();
+    }
+    async function selectAdvancedSport(bucket) {
+        const want = String(bucket || '');
+        if (want === advSportCurrent) return;
+        const params = new URLSearchParams(window.location.search || '');
+        const username = params.get('user') || params.get('username') || profileUsername;
+        if (!username) return;
+        const bar = document.getElementById('profileAdvancedSportBar');
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        advSportCurrent = want;
+        if (bar) bar.classList.add('is-busy');
+        if (statusEl) statusEl.textContent = 'Loading ' + advSportLabel(want) + '...';
+        try {
+            let data = advSportCache[want] || (!want ? window.__tmrAdvMetricsAll : null);
+            if (!data) data = await fetchAdvancedMetricsForSport(username, want);
+            if (advSportCurrent !== want) return;   // a later click already won
+            advSportCache[want] = data;
+            renderProfileAdvancedMetricsStrip(data, { sport: want });
+        } catch (err) {
+            console.warn('[Profile] sport metrics unavailable:', err && err.message ? err.message : err);
+            if (statusEl) statusEl.textContent = 'Metrics unavailable for ' + advSportLabel(want);
+        } finally {
+            if (bar) bar.classList.remove('is-busy');
+            buildAdvancedSportBar(null, advSportCurrent);
+        }
     }
 
     async function bootstrapProfileAdvancedMetricsStrip() {
@@ -19267,6 +19439,291 @@
   <script defer src="/static/js/pick-progress-nudge.js?v=df4043fd5769"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.e00cfb393e55.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+<style id="tmr-profile-qa-20260909">
+/* =====================================================================
+   PROFILE STATISTICS CONTAINMENT PASS -- 2026-09-09
+   Last stylesheet in the document on purpose: the profile's own rules are
+   spread across a dozen in-body <style> blocks, several of them !important,
+   and the fixes below have to land after all of them.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. THE RECORD TABLE FITS ITS COLUMN.
+   14 columns with nowrap cells and 16px side padding gave the table a
+   natural width of 1752px inside a 1258px content column, so Closing Line,
+   CLV, Book and Status sat off the right edge behind a horizontal
+   scrollbar. With a filter applied the result set is short, nothing invites
+   a sideways scroll, and the table simply reads as cut off.
+   Fixed layout plus an explicit column budget (the percentages below sum to
+   100) makes all 14 columns fit the column at desktop width. Below 1080px
+   the shell still scrolls, and the existing <=760px stacked-card layout is
+   left exactly as it was.
+   --------------------------------------------------------------------- */
+@media (min-width: 761px) {
+  html body.profile-page .picks-table,
+  html body.profile-page.tmr-social-profile .picks-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    min-width: 1120px !important;
+    font-size: 12.5px !important;
+  }
+  html body.profile-page .picks-table th,
+  html body.profile-page .picks-table td,
+  html body.profile-page.tmr-social-profile .picks-table thead th,
+  html body.profile-page.tmr-social-profile .picks-table tbody td {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    vertical-align: middle !important;
+  }
+  /* Header labels wrap at word boundaries only. "Closing Line" and "Net Units"
+     take two lines; nothing is broken mid-word. */
+  html body.profile-page.tmr-social-profile .picks-table thead th {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    font-size: 9.5px !important;
+    letter-spacing: .04em !important;
+    line-height: 1.3 !important;
+  }
+  /* The sortable headers were pills while Game and Pick beside them were plain
+     uppercase labels, so the header row read as two different designs -- and
+     each pill's own padding cost about 26px of a column that has none to
+     spare. Every header is now the same plain label; sorting still colours the
+     active one and the hover state is kept. */
+  html body.profile-page #picksTableWrapper .picks-table .ledger-sort-button,
+  html body.profile-page.tmr-social-profile #picksTableWrapper .picks-table .ledger-sort-button {
+    display: inline !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    font: inherit !important;
+    color: inherit !important;
+    letter-spacing: inherit !important;
+    text-transform: inherit !important;
+    white-space: normal !important;
+    text-align: left !important;
+    max-width: 100% !important;
+  }
+  /* Fixed layout takes its widths from the header row; these two min-widths
+     were sized for the old auto layout and would only fight it. */
+  html body.profile-page .picks-table td.col-game,
+  html body.profile-page .picks-table td.col-pick {
+    min-width: 0 !important;
+  }
+  /* Column budget: each width is the wider of its header label and its widest
+     real value, and the fourteen sum to 100. */
+  html body.profile-page .picks-table thead th:nth-child(1)  { width: 7.1%; }   /* Submitted    */
+  html body.profile-page .picks-table thead th:nth-child(2)  { width: 5.7%; }   /* Sport        */
+  html body.profile-page .picks-table thead th:nth-child(3)  { width: 15.9%; }  /* Game         */
+  html body.profile-page .picks-table thead th:nth-child(4)  { width: 18.6%; }  /* Pick         */
+  html body.profile-page .picks-table thead th:nth-child(5)  { width: 7.2%; }   /* Market       */
+  html body.profile-page .picks-table thead th:nth-child(6)  { width: 4.3%; }   /* Line         */
+  html body.profile-page .picks-table thead th:nth-child(7)  { width: 4.6%; }   /* Odds         */
+  html body.profile-page .picks-table thead th:nth-child(8)  { width: 4.9%; }   /* Units        */
+  html body.profile-page .picks-table thead th:nth-child(9)  { width: 5.4%; }   /* Result       */
+  html body.profile-page .picks-table thead th:nth-child(10) { width: 6.0%; }   /* Net Units    */
+  html body.profile-page .picks-table thead th:nth-child(11) { width: 5.6%; }   /* Closing Line */
+  html body.profile-page .picks-table thead th:nth-child(12) { width: 4.3%; }   /* CLV          */
+  html body.profile-page .picks-table thead th:nth-child(13) { width: 5.6%; }   /* Book         */
+  html body.profile-page .picks-table thead th:nth-child(14) { width: 4.8%; }   /* Status       */
+  /* Numbers, badges and single-token values stay on one line inside their
+     budget; only the two prose columns wrap. */
+  html body.profile-page .picks-table tbody td:nth-child(1),
+  html body.profile-page .picks-table tbody td:nth-child(6),
+  html body.profile-page .picks-table tbody td:nth-child(7),
+  html body.profile-page .picks-table tbody td:nth-child(8),
+  html body.profile-page .picks-table tbody td:nth-child(10),
+  html body.profile-page .picks-table tbody td:nth-child(11),
+  html body.profile-page .picks-table tbody td:nth-child(12),
+  html body.profile-page .picks-table tbody td:nth-child(13),
+  html body.profile-page .picks-table tbody td:nth-child(14) {
+    white-space: nowrap !important;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The ET time is the widest thing in the Submitted column; a point smaller
+     keeps it inside the column even at the table's 1120px floor. */
+  html body.profile-page .picks-table tbody td:nth-child(1) .ledger-muted {
+    font-size: 11px !important;
+  }
+  html body.profile-page .picks-table tbody td .ledger-subline,
+  html body.profile-page .picks-table tbody td .pick-sport,
+  html body.profile-page .picks-table tbody td .result-badge,
+  html body.profile-page .picks-table tbody td .ledger-status {
+    white-space: nowrap !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   1b. THE ADVANCED CAPPER METRICS GRID FILLS ITS ROWS.
+   Ten cards across eight columns left eight of them in the first row and two
+   stranded in a second beside six empty cells. Five columns is two complete
+   rows. Only the desktop count changes; 1180/720/440 keep the counts they
+   already had.
+   --------------------------------------------------------------------- */
+@media (min-width: 1181px) {
+  html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric-grid,
+  html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   1c. THE SPORT CHIPS. The site-wide pill treatment for a bare <button>
+   carries six :not() classes and would otherwise flatten the selected chip
+   back to an unselected one, so the selected state is scoped through the
+   bar's own ID.
+   --------------------------------------------------------------------- */
+html body.profile-page #profileAdvancedSportBar .profile-advanced-sportchip {
+  padding: 8px 14px !important;
+  font: 900 11px/1 'Barlow', 'Inter', sans-serif !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+  color: #aebbd0 !important;
+  background: transparent !important;
+  border: 1px solid rgba(148, 163, 184, .22) !important;
+  border-radius: 999px !important;
+}
+html body.profile-page #profileAdvancedSportBar .profile-advanced-sportchip:hover {
+  color: #e8f1ff !important;
+  border-color: rgba(148, 163, 184, .5) !important;
+  background: rgba(148, 163, 184, .08) !important;
+}
+html body.profile-page #profileAdvancedSportBar .profile-advanced-sportchip.is-active {
+  color: #04111a !important;
+  background: linear-gradient(135deg, #2b8cff, #4DA3FF) !important;
+  border-color: transparent !important;
+  box-shadow: 0 6px 16px rgba(43, 140, 255, .28) !important;
+}
+html body.profile-page #profileAdvancedSportBar .profile-advanced-sportchip .chip-n {
+  margin-left: 6px !important;
+  font-weight: 900 !important;
+  opacity: .7 !important;
+}
+
+/* ---------------------------------------------------------------------
+   2. THE METRIC / VALUE / DEFINITION TABLES STOP CLIPPING THEIR PROSE.
+   `.tmrx-table th, .tmrx-table td { white-space: nowrap !important }` is
+   right for the numeric split tables and wrong for the two glossary tables,
+   whose third column is a full sentence: it pushed them to 1384px inside a
+   1212px shell and sliced "...whatever the raw" off the Break-Even Gap row.
+   Only the definition column is released; every numeric table is untouched.
+   --------------------------------------------------------------------- */
+html body.profile-page #tmrxTableAdvancedTop,
+html body.profile-page #tmrxTableAdvanced {
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+html body.profile-page #tmrxTableAdvancedTop th:nth-child(1),
+html body.profile-page #tmrxTableAdvanced th:nth-child(1) { width: 26%; }
+html body.profile-page #tmrxTableAdvancedTop th:nth-child(2),
+html body.profile-page #tmrxTableAdvanced th:nth-child(2) { width: 15%; }
+html body.profile-page #tmrxTableAdvancedTop th:nth-child(3),
+html body.profile-page #tmrxTableAdvanced th:nth-child(3) { width: 59%; }
+html body.profile-page #tmrxTableAdvancedTop td:nth-child(3),
+html body.profile-page #tmrxTableAdvanced td:nth-child(3),
+html body.profile-page #tmrxTableAdvancedTop th:nth-child(3),
+html body.profile-page #tmrxTableAdvanced th:nth-child(3) {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.45 !important;
+}
+html body.profile-page #tmrxTableAdvancedTop td:nth-child(1),
+html body.profile-page #tmrxTableAdvanced td:nth-child(1) {
+  white-space: normal !important;
+}
+
+/* ---------------------------------------------------------------------
+   3. THE LEDGER FILTER TOOLBAR STOPS BEING CLIPPED BY ITS OWN CARD.
+   The desktop template is a fixed 260px + 4x150px, which needs 860px. At a
+   tablet width the card is 774px wide and clips overflow, so the Odds and
+   Sort selects were simply cut in half. The desktop layout (5 up, two tidy
+   rows of controls) is unchanged; below it the toolbar packs itself.
+   --------------------------------------------------------------------- */
+@media (max-width: 1180px) {
+  html body.profile-page.tmr-social-profile #pickFilters.filter-toolbar,
+  html body.profile-page #pickFilters.filter-toolbar {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  }
+}
+@media (max-width: 560px) {
+  html body.profile-page.tmr-social-profile #pickFilters.filter-toolbar,
+  html body.profile-page #pickFilters.filter-toolbar {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   4. THE GLOSSARY TABLE FITS INSTEAD OF BEING CUT OFF BY ITS CARD.
+   Same shape as the two tables above: a 760px min-width and a nowrap
+   Context column inside a card that clips its overflow, so on a tablet the
+   right-hand column was sliced off with nothing to scroll. It is prose, so
+   it wraps.
+   --------------------------------------------------------------------- */
+html body.profile-page .advanced-glossary-wrap {
+  overflow-x: auto !important;
+}
+html body.profile-page .advanced-glossary-table,
+html body.profile-page.tmr-social-profile .advanced-glossary-table {
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+html body.profile-page .advanced-glossary-table th:nth-child(1) { width: 26%; }
+html body.profile-page .advanced-glossary-table th:nth-child(2) { width: 15%; }
+html body.profile-page .advanced-glossary-table th:nth-child(3) { width: 59%; }
+html body.profile-page .advanced-glossary-table th,
+html body.profile-page .advanced-glossary-table td {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* ---------------------------------------------------------------------
+   5. THE EQUITY-CURVE FOOTER STRIP STOPS OVERLAPPING ITSELF ON A PHONE.
+   Four fixed columns gave each cell 38px at 390px wide, so "Max Drawdown"
+   and "-76.19u" both ran outside their own cell and over the next one.
+   --------------------------------------------------------------------- */
+/* The <=760px stacked-card layout for the ledger never actually engaged on a
+   social profile: its `min-width:0` reset was written one class less specific
+   than the 1320px floor beside it, so a phone got a 14-column table on a
+   sideways scroll instead of the card list that was built for it. */
+@media (max-width: 760px) {
+  html body.profile-page .picks-table,
+  html body.profile-page.tmr-social-profile .picks-table {
+    min-width: 0 !important;
+    table-layout: auto !important;
+  }
+}
+
+@media (max-width: 560px) {
+  html body.profile-page .tmrx-dd-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Header sort pills are a few pixels wider than the tightest columns once
+   the table is at its 1080px floor; trimming their own padding keeps them
+   inside the cell they label. */
+
+
+/* ---------------------------------------------------------------------
+   6. THE MEMBER-SINCE / LAST-ACTIVE DATES STAY INSIDE THEIR TILES.
+   `.tmrx-value` is a nowrap clamp(24px,1.8vw,30px) built for short numbers;
+   a full date ("Mar 30, 2026") ran 8px past the tile once the viewport got
+   small enough to shrink the tile but not the type.
+   --------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  html body.profile-page .tmrx-value.ca-date {
+    font-size: 19px !important;
+    letter-spacing: -.01em !important;
+  }
+}
+</style>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
