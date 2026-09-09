@@ -138,6 +138,19 @@
         return true;
     }
     function validLine(v) { return num(v) != null; }
+    // PROP_PRICE_GATE_20260909. validOdds refuses anything under -500 because
+    // on an ALT LINE ladder a -1200 rung is a broken price, not a market. On a
+    // PLAYER PROP it is a real one: an anytime-touchdown favourite and the low
+    // rungs of an alternate receiving-yards ladder are routinely -1000 or
+    // shorter, and the ladder is the market. So props keep the sanity bound and
+    // drop the ladder-integrity rule.
+    function validPropOdds(o) {
+        var n = num(o);
+        if (n == null) return false;
+        if (n > -100 && n < 100) return false;
+        if (Math.abs(n) > 20000) return false;
+        return true;
+    }
 
     // Keep the single best-covered sportsbook for a ladder, so a game's
     // alternates are one book's prices rather than a blend of several.
@@ -250,6 +263,12 @@
                     player: i.player_name || null,
                     playerTeam: i.player_team || null,
                     propLabel: i.prop_label || null,
+                    // FOOTBALL_PROPS_20260909: football props arrive already
+                    // filed under a category (Passing / Rushing / Receiving /
+                    // Touchdowns / Kicking / Defense). MLB carries none, so the
+                    // panel falls back to chipping by market there.
+                    propGroup: i.prop_group || null,
+                    propGroupLabel: i.prop_group_label || null,
                     marketType: i.market_type || i.market_key || grp.key,
                     // ALT_TEAM_TOTALS_COVERAGE_20260907: which rung is the main
                     // number is the backend's answer now, not a guess made here.
@@ -263,7 +282,8 @@
                 // moneyline-only market: 62 of 80 NCAAF games were losing their
                 // Second Half group outright because it held nothing else.
                 var needsLine = !/(^|_)h2h$/.test(String(i.marketType || ''));
-                if (!i.selection || !validOdds(i.odds)) return false;
+                var oddsOkHere = grp.key === 'player_props' ? validPropOdds(i.odds) : validOdds(i.odds);
+                if (!i.selection || !oddsOkHere) return false;
                 if (needsLine && !validLine(i.line)) return false;
                 // MLB team totals below 2.5 are unit-farming lines, not markets.
                 if (/team_totals/.test(grp.key) && sport === 'MLB' && Math.abs(i.line) < 2.5) return false;
@@ -1177,8 +1197,13 @@
             var all = catStrips(g, cat.key);
             var rows = all.slice(0, want);
             var restRows = all.length - rows.length;
+            // PROPS_EMPTY_STATE_20260909: a book posts player props on the
+            // games it expects action on and on nothing else. Say that, rather
+            // than showing a card with an empty track.
             body = rows.length ? rows.map(function (r) { return stripRow(g, cat, r); }).join('')
-                : '<div class="sbn-norow">Not posted for this game.</div>';
+                : '<div class="sbn-norow">' + (cat.key === 'player_props'
+                    ? 'Player props not currently posted by sportsbook.'
+                    : 'Not posted for this game.') + '</div>';
             // pad so every card in this category is exactly the same height
             for (var pad = rows.length; rows.length && pad < want; pad++) body += '<div class="sbn-strip is-blank"></div>';
             if (rows.length) body += '<button type="button" class="sbn-striprest" data-drawer="' + esc(g.id) +
@@ -1293,14 +1318,32 @@
     // which says nothing about which side of the number you are taking. So the
     // props panel gets its own market chips and its own row shape, where the
     // row is the PLAYER and every rung says Over or Under out loud.
+    // Football props are filed under a category by the feed, so the chips are
+    // Passing / Rushing / Receiving / Touchdowns / Kicking and the panel then
+    // splits the chosen category into one section per market. A feed with no
+    // category (MLB) keeps chipping by market, which is what it did before.
+    var PROP_CAT_ORDER = ['passing', 'rushing', 'receiving', 'touchdowns', 'kicking', 'defense', 'other'];
     function propCatsOf(items) {
-        var seen = {}, order = [];
-        (items || []).forEach(function (i) {
-            var k = i.propLabel || 'Player Props';
-            if (seen[k] == null) { seen[k] = 0; order.push(k); }
+        var list = items || [];
+        var grouped = list.length && list.some(function (i) { return i.propGroup; });
+        var seen = {}, label = {}, order = [];
+        list.forEach(function (i) {
+            var k = grouped ? (i.propGroup || 'other') : (i.propLabel || 'Player Props');
+            if (seen[k] == null) { seen[k] = 0; order.push(k); label[k] = grouped ? (i.propGroupLabel || 'Other') : k; }
             seen[k]++;
         });
-        return order.map(function (k) { return { key: k, label: k, n: seen[k] }; });
+        if (grouped) {
+            order.sort(function (a, b) {
+                var ia = PROP_CAT_ORDER.indexOf(a), ib = PROP_CAT_ORDER.indexOf(b);
+                return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+            });
+        }
+        return order.map(function (k) {
+            return { key: k, label: label[k], n: seen[k], grouped: grouped };
+        });
+    }
+    function propCatKey(item, grouped) {
+        return grouped ? (item.propGroup || 'other') : (item.propLabel || 'Player Props');
     }
     function drawerPlayerProps(g, title, book, items) {
         var byPlayer = {}, order = [];
@@ -1377,8 +1420,24 @@
             for (var q = 0; q < pcats.length; q++) if (pcats[q].key === state.drawerProp) onProp = pcats[q];
             if (!onProp) onProp = pcats[0];
             var wantProp = onProp ? onProp.key : null;
-            var pitems = (pgrp.items || []).filter(function (i) { return (i.propLabel || 'Player Props') === wantProp; });
-            secs = drawerPlayerProps(g, (onProp && onProp.label) || (pgrp.label || 'Player Props'), pgrp.book, pitems);
+            var isGrouped = !!(onProp && onProp.grouped);
+            var pitems = (pgrp.items || []).filter(function (i) { return propCatKey(i, isGrouped) === wantProp; });
+            if (isGrouped) {
+                // A category holds several markets (Passing = yards, TDs,
+                // attempts, completions, interceptions), so it is split into one
+                // section per market rather than listed as one run of players.
+                var byMkt = {}, mktOrder = [];
+                pitems.forEach(function (i) {
+                    var k = i.propLabel || 'Player Props';
+                    if (!byMkt[k]) { byMkt[k] = []; mktOrder.push(k); }
+                    byMkt[k].push(i);
+                });
+                secs = mktOrder.map(function (k) {
+                    return drawerPlayerProps(g, k, pgrp.book, byMkt[k]);
+                }).join('');
+            } else {
+                secs = drawerPlayerProps(g, (onProp && onProp.label) || (pgrp.label || 'Player Props'), pgrp.book, pitems);
+            }
         } else if (on) {
             var grp = g.groups[on.key];
             secs = drawerGroup(g, on.key, grp.label || on.key, grp.book, grp.items, true);
