@@ -2661,6 +2661,7 @@
                             <tbody><tr class="empty"><td colspan="7">No faded-team rows yet.</td></tr></tbody>
                           </table>
                         </div>
+                        <div class="tmrx-more-row"><button type="button" class="tmrx-more-btn" id="tmrxOpponentMore" hidden></button></div>
                       </div>
 
                       <div class="tmrx-section" id="tmrxTeamMarketSection" hidden>
@@ -2670,6 +2671,7 @@
                             <div class="tmrx-section-sub">What you actually bet on each club, market by market. Moneyline, spread and team totals sit with the club named on the ticket, and team totals are split by side because an Over and an Under on the same club are opposite opinions. Game totals and player props name no club, so they count for both teams in the game; that is why the Picks column across teams adds up to more than your pick count.</div>
                           </div>
                         </div>
+                        <div class="tmrx-sport-picker" id="tmrxTeamMarketSportPicker" role="tablist" aria-label="League"></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableTeamMarketTop">
                             <thead><tr><th>Team</th><th>League</th><th>Market</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -2700,6 +2702,7 @@
                             <div class="tmrx-section-sub">The exact number on the ticket &mdash; every spread, total and team total played, not a tier.</div>
                           </div>
                         </div>
+                        <div class="tmrx-sport-picker" id="tmrxLineNumberSportPicker" role="tablist" aria-label="League"></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableLineNumberTop">
                             <thead><tr><th>Number</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -14278,6 +14281,9 @@
     let tmrxOpponentRows = [];
     let tmrxOpponentTab = '';
     let tmrxOpponentWired = false;
+    /* The cap keeps a 40 club league readable, but a member who faded 29 MLB
+       clubs should not be told about 25 of them with no way to the rest. */
+    let tmrxOpponentShowAll = false;
 
     function tmrxOpponentGroups() {
         return tmrxLeagueGroups(tmrxOpponentRows,
@@ -14292,10 +14298,21 @@
         picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxOpponentTab, 'data-tmrx-opponent-tab');
     }
 
+    function tmrxOpponentSyncMore(total) {
+        const btn = document.getElementById('tmrxOpponentMore');
+        if (!btn) return;
+        if (total <= TMRX_OPPONENT_LIMIT) { btn.hidden = true; return; }
+        btn.hidden = false;
+        btn.textContent = tmrxOpponentShowAll
+            ? 'Show the top ' + TMRX_OPPONENT_LIMIT
+            : 'Show all ' + total;
+    }
+
     function tmrxOpponentDraw() {
         const rows = tmrxOpponentRows.filter(function (row) {
             return tmrxLeagueTab(tmrxSplitScoped(row.bucket).sportKey).key === tmrxOpponentTab;
         });
+        tmrxOpponentSyncMore(rows.length);
         if (!rows.length) {
             const table = document.getElementById('tmrxTableOpponentTop');
             const tbody = table ? table.querySelector('tbody') : null;
@@ -14303,7 +14320,7 @@
             return;
         }
         tmrxRenderDepthTable('tmrxTableOpponentTop', 'tmrxOpponentSection', rows, {
-            limit: TMRX_OPPONENT_LIMIT,
+            limit: tmrxOpponentShowAll ? 0 : TMRX_OPPONENT_LIMIT,
             labelCells: function (row) {
                 const parts = tmrxSplitScoped(row.bucket);
                 const sport = tmrxSportParts(parts.sportKey);
@@ -14327,7 +14344,14 @@
                 const btn = e.target.closest && e.target.closest('[data-tmrx-opponent-tab]');
                 if (!btn) return;
                 tmrxOpponentTab = btn.getAttribute('data-tmrx-opponent-tab');
+                /* A new league starts at the top of its own list. */
+                tmrxOpponentShowAll = false;
                 tmrxOpponentSyncTabs(tmrxOpponentGroups());
+                tmrxOpponentDraw();
+            });
+            const more = document.getElementById('tmrxOpponentMore');
+            if (more) more.addEventListener('click', function () {
+                tmrxOpponentShowAll = !tmrxOpponentShowAll;
                 tmrxOpponentDraw();
             });
             tmrxOpponentWired = true;
@@ -14336,14 +14360,112 @@
         tmrxOpponentDraw();
     }
 
+    /* Team Splits kept the 12 busiest clubs across every sport, so on a record
+       led by baseball the NHL, NCAAF and soccer clubs fell off the table
+       entirely. The league tabs give each league its own 12. */
+    let tmrxTeamMarketRows = [];
+    let tmrxTeamMarketTab = '';
+    let tmrxTeamMarketWired = false;
+
+    function tmrxTeamMarketGroups() {
+        /* One club is one entry in the tab count, not one row per market. */
+        const seen = {};
+        const clubs = [];
+        tmrxTeamMarketRows.forEach(function (row) {
+            const parts = String(row.bucket || '').split('|');
+            if (parts.length < 3) return;
+            const key = parts[0] + '|' + parts[1];
+            if (!seen[key]) { seen[key] = { sportKey: parts[0], picks: 0 }; clubs.push(seen[key]); }
+            seen[key].picks += Number(row.total_picks) || 0;
+        });
+        return tmrxLeagueGroups(clubs,
+            function (c) { return c.sportKey; }, function (c) { return c.picks; });
+    }
+
+    /* By The Number carried a League column and no league control, so a spread
+       of 2.5 in the NHL sat between two MLB run lines. Same tabs as everywhere
+       else on the page. */
+    const TMRX_LINE_NUMBER_LIMIT = 25;
+    let tmrxLineNumberRows = [];
+    let tmrxLineNumberTab = '';
+    let tmrxLineNumberWired = false;
+
+    function tmrxRenderLineNumber(rows) {
+        if (Array.isArray(rows)) tmrxLineNumberRows = rows.slice();
+        if (!tmrxLineNumberRows.length) return;
+        const groups = tmrxLeagueGroups(tmrxLineNumberRows,
+            function (row) { return tmrxSplitScoped(row.bucket).sportKey; },
+            function (row) { return row.total_picks; });
+        tmrxLineNumberTab = tmrxDefaultLeagueTab(groups, tmrxLineNumberTab);
+        const picker = document.getElementById('tmrxLineNumberSportPicker');
+        if (picker) {
+            picker.hidden = !groups.length;
+            picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxLineNumberTab, 'data-tmrx-line-number-tab');
+            if (!tmrxLineNumberWired) {
+                picker.addEventListener('click', function (e) {
+                    const btn = e.target.closest && e.target.closest('[data-tmrx-line-number-tab]');
+                    if (!btn) return;
+                    tmrxLineNumberTab = btn.getAttribute('data-tmrx-line-number-tab');
+                    tmrxRenderLineNumber();
+                });
+                tmrxLineNumberWired = true;
+            }
+        }
+        const list = tmrxLineNumberRows.filter(function (row) {
+            return tmrxLeagueTab(tmrxSplitScoped(row.bucket).sportKey).key === tmrxLineNumberTab;
+        });
+        const table = document.getElementById('tmrxTableLineNumberTop');
+        const tbody = table ? table.querySelector('tbody') : null;
+        if (!list.length) {
+            if (tbody) tbody.innerHTML = '<tr class="empty"><td colspan="7">No numbered markets in this league.</td></tr>';
+            return;
+        }
+        tmrxRenderDepthTable('tmrxTableLineNumberTop', 'tmrxLineNumberSection', list, {
+            limit: TMRX_LINE_NUMBER_LIMIT,
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + escapeHtml(tmrxLineNumberLabel(parts.rest)) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+    }
+
     function tmrxRenderTeamMarket(rows) {
         const table = document.getElementById('tmrxTableTeamMarketTop');
         const section = document.getElementById('tmrxTeamMarketSection');
         if (!table) return;
         const tbody = table.querySelector('tbody');
         if (!tbody) return;
-        const list = Array.isArray(rows) ? rows : [];
-        if (!list.length) return;
+        if (Array.isArray(rows)) tmrxTeamMarketRows = rows.slice();
+        if (!tmrxTeamMarketRows.length) return;
+
+        const groups = tmrxTeamMarketGroups();
+        tmrxTeamMarketTab = tmrxDefaultLeagueTab(groups, tmrxTeamMarketTab);
+        const picker = document.getElementById('tmrxTeamMarketSportPicker');
+        if (picker) {
+            picker.hidden = !groups.length;
+            picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxTeamMarketTab, 'data-tmrx-team-market-tab');
+            if (!tmrxTeamMarketWired) {
+                picker.addEventListener('click', function (e) {
+                    const btn = e.target.closest && e.target.closest('[data-tmrx-team-market-tab]');
+                    if (!btn) return;
+                    tmrxTeamMarketTab = btn.getAttribute('data-tmrx-team-market-tab');
+                    tmrxRenderTeamMarket();
+                });
+                tmrxTeamMarketWired = true;
+            }
+        }
+        const list = tmrxTeamMarketRows.filter(function (row) {
+            return tmrxLeagueTab(String(row.bucket || '').split('|')[0]).key === tmrxTeamMarketTab;
+        });
+        if (!list.length) {
+            tbody.innerHTML = '<tr class="empty"><td colspan="8">No team split rows in this league.</td></tr>';
+            if (section) section.hidden = false;
+            return;
+        }
 
         const clubs = new Map();
         list.forEach(function (row) {
@@ -14506,17 +14628,7 @@
 
         tmrxRenderTeamMarket(byCategory.team_market);
 
-        tmrxRenderDepthTable('tmrxTableLineNumberTop', 'tmrxLineNumberSection', byCategory.line_number, {
-            limit: 25,
-            labelCells: function (row) {
-                const parts = tmrxSplitScoped(row.bucket);
-                const sport = tmrxSportParts(parts.sportKey);
-                return [
-                    '<td class="name">' + escapeHtml(tmrxLineNumberLabel(parts.rest)) + '</td>',
-                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
-                ];
-            }
-        });
+        tmrxRenderLineNumber(byCategory.line_number);
 
         const months = tmrxRenderDepthTable('tmrxTableMonthTop', 'tmrxMonthSection', byCategory.month,
             { sort: 'bucket_desc', labelCells: plain(tmrxMonthLabel) });
@@ -14885,6 +14997,12 @@
             '<div class="tmrx-team-drill-head">' + escapeHtml(team) + ' &mdash; ' + picks.length + ' pick' +
                 (picks.length === 1 ? '' : 's') +
                 (excluded ? ' <span class="tmrx-team-drill-note">(' + excluded + ' void/cancelled, excluded from the totals above)</span>' : '') +
+                /* The record tab's copy of this table sends a click to the full
+                   pick history. This expansion goes to the same place rather
+                   than being a dead end that reads differently. */
+                ' <a class="tmrx-team-drill-open" href="' +
+                    escapeHtml(tmrxDrillHref('team', sportKey + '|' + team, team)) +
+                    '">Open in full pick history</a>' +
             '</div>' +
             '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-team-drill-table">' +
             '<thead><tr><th>Date</th><th>Matchup</th><th>Market</th><th>Selection</th>' +
@@ -16157,6 +16275,19 @@
         font-family: 'Barlow','Inter',sans-serif; font-size: 12.5px; font-weight: 700; letter-spacing: .01em;
       }
       .tmrx-drill-hint-caret { color: #4DA3FF; font-size: 9px; }
+      .tmrx-more-row { display: flex; justify-content: center; margin: 10px 0 2px; }
+      .tmrx-more-btn {
+        cursor: pointer; background: #08111f; color: #9fb0c9; border: 1px solid #1F3350;
+        border-radius: 999px; padding: 7px 16px; font-family: 'Barlow','Inter',sans-serif;
+        font-size: 11.5px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase;
+      }
+      .tmrx-more-btn:hover { color: #dbe5f4; border-color: #2c4a72; }
+      .tmrx-more-btn[hidden] { display: none; }
+      .tmrx-team-drill-open {
+        text-transform: none; letter-spacing: 0; font-weight: 800; font-size: 11.5px;
+        color: #4DA3FF; text-decoration: none; margin-left: 8px;
+      }
+      .tmrx-team-drill-open:hover { text-decoration: underline; }
       .tmrx-team-drill-row { cursor: pointer; }
       .tmrx-team-drill-row .tmrx-drill-caret { font-size: 9px; color: #9BA7B8; transition: transform .15s ease; display: inline-block; }
       .tmrx-team-drill-row.tmrx-drill-open .tmrx-drill-caret { transform: rotate(90deg); color: #4DA3FF; }
