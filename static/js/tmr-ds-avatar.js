@@ -220,6 +220,8 @@
      drawn here while that request was still in flight. */
   
   
+  
+  
   function emHash(value) {
     var h = 0x811c9dc5;
     var s = String(value == null ? '' : value);
@@ -271,7 +273,16 @@
   /* The athletic mark at the centre. Flat, single-weight, and sized to the same
      optical box so one crest is not visually heavier than the next. */
   function emMotif(index, ink) {
-    var s = 'stroke="' + ink + '" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"';
+    /* DUPLICATE ATTRIBUTES BROKE THE IMAGE (2026-09-08). This used to bake
+       stroke-width into the shared attribute string, and five motifs then appended
+       a second stroke-width for their finer lines. Two of the same attribute on
+       one element is malformed markup: the SVG failed to parse and the <img>
+       rendered as a broken image at naturalWidth 0 - on the leaderboard, the feed,
+       the contest list and the coin board. The width is a parameter now. */
+    var stroke = function (w) { return 'stroke="' + ink + '" fill="none" stroke-width="' + w
+      + '" stroke-linecap="round" stroke-linejoin="round"'; };
+    var s = stroke(3.2);
+    var thin = stroke(2);
     switch (index) {
       case 0:  // baseball seams
         return '<circle cx="50" cy="49" r="14" ' + s + '/>'
@@ -284,27 +295,27 @@
           + '<path d="M36 49h28M50 35v28M40 39c6 6 14 6 20 0M40 59c6-6 14-6 20 0" ' + s + '/>';
       case 3:  // goal net
         return '<path d="M33 41h34v18H33z" ' + s + '/>'
-          + '<path d="M42 41v18M50 41v18M58 41v18M33 50h34" ' + s + ' stroke-width="2"/>';
+          + '<path d="M42 41v18M50 41v18M58 41v18M33 50h34" ' + thin + '/>';
       case 4:  // stadium arch
         return '<path d="M32 60c0-12 8-20 18-20s18 8 18 20" ' + s + '/>'
           + '<path d="M28 60h44M38 60v-8M50 60V44M62 60v-8" ' + s + '/>';
       case 5:  // track lanes
         return '<path d="M30 44h40M30 52h40M30 60h40" ' + s + '/>'
-          + '<path d="M38 40v24M62 40v24" ' + s + ' stroke-width="2"/>';
+          + '<path d="M38 40v24M62 40v24" ' + thin + '/>';
       case 6:  // chevron rank
         return '<path d="M36 56l14-13 14 13M36 45l14-13 14 13" ' + s + '/>';
       case 7:  // laurel
         return '<path d="M50 38v24" ' + s + '/>'
-          + '<path d="M50 44c-6-4-11-3-13 1 3 4 9 4 13 0zM50 44c6-4 11-3 13 1-3 4-9 4-13 0z" ' + s + ' stroke-width="2.4"/>'
-          + '<path d="M50 54c-6-4-11-3-13 1 3 4 9 4 13 0zM50 54c6-4 11-3 13 1-3 4-9 4-13 0z" ' + s + ' stroke-width="2.4"/>';
+          + '<path d="M50 44c-6-4-11-3-13 1 3 4 9 4 13 0zM50 44c6-4 11-3 13 1-3 4-9 4-13 0z" ' + s + '/>'
+          + '<path d="M50 54c-6-4-11-3-13 1 3 4 9 4 13 0zM50 54c6-4 11-3 13 1-3 4-9 4-13 0z" ' + stroke(2.4) + '/>';
       case 8:  // crossed bats
         return '<path d="M37 62 61 38M63 62 39 38" ' + s + '/>'
-          + '<circle cx="37" cy="62" r="3.2" ' + s + ' stroke-width="2.4"/>'
-          + '<circle cx="63" cy="62" r="3.2" ' + s + ' stroke-width="2.4"/>';
+          + '<circle cx="37" cy="62" r="3.2" ' + stroke(2.4) + '/>'
+          + '<circle cx="63" cy="62" r="3.2" ' + stroke(2.4) + '/>';
       case 9:  // pitch / field lines
         return '<path d="M31 38h38v24H31z" ' + s + '/>'
-          + '<path d="M50 38v24" ' + s + ' stroke-width="2"/>'
-          + '<circle cx="50" cy="50" r="5" ' + s + ' stroke-width="2"/>';
+          + '<path d="M50 38v24" ' + thin + '/>'
+          + '<circle cx="50" cy="50" r="5" ' + thin + '/>';
       case 10: // upward trend, which is what a record is
         return '<path d="M32 60l10-10 8 6 14-16" ' + s + '/>'
           + '<path d="M56 40h10v10" ' + s + '/>';

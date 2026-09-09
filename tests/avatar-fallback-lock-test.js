@@ -120,6 +120,26 @@ const many = new Set();
 for (let i = 1; i <= 200; i += 1) many.add(stripLabel(AV.svg(AV.identity({ id: i, username: 'u' + i }))));
 ok(many.size >= 150, `only ${many.size} distinct crests across 200 members`);
 
+
+/* WELL-FORMED, OR THE BROWSER DRAWS NOTHING (2026-09-08).
+   Five crest motifs baked stroke-width into a shared attribute string and then
+   appended a second stroke-width for their finer lines. Two of the same
+   attribute on one element is malformed markup: the SVG failed to parse and the
+   <img> rendered as a broken-image icon at naturalWidth 0, on the leaderboard,
+   the feed, the contest list and the coin board. Nothing about the code looked
+   wrong, which is exactly why this is a test and not a comment. */
+{
+  let malformed = 0;
+  for (let i = 1; i <= 300; i += 1) {
+    const face = AV.svg(AV.identity({ id: i, username: 'u' + i }), 96);
+    for (const el of face.match(/<[a-z]+[^>]*>/g) || []) {
+      const names = el.match(/[a-z-]+=/g) || [];
+      if (new Set(names).size !== names.length) { malformed += 1; break; }
+    }
+  }
+  ok(malformed === 0, `${malformed} of 300 crests carry a duplicate attribute and will not render`);
+}
+
 /* A real club always arrives WITH its logo url, so in the browser a club is
    always drawn as its mark. The lettered badge survives only in the API, where
    `logo` is the club we know and `logo_data` is the fetch that can fail; that
