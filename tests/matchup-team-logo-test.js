@@ -98,8 +98,12 @@ let official = 0;
 for (const dir of dirs) {
   const file = path.join(MOTD, dir, 'index.html');
   const html = fs.readFileSync(file, 'utf8');
-  const sport = (html.match(/"sport"\s*:\s*"([a-z]+)"/) ||
-                 html.match(/data-sport="([a-z]+)"/) || [])[1] || '';
+  /* CASE-INSENSITIVE (2026-09-08): the soccer cards write "sport": "Soccer",
+     which a lowercase-only class silently failed to match. Every registry check
+     below keys off this value, so a capital letter turned them into no-ops for
+     a whole league rather than into a failure. */
+  const sport = (((html.match(/"sport"\s*:\s*"([A-Za-z]+)"/) ||
+                   html.match(/data-sport="([A-Za-z]+)"/) || [])[1]) || '').toLowerCase();
 
   const sides = html.match(
     /<div class="ed-team ed-team--(?:away|home)">[\s\S]*?<\/div>/g) || [];
@@ -154,7 +158,22 @@ for (const dir of dirs) {
        failed a check that was only ever about the mark belonging to the club. */
     const base = path.basename(src).replace(/-dark(\.\w+)$/, '$1');
     const flat = (v) => slug(v).replace(/-/g, '');
-    if (!isFallback && base.replace(/[^a-z0-9]+/gi, '').toLowerCase().indexOf(flat(name)) === -1) {
+    /* ASK THE REGISTRY, DO NOT MATCH STRINGS (2026-09-08). A club has several
+       true names and the cache file is named from the registry's slug and id,
+       not from the card's line: Internazionale is filed as 110-ita.inter_milan.
+       Comparing the printed name against the filename therefore failed a card
+       whose mark was exactly right. Resolve the printed name to a club the same
+       way the bake does, then accept the mark if it is THAT club's file. The
+       string compare stays as the fallback for a name the registry does not
+       know, so a genuinely mismatched mark is still caught. */
+    const club = index[sport] && index[sport].get(slug(name));
+    const flatBase = base.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+    const belongs = club
+      ? [club.slug, club.display, club.short, club.nick]
+          .some((n) => n && flatBase.indexOf(flat(n)) !== -1)
+        || flatBase.indexOf(String(club.id || ' ')) === 0
+      : flatBase.indexOf(flat(name)) !== -1;
+    if (!isFallback && !belongs) {
       bad(dir + ': the card says ' + JSON.stringify(name) +
           ' and the mark is ' + base);
     }

@@ -1130,6 +1130,27 @@ def render_article(article, provenance, neighbours):
     away_logo_html = club_mark("away")
     home_logo_html = club_mark("home")
 
+    def club_display(side):
+        """The name the REGISTRY gives the club whose mark we just printed, so the
+        card and its alt text cannot disagree. The soccer feed's nick is "Inter
+        Milan" while the registry calls the club "Internazionale"; printing one
+        and writing the other into alt is the kind of mismatch the logo guard
+        exists to catch. Only used where the city line collapsed away, i.e. a
+        club with a single name; a real city/nickname pair is left alone."""
+        alt = (club_logo(side) or {}).get("alt") or ""
+        alt = alt[:-5].strip() if alt.lower().endswith(" logo") else alt.strip()
+        return alt
+
+    def card_lines(side):
+        city, nick = _collapse_team_name(
+            hero.get("%s_city" % side), hero.get("%s_nick" % side))
+        if not city:
+            nick = club_display(side) or nick
+        return city, nick
+
+    away_city_line, away_nick_line = card_lines("away")
+    home_city_line, home_nick_line = card_lines("home")
+
     # The two club marks as CSS variables on the article root. This is what lets
     # legends, form rows, the season timeline and the verdict all show the badge
     # without every one of those blocks having to carry an image in its data —
@@ -1199,10 +1220,8 @@ def render_article(article, provenance, neighbours):
         home_color=esc(hero.get("home_color", "#CE1141")),
         away_logo=away_logo_html, home_logo=home_logo_html, hero_faces=faces_html,
         logo_vars=logo_bits, venue_plate=venue_html,
-        away_city=esc(_city_line(hero.get("away_city"), hero.get("away_nick"))),
-        away_nick=esc(_nick_line(hero.get("away_city"), hero.get("away_nick"))),
-        home_city=esc(_city_line(hero.get("home_city"), hero.get("home_nick"))),
-        home_nick=esc(_nick_line(hero.get("home_city"), hero.get("home_nick"))),
+        away_city=esc(away_city_line), away_nick=esc(away_nick_line),
+        home_city=esc(home_city_line), home_nick=esc(home_nick_line),
         away_line=esc(hero.get("away_line", "")), home_line=esc(hero.get("home_line", "")),
         matchup_arrow=esc(hero.get("arrow", "at")),
         rail=rail_html, nav=nav_html, body=body_html, postgame=postgame_html,
