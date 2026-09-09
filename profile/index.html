@@ -2678,6 +2678,7 @@
                             <tbody><tr class="empty"><td colspan="8">No team split rows yet.</td></tr></tbody>
                           </table>
                         </div>
+                        <div class="tmrx-more-row"><button type="button" class="tmrx-more-btn" id="tmrxTeamMarketMore" hidden></button></div>
                       </div>
 
                       <div class="tmrx-section" id="tmrxPropTypeSection" hidden>
@@ -2709,6 +2710,7 @@
                             <tbody><tr class="empty"><td colspan="7">No numbered markets yet.</td></tr></tbody>
                           </table>
                         </div>
+                        <div class="tmrx-more-row"><button type="button" class="tmrx-more-btn" id="tmrxLineNumberMore" hidden></button></div>
                       </div>
 
                       <div class="tmrx-section" id="tmrxMonthSection" hidden>
@@ -2724,6 +2726,7 @@
                             <tbody><tr class="empty"><td colspan="6">No monthly rows yet.</td></tr></tbody>
                           </table>
                         </div>
+                        <div class="tmrx-sport-picker" id="tmrxSeasonSportPicker" role="tablist" aria-label="League" hidden></div>
                         <div class="tmrx-table-shell" id="tmrxSeasonShell" hidden>
                           <table class="tmrx-table" id="tmrxTableSeasonTop">
                             <thead><tr><th>Season</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -14298,14 +14301,21 @@
         picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxOpponentTab, 'data-tmrx-opponent-tab');
     }
 
-    function tmrxOpponentSyncMore(total) {
-        const btn = document.getElementById('tmrxOpponentMore');
+    /* Every capped depth table says how much it is holding back and opens in
+       full from the same control. `noun` is what is being counted, because a
+       club and a number are not the same thing to a reader. */
+    function tmrxSyncMoreBtn(id, total, limit, showAll, noun) {
+        const btn = document.getElementById(id);
         if (!btn) return;
-        if (total <= TMRX_OPPONENT_LIMIT) { btn.hidden = true; return; }
+        if (total <= limit) { btn.hidden = true; return; }
         btn.hidden = false;
-        btn.textContent = tmrxOpponentShowAll
-            ? 'Show the top ' + TMRX_OPPONENT_LIMIT
-            : 'Show all ' + total;
+        btn.textContent = showAll
+            ? 'Show the top ' + limit
+            : 'Show all ' + total + ' ' + noun;
+    }
+
+    function tmrxOpponentSyncMore(total) {
+        tmrxSyncMoreBtn('tmrxOpponentMore', total, TMRX_OPPONENT_LIMIT, tmrxOpponentShowAll, 'teams');
     }
 
     function tmrxOpponentDraw() {
@@ -14366,6 +14376,7 @@
     let tmrxTeamMarketRows = [];
     let tmrxTeamMarketTab = '';
     let tmrxTeamMarketWired = false;
+    let tmrxTeamMarketShowAll = false;
 
     function tmrxTeamMarketGroups() {
         /* One club is one entry in the tab count, not one row per market. */
@@ -14389,6 +14400,54 @@
     let tmrxLineNumberRows = [];
     let tmrxLineNumberTab = '';
     let tmrxLineNumberWired = false;
+    let tmrxLineNumberShowAll = false;
+
+    /* The season table sat under Month by Month with a League column and no
+       league control, so a 2026 MLB season, a 2026 NHL season and a World Cup
+       run stacked in one list. Same tabs as every other league table here. */
+    let tmrxSeasonRows = [];
+    let tmrxSeasonTab = '';
+    let tmrxSeasonWired = false;
+
+    function tmrxRenderSeason(rows) {
+        if (Array.isArray(rows)) tmrxSeasonRows = rows.slice();
+        if (!tmrxSeasonRows.length) return false;
+        const groups = tmrxLeagueGroups(tmrxSeasonRows,
+            function (row) { return tmrxSplitScoped(row.bucket).sportKey; },
+            function (row) { return row.total_picks; });
+        tmrxSeasonTab = tmrxDefaultLeagueTab(groups, tmrxSeasonTab);
+        const picker = document.getElementById('tmrxSeasonSportPicker');
+        if (picker) {
+            picker.hidden = !groups.length;
+            picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxSeasonTab, 'data-tmrx-season-tab');
+            if (!tmrxSeasonWired) {
+                picker.addEventListener('click', function (e) {
+                    const btn = e.target.closest && e.target.closest('[data-tmrx-season-tab]');
+                    if (!btn) return;
+                    tmrxSeasonTab = btn.getAttribute('data-tmrx-season-tab');
+                    tmrxRenderSeason();
+                });
+                tmrxSeasonWired = true;
+            }
+        }
+        const list = tmrxSeasonRows.filter(function (row) {
+            return tmrxLeagueTab(tmrxSplitScoped(row.bucket).sportKey).key === tmrxSeasonTab;
+        });
+        const shell = document.getElementById('tmrxSeasonShell');
+        const drawn = tmrxRenderDepthTable('tmrxTableSeasonTop', null, list, {
+            sort: 'bucket_desc',
+            labelCells: function (row) {
+                const parts = tmrxSplitScoped(row.bucket);
+                const sport = tmrxSportParts(parts.sportKey);
+                return [
+                    '<td class="name">' + escapeHtml(parts.rest) + '</td>',
+                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
+                ];
+            }
+        });
+        if (shell && drawn) shell.hidden = false;
+        return drawn;
+    }
 
     function tmrxRenderLineNumber(rows) {
         if (Array.isArray(rows)) tmrxLineNumberRows = rows.slice();
@@ -14406,6 +14465,12 @@
                     const btn = e.target.closest && e.target.closest('[data-tmrx-line-number-tab]');
                     if (!btn) return;
                     tmrxLineNumberTab = btn.getAttribute('data-tmrx-line-number-tab');
+                    tmrxLineNumberShowAll = false;
+                    tmrxRenderLineNumber();
+                });
+                const more = document.getElementById('tmrxLineNumberMore');
+                if (more) more.addEventListener('click', function () {
+                    tmrxLineNumberShowAll = !tmrxLineNumberShowAll;
                     tmrxRenderLineNumber();
                 });
                 tmrxLineNumberWired = true;
@@ -14416,12 +14481,13 @@
         });
         const table = document.getElementById('tmrxTableLineNumberTop');
         const tbody = table ? table.querySelector('tbody') : null;
+        tmrxSyncMoreBtn('tmrxLineNumberMore', list.length, TMRX_LINE_NUMBER_LIMIT, tmrxLineNumberShowAll, 'numbers');
         if (!list.length) {
             if (tbody) tbody.innerHTML = '<tr class="empty"><td colspan="7">No numbered markets in this league.</td></tr>';
             return;
         }
         tmrxRenderDepthTable('tmrxTableLineNumberTop', 'tmrxLineNumberSection', list, {
-            limit: TMRX_LINE_NUMBER_LIMIT,
+            limit: tmrxLineNumberShowAll ? 0 : TMRX_LINE_NUMBER_LIMIT,
             labelCells: function (row) {
                 const parts = tmrxSplitScoped(row.bucket);
                 const sport = tmrxSportParts(parts.sportKey);
@@ -14453,6 +14519,12 @@
                     const btn = e.target.closest && e.target.closest('[data-tmrx-team-market-tab]');
                     if (!btn) return;
                     tmrxTeamMarketTab = btn.getAttribute('data-tmrx-team-market-tab');
+                    tmrxTeamMarketShowAll = false;
+                    tmrxRenderTeamMarket();
+                });
+                const more = document.getElementById('tmrxTeamMarketMore');
+                if (more) more.addEventListener('click', function () {
+                    tmrxTeamMarketShowAll = !tmrxTeamMarketShowAll;
                     tmrxRenderTeamMarket();
                 });
                 tmrxTeamMarketWired = true;
@@ -14479,9 +14551,10 @@
             clubs.set(key, entry);
         });
 
-        const ordered = Array.from(clubs.values())
-            .sort(function (a, b) { return b.picks - a.picks; })
-            .slice(0, TMRX_TEAM_MARKET_LIMIT);
+        const ranked = Array.from(clubs.values())
+            .sort(function (a, b) { return b.picks - a.picks; });
+        tmrxSyncMoreBtn('tmrxTeamMarketMore', ranked.length, TMRX_TEAM_MARKET_LIMIT, tmrxTeamMarketShowAll, 'clubs');
+        const ordered = tmrxTeamMarketShowAll ? ranked : ranked.slice(0, TMRX_TEAM_MARKET_LIMIT);
         if (!ordered.length) return;
 
         const html = [];
@@ -14632,19 +14705,7 @@
 
         const months = tmrxRenderDepthTable('tmrxTableMonthTop', 'tmrxMonthSection', byCategory.month,
             { sort: 'bucket_desc', labelCells: plain(tmrxMonthLabel) });
-        const seasonShell = document.getElementById('tmrxSeasonShell');
-        const seasons = tmrxRenderDepthTable('tmrxTableSeasonTop', null, byCategory.season, {
-            sort: 'bucket_desc',
-            labelCells: function (row) {
-                const parts = tmrxSplitScoped(row.bucket);
-                const sport = tmrxSportParts(parts.sportKey);
-                return [
-                    '<td class="name">' + escapeHtml(parts.rest) + '</td>',
-                    '<td class="league">' + escapeHtml(sport[1]) + '</td>'
-                ];
-            }
-        });
-        if (seasonShell && seasons) seasonShell.hidden = false;
+        const seasons = tmrxRenderSeason(byCategory.season);
         if (months || seasons) {
             const monthSection = document.getElementById('tmrxMonthSection');
             if (monthSection) monthSection.hidden = false;
