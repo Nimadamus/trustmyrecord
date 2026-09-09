@@ -259,10 +259,17 @@ def team_injuries(team_id, cap=18):
 
 def game_venue(kickoff_iso, away_abbr, home_abbr):
     """Venue and broadcast for this fixture, off the ESPN scoreboard."""
-    day = (kickoff_iso or "")[:10].replace("-", "")
-    if not day:
+    # ESPN files a game under its EASTERN date; the board timestamps in UTC, so
+    # a night kickoff is already the next UTC day and a single day query missed
+    # every one of them (Patriots at Seahawks is 2026-09-10T00:20Z on the board
+    # and sits on ESPN's 2026-09-09 scoreboard). Scan the day either side.
+    try:
+        day0 = datetime.date.fromisoformat((kickoff_iso or "")[:10])
+    except ValueError:
         return {}
-    d = _get("%s/scoreboard?dates=%s-%s&limit=100" % (SITE_API, day, day))
+    lo = (day0 - datetime.timedelta(days=1)).strftime("%Y%m%d")
+    hi = (day0 + datetime.timedelta(days=1)).strftime("%Y%m%d")
+    d = _get("%s/scoreboard?dates=%s-%s&limit=100" % (SITE_API, lo, hi))
     for e in (d or {}).get("events") or []:
         comp = (e.get("competitions") or [{}])[0]
         abbrs = {((c.get("team") or {}).get("abbreviation") or "").upper()
