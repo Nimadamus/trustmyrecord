@@ -55,6 +55,15 @@ _hspec = importlib.util.spec_from_file_location(
 seo = importlib.util.module_from_spec(_hspec)
 _hspec.loader.exec_module(seo)
 
+# SOCCER_ROOM_20260909. The soccer hub is a research page rather than a table,
+# and everything specific to it (the ESPN club index, form, season rates,
+# trends, head to head, the cards, the filters and the analysis panel) lives in
+# its own module so this builder keeps its shape for the other five sports.
+_sspec = importlib.util.spec_from_file_location(
+    "soccer_hub", os.path.join(HERE, "soccer_hub.py"))
+soccer = importlib.util.module_from_spec(_sspec)
+_sspec.loader.exec_module(soccer)
+
 # NFL_DEEP_PREVIEW_20260909: the deep half of an NFL matchup page (team
 # statistics with league ranks, personnel, injuries, the TMR model and the
 # read). Same generator for every fixture, so next week's game needs no code.
@@ -291,7 +300,8 @@ def fetch_board(sport):
                       "markets": best_markets(g), "priced": bool(g.get("has_sportsbook_odds")),
                       # Soccer's board is seven competitions in one list, so the
                       # fixture alone does not say what a reader is looking at.
-                      "comp": g.get("tournament_name") or g.get("sport_title") or ""})
+                      "comp": g.get("tournament_name") or g.get("sport_title") or "",
+                      "_raw": g if sport == "soccer" else None})
     games.sort(key=lambda x: (x["commence"] or "", x["away"]))
     return games
 
@@ -755,7 +765,46 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None, preview=None
     return page_head(title, desc, url, ld) + "".join(b)
 
 
+FOOT = "</body>" + chr(10) + "</html>" + chr(10)
+
+
+def render_soccer_hub(games, built_at):
+    """The soccer room. Same shell and same sitemap entry, different body."""
+    title = "Soccer Handicapping: Form, Stats, Trends and Today's Odds"
+    desc = ("Every soccer fixture on the board with the price beside the research: recent form, "
+            "season attacking and defensive rates, expected goals, over/under and both teams to "
+            "score trends, home and away records and head to head.")
+    url = SITE + "/handicapping/soccer/"
+    data = soccer.SoccerData()
+    soccer.load_index(data)
+    rich = soccer.build_games(data, games)
+    items = [{"@type": "ListItem", "position": i + 1,
+              "name": "%s at %s" % (g["away_name"], g["home_name"])}
+             for i, g in enumerate(rich)]
+    ld = {"@context": "https://schema.org", "@graph": [
+        breadcrumb_ld([("Handicapping", "/handicapping/"), ("Soccer", None)]),
+        {"@type": "ItemList", "itemListElement": items}]}
+    helpers = {"esc": esc, "odds_str": odds_str, "line_str": line_str,
+               "kickoff": kickoff, "long_date": long_date}
+    extras = """        <section class="sh-sec">
+            <div class="sh-sec-head"><h2>Elsewhere on TrustMyRecord</h2></div>
+            <ul class="sh-links">
+                <li><a href="/handicapping/">The handicapping hub, every sport</a></li>
+                <li><a href="/soccer-pick-tracker/">Soccer pick tracker</a></li>
+                <li><a href="/sportsbook/">The sportsbook, every market</a></li>
+                <li><a href="/handicapping/mlb/">MLB matchups and probable pitchers</a></li>
+                <li><a href="/betlegend-pro/">BetLegend Pro, the research database</a></li>
+            </ul>
+        </section>
+"""
+    body = soccer.render_body(rich, built_at, helpers, extras, gotw_block("soccer"))
+    return (page_head(title, desc, url, ld) + BODY_TAG + soccer.CSS + body
+            + mlb.FOOT_SCRIPTS + FOOT)
+
+
 def render_hub(sport, games, built_at):
+    if sport == "soccer":
+        return render_soccer_hub(games, built_at)
     label = SPORTS[sport]["label"]
     hub_only = bool(SPORTS[sport].get("hub_only"))
     title = ("%s Handicapping: Today's Board, Odds and Totals" % label if hub_only
