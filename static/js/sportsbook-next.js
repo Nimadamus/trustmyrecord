@@ -1357,11 +1357,13 @@
                 return ((a.line == null ? 0 : a.line) - (b.line == null ? 0 : b.line))
                     || (String(a.side).toLowerCase() === 'under' ? 1 : -1);
             });
-            // MLB names the player's club in full ("Detroit Tigers") where the
-            // NFL feed gives an abbreviation, and a full club name in a badge
-            // this small wraps the row. Last word only, which is the nickname.
+            // The feed's own name for the club, not a shortened one. Taking the
+            // last word reads as the nickname for a pro club ("Detroit Tigers"
+            // -> Tigers) and as nonsense for a college one ("Miami Florida" ->
+            // Florida, "North Carolina State" -> State), which is exactly what
+            // it did once college props arrived. The badge is small caps and
+            // wraps cleanly, so the full name stays.
             var team = (list[0] && list[0].playerTeam) || '';
-            if (team.length > 4) team = team.split(/\s+/).pop();
             var cells = list.map(function (i) {
                 var top = (String(i.side).toLowerCase() === 'under' ? 'U ' : 'O ') + fmtLine(i.line);
                 return '<span class="sbn-dcell">' + chip({
