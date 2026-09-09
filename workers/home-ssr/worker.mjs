@@ -274,10 +274,16 @@ class NthHtmlCell {
    row is exactly the same size and weight as a row wearing a club logo.
    Byte-identical in static/js/tmr-home-live.js, static/js/tmr-ds-avatar.js and
    the API's utils/avatarIdentity.js (avatarNeutralSvg). */
-const NEUTRAL_BODY = '<circle cx="50" cy="50" r="50" fill="#FFFFFF"/>'
-  + '<circle cx="50" cy="50" r="48.2" fill="none" stroke="#94A3B8" stroke-opacity=".9" stroke-width="3.6"/>'
-  + '<circle cx="50" cy="37" r="15" fill="#94A3B8"/>'
-  + '<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>';
+/* LAST RESORT ONLY, AND NOT A GREY PERSON (2026-09-08). Every avatar slot
+   now resolves through the avatar route, which composes that member's own
+   assigned portrait. This is what an <img> falls back to when that route is
+   unreachable, so it must not be the shared silhouette it used to be: it is
+   an empty jersey in TMR's own colour, which reads as a kit rather than as a
+   person nobody recognises. */
+const NEUTRAL_BODY = '<circle cx="50" cy="50" r="50" fill="#111827"/>'
+  + '<circle cx="50" cy="50" r="48.2" fill="none" stroke="#35E0CB" stroke-opacity=".55" stroke-width="3.6"/>'
+  + '<path d="M12 100c0-21 17-33 38-33s38 12 38 33z" fill="#35E0CB" opacity=".22"/>'
+  + '<path d="M40 68h20l-10 15z" fill="#35E0CB" opacity=".5"/>';
 /* As a data URI, for the <img> slots: swapping an <img> src keeps the element
    and therefore the class that sized and rounded it, so a picture that fails to
    load cannot come back a different size. */
@@ -288,9 +294,16 @@ const NEUTRAL_URI = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
 /* The neutral competitor face. Inline rather than a request, for the same
    reason the badge is: the payload already says there is nothing to fetch.
    Kept identical in static/js/tmr-home-live.js. */
-function compNeutral(username) {
-  return '<svg class="comp-av" viewBox="0 0 100 100" role="img" aria-label="' + esc(username || 'TrustMyRecord member') + '">' +
-    NEUTRAL_BODY + '</svg>';
+/* ASSIGNED PORTRAIT, NOT A SHARED SILHOUETTE (2026-09-08). This drew one grey
+   figure for every member with no photo, so a leaderboard of twenty read as
+   one account twenty times. It now points at the avatar route, which composes
+   that member's own generated fan - their face, their haircut, their league's
+   kit - so the homepage shows the same face as every other surface without
+   this file having to carry the generator. */
+function compNeutral(username, id) {
+  var key = (id != null && id !== '') ? id : username;
+  return '<img class="comp-av" src="' + esc('https://trustmyrecord-api.onrender.com/api' + '/users/' + encodeURIComponent(key || '') + '/avatar') +
+    '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block">';
 }
 
 /* The TMR badge for a competitor whose favourite team has no club mark (a
@@ -343,7 +356,7 @@ function compAvatar(c) {
   if (!c.avatar_url && c.avatar && c.avatar.team) return compBadge(c.avatar, c.username);
   if (c.avatar_url) return `<img class="comp-av" src="${esc(c.avatar_url)}" alt="" ` +
     `onerror="this.onerror=null;this.src='${NEUTRAL_URI}'">`;
-  return compNeutral(c.username);
+  return compNeutral(c.username, c.id);
 }
 
 function compDelta(row) {

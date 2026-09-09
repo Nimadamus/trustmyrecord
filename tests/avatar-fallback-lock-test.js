@@ -89,20 +89,40 @@ ok(AV.html({ username: 'a', avatar: LOGO_ROW }).indexOf('data-tmr-logo="1"') !==
   'the mark is rendered as its own image, so it can be contained rather than cropped');
 ok(AV.identity({ username: 'nobody' }).logo === null, 'no team, no mark');
 
-/* THE NEUTRAL FACE (2026-09-07). No picture and no favourite team is the only
-   case left that draws neither a club mark nor a club abbreviation, and it must
-   not print the member's two letters: a leaderboard of "MA" and "FI" tiles is
-   exactly what this replaced. Same disc and ring as the club-mark face, so the
-   two sit at the same size in the same row. */
+/* ASSIGNED PORTRAITS (2026-09-08). The shared grey silhouette is gone. It was
+   ONE picture for all 89 members with no photo, so a leaderboard of twenty read
+   as one account twenty times. Every faceless member now gets their own
+   generated fan, seeded off their user id. The rules locked here are Nima's:
+   never a silhouette, never a blank circle, never initials, and a different
+   face per member. */
+const FACES = new Set();
 for (const who of ['makaveli66', 'Firelink', 'henrywalllace', '11space']) {
   const face = AV.svg(AV.identity({ username: who }));
+  FACES.add(face);
   ok(face.indexOf('<text') === -1, `${who} must not get a lettered tile`);
   ok(face.indexOf('>' + AV.initials('', who) + '<') === -1, `${who} must not get their initials`);
-  ok(face.includes('<circle cx="50" cy="50" r="50" fill="#FFFFFF"/>') && face.includes('r="48.2"'),
-    `${who} must get the same disc and ring as a club mark, so the sizes match`);
-  ok(face.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
-    `${who} must get the silhouette the API draws`);
+  ok(face.indexOf('fill="#94A3B8"') === -1, `${who} must never get the old grey silhouette back`);
+  ok(face.includes('viewBox="0 0 100 100"'), `${who} sits in the same frame as a club mark`);
+  ok(face.length > 600, `${who} must get a drawn face, not an empty circle`);
 }
+ok(FACES.size === 4, 'four members, four different faces');
+
+/* Deterministic, and keyed on the id so a rename does not reroll the face. */
+const stripLabel = (v) => v.replace(/(aria-label|title)="[^"]*"/g, '');
+ok(stripLabel(AV.svg(AV.identity({ id: 626, username: 'makaveli66' })))
+   === stripLabel(AV.svg(AV.identity({ id: 626, username: 'renamed' }))),
+  'the seed is the user id, so a username change keeps the face');
+
+/* League-aware: a member who told us their sports wears that kit. */
+ok(AV.svg(AV.identity({ id: 5, username: 'a', favorite_sports: ['MLB'] }))
+   !== AV.svg(AV.identity({ id: 5, username: 'a', favorite_sports: ['NBA'] })),
+  'a baseball fan and a basketball fan are not dressed the same');
+
+/* At scale, which is the whole point of the change. */
+const many = new Set();
+for (let i = 1; i <= 200; i += 1) many.add(AV.svg(AV.identity({ id: i, username: 'u' + i })));
+ok(many.size >= 190, `only ${many.size} distinct faces across 200 members`);
+
 /* A real club always arrives WITH its logo url, so in the browser a club is
    always drawn as its mark. The lettered badge survives only in the API, where
    `logo` is the club we know and `logo_data` is the fetch that can fail; that
@@ -110,20 +130,17 @@ for (const who of ['makaveli66', 'Firelink', 'henrywalllace', '11space']) {
 const CLUB_FACE = AV.svg(AV.identity({ username: 'a', avatar: { kind: 'team-logo', mark: 'PIT', primary: '#101820', secondary: '#FFB612', ink: '#FFFFFF', team: 'Pittsburgh Steelers', logo: 'https://a.espncdn.com/i/teamlogos/nfl/500/pit.png' } }));
 ok(CLUB_FACE.indexOf('<text') === -1 && CLUB_FACE.includes('stroke="#101820"'),
   "a real club gets its own disc, in the club's colour, and never letters");
-ok(CLUB_FACE.indexOf('fill="#94A3B8"') === -1,
-  'a member WITH a club never falls through to the neutral silhouette');
 
 /* NO_LETTERS_WITHOUT_A_REAL_CLUB_20260907: favourite teams are free text.
-   "LaoAngelaRam" and "DoBronx" are not clubs, they resolve to no logo, and a
-   "LAO" tile is initials wearing a club's clothes. Those go neutral. */
+   "LaoAngelaRam" and "DoBronx" are not clubs, and a "LAO" tile is initials
+   wearing a club's clothes. Those get a portrait instead. */
 for (const junk of [
   { mark: 'LAO', team: 'LaoAngelaRam' },
   { mark: 'DOB', team: 'DoBronx' },
 ]) {
   const face = AV.svg(AV.identity({ username: 'x', avatar: Object.assign({ kind: 'team', primary: '#1D4ED8', secondary: '#60A5FA', ink: '#FFFFFF', logo: null }, junk) }));
   ok(face.indexOf('<text') === -1, `${junk.team} is not a club and must not letter`);
-  ok(face.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
-    `${junk.team} must fall through to the neutral silhouette`);
+  ok(face.indexOf('fill="#94A3B8"') === -1, `${junk.team} must not get the old silhouette`);
 }
 
 /* ---------- 2. deterministic, and distinguishable -------------------------- */
@@ -167,13 +184,18 @@ const edge = fs.readFileSync(path.join(ROOT, 'workers', 'home-ssr', 'worker.mjs'
 for (const [name, src] of [['tmr-home-live.js', home], ['workers/home-ssr/worker.mjs', edge]]) {
   ok(src.includes('function compBadge'), `${name} must render the badge, not an empty circle`);
   ok(src.includes('c.avatar && c.avatar.team'), `${name} must read the identity off the payload`);
-  /* 2026-09-07: no picture and no favourite team is the neutral silhouette, and
-     the two-letter tile ("MA", "FI") that used to fill that slot is gone. */
-  ok(src.includes('function compNeutral'), `${name} must draw the neutral face`);
+  /* 2026-09-08: no picture and no favourite team is that member's own
+     assigned portrait; the shared silhouette and the letter tile are both gone. */
+  ok(src.includes('function compNeutral'), `${name} must draw a face for a member with no club`);
   ok(!/comp-avl">' \\+ initials|comp-avl">\\$\\{initials/.test(src),
     `${name} must not fall back to a lettered chip`);
-  ok(src.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
-    `${name} must draw the same silhouette as the API`);
+  /* 2026-09-08: these two carry no generator of their own. They point the slot
+     at the avatar route, which composes that member's assigned portrait, so the
+     homepage cannot drift from the face the rest of the site draws. */
+  ok(src.includes("/users/' + encodeURIComponent(key"),
+    `${name} must resolve a faceless member through the avatar route`);
+  ok(!src.includes('<path d="M20 84a30 30 0 0 1 60 0Z" fill="#94A3B8"/>'),
+    `${name} must not draw the retired grey silhouette`);
   ok(src.includes('function compMark'), `${name} must render the club mark`);
   ok(src.includes('c.avatar && c.avatar.logo'), `${name} must prefer the club mark over the lettered badge`);
   ok(src.includes('object-fit:contain'), `${name} must contain the mark, not crop it to the circle`);
