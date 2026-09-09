@@ -382,6 +382,90 @@ def roster(sport, espn_id):
     return out
 
 
+def team_form(sport, espn_id, season, limit=5):
+    """Real results, most recent first, from the league's own schedule feed.
+
+    HUB_FORM_20260909. This is the shape the soccer room already uses and the
+    reason its cards read as research: not "W10" as a word, but the actual last
+    five games with who they were against and what the score was. Returns
+    (pills, record, note) where pills is a list of dicts.
+
+    Falls back to the previous season when the current one has not started, so a
+    week one card still shows form instead of an empty strip."""
+    league = ESPN_PATH.get(sport)
+    if not league or not espn_id:
+        return [], None, None
+    for yr, prev in ((season, False), (season - 1, True)):
+        d = get("%s/teams/%s/schedule?season=%d" % (SITE_API % league, espn_id, yr), ttl=21600)
+        out = []
+        for ev in (d or {}).get("events") or []:
+            comp = (ev.get("competitions") or [{}])[0]
+            sides = comp.get("competitors") or []
+            if len(sides) != 2:
+                continue
+            mine = next((c for c in sides if str((c.get("team") or {}).get("id")) == str(espn_id)), None)
+            them = next((c for c in sides if c is not mine), None)
+            if not mine or not them:
+                continue
+            my_score = ((mine.get("score") or {}).get("displayValue"))
+            their_score = ((them.get("score") or {}).get("displayValue"))
+            if my_score is None or their_score is None:
+                continue          # not played yet
+            if mine.get("winner") is True:
+                res = "W"
+            elif them.get("winner") is True:
+                res = "L"
+            else:
+                res = "T"
+            out.append({"r": res, "for": my_score, "against": their_score,
+                        "opp": (them.get("team") or {}).get("abbreviation") or "",
+                        "home": mine.get("homeAway") == "home",
+                        "date": (ev.get("date") or "")[:10]})
+        if out:
+            out.reverse()
+            recent = out[:limit]
+            w = sum(1 for x in out if x["r"] == "W")
+            l = sum(1 for x in out if x["r"] == "L")
+            t = sum(1 for x in out if x["r"] == "T")
+            rec = "%d-%d%s" % (w, l, ("-%d" % t) if t else "")
+            note = ("%d season" % yr) if not prev else ("%d season" % yr)
+            return recent, rec, note
+    return [], None, None
+
+
+def depth_starter(sport, espn_id, season, position="qb"):
+    """The rank 1 athlete at a position, from the league's own depth chart.
+
+    HUB_DEPTH_20260909. The unattended bake has no NFL_ADMIN_TOKEN, so it cannot
+    read TrustMyRecord's depth chart, and the first keyless fallback picked the
+    lowest jersey. That put Mac Jones on the 49ers card ahead of Brock Purdy and
+    Tyler Huntley on the Ravens ahead of Lamar Jackson, which is a wrong fact
+    published as a fact. ESPN publishes the real depth chart keylessly and ranks
+    it, so rank 1 is the answer. Returns an athlete id, or None."""
+    league = CORE_LEAGUE.get(sport)
+    if not league or not espn_id:
+        return None
+    base = CORE_API % league
+    for yr in (season, season - 1):
+        d = get("%s/seasons/%d/teams/%s/depthcharts" % (base, yr, espn_id), ttl=21600)
+        for item in (d or {}).get("items") or []:
+            pos = (item.get("positions") or {}).get(position) or {}
+            best = None
+            for a in pos.get("athletes") or []:
+                try:
+                    rank = int(a.get("rank"))
+                except (TypeError, ValueError):
+                    continue
+                if rank == 1:
+                    best = a
+                    break
+            if best:
+                m = re.search(r"/athletes/(\d+)", str((best.get("athlete") or {}).get("$ref") or ""))
+                if m:
+                    return m.group(1)
+    return None
+
+
 def initials(name):
     parts = [p for p in re.split(r"\s+", str(name or "").strip()) if p]
     if not parts:

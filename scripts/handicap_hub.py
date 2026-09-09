@@ -94,7 +94,7 @@ def _card_tags(hist, away, home, unit):
     return tags[:4]
 
 
-def _faces(sport, away, home, extras):
+def _faces(sport, away, home, extras, sim_starters=None, season=None):
     """The two people the game turns on, with the league's own photography.
 
     HUB_FACES_20260909. Nima: use meaningful player imagery, and do not create
@@ -109,17 +109,43 @@ def _faces(sport, away, home, extras):
     if sport != "nfl":
         return ""
     teams_by_name, qb1, _inj = extras or ({}, {}, {})
-    if not teams_by_name or not qb1:
-        return ""
     cells = []
     for side in (away, home):
+        person = {}
+        name = None
+        # TMR's own depth chart first: it is the authoritative starter and it is
+        # refreshed daily. It needs NFL_ADMIN_TOKEN, which the GitHub runner does
+        # NOT carry, so the first unattended bake produced a hub with zero faces.
+        # ESPN's roster is the keyless fallback and it is on every runner.
         t = (teams_by_name or {}).get(side["name"]) or {}
         starter = (qb1 or {}).get(t.get("franchise_id")) or {}
-        name = starter.get("full_name")
+        roster = enrich.roster(sport, side.get("espn_id")) or {}
+        if starter.get("full_name"):
+            name = starter["full_name"]
+            person = roster.get(enrich.norm_name(name)) or {}
+        else:
+            # Fallback for the unattended bake, where NFL_ADMIN_TOKEN is absent.
+            # NOT the lowest jersey: that put Drew Lock on the Seattle card ahead
+            # of Sam Darnold. TrustMyRecord's own simulator publishes the expected
+            # starters keylessly and it is already cached from the matchup pages,
+            # so it costs nothing and it agrees with the deep page by construction.
+            # ESPN's own depth chart, rank 1. Keyless, so it works on the
+            # runner, and it is RIGHT: the lowest-jersey guess put Mac Jones on
+            # the 49ers card ahead of Brock Purdy and Tyler Huntley on the
+            # Ravens ahead of Lamar Jackson. A wrong starter published as a fact
+            # is worse than no face at all.
+            aid = enrich.depth_starter(sport, side.get("espn_id"), season)
+            if aid:
+                person = next((q for q in roster.values() if str(q.get("id")) == str(aid)), {})
+                name = person.get("name")
+            if not name:
+                for who in (sim_starters or {}).get(side["name"], []):
+                    if (who.get("role") or "").upper() == "QB" and who.get("name"):
+                        name = who["name"]
+                        person = roster.get(enrich.norm_name(name)) or {}
+                        break
         if not name:
             return ""
-        person = (enrich.roster(sport, side.get("espn_id")) or {}).get(
-            enrich.norm_name(name)) or {}
         shot = person.get("headshot")
         face = (('<img class="hx-face-sm" src="%s" alt="%s" width="72" height="72" '
                  'loading="lazy" decoding="async">' % (esc(shot), esc(name))) if shot else
@@ -129,6 +155,85 @@ def _faces(sport, away, home, extras):
                      '<span class="hx-face-name">%s<small>QB</small></span></span>'
                      % (esc(side.get("color") or "#1D7FE8"), face, esc(name)))
     return '                    <div class="hx-faces">%s</div>\n' % "".join(cells)
+
+
+# The stats a handicapper actually opens the page for. Per sport, because the
+# sports do not share metrics: points scored and allowed carry football and
+# basketball, goals carry hockey. Each row is (label, ESPN key, per-game?,
+# higher-is-better).
+CARD_STATS = {
+    "nfl": [("Points scored", "record.avgPointsFor", False, True),
+            ("Points allowed", "record.avgPointsAgainst", False, False),
+            ("Yards per game", "passing.netYardsPerGame", False, True)],
+    "nba": [("Points scored", "record.avgPointsFor", False, True),
+            ("Points allowed", "record.avgPointsAgainst", False, False)],
+    "nhl": [("Goals for", "record.avgPointsFor", False, True),
+            ("Goals against", "record.avgPointsAgainst", False, False)],
+}
+
+
+def _statstrip(sport, away, home, season):
+    """Real season numbers on the card, not just the line.
+
+    HUB_CARD_STATS_20260909. Nima, looking at the first live hub: "no real
+    stats, just lines". He was right: the card carried the market, the streak
+    and a head to head average, and nothing about how either club has actually
+    been playing. This is the same ESPN season feed the matchup page uses, so
+    the two never disagree, and it is keyless, so it works on the runner.
+
+    Renders nothing at all unless BOTH clubs answer. A one-sided comparison is
+    not a comparison."""
+    rows = CARD_STATS.get(sport)
+    if not rows or not away.get("espn_id") or not home.get("espn_id"):
+        return "", None
+    a_stats, a_yr, a_prev = enrich.team_stats(sport, away["espn_id"], season)
+    h_stats, h_yr, _hp = enrich.team_stats(sport, home["espn_id"], season)
+    if not a_stats or not h_stats:
+        return "", None
+    out = []
+    for label, key, _per, higher in rows:
+        av, hv = enrich.statf(a_stats, key), enrich.statf(h_stats, key)
+        if av is None or hv is None:
+            continue
+        a_win = (av > hv) if higher else (av < hv)
+        share = 50.0
+        if av > 0 and hv > 0:
+            share = 100.0 * av / (av + hv)
+            if not higher:
+                share = 100.0 - share
+            share = max(8.0, min(92.0, share))
+        out.append(
+            '<div class="hx-cstat">'
+            '<span class="hx-cstat-v%s">%s</span>'
+            '<span class="hx-cstat-l">%s</span>'
+            '<span class="hx-cstat-v hx-cstat-v--home%s">%s</span>'
+            '<span class="hx-cstat-bar"><i style="width:%.1f%%"></i>'
+            '<i style="width:%.1f%%"></i></span></div>'
+            % (" is-win" if a_win else "", esc(enrich.stat(a_stats, key)),
+               esc(label), "" if a_win else " is-win", esc(enrich.stat(h_stats, key)),
+               share, 100.0 - share))
+    if not out:
+        return "", None
+    note = ("%d season" % a_yr) if a_yr else None
+    if a_prev:
+        note = "%d season, complete" % a_yr
+    return ('                    <div class="hx-cstats">%s</div>' % "".join(out)) + "\n", note
+
+
+def _form_pills(pills):
+    """The last five results, most recent first, with the score on hover.
+
+    HUB_FORM_20260909. The soccer room proved this: a card reads as research
+    when it shows the actual results rather than the word "W10". Same component,
+    same meaning, real final scores from the league's own schedule feed."""
+    if not pills:
+        return ""
+    out = []
+    for p in pills:
+        title = "%s %s-%s %s %s" % (p["r"], p["for"], p["against"],
+                                    "vs" if p["home"] else "at", p["opp"])
+        out.append('<i data-r="%s" title="%s">%s</i>' % (esc(p["r"]), esc(title), esc(p["r"])))
+    return '<span class="hx-seq">%s</span>' % "".join(out)
 
 
 def _team_row(side, other, ml, spreads):
@@ -141,15 +246,17 @@ def _team_row(side, other, ml, spreads):
             fav = " is-fav" if float(ml[side["name"]]) < float(ml[other["name"]]) else ""
     except (TypeError, ValueError):
         fav = ""
-    sub = side.get("record") or side.get("division") or ""
+    bits = [b for b in (side.get("form_record"), side.get("record"), side.get("division")) if b]
+    sub = " &middot; ".join(esc(b) for b in bits[:2])
     return ('                        <div class="hx-gteam%s">%s'
             '<span class="hx-gteam-name">%s%s</span>'
             '<span class="hx-gteam-price">%s</span>'
-            '<span class="hx-gteam-price">%s</span></div>\n' % (
+            '<span class="hx-gteam-price">%s</span>%s</div>\n' % (
                 fav, ui.logo_img(side.get("logo"), "", "", 34),
                 esc(side.get("short") or side["name"]),
-                ('<small>%s</small>' % esc(sub)) if sub else "",
-                esc(line or ""), esc(price or "")))
+                ('<small>%s</small>' % sub) if sub else "",
+                esc(line or ""), esc(price or ""),
+                _form_pills(side.get("form"))))
 
 
 def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
@@ -168,8 +275,10 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
         except ValueError:
             dates = ""
     sb = enrich.scoreboard(sport, dates) if dates else {}
+    season = hp._season_for(sport, games[0].get("commence") if games else None)
 
     cards, days = [], []
+    stat_note = None
     for g in games:
         key = tuple(sorted([enrich.norm_name(g["away"]), enrich.norm_name(g["home"])]))
         ev = sb.get(key) or {}
@@ -181,6 +290,11 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
             # A club at 0-0 says nothing in week one; its division says more.
             if side.get("record") and not side["record"].replace("-", "").strip("0"):
                 side["record"] = None
+            # The last five, with real scores, from the league's own schedule.
+            pills, rec, fnote = enrich.team_form(sport, side.get("espn_id"), season)
+            side["form"], side["form_record"] = pills, rec
+            if fnote and not stat_note:
+                stat_note = fnote
 
         mk = hp.markets(g, away, home)
         ml = (g.get("markets") or {}).get("h2h") or {}
@@ -202,6 +316,20 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
         if g.get("comp"):
             when.append(esc(g["comp"]))
 
+        # The simulator's expected starters, keyless and already cached by the
+        # matchup build. One call per fixture, and it is the same answer the deep
+        # page shows.
+        sim_starters = {}
+        if sport == "nfl":
+            sim = enrich.simulate(g.get("event_id"))
+            for which, side in (("away", away), ("home", home)):
+                block = ((sim or {}).get("roster") or {}).get(which) or {}
+                sim_starters[side["name"]] = block.get("expected_starters") or []
+
+        strip, note = _statstrip(sport, away, home, season)
+        if note and not stat_note:
+            stat_note = note
+
         tags = []
         tot = (mk.get("total") or {}).get("point")
         if tot:
@@ -222,7 +350,7 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                 esc(day), esc(g.get("commence") or ""), esc(bld.game_url(sport, g)),
                 " &middot; ".join(when),
                 _team_row(away, home, ml, spreads) + _team_row(home, away, ml, spreads),
-                _faces(sport, away, home, extras),
+                _faces(sport, away, home, extras, sim_starters, season) + strip,
                 "".join(tags)))
 
     if cards:
@@ -255,9 +383,11 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
     priced = sum(1 for g in games if g.get("priced"))
     lede = None
     if games:
-        lede = ("%d game%s on the board, %d priced. Every card carries the line, each club's "
-                "record and its current form, and the full research page for a matchup is one "
-                "click away." % (len(games), "" if len(games) == 1 else "s", priced))
+        lede = ("%d game%s on the board, %d priced. Every card carries the line, both clubs' "
+                "season rates%s, their current form and the starting quarterbacks, with the full "
+                "research page one click away."
+                % (len(games), "" if len(games) == 1 else "s", priced,
+                   (" from the %s" % stat_note) if stat_note else ""))
 
     title = "%s Handicapping: Odds, Trends and Matchup Research" % label
     desc = ("Every %s game on the board with the moneyline, the spread and the total, each club's "
