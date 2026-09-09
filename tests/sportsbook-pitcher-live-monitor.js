@@ -4,12 +4,13 @@
  *
  * Loads the real page, reads the rendered "Probable Pitcher" line for every MLB
  * slot together with that game's own start time, and cross-checks each one
- * against ESPN's probables for that game's Eastern-time date. Fails (exit 1) when:
+ * against MLB StatsAPI's probables for that game's Eastern-time date - the source
+ * the board itself reads. Fails (exit 1) when:
  *
  *   - the board shows MLB games but renders no pitcher lines at all
  *   - every MLB slot is TBD (the Jul 23 2026 all-TBD outage signature)
- *   - a slot shows TBD while ESPN has a named starter for that team on that ET date
- *   - a slot shows a name ESPN does not have for that team on that ET date
+ *   - a slot shows TBD while MLB has a named starter for that team on that ET date
+ *   - a slot shows a name MLB does not have for that team on that ET date
  *     (stale / wrong-slate pitcher — the other half of the Jul 23 bug)
  *
  * Skips cleanly (exit 0) when there is no MLB slate or ESPN is unreachable, so
@@ -22,6 +23,20 @@ const { chromium } = require('@playwright/test');
 
 const URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
 const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard';
+/* CHECK THE SOURCE THE BOARD ACTUALLY READS (2026-09-09).
+   This monitor cross-checked the board against ESPN. The board does not read
+   ESPN: since MLB_PROBABLES_STATSAPI_20260908 it reads MLB's own StatsAPI,
+   because ESPN was naming starters MLB had not entered and getting them wrong -
+   on 2026-09-08 ESPN had Max Fried on Sep 9 and Carlos Rodon on Sep 10 while
+   MLB had Will Warren and Max Fried.
+
+   So an ESPN-only name is not staleness, it is the two sources disagreeing, and
+   failing the job on it made the monitor cry wolf: on 2026-09-09 it failed on
+   Atlanta and Houston showing TBD when MLB StatsAPI itself said TBD for both.
+
+   The failing comparison is now board vs StatsAPI - real drift, the thing this
+   job exists to catch. ESPN is still fetched and still reported, as a note. */
+const STATSAPI = 'https://statsapi.mlb.com/api/v1/schedule';
 
 /* FOLD ACCENTS BEFORE COMPARING (2026-09-09). `.replace(/[^a-z0-9]/g,'')` drops
    an accented letter entirely, so the board's "Cristopher Sanchez" keyed as
@@ -152,38 +167,72 @@ function skip(msg) { console.log('SKIP: ' + msg); process.exit(0); }
   const ms = dated.map((s) => new Date(s.commence).getTime()).sort((a, b) => a - b);
   const range = etDate(ms[0]) + '-' + etDate(ms[ms.length - 1]);
 
-  let espn;
+  const isoRange = (r) => {
+    const [a, b] = String(r).split('-');
+    const iso = (d) => d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6, 8);
+    return { start: iso(a), end: iso(b || a) };
+  };
+
+  /* THE AUTHORITY: MLB's own schedule, the club-entered record the board reads. */
+  let stats;
   try {
-    const r = await fetch(ESPN + '?dates=' + encodeURIComponent(range) + '&limit=200');
+    const { start, end } = isoRange(range);
+    const r = await fetch(STATSAPI + '?sportId=1&startDate=' + start + '&endDate=' + end
+      + '&hydrate=probablePitcher,team');
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    espn = await r.json();
+    stats = await r.json();
   } catch (e) {
-    skip('ESPN unreachable (' + e.message + ') — not treating that as a site regression');
+    skip('MLB StatsAPI unreachable (' + e.message + ') — not treating that as a site regression');
   }
 
-  // "teamKey|YYYYMMDD" -> { names: Set }  (present but empty = ESPN says no starter yet)
+  // "teamKey|YYYYMMDD" -> Set of names (present but empty = MLB says no starter yet)
   const expected = new Map();
-  (espn.events || []).forEach((evt) => {
-    const comp = (evt.competitions || [])[0];
-    if (!comp || !Array.isArray(comp.competitors)) return;
-    const dk = etDate(new Date(evt.date || comp.date || '').getTime());
-    comp.competitors.forEach((c) => {
-      const a = (c.probables || [])[0] && (c.probables || [])[0].athlete;
-      let nm = a ? (a.displayName || a.fullName || a.shortName || '') : '';
-      if (/^tbd$/i.test(String(nm).trim())) nm = '';
-      const t = c.team || {};
-      [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation]
-        .map(key).filter(Boolean)
-        .forEach((k) => {
-          const id = k + '|' + dk;
-          if (!expected.has(id)) expected.set(id, new Set());
-          if (nm) expected.get(id).add(nm.trim());
-        });
+  const addName = (map, team, dk, nm) => {
+    [team.displayName, team.shortDisplayName, team.name, team.nickname, team.location,
+      team.abbreviation, team.teamName, team.locationName, team.shortName]
+      .map(key).filter(Boolean)
+      .forEach((k) => {
+        const id = k + '|' + dk;
+        if (!map.has(id)) map.set(id, new Set());
+        if (nm) map.get(id).add(nm.trim());
+      });
+  };
+  (stats.dates || []).forEach((day) => {
+    (day.games || []).forEach((g) => {
+      const dk = etDate(new Date(g.gameDate || '').getTime()) || String(day.date || '').replace(/-/g, '');
+      ['away', 'home'].forEach((side) => {
+        const entry = (g.teams || {})[side] || {};
+        let nm = ((entry.probablePitcher || {}).fullName || '').trim();
+        if (/^tbd$/i.test(nm)) nm = '';
+        addName(expected, entry.team || {}, dk, nm);
+      });
     });
   });
-  if (!expected.size) skip('ESPN returned no MLB events for ' + range);
+  if (!expected.size) skip('MLB StatsAPI returned no games for ' + range);
+
+  /* ESPN stays in the run as a NOTE. Where it names a starter MLB has not
+     entered yet, that is worth seeing in the log and is never a failure. */
+  const espnNames = new Map();
+  try {
+    const r = await fetch(ESPN + '?dates=' + encodeURIComponent(range) + '&limit=200');
+    if (r.ok) {
+      const espn = await r.json();
+      (espn.events || []).forEach((evt) => {
+        const comp = (evt.competitions || [])[0];
+        if (!comp || !Array.isArray(comp.competitors)) return;
+        const dk = etDate(new Date(evt.date || comp.date || '').getTime());
+        comp.competitors.forEach((c) => {
+          const a = (c.probables || [])[0] && (c.probables || [])[0].athlete;
+          let nm = a ? (a.displayName || a.fullName || a.shortName || '') : '';
+          if (/^tbd$/i.test(String(nm).trim())) nm = '';
+          addName(espnNames, c.team || {}, dk, nm);
+        });
+      });
+    }
+  } catch (e) { /* a note nobody gets is not a regression */ }
 
   const problems = [];
+  const notes = [];
   let checked = 0;
   dated.forEach((s) => {
     const dk = etDate(new Date(s.commence).getTime());
@@ -198,7 +247,17 @@ function skip(msg) { console.log('SKIP: ' + msg); process.exit(0); }
     checked++;
     if (/^TBD$/i.test(s.pitcher)) {
       if (names.size) {
-        problems.push(s.team + ' (' + dk + ') shows TBD but ESPN lists ' + [...names].join(' / '));
+        problems.push(s.team + ' (' + dk + ') shows TBD but MLB lists ' + [...names].join(' / '));
+      } else {
+        /* MLB has not named one either. If ESPN has, say so and move on: the
+           board is faithful to its source, which is the whole contract. */
+        const ahead = new Set();
+        cands.forEach((k) => {
+          const set = espnNames.get(k + '|' + dk);
+          if (set) set.forEach((n) => ahead.add(n));
+        });
+        if (ahead.size) notes.push(s.team + ' (' + dk + ') is TBD at MLB; ESPN already lists '
+          + [...ahead].join(' / '));
       }
       return;
     }
@@ -208,20 +267,25 @@ function skip(msg) { console.log('SKIP: ' + msg); process.exit(0); }
        stale pitcher. */
     const wanted = new Set([...names].map(key));
     if (names.size && !wanted.has(key(s.pitcher))) {
-      problems.push(s.team + ' (' + dk + ') shows "' + s.pitcher + '" but ESPN lists ' +
+      problems.push(s.team + ' (' + dk + ') shows "' + s.pitcher + '" but MLB lists ' +
         [...names].join(' / ') + ' — stale or wrong-slate pitcher');
     } else if (!names.size) {
       problems.push(s.team + ' (' + dk + ') shows "' + s.pitcher +
-        '" but ESPN has no starter named for that game');
+        '" but MLB has no starter named for that game');
     }
   });
 
-  console.log('cross-checked ' + checked + ' slot(s) against ESPN ?dates=' + range);
+  console.log('cross-checked ' + checked + ' slot(s) against MLB StatsAPI ' + range
+    + ' (the source the board reads)');
+  if (notes.length) {
+    console.log('NOTE - ESPN is ahead of MLB on ' + notes.length + ' slot(s); not a board problem:');
+    notes.forEach((n) => console.log('  - ' + n));
+  }
   if (problems.length) {
     problems.forEach((p) => console.error('  - ' + p));
-    fail(problems.length + ' MLB pitcher slot(s) disagree with ESPN');
+    fail(problems.length + ' MLB pitcher slot(s) disagree with MLB StatsAPI');
     return;
   }
   console.log('Sportsbook probable-pitcher live monitor: PASS (' + (slots.length - tbd.length) +
-    ' named, ' + tbd.length + ' TBD and ESPN agrees on every one)');
+    ' named, ' + tbd.length + ' TBD, matching MLB StatsAPI on every slot)');
 })().catch((e) => { console.error('FAIL: monitor crashed: ' + (e && e.stack || e)); process.exit(1); });
