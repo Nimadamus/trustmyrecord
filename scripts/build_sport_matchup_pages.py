@@ -811,9 +811,49 @@ def render_soccer_hub(games, built_at):
             + mlb.FOOT_SCRIPTS + FOOT)
 
 
+def _render_ncaaf_research_hub(games, built_at):
+    """/handicapping/ncaaf/, built by the NCAAF research modules.
+
+    Returns None when ESPN has no upcoming slate at all, in which case the
+    caller falls back to the plain board hub rather than writing an empty page
+    over a good one."""
+    if HERE not in sys.path:
+        sys.path.insert(0, HERE)
+    import ncaaf_hub_page
+    body, slate = ncaaf_hub_page.build_body(
+        games, built_at, esc, mlb.FOOT_SCRIPTS, BODY_TAG, SHELL_STYLE,
+        featured_callout=gotw_block)
+    if not body:
+        return None
+    title = "NCAAF Handicapping: Matchups, Team Stats, ATS Trends and Odds"
+    desc = ("College football handicapping: featured matchup cards with team statistical "
+            "comparisons and national ranks, against the spread and over/under splits, recent "
+            "form settled at the closing number, head to head history, and the full NCAAF "
+            "board filterable by conference.")
+    url = SITE + "/handicapping/ncaaf/"
+    ld = {"@context": "https://schema.org", "@graph": [
+        breadcrumb_ld([("Handicapping", "/handicapping/"), ("NCAAF", None)]),
+        {"@type": "ItemList", "itemListElement": [
+            {"@type": "ListItem", "position": i + 1,
+             "name": "%s at %s" % (g["away"]["name"], g["home"]["name"])}
+            for i, g in enumerate(slate)]}]}
+    return page_head(title, desc, url, ld) + body
+
+
 def render_hub(sport, games, built_at):
     if sport == "soccer":
         return render_soccer_hub(games, built_at)
+    # NCAAF_HANDICAPPING_HUB_20260909. NCAAF is hub-first and stays hub-first:
+    # no per-fixture page is minted here and none ever was. What changed is the
+    # hub itself, which was a price list with a heading. ESPN carries college
+    # team statistics with national ranks, closing numbers on every completed
+    # game, polls, leaders and coaches, so the hub is now the research: see
+    # scripts/ncaaf_hub*.py. If ESPN has no upcoming slate the board hub below
+    # is written instead, rather than an empty page over a good one.
+    if sport == "ncaaf":
+        research = _render_ncaaf_research_hub(games, built_at)
+        if research:
+            return research
     label = SPORTS[sport]["label"]
     hub_only = bool(SPORTS[sport].get("hub_only"))
     title = ("%s Handicapping: Today's Board, Odds and Totals" % label if hub_only
