@@ -13,6 +13,10 @@ const allChecks = [
   ['unit/static: pick line single source', 'node', ['tests/pick-line-single-source-test.js'], 'static'],
   ['unit/static: sportsbook visual marker lock', 'node', ['tests/sportsbook-approved-visual-lock.test.js'], 'static'],
   ['unit/static: sportsbook reliability guard', 'node', ['tests/sportsbook-reliability-guard-test.js'], 'static'],
+  /* EVERY INLINE SCRIPT ON EVERY PAGE MUST PARSE (2026-09-09). One unescaped
+     apostrophe killed 196KB of the sportsbook's main block and nothing in this
+     list noticed, because node --check only reads .js files. */
+  ['unit/static: inline script parse', 'node', ['tests/sportsbook-inline-script-parse-test.js'], 'static'],
   ['unit/static: sportsbook F5 board layout lock', 'node', ['tests/sportsbook-f5-board-layout-lock-test.js'], 'static'],
   ['unit/static: sportsbook 1st-inning Yes/No lock', 'node', ['tests/sportsbook-first-inning-yesno-lock-test.js'], 'static'],
   ['unit/static: sportsbook stake mode guard', 'node', ['tests/sportsbook-stake-mode-ui-test.js'], 'static'],
