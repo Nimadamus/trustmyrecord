@@ -251,8 +251,24 @@ async function verifyModelBuilder(page) {
     throw new Error(`Model Builder did not label its data source: ${badges}`);
   }
 
-  const sport = await page.locator('#modelSport option').evaluateAll(
-    (options) => (options.find((option) => option.value) || {}).value || '');
+  /* PICK A LEAGUE THAT HAS A RECORD (2026-09-09). This took the FIRST option
+     with a value, which is soccer_argentina_liga_profesional - a league with no
+     graded wager history on TMR. The tool answered honestly ("There is no
+     graded wager history for Argentine Primera yet"), the proof sat waiting for
+     a win-loss record that was never coming, and this job failed on every run
+     for a day. The tool was right and the test was wrong.
+
+     Prefer a league the site actually grades; fall back to whatever is there. */
+  const sport = await page.locator('#modelSport option').evaluateAll((options) => {
+    const values = options.map((option) => option.value).filter(Boolean);
+    const preferred = ['mlb', 'nfl', 'nba', 'nhl', 'ncaaf', 'ncaab'];
+    for (const want of preferred) {
+      const hit = values.find((v) => v.toLowerCase() === want)
+        || values.find((v) => v.toLowerCase().includes(want));
+      if (hit) return hit;
+    }
+    return values[0] || '';
+  });
   if (!sport) throw new Error('Model Builder has no selectable sport.');
   await page.selectOption('#modelSport', sport);
   const chip = page.locator('#marketChips label, #marketChips button').first();
@@ -260,22 +276,33 @@ async function verifyModelBuilder(page) {
   await chip.click();
   await page.click('#runBtn');
 
-  // A backtest must come back with a real record, not a spinner.
+  /* A backtest must RESOLVE - into a record, or into the honest statement that
+     this league has nothing graded to test against. Both are the tool working;
+     a spinner that never resolves is the failure this guards. */
+  const RESOLVED = /\d+-\d+|no graded wager history|nothing honest to backtest/i;
   await page.waitForFunction(
-    () => /\d+-\d+/.test(document.getElementById('resultsBody').textContent),
+    () => /\d+-\d+|no graded wager history|nothing honest to backtest/i
+      .test(document.getElementById('resultsBody').textContent),
     null, { timeout: 45000 });
   const results = await page.locator('#resultsBody').innerText();
-  for (const [label, pattern] of [
-    ['a win-loss record', /\d+-\d+/],
-    ['a units figure', /-?\d+(\.\d+)?u/],
-    ['an ROI percentage', /ROI/i],
-    ['a sample size', /Sample|graded|matching picks/i],
-  ]) {
-    if (!pattern.test(results)) throw new Error(`Model Builder backtest is missing ${label}.`);
-  }
-  // The comparison rows are what stop a bare record from reading as an edge.
-  if (!/Baseline/i.test(results) || !/Random control/i.test(results)) {
-    throw new Error('Model Builder returned a record with no baseline or control to judge it against.');
+  if (!RESOLVED.test(results)) throw new Error('Model Builder never resolved its backtest.');
+
+  if (/\d+-\d+/.test(results)) {
+    for (const [label, pattern] of [
+      ['a units figure', /-?\d+(\.\d+)?u/],
+      ['an ROI percentage', /ROI/i],
+      ['a sample size', /Sample|graded|matching picks/i],
+    ]) {
+      if (!pattern.test(results)) throw new Error(`Model Builder backtest is missing ${label}.`);
+    }
+    // The comparison rows are what stop a bare record from reading as an edge.
+    if (!/Baseline/i.test(results) || !/Random control/i.test(results)) {
+      throw new Error('Model Builder returned a record with no baseline or control to judge it against.');
+    }
+  } else if (!/optional|tracking period/i.test(results)) {
+    /* An empty league still has to tell the member what to do next, or the
+       panel is just a dead end wearing an explanation. */
+    throw new Error('Model Builder said it had no history but offered no way forward.');
   }
 
   const text = await page.locator('body').innerText();

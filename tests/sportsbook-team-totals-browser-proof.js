@@ -20,18 +20,31 @@ const REQUESTED_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.c
 // TMR_SPORTSBOOK_URL still wins.
 const LIVE_URL = (() => {
   const url = new URL(REQUESTED_URL);
-  if (!url.searchParams.has('sbnext')) url.searchParams.set('sbnext', '0');
+  /* THE SKIN VISITORS ACTUALLY GET (2026-09-09). This pinned sbnext=0, which
+     forces the LEGACY board. The live sportsbook serves html.sbn-v3, so the
+     proof was inspecting a skin nobody sees, matched none of its selectors and
+     timed out on every run. A guard aimed at a retired code path proves
+     nothing. It tests the default board now. */
   return url.toString();
 })();
 const OUT_DIR = path.join(process.cwd(), 'artifacts');
 const OUT = path.join(OUT_DIR, 'sportsbook-team-totals-browser-proof.png');
 const REPORT = path.join(OUT_DIR, 'sportsbook-team-totals-browser-proof.json');
 
+/* WAIT ON WHATEVER BOARD IS ON SCREEN (2026-09-09). This waited on
+   #lobbyBoardRows, the legacy container. On html.sbn-v3 that element still
+   exists in the document but is HIDDEN - the board the visitor reads is
+   #sbnBoardRows - so the wait resolved the element, saw it hidden 58 times and
+   timed out with the sportsbook perfectly healthy. */
 async function waitForBoardSettled(page) {
-  await page.locator('#lobbyBoardRows, #gamesListContainer').first().waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('#sbnBoardRows, #lobbyBoardRows, #gamesListContainer')
+    .first().waitFor({ state: 'attached', timeout: 30000 });
   await page.waitForFunction(() => {
-    const board = document.querySelector('#lobbyBoardRows') || document.querySelector('#gamesListContainer');
-    return board && !/Loading live odds/i.test(board.textContent || '');
+    const board = document.querySelector('#sbnBoardRows')
+      || document.querySelector('#lobbyBoardRows')
+      || document.querySelector('#gamesListContainer');
+    return board && (board.textContent || '').trim().length > 0
+      && !/Loading live odds/i.test(board.textContent || '');
   }, null, { timeout: 30000 });
 }
 
@@ -53,51 +66,54 @@ async function main() {
     await page.goto(proofUrl.toString(), { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForBoardSettled(page);
 
-    await page.evaluate(() => {
-      if (window.TMR && typeof window.TMR.setSport === 'function') {
-        window.TMR.setSport('MLB');
-      } else {
-        throw new Error('window.TMR.setSport is unavailable on the public sportsbook page');
-      }
-    });
-    await waitForBoardSettled(page);
+    /* The legacy window.TMR.setSport/setPeriod calls that used to sit here are
+       gone (2026-09-09). They drive the retired board, and on html.sbn-v3 they
+       kicked off an async re-render that raced the market switch below: the
+       proof would click Team Totals, watch the rows appear, and then find a
+       game-lines board again by the time it read the cards. The v3 board is
+       driven the way a visitor drives it - by clicking the tab. */
 
-    await page.evaluate(() => {
-      if (window.TMR && typeof window.TMR.setPeriod === 'function') {
-        window.TMR.setPeriod('tt');
-      } else {
-        throw new Error('window.TMR.setPeriod is unavailable on the public sportsbook page');
-      }
-    });
+    /* THE V3 BOARD (2026-09-09). This waited on
+       `#lobbyBoardRows article.sportsbook-game-card` with `.team-market-row`
+       inside it. That is the retired legacy markup: the sportsbook renders
+       through `html.sbn-v3` into #sbnBoardRows, as `.sbn-row` cards holding
+       `.sbn-ttrow` lines. The selector matched nothing, the wait timed out at
+       45s, and this job failed on every run for a day with the board healthy
+       and priced. Same contract, current markup.
 
-    // Any MLB card on TODAY's team-totals board, not a named matchup.
-    //
-    // This used to wait for Boston Red Sox vs Atlanta Braves specifically. That
-    // fixture only existed on the board the day the proof was written, so from
-    // 2026-08-04 onward the job failed every single run with the sportsbook
-    // perfectly healthy -- the two teams simply were not playing each other.
-    // What this proof is actually about is the RENDERING of a team-totals card
-    // (main line only, no empty Board/Action header, no clipped team names),
-    // and that contract holds for whichever game is on today.
-    const cards = page.locator('#lobbyBoardRows article.sportsbook-game-card');
+       The market has to be SELECTED first - team totals are not the default
+       board - and the switcher is a horizontally scrolling strip, so the tab is
+       scrolled into view before it is clicked. */
+    const tab = page.locator('#sbnCat-team_totals');
+    if (await tab.count()) {
+      await tab.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'center' }));
+      await tab.click();
+      /* Wait for the board to actually REDRAW as team totals. A fixed pause let
+         the proof read the game-lines board on a slow run and report "no card
+         exposes a team total" when the board was simply still switching. */
+      await page.waitForFunction(
+        () => document.querySelectorAll('#sbnBoardRows .sbn-ttrow').length > 0,
+        null, { timeout: 30000 });
+    }
+
+    const cards = page.locator('#sbnBoardRows .sbn-row');
     await cards.first().waitFor({ state: 'visible', timeout: 45000 });
     const cardCount = await cards.count();
     let card = null;
     for (let i = 0; i < cardCount; i += 1) {
       const candidate = cards.nth(i);
-      const rows = await candidate.locator('.team-market-row .sb-odds-line').count();
-      if (rows > 0) { card = candidate; break; }
+      if (await candidate.locator('.sbn-ttrow').count() > 0) { card = candidate; break; }
     }
     if (!card) {
       throw new Error(
-        `no MLB card on the team-totals board exposes any team-total line (${cardCount} card(s) on the board)`);
+        `no card on the team-totals board exposes any team-total line (${cardCount} card(s) on the board)`);
     }
     await card.scrollIntoViewIfNeeded();
     await page.waitForTimeout(800);
 
     const checks = await card.evaluate((node) => {
-      const headers = [...node.querySelectorAll('.market-header-cell')].map((el) => el.textContent.trim());
-      const teamNames = [...node.querySelectorAll('.team-cell b')].map((el) => ({
+      const headers = [...node.querySelectorAll('.sbn-tthead > *')].map((el) => el.textContent.trim());
+      const teamNames = [...node.querySelectorAll('.sbn-ttname')].map((el) => ({
         text: el.textContent.trim(),
         clipped: el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).whiteSpace === 'nowrap',
         clientWidth: el.clientWidth,
@@ -105,18 +121,23 @@ async function main() {
         whiteSpace: getComputedStyle(el).whiteSpace,
         textOverflow: getComputedStyle(el).textOverflow,
       }));
-      const rows = [...node.querySelectorAll('.team-market-row')].map((row) => ({
-        team: row.querySelector('.team-cell b')?.textContent.trim() || '',
-        lines: [...row.querySelectorAll('.sb-odds-line')].map((el) => el.textContent.trim()),
-        prices: [...row.querySelectorAll('.sb-odds-price')].map((el) => el.textContent.trim()),
+      /* One row per TEAM. The property under test is that a team shows its main
+         total only, so the lines are read per team row and counted. */
+      const rows = [...node.querySelectorAll('.sbn-ttteam')].map((row) => ({
+        team: (row.querySelector('.sbn-ttname') || {}).textContent?.trim() || '',
+        lines: [...row.querySelectorAll('.sbn-ttline')].map((el) => el.textContent.trim()),
+        prices: [...row.querySelectorAll('.sbn-chip, .sbn-ttprice')].map((el) => el.textContent.trim()),
       }));
       // The property under test is "each team shows exactly ONE total, its
       // main line" -- the alt-line regression showed a team's 3.5 and 4.5 side
       // by side. Expressed against whatever teams are playing: every row that
       // has any line must carry exactly one Over and one Under.
       const pricedRows = rows.filter((row) => row.lines.length > 0);
-      const overs = (row) => row.lines.filter((l) => /^O\s/i.test(l));
-      const unders = (row) => row.lines.filter((l) => /^U\s/i.test(l));
+      /* v3 prints the number once with OVER/UNDER above it rather than "O 3.5"
+         and "U 3.5" as separate cells, so a main line is ONE .sbn-ttline on the
+         team's row. An alt-total regression shows up as more than one. */
+      const overs = (row) => row.lines.slice(0, 1);
+      const unders = (row) => row.lines.slice(0, 1);
       return {
         liveText: node.innerText,
         headers,
@@ -124,9 +145,9 @@ async function main() {
         rows,
         hasBoardHeader: headers.includes('Board') || headers.includes('Action'),
         pricedRowCount: pricedRows.length,
-        rowsWithMainTotal: pricedRows.filter((r) => overs(r).length === 1 && unders(r).length === 1).length,
+        rowsWithMainTotal: pricedRows.filter((r) => r.lines.length === 1).length,
         rowsWithStackedAltTotals: pricedRows
-          .filter((r) => overs(r).length > 1 || unders(r).length > 1)
+          .filter((r) => r.lines.length > 1)
           .map((r) => ({ team: r.team, lines: r.lines })),
       };
     });
@@ -134,7 +155,7 @@ async function main() {
     const failures = [];
     if (!checks.pricedRowCount) failures.push('no team on this card shows a team total at all');
     if (checks.pricedRowCount && checks.rowsWithMainTotal !== checks.pricedRowCount) {
-      failures.push(`${checks.pricedRowCount - checks.rowsWithMainTotal} of ${checks.pricedRowCount} team rows do not show exactly one Over/Under main line`);
+      failures.push(`${checks.pricedRowCount - checks.rowsWithMainTotal} of ${checks.pricedRowCount} team rows do not show exactly one main total line`);
     }
     if (checks.rowsWithStackedAltTotals.length) {
       failures.push('alternate team totals are stacked into the main row: ' + JSON.stringify(checks.rowsWithStackedAltTotals));
