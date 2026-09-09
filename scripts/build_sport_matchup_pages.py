@@ -229,6 +229,30 @@ def next_game_block(sport, games):
            sp_txt, tot_txt))
 
 
+# DS_BODY_CLASS_20260909
+# Every page this builder writes carried a bare <body>, so none of the design
+# system reached it: tmr-ds.css declares its palette on `body.tmr-ds`, and with
+# that class absent the tokens are undefined and tmr-mlb-matchup.css paints its
+# near-white heading colour onto a plain white page. Section headings on
+# /handicapping/nfl/, /handicapping/nba/ and every matchup page under them were
+# effectively invisible. The MLB builder has always emitted the class (its pages
+# read "tmr-ds tmr-ds--dark tmr-site-shell mm-page"); this one never did.
+BODY_TAG = '<body class="tmr-ds tmr-ds--dark tmr-site-shell mm-page">\n'
+
+# The MLB builder wraps its pages in main.mm-shell, which tmr-mlb-matchup.css
+# gives a 1120px column. This builder has always used main.mm-wrap, which that
+# stylesheet does not style at all, so with the design system finally reaching
+# these pages the content ran the full width of the window. The same column is
+# declared here rather than in the shared stylesheet, so nothing else moves.
+SHELL_STYLE = (
+    '    <style>\n'
+    '        .mm-wrap{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}\n'
+    '        .mm-head{margin-bottom:26px}\n'
+    '        .mm-sec{margin:0 0 30px}\n'
+    '        @media (max-width:620px){.mm-wrap{padding:18px 0 48px}}\n'
+    '    </style>\n')
+
+
 class BuildError(Exception):
     pass
 
@@ -688,7 +712,7 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None, preview=None
                       % (game_url(sport, o), esc(o["away"]), esc(o["home"])) for o in others)
     sim = SPORTS[sport]["simulator"]
 
-    b = ['<body>\n', '    <main class="mm-wrap">\n',
+    b = [BODY_TAG, SHELL_STYLE, '    <main class="mm-wrap">\n',
          '        <header class="mm-head">\n',
          '            <span class="mm-kicker">%s</span>\n' % esc(label),
          '            <h1>%s at %s</h1>\n' % (esc(g["away"]), esc(g["home"])),
@@ -756,7 +780,7 @@ def render_hub(sport, games, built_at):
 
     priced = sum(1 for g in games if g["priced"])
     sim = SPORTS[sport]["simulator"]
-    b = ['<body>\n', '    <main class="mm-wrap">\n',
+    b = [BODY_TAG, SHELL_STYLE, '    <main class="mm-wrap">\n',
          '        <header class="mm-head">\n',
          '            <span class="mm-kicker">Handicapping</span>\n',
          '            <h1>%s Handicapping</h1>\n' % esc(label),
