@@ -5,182 +5,340 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="canonical" href="https://trustmyrecord.com/handicapping/tennis/">
-    <title>Tennis Handicapping | Handicapping Hub | ATP &amp; WTA Matches, Odds, Rankings and Form | TrustMyRecord</title>
-    <meta name="description" content="Every ATP and WTA singles match on the board today, with the moneyline, the game handicap, the total and the set markets, next to each player's 2026 record, their record on this surface, their tiebreak and deciding set numbers, recent form and head to head.">
+    <title>Tennis Handicapping | Handicapping Hub | ATP &amp; WTA Matchups, Form, Head to Head and Odds | TrustMyRecord</title>
+    <meta name="description" content="Tennis handicapping research: every ATP and WTA singles match with a player versus player breakdown, side by side season and surface numbers, last ten form with scores, career head to head and the full market, organised so the research comes first.">
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Tennis | Handicapping Hub | TrustMyRecord">
-    <meta property="og:description" content="Today's ATP and WTA board with prices, surface splits, form and head to head. Rankings and season leaders, measured from every completed match of 2026.">
+    <meta property="og:title" content="Tennis Handicapping | Handicapping Hub | TrustMyRecord">
+    <meta property="og:description" content="Player versus player tennis research: rankings, season and surface records, last ten form with scores, career head to head and the full board.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trustmyrecord.com/handicapping/tennis/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* ------------------------------------------------------------------
+           Tennis handicapping, rebuilt 2026-09-09 around readability first.
+
+           The page this replaced painted #9aa8bc secondary text and twelve
+           equal market boxes at 190px wide onto a dark navy card, so the
+           research was the least readable thing on a research page. Every
+           colour below is checked against the panel it sits on: primary text
+           is pure white, secondary is #cbd8e8 (11:1), the label grey is
+           #a8bad2 (8:1) and the accent blue #4cc2ff (8.5:1) is used only for
+           numbers and links. Nothing dark is painted on the dark ground.
+           ------------------------------------------------------------------ */
         :root {
-            --tn-bg: #06101f;
-            --tn-panel: rgba(15, 27, 46, 0.9);
-            --tn-panel-2: rgba(18, 31, 52, 0.96);
-            --tn-border: rgba(148, 163, 184, 0.18);
-            --tn-text: #f8fafc;
-            --tn-muted: #9aa8bc;
-            --tn-teal: #1D7FE8;
-            --tn-blue: #38bdf8;
-            --tn-gold: #d4a72c;
-            --tn-green: #22c55e;
-            --tn-red: #f87171;
-            --tn-clay: #d97757;
-            --tn-grass: #4ea45f;
-            --tn-hard: #3f83d6;
+            --tn-bg: #070e1a;
+            --tn-panel: #101c30;
+            --tn-panel-2: #16243c;
+            --tn-panel-3: #1b2c47;
+            --tn-line: rgba(154, 176, 204, 0.26);
+            --tn-line-soft: rgba(154, 176, 204, 0.14);
+            --tn-text: #ffffff;
+            --tn-text-2: #cbd8e8;
+            --tn-dim: #a8bad2;
+            --tn-blue: #4cc2ff;
+            --tn-blue-deep: #1d7fe8;
+            --tn-green: #4ade80;
+            --tn-red: #ff7a7a;
+            --tn-gold: #ffce4d;
+            --tn-clay: #ff9a6b;
+            --tn-grass: #6fd98a;
+            --tn-hard: #6fb6ff;
         }
-        body {
+        /* Scoped to body.tmr-ds on purpose. tmr-ds.css sets background:var(--page)
+           and color:var(--ink) on body.tmr-ds, which outranks a bare body rule,
+           so the page was being painted on the LIGHT design system ground while
+           every card, pill and label on it was written for a dark one. That is
+           the contrast failure this rebuild is fixing, so the palette is claimed
+           at the same specificity and the dark ramp is opted into on the body. */
+        body.tmr-ds {
             margin: 0;
             background:
-                radial-gradient(circle at 12% 8%, rgba(29, 127, 232, 0.14), transparent 34%),
-                radial-gradient(circle at 88% 6%, rgba(56, 189, 248, 0.12), transparent 30%),
-                linear-gradient(180deg, var(--tn-bg) 0%, #0b1220 100%);
+                radial-gradient(circle at 12% 6%, rgba(29, 127, 232, 0.16), transparent 36%),
+                radial-gradient(circle at 88% 4%, rgba(76, 194, 255, 0.10), transparent 30%),
+                linear-gradient(180deg, var(--tn-bg) 0%, #0a1424 100%);
             color: var(--tn-text);
             font-family: "Inter", system-ui, sans-serif;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
         }
-        .tn-shell { width: min(1200px, calc(100% - 32px)); margin: 0 auto; padding: 108px 0 72px; }
-        @media (max-width: 620px) { .tn-shell { padding-top: 92px; } }
+        /* 1340 instead of 1200: at 125% Windows scaling the desktop viewport is
+           about 1536 CSS pixels, and the old column left the analysis squeezed
+           while the window sat half empty. */
+        .tn-shell { width: min(1340px, calc(100% - 40px)); margin: 0 auto; padding: 108px 0 80px; }
+        @media (max-width: 620px) { .tn-shell { width: calc(100% - 24px); padding-top: 92px; } }
 
         .tn-hero {
-            background: linear-gradient(135deg, rgba(29, 127, 232, 0.12), rgba(56, 189, 248, 0.06));
-            border: 1px solid var(--tn-border);
+            background: linear-gradient(135deg, rgba(29, 127, 232, 0.16), rgba(76, 194, 255, 0.05));
+            border: 1px solid var(--tn-line);
             border-radius: 20px;
-            padding: clamp(24px, 4vw, 44px);
-            margin-bottom: 30px;
+            padding: clamp(22px, 3.4vw, 40px);
+            margin-bottom: 26px;
         }
         .tn-kicker {
             display: inline-block; margin: 0 0 12px;
-            font: 800 0.72rem/1 "Barlow Condensed", sans-serif;
-            letter-spacing: 0.18em; text-transform: uppercase; color: var(--tn-teal);
+            font: 800 0.78rem/1 "Barlow Condensed", sans-serif;
+            letter-spacing: 0.2em; text-transform: uppercase; color: var(--tn-blue);
         }
-        .tn-hero h1 {
-            margin: 0 0 14px; font: 800 clamp(1.9rem, 4vw, 3rem)/1.05 "Barlow Condensed", sans-serif;
-        }
-        .tn-hero p { margin: 0; max-width: 68ch; color: var(--tn-muted); font-size: 1.05rem; line-height: 1.55; }
-        .tn-hero p + p { margin-top: 12px; }
+        .tn-hero h1 { margin: 0 0 14px; font: 800 clamp(2rem, 4vw, 3rem)/1.06 "Barlow Condensed", sans-serif; color: #fff; }
+        .tn-hero p { margin: 0; max-width: 74ch; color: var(--tn-text-2); font-size: 1.04rem; line-height: 1.6; }
+        .tn-hero p + p { margin-top: 10px; }
 
-        /* The eight players at the top of each tour, with their faces and their
-           season records. It is the first thing a tennis reader scans for, and
-           it says at a glance that this page knows the sport. */
-        .tn-top { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--tn-border); }
-        .tn-top-h { margin: 0 0 12px; font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-muted); }
-        .tn-top-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
-        .tn-top-p { flex: none; width: 88px; text-align: center; text-decoration: none; color: inherit; }
-        .tn-top-p .tn-face { width: 64px; height: 64px; margin: 0 auto 7px; }
-        .tn-top-p b { display: block; font: 700 .78rem/1.25 "Inter", sans-serif; }
-        .tn-top-p span { display: block; margin-top: 2px; font-size: .72rem; color: var(--tn-muted); font-variant-numeric: tabular-nums; }
+        .tn-top { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--tn-line); }
+        .tn-top-h { margin: 0 0 12px; font: 800 .76rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-dim); }
+        .tn-top-row { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+        .tn-top-p { flex: none; width: 96px; text-align: center; text-decoration: none; color: var(--tn-text); }
+        .tn-top-p .tn-face { width: 68px; height: 68px; margin: 0 auto 8px; }
+        .tn-top-p b { display: block; font: 700 .84rem/1.3 "Inter", sans-serif; color: #fff; }
+        .tn-top-p span { display: block; margin-top: 3px; font-size: .78rem; color: var(--tn-text-2); font-variant-numeric: tabular-nums; }
 
-        .tn-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; }
+        .tn-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; }
         .tn-tab {
             appearance: none; cursor: pointer;
-            background: var(--tn-panel); color: var(--tn-muted);
-            border: 1px solid var(--tn-border); border-radius: 999px;
-            padding: 9px 16px; font: 700 0.85rem/1 "Inter", sans-serif;
+            background: rgba(255,255,255,.06); color: var(--tn-text-2);
+            border: 1px solid var(--tn-line); border-radius: 999px;
+            padding: 10px 18px; font: 700 .9rem/1 "Inter", sans-serif;
         }
-        .tn-tab[aria-selected="true"] { background: var(--tn-teal); color: #04101f; border-color: transparent; }
+        .tn-tab:hover { color: #fff; border-color: rgba(76,194,255,.55); }
+        .tn-tab[aria-selected="true"] { background: var(--tn-blue-deep); color: #fff; border-color: transparent; }
 
-        .tn-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 30px 0 14px; }
-        .tn-section-head h2 { margin: 0; font: 800 1.4rem/1.1 "Barlow Condensed", sans-serif; letter-spacing: .02em; }
-        .tn-section-head p { margin: 0; color: var(--tn-muted); font-size: .88rem; }
+        .tn-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 34px 0 14px; }
+        .tn-section-head h2 { margin: 0; font: 800 1.7rem/1.1 "Barlow Condensed", sans-serif; letter-spacing: .02em; color: #fff; }
+        .tn-section-head p { margin: 0; color: var(--tn-text-2); font-size: .92rem; }
+        .tn-section-head p a { color: var(--tn-blue); font-weight: 700; text-decoration: none; }
 
-        .tn-event { margin-bottom: 26px; }
-        .tn-event h3 {
-            display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-            margin: 0 0 10px; padding-bottom: 8px;
-            border-bottom: 1px solid var(--tn-border);
-            font: 800 1.05rem/1.2 "Barlow Condensed", sans-serif; letter-spacing: .03em;
+        .tn-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .tn-controls label { color: var(--tn-dim); font: 700 .78rem/1 "Inter", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+        .tn-controls select, .tn-controls input {
+            background: var(--tn-panel-2); color: #fff;
+            border: 1px solid var(--tn-line); border-radius: 9px; padding: 9px 12px;
+            font: 600 .9rem "Inter", sans-serif;
         }
-        .tn-event h3 em { font: 600 .74rem/1 "Inter", sans-serif; font-style: normal; color: var(--tn-muted); white-space: nowrap; }
-        .tn-card {
-            background: var(--tn-panel); border: 1px solid var(--tn-border);
-            border-radius: 16px; padding: 18px; margin-bottom: 14px;
-        }
-        .tn-matchhead { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .tn-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--tn-muted); font-size: .8rem; }
+        .tn-empty { color: var(--tn-text-2); padding: 26px 4px; font-size: .95rem; }
+
+        /* ---------------------------------------------------- matchup head */
+        .tn-research { background: var(--tn-panel); border: 1px solid var(--tn-line); border-radius: 18px; padding: clamp(16px, 2.2vw, 26px); margin-bottom: 18px; }
+        .tn-research.is-featured { border-color: rgba(76,194,255,.42); box-shadow: inset 0 0 0 1px rgba(76,194,255,.12); }
+
+        .tn-ctx { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 18px; }
         .tn-pill {
-            display: inline-block; padding: 3px 9px; border-radius: 999px;
-            border: 1px solid var(--tn-border); font: 700 .72rem/1.5 "Inter", sans-serif;
-            letter-spacing: .04em; text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 999px;
+            border: 1px solid var(--tn-line); background: rgba(255,255,255,.05);
+            font: 700 .78rem/1.5 "Inter", sans-serif; letter-spacing: .04em;
+            text-transform: uppercase; color: var(--tn-text-2);
         }
-        .tn-pill.hard { color: var(--tn-hard); border-color: rgba(63,131,214,.5); }
-        .tn-pill.clay { color: var(--tn-clay); border-color: rgba(217,119,87,.5); }
-        .tn-pill.grass { color: var(--tn-grass); border-color: rgba(78,164,95,.5); }
-        .tn-pill.live { color: var(--tn-gold); border-color: rgba(212,167,44,.55); }
-        .tn-pill.final { color: var(--tn-muted); }
+        .tn-pill.hard { color: var(--tn-hard); border-color: rgba(111,182,255,.5); background: rgba(111,182,255,.10); }
+        .tn-pill.clay { color: var(--tn-clay); border-color: rgba(255,154,107,.5); background: rgba(255,154,107,.10); }
+        .tn-pill.grass { color: var(--tn-grass); border-color: rgba(111,217,138,.5); background: rgba(111,217,138,.10); }
+        .tn-pill.live { color: var(--tn-gold); border-color: rgba(255,206,77,.55); background: rgba(255,206,77,.10); }
+        .tn-pill.final { color: var(--tn-text-2); }
+        .tn-pill.major { color: var(--tn-gold); border-color: rgba(255,206,77,.45); }
+        .tn-pill.time { color: #fff; }
 
-        .tn-players { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 760px) { .tn-players { grid-template-columns: 1fr; } }
-        .tn-player {
-            background: var(--tn-panel-2); border: 1px solid var(--tn-border);
-            border-radius: 12px; padding: 14px;
+        .tn-vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(10px, 2vw, 26px); align-items: stretch; }
+        .tn-vs-side {
+            background: var(--tn-panel-2); border: 1px solid var(--tn-line);
+            border-radius: 16px; padding: clamp(14px, 1.6vw, 20px);
+            display: flex; gap: 16px; align-items: center;
         }
-        .tn-player.won { border-color: rgba(34,197,94,.45); }
-        .tn-pname { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
-        .tn-pname b { font: 800 1.05rem/1.2 "Inter", sans-serif; }
-        .tn-pname .tn-flag { width: 22px; height: 15px; object-fit: cover; border-radius: 2px; flex: none; }
-        /* The player's face, with their initials behind it. The initials are
-           not a placeholder that flashes: they are what a player ESPN has never
-           photographed keeps, which on the Challenger circuit is most of them. */
+        .tn-vs-side.right { flex-direction: row-reverse; text-align: right; }
+        .tn-vs-side.won { border-color: rgba(74,222,128,.5); }
+        .tn-vs-side.fav { border-color: rgba(76,194,255,.45); }
+        .tn-vs-id { min-width: 0; }
+        .tn-vs-name { margin: 0 0 6px; font: 800 clamp(1.2rem, 1.8vw, 1.6rem)/1.12 "Barlow Condensed", sans-serif; letter-spacing: .01em; color: #fff; }
+        .tn-vs-name .tn-flag { width: 26px; height: 18px; object-fit: cover; border-radius: 3px; vertical-align: -2px; margin-right: 9px; }
+        .tn-vs-side.right .tn-vs-name .tn-flag { margin: 0 0 0 9px; }
+        .tn-vs-sub { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: .86rem; color: var(--tn-text-2); font-variant-numeric: tabular-nums; }
+        .tn-vs-side.right .tn-vs-sub { justify-content: flex-end; }
+        .tn-vs-sub b { color: #fff; }
+        .tn-vs-sub .seed { color: var(--tn-gold); font-weight: 800; }
+        .tn-vs-price { margin-top: 12px; font: 800 clamp(1.7rem, 2.6vw, 2.3rem)/1 "Barlow Condensed", sans-serif; color: var(--tn-blue); font-variant-numeric: tabular-nums; }
+        .tn-vs-price small { display: block; margin-top: 5px; font: 600 .8rem/1.4 "Inter", sans-serif; color: var(--tn-text-2); }
+        .tn-vs-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-width: 108px; }
+        .tn-vs-mid .vs { font: 900 1.5rem/1 "Barlow Condensed", sans-serif; letter-spacing: .1em; color: var(--tn-blue); }
+        .tn-vs-mid .when { text-align: center; font: 700 .82rem/1.4 "Inter", sans-serif; color: #fff; }
+        .tn-vs-mid .when em { display: block; font-style: normal; font-weight: 600; color: var(--tn-text-2); }
         .tn-face {
             position: relative; flex: none;
-            width: 46px; height: 46px; border-radius: 50%;
-            background: linear-gradient(150deg, rgba(56,189,248,.22), rgba(29,127,232,.10));
-            border: 1px solid var(--tn-border);
+            width: clamp(72px, 7vw, 104px); height: clamp(72px, 7vw, 104px); border-radius: 50%;
+            background: linear-gradient(150deg, rgba(76,194,255,.26), rgba(29,127,232,.12));
+            border: 1px solid var(--tn-line);
             display: grid; place-items: center; overflow: hidden;
         }
-        .tn-face span { font: 800 .82rem/1 "Barlow Condensed", sans-serif; letter-spacing: .04em; color: var(--tn-muted); }
-        .tn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; background: #0d1726; }
+        .tn-face span { font: 800 1.1rem/1 "Barlow Condensed", sans-serif; letter-spacing: .05em; color: #dce8f7; }
+        .tn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; background: #16243c; }
         .tn-face img[data-missing] { display: none; }
-        .tn-prank { color: var(--tn-muted); font-size: .78rem; margin-bottom: 10px; }
-        .tn-price { font: 800 1.35rem/1 "Barlow Condensed", sans-serif; color: var(--tn-blue); margin-bottom: 10px; }
-        .tn-price small { display: block; font: 600 .72rem/1.4 "Inter", sans-serif; color: var(--tn-muted); margin-top: 3px; }
-        .tn-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 12px; }
-        .tn-stat { display: flex; justify-content: space-between; gap: 8px; font-size: .8rem; border-bottom: 1px dashed rgba(148,163,184,.16); padding-bottom: 4px; }
-        .tn-stat span { color: var(--tn-muted); }
-        .tn-stat b { font-variant-numeric: tabular-nums; }
-        .tn-form { display: flex; gap: 3px; margin-top: 10px; flex-wrap: wrap; }
-        .tn-form i {
-            font-style: normal; width: 17px; height: 17px; border-radius: 4px;
-            display: grid; place-items: center; font-size: .62rem; font-weight: 800;
-            background: rgba(248,113,113,.18); color: var(--tn-red);
+        @media (max-width: 860px) {
+            .tn-vs { grid-template-columns: 1fr; }
+            .tn-vs-side, .tn-vs-side.right { flex-direction: row; text-align: left; }
+            .tn-vs-side.right .tn-vs-sub { justify-content: flex-start; }
+            .tn-vs-side.right .tn-vs-name .tn-flag { margin: 0 9px 0 0; }
+            .tn-vs-mid { flex-direction: row; gap: 14px; min-width: 0; }
         }
-        .tn-form i.w { background: rgba(34,197,94,.18); color: var(--tn-green); }
 
-        .tn-extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
-        .tn-box { background: rgba(9,18,33,.6); border: 1px solid var(--tn-border); border-radius: 10px; padding: 11px 12px; }
-        .tn-box h4 { margin: 0 0 7px; font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--tn-muted); }
-        .tn-box .row { display: flex; justify-content: space-between; gap: 10px; font-size: .82rem; padding: 2px 0; }
-        .tn-box .row b { font-variant-numeric: tabular-nums; }
+        /* --------------------------------------------------------- panels */
+        .tn-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 1000px) { .tn-grid2 { grid-template-columns: 1fr; } }
+        .tn-panel { background: var(--tn-panel-2); border: 1px solid var(--tn-line); border-radius: 14px; padding: 18px 20px; margin-top: 16px; }
+        .tn-panel > h3 {
+            margin: 0 0 14px; font: 800 .84rem/1 "Inter", sans-serif;
+            letter-spacing: .16em; text-transform: uppercase; color: var(--tn-dim);
+            display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+        }
+        .tn-panel > h3 em { font: 600 .8rem/1 "Inter", sans-serif; font-style: normal; letter-spacing: 0; text-transform: none; color: var(--tn-text-2); }
+        .tn-sub { color: var(--tn-text-2); font-size: .9rem; line-height: 1.6; margin: 0 0 12px; }
 
-        table.tn-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
-        .tn-scroll { overflow-x: auto; }
-        table.tn-table th, table.tn-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(148,163,184,.12); white-space: nowrap; }
-        table.tn-table th { color: var(--tn-muted); font: 800 .7rem/1 "Inter", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
-        table.tn-table td b { font-variant-numeric: tabular-nums; }
-        .tn-up { color: var(--tn-green); }
-        .tn-down { color: var(--tn-red); }
+        /* --------------------------------------------- comparison bars */
+        .cmp + .cmp { margin-top: 14px; }
+        .cmp-label { text-align: center; font: 800 .74rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-dim); margin-bottom: 7px; }
+        .cmp-bars { display: grid; grid-template-columns: 78px 1fr 1fr 78px; align-items: center; gap: 10px; }
+        .cmp-bars .v { font: 800 1.05rem/1 "Inter", sans-serif; color: var(--tn-text-2); font-variant-numeric: tabular-nums; }
+        .cmp-bars .v.left { text-align: right; }
+        .cmp-bars .v.adv { color: #fff; }
+        .cmp-track { height: 12px; border-radius: 7px; background: rgba(255,255,255,.07); overflow: hidden; display: flex; }
+        .cmp-track.left { justify-content: flex-end; }
+        .cmp-track i { display: block; height: 100%; background: rgba(120,160,205,.55); }
+        .cmp-track.left i { border-radius: 7px 0 0 7px; }
+        .cmp-track.right i { border-radius: 0 7px 7px 0; }
+        .cmp-track.adv i { background: linear-gradient(90deg, var(--tn-blue-deep), var(--tn-blue)); }
+        .cmp-note { text-align: center; margin-top: 5px; font-size: .78rem; color: var(--tn-text-2); }
+        @media (max-width: 560px) { .cmp-bars { grid-template-columns: 62px 1fr 1fr 62px; gap: 7px; } .cmp-bars .v { font-size: .92rem; } }
 
-        /* Game Files list, added 2026-09-07. The section published seven tennis
-           Game Files with no link to any of them from the hub they belong to. */
-        .tn-gf { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-        .tn-gf-card { display: block; background: rgba(9,18,33,.6); border: 1px solid var(--tn-border); border-radius: 12px; padding: 14px 16px; text-decoration: none; color: inherit; }
-        .tn-gf-card:hover { border-color: rgba(53,224,203,.5); }
-        .tn-gf-card .k { display: block; font: 800 .68rem/1 "Inter", sans-serif; letter-spacing: .13em; text-transform: uppercase; color: var(--tn-muted); margin-bottom: 8px; }
-        .tn-gf-card h3 { margin: 0 0 7px; font: 800 1.02rem/1.3 "Inter", sans-serif; }
-        .tn-gf-card p { margin: 0; color: var(--tn-muted); font-size: .84rem; line-height: 1.5; }
-        .tn-gf-card .d { display: block; margin-top: 9px; font-size: .74rem; color: var(--tn-muted); font-variant-numeric: tabular-nums; }
-        .tn-note { background: rgba(9,18,33,.6); border: 1px solid var(--tn-border); border-radius: 12px; padding: 15px 17px; color: var(--tn-muted); font-size: .87rem; line-height: 1.6; margin-top: 20px; }
-        .tn-note b { color: var(--tn-text); }
+        /* ------------------------------------------------- key stat tiles */
+        .tn-keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+        .tn-key { background: var(--tn-panel-3); border: 1px solid var(--tn-line); border-left: 3px solid var(--tn-blue); border-radius: 12px; padding: 14px 16px; }
+        .tn-key > b { display: block; font: 800 1.5rem/1.05 "Barlow Condensed", sans-serif; color: var(--tn-blue); font-variant-numeric: tabular-nums; margin-bottom: 5px; }
+        .tn-key span { display: block; font-size: .92rem; line-height: 1.5; color: var(--tn-text-2); }
+        .tn-key span b { color: #fff; font-weight: 800; }
+        .tn-key.pos { border-left-color: var(--tn-green); } .tn-key.pos > b { color: var(--tn-green); }
+        .tn-key.neg { border-left-color: var(--tn-red); } .tn-key.neg > b { color: var(--tn-red); }
+
+        /* -------------------------------------------------------- form */
+        .tn-formhead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font: 800 1rem/1.2 "Inter", sans-serif; color: #fff; }
+        .tn-formhead .tn-face { width: 34px; height: 34px; }
+        .tn-formhead .tn-face span { font-size: .72rem; }
+        .tn-formhead em { font: 700 .82rem/1 "Inter", sans-serif; font-style: normal; color: var(--tn-text-2); margin-left: auto; font-variant-numeric: tabular-nums; }
+        .tn-fm { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--tn-line-soft); }
+        .tn-fm:last-child { border-bottom: 0; }
+        .tn-wl { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font: 900 .82rem/1 "Inter", sans-serif; }
+        .tn-wl.w { background: rgba(74,222,128,.18); color: var(--tn-green); border: 1px solid rgba(74,222,128,.45); }
+        .tn-wl.l { background: rgba(255,122,122,.16); color: var(--tn-red); border: 1px solid rgba(255,122,122,.42); }
+        .tn-fm-main { min-width: 0; }
+        .tn-fm-main b { display: block; font: 700 .95rem/1.3 "Inter", sans-serif; color: #fff; }
+        .tn-fm-main span { display: block; margin-top: 2px; font-size: .8rem; color: var(--tn-text-2); }
+        .tn-fm-score { font: 800 .95rem/1.2 "Inter", sans-serif; color: var(--tn-text-2); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+        .tn-strip { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+        .tn-strip i { font-style: normal; width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; font: 900 .74rem/1 "Inter", sans-serif; background: rgba(255,122,122,.16); color: var(--tn-red); border: 1px solid rgba(255,122,122,.4); }
+        .tn-strip i.w { background: rgba(74,222,128,.18); color: var(--tn-green); border-color: rgba(74,222,128,.45); }
+
+        /* --------------------------------------------------------- h2h */
+        .tn-h2h-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .tn-h2h-top b { font: 800 2.2rem/1 "Barlow Condensed", sans-serif; color: #fff; font-variant-numeric: tabular-nums; }
+        .tn-h2h-top .side { text-align: center; }
+        .tn-h2h-top .side span { display: block; margin-top: 4px; font-size: .84rem; color: var(--tn-text-2); }
+        .tn-h2h-top .mid { font: 800 .78rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-dim); }
+        .tn-meet { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--tn-line-soft); }
+        .tn-meet:last-child { border-bottom: 0; }
+        .tn-meet b { font: 700 .95rem/1.3 "Inter", sans-serif; color: #fff; }
+        .tn-meet span { display: block; margin-top: 3px; font-size: .82rem; color: var(--tn-text-2); }
+        .tn-meet .sc { font: 800 .92rem/1.3 "Inter", sans-serif; color: var(--tn-text-2); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .tn-meet .sc em { display: block; font-style: normal; font-weight: 700; font-size: .8rem; color: var(--tn-green); margin-top: 3px; }
+
+        /* ----------------------------------------------------- surface */
+        .tn-surf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 720px) { .tn-surf { grid-template-columns: 1fr; } }
+        .tn-surf-card { background: var(--tn-panel-3); border: 1px solid var(--tn-line); border-radius: 12px; padding: 14px 15px; }
+        .tn-surf-card.now { border-color: rgba(76,194,255,.55); background: rgba(76,194,255,.08); }
+        .tn-surf-card h4 { margin: 0 0 10px; font: 800 .8rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-dim); display: flex; justify-content: space-between; gap: 8px; }
+        .tn-surf-card h4 em { font-style: normal; color: var(--tn-text-2); letter-spacing: 0; text-transform: none; font-weight: 600; }
+        .tn-surf-card.now h4, .tn-surf-card.now h4 em { color: var(--tn-blue); }
+        .tn-surf-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--tn-line-soft); font-size: .92rem; }
+        .tn-surf-row:last-child { border-bottom: 0; }
+        .tn-surf-row span { color: var(--tn-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tn-surf-row b { color: #fff; font-variant-numeric: tabular-nums; }
+        .tn-surf-row b em { font-style: normal; color: var(--tn-blue); font-weight: 800; margin-left: 7px; }
+
+        /* ----------------------------------------------------- markets */
+        .tn-mtabs { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+        .tn-mtab { appearance: none; cursor: pointer; background: rgba(255,255,255,.05); color: var(--tn-text-2); border: 1px solid var(--tn-line); border-radius: 999px; padding: 8px 15px; font: 700 .82rem/1 "Inter", sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+        .tn-mtab:hover { color: #fff; }
+        .tn-mtab[aria-selected="true"] { background: var(--tn-blue-deep); border-color: transparent; color: #fff; }
+        .tn-mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+        /* display:grid outranks the user agent's [hidden] rule, so the tab
+           panels that are meant to be closed have to be closed explicitly. */
+        .tn-mgrid[hidden] { display: none; }
+        .tn-mbox { background: var(--tn-panel-3); border: 1px solid var(--tn-line); border-radius: 12px; padding: 14px 16px; }
+        .tn-mbox h4 { margin: 0 0 10px; font: 800 .8rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-dim); }
+        .tn-mrow { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--tn-line-soft); font-size: .94rem; }
+        .tn-mrow:last-child { border-bottom: 0; }
+        .tn-mrow span { color: var(--tn-text-2); }
+        .tn-mrow b { color: var(--tn-blue); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .tn-mrow.head span, .tn-mrow.head b { color: #fff; font-weight: 800; }
+        .tn-mnote { margin: 12px 0 0; font-size: .86rem; color: var(--tn-text-2); }
+        .tn-mnote a { color: var(--tn-blue); font-weight: 700; text-decoration: none; }
+
+        /* -------------------------------------------------- board rows */
+        .tn-event { margin-bottom: 30px; }
+        .tn-event > h3 {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+            margin: 0 0 12px; padding-bottom: 9px; border-bottom: 1px solid var(--tn-line);
+            font: 800 1.28rem/1.2 "Barlow Condensed", sans-serif; letter-spacing: .03em; color: #fff;
+        }
+        .tn-event > h3 em { font: 600 .84rem/1 "Inter", sans-serif; font-style: normal; color: var(--tn-text-2); white-space: nowrap; }
+        .tn-row { background: var(--tn-panel); border: 1px solid var(--tn-line); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+        .tn-rowhead { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; align-items: center; padding: 14px 18px; }
+        .tn-rowmeta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .tn-rowmeta .m { font-size: .84rem; color: var(--tn-text-2); }
+        .tn-rp { display: grid; grid-template-columns: minmax(0,1fr) 100px; gap: 12px; align-items: center; padding: 6px 0; }
+        .tn-rp + .tn-rp { border-top: 1px solid var(--tn-line-soft); }
+        .tn-rp-id { display: flex; align-items: center; gap: 11px; min-width: 0; }
+        .tn-rp-id .tn-face { width: 42px; height: 42px; }
+        .tn-rp-id .tn-face span { font-size: .8rem; }
+        .tn-rp-id b { font: 700 1.02rem/1.25 "Inter", sans-serif; color: #fff; }
+        .tn-rp-id .tn-flag { width: 21px; height: 14px; object-fit: cover; border-radius: 2px; flex: none; margin-left: 2px; }
+        .tn-rp-id em { display: block; font-style: normal; font-size: .8rem; color: var(--tn-text-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+        .tn-rp-odds { text-align: right; font: 800 1.3rem/1 "Barlow Condensed", sans-serif; color: var(--tn-blue); font-variant-numeric: tabular-nums; }
+        .tn-rp-odds em { display: block; font: 600 .74rem/1.3 "Inter", sans-serif; font-style: normal; color: var(--tn-text-2); margin-top: 4px; }
+        .tn-rp.won .tn-rp-id b { color: var(--tn-green); }
+        .tn-open {
+            appearance: none; cursor: pointer; white-space: nowrap;
+            background: rgba(76,194,255,.12); color: #fff;
+            border: 1px solid rgba(76,194,255,.45); border-radius: 10px;
+            padding: 12px 18px; font: 800 .86rem/1 "Inter", sans-serif; letter-spacing: .06em; text-transform: uppercase;
+        }
+        .tn-open:hover { background: rgba(76,194,255,.22); }
+        .tn-open[aria-expanded="true"] { background: var(--tn-blue-deep); border-color: transparent; }
+        .tn-rowbody { border-top: 1px solid var(--tn-line); padding: 4px 18px 18px; }
+        @media (max-width: 700px) {
+            .tn-rowhead { grid-template-columns: 1fr; }
+            .tn-open { width: 100%; }
+            .tn-rowbody { padding: 4px 12px 14px; }
+            .tn-research { padding: 14px 12px; }
+            .tn-panel { padding: 15px 13px; }
+        }
+
+        /* ------------------------------------------------------ tables */
+        table.tn-table { width: 100%; border-collapse: collapse; font-size: .94rem; }
+        .tn-scroll { overflow-x: auto; background: var(--tn-panel); border: 1px solid var(--tn-line); border-radius: 14px; padding: 6px 14px; }
+        table.tn-table th, table.tn-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--tn-line-soft); white-space: nowrap; color: var(--tn-text-2); }
+        table.tn-table th { color: var(--tn-dim); font: 800 .76rem/1 "Inter", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+        table.tn-table td b { color: #fff; font-variant-numeric: tabular-nums; }
+        .tn-up { color: var(--tn-green); font-weight: 700; }
+        .tn-down { color: var(--tn-red); font-weight: 700; }
+
+        /* --------------------------------------------------- game files */
+        .tn-gf { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+        .tn-gf-card { display: block; background: var(--tn-panel); border: 1px solid var(--tn-line); border-radius: 14px; padding: 16px 18px; text-decoration: none; color: var(--tn-text); }
+        .tn-gf-card:hover { border-color: rgba(76,194,255,.55); }
+        .tn-gf-card .k { display: block; font: 800 .74rem/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--tn-blue); margin-bottom: 9px; }
+        .tn-gf-card h3 { margin: 0 0 8px; font: 800 1.1rem/1.3 "Inter", sans-serif; color: #fff; }
+        .tn-gf-card p { margin: 0; color: var(--tn-text-2); font-size: .9rem; line-height: 1.55; }
+        .tn-gf-card .d { display: block; margin-top: 10px; font-size: .8rem; color: var(--tn-dim); font-variant-numeric: tabular-nums; }
+        .tn-note { background: var(--tn-panel); border: 1px solid var(--tn-line); border-radius: 14px; padding: 18px 20px; color: var(--tn-text-2); font-size: .94rem; line-height: 1.7; margin-top: 26px; }
+        .tn-note b { color: #fff; }
         .tn-note a { color: var(--tn-blue); font-weight: 700; text-decoration: none; }
-        .tn-empty { color: var(--tn-muted); padding: 26px 4px; }
-        .tn-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .tn-controls select, .tn-controls input {
-            background: var(--tn-panel-2); color: var(--tn-text);
-            border: 1px solid var(--tn-border); border-radius: 8px; padding: 7px 10px; font: 600 .82rem "Inter", sans-serif;
-        }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
@@ -200,7 +358,7 @@
 .hh-tabs .hh-tab.is-active{background:#1D7FE8;border-color:#1D7FE8;color:#041014}
 </style>
 </head>
-<body class="tmr-ds tmr-site-shell">
+<body class="tmr-ds tmr-ds--dark tmr-site-shell">
 <main class="tn-shell">
         <nav class="hh-tabs" aria-label="Handicapping Hub sports">
         <a class="hh-tab" href="/handicapping/">All Sports</a>
@@ -212,16 +370,16 @@
         </nav>
 
     <section class="tn-hero" aria-labelledby="tn-title">
-        <span class="tn-kicker">Tennis Hub</span>
-        <h1 id="tn-title">Every ATP and WTA match, with the price and the record behind it.</h1>
-        <p>Today's singles board, both tours, with the moneyline, the game handicap, the total games line and the set markets that most books bury. Beside every price is what the season actually says: the win and loss record, the record on the surface being played on, games won, tiebreaks, deciding sets, the last ten matches and the head to head.</p>
-        <p>Every number on this page is counted from completed 2026 matches. Nothing is modelled, projected or estimated, and where a figure does not exist the space is left empty rather than filled.</p>
+        <span class="tn-kicker">Tennis Handicapping</span>
+        <h1 id="tn-title">Who are these two, how are they playing, and how do they match up?</h1>
+        <p>Every ATP and WTA singles match, built as a research page rather than a price list. Open any match and you get the two players facing each other, their season and current surface numbers side by side, the last ten results with the scores and the opponents, the full career head to head, what each surface says about them, and only then the market.</p>
+        <p>Every number here is counted from completed 2026 matches. Nothing is modelled, projected or estimated, and where a figure does not exist the space is left empty rather than filled.</p>
         <div class="tn-top" id="tn-top" hidden>
             <p class="tn-top-h">Top of the tour right now</p>
             <div class="tn-top-row" id="tn-toprow"></div>
         </div>
         <div class="tn-tabs" role="tablist" aria-label="Sections">
-            <button class="tn-tab" role="tab" aria-selected="true" data-view="board">Today's board</button>
+            <button class="tn-tab" role="tab" aria-selected="true" data-view="board">Today's matchups</button>
             <button class="tn-tab" role="tab" aria-selected="false" data-view="rankings">Rankings</button>
             <button class="tn-tab" role="tab" aria-selected="false" data-view="leaders">Season leaders</button>
         </div>
@@ -229,23 +387,29 @@
 
     <section id="tn-view-board">
         <div class="tn-section-head">
-            <h2>The board</h2>
+            <h2>Featured matchup</h2>
+            <p id="tn-featmeta"></p>
+        </div>
+        <div id="tn-featured"><p class="tn-empty">Loading the featured matchup.</p></div>
+
+        <div class="tn-section-head">
+            <h2>The full board</h2>
             <div class="tn-controls">
-                <label class="tn-pill" for="tn-date" style="border:none;padding:0;color:var(--tn-muted)">Date</label>
+                <label for="tn-date">Date</label>
                 <input type="date" id="tn-date">
-                <select id="tn-tour">
+                <select id="tn-tour" aria-label="Tour">
                     <option value="">ATP and WTA</option>
                     <option value="atp">ATP only</option>
                     <option value="wta">WTA only</option>
                 </select>
-                <select id="tn-filter">
+                <select id="tn-filter" aria-label="Which matches">
                     <option value="priced">Matches with a price</option>
                     <option value="all">Every match on the schedule</option>
                     <option value="upcoming">Not started yet</option>
                 </select>
             </div>
         </div>
-        <p class="tn-section-head" style="margin-top:0"><span id="tn-boardmeta" style="color:var(--tn-muted);font-size:.85rem"></span></p>
+        <p style="margin:0 0 14px"><span id="tn-boardmeta" style="color:var(--tn-text-2);font-size:.9rem"></span></p>
         <div id="tn-board"><p class="tn-empty">Loading the board.</p></div>
     </section>
 
@@ -253,20 +417,20 @@
         <div class="tn-section-head">
             <h2>Rankings</h2>
             <div class="tn-controls">
-                <select id="tn-ranktour">
+                <select id="tn-ranktour" aria-label="Tour">
                     <option value="atp">ATP singles</option>
                     <option value="wta">WTA singles</option>
                 </select>
             </div>
         </div>
-        <div class="tn-card tn-scroll" id="tn-rankings"><p class="tn-empty">Loading rankings.</p></div>
+        <div class="tn-scroll" id="tn-rankings"><p class="tn-empty">Loading rankings.</p></div>
     </section>
 
     <section id="tn-view-leaders" hidden>
         <div class="tn-section-head">
             <h2>Season leaders</h2>
             <div class="tn-controls">
-                <select id="tn-lmetric">
+                <select id="tn-lmetric" aria-label="Metric">
                     <option value="wins">Match wins</option>
                     <option value="win_pct">Match win percentage</option>
                     <option value="game_win_pct">Share of games won</option>
@@ -275,12 +439,12 @@
                     <option value="straight_sets_wins">Straight sets wins</option>
                     <option value="titles">Titles</option>
                 </select>
-                <select id="tn-ltour">
+                <select id="tn-ltour" aria-label="Tour">
                     <option value="">ATP and WTA</option>
                     <option value="atp">ATP</option>
                     <option value="wta">WTA</option>
                 </select>
-                <select id="tn-lsurface">
+                <select id="tn-lsurface" aria-label="Surface">
                     <option value="">Every surface</option>
                     <option value="Hard">Hard</option>
                     <option value="Clay">Clay</option>
@@ -288,7 +452,7 @@
                 </select>
             </div>
         </div>
-        <div class="tn-card tn-scroll" id="tn-leaders"><p class="tn-empty">Loading leaders.</p></div>
+        <div class="tn-scroll" id="tn-leaders"><p class="tn-empty">Loading leaders.</p></div>
     </section>
 
     <section id="tn-gamefiles">
@@ -300,16 +464,15 @@
     </section>
 
     <div class="tn-note">
-        <b>Where these numbers come from.</b> Matches, draws, results and rankings are read from the ESPN tennis feed; prices are the tennis board TrustMyRecord already carries in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>. Surfaces come from the published ATP and WTA tour calendars. Records, surface splits, games, sets, tiebreaks, deciding sets and head to head are counted here from every completed singles match of the season.
+        <b>Where these numbers come from.</b> Matches, draws, results and rankings are read from the ESPN tennis feed; prices are the tennis board TrustMyRecord already carries in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>. Surfaces come from the published ATP and WTA tour calendars. Records, surface splits, games, sets, tiebreaks, deciding sets, form and head to head are counted here from completed singles matches, the season for the splits and every season the feed carries for the head to head.
         <br><br>
-        <b>More markets.</b> Set betting, set handicaps, total sets, a player's own total games, and the serve, break and ace props come from Bovada and appear on a match when they carry it. The full boards are in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>.
+        <b>More markets.</b> Set betting, set handicaps, total sets, a player&rsquo;s own total games, and the serve, break and ace props come from Bovada and appear on a match when they carry it. The full boards are in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>.
         <br><br>
-        <b>What is deliberately missing.</b> Serve and return statistics. Aces, first serve percentage, hold and break rates are not carried by the feed behind this page, so they are not published here rather than estimated. When a match has no price it is because the board has no market for it, usually a qualifying or lower tier event, and the card says so.
+        <b>What is deliberately missing.</b> Serve and return statistics. Aces, double faults, first serve percentage, first and second serve points won, hold and break rates are not carried by the feed behind this page, so they are not published here rather than estimated. When a match has no price it is because the board has no market for it, usually a qualifying or lower tier event, and the card says so.
         <br><br>
         <b>Read the daily piece.</b> One tennis match gets a full write up every day: <a href="/matchup-of-the-day/tennis/">Tennis Matchup of the Day</a>.
     </div>
 </main>
-
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script>
 (function () {
@@ -328,8 +491,9 @@
     function rec(r) { return r ? r.wins + '-' + r.losses : ''; }
     function pctOf(a, b) {
         var t = (a || 0) + (b || 0);
-        return t ? (100 * a / t).toFixed(1) + '%' : '';
+        return t ? (100 * a / t) : null;
     }
+    function pct1(v) { return v == null ? '' : v.toFixed(1) + '%'; }
     function american(v) {
         if (v == null) return '';
         return v > 0 ? '+' + v : String(v);
@@ -340,162 +504,696 @@
         if (isNaN(d.getTime())) return '';
         return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
+    function clockOnly(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+    function dayOnly(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    function shortDate(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+        return d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+    }
     function todayLocal() {
         var d = new Date();
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
-
-    /* ------------------------------------------------------------- board -- */
-
-    function statRow(label, value) {
-        if (value == null || value === '') return '';
-        return '<div class="tn-stat"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
+    function initials(name) {
+        return String(name || '').split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+    }
+    /* The face. A player ESPN has never photographed keeps a monogram on the
+       same disc, which is the neutral fallback, never a cartoon. */
+    function face(name, url, cls) {
+        return '<span class="tn-face' + (cls ? ' ' + cls : '') + '"><span>' + esc(initials(name)) + '</span>'
+            + (url ? '<img src="' + esc(url) + '" alt="' + esc(name) + '" loading="lazy" decoding="async"'
+                + ' onerror="this.dataset.missing=1">' : '') + '</span>';
+    }
+    function flagImg(url, country, cls) {
+        if (!url) return '';
+        return '<img class="' + (cls || 'tn-flag') + '" src="' + esc(url) + '" alt="' + esc(country || '') + '" loading="lazy">';
+    }
+    /* The scoreline out of an ESPN result note, which reads
+       "(4) Coco Gauff (USA) bt (14) Iva Jovic (USA) 6-1 6-4". */
+    function scoreFromNote(note) {
+        if (!note) return '';
+        var m = String(note).match(/((?:\d+-\d+(?:\s*\([\d\s-]+\))?\s*)+)$/);
+        return m ? m[1].trim() : '';
+    }
+    /* The seed a player carried in a result note, read only off a note from the
+       same event, because a seed belongs to one draw and nothing else. */
+    function seedFromNote(note, playerName) {
+        if (!note || !playerName) return null;
+        var esc1 = String(playerName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var m = String(note).match(new RegExp('\\((\\d+)\\)\\s+' + esc1));
+        return m ? m[1] : null;
     }
 
-    function playerBlock(p, market, side, surface, completed) {
-        var c = p.card;
-        var price = market && market.moneyline
-            ? american(side === 0 ? market.moneyline.a : market.moneyline.b) : null;
-        var novig = market && market.moneyline && market.moneyline.noVigA != null
-            ? (100 * (side === 0 ? market.moneyline.noVigA : market.moneyline.noVigB)).toFixed(1) + '%'
-            : null;
-        var initials = String(p.name || '').split(' ').map(function (w) { return w[0]; })
-            .join('').slice(0, 2).toUpperCase();
-        var shot = c && c.headshot ? c.headshot : null;
-        var html = '<div class="tn-player' + (completed && p.winner ? ' won' : '') + '">';
-        html += '<div class="tn-pname">';
-        html += '<span class="tn-face"><span>' + esc(initials) + '</span>'
-            + (shot ? '<img src="' + esc(shot) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async"'
-                + ' onerror=\"this.dataset.missing=1\">' : '')
-            + '</span>';
-        html += '<b>' + esc(p.name) + '</b>';
-        if (p.flag) html += '<img class="tn-flag" src="' + esc(p.flag) + '" alt="' + esc(p.country || '') + '" loading="lazy">';
-        html += '</div>';
-        var rankBits = [];
-        if (c && c.rank) rankBits.push('No. ' + c.rank);
-        if (p.country) rankBits.push(p.country);
-        if (c && c.titles) rankBits.push(c.titles + (c.titles === 1 ? ' title' : ' titles'));
-        html += '<div class="tn-prank">' + esc(rankBits.join(' · ') || 'Unranked') + '</div>';
-        if (price) {
-            html += '<div class="tn-price">' + esc(price)
-                + (novig ? '<small>' + esc(novig) + ' to win, vig removed</small>' : '') + '</div>';
-        }
-        if (c) {
-            html += '<div class="tn-stats">';
-            html += statRow('Season', rec(c.record));
-            if (c.surface_record) {
-                html += statRow(surface, rec(c.surface_record));
-            }
-            html += statRow('Games won', pctOf(c.games.won, c.games.lost));
-            html += statRow('Sets won', pctOf(c.sets.won, c.sets.lost));
-            html += statRow('Tiebreaks', c.tiebreaks.won + '-' + c.tiebreaks.lost);
-            html += statRow('Deciding sets', c.deciding_sets.wins + '-' + c.deciding_sets.losses);
-            html += '</div>';
-            if (c.form && c.form.matches.length) {
-                html += '<div class="tn-form" title="Last ten matches, most recent on the right">';
-                c.form.matches.forEach(function (m) {
-                    html += '<i class="' + (m.won ? 'w' : 'l') + '" title="'
-                        + esc((m.date || '').slice(0, 10) + ' ' + m.event + ' ' + m.round + ' vs ' + m.opponent + ' ' + m.sets)
-                        + '">' + (m.won ? 'W' : 'L') + '</i>';
-                });
-                html += '</div>';
-            }
-        } else {
-            html += '<div class="tn-prank">No completed matches recorded this season.</div>';
-        }
-        return html + '</div>';
+    /* ------------------------------------------------------------ caches -- */
+
+    var cache = { players: {}, h2h: {}, ranks: null };
+
+    function playerData(id) {
+        if (!id) return Promise.resolve(null);
+        if (cache.players[id]) return cache.players[id];
+        cache.players[id] = get('/tennis/players/' + encodeURIComponent(id))
+            .then(function (d) { return d && d.ok ? d.player : null; })
+            .catch(function () { return null; });
+        return cache.players[id];
+    }
+    function h2hData(a, b) {
+        var key = a + '|' + b;
+        if (cache.h2h[key]) return cache.h2h[key];
+        cache.h2h[key] = get('/tennis/h2h?career=1&a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b))
+            .then(function (d) { return d && d.ok ? d : null; })
+            .catch(function () { return null; });
+        return cache.h2h[key];
+    }
+    /* One ranking read for both tours, used to say what an opponent was ranked.
+       A form line that says "beat Iva Jovic" is a name; "beat Iva Jovic, No. 14"
+       is handicapping. */
+    function rankIndex() {
+        if (cache.ranks) return cache.ranks;
+        cache.ranks = Promise.all([
+            get('/tennis/rankings?tour=atp&limit=150').catch(function () { return null; }),
+            get('/tennis/rankings?tour=wta&limit=150').catch(function () { return null; })
+        ]).then(function (res) {
+            var idx = {};
+            res.forEach(function (d) {
+                if (d && d.ok) d.rows.forEach(function (r) { idx[r.id] = r; });
+            });
+            return idx;
+        });
+        return cache.ranks;
     }
 
-    function marketBox(m) {
-        if (!m) return '';
+    /* -------------------------------------------------- comparison bars -- */
+
+    function cmpRow(label, a, b, note) {
+        if (a == null && b == null) return '';
+        if (a.bar == null && b.bar == null) return '';
+        var max = Math.max(a.bar || 0, b.bar || 0) || 1;
+        var aw = Math.max(3, Math.round(100 * (a.bar || 0) / max));
+        var bw = Math.max(3, Math.round(100 * (b.bar || 0) / max));
+        var aAdv = (a.bar || 0) > (b.bar || 0);
+        var bAdv = (b.bar || 0) > (a.bar || 0);
+        return '<div class="cmp">'
+            + '<div class="cmp-label">' + esc(label) + '</div>'
+            + '<div class="cmp-bars">'
+            + '<b class="v left' + (aAdv ? ' adv' : '') + '">' + esc(a.text) + '</b>'
+            + '<span class="cmp-track left' + (aAdv ? ' adv' : '') + '"><i style="width:' + aw + '%"></i></span>'
+            + '<span class="cmp-track right' + (bAdv ? ' adv' : '') + '"><i style="width:' + bw + '%"></i></span>'
+            + '<b class="v right' + (bAdv ? ' adv' : '') + '">' + esc(b.text) + '</b>'
+            + '</div>'
+            + (note ? '<div class="cmp-note">' + esc(note) + '</div>' : '')
+            + '</div>';
+    }
+
+    function comparisonPanel(ca, cb, surface, pa, pb) {
+        if (!ca || !cb) return '';
         var rows = '';
-        if (m.gameSpread && m.gameSpread.pointA != null) {
-            rows += '<div class="row"><span>Game handicap</span><b>'
-                + esc((m.gameSpread.pointA > 0 ? '+' : '') + m.gameSpread.pointA) + ' / '
-                + esc((m.gameSpread.pointB > 0 ? '+' : '') + m.gameSpread.pointB) + '</b></div>';
+        function push(label, av, bv, note) {
+            if (av == null || bv == null) return;
+            rows += cmpRow(label, av, bv, note);
         }
-        if (m.total && m.total.point != null) {
-            rows += '<div class="row"><span>Total games</span><b>' + esc(m.total.point)
-                + ' (o ' + esc(american(m.total.over)) + ' / u ' + esc(american(m.total.under)) + ')</b></div>';
+        function val(text, bar) { return text === '' || text == null ? null : { text: text, bar: bar }; }
+
+        push('Season record',
+            val(rec(ca.record), ca.rates && ca.rates.win_pct),
+            val(rec(cb.record), cb.rates && cb.rates.win_pct),
+            'Match wins and losses in 2026');
+        push('Season win rate',
+            val(pct1(ca.rates && ca.rates.win_pct), ca.rates && ca.rates.win_pct),
+            val(pct1(cb.rates && cb.rates.win_pct), cb.rates && cb.rates.win_pct));
+        if (surface && ca.surfaces && cb.surfaces && ca.surfaces[surface] && cb.surfaces[surface]) {
+            var sa = ca.surfaces[surface], sb = cb.surfaces[surface];
+            push('On ' + surface.toLowerCase() + ' this season',
+                val(rec(sa), pctOf(sa.wins, sa.losses)),
+                val(rec(sb), pctOf(sb.wins, sb.losses)),
+                'The surface this match is played on');
         }
-        (m.sets || []).forEach(function (s) {
+        if (pa && pb) {
+            var la = last10(pa), lb = last10(pb);
+            push('Last 10 matches',
+                val(la.wins + '-' + la.losses, 10 * la.wins),
+                val(lb.wins + '-' + lb.losses, 10 * lb.wins));
+        }
+        push('Games won',
+            val(pct1(ca.rates && ca.rates.game_win_pct), ca.rates && ca.rates.game_win_pct),
+            val(pct1(cb.rates && cb.rates.game_win_pct), cb.rates && cb.rates.game_win_pct),
+            ca.games && cb.games ? ca.games.won + ' of ' + (ca.games.won + ca.games.lost)
+                + ' against ' + cb.games.won + ' of ' + (cb.games.won + cb.games.lost) : '');
+        push('Sets won',
+            val(pct1(ca.rates && ca.rates.set_win_pct), ca.rates && ca.rates.set_win_pct),
+            val(pct1(cb.rates && cb.rates.set_win_pct), cb.rates && cb.rates.set_win_pct),
+            ca.sets && cb.sets ? rec({ wins: ca.sets.won, losses: ca.sets.lost }) + ' against '
+                + rec({ wins: cb.sets.won, losses: cb.sets.lost }) + ' in sets' : '');
+        if (ca.tiebreaks && cb.tiebreaks && (ca.tiebreaks.won + ca.tiebreaks.lost + cb.tiebreaks.won + cb.tiebreaks.lost) > 0) {
+            push('Tiebreaks',
+                val(ca.tiebreaks.won + '-' + ca.tiebreaks.lost, ca.rates && ca.rates.tiebreak_win_pct),
+                val(cb.tiebreaks.won + '-' + cb.tiebreaks.lost, cb.rates && cb.rates.tiebreak_win_pct),
+                pct1(ca.rates && ca.rates.tiebreak_win_pct) + ' against ' + pct1(cb.rates && cb.rates.tiebreak_win_pct));
+        }
+        if (ca.deciding_sets && cb.deciding_sets) {
+            push('Deciding sets',
+                val(ca.deciding_sets.wins + '-' + ca.deciding_sets.losses, ca.rates && ca.rates.deciding_set_win_pct),
+                val(cb.deciding_sets.wins + '-' + cb.deciding_sets.losses, cb.rates && cb.rates.deciding_set_win_pct),
+                'Matches that went the distance');
+        }
+        push('Straight sets wins',
+            val(ca.straight_sets_wins == null ? '' : String(ca.straight_sets_wins), ca.rates && ca.rates.straight_sets_share),
+            val(cb.straight_sets_wins == null ? '' : String(cb.straight_sets_wins), cb.rates && cb.rates.straight_sets_share),
+            pct1(ca.rates && ca.rates.straight_sets_share) + ' of wins against ' + pct1(cb.rates && cb.rates.straight_sets_share));
+        push('Titles in 2026',
+            val(ca.titles == null ? '' : String(ca.titles), (ca.titles || 0) + 0.15),
+            val(cb.titles == null ? '' : String(cb.titles), (cb.titles || 0) + 0.15));
+        push('Ranking points',
+            val(ca.rank_points == null ? '' : String(ca.rank_points), ca.rank_points),
+            val(cb.rank_points == null ? '' : String(cb.rank_points), cb.rank_points),
+            ca.rank && cb.rank ? 'No. ' + ca.rank + ' against No. ' + cb.rank : '');
+
+        if (!rows) return '';
+        return '<div class="tn-panel"><h3>Side by side<em>' + esc(ca.name) + ' left, ' + esc(cb.name) + ' right</em></h3>'
+            + rows
+            + '<p class="tn-mnote">Serve and return numbers, aces, double faults, first serve percentage and hold and break rates are not carried by the feed behind this page, so they are not shown rather than estimated.</p>'
+            + '</div>';
+    }
+
+    /* --------------------------------------------------------- form ----- */
+
+    function last10(p) {
+        var r = (p && p.results) || [];
+        var slice = r.slice(-10);
+        var w = 0;
+        slice.forEach(function (x) { if (x.won) w += 1; });
+        return { wins: w, losses: slice.length - w, matches: slice.slice().reverse() };
+    }
+    function winStreak(p) {
+        var r = (p && p.results) || [];
+        var n = 0;
+        for (var i = r.length - 1; i >= 0; i -= 1) {
+            if (r[i].won) n += 1; else break;
+        }
+        return n;
+    }
+    function formPanel(card, p, ranks, name) {
+        if (!p || !p.results || !p.results.length) {
+            return '<div><div class="tn-formhead">' + face(name, card && card.headshot) + '<span>' + esc(name) + '</span></div>'
+                + '<p class="tn-empty">No completed matches recorded this season.</p></div>';
+        }
+        var l = last10(p);
+        var strip = l.matches.slice().reverse().map(function (m) {
+            return '<i class="' + (m.won ? 'w' : 'l') + '">' + (m.won ? 'W' : 'L') + '</i>';
+        }).join('');
+        var rows = l.matches.map(function (m) {
+            var opp = ranks && ranks[m.opponent_id];
+            var oppRank = opp && opp.rank ? ' &middot; No. ' + opp.rank : '';
+            var score = scoreFromNote(m.note) || m.games || m.sets || '';
+            return '<div class="tn-fm">'
+                + '<span class="tn-wl ' + (m.won ? 'w' : 'l') + '">' + (m.won ? 'W' : 'L') + '</span>'
+                + '<span class="tn-fm-main"><b>' + esc(m.opponent || 'Opponent') + oppRank + '</b>'
+                + '<span>' + esc([m.event, m.round, m.surface, shortDate(m.date)].filter(Boolean).join(' · ')) + '</span></span>'
+                + '<span class="tn-fm-score">' + esc(score) + '</span>'
+                + '</div>';
+        }).join('');
+        return '<div>'
+            + '<div class="tn-formhead">' + face(name, card && card.headshot) + '<span>' + esc(name) + '</span>'
+            + '<em>' + l.wins + '-' + l.losses + ' in the last ' + l.matches.length + '</em></div>'
+            + '<div class="tn-strip">' + strip + '</div>'
+            + rows + '</div>';
+    }
+
+    /* ---------------------------------------------------------- head to head */
+
+    function h2hPanel(h, nameA, nameB) {
+        if (!h) return '';
+        var career = h.career && !h.career.error ? h.career : null;
+        var meetings = career ? career.meetings : h.meetings;
+        if (!meetings) {
+            return '<div class="tn-panel"><h3>Head to head</h3>'
+                + '<p class="tn-sub">No previous meetings. These two have never played each other in the seasons this feed carries.</p></div>';
+        }
+        var split = String((career ? career.record : h.record) || '0-0').split('-');
+        var aw = Number(split[0] || 0), bw = Number(split[1] || 0);
+        var out = '<div class="tn-panel"><h3>Head to head<em>'
+            + esc(meetings + (meetings === 1 ? ' meeting' : ' meetings')
+                + (career && career.since ? ' since ' + career.since : '')) + '</em></h3>';
+        out += '<div class="tn-h2h-top">'
+            + '<span class="side"><b>' + aw + '</b><span>' + esc(nameA) + '</span></span>'
+            + '<span class="mid">Wins</span>'
+            + '<span class="side"><b>' + bw + '</b><span>' + esc(nameB) + '</span></span>'
+            + '</div>';
+        if (career && career.streak && career.streak.count > 1) {
+            var sname = career.streak.winnerId === h.aId ? nameA : nameB;
+            out += '<p class="tn-sub"><b style="color:#fff">' + esc(sname) + '</b> has won the last '
+                + career.streak.count + ' meetings.</p>';
+        }
+        var bys = (career && career.by_surface) || h.by_surface || {};
+        var surfBits = Object.keys(bys).map(function (s) {
+            return esc(s) + ' ' + bys[s].wins + '-' + bys[s].losses;
+        });
+        if (surfBits.length) {
+            out += '<p class="tn-sub">By surface, from ' + esc(nameA) + '&rsquo;s side: ' + surfBits.join(', ') + '.</p>';
+        }
+        var list = (career && career.matches) || h.matches || [];
+        list = list.slice().sort(function (x, y) { return String(y.date).localeCompare(String(x.date)); }).slice(0, 8);
+        out += list.map(function (m) {
+            return '<div class="tn-meet">'
+                + '<span><b>' + esc(m.winner) + ' beat ' + esc(m.loser) + '</b>'
+                + '<span>' + esc([m.event, m.round, m.surface, shortDate(m.date)].filter(Boolean).join(' · ')) + '</span></span>'
+                + '<span class="sc">' + esc(scoreFromNote(m.note) || (m.setsWinner + '-' + m.setsLoser))
+                + '<em>' + esc(m.winner) + '</em></span>'
+                + '</div>';
+        }).join('');
+        return out + '</div>';
+    }
+
+    /* ------------------------------------------------------ surface split */
+
+    function surfacePanel(ca, cb, surface) {
+        if (!ca || !cb) return '';
+        var order = ['Hard', 'Clay', 'Grass'];
+        var cards = order.map(function (s) {
+            var a = ca.surfaces && ca.surfaces[s], b = cb.surfaces && cb.surfaces[s];
+            if (!a && !b) return '';
+            var isNow = surface === s;
+            function row(card, r) {
+                if (!r) return '<div class="tn-surf-row"><span>' + esc(card.name) + '</span><b>No matches</b></div>';
+                var p = pctOf(r.wins, r.losses);
+                return '<div class="tn-surf-row"><span>' + esc(card.name) + '</span><b>'
+                    + r.wins + '-' + r.losses + (p == null ? '' : '<em>' + pct1(p) + '</em>') + '</b></div>';
+            }
+            return '<div class="tn-surf-card' + (isNow ? ' now' : '') + '"><h4>' + esc(s)
+                + (isNow ? '<em>This match</em>' : '') + '</h4>'
+                + row(ca, a) + row(cb, b) + '</div>';
+        }).join('');
+        if (!cards) return '';
+        return '<div class="tn-panel"><h3>Surface performance<em>2026 singles, main draw and qualifying</em></h3>'
+            + '<div class="tn-surf">' + cards + '</div></div>';
+    }
+
+    /* ------------------------------------------------- key handicapping -- */
+
+    function topTenRecord(p, ranks) {
+        if (!p || !p.results || !ranks) return null;
+        var w = 0, l = 0;
+        p.results.forEach(function (r) {
+            var o = ranks[r.opponent_id];
+            if (o && o.rank && o.rank <= 10) { if (r.won) w += 1; else l += 1; }
+        });
+        return (w + l) ? { wins: w, losses: l } : null;
+    }
+
+    function keysPanel(m, ca, cb, pa, pb, h, ranks) {
+        var nameA = ca ? ca.name : m.players[0].name;
+        var nameB = cb ? cb.name : m.players[1].name;
+        var tiles = [];
+        function tile(head, body, cls) {
+            tiles.push('<div class="tn-key' + (cls ? ' ' + cls : '') + '"><b>' + head + '</b><span>' + body + '</span></div>');
+        }
+        var surf = m.surface;
+        [[ca, nameA], [cb, nameB]].forEach(function (pair) {
+            var c = pair[0], n = pair[1];
+            if (!c || !surf || !c.surfaces || !c.surfaces[surf]) return;
+            var s = c.surfaces[surf];
+            var p = pctOf(s.wins, s.losses);
+            tile(s.wins + '-' + s.losses,
+                '<b>' + esc(n) + '</b> on ' + esc(surf.toLowerCase()) + ' courts this season'
+                + (p == null ? '' : ', ' + pct1(p) + ' of matches won') + '.');
+        });
+        /* "Has not lost since" is dated off the LAST DEFEAT, not off the first win
+           of the run, which is a different day and would be wrong. */
+        function streakTile(p, n) {
+            var st = winStreak(p);
+            if (st < 3) return;
+            var prior = p.results[p.results.length - st - 1];
+            tile(st + ' straight', '<b>' + esc(n) + '</b> has won ' + st
+                + ' in a row and has not lost since '
+                + (prior ? esc(shortDate(prior.date)) : 'the season started') + '.', 'pos');
+        }
+        streakTile(pa, nameA);
+        streakTile(pb, nameB);
+        if (ca && cb && ca.rates && cb.rates && ca.rates.game_win_pct != null && cb.rates.game_win_pct != null) {
+            var gap = Math.abs(ca.rates.game_win_pct - cb.rates.game_win_pct);
+            if (gap >= 2) {
+                var lead = ca.rates.game_win_pct > cb.rates.game_win_pct ? [nameA, ca, nameB, cb] : [nameB, cb, nameA, ca];
+                tile(gap.toFixed(1) + ' points',
+                    '<b>' + esc(lead[0]) + '</b> wins ' + pct1(lead[1].rates.game_win_pct)
+                    + ' of the games played, against ' + pct1(lead[3].rates.game_win_pct) + ' for ' + esc(lead[2]) + '.');
+            }
+        }
+        [[ca, nameA], [cb, nameB]].forEach(function (pair) {
+            var c = pair[0], n = pair[1];
+            if (!c || !c.tiebreaks) return;
+            var t = c.tiebreaks.won + c.tiebreaks.lost;
+            if (t < 8) return;
+            tile(c.tiebreaks.won + '-' + c.tiebreaks.lost,
+                '<b>' + esc(n) + '</b> in tiebreaks this season, ' + pct1(c.rates.tiebreak_win_pct) + '.',
+                c.rates.tiebreak_win_pct >= 55 ? 'pos' : (c.rates.tiebreak_win_pct <= 45 ? 'neg' : ''));
+        });
+        [[ca, nameA], [cb, nameB]].forEach(function (pair) {
+            var c = pair[0], n = pair[1];
+            if (!c || !c.deciding_sets) return;
+            var t = c.deciding_sets.wins + c.deciding_sets.losses;
+            if (t < 8) return;
+            tile(c.deciding_sets.wins + '-' + c.deciding_sets.losses,
+                '<b>' + esc(n) + '</b> when the match goes to a deciding set, '
+                + pct1(c.rates.deciding_set_win_pct) + '.',
+                c.rates.deciding_set_win_pct >= 55 ? 'pos' : (c.rates.deciding_set_win_pct <= 45 ? 'neg' : ''));
+        });
+        [[pa, nameA], [pb, nameB]].forEach(function (pair) {
+            var t = topTenRecord(pair[0], ranks);
+            if (!t) return;
+            tile(t.wins + '-' + t.losses,
+                '<b>' + esc(pair[1]) + '</b> this season against opponents who are ranked in the top ten today.');
+        });
+        var career = h && h.career && !h.career.error ? h.career : null;
+        if (career && career.meetings) {
+            var split = String(career.record || '0-0').split('-');
+            var aw = Number(split[0] || 0), bw = Number(split[1] || 0);
+            var leadName = aw === bw ? null : (aw > bw ? nameA : nameB);
+            tile(Math.max(aw, bw) + '-' + Math.min(aw, bw),
+                leadName ? '<b>' + esc(leadName) + '</b> leads the career head to head over '
+                    + career.meetings + (career.meetings === 1 ? ' meeting' : ' meetings')
+                    + (career.since ? ' since ' + career.since : '') + '.'
+                    : 'The career head to head is level after ' + career.meetings + ' meetings.');
+        }
+        if (m.market && m.market.moneyline && m.market.moneyline.noVigPctA != null) {
+            var ml = m.market.moneyline;
+            var favName = ml.noVigPctA >= ml.noVigPctB ? nameA : nameB;
+            var favPct = Math.max(ml.noVigPctA, ml.noVigPctB);
+            tile(favPct.toFixed(1) + '%',
+                'What the market gives <b>' + esc(favName) + '</b> once the vig is taken out'
+                + (ml.holdPct != null ? ', off a ' + ml.holdPct.toFixed(1) + '% hold' : '') + '.');
+        }
+        if (!tiles.length) return '';
+        return '<div class="tn-panel"><h3>Key handicapping stats<em>counted, not modelled</em></h3>'
+            + '<div class="tn-keys">' + tiles.join('') + '</div></div>';
+    }
+
+    /* -------------------------------------------------- tournament context */
+
+    function contextPanel(m, ca, cb) {
+        var rows = [];
+        function row(k, v) { if (v) rows.push('<div class="tn-surf-row"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>'); }
+        row('Tournament', m.event);
+        row('Level', m.tier + (m.major ? ', a major' : ''));
+        row('Location', m.venue);
+        row('Court', m.court);
+        row('Surface', m.surface);
+        row('Round', m.round);
+        row('Format', m.best_of ? 'Best of ' + m.best_of + ' sets' : '');
+        row('Start', m.start_utc ? dayOnly(m.start_utc) + ', ' + clockOnly(m.start_utc) + ' your time' : '');
+        row('Television', m.broadcast);
+        var evRows = [];
+        [ca, cb].forEach(function (c) {
+            if (!c || !c.by_event) return;
+            var e = c.by_event.filter(function (x) { return x.event === m.event; })[0];
+            if (!e) return;
+            evRows.push('<div class="tn-surf-row"><span>' + esc(c.name) + ' at this event</span><b>'
+                + e.wins + '-' + e.losses + '</b></div>');
+        });
+        if (!rows.length && !evRows.length) return '';
+        return '<div class="tn-panel"><h3>Tournament context</h3>' + rows.join('') + evRows.join('') + '</div>';
+    }
+
+    /* -------------------------------------------------------- markets --- */
+
+    var MARKET_TABS = [
+        { key: 'main', label: 'Main lines' },
+        { key: 'sets', label: 'Sets' },
+        { key: 'games', label: 'Games' },
+        { key: 'players', label: 'Player totals' },
+        { key: 'props', label: 'Props' },
+        { key: 'specials', label: 'Specials' }
+    ];
+    var GROUP_TAB = {
+        'Set 1': 'sets', 'Set 2': 'sets', 'Set 3': 'sets', 'Set 4': 'sets', 'Set 5': 'sets',
+        'Set Betting': 'sets', 'Set Handicap': 'sets', 'Total Sets': 'sets', 'Set Correct Score': 'sets',
+        'Total Games': 'games', 'Game Handicap': 'games', 'Alternate Game Handicap': 'games',
+        'Alternate Total Games': 'games',
+        'Player Total Games': 'players',
+        'Match Props': 'props', 'Serve & Break': 'props', 'Aces & Double Faults': 'props'
+    };
+
+    /* The book repeats its own group name inside every selection, so a Set
+       Betting box reads "Mirra Andreeva 2 - 0 (Set Betting)" twelve times. The
+       heading already says which market this is. */
+    function tidySelection(sel, label) {
+        var s = String(sel == null ? '' : sel).trim();
+        var suffix = '(' + label + ')';
+        if (label && s.slice(-suffix.length) === suffix) s = s.slice(0, -suffix.length).trim();
+        var prefix = label + ':';
+        if (label && s.slice(0, prefix.length) === prefix) s = s.slice(prefix.length).trim();
+        return s;
+    }
+    function mrow(label, value, head) {
+        return '<div class="tn-mrow' + (head ? ' head' : '') + '"><span>' + label + '</span><b>' + value + '</b></div>';
+    }
+    function marketsPanel(m, uid) {
+        var mk = m.market;
+        if (!mk) {
+            return '<div class="tn-panel"><h3>The market</h3><p class="tn-sub">'
+                + esc(m.market_note || 'The board carries no market for this match, which is usual for qualifying and lower tier events.')
+                + '</p></div>';
+        }
+        var nameA = m.players[0].name, nameB = m.players[1].name;
+        var buckets = { main: [], sets: [], games: [], players: [], props: [], specials: [] };
+
+        var mainRows = '';
+        if (mk.moneyline) {
+            mainRows += mrow(esc(nameA), esc(american(mk.moneyline.a)), true);
+            mainRows += mrow(esc(nameB), esc(american(mk.moneyline.b)), true);
+            if (mk.moneyline.noVigPctA != null) {
+                mainRows += mrow('Vig removed', esc(mk.moneyline.noVigPctA.toFixed(1) + '% / ' + mk.moneyline.noVigPctB.toFixed(1) + '%'));
+            }
+            if (mk.moneyline.fairA != null) {
+                mainRows += mrow('Fair price', esc(american(mk.moneyline.fairA) + ' / ' + american(mk.moneyline.fairB)));
+            }
+            if (mk.moneyline.holdPct != null) mainRows += mrow('Hold', esc(mk.moneyline.holdPct.toFixed(1) + '%'));
+        }
+        if (mainRows) buckets.main.push({ label: 'Moneyline', rows: mainRows });
+        if (mk.gameSpread && mk.gameSpread.pointA != null) {
+            buckets.main.push({
+                label: 'Game handicap', rows:
+                    mrow(esc(nameA) + ' ' + esc((mk.gameSpread.pointA > 0 ? '+' : '') + mk.gameSpread.pointA), esc(american(mk.gameSpread.priceA)), true)
+                    + mrow(esc(nameB) + ' ' + esc((mk.gameSpread.pointB > 0 ? '+' : '') + mk.gameSpread.pointB), esc(american(mk.gameSpread.priceB)), true)
+            });
+        }
+        if (mk.total && mk.total.point != null) {
+            buckets.main.push({
+                label: 'Total games', rows:
+                    mrow('Over ' + esc(mk.total.point), esc(american(mk.total.over)), true)
+                    + mrow('Under ' + esc(mk.total.point), esc(american(mk.total.under)), true)
+            });
+        }
+        /* Bovada already publishes a "Set 1" group with the same two prices in
+           it. Two boxes carrying one market is exactly the clutter this rebuild
+           is removing, so the summary set line yields to the full group. */
+        var groupLabels = {};
+        (mk.groups || []).forEach(function (g) { groupLabels[g.label] = true; });
+        (mk.sets || []).forEach(function (s) {
+            if (groupLabels['Set ' + s.set]) return;
+            var rows = '';
             if (s.moneyline) {
-                rows += '<div class="row"><span>Set ' + s.set + '</span><b>'
-                    + esc(american(s.moneyline.a)) + ' / ' + esc(american(s.moneyline.b)) + '</b></div>';
+                rows += mrow(esc(nameA), esc(american(s.moneyline.a)), true);
+                rows += mrow(esc(nameB), esc(american(s.moneyline.b)), true);
             }
             if (s.total && s.total.point != null) {
-                rows += '<div class="row"><span>Set ' + s.set + ' games</span><b>' + esc(s.total.point) + '</b></div>';
+                rows += mrow('Over ' + esc(s.total.point), esc(american(s.total.over)));
+                rows += mrow('Under ' + esc(s.total.point), esc(american(s.total.under)));
             }
+            if (rows) buckets.sets.push({ label: 'Set ' + s.set + ' winner', rows: rows });
         });
-        if (!rows) return '';
-        return '<div class="tn-box"><h4>The rest of the market</h4>' + rows + '</div>';
-    }
-
-    /* Every extra market group the board carries, the same depth the sportsbook
-       shows. Bovada supplies set betting, set handicaps, total sets, per-player
-       total games and the serve, break and ace props; on a match it does not
-       carry, this simply renders nothing. */
-    function depthBoxes(m) {
-        var groups = (m.market && m.market.groups) || [];
-        if (!groups.length) return '';
-        return groups.map(function (g) {
-            var rows = g.items.slice(0, 6).map(function (it) {
-                return '<div class="row"><span>' + esc(it.selection) + '</span><b>'
-                    + esc(american(it.odds)) + '</b></div>';
+        (mk.groups || []).forEach(function (g) {
+            var tab = GROUP_TAB[g.label] || 'specials';
+            var rows = g.items.map(function (it) {
+                var sel = tidySelection(it.selection, g.label);
+                var line = it.line != null && sel.indexOf(String(it.line)) === -1 ? ' ' + it.line : '';
+                return mrow(esc(sel + line), esc(american(it.odds)));
             }).join('');
-            var more = g.count > 6
-                ? '<div class="row"><span>' + (g.count - 6) + ' more in the sportsbook</span><b></b></div>'
+            var more = g.count > g.items.length
+                ? '<p class="tn-mnote">' + (g.count - g.items.length) + ' more selections in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>.</p>'
                 : '';
-            return '<div class="tn-box"><h4>' + esc(g.label) + '</h4>' + rows + more + '</div>';
-        }).join('');
-    }
-
-    function h2hBox(h) {
-        if (!h) return '';
-        var rows = '<div class="row"><span>This season</span><b>' + esc(h.record) + '</b></div>';
-        Object.keys(h.by_surface || {}).forEach(function (s) {
-            var v = h.by_surface[s];
-            rows += '<div class="row"><span>On ' + esc(s.toLowerCase()) + '</span><b>' + v.wins + '-' + v.losses + '</b></div>';
+            buckets[tab].push({ label: g.label, rows: rows + more });
         });
-        if (h.last) {
-            rows += '<div class="row"><span>Last meeting</span><b>' + esc((h.last.date || '').slice(0, 10)) + '</b></div>';
-            rows += '<div class="row"><span>Won by</span><b>' + esc(h.last.winner) + '</b></div>';
-        }
-        return '<div class="tn-box"><h4>Head to head</h4>' + rows + '</div>';
+
+        var tabs = MARKET_TABS.filter(function (t) { return buckets[t.key].length; });
+        if (!tabs.length) return '';
+        var head = tabs.map(function (t, i) {
+            return '<button class="tn-mtab" role="tab" aria-selected="' + (i === 0 ? 'true' : 'false')
+                + '" data-mtab="' + t.key + '" data-uid="' + esc(uid) + '">' + esc(t.label) + '</button>';
+        }).join('');
+        var panels = tabs.map(function (t, i) {
+            return '<div class="tn-mgrid" data-mpanel="' + t.key + '" data-uid="' + esc(uid) + '"'
+                + (i === 0 ? '' : ' hidden') + '>'
+                + buckets[t.key].map(function (b) {
+                    return '<div class="tn-mbox"><h4>' + esc(b.label) + '</h4>' + b.rows + '</div>';
+                }).join('') + '</div>';
+        }).join('');
+        var src = [];
+        if (mk.books && mk.books.length) src.push(mk.books.join(', '));
+        if (mk.updatedAt) src.push('read ' + localTime(mk.updatedAt));
+        return '<div class="tn-panel"><h3>The market<em>' + esc(src.join(', ')) + '</em></h3>'
+            + '<div class="tn-mtabs" role="tablist" aria-label="Market groups">' + head + '</div>'
+            + panels + '</div>';
     }
 
-    function matchCard(m) {
-        var surfaceClass = (m.surface || '').toLowerCase();
-        var bits = '<span class="tn-pill ' + esc(surfaceClass) + '">' + esc(m.surface || 'Surface unlisted') + '</span>'
-            + '<span class="tn-pill">' + esc(m.tour.toUpperCase()) + '</span>';
-        if (m.completed) bits += '<span class="tn-pill final">Final</span>';
-        else if (m.status === 'STATUS_IN_PROGRESS') bits += '<span class="tn-pill live">In progress</span>';
+    /* --------------------------------------------------- matchup header -- */
 
-        var meta = [m.event, m.round];
+    function matchupHeader(m, ca, cb, pa, pb) {
+        var surfaceClass = (m.surface || '').toLowerCase();
+        var pills = '<span class="tn-pill ' + esc(surfaceClass) + '">' + esc(m.surface || 'Surface unlisted') + '</span>'
+            + '<span class="tn-pill">' + esc((m.tour || '').toUpperCase()) + '</span>'
+            + '<span class="tn-pill">' + esc(m.event || '') + '</span>'
+            + '<span class="tn-pill">' + esc(m.round || '') + '</span>';
+        if (m.major) pills += '<span class="tn-pill major">Major</span>';
+        else if (m.tier) pills += '<span class="tn-pill">' + esc(m.tier) + '</span>';
+        if (m.best_of) pills += '<span class="tn-pill">Best of ' + esc(m.best_of) + '</span>';
+        if (m.venue) pills += '<span class="tn-pill">' + esc(m.venue) + '</span>';
+        if (m.court) pills += '<span class="tn-pill">' + esc(m.court) + '</span>';
+        if (m.completed) pills += '<span class="tn-pill final">Final</span>';
+        else if (m.status === 'STATUS_IN_PROGRESS') pills += '<span class="tn-pill live">In progress</span>';
+        else if (m.start_utc) pills += '<span class="tn-pill time">' + esc(dayOnly(m.start_utc) + ', ' + clockOnly(m.start_utc)) + '</span>';
+
+        function side(i) {
+            var p = m.players[i];
+            var c = i === 0 ? ca : cb;
+            var pd = i === 0 ? pa : pb;
+            var ml = m.market && m.market.moneyline;
+            var price = ml ? american(i === 0 ? ml.a : ml.b) : null;
+            var novig = ml && ml.noVigPctA != null ? (i === 0 ? ml.noVigPctA : ml.noVigPctB).toFixed(1) + '%' : null;
+            var fav = ml && ml.a != null && ml.b != null
+                && ((i === 0 && ml.a < ml.b) || (i === 1 && ml.b < ml.a));
+            var bits = [];
+            /* The seed comes off this player's own result note inside this same
+               draw, so it is the seed the tournament gave them, never a guess. */
+            var seed = null;
+            if (pd && pd.results) {
+                for (var k = pd.results.length - 1; k >= 0; k -= 1) {
+                    if (pd.results[k].event === m.event) {
+                        seed = seedFromNote(pd.results[k].note, p.name);
+                        if (seed) break;
+                    }
+                }
+            }
+            if (seed) bits.push('<span class="seed">Seed ' + esc(seed) + '</span>');
+            if (c && c.rank) bits.push('<b>' + esc((c.tour || m.tour || '').toUpperCase()) + ' No. ' + esc(c.rank) + '</b>');
+            else bits.push('Unranked');
+            if (c && c.rank_points != null) bits.push(esc(c.rank_points) + ' pts');
+            if (p.country) bits.push(esc(p.country));
+            if (c && c.record) bits.push('<b>' + esc(rec(c.record)) + '</b> in 2026');
+            if (c && c.titles) bits.push(esc(c.titles) + (c.titles === 1 ? ' title' : ' titles'));
+
+            return '<div class="tn-vs-side ' + (i === 1 ? 'right' : 'left')
+                + (m.completed && p.winner ? ' won' : (fav ? ' fav' : '')) + '">'
+                + face(p.name, c && c.headshot ? c.headshot : null)
+                + '<div class="tn-vs-id">'
+                + '<h3 class="tn-vs-name">' + (i === 0 ? flagImg(p.flag, p.country) : '') + esc(p.name)
+                + (i === 1 ? flagImg(p.flag, p.country) : '') + '</h3>'
+                + '<div class="tn-vs-sub">' + bits.join('<span style="opacity:.45">|</span>') + '</div>'
+                + (price ? '<div class="tn-vs-price">' + esc(price)
+                    + (novig ? '<small>' + esc(novig) + ' to win, vig removed</small>' : '') + '</div>' : '')
+                + '</div></div>';
+        }
+
+        var mid = '<div class="tn-vs-mid"><span class="vs">VS</span>';
+        if (m.completed && m.result) mid += '<span class="when">' + esc(m.result) + '<em>Final</em></span>';
+        else if (m.start_utc) mid += '<span class="when">' + esc(clockOnly(m.start_utc)) + '<em>' + esc(dayOnly(m.start_utc)) + '</em></span>';
+        mid += '</div>';
+
+        return '<div class="tn-ctx">' + pills + '</div>'
+            + '<div class="tn-vs">' + side(0) + mid + side(1) + '</div>';
+    }
+
+    /* ---------------------------------------------------- research build -- */
+
+    var uidSeq = 0;
+
+    function renderResearch(m, host, featured) {
+        var a = m.players[0], b = m.players[1];
+        host.innerHTML = '<div class="tn-research' + (featured ? ' is-featured' : '') + '">'
+            + '<p class="tn-empty">Pulling both players, the head to head and the market.</p></div>';
+        Promise.all([playerData(a.id), playerData(b.id), h2hData(a.id, b.id), rankIndex()])
+            .then(function (res) {
+                var pa = res[0], pb = res[1], h = res[2], ranks = res[3];
+                var ca = (a.card) || (pa || null);
+                var cb = (b.card) || (pb || null);
+                if (h) h.aId = a.id;
+                var uid = 'm' + (uidSeq += 1);
+                var html = '<div class="tn-research' + (featured ? ' is-featured' : '') + '">';
+                html += matchupHeader(m, ca, cb, pa, pb);
+                html += keysPanel(m, ca, cb, pa, pb, h, ranks);
+                html += '<div class="tn-grid2">'
+                    + '<div>' + comparisonPanel(ca, cb, m.surface, pa, pb) + '</div>'
+                    + '<div>' + h2hPanel(h, a.name, b.name) + contextPanel(m, ca, cb) + '</div>'
+                    + '</div>';
+                html += surfacePanel(ca, cb, m.surface);
+                html += '<div class="tn-panel"><h3>Recent form<em>last ten completed matches, newest first</em></h3>'
+                    + '<div class="tn-grid2">'
+                    + formPanel(ca, pa, ranks, a.name)
+                    + formPanel(cb, pb, ranks, b.name)
+                    + '</div></div>';
+                html += marketsPanel(m, uid);
+                html += '</div>';
+                host.innerHTML = html;
+            })
+            .catch(function () {
+                host.innerHTML = '<div class="tn-research"><p class="tn-empty">'
+                    + 'The research feed did not answer for this match. Reload in a moment.</p></div>';
+            });
+    }
+
+    /* --------------------------------------------------------- board ---- */
+
+    function boardRow(m, key) {
+        var meta = [m.round];
         if (m.court) meta.push(m.court);
         if (m.best_of) meta.push('best of ' + m.best_of);
-        if (!m.completed && m.start_utc) meta.push(localTime(m.start_utc));
+        if (m.completed) meta.push('final');
+        else if (m.start_utc) meta.push(localTime(m.start_utc));
+        var pills = '<span class="tn-pill ' + esc((m.surface || '').toLowerCase()) + '">' + esc(m.surface || 'Surface unlisted') + '</span>'
+            + '<span class="tn-pill">' + esc((m.tour || '').toUpperCase()) + '</span>';
+        if (m.status === 'STATUS_IN_PROGRESS' && !m.completed) pills += '<span class="tn-pill live">In progress</span>';
 
-        var html = '<article class="tn-card">';
-        html += '<div class="tn-matchhead"><div class="tn-meta">' + bits
-            + '<span>' + esc(meta.filter(Boolean).join(' · ')) + '</span></div></div>';
-        html += '<div class="tn-players">'
-            + playerBlock(m.players[0], m.market, 0, m.surface, m.completed)
-            + playerBlock(m.players[1], m.market, 1, m.surface, m.completed)
-            + '</div>';
-        var extras = marketBox(m.market) + h2hBox(m.head_to_head) + depthBoxes(m);
-        if (m.completed && m.result) {
-            extras += '<div class="tn-box"><h4>Result</h4><div class="row"><span>' + esc(m.result) + '</span></div></div>';
+        function line(i) {
+            var p = m.players[i];
+            var c = p.card;
+            var ml = m.market && m.market.moneyline;
+            var price = ml ? american(i === 0 ? ml.a : ml.b) : '';
+            var novig = ml && ml.noVigPctA != null ? (i === 0 ? ml.noVigPctA : ml.noVigPctB).toFixed(1) + '%' : '';
+            var sub = [];
+            if (c && c.rank) sub.push('No. ' + c.rank);
+            if (c && c.record) sub.push(rec(c.record) + ' in 2026');
+            if (c && c.surface_record) sub.push(rec(c.surface_record) + ' on ' + String(m.surface || '').toLowerCase());
+            return '<div class="tn-rp' + (m.completed && p.winner ? ' won' : '') + '">'
+                + '<span class="tn-rp-id">' + face(p.name, c && c.headshot)
+                + '<span><b>' + esc(p.name) + '</b>' + flagImg(p.flag, p.country)
+                + '<em>' + esc(sub.join(' · ') || 'No completed matches this season') + '</em></span></span>'
+                + '<span class="tn-rp-odds">' + esc(price)
+                + (novig ? '<em>' + esc(novig) + '</em>' : '') + '</span>'
+                + '</div>';
         }
-        if (!m.market && !m.completed) {
-            extras += '<div class="tn-box"><h4>No price</h4><div class="row"><span>'
-                + esc(m.market_note || 'the board carries no market for this match') + '</span></div></div>';
-        }
-        if (extras) html += '<div class="tn-extra">' + extras + '</div>';
-        return html + '</article>';
+
+        return '<article class="tn-row" data-key="' + esc(key) + '">'
+            + '<div class="tn-rowhead"><div>'
+            + '<div class="tn-rowmeta">' + pills + '<span class="m">' + esc(meta.filter(Boolean).join(' · ')) + '</span></div>'
+            + line(0) + line(1)
+            + '</div>'
+            + '<button class="tn-open" type="button" aria-expanded="false" data-key="' + esc(key) + '">Research this match</button>'
+            + '</div>'
+            + '<div class="tn-rowbody" data-body="' + esc(key) + '" hidden></div>'
+            + '</article>';
     }
 
-    var boardState = { data: null };
+    var boardState = { data: null, byKey: {} };
 
     function renderBoard() {
         var host = document.getElementById('tn-board');
@@ -514,29 +1212,79 @@
         });
         document.getElementById('tn-boardmeta').textContent =
             rows.length + ' of ' + d.count + ' singles matches on ' + d.date
-            + (d.sources && d.sources.season_built_at ? ' · season counted through ' + d.sources.season_built_at.slice(0, 10) : '');
+            + (d.sources && d.sources.season_built_at ? ', season counted through ' + d.sources.season_built_at.slice(0, 10) : '');
         if (!rows.length) {
             host.innerHTML = '<p class="tn-empty">Nothing matches that filter on this date.</p>';
             return;
         }
-        /* Grouped by tournament. A hundred and twenty matches in one flat list
-           is a wall; the same hundred and twenty under the events they belong
-           to is a calendar, which is what a reader is actually reading. */
-        var order = [];
-        var groups = {};
+        var order = [], groups = {};
         rows.forEach(function (m) {
             var key = m.event || 'Tennis';
             if (!groups[key]) { groups[key] = []; order.push(key); }
             groups[key].push(m);
         });
+        boardState.byKey = {};
         host.innerHTML = order.map(function (key) {
             var list = groups[key];
-            var surf = (list[0].surface || '').toLowerCase();
+            var surf = list[0].surface || '';
             return '<div class="tn-event"><h3>' + esc(key)
                 + '<em>' + list.length + (list.length === 1 ? ' match' : ' matches')
-                + (surf ? ' · ' + esc(list[0].surface) : '') + '</em></h3>'
-                + list.map(matchCard).join('') + '</div>';
+                + (surf ? ' · ' + esc(surf) : '') + '</em></h3>'
+                + list.map(function (m) {
+                    var k = String(m.match_id || (m.players[0].id + '-' + m.players[1].id));
+                    boardState.byKey[k] = m;
+                    return boardRow(m, k);
+                }).join('') + '</div>';
         }).join('');
+    }
+
+    /* One click opens the whole research module for that match, underneath the
+       row. The board stays a board; the research is never forced on a reader
+       scanning twenty four matches for the one they care about. */
+    document.addEventListener('click', function (ev) {
+        var btn = ev.target.closest ? ev.target.closest('.tn-open') : null;
+        if (btn) {
+            var key = btn.getAttribute('data-key');
+            var body = document.querySelector('[data-body="' + key + '"]');
+            if (!body) return;
+            var open = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', String(!open));
+            btn.textContent = open ? 'Research this match' : 'Hide the research';
+            body.hidden = open;
+            if (!open && !body.dataset.filled) {
+                body.dataset.filled = '1';
+                renderResearch(boardState.byKey[key], body, false);
+            }
+            return;
+        }
+        var tab = ev.target.closest ? ev.target.closest('.tn-mtab') : null;
+        if (tab) {
+            var uid = tab.getAttribute('data-uid');
+            var want = tab.getAttribute('data-mtab');
+            document.querySelectorAll('.tn-mtab[data-uid="' + uid + '"]').forEach(function (t) {
+                t.setAttribute('aria-selected', String(t === tab));
+            });
+            document.querySelectorAll('.tn-mgrid[data-uid="' + uid + '"]').forEach(function (p) {
+                p.hidden = p.getAttribute('data-mpanel') !== want;
+            });
+        }
+    });
+
+    /* The featured match: the best pair of rankings on the board that still has
+       a price and has not started. A quarterfinal between two top ten players
+       is the match a reader came for. */
+    function pickFeatured(matches) {
+        var live = matches.filter(function (m) { return m.market && !m.completed; });
+        var pool = live.length ? live : matches.filter(function (m) { return !m.completed; });
+        if (!pool.length) pool = matches;
+        if (!pool.length) return null;
+        function score(m) {
+            var ranks = m.players.map(function (p) { return (p.card && p.card.rank) || 400; });
+            var best = Math.min(ranks[0], ranks[1]);
+            var worst = Math.max(ranks[0], ranks[1]);
+            return best * 2 + worst - (m.major ? 60 : 0);
+        }
+        return pool.slice().sort(function (x, y) { return score(x) - score(y); })[0];
     }
 
     function nextDay(iso) {
@@ -549,8 +1297,7 @@
        A reader arriving late in the evening was landing on a date whose matches
        had all finished, and the default filter is "matches with a price", so the
        board read as empty when the tour had a full card the next morning. One
-       automatic step forward, once, and the date field says which day is being
-       shown. */
+       automatic step forward, once, and the date field says which day is shown. */
     function loadBoard(opts) {
         var rolled = opts && opts.rolled;
         var date = document.getElementById('tn-date').value;
@@ -564,10 +1311,22 @@
                 }
                 boardState.data = d;
                 renderBoard();
+                var feat = pickFeatured(d.matches || []);
+                var fhost = document.getElementById('tn-featured');
+                if (feat) {
+                    document.getElementById('tn-featmeta').textContent =
+                        feat.event + ', ' + feat.round + ', ' + (feat.surface || '');
+                    renderResearch(feat, fhost, true);
+                } else {
+                    fhost.innerHTML = '<p class="tn-empty">No match on this date to feature.</p>';
+                    document.getElementById('tn-featmeta').textContent = '';
+                }
                 return null;
             })
             .catch(function () {
                 document.getElementById('tn-board').innerHTML =
+                    '<p class="tn-empty">The tennis feed did not answer. Reload in a moment.</p>';
+                document.getElementById('tn-featured').innerHTML =
                     '<p class="tn-empty">The tennis feed did not answer. Reload in a moment.</p>';
             });
     }
@@ -583,12 +1342,12 @@
             var html = '<table class="tn-table"><thead><tr><th>#</th><th>Move</th><th>Player</th><th>Points</th>'
                 + '<th>2026</th><th>Hard</th><th>Clay</th><th>Grass</th><th>Titles</th></tr></thead><tbody>';
             d.rows.forEach(function (r) {
-                var move = r.move == null || r.move === 0 ? '—'
-                    : (r.move > 0 ? '<span class="tn-up">▲ ' + r.move + '</span>' : '<span class="tn-down">▼ ' + Math.abs(r.move) + '</span>');
+                var move = r.move == null || r.move === 0 ? 'Same'
+                    : (r.move > 0 ? '<span class="tn-up">&#9650; ' + r.move + '</span>' : '<span class="tn-down">&#9660; ' + Math.abs(r.move) + '</span>');
                 var s = r.surfaces || {};
                 html += '<tr><td><b>' + r.rank + '</b></td><td>' + move + '</td>'
-                    + '<td>' + (r.flag ? '<img src="' + esc(r.flag) + '" alt="" style="width:18px;height:12px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:6px">' : '')
-                    + esc(r.name) + '</td>'
+                    + '<td>' + (r.flag ? '<img src="' + esc(r.flag) + '" alt="" style="width:20px;height:13px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:8px">' : '')
+                    + '<b>' + esc(r.name) + '</b></td>'
                     + '<td><b>' + (r.points == null ? '' : r.points) + '</b></td>'
                     + '<td><b>' + esc(rec(r.record)) + '</b></td>'
                     + '<td>' + esc(s.Hard ? s.Hard.wins + '-' + s.Hard.losses : '') + '</td>'
@@ -622,8 +1381,8 @@
             var html = '<table class="tn-table"><thead><tr><th>#</th><th>Player</th><th>Tour</th><th>Rank</th><th>Value</th><th>Record</th></tr></thead><tbody>';
             d.rows.forEach(function (r, i) {
                 html += '<tr><td>' + (i + 1) + '</td>'
-                    + '<td>' + (r.flag ? '<img src="' + esc(r.flag) + '" alt="" style="width:18px;height:12px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:6px">' : '')
-                    + esc(r.name) + '</td>'
+                    + '<td>' + (r.flag ? '<img src="' + esc(r.flag) + '" alt="" style="width:20px;height:13px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:8px">' : '')
+                    + '<b>' + esc(r.name) + '</b></td>'
                     + '<td>' + esc(r.tour.toUpperCase()) + '</td>'
                     + '<td>' + (r.rank == null ? '' : 'No. ' + r.rank) + '</td>'
                     + '<td><b>' + esc(r.display) + '</b></td>'
@@ -650,8 +1409,6 @@
         });
     });
 
-    /* The top of both tours, faces first. Two calls, once, and the strip stays
-       hidden rather than showing an empty rail if either does not answer. */
     function loadTopPlayers() {
         Promise.all([get('/tennis/rankings?tour=atp&limit=6'), get('/tennis/rankings?tour=wta&limit=6')])
             .then(function (res) {
@@ -660,16 +1417,11 @@
                 if (!rows.length) return;
                 var host = document.getElementById('tn-toprow');
                 host.innerHTML = rows.map(function (r) {
-                    var initials = String(r.name || '').split(' ').map(function (w) { return w[0]; })
-                        .join('').slice(0, 2).toUpperCase();
-                    var rec = r.record ? r.record.wins + '-' + r.record.losses : '';
+                    var record = r.record ? r.record.wins + '-' + r.record.losses : '';
                     return '<a class="tn-top-p" href="/sportsbook/?sport=Tennis">'
-                        + '<span class="tn-face"><span>' + esc(initials) + '</span>'
-                        + '<img src="https://a.espncdn.com/i/headshots/tennis/players/full/' + esc(r.id) + '.png"'
-                        + ' alt="' + esc(r.name) + '" loading="lazy" decoding="async"'
-                        + ' onerror=\"this.dataset.missing=1\"></span>'
+                        + face(r.name, 'https://a.espncdn.com/i/headshots/tennis/players/full/' + r.id + '.png')
                         + '<b>' + esc(r.name) + '</b>'
-                        + '<span>' + esc(r.tour ? r.tour.toUpperCase() + ' ' : '') + 'No. ' + esc(r.rank) + (rec ? ' · ' + esc(rec) : '') + '</span>'
+                        + '<span>' + esc(r.tour ? r.tour.toUpperCase() + ' ' : '') + 'No. ' + esc(r.rank) + (record ? ' · ' + esc(record) : '') + '</span>'
                         + '</a>';
                 }).join('');
                 document.getElementById('tn-top').hidden = false;
