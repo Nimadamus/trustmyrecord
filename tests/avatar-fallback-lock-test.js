@@ -183,6 +183,22 @@ ok(tickerAvatar.indexOf("loading = 'lazy'") === -1,
 ok(tickerAvatar.indexOf('initials(') === -1, 'the ticker must not draw a member initial');
 ok(tickerAvatar.indexOf('box.appendChild(img)') !== -1, 'the ticker attaches the image up front');
 
+
+/* UI WORDS ARE NOT USERNAMES (2026-09-09). The repair pass falls back to text
+   near the slot, and on /sportsbook/ it read the account chip's label and asked
+   the API for /users/Profile/avatar - a 404 on every single page load. */
+{
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-ds-avatar.js'), 'utf8');
+  ok(/NOT_A_MEMBER\s*=/.test(src), 'the resolver must keep a list of words that are never a member');
+  for (const word of ['profile', 'account', 'settings', 'login', 'notifications']) {
+    ok(new RegExp('\b' + word + '\b', 'i').test(src.slice(src.indexOf('NOT_A_MEMBER'), src.indexOf('NOT_A_MEMBER') + 400)),
+      `"${word}" must be treated as a UI label, not a username`);
+  }
+  const guarded = src.slice(src.indexOf('function subjectFor'), src.indexOf('function hasVisibleContent'));
+  ok((guarded.match(/NOT_A_MEMBER\.test/g) || []).length >= 3,
+    'every text-derived fallback in subjectFor must be guarded, not just one');
+}
+
 /* ---------- 2. deterministic, and distinguishable -------------------------- */
 ok(AV.dataUri(AV.identity({ username: 'makaveli66' })) === AV.dataUri(AV.identity({ username: 'makaveli66' })),
   'the same member always gets the same face');

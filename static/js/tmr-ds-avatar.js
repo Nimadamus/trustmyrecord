@@ -572,6 +572,12 @@
   /* Who is this slot for? Whatever the markup already says: an explicit
      data-username, the image's alt text, or the member link in the same row —
      /u/<username>/ is how every member is linked across the site. */
+  /* WORDS THAT ARE NOT MEMBERS (2026-09-09). subjectFor() falls back to nearby
+     text, and on the sportsbook it read the account chip's label and asked the
+     API for /users/Profile/avatar, which 404s on every page load. These are the
+     UI words that sit next to an avatar and are never somebody's username. */
+  var NOT_A_MEMBER = /^(profile|account|settings|menu|login|log in|sign in|sign up|register|user|guest|you|me|my profile|my account|avatar|member|admin|search|home|notifications|messages)$/i;
+
   function subjectFor(el) {
     var node = el;
     for (var i = 0; node && i < 5; i += 1) {
@@ -580,7 +586,8 @@
       node = node.parentElement;
     }
     var img = el.tagName === 'IMG' ? el : el.querySelector('img[alt]');
-    if (img && img.alt && img.alt.trim() && !/avatar/i.test(img.alt)) return { username: img.alt.trim(), id: null };
+    if (img && img.alt && img.alt.trim() && !/avatar/i.test(img.alt)
+      && !NOT_A_MEMBER.test(img.alt.trim())) return { username: img.alt.trim(), id: null };
     /* The row around the slot names the member three different ways across the
        site: /u/<name>/, /profile/?user=<name>, and an @handle. All three are
        read, because a feed row and a leaderboard row do not agree. */
@@ -597,8 +604,11 @@
         return { username: handle.textContent.trim().replace(/^@/, ''), id: null };
       }
       var named = row.querySelector('[class*="username"],[class*="-name"]');
-      if (named && (named.textContent || '').trim().length >= 2) {
-        return { username: named.textContent.trim(), id: null };
+      if (named) {
+        var namedText = (named.textContent || '').trim();
+        if (namedText.length >= 2 && !NOT_A_MEMBER.test(namedText)) {
+          return { username: namedText, id: null };
+        }
       }
       row = row.parentElement;
     }
@@ -607,7 +617,7 @@
        while the homepage calls them "FI": treat 2+ characters as a name and
        nothing shorter. */
     var text = (el.textContent || '').trim();
-    if (text.length >= 2) return { username: text, id: null };
+    if (text.length >= 2 && !NOT_A_MEMBER.test(text)) return { username: text, id: null };
     /* On a member's own page the URL is the most reliable name there is. */
     var onProfile = String(location.pathname || '').match(/^\/u\/([^/?#]+)/);
     if (onProfile) return { username: decodeURIComponent(onProfile[1]), id: null };
