@@ -180,6 +180,26 @@
             color: #d7ffff;
         }
 
+        .av-row { display: flex; gap: 14px; align-items: center; }
+        .av-preview {
+            width: 68px; height: 68px; flex: 0 0 68px; border-radius: 50%;
+            overflow: hidden; display: block; background: rgba(255, 255, 255, .06);
+        }
+        .av-preview svg, .av-preview img { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; }
+        .av-copy { min-width: 0; }
+        .av-note { margin: 0 0 9px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+        .av-note.is-set { color: var(--text); }
+        .av-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .av-btn {
+            font: 700 12px/1 inherit; letter-spacing: .04em; text-transform: uppercase;
+            padding: 9px 12px; border-radius: 8px; cursor: pointer;
+            background: transparent; color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .22);
+        }
+        .av-btn.is-primary { background: rgba(53, 224, 203, .14); border-color: rgba(53, 224, 203, .5); }
+        .av-btn:hover { border-color: rgba(255, 255, 255, .45); }
+        .av-btn[aria-pressed="true"] { border-color: #35E0CB; color: #35E0CB; }
+        .av-btn:focus-visible { outline: 2px solid #35E0CB; outline-offset: 2px; }
         .submit {
             width: 100%;
             border: 0;
@@ -424,6 +444,32 @@
                 -->
                 <div id="turnstileMount" class="field" style="display:none;margin-bottom:14px;"></div>
 
+
+                <!--
+                  PICK AN AVATAR, OR ONE GETS PICKED FOR YOU (2026-09-08).
+                  89 of the first 162 members finished signup with no photo and
+                  never came back for one, which is how the boards filled up
+                  with identical faceless rows. This step cannot be walked past:
+                  a new account either uploads a photo or accepts the one the
+                  site drew for them, and it says in plain words which is
+                  happening. The preview is live, so what they accept here is
+                  exactly what every other page will show.
+                -->
+                <div class="field" id="avatarStep">
+                    <label for="avUploadBtn">Your avatar</label>
+                    <div class="av-row">
+                        <span class="av-preview" id="avPreview" aria-live="polite"></span>
+                        <div class="av-copy">
+                            <p class="av-note" id="avNote">Pick an avatar, or one gets picked for you. This is the one we drew &mdash; it is yours until you upload a photo.</p>
+                            <div class="av-actions">
+                                <button type="button" class="av-btn is-primary" id="avUploadBtn">Upload a photo</button>
+                                <button type="button" class="av-btn" id="avKeepBtn">Use the one we drew</button>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="avFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                </div>
+
                 <div id="message" class="message"></div>
                 <button id="submitBtn" class="submit" type="submit">CREATE ACCOUNT</button>
                 <p style="margin:12px 0 0;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;">By creating an account you agree to the <a href="/rules/" style="color:var(--text);font-weight:700;" target="_blank" rel="noopener">Platform Rules</a> and <a href="/terms/" style="color:var(--text);font-weight:700;" target="_blank" rel="noopener">Terms of Service</a>, including one account per person and one account per household.</p>
@@ -602,6 +648,104 @@
                 if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
             }
 
+
+            /* ---- the avatar step -------------------------------------------
+               The preview is drawn by the same resolver the rest of the site
+               uses (tmr-ds-avatar.js, carried by the nav), seeded on the
+               username being typed and dressed in the sports being picked, so
+               the face in this circle is the face the account will wear. */
+            (function avatarStep() {
+                var preview = document.getElementById('avPreview');
+                var note = document.getElementById('avNote');
+                var fileInput = document.getElementById('avFile');
+                var uploadBtn = document.getElementById('avUploadBtn');
+                var keepBtn = document.getElementById('avKeepBtn');
+                if (!preview || !fileInput || !uploadBtn || !keepBtn) return;
+
+                function currentUsername() {
+                    var el = document.getElementById('username');
+                    return (el && el.value.trim()) || 'your account';
+                }
+                function currentSports() {
+                    try { return (typeof window.collectFavSports === 'function') ? window.collectFavSports() : []; }
+                    catch (error) { return []; }
+                }
+                function drawAssigned() {
+                    if (window.tmrAvatarUpload) return;
+                    if (!window.TMRAvatar) return;
+                    preview.innerHTML = window.TMRAvatar.svg(window.TMRAvatar.identity({
+                        username: currentUsername(),
+                        favorite_sports: currentSports()
+                    }), 96);
+                }
+
+                window.tmrAvatarChoice = '';
+                window.tmrAvatarUpload = '';
+
+                function choose(kind) {
+                    window.tmrAvatarChoice = kind;
+                    keepBtn.setAttribute('aria-pressed', String(kind === 'assigned'));
+                    uploadBtn.setAttribute('aria-pressed', String(kind === 'upload'));
+                    note.classList.add('is-set');
+                }
+
+                keepBtn.addEventListener('click', function () {
+                    window.tmrAvatarUpload = '';
+                    drawAssigned();
+                    choose('assigned');
+                    note.textContent = 'Done. This is your avatar until you upload a photo, and you can change it any time from your profile.';
+                });
+
+                uploadBtn.addEventListener('click', function () { fileInput.click(); });
+
+                fileInput.addEventListener('change', function () {
+                    var file = fileInput.files && fileInput.files[0];
+                    if (!file) return;
+                    if (file.size > 8 * 1024 * 1024) {
+                        note.textContent = 'That photo is larger than 8MB. Pick a smaller one, or use the avatar we drew.';
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        var img = new Image();
+                        img.onload = function () {
+                            /* Resized before it is ever sent: a phone photo is
+                               several megabytes, and this value is stored on the
+                               account and read by every page that draws a face. */
+                            var side = 256;
+                            var canvas = document.createElement('canvas');
+                            canvas.width = side;
+                            canvas.height = side;
+                            var scale = Math.max(side / img.width, side / img.height);
+                            var w = img.width * scale;
+                            var h = img.height * scale;
+                            var ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, (side - w) / 2, (side - h) / 2, w, h);
+                            window.tmrAvatarUpload = canvas.toDataURL('image/jpeg', 0.86);
+                            preview.innerHTML = '<img src="' + window.tmrAvatarUpload + '" alt="">';
+                            choose('upload');
+                            note.textContent = 'Looking good. This is the photo your account will use.';
+                        };
+                        img.onerror = function () {
+                            note.textContent = 'That file would not open as an image. Try another, or use the avatar we drew.';
+                        };
+                        img.src = String(reader.result || '');
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                var nameField = document.getElementById('username');
+                if (nameField) nameField.addEventListener('input', drawAssigned);
+                document.addEventListener('click', function (e) {
+                    if (e.target && e.target.closest && e.target.closest('#sportChips, .sport-chip, [data-sport]')) {
+                        setTimeout(drawAssigned, 0);
+                    }
+                });
+                drawAssigned();
+                window.addEventListener('load', drawAssigned);
+                setTimeout(drawAssigned, 800);
+            }());
+
             document.getElementById('direct-register-form').addEventListener('submit', async function(event) {
                 event.preventDefault();
                 const username = String(document.getElementById('usernameValue').value || '').trim();
@@ -674,6 +818,15 @@
                     } catch (error) {}
                     if (data && data.user && (data.accessToken || data.access_token || data.tokens)) {
                         await persistBackendLogin(data.user);
+                        /* The photo is saved AFTER the account exists, because
+                           that is the first moment there is a token to save it
+                           with. A failure here costs the member nothing: the
+                           assigned face is already theirs, and their profile can
+                           upload again whenever they want. */
+                        if (window.tmrAvatarUpload) {
+                            try { await window.api.updateProfile({ avatar_url: window.tmrAvatarUpload }); }
+                            catch (error) {}
+                        }
                         var ru = data.user || {};
                         // WELCOME_20260809: a brand-new account goes to /welcome/, not
                         // straight onto the odds board. Consumed by verify-email's
