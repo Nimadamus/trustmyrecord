@@ -55,6 +55,19 @@ _hspec = importlib.util.spec_from_file_location(
 seo = importlib.util.module_from_spec(_hspec)
 _hspec.loader.exec_module(seo)
 
+# NFL_DEEP_PREVIEW_20260909: the deep half of an NFL matchup page (team
+# statistics with league ranks, personnel, injuries, the TMR model and the
+# read). Same generator for every fixture, so next week's game needs no code.
+_pspec = importlib.util.spec_from_file_location(
+    "nfl_preview", os.path.join(HERE, "nfl_preview_sections.py"))
+nflp = importlib.util.module_from_spec(_pspec)
+_pspec.loader.exec_module(nflp)
+
+# A deep preview costs a simulation and about a dozen feed calls, so it is
+# built for the games a reader is actually about to watch. Everything outside
+# the window keeps the permanent research page exactly as it was.
+PREVIEW_DAYS = int(os.environ.get("NFL_PREVIEW_DAYS", "9"))
+
 SITE = mlb.SITE
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
 ENGINE = os.environ.get("BETLEGEND_PRO_API_BASE", "https://betlegend-pro-api.onrender.com")
@@ -148,6 +161,72 @@ def gotw_block(sport):
         '            .mm-gotw-cta{display:inline-block;margin-top:12px;font-weight:800;color:#FFC93C;font-size:.9rem}\n'
         '        </style>\n'
         % (g["url"], esc(g["week"]), logos, esc(g["matchup"]), esc(g["blurb"])))
+
+
+# NEXT_GAME_SPOTLIGHT_20260909
+# The hub lists sixteen fixtures in a table, which is the right shape for a
+# slate and the wrong shape for "the season starts tomorrow night". The next
+# kickoff gets a card of its own above the table, linking into its preview.
+# Generated from the board, so it moves on its own every week and disappears
+# the moment the board is empty.
+def next_game_block(sport, games):
+    if sport != "nfl" or not games:
+        return ""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    upcoming = []
+    for g in games:
+        try:
+            kick = datetime.datetime.fromisoformat((g.get("commence") or "").replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if kick >= now - datetime.timedelta(hours=4):
+            upcoming.append((kick, g))
+    if not upcoming:
+        return ""
+    kick, g = sorted(upcoming, key=lambda x: x[0])[0]
+    try:
+        idx = nflp.team_index()
+        away = nflp.find_team(idx, g["away"])
+        home = nflp.find_team(idx, g["home"])
+    except Exception:  # noqa: BLE001 - a hub must never fail over a logo
+        away = home = None
+    if not away or not home:
+        return ""
+    _ml, sp_txt, tot_txt = market_cells(g)
+    hours = (kick - now).total_seconds() / 3600.0
+    when = "Tonight" if hours <= 10 else ("Tomorrow" if hours <= 34 else long_date(g["commence"]))
+    return (
+        '        <section class="mm-sec mm-next">\n'
+        '            <a class="mm-next-card" href="%s">\n'
+        '                <span class="mm-next-tag">Next up &middot; %s</span>\n'
+        '                <span class="mm-next-teams">'
+        '<img src="%s" alt="" width="42" height="42" loading="lazy"><b>%s</b>'
+        '<i>at</i>'
+        '<img src="%s" alt="" width="42" height="42" loading="lazy"><b>%s</b></span>\n'
+        '                <span class="mm-next-when">%s, %s</span>\n'
+        '                <span class="mm-next-mkt">Spread %s &middot; Total %s</span>\n'
+        '                <span class="mm-next-cta">Open the full matchup preview &rsaquo;</span>\n'
+        '            </a>\n'
+        '        </section>\n'
+        '        <style>\n'
+        '            .mm-next-card{display:block;text-decoration:none;color:inherit;padding:18px 20px;\n'
+        '                border-radius:16px;background:linear-gradient(120deg,rgba(66,211,146,.12),rgba(0,53,148,.16));\n'
+        '                border:1px solid rgba(66,211,146,.38)}\n'
+        '            .mm-next-card:hover{border-color:#42d392}\n'
+        '            .mm-next-tag{display:inline-block;font:800 .68rem/1 "Barlow Condensed",Inter,sans-serif;\n'
+        '                letter-spacing:.18em;text-transform:uppercase;color:#04101c;background:#42d392;\n'
+        '                padding:6px 10px;border-radius:5px}\n'
+        '            .mm-next-teams{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:13px 0 6px}\n'
+        '            .mm-next-teams img{width:42px;height:42px;object-fit:contain}\n'
+        '            .mm-next-teams b{font:900 1.2rem/1.1 "Barlow Condensed",Inter,sans-serif;text-transform:uppercase}\n'
+        '            .mm-next-teams i{font-style:normal;opacity:.6;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase}\n'
+        '            .mm-next-when,.mm-next-mkt{display:block;font-size:.92rem;opacity:.85}\n'
+        '            .mm-next-cta{display:inline-block;margin-top:12px;font-weight:800;color:#42d392;font-size:.9rem}\n'
+        '        </style>\n'
+        % (game_url(sport, g), esc(when), away["logo"], esc(g["away"]),
+           home["logo"], esc(g["home"]),
+           esc(long_date(g["commence"])), esc(kickoff(g["commence"])),
+           sp_txt, tot_txt))
 
 
 class BuildError(Exception):
@@ -285,13 +364,48 @@ def kickoff(iso):
         return "TBD"
 
 
-def long_date(iso):
-    for fmt in ("%A %B %-d, %Y", "%A %B %d, %Y"):
+def et_date(iso):
+    """The calendar date in EASTERN time, which is the date of the game.
+
+    ET_DATE_20260909. The board timestamps in UTC, and a night kickoff is
+    already the next UTC day: Patriots at Seahawks starts 2026-09-09 20:20 ET
+    and the feed calls it 2026-09-10T00:20Z. Formatting the raw ISO date put
+    "Thursday September 10" on a Wednesday night game. The clock beside it was
+    already converted (mlb.et_time); only the date was not."""
+    raw = (iso or "").strip()
+    if not raw:
+        return None
+    try:
+        t = datetime.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
         try:
-            return datetime.date.fromisoformat((iso or "")[:10]).strftime(fmt)
-        except Exception:  # noqa: BLE001
-            continue
-    return ""
+            return datetime.date.fromisoformat(raw[:10])
+        except ValueError:
+            return None
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=datetime.timezone.utc)
+    t = t.astimezone(datetime.timezone.utc)
+    # US Eastern DST: second Sunday in March to the first Sunday in November.
+    # Computed rather than imported, matching mlb.et_time, so the script stays
+    # stdlib only and does not depend on the runner's tzdata.
+    mar = datetime.datetime(t.year, 3, 8, tzinfo=datetime.timezone.utc)
+    while mar.weekday() != 6:
+        mar += datetime.timedelta(days=1)
+    nov = datetime.datetime(t.year, 11, 1, tzinfo=datetime.timezone.utc)
+    while nov.weekday() != 6:
+        nov += datetime.timedelta(days=1)
+    dst = mar + datetime.timedelta(hours=7) <= t < nov + datetime.timedelta(hours=6)
+    return (t + datetime.timedelta(hours=-4 if dst else -5)).date()
+
+
+def long_date(iso):
+    """"Wednesday September 9, 2026". %-d is glibc only and this builder runs
+    on Windows as well as CI, so the day is written by hand rather than left
+    zero padded on one platform and not the other."""
+    d = et_date(iso)
+    if not d:
+        return ""
+    return "%s %s %d, %d" % (d.strftime("%A"), d.strftime("%B"), d.day, d.year)
 
 
 def market_cells(g):
@@ -514,7 +628,42 @@ def coverage_section(hist):
 
 # ---------------------------------------------------------------- pages
 
-def render_game(sport, g, hist, slate, extras, built_at, hook=None):
+def wants_preview(sport, g):
+    """True when this fixture is close enough to warrant the deep build."""
+    if sport != "nfl":
+        return False
+    try:
+        kick = datetime.datetime.fromisoformat(
+            (g.get("commence") or "").replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    now = datetime.datetime.now(datetime.timezone.utc)
+    return -datetime.timedelta(hours=6) <= (kick - now) <= datetime.timedelta(days=PREVIEW_DAYS)
+
+
+def preview_context(sport, g, extras):
+    """Fetch the deep preview for one game, or None. Never raises."""
+    if not wants_preview(sport, g):
+        return None
+    teams_by_name, qb1, _inj = extras
+    fallback = {}
+    for side in ("away", "home"):
+        t = (teams_by_name or {}).get(g[side])
+        starter = (qb1 or {}).get(t["franchise_id"]) if t else None
+        if starter and starter.get("full_name"):
+            fallback[side] = starter["full_name"]
+    when = "%s, %s" % (long_date(g["commence"]), kickoff(g["commence"]))
+    try:
+        ctx = nflp.build_context(g, kickoff_text=when, qb_fallback=fallback)
+    except Exception as exc:  # noqa: BLE001 - a preview must never fail a build
+        print("  WARN  preview build failed for %s at %s (%s)" % (g["away"], g["home"], exc))
+        return None
+    if ctx:
+        print("  preview built: %s at %s" % (g["away"], g["home"]))
+    return ctx
+
+
+def render_game(sport, g, hist, slate, extras, built_at, hook=None, preview=None):
     label = SPORTS[sport]["label"]
     teams_by_name, qb1, injuries = extras
     # The hook is one true, game-specific number, frozen the first time this
@@ -525,6 +674,10 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None):
              % (g["away"], g["home"], label))
     desc = ("%s at %s. The current line, the complete head to head record, against the spread and "
             "over/under splits, and recent form for both teams." % (g["away"], g["home"]))
+    if preview:
+        desc = ("%s at %s: the full matchup preview. Line, records, offensive and defensive "
+                "comparison, expected quarterbacks, key players, injuries, the head to head "
+                "record and the TrustMyRecord model projection." % (g["away"], g["home"]))
     url = SITE + game_url(sport, g)
     ld = {"@context": "https://schema.org", "@graph": [breadcrumb_ld([
         ("Handicapping", "/handicapping/"), (label, "/handicapping/%s/" % sport),
@@ -539,17 +692,28 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None):
          '        <header class="mm-head">\n',
          '            <span class="mm-kicker">%s</span>\n' % esc(label),
          '            <h1>%s at %s</h1>\n' % (esc(g["away"]), esc(g["home"])),
-         '            <p class="mm-lede">Next meeting %s, %s. This page is permanent and '
-         'carries whichever game these two play next.</p>\n'
-         % (esc(long_date(g["commence"])), esc(kickoff(g["commence"]))),
+         (('            <p class="mm-lede">%s, %s. The full preview: the board, both teams by '
+           'the numbers, who is expected to play, the head to head record and what the '
+           'TrustMyRecord model makes of it.</p>\n'
+           % (esc(long_date(g["commence"])), esc(kickoff(g["commence"])))) if preview else
+          ('            <p class="mm-lede">Next meeting %s, %s. This page is permanent and '
+           'carries whichever game these two play next.</p>\n'
+           % (esc(long_date(g["commence"])), esc(kickoff(g["commence"]))))),
          '        </header>\n',
+         # NFL_DEEP_PREVIEW_20260909. Reading order: who and where, the price,
+         # the two teams in full, then the record between them, then the model
+         # and the read. The stub sections a preview supersedes (starting
+         # quarterbacks, status notes) are dropped rather than printed twice.
+         (nflp.render_hero(preview) if preview else ""),
          board_section(g),
-         nfl_people_sections(sport, g, teams_by_name, qb1, injuries),
+         (nflp.render_teams(preview) if preview else ""),
+         ("" if preview else nfl_people_sections(sport, g, teams_by_name, qb1, injuries)),
          division_section(sport, g, teams_by_name),
          form_section(hist),
          h2h_section(sport, hist),
          market_section(hist),
          coverage_section(hist),
+         (nflp.render_model(preview) if preview else ""),
          '        <section class="mm-sec">\n',
          '            <h2>Rest of the %s board</h2>\n' % esc(label),
          '            <ul>\n', related,
@@ -561,6 +725,7 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None):
          '<a href="/handicapping/%s/">Back to the %s slate</a>, or the '
          '<a href="/handicapping/">handicapping hub</a>.</p>\n'
          % (esc(built_at[:16].replace("T", " ") + " UTC"), sport, esc(label)),
+         (nflp.sources_note(preview) if preview else ""),
          BLP_CROSS_LINK_TPL % esc(g["home"]),
          '    </main>\n', mlb.FOOT_SCRIPTS, '</body>\n</html>\n']
     return page_head(title, desc, url, ld) + "".join(b)
@@ -604,6 +769,7 @@ def render_hub(sport, games, built_at):
            'research page per matchup: head to head record, against the spread and over/under '
            'splits, recent form, and what the data does not cover.</p>\n' % esc(label))),
          '        </header>\n',
+         next_game_block(sport, games),
          gotw_block(sport),
          '        <section class="mm-sec">\n            <h2>On the board</h2>\n',
          ('            <p class="mm-lede">%d game%s listed, %d priced by the sportsbook feed. '
@@ -737,7 +903,8 @@ def build(sport, built_at):
                         (g["commence"] or "")[:10],
                         "/handicapping/%s/%s/" % (sport, game_slug(g)))
         if write("handicapping/%s/%s/index.html" % (sport, game_slug(g)),
-                 render_game(sport, g, cache[key], games, extras, built_at, hook)):
+                 render_game(sport, g, cache[key], games, extras, built_at, hook,
+                             preview_context(sport, g, extras))):
             changed += 1
     seo.save_store(store)
     if write("handicapping/%s/index.html" % sport, render_hub(sport, games, built_at)):

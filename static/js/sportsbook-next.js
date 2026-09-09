@@ -56,6 +56,11 @@
         cat: 'game_lines',    // selected market category (see categories())
         drawer: null,         // gameId whose full market list is open
         drawerCat: null,      // category the drawer scrolled to
+        // NFL_PLAYER_PROPS_20260909: which prop market (Receiving Yards,
+        // Receptions, ...) the Player Props panel is showing. One enormous
+        // undifferentiated list is unreadable once a football game posts 400
+        // prices, so the panel shows one market at a time, by player.
+        drawerProp: null,
         error: null,
         reqId: 0,
         // SECOND_HALF_20260905 — the halftime board, kept in its own slice of
@@ -1281,6 +1286,58 @@
             '<span class="sbn-count">' + items.length + '</span>' +
             (book ? '<span class="sbn-book">' + esc(book) + '</span>' : '') + '</h4>' + body + '</section>';
     }
+    // ---- Player Props: one market at a time, grouped by player -------------
+    // A football game posts several hundred player prices. Stacking them in one
+    // list the way every other category is stacked is unreadable, and it also
+    // read wrong: the generic renderer leads a rung with its line ("+3.5"),
+    // which says nothing about which side of the number you are taking. So the
+    // props panel gets its own market chips and its own row shape, where the
+    // row is the PLAYER and every rung says Over or Under out loud.
+    function propCatsOf(items) {
+        var seen = {}, order = [];
+        (items || []).forEach(function (i) {
+            var k = i.propLabel || 'Player Props';
+            if (seen[k] == null) { seen[k] = 0; order.push(k); }
+            seen[k]++;
+        });
+        return order.map(function (k) { return { key: k, label: k, n: seen[k] }; });
+    }
+    function drawerPlayerProps(g, title, book, items) {
+        var byPlayer = {}, order = [];
+        (items || []).forEach(function (i) {
+            var p = i.player || i.selection || '—';
+            if (!byPlayer[p]) { byPlayer[p] = []; order.push(p); }
+            byPlayer[p].push(i);
+        });
+        var body = order.map(function (p) {
+            var list = byPlayer[p].slice().sort(function (a, b) {
+                return ((a.line == null ? 0 : a.line) - (b.line == null ? 0 : b.line))
+                    || (String(a.side).toLowerCase() === 'under' ? 1 : -1);
+            });
+            // MLB names the player's club in full ("Detroit Tigers") where the
+            // NFL feed gives an abbreviation, and a full club name in a badge
+            // this small wraps the row. Last word only, which is the nickname.
+            var team = (list[0] && list[0].playerTeam) || '';
+            if (team.length > 4) team = team.split(/\s+/).pop();
+            var cells = list.map(function (i) {
+                var top = (String(i.side).toLowerCase() === 'under' ? 'U ' : 'O ') + fmtLine(i.line);
+                return '<span class="sbn-dcell">' + chip({
+                    top: top, bottom: fmtOdds(i.odds),
+                    sel: isSel(g, i.marketType, i.selection, i.line),
+                    data: pickData(g, i.marketType, i.selection,
+                        i.label || (i.selection + ' ' + fmtLine(i.line)),
+                        i.line, i.odds, title, i.book || book)
+                }) + '</span>';
+            }).join('');
+            return '<div class="sbn-drow sbn-drow--prop"><span class="sbn-dside">' + esc(p) +
+                (team ? '<em class="sbn-dteam">' + esc(team) + '</em>' : '') +
+                '</span><div class="sbn-dgrid">' + cells + '</div></div>';
+        }).join('');
+        return '<section class="sbn-dsec is-open"><h4>' + esc(title) +
+            '<span class="sbn-count">' + (items || []).length + '</span>' +
+            (book ? '<span class="sbn-book">' + esc(book) + '</span>' : '') + '</h4>' + body + '</section>';
+    }
+
     // The expanded view is a wide panel, not a sidebar: it carries the whole
     // market inventory for one game, so it gets category tabs of its own and
     // shows one category at a time rather than stacking every price in a
@@ -1307,12 +1364,21 @@
         for (var c = 0; c < cats.length; c++) if (cats[c].key === state.drawerCat) on = cats[c];
         if (!on) on = cats[0];
         var secs = '';
+        var pcats = [], onProp = null;
         if (on && on.key === 'game_lines') {
             var mainItems = [];
             (g.main.spread || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line, true), line: x.line, odds: x.odds, marketType: 'spreads' }); });
             (g.main.total || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ' + fmtLine(x.line), line: x.line, odds: x.odds, marketType: 'totals', side: x.selection }); });
             (g.main.h2h || []).forEach(function (x) { mainItems.push({ selection: x.selection, label: x.selection + ' ML', line: null, odds: x.odds, marketType: 'h2h' }); });
             secs = drawerGroup(g, 'game_lines', 'Game Lines', g.main.book, mainItems, true);
+        } else if (on && on.key === 'player_props') {
+            var pgrp = g.groups.player_props;
+            pcats = propCatsOf(pgrp.items);
+            for (var q = 0; q < pcats.length; q++) if (pcats[q].key === state.drawerProp) onProp = pcats[q];
+            if (!onProp) onProp = pcats[0];
+            var wantProp = onProp ? onProp.key : null;
+            var pitems = (pgrp.items || []).filter(function (i) { return (i.propLabel || 'Player Props') === wantProp; });
+            secs = drawerPlayerProps(g, (onProp && onProp.label) || (pgrp.label || 'Player Props'), pgrp.book, pitems);
         } else if (on) {
             var grp = g.groups[on.key];
             secs = drawerGroup(g, on.key, grp.label || on.key, grp.book, grp.items, true);
@@ -1332,6 +1398,11 @@
             '<button type="button" class="sbn-dslip" data-drawerclose="1">Pick slip <b>' + state.picks.length + '</b></button>' +
             '<button type="button" class="sbn-dclose" data-drawerclose="1" aria-label="Close">&times;</button></header>' +
             (cats.length ? '<nav class="sbn-dcats" aria-label="Market categories">' + nav + '</nav>' : '') +
+            (pcats.length > 1 ? '<nav class="sbn-dprops" aria-label="Player prop markets">' + pcats.map(function (c) {
+                return '<button type="button" class="sbn-dprop' + (onProp && c.key === onProp.key ? ' is-on' : '') +
+                    '" data-dprop="' + esc(c.key) + '">' + esc(c.label) +
+                    '<span class="sbn-dpropn">' + c.n + '</span></button>';
+            }).join('') + '</nav>' : '') +
             '<div class="sbn-dbody">' + (secs || '<div class="sbn-note">No markets are posted for this game.</div>') + '</div>' +
             // The panel covers the slip, so a price added from here changed
             // something the user could not see. This is the same slip, reported:
@@ -1598,12 +1669,15 @@
         if (dOpen) {
             state.drawer = dOpen.getAttribute('data-drawer');
             state.drawerCat = dOpen.getAttribute('data-drawercat') || state.cat;
+            state.drawerProp = null;
             render();
             return;
         }
         var dcat = t.closest && t.closest('[data-dcat]');
-        if (dcat) { state.drawerCat = dcat.getAttribute('data-dcat'); render(); return; }
-        if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; state.drawerCat = null; render(); return; }
+        if (dcat) { state.drawerCat = dcat.getAttribute('data-dcat'); state.drawerProp = null; render(); return; }
+        var dprop = t.closest && t.closest('[data-dprop]');
+        if (dprop) { state.drawerProp = dprop.getAttribute('data-dprop'); render(); return; }
+        if (t.closest && t.closest('[data-drawerclose]')) { state.drawer = null; state.drawerCat = null; state.drawerProp = null; render(); return; }
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');

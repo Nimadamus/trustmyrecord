@@ -902,3 +902,43 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
     .sbn-ok { margin-top: 8px; }
     .sbn-bar.is-ok .sbn-bardot { background: var(--sbn-accent); box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2); }
 }
+
+/* NFL_PLAYER_PROPS_20260909 — the Player Props panel.
+   A football game posts several hundred player prices, so the panel picks one
+   market at a time off a chip row and lists it by player. Chips sit under the
+   category tabs and scroll sideways on a phone rather than wrapping into a
+   four-line block that pushes the prices off the screen. */
+.sbn-dprops {
+    display: flex; flex-wrap: nowrap; align-items: center; gap: 8px;
+    padding: 10px 16px; background: var(--sbn-panel2);
+    border-bottom: 1px solid var(--sbn-line);
+    overflow-x: auto; scrollbar-width: none;
+}
+.sbn-dprops::-webkit-scrollbar { display: none; }
+.sbn-dprop {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 32px; padding: 0 12px; border: 1px solid var(--sbn-line); border-radius: 999px;
+    background: transparent; color: var(--sbn-muted);
+    font-family: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.sbn-dprop:hover { color: var(--sbn-text2); background: rgba(255, 255, 255, 0.05); }
+.sbn-dprop.is-on {
+    color: var(--sbn-text); border-color: var(--sbn-accent);
+    background: rgba(255, 255, 255, 0.06);
+}
+.sbn-dprop:focus-visible { outline: 2px solid var(--sbn-accent); outline-offset: 2px; }
+.sbn-dpropn {
+    padding: 1px 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08);
+    font-size: 11px; font-weight: 700; color: var(--sbn-muted);
+}
+.sbn-dprop.is-on .sbn-dpropn { color: var(--sbn-text2); }
+/* the player row: name on the left, its whole ladder on the right */
+.sbn-drow--prop .sbn-dside { display: flex; align-items: baseline; gap: 8px; }
+.sbn-dteam {
+    font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .08em;
+    color: var(--sbn-muted); text-transform: uppercase;
+}
+@media (max-width: 1023px) {
+    .sbn-dprops { padding: 8px 10px; }
+    .sbn-dprop { height: 30px; padding: 0 10px; font-size: 12.5px; }
+}
