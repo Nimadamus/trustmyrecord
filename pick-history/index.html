@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://trustmyrecord.com/pick-history/">
+<title>Bet History Drilldown | TrustMyRecord</title>
+<meta name="description" content="Open any statistic on a TrustMyRecord profile and read every individual graded bet behind it: date, matchup, side, line, price, units, final score and result.">
+<meta property="og:title" content="Bet History Drilldown | TrustMyRecord">
+<meta property="og:description" content="Every summary statistic on a verified record opens the exact bets that produced it.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://trustmyrecord.com/pick-history/">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-V5MCVXS2HE');
+</script>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+<script defer src="/static/js/tmr-sitewide.js?v=888ac340bed8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Deliberately the same palette and table metrics as the profile's analytics
+     panels (.tmrx-table in /profile/), so a drilldown reads as the same product
+     as the row that opened it rather than as a separate report. */
+  .ph-wrap { max-width: 1240px; margin: 0 auto; padding: 18px 16px 90px; font-family: 'Inter', sans-serif; }
+  .ph-crumb { font-size: 12px; color: #7f8ca3; font-weight: 700; margin: 6px 0 14px; }
+  .ph-crumb a { color: #9fb0c9; text-decoration: none; }
+  .ph-crumb a:hover { color: #4DA3FF; }
+
+  .ph-head { border: 1px solid rgba(31,51,80,.55); border-radius: 14px; background: #0a1322; padding: 20px 22px; }
+  .ph-kicker { font-size: 10.5px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #7f8ca3; }
+  .ph-title { font-family: 'Barlow','Inter',sans-serif; font-weight: 900; font-size: clamp(1.35rem, 3.4vw, 2rem); letter-spacing: -.01em; color: #f1f5fb; margin-top: 6px; text-transform: uppercase; }
+  .ph-sub { margin-top: 7px; font-size: 13px; font-weight: 600; color: #9BA7B8; line-height: 1.5; }
+  .ph-sub a { color: #4DA3FF; text-decoration: none; }
+
+  .ph-tiles { margin-top: 18px; display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 8px; }
+  .ph-tile { padding: 11px 12px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); }
+  .ph-tile .k { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #9BA7B8; }
+  .ph-tile .v { margin-top: 6px; font-size: 17px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
+  .ph-tile .v.is-pos { color: #86efac; }
+  .ph-tile .v.is-neg { color: #fca5a5; }
+
+  .ph-controls { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .ph-field { display: flex; flex-direction: column; gap: 4px; }
+  .ph-field label { font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #7f8ca3; }
+  .ph-field select, .ph-field input {
+    background: #08111f; border: 1px solid #1F3350; border-radius: 9px; color: #dbe5f4;
+    font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700; padding: 8px 10px; min-width: 130px;
+  }
+  .ph-field input[type="search"] { min-width: 210px; }
+  .ph-field select:focus, .ph-field input:focus { outline: none; border-color: #4DA3FF; }
+  .ph-reset { background: #08111f; border: 1px solid #1F3350; border-radius: 9px; color: #9fb0c9; font-weight: 900; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 9px 14px; cursor: pointer; }
+  .ph-reset:hover { color: #dbe5f4; border-color: #2c4a72; }
+
+  .ph-count { margin: 16px 0 8px; font-size: 12px; font-weight: 700; color: #9BA7B8; }
+  .ph-count strong { color: #f1f5fb; }
+
+  .ph-shell { border: 1px solid rgba(31,51,80,.55); border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #0a1322; }
+  table.ph-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 1080px; }
+  .ph-table thead th { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #9BA7B8; background: #08111f; text-align: left; padding: 10px 12px; border-bottom: 1px solid #1F3350; white-space: nowrap; }
+  .ph-table thead th.num { text-align: right; }
+  .ph-table tbody td { padding: 11px 12px; border-bottom: 1px solid rgba(31,51,80,.55); color: #dbe5f4; font-weight: 600; vertical-align: top; }
+  .ph-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ph-table tbody tr:last-child td { border-bottom: 0; }
+  .ph-table tbody tr { cursor: pointer; }
+  .ph-table tbody tr:hover td { background: rgba(77,163,255,.05); }
+  .ph-table .pos { color: #86efac; }
+  .ph-table .neg { color: #fca5a5; }
+  .ph-table .zero { color: #94a3b8; }
+  .ph-bet { font-weight: 800; color: #f1f5fb; }
+  .ph-dim { color: #8fa0b8; font-weight: 600; font-size: 12px; }
+  .ph-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+  .ph-tag.won { background: rgba(34,197,94,.14); color: #86efac; }
+  .ph-tag.lost { background: rgba(239,68,68,.14); color: #fca5a5; }
+  .ph-tag.push { background: rgba(148,163,184,.14); color: #cbd5e1; }
+
+  .ph-pager { margin-top: 14px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .ph-pager button { background: #08111f; border: 1px solid #1F3350; border-radius: 9px; color: #dbe5f4; font-weight: 900; font-size: 12px; padding: 9px 16px; cursor: pointer; }
+  .ph-pager button:disabled { opacity: .4; cursor: default; }
+  .ph-pager span { font-size: 12px; font-weight: 700; color: #9BA7B8; }
+
+  .ph-note { margin-top: 16px; font-size: 12px; color: #7f8ca3; line-height: 1.6; }
+  .ph-note strong { color: #9fb0c9; }
+  .ph-msg { padding: 30px 16px; text-align: center; color: #9BA7B8; font-weight: 700; font-size: 13.5px; }
+  .ph-msg.err { color: #fca5a5; }
+
+  @media (max-width: 900px) { .ph-tiles { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  @media (max-width: 520px) { .ph-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); } .ph-field select, .ph-field input { min-width: 0; width: 100%; } .ph-field { flex: 1 1 46%; } }
+</style>
+</head>
+<body class="tmr-site-shell tmr-ds-shell">
+<div class="ph-wrap">
+  <div class="ph-crumb"><a href="/">TrustMyRecord</a> &rsaquo; <a id="phProfileCrumb" href="/profile/">Profile</a> &rsaquo; Bet history</div>
+
+  <div class="ph-head">
+    <div class="ph-kicker" id="phKicker">Bet history</div>
+    <h1 class="ph-title" id="phTitle">Bet history</h1>
+    <div class="ph-sub" id="phSub">Loading the exact bets behind this statistic&hellip;</div>
+
+    <div class="ph-tiles" id="phTiles">
+      <div class="ph-tile"><div class="k">Picks</div><div class="v" id="phPicks">&mdash;</div></div>
+      <div class="ph-tile"><div class="k">Record</div><div class="v" id="phRecord">&mdash;</div></div>
+      <div class="ph-tile"><div class="k">Win %</div><div class="v" id="phWinPct">&mdash;</div></div>
+      <div class="ph-tile"><div class="k">Net units</div><div class="v" id="phNet">&mdash;</div></div>
+      <div class="ph-tile"><div class="k">ROI</div><div class="v" id="phRoi">&mdash;</div></div>
+      <div class="ph-tile"><div class="k">Avg odds</div><div class="v" id="phAvgOdds">&mdash;</div></div>
+    </div>
+  </div>
+
+  <div class="ph-controls" id="phControls" hidden>
+    <div class="ph-field"><label for="phSort">Order</label>
+      <select id="phSort">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="units_desc">Biggest win first</option>
+        <option value="units_asc">Biggest loss first</option>
+      </select>
+    </div>
+    <div class="ph-field"><label for="phResult">Result</label>
+      <select id="phResult">
+        <option value="all">All results</option>
+        <option value="won">Wins</option>
+        <option value="lost">Losses</option>
+        <option value="push">Pushes</option>
+      </select>
+    </div>
+    <div class="ph-field"><label for="phSport">Sport / league</label>
+      <select id="phSport"><option value="all">All leagues</option></select>
+    </div>
+    <div class="ph-field"><label for="phMarket">Bet type</label>
+      <select id="phMarket"><option value="all">All bet types</option></select>
+    </div>
+    <div class="ph-field"><label for="phFrom">From</label><input type="date" id="phFrom"></div>
+    <div class="ph-field"><label for="phTo">To</label><input type="date" id="phTo"></div>
+    <div class="ph-field"><label for="phSearch">Search</label><input type="search" id="phSearch" placeholder="Team, player, matchup"></div>
+    <button class="ph-reset" id="phReset" type="button">Reset</button>
+  </div>
+
+  <div class="ph-count" id="phCount"></div>
+
+  <div class="ph-shell">
+    <table class="ph-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>League</th>
+          <th>Matchup</th>
+          <th>Bet</th>
+          <th>Line</th>
+          <th class="num">Odds</th>
+          <th class="num">Risked</th>
+          <th>Final score</th>
+          <th>Result</th>
+          <th class="num">Units</th>
+          <th class="num">Running</th>
+        </tr>
+      </thead>
+      <tbody id="phBody">
+        <tr><td colspan="11"><div class="ph-msg">Loading&hellip;</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ph-pager" id="phPager" hidden>
+    <button type="button" id="phPrev">&larr; Previous</button>
+    <span id="phPageInfo"></span>
+    <button type="button" id="phNext">Next &rarr;</button>
+  </div>
+
+  <p class="ph-note" id="phNote"></p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
+            'https://trustmyrecord-api.onrender.com/api';
+
+  var qs = new URLSearchParams(location.search);
+  var USER = qs.get('user') || qs.get('u') || '';
+  /* No category means "the whole record": /pick-history/?user=X is a valid,
+     linkable page in its own right, not a dead end. */
+  var CATEGORY = qs.get('category') || (qs.get('user') ? 'all' : '');
+  var BUCKET = qs.get('bucket') == null ? '' : qs.get('bucket');
+  var PASSED_LABEL = qs.get('label') || '';
+  var PASSED_CONTEXT = qs.get('context') || '';
+
+  var PAGE_SIZE = 100;
+  var state = { offset: 0, rows: [], data: null };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function signed(n, suffix, dp) {
+    var x = Number(n) || 0;
+    return (x > 0 ? '+' : '') + x.toFixed(dp == null ? 2 : dp) + (suffix || '');
+  }
+  function american(o) {
+    var x = Number(o);
+    if (!isFinite(x) || x === 0) return '—';
+    return (x > 0 ? '+' : '') + Math.round(x);
+  }
+  function cls(n) { var x = Number(n) || 0; return x > 0 ? 'pos' : x < 0 ? 'neg' : 'zero'; }
+  function fmtDate(v) {
+    if (!v) return '—';
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  /* The profile passes the row label it actually rendered, so the header words
+     match the row that was clicked. These fallbacks only matter for a pasted or
+     hand-built URL. */
+  var LABELS = {
+    day: 'Day games (before 5 PM ET)', night: 'Night games (5 PM ET on)',
+    home: 'Home side', away: 'Away side', over: 'Over', under: 'Under',
+    favorite: 'Favorites', underdog: 'Underdogs', heavy_favorite: 'Heavy favorites',
+    big_underdog: 'Longshots', even: 'Even money', even_money: 'Even money',
+    under_1h: 'Locked under 1 hour out', '1_to_6h': 'Locked 1 to 6 hours out',
+    '6_to_24h': 'Locked 6 to 24 hours out', '24h_plus': 'Locked a day or more out',
+    won: 'Wins', lost: 'Losses', push: 'Pushes',
+    sun: 'Sundays', mon: 'Mondays', tue: 'Tuesdays', wed: 'Wednesdays',
+    thu: 'Thursdays', fri: 'Fridays', sat: 'Saturdays',
+    h2h: 'Moneyline', spreads: 'Spreads', totals: 'Totals', team_totals: 'Team totals',
+    moneyline: 'Moneyline', spread: 'Spread', total: 'Total', team_total: 'Team total',
+    first_five: 'First five', player_props: 'Player props',
+    best: 'Best win streak', worst: 'Worst losing streak', current: 'Current streak',
+    all_time: 'All time'
+  };
+  var KICKERS = {
+    daypart: 'Day vs night', opponent: 'Team faded', team: 'Team backed',
+    team_market: 'Team and bet type', home_away: 'Home vs away',
+    home_away_sport: 'Home vs away by league', side_total: 'Over vs under',
+    bet_timing: 'Bet timing', prop_type: 'Player prop type', line_number: 'Exact line',
+    month: 'Month', season: 'Season', market: 'Market type', market_group: 'Market group',
+    sport: 'Sport', result: 'Result', odds_bucket: 'Odds range', unit_size: 'Unit size',
+    favorite_underdog: 'Favorite vs underdog', wager_period: 'Wager period',
+    wager_period_sport: 'Wager period by league', wager_period_market: 'Wager period market',
+    wager_period_split: 'Wager period split', alt_line_type: 'Alternate line',
+    split_sport: 'League', split_sport_group: 'Sport', split_market: 'Market type',
+    split_odds_bucket: 'Odds range', split_fav_dog: 'Favorite vs underdog',
+    split_unit_size: 'Unit size', split_day_of_week: 'Day of week',
+    period: 'Recent window', rolling_form: 'Rolling form', streak: 'Streak',
+    all: 'Full record'
+  };
+  function titleize(v) {
+    return String(v || '').replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+  function fallbackLabel() {
+    if (CATEGORY === 'all') return 'Every graded pick';
+    if (CATEGORY === 'period') return 'Last ' + String(BUCKET).replace('d', ' days');
+    if (CATEGORY === 'rolling_form') return String(BUCKET).replace('last_', 'Last ') + ' picks';
+    var b = String(BUCKET);
+    if (b.indexOf('|') >= 0) b = b.split('|').slice(1).join(' · ');
+    return LABELS[b.toLowerCase()] || titleize(b);
+  }
+
+  function setText(id, text, sign) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    if (sign != null) {
+      el.classList.toggle('is-pos', sign > 0);
+      el.classList.toggle('is-neg', sign < 0);
+    }
+  }
+
+  function renderHeader(d) {
+    var s = d.summary || {};
+    var label = PASSED_LABEL || fallbackLabel();
+    document.getElementById('phKicker').textContent = KICKERS[CATEGORY] || 'Bet history';
+    var title = label + ' — bet history';
+    document.getElementById('phTitle').textContent = title;
+    document.title = label + ' — ' + d.username + ' bet history | TrustMyRecord';
+
+    var profileHref = '/u/' + encodeURIComponent(d.username) + '/';
+    var crumb = document.getElementById('phProfileCrumb');
+    crumb.setAttribute('href', profileHref);
+    crumb.textContent = d.username;
+
+    var bits = ['Every graded pick behind this row on <a href="' + esc(profileHref) + '">' +
+      esc(d.username) + '</a>’s verified record.'];
+    if (PASSED_CONTEXT) bits.unshift(esc(PASSED_CONTEXT) + '.');
+    if (d.hidden_picks) {
+      bits.push('<strong>' + d.hidden_picks + '</strong> of these picks are private and are counted in the totals but not listed.');
+    }
+    document.getElementById('phSub').innerHTML = bits.join(' ');
+
+    setText('phPicks', String(s.total_picks || 0));
+    setText('phRecord', s.total_picks ? (s.pushes ? s.record_full : s.record) : '—',
+      (Number(s.win_rate) || 0) - 50);
+    setText('phWinPct', (s.wins + s.losses) > 0 ? Number(s.win_rate).toFixed(1) + '%' : '—',
+      (Number(s.win_rate) || 0) - 50);
+    setText('phNet', signed(s.net_units, 'u', 2), Number(s.net_units) || 0);
+    setText('phRoi', signed(s.roi, '%', 2), Number(s.roi) || 0);
+    setText('phAvgOdds', american(s.avg_odds));
+  }
+
+  function fillFilterOptions(picks) {
+    var sportSel = document.getElementById('phSport');
+    var marketSel = document.getElementById('phMarket');
+    if (sportSel.options.length > 1 || marketSel.options.length > 1) return;
+    var sports = {}, markets = {};
+    picks.forEach(function (p) {
+      if (p.sport_key) sports[p.sport_key] = p.league || p.sport_key;
+      if (p.market_type) markets[p.market_type] = p.market_label || titleize(p.market_type);
+    });
+    Object.keys(sports).sort(function (a, b) { return sports[a].localeCompare(sports[b]); })
+      .forEach(function (k) {
+        var o = document.createElement('option'); o.value = k; o.textContent = sports[k];
+        sportSel.appendChild(o);
+      });
+    Object.keys(markets).sort(function (a, b) { return markets[a].localeCompare(markets[b]); })
+      .forEach(function (k) {
+        var o = document.createElement('option'); o.value = k; o.textContent = markets[k];
+        marketSel.appendChild(o);
+      });
+  }
+
+  function rowHtml(p) {
+    var status = p.status === 'pushed' ? 'push' : p.status;
+    var score = p.final_score;
+    if (score && p.away_team && p.home_team) {
+      score = esc(p.away_team) + ' <strong>' + p.away_score + '</strong> – <strong>' +
+              p.home_score + '</strong> ' + esc(p.home_team);
+    } else {
+      score = '<span class="ph-dim">—</span>';
+    }
+    var bet = esc(p.pick_label || p.selection || '—');
+    if (p.player_name) bet = esc(p.player_name) + ' · ' + bet;
+    return '<tr data-pick-id="' + esc(p.id) + '">' +
+      '<td>' + esc(fmtDate(p.date)) + '</td>' +
+      '<td>' + esc(p.league || p.sport_key || '—') + '</td>' +
+      '<td>' + (p.matchup ? esc(p.matchup) : '<span class="ph-dim">—</span>') + '</td>' +
+      '<td><span class="ph-bet">' + bet + '</span>' +
+        (p.market_label ? '<br><span class="ph-dim">' + esc(p.market_label) + '</span>' : '') + '</td>' +
+      '<td>' + esc(p.line_label || (p.line == null ? '—' : p.line)) + '</td>' +
+      '<td class="num">' + american(p.odds) + '</td>' +
+      '<td class="num">' + (Number(p.risk_units) || 0).toFixed(2) + 'u</td>' +
+      '<td>' + score + '</td>' +
+      '<td><span class="ph-tag ' + esc(status) + '">' + esc(status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : 'Push') + '</span></td>' +
+      '<td class="num ' + cls(p.result_units) + '">' + signed(p.result_units, 'u', 2) + '</td>' +
+      '<td class="num ' + cls(p.running_units) + '">' + signed(p.running_units, 'u', 2) + '</td>' +
+      '</tr>';
+  }
+
+  function renderBody(d) {
+    var body = document.getElementById('phBody');
+    if (!d.picks.length) {
+      body.innerHTML = '<tr><td colspan="11"><div class="ph-msg">No bets match these filters.</div></td></tr>';
+    } else {
+      body.innerHTML = d.picks.map(rowHtml).join('');
+    }
+
+    var f = d.filtered || d.summary;
+    var count = document.getElementById('phCount');
+    var narrowed = d.listed !== d.total;
+    count.innerHTML = 'Showing <strong>' + (d.listed ? (d.offset + 1) : 0) + '–' +
+      (d.offset + d.returned) + '</strong> of <strong>' + d.listed + '</strong> bet' +
+      (d.listed === 1 ? '' : 's') +
+      (narrowed
+        ? ' (filtered from ' + d.total + '). Filtered totals: ' + f.record_full + ', ' +
+          signed(f.net_units, 'u', 2) + ', ' + signed(f.roi, '%', 2) + ' ROI.'
+        : '.');
+
+    var pager = document.getElementById('phPager');
+    var pages = Math.max(1, Math.ceil(d.listed / PAGE_SIZE));
+    var page = Math.floor(d.offset / PAGE_SIZE) + 1;
+    pager.hidden = pages <= 1;
+    document.getElementById('phPageInfo').textContent = 'Page ' + page + ' of ' + pages;
+    document.getElementById('phPrev').disabled = d.offset <= 0;
+    document.getElementById('phNext').disabled = d.offset + d.returned >= d.listed;
+
+    document.getElementById('phNote').innerHTML =
+      'These ' + d.total + ' bet' + (d.total === 1 ? '' : 's') +
+      ' are selected by the same rule that produced the summary on the profile, from the same graded ledger, ' +
+      'so the counts, record, net units and ROI above reconcile exactly with the row you clicked. ' +
+      '<strong>Click any row</strong> to open that individual pick.';
+  }
+
+  function load() {
+    var params = new URLSearchParams();
+    params.set('category', CATEGORY);
+    params.set('bucket', BUCKET);
+    params.set('limit', String(PAGE_SIZE));
+    params.set('offset', String(state.offset));
+    params.set('sort', document.getElementById('phSort').value);
+    var result = document.getElementById('phResult').value;
+    if (result !== 'all') params.set('result', result);
+    var sport = document.getElementById('phSport').value;
+    if (sport !== 'all') params.set('sport', sport);
+    var market = document.getElementById('phMarket').value;
+    if (market !== 'all') params.set('market', market);
+    var from = document.getElementById('phFrom').value;
+    if (from) params.set('from', from);
+    var to = document.getElementById('phTo').value;
+    if (to) params.set('to', to);
+    var q = document.getElementById('phSearch').value.trim();
+    if (q) params.set('q', q);
+
+    var headers = { Accept: 'application/json' };
+    try {
+      var t = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('tmr_token') ||
+              localStorage.getItem('accessToken');
+      if (t) headers.Authorization = 'Bearer ' + t;
+    } catch (e) {}
+
+    return fetch(API + '/users/' + encodeURIComponent(USER) + '/stats/drilldown?' + params.toString(),
+      { headers: headers, cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        state.data = d;
+        renderHeader(d);
+        fillFilterOptions(d.picks);
+        renderBody(d);
+        document.getElementById('phControls').hidden = false;
+      })
+      .catch(function (err) {
+        document.getElementById('phBody').innerHTML =
+          '<tr><td colspan="11"><div class="ph-msg err">Could not load this bet history. ' +
+          esc(err.message) + '</div></td></tr>';
+      });
+  }
+
+  function reload(resetOffset) {
+    if (resetOffset !== false) state.offset = 0;
+    load();
+  }
+
+  if (!USER || !CATEGORY) {
+    document.getElementById('phSub').textContent =
+      'Open this view by clicking any statistic on a member profile.';
+    document.getElementById('phBody').innerHTML =
+      '<tr><td colspan="11"><div class="ph-msg">Nothing selected. Pick a stat on a profile to drill into it.</div></td></tr>';
+  } else {
+    ['phSort', 'phResult', 'phSport', 'phMarket', 'phFrom', 'phTo'].forEach(function (id) {
+      document.getElementById(id).addEventListener('change', function () { reload(true); });
+    });
+    var searchTimer = null;
+    document.getElementById('phSearch').addEventListener('input', function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () { reload(true); }, 280);
+    });
+    document.getElementById('phReset').addEventListener('click', function () {
+      document.getElementById('phSort').value = 'newest';
+      document.getElementById('phResult').value = 'all';
+      document.getElementById('phSport').value = 'all';
+      document.getElementById('phMarket').value = 'all';
+      document.getElementById('phFrom').value = '';
+      document.getElementById('phTo').value = '';
+      document.getElementById('phSearch').value = '';
+      reload(true);
+    });
+    document.getElementById('phPrev').addEventListener('click', function () {
+      state.offset = Math.max(0, state.offset - PAGE_SIZE);
+      load();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.getElementById('phNext').addEventListener('click', function () {
+      state.offset += PAGE_SIZE;
+      load();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.getElementById('phBody').addEventListener('click', function (e) {
+      var tr = e.target.closest('tr[data-pick-id]');
+      if (!tr) return;
+      window.location.href = '/pick/?id=' + encodeURIComponent(tr.getAttribute('data-pick-id'));
+    });
+    load();
+  }
+})();
+</script>
+</body>
+</html>
