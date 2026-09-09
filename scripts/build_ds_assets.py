@@ -18,6 +18,7 @@ always produces a new URL the CDN has never seen.
 Run:  python scripts/build_ds_assets.py
 """
 import hashlib
+import re
 import json
 import pathlib
 
@@ -42,6 +43,50 @@ MANIFEST = ROOT / "static" / "ds-assets.json"
 EXTRA_SOURCES = (
     "static/js/tmr-profile-hydrate.js",
 )
+
+# ASSETS THAT NAME OTHER ASSETS MUST BE HASHED LAST (2026-09-08).
+# tmr-ds-nav.js is both a hashed build and a file that carries a hashed URL: it
+# names tmr-ds-avatar.<hash>.js so that 684 pages get the avatar resolver from
+# the one bundle they all already load. That makes the nav's own bytes depend on
+# another asset's hash, and hashing it in arbitrary order produced a build that
+# could never be self-consistent -- repoint_ds_assets.py rewrote the nav AFTER
+# its hashed copy had been published, so the manifest named a hash the source no
+# longer had. "Prove every hashed build matches its own name" failed on every CI
+# run because of it, and the practical damage was worse than a red job: main
+# shipped a nav whose bytes still pointed at the PREVIOUS avatar build.
+#
+# Fix the order instead of iterating: hash every ordinary asset first, rewrite
+# the loaders against that finished mapping, and only then hash the loaders. The
+# nav is published already carrying the final avatar URL, so the later repoint
+# pass has nothing left to change in it and reaches a fixpoint in one round --
+# which also keeps CI's publish-then-verify-then-reference order intact, because
+# no new hashed build appears after the availability gate.
+LOADER_SOURCES = (
+    "static/js/tmr-ds-nav.js",
+)
+
+# Assets referenced by their unhashed name (with or without ?v=) as well as by a
+# previous hash. Mirrors repoint_ds_assets.QUERY_REPOINT.
+QUERY_REPOINT = {"tmr-profile-hydrate.js", "tmr-ds-avatar.js"}
+
+
+def loader_rules(mapping):
+    """The same substitutions repoint_ds_assets.py makes, built from the mapping
+    THIS run just produced rather than from the manifest on disk, which is the
+    whole point: the nav has to be rewritten before it is hashed."""
+    rules = []
+    for src, url in mapping.items():
+        q = pathlib.Path(src)
+        stem, ext = q.stem, q.suffix
+        sub = "css" if ext == ".css" else "js"
+        rules.append((re.compile(
+            (r"/static/%s/%s\.[0-9a-f]{12}%s" % (sub, re.escape(stem), re.escape(ext))).encode()),
+            url.encode()))
+        if q.name in QUERY_REPOINT:
+            rules.append((re.compile(
+                (r"/static/%s/%s%s(\?v=[A-Za-z0-9._-]+)?" % (sub, re.escape(stem), re.escape(ext))).encode()),
+                url.encode()))
+    return rules
 
 
 def sources():
@@ -79,10 +124,27 @@ def main(only=()):
     if MANIFEST.exists():
         mapping.update(json.loads(MANIFEST.read_text(encoding="utf-8")))
 
-    for src in sources():
+    # Ordinary assets first, then the loaders that name them. See LOADER_SOURCES.
+    discovered = sources()
+    ordinary = [s for s in discovered
+                if str(s.relative_to(ROOT)).replace("\\", "/") not in LOADER_SOURCES]
+    loaders = [s for s in discovered
+               if str(s.relative_to(ROOT)).replace("\\", "/") in LOADER_SOURCES]
+
+    for src in ordinary + loaders:
         key = str(src.relative_to(ROOT)).replace("\\", "/")
         if only and key not in only:
             continue
+        if key in LOADER_SOURCES:
+            # Binary I/O, so a loader that needed no rewrite stays byte-identical
+            # and cannot pick up CRLF on a Windows run.
+            before = src.read_bytes()
+            after = before
+            for pat, url in loader_rules(mapping):
+                after = pat.sub(url, after)
+            if after != before:
+                src.write_bytes(after)
+                print(f"{key}  ->  rewritten against this run's hashes")
         raw = src.read_bytes()
         digest = hashlib.sha256(raw).hexdigest()[:12]
         hashed = src.with_name(f"{src.stem}.{digest}{src.suffix}")
