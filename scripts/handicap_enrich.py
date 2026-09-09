@@ -378,6 +378,7 @@ def roster(sport, espn_id):
                         if isinstance(a.get("college"), dict) else a.get("college")),
             "experience": ((a.get("experience") or {}).get("years")
                            if isinstance(a.get("experience"), dict) else None),
+            "injuries": a.get("injuries") or [],
         }
     return out
 
@@ -464,6 +465,27 @@ def depth_starter(sport, espn_id, season, position="qb"):
                 if m:
                     return m.group(1)
     return None
+
+
+def injuries(sport, espn_id):
+    """Who is out or questionable, from the league's own roster feed.
+
+    HUB_INJURIES_20260909. TrustMyRecord's injury table needs NFL_ADMIN_TOKEN,
+    which the unattended bake does not carry. ESPN publishes the same thing on
+    the roster, keylessly, so availability reaches the hub on every run. Ordered
+    by how much the status matters, because a card has room for three names and
+    they should be the three that move a line."""
+    ORDER = {"out": 0, "injured reserve": 1, "doubtful": 2, "questionable": 3}
+    out = []
+    for person in (roster(sport, espn_id) or {}).values():
+        for i in person.get("injuries") or []:
+            status = (i.get("status") or "").strip()
+            if not status:
+                continue
+            out.append({"name": person.get("name"), "pos": person.get("pos"),
+                        "status": status, "rank": ORDER.get(status.lower(), 9)})
+    out.sort(key=lambda x: (x["rank"], x["name"] or ""))
+    return out
 
 
 def initials(name):

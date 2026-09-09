@@ -65,6 +65,19 @@ HUB_JS = (
     "var stamp=document.getElementById('hx-today');"
     "if(stamp){try{stamp.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',"
     "weekday:'long',month:'long',day:'numeric'}).format(new Date())}catch(e){}}"
+    "var slate=document.querySelector('.hx-slate');"
+    "Array.prototype.forEach.call(document.querySelectorAll('.hx-chipbtn[data-sort]'),"
+    "function(b){b.addEventListener('click',function(){"
+    "var k=b.getAttribute('data-sort');"
+    "Array.prototype.forEach.call(document.querySelectorAll('.hx-chipbtn[data-sort]'),"
+    "function(x){x.setAttribute('aria-pressed',String(x===b))});"
+    "var arr=Array.prototype.slice.call(cards);"
+    "arr.sort(function(p,q){"
+    "if(k==='time'){return Date.parse(p.getAttribute('data-kick')||0)-"
+    "Date.parse(q.getAttribute('data-kick')||0)}"
+    "var a=parseFloat(p.getAttribute('data-'+k))||0,c=parseFloat(q.getAttribute('data-'+k))||0;"
+    "return c-a});"
+    "arr.forEach(function(el){slate.appendChild(el)})})});"
     "apply('live');})();")
 
 
@@ -236,6 +249,30 @@ def _form_pills(pills):
     return '<span class="hx-seq">%s</span>' % "".join(out)
 
 
+def _injuries(away, home):
+    """Availability, both clubs, the names that actually move a line.
+
+    HUB_INJURIES_20260909. Three per side at most: a card is not an injury
+    report, but a handicapper who cannot see that a starting back is out is
+    reading a price list. Renders nothing when neither club has anyone listed."""
+    cells = []
+    for side in (away, home):
+        listed = side.get("injuries") or []
+        if not listed:
+            continue
+        names = "".join(
+            '<span class="hx-inj"><b>%s</b> %s <i>%s</i></span>'
+            % (esc(i["pos"] or ""), esc(i["name"] or ""), esc(i["status"]))
+            for i in listed[:3])
+        more = len(listed) - 3
+        cells.append('<div class="hx-inj-side"><span class="hx-inj-who">%s</span>%s%s</div>'
+                     % (esc(side.get("short") or side["name"]), names,
+                        ('<span class="hx-inj-more">+%d more</span>' % more) if more > 0 else ""))
+    if not cells:
+        return ""
+    return ('                    <div class="hx-injs">%s</div>' % "".join(cells)) + "\n"
+
+
 def _team_row(side, other, ml, spreads):
     price = hp._odds(ml.get(side["name"]))
     point = spreads.get(side["name"])
@@ -293,6 +330,7 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
             # The last five, with real scores, from the league's own schedule.
             pills, rec, fnote = enrich.team_form(sport, side.get("espn_id"), season)
             side["form"], side["form_record"] = pills, rec
+            side["injuries"] = enrich.injuries(sport, side.get("espn_id"))
             if fnote and not stat_note:
                 stat_note = fnote
 
@@ -340,17 +378,22 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                            ('<b>%s</b> ' % esc(val)) if val else "", esc(txt)))
 
         cards.append(
-            '                <a class="hx-gcard" data-day="%s" data-kick="%s" href="%s">\n'
+            '                <a class="hx-gcard" data-day="%s" data-kick="%s" data-fav="%s" '
+            'data-total="%s" href="%s">\n'
             '                    <p class="hx-gcard-when">%s</p>\n'
             '                    <div class="hx-gcard-teams">\n%s'
             '                    </div>\n%s'
             '                    <div class="hx-gcard-foot">%s'
             '<span class="hx-gcard-cta">Full research &rsaquo;</span></div>\n'
             '                </a>\n' % (
-                esc(day), esc(g.get("commence") or ""), esc(bld.game_url(sport, g)),
+                esc(day), esc(g.get("commence") or ""),
+                esc("%.1f" % abs(float(list(spreads.values())[0]))) if spreads else "",
+                esc(str((mk.get("total") or {}).get("point") or "")),
+                esc(bld.game_url(sport, g)),
                 " &middot; ".join(when),
                 _team_row(away, home, ml, spreads) + _team_row(home, away, ml, spreads),
-                _faces(sport, away, home, extras, sim_starters, season) + strip,
+                _faces(sport, away, home, extras, sim_starters, season) + strip
+                + _injuries(away, home),
                 "".join(tags)))
 
     if cards:
@@ -371,6 +414,14 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                     continue
                 chips.append('<button type="button" class="hx-chipbtn" data-daypick="%s" '
                              'aria-pressed="false">%s</button>' % (esc(d), esc(lab)))
+            # Sort, the way the soccer room does it: what a handicapper scans
+            # for first is the biggest number, not the earliest kickoff.
+            chips.append('<span class="hx-toolbar-l" style="margin-left:10px">Sort</span>')
+            for key, lab in (("time", "Kickoff"), ("fav", "Biggest favourite"),
+                             ("total", "Highest total")):
+                chips.append('<button type="button" class="hx-chipbtn" data-sort="%s" '
+                             'aria-pressed="%s">%s</button>'
+                             % (key, "true" if key == "time" else "false", lab))
             body += '            <div class="hx-toolbar">%s</div>\n' % "".join(chips)
         body += ('            <div class="hx-slate">\n%s            </div>\n'
                  '            <p class="hx-slate-empty" id="hx-none" hidden>Nothing left on the '
@@ -381,6 +432,20 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                 'fills in as soon as the sportsbook feed carries the next slate.</p>\n' % esc(label))
 
     priced = sum(1 for g in games if g.get("priced"))
+    # HUB_TILES_20260909. The soccer and NCAAF rooms open with a row of counts,
+    # and it is the first thing that tells a reader this is a research product
+    # rather than a list. Same idea, counted from this slate.
+    tv = sum(1 for g in games
+             if (sb.get(tuple(sorted([enrich.norm_name(g["away"]),
+                                      enrich.norm_name(g["home"])]))) or {}).get("network"))
+    days_n = len({(g.get("commence") or "")[:10] for g in games if g.get("commence")})
+    tiles = ""
+    if games:
+        cells = [(len(games), "games on the board"), (priced, "priced by the book"),
+                 (tv, "on a national network"), (days_n, "days covered")]
+        tiles = ('            <div class="hx-tiles">%s</div>'
+                 % "".join('<div class="hx-tile"><b>%s</b><span>%s</span></div>'
+                           % (esc(v), esc(l)) for v, l in cells)) + "\n"
     lede = None
     if games:
         lede = ("%d game%s on the board, %d priced. Every card carries the line, both clubs' "
@@ -426,7 +491,7 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
          '<span class="hx-eyebrow">Updated %s</span></div>\n' % (esc(label), esc(stamp)),
          ('        <p class="hx-lede">%s</p>\n' % esc(lede)) if lede else "",
          bld.gotw_block(sport),
-         '        <section class="hx-sec">\n', body, '        </section>\n',
+         '        <section class="hx-sec">\n', tiles, body, '        </section>\n',
          ui.section("Elsewhere on TrustMyRecord", ui.links(links), eyebrow="Keep going"),
          '        <p class="hx-foot">Lines come from the sportsbook feed and refresh through the '
          'day. Club marks, records and form come from the league feed and the graded game '

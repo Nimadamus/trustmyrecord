@@ -1062,3 +1062,63 @@ body.hx-page {
 @media (max-width: 520px) {
   .hx-gteam .hx-seq i { width: 18px; height: 18px; font-size: .6rem; }
 }
+
+/* HUB_TILES_20260909 + HUB_INJURIES_20260909. The counts that open the soccer
+   and NCAAF rooms, and the availability line a handicapper needs before a
+   price means anything. */
+.hx-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.hx-tile {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold-b, #FFC93C);
+  border-radius: var(--hx-r-sm);
+  padding: 14px 16px;
+}
+.hx-tile b {
+  display: block;
+  font: 900 clamp(1.4rem, 4vw, 1.9rem)/1 var(--display, "Barlow Condensed", sans-serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hx-tile span {
+  display: block;
+  margin-top: 6px;
+  font: 700 .68rem/1.25 var(--font, Inter, sans-serif);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hx-injs {
+  display: grid;
+  gap: 8px;
+  padding: 12px clamp(14px, 2.4vw, 20px) 0;
+}
+.hx-inj-side { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; }
+.hx-inj-who {
+  font: 900 .66rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 62px;
+}
+.hx-inj {
+  font: 600 .74rem/1.2 var(--font, Inter, sans-serif);
+  color: var(--ink-2);
+  background: var(--red-soft);
+  border: 1px solid color-mix(in srgb, var(--red) 32%, transparent);
+  border-radius: 999px;
+  padding: 5px 9px;
+}
+.hx-inj b { color: var(--red); font-weight: 800; }
+.hx-inj i { font-style: normal; color: var(--muted); }
+.hx-inj-more { font: 700 .7rem/1 var(--font, Inter, sans-serif); color: var(--muted); }
+@media (max-width: 520px) {
+  .hx-inj { font-size: .68rem; padding: 4px 8px; }
+  .hx-inj-who { min-width: 0; }
+}
