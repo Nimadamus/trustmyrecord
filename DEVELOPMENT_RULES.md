@@ -22,6 +22,50 @@ and stating how many graded games a record was counted from and the span it cove
 It is why a TrustMyRecord number is worth more than one on a blog. Keep it, phrased as what we
 have rather than what we lack.
 
+## Handicapping acceptance gate (Sep 9, 2026) - HARD RULE (PERMANENT, RUN IT BEFORE SAYING DONE)
+`HANDICAP_ACCEPTANCE_GATE_20260909`. Nima: "Nothing is considered complete unless EVERY
+applicable requirement passes." The checklist is executable so that it actually gets run:
+
+    python scripts/handicap_qa.py            all seven sports, PASS/FAIL with evidence
+    python scripts/handicap_qa.py nfl mlb    just those
+    python scripts/handicap_qa.py --live     also check the deployed URLs
+
+Exit code is 1 if any sport fails, so it can gate a workflow. The ten requirement groups:
+
+ 1. DATA ACCURACY AND FRESHNESS. Correct current slate and date in EASTERN time, correct
+    teams and players, current stats, current markets, current availability. No prior-day
+    data. Nothing invented or reconstructed and presented as fact. A source failure is
+    handled explicitly, never papered over.
+ 2. AUTOMATIC UPDATES. Real unattended scheduled refreshes, correct overnight rollover,
+    every sport processed, validation BEFORE publish, stale-data detection, run logging.
+    A workflow_dispatch run or a local build is NOT proof; only an Actions run with
+    `event: schedule` is.
+ 3. DESIGN QUALITY. Premium TMR visual design, strong hero, real typography and spacing,
+    designed cards and comparisons, never a raw database appearance, excellent on desktop
+    AND at 390px.
+ 4. HANDICAPPING DEPTH. Sport-specific research where the data exists: advanced stats,
+    recent form, splits, availability, matchup advantages, model projections, market
+    context, meaningful trends, and a link to the deeper matchup page where one exists.
+ 5. IMAGES AND BRANDING. Team marks everywhere. Meaningful player imagery: NFL and NCAAF
+    quarterbacks and key players, MLB probable pitchers and key hitters, NBA stars and
+    starters, NHL goalies and stars, Soccer key players, Tennis both competitors. No broken
+    imagery and no thumbnail clutter.
+ 6. COMPLETE SLATE COVERAGE. Every relevant game present, none missing, none duplicated, and
+    a properly designed offseason or empty state when there is genuinely nothing on.
+ 7. QA EVERY RELEASE. Broken links, broken images, exactly one H1, SEO indexability, slate
+    and date correctness, data freshness, desktop rendering, 390px rendering, and the live
+    deployed URL.
+ 8. CONSISTENCY. All seven sports meet the same product standard while keeping their own
+    sport-specific modules.
+ 9. ARTICLES STAY SEPARATE. Hub automation is the daily research product. Articles remain
+    optional, occasional, editorial. Never turn the hub pipeline into an article generator.
+10. COMPLETION RULE. A PASS/FAIL line per sport with evidence. Do NOT report "complete"
+    while any required item is failing, missing, stale, visually poor, or unproven.
+
+Two checks are printed as MANUAL rather than guessed at, because a script cannot settle
+them: the desktop and 390px render, and whether a real scheduled run has fired. Anyone
+reporting completion has to supply that evidence themselves.
+
 ## Handicapping Hub: the locked 15 point plan (Sep 9, 2026) - HARD RULE (PERMANENT)
 `HANDICAPPING_HUB_ARCHITECTURE_20260909`. Nima's full direction, verbatim in substance. Any
 session touching /handicapping/ follows all fifteen.

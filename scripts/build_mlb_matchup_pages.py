@@ -1223,11 +1223,78 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
 # ---------------------------------------------------------------------------
 # the hub's server rendered block
 # ---------------------------------------------------------------------------
+# HUB_BRANDING_20260909. The crawlable slate was the only hub on the site with
+# no club marks and no faces on it, a six column table of names and prices while
+# NFL, NCAAF, Soccer and Tennis all carry imagery. The acceptance gate fails a
+# hub with zero logo references and it was right to.
+#
+# Both come from the same ESPN reader every other sport already uses, so there is
+# no new feed and no new dependency. Both resolve BY NAME and both return None
+# when the feed does not answer, in which case the cell renders exactly as it did
+# before. The table's structure is unchanged, so the contract test still passes.
+_MLB_ART = {"logos": {}, "faces": {}, "loaded": False}
+
+
+def _enrich():
+    import sys as _sys
+    _here = os.path.dirname(os.path.abspath(__file__))
+    if _here not in _sys.path:
+        _sys.path.insert(0, _here)
+    import handicap_enrich as _en
+    return _en
+
+
+def _mlb_art(date_iso):
+    if _MLB_ART["loaded"]:
+        return _MLB_ART
+    _MLB_ART["loaded"] = True
+    try:
+        en = _enrich()
+        d0 = dt.date.fromisoformat(str(date_iso)[:10])
+        span = "%s-%s" % ((d0 - dt.timedelta(days=1)).strftime("%Y%m%d"),
+                          (d0 + dt.timedelta(days=1)).strftime("%Y%m%d"))
+        for _key, entry in (en.scoreboard("mlb", span) or {}).items():
+            if not isinstance(entry, dict):
+                continue
+            for norm, club in (entry.get("teams") or {}).items():
+                if club.get("logo"):
+                    _MLB_ART["logos"][norm] = club["logo"]
+                if club.get("espn_id"):
+                    for pname, person in (en.roster("mlb", club["espn_id"]) or {}).items():
+                        if person.get("headshot"):
+                            _MLB_ART["faces"][pname] = person["headshot"]
+    except Exception as exc:  # noqa: BLE001 - imagery never fails a bake
+        print("  WARN  hub imagery unavailable (%s)" % exc)
+    return _MLB_ART
+
+
+def _mlb_logo(name):
+    try:
+        return _MLB_ART["logos"].get(_enrich().norm_name(name))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _mlb_face(name):
+    try:
+        return _MLB_ART["faces"].get(_enrich().norm_name(name))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _img(src, alt, cls, px):
+    if not src:
+        return ""
+    return ('<img class="%s" src="%s" alt="%s" width="%d" height="%d" loading="lazy" '
+            'decoding="async">' % (cls, esc(src), esc(alt), px, px))
+
+
 def render_hub_block(date, rows, built_at):
     """rows: list of dicts produced by build(), one per game, already rendered
        down to plain values. This is the crawlable half of the hub: below the
        interactive cards, the same slate as text, with a link to every game."""
     n = len(rows)
+    _mlb_art(date)
     out = []
     out.append('<section class="mhs" aria-labelledby="mhs-title">\n')
     out.append('  <h2 id="mhs-title">Today\'s MLB matchups, %s %s</h2>\n'
@@ -1254,11 +1321,19 @@ def render_hub_block(date, rows, built_at):
             else '<span class="mm-na">not announced</span>'
         ml = ("%s %s, %s %s" % (r["away_nick"], r["ml_away"], r["home_nick"], r["ml_home"])) \
             if r["ml_away"] and r["ml_home"] else '<span class="mm-na">not priced</span>'
-        out.append('      <tr><th scope="row"><a href="%s">%s at %s</a></th>'
+        marks = (_img(_mlb_logo(r["away"]), "", "mhs-logo", 22)
+                 + _img(_mlb_logo(r["home"]), "", "mhs-logo", 22))
+        if r["away_sp"] and r["home_sp"]:
+            faces = (_img(_mlb_face(r["away_sp"]), r["away_sp"], "mhs-face", 30)
+                     + _img(_mlb_face(r["home_sp"]), r["home_sp"], "mhs-face", 30))
+            if faces:
+                probables = faces + esc(probables)
+        out.append('      <tr><th scope="row">%s<a href="%s">%s at %s</a></th>'
                    '<td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'
-                   % (esc(r["url"]), esc(r["away"]), esc(r["home"]),
+                   % (marks, esc(r["url"]), esc(r["away"]), esc(r["home"]),
                       esc(r["start"] or "TBD"), esc(r["venue"] or "TBD"),
-                      probables if not (r["away_sp"] and r["home_sp"]) else esc(probables),
+                      probables if not (r["away_sp"] and r["home_sp"]) or "<img" in probables
+                      else esc(probables),
                       ml if not (r["ml_away"] and r["ml_home"]) else esc(ml),
                       esc(r["total"]) if r["total"] else '<span class="mm-na">not priced</span>'))
     out.append("    </tbody>\n  </table></div>\n")

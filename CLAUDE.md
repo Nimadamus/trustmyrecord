@@ -57,6 +57,19 @@ Sourcing and sample size are not disclaimers and stay: name the book, state how 
 a record was counted from. Phrase it as what we have, never as what we lack.
 
 
+## Run the acceptance gate before you say done
+
+`python scripts/handicap_qa.py` prints PASS/FAIL per sport with evidence and exits 1 on any
+failure. It is the governing quality gate for every hub and matchup page: data freshness in
+Eastern time, one H1, no internal disclaimers, no broken links or images, team and player
+imagery, full slate coverage against the live board, and the sport-specific research modules.
+
+Two items print as MANUAL because a script cannot settle them: the desktop and 390px render,
+and whether a REAL scheduled run has fired (`event: schedule`, not workflow_dispatch and not
+a local build). Supply that evidence yourself. Never report complete with a FAIL or an
+unproven MANUAL outstanding. Full requirement list: `DEVELOPMENT_RULES.md`.
+
+
 ## Session model: ONE coordinator, no new Handicapping sessions
 
 `HANDICAPPING_SESSION_CONSOLIDATION_20260909`. Nima, 2026-09-09: "The goal now is REDUCING
