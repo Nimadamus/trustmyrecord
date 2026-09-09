@@ -17,10 +17,18 @@ WHERE THE CONTENT COMES FROM
   NFL only     TMR /api/nfl/starters and /api/nfl/injuries, both already kept
                current by the existing trustmyrecord-nfl-personnel cron
 
-URLS ARE EVERGREEN
-/handicapping/nfl/49ers-vs-rams/ is the permanent page for that matchup. It is
-rewritten with the next meeting rather than a new dated URL being minted, so
-the page accumulates authority instead of being replaced every week.
+URLS: ONE PER FIXTURE, AND AN EXISTING ONE NEVER MOVES
+Two rules, in this order (SEO_PRESERVE_EXISTING_URLS_20260909):
+
+  1. A fixture that already has a page keeps that page's URL, forever. Those
+     pages are indexed and they carry real traffic, so a rename to a prettier
+     slug would trade traffic for tidiness. resolve_slug() freezes the existing
+     path the first time it sees it.
+  2. A fixture appearing for the first time mints its URL from its frozen SEO
+     hook, the one true game-specific fact the title already uses:
+       /handicapping/nfl/seattle-won-10-straight-vs-patriots/
+     No date in the path, unique per fixture, and a sixteen game slate does not
+     read as one template with the nouns swapped.
 
 WHAT IT WILL NOT DO
 A sport whose board is empty is out of season and is skipped entirely, writing
@@ -33,10 +41,12 @@ feed, so the pages say so rather than inventing a number.
 """
 
 import datetime
+import html
 import importlib.util
 import io
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -72,10 +82,31 @@ _pspec = importlib.util.spec_from_file_location(
 nflp = importlib.util.module_from_spec(_pspec)
 _pspec.loader.exec_module(nflp)
 
+# The shared handicapping design system: components, feeds and the per-sport
+# composition. HANDICAP_REDESIGN_20260909.
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+import handicap_page  # noqa: E402
+import handicap_hub  # noqa: E402
+
 # A deep preview costs a simulation and about a dozen feed calls, so it is
 # built for the games a reader is actually about to watch. Everything outside
 # the window keeps the permanent research page exactly as it was.
 PREVIEW_DAYS = int(os.environ.get("NFL_PREVIEW_DAYS", "9"))
+
+# HUB_FIRST_ARCHITECTURE_20260909. Nima's decision, in his words: the sport hub
+# is the primary product, every game on it gets useful automated data, and the
+# only recurring deep article is ONE Matchup of the Day per sport per day.
+#
+# What that means for this file:
+#   * the matchup page is rendered by handicap_page.py, the shared design system
+#     every sport uses, NOT by the per-fixture preview generator;
+#   * nfl_preview_sections.py stays in the repo and stays importable, because it
+#     built pages that exist and are indexed, but it no longer decides what a
+#     page looks like. Set NFL_DEEP_PREVIEW=1 to put it back in the render path.
+#   * no sport gains per-fixture pages it does not already have. hub_only is the
+#     default for anything the graded-game engine cannot answer.
+DEEP_PREVIEW = os.environ.get("NFL_DEEP_PREVIEW", "0") not in ("0", "", "false", "no")
 
 SITE = mlb.SITE
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
@@ -124,61 +155,109 @@ SPORTS = {
 }
 
 
-# GAME_OF_THE_WEEK_20260907
-# The one long form deep dive we publish per week, surfaced at the top of the
-# sport hub. It lives at its own URL and is written by hand, so the hub links to
-# it rather than trying to generate it. Point this at the current week's article
-# and the callout follows; set it to None out of season and the hub renders
-# exactly as it did before, with no empty box.
-GAME_OF_THE_WEEK = {
-    "nfl": {
-        "url": "/nfl/49ers-vs-rams-week-1-2026/",
-        "week": "Week 1",
-        "matchup": "49ers at Rams, Melbourne Cricket Ground",
-        "blurb": ("The first NFL regular season game ever played in Australia, taken apart in full: "
-                  "every 2025 number for both teams, what the Rams bought in Myles Garrett and Aaron "
-                  "Donald, the opener against the current line with the ticket and money splits, the "
-                  "live injury board, and the game simulated 1,000 times."),
-        "logos": ["sf", "lar"],
-        "index": "/nfl-game-of-the-week/",
-    },
-    "nba": None,
-    "nhl": None,
-}
+# FEATURED_FROM_MOTD_20260909.
+# There used to be a hand-edited GAME_OF_THE_WEEK dict here: a URL, a week, a
+# matchup line, a blurb and two logo codes, all typed in by a person every week,
+# pointing at an article also written by hand. That was the only part of this
+# builder that required recurring human maintenance, and it was a second
+# featured-game system competing with Matchup of the Day.
+#
+# Nima's call, 2026-09-09: one featured article per sport per day, chosen by the
+# MOTD lane, and no competing hand-maintained feature. So the hub now READS the
+# sport's own Matchup of the Day index and links whatever is newest there.
+# Nothing to edit, nothing to remember, and when a sport has no MOTD article the
+# callout renders as an empty string rather than a stale link to last week.
+MOTD_INDEX = "matchup-of-the-day/%s/index.html"
+MOTD_CARD = re.compile(
+    r'<a[^>]+href="(/matchup-of-the-day/[^"/]+/)"[^>]*>(.{0,800}?)</a>', re.S)
+MOTD_TAGS = re.compile(r"<[^>]+>")
+
+
+def featured_article(sport):
+    """The newest Matchup of the Day for this sport, or None.
+
+    Reads the lane's own index page rather than keeping a second copy of the
+    facts. Returns None for a sport with no lane yet, which is what keeps an
+    empty box off the hub."""
+    path = os.path.join(REPO, MOTD_INDEX % sport)
+    if not os.path.exists(path):
+        return None
+    try:
+        with io.open(path, encoding="utf-8") as fh:
+            page = fh.read()
+    except OSError:
+        return None
+    m = MOTD_CARD.search(page)
+    if not m:
+        return None
+    # The index page is already escaped; unescape before it is escaped again,
+    # or an apostrophe ships as &amp;#x27; on the hub.
+    title = html.unescape(MOTD_TAGS.sub(" ", m.group(2)))
+    title = " ".join(title.split())
+    if not title:
+        return None
+    return {"url": m.group(1), "title": title[:200]}
+
+
+def gotw_block_disabled(sport):
+    return ""
 
 
 def gotw_block(sport):
-    """The featured deep dive callout, or nothing at all when none is set."""
-    g = GAME_OF_THE_WEEK.get(sport)
-    if not g:
+    """The sport's Matchup of the Day, surfaced at the top of its hub."""
+    art = featured_article(sport)
+    if not art:
         return ""
-    logos = "".join(
-        '<img src="https://a.espncdn.com/i/teamlogos/nfl/500/%s.png" alt="" width="34" height="34" '
-        'loading="lazy">' % a for a in g.get("logos", []))
-    return (
-        '        <section class="mm-sec mm-gotw">\n'
-        '            <a class="mm-gotw-card" href="%s">\n'
-        '                <span class="mm-gotw-tag">Game of the Week &middot; %s</span>\n'
-        '                <span class="mm-gotw-teams">%s<b>%s</b></span>\n'
-        '                <span class="mm-gotw-blurb">%s</span>\n'
-        '                <span class="mm-gotw-cta">Read the deep dive and the 1,000 simulations &rsaquo;</span>\n'
-        '            </a>\n'
-        '        </section>\n'
-        '        <style>\n'
-        '            .mm-gotw-card{display:block;text-decoration:none;color:inherit;padding:18px 20px;border-radius:16px;\n'
-        '                background:linear-gradient(120deg,rgba(255,201,60,.13),rgba(0,53,148,.16) 58%%,rgba(170,0,0,.15));\n'
-        '                border:1px solid rgba(255,201,60,.4)}\n'
-        '            .mm-gotw-card:hover{border-color:#FFC93C}\n'
-        '            .mm-gotw-tag{display:inline-block;font:800 .68rem/1 "Barlow Condensed",Inter,sans-serif;\n'
-        '                letter-spacing:.18em;text-transform:uppercase;color:#04101c;background:#FFC93C;\n'
-        '                padding:6px 10px;border-radius:5px}\n'
-        '            .mm-gotw-teams{display:flex;align-items:center;gap:10px;margin:13px 0 9px}\n'
-        '            .mm-gotw-teams img{width:34px;height:34px;object-fit:contain}\n'
-        '            .mm-gotw-teams b{font:900 1.25rem/1.1 "Barlow Condensed",Inter,sans-serif;text-transform:uppercase}\n'
-        '            .mm-gotw-blurb{display:block;max-width:78ch;line-height:1.6;opacity:.86;font-size:.94rem}\n'
-        '            .mm-gotw-cta{display:inline-block;margin-top:12px;font-weight:800;color:#FFC93C;font-size:.9rem}\n'
-        '        </style>\n'
-        % (g["url"], esc(g["week"]), logos, esc(g["matchup"]), esc(g["blurb"])))
+    css = (
+        ".mm-gotw-card{display:block;text-decoration:none;color:inherit;padding:18px 20px;"
+        "border-radius:16px;background:linear-gradient(120deg,rgba(255,201,60,.13),"
+        "rgba(0,53,148,.16) 58%,rgba(170,0,0,.15));border:1px solid rgba(255,201,60,.4)}"
+        ".mm-gotw-card:hover{border-color:#FFC93C}"
+        ".mm-gotw-tag{display:inline-block;font:800 .68rem/1 'Barlow Condensed',Inter,sans-serif;"
+        "letter-spacing:.18em;text-transform:uppercase;color:#04101c;background:#FFC93C;"
+        "padding:6px 10px;border-radius:5px}"
+        ".mm-gotw-teams{display:block;margin:13px 0 9px}"
+        ".mm-gotw-teams b{font:900 1.25rem/1.15 'Barlow Condensed',Inter,sans-serif;"
+        "text-transform:uppercase}"
+        ".mm-gotw-cta{display:inline-block;margin-top:4px;font-weight:800;color:#FFC93C;font-size:.9rem}")
+    parts = [
+        '        <section class="mm-sec mm-gotw">',
+        '            <a class="mm-gotw-card" href="%s">' % esc(art["url"]),
+        '                <span class="mm-gotw-tag">%s Matchup of the Day</span>'
+        % esc(SPORTS[sport]["label"]),
+        '                <span class="mm-gotw-teams"><b>%s</b></span>' % esc(art["title"]),
+        '                <span class="mm-gotw-cta">Read the full breakdown &rsaquo;</span>',
+        '            </a>',
+        '        </section>',
+        '        <style>%s</style>' % css,
+        '',
+    ]
+    return chr(10).join(parts)
+
+
+
+# DS_BODY_CLASS_20260909
+# Every page this builder writes carried a bare <body>, so none of the design
+# system reached it: tmr-ds.css declares its palette on `body.tmr-ds`, and with
+# that class absent the tokens are undefined and tmr-mlb-matchup.css paints its
+# near-white heading colour onto a plain white page. Section headings on
+# /handicapping/nfl/, /handicapping/nba/ and every matchup page under them were
+# effectively invisible. The MLB builder has always emitted the class (its pages
+# read "tmr-ds tmr-ds--dark tmr-site-shell mm-page"); this one never did.
+BODY_TAG = '<body class="tmr-ds tmr-ds--dark tmr-site-shell mm-page">\n'
+
+# The MLB builder wraps its pages in main.mm-shell, which tmr-mlb-matchup.css
+# gives a 1120px column. This builder has always used main.mm-wrap, which that
+# stylesheet does not style at all, so with the design system finally reaching
+# these pages the content ran the full width of the window. The same column is
+# declared here rather than in the shared stylesheet, so nothing else moves.
+SHELL_STYLE = (
+    '    <style>\n'
+    '        .mm-wrap{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}\n'
+    '        .mm-head{margin-bottom:26px}\n'
+    '        .mm-sec{margin:0 0 30px}\n'
+    '        @media (max-width:620px){.mm-wrap{padding:18px 0 48px}}\n'
+    '    </style>\n')
 
 
 # NEXT_GAME_SPOTLIGHT_20260909
@@ -245,30 +324,6 @@ def next_game_block(sport, games):
            home["logo"], esc(g["home"]),
            esc(long_date(g["commence"])), esc(kickoff(g["commence"])),
            sp_txt, tot_txt))
-
-
-# DS_BODY_CLASS_20260909
-# Every page this builder writes carried a bare <body>, so none of the design
-# system reached it: tmr-ds.css declares its palette on `body.tmr-ds`, and with
-# that class absent the tokens are undefined and tmr-mlb-matchup.css paints its
-# near-white heading colour onto a plain white page. Section headings on
-# /handicapping/nfl/, /handicapping/nba/ and every matchup page under them were
-# effectively invisible. The MLB builder has always emitted the class (its pages
-# read "tmr-ds tmr-ds--dark tmr-site-shell mm-page"); this one never did.
-BODY_TAG = '<body class="tmr-ds tmr-ds--dark tmr-site-shell mm-page">\n'
-
-# The MLB builder wraps its pages in main.mm-shell, which tmr-mlb-matchup.css
-# gives a 1120px column. This builder has always used main.mm-wrap, which that
-# stylesheet does not style at all, so with the design system finally reaching
-# these pages the content ran the full width of the window. The same column is
-# declared here rather than in the shared stylesheet, so nothing else moves.
-SHELL_STYLE = (
-    '    <style>\n'
-    '        .mm-wrap{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}\n'
-    '        .mm-head{margin-bottom:26px}\n'
-    '        .mm-sec{margin:0 0 30px}\n'
-    '        @media (max-width:620px){.mm-wrap{padding:18px 0 48px}}\n'
-    '    </style>\n')
 
 
 class BuildError(Exception):
@@ -351,6 +406,32 @@ def fetch_history(sport, away, home):
         return None
 
 
+def engine_reachable():
+    """One real question to the engine before any page is rewritten.
+
+    ENGINE_LIVENESS_PROBE_20260909. Asks for a matchup that has existed since
+    1970 and checks the answer has the shape a matchup page depends on. Retries
+    are deliberate and generous: the engine runs on Render's free tier, so the
+    first request after an idle period pays a cold start, and treating that as a
+    dead engine would skip a build that would have succeeded thirty seconds
+    later. Returns False only when it has genuinely failed to answer."""
+    if not SERVICE_KEY:
+        return False
+    try:
+        d = get_json("%s/api/matchup/historical" % ENGINE.rstrip("/"), attempts=3,
+                     method="POST",
+                     body={"sport": "NFL", "team_1": "Dallas Cowboys",
+                           "team_2": "New York Giants"},
+                     headers={"X-TMR-Service-Key": SERVICE_KEY, "X-TMR-User-Id": "0"})
+    except BuildError as exc:
+        print("WARN  engine probe failed: %s" % exc)
+        return False
+    if not isinstance(d, dict) or not (d.get("matchup_summary") or d.get("head_to_head")):
+        print("WARN  engine answered without a matchup summary; treating as unavailable")
+        return False
+    return True
+
+
 def fetch_nfl_extras():
     """Starting quarterbacks, status notes and divisions.
 
@@ -378,8 +459,103 @@ def fetch_nfl_extras():
 
 # ---------------------------------------------------------------- helpers
 
+# SLUG_FROM_HOOK_20260909, amended by SEO_PRESERVE_EXISTING_URLS_20260909.
+# Resolved once per run and keyed on the board's event id.
+_SLUGS = {}
+
+_SLUG_STOP = {"is", "are", "was", "were", "has", "have", "had", "the", "a", "an",
+              "in", "on", "at", "of", "to", "over", "its", "his", "her", "their",
+              "this", "that", "and", "entering", "game", "games"}
+
+
+def nickname(team):
+    """"Los Angeles Rams" -> "Rams", "Boston Red Sox" -> "Red Sox"."""
+    name = (team or "").strip()
+    for nick in seo._TWO_WORD_NICKNAMES:
+        if name.endswith(nick):
+            return nick
+    parts = name.split()
+    return parts[-1] if parts else name
+
+
+def hook_slug(text, limit=7):
+    """A URL out of the frozen hook sentence.
+
+    The hook is already unique per fixture and already evidence backed, so using
+    it as the slug is what stops a slate of sixteen URLs reading as one template
+    with the nouns swapped, and it does it with no date in the path, because the
+    hook itself is what changed since yesterday."""
+    words = [w for w in slugify(text).split("-") if w and w not in _SLUG_STOP]
+    return "-".join(words[:limit])
+
+
+def mint_slug(sport, g, hook, taken):
+    """The URL a NEW fixture gets. Never called for one that already has a page."""
+    pair = "%s-vs-%s" % (slugify(g["away"]), slugify(g["home"]))
+    raw = str(g.get("event_id") or "")
+    tail = raw.rsplit("_", 1)[-1] if raw else ""
+    if not tail:
+        raise BuildError("board game has no id: %s at %s" % (g["away"], g["home"]))
+    base = hook_slug(hook[0]) if hook and hook[0] else ""
+    if base:
+        # Carry the club the hook does NOT name, by NICKNAME rather than city:
+        # the hook writes "Los Angeles" and two different clubs answer to that.
+        away_s, home_s = slugify(seo.short_name(g["away"])), slugify(seo.short_name(g["home"]))
+        away_n, home_n = slugify(nickname(g["away"])), slugify(nickname(g["home"]))
+        if away_s in base and home_s not in base:
+            slug = "%s-vs-%s" % (base, home_n)
+        elif home_s in base and away_s not in base:
+            slug = "%s-vs-%s" % (base, away_n)
+        elif away_s in base or home_s in base:
+            slug = base
+        else:
+            slug = "%s-%s-vs-%s" % (base, away_n, home_n)
+    else:
+        slug = "%s-%s" % (pair, tail)
+    slug = slug.strip("-")[:110].strip("-")
+    if not slug or slug in taken:
+        slug = "%s-%s" % (slug or pair, tail)
+    taken.add(slug)
+    return slug
+
+
+def resolve_slug(sport, g, hook, store, taken):
+    """The URL for this fixture, chosen once and then never again.
+
+    SEO_PRESERVE_EXISTING_URLS_20260909. The order matters and it is the whole
+    point of this function:
+
+      1. a slug already frozen in the store wins;
+      2. otherwise, a page this fixture ALREADY HAS on disk wins, and is frozen
+         as-is. A live URL is never renamed. Those pages are indexed, the MLB
+         ones carry 17,307 impressions over 89 days, and a rename to a prettier
+         slug trades real traffic for tidiness;
+      3. only a fixture with no page anywhere mints a hook slug.
+
+    So the scheme applies going forward, to games appearing on the board for the
+    first time, and nothing that is already published moves."""
+    engine = SPORTS[sport]["engine"]
+    key = seo.game_key(engine, g["away"], g["home"], (g["commence"] or "")[:10])
+    entry = store.setdefault(key, {})
+    slug = entry.get("slug")
+    if not slug:
+        recorded = (entry.get("page") or "").strip("/").split("/")[-1]
+        on_disk = os.path.isdir(os.path.join(REPO, "handicapping", sport, recorded)) if recorded else False
+        if recorded and on_disk:
+            slug = recorded
+        else:
+            slug = mint_slug(sport, g, hook, taken)
+        entry["slug"] = slug
+    taken.add(slug)
+    _SLUGS[str(g.get("event_id"))] = slug
+    return slug
+
+
 def game_slug(g):
-    """One permanent URL per GAME, keyed on the board's own event id.
+    """The URL segment for this fixture, as resolved by the current run.
+
+    Falls back to the pair and the board id for any caller that asks before
+    resolve_slug() has run, which is the scheme every existing page uses.
 
     A bare pair slug cannot represent two different meetings between the same
     teams: the second one overwrites the first and the earlier page stops
@@ -388,9 +564,11 @@ def game_slug(g):
 
     The feed's ids read an_americanfootball_nfl_290843; only the numeric tail is
     kept, since the sport is already in the path."""
+    sid = str(g.get("event_id") or "")
+    if sid in _SLUGS:
+        return _SLUGS[sid]
     base = "%s-vs-%s" % (slugify(g["away"]), slugify(g["home"]))
-    raw = str(g.get("event_id") or "")
-    tail = raw.rsplit("_", 1)[-1] if raw else ""
+    tail = sid.rsplit("_", 1)[-1] if sid else ""
     if not tail:
         raise BuildError("board game has no id: %s at %s" % (g["away"], g["home"]))
     return "%s-%s" % (base, tail)
@@ -707,6 +885,24 @@ def preview_context(sport, g, extras):
 
 
 def render_game(sport, g, hist, slate, extras, built_at, hook=None, preview=None):
+    """One permanent research page per fixture, in the shared design system.
+
+    HUB_FIRST_ARCHITECTURE_20260909. The composition lives in handicap_page.py
+    so the NFL page, the NBA page and any sport added later are one product.
+    What shipped here before was a bare <body> and a stack of tables: tmr-ds.css
+    is scoped to `body.tmr-ds`, so none of the sitewide design system was
+    reaching these pages and they rendered in the browser's default serif.
+
+    render_game_legacy() below is the previous renderer, kept whole and reachable
+    through NFL_DEEP_PREVIEW=1 rather than deleted, because it is what wrote the
+    pages that are currently indexed."""
+    if DEEP_PREVIEW:
+        return render_game_legacy(sport, g, hist, slate, extras, built_at, hook, preview)
+    return handicap_page.render(sys.modules[__name__], sport, g, hist, slate, extras,
+                                built_at, hook)
+
+
+def render_game_legacy(sport, g, hist, slate, extras, built_at, hook=None, preview=None):
     label = SPORTS[sport]["label"]
     teams_by_name, qb1, injuries = extras
     # The hook is one true, game-specific number, frozen the first time this
@@ -840,9 +1036,22 @@ def _render_ncaaf_research_hub(games, built_at):
     return page_head(title, desc, url, ld) + body
 
 
-def render_hub(sport, games, built_at):
+def render_hub(sport, games, built_at, hist_by_pair=None, extras=None):
+    # HUB_RESEARCH_20260909. NFL, NBA and NHL were the last hubs still
+    # rendering a bare price table while every other sport had become a
+    # research room. They now go through handicap_hub.py, the same component
+    # set the matchup pages use. Soccer and NCAAF keep their own renderers,
+    # which already meet the standard; the board hub below survives as the
+    # fallback for anything that reaches it.
     if sport == "soccer":
         return render_soccer_hub(games, built_at)
+    if sport in ("nfl", "nba", "nhl"):
+        try:
+            return handicap_hub.render(sys.modules[__name__], sport, games, built_at,
+                                       hist_by_pair, extras)
+        except Exception as exc:  # noqa: BLE001 - never lose a hub to a render bug
+            print("  WARN  research hub failed for %s (%s); writing the board hub"
+                  % (sport, exc))
     # NCAAF_HANDICAPPING_HUB_20260909. NCAAF is hub-first and stays hub-first:
     # no per-fixture page is minted here and none ever was. What changed is the
     # hub itself, which was a price list with a heading. ESPN carries college
@@ -882,14 +1091,18 @@ def render_hub(sport, games, built_at):
          '        <header class="mm-head">\n',
          '            <span class="mm-kicker">Handicapping</span>\n',
          '            <h1>%s Handicapping</h1>\n' % esc(label),
+         # NO_INTERNAL_DISCLAIMERS_20260909. This lede used to tell the reader
+         # "there are no permanent matchup pages for this sport yet: the graded
+         # game database behind them does not carry NCAAF". That is
+         # implementation detail, it reads as an apology, and it makes a
+         # finished page look unfinished. A hub says what it HAS.
          (('            <p class="mm-lede">Every %s game on the board today with the moneyline, '
-           'the spread and the total, straight off the sportsbook feed. There are no permanent '
-           'matchup pages for this sport yet: the graded game database behind them does not carry '
-           '%s, and a page with no record on it is not research.</p>\n' % (esc(label), esc(label)))
+           'the spread and the total, priced straight off the sportsbook feed and refreshed '
+           'through the day.</p>\n' % esc(label))
           if hub_only else
           ('            <p class="mm-lede">Every %s game on the board with the line, and a permanent '
            'research page per matchup: head to head record, against the spread and over/under '
-           'splits, recent form, and what the data does not cover.</p>\n' % esc(label))),
+           'splits, and recent form.</p>\n' % esc(label))),
          '        </header>\n',
          next_game_block(sport, games),
          gotw_block(sport),
@@ -919,8 +1132,11 @@ def render_hub(sport, games, built_at):
           '        <section class="mm-sec">\n            <h2>Elsewhere on TrustMyRecord</h2>\n',
           '            <ul>\n',
           '                <li><a href="/handicapping/">The handicapping hub, every sport</a></li>\n',
-          ('                <li><a href="%s">%s Game of the Week, the weekly deep dive</a></li>\n'
-           % (GAME_OF_THE_WEEK[sport]["index"], esc(SPORTS[sport]["label"]))) if GAME_OF_THE_WEEK.get(sport) else "",
+          # The lane's own archive, linked only when the lane exists. No stale
+          # link to a weekly feature nobody is writing any more.
+          ('                <li><a href="/matchup-of-the-day/%s/">%s Matchup of the Day, every '
+           'featured breakdown</a></li>\n' % (sport, esc(label)))
+          if os.path.exists(os.path.join(REPO, MOTD_INDEX % sport)) else "",
           '                <li><a href="/handicapping/mlb/">MLB matchups, odds and probable pitchers</a></li>\n',
           ('                <li><a href="%s">%s simulator</a></li>\n' % (sim, esc(label))) if sim else "",
           '                <li><a href="/betlegend-pro/">BetLegend Pro, the research database '
@@ -1014,22 +1230,40 @@ def build(sport, built_at):
     cache = {}
     store = seo.load_store()
     used = set()
+    # PASS ONE: hook, then URL. Both freeze on first sight of the fixture, and a
+    # fixture that already has a page keeps that page's URL. The whole slate has
+    # to be resolved before anything renders, because every page links to the
+    # rest of the board.
+    hooks, taken = {}, set()
+    engine = SPORTS[sport]["engine"]
+    minted = []
     for g in games:
         key = (g["away"], g["home"])
         if key not in cache:
             cache[key] = fetch_history(sport, g["away"], g["home"])
-        hook = seo.hook_for(SPORTS[sport]["engine"], g["away"], g["home"],
-                            (g["commence"] or "")[:10], cache[key],
-                            None, None, store, used)
-        seo.record_page(store, SPORTS[sport]["engine"], g["away"], g["home"],
-                        (g["commence"] or "")[:10],
+        hook = seo.hook_for(engine, g["away"], g["home"], (g["commence"] or "")[:10],
+                            cache[key], None, None, store, used)
+        hooks[str(g.get("event_id"))] = hook
+        before = os.path.isdir(os.path.join(REPO, "handicapping", sport,
+                                            resolve_slug(sport, g, hook, store, taken)))
+        if not before:
+            minted.append(game_slug(g))
+
+    # PASS TWO: write.
+    for g in games:
+        seo.record_page(store, engine, g["away"], g["home"], (g["commence"] or "")[:10],
                         "/handicapping/%s/%s/" % (sport, game_slug(g)))
         if write("handicapping/%s/%s/index.html" % (sport, game_slug(g)),
-                 render_game(sport, g, cache[key], games, extras, built_at, hook,
-                             preview_context(sport, g, extras))):
+                 render_game(sport, g, cache[(g["away"], g["home"])], games, extras,
+                             built_at, hooks[str(g.get("event_id"))],
+                             preview_context(sport, g, extras) if DEEP_PREVIEW else None)):
             changed += 1
     seo.save_store(store)
-    if write("handicapping/%s/index.html" % sport, render_hub(sport, games, built_at)):
+    if minted:
+        print("  %d new URL(s) minted from the hook: %s"
+              % (len(minted), ", ".join(minted[:4]) + (" ..." if len(minted) > 4 else "")))
+    if write("handicapping/%s/index.html" % sport,
+             render_hub(sport, games, built_at, cache, extras)):
         changed += 1
     print("%s: %d file(s) written" % (sport.upper(), changed))
 
@@ -1048,12 +1282,22 @@ def main():
     # dressed up as a successful build. A sport that needs the engine is skipped
     # entirely rather than rebuilt blind; yesterday's good pages stay live.
     # hub_only sports never call the engine, so they still run.
-    if not SERVICE_KEY:
+    # ENGINE_LIVENESS_PROBE_20260909. The check used to be "is the variable
+    # non-empty", which is not the question. A key that is present but dead, or
+    # an engine that is down or cold starting on Render's free tier, produces
+    # EXACTLY the outcome this guard exists to prevent: fetch_history() returns
+    # None for every matchup and every page is rewritten with its head to head,
+    # ATS split and form gone. bl-38 hit this locally on 2026-09-09 and had to
+    # revert 16 NFL pages by hand. So the guard now asks the engine.
+    engine_ok = bool(SERVICE_KEY) and engine_reachable()
+    if not engine_ok:
         blocked = [x for x in wanted if not SPORTS[x].get("hub_only")]
         if blocked:
-            print("WARN  BETLEGEND_PRO_SERVICE_KEY unset; skipping %s "
-                  "(their pages carry engine history and must not be rebuilt "
-                  "without it)" % ", ".join(sorted(b.upper() for b in blocked)))
+            why = ("BETLEGEND_PRO_SERVICE_KEY unset" if not SERVICE_KEY
+                   else "the BetLegend Pro engine did not answer")
+            print("WARN  %s; skipping %s (their pages carry engine history and "
+                  "must not be rebuilt without it)"
+                  % (why, ", ".join(sorted(b.upper() for b in blocked))))
             wanted = [x for x in wanted if SPORTS[x].get("hub_only")]
         if not wanted:
             print("nothing to build")

@@ -1,5 +1,118 @@
 # TrustMyRecord Development Rules
 
+## Handicapping Hub presentation: no internal disclaimers (Sep 9, 2026) - HARD RULE (PERMANENT, SITE WIDE)
+`NO_INTERNAL_DISCLAIMERS_20260909`. Nima, 2026-09-09: "Do not make the site look unfinished by
+explaining our backend limitations to visitors."
+
+Never show a visitor:
+- database limitations ("the database holds no completed meeting between these two clubs")
+- missing-engine explanations ("the graded game database behind them does not carry NCAAF")
+- "there are no permanent matchup pages for this sport yet"
+- internal architecture commentary of any kind
+- developer-style caveats ("left blank rather than filled with an estimate", "not shown rather
+  than reconstructed", "data is 213 days behind today", "this reading is unavailable because")
+
+**If a data feature is unavailable, omit the module. Silently.** The page closes up around it.
+A hub says what it HAS. Removed on Sep 9, 2026 from the hub_only lede in `render_hub()`, from
+`series_section()` and `coverage_section()` in `scripts/handicap_page.py`, and from the market
+board's book note. Do not reintroduce them anywhere, in any sport, in any builder.
+
+What is NOT a disclaimer and stays: **sourcing and sample.** Naming the book a price came from,
+and stating how many graded games a record was counted from and the span it covers, is evidence.
+It is why a TrustMyRecord number is worth more than one on a blog. Keep it, phrased as what we
+have rather than what we lack.
+
+## Handicapping Hub: the locked 15 point plan (Sep 9, 2026) - HARD RULE (PERMANENT)
+`HANDICAPPING_HUB_ARCHITECTURE_20260909`. Nima's full direction, verbatim in substance. Any
+session touching /handicapping/ follows all fifteen.
+
+ 1. ONE HANDICAPPING HUB PER SPORT: MLB, NFL, NCAAF, NBA, NHL, Soccer, Tennis.
+ 2. EVERY CURRENT GAME BELONGS ON THE HUB. The full relevant daily slate, with useful
+    structured handicapping data.
+ 3. THE HUB MUST BE AUTOMATED. Current slate, current structured data, automatic refresh.
+    No manual daily Claude rebuild requirement.
+ 4. NO MASS ARTICLE FACTORY. Do not build permanent article-per-game systems across sports.
+ 5. MATCHUP OF THE DAY IS OCCASIONAL. Optional only. Not required daily, not required for
+    every sport. If none exists, render nothing.
+ 6. PRESERVE EXISTING VALUABLE CONTENT. Useful and indexed MLB/NFL pages, historical URLs,
+    SEO-performing content.
+ 7. HUB-FIRST SPORTS. NCAAF, Soccer and Tennis stay hub-first and do not expand into
+    permanent per-game editorial architectures.
+ 8. NO INTERNAL DEVELOPER DISCLAIMERS. Never expose database or backend limitations to
+    users. Omit unsupported modules gracefully. See NO_INTERNAL_DISCLAIMERS_20260909 below.
+ 9. DATA INTEGRITY. No fabricated stats. No paid or new data provider without approval.
+    Derived metrics must be supported by real source data.
+10. DESIGN STANDARD. A serious research product: logos and headshots, matchup cards,
+    comparison bars, form, filters, sorting, readable data, desktop and mobile quality.
+    Never regress to a plain odds dump.
+11. TMR CORE IDENTITY REMAINS. Verified picks, records, handicappers, accountability,
+    leaderboards, community, contests, sportsbook and picks, performance history.
+    Handicapping SUPPORTS TMR; it does not replace it.
+12. CONCURRENT SESSION RULE. Before editing shared Handicapping files, check ownership and
+    coordinate. Do not overwrite another Claude session.
+13. SOCCER CURRENT STATE. The rebuilt Soccer Hub is aligned with the model and must not be
+    regressed.
+14. TENNIS / NCAAF / OTHER SPORTS. Same product model, sport-specific stats and layouts.
+15. FINAL PERMANENT MODEL:
+        ONE STABLE HANDICAPPING HUB PER SPORT
+        + FULL CURRENT SLATE
+        + AUTOMATED CURRENT STATS / TRENDS / ODDS
+        + OCCASIONAL OPTIONAL MATCHUP OF THE DAY ARTICLE
+        + PRESERVE EXISTING VALUABLE CONTENT
+
+**The acceptance test for point 3:** if no Claude terminal is open tomorrow, does each hub
+still update to tomorrow's slate with current available data? Every sport must answer YES.
+
+## Handicapping architecture is LOCKED (Sep 9, 2026) — HARD RULE (PERMANENT, READ BEFORE TOUCHING /handicapping/)
+`HANDICAPPING_HUB_ARCHITECTURE_20260909`. Nima's final direction, after two Claude sessions
+overwrote each other in `scripts/build_sport_matchup_pages.py` on the same day. Any session
+working on the Handicapping Hub follows this and nothing else.
+
+**The permanent model, in three lines:**
+
+    ONE HANDICAPPING HUB PER SPORT
+    + USEFUL AUTOMATED DATA FOR EVERY GAME ON THAT HUB
+    + OCCASIONAL MATCHUP OF THE DAY ARTICLES, WHEN WE CHOOSE TO FEATURE ONE
+
+**Do not:**
+- generate or write a deep editorial preview for every fixture. That is not the model. It is
+  too large to maintain and it pulls TMR away from pick tracking, verified records,
+  handicappers, leaderboards, community and contests, which are the product.
+- create permanent per-game pages for a sport the graded-game engine cannot answer. NCAAF,
+  soccer and tennis stay hub-first; `hub_only` in `SPORTS` is what enforces it.
+- rename, delete or de-index an existing matchup page. The 212 MLB pages carried 17,307
+  impressions in the 89 days to Sep 7, 2026. `resolve_slug()` freezes the URL a fixture
+  already has; only a fixture appearing for the FIRST time mints a new slug, from its frozen
+  SEO hook, with no date in the path.
+- add a second featured-game system. The hand-edited `GAME_OF_THE_WEEK` dict was removed on
+  Sep 9, 2026; `featured_article()` reads the sport's own `/matchup-of-the-day/<sport>/`
+  index and links the newest article, or renders nothing when the lane has none.
+- treat the Matchup of the Day as a daily obligation. **There is no editorial quota.** The
+  article is optional and occasional: published when a matchup is genuinely worth featuring or
+  when we want a premium piece, and not otherwise. Not every day, not every sport, not just
+  because games exist. Some days carry several across different sports, some days carry none.
+  The hub has to be complete and valuable on a day when ZERO articles are published, and a
+  sport with no article that day is a normal state, not a gap to fill.
+- keep mass-producing articles or previews once the in-flight transition batches are done.
+  TMR is not a daily article factory. Finishing work already substantially underway is fine;
+  treating it as the ongoing model is not.
+
+**Do:**
+- render every matchup page through `scripts/handicap_page.py`, the shared design system
+  (`static/css/tmr-handicap.css` + `handicap_ui.py` + `handicap_enrich.py`). One product
+  across NFL, MLB, NBA, NHL, college, tennis and soccer.
+- keep `scripts/nfl_preview_sections.py`. It wrote pages that are live, and it is still
+  reachable with `NFL_DEEP_PREVIEW=1`, but it does NOT decide what a page looks like and it
+  must not be re-wired into the default render path.
+- keep finishing a batch of articles that is already substantially underway. That is
+  temporary work, not the model.
+
+**Before editing `scripts/build_sport_matchup_pages.py`:** `git fetch` and check the file's
+mtime. Two sessions edited it within one hour on Sep 9, 2026 and the second silently dropped
+the first's work, including `BODY_TAG`, `SHELL_STYLE` and `next_game_block`. Never replace a
+line RANGE in that file; match on exact text.
+
+
 ## Editorial: a negative number takes the MINUS SIGN, never the word (Sep 4, 2026) — HARD RULE (PERMANENT, SITE WIDE)
 `HOUSE_STYLE_MINUS_SIGN_20260904`. Applies to every word TrustMyRecord publishes, human or automated:
 Matchup of the Day, board and ticker blurbs, forum card posts, article copy, captions, alt text, headlines,

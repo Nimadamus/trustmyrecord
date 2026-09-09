@@ -1,0 +1,1007 @@
+/* =============================================================================
+   TrustMyRecord - HANDICAPPING DESIGN SYSTEM  (tmr-handicap.css)
+   HANDICAP_REDESIGN_20260909.
+
+   Loaded by every page under /handicapping/ that is not MLB's older mm- shell:
+     /handicapping/<sport>/               a sport hub
+     /handicapping/<sport>/<matchup>/     one permanent research page per game
+
+   WHY IT EXISTS
+   The sport matchup pages shipped with a bare <body>. tmr-ds.css is scoped to
+   `body.tmr-ds`, so NONE of the sitewide design system was reaching them: no
+   type scale, no panels, no navbar geometry, no dark ramp. They rendered in the
+   browser's default serif on white. That is the "database stats page" look. The
+   body class is fixed in the builder; this sheet is the composition layer that
+   sits on top of it.
+
+   RULES
+   1. Every selector is namespaced hx-. Nothing here overrides a tmr-ds, mm- or
+      hh- rule, so the MLB pages and the existing hub are unaffected by it.
+   2. Colour comes from tmr-ds tokens ONLY. The two per-page exceptions are
+      --hx-away and --hx-home, the two clubs' own marks, set inline by the
+      builder from the league feed. They are used for accents - borders, bars,
+      badges, washes - never as a page background, so a club with a near-black
+      primary cannot swallow the page.
+   3. Sport-agnostic by construction. A module is named for what it DOES
+      (comparison, duel, feature, dial) not for the sport it was first used in,
+      so the NFL quarterback duel and the MLB pitching duel are one component
+      with different content, and tennis gets it for free.
+   4. Mobile is not an afterthought: every grid collapses to one column, every
+      wide strip scrolls inside its own box, and no fixed pixel width anywhere
+      in the sheet is wider than 320px.
+   ========================================================================== */
+
+body.hx-page {
+  --hx-away: #1D7FE8;
+  --hx-home: #B98505;
+  --hx-r: 16px;
+  --hx-r-sm: 10px;
+}
+
+.hx-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 var(--gutter, 28px) 72px;
+}
+
+/* --------------------------------------------------------------------------
+   1. HERO
+   A designed band, not a white void. Three layers: a base gradient in the two
+   clubs' own colours, a radial wash that keeps the centre readable behind the
+   headline, and the content grid on top.
+   -------------------------------------------------------------------------- */
+.hx-hero {
+  position: relative;
+  margin: 0 0 var(--sp-6, 32px);
+  border-radius: 0 0 var(--hx-r) var(--hx-r);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--panel-2);
+}
+.hx-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(104deg,
+      color-mix(in srgb, var(--hx-away) 62%, transparent) 0%,
+      color-mix(in srgb, var(--hx-away) 26%, transparent) 27%,
+      transparent 48%,
+      color-mix(in srgb, var(--hx-home) 26%, transparent) 73%,
+      color-mix(in srgb, var(--hx-home) 62%, transparent) 100%);
+}
+.hx-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 88% at 50% 6%, rgba(6, 19, 33, .10) 0%, rgba(6, 19, 33, .74) 62%, rgba(6, 19, 33, .93) 100%),
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, .028) 0 2px, transparent 2px 9px);
+}
+.hx-hero-in {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 22px var(--gutter, 28px) 26px;
+}
+
+.hx-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  font: 700 .74rem/1.2 var(--font, Inter, sans-serif);
+  letter-spacing: .04em;
+  color: rgba(234, 242, 250, .62);
+  margin: 0 0 16px;
+}
+.hx-crumb a { color: rgba(234, 242, 250, .78); text-decoration: none; }
+.hx-crumb a:hover { color: #fff; text-decoration: underline; }
+.hx-crumb span[aria-hidden] { opacity: .45; }
+
+.hx-kick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 900 .7rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: #04101c;
+  background: var(--gold-b, #FFC93C);
+  padding: 7px 11px 6px;
+  border-radius: 5px;
+}
+.hx-kick + .hx-kick { margin-left: 8px; }
+.hx-kick--ghost {
+  color: #EAF2FA;
+  background: rgba(234, 242, 250, .10);
+  border: 1px solid rgba(234, 242, 250, .22);
+}
+
+/* the two clubs, big, with the fixture verb between them */
+.hx-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(10px, 3vw, 34px);
+  margin: 20px 0 6px;
+}
+.hx-team { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; min-width: 0; }
+.hx-team--away { --hx-c: var(--hx-away); }
+.hx-team--home { --hx-c: var(--hx-home); }
+.hx-logo {
+  width: clamp(74px, 16vw, 132px);
+  height: clamp(74px, 16vw, 132px);
+  object-fit: contain;
+  filter: drop-shadow(0 10px 26px rgba(0, 0, 0, .55));
+}
+.hx-team-name {
+  margin: 0;
+  font: 900 clamp(1.05rem, 3.1vw, 1.85rem)/1.02 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.hx-team-sub {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 9px;
+  font: 700 .78rem/1.2 var(--font, Inter, sans-serif);
+  color: rgba(234, 242, 250, .72);
+}
+.hx-team-sub b { color: #fff; }
+.hx-team-rule { width: 46px; height: 4px; border-radius: 3px; background: var(--hx-c); }
+
+.hx-vs {
+  font: 900 clamp(.82rem, 2.4vw, 1.15rem)/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(234, 242, 250, .55);
+}
+
+.hx-title {
+  margin: 14px 0 0;
+  text-align: center;
+  font: 900 clamp(1.5rem, 5.2vw, 3.05rem)/1.02 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: #fff;
+  text-wrap: balance;
+}
+.hx-sub {
+  margin: 10px auto 0;
+  max-width: 74ch;
+  text-align: center;
+  font: 500 clamp(.95rem, 2.2vw, 1.06rem)/1.6 var(--font, Inter, sans-serif);
+  color: rgba(234, 242, 250, .8);
+  text-wrap: pretty;
+}
+
+.hx-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.hx-meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 700 .82rem/1 var(--font, Inter, sans-serif);
+  color: #EAF2FA;
+  background: rgba(6, 19, 33, .5);
+  border: 1px solid rgba(234, 242, 250, .17);
+  border-radius: 999px;
+  padding: 9px 14px;
+}
+.hx-meta svg { width: 14px; height: 14px; flex: 0 0 auto; opacity: .75; }
+
+/* --------------------------------------------------------------------------
+   2. MARKET BOARD - the sportsbook strip, in the hero and reusable below it
+   -------------------------------------------------------------------------- */
+.hx-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 22px 0 0;
+}
+.hx-mk {
+  background: rgba(6, 19, 33, .62);
+  border: 1px solid rgba(234, 242, 250, .18);
+  border-radius: var(--hx-r-sm);
+  padding: 14px 14px 13px;
+  min-width: 0;
+}
+.hx-mk-l {
+  margin: 0 0 10px;
+  font: 900 .66rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold-b, #FFC93C);
+}
+.hx-mk-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 8px; }
+.hx-mk-row:last-child { margin-bottom: 0; }
+.hx-mk-who {
+  font: 800 .78rem/1.2 var(--font, Inter, sans-serif);
+  color: rgba(234, 242, 250, .74);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hx-mk-v {
+  font: 900 clamp(1.05rem, 3vw, 1.45rem)/1 var(--display, "Barlow Condensed", sans-serif);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hx-mk-v small { font-size: .62em; opacity: .72; margin-left: 3px; }
+.hx-mk-single { display: flex; align-items: baseline; gap: 9px; }
+.hx-mk-single .hx-mk-v { font-size: clamp(1.5rem, 5vw, 2.1rem); }
+.hx-mk-imp { font: 700 .68rem/1 var(--font, Inter, sans-serif); color: rgba(234, 242, 250, .58); font-variant-numeric: tabular-nums; }
+.hx-mk-book {
+  margin: 12px 0 0;
+  text-align: center;
+  font: 600 .72rem/1.45 var(--font, Inter, sans-serif);
+  color: rgba(234, 242, 250, .55);
+}
+
+/* --------------------------------------------------------------------------
+   3. SECTION SHELL
+   -------------------------------------------------------------------------- */
+.hx-sec { margin: 0 0 var(--sp-6, 32px); scroll-margin-top: 90px; }
+.hx-sec-h { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 14px; margin: 0 0 16px; }
+.hx-sec-h h1,
+.hx-sec-h h2 {
+  margin: 0;
+  font: 900 clamp(1.25rem, 3.4vw, 1.85rem)/1.06 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.hx-eyebrow {
+  font: 800 .68rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold-ink, #FFC93C);
+  border: 1px solid color-mix(in srgb, var(--gold-ink, #FFC93C) 45%, transparent);
+  border-radius: 4px;
+  padding: 5px 8px 4px;
+}
+.hx-lede {
+  margin: -4px 0 16px;
+  max-width: 78ch;
+  font: 400 1.02rem/1.68 var(--font, Inter, sans-serif);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.hx-note {
+  margin: 12px 0 0;
+  max-width: 88ch;
+  font: 400 .82rem/1.6 var(--font, Inter, sans-serif);
+  color: var(--muted);
+}
+.hx-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--hx-r);
+  box-shadow: var(--sh);
+  padding: clamp(16px, 3vw, 26px);
+}
+.hx-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.hx-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.hx-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+
+/* --------------------------------------------------------------------------
+   4. DUEL - two people, head to head. NFL quarterbacks, MLB starting pitchers,
+   NBA stars, a tennis singles match. Same component every time.
+   -------------------------------------------------------------------------- */
+.hx-duel { display: grid; grid-template-columns: 1fr 1fr; gap: 0; overflow: hidden; padding: 0; }
+.hx-duel-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(16px, 2.6vw, 24px);
+  min-width: 0;
+}
+.hx-duel-side + .hx-duel-side { border-left: 1px solid var(--line); }
+.hx-duel-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hx-c) 15%, transparent), transparent 58%);
+  pointer-events: none;
+}
+.hx-duel-side--away { --hx-c: var(--hx-away); }
+.hx-duel-side--home { --hx-c: var(--hx-home); }
+.hx-duel-top { position: relative; display: flex; align-items: center; gap: 14px; min-width: 0; }
+.hx-face {
+  width: clamp(76px, 15vw, 116px);
+  height: clamp(76px, 15vw, 116px);
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 12%;
+  background: color-mix(in srgb, var(--hx-c) 22%, var(--panel-3));
+  border: 3px solid var(--hx-c);
+  box-shadow: 0 8px 22px rgba(2, 10, 20, .3);
+}
+.hx-face--mono {
+  display: grid;
+  place-items: center;
+  font: 900 1.6rem/1 var(--display, "Barlow Condensed", sans-serif);
+  color: #fff;
+  background: var(--hx-c);
+}
+.hx-duel-who { min-width: 0; }
+.hx-duel-role {
+  margin: 0 0 6px;
+  font: 900 .66rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--hx-c);
+}
+.hx-duel-name {
+  margin: 0;
+  font: 900 clamp(1.15rem, 3.2vw, 1.65rem)/1.02 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.hx-duel-meta { margin: 6px 0 0; font: 600 .8rem/1.4 var(--font, Inter, sans-serif); color: var(--muted); }
+.hx-duel-stats { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hx-dstat {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--hx-r-sm);
+  padding: 11px 12px;
+  min-width: 0;
+}
+.hx-dstat b {
+  display: block;
+  font: 900 clamp(1.15rem, 3.1vw, 1.45rem)/1 var(--display, "Barlow Condensed", sans-serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hx-dstat span {
+  display: block;
+  margin-top: 5px;
+  font: 700 .66rem/1.2 var(--font, Inter, sans-serif);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hx-dstat.is-win { border-color: color-mix(in srgb, var(--green) 45%, transparent); background: var(--green-soft); }
+.hx-dstat.is-win b { color: var(--green-ink, var(--green)); }
+
+/* --------------------------------------------------------------------------
+   5. COMPARISON - the component that replaces a stat table.
+   away value | label | home value, with a split bar underneath showing the
+   share of the pair and the advantage side flagged.
+   -------------------------------------------------------------------------- */
+.hx-cmp-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 14px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid var(--line);
+}
+.hx-cmp-head img { width: 34px; height: 34px; object-fit: contain; }
+.hx-cmp-club { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hx-cmp-club b {
+  font: 900 .95rem/1.1 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hx-cmp-club--home { justify-content: flex-end; }
+.hx-cmp-vs { font: 800 .68rem/1 var(--font, Inter, sans-serif); letter-spacing: .16em; color: var(--muted); }
+
+.hx-cmp-row { padding: 14px 0; border-bottom: 1px dashed var(--line); }
+.hx-cmp-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.hx-cmp-line { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 10px; }
+.hx-cmp-v {
+  font: 900 clamp(1.1rem, 3.4vw, 1.55rem)/1 var(--display, "Barlow Condensed", sans-serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hx-cmp-v--home { text-align: right; }
+.hx-cmp-v.is-win { color: var(--green); }
+.hx-cmp-l {
+  text-align: center;
+  font: 800 .68rem/1.2 var(--font, Inter, sans-serif);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hx-cmp-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin: 10px 0 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--panel-3);
+}
+.hx-cmp-bar i { display: block; height: 100%; border-radius: 999px; min-width: 2px; }
+.hx-cmp-bar i:first-child { background: var(--hx-away); }
+.hx-cmp-bar i:last-child { background: var(--hx-home); }
+.hx-cmp-foot { display: flex; justify-content: center; margin: 9px 0 0; }
+.hx-edge {
+  font: 800 .68rem/1 var(--font, Inter, sans-serif);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--green-ink, var(--green));
+  background: var(--green-soft);
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+.hx-edge--even { color: var(--muted); background: var(--panel-3); }
+
+/* --------------------------------------------------------------------------
+   6. MODEL PANEL - the strongest block on the page
+   -------------------------------------------------------------------------- */
+.hx-model {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--gold-b, #FFC93C) 34%, var(--line));
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--gold-b, #FFC93C) 8%, transparent), transparent 46%),
+    var(--panel);
+}
+.hx-model-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 34px); align-items: center; }
+.hx-score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.hx-score-side { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hx-score-side img { width: 46px; height: 46px; object-fit: contain; }
+.hx-score-v {
+  font: 900 clamp(2.6rem, 11vw, 4.4rem)/.9 var(--display, "Barlow Condensed", sans-serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hx-score-v.is-win { color: var(--green); }
+.hx-score-abbr { font: 800 .74rem/1 var(--font, Inter, sans-serif); letter-spacing: .12em; color: var(--muted); }
+.hx-score-dash { font: 900 1.4rem/1 var(--display, "Barlow Condensed", sans-serif); color: var(--line-2); }
+
+.hx-wp-l {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font: 900 .68rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hx-wp-bar { display: flex; height: 40px; border-radius: var(--hx-r-sm); overflow: hidden; background: var(--panel-3); }
+.hx-wp-bar i {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  font: 900 1rem/1 var(--display, "Barlow Condensed", sans-serif);
+  font-style: normal;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
+}
+.hx-wp-bar i:first-child { background: var(--hx-away); }
+.hx-wp-bar i:last-child { background: var(--hx-home); }
+
+.hx-mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; margin: 22px 0 0; }
+.hx-mcell {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold-b, #FFC93C);
+  border-radius: var(--hx-r-sm);
+  padding: 13px 14px;
+}
+.hx-mcell b {
+  display: block;
+  font: 900 clamp(1.2rem, 3.4vw, 1.6rem)/1 var(--display, "Barlow Condensed", sans-serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hx-mcell span {
+  display: block;
+  margin-top: 6px;
+  font: 700 .68rem/1.25 var(--font, Inter, sans-serif);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hx-mcell em { display: block; margin-top: 6px; font: 600 .78rem/1.45 var(--font, Inter, sans-serif); font-style: normal; color: var(--ink-2); }
+.hx-mcell--edge { border-left-color: var(--green); }
+.hx-mcell--edge b { color: var(--green); }
+
+.hx-dist { margin: 22px 0 0; }
+.hx-dist svg { display: block; width: 100%; height: auto; }
+.hx-dist-l { display: flex; justify-content: space-between; margin: 8px 0 0; font: 700 .7rem/1 var(--font, Inter, sans-serif); color: var(--muted); }
+
+.hx-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
+.hx-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font: 700 .78rem/1 var(--font, Inter, sans-serif);
+  color: var(--ink-2);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 13px;
+}
+.hx-chip b { font: 900 .92rem/1 var(--display, "Barlow Condensed", sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.hx-lean {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 15px 17px;
+  border-radius: var(--hx-r-sm);
+  background: var(--green-soft);
+  border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
+}
+.hx-lean--none { background: var(--panel-2); border-color: var(--line); }
+.hx-lean-tag {
+  font: 900 .66rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #04101c;
+  background: var(--green);
+  border-radius: 4px;
+  padding: 7px 9px 6px;
+}
+.hx-lean--none .hx-lean-tag { background: var(--line-2); color: var(--ink); }
+.hx-lean p { flex: 1 1 300px; margin: 0; font: 600 .93rem/1.55 var(--font, Inter, sans-serif); color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   7. FEATURE PEOPLE
+   -------------------------------------------------------------------------- */
+.hx-people { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 16px; }
+.hx-person {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--hx-r);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--sh);
+}
+.hx-person-shot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--hx-c) 55%, transparent), color-mix(in srgb, var(--hx-c) 12%, transparent));
+}
+.hx-person-shot img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 8%; }
+.hx-person-mono { font: 900 3rem/1 var(--display, "Barlow Condensed", sans-serif); color: rgba(255, 255, 255, .82); }
+.hx-person-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font: 900 .62rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(6, 19, 33, .72);
+  border-radius: 4px;
+  padding: 6px 8px 5px;
+}
+.hx-person-body { padding: 13px 14px 15px; border-top: 3px solid var(--hx-c); }
+.hx-person-name {
+  margin: 0;
+  font: 900 1.05rem/1.1 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.hx-person-meta { margin: 5px 0 0; font: 600 .78rem/1.45 var(--font, Inter, sans-serif); color: var(--muted); }
+.hx-person--away { --hx-c: var(--hx-away); }
+.hx-person--home { --hx-c: var(--hx-home); }
+
+/* --------------------------------------------------------------------------
+   8. FORM
+   -------------------------------------------------------------------------- */
+.hx-form-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.hx-form-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.hx-form-who { display: flex; align-items: center; gap: 11px; min-width: 190px; flex: 0 0 auto; }
+.hx-form-who img { width: 30px; height: 30px; object-fit: contain; }
+.hx-form-who b { font: 900 1rem/1.1 var(--display, "Barlow Condensed", sans-serif); text-transform: uppercase; color: var(--ink); }
+.hx-seq { display: flex; gap: 5px; flex-wrap: wrap; }
+.hx-seq i {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font: 900 .72rem/1 var(--display, "Barlow Condensed", sans-serif);
+  font-style: normal;
+  color: #fff;
+}
+.hx-seq i[data-r="W"] { background: var(--green); }
+.hx-seq i[data-r="L"] { background: var(--red); }
+.hx-seq i[data-r="T"] { background: var(--line-2); color: var(--ink); }
+.hx-form-bits { display: flex; flex-wrap: wrap; gap: 6px; }
+.hx-tag {
+  font: 700 .72rem/1 var(--font, Inter, sans-serif);
+  color: var(--ink-2);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+}
+.hx-tag b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-tag--hot { color: var(--green-ink, var(--green)); background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
+.hx-tag--cold { color: var(--red); background: var(--red-soft); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+
+/* --------------------------------------------------------------------------
+   9. SERIES DIAL + TREND CARDS
+   -------------------------------------------------------------------------- */
+.hx-series { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: clamp(16px, 3vw, 30px); align-items: center; }
+.hx-dial { position: relative; display: grid; place-items: center; }
+.hx-dial svg { width: 100%; max-width: 220px; height: auto; }
+.hx-dial-c { position: absolute; text-align: center; }
+.hx-dial-c b { display: block; font: 900 2rem/1 var(--display, "Barlow Condensed", sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-dial-c span { display: block; margin-top: 4px; font: 700 .66rem/1.2 var(--font, Inter, sans-serif); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+.hx-trend {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--line-2);
+  border-radius: var(--hx-r-sm);
+  padding: 15px 16px;
+}
+.hx-trend b { display: block; font: 900 clamp(1.3rem, 3.6vw, 1.7rem)/1 var(--display, "Barlow Condensed", sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-trend span { display: block; margin-top: 7px; font: 700 .68rem/1.25 var(--font, Inter, sans-serif); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.hx-trend em { display: block; margin-top: 7px; font: 500 .82rem/1.5 var(--font, Inter, sans-serif); font-style: normal; color: var(--ink-2); }
+.hx-trend--up { border-top-color: var(--green); }
+.hx-trend--down { border-top-color: var(--red); }
+
+/* --------------------------------------------------------------------------
+   10. STORY CARDS
+   -------------------------------------------------------------------------- */
+.hx-story { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.hx-story-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--hx-r);
+  box-shadow: var(--sh);
+  padding: 20px 21px 21px;
+}
+.hx-story-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--hx-c, var(--brand));
+}
+.hx-story-card--away { --hx-c: var(--hx-away); }
+.hx-story-card--home { --hx-c: var(--hx-home); }
+.hx-story-card--gold { --hx-c: var(--gold-b, #FFC93C); }
+.hx-story-k {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 10px;
+  font: 900 .66rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--hx-c, var(--brand));
+}
+.hx-story-k img { width: 22px; height: 22px; object-fit: contain; }
+.hx-story-card h3 {
+  margin: 0 0 9px;
+  font: 900 1.18rem/1.2 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.hx-story-card p { margin: 0; font: 400 .96rem/1.66 var(--font, Inter, sans-serif); color: var(--ink-2); text-wrap: pretty; }
+.hx-story-card p + p { margin-top: 10px; }
+.hx-story-shot {
+  float: right;
+  width: 92px;
+  height: 92px;
+  margin: 0 0 10px 14px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 10%;
+  border: 3px solid var(--hx-c, var(--brand));
+  background: var(--panel-3);
+}
+
+/* --------------------------------------------------------------------------
+   11. LISTS AND TABLES, kept for the long tail
+   -------------------------------------------------------------------------- */
+.hx-tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--hx-r-sm); border: 1px solid var(--line); }
+.hx-table { width: 100%; border-collapse: collapse; min-width: 520px; background: var(--panel); }
+.hx-table th, .hx-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); font: 500 .9rem/1.45 var(--font, Inter, sans-serif); color: var(--ink-2); }
+.hx-table thead th {
+  font: 900 .68rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--panel-2);
+  white-space: nowrap;
+}
+.hx-table tbody tr:last-child th, .hx-table tbody tr:last-child td { border-bottom: 0; }
+.hx-table td b, .hx-table th b { color: var(--ink); }
+.hx-table a { color: var(--brand-dk); font-weight: 700; text-decoration: none; }
+.hx-table a:hover { text-decoration: underline; }
+
+.hx-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.hx-links a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--hx-r-sm);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  font: 700 .92rem/1.35 var(--font, Inter, sans-serif);
+  transition: border-color .14s ease, transform .14s ease;
+}
+.hx-links a:hover { border-color: var(--brand); transform: translateY(-1px); }
+.hx-links img { width: 26px; height: 26px; object-fit: contain; flex: 0 0 auto; }
+
+.hx-foot { margin: 30px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); font: 400 .84rem/1.65 var(--font, Inter, sans-serif); color: var(--muted); }
+.hx-foot a { color: var(--brand-dk); font-weight: 700; }
+
+/* --------------------------------------------------------------------------
+   12. RESPONSIVE
+   Not a patch: these are the layouts the components are designed to take on a
+   phone, which is where most of this traffic reads them.
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .hx-model-top { grid-template-columns: 1fr; gap: 24px; }
+  .hx-series { grid-template-columns: 1fr; }
+  .hx-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .hx-wrap { padding-bottom: 52px; }
+  .hx-hero-in { padding: 16px var(--gutter, 20px) 22px; }
+  .hx-board { grid-template-columns: 1fr; gap: 10px; }
+  .hx-mk-single { justify-content: space-between; }
+  .hx-duel { grid-template-columns: 1fr; }
+  .hx-duel-side + .hx-duel-side { border-left: 0; border-top: 1px solid var(--line); }
+  .hx-grid-2, .hx-grid-3 { grid-template-columns: 1fr; }
+  .hx-form-who { min-width: 0; flex: 1 0 100%; }
+  .hx-story-shot { width: 72px; height: 72px; }
+}
+@media (max-width: 460px) {
+  .hx-teams { gap: 8px; }
+  .hx-vs { font-size: .7rem; letter-spacing: .12em; }
+  .hx-grid-4 { grid-template-columns: 1fr; }
+  .hx-meta li { font-size: .76rem; padding: 8px 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-links a { transition: none; }
+}
+
+/* --------------------------------------------------------------------------
+   13. THE SPORT HUB
+   HUB_RESEARCH_20260909. NFL, NBA and NHL shipped a bare <table> of prices
+   while NCAAF, Soccer and Tennis had become research rooms. Same components as
+   the matchup page, arranged for a slate: one card per game, the board on the
+   card rather than in a column, and the research a reader wants before they
+   click through to the full page.
+   -------------------------------------------------------------------------- */
+.hx-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.hx-toolbar-l {
+  font: 900 .66rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 2px;
+}
+.hx-chipbtn {
+  font: 800 .78rem/1 var(--font, Inter, sans-serif);
+  color: var(--ink-2);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: border-color .14s ease, color .14s ease;
+}
+.hx-chipbtn:hover { border-color: var(--brand); }
+.hx-chipbtn[aria-pressed="true"] { color: #04101c; background: var(--gold-b, #FFC93C); border-color: var(--gold-b, #FFC93C); }
+
+.hx-slate { display: grid; gap: 16px; }
+.hx-gcard {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  color: inherit;
+  text-decoration: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--hx-r);
+  box-shadow: var(--sh);
+  transition: border-color .14s ease, transform .14s ease;
+}
+.hx-gcard:hover { border-color: var(--brand); transform: translateY(-1px); }
+.hx-gcard-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px clamp(14px, 2.4vw, 20px) 0;
+}
+.hx-gcard-when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font: 700 .74rem/1.2 var(--font, Inter, sans-serif);
+  color: var(--muted);
+  padding: 0 clamp(14px, 2.4vw, 20px);
+  margin: 0 0 12px;
+}
+.hx-gcard-when b { color: var(--ink-2); }
+.hx-gcard-teams { display: grid; gap: 10px; padding: 0 clamp(14px, 2.4vw, 20px) 4px; }
+.hx-gteam { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto; align-items: center; gap: 12px; }
+.hx-gteam img { width: 34px; height: 34px; object-fit: contain; }
+.hx-gteam-name {
+  font: 900 1.02rem/1.15 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hx-gteam-name small {
+  display: block;
+  font: 600 .7rem/1.2 var(--font, Inter, sans-serif);
+  text-transform: none;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.hx-gteam-price {
+  font: 900 1rem/1 var(--display, "Barlow Condensed", sans-serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  min-width: 58px;
+  text-align: right;
+}
+.hx-gteam-price small { display: block; font-size: .62em; color: var(--muted); margin-top: 3px; }
+.hx-gteam.is-fav .hx-gteam-price { color: var(--green); }
+.hx-gcard-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 12px clamp(14px, 2.4vw, 20px) 15px;
+  border-top: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.hx-gcard-cta {
+  margin-left: auto;
+  font: 800 .8rem/1 var(--font, Inter, sans-serif);
+  color: var(--brand-dk);
+  white-space: nowrap;
+}
+.hx-gtag {
+  font: 700 .72rem/1 var(--font, Inter, sans-serif);
+  color: var(--ink-2);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+}
+.hx-gtag b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.hx-gtag--hot { color: var(--green-ink, var(--green)); background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
+.hx-gtag--cold { color: var(--red); background: var(--red-soft); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+.hx-gtag--total { color: var(--gold-ink, #FFC93C); background: var(--gold-soft); border-color: color-mix(in srgb, var(--gold-ink, #FFC93C) 38%, transparent); }
+
+.hx-daybar {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 22px 0 12px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+.hx-daybar h3 {
+  margin: 0;
+  font: 900 1.05rem/1 var(--display, "Barlow Condensed", sans-serif);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.hx-daybar span { font: 700 .74rem/1 var(--font, Inter, sans-serif); color: var(--muted); }
+.hx-slate-empty {
+  padding: 26px 20px;
+  text-align: center;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--hx-r);
+  color: var(--muted);
+  font: 500 .95rem/1.6 var(--font, Inter, sans-serif);
+}
+
+@media (min-width: 860px) {
+  .hx-slate { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  /* FOUR cells, so four columns. The first cut declared three here and the
+     moneyline wrapped onto its own line under the club name, which put the
+     price further from its team than the other team's price was. */
+  .hx-gteam { grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 8px; }
+  .hx-gteam img { width: 26px; height: 26px; }
+  .hx-gteam-name { font-size: .92rem; }
+  .hx-gteam-name small { font-size: .64rem; }
+  .hx-gteam-price { min-width: 0; font-size: .92rem; white-space: nowrap; }
+  .hx-gcard-when { font-size: .68rem; }
+  .hx-gtag { font-size: .68rem; padding: 6px 9px; }
+}
+
+/* HUB_FACES_20260909. Exactly two faces per card, the people the market moves
+   on. Sits between the price rows and the trend tags so the card reads
+   who, then what it costs, then why. */
+.hx-faces {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px clamp(14px, 2.4vw, 20px) 0;
+}
+.hx-face-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hx-face-sm {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 10%;
+  background: color-mix(in srgb, var(--hx-c, var(--brand)) 24%, var(--panel-3));
+  border: 2px solid var(--hx-c, var(--brand));
+}
+.hx-face-sm--mono {
+  display: grid;
+  place-items: center;
+  font: 900 .9rem/1 var(--display, "Barlow Condensed", sans-serif);
+  color: #fff;
+  background: var(--hx-c, var(--brand));
+}
+.hx-face-name {
+  min-width: 0;
+  font: 800 .82rem/1.15 var(--font, Inter, sans-serif);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hx-face-name small {
+  display: block;
+  margin-top: 2px;
+  font: 700 .64rem/1 var(--font, Inter, sans-serif);
+  letter-spacing: .1em;
+  color: var(--muted);
+}
+@media (max-width: 520px) {
+  .hx-faces { gap: 8px; padding-top: 10px; }
+  .hx-face-sm { width: 36px; height: 36px; }
+  .hx-face-name { font-size: .76rem; }
+}
