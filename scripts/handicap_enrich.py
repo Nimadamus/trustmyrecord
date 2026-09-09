@@ -429,9 +429,33 @@ def team_form(sport, espn_id, season, limit=5):
             l = sum(1 for x in out if x["r"] == "L")
             t = sum(1 for x in out if x["r"] == "T")
             rec = "%d-%d%s" % (w, l, ("-%d" % t) if t else "")
-            note = ("%d season" % yr) if not prev else ("%d season" % yr)
-            return recent, rec, note
-    return [], None, None
+
+            # SITUATIONAL_SPLITS_20260909. Counted from the same game log, so it
+            # opens no new request. Real ATS is NOT here: the free schedule feed
+            # carries no closing number, and a true record would mean a per-event
+            # odds call for 17 games across 32 clubs, 544 a build. Left out
+            # rather than approximated.
+            def split(rows):
+                ww = sum(1 for x in rows if x["r"] == "W")
+                ll = sum(1 for x in rows if x["r"] == "L")
+                tt = sum(1 for x in rows if x["r"] == "T")
+                return "%d-%d%s" % (ww, ll, ("-%d" % tt) if tt else "")
+
+            def avg(rows, key):
+                vals = []
+                for x in rows:
+                    try:
+                        vals.append(float(str(x[key]).replace(",", "")))
+                    except (TypeError, ValueError):
+                        pass
+                return round(sum(vals) / len(vals), 1) if vals else None
+
+            extra = {"home": split([x for x in out if x["home"]]),
+                     "road": split([x for x in out if not x["home"]]),
+                     "pf5": avg(recent, "for"), "pa5": avg(recent, "against"),
+                     "games": len(out)}
+            return recent, rec, "%d season" % yr, extra
+    return [], None, None, {}
 
 
 def depth_starter(sport, espn_id, season, position="qb"):

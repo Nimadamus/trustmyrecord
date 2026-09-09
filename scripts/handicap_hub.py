@@ -317,6 +317,30 @@ def _model(sim, away, home, mk):
             '</div>' % "".join(cells)) + "\n"
 
 
+def _splits(away, home):
+    """Home and road records and recent scoring, both clubs, side by side.
+
+    SITUATIONAL_SPLITS_20260909. The season rate says how good a club is; this
+    says where, and how recently. Counted from the same game log the form pills
+    come from, so it opens no new feed."""
+    a, h = away.get("splits") or {}, home.get("splits") or {}
+    if not a or not h:
+        return ""
+    out = []
+    for label, key in (("Home", "home"), ("Road", "road"),
+                       ("Points, last 5", "pf5"), ("Allowed, last 5", "pa5")):
+        av, hv = a.get(key), h.get(key)
+        if av is None or hv is None:
+            continue
+        out.append('<div class="hx-split"><span class="hx-split-v">%s</span>'
+                   '<span class="hx-split-l">%s</span>'
+                   '<span class="hx-split-v hx-split-v--home">%s</span></div>'
+                   % (esc(av), esc(label), esc(hv)))
+    if not out:
+        return ""
+    return ('                    <div class="hx-splits">%s</div>' % "".join(out)) + chr(10)
+
+
 def _team_row(side, other, ml, spreads):
     price = hp._odds(ml.get(side["name"]))
     point = spreads.get(side["name"])
@@ -372,8 +396,8 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
             if side.get("record") and not side["record"].replace("-", "").strip("0"):
                 side["record"] = None
             # The last five, with real scores, from the league's own schedule.
-            pills, rec, fnote = enrich.team_form(sport, side.get("espn_id"), season)
-            side["form"], side["form_record"] = pills, rec
+            pills, rec, fnote, splits = enrich.team_form(sport, side.get("espn_id"), season)
+            side["form"], side["form_record"], side["splits"] = pills, rec, splits
             side["injuries"] = enrich.injuries(sport, side.get("espn_id"))
             if fnote and not stat_note:
                 stat_note = fnote
@@ -437,7 +461,8 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                 " &middot; ".join(when),
                 _team_row(away, home, ml, spreads) + _team_row(home, away, ml, spreads),
                 _faces(sport, away, home, extras, sim_starters, season)
-                + _model(sim_payload, away, home, mk) + strip + _injuries(away, home),
+                + _model(sim_payload, away, home, mk) + strip + _splits(away, home)
+                + _injuries(away, home),
                 "".join(tags)))
 
     if cards:
