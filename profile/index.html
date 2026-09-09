@@ -3178,6 +3178,7 @@
                     <div class="section-title">Performance by Team</div>
                     <div class="support-module-note">Settled record by the team you backed (moneyline, spread, team totals). Totals, props, and futures are excluded.</div>
                 </div>
+                <div class="tmrx-sport-picker" id="teamBreakdownSportPicker" role="tablist" aria-label="League"></div>
                 <div class="team-breakdown-wrap">
                     <table class="team-breakdown-table" id="teamBreakdownTable" aria-label="Performance by team">
                         <thead>
@@ -13758,6 +13759,8 @@
     // Source of truth: backend `team` breakdown category (bucket = "sportKey|team").
     // Settled-only aggregate; totals/props/futures never appear (backend derivation).
     let teamBreakdownRows = [];
+    let teamBreakdownTab = '';
+    let teamBreakdownTabWired = false;
     let teamSort = { key: 'units', dir: 'desc' };
 
     // sport_key -> [sport, league] so the stats table can filter on each
@@ -13792,6 +13795,68 @@
         const sport = TMRX_SPORT_PREFIX[prefix] || tmrxTitleize(prefix);
         const league = rest ? (rest.length <= 5 && rest.indexOf('_') < 0 ? rest.toUpperCase() : tmrxTitleize(rest)) : sport;
         return [sport || 'Other', league || 'Other'];
+    }
+
+    /* ---- ONE TABLE, ONE LEAGUE (2026-09-09) ------------------------------
+       Every team table on this page - Performance by Team on the record tab,
+       Performance by Team in the deep stats, and Teams Faded - draws exactly
+       one league. The tab key is the LEAGUE and not the sport, because a
+       "Football" tab would put NFL clubs and NCAAF programs back in one table,
+       which is the mixing these tabs exist to stop. Every soccer competition
+       collapses into a single SOCCER tab (a member with one World Cup side and
+       one friendly should not get two tabs of one row each); the League column
+       inside that tab still names the competition, and the deep-stats table
+       keeps its competition selector on top of it. */
+    const TMRX_LEAGUE_TAB_ORDER = ['MLB', 'NFL', 'NCAAF', 'NBA', 'NHL', 'NCAAB', 'SOCCER'];
+
+    function tmrxLeagueTab(sportKey) {
+        const parts = tmrxSportParts(sportKey);
+        if (String(parts[0] || '').trim().toUpperCase() === 'SOCCER') {
+            return { key: 'SOCCER', label: 'Soccer' };
+        }
+        const league = String(parts[1] || '').trim() || 'Other';
+        return { key: league.toUpperCase(), label: league };
+    }
+
+    /* Tabs are built from the rows the member actually has, so an empty tab is
+       never drawn. Requested reading order first, then any other league by how
+       much of it the member played. */
+    function tmrxLeagueGroups(rows, sportKeyOf, picksOf) {
+        const map = {};
+        const keys = [];
+        (rows || []).forEach(function (row) {
+            const tab = tmrxLeagueTab(sportKeyOf(row));
+            if (!map[tab.key]) {
+                map[tab.key] = { key: tab.key, label: tab.label, teams: 0, picks: 0 };
+                keys.push(tab.key);
+            }
+            map[tab.key].teams += 1;
+            map[tab.key].picks += Number(picksOf(row)) || 0;
+        });
+        keys.sort(function (a, b) {
+            const ai = TMRX_LEAGUE_TAB_ORDER.indexOf(a);
+            const bi = TMRX_LEAGUE_TAB_ORDER.indexOf(b);
+            if (ai >= 0 || bi >= 0) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+            return map[b].picks - map[a].picks || a.localeCompare(b);
+        });
+        return keys.map(function (k) { return map[k]; });
+    }
+
+    /* A tab the member still has stays selected across a redraw; otherwise MLB,
+       which is the live sport, and only then the first tab in reading order. */
+    function tmrxDefaultLeagueTab(groups, current) {
+        if (current && groups.some(function (g) { return g.key === current; })) return current;
+        if (groups.some(function (g) { return g.key === 'MLB'; })) return 'MLB';
+        return groups.length ? groups[0].key : '';
+    }
+
+    function tmrxLeaguePillsHtml(groups, active, attr) {
+        return groups.map(function (g) {
+            const on = g.key === active;
+            return '<button type="button" role="tab" class="tmrx-sport-pill' + (on ? ' is-active' : '') +
+                '" aria-selected="' + (on ? 'true' : 'false') + '" ' + attr + '="' + escapeHtml(g.key) + '">' +
+                escapeHtml(g.label) + '<span class="tmrx-sport-pill-count">' + g.teams + '</span></button>';
+        }).join('');
     }
 
     /* ---- DEPTH PANELS (2026-08-15) --------------------------------------
@@ -13926,71 +13991,38 @@
         'first_five', 'player_props'];
     const TMRX_TEAM_MARKET_LIMIT = 12;
 
-    /* Teams Faded is one table over every sport the member ever faded, so MLB
-       clubs, NHL clubs and World Cup countries used to interleave in one list.
-       A tab strip splits it by league. Nothing here recomputes a record: the
-       tabs only choose which of the aggregator's own rows are drawn, and the
-       25-row cap that already applied to the mixed list now applies inside the
-       chosen tab, so one sport is never truncated by another sport's rows. */
-    const TMRX_OPPONENT_TAB_ORDER = ['MLB', 'NFL', 'NBA', 'NHL', 'NCAAF', 'NCAAB', 'SOCCER'];
+    /* Teams Faded draws one league at a time through the shared league tabs
+       above, so MLB clubs, NHL clubs and World Cup countries never interleave.
+       Nothing here recomputes a record: the tabs only choose which of the
+       aggregator's own rows are drawn, and the 25-row cap that once applied to
+       the mixed list now applies inside the chosen league, so one sport is
+       never truncated by another sport's rows. */
     const TMRX_OPPONENT_LIMIT = 25;
     let tmrxOpponentRows = [];
-    let tmrxOpponentTab = 'ALL';
+    let tmrxOpponentTab = '';
     let tmrxOpponentWired = false;
 
-    /* Every soccer competition (EPL, FIFA World Cup, International Friendly)
-       collapses into one SOCCER tab; every other league is its own tab. */
-    function tmrxOpponentTabKey(sportKey) {
-        const parts = tmrxSportParts(sportKey);
-        const sport = String(parts[0] || '').trim().toUpperCase();
-        if (sport === 'SOCCER') return 'SOCCER';
-        const league = String(parts[1] || '').trim();
-        return (league ? league : 'Other').toUpperCase();
-    }
-
     function tmrxOpponentGroups() {
-        const map = {};
-        const keys = [];
-        tmrxOpponentRows.forEach(function (row) {
-            const key = tmrxOpponentTabKey(tmrxSplitScoped(row.bucket).sportKey);
-            if (!map[key]) { map[key] = { key: key, teams: 0, picks: 0 }; keys.push(key); }
-            map[key].teams += 1;
-            map[key].picks += Number(row.total_picks) || 0;
-        });
-        /* Requested lane order first, then any other league by how much of it
-           the member faded. */
-        keys.sort(function (a, b) {
-            const ai = TMRX_OPPONENT_TAB_ORDER.indexOf(a);
-            const bi = TMRX_OPPONENT_TAB_ORDER.indexOf(b);
-            if (ai >= 0 || bi >= 0) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
-            return map[b].picks - map[a].picks || a.localeCompare(b);
-        });
-        return keys.map(function (k) { return map[k]; });
+        return tmrxLeagueGroups(tmrxOpponentRows,
+            function (row) { return tmrxSplitScoped(row.bucket).sportKey; },
+            function (row) { return row.total_picks; });
     }
 
     function tmrxOpponentSyncTabs(groups) {
         const picker = document.getElementById('tmrxOpponentSportPicker');
         if (!picker) return;
-        /* One league needs no tab strip; the League column already says it. */
-        if (groups.length < 2) { picker.innerHTML = ''; picker.hidden = true; return; }
-        picker.hidden = false;
-        const tabs = [{ key: 'ALL', teams: tmrxOpponentRows.length }].concat(groups);
-        picker.innerHTML = tabs.map(function (g) {
-            const on = g.key === tmrxOpponentTab;
-            return '<button type="button" role="tab" class="tmrx-sport-pill' + (on ? ' is-active' : '') +
-                '" aria-selected="' + (on ? 'true' : 'false') + '" data-tmrx-opponent-tab="' + escapeHtml(g.key) + '">' +
-                escapeHtml(g.key) + '<span class="tmrx-sport-pill-count">' + g.teams + '</span></button>';
-        }).join('');
+        picker.hidden = !groups.length;
+        picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxOpponentTab, 'data-tmrx-opponent-tab');
     }
 
     function tmrxOpponentDraw() {
-        const rows = tmrxOpponentTab === 'ALL' ? tmrxOpponentRows : tmrxOpponentRows.filter(function (row) {
-            return tmrxOpponentTabKey(tmrxSplitScoped(row.bucket).sportKey) === tmrxOpponentTab;
+        const rows = tmrxOpponentRows.filter(function (row) {
+            return tmrxLeagueTab(tmrxSplitScoped(row.bucket).sportKey).key === tmrxOpponentTab;
         });
         if (!rows.length) {
             const table = document.getElementById('tmrxTableOpponentTop');
             const tbody = table ? table.querySelector('tbody') : null;
-            if (tbody) tbody.innerHTML = '<tr class="empty"><td colspan="7">No faded-team rows yet.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr class="empty"><td colspan="7">No faded-team rows in this league.</td></tr>';
             return;
         }
         tmrxRenderDepthTable('tmrxTableOpponentTop', 'tmrxOpponentSection', rows, {
@@ -14011,9 +14043,7 @@
         tmrxOpponentRows = Array.isArray(rows) ? rows.slice() : [];
         if (!tmrxOpponentRows.length) return;
         const groups = tmrxOpponentGroups();
-        if (tmrxOpponentTab !== 'ALL' && !groups.some(function (g) { return g.key === tmrxOpponentTab; })) {
-            tmrxOpponentTab = 'ALL';
-        }
+        tmrxOpponentTab = tmrxDefaultLeagueTab(groups, tmrxOpponentTab);
         if (!tmrxOpponentWired) {
             const picker = document.getElementById('tmrxOpponentSportPicker');
             if (picker) picker.addEventListener('click', function (e) {
@@ -14269,6 +14299,21 @@
         }
     }
 
+    function teamBreakdownSyncTabs(groups) {
+        const picker = document.getElementById('teamBreakdownSportPicker');
+        if (!picker) return;
+        picker.hidden = !groups.length;
+        picker.innerHTML = tmrxLeaguePillsHtml(groups, teamBreakdownTab, 'data-team-league-tab');
+        if (teamBreakdownTabWired) return;
+        picker.addEventListener('click', function (e) {
+            const btn = e.target.closest && e.target.closest('[data-team-league-tab]');
+            if (!btn) return;
+            teamBreakdownTab = btn.getAttribute('data-team-league-tab');
+            renderTeamBreakdown();
+        });
+        teamBreakdownTabWired = true;
+    }
+
     function renderTeamBreakdown() {
         const body = document.getElementById('teamBreakdownBody');
         const empty = document.getElementById('teamBreakdownEmpty');
@@ -14283,9 +14328,25 @@
         if (empty) empty.style.display = 'none';
         if (table) table.style.display = '';
 
+        /* One league at a time. This table used to draw MLB clubs, NHL clubs,
+           NCAAF programs and World Cup countries in a single list. */
+        const groups = tmrxLeagueGroups(teamBreakdownRows,
+            function (r) { return r.sport_key; }, function (r) { return r.picks; });
+        teamBreakdownTab = tmrxDefaultLeagueTab(groups, teamBreakdownTab);
+        teamBreakdownSyncTabs(groups);
+        const visible = teamBreakdownRows.filter(function (r) {
+            return tmrxLeagueTab(r.sport_key).key === teamBreakdownTab;
+        });
+        if (!visible.length) {
+            body.innerHTML = '';
+            if (empty) { empty.textContent = 'No settled team-based picks in this league'; empty.style.display = 'block'; }
+            if (table) table.style.display = 'none';
+            return;
+        }
+
         const dir = teamSort.dir === 'asc' ? 1 : -1;
         const key = teamSort.key;
-        const sorted = teamBreakdownRows.slice().sort(function (a, b) {
+        const sorted = visible.slice().sort(function (a, b) {
             let av, bv;
             if (key === 'team' || key === 'league') { av = String(a[key]).toLowerCase(); bv = String(b[key]).toLowerCase(); }
             else if (key === 'record') { av = a.wins + a.losses + a.pushes ? a.wins / (a.wins + a.losses || 1) : 0; bv = b.wins + b.losses + b.pushes ? b.wins / (b.wins + b.losses || 1) : 0; }
@@ -14342,7 +14403,7 @@
     // picks in five sports never gets one long mixed list. Rows expand into that
     // team's full pick history (dates, matchup, market, odds, risk, result).
     let tmrxTeamSort = { key: 'units', dir: 'desc' };
-    let tmrxTeamFilters = { sport: '', league: '' };
+    let tmrxTeamFilters = { tab: '', league: '' };
     let tmrxTeamWired = false;
 
     function tmrxTeamLogoHtml(name) {
@@ -14353,22 +14414,13 @@
     }
 
     function tmrxTeamSportGroups() {
-        const order = [];
-        const map = {};
-        teamBreakdownRows.forEach(function (r) {
-            if (!map[r.sport]) { map[r.sport] = { sport: r.sport, teams: 0, picks: 0 }; order.push(r.sport); }
-            map[r.sport].teams += 1;
-            map[r.sport].picks += r.picks;
-        });
-        // Busiest sport first: that is the one the member actually bets.
-        return order.map(function (s) { return map[s]; }).sort(function (a, b) {
-            return b.picks - a.picks || a.sport.localeCompare(b.sport);
-        });
+        return tmrxLeagueGroups(teamBreakdownRows,
+            function (r) { return r.sport_key; }, function (r) { return r.picks; });
     }
 
     function tmrxTeamFiltered() {
         return teamBreakdownRows.filter(function (r) {
-            if (r.sport !== tmrxTeamFilters.sport) return false;
+            if (tmrxLeagueTab(r.sport_key).key !== tmrxTeamFilters.tab) return false;
             if (tmrxTeamFilters.league && r.league !== tmrxTeamFilters.league) return false;
             return true;
         });
@@ -14379,32 +14431,25 @@
         const leagueSel = document.getElementById('tmrxTeamLeagueFilter');
         const leagueWrap = document.getElementById('tmrxTeamLeagueWrap');
         const groups = tmrxTeamSportGroups();
-        if (!groups.length) tmrxTeamFilters.sport = '';
-        else if (!tmrxTeamFilters.sport || !groups.some(function (g) { return g.sport === tmrxTeamFilters.sport; })) {
-            tmrxTeamFilters.sport = groups[0].sport;
-            tmrxTeamFilters.league = '';
-        }
+        const next = tmrxDefaultLeagueTab(groups, tmrxTeamFilters.tab);
+        if (next !== tmrxTeamFilters.tab) { tmrxTeamFilters.tab = next; tmrxTeamFilters.league = ''; }
         if (picker) {
-            picker.innerHTML = groups.map(function (g) {
-                const on = g.sport === tmrxTeamFilters.sport;
-                return '<button type="button" role="tab" class="tmrx-sport-pill' + (on ? ' is-active' : '') +
-                    '" aria-selected="' + (on ? 'true' : 'false') + '" data-tmrx-team-sport="' + escapeHtml(g.sport) + '">' +
-                    escapeHtml(g.sport) + '<span class="tmrx-sport-pill-count">' + g.teams + '</span></button>';
-            }).join('');
+            picker.hidden = !groups.length;
+            picker.innerHTML = tmrxLeaguePillsHtml(groups, tmrxTeamFilters.tab, 'data-tmrx-team-tab');
         }
 
-        // League selector only appears when the chosen sport really has more than
-        // one competition (soccer does; MLB does not).
+        // Competition selector only appears when the chosen tab really holds more
+        // than one competition (the soccer tab does; MLB does not).
         const leagues = [];
         teamBreakdownRows.forEach(function (r) {
-            if (r.sport !== tmrxTeamFilters.sport) return;
+            if (tmrxLeagueTab(r.sport_key).key !== tmrxTeamFilters.tab) return;
             if (leagues.indexOf(r.league) < 0) leagues.push(r.league);
         });
         leagues.sort();
         if (tmrxTeamFilters.league && leagues.indexOf(tmrxTeamFilters.league) < 0) tmrxTeamFilters.league = '';
         if (leagueWrap) leagueWrap.hidden = leagues.length < 2;
         if (leagueSel) {
-            leagueSel.innerHTML = '<option value="">All leagues</option>' + leagues.map(function (s) {
+            leagueSel.innerHTML = '<option value="">All competitions</option>' + leagues.map(function (s) {
                 return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>';
             }).join('');
             leagueSel.value = tmrxTeamFilters.league;
@@ -14606,9 +14651,9 @@
         });
         const picker = document.getElementById('tmrxTeamSportPicker');
         if (picker) picker.addEventListener('click', function (e) {
-            const btn = e.target.closest && e.target.closest('[data-tmrx-team-sport]');
+            const btn = e.target.closest && e.target.closest('[data-tmrx-team-tab]');
             if (!btn) return;
-            tmrxTeamFilters.sport = btn.getAttribute('data-tmrx-team-sport');
+            tmrxTeamFilters.tab = btn.getAttribute('data-tmrx-team-tab');
             tmrxTeamFilters.league = '';
             renderTmrxTeamTable(true);
         });
