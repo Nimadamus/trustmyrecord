@@ -90,6 +90,15 @@ line_str = mlb.line_str
 page_head = mlb.page_head
 breadcrumb_ld = mlb.breadcrumb_ld
 
+# HUB_KEEPS_ITSELF_CURRENT_20260909. The hub is a living daily research page,
+# so the baked board is the floor, not the ceiling: this script re-reads
+# /api/games/board/<key> in the browser on load and every 90 seconds the tab is
+# visible, repaints the table, and stamps when it last read the feed. Between
+# bakes the prices on the page are the prices in the sportsbook, and a reader
+# who arrives at 04:00 ET does not get the 22:40 UTC board. MLB and tennis
+# already render their hubs from the feed; this gives the other five the same.
+HUB_LIVE = '    <script defer src="/static/js/tmr-hub-live.js"></script>\n'
+
 SPORTS = {
     "nfl": {"label": "NFL", "board": "americanfootball_nfl", "engine": "NFL",
             "unit": "points", "simulator": "/nfl-simulator/"},
@@ -883,7 +892,7 @@ def render_hub(sport, games, built_at):
           ('        <p class="mm-note">Lines come from the sportsbook feed and history from the '
            'graded game database. Nothing here is a projection: every number counts games already '
            'played. Built %s.</p>\n' % esc(built_at[:16].replace("T", " ") + " UTC")),
-          '    </main>\n', mlb.FOOT_SCRIPTS, '</body>\n</html>\n']
+          '    </main>\n', mlb.FOOT_SCRIPTS, HUB_LIVE, '</body>\n</html>\n']
     return page_head(title, desc, url, ld) + "".join(b)
 
 

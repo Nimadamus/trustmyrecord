@@ -373,7 +373,7 @@
         <span class="tn-kicker">Tennis Handicapping</span>
         <h1 id="tn-title">Who are these two, how are they playing, and how do they match up?</h1>
         <p>Every ATP and WTA singles match, built as a research page rather than a price list. Open any match and you get the two players facing each other, their season and current surface numbers side by side, the last ten results with the scores and the opponents, the full career head to head, what each surface says about them, and only then the market.</p>
-        <p>Every number here is counted from completed 2026 matches. Nothing is modelled, projected or estimated, and where a figure does not exist the space is left empty rather than filled.</p>
+        <p>Every number here is counted from completed 2026 matches. Nothing is modelled, projected or estimated.</p>
         <div class="tn-top" id="tn-top" hidden>
             <p class="tn-top-h">Top of the tour right now</p>
             <div class="tn-top-row" id="tn-toprow"></div>
@@ -467,8 +467,6 @@
         <b>Where these numbers come from.</b> Matches, draws, results and rankings are read from the ESPN tennis feed; prices are the tennis board TrustMyRecord already carries in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>. Surfaces come from the published ATP and WTA tour calendars. Records, surface splits, games, sets, tiebreaks, deciding sets, form and head to head are counted here from completed singles matches, the season for the splits and every season the feed carries for the head to head.
         <br><br>
         <b>More markets.</b> Set betting, set handicaps, total sets, a player&rsquo;s own total games, and the serve, break and ace props come from Bovada and appear on a match when they carry it. The full boards are in the <a href="/sportsbook/?sport=Tennis">sportsbook</a>.
-        <br><br>
-        <b>What is deliberately missing.</b> Serve and return statistics. Aces, double faults, first serve percentage, first and second serve points won, hold and break rates are not carried by the feed behind this page, so they are not published here rather than estimated. When a match has no price it is because the board has no market for it, usually a qualifying or lower tier event, and the card says so.
         <br><br>
         <b>Read the daily piece.</b> One tennis match gets a full write up every day: <a href="/matchup-of-the-day/tennis/">Tennis Matchup of the Day</a>.
     </div>
@@ -682,7 +680,6 @@
         if (!rows) return '';
         return '<div class="tn-panel"><h3>Side by side<em>' + esc(ca.name) + ' left, ' + esc(cb.name) + ' right</em></h3>'
             + rows
-            + '<p class="tn-mnote">Serve and return numbers, aces, double faults, first serve percentage and hold and break rates are not carried by the feed behind this page, so they are not shown rather than estimated.</p>'
             + '</div>';
     }
 
@@ -961,7 +958,7 @@
         var mk = m.market;
         if (!mk) {
             return '<div class="tn-panel"><h3>The market</h3><p class="tn-sub">'
-                + esc(m.market_note || 'The board carries no market for this match, which is usual for qualifying and lower tier events.')
+                + esc('No market on the board for this match yet.')
                 + '</p></div>';
         }
         var nameA = m.players[0].name, nameB = m.players[1].name;
