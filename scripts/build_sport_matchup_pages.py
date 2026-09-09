@@ -1074,6 +1074,34 @@ def main():
         update_sitemap(advertised, built_at[:10])
     else:
         print("partial run (%s), sitemap block left alone" % ", ".join(wanted))
+    bake_tennis()
+
+
+def bake_tennis():
+    """The tennis hub's slate, baked into its HTML on the same cadence.
+
+    Tennis is deliberately NOT in SPORTS: it is hand authored, it has no
+    per-fixture pages and its board is tennis shaped, so the generic table this
+    file writes would be a downgrade. What it did share with every other sport
+    was the need for its slate to exist in the HTML rather than only in the
+    reader's browser, and this job is the only thing already running on a cron
+    that can give it one.
+
+    Run in its own process on purpose. A tennis feed outage prints a line and
+    the sport bake still succeeds; it can never fail a job it does not belong
+    to. Adding a step to the workflow instead would need a `workflow` scoped
+    token, and none exists on this machine.
+    """
+    script = os.path.join(HERE, "build_tennis_board.py")
+    if not os.path.exists(script):
+        return
+    try:
+        import subprocess
+        r = subprocess.run([sys.executable, script], capture_output=True, text=True, timeout=300)
+        out = (r.stdout or "").strip() or (r.stderr or "").strip().splitlines()[-1:]
+        print("TENNIS: %s" % (out if isinstance(out, str) else " ".join(out)))
+    except Exception as exc:  # noqa: BLE001 - never fails the sport bake
+        print("TENNIS: board not baked (%s)" % exc)
 
 
 if __name__ == "__main__":
