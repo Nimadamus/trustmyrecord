@@ -533,10 +533,13 @@ function pitcherLine(g) {
 /* Lockstep with postgameDwell() in tmr-home-live.js. A FINAL card rotates a
    denser postgame recap and holds each line 11 to 19 seconds, drawn off its own
    game_pk so two finals side by side never flip together. */
-const POSTGAME_DWELL_MIN_MS = 14000;
+/* IN LOCKSTEP WITH static/js/tmr-home-live.js. The worker bakes the same
+   data-dwell the client would compute, so a difference here is a visible jump
+   the moment the client re-renders. Raised with it on 2026-09-08. */
+const POSTGAME_DWELL_MIN_MS = 20000;
 const POSTGAME_DWELL_STEP_MS = 2000;
 const POSTGAME_DWELL_STEPS = 5;
-const INSIGHT_ROTATE_MS = 8000;
+const INSIGHT_ROTATE_MS = 12000;
 
 function postgameDwell(g) {
   /* MLB cards are keyed by game_pk; ESPN cards carry espn_event_id instead.

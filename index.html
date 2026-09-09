@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="f3e0041fb23b">
+<html lang="en" data-tmr-build="d0ef842b153c">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -251,7 +251,10 @@ img{display:block;max-width:100%}
 .ticker-in{max-width:2580px;margin:0 auto;padding:14px 43px;display:flex;align-items:stretch;gap:0;
   overflow:hidden}
 .ticker-games{flex:1 1 auto;min-width:0;position:relative;overflow:hidden}
-.ticker-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);will-change:transform}
+/* 2026-09-08: .5s to .8s. Nima asked for the transitions to "feel deliberate
+   rather than rushed"; on a 40s page window the slide is the only moving part a
+   reader ever sees, so it is the one place that reads as haste. */
+.ticker-track{display:flex;transition:transform .8s cubic-bezier(.4,0,.2,1);will-change:transform}
 .ticker-page{flex:0 0 100%;width:100%;min-width:0;display:flex;align-items:stretch;gap:18px}
 .tk-nav{flex:0 0 auto;align-self:center;width:39px;height:39px;display:flex;align-items:center;
   justify-content:center;padding:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
@@ -366,10 +369,14 @@ a.gm--bug:hover .gb-tn{color:#DFEBF6}
      is gone before the next one arrives: a symmetric crossfade left both
      sentences readable on top of each other for a fifth of a second, which is
      the one thing a single-line slot must never show. */
-  transition:opacity .2s ease,transform .2s ease}
+  /* Lengthened with the dwell on 2026-09-08 (.2s to .32s out, .3s to .42s in).
+     The ORDER is unchanged and is the part that matters: the outgoing line is
+     still gone before the incoming one starts, so a single-line slot never
+     shows two sentences at once. */
+  transition:opacity .32s ease,transform .32s ease}
 /* The INCOMING timing: same easing, but it waits out the departure first. */
 .gm .gm-in-l.is-on{opacity:1;transform:none;pointer-events:auto;
-  transition:opacity .3s ease .2s,transform .3s ease .2s}
+  transition:opacity .42s ease .32s,transform .42s ease .32s}
 /* The outgoing line leaves the way the incoming one arrives, so the pair reads
    as one slot changing rather than two elements crossfading. */
 .gm .gm-in-l.is-out{opacity:0;transform:translateY(-8px)}
@@ -2538,7 +2545,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.f3e0041fb23b.js"></script>
+<script src="/static/js/tmr-home-live.d0ef842b153c.js"></script>
 <!-- HERO ANIMATION, STARTED AFTER THE PAGE IS PAINTED (2026-08-25).
      The still frame is already on screen (see .hero-bg in the critical CSS);
      this decodes the 1.21MB motion plate off the critical path and swaps the
