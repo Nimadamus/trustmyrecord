@@ -513,6 +513,51 @@ def sim_ref(event_id):
     return base64.b64encode(raw.encode("ascii")).decode("ascii").rstrip("=")
 
 
+_SIM_INDEX = {}
+
+
+def sim_index(season):
+    """Every fixture the simulator carries, keyed on the two clubs.
+
+    SIM_JOIN_BY_PAIR_20260909. The reference was being derived as base64 of the
+    ODDS BOARD's event id, which looked right and worked for three games. It is
+    wrong: the simulator keeps its own ids, so 13 of 16 answered "That game
+    could not be found" and the model quietly vanished from those cards. The
+    clubs and the date are the only stable join between the two feeds."""
+    if _SIM_INDEX:
+        return _SIM_INDEX
+    for week in range(1, 24):
+        d = get("%s/schedule?season=%d&week=%d" % (SIM_API, season, week), ttl=21600)
+        games = (d or {}).get("games") or []
+        if not games:
+            break
+        for g in games:
+            if not g.get("ref"):
+                continue
+            key = (norm_name(g.get("away")), norm_name(g.get("home")))
+            _SIM_INDEX[key] = g["ref"]
+    return _SIM_INDEX
+
+
+def simulate_pair(away, home, season, sims=10000, seed=None, window=None):
+    """The projection for a fixture, found by club rather than by id."""
+    ref = sim_index(season).get((norm_name(away), norm_name(home)))
+    if not ref:
+        return None
+    if seed is None:
+        seed = int(hashlib.sha1(("%s|%s" % (away, home)).encode()).hexdigest()[:8], 16)
+    q = "sims=%d&seed=%d" % (sims, seed)
+    if window:
+        q += "&window=%s" % window
+    for attempt in range(3):
+        d = get("%s/simulate/%s?%s" % (SIM_API, ref, q), ttl=21600)
+        if d and (d.get("projection") or {}).get("score"):
+            return d
+        if attempt < 2:
+            time.sleep(5)
+    return None
+
+
 def simulate(event_id, sims=10000, seed=None, window=None):
     """TrustMyRecord's own projection for this game, or None.
 
@@ -528,7 +573,18 @@ def simulate(event_id, sims=10000, seed=None, window=None):
     q = "sims=%d&seed=%d" % (sims, seed)
     if window:
         q += "&window=%s" % window
-    return get("%s/simulate/%s?%s" % (SIM_API, ref, q), ttl=21600)
+    url = "%s/simulate/%s?%s" % (SIM_API, ref, q)
+    # The simulator runs on Render's free tier and answers 503 sim_busy when a
+    # slate is being baked, which left the model on 3 of 16 cards. It is the
+    # single most useful number on the page, so it is worth waiting for: three
+    # attempts with a short backoff, then give up and render the card without it.
+    for attempt in range(3):
+        d = get(url, ttl=21600)
+        if d and (d.get("projection") or {}).get("score"):
+            return d
+        if attempt < 2:
+            time.sleep(6)
+    return None
 
 
 # ---------------------------------------------------------------- derived

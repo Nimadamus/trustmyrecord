@@ -555,7 +555,7 @@ def render(bld, sport, g, hist, slate, extras, built_at, hook=None):
     rosters = {"away": enrich.roster(sport, away["espn_id"]),
                "home": enrich.roster(sport, home["espn_id"])}
 
-    sim = enrich.simulate(g.get("event_id")) if sport == "nfl" else None
+    sim = enrich.simulate_pair(g["away"], g["home"], season) if sport == "nfl" else None
 
     mk = markets(g, away, home)
     duel_spec, photos = qb_duel(sport, g, away, home, qb1, teams_by_name, rosters, season)

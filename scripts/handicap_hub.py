@@ -100,11 +100,13 @@ def _card_tags(hist, away, home, unit):
     sc = ms.get("scoring") or {}
     if sc.get("avg_combined") is not None:
         tags.append(("avg combined %s in this matchup" % unit, str(sc["avg_combined"]), "total"))
-    mk = ms.get("market") or {}
-    ats = (mk.get("ats") or {}).get("record")
-    if ats:
-        tags.append(("against the spread", str(ats)[:14], ""))
-    return tags[:4]
+    mk = (ms.get("market") or {})
+    for key, label in (("ats", "against the spread"), ("over_under", "over / under"),
+                       ("favorite", "as favourite"), ("underdog", "as underdog")):
+        rec = (mk.get(key) or {}).get("record")
+        if rec:
+            tags.append((label, str(rec)[:14], ""))
+    return tags[:7]
 
 
 def _faces(sport, away, home, extras, sim_starters=None, season=None):
@@ -177,7 +179,10 @@ def _faces(sport, away, home, extras, sim_starters=None, season=None):
 CARD_STATS = {
     "nfl": [("Points scored", "record.avgPointsFor", False, True),
             ("Points allowed", "record.avgPointsAgainst", False, False),
-            ("Yards per game", "passing.netYardsPerGame", False, True)],
+            ("Point differential", "record.pointDifferential", False, True),
+            ("Total yards", "passing.netYardsPerGame", False, True),
+            ("Passing yards", "passing.netPassingYardsPerGame", False, True),
+            ("Rushing yards", "rushing.rushingYardsPerGame", False, True)],
     "nba": [("Points scored", "record.avgPointsFor", False, True),
             ("Points allowed", "record.avgPointsAgainst", False, False)],
     "nhl": [("Goals for", "record.avgPointsFor", False, True),
@@ -273,6 +278,45 @@ def _injuries(away, home):
     return ('                    <div class="hx-injs">%s</div>' % "".join(cells)) + "\n"
 
 
+def _model(sim, away, home, mk):
+    """TrustMyRecord's own projection, on the card.
+
+    HUB_MODEL_20260909. It is the single most useful number a handicapper can
+    see before clicking: the projected score, the win probability, and how far
+    the model sits from the number the book is offering. Same simulator run the
+    matchup page shows, already cached, so the two cannot disagree."""
+    p = (sim or {}).get("projection") or {}
+    sc, wp = p.get("score") or {}, p.get("win_probability") or {}
+    if sc.get("home") is None or wp.get("home") is None:
+        return ""
+    a, h = sc.get("away"), sc.get("home")
+    fav, fwp = (home, wp["home"]) if h >= a else (away, wp.get("away"))
+    cells = ['<span class="hx-mdl-score"><b>%s</b> %s &middot; %s <b>%s</b></span>'
+             % (esc(away.get("abbr") or away["short"]), esc(a),
+                esc(h), esc(home.get("abbr") or home["short"])),
+             '<span class="hx-mdl-wp">%s %s to win</span>'
+             % (esc(fav.get("abbr") or fav["short"]), esc(enrich.pct(fwp)))]
+
+    # the edge, which is the whole reason to print a projection beside a price
+    mkt = (mk.get("spread_by_side") or {}).get(home["name"])
+    if mkt is not None:
+        edge = (float(h) - float(a)) - (-float(mkt))
+        if abs(edge) >= 1.0:
+            side = home if edge > 0 else away
+            cells.append('<span class="hx-mdl-edge">%s by %.1f vs the number</span>'
+                         % (esc(side.get("abbr") or side["short"]), abs(edge)))
+    tot = mk.get("total_point")
+    proj = p.get("projected_total")
+    if tot is not None and proj is not None and abs(float(proj) - tot) >= 2.0:
+        cells.append('<span class="hx-mdl-edge">%s %g by %.1f</span>'
+                     % ("Under" if float(proj) < tot else "Over", tot, abs(float(proj) - tot)))
+    one = (p.get("margin_shape") or {}).get("one_score")
+    if one is not None:
+        cells.append('<span class="hx-mdl-note">%s one score</span>' % esc(enrich.pct(one)))
+    return ('                    <div class="hx-mdl"><span class="hx-mdl-tag">TMR model</span>%s'
+            '</div>' % "".join(cells)) + "\n"
+
+
 def _team_row(side, other, ml, spreads):
     price = hp._odds(ml.get(side["name"]))
     point = spreads.get(side["name"])
@@ -357,12 +401,12 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
         # The simulator's expected starters, keyless and already cached by the
         # matchup build. One call per fixture, and it is the same answer the deep
         # page shows.
-        sim_starters = {}
+        sim_starters, sim_payload = {}, None
         if sport == "nfl":
-            sim = enrich.simulate(g.get("event_id"))
+            sim_payload = enrich.simulate_pair(g["away"], g["home"], season)
             for which, side in (("away", away), ("home", home)):
-                block = ((sim or {}).get("roster") or {}).get(which) or {}
-                sim_starters[side["name"]] = block.get("expected_starters") or []
+                blk = ((sim_payload or {}).get("roster") or {}).get(which) or {}
+                sim_starters[side["name"]] = blk.get("expected_starters") or []
 
         strip, note = _statstrip(sport, away, home, season)
         if note and not stat_note:
@@ -392,8 +436,8 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                 esc(bld.game_url(sport, g)),
                 " &middot; ".join(when),
                 _team_row(away, home, ml, spreads) + _team_row(home, away, ml, spreads),
-                _faces(sport, away, home, extras, sim_starters, season) + strip
-                + _injuries(away, home),
+                _faces(sport, away, home, extras, sim_starters, season)
+                + _model(sim_payload, away, home, mk) + strip + _injuries(away, home),
                 "".join(tags)))
 
     if cards:
