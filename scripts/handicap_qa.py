@@ -218,7 +218,12 @@ def check(sport, live=False):
 
     if live:
         try:
-            req = urllib.request.Request("https://trustmyrecord.com/handicapping/%s/" % sport)
+            # Cloudflare 403s urllib's default agent. curl gets 200 on the same
+            # URL, so the 403 was the checker being blocked, not the page being
+            # down, and reporting it as a failed deployment would have been wrong.
+            req = urllib.request.Request(
+                "https://trustmyrecord.com/handicapping/%s/" % sport,
+                headers={"User-Agent": "curl/8.4.0", "Accept": "*/*"})
             with urllib.request.urlopen(req, timeout=45) as r:
                 body = r.read().decode("utf-8", "replace")
             add("live URL serves", True, "%d KB deployed" % (len(body.encode()) // 1024))
