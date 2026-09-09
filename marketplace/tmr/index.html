@@ -681,13 +681,26 @@ body.mp-tmr-page .reveal .sel {font-weight:800;font-size:13.5px}
     }).join('') + '</div>';
   }
 
+  /* ONE RESOLVER (2026-09-08). The avatar route answers the upload, else that
+     member's assigned portrait. Never an initial. */
+  function tmrAvaSrc(user) {
+    if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(user);
+    var u = user || {};
+    var direct = u.avatar_url || u.avatarUrl || u.avatar || '';
+    if (direct && typeof direct === 'string') return direct;
+    var key = u.id != null ? u.id : (u.username || '');
+    if (key === '' || key == null) return '';
+    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
+  }
+
   function avatar(s) {
-    if (s.avatar_url) {
-      return '<img class="av" src="' + esc(s.avatar_url) + '" alt="" loading="lazy" ' +
-        'onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),' +
-        '{className:\'av ph\',textContent:' + JSON.stringify(String(s.username || '?').charAt(0).toUpperCase()) + '}))">';
-    }
-    return '<div class="av ph">' + esc(String(s.username || '?').charAt(0).toUpperCase()) + '</div>';
+    /* NO INITIALS TILE (2026-09-08): both branches drew the seller's first
+       letter, one of them out of an onerror handler. The avatar route answers
+       a real face for every member, so there is nothing left to letter. */
+    var src = tmrAvaSrc(s);
+    if (!src) return '<div class="av ph"></div>';
+    return '<img class="av" src="' + esc(src) + '" alt="" loading="lazy">';
   }
 
   function listingCard(l) {

@@ -143,6 +143,29 @@ for (const junk of [
   ok(face.indexOf('fill="#94A3B8"') === -1, `${junk.team} must not get the old silhouette`);
 }
 
+
+/* NO COMPONENT MAY DRAW ITS OWN LETTER TILE (2026-09-08).
+   The homepage "Live on TMR" ticker named its slot `tkact-av`, which the repair
+   pass's class pattern did not match, so the one component still printing two
+   letters was also the one component the safety net could not see. Worse, its
+   <img> was built DETACHED and marked loading="lazy" - a lazy image outside the
+   document never starts loading, so the `load` handler that was supposed to
+   clear the letters never ran and "FA" stayed on screen for good.
+
+   These two checks are the general form of that bug: the pattern has to cover
+   an -av suffix, and no shipped component may build a lazy image it has not
+   attached yet. */
+ok(/\(\^\|\[-_\]\)\(av\|ava\|avl\)\$/.test(fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-ds-avatar.js'), 'utf8')),
+  'the repair pass must match a bare -av suffix, not only -ava and -avl');
+
+const ticker = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-activity-feed.js'), 'utf8');
+const tickerAvatar = ticker.slice(ticker.indexOf('function avatarNode'), ticker.indexOf('function welcomeItem'));
+ok(tickerAvatar.length > 40, 'found the ticker avatar builder');
+ok(tickerAvatar.indexOf("loading = 'lazy'") === -1,
+  'the ticker must not lazy-load an image it has not put in the document yet');
+ok(tickerAvatar.indexOf('initials(') === -1, 'the ticker must not draw a member initial');
+ok(tickerAvatar.indexOf('box.appendChild(img)') !== -1, 'the ticker attaches the image up front');
+
 /* ---------- 2. deterministic, and distinguishable -------------------------- */
 ok(AV.dataUri(AV.identity({ username: 'makaveli66' })) === AV.dataUri(AV.identity({ username: 'makaveli66' })),
   'the same member always gets the same face');

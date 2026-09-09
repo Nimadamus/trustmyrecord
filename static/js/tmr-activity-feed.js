@@ -102,26 +102,30 @@
     return String(name || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '?';
   }
 
-  /* The site's existing avatar treatment: the stored URL if there is one, the
-     API's avatar route otherwise, and the initials tile when neither resolves.
-     Built as nodes, never as an HTML string — a username is user input. */
+  /* NO INITIALS, AND THE IMAGE GOES IN IMMEDIATELY (2026-09-08).
+     This painted the member's two letters first and only replaced them when the
+     picture fired `load` - except the <img> was built DETACHED and marked
+     loading="lazy", and a lazy image that is not in the document never starts
+     loading. So `load` never fired, the letters never cleared, and "Live on TMR"
+     sat there showing FA and WI while every other surface on the site showed a
+     face. That is the bug Nima kept seeing after the rest was fixed.
+
+     The image is attached up front now, and the letters are never drawn at all:
+     the avatar route always answers with that member's assigned portrait, and if
+     the network is down the slot stays empty rather than falling back to the one
+     thing this site does not print. */
   function avatarNode(user) {
     var box = document.createElement('span');
     box.className = 'tkact-av';
-    var text = initials(user && user.username);
-    box.textContent = text;
-    var src = (user && user.avatar_url) || (user && user.id ? API + '/users/' + user.id + '/avatar' : '');
+    var key = (user && user.id) || (user && user.username) || '';
+    var src = (user && user.avatar_url)
+      || (key !== '' ? API + '/users/' + encodeURIComponent(key) + '/avatar' : '');
     if (!src) return box;
     var img = document.createElement('img');
     img.alt = '';
-    img.loading = 'lazy';
     img.decoding = 'async';
-    img.addEventListener('error', function () {
-      if (img.parentNode) img.parentNode.removeChild(img);
-      box.textContent = text;
-    });
-    img.addEventListener('load', function () { box.textContent = ''; box.appendChild(img); });
     img.src = src;
+    box.appendChild(img);
     return box;
   }
 

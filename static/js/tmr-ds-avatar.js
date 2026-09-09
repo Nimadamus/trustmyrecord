@@ -637,7 +637,11 @@
      variant suffix: profile-avatar, profile-avatar-large, tmr-social-avatar--letter,
      comp-avl, v2nav-ava. The site names these things thirty different ways and
      a hand-kept list would go stale the first time a component is added. */
-  var AV_CLASS = /(^|[-_])avatar([-_]+[a-z0-9]+)*$|(^|[-_])(ava|avl)$/i;
+  /* `-av` JOINED THE LIST 2026-09-08. The homepage "Live on TMR" ticker names
+     its slot tkact-av, which this pattern did not match, so the one component on
+     the site still printing a two-letter tile was also the one component the
+     repair pass could not see. Any class token ending in av/ava/avl counts now. */
+  var AV_CLASS = /(^|[-_])avatar([-_]+[a-z0-9]+)*$|(^|[-_])(av|ava|avl)$/i;
   var SKIP_CLASS = /(skel|skeleton|loading|placeholder|uploader|upload-|-btn|button)/i;
 
   function isAvatarSlot(el) {
@@ -788,7 +792,7 @@
     el.appendChild(img);
   }
 
-  var SELECTOR = '[class*="avatar"],[class*="-ava"],[class*="-avl"],[data-tmr-avatar]';
+  var SELECTOR = '[class*="avatar"],[class*="-av"],[class*="-ava"],[class*="-avl"],[data-tmr-avatar]';
 
   function repairIn(node) {
     if (!node || node.nodeType !== 1) return;
