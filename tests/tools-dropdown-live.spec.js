@@ -54,7 +54,7 @@ for (const vp of VIEWPORTS) {
     }
 
     // Existing Tools entries must survive.
-    for (const href of ['/tools/', '/trendspotter/', '/betlegend-pro/']) {
+    for (const href of ['/tools/', '/trendspotter/', '/betlegend-pro/', '/model-builder/']) {
       await expect(
         page.locator(`nav a[href="${href}"], header a[href="${href}"]`).first(),
         `existing Tools link ${href} still present`,

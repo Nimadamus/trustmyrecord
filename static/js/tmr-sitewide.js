@@ -109,6 +109,9 @@
         ["/sports-simulators/", "Sports Simulators"],
         ["/trendspotter/", "TrendSpotter"],
         ["/betlegend-pro/", "BetLegend Pro"],
+        // Model Builder rejoined the Tools menu on 2026-09-08. It was absent
+        // from BOTH nav tables, so it appeared in no dropdown anywhere.
+        ["/model-builder/", "Model Builder"],
         // Was missing here while the DS nav has carried it since 2026-08-11.
         ["/handicapping/mlb/", "MLB Matchups Today"],
         ["/handicapping/", "Handicapping Hub"]
@@ -125,7 +128,7 @@
     const COMPETE_GROUP = new Set(["challenges.html", "tmr-challenges.html", "tmr-match.html", "trivia.html", "polls.html", "contests.html"]);
     const SPORTS_GAMING_GROUP = new Set(["sports-gaming.html", "arena.html", "online-gaming.html", "mlb-the-show-stat-league.html", "rankings.html", "leagues.html", "mlb-the-show.html", "madden.html", "nba-2k.html", "ea-fc.html", "nhl.html"]);
     const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "hangout.html"]);
-    const TOOLS_GROUP = new Set(["tools.html", "sports-simulators.html", "mlb-simulator.html", "nfl-simulator.html", "nba-simulator.html", "nhl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
+    const TOOLS_GROUP = new Set(["tools.html", "sports-simulators.html", "mlb-simulator.html", "nfl-simulator.html", "nba-simulator.html", "nhl-simulator.html", "trendspotter.html", "betlegend-pro.html", "model-builder.html"]);
     // --- Sportsbook dropdown rows ------------------------------------------
     // A plain row is [href, label]; a submenu row is ["@sub", label, items].
     // Mirrors .ds-sub in static/js/tmr-ds-nav.js so both nav scripts render the
