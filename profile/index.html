@@ -19606,6 +19606,32 @@ html body.profile-page #profileAdvancedSportBar .profile-advanced-sportchip .chi
 }
 
 /* ---------------------------------------------------------------------
+   1d. THE PICKS FOR SALE MODULE STOPS BEING A WHITE CARD IN A DARK PAGE.
+   It paints itself from --bg-card, which resolves light on this page, so it
+   was the one panel on the profile with a near-white background. Same dark
+   card treatment as every module around it; nothing about its layout moves.
+   --------------------------------------------------------------------- */
+html body.profile-page #mppfsSection.mppfs-section {
+  background: linear-gradient(180deg, #101b30, #0a1322) !important;
+  border: 1px solid rgba(148, 163, 184, .16) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .24) !important;
+}
+html body.profile-page #mppfsSection .mppfs-title,
+html body.profile-page #mppfsSection .mppfs-pkg-name,
+html body.profile-page #mppfsSection .mppfs-pkg-price {
+  color: #eef4ff !important;
+}
+html body.profile-page #mppfsSection .mppfs-sub,
+html body.profile-page #mppfsSection .mppfs-pkg-desc,
+html body.profile-page #mppfsSection .mppfs-pkg-price small {
+  color: #93a3ba !important;
+}
+html body.profile-page #mppfsSection .mppfs-pkg {
+  background: rgba(2, 6, 23, .36) !important;
+  border: 1px solid rgba(148, 163, 184, .16) !important;
+}
+
+/* ---------------------------------------------------------------------
    2. THE METRIC / VALUE / DEFINITION TABLES STOP CLIPPING THEIR PROSE.
    `.tmrx-table th, .tmrx-table td { white-space: nowrap !important }` is
    right for the numeric split tables and wrong for the two glossary tables,
