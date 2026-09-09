@@ -89,39 +89,36 @@ ok(AV.html({ username: 'a', avatar: LOGO_ROW }).indexOf('data-tmr-logo="1"') !==
   'the mark is rendered as its own image, so it can be contained rather than cropped');
 ok(AV.identity({ username: 'nobody' }).logo === null, 'no team, no mark');
 
-/* ASSIGNED PORTRAITS (2026-09-08). The shared grey silhouette is gone. It was
-   ONE picture for all 89 members with no photo, so a leaderboard of twenty read
-   as one account twenty times. Every faceless member now gets their own
-   generated fan, seeded off their user id. The rules locked here are Nima's:
-   never a silhouette, never a blank circle, never initials, and a different
-   face per member. */
+/* ASSIGNED CRESTS (2026-09-08, second pass). Two rewrites landed here. The
+   shared grey silhouette made a leaderboard read as one account twenty times;
+   the illustrated fan that replaced it fixed that and read as a cartoon, which
+   Nima called out as hurting the site's credibility. What a member with no
+   photo and no club gets now is a CREST - navy, electric blue, one athletic
+   motif. The rules locked here: no silhouette, no blank circle, no illustrated
+   people, and a different crest per member. */
 const FACES = new Set();
 for (const who of ['makaveli66', 'Firelink', 'henrywalllace', '11space']) {
-  const face = AV.svg(AV.identity({ username: who }));
-  FACES.add(face);
+  const face = AV.svg(AV.identity({ id: who.length * 37, username: who }));
+  FACES.add(face.replace(/aria-label="[^"]*"/, ''));
   ok(face.indexOf('<text') === -1, `${who} must not get a lettered tile`);
-  ok(face.indexOf('>' + AV.initials('', who) + '<') === -1, `${who} must not get their initials`);
   ok(face.indexOf('fill="#94A3B8"') === -1, `${who} must never get the old grey silhouette back`);
+  ok(!/<ellipse cx="50" cy="44"/.test(face), `${who} must not get an illustrated face`);
+  ok(!/#F4CCA6|#EBB78D|#DA9E70|#BC8052/.test(face), `${who} must not carry skin tones`);
   ok(face.includes('viewBox="0 0 100 100"'), `${who} sits in the same frame as a club mark`);
-  ok(face.length > 600, `${who} must get a drawn face, not an empty circle`);
+  ok(face.length > 500, `${who} must get a drawn crest, not an empty circle`);
 }
-ok(FACES.size === 4, 'four members, four different faces');
+ok(FACES.size === 4, 'four members, four different crests');
 
-/* Deterministic, and keyed on the id so a rename does not reroll the face. */
+/* Deterministic, and keyed on the id so a rename does not reroll it. */
 const stripLabel = (v) => v.replace(/(aria-label|title)="[^"]*"/g, '');
 ok(stripLabel(AV.svg(AV.identity({ id: 626, username: 'makaveli66' })))
    === stripLabel(AV.svg(AV.identity({ id: 626, username: 'renamed' }))),
-  'the seed is the user id, so a username change keeps the face');
+  'the seed is the user id, so a username change keeps the crest');
 
-/* League-aware: a member who told us their sports wears that kit. */
-ok(AV.svg(AV.identity({ id: 5, username: 'a', favorite_sports: ['MLB'] }))
-   !== AV.svg(AV.identity({ id: 5, username: 'a', favorite_sports: ['NBA'] })),
-  'a baseball fan and a basketball fan are not dressed the same');
-
-/* At scale, which is the whole point of the change. */
+/* At scale, which is the whole point. */
 const many = new Set();
-for (let i = 1; i <= 200; i += 1) many.add(AV.svg(AV.identity({ id: i, username: 'u' + i })));
-ok(many.size >= 190, `only ${many.size} distinct faces across 200 members`);
+for (let i = 1; i <= 200; i += 1) many.add(stripLabel(AV.svg(AV.identity({ id: i, username: 'u' + i }))));
+ok(many.size >= 150, `only ${many.size} distinct crests across 200 members`);
 
 /* A real club always arrives WITH its logo url, so in the browser a club is
    always drawn as its mark. The lettered badge survives only in the API, where

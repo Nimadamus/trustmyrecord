@@ -206,21 +206,21 @@
      r=48 so nothing crosses the ring, and no clipPath: this markup is also
      inlined into pages, where duplicate clip ids collide.
      Same bytes as the backend's avatarNeutralSvg(). */
-  /* ================= ASSIGNED PORTRAITS (2026-09-08) ==================
-     The grey silhouette below used to be ONE picture shared by all 89 members
-     with no photo, so a leaderboard of twenty read as one account twenty times.
-     Every faceless member now gets their own generated fan instead: a face, a
-     haircut and their league's kit, seeded off their user id so it never
-     changes and follows them across every surface.
+  /* ================= ASSIGNED CRESTS (2026-09-08) =====================
+     Two rewrites got here. This slot was one shared grey silhouette, which made
+     a leaderboard of twenty read as one account twenty times. It was then an
+     illustrated fan per member, which fixed that and read as a cartoon - Nima:
+     "too cartoonish ... hurting the credibility of the site". A betting record
+     is a serious document and the faces beside it have to look like one.
 
-     This is the browser copy of the API's utils/avatarPortrait.js and the two
-     must stay in step - a member has to wear the same face whether the picture
-     came from the avatar route or was drawn here while it loaded. */
+     A member with no photo and no club now gets a CREST: navy ground, electric
+     blue mark, one athletic motif, keyed off their user id. Browser copy of the
+     API's utils/avatarEmblem.js - the two must stay in step, because a member
+     has to wear the same crest whether it came from the avatar route or was
+     drawn here while that request was still in flight. */
   
   
-  /* FNV-1a, then a mix per field, so two members who collide on hair do not also
-     collide on everything else. */
-  function pHash(value) {
+  function emHash(value) {
     var h = 0x811c9dc5;
     var s = String(value == null ? '' : value);
     for (var i = 0; i < s.length; i += 1) {
@@ -230,246 +230,143 @@
     return h >>> 0;
   }
   
-  function pDraw(seed, salt, n) {
-    var h = (seed ^ pHash(salt)) >>> 0;
+  function emDraw(seed, salt, n) {
+    var h = (seed ^ emHash(salt)) >>> 0;
     h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) >>> 0;
     h = Math.imul(h ^ (h >>> 12), 0x297a2d39) >>> 0;
     h = (h ^ (h >>> 15)) >>> 0;
     return h % n;
   }
   
-  function pPick(seed, salt, arr) { return arr[pDraw(seed, salt, arr.length)]; }
+  function emPick(seed, salt, arr) { return arr[emDraw(seed, salt, arr.length)]; }
   
-  /* Wide on hue on purpose: a board of forty must not read as one colour. */
-  var KIT_PALETTES = [
-    ['#E23D4B', '#FFFFFF'], ['#1D6FE0', '#F2F5FA'], ['#17A673', '#F2F7F4'],
-    ['#F2A63D', '#20160A'], ['#8B5CF6', '#F4F1FB'], ['#E0448E', '#FFF3F8'],
-    ['#0EA5B7', '#F0FBFC'], ['#D6482B', '#FFF4F0'], ['#4C6EF5', '#F3F5FF'],
-    ['#65A30D', '#F7FBEF'], ['#C026A3', '#FDF2FA'], ['#0891B2', '#EFFAFC'],
-    ['#EA580C', '#FFF6F0'], ['#7C3AED', '#F6F2FE'], ['#059669', '#F0FBF6'],
-    ['#DB2777', '#FFF2F7'], ['#2563EB', '#F1F5FF'], ['#B45309', '#FFF8EE'],
-    ['#DC2626', '#FFF3F3'], ['#0D9488', '#EFFAF8'], ['#4338CA', '#F2F2FE'],
-    ['#9A3412', '#FFF5EF'], ['#166534', '#F0FAF2'], ['#701A75', '#FBF0FB'],
+  /* Every palette is a navy ground with one cool accent. Deliberately narrow in
+     hue - the variety comes from shape and motif, not from colour, because a row
+     of pink and lime discs is exactly the "childish" read being removed here. */
+  var EM_PALETTES = [
+    { ground: '#0B1220', panel: '#141E33', ink: '#4E8CFF' },
+    { ground: '#0A121C', panel: '#12202E', ink: '#35E0CB' },
+    { ground: '#0D1424', panel: '#182338', ink: '#6EA8FF' },
+    { ground: '#091019', panel: '#111C2B', ink: '#8FB3D9' },
+    { ground: '#0C1522', panel: '#16233A', ink: '#3B82F6' },
+    { ground: '#0A0F1A', panel: '#131D2E', ink: '#5FD3E4' },
+    { ground: '#0E1526', panel: '#1A2540', ink: '#7C9CE0' },
+    { ground: '#080D16', panel: '#101927', ink: '#4ADEC4' },
   ];
   
-  var SKIN = ['#F4CCA6', '#EBB78D', '#DA9E70', '#BC8052', '#946039', '#70472A', '#F8DCC0', '#A9713F'];
-  var HAIR = ['#191512', '#3A2417', '#6B4423', '#A9702F', '#C9A227', '#DAD7D2', '#7E1F1F', '#2C3A50'];
+  var EM_SHAPES = [
+    'M50 14 82 25v27c0 17-14 27-32 32C32 79 18 69 18 52V25z',            // shield
+    'M50 15a35 35 0 1 0 .01 0z',                                          // roundel
+    'M50 13 84 32v36L50 87 16 68V32z',                                    // hex
+    'M20 17h60v40L50 84 20 57z',                                          // pennant
+    'M50 12 88 50 50 88 12 50z',                                          // diamond
+    'M24 20h52c0 30-6 48-26 66C30 68 24 50 24 20z',                       // arch
+  ];
   
-  /* A member's sports come back as free text from the fan-identity editor, so map
-     loosely rather than exactly. The kit archetype is what the drawing needs. */
-  var LEAGUE_KIT = {
-    mlb: 'baseball', baseball: 'baseball',
-    nfl: 'football', ncaaf: 'football', football: 'football', cfb: 'football',
-    nba: 'basketball', ncaab: 'basketball', basketball: 'basketball', cbb: 'basketball', wnba: 'basketball',
-    nhl: 'hockey', hockey: 'hockey',
-    soccer: 'soccer', mls: 'soccer', epl: 'soccer', football_eu: 'soccer',
-    ufc: 'combat', mma: 'combat', boxing: 'combat',
-    tennis: 'tennis',
-    golf: 'golf', pga: 'golf',
-    f1: 'motor', nascar: 'motor', motorsport: 'motor',
-  };
-  
-  function pKitFor(sports) {
-    var list = Array.isArray(sports) ? sports : (sports ? [sports] : []);
-    for (var i = 0; i < list.length; i += 1) {
-      var key = String(list[i] || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-      if (LEAGUE_KIT[key]) return LEAGUE_KIT[key];
-    }
-    return '';
+  var EM_ESCMAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function emEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return EM_ESCMAP[c]; });
   }
   
-  function pEsc(s) {
-    var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return map[c]; });
+  /* The athletic mark at the centre. Flat, single-weight, and sized to the same
+     optical box so one crest is not visually heavier than the next. */
+  function emMotif(index, ink) {
+    var s = 'stroke="' + ink + '" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"';
+    switch (index) {
+      case 0:  // baseball seams
+        return '<circle cx="50" cy="49" r="14" ' + s + '/>'
+          + '<path d="M41 39c5 6 5 14 0 20M59 39c-5 6-5 14 0 20" ' + s + '/>';
+      case 1:  // football
+        return '<path d="M50 35c11 0 18 6 18 14s-7 14-18 14-18-6-18-14 7-14 18-14z" ' + s + '/>'
+          + '<path d="M43 49h14M47 45v8M53 45v8" ' + s + '/>';
+      case 2:  // basketball
+        return '<circle cx="50" cy="49" r="14" ' + s + '/>'
+          + '<path d="M36 49h28M50 35v28M40 39c6 6 14 6 20 0M40 59c6-6 14-6 20 0" ' + s + '/>';
+      case 3:  // goal net
+        return '<path d="M33 41h34v18H33z" ' + s + '/>'
+          + '<path d="M42 41v18M50 41v18M58 41v18M33 50h34" ' + s + ' stroke-width="2"/>';
+      case 4:  // stadium arch
+        return '<path d="M32 60c0-12 8-20 18-20s18 8 18 20" ' + s + '/>'
+          + '<path d="M28 60h44M38 60v-8M50 60V44M62 60v-8" ' + s + '/>';
+      case 5:  // track lanes
+        return '<path d="M30 44h40M30 52h40M30 60h40" ' + s + '/>'
+          + '<path d="M38 40v24M62 40v24" ' + s + ' stroke-width="2"/>';
+      case 6:  // chevron rank
+        return '<path d="M36 56l14-13 14 13M36 45l14-13 14 13" ' + s + '/>';
+      case 7:  // laurel
+        return '<path d="M50 38v24" ' + s + '/>'
+          + '<path d="M50 44c-6-4-11-3-13 1 3 4 9 4 13 0zM50 44c6-4 11-3 13 1-3 4-9 4-13 0z" ' + s + ' stroke-width="2.4"/>'
+          + '<path d="M50 54c-6-4-11-3-13 1 3 4 9 4 13 0zM50 54c6-4 11-3 13 1-3 4-9 4-13 0z" ' + s + ' stroke-width="2.4"/>';
+      case 8:  // crossed bats
+        return '<path d="M37 62 61 38M63 62 39 38" ' + s + '/>'
+          + '<circle cx="37" cy="62" r="3.2" ' + s + ' stroke-width="2.4"/>'
+          + '<circle cx="63" cy="62" r="3.2" ' + s + ' stroke-width="2.4"/>';
+      case 9:  // pitch / field lines
+        return '<path d="M31 38h38v24H31z" ' + s + '/>'
+          + '<path d="M50 38v24" ' + s + ' stroke-width="2"/>'
+          + '<circle cx="50" cy="50" r="5" ' + s + ' stroke-width="2"/>';
+      case 10: // upward trend, which is what a record is
+        return '<path d="M32 60l10-10 8 6 14-16" ' + s + '/>'
+          + '<path d="M56 40h10v10" ' + s + '/>';
+      case 11: // star
+      default:
+        return '<path d="M50 36l4.2 8.8L64 46l-7 6.6L58.6 62 50 57.4 41.4 62 43 52.6 36 46l9.8-1.2z" ' + s + '/>';
+    }
   }
   
-  function pClamp(v) { return Math.max(0, Math.min(255, Math.round(v))); }
-  
-  function pShade(hex, amount) {
-    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
-    if (!m) return amount < 0 ? '#101623' : '#8FA0B5';
-    var n = parseInt(m[1], 16);
-    var target = amount < 0 ? 0 : 255;
-    var k = Math.abs(amount);
-    var r = pClamp((n >> 16 & 255) + (target - (n >> 16 & 255)) * k);
-    var g = pClamp((n >> 8 & 255) + (target - (n >> 8 & 255)) * k);
-    var b = pClamp((n & 255) + (target - (n & 255)) * k);
-    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  }
-  
-  /* ------------------------------------------------------------------ the kit */
-  /* Drawn BEFORE the head, so the shoulders sit behind the jaw. Every archetype
-     fills the same footprint, so the face lands in the same place whichever sport
-     a member follows and a row of mixed leagues still lines up. */
-  function pKit(kit, seed, primary, secondary) {
-    var dark = pShade(primary, -0.45);
-    var body = 'M12 100c0-21 17-33 38-33s38 12 38 33z';
-    var out = '';
-  
-    if (kit === 'basketball') {
-      // Sleeveless: the shoulders are skin, so the vest is narrow.
-      out += '<path d="M16 100c2-16 12-26 24-30 6 5 14 5 20 0 12 4 22 14 24 30z" fill="' + primary + '"/>';
-      out += '<path d="M37 71c4 4 22 4 26 0l2 3c-7 6-23 6-30 0z" fill="' + secondary + '" opacity=".9"/>';
-      return out;
-    }
-  
-    out += '<path d="' + body + '" fill="' + primary + '"/>';
-  
-    if (kit === 'baseball') {
-      var stripes = pDraw(seed, 'pin', 2);
-      if (stripes) {
-        for (var i = 0; i < 7; i += 1) {
-          out += '<rect x="' + (16 + i * 10) + '" y="70" width="1.8" height="30" fill="' + secondary + '" opacity=".7"/>';
-        }
-      }
-      out += '<path d="M40 68h20l-10 15z" fill="' + secondary + '"/>';
-      out += '<rect x="47" y="68" width="6" height="32" fill="' + secondary + '" opacity=".55"/>';
-    } else if (kit === 'football') {
-      /* PADS, NOT A HELMET (2026-09-08). The first draft put a full helmet on
-         these members and it covered the entire face, so a football fan rendered
-         as a featureless coloured dome - worse than the silhouette this replaces.
-         The sport reads off the SHOULDERS, which is how you tell it apart anyway:
-         square, wide, and darker at the caps. */
-      out += '<path d="M8 100c0-20 18-31 42-31s42 11 42 31z" fill="' + primary + '"/>';
-      out += '<path d="M8 100c0-9 4-16 10-21l6 21zM92 100c0-9-4-16-10-21l-6 21z" fill="' + dark + '"/>';
-      out += '<path d="M41 69h18l-9 12z" fill="' + secondary + '"/>';
-      out += '<rect x="20" y="86" width="60" height="5" fill="' + secondary + '" opacity=".7"/>';
-    } else if (kit === 'hockey') {
-      /* A sweater: shoulder yoke and two hem bands. The first draft swept a wide
-         arc across the chest and it read as a steering wheel, not a jersey. */
-      out += '<path d="M12 100c0-21 17-33 38-33s38 12 38 33z" fill="' + primary + '"/>';
-      out += '<path d="M26 70c7-3 41-3 48 0 4 3 7 7 9 11H17c2-4 5-8 9-11z" fill="' + secondary + '" opacity=".9"/>';
-      out += '<rect x="13" y="90" width="74" height="4" fill="' + secondary + '" opacity=".75"/>';
-      out += '<path d="M41 68h18l-9 11z" fill="' + pShade(primary, -0.4) + '"/>';
-    } else if (kit === 'soccer') {
-      out += '<path d="M38 68h24l-12 14z" fill="' + secondary + '"/>';
-      out += '<path d="M30 71c-4 2-7 5-10 8l7 6zM70 71c4 2 7 5 10 8l-7 6z" fill="' + secondary + '" opacity=".8"/>';
-      if (pDraw(seed, 'hoop', 2)) {
-        out += '<rect x="12" y="86" width="76" height="7" fill="' + secondary + '" opacity=".65"/>';
-      }
-    } else if (kit === 'combat') {
-      // A hood, not a jersey: nobody fights in a shirt.
-      out += '<path d="M12 100c0-21 17-33 38-33s38 12 38 33z" fill="' + dark + '"/>';
-      out += '<path d="M33 69c5 8 29 8 34 0 5 3 8 7 10 11-8 8-46 8-54 0 2-4 5-8 10-11z" fill="' + primary + '"/>';
-    } else if (kit === 'tennis' || kit === 'golf') {
-      out += '<path d="M42 68h16l-8 6z" fill="' + secondary + '"/>';
-      out += '<path d="M43 68l-3 22h4l3-22zM57 68l3 22h-4l-3-22z" fill="' + secondary + '" opacity=".8"/>';
-      out += '<circle cx="50" cy="88" r="1.8" fill="' + secondary + '"/>';
-    } else if (kit === 'motor') {
-      // A race suit: high collar, shoulder banding, zip. Not a hood.
-      out += '<path d="M12 100c0-21 17-33 38-33s38 12 38 33z" fill="' + dark + '"/>';
-      out += '<path d="M36 67h28c2 3 3 6 3 9H33c0-3 1-6 3-9z" fill="' + primary + '"/>';
-      out += '<rect x="47" y="76" width="6" height="24" fill="' + secondary + '" opacity=".85"/>';
-      out += '<rect x="14" y="88" width="72" height="5" fill="' + primary + '" opacity=".9"/>';
-    } else {
-      /* No sport on file: a club jacket. The placket is narrow on purpose - the
-         first draft ran a wide bar up the chest and it out-shouted the face at
-         32px, which is the size that matters. */
-      out += '<path d="M48.5 70h3v30h-3z" fill="' + secondary + '" opacity=".75"/>';
-      out += '<path d="M39 69l11 8 11-8-4-2-7 5-7-5z" fill="' + secondary + '" opacity=".9"/>';
-    }
-    return out;
-  }
-  
-  /* Headwear goes over the hair, so it is drawn after the face. */
-  function pHeadwear(kit, seed, primary, secondary) {
-    var dark = pShade(primary, -0.35);
-    if (kit === 'baseball' || kit === 'golf') {
-      return '<path d="M27 38c0-13 10-21 23-21s23 8 23 21z" fill="' + primary + '"/>'
-        + '<path d="M73 36h12c2 0 3 2 2 4-2 3-8 5-14 5z" fill="' + dark + '"/>'
-        + '<circle cx="50" cy="18" r="2.6" fill="' + secondary + '"/>';
-    }
-    /* NO HELMETS. A football or hockey helmet covers the whole head, and the
-       entire point of this system is that a board of fifty reads as fifty
-       different people. Those sports are carried by the shoulders instead. */
-    if (kit === 'tennis') {
-      return '<rect x="29" y="33" width="42" height="7" rx="3.5" fill="' + primary + '"/>'
-        + '<rect x="29" y="33" width="42" height="3" rx="1.5" fill="' + secondary + '" opacity=".8"/>';
-    }
-    return '';
-  }
-  
-  /* --------------------------------------------------------------- the person */
-  function portraitSvg(seedValue, options) {
+  function emblemSvg(seedValue, options) {
     var opts = options || {};
-    var seed = typeof seedValue === 'number' ? (seedValue >>> 0) : pHash(seedValue);
-    var kit = pKitFor(opts.sports);
-  
-    var pair = opts.primary && opts.secondary
-      ? [opts.primary, opts.secondary]
-      : pPick(seed, 'kitpal', KIT_PALETTES);
-    var primary = pair[0];
-    var secondary = pair[1];
-  
-    var skin = pPick(seed, 'skin', SKIN);
-    var hair = pPick(seed, 'haircolor', HAIR);
-    var hairStyle = pDraw(seed, 'hairstyle', 8);
-    var beard = pDraw(seed, 'beard', 5);
-    var brow = pDraw(seed, 'brow', 3);
-    var headwear = pHeadwear(kit, seed, primary, secondary);
-    var ground = pShade(primary, -0.62);
+    var seed = typeof seedValue === 'number' ? (seedValue >>> 0) : emHash(seedValue);
+    var pal = emPick(seed, 'palette', EM_PALETTES);
+    var shape = emPick(seed, 'shape', EM_SHAPES);
+    var division = emDraw(seed, 'division', 6);
+    var motif = emDraw(seed, 'motif', 12);
     var px = Number(opts.size) > 0 ? Number(opts.size) : 96;
-    var label = opts.label ? pEsc(opts.label) : 'TrustMyRecord member';
+    var label = opts.label ? emEsc(opts.label) : 'TrustMyRecord member';
+    var id = 'e' + seed.toString(36);
   
     var g = '';
-    g += '<circle cx="50" cy="50" r="50" fill="' + ground + '"/>';
-    g += '<path d="M0 50a50 50 0 0 1 100 0Z" fill="#FFFFFF" opacity=".06"/>';
-    g += pKit(kit, seed, primary, secondary);
+    g += '<circle cx="50" cy="50" r="50" fill="' + pal.ground + '"/>';
+    g += '<path d="M0 50a50 50 0 0 1 100 0Z" fill="#FFFFFF" opacity=".045"/>';
+    g += '<defs><clipPath id="' + id + '"><path d="' + shape + '"/></clipPath></defs>';
+    g += '<path d="' + shape + '" fill="' + pal.panel + '"/>';
   
-    // neck, ears, head
-    g += '<path d="M42 56h16v14H42z" fill="' + pShade(skin, -0.18) + '"/>';
-    g += '<ellipse cx="29" cy="46" rx="4.2" ry="6" fill="' + skin + '"/>';
-    g += '<ellipse cx="71" cy="46" rx="4.2" ry="6" fill="' + skin + '"/>';
-    g += '<ellipse cx="50" cy="44" rx="20.5" ry="23.5" fill="' + skin + '"/>';
+    /* The division is what stops two crests that share a shape from reading as the
+       same crest. Kept low-contrast: it is structure, not decoration. */
+    var div = '<g clip-path="url(#' + id + ')">';
+    if (division === 1) div += '<rect x="50" y="0" width="50" height="100" fill="#FFFFFF" opacity=".05"/>';
+    if (division === 2) div += '<rect x="0" y="50" width="100" height="50" fill="#000000" opacity=".22"/>';
+    if (division === 3) div += '<path d="M50 6 96 52 50 98 4 52z" fill="' + pal.ink + '" opacity=".07"/>';
+    if (division === 4) div += '<path d="M0 74h100v40H0z" fill="' + pal.ink + '" opacity=".10"/>';
+    if (division === 5) div += '<path d="M0 0h100v22H0z" fill="' + pal.ink + '" opacity=".10"/>';
+    div += '</g>';
+    g += div;
   
-    // Hair always shows: the only headwear left is a cap or a headband.
-    var capped = kit === 'baseball' || kit === 'golf';
-    if (!capped || pDraw(seed, 'longhair', 2) === 1) {
-      if (hairStyle === 0) g += '<path d="M29 41c0-14 9-23 21-23s21 9 21 23c-1-8-9-12-21-12s-20 4-21 12z" fill="' + hair + '"/>';
-      if (hairStyle === 1) g += '<path d="M28 45c-1-19 9-28 22-28s23 9 22 28c-2-7-4-15-9-17-6 4-21 5-27 1-3 3-6 9-8 16z" fill="' + hair + '"/>';
-      if (hairStyle === 2) g += '<ellipse cx="50" cy="27" rx="21.5" ry="15" fill="' + hair + '"/><ellipse cx="32" cy="40" rx="6" ry="9.5" fill="' + hair + '"/><ellipse cx="68" cy="40" rx="6" ry="9.5" fill="' + hair + '"/>';
-      if (hairStyle === 3) g += '<path d="M28 43c0-17 10-25 22-25s22 8 22 25v23h-7V45c-7 3-23 3-30-1v21h-7z" fill="' + hair + '"/>';
-      if (hairStyle === 4) g += '<path d="M31 38c2-13 10-20 19-20s17 7 19 20c-4-6-9-9-19-9s-15 3-19 9z" fill="' + hair + '"/><circle cx="50" cy="13" r="7" fill="' + hair + '"/>';
-      if (hairStyle === 5) g += '<path d="M27 47c0-20 10-30 23-30s23 10 23 30c0-12-10-17-23-17s-23 5-23 17z" fill="' + hair + '"/>';
-      if (hairStyle === 6) g += '<path d="M30 40c1-13 9-22 20-22s19 9 20 22c-3-5-6-9-10-11-4 5-20 6-26 2-2 2-3 6-4 9z" fill="' + hair + '"/>';
-      // 7 is bald, and stays bald.
-    }
-  
-    // brows, eyes, mouth
-    var browY = brow === 0 ? 39.5 : (brow === 1 ? 38.5 : 40.5);
-    g += '<rect x="36" y="' + browY + '" width="9.5" height="2.4" rx="1.2" fill="' + (hairStyle === 7 ? HAIR[0] : hair) + '"/>';
-    g += '<rect x="54.5" y="' + browY + '" width="9.5" height="2.4" rx="1.2" fill="' + (hairStyle === 7 ? HAIR[0] : hair) + '"/>';
-    g += '<ellipse cx="41" cy="46.5" rx="2.7" ry="3.1" fill="#20262E"/>';
-    g += '<ellipse cx="59" cy="46.5" rx="2.7" ry="3.1" fill="#20262E"/>';
-    g += '<circle cx="41.9" cy="45.6" r="0.9" fill="#FFFFFF" opacity=".85"/>';
-    g += '<circle cx="59.9" cy="45.6" r="0.9" fill="#FFFFFF" opacity=".85"/>';
-  
-    var mouth = '<path d="M44 56.5c3 2.6 9 2.6 12 0" stroke="' + pShade(skin, -0.55) + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
-    if (beard === 0) g += mouth;
-    if (beard === 1) { // stubble
-      g += '<path d="M31 47c1 13 9 21 19 21s18-8 19-21c2 13-5 24-19 24s-21-11-19-24z" fill="' + hair + '" opacity=".26"/>' + mouth;
-    }
-    if (beard === 2) { // full beard
-      g += '<path d="M30 45c0 17 9 26 20 26s20-9 20-26c2 19-6 31-20 31s-22-12-20-31z" fill="' + hair + '"/>';
-      g += '<path d="M44 57c3 2 9 2 12 0" stroke="' + pShade(hair, -0.4) + '" stroke-width="2" fill="none" stroke-linecap="round"/>';
-    }
-    if (beard === 3) { // moustache
-      g += '<path d="M42 53.5h16c0 3.6-3.6 5.2-8 5.2s-8-1.6-8-5.2z" fill="' + hair + '"/>' + mouth;
-    }
-    if (beard === 4) { // goatee
-      g += mouth + '<path d="M44 61h12c0 5-2.6 8-6 8s-6-3-6-8z" fill="' + hair + '"/>';
-    }
-  
-    g += headwear;
-    // one ring, so the face reads as an avatar and not as a sticker
-    g += '<circle cx="50" cy="50" r="48.4" fill="none" stroke="' + pShade(primary, 0.25) + '" stroke-opacity=".42" stroke-width="3.2"/>';
+    g += '<path d="' + shape + '" fill="none" stroke="' + pal.ink + '" stroke-opacity=".55" stroke-width="2.4"/>';
+    g += emMotif(motif, pal.ink);
+    g += '<circle cx="50" cy="50" r="48.4" fill="none" stroke="' + pal.ink + '" stroke-opacity=".3" stroke-width="3.2"/>';
   
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="' + px + '" height="' + px
       + '" role="img" aria-label="' + label + '">' + g + '</svg>';
   }
   
-  function portraitDataUri(seedValue, options) {
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(portraitSvg(seedValue, options));
+  /* TIER 4. Only reached when there is no seed to draw a crest from. Same navy
+     and the same ring as everything else, so it never reads as a different
+     system - just a quieter member of it. */
+  function initialsSvg(mark, size, seedValue) {
+    var seed = typeof seedValue === 'number' ? (seedValue >>> 0) : emHash(seedValue || mark || 'tmr');
+    var pal = emPick(seed, 'palette', EM_PALETTES);
+    var text = String(mark || 'TM').slice(0, 2).toUpperCase();
+    var px = Number(size) > 0 ? Number(size) : 96;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="' + px + '" height="' + px
+      + '" role="img" aria-label="' + emEsc(text) + '">'
+      + '<circle cx="50" cy="50" r="50" fill="' + pal.ground + '"/>'
+      + '<path d="M0 50a50 50 0 0 1 100 0Z" fill="#FFFFFF" opacity=".045"/>'
+      + '<circle cx="50" cy="50" r="48.4" fill="none" stroke="' + pal.ink + '" stroke-opacity=".3" stroke-width="3.2"/>'
+      + '<text x="50" y="50" text-anchor="middle" dominant-baseline="central" fill="' + pal.ink + '"'
+      + ' font-family="Inter,\'Segoe UI\',system-ui,-apple-system,Helvetica,Arial,sans-serif"'
+      + ' font-size="36" font-weight="700" letter-spacing="1.5">' + emEsc(text) + '</text>'
+      + '</svg>';
   }
   
   
@@ -477,13 +374,10 @@
 
   function neutralSvg(size, id) {
     var i = id || {};
-    return portraitSvg(i.seed || i.username || 'tmr', {
-      size: size,
-      sports: i.sports,
-      primary: i.logo ? i.primary : null,
-      secondary: i.logo ? i.secondary : null,
-      label: i.username ? i.username + ' avatar' : 'TrustMyRecord member'
-    });
+    var seed = i.seed || i.username || '';
+    var label = i.username ? i.username + ' avatar' : 'TrustMyRecord member';
+    if (!seed) return initialsSvg(i.initials || i.mark || 'TM', size, label);
+    return emblemSvg(seed, { size: size, label: label });
   }
 
   /* The badge. Same geometry as the backend's avatarSvg(). */
