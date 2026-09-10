@@ -1213,6 +1213,17 @@
         }
         const LEADERBOARD_MIN_PICKS = resolveMinLeaderboardPicks();
 
+        // Directory eligibility. A member must have at least this many GRADED
+        // picks to appear anywhere in the ranked table: every tab, every filter,
+        // every sort, and the rank numbers, pagination and row counts are all
+        // computed from the eligible set only. Accounts below the line keep
+        // their profile at /u/<username>/ - they are simply not listed here
+        // until they have a real record to show.
+        const DIRECTORY_MIN_GRADED = 1;
+        function isDirectoryEligible(member) {
+            return gradedCount(member) >= DIRECTORY_MIN_GRADED;
+        }
+
         // Sort state for the leaderboard table. Each field has a default direction
         // that matches "highest first" semantics for the user-visible metric.
         const SORT_DEFAULT_DIRS = {
@@ -2316,9 +2327,12 @@
             if (activeWeekCount != null) setText(els.activeWeek, String(activeWeekCount));
 
             // Directory tab counts share the same authoritative numbers.
-            setTabCount('all', totalMembersCount);
+            // Tab counts must match the rows the tab can actually show, so the
+            // two listing tabs count eligible handicappers, not registrations.
+            const eligibleCount = membersAreFresh ? members.filter(isDirectoryEligible).length : null;
+            setTabCount('all', eligibleCount != null ? eligibleCount : totalMembersCount);
             setTabCount('verified', verifiedCount);
-            setTabCount('pickmakers', pickMakersCount);
+            setTabCount('pickmakers', eligibleCount != null ? eligibleCount : pickMakersCount);
             setTabCount('active', activeWeekCount);
             setTabCount('following', getCurrentUser() ? members.filter(member => member.isFollowing).length : null);
             renderFeaturedLeaders();
@@ -2730,7 +2744,11 @@
                 : members;
 
             const view = TIER_VIEWS[tierView] || TIER_VIEWS.all;
-            let basePool = displayMembers.filter(member => meetsLeaderboardMinimum(member, view));
+            // Eligibility first: zero-graded accounts never enter the pool, so the
+            // table, rank numbers, pagination, counts, search and sorting all run
+            // against eligible handicappers only.
+            let basePool = displayMembers.filter(isDirectoryEligible);
+            basePool = basePool.filter(member => meetsLeaderboardMinimum(member, view));
             basePool = basePool.filter(member => view.tiers.includes(tierOf(member)));
             if (view.activeDays) {
                 const cutoff = Date.now() - (view.activeDays * 24 * 60 * 60 * 1000);
@@ -2761,7 +2779,7 @@
         }
 
         const VIEW_HINTS = {
-            all: 'All members, grouped by record tier. Members without picks yet are listed last.',
+            all: 'Every handicapper with a graded record, grouped by record tier.',
             verified: 'Verified handicappers: 25 or more graded picks and a real public record.',
             pickmakers: 'Every member who has locked at least one pick.',
             active: 'Members who locked a pick in the last ' + RECENT_ACTIVE_DAYS + ' days.',

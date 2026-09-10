@@ -107,11 +107,18 @@ def list_users():
         off += 200
     return out
 
+# Directory eligibility: mirrors DIRECTORY_MIN_GRADED in handicappers/index.html.
+# Zero-graded accounts are not baked into the static table either, so the
+# prerendered HTML a crawler sees matches what the live page renders.
+DIRECTORY_MIN_GRADED = 1
+
 def eligible(d):
     un = d.get("username", "")
     if d.get("verification_status") != "verified":
         return False
     if (d.get("total_picks") or 0) <= 0:
+        return False
+    if (d.get("graded_picks") or 0) < DIRECTORY_MIN_GRADED:
         return False
     if un.lower() in INTERNAL_DENYLIST:
         return False
