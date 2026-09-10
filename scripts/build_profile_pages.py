@@ -1150,16 +1150,33 @@ def regen_sitemap(usernames):
         xml = f.read()
     xml = re.sub(r"\s*<!-- BEGIN_PROFILE_URLS -->.*?<!-- END_PROFILE_URLS -->",
                  "", xml, flags=re.S)
+    # DUP_LOC_20260910: the managed block is not the only place a /u/ URL can
+    # live -- a batch of compact profile URLs was written straight into the body
+    # of sitemap.xml on 2026-09-06. The moment one of those members crossed
+    # GRADED_MIN this function emitted a SECOND <loc> for the same page, and the
+    # SEO indexability gate fails closed on a duplicate <loc>, so every
+    # Prerender Directory Refresh run aborted before publishing anything
+    # (scpridematt, every run from that day on -- 4+ failed runs an hour).
+    # Emit a username here only if the rest of the file does not already carry
+    # its URL. The existing entry is left exactly as it is, so no profile URL is
+    # ever dropped from the sitemap.
+    already = set(re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", xml))
     block = ["  <!-- BEGIN_PROFILE_URLS -->"]
+    emitted = 0
     for un in sorted(usernames):
-        block.append(f"  <url><loc>{SITE}/u/{un}/</loc><changefreq>daily</changefreq>"
+        loc = f"{SITE}/u/{un}/"
+        if loc in already:
+            continue
+        emitted += 1
+        block.append(f"  <url><loc>{loc}</loc><changefreq>daily</changefreq>"
                      f"<priority>0.6</priority></url>")
     block.append("  <!-- END_PROFILE_URLS -->")
     block = "\n".join(block)
     xml = xml.replace("</urlset>", block + "\n</urlset>")
     with open(SITEMAP, "w", encoding="utf-8", newline="\n") as f:
         f.write(xml)
-    print(f"sitemap.xml updated with {len(usernames)} eligible profile URLs")
+    print(f"sitemap.xml updated with {emitted} eligible profile URL(s) in the managed block; "
+          f"{len(usernames) - emitted} already present elsewhere in the file")
 
 if __name__ == "__main__":
     main()
