@@ -661,7 +661,6 @@
 
         .hm-badge--building { background: rgba(96, 165, 250, 0.14); color: #93c5fd; }
         .hm-badge--sample { background: rgba(148, 163, 184, 0.14); color: var(--muted); }
-        .hm-badge--joined { background: rgba(148, 163, 184, 0.1); color: var(--muted); }
 
         .hm-stat {
             font-variant-numeric: tabular-nums;
@@ -733,7 +732,7 @@
 
         .hm-tier-header--verified h3 { color: var(--teal); }
         .hm-tier-header--rising h3 { color: #93c5fd; }
-        .hm-tier-header--new h3, .hm-tier-header--joined h3 { color: var(--muted); }
+        .hm-tier-header--new h3 { color: var(--muted); }
 
         .hm-tier-count {
             font-size: 0.62rem;
@@ -749,18 +748,6 @@
             margin: 2px 0 0;
             font-size: 0.68rem;
             color: var(--muted);
-        }
-
-        .hm-tier-more {
-            padding: 10px 12px 14px;
-            text-align: center;
-        }
-        .hm-tier-more .hm-action-btn {
-            min-height: 34px;
-            padding: 6px 16px;
-        }
-        @media (max-width: 720px) {
-            .hm-tier-more .hm-action-btn { width: 100%; }
         }
 
         .hm-empty, .hm-error {
@@ -1123,7 +1110,7 @@
         //   new:      1-4 graded picks   (community activity, not ROI-ranked)
         const TIER_VERIFIED_MIN = 25;
         const TIER_RISING_MIN = 5;
-        const TIER_ORDER = ['verified', 'rising', 'new', 'joined'];
+        const TIER_ORDER = ['verified', 'rising', 'new'];
         const TIER_META = {
             verified: {
                 title: 'Verified Handicappers',
@@ -1136,44 +1123,25 @@
             new: {
                 title: 'New / Building Records',
                 copy: 'Members who have started building a public record (1 to 4 graded picks). Shown as community activity, not ranked aggressively by ROI.'
-            },
-            joined: {
-                title: 'New Members — No Picks Yet',
-                copy: 'Members who joined but have not locked a pick yet. They move into the ranked tiers above the moment their first pick locks.'
             }
         };
         // Directory tab views: each maps to a set of tiers + a default sort.
         // 'all' is grouped into stacked tier sections; the rest are flat lists.
         const RECENT_ACTIVE_DAYS = 7;
         const TIER_VIEWS = {
-            all:        { tiers: ['verified', 'rising', 'new', 'joined'], grouped: true,  sort: 'units',  minPicks: 0 },
+            all:        { tiers: ['verified', 'rising', 'new'],           grouped: true,  sort: 'units',  minPicks: 0 },
             verified:   { tiers: ['verified'],                            grouped: false, sort: 'units' },
             pickmakers: { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'units' },
             active:     { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'active', activeDays: RECENT_ACTIVE_DAYS },
-            following:  { tiers: ['verified', 'rising', 'new', 'joined'], grouped: false, sort: 'active', minPicks: 0, followedOnly: true }
+            following:  { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'active', minPicks: 0, followedOnly: true }
         };
         let tierView = 'all';
 
         let members = [];
         // Members who have locked at least one pick (fetchBackendUsers source).
-        // Kept separate from the zero-pick `newMembers` list below so refreshing
-        // either source never clobbers the other; `members` is always their union
-        // (see composeMembers()).
+        // The directory lists handicappers with a graded record only, so there is
+        // no second "joined but never picked" source to merge in.
         let pickMakerMembers = [];
-        // Zero-locked-pick members for the "New Members" tier, sourced from
-        // GET /api/users/handicappers/new-members (same publicDirectoryUserWhere
-        // eligibility as the rest of the directory). Paginated client-side via
-        // newMembersOffset/newMembersHasMore + the "Show more" button in the
-        // joined-tier section.
-        let newMembers = [];
-        let newMembersOffset = 0;
-        let newMembersTotal = 0;
-        let newMembersHasMore = false;
-        const NEW_MEMBERS_PAGE_SIZE = 24;
-        // Total registered/public users (production directory), INCLUDING members
-        // with zero picks. Distinct from `members`, which is filtered to users with
-        // at least one pick. Used for the "Total Members" summary card.
-        let totalRegistered = 0;
         // Authoritative platform counts computed server-side from the production
         // DB (/api/users/directory-counts). Single source of truth for the hero
         // stat cards so they never drift from the database or fall back to stale
@@ -1871,46 +1839,6 @@
             return uniqUsers(users).filter(isProductionDirectoryUser);
         }
 
-        // Zero-locked-pick members for the "New Members" tier. Server-paginated;
-        // offset advances only via loadMoreNewMembers so a background refresh
-        // (which always re-requests from offset 0) never double-counts a page.
-        async function fetchNewMembersPage(offset) {
-            const data = await directoryRequest('/users/handicappers/new-members?limit=' + NEW_MEMBERS_PAGE_SIZE + '&offset=' + offset);
-            const rows = Array.isArray(data && data.members) ? data.members : [];
-            const pagination = (data && data.pagination) || {};
-            return {
-                rows,
-                total: Number(pagination.total || rows.length),
-                hasMore: !!pagination.has_more
-            };
-        }
-
-        function mapNewMemberRows(rows) {
-            return rows
-                .map(row => normalizeMember(row, defaultStats()))
-                .filter(member => member.username && isProductionDirectoryUser(member));
-        }
-
-        // `members` (used by every stat/filter/render function on this page) is
-        // always the union of pick-makers and zero-pick new members, deduped by
-        // username so the two independently-refreshed sources can never produce
-        // a duplicate row.
-        function composeMembers() {
-            const seen = new Set(pickMakerMembers.map(member => member.username.toLowerCase()));
-            members = pickMakerMembers.concat(newMembers.filter(member => !seen.has(member.username.toLowerCase())));
-        }
-
-        async function loadMoreNewMembers() {
-            if (!newMembersHasMore) return;
-            const page = await fetchNewMembersPage(newMembersOffset);
-            newMembers = newMembers.concat(mapNewMemberRows(page.rows));
-            newMembersOffset += page.rows.length;
-            newMembersTotal = page.total;
-            newMembersHasMore = page.hasMore;
-            composeMembers();
-            applyFilters();
-        }
-
         async function mapWithConcurrency(items, limit, mapper) {
             const results = new Array(items.length);
             let index = 0;
@@ -2119,14 +2047,14 @@
                 && featuredActivityTime(member) > Date.now() - (30 * 24 * 60 * 60 * 1000);
         }
 
-        // Tier of a member, by verified (graded) pick volume; members with no
-        // locked picks at all sit in the separate 'joined' tier.
+        // Tier of a member, by verified (graded) pick volume. Every listed member
+        // has a graded record (see isDirectoryEligible), so there is no tier for
+        // accounts that have never made a pick.
         function tierOf(member) {
             const g = gradedCount(member);
             if (g >= TIER_VERIFIED_MIN) return 'verified';
             if (g >= TIER_RISING_MIN) return 'rising';
-            if (Number(member?.stats?.totalPicks || 0) > 0) return 'new';
-            return 'joined';
+            return 'new';
         }
 
         // Small-sample badge shown next to sub-verified members so they are never
@@ -2135,12 +2063,7 @@
             const g = gradedCount(member);
             if (g >= TIER_VERIFIED_MIN) return null;
             if (g >= TIER_RISING_MIN) return { label: 'Building Record', cls: 'building', title: 'Needs ' + TIER_VERIFIED_MIN + ' graded picks to be verified' };
-            if (g >= 1) return { label: 'Small Sample', cls: 'sample', title: 'Small sample - record still forming' };
-            const joinedDate = member && member.createdAt ? new Date(member.createdAt) : null;
-            const joinedLabel = joinedDate && !isNaN(joinedDate.getTime())
-                ? 'Joined ' + joinedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                : 'Recently Joined';
-            return { label: joinedLabel, cls: 'joined', title: 'No graded picks yet' };
+            return { label: 'Small Sample', cls: 'sample', title: 'Small sample - record still forming' };
         }
 
         function compareBy(...getters) {
@@ -2303,7 +2226,7 @@
             const metric = (key, fallback) => authCounts && Number.isFinite(authCounts[key])
                 ? Number(authCounts[key])
                 : fallback;
-            const totalMembersCount = metric('total_members', membersAreFresh ? totalRegistered : null);
+            const totalMembersCount = metric('total_members', null);
             const pickMakersCount = metric('pick_makers', membersAreFresh ? pickMakers.length : null);
             const verifiedCount = metric('verified_handicappers', membersAreFresh ? verifiedTier.length : null);
             const buildingCount = metric('building_records', membersAreFresh ? buildingTier.length : null);
@@ -2869,16 +2792,11 @@
 
         function tierSectionHtml(tier, group) {
             const meta = TIER_META[tier];
-            const countLabel = (tier === 'joined' && newMembersTotal > group.length)
-                ? group.length + ' of ' + newMembersTotal
-                : String(group.length);
-            const moreHtml = (tier === 'joined' && newMembersHasMore)
-                ? '<div class="hm-tier-more"><button type="button" class="hm-action-btn" data-action="load-more-new-members">Show more new members (' + Math.max(newMembersTotal - newMembers.length, 0) + ' remaining)</button></div>'
-                : '';
+            const countLabel = String(group.length);
             return '<div class="hm-tier-header hm-tier-header--' + tier + '" role="presentation">' +
                 '<h3>' + escapeHtml(meta.title) + ' <span class="hm-tier-count">' + countLabel + '</span></h3>' +
                 '<p>' + escapeHtml(meta.copy) + '</p>' +
-            '</div>' + group.map(memberRowHtml).join('') + moreHtml;
+            '</div>' + group.map(memberRowHtml).join('');
         }
 
         function renderRows() {
@@ -3053,25 +2971,12 @@
                 // no-JS/crawler) a populated, non-blank table, so painting a second,
                 // independently-stale local snapshot on top of it only added a
                 // second stale-then-correct swap instead of preventing one.
-                const [sourceUsers, newMembersPage] = await Promise.all([
-                    fetchBackendUsers(),
-                    fetchNewMembersPage(0).catch(error => {
-                        console.warn('[Handicappers] New members load failed:', error);
-                        return { rows: [], total: 0, hasMore: false };
-                    })
-                ]);
-                newMembers = mapNewMemberRows(newMembersPage.rows);
-                newMembersOffset = newMembersPage.rows.length;
-                newMembersTotal = newMembersPage.total;
-                newMembersHasMore = newMembersPage.hasMore;
+                const sourceUsers = await fetchBackendUsers();
                 // Phase 1: render fresh aggregate stats (no per-user fetches).
                 pickMakerMembers = sourceUsers
                     .map(user => normalizeMember(user, hydrateStats(user)))
                     .filter(member => member.username && isProductionDirectoryUser(member));
-                composeMembers();
-                // Total registered/public members = every production user with a
-                // username, regardless of pick count.
-                totalRegistered = members.length;
+                members = pickMakerMembers;
                 membersAreFresh = true;
                 applyFollowingSet();
                 syncFeaturedStatsIntoMembers();
@@ -3159,14 +3064,6 @@
             renderRows();
         });
         els.rows.addEventListener('click', event => {
-            const loadMoreBtn = event.target.closest('[data-action="load-more-new-members"]');
-            if (loadMoreBtn) {
-                event.preventDefault();
-                loadMoreBtn.disabled = true;
-                loadMoreBtn.textContent = 'Loading…';
-                loadMoreNewMembers().catch(error => console.warn('[Handicappers] Load more new members failed:', error));
-                return;
-            }
             const follow = event.target.closest('[data-follow]');
             if (follow) {
                 event.preventDefault();
@@ -3216,26 +3113,7 @@
             refreshing = true;
             try {
                 fetchDirectoryCounts();
-                // Re-request however many new members were already loaded (base
-                // page, or more if the visitor clicked "Show more") so a silent
-                // background refresh never shrinks their expanded list back down.
-                const newMembersRefreshLimit = Math.max(NEW_MEMBERS_PAGE_SIZE, newMembers.length);
-                const [sourceUsers, newMembersPage] = await Promise.all([
-                    fetchBackendUsers(),
-                    directoryRequest('/users/handicappers/new-members?limit=' + newMembersRefreshLimit + '&offset=0')
-                        .catch(error => {
-                            console.warn('[Handicappers] New members refresh failed:', error);
-                            return null;
-                        })
-                ]);
-                if (newMembersPage) {
-                    const rows = Array.isArray(newMembersPage.members) ? newMembersPage.members : [];
-                    const pagination = newMembersPage.pagination || {};
-                    newMembers = mapNewMemberRows(rows);
-                    newMembersOffset = rows.length;
-                    newMembersTotal = Number(pagination.total || rows.length);
-                    newMembersHasMore = !!pagination.has_more;
-                }
+                const sourceUsers = await fetchBackendUsers();
                 // Preserve already-enriched picks so the Sport/Wager filters don't
                 // flicker back to aggregate-only between background refreshes.
                 const priorPicks = new Map();
@@ -3256,8 +3134,7 @@
                         return member;
                     })
                     .filter(member => member.username && isProductionDirectoryUser(member));
-                composeMembers();
-                totalRegistered = members.length;
+                members = pickMakerMembers;
                 applyFollowingSet();
                 syncFeaturedStatsIntoMembers();
                 fillSports();

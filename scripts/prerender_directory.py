@@ -167,9 +167,7 @@ def tier_badge(r):
         return None
     if g >= TIER_RISING_MIN:
         return ("building", "Building Record", f"Needs {TIER_VERIFIED_MIN} graded picks to be verified")
-    if g >= 1:
-        return ("sample", "Small Sample", "Small sample - record still forming")
-    return ("joined", "Recently Joined", "No graded picks yet")
+    return ("sample", "Small Sample", "Small sample - record still forming")
 
 def collect():
     """Return ranked list of member dicts with full record stats."""
