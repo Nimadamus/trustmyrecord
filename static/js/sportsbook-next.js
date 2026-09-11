@@ -28,6 +28,21 @@
     var API = (window.TMR_CONFIG && window.TMR_CONFIG.baseUrl) ||
         (window.api && window.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
     var BOARD_LIMIT = 60;
+    /* PROPS_LAZY_20260911. Verification switch, not a feature flag for users.
+     *
+     * Until the board stops inlining player props there is nothing to lazy-load,
+     * so the endpoint-driven panel could not be compared against the
+     * board-driven one on the same live slate. `?props=lazy` makes the client
+     * ignore whatever props the board inlined and fetch them from the per-game
+     * endpoint instead, which is exactly the post-cutover code path. `?props=board`
+     * forces the old path. With no parameter the client behaves as it always
+     * has, so real traffic is untouched and rollback is the absence of a flag. */
+    var PROPS_MODE = (function () {
+        try {
+            var m = /[?&]props=(lazy|board)/.exec(window.location.search || '');
+            return m ? m[1] : '';
+        } catch (e) { return ''; }
+    })();
     var ALT_PREVIEW = 6;      // rungs shown per ladder before "Show all"
 
     var SPORTS = [
@@ -83,7 +98,19 @@
         // the existing ticket the server named, so the slip can offer to add the
         // units to that pick instead of pretending a second one was recorded.
         dupes: [],
-        submitting: false
+        submitting: false,
+        /* PROPS_LAZY_20260911. Per-game player-prop load state, keyed by game
+         * id: { status, items, book, message, retryable }.
+         *   'loading' -> spinner row
+         *   'ready'   -> items rendered
+         *   'empty'   -> the game genuinely has no pickable props
+         *   'retry'   -> the board cache needs warming; the endpoint named the
+         *                board URL to warm, so this is a real retry, not an
+         *                error the user has to interpret
+         *   'error'   -> network or unexpected shape; retry offered
+         * Kept for the life of the page: reopening a panel never refetches, and
+         * switching sport clears it with the rest of the slate state. */
+        props: {}
     };
 
     // ---- small helpers -----------------------------------------------------
@@ -253,11 +280,23 @@
         var main = { book: bk.title || bk.key || null, spread: pick('spreads'), h2h: pick('h2h'), total: pick('totals') };
         return (main.spread || main.h2h || main.total) ? main : null;
     }
-    function readGroups(g, sport) {
-        var out = {};
-        (g.market_groups || []).forEach(function (grp) {
-            if (!grp || !grp.key) return;
-            var items = (grp.items || []).map(function (i) {
+    /* PROPS_LAZY_20260911. One pipeline, two callers.
+     *
+     * Player props no longer arrive inside the board response: the board ships
+     * the group with total_items and an empty items array, and the full set is
+     * fetched per game from /api/games/board/:sportKey/props/:gameId when the
+     * user opens the Player Props tab. Measured 2026-09-11, the inline props
+     * were 7,584,126 of the MLB board's 8,738,352 bytes (86.8%, 9,572 items)
+     * while the collapsed card renders four rows.
+     *
+     * Those lazily fetched items MUST go through exactly the same normalize,
+     * filter and book-scoping pipeline the board items went through, or the
+     * panel would show different markets, different prices or a different book
+     * than it did before. So that pipeline lives here, is called by readGroups
+     * for the board and by loadProps for the endpoint, and is never duplicated.
+     */
+    function mapGroupItems(grp, sport) {
+        var items = (grp.items || []).map(function (i) {
                 return {
                     selection: i.selection != null ? i.selection : i.selection_label,
                     label: i.selection_label || i.selection,
@@ -294,9 +333,53 @@
                 if (/team_totals/.test(grp.key) && sport === 'MLB' && Math.abs(i.line) < 2.5) return false;
                 return true;
             });
-            if (!items.length) return;
-            var one = scopeBooks(grp.key, items);
-            out[grp.key] = { key: grp.key, label: grp.label || grp.key, book: one.book, items: one.items };
+        if (!items.length) return null;
+        var one = scopeBooks(grp.key, items);
+        return { key: grp.key, label: grp.label || grp.key, book: one.book, items: one.items };
+    }
+
+    function readGroups(g, sport) {
+        var out = {};
+        (g.market_groups || []).forEach(function (grp) {
+            if (!grp || !grp.key) return;
+            var built = mapGroupItems(grp, sport);
+            // PROPS_LAZY_20260911. A group the board deliberately sent empty is
+            // still a real group: total_items says how many prices are waiting
+            // behind the endpoint. Keeping the shell is what makes the tab
+            // appear, keeps the game on the slate when props are its only
+            // market, and gives loadProps somewhere to put the result. Without
+            // total_items this behaves exactly as before, so a board that still
+            // inlines its props needs no client change and rollback is free.
+            var totalItems = Number(grp.total_items);
+            if (!isFinite(totalItems) || totalItems < 0) totalItems = built ? built.items.length : 0;
+            if (grp.key === 'player_props' && PROPS_MODE === 'lazy') {
+                // Drop the inlined prices on the floor and make the client take
+                // the endpoint path, so the two can be compared side by side.
+                out[grp.key] = {
+                    key: grp.key,
+                    label: grp.label || grp.key,
+                    book: null,
+                    items: [],
+                    totalItems: Math.max(totalItems, built ? built.items.length : 0),
+                    lazy: true
+                };
+                return;
+            }
+            if (!built) {
+                if (grp.key !== 'player_props' || totalItems <= 0) return;
+                out[grp.key] = {
+                    key: grp.key,
+                    label: grp.label || grp.key,
+                    book: null,
+                    items: [],
+                    totalItems: totalItems,
+                    lazy: true
+                };
+                return;
+            }
+            built.totalItems = Math.max(totalItems, built.items.length);
+            built.lazy = grp.key === 'player_props' && built.totalItems > built.items.length;
+            out[grp.key] = built;
         });
         // Ladders get the monotonicity pass, bucketed per side.
         ['alt_spreads', 'alt_totals'].forEach(function (k) {
@@ -321,6 +404,105 @@
         });
         return out;
     }
+    /* PROPS_LAZY_20260911. Fetch one game's player props on demand.
+     *
+     * The endpoint answers HTTP 200 for every ordinary outcome and carries the
+     * reason in `status`, so a cache miss is never a mystery 5xx for the user:
+     *   ok                   -> render
+     *   no_props_for_game    -> "no props" (final, no retry offered)
+     *   game_already_started  }
+     *   game_not_on_board     } -> final, the card is stale; refresh the board
+     *   board_not_cached      }
+     *   board_cache_expired   } -> retryable; warm_with names the board URL,
+     *                             and the board request is the one this page
+     *                             already makes, so the retry is real work
+     *                             rather than a hopeful second attempt.
+     * A non-2xx or an unparseable body is the only thing treated as an error.
+     */
+    function setProps(g, next) {
+        state.props[g.id] = next;
+        var grp = g.groups && g.groups.player_props;
+        if (grp && next.status === 'ready') {
+            grp.items = next.items;
+            grp.book = next.book;
+            grp.lazy = false;
+            grp.totalItems = Math.max(grp.totalItems || 0, next.items.length);
+        }
+        render();
+    }
+
+    function loadProps(g) {
+        if (!g || !g.id) return;
+        var grp = g.groups && g.groups.player_props;
+        if (!grp) return;
+        // Board already carried the whole group: never fetch, never touch state.
+        if (!grp.lazy && grp.items.length) return;
+        var cur = state.props[g.id];
+        if (cur && (cur.status === 'loading' || cur.status === 'ready' || cur.status === 'empty')) return;
+
+        var sportKey = g.sportKey || sportMeta(state.sport).api;
+        // No render() here: the caller is render() itself, and setting the
+        // state before the HTML is built is what paints the loading row.
+        state.props[g.id] = { status: 'loading' };
+
+        var url = API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)
+            + '/props/' + encodeURIComponent(g.id);
+        fetch(url, { cache: 'no-store' })
+            .then(function (r) {
+                return r.text().then(function (body) {
+                    var parsed = null;
+                    try { parsed = JSON.parse(body); } catch (e) { parsed = null; }
+                    return { ok: r.ok, status: r.status, data: parsed };
+                });
+            })
+            .then(function (res) {
+                var d = res.data;
+                if (!d || typeof d !== 'object') {
+                    setProps(g, {
+                        status: 'error', retryable: true,
+                        message: 'Player props did not load. Try again.'
+                    });
+                    return;
+                }
+                if (d.status === 'ok') {
+                    var built = mapGroupItems({
+                        key: 'player_props',
+                        label: (d.group && d.group.label) || 'Player Props',
+                        items: (d.group && d.group.items) || []
+                    }, state.sport);
+                    if (!built || !built.items.length) {
+                        setProps(g, { status: 'empty', message: 'No player props are posted for this game.' });
+                        return;
+                    }
+                    setProps(g, { status: 'ready', items: built.items, book: built.book });
+                    return;
+                }
+                if (d.status === 'no_props_for_game') {
+                    setProps(g, { status: 'empty', message: 'No player props are posted for this game.' });
+                    return;
+                }
+                if (d.retryable) {
+                    setProps(g, {
+                        status: 'retry', retryable: true,
+                        message: 'Loading player props took a moment. Try again.'
+                    });
+                    return;
+                }
+                // game_not_on_board / game_already_started: the card the user is
+                // looking at is older than the board. Say so plainly.
+                setProps(g, {
+                    status: 'error', retryable: false,
+                    message: 'This game is no longer on the open board. Refresh to see the current slate.'
+                });
+            })
+            .catch(function () {
+                setProps(g, {
+                    status: 'error', retryable: true,
+                    message: 'Player props did not load. Check your connection and try again.'
+                });
+            });
+    }
+
     function normalise(g, sport) {
         return {
             id: g.id,
@@ -344,6 +526,10 @@
         var meta = sportMeta(sportKey);
         var id = ++state.reqId;
         state.sport = sportKey; state.cat = 'game_lines'; state.loading = true; state.error = null; state.games = [];
+        // PROPS_LAZY_20260911: prop loads are per game and per slate. A new
+        // sport means new game ids, so stale entries could never be read, and
+        // leaving them would grow unbounded across a long session.
+        state.props = {};
         state.live = { games: [], loading: !!LIVE_SPORTS[sportKey], error: null, at: null, reqId: state.live.reqId };
         state.starters = { games: [], hands: state.starters.hands, at: null, reqId: state.starters.reqId, timer: state.starters.timer };
         render();
@@ -1427,11 +1613,37 @@
     // market inventory for one game, so it gets category tabs of its own and
     // shows one category at a time rather than stacking every price in a
     // column 84px wide.
+    /* PROPS_LAZY_20260911. What the user sees while, or instead of, props.
+     * Never a status code, never a stack trace, never an empty panel. A retry
+     * is offered only when retrying can actually change the answer. */
+    function propsStatusHtml(g) {
+        var st = state.props[g.id];
+        var grp = g.groups.player_props;
+        var waiting = grp && grp.totalItems > 0 ? grp.totalItems : 0;
+        if (!st || st.status === 'loading') {
+            return '<div class="sbn-note" aria-live="polite">Loading player props'
+                + (waiting ? ' (' + waiting.toLocaleString() + ' prices)' : '') + '…</div>';
+        }
+        if (st.status === 'empty') {
+            return '<div class="sbn-note">' + esc(st.message || 'No player props are posted for this game.') + '</div>';
+        }
+        return '<div class="sbn-note" aria-live="polite">' + esc(st.message || 'Player props did not load.')
+            + (st.retryable
+                ? ' <button type="button" class="sbn-expclose" data-propretry="' + esc(g.id) + '">Try again</button>'
+                : '')
+            + '</div>';
+    }
+
     function drawerCats(g) {
         var out = [];
         if (g.main && ((g.main.spread || []).length + (g.main.total || []).length + (g.main.h2h || []).length))
             out.push({ key: 'game_lines', label: 'Game Lines' });
-        Object.keys(g.groups).filter(function (k) { return !LINE_GROUPS[k] && g.groups[k].items.length; })
+        // PROPS_LAZY_20260911: a lazy group has no items yet but does have a
+        // count, and the tab has to exist for the user to be able to ask for it.
+        Object.keys(g.groups).filter(function (k) {
+            var grp = g.groups[k];
+            return !LINE_GROUPS[k] && (grp.items.length || grp.totalItems > 0);
+        })
             .sort(function (a, b) {
                 var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
                 if (ia < 0) ia = 99; if (ib < 0) ib = 99;
@@ -1466,6 +1678,14 @@
             secs = drawerGroup(g, 'game_lines', 'Game Lines', g.main.book, mainItems, true);
         } else if (on && on.key === 'player_props') {
             var pgrp = g.groups.player_props;
+            /* PROPS_LAZY_20260911. The group can legitimately be empty here:
+             * the board ships it as a shell and the prices arrive from the
+             * per-game endpoint. Paint the load state instead of an empty
+             * panel, and never show a raw failure. */
+            if (!pgrp.items.length) {
+                secs = propsStatusHtml(g);
+                pcats = [];
+            } else {
             pcats = propCatsOf(pgrp.items);
             for (var q = 0; q < pcats.length; q++) if (pcats[q].key === state.drawerProp) onProp = pcats[q];
             if (!onProp) onProp = pcats[0];
@@ -1487,6 +1707,7 @@
                 }).join('');
             } else {
                 secs = drawerPlayerProps(g, (onProp && onProp.label) || (pgrp.label || 'Player Props'), pgrp.book, pitems);
+            }
             }
         } else if (on) {
             var grp = g.groups[on.key];
@@ -1783,6 +2004,18 @@
     }
 
     function render() {
+        /* PROPS_LAZY_20260911. One hook for every way the Player Props tab can
+         * be opened: click, the in-card tab row, keyboard arrow navigation, a
+         * "See every" button, or a future path nobody has written yet. Hooking
+         * render() rather than each handler is what keeps those in step. It
+         * runs BEFORE the HTML is built, so the pass that opens the panel is
+         * also the pass that paints the loading row. loadProps is idempotent
+         * and never calls render() synchronously, so this cannot recurse. */
+        if (state.drawer && state.drawerCat === 'player_props') {
+            for (var gi = 0; gi < state.games.length; gi++) {
+                if (state.games[gi].id === state.drawer) { loadProps(state.games[gi]); break; }
+            }
+        }
         var rail = el('sbnRail');
         if (rail && !rail.dataset.built) {
             rail.innerHTML = SPORTS.map(function (s) {
@@ -2000,6 +2233,17 @@
             render();
             var back = document.getElementById(expTabId(state.drawer, state.drawerCat));
             if (back) back.focus({ preventScroll: true });
+            return;
+        }
+        /* PROPS_LAZY_20260911. Retry means clear the state and let render()'s
+         * hook fetch again, so there is exactly one fetch path. */
+        var pretry = t.closest && t.closest('[data-propretry]');
+        if (pretry) {
+            var rgid = pretry.getAttribute('data-propretry');
+            delete state.props[rgid];
+            state.drawer = rgid;
+            state.drawerCat = 'player_props';
+            render();
             return;
         }
         var dprop = t.closest && t.closest('[data-dprop]');
