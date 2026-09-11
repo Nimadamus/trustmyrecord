@@ -61,8 +61,17 @@ const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
    same contract as `today`: canonical'd to the article, out of the sitemap, and
    never noindexed. The list is the sports the generator can write a door for,
    so a typo'd directory under matchup-of-the-day/ is still caught as an article
-   that failed to build. */
-const EXEMPT = new Set(['today', 'mlb', 'nba', 'nfl', 'nhl', 'soccer', 'ncaaf', 'ncaab']);
+   that failed to build.
+
+   `tennis` was NOT on this list until 2026-09-11, and that absence is the whole
+   story of the bug it is on the list for. Its door was a self-canonical index
+   page listing every tennis piece written that day, so it passed the article
+   contract instead of the door contract, and a reader clicking "Tennis Matchup
+   of the Day" got "3 matchups written today" and a choice. Every sport door is
+   now a handoff to ONE article, so every sport door is exempt here and is
+   guarded instead by tests/matchup-single-door-test.js. */
+const EXEMPT = new Set(['today', 'mlb', 'nba', 'nfl', 'nhl', 'soccer', 'ncaaf', 'ncaab',
+                        'tennis']);
 
 const slugs = fs.readdirSync(DIR, { withFileTypes: true })
   .filter((e) => e.isDirectory() && !EXEMPT.has(e.name))

@@ -126,6 +126,19 @@ SPORT_LABEL = {
     "tennis": "Tennis",
 }
 
+# The sports whose nav carries a "<Sport> Matchup of the Day" entry, mapped to
+# the handicapping hub that holds that sport's COMPLETE daily slate. The door is
+# one featured article; the hub is every game. A sport listed here can never be
+# a 404 behind its own menu item, so if it has no featured article at all its
+# door is baked from MOTD_EMPTY_TEMPLATE and points at the hub instead.
+NAV_SPORT_HUBS = {
+    "mlb": "/handicapping/mlb/",
+    "ncaaf": "/handicapping/ncaaf/",
+    "nfl": "/handicapping/nfl/",
+    "soccer": "/handicapping/soccer/",
+    "tennis": "/handicapping/tennis/",
+}
+
 # The governing body that actually stages the fixture, for the leagues where
 # there is exactly one and we know it. College and soccer fixtures are staged by
 # a conference or a federation that varies game to game, so they name no
@@ -1384,47 +1397,43 @@ TEMPLATE = """<!DOCTYPE html>
 
 
 
-# A DOOR FOR A SPORT THAT PUBLISHES SEVERAL A DAY.
+# THE DOOR FOR A SPORT THAT HAS NOTHING FEATURED YET.
 #
-# The redirect door below is right for one piece a day: the reader wanted the
-# article, so hand them the article. Tennis writes the day's prominent matchups,
-# plural, and a redirect to whichever landed last hides the rest of them behind
-# a page nobody knows exists. So a sport with more than one piece on its newest
-# day gets a list instead: same address, same promise, every piece on it.
+# PERMANENT RULE (Nima, 2026-09-11). "Matchup of the Day" is ONE featured
+# article. A click on it opens that article and nothing else. There is never an
+# intermediate landing, index or preview page listing several of them, and there
+# are never three Matchups of the Day for one sport on one day. The complete
+# daily slate belongs to that sport's HANDICAPPING HUB, not here.
 #
-# Deliberately NOT canonicalised to any one article, because it is not a copy of
-# one any more, and still out of the sitemap for the same reason as the
-# redirect: the articles are the destinations search should hold.
-MOTD_LIST_TEMPLATE = """<!DOCTYPE html>
+# This template exists only for the case a sport door is asked for before that
+# sport has ever had a featured article. It says so and sends the reader to the
+# section that does have the full slate, rather than manufacturing a list page.
+MOTD_EMPTY_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{eyebrow} | TrustMyRecord</title>
-<meta name="description" content="{eyebrow}: {count} matchups written today, with the odds, the season records and the head to head.">
+<meta name="description" content="{eyebrow}: the next featured matchup publishes in the morning.">
 <link rel="canonical" href="{self_abs}">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <style>
   html,body{{margin:0;background:#070910;color:#CBD5E1;
     font:500 15px/1.6 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}}
-  .t{{max-width:44rem;margin:0 auto;padding:12vh 24px 8vh}}
-  .t>p.k{{color:#8A97A8;margin:0 0 6px;font-size:12px;font-weight:800;
+  .t{{max-width:34rem;margin:0 auto;padding:22vh 24px 0}}
+  .t p.k{{color:#8A97A8;margin:0 0 14px;font-size:12px;font-weight:800;
     letter-spacing:.16em;text-transform:uppercase}}
-  .t h1{{margin:0 0 6px;font-size:1.5rem;line-height:1.25;letter-spacing:-.02em;color:#F7F9FC}}
-  .t>p.s{{margin:0 0 28px;color:#8A97A8;font-size:14px}}
-  .t ol{{list-style:none;margin:0;padding:0}}
-  .t li{{padding:16px 0;border-top:1px solid rgba(148,163,184,.16)}}
-  .t li a{{color:#F7F9FC;font-size:1.15rem;font-weight:800;line-height:1.3;
-    letter-spacing:-.01em;text-decoration:none;border-bottom:2px solid #35E0CB}}
-  .t li p{{margin:6px 0 0;color:#8A97A8;font-size:13px}}
+  .t h1{{margin:0 0 10px;font-size:1.4rem;line-height:1.25;
+    letter-spacing:-.02em;color:#F7F9FC}}
+  .t a{{color:#F7F9FC;font-weight:800;text-decoration:none;
+    border-bottom:2px solid #35E0CB}}
 </style>
 </head>
 <body>
 <main class="t">
   <p class="k">{eyebrow}</p>
-  <h1>{count} matchups written today</h1>
-  <p class="s">Each one carries the market, both players&#39; season records, the record on the surface being played, and every meeting between them.</p>
-  <ol>{items}</ol>
+  <h1>The next featured matchup publishes in the morning.</h1>
+  <p>Every game on today&#39;s board is in the <a href="{hub}">{label} handicapping hub</a>.</p>
 </main>
 </body>
 </html>
@@ -1950,35 +1959,19 @@ def main():
                 hub_file)
             writes.append((hub_file, hub_text))
         for sport, articles in sorted(by_sport.items()):
+            # ONE FEATURED ARTICLE PER SPORT DOOR, ALWAYS. `daily` is
+            # newest-first, so the door is the newest published Game File for
+            # that sport, exactly as the nav promises.
+            #
+            # This used to branch: a sport whose newest day carried more than
+            # one piece got a list page instead, and a reader who clicked
+            # "Tennis Matchup of the Day" landed on "3 matchups written today"
+            # and had to choose. Removed 2026-09-11 on Nima's permanent ruling.
+            # If a lane ever writes several pieces again, the extras are archive
+            # and hub content; this door still opens exactly one article.
             lead = articles[0]
             s_label = SPORT_LABEL.get(sport, sport.upper())
-            # THE DAY IS THE FIXTURE'S DAY, not the minute we pressed publish.
-            # Grouping on published_at split one afternoon's three tennis pieces
-            # across two days, because they landed at 23:35Z, 23:39Z and 00:01Z:
-            # same slate, same session, two UTC dates. featured_on is no good on
-            # its own either, since only one article per sport holds it.
-            def day_of(a):
-                return str(a.get("featured_on") or a.get("game_time_utc")
-                           or a.get("published_at") or "")[:10]
-            lead_day = day_of(lead)
-            same_day = [a for a in articles if day_of(a) == lead_day]
             door = os.path.join(MOTD_DIR, sport, "index.html")
-
-            if len(same_day) > 1:
-                items = "".join(
-                    '<li><a href="%s">%s</a><p>%s vs. %s</p></li>' % (
-                        esc(article_href(a)),
-                        esc(a.get("h1") or ("%s vs. %s" % (a["away_team"], a["home_team"]))),
-                        esc(a["away_team"]), esc(a["home_team"]))
-                    for a in same_day)
-                writes.append((door, MOTD_LIST_TEMPLATE.format(
-                    eyebrow=esc("%s Matchup of the Day" % s_label),
-                    count=len(same_day),
-                    items=items,
-                    self_abs=esc("%s/matchup-of-the-day/%s/" % (SITE, sport)),
-                )))
-                continue
-
             s_target = article_href(lead)
             s_headline = lead.get("h1") or ("%s vs. %s" % (lead["away_team"], lead["home_team"]))
             writes.append((door, TODAY_TEMPLATE.format(
@@ -1988,6 +1981,24 @@ def main():
                 eyebrow=esc("%s Matchup of the Day" % s_label),
                 matchup=esc("%s vs. %s" % (lead["away_team"], lead["home_team"])),
             )))
+
+        # A sport the nav links to but that has never had a featured article
+        # gets the graceful door, not a 404 and not a list. Existing doors are
+        # left alone: a sport that published yesterday keeps yesterday's piece
+        # on its door until today's lands, which is the honest answer.
+        for sport, hub in sorted(NAV_SPORT_HUBS.items()):
+            if by_sport.get(sport):
+                continue
+            door = os.path.join(MOTD_DIR, sport, "index.html")
+            if os.path.exists(door):
+                continue
+            writes.append((door, MOTD_EMPTY_TEMPLATE.format(
+                eyebrow=esc("%s Matchup of the Day" % SPORT_LABEL.get(sport, sport.upper())),
+                label=esc(SPORT_LABEL.get(sport, sport.upper())),
+                hub=esc(hub),
+                self_abs=esc("%s/matchup-of-the-day/%s/" % (SITE, sport)),
+            )))
+
     else:
         print("WARN: matchup-of-the-day/index.html is missing; the daily hub was not written")
 
@@ -2125,6 +2136,28 @@ def main():
                       '<meta property="og:url" content="%s">' % new_url, page, count=1)
         write(old_file, page)
         print("canonical %s -> %s" % (old_rel, new_rel))
+    # ONE ARTICLE BEHIND EVERY "MATCHUP OF THE DAY" DOOR. Checked here, on the
+    # rendered bytes, before anything is written, so it holds for every caller:
+    # the daily runner, the GitHub workflow and a hand run alike. Nima's
+    # permanent ruling, 2026-09-11. A door that carries more than one article
+    # link is an index page asking the reader to choose, which is the thing that
+    # must never ship again, and the whole bake fails closed rather than
+    # publishing it.
+    DOOR_DIRS = set(SPORT_LABEL) | {"today"}
+    for path, text in writes:
+        parent, name = os.path.split(os.path.abspath(path))
+        door_name = os.path.basename(parent)
+        if (name != "index.html" or door_name not in DOOR_DIRS
+                or os.path.dirname(parent) != os.path.abspath(MOTD_DIR)):
+            continue
+        links = set(re.findall(r'href="(/matchup-of-the-day/[^"]+)"', text))
+        links.discard("/matchup-of-the-day/%s/" % door_name)
+        if len(links) > 1:
+            sys.exit("ABORT: /matchup-of-the-day/%s/ would list %d articles (%s). "
+                     "Matchup of the Day opens ONE article; the full slate belongs "
+                     "to that sport's handicapping hub."
+                     % (door_name, len(links), ", ".join(sorted(links))))
+
     for path, text in writes:
         # Hard stop: this generator has no business writing the homepage.
         assert os.path.abspath(path) != os.path.abspath(HOME),             "build_matchup_articles.py must never write the homepage"
