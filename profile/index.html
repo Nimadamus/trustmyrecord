@@ -2819,7 +2819,9 @@
                               <tr data-tmrx-adv-top="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
                               <tr data-tmrx-adv-top="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
                               <tr data-tmrx-adv-top="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
+                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_novig"><td class="name">CLV vs Fair Value</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv-top="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
+
                             </tbody>
                           </table>
                         </div>
@@ -3798,7 +3800,9 @@
                               <tr data-tmrx-adv="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
                               <tr data-tmrx-adv="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
                               <tr data-tmrx-adv="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
+                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_novig"><td class="name">CLV vs Fair Value</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
+
                             </tbody>
                           </table>
                         </div>
@@ -8121,7 +8125,9 @@
         }
         if (scores.clv != null) {
             const c = Number(scores.clv);
-            set('advClv', (c >= 0 ? '+' : '') + c.toFixed(2) + ' bps', { signed: c });
+            /* Points of implied probability, not basis points -- see the card
+               block below. The old label was out by a factor of a hundred. */
+            set('advClv', (c >= 0 ? '+' : '') + c.toFixed(2) + ' pts', { signed: c });
         }
         // Drawdown card cells.
         const dd = data.drawdown || {};
@@ -8325,19 +8331,55 @@
             clvCard.hidden = !clvAvailable;
             clvCard.toggleAttribute('hidden', !clvAvailable);
         }
+        /* CLV_AUDIT_20260911. This card printed "+0.00 bps · 4 tracked picks"
+           on a 67-pick record and it read as a verdict. Two things were wrong
+           with that and both are fixed here.
+
+           The unit was never basis points. It is percentage POINTS of implied
+           probability, so "bps" was out by a factor of a hundred -- +0.42 pts
+           is 42 bps, not 0.42.
+
+           And a number that thin is not a finding. Below the backend's
+           sufficiency floor the card says so in words instead of showing a
+           decimal nobody should act on, and either way it states coverage --
+           how many of the eligible picks actually carry a closing number -- so
+           a small sample can never be mistaken for a settled record. Props and
+           halves are outside `eligible` because no closing number exists for
+           them; counting them would make coverage look worse than it is. */
         if (clvAvailable) {
-            /* Say how many picks the number rests on. A sport view can land on
-               a CLV built from a single tracked pick, and "+0.00 bps" with no
-               sample beside it reads like a settled fact about the capper. */
-            const clvN = Number(((scores.clv_detail) || {}).sample_size || 0);
-            setCard(
-                'profileAdvClv',
-                fmtSigned(clv, ' bps', 2),
-                clvN > 0
-                    ? ('Closing-line value · ' + clvN + ' tracked pick' + (clvN === 1 ? '' : 's'))
-                    : 'Closing-line value',
-                clv
-            );
+            const d = scores.clv_detail || {};
+            const tracked = Number(d.sample_size || 0);
+            const eligible = Number(d.eligible_sample_size || 0);
+            const priced = Number(d.priced_sample_size != null ? d.priced_sample_size : tracked);
+            const coverage = (eligible > 0 && tracked > 0)
+                ? (tracked + ' of ' + eligible + ' eligible picks tracked')
+                : null;
+
+            if (d.sufficient === false) {
+                setCard(
+                    'profileAdvClv',
+                    'Insufficient data',
+                    coverage
+                        ? ('Insufficient closing-line data · ' + coverage)
+                        : 'Insufficient closing-line data',
+                    null
+                );
+            } else {
+                setCard(
+                    'profileAdvClv',
+                    fmtSigned(clv, ' pts', 2),
+                    coverage || 'Closing-line value',
+                    clv
+                );
+            }
+            /* When the market closed on a DIFFERENT number, the close is still
+               recorded but no raw CLV exists for it -- a -1.5 price is never
+               used to score a +1.5 ticket. Say so rather than letting the gap
+               between tracked and priced go unexplained. */
+            const sub = document.getElementById('profileAdvClvSub');
+            if (sub && priced < tracked) {
+                sub.textContent += ' · ' + (tracked - priced) + ' closed on a different number';
+            }
         }
         const maxDd = (graded > 0 && dd.max_drawdown != null) ? Number(dd.max_drawdown) : null;
         setCard(
@@ -9027,9 +9069,30 @@
         }
         const clvDetail = sc.clv_detail;
         if (clvDetail && clvDetail.available) {
-            if (clvDetail.avg_clv != null) {
+            /* Same rule as the card: below the sufficiency floor say so in
+               words. A row reading "+0.00 pts · 4 tracked" is a number nobody
+               should act on dressed up as one they can. */
+            if (clvDetail.sufficient === false) {
+                const cov = (Number(clvDetail.eligible_sample_size) > 0)
+                    ? (' (' + clvDetail.sample_size + ' of ' + clvDetail.eligible_sample_size + ' eligible tracked)')
+                    : '';
+                setAdv('clv', 'Insufficient closing-line data' + cov, null);
+            } else if (clvDetail.avg_clv != null) {
                 const c = Number(clvDetail.avg_clv);
-                setAdv('clv', fmtSigned(c, ' pts', 2) + ' · ' + clvDetail.sample_size + ' tracked', c);
+                const cov = (Number(clvDetail.eligible_sample_size) > 0)
+                    ? (' · ' + clvDetail.sample_size + ' of ' + clvDetail.eligible_sample_size + ' eligible tracked')
+                    : (' · ' + clvDetail.sample_size + ' tracked');
+                setAdv('clv', fmtSigned(c, ' pts', 2) + cov, c);
+            }
+            /* De-vigged and line-adjusted are DIFFERENT questions and are never
+               folded into the headline number. Shown only where they exist. */
+            if (clvDetail.avg_clv_novig != null) {
+                const n = Number(clvDetail.avg_clv_novig);
+                setAdv('clv_novig', fmtSigned(n, ' pts', 2) + ' · ' + clvDetail.novig_sample_size + ' picks', n);
+            }
+            if (clvDetail.avg_clv_adj != null) {
+                const a = Number(clvDetail.avg_clv_adj);
+                setAdv('clv_adj', fmtSigned(a, ' pts', 2) + ' · ' + clvDetail.adj_sample_size + ' picks (estimated)', a);
             }
             if (clvDetail.beat_close_rate != null) {
                 const r = Number(clvDetail.beat_close_rate);
