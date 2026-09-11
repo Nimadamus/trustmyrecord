@@ -18,6 +18,9 @@
  *                              or walk away. Never swaps it in silently.
  *   EXPOSURE_CAP_*             five units of RISK is the ceiling, per ticket
  *                              and per side of a game. Says what is left.
+ *   PAYOUT_CAP_EXCEEDED        one wager may not move a record further up than
+ *                              a run of ordinary picks can. Says the maximum
+ *                              stake at this price.
  *
  * Self-contained: its own DOM, its own styles, no dependency on the slip's
  * markup beyond the API client that is handed to it. If it fails to load, the
@@ -250,6 +253,29 @@
     /* ---------------------------------------------------------------- */
     function showExposure(data) {
         var isSide = data.code === 'EXPOSURE_CAP_SIDE_EXCEEDED';
+        var isPayout = data.code === 'PAYOUT_CAP_EXCEEDED';
+        if (isPayout) {
+            open(''
+                + '<div class="tmr-dg">'
+                + '<h4>That would win more than one wager may</h4>'
+                + '<div class="tmr-dg-body"><p>' + esc(data.error || '') + '</p>'
+                + '<div class="tmr-dg-ticket">'
+                + 'This ticket would win <b>' + esc(data.to_win_units) + 'u</b><br>'
+                + 'Maximum <b>' + esc(data.max_to_win_units) + 'u</b> from a single wager'
+                + (data.max_units_at_this_price
+                    ? '<br>At ' + esc(signed(data.odds_snapshot)) + ' you can stake up to <b>'
+                      + esc(data.max_units_at_this_price) + 'u</b>' : '')
+                + '</div>'
+                + '<p class="tmr-dg-note">A record is a units ledger. One longshot is not allowed to '
+                + 'move it further than a run of ordinary picks can.</p>'
+                + '</div>'
+                + '<div class="tmr-dg-actions">'
+                + '<button type="button" class="tmr-dg-ghost" id="tmrDgClose">Back to the slip</button>'
+                + '</div></div>');
+            var c0 = document.getElementById('tmrDgClose');
+            if (c0) c0.addEventListener('click', close);
+            return true;
+        }
         var detail = isSide
             ? '<div class="tmr-dg-ticket">'
               + 'Already open on this side <b>' + esc(data.side_risk_units) + 'u</b> of risk'
@@ -295,7 +321,8 @@
         try {
             if (data.code === 'DUPLICATE_PICK') return showDuplicate(data, ctx || {});
             if (data.code === 'PRICE_MOVED') return showPriceMoved(data, ctx || {});
-            if (data.code === 'EXPOSURE_CAP_EXCEEDED' || data.code === 'EXPOSURE_CAP_SIDE_EXCEEDED') {
+            if (data.code === 'EXPOSURE_CAP_EXCEEDED' || data.code === 'EXPOSURE_CAP_SIDE_EXCEEDED'
+                || data.code === 'PAYOUT_CAP_EXCEEDED') {
                 return showExposure(data);
             }
         } catch (error) {
