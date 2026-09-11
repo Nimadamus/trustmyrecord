@@ -772,7 +772,10 @@
                 // adding these units to the pick that already exists.
                 if (err && err.code === 'DUPLICATE_PICK' && err.data && err.data.existing_pick) {
                     state.dupes.push({
-                        existing: err.data.existing_pick,
+                        existing: Object.assign({}, err.data.existing_pick, {
+                            units_remaining: err.data.units_remaining,
+                            max_units_per_wager: err.data.max_units_per_wager
+                        }),
                         label: p.label,
                         game: p.game,
                         units: p.units,
@@ -1553,15 +1556,22 @@
         var rows = state.dupes.map(function (d, i) {
             var ex = d.existing || {};
             var desc = ex.description || d.label;
-            var unitWord = d.units === 1 ? 'unit' : 'units';
+            // UNIT_CAP_PER_WAGER_20260911: one wager carries at most five units,
+            // so offer only what is actually left on it. At the ceiling there is
+            // no button at all -- a button that is going to be refused is worse
+            // than a sentence that explains why there is nothing to press.
+            var room = addable(d);
+            var unitWord = room === 1 ? 'unit' : 'units';
             var action = d.done
                 ? '<p class="sbn-oknote">' + esc(d.done) + '</p>'
-                : '<div class="sbn-dupacts">' +
-                    '<button type="button" class="sbn-okcta sbn-dupadd" data-addunits="' + i + '"' +
-                    (d.busy ? ' disabled' : '') + '>' +
-                    (d.busy ? 'Adding&hellip;' : 'Add ' + d.units + ' ' + unitWord + ' to my existing pick') + '</button>' +
-                    '<button type="button" class="sbn-clear" data-dupdismiss="' + i + '">Keep it as it is</button>' +
-                  '</div>';
+                : (room <= 0
+                    ? '<p class="sbn-oknote">This wager is already at the ' + maxUnitsPerWager(d) + ' unit maximum, so there is nothing to add.</p>'
+                    : '<div class="sbn-dupacts">' +
+                        '<button type="button" class="sbn-okcta sbn-dupadd" data-addunits="' + i + '"' +
+                        (d.busy ? ' disabled' : '') + '>' +
+                        (d.busy ? 'Adding&hellip;' : 'Add ' + room + ' ' + unitWord + ' to my existing pick') + '</button>' +
+                        '<button type="button" class="sbn-clear" data-dupdismiss="' + i + '">Keep it as it is</button>' +
+                      '</div>');
             return '<li class="sbn-okrow">' +
                 '<span class="sbn-oksel">You already have this pick: ' + esc(desc) + '</span>' +
                 '<span class="sbn-okgame">' + esc(d.game || '') +
@@ -1575,9 +1585,23 @@
             '<ul class="sbn-oklist">' + rows + '</ul>' +
             '</div>';
     }
+    // How many units may still go onto the wager they already hold: what they
+    // asked for, capped by the room the server said is left on it.
+    function maxUnitsPerWager(d) {
+        var cap = d && d.existing && d.existing.max_units_per_wager;
+        return Number(cap) > 0 ? Number(cap) : 5;
+    }
+    function addable(d) {
+        var room = d && d.existing && d.existing.units_remaining;
+        room = (room == null) ? maxUnitsPerWager(d) : Number(room);
+        if (!(room > 0)) return 0;
+        return Math.round(Math.min(d.units, room) * 100) / 100;
+    }
     function addUnitsToExisting(i) {
         var d = state.dupes[i];
         if (!d || d.busy || d.done) return;
+        var room = addable(d);
+        if (room <= 0) return;
         var client = window.api;
         if (!client || typeof client.addUnitsToPick !== 'function') {
             d.done = 'Adding units is unavailable right now. Your existing pick is unchanged.';
@@ -1586,9 +1610,9 @@
         }
         d.busy = true;
         render();
-        client.addUnitsToPick(d.existing.id, d.units, d.stakeMode).then(function (res) {
+        client.addUnitsToPick(d.existing.id, room, d.stakeMode).then(function (res) {
             d.busy = false;
-            d.done = 'Added ' + d.units + (d.units === 1 ? ' unit. ' : ' units. ') +
+            d.done = 'Added ' + room + (room === 1 ? ' unit. ' : ' units. ') +
                 'Ticket #' + (d.existing.ticket || d.existing.id) + ' is now ' +
                 (res && res.units_after != null ? res.units_after + 'u ' : '') +
                 'and still grades as one pick.';
