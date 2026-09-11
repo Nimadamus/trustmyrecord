@@ -3742,6 +3742,55 @@
             // useless generic string. Auth/session errors get a clear re-login
             // prompt rather than "something went wrong".
             const backendMsg = (data && (data.error || data.message)) || '';
+            /* DUPLICATE_GUARD_UI_20260911 (Nima, F-10) -------------------------
+               Three of the backend's answers are DECISIONS, not failures, and
+               each has a body the member can act on:
+
+                 DUPLICATE_PICK  you already hold this wager; add units to it
+                 PRICE_MOVED     the number moved; take the new one or walk
+                 EXPOSURE_CAP_*  five units of RISK is the ceiling
+
+               Before this, all three landed in the generic red banner below and
+               the add-units endpoint the backend offers had no button anywhere
+               in the site. When the module owns the answer it returns true and
+               the banner is skipped; if it is missing or throws, we fall
+               through and the previous behaviour is unchanged. */
+            try {
+                const guardUI = window.__tmrDuplicateGuardUI;
+                if (guardUI && data && data.code && guardUI.handle(data, {
+                    api: await getApiClientOrFallback(),
+                    onAdded: async (result) => {
+                        showSubmitTrace('Units added to existing ticket.');
+                        await fetchCurrentUserPicks();
+                        syncRecordWidgets(state.currentUserPicks);
+                        try {
+                            window.dispatchEvent(new CustomEvent('tmr:pickLocked', {
+                                detail: { pick: result && result.pick ? result.pick : null }
+                            }));
+                        } catch (_) {}
+                        showPickSlipSuccess(
+                            'Units Added',
+                            'Ticket #' + String((result && result.pick && result.pick.id) || '')
+                            + ' now carries ' + String(result && result.units_after) + ' units. '
+                            + 'It is still one pick and one result on your record.'
+                        );
+                    },
+                    onAcceptNewPrice: (newOdds) => {
+                        const oddsField = document.getElementById('pickOdds')
+                            || document.querySelector('[data-tmr-odds-input]');
+                        if (oddsField) oddsField.value = String(newOdds);
+                        if (state.selectedOption) state.selectedOption.odds = newOdds;
+                        showPickSlipError(
+                            'The slip has been updated to ' + (newOdds > 0 ? '+' : '') + newOdds
+                            + '. Press Lock Pick again to take it at that price.'
+                        );
+                    },
+                })) {
+                    return;
+                }
+            } catch (guardError) {
+                try { console.error('[TMR][dupguard] handler failed', guardError); } catch (_) {}
+            }
             const isAuth = status === 401 || status === 403 || /access token|unauthor|session|log ?in|verify your email/i.test(backendMsg + ' ' + raw);
             let userMsg;
             if (isAuth) {
@@ -4558,13 +4607,27 @@
                 var lineDisp = fmtLine(lineNum, false);
                 var lineDispSigned = fmtLine(lineNum, true);
 
-                var marketType = 'h2h';
+                // MARKET_TYPE_FAIL_CLOSED_20260911 (Nima, F-08).
+                //
+                // This used to initialise marketType to 'h2h' while the switch
+                // below had NO default branch, so any bet type the switch did
+                // not name fell through and was submitted as a MONEYLINE
+                // carrying the total's or the spread's selection text. It has
+                // already happened twice -- UFC rounds and NRFI/YRFI are both in
+                // the case list because of it -- and 'altspread' plus the generic
+                // 'pick' fallback type are still emitted by sportsbook/index.html
+                // today with no case to catch them.
+                //
+                // marketType now starts null and an unrecognised bet type refuses
+                // the click. Failing closed costs one selection; failing open
+                // corrupts a permanent record.
+                var marketType = null;
                 var groupLabel = 'Full Game';
                 var selection = team || '';
                 var selectionLabel = team || '';
                 var teamRaw = String(team || '').trim();
 
-                switch (betType) {
+                switch (String(betType || '').trim().toLowerCase()) {
                     case 'teamover': {
                         marketType = 'team_totals';
                         groupLabel = 'Team Totals';
@@ -4616,6 +4679,15 @@
                         break;
                     case 'spread':
                         marketType = 'spreads'; groupLabel = 'Full Game';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    // ALT_SPREAD_CASE_20260911 (F-08): the alternates renderer in
+                    // sportsbook/index.html has emitted 'altspread' the whole time.
+                    // With no case it fell through to the moneyline default and an
+                    // alternate spread locked as an h2h.
+                    case 'altspread':
+                        marketType = 'alt_spreads'; groupLabel = 'Alt Spreads';
                         selection = teamRaw;
                         selectionLabel = teamRaw + (lineDispSigned ? ' ' + lineDispSigned : '');
                         break;
@@ -4789,6 +4861,21 @@
                         selection = 'Under';
                         selectionLabel = '4P Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
+                    // F-08: no silent fallback. An unmapped bet type is a bug in
+                    // the renderer, and the honest answer is to say so.
+                    default:
+                        marketType = null;
+                        break;
+                }
+
+                if (!marketType) {
+                    console.error('[TMR] selectGameBet: unmapped bet type', betType);
+                    ensurePickSlipVisible();
+                    showPickSlipError(
+                        'This market cannot be locked yet. Refresh the board, and if it keeps '
+                        + 'happening tell us which market it was.'
+                    );
+                    return;
                 }
 
                 var option = createFallbackOption(
