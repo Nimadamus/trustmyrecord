@@ -848,6 +848,16 @@ class TrustMyRecordAPI {
         });
     }
 
+    // DUPLICATE_PICK_GUARD_20260911: the only sanctioned way to put more units
+    // behind a wager the member already holds. It updates the existing pick, so
+    // the record still carries exactly one pick and one eventual W or L.
+    async addUnitsToPick(pickId, units, stakeMode) {
+        return this.request(`/picks/${pickId}/add-units`, {
+            method: 'POST',
+            body: { units: units, stake_mode: stakeMode || undefined }
+        });
+    }
+
     async getPick(pickId) {
         return this.request(`/picks/${pickId}`);
     }

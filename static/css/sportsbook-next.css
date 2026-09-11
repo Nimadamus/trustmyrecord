@@ -851,6 +851,21 @@ html.sbn-v3 .sbn-ttrow .sbn-chip.is-single .sbn-chip-top { justify-content: cent
     background: var(--sbn-red); color: #2a0707; font-size: 12px; font-weight: 900;
 }
 
+/* DUPLICATE_PICK_GUARD_20260911 - "you already have this pick".
+   It sits in the failure colour because a submit really was refused, but it
+   reads as a decision to make, not a glitch to retry: the pick they already
+   hold is named, and the one allowed action is a button, not a re-press of
+   Lock. */
+.sbn-dup { flex-direction: column; }
+.sbn-dup .sbn-okhead { margin-bottom: 2px; }
+.sbn-dup .sbn-okhead strong { color: #fecaca; }
+.sbn-dup .sbn-okrow { border-color: rgba(248, 113, 113, 0.35); }
+.sbn-dup .sbn-oksel { color: #fee2e2; }
+.sbn-dupacts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sbn-dupadd { flex: 1 1 auto; margin-top: 9px; cursor: pointer; }
+.sbn-dupadd[disabled] { opacity: .6; cursor: default; }
+.sbn-dup .sbn-clear { margin-top: 9px; }
+
 /* The toast. Reparented to <body> by the engine, so this z-index is measured
    against the page root and not against whatever stacking context the
    production sportsbook header opens. */

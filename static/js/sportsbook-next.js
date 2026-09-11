@@ -78,6 +78,11 @@
         confirm: null,        // { items: [{ label, game, odds, groupLabel }], failed: n }
         confirmTimer: null,
         subError: '',
+        // DUPLICATE_PICK_GUARD_20260911 - wagers the API refused because the
+        // member already holds them. One entry per refused slip pick, carrying
+        // the existing ticket the server named, so the slip can offer to add the
+        // units to that pick instead of pretending a second one was recorded.
+        dupes: [],
         submitting: false
     };
 
@@ -723,6 +728,7 @@
         }
         state.submitting = true;
         state.subError = '';
+        state.dupes = [];
         clearConfirm();
         var queue = state.picks.slice(), saved = [], failed = 0;
         (function next(i) {
@@ -744,7 +750,9 @@
                     if (!saved.length) toast('Pick could not be submitted. Your slip was kept.', 'bad');
                 }
                 announce((saved.length ? saved.length + (saved.length === 1 ? ' pick submitted to your record.' : ' picks submitted to your record.') : '') +
-                    (failed ? ' ' + state.subError : ''));
+                    (failed ? ' ' + state.subError : '') +
+                    (state.dupes.length ? ' ' + state.dupes.length + (state.dupes.length === 1
+                        ? ' pick is already on your record.' : ' picks are already on your record.') : ''));
                 if (btn) { btn.disabled = false; btn.textContent = 'Lock picks'; }
                 render();
                 return;
@@ -756,7 +764,26 @@
                 if (res && res.pick && res.pick.id != null) {
                     saved.push({ id: res.pick.id, label: p.label, game: p.game, odds: p.odds, groupLabel: p.groupLabel, units: p.units });
                 } else { failed++; p.__failed = true; }
-            }).catch(function () { failed++; p.__failed = true; })
+            }).catch(function (err) {
+                // DUPLICATE_PICK_GUARD_20260911: this is not a failure to fix by
+                // pressing lock again -- the member already holds this exact
+                // wager, and the record may only ever carry it once. Take it off
+                // the retry path and offer the one thing that is allowed:
+                // adding these units to the pick that already exists.
+                if (err && err.code === 'DUPLICATE_PICK' && err.data && err.data.existing_pick) {
+                    state.dupes.push({
+                        existing: err.data.existing_pick,
+                        label: p.label,
+                        game: p.game,
+                        units: p.units,
+                        stakeMode: state.stakeMode,
+                        busy: false,
+                        done: ''
+                    });
+                    return;
+                }
+                failed++; p.__failed = true;
+            })
                 .then(function () { next(i + 1); });
         })(0);
     }
@@ -1514,6 +1541,69 @@
             '<a class="sbn-okcta" href="/my-pending-picks/">View pending picks</a>' +
             '</div>';
     }
+    /* DUPLICATE_PICK_GUARD_20260911
+       A wager may exist on the record exactly once. When the API refuses a
+       submit because the member already holds it, the slip does not say
+       "could not be saved" -- that would read like a glitch and invite another
+       press. It names the pick they already have and offers the only honest way
+       to put more behind it: add the units to that ticket, which stays one pick
+       and grades once. */
+    function dupesHtml() {
+        if (!state.dupes.length) return '';
+        var rows = state.dupes.map(function (d, i) {
+            var ex = d.existing || {};
+            var desc = ex.description || d.label;
+            var unitWord = d.units === 1 ? 'unit' : 'units';
+            var action = d.done
+                ? '<p class="sbn-oknote">' + esc(d.done) + '</p>'
+                : '<div class="sbn-dupacts">' +
+                    '<button type="button" class="sbn-okcta sbn-dupadd" data-addunits="' + i + '"' +
+                    (d.busy ? ' disabled' : '') + '>' +
+                    (d.busy ? 'Adding&hellip;' : 'Add ' + d.units + ' ' + unitWord + ' to my existing pick') + '</button>' +
+                    '<button type="button" class="sbn-clear" data-dupdismiss="' + i + '">Keep it as it is</button>' +
+                  '</div>';
+            return '<li class="sbn-okrow">' +
+                '<span class="sbn-oksel">You already have this pick: ' + esc(desc) + '</span>' +
+                '<span class="sbn-okgame">' + esc(d.game || '') +
+                (ex.ticket ? ' &middot; Ticket #' + esc(ex.ticket) : '') +
+                (ex.units != null ? ' &middot; ' + esc(String(ex.units)) + 'u on it now' : '') + '</span>' +
+                action + '</li>';
+        }).join('');
+        return '<div class="sbn-fail sbn-dup" role="alert">' +
+            '<div class="sbn-okhead"><span class="sbn-failico" aria-hidden="true">!</span>' +
+            '<strong>You cannot submit the same pick twice</strong></div>' +
+            '<ul class="sbn-oklist">' + rows + '</ul>' +
+            '</div>';
+    }
+    function addUnitsToExisting(i) {
+        var d = state.dupes[i];
+        if (!d || d.busy || d.done) return;
+        var client = window.api;
+        if (!client || typeof client.addUnitsToPick !== 'function') {
+            d.done = 'Adding units is unavailable right now. Your existing pick is unchanged.';
+            render();
+            return;
+        }
+        d.busy = true;
+        render();
+        client.addUnitsToPick(d.existing.id, d.units, d.stakeMode).then(function (res) {
+            d.busy = false;
+            d.done = 'Added ' + d.units + (d.units === 1 ? ' unit. ' : ' units. ') +
+                'Ticket #' + (d.existing.ticket || d.existing.id) + ' is now ' +
+                (res && res.units_after != null ? res.units_after + 'u ' : '') +
+                'and still grades as one pick.';
+            toast('Units added to your existing pick.');
+            announce(d.done);
+            render();
+        }).catch(function (err) {
+            d.busy = false;
+            d.done = (err && err.message) ? err.message : 'Those units could not be added. Your existing pick is unchanged.';
+            toast('Units could not be added.', 'bad');
+            announce(d.done);
+            render();
+        });
+    }
+
     function subErrorHtml() {
         if (!state.subError) return '';
         return '<div class="sbn-fail" role="alert">' +
@@ -1543,7 +1633,7 @@
         }).join('');
         var totalRisk = state.picks.reduce(function (a, p) { return a + stakeFor(p).risk; }, 0);
         var totalWin = state.picks.reduce(function (a, p) { return a + stakeFor(p).win; }, 0);
-        return confirmHtml() + subErrorHtml() +
+        return confirmHtml() + dupesHtml() + subErrorHtml() +
             '<div class="sbn-sliphead"><h3>Pick slip</h3><span class="sbn-slipcount">' + n + '</span>' +
             (n ? '<button type="button" class="sbn-clear" data-clear="1">Clear</button>' : '') + '</div>' +
             (n ? '<div class="sbn-mode" role="group" aria-label="Stake mode">' +
@@ -1857,8 +1947,12 @@
         if (t.closest && t.closest('[data-drawerclose]')) { collapse(true); return; }
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
+        var addU = t.closest && t.closest('[data-addunits]');
+        if (addU) { addUnitsToExisting(parseInt(addU.getAttribute('data-addunits'), 10)); return; }
+        var dupX = t.closest && t.closest('[data-dupdismiss]');
+        if (dupX) { state.dupes.splice(parseInt(dupX.getAttribute('data-dupdismiss'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');
-        if (clear) { state.picks = []; state.subError = ''; clearConfirm(); render(); return; }
+        if (clear) { state.picks = []; state.subError = ''; state.dupes = []; clearConfirm(); render(); return; }
         var mode = t.closest && t.closest('[data-mode]');
         if (mode) { state.stakeMode = mode.getAttribute('data-mode'); render(); return; }
         var step = t.closest && t.closest('[data-units]');
