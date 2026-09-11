@@ -1557,26 +1557,47 @@
             var ex = d.existing || {};
             var desc = ex.description || d.label;
             // UNIT_CAP_PER_WAGER_20260911: one wager carries at most five units,
-            // so offer only what is actually left on it. At the ceiling there is
-            // no button at all -- a button that is going to be refused is worse
-            // than a sentence that explains why there is nothing to press.
-            var room = addable(d);
-            var unitWord = room === 1 ? 'unit' : 'units';
+            // so the control here can only ever offer the room that is left. At
+            // the ceiling there is no control at all, because a button that is
+            // going to be refused is worse than a sentence saying why.
+            var cap = maxUnitsPerWager(d);
+            var room = unitsRoom(d);
+            var chosen = chosenAdd(d);
+            var atCap = room <= 0;
+            // Said in full whenever what they asked for does not fit, which is
+            // the moment the number on the control stops matching the slip.
+            var capNote = (!atCap && Number(d.units) > room)
+                ? '<p class="sbn-oknote">This wager has a ' + cap + '-unit maximum. You currently have ' +
+                  fmtUnits(ex.units) + 'u on this pick, so you can add up to ' + fmtUnits(room) + 'u more.</p>'
+                : '';
+            var control = '<div class="sbn-dupunits">' +
+                '<label for="sbnDupU' + i + '">Add</label>' +
+                '<button type="button" class="sbn-step" data-dupstep="' + i + '" data-dir="-1" aria-label="Fewer units"' +
+                (d.busy || chosen <= 0.5 ? ' disabled' : '') + '>&minus;</button>' +
+                '<input id="sbnDupU' + i + '" type="number" min="0.5" max="' + room + '" step="0.5" value="' + chosen +
+                '" data-dupunitsinput="' + i + '"' + (d.busy ? ' disabled' : '') + '>' +
+                '<button type="button" class="sbn-step" data-dupstep="' + i + '" data-dir="1" aria-label="More units"' +
+                (d.busy || chosen >= room ? ' disabled' : '') + '>+</button>' +
+                '<span class="sbn-dupmax">of ' + fmtUnits(room) + 'u available</span>' +
+                '</div>';
             var action = d.done
                 ? '<p class="sbn-oknote">' + esc(d.done) + '</p>'
-                : (room <= 0
-                    ? '<p class="sbn-oknote">This wager is already at the ' + maxUnitsPerWager(d) + ' unit maximum, so there is nothing to add.</p>'
-                    : '<div class="sbn-dupacts">' +
+                : (atCap
+                    ? '<p class="sbn-oknote"><span class="sbn-dupcap">MAX ' + cap + 'U</span> This wager is already at the ' +
+                      cap + '-unit maximum, so there is nothing to add.</p>'
+                    : capNote + control +
+                      '<div class="sbn-dupacts">' +
                         '<button type="button" class="sbn-okcta sbn-dupadd" data-addunits="' + i + '"' +
                         (d.busy ? ' disabled' : '') + '>' +
-                        (d.busy ? 'Adding&hellip;' : 'Add ' + room + ' ' + unitWord + ' to my existing pick') + '</button>' +
+                        (d.busy ? 'Adding&hellip;' : 'Add ' + fmtUnits(chosen) + (chosen === 1 ? ' unit' : ' units') + ' to my existing pick') +
+                        '</button>' +
                         '<button type="button" class="sbn-clear" data-dupdismiss="' + i + '">Keep it as it is</button>' +
                       '</div>');
             return '<li class="sbn-okrow">' +
                 '<span class="sbn-oksel">You already have this pick: ' + esc(desc) + '</span>' +
                 '<span class="sbn-okgame">' + esc(d.game || '') +
                 (ex.ticket ? ' &middot; Ticket #' + esc(ex.ticket) : '') +
-                (ex.units != null ? ' &middot; ' + esc(String(ex.units)) + 'u on it now' : '') + '</span>' +
+                (ex.units != null ? ' &middot; ' + fmtUnits(ex.units) + 'u of ' + cap + 'u on it now' : '') + '</span>' +
                 action + '</li>';
         }).join('');
         return '<div class="sbn-fail sbn-dup" role="alert">' +
@@ -1585,22 +1606,43 @@
             '<ul class="sbn-oklist">' + rows + '</ul>' +
             '</div>';
     }
-    // How many units may still go onto the wager they already hold: what they
-    // asked for, capped by the room the server said is left on it.
+    // ---- the five-unit ceiling, as the slip presents it ---------------------
+    // The server is the authority: it refuses anything over the cap whatever
+    // the page does. These read the room IT reported, so the control can never
+    // offer a number the API is going to turn down.
     function maxUnitsPerWager(d) {
         var cap = d && d.existing && d.existing.max_units_per_wager;
         return Number(cap) > 0 ? Number(cap) : 5;
     }
-    function addable(d) {
+    function fmtUnits(n) {
+        var v = Math.round(Number(n) * 100) / 100;
+        return String(Number.isFinite(v) ? v : 0);
+    }
+    /** Units still available on the wager they already hold. 0 means it is full. */
+    function unitsRoom(d) {
         var room = d && d.existing && d.existing.units_remaining;
         room = (room == null) ? maxUnitsPerWager(d) : Number(room);
-        if (!(room > 0)) return 0;
-        return Math.round(Math.min(d.units, room) * 100) / 100;
+        return room > 0 ? Math.round(room * 100) / 100 : 0;
+    }
+    /** What the control is set to: their own figure, held inside the room left. */
+    function chosenAdd(d) {
+        var room = unitsRoom(d);
+        if (room <= 0) return 0;
+        var want = (d.add == null) ? Number(d.units) : Number(d.add);
+        if (!(want > 0)) want = 0.5;
+        return Math.round(Math.min(Math.max(want, 0.5), room) * 100) / 100;
+    }
+    function setDupUnits(i, value) {
+        var d = state.dupes[i];
+        if (!d || d.busy || d.done) return;
+        d.add = value;
+        d.add = chosenAdd(d);
+        render();
     }
     function addUnitsToExisting(i) {
         var d = state.dupes[i];
         if (!d || d.busy || d.done) return;
-        var room = addable(d);
+        var room = chosenAdd(d);
         if (room <= 0) return;
         var client = window.api;
         if (!client || typeof client.addUnitsToPick !== 'function') {
@@ -1973,6 +2015,14 @@
         if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
         var addU = t.closest && t.closest('[data-addunits]');
         if (addU) { addUnitsToExisting(parseInt(addU.getAttribute('data-addunits'), 10)); return; }
+        var dupStep = t.closest && t.closest('[data-dupstep]');
+        if (dupStep) {
+            var di = parseInt(dupStep.getAttribute('data-dupstep'), 10);
+            var ddir = parseInt(dupStep.getAttribute('data-dir'), 10);
+            var dd = state.dupes[di];
+            if (dd) setDupUnits(di, chosenAdd(dd) + ddir * 0.5);
+            return;
+        }
         var dupX = t.closest && t.closest('[data-dupdismiss]');
         if (dupX) { state.dupes.splice(parseInt(dupX.getAttribute('data-dupdismiss'), 10), 1); render(); return; }
         var clear = t.closest && t.closest('[data-clear]');
@@ -1993,6 +2043,11 @@
         if (t.closest && t.closest('.sbn-slipclose')) { document.documentElement.classList.remove('sbn-slip-open'); return; }
     }
     function onChange(ev) {
+        var dupInp = ev.target.closest && ev.target.closest('[data-dupunitsinput]');
+        if (dupInp) {
+            setDupUnits(parseInt(dupInp.getAttribute('data-dupunitsinput'), 10), parseFloat(dupInp.value));
+            return;
+        }
         var inp = ev.target.closest && ev.target.closest('[data-unitsinput]');
         if (!inp) return;
         var i = parseInt(inp.getAttribute('data-unitsinput'), 10);
