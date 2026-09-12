@@ -1380,13 +1380,13 @@ def render_hub_block(date, rows, built_at):
 
     # trends
     trendy = [r for r in rows if r["top_trend"]]
-    out.append("  <h3>Verified MLB trends on today's board</h3>\n")
+    out.append("  <h3>Recent form on today's board</h3>\n")
     if trendy:
         total = sum(r["trend_count"] for r in rows)
-        out.append("  <p>%d trends across today's slate cleared the sample size and edge gates. "
-                   "Each one is measured over completed games with final scores and carries the "
-                   "sample it came from. The full list is on "
-                   "<a href=\"%strends/\">today's verified MLB trends</a>.</p>\n" % (total, HUB))
+        out.append("  <p>%d last-10 lines across today's slate: each is one team's record over its last 10 completed games on the market named. These are counts, not gated trends. "
+                   "Each is measured over completed games with final scores and carries its "
+                   "sample. The full list is on "
+                   "<a href=\"%strends/\">today's MLB recent form</a>, and the gated, baseline-measured trends are on each matchup page.</p>\n" % (total, HUB))
         out.append('  <ul class="mhs-list">\n')
         for r in sorted(trendy, key=lambda r: -r["trend_sample"])[:6]:
             out.append('    <li>%s <span class="mhs-when">Sample %s games. '
@@ -1395,7 +1395,7 @@ def render_hub_block(date, rows, built_at):
                           esc(r["away_nick"]), esc(r["home_nick"])))
         out.append("  </ul>\n")
     else:
-        out.append("  <p>No trend on today's board cleared the sample gate. Nothing is listed "
+        out.append("  <p>No last-10 line is available for today's board. Nothing is listed "
                    "rather than filling the section.</p>\n")
 
     out.append("  <h3>More MLB research on TrustMyRecord</h3>\n")
@@ -1403,8 +1403,8 @@ def render_hub_block(date, rows, built_at):
                'announced starter on ERA, WHIP, FIP and K rate. '
                '<a href="%sodds/">MLB odds today</a> carries the whole board including First 5, '
                'team totals and the first inning market. '
-               '<a href="%strends/">MLB betting trends today</a> lists every verified trend with '
-               'its sample. From there, the '
+               '<a href="%strends/">MLB recent form today</a> lists every team\'s last-10 record by '
+               'market, with its sample. From there, the '
                '<a href="/mlb-simulator/">MLB Simulator</a> plays a game out, '
                '<a href="/trendspotter/">Trend Spotter</a> lets you query the trend corpus '
                'yourself, <a href="/betlegend-pro/">BetLegend Pro</a> runs the deeper situational '
@@ -1669,7 +1669,7 @@ def render_trends(date, rows, all_trends, built_at):
                 by_game[r["url"]] = (r, sorted(hits, key=lambda t: -(t.get("sample") or 0)))
         for url in sorted(by_game, key=lambda u: -len(by_game[u][1])):
             r, hits = by_game[url]
-            body.append('          <h3><a href="%s">%s at %s</a> &middot; %d trends</h3>\n'
+            body.append('          <h3><a href="%s">%s at %s</a> &middot; %d last-10 lines</h3>\n'
                         % (esc(url), esc(r["away"]), esc(r["home"]), len(hits)))
             body.append('          <ul class="mm-trends">\n')
             for t in hits:
@@ -1697,15 +1697,20 @@ def render_trends(date, rows, all_trends, built_at):
     body.append("        </section>\n")
     return _support_page(
         "trends",
-        "MLB Betting Trends Today, %s: Verified, With Samples" % short_date(date),
-        "MLB betting trends today",
-        "Every verified MLB betting trend on today's board for %s, each one measured over "
-        "completed games with final scores and shown with the sample size behind it."
+        "MLB Recent Form Today, %s: Last 10 Games, With Samples" % short_date(date),
+        "MLB recent form today",
+        "Every MLB team's last-10 record on today's board for %s, by market, measured over "
+        "completed games with final scores and shown with the sample behind it."
         % long_date(date),
-        "Verified MLB trends · %s" % long_date(date),
-        "Every MLB trend on today's board that cleared our sample size and edge gates, grouped by "
-        "game, each shown with its record, its sample and the window it was measured over. Nothing "
-        "that failed the gate appears here.",
+        "MLB recent form · %s" % long_date(date),
+        # TRENDSPOTTER_LABEL_SPLIT_20260912: this page lists the last-10 FORM
+        # lines, which carry no gate at all, as its own section below says. The
+        # gated engine trends live on each matchup page. The old lede claimed
+        # the opposite of the page it introduces.
+        "Every team's record over its last 10 completed games on today's board, grouped by "
+        "game, each shown with its record, its sample and the window it was measured over. "
+        "These are counts, not gated trends: the gated, baseline-measured trends are on each "
+        "matchup page.",
         "".join(body), date, built_at, "Trends")
 
 

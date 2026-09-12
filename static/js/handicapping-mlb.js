@@ -958,12 +958,23 @@
         var total = api + reps.length;
         if (!total) return "";
         var TOP = 3;
+        /* Engine rows first, then form lines, up to TOP. Keeps the rows in the
+           same order the count names them in. */
+        function apiTrendsForOverview(dd, u, cap, forms) {
+            var eng = (dd.trends || []).slice(0, cap).map(function (t, i) { return apiTrendHtml(t, i, u); });
+            var room = Math.max(0, cap - eng.length);
+            return eng.join("") + forms.slice(0, room).map(trendCardHtml).join("");
+        }
         return '<section class="hh-tsec hh-tsec--ov">' +
             '<div class="hh-tsec__head">' +
                 '<h4 class="hh-tsec__title">Matchup Trends</h4>' +
                 '<span class="hh-tsec__count">' + (api ? api + ' verified' : '') + (api && reps.length ? ' · ' : '') + (reps.length ? reps.length + ' last-10 form' : '') + '</span>' +
             '</div>' +
-            '<div class="hh-tsec__list">' + reps.slice(0, TOP).map(trendCardHtml).join("") + '</div>' +
+            /* TRENDSPOTTER_LABEL_SPLIT_20260912. The count beside this heading
+               says how many cleared the strict engine, so the list under it has
+               to START with those. It used to render only the last-10 feed, so a
+               card could read "2 verified" above three rows that were not. */
+            '<div class="hh-tsec__list">' + apiTrendsForOverview(d, uid, TOP, reps) + '</div>' +
             '<button type="button" class="hh-tsec__all" data-gototrends>' +
                 '<span>' + (total > TOP ? 'See all ' + total + ' trends' : 'Open the Trends tab') + '</span>' +
                 '<span class="hh-tsec__arrow" aria-hidden="true">→</span>' +
@@ -971,8 +982,8 @@
     }
 
     /* Trends panel order: real trends first, engine notices after. The strict
-       matchup engine and the TrendSpotter slate feed run different thresholds,
-       so the engine returning nothing while the feed has verified trends is
+       matchup engine and the last-10 form feed run different thresholds, so the
+       engine returning nothing while the feed has form lines is
        normal — leading with its "no verified trends" state made a panel holding
        real trends read as empty. Nothing about the data itself changes here. */
     function trendsHtml(d, game, uid) {
