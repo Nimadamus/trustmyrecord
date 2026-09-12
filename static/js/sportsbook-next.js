@@ -41,11 +41,49 @@
      * forces the old path. With no parameter the client behaves as it always
      * has, so real traffic is untouched and rollback is the absence of a flag. */
     var PROPS_MODE = (function () {
-        try {
-            var m = /[?&]props=(lazy|board)/.exec(window.location.search || '');
-            return m ? m[1] : '';
-        } catch (e) { return ''; }
+        // Read once at parse time from the query string, and fall back to
+        // localStorage so the switch survives a navigation or anything that
+        // rewrites the URL. A query value is also persisted, so ?props=lazy
+        // once is enough for a whole verification session, and ?props=board
+        // turns it back off.
+        var m = null, ls = null;
+        try { m = /[?&]props=(lazy|board)/.exec(window.location.search || ''); } catch (e) { m = null; }
+        try { ls = window.localStorage.getItem('tmr_props_mode'); } catch (e) { ls = null; }
+        var mode = m ? m[1] : (ls === 'lazy' || ls === 'board' ? ls : '');
+        if (m) { try { window.localStorage.setItem('tmr_props_mode', m[1]); } catch (e) {} }
+        return mode;
     })();
+
+    /* PROPS_STATE_20260912. Observability, not behaviour. The verification
+     * switch could not be confirmed to engage from outside the closure, which
+     * is what blocked the browser half of this work: a panel that renders rows
+     * looks identical whether the rows came from the board or the endpoint.
+     * This publishes the answer. Read-only, and nothing in the page consumes
+     * it. */
+    function publishPropsDebug() {
+        try {
+            var games = {};
+            (state.games || []).forEach(function (g) {
+                var grp = g.groups && g.groups.player_props;
+                if (!grp) return;
+                games[g.id] = {
+                    itemsOnBoard: grp.items.length,
+                    totalItems: grp.totalItems || 0,
+                    lazy: !!grp.lazy,
+                    load: state.props[g.id] ? state.props[g.id].state : null,
+                    reason: state.props[g.id] ? state.props[g.id].reason : null,
+                    attempts: state.props[g.id] ? state.props[g.id].attempts : 0
+                };
+            });
+            window.__TMR_PROPS_DEBUG = {
+                mode: PROPS_MODE || '(default)',
+                stateModuleLoaded: !!(window.TMRPropsState && window.TMRPropsState.classify),
+                fetches: PROPS_FETCH_COUNT,
+                games: games
+            };
+        } catch (e) { /* observability must never break a render */ }
+    }
+    var PROPS_FETCH_COUNT = 0;
     var ALT_PREVIEW = 6;      // rungs shown per ladder before "Show all"
 
     var SPORTS = [
@@ -506,6 +544,7 @@
             render();
         }
 
+        PROPS_FETCH_COUNT += 1;
         fetch(url, { cache: 'no-store' })
             .then(function (r) {
                 return r.text().then(function (text) {
@@ -2042,6 +2081,7 @@
                 if (state.games[gi].id === state.drawer) { loadProps(state.games[gi]); break; }
             }
         }
+        publishPropsDebug();
         var rail = el('sbnRail');
         if (rail && !rail.dataset.built) {
             rail.innerHTML = SPORTS.map(function (s) {
