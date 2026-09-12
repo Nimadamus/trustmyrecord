@@ -317,8 +317,17 @@ class TrustMyRecordAPI {
             // client aborts before that route ever gets to respond); writes/
             // uploads get 45s. Callers that pass their own options.signal keep
             // full control.
+            // PERF_TIMEOUT_20260911: the flat 65s GET budget below existed only for
+            // the /betlegend-pro/* routes, which proxy an upstream bridge whose own
+            // timeout is 60s (cold starts measured to 53s). Every other GET inherited
+            // it, so an API restart or an event-loop stall left ordinary reads hanging
+            // for over a minute behind a spinner. Those now fail at 20s so the caller
+            // can show a real error with a retry. The bridge routes keep 65s -- cutting
+            // them short would abort a report the server is still legitimately building.
             if (!config.signal && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
-                config.signal = AbortSignal.timeout(_method === 'GET' ? 65000 : 45000);
+                var _isBridge = endpoint.indexOf('/betlegend-pro/') === 0;
+                var _budget = (_method === 'GET') ? (_isBridge ? 65000 : 20000) : 45000;
+                config.signal = AbortSignal.timeout(_budget);
             }
 
             try {
