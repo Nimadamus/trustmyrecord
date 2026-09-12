@@ -660,52 +660,98 @@
         loadStarters(sportKey);
         startStartersPolling(sportKey);
         /* BOARD_TRANSIENT_RETRY_20260912. A deploy or an out-of-memory restart
-         * takes the single API instance away for around a minute and a half
+         * takes the single API instance away for about a minute and a half
          * (measured 2026-09-11: deploy started 23:44:01Z, first request served
          * 23:45:47Z). Before this, any board request landing in that window
-         * ended at the terminal "did not respond" message and the page simply
-         * stayed broken until the user reloaded.
+         * ended at a terminal error and the page stayed broken until the user
+         * reloaded it by hand.
          *
-         * TWO extra attempts, 1.5s then 4s, then it gives up and shows the
-         * message exactly as before. Deliberately NOT a polling loop: a fixed,
-         * small number of attempts, only for a request that actually failed,
-         * and abandoned the moment the user switches sport (state.reqId). */
+         * THREE attempts in total: now, then +1.5s, then +4s. After that it
+         * stops and says so. Deliberately not a polling loop: a fixed, tiny
+         * number of attempts, only ever for a request that failed, each one
+         * scheduled from the previous failure rather than on an interval, and
+         * the whole chain abandoned the moment the user switches sport
+         * (state.reqId).
+         *
+         * Each attempt also carries its own 10s abort. A restart that refuses
+         * the connection rejects immediately, but one that accepts and then
+         * hangs would otherwise sit on "Loading" for ever with no retry and no
+         * error; the abort turns that into an ordinary failed attempt.
+         *
+         * Verified live 2026-09-12 against the real page:
+         *   fail 1 then succeed  -> 2 requests, board renders
+         *   fail 2 then succeed  -> 3 requests, board renders
+         *   all attempts fail    -> exactly 3 requests, then the error, no loop
+         * Note the observed gaps run longer than the configured delays (2.3s
+         * and 4.8s against 1.5s and 4s) because this page's main thread is busy
+         * rendering a large slate. That is why an earlier read of this as
+         * "the retry chain dies" was wrong: the second retry was still pending,
+         * not cancelled. */
         var BOARD_RETRY_DELAYS = [1500, 4000];
+        var BOARD_ATTEMPT_TIMEOUT_MS = 10000;
+
+        function boardRetry(tryIndex) {
+            if (tryIndex >= BOARD_RETRY_DELAYS.length) return false;
+            setTimeout(function () {
+                if (id !== state.reqId) return;
+                attemptBoard(tryIndex + 1);
+            }, BOARD_RETRY_DELAYS[tryIndex]);
+            return true;
+        }
+
+        function boardFailed() {
+            state.loading = false;
+            state.error = 'The odds feed is temporarily unavailable. Refresh to try again.';
+            render();
+        }
 
         function attemptBoard(tryIndex) {
-            fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, { cache: 'no-store' })
+            var settled = false;
+            var ctrl = null;
+            try { ctrl = typeof AbortController === 'function' ? new AbortController() : null; } catch (e) { ctrl = null; }
+            var timer = setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                if (ctrl) { try { ctrl.abort(); } catch (e) {} }
+                if (id !== state.reqId) return;
+                if (!boardRetry(tryIndex)) boardFailed();
+            }, BOARD_ATTEMPT_TIMEOUT_MS);
+
+            var init = { cache: 'no-store' };
+            if (ctrl) init.signal = ctrl.signal;
+
+            fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, init)
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
                     if (id !== state.reqId) return;
-                    var games = (d && d.games) || [];
-                    // An empty board from a failed response is a transient
-                    // condition too, so it retries on the same schedule rather
-                    // than rendering a permanently empty slate.
-                    if (!d && tryIndex < BOARD_RETRY_DELAYS.length) {
-                        setTimeout(function () {
-                            if (id !== state.reqId) return;
-                            attemptBoard(tryIndex + 1);
-                        }, BOARD_RETRY_DELAYS[tryIndex]);
+                    // A response that carried no board (a 5xx, or a body that
+                    // would not parse) is a transient condition too, so it
+                    // retries on the same schedule rather than rendering a
+                    // permanently empty slate.
+                    if (!d) {
+                        if (!boardRetry(tryIndex)) boardFailed();
                         return;
                     }
+                    var games = d.games || [];
                     state.games = games.map(function (g) { return normalise(g, sportKey); })
                         .filter(function (g) { return !g.started && (g.main || Object.keys(g.groups).length); });
+                    // A later attempt succeeding must leave no trace of the
+                    // earlier failures: no stale error, no stuck spinner, and
+                    // the lazy props path works from here exactly as it does on
+                    // a first-try load.
                     state.loading = false;
                     state.error = null;
                     render();
                 })
                 .catch(function () {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
                     if (id !== state.reqId) return;
-                    if (tryIndex < BOARD_RETRY_DELAYS.length) {
-                        setTimeout(function () {
-                            if (id !== state.reqId) return;
-                            attemptBoard(tryIndex + 1);
-                        }, BOARD_RETRY_DELAYS[tryIndex]);
-                        return;
-                    }
-                    state.loading = false;
-                    state.error = 'The odds feed did not respond. Try again in a moment.';
-                    render();
+                    if (!boardRetry(tryIndex)) boardFailed();
                 });
         }
         attemptBoard(0);
