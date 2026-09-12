@@ -5,6 +5,23 @@
          wraps window.fetch, and it can only collapse a board request that is
          issued after it has installed. See static/js/tmr-board-dedupe.js. -->
     <script src="/static/js/tmr-board-dedupe.js?v=cf96a1670c61"></script>
+    <!-- ESPN_LOGO_THUMB_20260912. Every team crest on this page was requested
+         from ESPN at 500px and drawn at 19-32px: 28 images, about 1MB, for
+         roughly 90KB of pixels anyone can see. a.espncdn.com's combiner resizes
+         on its own edge, so the same crest is ~3.5KB at 96px (enough for a 32px
+         slot at 3x). Defined here because several call sites build crest URLs
+         and they all run later than this. Anything that is not a teamlogos URL,
+         and anything already routed through the combiner, is returned as-is. -->
+    <script>
+    window.TMR_ESPN_THUMB = function (url, px) {
+      var u = String(url || '');
+      if (!u || u.indexOf('a.espncdn.com') === -1 || u.indexOf('/combiner/') !== -1) return u;
+      var i = u.indexOf('/i/teamlogos/');
+      if (i === -1) return u;
+      var size = px || 96;
+      return 'https://a.espncdn.com/combiner/i?img=' + u.slice(i) + '&h=' + size + '&w=' + size;
+    };
+    </script>
     <!-- tmr-build-autoreload 20260609: GitHub Pages serves this HTML with
          Cache-Control: max-age=600, so a user can sit on a stale cached copy of
          the sportsbook (old submit/props code) for up to 10 minutes and think a
@@ -1001,13 +1018,13 @@
         var normalizedSport = String(resolvedSportKey || '').toLowerCase();
         var normalizedTeam = String(fullName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         var direct = INLINE_TEAM_LOGOS[normalizedSport] && INLINE_TEAM_LOGOS[normalizedSport][normalizedTeam];
-        if (direct) return 'https://a.espncdn.com/i/teamlogos/' + direct;
+        if (direct) return window.TMR_ESPN_THUMB('https://a.espncdn.com/i/teamlogos/' + direct);
         return '';
     }
     var legacyTeamLogoRenderer = function(logoUrl, abbr, fullName, sportKey) {
         var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
         var resolvedSportKey = sportKey || (window.TMR.sportKeyMap && window.TMR.sportKeyMap[window.TMR.selectedSport]) || '';
-        var resolvedLogoUrl = logoUrl || '';
+        var resolvedLogoUrl = window.TMR_ESPN_THUMB ? window.TMR_ESPN_THUMB(logoUrl || '') : (logoUrl || '');
         if (!resolvedLogoUrl && typeof window.TMR.resolveSportsbookTeamLogo === 'function') {
             resolvedLogoUrl = window.TMR.resolveSportsbookTeamLogo(fullName, resolvedSportKey, '');
         }
@@ -3250,9 +3267,17 @@
     <meta property="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <!-- FAVICON_WEIGHT_20260912: /static/favicon.png is 512x512 and 405KB, the
+         single heaviest file on the page, for a 16px tab icon. The SVG is 795
+         bytes and the PNG fallback is for browsers that will not take it. -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="/static/favicon-64.png">
     <link rel="apple-touch-icon" href="/static/favicon.svg">
 
+    <!-- PRECONNECT_20260912: the board fetch and every crest pay a fresh
+         DNS + TLS handshake without these; both are requested within ~600ms. -->
+    <link rel="preconnect" href="https://trustmyrecord-api.onrender.com" crossorigin>
+    <link rel="preconnect" href="https://a.espncdn.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -10667,9 +10692,9 @@
         <a class="sb-gotw" id="sbFeatureStrip" href="/nfl/bills-texans-josh-allen-under-anderson-and-hunter/">
             <span class="sb-gotw-tag" data-feat="label">NFL Sunday Spotlight</span>
             <span class="sb-gotw-main">
-                <img data-feat="logoA" src="https://a.espncdn.com/i/teamlogos/nfl/500/buf.png" alt="" width="32" height="32" loading="lazy">
+                <img data-feat="logoA" src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/buf.png&amp;h=96&amp;w=96" alt="" width="32" height="32" loading="lazy">
                 <b data-feat="main">Bills at Texans</b>
-                <img data-feat="logoB" src="https://a.espncdn.com/i/teamlogos/nfl/500/hou.png" alt="" width="32" height="32" loading="lazy">
+                <img data-feat="logoB" src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/hou.png&amp;h=96&amp;w=96" alt="" width="32" height="32" loading="lazy">
                 <em data-feat="secondary">Sunday, September 13 &middot; Week 1</em>
             </span>
             <span class="sb-gotw-cta"><span data-feat="cta">Deep Dive, Prediction &amp; 1,000 Simulations</span> <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
@@ -10686,8 +10711,8 @@
                     main: 'Bills at Texans',
                     secondary: 'Sunday, September 13 · Week 1',
                     cta: 'Deep Dive, Prediction &amp; 1,000 Simulations',
-                    logoA: 'https://a.espncdn.com/i/teamlogos/nfl/500/buf.png',
-                    logoB: 'https://a.espncdn.com/i/teamlogos/nfl/500/hou.png',
+                    logoA: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/buf.png&h=96&w=96',
+                    logoB: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/hou.png&h=96&w=96',
                     kickoff: '2026-09-13T17:00:00Z'
                 }
             ];
@@ -11542,9 +11567,9 @@ window.toggleSportFamily = function (family) {
             'utah jazz': 'utah',
             'washington wizards': 'wsh'
         };
-        if (mlb[key]) return 'https://a.espncdn.com/i/teamlogos/mlb/500/' + mlb[key] + '.png';
-        if (nhl[key]) return 'https://a.espncdn.com/i/teamlogos/nhl/500/' + nhl[key] + '.png';
-        return nba[key] ? 'https://a.espncdn.com/i/teamlogos/nba/500/' + nba[key] + '.png' : '';
+        if (mlb[key]) return window.TMR_ESPN_THUMB('https://a.espncdn.com/i/teamlogos/mlb/500/' + mlb[key] + '.png');
+        if (nhl[key]) return window.TMR_ESPN_THUMB('https://a.espncdn.com/i/teamlogos/nhl/500/' + nhl[key] + '.png');
+        return nba[key] ? window.TMR_ESPN_THUMB('https://a.espncdn.com/i/teamlogos/nba/500/' + nba[key] + '.png') : '';
     }
     function sportsbookTeamLogoMarkup(teamName, logoUrl, abbr) {
         var src = sportsbookTeamLogoUrl(teamName, logoUrl);

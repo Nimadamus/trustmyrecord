@@ -156,19 +156,31 @@
      Game File logo pipeline already uses. All 127 pro marks and a 60-school
      college sample were HEAD-checked at 200 before this switched over, and a
      miss still falls back to the light mark before the mark is dropped. */
+  /* ESPN_LOGO_THUMB_20260912: these marks are drawn at 14-32px and ESPN's
+     500px dark master is ~46KB each. The combiner resizes on ESPN's own edge,
+     so the same mark is ~5KB at 96px, which still covers a 32px slot at 3x.
+     It 404s on a missing source exactly as the direct path does, so the
+     dark -> light -> drop fallback below is unaffected. */
+  function thumb(url) {
+    if (!url) return url;
+    if (window.TMR_ESPN_THUMB) return window.TMR_ESPN_THUMB(url);
+    var i = url.indexOf('/i/teamlogos/');
+    if (i === -1 || url.indexOf('/combiner/') !== -1) return url;
+    return 'https://a.espncdn.com/combiner/i?img=' + url.slice(i) + '&h=96&w=96';
+  }
   function variant(name, kind) {
     var slug = slugify(name);
     var ref = ABBR[slug];
     if (ref) {
       var p = ref.split('/');
-      return 'https://a.espncdn.com/i/teamlogos/' + p[0] + '/' + kind + '/' + p[1] + '.png';
+      return thumb('https://a.espncdn.com/i/teamlogos/' + p[0] + '/' + kind + '/' + p[1] + '.png');
     }
     /* College: the same artwork the Game File pipeline bakes, from the generated
        slug -> team id map. That file is optional - a page that does not load it
        just shows the club name on its own, with no mark at all. */
     var cat = window.TMRTeamLogoCatalog;
     var id = cat && Object.prototype.hasOwnProperty.call(cat, slug) ? cat[slug] : null;
-    if (id) return 'https://a.espncdn.com/i/teamlogos/ncaa/' + kind + '/' + id + '.png';
+    if (id) return thumb('https://a.espncdn.com/i/teamlogos/ncaa/' + kind + '/' + id + '.png');
     return null;
   }
   /* WHICH artwork, decided from the surface the page actually paints. TMR runs
@@ -296,7 +308,7 @@
   var LEAGUES = { nfl: 1, mlb: 1, nba: 1, nhl: 1 };
   function leagueUrl(sport) {
     var k = String(sport || '').toLowerCase().replace(/\s+fan$/, '').trim();
-    return LEAGUES[k] ? 'https://a.espncdn.com/i/teamlogos/leagues/500/' + k + '.png' : null;
+    return LEAGUES[k] ? thumb('https://a.espncdn.com/i/teamlogos/leagues/500/' + k + '.png') : null;
   }
   // Which of the four pro leagues a team name belongs to, from the same table
   // the logo URL comes from, so the two can never disagree. Null when unknown

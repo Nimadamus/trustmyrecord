@@ -2849,7 +2849,22 @@
         return NPB_LOGO_BASE + new Date().getFullYear() + '/logo_' + code + '_s.gif';
     }
 
+    /* ESPN_LOGO_THUMB_20260912: this renderer paints the 54 crests on a loaded
+       board, at 14-32px, from ESPN's 500px master. Route every crest it emits
+       through the page-head combiner helper (with a local fallback, so the
+       file still works on a page that has not loaded it). Non-ESPN sources,
+       NPB included, are returned untouched. */
+    function espnThumb(url) {
+        if (!url) return url;
+        if (window.TMR_ESPN_THUMB) return window.TMR_ESPN_THUMB(url);
+        const i = String(url).indexOf('/i/teamlogos/');
+        if (i === -1 || String(url).indexOf('/combiner/') !== -1) return url;
+        return 'https://a.espncdn.com/combiner/i?img=' + String(url).slice(i) + '&h=96&w=96';
+    }
     function resolveTeamLogo(teamName, sportKey, suppliedLogo) {
+        return espnThumb(resolveTeamLogoFull(teamName, sportKey, suppliedLogo));
+    }
+    function resolveTeamLogoFull(teamName, sportKey, suppliedLogo) {
         if (String(sportKey || '') === 'baseball_npb') {
             // Never fall through to the ESPN map for NPB: several NPB clubs
             // share a nickname with an MLB club (Giants, Tigers, Lions) and

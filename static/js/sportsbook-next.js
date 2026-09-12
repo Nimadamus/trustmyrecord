@@ -1238,7 +1238,16 @@
     }
     // The generated map (sportsbook-next-logos.js) covers every league; the small
     // hand map below stays as a fallback if that file ever fails to load.
+    // ESPN_LOGO_THUMB_20260912: the crest slot is 19-28px and the source is
+    // ESPN's 500px master (~18KB each, ~1MB a board). Route it through the
+    // ESPN combiner at 96px, which covers a 32px slot at 3x for ~3.5KB. The
+    // helper is defined in the page head; falling back to the raw URL keeps
+    // this working anywhere the page has not loaded it.
     function crestUrl(api, team) {
+        var raw = crestUrlFull(api, team);
+        return window.TMR_ESPN_THUMB ? window.TMR_ESPN_THUMB(raw) : raw;
+    }
+    function crestUrlFull(api, team) {
         var L = window.TMR_SBN_LOGOS, canon = window.TMR_SBN_LOGO_CANON;
         if (L && canon && L[api]) {
             var m = L[api];
