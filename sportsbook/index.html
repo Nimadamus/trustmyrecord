@@ -97,6 +97,32 @@
         'WTA': 'tennis'
     };
 
+    /* BOARD_PREFETCH_20260912. Traced on the live page: the first board request
+       does not leave the browser until ~1877ms, because ~1s of this page's own
+       inline script has to run first. The network sits idle through all of it,
+       and then the board is what everyone waits on -- 380ms against a warm
+       server cache, several seconds against a cold one.
+       This starts that request now instead, while the rest of the page is still
+       parsing. Nothing reads the response here: tmr-board-dedupe.js (loaded as
+       the first script on the page) memoises a board GET for 15s, so whichever
+       call site asks for the same board later is handed this one.
+       Only a sport the visitor has actually been on before is prefetched -- the
+       key sportsbook-default-board.js writes when they pick a tab. A first-time
+       visitor prefetches nothing rather than having us guess a board and spend
+       their bandwidth on the wrong one. Fully wrapped: any failure here leaves
+       the page exactly as it was. */
+    (function () {
+        try {
+            var last = localStorage.getItem('tmr_sb_last_sport');
+            var key = last && window.TMR.sportKeyMap[last];
+            if (!key) return;
+            fetch('https://trustmyrecord-api.onrender.com/api/games/board/' + encodeURIComponent(key),
+                  { headers: { Accept: 'application/json' } })
+                .then(function (r) { return r && r.ok ? r.json() : null; })
+                .catch(function () {});
+        } catch (e) {}
+    })();
+
     // ESPN free API - map sport keys to ESPN URL paths
     window.TMR.espnPaths = {
         'americanfootball_nfl': 'football/nfl',
