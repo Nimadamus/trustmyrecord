@@ -613,7 +613,12 @@ function renderAuthorPanel(post) {
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
         : '';
-    return '<div class="fthread-author' + botClass + '">'
+    /* ENRICH_PATCH_20260912: data-tmr-author lets forumPatchAuthorPanels() find
+       this panel again once enrichment lands, so the profile-only fields are
+       written in place instead of re-rendering the thread. The re-render cost a
+       measured mobile TBT of 386 ms p50 against 154 ms for a single render, and
+       made visible content slower, not faster. */
+    return '<div class="fthread-author' + botClass + '" data-tmr-author="' + escHtml(String(author.username || '').toLowerCase()) + '">'
         + avatarHtml
         + nameHtml
         + botBadge
@@ -628,6 +633,60 @@ function renderAuthorPanel(post) {
         + (userIsVerified(author) ? '<span class="fthread-badge">Verified record</span>' : '')
         + followUserHtml
         + '</div>';
+}
+
+/* ENRICH_PATCH_20260912 -- write the profile-only author fields into the panels
+   that are already on screen.
+   Deliberately narrow. It touches the role line, the role badge, the Posts and
+   Threads values, the fandom line and the verified-record badge, and nothing
+   else. It does NOT rebuild a post, renumber anything, replace the reply area,
+   change scroll position, or write to any element the reader can be typing in or
+   selecting. Every write is compared first, so an unchanged field is not touched
+   at all -- and an untouched text node cannot break a selection or a focus ring. */
+function forumPatchAuthorPanels() {
+    var panels = document.querySelectorAll('#postsContainer [data-tmr-author]');
+    var setText = function (el, value) {
+        if (el && value != null && el.textContent !== value) el.textContent = value;
+    };
+    for (var i = 0; i < panels.length; i++) {
+        var panel = panels[i];
+        var prof = forumAuthorCache[panel.getAttribute('data-tmr-author') || ''];
+        if (!prof) continue;
+        // role line: 'Member' -> 'Verified Handicapper'. Same element, text only.
+        if (!(prof.author_is_official_bot || prof.is_official_bot)) {
+            var wantRole = prof.user_title || (userIsVerified(prof) ? 'Verified Handicapper' : null);
+            if (wantRole) setText(panel.querySelector('.fthread-role'), wantRole);
+        }
+        // Posts / Threads were already correct from the row; this only corrects a
+        // difference, and only the number.
+        var rows = panel.querySelectorAll('.fthread-author-row');
+        for (var r = 0; r < rows.length; r++) {
+            var txt = rows[r].textContent || '';
+            if (txt.indexOf('Posts:') === 0 && numericValue(prof.user_post_count) != null) {
+                setText(rows[r], 'Posts: ' + numericValue(prof.user_post_count));
+            } else if (txt.indexOf('Threads:') === 0 && numericValue(prof.user_thread_count) != null) {
+                setText(rows[r], 'Threads: ' + numericValue(prof.user_thread_count));
+            }
+        }
+        var roleEl = panel.querySelector('.fthread-role');
+        // ADMIN / MOD badge, only if enrichment revealed a role the row lacked.
+        if (!panel.querySelector('.fadmin-badge') && roleEl) {
+            var badge = authorRoleBadge(prof);
+            if (badge) roleEl.insertAdjacentHTML('beforebegin', badge);
+        }
+        // Favourite team is profile-only, so it can only ever be added here.
+        var favTeam = firstFavoriteTeam(prof);
+        if (favTeam && favTeam !== 'Not set' && !panel.querySelector('.fthread-fandom') && roleEl) {
+            roleEl.insertAdjacentHTML('afterend',
+                '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>');
+        }
+        // Verified-record badge is profile-only too.
+        if (userIsVerified(prof) && !panel.querySelector('.fthread-badge')) {
+            var allRows = panel.querySelectorAll('.fthread-author-row');
+            var lastRow = allRows.length ? allRows[allRows.length - 1] : null;
+            if (lastRow) lastRow.insertAdjacentHTML('afterend', '<span class="fthread-badge">Verified record</span>');
+        }
+    }
 }
 
 // Follow (or, once following, open the author's profile to manage preferences)
@@ -2086,9 +2145,32 @@ async function loadThread(threadId) {
             currentCategoryName = cachedThread.category_name || cachedThread.category_slug;
             currentCategoryId = cachedThread.category_id;
         }
-        await enrichForumAuthors(cachedThread, cachedPosts);
+        /* RENDER_BEFORE_ENRICH_20260912: enrichForumAuthors() was awaited HERE,
+           before the first paint, costing a measured p50 451 ms / p95 1,235 ms of
+           blank screen on mobile for a two-author thread.
+           It is not needed for the first paint: authorSource() merges
+           post -> user -> cache, and the row the API already returned carries
+           username, avatar_url, headline, forum_undertitle, custom_flair_text,
+           user_joined, author_is_moderator, user_thread_count, user_post_count and
+           user_picks.
+           An earlier attempt deferred it and then called renderThread() a second
+           time. That doubled mobile TBT (154 -> 386 ms p50) and made visible
+           content SLOWER (1,624 -> 2,700 ms p50), so the second render is gone and
+           the profile-only fields are written into the panels already on screen.
+           Guarded: only if this is still the thread on screen, and never allowed
+           to reject into the caller. */
         renderThread();
         renderReplyArea();
+        (function (enrichThreadId) {
+            enrichForumAuthors(cachedThread, cachedPosts).then(function () {
+                if (String(currentThreadId) !== String(enrichThreadId)) return;
+                forumPatchAuthorPanels();
+            }).catch(function (err) {
+                /* Enrichment is decoration. A failure leaves the thread exactly as
+                   it is already rendered. */
+                console.warn('[Forum] author enrichment failed (thread still rendered):', err && err.message);
+            });
+        }(threadId));
         // Update header label
         var detailHeader = document.getElementById('threadDetailHeader');
         if (detailHeader) detailHeader.textContent = currentThreadTitle || 'Thread';
