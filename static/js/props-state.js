@@ -23,6 +23,12 @@
 }(typeof self !== 'undefined' ? self : null, function () {
     'use strict';
 
+    /* Wording rule: a message NEVER tells the user to try again. The retry
+     * control is a button labelled "Try again" that is drawn only when the
+     * state is retryable, so a message that also said it rendered as
+     * "...Try again. Try again" on the live page. The message says what
+     * happened; the button says what to do. */
+
     // Four states, and nothing else can reach the panel.
     //   'loading'  spinner row, no retry offered, not terminal
     //   'ok'       prices render
@@ -33,14 +39,14 @@
     var MESSAGES = {
         // Expected cache states. The board request is what warms the cache and
         // the page already makes it, so a retry here does real work.
-        warming: 'Player props are still loading. Try again.',
+        warming: 'Player props are still loading.',
         // The card is older than the board. Retrying cannot fix that; a refresh
         // can. Deliberately does not say anything is broken.
         offBoard: 'This game is no longer on the open board. Refresh to see the current slate.',
         started: 'This game has already started, so its props are closed.',
         // A real, non-expected fault. Recoverable, and says so.
-        fault: 'Player props could not be loaded just now. Try again.',
-        offline: 'Player props could not be loaded. Check your connection and try again.',
+        fault: 'Player props could not be loaded just now.',
+        offline: 'Player props could not be loaded. Check your connection.',
         // Not a fault at all.
         none: 'No player props are posted for this game.'
     };

@@ -250,6 +250,31 @@ console.log('\nPanel rendering, per state');
     S.noteHtml(S.classify({ timedOut: true }, null), 'a"b<c').indexOf('a&quot;b&lt;c') !== -1);
 }
 
+/* Observed on the live page: the retryable message ended with "Try again." and
+ * the control beside it is a button labelled "Try again", so the panel read
+ * "...Try again. Try again". The message says what happened; the button says
+ * what to do. */
+console.log('\nNo message tells the user to try again');
+{
+  const all = Object.keys(S.MESSAGES).map(k => [k, S.MESSAGES[k]])
+    .concat([['loading', S.loadingView(5).message], ['exhausted', S.exhaustedView({ attempts: 4 }).message]]);
+  for (const [k, m] of all) {
+    // 'exhausted' is the one exception: the button is gone by then, so the
+    // message is the only place left to say what to do, and it says refresh.
+    if (k === 'exhausted') continue;
+    check('MESSAGES.' + k + ' does not say "try again"', !/try again/i.test(m), m);
+  }
+  const v = S.classify({ ok: true, httpStatus: 200, body: { status: 'board_not_cached' } }, null);
+  const html = S.noteHtml(v, 'g1');
+  const occurrences = (html.match(/Try again/gi) || []).length;
+  check('the rendered retryable note says "Try again" exactly once (the button)',
+    occurrences === 1, html);
+  // The exhausted message is the one place an instruction belongs, because the
+  // button is gone.
+  check('the exhausted message tells the user to refresh instead',
+    /refresh/i.test(S.exhaustedView({ attempts: 4 }).message));
+}
+
 if (failures > 0) {
   console.error('\nprops-state-test: ' + failures + ' failure(s)');
   process.exit(1);
