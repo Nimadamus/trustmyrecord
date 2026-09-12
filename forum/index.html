@@ -6095,6 +6095,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (!cleanPost) {
                 cleanPost = (new URLSearchParams(window.location.search).get('post') || '').trim();
             }
+            // PERF_SIDEBAR_20260911: every thread entry point used to return from
+            // this handler without ever calling loadCategories(), which is the only
+            // thing that moves forumLoadState off 'loading' and calls
+            // renderForumSidebar(). The left rail therefore sat on the literal string
+            // "Loading forums..." forever on /forum/thread/<id>/<slug>/ and on
+            // /forum/?thread=<id>, and /api/forum/categories was never requested at
+            // all. Fire-and-forget (deliberately NOT awaited) so the rail fills in
+            // parallel and can never delay the thread itself -- the same shape the
+            // ?view=new branch below already uses.
+            loadCategories();
             await showThreadDetail(cleanTid, null, cleanPost || null, true);
             return;
         }
@@ -6127,6 +6137,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             var postHash = (window.location.hash || '').match(/^#post-(.+)$/);
             if (postHash) queryPost = decodeURIComponent(postHash[1]);
         }
+        // PERF_SIDEBAR_20260911: every thread entry point used to return from
+        // this handler without ever calling loadCategories(), which is the only
+        // thing that moves forumLoadState off 'loading' and calls
+        // renderForumSidebar(). The left rail therefore sat on the literal string
+        // "Loading forums..." forever on /forum/thread/<id>/<slug>/ and on
+        // /forum/?thread=<id>, and /api/forum/categories was never requested at
+        // all. Fire-and-forget (deliberately NOT awaited) so the rail fills in
+        // parallel and can never delay the thread itself -- the same shape the
+        // ?view=new branch below already uses.
+        loadCategories();
         await showThreadDetail(queryThread, null, queryPost || null, true);
         return;
     }
@@ -6148,6 +6168,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (hash && hash.indexOf('#thread-') === 0) {
         var tid = parseInt(hash.substring(8));
         if (tid) {
+            loadCategories(); // PERF_SIDEBAR_20260911: see note above
             await showThreadDetail(tid, null, null, true);
             return;
         }
