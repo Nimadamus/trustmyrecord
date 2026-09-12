@@ -1845,11 +1845,8 @@
         <div class="container">
             <div class="profile-advanced-strip-card">
                 <div class="profile-advanced-strip-head">
-                    <div>
-                        <h2>Advanced Capper Metrics</h2>
-                        <p>Ledger-driven analytics from graded picks. Missing fields stay neutral until the backend has enough data.</p>
-                    </div>
-                    <span id="profileAdvancedMetricsStatus">Loading verified metrics...</span>
+                    <h2>Advanced Capper Metrics</h2>
+                    <span id="profileAdvancedMetricsStatus">Loading verified metrics…</span>
                 </div>
                 <!-- ADV_SPORT_FILTER_20260909: every chip re-reads
                      /users/:name/metrics?sport=, which recomputes the whole card
@@ -1877,6 +1874,18 @@
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvWinRate" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvWinRateSub">Wins divided by decisions</span>
                     </article>
+                    <!-- ADV_ZSCORE_CARD_20260912. The renderer has always called
+                         setCard('profileAdvZScore', ...) but no element with that id
+                         existed, so setCard returned at `if (!el) return;` and the
+                         metric never appeared. Backend source: summary.z_score plus
+                         the four fields that document it (z_score_sample_size,
+                         z_score_actual_wins, z_score_expected_wins, z_score_variance)
+                         from profileAnalytics.calculateOddsAdjustedZScore. -->
+                    <article class="profile-advanced-metric" data-advanced-metric-card="z_score">
+                        <span class="profile-advanced-metric__label">Z-Score <span class="profile-metric-info" role="button" tabindex="0" aria-label="What is the Z-Score?" title="Odds-adjusted skill-vs-luck signal. Each settled pick contributes the win probability its own price implies. Z = (actual wins &minus; sum of those probabilities) / sqrt(sum of p(1&minus;p)). 0 means the record landed exactly where its prices said it should; +2 or more is a result variance alone rarely produces; negative means it came in under the prices taken. Pushes and pending picks are excluded. Hidden below 30 decisions, where the normal approximation is not trustworthy.">?</span></span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvZScore" aria-busy="true">…</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvZScoreSub">Odds-adjusted skill-vs-luck signal</span>
+                    </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_odds">
                         <span class="profile-advanced-metric__label">Avg Odds</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgOdds" aria-busy="true">…</strong>
@@ -1892,10 +1901,21 @@
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Graded public picks over active dates</span>
                     </article>
-                    <article class="profile-advanced-metric" data-advanced-metric-card="clv" hidden>
-                        <span class="profile-advanced-metric__label">Avg CLV (no vig)</span>
+                    <!-- CLV_CARD_20260912. The card used to append six clauses onto a
+                         single <span>, which wrapped to eight lines and stretched this
+                         card far past every other one. The visible card is now four
+                         things: name, value, qualifying sample, one status line. Every
+                         other number moved into the expandable panel below, which is
+                         populated by renderProfileAdvancedMetricsStrip. -->
+                    <article class="profile-advanced-metric profile-advanced-metric--wide" data-advanced-metric-card="clv" hidden>
+                        <span class="profile-advanced-metric__label">CLV <span class="profile-metric-info" role="button" tabindex="0" aria-label="What is CLV?" title="Closing Line Value: the edge held over the price the market closed at, measured in percentage points of implied win probability. The headline divides the book&#39;s hold out of the closing price first, so it asks whether the pick beat the market&#39;s FAIR number rather than its posted one. Only picks whose market actually closed on the same number are counted; everything else is excluded rather than estimated.">?</span></span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvClv" aria-busy="true">…</strong>
+                        <span class="profile-advanced-metric__sample" id="profileAdvClvSample"></span>
                         <span class="profile-advanced-metric__sub" id="profileAdvClvSub">Average edge over the closing fair price</span>
+                        <details class="profile-metric-detail" id="profileAdvClvDetail" hidden>
+                            <summary>How this is calculated</summary>
+                            <div id="profileAdvClvDetailBody"></div>
+                        </details>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="max_drawdown">
                         <span class="profile-advanced-metric__label">Max Drawdown</span>
@@ -1957,10 +1977,14 @@
         .profile-advanced-strip-section{padding:18px 0 0;background:transparent;}
         .profile-advanced-strip-section .container{width:min(100% - 44px,1260px);max-width:1260px;margin:0 auto;padding:0;}
         .profile-advanced-strip-card{padding:18px;border:1px solid rgba(148,163,184,.16);border-radius:16px;background:linear-gradient(180deg,#111b2e 0%,#08111f 100%);box-shadow:0 18px 42px rgba(0,0,0,.28);color:#eef6ff;}
-        .profile-advanced-strip-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px;}
+        /* ACM_HEAD_20260912: one section title. The old head stacked an <h2>, a
+           descriptive <p> and an uppercase status pill, which read as three
+           competing headings. The status is now a quiet caption on the same
+           baseline as the title, and the description moved into the per-card
+           tooltips where it is actually needed. */
+        .profile-advanced-strip-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:14px;}
         .profile-advanced-strip-head h2{margin:0;font:900 22px/1.1 'Barlow','Inter',sans-serif;letter-spacing:0;color:#f8fbff;}
-        .profile-advanced-strip-head p{margin:5px 0 0;color:#91a0b5;font-size:13px;line-height:1.45;}
-        .profile-advanced-strip-head span{flex:0 0 auto;padding:7px 10px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(2,6,23,.36);color:#aebbd0;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;}
+        .profile-advanced-strip-head span{flex:0 0 auto;color:#7f8ca3;font-size:11.5px;font-weight:700;letter-spacing:.02em;text-transform:none;}
         .profile-advanced-sportbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px;padding:6px;border:1px solid rgba(148,163,184,.14);border-radius:12px;background:rgba(2,6,23,.34);}
         .profile-advanced-sportbar[hidden]{display:none;}
         .profile-advanced-sportbar.is-busy{opacity:.55;pointer-events:none;}
@@ -1969,10 +1993,16 @@
         .profile-advanced-sportchip.is-active{background:linear-gradient(135deg,#2b8cff,#4DA3FF);border-color:transparent;color:#04111a;box-shadow:0 6px 16px rgba(43,140,255,.28);}
         .profile-advanced-sportchip:focus-visible{outline:2px solid #4DA3FF;outline-offset:2px;}
         .profile-advanced-sportchip .chip-n{margin-left:6px;font-weight:900;opacity:.7;letter-spacing:.04em;}
-        /* Ten cards over nine columns stranded a single card beside eight empty
-           ones. Five columns fills two complete rows instead. */
-        .profile-advanced-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;}
-        .profile-advanced-metric{min-width:0;min-height:126px;padding:13px 12px;border:1px solid rgba(68,91,126,.72);border-radius:10px;background:linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
+        /* ACM_GRID_20260912. Eleven cards, and CLV spans two columns because it
+           is the one metric that carries a sample line as well as a status line
+           -- it needs WIDTH, not the extra height that used to stretch it past
+           every card beside it. 11 cards + 1 extra span = 12 column units, which
+           divides exactly by 6, 4, 3, 2 and 1, so no breakpoint strands a card.
+           grid-auto-rows:1fr makes every ROW the same height, which is what the
+           old layout lacked (row 1 was 138px against row 2's 178px). */
+        .profile-advanced-metric-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:1fr;gap:10px;align-items:stretch;}
+        .profile-advanced-metric{min-width:0;min-height:132px;height:100%;padding:13px 12px;border:1px solid rgba(68,91,126,.72);border-radius:10px;background:linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
+        .profile-advanced-metric--wide{grid-column:span 2;}
         .profile-advanced-metric__label{color:#afbdd0;font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;line-height:1.15;}
         .profile-advanced-metric__value{color:#f8fbff;font-size:clamp(17px,1.18vw,22px);font-weight:950;line-height:1.05;letter-spacing:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
         [data-advanced-metric-card="avg_daily_picks"] .profile-advanced-metric__value{white-space:nowrap;overflow-wrap:normal;word-break:keep-all;}
@@ -1984,7 +2014,40 @@
         .profile-advanced-metric__value.corr-high{color:#f97316;}
         .profile-advanced-metric__value.corr-extreme{color:#ef4444;}
         .profile-advanced-metric__value .corr-warn-badge{display:inline-block;margin-left:7px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.04em;vertical-align:middle;line-height:1.4;background:rgba(239,68,68,.16);color:#fca5a5;border:1px solid rgba(239,68,68,.5);white-space:nowrap;}
-        .profile-advanced-metric__sub{margin-top:auto;color:#7f8ca3;font-size:11px;font-weight:700;line-height:1.25;}
+        /* Every value sits on the same line of every card: the label is a fixed
+           two-line box, so a one-word label and a wrapped one still put their
+           numbers at the same height. */
+        .profile-advanced-metric__label{min-height:23px;display:block;}
+        .profile-advanced-metric__sample{color:#c6d3e6;font-size:11.5px;font-weight:800;line-height:1.25;letter-spacing:.01em;}
+        /* One short status line, never a paragraph. Anything longer belongs in
+           the "How this is calculated" panel. */
+        .profile-advanced-metric__sub{margin-top:auto;color:#7f8ca3;font-size:11px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .profile-metric-info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:4px;border-radius:50%;border:1px solid rgba(148,163,184,.5);color:#aebbd0;font-size:9px;font-weight:900;line-height:1;cursor:help;vertical-align:middle;}
+        .profile-metric-info:hover,.profile-metric-info:focus-visible{color:#eaf3ff;border-color:#4DA3FF;background:rgba(43,140,255,.16);outline:none;}
+        /* The panel opens as a popover anchored under the card rather than in
+           the card's own flow. In flow it pushed the card taller, and because
+           every row is one height that dragged nine other cards down with it. */
+        .profile-advanced-metric{position:relative;}
+        .profile-metric-detail{margin-top:8px;border-top:1px solid rgba(148,163,184,.14);padding-top:7px;}
+        .profile-advanced-metric:has(.profile-metric-detail[open]){z-index:30;}
+        /* The card and the strip card both clip their overflow (rounded corners
+           and the divider grid), which would cut the popover off at the card
+           edge. The class is toggled in JS rather than left to :has() alone, so
+           a browser without :has() still shows the whole panel. */
+        .profile-advanced-metric.is-detail-open,
+        .profile-advanced-strip-card.is-detail-open{overflow:visible !important;}
+        .profile-advanced-metric.is-detail-open{z-index:30;}
+        .profile-metric-detail[hidden]{display:none;}
+        .profile-metric-detail>summary{cursor:pointer;color:#8ab4f8;font-size:11px;font-weight:800;letter-spacing:.02em;list-style:none;}
+        .profile-metric-detail>summary::-webkit-details-marker{display:none;}
+        .profile-metric-detail>summary::before{content:'\25B8\00a0';display:inline-block;}
+        .profile-metric-detail[open]>summary::before{content:'\25BE\00a0';}
+        .profile-metric-detail>div{position:absolute;left:8px;right:8px;top:calc(100% - 6px);z-index:30;max-height:330px;overflow:auto;padding:12px 14px;border:1px solid rgba(148,163,184,.3);border-radius:10px;background:#0b1626;box-shadow:0 20px 46px rgba(0,0,0,.55);color:#93a2b8;font-size:11px;font-weight:600;line-height:1.45;}
+        .profile-metric-detail dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;}
+        .profile-metric-detail dt{color:#7f8ca3;font-weight:700;}
+        .profile-metric-detail dd{margin:0;color:#d7e3f4;font-weight:700;font-variant-numeric:tabular-nums;}
+        .profile-metric-detail p{margin:7px 0 0;color:#8491a6;font-weight:600;}
+        .profile-metric-detail code{font-size:10.5px;color:#b9c9e0;background:rgba(2,6,23,.5);padding:1px 5px;border-radius:4px;}
         .profile-advanced-support-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:12px;}
         .profile-advanced-support-grid div{min-height:70px;padding:11px;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(2,6,23,.32);color:#e7eef8;font-size:12px;font-weight:850;line-height:1.2;}
         .profile-advanced-support-grid span{display:block;margin-top:5px;color:#8491a6;font-size:11px;font-weight:650;line-height:1.25;}
@@ -1995,13 +2058,18 @@
         @media(max-width:980px){
             .profile-advanced-metric-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
         }
+        @media(max-width:560px){
+            /* Two columns is too narrow for a card carrying a sample line and a
+               status line, so CLV drops back to a single column here. */
+            .profile-advanced-metric--wide{grid-column:span 1;}
+        }
         @media(max-width:720px){
             .profile-advanced-strip-section .container{width:min(100% - 28px,1260px);}
             .profile-advanced-strip-card{padding:14px;border-radius:14px;}
-            .profile-advanced-strip-head{align-items:flex-start;flex-direction:column;}
+            .profile-advanced-strip-head{align-items:flex-start;flex-direction:column;gap:3px;}
             .profile-advanced-strip-head h2{font-size:20px;}
             .profile-advanced-metric-grid,.profile-advanced-support-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-            .profile-advanced-metric{min-height:118px;}
+            .profile-advanced-metric{min-height:124px;}
         }
         @media(max-width:420px){
             .profile-advanced-metric-grid,.profile-advanced-support-grid{grid-template-columns:1fr;}
@@ -8310,12 +8378,48 @@
             graded > 0 ? graded + ' graded public picks' : 'Requires graded picks',
             decisions > 0 ? Number(s.wins || 0) - Number(s.losses || 0) : null
         );
+        /* ADV_ZSCORE_CARD_20260912. Population: this capper's own settled
+           decisions in the current scope (wins and losses; pushes and pending
+           are excluded by the backend, which is why the Z sample is 730 against
+           a 739-pick record). Baseline: not a league average and not a flat
+           50%. Each pick's expected win probability is the break-even
+           probability of the price that pick was actually taken at, so the null
+           hypothesis is "this record landed exactly where its own prices said
+           it should". Variance is the Poisson-binomial sum of p(1-p), which is
+           the right variance for a sum of independent Bernoulli trials with
+           DIFFERENT probabilities -- n*p*(1-p) would be wrong here because the
+           p's differ pick to pick.
+
+               Z = (W - SUM p_i) / sqrt(SUM p_i(1 - p_i))
+
+           The backend nulls it below 5 decisions. The CARD holds out for 30,
+           because the normal approximation this Z leans on is not trustworthy
+           below roughly that, and a decimal that reads like a verdict should
+           not appear before it means one. A missing z_score_sample_size counts
+           as not-enough rather than as enough. */
+        const Z_MIN_DECISIONS = 30;
+        const zRaw = s.z_score != null && Number.isFinite(Number(s.z_score)) ? Number(s.z_score) : null;
+        const zN = Number(s.z_score_sample_size);
+        const zShow = zRaw != null && Number.isFinite(zN) && zN >= Z_MIN_DECISIONS;
         setCard(
             'profileAdvZScore',
-            s.z_score != null ? fmtSigned(s.z_score, '', 2) : null,
-            s.z_score != null ? 'Odds-adjusted skill-vs-luck signal' : 'Requires larger graded sample',
-            s.z_score != null ? Number(s.z_score) : null
+            zShow ? fmtSigned(zRaw, '', 2) : null,
+            zShow
+                ? (zN + ' decisions · vs the prices taken')
+                : ('Needs ' + Z_MIN_DECISIONS + '+ decisions'),
+            zShow ? zRaw : null
         );
+        const zSub = document.getElementById('profileAdvZScoreSub');
+        if (zSub && zShow) {
+            /* The expected-wins figure is what makes the number readable: it
+               says what the prices themselves predicted before any result came
+               in. One extra clause, not a paragraph. */
+            const expW = Number(s.z_score_expected_wins);
+            if (Number.isFinite(expW)) {
+                zSub.textContent = Number(s.z_score_actual_wins) + ' wins vs '
+                    + expW.toFixed(1) + ' the prices implied · ' + zN + ' decisions';
+            }
+        }
         setCard(
             'profileAdvRoi',
             graded > 0 && s.roi != null ? fmtSigned(s.roi, '%', 1) : null,
@@ -8387,71 +8491,111 @@
            a small sample can never be mistaken for a settled record. Props and
            halves are outside `eligible` because no closing number exists for
            them; counting them would make coverage look worse than it is. */
+        /* CLV_CARD_20260912. Four things on the card: name, value, qualifying
+           sample, one status line. Everything that used to be appended onto the
+           status line -- and wrapped to eight lines underneath the value -- is
+           now in the "How this is calculated" panel below it. No number was
+           removed from the page; they moved to where a reader goes looking. */
+        const clvSampleEl = document.getElementById('profileAdvClvSample');
+        const clvDetailEl = document.getElementById('profileAdvClvDetail');
+        const clvDetailBody = document.getElementById('profileAdvClvDetailBody');
+        if (clvSampleEl) clvSampleEl.textContent = '';
+        if (clvDetailEl) clvDetailEl.hidden = true;
         if (clvAvailable) {
             const d = clvDetailCard;
             const tracked = Number(d.sample_size || 0);
             const eligible = Number(d.eligible_sample_size || 0);
             const priced = Number(d.priced_sample_size != null ? d.priced_sample_size : tracked);
-            /* Coverage states the PRICED share, because the priced count is the
-               denominator the average was actually taken over. Quoting the
-               tracked share beside it overstates coverage by every pick that
-               closed on a different number. */
+            /* The qualifying sample is the PRICED count, because that is the
+               denominator the average was actually taken over. The tracked
+               count is larger, and quoting it here would overstate coverage by
+               every pick that closed on a different number. */
             const pricedPct = d.priced_coverage_rate != null
                 ? Number(d.priced_coverage_rate)
                 : (eligible > 0 ? (priced / eligible) * 100 : null);
-            const coverage = (eligible > 0 && priced > 0)
-                ? (priced + ' of ' + eligible + ' eligible picks priced'
-                   + (pricedPct != null ? ' (' + Math.round(pricedPct) + '%)' : ''))
-                : null;
+            const novigN = Number(d.novig_sample_size != null ? d.novig_sample_size : priced);
+            const usingNoVig = clvNoVig != null && Number.isFinite(clvNoVig);
+            const qualifying = usingNoVig ? novigN : priced;
+            const enough = d.sufficient !== false;
 
-            if (d.sufficient === false) {
-                setCard(
-                    'profileAdvClv',
-                    'Insufficient data',
-                    coverage
-                        ? ('Insufficient closing-line data · ' + coverage)
-                        : 'Insufficient closing-line data',
-                    null
-                );
-            } else {
-                setCard(
-                    'profileAdvClv',
-                    fmtSigned(clv, ' pts', 2),
-                    coverage || 'Average edge over the closing fair price',
-                    clv
-                );
+            setCard(
+                'profileAdvClv',
+                enough ? fmtSigned(clv, ' pts', 2) : 'Unavailable',
+                enough
+                    ? (usingNoVig ? 'Against the closing FAIR price' : 'Against the closing POSTED price')
+                    : 'Historical closing lines not captured',
+                enough ? clv : null
+            );
+            if (clvSampleEl) {
+                clvSampleEl.textContent = enough
+                    ? (qualifying + ' qualifying pick' + (qualifying === 1 ? '' : 's')
+                       + (pricedPct != null ? ' · ' + Math.round(pricedPct) + '% of eligible' : ''))
+                    : (eligible > 0 ? eligible + ' eligible, ' + priced + ' priced' : '');
             }
-            const sub = document.getElementById('profileAdvClvSub');
-            if (sub && d.sufficient !== false) {
-                /* The two secondary numbers, on the card, named for what they
-                   measure. Beat the Close is the POSTED-price rate; the
-                   fair-value rate sits in the advanced grid beside it. */
-                if (d.beat_close_rate != null) {
-                    sub.textContent += ' · beat the close ' + Number(d.beat_close_rate).toFixed(2) + '%';
-                }
-                if (d.median_clv != null) {
-                    sub.textContent += ' · median ' + fmtSigned(Number(d.median_clv), '', 2);
-                }
-                if (clvRaw != null && Number.isFinite(clvRaw)) {
-                    sub.textContent += ' · posted price ' + fmtSigned(clvRaw, ' pts', 2);
-                }
+
+            /* Opening the panel must not resize the card: it is a popover
+               anchored under it, and the two ancestors that clip their overflow
+               are opened up for as long as it is showing. */
+            if (clvDetailEl && !clvDetailEl.dataset.boundToggle) {
+                clvDetailEl.dataset.boundToggle = '1';
+                const card = clvDetailEl.closest('.profile-advanced-metric');
+                const strip = clvDetailEl.closest('.profile-advanced-strip-card');
+                const sync = () => {
+                    const on = clvDetailEl.open;
+                    if (card) card.classList.toggle('is-detail-open', on);
+                    if (strip) strip.classList.toggle('is-detail-open', on);
+                };
+                clvDetailEl.addEventListener('toggle', sync);
+                document.addEventListener('click', (ev) => {
+                    if (clvDetailEl.open && !clvDetailEl.contains(ev.target)) clvDetailEl.open = false;
+                });
+                document.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Escape' && clvDetailEl.open) clvDetailEl.open = false;
+                });
             }
-            /* When the market closed on a DIFFERENT number, the close is still
-               recorded but no raw CLV exists for it -- a -1.5 price is never
-               used to score a +1.5 ticket. Say so rather than letting the gap
-               between tracked and priced go unexplained. */
-            if (sub && priced < tracked) {
-                sub.textContent += ' · ' + (tracked - priced) + ' closed on a different number';
-            }
-            /* Provenance, in one clause, never overstated. A backfilled close is
-               not the same evidence as one captured live at the bell. */
-            const prov = d.provenance || {};
-            if (sub && (Number(prov.low_confidence) > 0 || Number(prov.valid) > 0)) {
+            /* The panel. Every row is a stored field or a count of stored
+               fields. Nothing is estimated and nothing missing is filled in. */
+            if (clvDetailBody) {
+                const prov = d.provenance || {};
                 const live = Number(prov.valid || 0);
                 const low = Number(prov.low_confidence || 0);
-                sub.textContent += ' · ' + (live > 0 ? live + ' captured live, ' : '')
-                    + low + ' backfilled';
+                const esc = (v) => String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+                const row = (k, v) => (v == null || v === '' ? '' : '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>');
+                let html = '<dl>';
+                html += row('Headline', usingNoVig ? 'Average CLV, vig removed' : 'Average CLV, posted price');
+                html += row('Qualifying picks', qualifying);
+                html += row('Eligible picks', eligible);
+                html += row('With a stored close', tracked);
+                html += row('Priced (closed on the same number)', priced);
+                if (priced < tracked) html += row('Closed on a different number', (tracked - priced) + ', excluded and never estimated');
+                if (eligible > tracked) html += row('No usable close', (eligible - tracked) + ', excluded');
+                if (d.beat_close_rate_novig != null) html += row('Beat the fair close', Number(d.beat_close_rate_novig).toFixed(2) + '% (' + Number(d.beat_close_count_novig || 0) + ')');
+                if (d.beat_close_rate != null) html += row('Beat the posted close', Number(d.beat_close_rate).toFixed(2) + '% (' + Number(d.beat_close_count || 0) + ')');
+                if (d.median_clv_novig != null) html += row('Median, vig removed', fmtSigned(Number(d.median_clv_novig), ' pts', 2));
+                if (d.median_clv != null) html += row('Median, posted price', fmtSigned(Number(d.median_clv), ' pts', 2));
+                if (clvRaw != null && Number.isFinite(clvRaw)) html += row('Average vs posted price', fmtSigned(clvRaw, ' pts', 2));
+                if (live > 0 || low > 0) html += row('Close provenance', live + ' captured live, ' + low + ' backfilled');
+                html += '</dl>';
+                html += '<p><code>CLV = (fair closing probability \u2212 probability of the price taken) \u00d7 100</code>, '
+                     + 'in percentage points of implied win probability. American odds convert as '
+                     + '<code>p = 100/(odds+100)</code> for a plus price and <code>p = |odds|/(|odds|+100)</code> for a minus one. '
+                     + 'The fair closing probability divides the hold out of the two posted closing prices: '
+                     + '<code>p_side / (p_side + p_other)</code>.</p>';
+                html += '<p>Closing prices are archived on each pick at capture time from the pre-game feed '
+                     + '(closing_odds, closing_line, closing_book_title, closing_captured_at). A pick with no '
+                     + 'stored close is excluded from the average AND from its denominator, never counted as zero '
+                     + 'and never back-filled from a current line. A pick whose market closed on a different '
+                     + 'number is excluded too, because a price on one number does not score a ticket on another. '
+                     + 'Player props, halves, quarters and periods carry no closing number at all, so they sit '
+                     + 'outside \u201celigible\u201d rather than dragging coverage down.</p>';
+                clvDetailBody.innerHTML = html;
+                if (clvDetailEl) clvDetailEl.hidden = false;
             }
+        } else if (clvCard) {
+            /* No closing-line history at all in this scope. Say that in words,
+               rather than printing a decimal that means nothing. */
+            clvCard.hidden = false;
+            setCard('profileAdvClv', 'Unavailable', 'Historical closing lines not captured', null);
         }
         const maxDd = (graded > 0 && dd.max_drawdown != null) ? Number(dd.max_drawdown) : null;
         setCard(
@@ -13491,8 +13635,31 @@
             (period && period !== 'all'));
     }
 
+    /* CAPPERMETRICS_RETIRED_20260912. This block computed fifteen headline
+       numbers in the browser from `allLoadedPicks`, which holds only the first
+       page of the ledger -- 100 rows of BetLegend's 739. It then labelled that
+       page "All Time". Measured on the live profile before this change:
+
+           this section   Record 55-44 (99 graded), ROI -7.1%, Max DD 36.77u
+           the ledger     Record 395-335-9 (739 graded), ROI +0.04%, Max DD 76.19u
+
+       Its Win Rate tile also printed 0.6% where 55/99 is 55.6%, and its Avg
+       Odds was an arithmetic mean of American prices, which the rest of this
+       codebase explicitly refuses (average the implied probability, convert
+       back). Confidence, Projected ROI, Sharpe, Sortino and Kelly have no
+       stored source at all -- they are browser-side estimates that were
+       presented in the same typography as the verified figures.
+
+       Every number worth keeping is already in Advanced Capper Metrics above,
+       computed server-side over the WHOLE ledger and reproducible from the
+       picks table. So this section is off rather than showing a second, wrong
+       answer beside the right one. Nothing was deleted: remove the early
+       return to bring it back, and the charts below it with it. */
+    const CAPPER_METRICS_LEGACY_ENABLED = false;
+
     function renderCapperMetrics(picks) {
         const section = document.getElementById('capperMetricsSection');
+        if (!CAPPER_METRICS_LEGACY_ENABLED) { if (section) section.style.display = 'none'; return; }
         const adv = computeAdvancedStats(picks);
         if (!adv) { section.style.display = 'none'; return; }
         section.style.display = 'block';
@@ -19728,7 +19895,81 @@
 @media (min-width: 1181px) {
   html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric-grid,
   html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    /* ACM_GRID_20260912: six, not five. The Z-Score card makes eleven cards,
+       and CLV takes two columns because it carries a sample line as well as a
+       status line. 12 column units divides exactly by 6 / 4 / 3 / 2, so every
+       breakpoint fills its rows instead of stranding cards in a short one. */
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   1b-ii. ACM_CARD_GEOMETRY_20260912. Equal rows, aligned values, and the
+   one double-width card. This sits in the same !important layer as the
+   social-profile skin above, because that skin sets the grid and the card
+   box itself with !important and would otherwise win.
+   --------------------------------------------------------------------- */
+html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric-grid,
+html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric-grid {
+  /* Every ROW the same height. Before this, row one was 138px and row two
+     178px because the CLV card's status text ran to eight lines. */
+  grid-auto-rows: 1fr !important;
+  align-items: stretch !important;
+}
+html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric,
+html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric {
+  height: 100% !important;
+  /* Content starts at the top of every card, so the labels line up and the
+     values line up, whatever each card carries underneath them. */
+  justify-content: flex-start !important;
+}
+html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric__label,
+html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric__label {
+  /* A fixed label box, so a label that wraps cannot push its own value a line
+     below the value in the card beside it. */
+  min-height: 15px !important;
+  display: block !important;
+}
+html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric__sub,
+html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric__sub {
+  margin-top: auto !important;
+}
+@media (min-width: 561px) {
+  html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric--wide,
+  html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric--wide {
+    grid-column: span 2 !important;
+  }
+}
+html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric.is-detail-open,
+html body.profile-page #profileAdvancedMetricsSection .profile-advanced-strip-card.is-detail-open,
+html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric.is-detail-open,
+html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-strip-card.is-detail-open {
+  overflow: visible !important;
+}
+
+@media (max-width: 560px) {
+  /* One or two cards to a row on a phone, so a fixed 138px card leaves a dead
+     band between the value and the line under it. Height follows the content
+     here; cards sharing a row still stretch to match each other, which is the
+     only equality that means anything once the grid is this narrow. */
+  html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric-grid,
+  html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric-grid {
+    grid-auto-rows: auto !important;
+  }
+  html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric,
+  html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric {
+    min-height: 0 !important;
+    padding: 13px 14px !important;
+    gap: 4px !important;
+  }
+  html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric__sub,
+  html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric__sub {
+    margin-top: 2px !important;
+  }
+  html body.profile-page #profileAdvancedMetricsSection .profile-advanced-metric__value,
+  html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection .profile-advanced-metric__value {
+    font-size: 24px !important;
+    margin-top: 2px !important;
   }
 }
 
