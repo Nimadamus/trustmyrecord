@@ -368,6 +368,22 @@
      * than it did before. So that pipeline lives here, is called by readGroups
      * for the board and by loadProps for the endpoint, and is never duplicated.
      */
+    /* SECOND_HALF_STRICT_20260912. The 2nd Half tab is a filter, so what
+     * reaches it is decided by the feed's own period metadata and nothing
+     * else: an item belongs only when its market_type is one of these exact
+     * keys. Sitting in the group, a label, or a pattern on the name is not
+     * enough, and a missing or unknown type fails closed. While the tab is
+     * selected the whole board is scoped to it (see scopedCat): only games
+     * with a real 2H price, the tally counts only 2H prices, and a card's
+     * market count and expanded panel show only its 2H markets. */
+    var STRICT_CATS = {
+        second_half: { second_half_h2h: 1, second_half_spreads: 1, second_half_totals: 1 }
+    };
+    function strictItems(key, items) {
+        var allow = STRICT_CATS[key];
+        if (!allow) return items;
+        return items.filter(function (i) { return allow[String(i.marketType || '')] === 1; });
+    }
     function mapGroupItems(grp, sport) {
         var items = (grp.items || []).map(function (i) {
                 return {
@@ -406,6 +422,7 @@
                 if (/team_totals/.test(grp.key) && sport === 'MLB' && Math.abs(i.line) < 2.5) return false;
                 return true;
             });
+        items = strictItems(grp.key, items);
         if (!items.length) return null;
         var one = scopeBooks(grp.key, items);
         return { key: grp.key, label: grp.label || grp.key, book: one.book, items: one.items };
@@ -805,6 +822,7 @@
             if (!/(^|_)h2h$/.test(String(i.marketType)) && !validLine(i.line)) return false;
             return true;
         });
+        items = strictItems('second_half', items);
         return {
             id: g.id,
             sportKey: g.sport_key,
@@ -1315,6 +1333,21 @@
         for (var i = 0; i < cats.length; i++) if (cats[i].key === state.cat) return cats[i];
         return cats[0] || null;
     }
+    // SECOND_HALF_STRICT_20260912: the selected tab when it scopes the whole
+    // board, else null. Every other tab keeps the full-inventory board as is.
+    function scopedCat() {
+        var a = activeCat();
+        return a && STRICT_CATS[a.key] ? a.key : null;
+    }
+    function boardGames(scope) {
+        if (!scope) return state.games;
+        return state.games.filter(function (g) { return !!catLines(g, scope); });
+    }
+    function scopedPrices(g, scope) {
+        if (!scope) return countPrices(g);
+        var grp = g.groups[scope];
+        return grp ? grp.items.length : 0;
+    }
 
     // ---- Reading one category out of a game ---------------------------------
     // Period / half / First 5 buckets hold three market types at once. Split them
@@ -1657,7 +1690,7 @@
             '<button type="button" class="sbn-deep' + (open ? ' is-on' : '') +
             '" data-drawer="' + esc(g.id) + '" aria-expanded="' + (open ? 'true' : 'false') +
             '" aria-controls="' + expId(g.id) + '">' +
-            (open ? 'Hide markets' : 'All markets <b>' + countPrices(g) + '</b>') +
+            (open ? 'Hide markets' : 'All markets <b>' + scopedPrices(g, STRICT_CATS[cat.key] ? cat.key : null) + '</b>') +
             '<i class="sbn-deepcaret" aria-hidden="true"></i></button>' +
             '</div>' +
             '<div class="sbn-teams">' + body + '</div>' +
@@ -1685,7 +1718,9 @@
         var cats = categories();
         if (!cats.length) return '';
         var active = activeCat();
-        var total = state.games.reduce(function (n, g) { return n + countPrices(g); }, 0);
+        var scope = scopedCat();
+        var shown = boardGames(scope);
+        var total = shown.reduce(function (n, g) { return n + scopedPrices(g, scope); }, 0);
         return '<div class="sbn-toolbar">' +
             '<span class="sbn-boardname">' + esc(sportMeta(state.sport).label) + '</span>' +
             // A11Y_20260904: these controls switch which market the board below
@@ -1707,7 +1742,7 @@
                     esc(c.label) + '<i>' + c.games + '</i></button>';
             }).join('') +
             '</nav>' +
-            '<span class="sbn-tally">' + state.games.length + ' games \u00b7 ' + total.toLocaleString() + ' prices</span>' +
+            '<span class="sbn-tally">' + shown.length + (shown.length === 1 ? ' game' : ' games') + ' \u00b7 ' + total.toLocaleString() + ' prices</span>' +
             '</div>';
     }
 
@@ -1870,6 +1905,8 @@
     // the page is that one card gets taller.
     function expandHtml(g) {
         var cats = drawerCats(g);
+        var scope = scopedCat();
+        if (scope) cats = cats.filter(function (c) { return c.key === scope; });
         var on = null;
         for (var c = 0; c < cats.length; c++) if (cats[c].key === state.drawerCat) on = cats[c];
         if (!on) on = cats[0];
@@ -2248,6 +2285,7 @@
             else {
                 var cat = activeCat();
                 var cols = cat.layout === 'lines' ? linesCols(cat) : null;
+                var shownGames = boardGames(scopedCat());
                 // The rows are the tab's panel. An unstyled block wrapper: it
                 // adds no padding, border or display of its own, so the column
                 // header and the rows lay out exactly as they did.
@@ -2255,9 +2293,10 @@
                     '<div id="' + BOARD_PANEL_ID + '" role="tabpanel" aria-labelledby="' +
                     catTabId(cat.key) + '">' +
                     colHead(cat, cols) +
+                    (!shownGames.length ? '<div class="sbn-note">No ' + esc(cat.label) + ' lines available.</div>' : '') +
                     (function () {
                         var lastDay = '';
-                        return state.games.map(function (g) {
+                        return shownGames.map(function (g) {
                             var key = dayKey(g.when), bar = '';
                             if (key && key !== lastDay) {
                                 lastDay = key;
