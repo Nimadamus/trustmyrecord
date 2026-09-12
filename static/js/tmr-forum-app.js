@@ -2065,9 +2065,45 @@ function forumRenderThreadLoadFailed(threadId, container, message) {
         + '</div>';
 }
 
+/* CLS_RESERVE_20260912: hold the space the thread is about to occupy.
+   #postsContainer goes from a one-line "Loading..." placeholder to the full thread
+   -- 165px to 4,444px measured on a 390px viewport -- and everything under it moves.
+   That single growth was CLS 0.85 of a 0.93 total on mobile, the worst Core Web
+   Vitals number on the site.
+   tmr-forum-thread-hydrate.js measured the baked page, which had the SAME posts laid
+   out at the SAME width moments earlier, and handed the height over. Reserve it, then
+   release it once the real content is at least that tall -- releasing a min-height the
+   content already exceeds changes nothing on screen, so that release cannot shift.
+   If the estimate overshot, the reservation stays and costs a little trailing space
+   rather than a jump. Nothing here changes what is fetched or rendered. */
+function forumReserveThreadSpace(container) {
+    if (!container) return 0;
+    var px = parseInt(window.__TMR_FORUM_RESERVE_PX, 10);
+    if (!(px > 0)) return 0;
+    container.style.minHeight = px + 'px';
+    return px;
+}
+function forumReleaseThreadSpace(container, reserved) {
+    if (!container || !reserved) return;
+    // Two frames: let the posts lay out before deciding whether the reserve is spent.
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            // Measure the POSTS, not the container: while the reservation is applied
+            // the container's own scrollHeight IS the reservation, so comparing
+            // against it always succeeded and released the reserve even when the
+            // real content was shorter -- which put the jump straight back.
+            var rendered = 0;
+            var nodes = container.querySelectorAll('.fthread-post');
+            for (var i = 0; i < nodes.length; i++) rendered += nodes[i].offsetHeight;
+            if (rendered >= reserved) container.style.minHeight = '';
+        });
+    });
+}
+
 async function loadThread(threadId) {
     var container = document.getElementById('postsContainer');
     showLoading(container);
+    var reservedPx = forumReserveThreadSpace(container);
 
     try {
         var data = await api.request('/forum/threads/' + threadId, {
@@ -2088,6 +2124,7 @@ async function loadThread(threadId) {
         }
         await enrichForumAuthors(cachedThread, cachedPosts);
         renderThread();
+        forumReleaseThreadSpace(container, reservedPx);
         renderReplyArea();
         // Update header label
         var detailHeader = document.getElementById('threadDetailHeader');
@@ -2103,11 +2140,13 @@ async function loadThread(threadId) {
         // No noindex and no redirect are used.
         if (err && err.status === 404) {
             forumRenderThreadNotFound(threadId, container);
+            if (container) container.style.minHeight = '';
         } else {
             var timedOut = !!(err && (err.name === 'TimeoutError' || err.name === 'AbortError'));
             forumRenderThreadLoadFailed(threadId, container, timedOut
                 ? 'The server did not respond within ' + Math.round(FORUM_THREAD_LOAD_BUDGET_MS / 1000) + ' seconds.'
                 : 'The server could not be reached.');
+            if (container) container.style.minHeight = '';
         }
         console.error('Load thread error:', err);
     }

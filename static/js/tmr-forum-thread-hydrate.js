@@ -62,6 +62,34 @@
     var el = document.querySelector(sel);
     return el ? el.getAttribute(name) : null;
   }
+  /* CLS_RESERVE_20260912: the shell's #postsContainer starts as a one-line
+     "Loading..." placeholder and then grows to the full thread -- 165px to 4,444px
+     on a 390px viewport. Everything below it moves, which is measured as CLS 0.93
+     on mobile, the worst Core Web Vitals number on the site.
+     This baked page has the SAME posts laid out at the SAME viewport width right
+     now, so its own content height is the best available estimate of what the shell
+     is about to render. Measure it before the swap and hand it over, so the space is
+     reserved instead of appearing underneath the reader. Estimate only -- the shell
+     clears it once the real content is at least that tall. */
+  var reservePx = 0;
+  try {
+    var postNodes = document.querySelectorAll('article.ft-post, .ft-post');
+    for (var pi = 0; pi < postNodes.length; pi++) {
+      reservePx += Math.round(postNodes[pi].getBoundingClientRect().height);
+    }
+    // The shell renders the same posts with its own chrome (author block, post
+    // actions, quote/like rows) that the baked crawler view does not carry, so the
+    // sum of the baked posts reads LOW -- measured 3,882px against a real 4,266px.
+    // <main> wraps the posts plus the surrounding furniture and reads closer. Take
+    // the larger of the two: under-reserving leaves a visible jump, over-reserving
+    // only leaves trailing space that the release step removes as soon as the real
+    // content reaches it.
+    var mainEl = document.querySelector('main');
+    if (mainEl) reservePx = Math.max(reservePx, Math.round(mainEl.getBoundingClientRect().height));
+    // Never reserve something absurd if the measurement goes wrong.
+    if (!(reservePx > 0) || reservePx > 20000) reservePx = 0;
+  } catch (e) { reservePx = 0; }
+
   var ldNode = document.querySelector('script[type="application/ld+json"]');
   var seo = {
     canonical: attr('link[rel=canonical]', 'href'),
@@ -84,7 +112,7 @@
      cache. The ?v= tags are content hashes; scripts/version_static_refs.py repins
      references inside .js sources, so these stay correct automatically. */
   try {
-    [['/static/js/tmr-forum-app.js?v=03aed4aa5842', 'script'],
+    [['/static/js/tmr-forum-app.js?v=953cfac11dc4', 'script'],
      ['/static/css/tmr-forum-app.css?v=2403843992ed', 'style']].forEach(function (a) {
       var l = document.createElement('link');
       l.rel = 'preload'; l.as = a[1]; l.href = a[0];
@@ -106,7 +134,7 @@
       // markers are the shell's own view container plus the script tag that pulls
       // the app in -- both of which are what actually has to be present for the
       // swap to produce a working page.
-      if (html.indexOf('id="viewThread"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=03aed4aa5842') < 0) {
+      if (html.indexOf('id="viewThread"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=953cfac11dc4') < 0) {
         throw new Error('unexpected shell payload');
       }
 
@@ -114,6 +142,7 @@
         'window.__TMR_FORUM_THREAD_ID=' + safeJson(tid) + ';' +
         'window.__TMR_FORUM_THREAD_SLUG=' + safeJson(window.__TMR_FORUM_THREAD_SLUG || '') + ';' +
         'window.__TMR_FORUM_SEO=' + safeJson(seo) + ';' +
+        'window.__TMR_FORUM_RESERVE_PX=' + safeJson(reservePx) + ';' +
         '<\/script>';
 
       // Runs at the END of the shell's <head>, so the shell's own canonical/title
