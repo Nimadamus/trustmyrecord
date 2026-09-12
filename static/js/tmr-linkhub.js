@@ -791,6 +791,17 @@
     }
 
     function syncFooter() {
+        /* CLS_FOOTER_CHURN_20260912: a baked /forum/thread/ or /forum/<cat>/
+           page is about to be replaced wholesale by the forum shell, which
+           carries its own <footer>. Appending ours at load+400ms and removing
+           it again after the swap is pure churn, and it is expensive: a 283px
+           element appearing then vanishing inside a 390px viewport measured as
+           a 0.335 layout shift, a third of that page's entire CLS. The hydrate
+           raises this flag before it starts and lowers it if the swap fails, so
+           the 1s reconcile loop still puts a footer on the fallback page.
+           Neither adds nor removes while the flag is up: the page keeps
+           whatever it has until the swap decides. */
+        if (window.__TMRLH_SWAP_PENDING) return;
         var ours = qs('.tmrlh-footwrap');
         if (nativeFooter()) {
             if (ours && ours.parentNode) ours.parentNode.removeChild(ours);

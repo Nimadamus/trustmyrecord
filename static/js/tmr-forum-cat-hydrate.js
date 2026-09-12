@@ -81,6 +81,13 @@
     });
   } catch (e) { /* preload is an optimisation only; never block the swap */ }
 
+  /* CLS_FOOTER_CHURN_20260912: tell tmr-linkhub.js not to build a sitewide
+     footer on this page. The shell that replaces it carries its own, and
+     adding then removing one measured as a 0.335 layout shift on a 390px
+     viewport. The catch() below lowers this again if the swap never happens,
+     and linkhub's 1s reconcile loop then puts the footer back. */
+  window.__TMRLH_SWAP_PENDING = true;
+
   fetch('/forum/', { headers: { Accept: 'text/html' }, credentials: 'same-origin' })
     .then(function (r) {
       if (!r.ok) throw new Error('shell HTTP ' + r.status);
@@ -126,6 +133,9 @@
       document.close();
     })
     .catch(function (err) {
+      /* Swap failed: the baked page is what the visitor gets, so it needs the
+         sitewide footer after all. linkhub's reconcile loop picks this up. */
+      window.__TMRLH_SWAP_PENDING = false;
       // Baked page stays; log for diagnostics only.
       revealBaked();
       if (window.console && console.warn) console.warn('cat hydrate skipped:', err && err.message);
