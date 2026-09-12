@@ -168,8 +168,14 @@ SPORTS = {
 # Nothing to edit, nothing to remember, and when a sport has no MOTD article the
 # callout renders as an empty string rather than a stale link to last week.
 MOTD_INDEX = "matchup-of-the-day/%s/index.html"
+# FEATURE_MAY_LIVE_OUTSIDE_THE_LANE_20260912. The pattern used to demand a
+# /matchup-of-the-day/ path, so when a sport's door was pointed at a feature that
+# lives elsewhere on the site the hub silently dropped its card instead of
+# following the door. The door is the source of truth for what a sport is
+# featuring; this now reads whatever internal URL it names. Every sport door
+# carries exactly one anchor, so there is nothing else here to match.
 MOTD_CARD = re.compile(
-    r'<a[^>]+href="(/matchup-of-the-day/[^"/]+/)"[^>]*>(.{0,800}?)</a>', re.S)
+    r'<a[^>]+href="(/[^"]+/)"[^>]*>(.{0,800}?)</a>', re.S)
 MOTD_TAGS = re.compile(r"<[^>]+>")
 
 
