@@ -77,15 +77,14 @@
     for (var pi = 0; pi < postNodes.length; pi++) {
       reservePx += Math.round(postNodes[pi].getBoundingClientRect().height);
     }
-    // The shell renders the same posts with its own chrome (author block, post
-    // actions, quote/like rows) that the baked crawler view does not carry, so the
-    // sum of the baked posts reads LOW -- measured 3,882px against a real 4,266px.
-    // <main> wraps the posts plus the surrounding furniture and reads closer. Take
-    // the larger of the two: under-reserving leaves a visible jump, over-reserving
-    // only leaves trailing space that the release step removes as soon as the real
-    // content reaches it.
-    var mainEl = document.querySelector('main');
-    if (mainEl) reservePx = Math.max(reservePx, Math.round(mainEl.getBoundingClientRect().height));
+    // TUNING, and the mistake in it: I first widened this to
+    // max(sum of baked posts, <main>) on the theory that the sum reads low
+    // because the shell adds chrome the crawler view lacks. Measured on a 390px
+    // viewport that produced 4,866px against a real 4,235px of rendered posts --
+    // 631px of reserved blank space, 75% of the viewport, that never released
+    // because the content never reached it. The tighter estimate measured better
+    // on BOTH counts: CLS 0.126 and no gap. Under-reserving costs a small
+    // residual shift; over-reserving costs a visible hole. Take the small shift.
     // Never reserve something absurd if the measurement goes wrong.
     if (!(reservePx > 0) || reservePx > 20000) reservePx = 0;
   } catch (e) { reservePx = 0; }
