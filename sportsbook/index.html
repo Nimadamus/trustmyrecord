@@ -10636,37 +10636,124 @@
             </div>
         </div>
 
-        <!-- NFL_GAME_OF_THE_WEEK_STRIP_20260907
-             Deliberately a sibling of .make-picks-loggedout rather than a child of
-             .section-header.make-picks-header: sportsbook-next-embed.css hides that
-             header outright under the v3 skin (html.tmr-sbnext), so anything placed
-             inside it disappears for the rolled-out board. Nothing targets .sb-gotw,
-             so this strip renders in both the classic and the v3 skins, and it sits
-             above .sportsbook-picks-layout, which is where the v3 shell mounts. -->
-        <a class="sb-gotw" href="/nfl/49ers-vs-rams-week-1-2026/">
-            <span class="sb-gotw-tag">NFL Game of the Week</span>
+        <!-- FEATURED_GAME_STRIP_20260912
+             Replaces NFL_GAME_OF_THE_WEEK_STRIP_20260907, which hard coded a
+             single game and therefore kept advertising 49ers at Rams after that
+             game had finished 27-7. The strip is now driven by an ordered list
+             of approved features, each carrying its own kickoff, and a feature
+             retires on the clock rather than on somebody remembering to edit
+             this file.
+
+             Placement is unchanged and is deliberate: a sibling of
+             .make-picks-loggedout rather than a child of .section-header, because
+             sportsbook-next-embed.css hides that header outright under the v3
+             skin (html.tmr-sbnext) and anything inside it disappears for the
+             rolled-out board. Nothing else targets .sb-gotw.
+
+             Rules, in one place:
+               * A feature is live from `start` (optional, defaults to always)
+                 until `kickoff` plus FEATURE_GRACE_MS. The grace is 3.5 hours,
+                 which is past the end of any NFL game, so a finished matchup can
+                 never still be on the strip.
+               * The first feature that is still live wins. The list is ordered,
+                 so the next approved feature takes over by itself.
+               * If nothing is live the strip is removed entirely rather than
+                 left showing a stale game.
+               * href always points at the ONE complete article. Never at a hub,
+                 an index, a forwarder or an archive.
+             The first entry is also rendered statically below so the strip is
+             correct with JavaScript disabled; the script only ever narrows or
+             removes what is shown, it never invents a feature. -->
+        <a class="sb-gotw" id="sbFeatureStrip" href="/nfl/bills-vs-texans-week-1-2026/">
+            <span class="sb-gotw-tag" data-feat="label">NFL Sunday Spotlight</span>
             <span class="sb-gotw-main">
-                <img src="https://a.espncdn.com/i/teamlogos/nfl/500/sf.png" alt="" width="30" height="30" loading="lazy">
-                <b>49ers at Rams</b>
-                <img src="https://a.espncdn.com/i/teamlogos/nfl/500/lar.png" alt="" width="30" height="30" loading="lazy">
-                <em>Melbourne Cricket Ground, Week 1</em>
+                <img data-feat="logoA" src="https://a.espncdn.com/i/teamlogos/nfl/500/buf.png" alt="" width="32" height="32" loading="lazy">
+                <b data-feat="main">Bills at Texans</b>
+                <img data-feat="logoB" src="https://a.espncdn.com/i/teamlogos/nfl/500/hou.png" alt="" width="32" height="32" loading="lazy">
+                <em data-feat="secondary">Sunday, September 13 &middot; Week 1</em>
             </span>
-            <span class="sb-gotw-cta">Deep dive and 1,000 simulations <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+            <span class="sb-gotw-cta"><span data-feat="cta">Deep Dive, Prediction &amp; 1,000 Simulations</span> <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
         </a>
+        <script>
+        (function () {
+            /* Approved features, in order. Add the next one above or below to
+               taste; order decides which wins when two are live at once.
+               kickoff is the real kickoff in UTC. href is the single article. */
+            var FEATURES = [
+                {
+                    href: '/nfl/bills-vs-texans-week-1-2026/',
+                    label: 'NFL Sunday Spotlight',
+                    main: 'Bills at Texans',
+                    secondary: 'Sunday, September 13 · Week 1',
+                    cta: 'Deep Dive, Prediction &amp; 1,000 Simulations',
+                    logoA: 'https://a.espncdn.com/i/teamlogos/nfl/500/buf.png',
+                    logoB: 'https://a.espncdn.com/i/teamlogos/nfl/500/hou.png',
+                    kickoff: '2026-09-13T17:00:00Z'
+                }
+            ];
+            /* 3.5 hours. Longer than any NFL game, so the strip is gone before
+               anybody could see a finished matchup advertised. */
+            var FEATURE_GRACE_MS = 3.5 * 60 * 60 * 1000;
+
+            var strip = document.getElementById('sbFeatureStrip');
+            if (!strip) return;
+
+            function live(f, now) {
+                var k = Date.parse(f.kickoff);
+                if (isNaN(k)) return false;                 // unparseable kickoff never shows
+                if (f.start && now < Date.parse(f.start)) return false;
+                return now < k + FEATURE_GRACE_MS;
+            }
+
+            function render() {
+                var now = Date.now(), i, f = null;
+                for (i = 0; i < FEATURES.length; i++) {
+                    if (live(FEATURES[i], now)) { f = FEATURES[i]; break; }
+                }
+                if (!f) {
+                    /* Nothing approved is current. Remove rather than hide, so
+                       no finished game can be revealed by a stylesheet change. */
+                    if (strip.parentNode) strip.parentNode.removeChild(strip);
+                    return false;
+                }
+                strip.setAttribute('href', f.href);
+                var set = function (k, v) {
+                    var el = strip.querySelector('[data-feat="' + k + '"]');
+                    if (el) el.innerHTML = v;
+                };
+                var img = function (k, v) {
+                    var el = strip.querySelector('[data-feat="' + k + '"]');
+                    if (el) el.setAttribute('src', v);
+                };
+                set('label', f.label); set('main', f.main);
+                set('secondary', f.secondary); set('cta', f.cta);
+                img('logoA', f.logoA); img('logoB', f.logoB);
+                strip.setAttribute('aria-label', f.label + ': ' + f.main + '. ' + f.secondary);
+                return true;
+            }
+
+            if (render()) {
+                /* Re-check every minute so a tab left open across kickoff plus
+                   the grace window retires the strip without a reload. */
+                var t = setInterval(function () { if (!render()) clearInterval(t); }, 60000);
+            }
+        })();
+        </script>
         <style>
             .sb-gotw{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;max-width:1720px;margin:10px auto 0;padding:12px 16px;
-                     background:linear-gradient(120deg,rgba(255,201,60,.14),rgba(0,53,148,.16) 55%,rgba(170,0,0,.16));
+                     background:linear-gradient(120deg,rgba(255,201,60,.14),rgba(0,53,148,.16) 55%,rgba(235,0,40,.16));
                      border:1px solid rgba(255,201,60,.38);border-radius:12px;text-decoration:none;color:#f4f8fc;
                      transition:border-color .15s ease,transform .15s ease}
             .sb-gotw:hover{border-color:#FFC93C;transform:translateY(-1px)}
             .sb-gotw-tag{font:800 .66rem/1 'Barlow Condensed',Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;
                          color:#04101c;background:#FFC93C;padding:6px 10px;border-radius:5px;white-space:nowrap}
             .sb-gotw-main{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
-            .sb-gotw-main img{width:30px;height:30px;object-fit:contain;flex:0 0 auto}
-            .sb-gotw-main b{font:900 1.02rem/1 'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+            .sb-gotw-main img{width:32px;height:32px;object-fit:contain;flex:0 0 auto;image-rendering:auto}
+            .sb-gotw-main b{font:900 1.02rem/1 'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;letter-spacing:.02em;color:#f4f8fc}
             .sb-gotw-main em{font-style:normal;font-size:.8rem;color:#a9bbd0}
             .sb-gotw-cta{margin-left:auto;font:700 .84rem/1 Inter,sans-serif;color:#FFC93C;white-space:nowrap}
             .sb-gotw-cta i{margin-left:6px;font-size:.76em}
+            @media(max-width:900px){.sb-gotw-cta{white-space:normal;line-height:1.35}}
             @media(max-width:640px){.sb-gotw{gap:8px 12px}.sb-gotw-cta{margin-left:0;width:100%}}
         </style>
 
