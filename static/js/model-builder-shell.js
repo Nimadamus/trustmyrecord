@@ -361,9 +361,18 @@
     if (el('maxOdds').value !== '') f.max_odds = num(el('maxOdds').value);
     if (el('minLine').value !== '') f.min_line = num(el('minLine').value);
     if (el('maxLine').value !== '') f.max_line = num(el('maxLine').value);
-    if (el('dateFrom').value) f.date_from = el('dateFrom').value;
-    if (el('dateTo').value) f.date_to = el('dateTo').value;
     if (el('selectionContains').value.trim()) f.selection_contains = el('selectionContains').value.trim();
+    return f;
+  }
+
+  /* MODEL_BUILDER_POLISH_20260912. The date pair windows `graded_at`, so it is
+     a BACKTEST parameter and never a condition. Keeping it out of
+     filtersFromForm() means a saved model can no longer carry two conditions
+     that do nothing forward and are not even shown on its card. */
+  function backtestFiltersFromForm() {
+    var f = filtersFromForm();
+    if (el('dateFrom') && el('dateFrom').value) f.date_from = el('dateFrom').value;
+    if (el('dateTo') && el('dateTo').value) f.date_to = el('dateTo').value;
     return f;
   }
 
@@ -398,7 +407,7 @@
     el('runBtn').disabled = true;
     skeletonResults();
     try {
-      var filters = filtersFromForm();
+      var filters = backtestFiltersFromForm();
       state.lastDescribe = describeFilters(filters);
       var res = await api().runBacktest(filters);
       renderResults(res);
@@ -828,7 +837,7 @@
             + '<button type="button" data-act="terms" data-id="' + m.id + '">Edit period</button>'
             + '<button type="button" data-act="publish" data-id="' + m.id + '">Submit for public listing</button>'
           : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
-      + '<button type="button" data-act="load" data-id="' + m.id + '">Backtest these conditions</button>'
+      + '<button type="button" data-act="load" data-id="' + m.id + '">Reuse these conditions</button>'
       + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
       + '</div></div>';
   }
@@ -857,12 +866,14 @@
     el('maxOdds').value = f.max_odds != null ? f.max_odds : '';
     el('minLine').value = f.min_line != null ? f.min_line : '';
     el('maxLine').value = f.max_line != null ? f.max_line : '';
-    el('dateFrom').value = f.date_from || '';
-    el('dateTo').value = f.date_to || '';
+    /* A model's conditions no longer include dates, so loading one clears the
+       backtest window rather than restoring a value that is not a condition. */
+    if (el('dateFrom')) el('dateFrom').value = f.date_from || '';
+    if (el('dateTo')) el('dateTo').value = f.date_to || '';
     el('selectionContains').value = f.selection_contains || '';
     state.nameTouched = true;
     if (el('modelName')) el('modelName').value = m.name;
-    setMessage('Loaded the conditions from "' + m.name + '". Run the historical backtest, or change them and start a new model. '
+    setMessage('Loaded the conditions from "' + m.name + '". Check them against past results, or change them and start tracking a new model. '
       + 'Nothing you do here changes the record of the model you loaded from.', 'ok');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

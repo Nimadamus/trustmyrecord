@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <link rel="canonical" href="https://trustmyrecord.com/model-builder/">
-    <title>Model Builder | Backtest Betting Models on Verified Results | TrustMyRecord</title>
+    <title>Model Builder | Define Betting Conditions and Track Them Forward | TrustMyRecord</title>
     <meta name="description" content="Describe the kind of bet you believe in and TrustMyRecord watches the sportsbook for you. Every bet that matches your filters is logged automatically at the posted price and graded on the final score, giving you a real record with units, ROI, win rate and a day by day breakdown. Nothing is wagered and nothing touches your profile.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -359,7 +359,7 @@
         <section class="model-builder-top mb-hero">
             <p class="kicker">Research Tools</p>
             <h1>Model <span class="accent">Builder</span></h1>
-            <p class="lede">Build a betting model, test it against historical TrustMyRecord results, then track every future wager that matches your conditions.</p>
+            <p class="lede">Define the conditions you believe in, and TrustMyRecord tracks every future wager that matches them, automatically, for as long as you choose.</p>
             <p class="lede lede-2">Once tracking begins, TrustMyRecord automatically records and grades every future qualifying wager for the duration you choose. You never have to come back and run it.</p>
 
             <ol class="how how-4">
@@ -370,7 +370,7 @@
                 </li>
                 <li class="how-step">
                     <span class="how-n">2</span>
-                    <h2 class="how-t">Backtest</h2>
+                    <h2 class="how-t">Check history</h2>
                     <p class="how-b">Optional. See how those exact conditions did in the verified graded ledger, so you can decide whether the idea is worth tracking. This is history, not your model's record.</p>
                 </li>
                 <li class="how-step">
@@ -484,16 +484,8 @@
                                     <span class="hint" style="margin-top:7px">The spread or total attached to the pick, such as -1.5 or 8.5.</span>
                                 </div>
                                 <details class="adv">
-                                    <summary>Advanced conditions</summary>
+                                    <summary>More conditions</summary>
                                     <div class="adv-body">
-                                        <div class="two-col">
-                                            <label>From date
-                                                <input id="dateFrom" type="date">
-                                            </label>
-                                            <label>To date
-                                                <input id="dateTo" type="date">
-                                            </label>
-                                        </div>
                                         <label>Selection contains
                                             <input id="selectionContains" type="text" placeholder="e.g. Over, Yankees">
                                             <span class="hint">Matches the pick text: a team name, Over or Under, a player.</span>
@@ -507,12 +499,34 @@
                             <div class="step-head">
                                 <span class="step-n" aria-hidden="true">3</span>
                                 <div>
-                                    <div class="step-title">Backtest it first (optional)</div>
-                                    <div class="step-sub">See how these conditions performed historically</div>
+                                    <div class="step-title">Check it against past results (optional)</div>
+                                    <div class="step-sub">A separate population, never part of the forward record</div>
                                 </div>
                             </div>
-                            <button type="submit" class="cta cta-secondary" id="runBtn">Run historical backtest</button>
-                            <p class="run-note">A backtest is past results from the verified graded ledger. It is not your model's record and it never counts toward it.</p>
+                            <!-- MODEL_BUILDER_POLISH_20260912. These two dates used to sit in
+                                 step 2 under "Set your conditions", which said "these are what a
+                                 future wager has to meet to qualify". They never qualified
+                                 anything: the forward scanner ignores them by design, because
+                                 they window `graded_at` to pick a slice of HISTORY, which says
+                                 nothing about which of tomorrow's games the model should take.
+                                 They are the backtest's window and nothing else, so they live in
+                                 the backtest step now. The tracking window has one control and it
+                                 is "Tracking ends" in step 4. -->
+                            <div class="form-grid" style="margin-bottom:12px">
+                                <div>
+                                    <div class="two-col">
+                                        <label>History from
+                                            <input id="dateFrom" type="date">
+                                        </label>
+                                        <label>History to
+                                            <input id="dateTo" type="date">
+                                        </label>
+                                    </div>
+                                    <span class="hint" style="margin-top:7px">Optional, and it narrows the BACKTEST only. It does not change which future wagers qualify: the tracking period is set in step 4.</span>
+                                </div>
+                            </div>
+                            <button type="submit" class="cta cta-secondary" id="runBtn">Check these conditions against past results</button>
+                            <p class="run-note">Past results come from the verified graded ledger. They are not your model's record and never count toward it.</p>
                         </li>
 
                         <li class="step">
@@ -579,15 +593,15 @@
             <section class="builder-panel panel-sticky" aria-label="Backtest results">
                 <div class="results-head">
                     <div>
-                        <p class="panel-label">Step 3 &middot; Backtest</p>
+                        <p class="panel-label">Step 3 &middot; Past results</p>
                         <h2>Historical results for these conditions</h2>
                     </div>
                     <span class="freshness" id="resultFreshness"></span>
                 </div>
                 <div id="resultsBody">
                     <div class="empty-state">
-                        <h3>Your backtest will appear here</h3>
-                        <p class="placeholder">Set your conditions and run a backtest to see how wagers like these have actually performed in the verified graded ledger. A backtest is optional: you can start tracking a model without running one.</p>
+                        <h3>Past results will appear here</h3>
+                        <p class="placeholder">Set your conditions and check them against the verified graded ledger to see how wagers like these have actually performed. This is optional: you can start tracking a model without it, and these past results never count toward the model’s own record.</p>
                         <div class="ghost-grid" aria-hidden="true">
                             <div class="ghost"><div class="k">Record</div><div class="v"><i class="ghost-bar"></i></div></div>
                             <div class="ghost"><div class="k">ROI</div><div class="v"><i class="ghost-bar"></i></div></div>
@@ -755,7 +769,7 @@
                 <div class="spec-row"><dt>Stopping</dt><dd>Pause it whenever you like, or give it an end date. Bets already open still settle either way.</dd></div>
             </dl>
 
-            <p class="detail-close">It answers one question: if you had actually been betting this idea, where would you stand? You can also backtest the idea against every verified graded pick already in the database before you switch it on, which is what the builder above does when you press Run historical backtest. That backtest is a separate population and it never enters a model's forward record.</p>
+            <p class="detail-close">It answers one question: if you had actually been betting this idea, where would you stand? You can also check the idea against every verified graded pick already in the database before you switch it on, which is what the builder above does when you press Check these conditions against past results. Those past results are a separate population and they never enter a model's forward record.</p>
         </section>
     </main>
 
