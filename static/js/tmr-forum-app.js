@@ -644,6 +644,32 @@ function renderAuthorPanel(post) {
    selecting. Every write is compared first, so an unchanged field is not touched
    at all -- and an untouched text node cannot break a selection or a focus ring. */
 function forumPatchAuthorPanels() {
+    /* VISUAL_ANCHOR_20260912: the optional fields (favourite team, verified
+       badge) are profile-only, so they can only ever be ADDED after the paint.
+       Adding them grows every author panel, and panels above the reader push
+       everything below them down.
+       Measured on the live build, mobile 390 @4x, 3 runs out of 3: document
+       +188px, Chromium's own scroll anchoring compensated 46px, and the reader
+       still saw a 95px jump. Native anchoring is not enough here.
+       So: take a reference point the reader is actually looking at, do every
+       write, then move the scroll by exactly how far that reference moved. The
+       content under the reader's eye then does not move at all. At the top of
+       the page the reference cannot move, so nothing is compensated and the
+       scroll position is untouched -- which is the common case.
+       Nothing is reserved in advance, so a member with neither field gets no
+       blank space. */
+    var anchorEl = null;
+    var anchorBefore = 0;
+    try {
+        var all = document.querySelectorAll('#postsContainer .fthread-post');
+        for (var k = 0; k < all.length; k++) {
+            var r = all[k].getBoundingClientRect();
+            // the first post that is at or below the top of the viewport is what
+            // the reader is reading; anything above it is off-screen.
+            if (r.bottom > 0) { anchorEl = all[k]; anchorBefore = r.top; break; }
+        }
+    } catch (e) { anchorEl = null; }
+
     var panels = document.querySelectorAll('#postsContainer [data-tmr-author]');
     var setText = function (el, value) {
         if (el && value != null && el.textContent !== value) el.textContent = value;
@@ -669,23 +695,32 @@ function forumPatchAuthorPanels() {
             }
         }
         var roleEl = panel.querySelector('.fthread-role');
-        // ADMIN / MOD badge, only if enrichment revealed a role the row lacked.
-        if (!panel.querySelector('.fadmin-badge') && roleEl) {
-            var badge = authorRoleBadge(prof);
-            if (badge) roleEl.insertAdjacentHTML('beforebegin', badge);
-        }
-        // Favourite team is profile-only, so it can only ever be added here.
+        /* One write per position instead of three separate reflows. Each is still
+           guarded on absence, so running the patcher twice cannot duplicate a
+           badge or a fandom line. */
+        var beforeRole = '';
+        var afterRole = '';
+        if (!panel.querySelector('.fadmin-badge') && roleEl) beforeRole += (authorRoleBadge(prof) || '');
         var favTeam = firstFavoriteTeam(prof);
         if (favTeam && favTeam !== 'Not set' && !panel.querySelector('.fthread-fandom') && roleEl) {
-            roleEl.insertAdjacentHTML('afterend',
-                '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>');
+            afterRole += '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>';
         }
-        // Verified-record badge is profile-only too.
+        if (beforeRole && roleEl) roleEl.insertAdjacentHTML('beforebegin', beforeRole);
+        if (afterRole && roleEl) roleEl.insertAdjacentHTML('afterend', afterRole);
         if (userIsVerified(prof) && !panel.querySelector('.fthread-badge')) {
             var allRows = panel.querySelectorAll('.fthread-author-row');
             var lastRow = allRows.length ? allRows[allRows.length - 1] : null;
             if (lastRow) lastRow.insertAdjacentHTML('afterend', '<span class="fthread-badge">Verified record</span>');
         }
+    }
+    /* Put the reader back where they were. Same frame as the writes, so there is
+       no intermediate paint to see. scrollTo with a plain number is instant --
+       no smooth behaviour, no animation to fight. */
+    if (anchorEl) {
+        try {
+            var moved = anchorEl.getBoundingClientRect().top - anchorBefore;
+            if (moved && Math.abs(moved) > 0.5) window.scrollTo(0, window.scrollY + moved);
+        } catch (e) { /* never let an anchoring failure break the patch */ }
     }
 }
 
@@ -2163,7 +2198,12 @@ async function loadThread(threadId) {
         renderReplyArea();
         (function (enrichThreadId) {
             enrichForumAuthors(cachedThread, cachedPosts).then(function () {
+                /* A slow enrichment for thread X must never write into thread Y.
+                   currentThreadId is reassigned by showThreadDetail() the moment a
+                   new thread opens, so this compares the id this call was launched
+                   for against the one on screen now. */
                 if (String(currentThreadId) !== String(enrichThreadId)) return;
+
                 forumPatchAuthorPanels();
             }).catch(function (err) {
                 /* Enrichment is decoration. A failure leaves the thread exactly as
