@@ -13635,26 +13635,32 @@
             (period && period !== 'all'));
     }
 
-    /* CAPPERMETRICS_RETIRED_20260912. This block computed fifteen headline
-       numbers in the browser from `allLoadedPicks`, which holds only the first
-       page of the ledger -- 100 rows of BetLegend's 739. It then labelled that
-       page "All Time". Measured on the live profile before this change:
+    /* CAPPERMETRICS_RETIRED_20260912. Fifteen headline numbers computed in the
+       browser, shown in the same typography as the verified section above, with
+       four defects measured on the live profile:
 
-           this section   Record 55-44 (99 graded), ROI -7.1%, Max DD 36.77u
-           the ledger     Record 395-335-9 (739 graded), ROI +0.04%, Max DD 76.19u
+       1. The Win Rate tile prints a FRACTION as a percentage. It read "0.6%"
+          where the record on screen beside it was 55-44, i.e. 55.6%. That is
+          wrong at every sample size.
+       2. Avg Odds (AOP) is an arithmetic mean of American prices. The rest of
+          this codebase refuses that by name: average the implied probability,
+          then convert back.
+       3. Confidence, Projected ROI, Sharpe, Sortino and Kelly have no stored
+          source. They are browser-side estimates, and nothing on the card said
+          so.
+       4. Its input is `allLoadedPicks`, which is paged in 100 at a time and
+          gives up on the first page that misses its 7s timeout. One measured
+          load held 100 of BetLegend's 739 and this section reported it as
+          "All Time": Record 55-44 (99 graded), ROI -7.1%, Max DD 36.77u,
+          against the ledger's 395-335-9, +0.04% and 76.19u.
 
-       Its Win Rate tile also printed 0.6% where 55/99 is 55.6%, and its Avg
-       Odds was an arithmetic mean of American prices, which the rest of this
-       codebase explicitly refuses (average the implied probability, convert
-       back). Confidence, Projected ROI, Sharpe, Sortino and Kelly have no
-       stored source at all -- they are browser-side estimates that were
-       presented in the same typography as the verified figures.
-
-       Every number worth keeping is already in Advanced Capper Metrics above,
-       computed server-side over the WHOLE ledger and reproducible from the
-       picks table. So this section is off rather than showing a second, wrong
-       answer beside the right one. Nothing was deleted: remove the early
-       return to bring it back, and the charts below it with it. */
+       Everything worth keeping is in Advanced Capper Metrics above, computed
+       server-side over the WHOLE ledger and reproducible from the picks table.
+       So this is off rather than a second, contradicting answer beside the
+       right one. Nothing was deleted: flip the constant to bring it back, and
+       the equity / day-of-week / monthly charts under it with it. Those charts
+       read the same truncatable array, so restoring them means fixing (4)
+       first. */
     const CAPPER_METRICS_LEGACY_ENABLED = false;
 
     function renderCapperMetrics(picks) {
