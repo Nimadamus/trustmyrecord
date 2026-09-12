@@ -1765,7 +1765,9 @@
                 var ou = /^(Over|Under)$/.test(side);
                 // A moneyline has no line to lead with, so the price is the hero there,
                 // exactly as it is in the Moneyline column on the board.
-                var noLine = i.line == null;
+                // SECOND_HALF_STRICT_20260912: num() reads a missing line as 0,
+                // so a 2H moneyline rendered "0" here. Its type says it has no line.
+                var noLine = i.line == null || (!!STRICT_CATS[key] && isH2H(String(mt)));
                 // a moneyline has no line, and an empty left half reads as a
                 // broken cell in a panel this wide, so it says what it is
                 var top = ou ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
