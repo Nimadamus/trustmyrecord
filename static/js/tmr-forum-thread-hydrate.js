@@ -111,7 +111,7 @@
      cache. The ?v= tags are content hashes; scripts/version_static_refs.py repins
      references inside .js sources, so these stay correct automatically. */
   try {
-    [['/static/js/tmr-forum-app.js?v=953cfac11dc4', 'script'],
+    [['/static/js/tmr-forum-app.js?v=f4a18bf8a8be', 'script'],
      ['/static/css/tmr-forum-app.css?v=2403843992ed', 'style']].forEach(function (a) {
       var l = document.createElement('link');
       l.rel = 'preload'; l.as = a[1]; l.href = a[0];
@@ -140,7 +140,7 @@
       // markers are the shell's own view container plus the script tag that pulls
       // the app in -- both of which are what actually has to be present for the
       // swap to produce a working page.
-      if (html.indexOf('id="viewThread"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=953cfac11dc4') < 0) {
+      if (html.indexOf('id="viewThread"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=f4a18bf8a8be') < 0) {
         throw new Error('unexpected shell payload');
       }
 
