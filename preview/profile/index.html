@@ -6506,22 +6506,24 @@
         return pick.book || pick.sportsbook || pick.sportsbook_name || pick.source_book || 'Tracked';
     }
 
+    /* CLV_DISPLAY_20260912. One CLV definition on this site, and it is the
+       backend's. This used to subtract a LINE from a LINE with the sign
+       inverted, and this copy never got CLV_NULL_GUARD_20260909 either, so a
+       missing close was scored against a closing number of zero. Both are gone:
+       read the value, do no arithmetic. */
+    function readPickNumber(pick, field) {
+        const raw = pick ? pick[field] : null;
+        if (raw == null || raw === '') return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+    }
+
     function calculatePickClv(pick) {
-        const opening = Number(pick.line_snapshot);
-        const closing = Number(getClosingLineValue(pick));
-        if (!Number.isFinite(opening) || !Number.isFinite(closing)) return null;
+        return readPickNumber(pick, 'clv');
+    }
 
-        const selection = String(pick.selection || '').toLowerCase();
-        const market = String(pick.market_type || '').toLowerCase();
-
-        if (selection.includes('under')) return parseFloat((closing - opening).toFixed(2));
-        if (selection.includes('over')) return parseFloat((opening - closing).toFixed(2));
-
-        if (market.includes('spread') || market.includes('total') || market.includes('f5') || market.includes('half') || market.includes('period')) {
-            return parseFloat((closing - opening).toFixed(2));
-        }
-
-        return parseFloat((closing - opening).toFixed(2));
+    function pickClvNoVig(pick) {
+        return readPickNumber(pick, 'clv_novig');
     }
 
     function formatClvValue(value) {
@@ -6530,17 +6532,18 @@
         return (num >= 0 ? '+' : '') + num.toFixed(2);
     }
 
+    /* The DE-VIGGED average, the same metric the live card headlines. */
     function computeAggregateClv(picks) {
         const values = (Array.isArray(picks) ? picks : [])
-            .map(calculatePickClv)
+            .map(pickClvNoVig)
             .filter(function(value) { return value != null && Number.isFinite(value); });
         if (values.length === 0) {
-            return { display: '--', note: 'CLV unavailable', className: 'neutral' };
+            return { display: '--', note: 'No closing-line data yet', className: 'neutral' };
         }
         const avg = values.reduce(function(total, value) { return total + value; }, 0) / values.length;
         return {
-            display: formatClvValue(avg),
-            note: values.length + ' picks with closing data',
+            display: formatClvValue(avg) + ' pts',
+            note: values.length + ' priced picks, vig removed',
             className: avg > 0 ? 'positive' : avg < 0 ? 'negative' : 'neutral'
         };
     }
@@ -11262,7 +11265,7 @@
             summaryStat('Average Odds', merged.avgOdds != null ? formatOddsValue(merged.avgOdds) : '--', 'Average market price') +
             summaryStat('Average Units', (summary ? Number(summary.avg_units || s.avgUnits || 0) : s.avgUnits).toFixed(2) + 'u', 'Average size per pick') +
             summaryStat('Best Streak', s.bestStreak + 'W', 'Longest win streak') +
-            summaryStat('CLV', clv.display, clv.note, clv.className);
+            summaryStat('Avg CLV (no vig)', clv.display, clv.note, clv.className);
     }
 
     function renderSummaryBarFromAdvanced(summary, fallbackStats) {
@@ -11361,7 +11364,7 @@
         const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
         const rd = status === 'pending' ? '' : (r != null ? formatSignedUnits(r) : '--');
         const netUnitsSubline = status === 'pending' ? '' : '<div class="ledger-subline">' + rd + '</div>';
-        const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
+        const clvClass = clvValue == null ? 'zero' : clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
@@ -11533,7 +11536,7 @@
             ['Pending Picks', String(pendingValue), 'Open picks not graded yet'],
             ['Average Odds', avgOddsValue != null ? (avgOddsValue > 0 ? '+' : '') + avgOddsValue : 'N/A', 'Average American price'],
             ['Average Units', avgUnitsValue.toFixed(2) + 'u', 'Average risk per pick'],
-            ['CLV', clv.display, clv.note],
+            ['Avg CLV (no vig)', clv.display, clv.note],
             ['Favorite Record', ledger.favoriteRecord, 'All negative-price decisions'],
             ['Underdog Record', ledger.underdogRecord, 'All plus-money decisions'],
             ['Home Record', ledger.homeRecord, 'Selections tied to home side'],
@@ -12433,7 +12436,7 @@
                 net_units: pickPL(a),
                 closing: Number(getClosingLineValue(a) || 0),
                 closing_line: Number(getClosingLineValue(a) || 0),
-                clv: Number(calculatePickClv(a) || 0),
+                clv: calculatePickClv(a),
                 book: deriveBookName(a),
                 status: aStatus
             };
@@ -12449,12 +12452,24 @@
                 net_units: pickPL(b),
                 closing: Number(getClosingLineValue(b) || 0),
                 closing_line: Number(getClosingLineValue(b) || 0),
-                clv: Number(calculatePickClv(b) || 0),
+                clv: calculatePickClv(b),
                 book: deriveBookName(b),
                 status: bStatus
             };
             const left = aValue[sortKey];
             const right = bValue[sortKey];
+
+            /* Best/Worst CLV must order by the number the column prints, and a
+               pick with NO CLV is not one that closed exactly at par. */
+            if (sortKey === 'clv') {
+                const ln = left == null || !Number.isFinite(Number(left)) ? null : Number(left);
+                const rn = right == null || !Number.isFinite(Number(right)) ? null : Number(right);
+                if (ln == null && rn == null) return getPickTimestamp(b) - getPickTimestamp(a);
+                if (ln == null) return 1;
+                if (rn == null) return -1;
+                if (ln !== rn) return (ln - rn) * direction;
+                return getPickTimestamp(b) - getPickTimestamp(a);
+            }
 
             if (typeof left === 'string' || typeof right === 'string') {
                 const compare = String(left || '').localeCompare(String(right || ''));

@@ -1893,9 +1893,9 @@
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Graded public picks over active dates</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="clv" hidden>
-                        <span class="profile-advanced-metric__label">CLV</span>
+                        <span class="profile-advanced-metric__label">Avg CLV (no vig)</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvClv" aria-busy="true">…</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvClvSub">Closing-line value</span>
+                        <span class="profile-advanced-metric__sub" id="profileAdvClvSub">Average edge over the closing fair price</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="max_drawdown">
                         <span class="profile-advanced-metric__label">Max Drawdown</span>
@@ -2817,9 +2817,9 @@
                               <tr data-tmrx-adv-top="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
                               <tr data-tmrx-adv-top="win_rate_interval"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson interval: where the true win rate sits, given this sample. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv-top="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
-                              <tr data-tmrx-adv-top="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
+                              <tr data-tmrx-adv-top="clv"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
                               <tr data-tmrx-adv-top="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_novig"><td class="name">CLV vs Fair Value</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
                               <tr data-tmrx-adv-top="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
@@ -3798,9 +3798,9 @@
                               <tr data-tmrx-adv="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
                               <tr data-tmrx-adv="win_rate_interval"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson score interval: the band the true win rate falls in at this sample size. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
-                              <tr data-tmrx-adv="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
+                              <tr data-tmrx-adv="clv"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
                               <tr data-tmrx-adv="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_novig"><td class="name">CLV vs Fair Value</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
                               <tr data-tmrx-adv="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
@@ -7103,32 +7103,62 @@
         return pick.book || pick.sportsbook || pick.sportsbook_name || pick.source_book || 'Tracked';
     }
 
+    /* CLV_DISPLAY_20260912. This function used to subtract a LINE from a LINE
+       and call the result CLV. It was a different quantity in a different unit
+       with the sign inverted, and it ignored the value the backend had already
+       computed. The 2026-09-11 audit measured it on a 734-pick record: of the
+       426 rows that printed a number, 362 printed "+0.00" while 279 of those
+       had a real CLV between -6.95 and +31.01, and all 64 of the non-zero
+       values contradicted the backend's own line-movement rule.
+
+       There is now exactly ONE CLV definition on this site. It lives in
+       services/closingLineMath.js, it is a difference of implied
+       PROBABILITIES in percentage points, and the API serves it per pick
+       through services/profileAnalytics.clvFieldsForPick. This reads it and
+       does no arithmetic of its own. A pick with no usable close arrives with
+       clv null and prints a dash. */
+    function readPickNumber(pick, field) {
+        const raw = pick ? pick[field] : null;
+        if (raw == null || raw === '') return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+    }
+
     function calculatePickClv(pick) {
-        /* CLV_NULL_GUARD_20260909: Number(null) is 0, not NaN, so a pick with no
-           stored closing line used to be scored against a closing number of
-           zero. A 4.5 total under printed "-4.50" in the CLV column while the
-           Closing Line column beside it correctly printed "--". A missing
-           opening OR closing line means no CLV exists, so return null and let
-           formatClvValue print the dash. */
-        const openingRaw = pick.line_snapshot;
-        const closingRaw = getClosingLineValue(pick);
-        if (openingRaw == null || openingRaw === '') return null;
-        if (closingRaw == null || closingRaw === '') return null;
-        const opening = Number(openingRaw);
-        const closing = Number(closingRaw);
-        if (!Number.isFinite(opening) || !Number.isFinite(closing)) return null;
+        return readPickNumber(pick, 'clv');
+    }
 
-        const selection = String(pick.selection || '').toLowerCase();
-        const market = String(pick.market_type || '').toLowerCase();
+    /* The de-vigged value. This is the headline metric, because beating the
+       POSTED close is a weaker claim than beating the closing fair price. */
+    function pickClvNoVig(pick) {
+        return readPickNumber(pick, 'clv_novig');
+    }
 
-        if (selection.includes('under')) return parseFloat((closing - opening).toFixed(2));
-        if (selection.includes('over')) return parseFloat((opening - closing).toFixed(2));
-
-        if (market.includes('spread') || market.includes('total') || market.includes('f5') || market.includes('half') || market.includes('period')) {
-            return parseFloat((closing - opening).toFixed(2));
+    /* Provenance for the cell tooltip. A backfilled close is never described as
+       a proven live-at-the-bell capture. */
+    function clvProvenanceNote(pick) {
+        if (!pick) return '';
+        const parts = [];
+        if (pick.clv != null && pick.clv !== '') {
+            parts.push('CLV ' + formatClvValue(readPickNumber(pick, 'clv')) + ' pts vs the posted close');
         }
-
-        return parseFloat((closing - opening).toFixed(2));
+        if (pick.clv_novig != null && pick.clv_novig !== '') {
+            parts.push('no vig ' + formatClvValue(pickClvNoVig(pick)) + ' pts');
+        }
+        if (pick.closing_book_title) parts.push('closed at ' + pick.closing_book_title);
+        const src = String(pick.closing_source || '').toLowerCase();
+        if (src === 'action_network') parts.push('captured live before the start');
+        else if (src) parts.push('backfilled from the last pre-game price');
+        if (pick.closing_captured_at) {
+            const d = new Date(pick.closing_captured_at);
+            if (!isNaN(d.getTime())) {
+                parts.push('read ' + d.toLocaleString('en-US', { timeZone: 'America/New_York' }) + ' ET');
+            }
+        }
+        if (pick.closing_confidence_reason === 'read_early') parts.push('flagged: read well before the start');
+        if (pick.closing_confidence_reason === 'outlier_review') parts.push('flagged for review: unusually large move');
+        if (!parts.length) return 'No closing price was recorded for this pick.';
+        return parts.join(' · ');
     }
 
     function formatClvValue(value) {
@@ -7137,17 +7167,21 @@
         return (num >= 0 ? '+' : '') + num.toFixed(2);
     }
 
+    /* CLV_DISPLAY_20260912. Averages the backend's DE-VIGGED value over
+       whatever the client-side filters currently show, because this stat has
+       to follow the filters and the profile aggregate cannot. Same metric as
+       the headline card, so the two can never tell different stories. */
     function computeAggregateClv(picks) {
         const values = (Array.isArray(picks) ? picks : [])
-            .map(calculatePickClv)
+            .map(pickClvNoVig)
             .filter(function(value) { return value != null && Number.isFinite(value); });
         if (values.length === 0) {
-            return { display: '--', note: 'CLV unavailable', className: 'neutral' };
+            return { display: '--', note: 'No closing-line data yet', className: 'neutral' };
         }
         const avg = values.reduce(function(total, value) { return total + value; }, 0) / values.length;
         return {
-            display: formatClvValue(avg),
-            note: values.length + ' picks with closing data',
+            display: formatClvValue(avg) + ' pts',
+            note: values.length + ' priced picks, vig removed',
             className: avg > 0 ? 'positive' : avg < 0 ? 'negative' : 'neutral'
         };
     }
@@ -8323,7 +8357,15 @@
                 : 'Coming once enough graded data is available',
             null
         );
-        const clv = scores.clv != null ? Number(scores.clv) : null;
+        /* CLV_DISPLAY_20260912. The headline is the DE-VIGGED average. The raw
+           figure reported +0.42 pts for a record whose de-vigged value was
+           -2.38 pts and whose beat-the-close rate was 48.05%, which is a number
+           carried by the book's hold rather than by edge. The raw figure is
+           still shown, named for what it measures. */
+        const clvDetailCard = scores.clv_detail || {};
+        const clvNoVig = clvDetailCard.avg_clv_novig != null ? Number(clvDetailCard.avg_clv_novig) : null;
+        const clvRaw = scores.clv != null ? Number(scores.clv) : null;
+        const clv = clvNoVig != null && Number.isFinite(clvNoVig) ? clvNoVig : clvRaw;
         const clvAvailable = clv != null && Number.isFinite(clv);
         const clvCard = document.querySelector('[data-advanced-metric-card="clv"]');
         if (clvCard) {
@@ -8346,12 +8388,20 @@
            halves are outside `eligible` because no closing number exists for
            them; counting them would make coverage look worse than it is. */
         if (clvAvailable) {
-            const d = scores.clv_detail || {};
+            const d = clvDetailCard;
             const tracked = Number(d.sample_size || 0);
             const eligible = Number(d.eligible_sample_size || 0);
             const priced = Number(d.priced_sample_size != null ? d.priced_sample_size : tracked);
-            const coverage = (eligible > 0 && tracked > 0)
-                ? (tracked + ' of ' + eligible + ' eligible picks tracked')
+            /* Coverage states the PRICED share, because the priced count is the
+               denominator the average was actually taken over. Quoting the
+               tracked share beside it overstates coverage by every pick that
+               closed on a different number. */
+            const pricedPct = d.priced_coverage_rate != null
+                ? Number(d.priced_coverage_rate)
+                : (eligible > 0 ? (priced / eligible) * 100 : null);
+            const coverage = (eligible > 0 && priced > 0)
+                ? (priced + ' of ' + eligible + ' eligible picks priced'
+                   + (pricedPct != null ? ' (' + Math.round(pricedPct) + '%)' : ''))
                 : null;
 
             if (d.sufficient === false) {
@@ -8367,17 +8417,40 @@
                 setCard(
                     'profileAdvClv',
                     fmtSigned(clv, ' pts', 2),
-                    coverage || 'Closing-line value',
+                    coverage || 'Average edge over the closing fair price',
                     clv
                 );
+            }
+            const sub = document.getElementById('profileAdvClvSub');
+            if (sub && d.sufficient !== false) {
+                /* The two secondary numbers, on the card, named for what they
+                   measure. Beat the Close is the POSTED-price rate; the
+                   fair-value rate sits in the advanced grid beside it. */
+                if (d.beat_close_rate != null) {
+                    sub.textContent += ' · beat the close ' + Number(d.beat_close_rate).toFixed(2) + '%';
+                }
+                if (d.median_clv != null) {
+                    sub.textContent += ' · median ' + fmtSigned(Number(d.median_clv), '', 2);
+                }
+                if (clvRaw != null && Number.isFinite(clvRaw)) {
+                    sub.textContent += ' · posted price ' + fmtSigned(clvRaw, ' pts', 2);
+                }
             }
             /* When the market closed on a DIFFERENT number, the close is still
                recorded but no raw CLV exists for it -- a -1.5 price is never
                used to score a +1.5 ticket. Say so rather than letting the gap
                between tracked and priced go unexplained. */
-            const sub = document.getElementById('profileAdvClvSub');
             if (sub && priced < tracked) {
                 sub.textContent += ' · ' + (tracked - priced) + ' closed on a different number';
+            }
+            /* Provenance, in one clause, never overstated. A backfilled close is
+               not the same evidence as one captured live at the bell. */
+            const prov = d.provenance || {};
+            if (sub && (Number(prov.low_confidence) > 0 || Number(prov.valid) > 0)) {
+                const live = Number(prov.valid || 0);
+                const low = Number(prov.low_confidence || 0);
+                sub.textContent += ' · ' + (live > 0 ? live + ' captured live, ' : '')
+                    + low + ' backfilled';
             }
         }
         const maxDd = (graded > 0 && dd.max_drawdown != null) ? Number(dd.max_drawdown) : null;
@@ -9096,6 +9169,16 @@
             if (clvDetail.beat_close_rate != null) {
                 const r = Number(clvDetail.beat_close_rate);
                 setAdv('clv_beat_rate', r.toFixed(1) + '% (' + clvDetail.beat_close_count + '/' + clvDetail.priced_sample_size + ')', r - 50);
+            }
+            /* CLV_DISPLAY_20260912: the same rate against fair value, and the
+               median, which says whether the average is carried by a few rows. */
+            if (clvDetail.beat_close_rate_novig != null) {
+                const rn = Number(clvDetail.beat_close_rate_novig);
+                setAdv('clv_beat_rate_novig', rn.toFixed(1) + '% (' + clvDetail.beat_close_count_novig + '/' + clvDetail.novig_sample_size + ')', rn - 50);
+            }
+            if (clvDetail.median_clv != null) {
+                const m = Number(clvDetail.median_clv);
+                setAdv('clv_median', fmtSigned(m, ' pts', 2) + ' · ' + clvDetail.priced_sample_size + ' priced picks', m);
             }
             const moved = clvDetail.line_moved_your_way;
             if (moved && moved.rate != null) {
@@ -12655,7 +12738,7 @@
             summaryStat('Average Odds', merged.avgOdds != null ? formatOddsValue(merged.avgOdds) : '--', 'Average market price') +
             summaryStat('Average Units', (summary ? Number(summary.avg_units || s.avgUnits || 0) : s.avgUnits).toFixed(2) + 'u', 'Average size per pick') +
             summaryStat('Best Streak', s.bestStreak + 'W', 'Longest win streak') +
-            summaryStat('CLV', clv.display, clv.note, clv.className);
+            summaryStat('Avg CLV (no vig)', clv.display, clv.note, clv.className);
     }
 
     function renderSummaryBarFromAdvanced(summary, fallbackStats) {
@@ -12741,6 +12824,7 @@
         const market = marketTypeLabel(p.market_type);
         const closingLine = getClosingLineValue(p);
         const clvValue = calculatePickClv(p);
+        const clvNote = clvProvenanceNote(p);
         const book = deriveBookName(p);
 
         let pl = '', plc = 'zero';
@@ -12754,7 +12838,7 @@
         const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
         const rd = status === 'pending' ? '' : (r != null ? formatSignedUnits(r) : '--');
         const netUnitsSubline = status === 'pending' ? '' : '<div class="ledger-subline">' + rd + '</div>';
-        const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
+        const clvClass = clvValue == null ? 'zero' : clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
@@ -12768,8 +12852,8 @@
             '<td data-label="Units">' + units + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
             '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + netUnitsSubline + '</td>' +
-            '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
-            '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
+            '<td data-label="Closing Line" class="ledger-closing"><div>' + formatLineValue(closingLine) + '</div>' + (p.closing_book_title ? '<div class="ledger-muted">' + p.closing_book_title + '</div>' : '') + '</td>' +
+            '<td data-label="CLV" class="profit-cell ' + clvClass + '" title="' + clvNote.replace(/"/g, '&quot;') + '">' + formatClvValue(clvValue) + '</td>' +
             '<td data-label="Book">' + book + '</td>' +
             '<td data-label="Status"><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
             '</tr>';
@@ -12928,7 +13012,7 @@
             ['Pending Picks', String(pendingValue), 'Open picks not graded yet'],
             ['Average Odds', avgOddsValue != null ? (avgOddsValue > 0 ? '+' : '') + avgOddsValue : 'N/A', 'Average American price'],
             ['Average Units', avgUnitsValue.toFixed(2) + 'u', 'Average risk per pick'],
-            ['CLV', clv.display, clv.note],
+            ['Avg CLV (no vig)', clv.display, clv.note],
             ['Favorite Record', ledger.favoriteRecord, 'All negative-price decisions'],
             ['Underdog Record', ledger.underdogRecord, 'All plus-money decisions'],
             ['Home Record', ledger.homeRecord, 'Selections tied to home side'],
@@ -13872,7 +13956,7 @@
                 net_units: pickPL(a),
                 closing: Number(getClosingLineValue(a) || 0),
                 closing_line: Number(getClosingLineValue(a) || 0),
-                clv: Number(calculatePickClv(a) || 0),
+                clv: calculatePickClv(a),
                 book: deriveBookName(a),
                 status: aStatus
             };
@@ -13888,12 +13972,26 @@
                 net_units: pickPL(b),
                 closing: Number(getClosingLineValue(b) || 0),
                 closing_line: Number(getClosingLineValue(b) || 0),
-                clv: Number(calculatePickClv(b) || 0),
+                clv: calculatePickClv(b),
                 book: deriveBookName(b),
                 status: bStatus
             };
             const left = aValue[sortKey];
             const right = bValue[sortKey];
+
+            /* CLV_DISPLAY_20260912. "Best CLV" and "Worst CLV" must order by
+               the same number the column prints, and a pick with NO CLV is not
+               a pick that closed exactly at par. Nulls sort last in both
+               directions so they can never occupy either end of the list. */
+            if (sortKey === 'clv') {
+                const ln = left == null || !Number.isFinite(Number(left)) ? null : Number(left);
+                const rn = right == null || !Number.isFinite(Number(right)) ? null : Number(right);
+                if (ln == null && rn == null) return getPickTimestamp(b) - getPickTimestamp(a);
+                if (ln == null) return 1;
+                if (rn == null) return -1;
+                if (ln !== rn) return (ln - rn) * direction;
+                return getPickTimestamp(b) - getPickTimestamp(a);
+            }
 
             if (typeof left === 'string' || typeof right === 'string') {
                 const compare = String(left || '').localeCompare(String(right || ''));
