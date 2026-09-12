@@ -28,6 +28,9 @@
     var API = (window.TMR_CONFIG && window.TMR_CONFIG.baseUrl) ||
         (window.api && window.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
     var BOARD_LIMIT = 60;
+    // A props request that has not answered in this long is treated as a
+    // recoverable failure rather than an indefinite spinner.
+    var PROPS_TIMEOUT_MS = 12000;
     /* PROPS_LAZY_20260911. Verification switch, not a feature flag for users.
      *
      * Until the board stops inlining player props there is nothing to lazy-load,
@@ -419,87 +422,117 @@
      *                             rather than a hopeful second attempt.
      * A non-2xx or an unparseable body is the only thing treated as an error.
      */
-    function setProps(g, next) {
+    function propsApi() {
+        // No local fallback on purpose. If props-state.js failed to load, the
+        // panel must say so loudly rather than quietly inventing a second,
+        // untested copy of the state machine.
+        return (typeof window !== 'undefined' && window.TMRPropsState) || null;
+    }
+
+    function storeProps(g, viewObj, patch) {
+        var prev = state.props[g.id] || {};
+        var next = { state: viewObj.state, message: viewObj.message, retryable: viewObj.retryable,
+            reason: viewObj.reason, warmWith: viewObj.warmWith || null,
+            attempts: prev.attempts || 0, items: prev.items || null, book: prev.book || null };
+        if (patch) { for (var k in patch) { if (Object.prototype.hasOwnProperty.call(patch, k)) next[k] = patch[k]; } }
         state.props[g.id] = next;
         var grp = g.groups && g.groups.player_props;
-        if (grp && next.status === 'ready') {
+        if (grp && next.state === 'ok' && next.items) {
             grp.items = next.items;
             grp.book = next.book;
             grp.lazy = false;
             grp.totalItems = Math.max(grp.totalItems || 0, next.items.length);
         }
-        render();
+        return next;
     }
 
-    function loadProps(g) {
+    /* PROPS_LAZY_20260911 + PROPS_STATE_20260912. Fetch one game's props.
+     *
+     * Every decision about what happens next lives in TMRPropsState, so this
+     * function only performs the request and hands the outcome over. `manual`
+     * is true only when the user pressed Try again, which is what separates a
+     * designed retry from a loop: render() calls this without `manual`, and
+     * shouldFetch() refuses a second automatic attempt.
+     *
+     * Rule 6: nothing here ever falls back to inline board props. A failure
+     * leaves grp.items exactly as it was (empty, once the board stops sending
+     * them), so a stale price can never be shown as current.
+     */
+    function loadProps(g, manual) {
         if (!g || !g.id) return;
         var grp = g.groups && g.groups.player_props;
         if (!grp) return;
-        // Board already carried the whole group: never fetch, never touch state.
+        // The board still carried the whole group: nothing to fetch, ever.
         if (!grp.lazy && grp.items.length) return;
-        var cur = state.props[g.id];
-        if (cur && (cur.status === 'loading' || cur.status === 'ready' || cur.status === 'empty')) return;
+
+        var api = propsApi();
+        if (!api) {
+            state.props[g.id] = { state: 'error', retryable: false, reason: 'state_module_missing',
+                message: 'Player props are unavailable on this page. Refresh to try again.', attempts: 0 };
+            return;
+        }
+
+        var entry = state.props[g.id];
+        if (!api.shouldFetch(entry, !!manual)) {
+            // At the cap, replace the retry offer with something honest.
+            if (manual && entry && entry.retryable && (entry.attempts || 0) >= api.MAX_ATTEMPTS) {
+                storeProps(g, api.exhaustedView(entry));
+                render();
+            }
+            return;
+        }
+
+        var attempt = ((entry && entry.attempts) || 0) + 1;
+        // No render() here when called from render(): setting the state before
+        // the HTML is built is what paints the loading row.
+        storeProps(g, api.loadingView(grp.totalItems || 0), { attempts: attempt });
+        if (manual) render();
 
         var sportKey = g.sportKey || sportMeta(state.sport).api;
-        // No render() here: the caller is render() itself, and setting the
-        // state before the HTML is built is what paints the loading row.
-        state.props[g.id] = { status: 'loading' };
-
         var url = API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)
             + '/props/' + encodeURIComponent(g.id);
+
+        var settled = false;
+        var timer = setTimeout(function () {
+            if (settled) return;
+            settled = true;
+            finish({ timedOut: true });
+        }, PROPS_TIMEOUT_MS);
+
+        function finish(outcome, items, book) {
+            clearTimeout(timer);
+            var v = api.classify(outcome, items);
+            storeProps(g, v, v.state === 'ok' ? { items: items, book: book } : null);
+            render();
+        }
+
         fetch(url, { cache: 'no-store' })
             .then(function (r) {
-                return r.text().then(function (body) {
-                    var parsed = null;
-                    try { parsed = JSON.parse(body); } catch (e) { parsed = null; }
-                    return { ok: r.ok, status: r.status, data: parsed };
+                return r.text().then(function (text) {
+                    var body = null;
+                    try { body = JSON.parse(text); } catch (e) { body = null; }
+                    return { ok: r.ok, httpStatus: r.status, body: body };
                 });
             })
-            .then(function (res) {
-                var d = res.data;
-                if (!d || typeof d !== 'object') {
-                    setProps(g, {
-                        status: 'error', retryable: true,
-                        message: 'Player props did not load. Try again.'
-                    });
-                    return;
-                }
-                if (d.status === 'ok') {
+            .then(function (outcome) {
+                if (settled) return;
+                settled = true;
+                var items = null, book = null;
+                if (outcome.body && outcome.body.status === 'ok') {
                     var built = mapGroupItems({
                         key: 'player_props',
-                        label: (d.group && d.group.label) || 'Player Props',
-                        items: (d.group && d.group.items) || []
+                        label: (outcome.body.group && outcome.body.group.label) || 'Player Props',
+                        items: (outcome.body.group && outcome.body.group.items) || []
                     }, state.sport);
-                    if (!built || !built.items.length) {
-                        setProps(g, { status: 'empty', message: 'No player props are posted for this game.' });
-                        return;
-                    }
-                    setProps(g, { status: 'ready', items: built.items, book: built.book });
-                    return;
+                    items = built ? built.items : [];
+                    book = built ? built.book : null;
                 }
-                if (d.status === 'no_props_for_game') {
-                    setProps(g, { status: 'empty', message: 'No player props are posted for this game.' });
-                    return;
-                }
-                if (d.retryable) {
-                    setProps(g, {
-                        status: 'retry', retryable: true,
-                        message: 'Loading player props took a moment. Try again.'
-                    });
-                    return;
-                }
-                // game_not_on_board / game_already_started: the card the user is
-                // looking at is older than the board. Say so plainly.
-                setProps(g, {
-                    status: 'error', retryable: false,
-                    message: 'This game is no longer on the open board. Refresh to see the current slate.'
-                });
+                finish(outcome, items, book);
             })
             .catch(function () {
-                setProps(g, {
-                    status: 'error', retryable: true,
-                    message: 'Player props did not load. Check your connection and try again.'
-                });
+                if (settled) return;
+                settled = true;
+                finish({ networkError: true });
             });
     }
 
@@ -1617,21 +1650,14 @@
      * Never a status code, never a stack trace, never an empty panel. A retry
      * is offered only when retrying can actually change the answer. */
     function propsStatusHtml(g) {
+        var api = propsApi();
+        if (!api) {
+            // props-state.js did not load. Say so; never a blank panel.
+            return '<div class="sbn-note">Player props are unavailable on this page. Refresh to try again.</div>';
+        }
         var st = state.props[g.id];
-        var grp = g.groups.player_props;
-        var waiting = grp && grp.totalItems > 0 ? grp.totalItems : 0;
-        if (!st || st.status === 'loading') {
-            return '<div class="sbn-note" aria-live="polite">Loading player props'
-                + (waiting ? ' (' + waiting.toLocaleString() + ' prices)' : '') + '…</div>';
-        }
-        if (st.status === 'empty') {
-            return '<div class="sbn-note">' + esc(st.message || 'No player props are posted for this game.') + '</div>';
-        }
-        return '<div class="sbn-note" aria-live="polite">' + esc(st.message || 'Player props did not load.')
-            + (st.retryable
-                ? ' <button type="button" class="sbn-expclose" data-propretry="' + esc(g.id) + '">Try again</button>'
-                : '')
-            + '</div>';
+        var v = st || api.loadingView((g.groups.player_props || {}).totalItems || 0);
+        return api.noteHtml(v, g.id, esc);
     }
 
     function drawerCats(g) {
@@ -2240,9 +2266,14 @@
         var pretry = t.closest && t.closest('[data-propretry]');
         if (pretry) {
             var rgid = pretry.getAttribute('data-propretry');
-            delete state.props[rgid];
             state.drawer = rgid;
             state.drawerCat = 'player_props';
+            // A MANUAL attempt. The state is kept, not deleted, so the attempt
+            // counter survives and TMRPropsState.shouldFetch can stop offering
+            // a retry that would never succeed.
+            for (var ri = 0; ri < state.games.length; ri++) {
+                if (state.games[ri].id === rgid) { loadProps(state.games[ri], true); break; }
+            }
             render();
             return;
         }
