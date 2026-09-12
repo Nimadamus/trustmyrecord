@@ -56,13 +56,17 @@ assert(html.includes('/static/js/backend-api.js'), 'backend API include is missi
   "api.request('/trivia/v2/attempts/' + attemptId + '/forfeit'",
   "api.request('/trivia/v2/attempts/active'",
   // v2 stats + boards
-  "api.request('/trivia/v2/me/stats'",
-  "api.request('/trivia/v2/leaderboards?board='",
-  "api.request('/trivia/v2/users/' + encodeURIComponent(username",
+  // TRIVIA_LOAD_ERRORS_20260912: stats, boards, history and creators go
+  // through triviaGet(), a thin api.request wrapper that retries a transient
+  // failure once and logs endpoint + status.
+  "return await api.request(endpoint);",
+  "triviaGet('/trivia/v2/me/stats'",
+  "'/trivia/v2/leaderboards?board='",
+  "triviaGet('/trivia/v2/users/' + encodeURIComponent(username",
   // still-live v1 routes: category browsing, user-submitted questions,
   // reporting, and the creators board
   "api.request('/trivia/categories'",
-  "api.request('/trivia/leaderboard/creators?limit=50')",
+  "triviaGet('/trivia/leaderboard/creators?limit=50')",
   "api.request('/trivia/questions'",
   "api.request('/trivia/questions/' + currentQuestion.id + '/report'",
   "api.request('/trivia/users/' + encodeURIComponent(username) + '/created'"
@@ -89,6 +93,11 @@ assert(html.includes('/static/js/backend-api.js'), 'backend API include is missi
 // blanket "no /hangout/ anywhere" check no longer expresses the intent. What must
 // hold is that the Polls entry still points at /polls/.
 assert(sitewide.includes('<a href="/polls/">Polls</a>'), 'footer Polls link regressed away from /polls/');
+// A failed stats load must never render as zeros (reads as lost history).
+assert(!html.includes('function zero()'), 'stats failure path renders zeros again');
+assert(html.includes("triviaLogLoadError('personal stats'"), 'stats load errors are no longer logged');
+assert(html.includes("triviaErrorHtml('the ' + board.label + ' leaderboard'"), 'leaderboard load error lost its status + retry');
+assert(!html.includes('<p>Could not load leaderboard.</p>'), 'bare leaderboard error without status/retry is back');
 assert(!html.includes('sampleQuestions = ['), 'hard-coded sample questions were reintroduced');
 assert(!html.includes('demoLeaderboard') && !html.includes('fakeLeaderboard'), 'fake leaderboard data was reintroduced');
 assert(html.includes('Submitted questions may be reviewed before going live.'), 'moderation copy is missing');
