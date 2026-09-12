@@ -59,6 +59,36 @@
   var lastResult = null;
   var tableExpanded = false;
   var chartView = 'units';
+
+  /* TRENDSPOTTER_FREE_PRO_GATE_20260912.
+
+     The API decides what this viewer receives. A free or anonymous response
+     physically omits units, ROI, average price, the market-implied rate and
+     the per-game price and units, and says so in result.entitlement.
+
+     So the page must never print a dash where a paid field would go: a dash
+     reads as "we have no data", which is untrue and makes the tool look
+     broken. It says what the field is and where it lives instead. Every
+     piece of free EVIDENCE is rendered exactly as before. */
+  function isProResult(data) {
+    if (!data) return false;
+    if (data.entitlement) return data.entitlement.financials === true;
+    /* No entitlement marker means a pre-gate response from an older backend,
+       which sends every field to everybody. Render what was actually received:
+       the SERVER is the gate, and this page can only ever display what it was
+       given. This branch is what makes the frontend safe to deploy before the
+       backend, and it disappears the moment the gated build is live. */
+    return Boolean(data.summary && data.summary.units !== undefined);
+  }
+
+  /* A locked metric tile. Same shape as metric(), so the grid does not
+     reflow, with the value replaced by what it would take to see it. */
+  function proMetric(label, sub) {
+    return '<div class="ts-metric ts-metric-pro">' +
+      '<dt>' + esc(label) + '</dt>' +
+      '<dd><a class="ts-pro-value" href="/premium/">TMR Pro</a>' +
+      (sub ? '<small>' + esc(sub) + '</small>' : '') + '</dd></div>';
+  }
   var chartData = null;
   var slateExpanded = false;
   var touched = false;   // no red validation copy before the user has tried anything
@@ -917,6 +947,23 @@
     };
   }
 
+  /* One line under the metrics, for a free or anonymous viewer. It states
+     what is behind TMR Pro and what is free, and offers the sign-in path
+     when there is no session, because a signed-out subscriber is one click
+     from the full view rather than a sale. */
+  function proNoteHtml() {
+    var signedIn = false;
+    try {
+      signedIn = Boolean(window.TMRSession && window.TMRSession.hasTokens && window.TMRSession.hasTokens());
+    } catch (e) { signedIn = false; }
+    return '<p class="ts-pro-note">' +
+      '<strong>Units, ROI, average price, the market-implied rate and the profitability chart are part of TMR Pro.</strong> ' +
+      'The record, the sample, the win rate, the season splits and every qualifying game are free, so you can check this trend yourself. ' +
+      '<a href="/premium/">See what TMR Pro includes</a>' +
+      (signedIn ? '' : ' · <a href="/login/?next=/trendspotter/">Sign in</a>') +
+      '</p>';
+  }
+
   function statTile(label, value, tone) {
     return '<div class="ts-cstat"' + (tone ? ' data-tone="' + esc(tone) + '"' : '') + '>' +
       '<span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>';
@@ -1048,12 +1095,21 @@
     var s = data.summary;
     var view = chartView;
     var points = data[view];
+    /* Cumulative units and rolling form are both drawn from per-game prices,
+       which a free viewer does not receive, so those two tabs are unavailable
+       rather than empty. They are labelled as Pro instead of just disabled,
+       so the reason is obvious. The win-rate view needs no price and is
+       always there, which is why a free result still has a chart. */
+    var gated = !isProResult(lastResult);
     var toggle = '<div class="ts-chart-toggle" role="tablist" aria-label="Chart view">' +
       ['units', 'rolling', 'winrate'].map(function (v) {
         var can = data.views.indexOf(v) !== -1;
-        return '<button type="button" role="tab" class="ts-ctab" data-chart-view="' + v + '"' +
-          ' aria-selected="' + (v === view ? 'true' : 'false') + '"' + (can ? '' : ' disabled') + '>' +
-          VIEW_LABELS[v] + '</button>';
+        var isPro = gated && (v === 'units' || v === 'rolling');
+        return '<button type="button" role="tab" class="ts-ctab"' +
+          (isPro ? ' data-pro="1"' : '') + ' data-chart-view="' + v + '"' +
+          ' aria-selected="' + (v === view ? 'true' : 'false') + '"' + (can ? '' : ' disabled') +
+          (isPro ? ' title="Part of TMR Pro"' : '') + '>' +
+          VIEW_LABELS[v] + (isPro ? ' <span class="ts-ctab-pro">Pro</span>' : '') + '</button>';
       }).join('') + '</div>';
 
     var vals = points.map(function (p) { return p.value; });
@@ -1377,7 +1433,12 @@
     // Stated once, so it does not repeat on every row.
     var caption = marketLabel + ' · ' + games.length + ' game' + (games.length === 1 ? '' : 's') +
       (oneStatus && games.length ? ' · final scores verified' : '') +
-      (hasPrice ? '' : ' · no closing price recorded for this market, so there are no units');
+      /* Without the gate this sentence was the only explanation for a missing
+         price column, and for a free viewer it would be a lie: the prices
+         exist, they are simply not in this response. */
+      (hasPrice ? '' : (isProResult(lastResult)
+        ? ' · no closing price recorded for this market, so there are no units'
+        : ' · closing price and per-game units are part of TMR Pro'));
 
     return '<p class="ts-table-caption">' + esc(caption) + '</p>' +
       '<div class="ts-table-wrap"><table class="ts-table">' +
@@ -1438,23 +1499,36 @@
       '<span class="ts-flag ts-flag-market">' + esc(marketLabel) + '</span>'];
     if (small) flags.push('<span class="ts-flag ts-flag-caution">Small sample</span>');
 
+    var pro = isProResult(data);
+
+    /* The free half: record, win rate, sample and date range, unchanged. The
+       paid half: either the real numbers, or a tile naming what they are. A
+       Pro user whose sample genuinely has no recorded price still sees the
+       honest dash, because that is a data fact rather than a paywall. */
     var metrics =
       metric('Record', s.record, s.pushes ? s.pushes + ' push' + (s.pushes === 1 ? '' : 'es') : 'no pushes') +
       metric('Win rate', s.win_rate === null ? '—' : winRatePct(s).toFixed(1) + '%', s.decided_games + ' decided') +
-      (s.units === null
-        ? metric('Units', '—', 'no closing price recorded')
-        : metric('Units', (s.units > 0 ? '+' : '') + s.units.toFixed(2) + 'u', s.units_risked.toFixed(2) + 'u risked',
-          s.units > 0 ? 'up' : s.units < 0 ? 'down' : null)) +
-      (s.roi === null
-        ? metric('ROI', '—', 'needs a recorded price')
-        : metric('ROI', (s.roi > 0 ? '+' : '') + s.roi.toFixed(2) + '%', 'per unit risked',
-          s.roi > 0 ? 'up' : s.roi < 0 ? 'down' : null)) +
-      metric(q.market === 'moneyline' ? 'Avg closing price' : 'Avg closing line',
-        q.market === 'moneyline'
-          ? (s.avg_price === null ? '—' : signed(s.avg_price))
-          : (s.avg_line === null ? '—' : String(s.avg_line)),
-        (q.market === 'moneyline' && s.market_expected_win_rate !== null)
-          ? 'market implied ' + s.market_expected_win_rate.toFixed(1) + '%' : null) +
+      (!pro
+        ? proMetric('Units', 'won or lost, and units risked')
+        : (s.units === null || s.units === undefined
+          ? metric('Units', '—', 'no closing price recorded')
+          : metric('Units', (s.units > 0 ? '+' : '') + s.units.toFixed(2) + 'u', s.units_risked.toFixed(2) + 'u risked',
+            s.units > 0 ? 'up' : s.units < 0 ? 'down' : null))) +
+      (!pro
+        ? proMetric('ROI', 'per unit risked')
+        : (s.roi === null || s.roi === undefined
+          ? metric('ROI', '—', 'needs a recorded price')
+          : metric('ROI', (s.roi > 0 ? '+' : '') + s.roi.toFixed(2) + '%', 'per unit risked',
+            s.roi > 0 ? 'up' : s.roi < 0 ? 'down' : null))) +
+      ((!pro && q.market === 'moneyline')
+        ? proMetric('Avg closing price', 'and the rate the market implied')
+        : metric(q.market === 'moneyline' ? 'Avg closing price' : 'Avg closing line',
+          q.market === 'moneyline'
+            ? (s.avg_price === null || s.avg_price === undefined ? '—' : signed(s.avg_price))
+            : (s.avg_line === null || s.avg_line === undefined ? '—' : String(s.avg_line)),
+          (q.market === 'moneyline' && s.market_expected_win_rate !== null
+            && s.market_expected_win_rate !== undefined)
+            ? 'market implied ' + s.market_expected_win_rate.toFixed(1) + '%' : null)) +
       metric('Sample', String(s.sample), s.date_range ? s.date_range.from + ' → ' + s.date_range.to : null);
 
     el.resultsBody.innerHTML = '<article class="ts-result">' +
@@ -1469,6 +1543,7 @@
         '</div>' +
       '</div>' +
       '<dl class="ts-metrics">' + metrics + '</dl>' +
+      (pro ? '' : proNoteHtml()) +
       '<div class="ts-section"><h3>' + (s.priced_games > 0 || s.decided_games > 1 ? 'Performance over time' : 'Record by season') + '</h3>' + chartHtml(s, data.games, q) + '</div>' +
       '<div class="ts-section" id="gamesSection"><h3>Games in this trend</h3>' +
         tableHtml(data.games, marketLabel, q.market === 'total') + '</div>' +
@@ -1489,8 +1564,14 @@
     lines.push('Record ' + s.record + (s.win_rate === null ? '' : ' (' + winRatePct(s).toFixed(1) + '%)') +
       ' · Sample ' + s.sample + ' games' +
       (s.date_range ? ' · ' + s.date_range.from + ' to ' + s.date_range.to : ''));
-    if (s.units === null) lines.push('Units and ROI unavailable: no closing price is recorded for these games.');
-    else lines.push('Units ' + fmtUnits(s.units) + ' · ROI ' + (s.roi > 0 ? '+' : '') + s.roi.toFixed(2) + '%');
+    /* Never share a number this viewer was not sent. */
+    if (!isProResult(lastResult)) {
+      /* nothing: the record and the sample above are the shareable facts */
+    } else if (s.units === null || s.units === undefined) {
+      lines.push('Units and ROI unavailable: no closing price is recorded for these games.');
+    } else {
+      lines.push('Units ' + fmtUnits(s.units) + ' · ROI ' + (s.roi > 0 ? '+' : '') + s.roi.toFixed(2) + '%');
+    }
     lines.push('Trend Spotter · TrustMyRecord');
     lines.push(window.location.href);
     return lines.join('\n');
