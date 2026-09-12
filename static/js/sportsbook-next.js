@@ -49,9 +49,23 @@
         var m = null, ls = null;
         try { m = /[?&]props=(lazy|board)/.exec(window.location.search || ''); } catch (e) { m = null; }
         try { ls = window.localStorage.getItem('tmr_props_mode'); } catch (e) { ls = null; }
-        var mode = m ? m[1] : (ls === 'lazy' || ls === 'board' ? ls : '');
         if (m) { try { window.localStorage.setItem('tmr_props_mode', m[1]); } catch (e) {} }
-        return mode;
+        /* PROPS_LAZY_DEFAULT_20260912. Lazy is the DEFAULT for every
+         * visitor now: no query string, no localStorage, no flag. A normal
+         * page load fetches props per game from
+         * /api/games/board/:sportKey/props/:gameId when the Player Props
+         * tab is opened, and the prices the board still inlines are
+         * dropped rather than rendered.
+         *
+         * `?props=board`, or localStorage tmr_props_mode=board, is the
+         * OPT-OUT and therefore the rollback switch: it restores the old
+         * behaviour in one browser with no deploy. `?props=lazy` is still
+         * accepted so the default can be forced back on.
+         *
+         * The board still SENDS player_props, deliberately, as rollback
+         * insurance. Nothing in the lazy path reads those prices. */
+        var chosen = m ? m[1] : (ls === 'lazy' || ls === 'board' ? ls : '');
+        return chosen === 'board' ? 'board' : 'lazy';
     })();
 
     /* PROPS_STATE_20260912. Observability, not behaviour. The verification
@@ -66,24 +80,42 @@
             (state.games || []).forEach(function (g) {
                 var grp = g.groups && g.groups.player_props;
                 if (!grp) return;
+                var st = state.props[g.id];
                 games[g.id] = {
+                    // itemsOnBoard is what the panel would RENDER from. In lazy
+                    // mode it is 0 until the endpoint answers, which is the
+                    // whole point: 0 proves the inline prices are not in play.
                     itemsOnBoard: grp.items.length,
+                    // What the board actually sent, recorded and never rendered.
+                    inlineItemsSeen: typeof grp.inlineItemsSeen === 'number' ? grp.inlineItemsSeen : null,
                     totalItems: grp.totalItems || 0,
                     lazy: !!grp.lazy,
-                    load: state.props[g.id] ? state.props[g.id].state : null,
-                    reason: state.props[g.id] ? state.props[g.id].reason : null,
-                    attempts: state.props[g.id] ? state.props[g.id].attempts : 0
+                    load: st ? st.state : null,
+                    reason: st ? st.reason : null,
+                    attempts: st ? st.attempts : 0,
+                    renderedItems: st && st.items ? st.items.length : 0
                 };
             });
             window.__TMR_PROPS_DEBUG = {
-                mode: PROPS_MODE || '(default)',
+                mode: PROPS_MODE,
                 stateModuleLoaded: !!(window.TMRPropsState && window.TMRPropsState.classify),
                 fetches: PROPS_FETCH_COUNT,
+                // Last 20 requests: which game, what the endpoint said, and how
+                // many prices came back. Market data and game ids only; nothing
+                // about the viewer, no credentials, no tokens.
+                log: PROPS_FETCH_LOG.slice(-20),
                 games: games
             };
         } catch (e) { /* observability must never break a render */ }
     }
     var PROPS_FETCH_COUNT = 0;
+    var PROPS_FETCH_LOG = [];
+    function logPropsFetch(entry) {
+        try {
+            PROPS_FETCH_LOG.push(entry);
+            if (PROPS_FETCH_LOG.length > 40) PROPS_FETCH_LOG.splice(0, PROPS_FETCH_LOG.length - 40);
+        } catch (e) {}
+    }
     var ALT_PREVIEW = 6;      // rungs shown per ladder before "Show all"
 
     var SPORTS = [
@@ -394,14 +426,19 @@
             var totalItems = Number(grp.total_items);
             if (!isFinite(totalItems) || totalItems < 0) totalItems = built ? built.items.length : 0;
             if (grp.key === 'player_props' && PROPS_MODE === 'lazy') {
-                // Drop the inlined prices on the floor and make the client take
-                // the endpoint path, so the two can be compared side by side.
+                /* The inlined prices are DROPPED, not deferred and not cached:
+                 * `items` is empty and nothing in the lazy path ever reads what
+                 * the board sent. inlineItemsSeen records only how many arrived,
+                 * for verification and for the parity comparison, and no render
+                 * path reads it. That is what makes "no hidden fallback to
+                 * inline props" checkable rather than asserted. */
                 out[grp.key] = {
                     key: grp.key,
                     label: grp.label || grp.key,
                     book: null,
                     items: [],
                     totalItems: Math.max(totalItems, built ? built.items.length : 0),
+                    inlineItemsSeen: built ? built.items.length : 0,
                     lazy: true
                 };
                 return;
@@ -540,11 +577,24 @@
         function finish(outcome, items, book) {
             clearTimeout(timer);
             var v = api.classify(outcome, items);
+            logPropsFetch({
+                gameId: g.id,
+                sportKey: sportKey,
+                attempt: attempt,
+                httpStatus: outcome && outcome.httpStatus ? outcome.httpStatus : null,
+                endpointStatus: outcome && outcome.body && outcome.body.status ? outcome.body.status : null,
+                timedOut: !!(outcome && outcome.timedOut),
+                networkError: !!(outcome && outcome.networkError),
+                renderedItems: items ? items.length : 0,
+                state: v.state,
+                reason: v.reason
+            });
             storeProps(g, v, v.state === 'ok' ? { items: items, book: book } : null);
             render();
         }
 
         PROPS_FETCH_COUNT += 1;
+        logPropsFetch({ gameId: g.id, sportKey: sportKey, attempt: attempt, requested: url.slice(url.indexOf('/games/board/')) });
         fetch(url, { cache: 'no-store' })
             .then(function (r) {
                 return r.text().then(function (text) {
@@ -609,21 +659,56 @@
         startLivePolling(sportKey);
         loadStarters(sportKey);
         startStartersPolling(sportKey);
-        fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, { cache: 'no-store' })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (d) {
-                if (id !== state.reqId) return;
-                var games = (d && d.games) || [];
-                state.games = games.map(function (g) { return normalise(g, sportKey); })
-                    .filter(function (g) { return !g.started && (g.main || Object.keys(g.groups).length); });
-                state.loading = false;
-                render();
-            })
-            .catch(function () {
-                if (id !== state.reqId) return;
-                state.loading = false; state.error = 'The odds feed did not respond. Try again in a moment.';
-                render();
-            });
+        /* BOARD_TRANSIENT_RETRY_20260912. A deploy or an out-of-memory restart
+         * takes the single API instance away for around a minute and a half
+         * (measured 2026-09-11: deploy started 23:44:01Z, first request served
+         * 23:45:47Z). Before this, any board request landing in that window
+         * ended at the terminal "did not respond" message and the page simply
+         * stayed broken until the user reloaded.
+         *
+         * TWO extra attempts, 1.5s then 4s, then it gives up and shows the
+         * message exactly as before. Deliberately NOT a polling loop: a fixed,
+         * small number of attempts, only for a request that actually failed,
+         * and abandoned the moment the user switches sport (state.reqId). */
+        var BOARD_RETRY_DELAYS = [1500, 4000];
+
+        function attemptBoard(tryIndex) {
+            fetch(API.replace(/\/$/, '') + '/games/board/' + encodeURIComponent(meta.api) + '?limit=' + BOARD_LIMIT, { cache: 'no-store' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (id !== state.reqId) return;
+                    var games = (d && d.games) || [];
+                    // An empty board from a failed response is a transient
+                    // condition too, so it retries on the same schedule rather
+                    // than rendering a permanently empty slate.
+                    if (!d && tryIndex < BOARD_RETRY_DELAYS.length) {
+                        setTimeout(function () {
+                            if (id !== state.reqId) return;
+                            attemptBoard(tryIndex + 1);
+                        }, BOARD_RETRY_DELAYS[tryIndex]);
+                        return;
+                    }
+                    state.games = games.map(function (g) { return normalise(g, sportKey); })
+                        .filter(function (g) { return !g.started && (g.main || Object.keys(g.groups).length); });
+                    state.loading = false;
+                    state.error = null;
+                    render();
+                })
+                .catch(function () {
+                    if (id !== state.reqId) return;
+                    if (tryIndex < BOARD_RETRY_DELAYS.length) {
+                        setTimeout(function () {
+                            if (id !== state.reqId) return;
+                            attemptBoard(tryIndex + 1);
+                        }, BOARD_RETRY_DELAYS[tryIndex]);
+                        return;
+                    }
+                    state.loading = false;
+                    state.error = 'The odds feed did not respond. Try again in a moment.';
+                    render();
+                });
+        }
+        attemptBoard(0);
     }
 
     /* ========================================================================
