@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Premium Analytics &amp; Unlimited Picks | TrustMyRecord</title>
+    <title>TMR Pro | Sports Betting Research Tools | TrustMyRecord</title>
 
 <link rel="canonical" href="https://trustmyrecord.com/premium/">
-    <meta name="description" content="TrustMyRecord Premium unlocks advanced handicapper analytics, unlimited locked picks, deeper splits, premium contests">
-    <meta name="keywords" content="premium handicapper tools, advanced sports analytics, sports betting analytics, capper analytics, sports betting subscription, sports tracking premium, ROI tracker premium">
-    <meta property="og:title" content="Premium | Advanced Handicapper Analytics &amp; Unlimited Picks">
-    <meta property="og:description" content="Advanced handicapper analytics, unlimited locked picks, deeper splits, premium contests, and priority leaderboard tools.">
+    <meta name="description" content="TMR Pro is the research-tool layer on TrustMyRecord: Bet Legend Pro matchup research, TrendSpotter profitability analysis and Model Builder forward tracking. $24.99/month or $239/year.">
+    <meta name="keywords" content="sports betting research tools, historical betting trends, betting model tracking, handicapping research">
+    <meta property="og:title" content="TMR Pro | Sports Betting Research Tools">
+    <meta property="og:description" content="Professional sports betting research tools built on real historical data. Bet Legend Pro, TrendSpotter and Model Builder.">
     <meta property="og:url" content="https://trustmyrecord.com/premium/">
     <meta property="og:type" content="website">
 
@@ -24,718 +24,457 @@
     <link href="/static/css/social.css?v=53415e93b875" rel="stylesheet">
 
     <style>
+        /* TMR_PRO_PRICING_PAGE_20260912.
+           Electric blue on light, the sitewide brand. #0B4FA8 is the brand ink
+           on white; the on-dark variant #4DA3FF is used only inside the dark
+           founding panel, where the brand itself reads 2.3:1. */
         :root {
-            /* --neon-cyan is this page's accent INK (the plan limits, the active
-               billing toggle, the secondary button label). The surfaces below are
-               dark, so the light-theme brand at #0B4FA8 read 2.3:1 against them.
-               The on-dark brand is used instead; the filled primary button keeps
-               its own deep fill further down. */
-            --neon-cyan: #4DA3FF;
-            --neon-purple: #5940AE;
-            --neon-green: #0B6B3E;
-            --neon-gold: #8A6206;
-            --neon-red: #BC372E;
-            --dark-bg: #F4F7FA;
-            --darker-bg: #F4F7FA;
-            --card-bg: #FFFFFF;
-            --glass-border: rgba(11, 79, 168,.28);
-            --text-primary: #07182A;
-            --text-secondary: #2E4459;
-            --text-muted: #5E7590;
+            --pro-brand: #0B4FA8;
+            --pro-brand-dark: #073A7C;
+            --pro-brand-on-dark: #4DA3FF;
+            --pro-ink: #07182A;
+            --pro-body: #2E4459;
+            --pro-muted: #5E7590;
+            --pro-line: rgba(11, 79, 168, .22);
+            --pro-line-soft: rgba(11, 79, 168, .12);
+            --pro-surface: #FFFFFF;
+            --pro-page: #F4F7FA;
+            --pro-tint: #EEF4FC;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .pro-page * { box-sizing: border-box; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark-bg);
-            background-image:
-                radial-gradient(circle at 25% 75%, rgba(11, 79, 168,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 75% 25%, rgba(185,133,5,0.08) 0%, transparent 50%),
-                linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
+        .pro-page {
+            background: var(--pro-page);
+            color: var(--pro-ink);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
+        .pro-wrap {
             width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(11, 79, 168,0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(11, 79, 168,0.08) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
-
-        /* Header */
-        header {
-            background: rgba(7,24,42,0.048);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 15px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: 'Barlow', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .nav-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .nav-link:hover {
-            color: var(--neon-cyan);
-            background: rgba(11, 79, 168,0.1);
-        }
-
-        /* Page Hero */
-        .premium-hero {
-            text-align: center;
-            padding: 80px 20px 60px;
-            position: relative;
-        }
-
-        .premium-hero h1 {
-            font-family: 'Barlow', sans-serif;
-            font-size: 3rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-        }
-
-        .premium-hero .crown-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .premium-hero p {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            max-width: 600px;
+            max-width: 1120px;
             margin: 0 auto;
+            padding-inline: 20px;
         }
 
-        /* Current Status Banner */
-        .status-banner {
-            background: rgba(11, 79, 168,0.1);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 0 auto 40px;
-            max-width: 600px;
+        /* ---------------------------------------------------------- hero -- */
+        .pro-hero {
+            padding-block: 56px 40px;
             text-align: center;
         }
 
-        .status-banner.premium {
-            background: rgba(185,133,5,0.1);
-            border-color: var(--neon-gold);
-        }
-
-        .status-banner h3 {
-            font-family: 'Barlow', sans-serif;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-
-        .current-tier {
+        .pro-eyebrow {
             display: inline-block;
-            padding: 5px 15px;
-            background: rgba(11, 79, 168,0.14);
-            border-radius: 20px;
-            font-weight: 700;
-            color: var(--neon-cyan);
-        }
-
-        .current-tier.elite { background: rgba(185,133,5,0.14); color: var(--neon-gold); }
-        .current-tier.pro { background: rgba(89,64,174,0.14); color: var(--neon-purple); }
-        .current-tier.basic { background: rgba(10,139,78,0.14); color: var(--neon-green); }
-
-        /* Billing Toggle */
-        .billing-toggle {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 50px;
-        }
-
-        .billing-toggle span {
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .billing-toggle span.active {
-            color: var(--neon-cyan);
-        }
-
-        .toggle-switch {
-            width: 60px;
-            height: 30px;
-            background: rgba(11, 79, 168,0.14);
-            border-radius: 15px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s;
-            border: 1px solid var(--glass-border);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background: var(--neon-cyan);
-            border-radius: 50%;
-            top: 2px;
-            left: 3px;
-            transition: all 0.3s;
-            box-shadow: 0 0 10px var(--neon-cyan);
-        }
-
-        .toggle-switch.yearly::after {
-            left: 33px;
-        }
-
-        .save-badge {
-            background: #DFF3E8;
-            color: #0A6E3E;
-            padding: 3px 10px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        /* Pricing Grid */
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px 80px;
-        }
-
-        .pricing-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-            transition: all 0.3s;
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(7,24,42,0.1);
-        }
-
-        .pricing-card.featured {
-            border-color: var(--neon-gold);
-            background: linear-gradient(135deg, rgba(185,133,5,0.1), rgba(11, 79, 168,0.1));
-        }
-
-        .pricing-card.featured::before {
-            content: 'MOST POPULAR';
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
-            color: #000;
-            padding: 5px 20px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.75rem;
-        }
-
-        .tier-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .tier-name {
             font-family: 'Barlow', sans-serif;
-            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 10px;
+            font-size: .78rem;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--pro-brand);
+            background: var(--pro-tint);
+            border: 1px solid var(--pro-line);
+            border-radius: 999px;
+            padding: 6px 14px;
+            margin-bottom: 18px;
         }
 
-        .tier-price {
-            font-size: 2.5rem;
-            font-weight: 900;
-            margin-bottom: 5px;
-        }
-
-        .tier-price span {
-            font-size: 1rem;
-            font-weight: 400;
-            color: var(--text-muted);
-        }
-
-        .tier-original-price {
-            text-decoration: line-through;
-            color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 20px;
-        }
-
-        .tier-features {
-            list-style: none;
-            text-align: left;
-            margin: 25px 0;
-        }
-
-        .tier-features li {
-            padding: 10px 0;
-            border-bottom: 1px solid #D2DEEA;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .tier-features li:last-child {
-            border-bottom: none;
-        }
-
-        .tier-features .check {
-            color: var(--neon-green);
-            font-weight: bold;
-        }
-
-        .tier-features .x {
-            color: var(--text-muted);
-        }
-
-        .tier-features .limit {
-            color: var(--neon-cyan);
-            font-weight: 600;
-            margin-left: auto;
-        }
-
-        .upgrade-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
+        .pro-hero h1 {
             font-family: 'Barlow', sans-serif;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 20px;
+            font-weight: 800;
+            font-size: clamp(2.4rem, 7vw, 3.9rem);
+            line-height: 1.05;
+            letter-spacing: -.015em;
+            margin: 0 0 14px;
         }
 
-        .upgrade-btn.primary {
-            background: #0B4FA8;
-            color: #FFFFFF;
-        }
-
-        .upgrade-btn.primary:hover {
-            box-shadow: 0 0 30px rgba(7,24,42,0.1);
-            transform: scale(1.02);
-        }
-
-        .upgrade-btn.secondary {
-            background: rgba(11, 79, 168,0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-        }
-
-        .upgrade-btn.secondary:hover {
-            background: rgba(11, 79, 168,0.14);
-            box-shadow: 0 0 20px rgba(7,24,42,0.1);
-        }
-
-        .upgrade-btn:disabled {
-            /* This was a LIGHT fill on a dark page, and the shared
-               `button:disabled` rule paints the label #A9BFD6 for the dark
-               ground, so "Current Plan" read at 1.45:1. The fill joins the
-               page it is on. */
-            background: #16212E;
-            border: 1px solid rgba(148,163,184,.28);
-            cursor: not-allowed;
-            color: #A9BFD6;
-        }
-
-        .upgrade-btn:disabled:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Features Comparison */
-        .features-section {
-            background: rgba(7,24,42,0.036);
-            padding: 80px 20px;
-        }
-
-        .features-section h2 {
-            font-family: 'Barlow', sans-serif;
-            font-size: 2rem;
-            text-align: center;
-            margin-bottom: 50px;
-            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .feature-row {
-            display: grid;
-            grid-template-columns: 2fr repeat(4, 1fr);
-            gap: 10px;
-            padding: 15px 20px;
-            border-bottom: 1px solid #D2DEEA;
-            max-width: 1200px;
+        .pro-lede {
+            font-size: clamp(1.02rem, 2.4vw, 1.2rem);
+            line-height: 1.55;
+            color: var(--pro-body);
+            max-width: 620px;
             margin: 0 auto;
         }
 
-        .feature-row.header {
-            font-family: 'Barlow', sans-serif;
-            font-weight: 700;
-            color: var(--neon-cyan);
-            border-bottom: 2px solid var(--glass-border);
+        .pro-note {
+            margin: 22px auto 0;
+            max-width: 640px;
+            font-size: .92rem;
+            line-height: 1.55;
+            color: var(--pro-muted);
         }
 
-        .feature-row .feature-name {
-            text-align: left;
-        }
-
-        .feature-row .tier-value {
-            text-align: center;
-        }
-
-        .feature-row .tier-value.yes {
-            color: var(--neon-green);
-        }
-
-        .feature-row .tier-value.no {
-            color: var(--text-muted);
-        }
-
-        /* Analytics Preview */
-        .analytics-preview {
-            padding: 80px 20px;
-            text-align: center;
-        }
-
-        .analytics-preview h2 {
-            font-family: 'Barlow', sans-serif;
-            font-size: 2rem;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, var(--neon-gold), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .analytics-preview p {
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }
-
-        .analytics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .analytics-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .analytics-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
-        }
-
-        .analytics-card h4 {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-        }
-
-        .analytics-card .value {
-            font-family: 'Barlow', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--neon-cyan);
-        }
-
-        .analytics-card .label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
-        }
-
-        .premium-lock {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #0B121B;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: 700;
-            color: var(--neon-gold);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .analytics-card.locked .value,
-        .analytics-card.locked .label {
-            filter: blur(5px);
-        }
-
-        /* Footer */
-        /* Footer styles handled inline */
-
-        /* Notification Toast */
-        .notification {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px 25px;
+        /* -------------------------------------------------- your status --- */
+        .pro-status {
             display: none;
             align-items: center;
-            gap: 15px;
-            z-index: 2000;
-            animation: slideIn 0.3s ease;
-            max-width: 400px;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 28px auto 0;
+            max-width: 620px;
+            font-size: .95rem;
+            color: var(--pro-body);
         }
 
-        .notification.show { display: flex; }
-        .notification.success { border-color: var(--neon-green); }
-        .notification.error { border-color: var(--neon-red); }
+        .pro-status.is-shown { display: flex; }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        .pro-status strong { color: var(--pro-ink); }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .premium-hero h1 { font-size: 2rem; }
-            .pricing-grid { grid-template-columns: 1fr; }
-            .feature-row { grid-template-columns: 1fr; gap: 5px; }
-            .feature-row .tier-value { display: none; }
-            .feature-row.header { display: none; }
-        }
-    </style>
-    <style>
-        body {
-            background:
-                radial-gradient(circle at 12% 0%, rgba(11, 79, 168,0.12), transparent 28%),
-                linear-gradient(180deg, #F4F7FA, #F4F7FA) !important;
-            color: #07182A;
-            font-family: 'Inter', sans-serif;
-        }
-
-        header {
-            background: #FFFFFF;
-            border-bottom: 1px solid #D2DEEA;
-            backdrop-filter: blur(18px);
-            padding: 12px 0;
-        }
-
-        .premium-hero h1{
+        .pro-chip {
             font-family: 'Barlow', sans-serif;
-            letter-spacing: -0.03em;
-            -webkit-text-fill-color: initial;
-            background: none;
-        }
-
-
-        .logo,.tier-name,.features-section h2{
-            font-family: 'Barlow', sans-serif;
-            letter-spacing: -0.03em;
-            -webkit-text-fill-color: initial;
-            background: none;
-        }
-
-        .logo {
-            color: #07182A;
-            font-size: 1.5rem;
-        }
-
-        .nav-link {
-            color: #2E4459;
+            font-weight: 700;
+            font-size: .78rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
             border-radius: 999px;
-            padding: 9px 14px;
+            padding: 5px 12px;
+            background: var(--pro-tint);
+            color: var(--pro-brand);
+            border: 1px solid var(--pro-line);
         }
 
-        .nav-link:hover {
-            color: #07182A;
-            background: rgba(7,24,42,0.02);
+        .pro-chip.is-pro {
+            background: var(--pro-brand);
+            color: #fff;
+            border-color: var(--pro-brand);
         }
 
-        .premium-hero {
-            padding: 54px 20px 34px;
+        /* ------------------------------------------------------ sections -- */
+        .pro-section { padding-block: 44px; }
+
+        .pro-section-head { margin-bottom: 26px; }
+
+        .pro-section-head h2 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.6rem, 4vw, 2.15rem);
+            letter-spacing: -.01em;
+            margin: 0 0 8px;
         }
 
-        .premium-hero .crown-icon {
-            margin-bottom: 12px;
-            font-size: 3rem;
-            animation: none;
+        .pro-section-head p {
+            color: var(--pro-body);
+            font-size: 1rem;
+            line-height: 1.55;
+            max-width: 680px;
+            margin: 0;
         }
 
-        .premium-hero h1 {
-            margin-bottom: 12px;
-            color: #eef4fb;
-            font-size: clamp(2.5rem, 6vw, 4.4rem);
-            line-height: 0.96;
-        }
-
-        .premium-hero p{
-            color: #97a8bc;
-        }
-
-
-        .billing-toggle span,.feature-row .feature-name{
-            color: #2E4459;
-        }
-        /* The save pill is a span inside .billing-toggle, so the rule above
-           was repainting it #C3D6EA on its pale green fill (1.3:1). */
-        .billing-toggle span.save-badge{ color: #0A6E3E; }
-
-        .status-banner,
-        .pricing-card,
-        .features-section,
-        .feature-row,
-        .premium-lock {
-            border-color: #D2DEEA !important;
-            background:
-                linear-gradient(180deg, rgba(7,24,42,0.02), rgba(7,24,42,0.02)),
-                #FFFFFF !important;
-            box-shadow: 0 18px 42px rgba(7,24,42,0.075);
-        }
-
-        .status-banner,
-        .pricing-card,
-        .features-section {
-            border-radius: 20px;
-        }
-
-        .current-tier,
-        .toggle-switch::after,
-        .pricing-card.featured::before {
-            background: linear-gradient(135deg, #DEF4F2, #DEF4F2);
-            color: #06120f !important;
-        }
-
-        .toggle-switch {
-            background: rgba(7,24,42,0.028);
-            border-color: #D2DEEA;
-        }
-
-        .pricing-grid {
+        /* ------------------------------------------------------ products -- */
+        .pro-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
             gap: 18px;
         }
 
-        .pricing-card {
+        .pro-product {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 18px;
             padding: 24px;
+            display: flex;
+            flex-direction: column;
         }
 
-        .pricing-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(11, 79, 168,.28);
-        }
-
-        .pricing-card.featured {
-            border-color: rgba(11, 79, 168,.28);
-        }
-
-        .tier-icon {
-            font-size: 2rem;
-        }
-
-        .tier-name {
-            color: #07182A;
-            font-size: 1.45rem;
-        }
-
-        .tier-price {
-            color: #07182A;
+        .pro-product-kicker {
             font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .74rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--pro-muted);
+            margin-bottom: 8px;
         }
 
-        .tier-price span,
-        .tier-original-price,
-        .tier-features li,
-        .feature-row .tier-value {
-            color: #2E4459;
+        .pro-product h3 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            letter-spacing: -.01em;
+            margin: 0 0 10px;
         }
 
-        .tier-features .check,
-        .feature-row .tier-value.yes {
-            color: #0B4FA8;
+        .pro-product > p {
+            color: var(--pro-body);
+            font-size: .96rem;
+            line-height: 1.6;
+            margin: 0 0 16px;
         }
 
-        .tier-features .x,
-        .feature-row .tier-value.no {
-            color: #BC372E;
+        .pro-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: auto;
         }
 
-        .premium-lock {
-            color: #07182A;
+        .pro-split-col {
+            background: var(--pro-page);
+            border: 1px solid var(--pro-line-soft);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .pro-split-col h4 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .78rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            margin: 0 0 10px;
+            color: var(--pro-muted);
+        }
+
+        .pro-split-col.is-pro { background: var(--pro-tint); border-color: var(--pro-line); }
+        .pro-split-col.is-pro h4 { color: var(--pro-brand); }
+
+        .pro-list { list-style: none; margin: 0; padding: 0; }
+
+        .pro-list li {
+            position: relative;
+            padding-left: 18px;
+            font-size: .9rem;
+            line-height: 1.5;
+            color: var(--pro-body);
+            margin-bottom: 6px;
+        }
+
+        .pro-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .55em;
+            width: 7px;
+            height: 7px;
+            border-radius: 2px;
+            background: var(--pro-brand);
+            opacity: .55;
+        }
+
+        .pro-list li:last-child { margin-bottom: 0; }
+
+        .pro-allowance {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .pro-allowance span {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--pro-body);
+            background: var(--pro-page);
+            border: 1px solid var(--pro-line-soft);
+            border-radius: 999px;
+            padding: 5px 12px;
+        }
+
+        /* ------------------------------------------------------- pricing -- */
+        .pro-prices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: 18px;
+            align-items: start;
+        }
+
+        .pro-price {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 18px;
+            padding: 26px 24px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pro-price.is-featured {
+            border-color: var(--pro-brand);
+            box-shadow: 0 10px 28px rgba(11, 79, 168, .12);
+        }
+
+        .pro-price-flag {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .72rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--pro-brand);
+            margin-bottom: 10px;
+            min-height: 1em;
+        }
+
+        .pro-price h3 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin: 0 0 14px;
+        }
+
+        .pro-amount {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.1rem, 6vw, 2.7rem);
+            line-height: 1;
+            letter-spacing: -.02em;
+        }
+
+        .pro-amount small {
+            font-size: .95rem;
+            font-weight: 600;
+            color: var(--pro-muted);
+            letter-spacing: 0;
+        }
+
+        .pro-price-detail {
+            margin: 12px 0 18px;
+            font-size: .92rem;
+            line-height: 1.55;
+            color: var(--pro-body);
+            min-height: 3em;
+        }
+
+        .pro-price-detail em { color: var(--pro-ink); font-style: normal; font-weight: 600; }
+
+        .pro-buy {
+            width: 100%;
+            margin-top: auto;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .95rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            border-radius: 12px;
+            padding: 14px 18px;
+            border: 1px solid var(--pro-line);
+            background: var(--pro-page);
+            color: var(--pro-muted);
+            cursor: not-allowed;
+        }
+
+        .pro-buy.is-primary {
+            background: var(--pro-brand-dark);
+            border-color: var(--pro-brand-dark);
+            color: #fff;
+            opacity: .55;
+        }
+
+        .pro-buy-note {
+            margin-top: 10px;
+            font-size: .82rem;
+            color: var(--pro-muted);
+            text-align: center;
+        }
+
+        /* ------------------------------------------------------ founding -- */
+        .pro-founding {
+            background: #071A2E;
+            border-radius: 20px;
+            padding: 30px;
+            color: #E7F0FA;
+        }
+
+        .pro-founding h2 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0 0 12px;
+            color: #fff;
+        }
+
+        .pro-founding p { color: #C3D5E8; line-height: 1.6; margin: 0 0 18px; max-width: 720px; }
+
+        .pro-founding ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+        .pro-founding li {
+            position: relative;
+            padding-left: 20px;
+            color: #D8E6F4;
+            font-size: .95rem;
+            line-height: 1.55;
+        }
+
+        .pro-founding li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .55em;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: var(--pro-brand-on-dark);
+        }
+
+        .pro-founding strong { color: #fff; }
+
+        /* ---------------------------------------------------- free layer -- */
+        .pro-free {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 18px;
+            padding: 28px;
+        }
+
+        .pro-free-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+            gap: 10px 24px;
+            margin-top: 18px;
+        }
+
+        /* ----------------------------------------------------------- faq -- */
+        .pro-faq { display: grid; gap: 12px; }
+
+        .pro-faq details {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .pro-faq summary {
+            font-weight: 700;
+            color: var(--pro-ink);
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .pro-faq summary::-webkit-details-marker { display: none; }
+
+        .pro-faq summary::after {
+            content: "+";
+            float: right;
+            color: var(--pro-brand);
+            font-weight: 800;
+        }
+
+        .pro-faq details[open] summary::after { content: "\2212"; }
+
+        .pro-faq p {
+            margin: 12px 0 0;
+            color: var(--pro-body);
+            font-size: .95rem;
+            line-height: 1.6;
+        }
+
+        .pro-fineprint {
+            margin-block: 34px 60px;
+            font-size: .85rem;
+            line-height: 1.6;
+            color: var(--pro-muted);
+            border-top: 1px solid var(--pro-line-soft);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 620px) {
+            .pro-hero { padding-block: 36px 28px; }
+            .pro-section { padding-block: 32px; }
+            .pro-split { grid-template-columns: 1fr; }
+            .pro-founding, .pro-free { padding: 22px 18px; }
         }
     </style>
     <!-- Google tag (gtag.js) -->
@@ -747,7 +486,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "UNLOCK YOUR POTENTIAL", "item": "https://trustmyrecord.com/premium/"}]}
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "TMR Pro", "item": "https://trustmyrecord.com/premium/"}]}
 </script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=2dbe6e3c2fd4">
 <script defer src="/static/js/tmr-linkhub.js?v=f315d279d2ec"></script>
@@ -759,569 +498,389 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 </head>
-<body class="tmr-site-shell tmr-ds-shell tmr-light">
-    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260729navclean1 -->
+<body class="tmr-site-shell tmr-ds-shell tmr-light pro-page">
+    <!-- Sitewide global nav is injected by tmr-sitewide.js -->
 
-    <!-- Hero Section -->
-    <section class="premium-hero">
-        <div class="crown-icon">👑</div>
-        <h1>UNLOCK YOUR POTENTIAL</h1>
-        <p>Upgrade to Premium and get access to advanced analytics, unlimited picks, exclusive contests, and more.</p>
-    </section>
+    <header class="pro-hero">
+        <div class="pro-wrap">
+            <span class="pro-eyebrow">Research tools</span>
+            <h1>TMR Pro</h1>
+            <p class="pro-lede">
+                Professional sports betting research tools built on real historical data.
+            </p>
+            <p class="pro-note">
+                These are research tools. They describe what has already happened in the
+                data, in the sports and markets we cover. They do not predict results and
+                nothing here is a claim about your future returns.
+            </p>
 
-    <!-- Current Status -->
-    <div class="container">
-        <div class="status-banner" id="statusBanner">
-            <h3>Your Current Plan</h3>
-            <span class="current-tier" id="currentTier">Free</span>
-            <p style="margin-top: 10px; color: var(--text-muted);" id="tierExpiry"></p>
-        </div>
-
-        <!-- Billing Toggle -->
-        <div class="billing-toggle">
-            <span class="active" id="monthlyLabel">Monthly</span>
-            <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"></div>
-            <span id="yearlyLabel">Yearly</span>
-            <span class="save-badge">Save 17%</span>
-        </div>
-    </div>
-
-    <!-- Pricing Cards -->
-    <div class="pricing-grid" id="pricingGrid">
-        <!-- Free Tier -->
-        <div class="pricing-card" data-tier="free">
-            <div class="tier-icon">🎯</div>
-            <h3 class="tier-name">Free</h3>
-            <div class="tier-price">$0<span>/mo</span></div>
-            <ul class="tier-features">
-                <li><span class="check">✓</span> Track your picks <span class="limit">5/day</span></li>
-                <li><span class="check">✓</span> Basic stats</li>
-                <li><span class="check">✓</span> Join contests <span class="limit">1/month</span></li>
-                <li><span class="check">✓</span> Follow users</li>
-                <li><span class="x">✗</span> Advanced analytics</li>
-                <li><span class="x">✗</span> Private picks</li>
-                <li><span class="x">✗</span> Priority support</li>
-            </ul>
-            <button class="upgrade-btn secondary" disabled>Current Plan</button>
-        </div>
-
-        <!-- Basic Tier -->
-        <div class="pricing-card" data-tier="basic">
-            <div class="tier-icon">🚀</div>
-            <h3 class="tier-name">Basic</h3>
-            <div class="tier-price" id="basicPrice">$9.99<span>/mo</span></div>
-            <div class="tier-original-price" id="basicOriginal" style="display: none;">$119.88/yr</div>
-            <ul class="tier-features">
-                <li><span class="check">✓</span> Track your picks <span class="limit">15/day</span></li>
-                <li><span class="check">✓</span> Basic stats</li>
-                <li><span class="check">✓</span> Join contests <span class="limit">5/month</span></li>
-                <li><span class="check">✓</span> Ad-free experience</li>
-                <li><span class="check">✓</span> Private picks</li>
-                <li><span class="check">✓</span> Custom challenges <span class="limit">3 active</span></li>
-                <li><span class="x">✗</span> Advanced analytics</li>
-            </ul>
-            <button class="upgrade-btn secondary" disabled title="Premium billing coming soon">Coming Soon</button>
-        </div>
-
-        <!-- Pro Tier -->
-        <div class="pricing-card featured" data-tier="pro">
-            <div class="tier-icon">⚡</div>
-            <h3 class="tier-name">Pro</h3>
-            <div class="tier-price" id="proPrice">$19.99<span>/mo</span></div>
-            <div class="tier-original-price" id="proOriginal" style="display: none;">$239.88/yr</div>
-            <ul class="tier-features">
-                <li><span class="check">✓</span> Track your picks <span class="limit">50/day</span></li>
-                <li><span class="check">✓</span> Advanced analytics</li>
-                <li><span class="check">✓</span> Join contests <span class="limit">20/month</span></li>
-                <li><span class="check">✓</span> Premium contests</li>
-                <li><span class="check">✓</span> Verified badge ✓</li>
-                <li><span class="check">✓</span> Priority support</li>
-                <li><span class="check">✓</span> Early access features</li>
-            </ul>
-            <button class="upgrade-btn primary" disabled title="Premium billing coming soon">Coming Soon</button>
-        </div>
-
-        <!-- Elite Tier -->
-        <div class="pricing-card" data-tier="elite">
-            <div class="tier-icon">💎</div>
-            <h3 class="tier-name">Elite</h3>
-            <div class="tier-price" id="elitePrice">$49.99<span>/mo</span></div>
-            <div class="tier-original-price" id="eliteOriginal" style="display: none;">$599.88/yr</div>
-            <ul class="tier-features">
-                <li><span class="check">✓</span> <strong>Unlimited</strong> picks</li>
-                <li><span class="check">✓</span> <strong>Unlimited</strong> challenges</li>
-                <li><span class="check">✓</span> <strong>Unlimited</strong> contests</li>
-                <li><span class="check">✓</span> Custom analytics dashboard</li>
-                <li><span class="check">✓</span> API access</li>
-                <li><span class="check">✓</span> Dedicated support</li>
-                <li><span class="check">✓</span> All Pro features</li>
-            </ul>
-            <button class="upgrade-btn secondary" disabled title="Premium billing coming soon">Coming Soon</button>
-        </div>
-    </div>
-
-    <!-- Features Comparison -->
-    <section class="features-section">
-        <div class="container">
-            <h2>Feature Comparison</h2>
-
-            <div class="feature-row header">
-                <div class="feature-name">Feature</div>
-                <div class="tier-value">Free</div>
-                <div class="tier-value">Basic</div>
-                <div class="tier-value">Pro</div>
-                <div class="tier-value">Elite</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Daily Pick Limit</div>
-                <div class="tier-value">5</div>
-                <div class="tier-value">15</div>
-                <div class="tier-value">50</div>
-                <div class="tier-value yes">Unlimited</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Active Challenges</div>
-                <div class="tier-value">1</div>
-                <div class="tier-value">3</div>
-                <div class="tier-value">10</div>
-                <div class="tier-value yes">Unlimited</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Contest Entries/Month</div>
-                <div class="tier-value">1</div>
-                <div class="tier-value">5</div>
-                <div class="tier-value">20</div>
-                <div class="tier-value yes">Unlimited</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Private Picks</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Advanced Analytics</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Premium Contests</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Verified Badge</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">Ad-Free Experience</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-                <div class="tier-value yes">Yes</div>
-            </div>
-
-            <div class="feature-row">
-                <div class="feature-name">API Access</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value no">No</div>
-                <div class="tier-value yes">Yes</div>
+            <div class="pro-status" id="proStatus" aria-live="polite">
+                <span class="pro-chip" id="proStatusChip">Free account</span>
+                <span id="proStatusText"></span>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Analytics Preview -->
-    <section class="analytics-preview">
-        <h2>Premium Analytics Preview</h2>
-        <p>See exactly where your edge is. Break down your performance by sport, bet type, and more.</p>
+    <main>
+        <!-- ================================================= the products -->
+        <section class="pro-section" id="tools">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <h2>Three tools, one subscription</h2>
+                    <p>
+                        TMR Pro is a layer of research tools on top of TrustMyRecord. Each
+                        one answers a different question, and each one reads the same
+                        historical record.
+                    </p>
+                </div>
 
-        <div class="analytics-grid">
-            <div class="analytics-card locked">
-                <h4>Best Sport</h4>
-                <div class="value">NBA</div>
-                <div class="label">+23.4 units</div>
-                <div class="premium-lock">🔒 Pro Required</div>
+                <div class="pro-products">
+                    <article class="pro-product">
+                        <div class="pro-product-kicker">Included with TMR Pro</div>
+                        <h3>Bet Legend Pro</h3>
+                        <p>
+                            Deeper historical matchup and situational research. You ask about a
+                            team, a matchup or a situation, and it works through the historical
+                            record behind it rather than a headline number. Bet Legend Pro is
+                            sold separately at $49 a month; it is included with TMR Pro at no
+                            extra cost.
+                        </p>
+                        <div class="pro-allowance">
+                            <span>Included in full with TMR Pro</span>
+                        </div>
+                    </article>
+
+                    <article class="pro-product">
+                        <div class="pro-product-kicker">Free and Pro</div>
+                        <h3>TrendSpotter</h3>
+                        <p>
+                            Historical trends with the games behind them. Everyone can see what
+                            happened and check it. TMR Pro adds the money side: what the trend
+                            was worth, at what prices, against what the market implied.
+                        </p>
+                        <div class="pro-split">
+                            <div class="pro-split-col">
+                                <h4>Free</h4>
+                                <ul class="pro-list">
+                                    <li>Record</li>
+                                    <li>Sample size</li>
+                                    <li>Win rate</li>
+                                    <li>Date range</li>
+                                    <li>Season splits</li>
+                                    <li>The qualifying games themselves</li>
+                                </ul>
+                            </div>
+                            <div class="pro-split-col is-pro">
+                                <h4>TMR Pro</h4>
+                                <ul class="pro-list">
+                                    <li>Units won or lost</li>
+                                    <li>ROI</li>
+                                    <li>Average price</li>
+                                    <li>Market-implied rate</li>
+                                    <li>Deeper profitability charts and analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="pro-product">
+                        <div class="pro-product-kicker">Free and Pro</div>
+                        <h3>Model Builder</h3>
+                        <p>
+                            Define a set of conditions once. From then on it finds every
+                            qualifying event automatically and tracks them forward, measuring
+                            record, units, ROI and results over time as the games settle. It is
+                            forward tracking, not a backtest: a model starts from the day you
+                            build it. The separate historical preview is the only part that
+                            looks backwards.
+                        </p>
+                        <div class="pro-split">
+                            <div class="pro-split-col">
+                                <h4>Free</h4>
+                                <ul class="pro-list">
+                                    <li>2 active models</li>
+                                    <li>Full forward tracking</li>
+                                    <li>Record, units and ROI</li>
+                                </ul>
+                            </div>
+                            <div class="pro-split-col is-pro">
+                                <h4>TMR Pro</h4>
+                                <ul class="pro-list">
+                                    <li>15 active models</li>
+                                    <li>Everything in Free</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
             </div>
+        </section>
 
-            <div class="analytics-card locked">
-                <h4>Best Bet Type</h4>
-                <div class="value">Spreads</div>
-                <div class="label">58.3% win rate</div>
-                <div class="premium-lock">🔒 Pro Required</div>
-            </div>
+        <!-- ================================================== the pricing -->
+        <section class="pro-section" id="pricing">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <h2>Pricing</h2>
+                    <p>One subscription covers all three tools. Cancel any time.</p>
+                </div>
 
-            <div class="analytics-card locked">
-                <h4>Best Streak</h4>
-                <div class="value">12</div>
-                <div class="label">consecutive wins</div>
-                <div class="premium-lock">🔒 Pro Required</div>
-            </div>
+                <div class="pro-prices">
+                    <div class="pro-price is-featured">
+                        <div class="pro-price-flag">Founding member</div>
+                        <h3>Founding</h3>
+                        <div class="pro-amount">$19.99<small>/month</small></div>
+                        <p class="pro-price-detail">
+                            The first <em>100</em> eligible subscribers. The founding rate holds
+                            for as long as the subscription runs without a break.
+                        </p>
+                        <button type="button" class="pro-buy is-primary" disabled aria-disabled="true"
+                                data-pro-buy="founding">Coming soon</button>
+                        <p class="pro-buy-note">Availability is confirmed by our server</p>
+                    </div>
 
-            <div class="analytics-card locked">
-                <h4>Optimal Odds Range</h4>
-                <div class="value">+120 to +180</div>
-                <div class="label">highest ROI zone</div>
-                <div class="premium-lock">🔒 Pro Required</div>
+                    <div class="pro-price">
+                        <div class="pro-price-flag">&nbsp;</div>
+                        <h3>Monthly</h3>
+                        <div class="pro-amount">$24.99<small>/month</small></div>
+                        <p class="pro-price-detail">
+                            The standard rate. Billed monthly.
+                        </p>
+                        <button type="button" class="pro-buy" disabled aria-disabled="true"
+                                data-pro-buy="monthly">Coming soon</button>
+                        <p class="pro-buy-note">&nbsp;</p>
+                    </div>
+
+                    <div class="pro-price">
+                        <div class="pro-price-flag">Best value per month</div>
+                        <h3>Annual</h3>
+                        <div class="pro-amount">$239<small>/year</small></div>
+                        <p class="pro-price-detail">
+                            Works out to <em>$19.92 a month</em>. Against $24.99 a month for a
+                            year, that is <em>$60.88</em> less, about <em>20%</em>.
+                        </p>
+                        <button type="button" class="pro-buy" disabled aria-disabled="true"
+                                data-pro-buy="annual">Coming soon</button>
+                        <p class="pro-buy-note">&nbsp;</p>
+                    </div>
+                </div>
             </div>
+        </section>
+
+        <!-- ================================================= the founding -->
+        <section class="pro-section">
+            <div class="pro-wrap">
+                <div class="pro-founding">
+                    <h2>How founding membership works</h2>
+                    <p>
+                        There are 100 founding places. That is the whole of it: no countdown,
+                        no expiring offer, just a fixed number of places that either exist or
+                        do not when you subscribe.
+                    </p>
+                    <ul>
+                        <li>The <strong>first 100 eligible subscribers</strong> pay <strong>$19.99 a month</strong>.</li>
+                        <li>That rate <strong>stays</strong> for as long as the subscription runs continuously.</li>
+                        <li>If the subscription ends, the place returns to the pool for somebody else, and a later subscription is at <strong>whatever the price is then</strong>.</li>
+                        <li>Whether a place is available is <strong>decided by our server</strong> at the moment you subscribe, not by anything this page can set.</li>
+                        <li>One founding place per account.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================== free stays free -->
+        <section class="pro-section" id="free">
+            <div class="pro-wrap">
+                <div class="pro-free">
+                    <div class="pro-section-head" style="margin-bottom:0">
+                        <h2>TrustMyRecord stays free</h2>
+                        <p>
+                            TMR Pro is the research-tool layer. It is not a paywall around the
+                            site. Everything that makes TrustMyRecord a public record is free
+                            and stays free, for everyone, whether you subscribe or not.
+                        </p>
+                    </div>
+                    <div class="pro-free-grid">
+                        <ul class="pro-list">
+                            <li>Profiles</li>
+                            <li>Public records</li>
+                            <li>Pick tracking</li>
+                            <li>Leaderboards</li>
+                        </ul>
+                        <ul class="pro-list">
+                            <li>Handicapping content</li>
+                            <li>Public community features</li>
+                            <li>The sportsbook and normal pick entry</li>
+                            <li>TrendSpotter records and the games behind them</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================== the faq -->
+        <section class="pro-section">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <h2>Questions</h2>
+                </div>
+                <div class="pro-faq">
+                    <details>
+                        <summary>Does TMR Pro change how my record looks?</summary>
+                        <p>
+                            No. A subscription buys research tools and nothing else. It does not
+                            change your verification, your badges, your public standing, how
+                            your picks are graded, how many picks you can post, or how you rank
+                            on any leaderboard. Nobody can buy credibility here; the whole point
+                            of the site is that the record speaks for itself.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Do I need TMR Pro to use TrendSpotter?</summary>
+                        <p>
+                            No. The record, the sample size, the win rate, the date range, the
+                            season splits and the qualifying games are all free, so you can
+                            check any trend yourself. TMR Pro adds the profitability side: units,
+                            ROI, average price, the market-implied rate and the deeper charts.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Is Model Builder a backtester?</summary>
+                        <p>
+                            Not in the main sense. A model you build starts tracking from that
+                            moment and measures results forward as games settle, which is what
+                            makes the record honest. There is a separate historical preview
+                            component that looks backwards; that one is the only part doing
+                            anything retrospective.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Is Bet Legend Pro the same thing I can buy on its own?</summary>
+                        <p>
+                            Yes, the same tool. It is sold separately at $49 a month, and a TMR
+                            Pro subscription includes it in full.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>When can I subscribe?</summary>
+                        <p>
+                            Not yet. Checkout is not open, which is why the buttons on this page
+                            do nothing. When it opens these buttons will start working and this
+                            answer will change.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <div class="pro-wrap">
+            <p class="pro-fineprint">
+                TMR Pro is a research and record-keeping product. It provides historical
+                data, measurement and tracking tools. It does not provide predictions,
+                guaranteed outcomes, profit, or any form of edge, and nothing on this page
+                should be read as a claim that any strategy will win. Sports betting
+                involves risk of loss. Prices shown are in US dollars and exclude any
+                applicable tax. Bet Legend Pro remains separately available at its own
+                price. If you or someone you know needs help with gambling, call
+                1-800-GAMBLER.
+            </p>
         </div>
-    </section>
+    </main>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=54050b368b80 -->
-
-    <!-- Notification -->
-    <div class="notification" id="notification">
-        <span class="icon"></span>
-        <span class="message"></span>
-    </div>
-
-    <!-- Scripts -->
-<script src="/static/js/config.js?v=430b4bba7b37"></script>
-<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-    <script src="/static/js/backend-api.js?v=954ceb0ab9ff"></script>
-<script src="/static/js/auth-persistent.js?v=d479be477169"></script>
-<script src="/static/js/nav-badges.js?v=dca92f04da03"></script>
-    <script src="/static/js/notifications.js?v=395be0dd8cdf"></script>
     <script>
-        // State
-        let billingPeriod = 'monthly';
-        let tiersData = [];
-        let currentStatus = null;
+    /* TMR_PRO_PRICING_PAGE_20260912.
+       Two jobs, and deliberately no others:
+         1. render the right state for a logged-out visitor, a logged-in free
+            user, or a Pro subscriber;
+         2. make certain nothing on this page can transact.
 
-        // Initialize after API is ready
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('[Premium] Initializing...');
-            handleStripeReturn();
+       There is no checkout call here, and no Stripe price id: the server picks
+       the price when checkout opens, including whether a founding place is
+       available. This file cannot name a price even if it wanted to. */
+    (function () {
+        'use strict';
 
-            // Wait for backend detection
-            if (window.api) {
-                await api.ready;
-            }
+        var CHECKOUT_OPEN = false;   /* flipped only when checkout is approved */
 
-            // Update nav based on auth state
-            updateNav();
-
-            // Load tiers from backend
-            await loadTiers();
-
-            // Load current subscription status
-            await loadSubscriptionStatus();
-
-            // If premium user, load real analytics
-            if (currentStatus && (currentStatus.tier === 'pro' || currentStatus.tier === 'elite')) {
-                await loadPremiumAnalytics();
-            }
+        /* ------------------------------------------------ inert purchase -- */
+        var buttons = document.querySelectorAll('[data-pro-buy]');
+        Array.prototype.forEach.call(buttons, function (btn) {
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+            /* Belt and braces: a disabled button fires no click, but if anything
+               ever re-enables one by accident this still refuses to transact. */
+            btn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+            });
         });
 
-        function updateNav() {
-            const profileLink = document.getElementById('profileLink');
+        /* ---------------------------------------------------- auth state -- */
+        var statusEl = document.getElementById('proStatus');
+        var chipEl = document.getElementById('proStatusChip');
+        var textEl = document.getElementById('proStatusText');
 
-            if (api && api.isLoggedIn()) {
-                if (profileLink) {
-                    profileLink.style.display = 'block';
-                }
-            } else {
-                if (profileLink) {
-                    profileLink.style.display = 'none';
-                }
+        function paint(state, user) {
+            if (!statusEl || !chipEl || !textEl) return;
+            var isPro = false;
+            if (user) {
+                var tier = String(user.subscription_tier || user.tier || '').toLowerCase();
+                var expires = user.subscription_expires_at ? new Date(user.subscription_expires_at) : null;
+                isPro = (tier === 'pro' || tier === 'elite') && (!expires || expires > new Date());
             }
-        }
 
-        async function loadTiers() {
-            try {
-                const data = await api.getSubscriptionTiers();
-                tiersData = data.tiers || [];
-                console.log('[Premium] Loaded tiers:', tiersData);
-
-                // Update pricing cards with server data if available
-                if (tiersData.length > 0) {
-                    renderTierPrices();
-                }
-            } catch (err) {
-                console.error('[Premium] Failed to load tiers (using defaults):', err);
-                // Fallback: keep the hardcoded HTML prices
-            }
-        }
-
-        function renderTierPrices() {
-            tiersData.forEach(tier => {
-                const card = document.querySelector(`.pricing-card[data-tier="${tier.name}"]`);
-                if (!card) return;
-
-                // Update monthly prices
-                const priceEl = card.querySelector('.tier-price');
-                if (priceEl && billingPeriod === 'monthly' && tier.price_monthly !== undefined) {
-                    const price = parseFloat(tier.price_monthly);
-                    priceEl.innerHTML = price === 0 ? '$0<span>/mo</span>' : `$${price.toFixed(2)}<span>/mo</span>`;
-                }
-
-                // Update display name
-                const nameEl = card.querySelector('.tier-name');
-                if (nameEl && tier.display_name) {
-                    nameEl.textContent = tier.display_name;
-                }
-
-                // Update features list if server provides them
-                if (tier.features && typeof tier.features === 'object') {
-                    // Features are already rendered in HTML, server data is supplementary
-                }
-            });
-        }
-
-        async function loadSubscriptionStatus() {
-            if (!api || !api.isLoggedIn()) {
-                document.getElementById('currentTier').textContent = 'Free (Not logged in)';
+            if (state === 'signed-in' && isPro) {
+                chipEl.textContent = 'TMR Pro';
+                chipEl.classList.add('is-pro');
+                textEl.textContent = 'Your subscription is active. All three tools are unlocked on your account.';
+                statusEl.classList.add('is-shown');
                 return;
             }
-
-            try {
-                const status = await api.getSubscriptionStatus();
-                currentStatus = status;
-                console.log('[Premium] Subscription status:', status);
-
-                const tierEl = document.getElementById('currentTier');
-                const expiryEl = document.getElementById('tierExpiry');
-                const banner = document.getElementById('statusBanner');
-
-                tierEl.textContent = status.display_name || 'Free';
-                tierEl.className = 'current-tier ' + (status.tier || 'free');
-
-                if (status.tier !== 'free' && status.expires_at) {
-                    expiryEl.textContent = 'Expires: ' + new Date(status.expires_at).toLocaleDateString();
-                    banner.classList.add('premium');
-                }
-
-                // Update button states based on current tier
-                updateButtonStates(status.tier);
-
-                // If premium, unlock analytics preview
-                if (status.tier === 'pro' || status.tier === 'elite') {
-                    document.querySelectorAll('.analytics-card').forEach(card => {
-                        card.classList.remove('locked');
-                        const lock = card.querySelector('.premium-lock');
-                        if (lock) lock.remove();
-                    });
-                }
-
-            } catch (err) {
-                console.error('[Premium] Failed to load status:', err);
-                document.getElementById('currentTier').textContent = 'Free';
-            }
-        }
-
-        async function loadPremiumAnalytics() {
-            try {
-                const analytics = await api.getPremiumAnalytics();
-                console.log('[Premium] Analytics:', analytics);
-
-                const cards = document.querySelectorAll('.analytics-card');
-
-                // Best Sport
-                if (cards[0] && analytics.insights?.strongest_sport) {
-                    const bestSportData = analytics.by_sport?.find(s => s.sport === analytics.insights.strongest_sport);
-                    cards[0].querySelector('.value').textContent = analytics.insights.strongest_sport.toUpperCase();
-                    cards[0].querySelector('.label').textContent = bestSportData
-                        ? `+${parseFloat(bestSportData.total_units).toFixed(1)} units`
-                        : 'Top performer';
-                }
-
-                // Best Bet Type
-                if (cards[1] && analytics.by_bet_type?.length > 0) {
-                    const best = analytics.by_bet_type.sort((a, b) =>
-                        parseFloat(b.total_units) - parseFloat(a.total_units))[0];
-                    cards[1].querySelector('.value').textContent = best.bet_type || 'N/A';
-                    const total = parseInt(best.wins || 0) + parseInt(best.losses || 0);
-                    const winRate = total > 0 ? ((parseInt(best.wins) / total) * 100).toFixed(1) : 0;
-                    cards[1].querySelector('.label').textContent = `${winRate}% win rate`;
-                }
-
-                // Best Streak
-                if (cards[2] && analytics.streaks) {
-                    cards[2].querySelector('.value').textContent = analytics.streaks.best_win_streak || 0;
-                    cards[2].querySelector('.label').textContent = 'consecutive wins';
-                }
-
-                // Best Odds Range
-                if (cards[3] && analytics.insights?.best_odds_range) {
-                    const rangeLabels = {
-                        heavy_favorite: '-200 & below',
-                        favorite: '-110 to -200',
-                        even: '-110 to +110',
-                        underdog: '+110 to +200',
-                        heavy_underdog: '+200 & above'
-                    };
-                    cards[3].querySelector('.value').textContent = rangeLabels[analytics.insights.best_odds_range] || analytics.insights.best_odds_range;
-                    cards[3].querySelector('.label').textContent = 'highest ROI zone';
-                }
-
-            } catch (err) {
-                console.error('[Premium] Failed to load analytics:', err);
-                // Keep the placeholder/locked state
-            }
-        }
-
-        function updateButtonStates(currentTier) {
-            const tierOrder = ['free', 'basic', 'pro', 'elite'];
-            const currentIndex = tierOrder.indexOf(currentTier || 'free');
-
-            document.querySelectorAll('.pricing-card').forEach(card => {
-                const cardTier = card.dataset.tier;
-                const cardIndex = tierOrder.indexOf(cardTier);
-                const btn = card.querySelector('.upgrade-btn');
-                if (!btn) return;
-
-                if (cardTier === currentTier || cardTier === (currentTier || 'free')) {
-                    btn.textContent = 'Current Plan';
-                    btn.disabled = true;
-                    btn.classList.remove('primary');
-                    btn.classList.add('secondary');
-                } else if (cardIndex < currentIndex) {
-                    btn.textContent = 'Downgrade';
-                    btn.disabled = false;
-                    btn.classList.remove('primary');
-                    btn.classList.add('secondary');
-                } else {
-                    // Higher tier - show upgrade
-                    btn.disabled = false;
-                }
-            });
-        }
-
-        function toggleBilling() {
-            const toggle = document.getElementById('billingToggle');
-            const monthlyLabel = document.getElementById('monthlyLabel');
-            const yearlyLabel = document.getElementById('yearlyLabel');
-
-            if (billingPeriod === 'monthly') {
-                billingPeriod = 'yearly';
-                toggle.classList.add('yearly');
-                monthlyLabel.classList.remove('active');
-                yearlyLabel.classList.add('active');
-
-                // Try to use server prices, fallback to hardcoded
-                const basicTier = tiersData.find(t => t.name === 'basic');
-                const proTier = tiersData.find(t => t.name === 'pro');
-                const eliteTier = tiersData.find(t => t.name === 'elite');
-
-                document.getElementById('basicPrice').innerHTML = `$${basicTier ? parseFloat(basicTier.price_yearly).toFixed(2) : '99.99'}<span>/yr</span>`;
-                document.getElementById('basicOriginal').style.display = 'block';
-                document.getElementById('proPrice').innerHTML = `$${proTier ? parseFloat(proTier.price_yearly).toFixed(2) : '199.99'}<span>/yr</span>`;
-                document.getElementById('proOriginal').style.display = 'block';
-                document.getElementById('elitePrice').innerHTML = `$${eliteTier ? parseFloat(eliteTier.price_yearly).toFixed(2) : '499.99'}<span>/yr</span>`;
-                document.getElementById('eliteOriginal').style.display = 'block';
-            } else {
-                billingPeriod = 'monthly';
-                toggle.classList.remove('yearly');
-                monthlyLabel.classList.add('active');
-                yearlyLabel.classList.remove('active');
-
-                const basicTier = tiersData.find(t => t.name === 'basic');
-                const proTier = tiersData.find(t => t.name === 'pro');
-                const eliteTier = tiersData.find(t => t.name === 'elite');
-
-                document.getElementById('basicPrice').innerHTML = `$${basicTier ? parseFloat(basicTier.price_monthly).toFixed(2) : '9.99'}<span>/mo</span>`;
-                document.getElementById('basicOriginal').style.display = 'none';
-                document.getElementById('proPrice').innerHTML = `$${proTier ? parseFloat(proTier.price_monthly).toFixed(2) : '19.99'}<span>/mo</span>`;
-                document.getElementById('proOriginal').style.display = 'none';
-                document.getElementById('elitePrice').innerHTML = `$${eliteTier ? parseFloat(eliteTier.price_monthly).toFixed(2) : '49.99'}<span>/mo</span>`;
-                document.getElementById('eliteOriginal').style.display = 'none';
-            }
-        }
-
-        async function upgrade(tier) {
-            // LAUNCH GATE 20260709: Stripe is not configured on trustmyrecord-api
-            // (no STRIPE_* env vars), so paid upgrades are disabled to prevent any
-            // checkout/charge or simulated free premium grant. Free tier (tracking,
-            // leaderboards, simulator) stays fully open. Reversible: remove once
-            // Stripe keys are set on the backend.
-            showToast('Premium is coming soon. Free pick tracking, leaderboards, and the MLB simulator are fully open in the meantime.', 'info');
-            return;
-            if (!api || !api.isLoggedIn()) {
-                showToast('Please log in to upgrade', 'error');
-                setTimeout(() => {
-            window.location.href = '/';
-                }, 1500);
+            if (state === 'signed-in') {
+                chipEl.textContent = 'Free account';
+                chipEl.classList.remove('is-pro');
+                textEl.textContent = CHECKOUT_OPEN
+                    ? 'You are on the free plan. Pick a plan below to upgrade.'
+                    : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.';
+                statusEl.classList.add('is-shown');
                 return;
             }
-
-            const btn = document.querySelector(`.pricing-card[data-tier="${tier}"] .upgrade-btn`);
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Redirecting...';
+            if (state === 'signed-out') {
+                chipEl.textContent = 'Not signed in';
+                chipEl.classList.remove('is-pro');
+                textEl.textContent = 'A free account is all you need for profiles, pick tracking and leaderboards.';
+                statusEl.classList.add('is-shown');
+                return;
             }
-
-            try {
-                const result = await api.upgradeSubscription(tier, billingPeriod);
-                
-                const checkoutUrl = result.checkout_url || result.checkoutUrl || result.url;
-                if (checkoutUrl) {
-                    // Redirect to Stripe checkout
-                    window.location.href = checkoutUrl;
-                } else {
-                    // Success message for free/simulated upgrade
-                    showToast(result.message || 'Upgrade successful!', 'success');
-                    setTimeout(async () => {
-                        await loadSubscriptionStatus();
-                        if (currentStatus && (currentStatus.tier === 'pro' || currentStatus.tier === 'elite')) {
-                            await loadPremiumAnalytics();
-                        }
-                    }, 1000);
-                }
-
-            } catch (err) {
-                showToast(err.message || 'Upgrade failed', 'error');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = `Upgrade to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`;
-                }
-            }
+            /* 'unknown': a cold start or a network blip. Say nothing rather than
+               claim a state, exactly as the shared session resolver does. */
+            statusEl.classList.remove('is-shown');
         }
 
-        function handleStripeReturn() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const status = urlParams.get('status') || urlParams.get('checkout');
+        function start() {
+            var S = window.TMRSession;
+            if (!S) { paint('signed-out', null); return; }
 
-            if (status === 'success') {
-                showToast('Payment successful! Your account is being upgraded.', 'success');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else if (status === 'cancel' || status === 'canceled') {
-                showToast('Payment cancelled.', 'info');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+            /* The cached identity paints immediately so the panel does not flash. */
+            var cached = null;
+            try { cached = S.getCachedUser && S.getCachedUser(); } catch (e) { cached = null; }
+            if (cached) paint('signed-in', cached);
+            else if (!S.hasTokens || !S.hasTokens()) paint('signed-out', null);
+
+            if (!S.resolveUser) return;
+            S.resolveUser().then(function (res) {
+                if (!res) return;
+                paint(res.state || 'unknown', res.user || null);
+            }).catch(function () { /* keep whatever is on screen */ });
         }
 
-        function showToast(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            if (!notification) return;
-            notification.className = 'notification show ' + type;
-            notification.querySelector('.message').textContent = message;
-            notification.querySelector('.icon').textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : 'i';
-
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', start);
+        } else {
+            start();
         }
+    })();
     </script>
-    <script src="/static/js/verification-banner.js?v=d33f5ea5385f"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.18d27a6a1a1c.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 </body>
 </html>
-
-
