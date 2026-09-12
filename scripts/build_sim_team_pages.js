@@ -183,7 +183,7 @@ ${JSON.stringify({
 </script>
 <link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=${cssHash}">
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=fa4ea64c6c4a">
-<script defer src="/static/js/tmr-linkhub.js?v=c3b9068ac3d7"></script>
+<script defer src="/static/js/tmr-linkhub.js?v=f315d279d2ec"></script>
 <script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
 <link rel="stylesheet" href="/static/css/tmr-ds.9daf47af9804.css">
 </head>

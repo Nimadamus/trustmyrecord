@@ -62,33 +62,6 @@
     var el = document.querySelector(sel);
     return el ? el.getAttribute(name) : null;
   }
-  /* CLS_RESERVE_20260912: the shell's #postsContainer starts as a one-line
-     "Loading..." placeholder and then grows to the full thread -- 165px to 4,444px
-     on a 390px viewport. Everything below it moves, which is measured as CLS 0.93
-     on mobile, the worst Core Web Vitals number on the site.
-     This baked page has the SAME posts laid out at the SAME viewport width right
-     now, so its own content height is the best available estimate of what the shell
-     is about to render. Measure it before the swap and hand it over, so the space is
-     reserved instead of appearing underneath the reader. Estimate only -- the shell
-     clears it once the real content is at least that tall. */
-  var reservePx = 0;
-  try {
-    var postNodes = document.querySelectorAll('article.ft-post, .ft-post');
-    for (var pi = 0; pi < postNodes.length; pi++) {
-      reservePx += Math.round(postNodes[pi].getBoundingClientRect().height);
-    }
-    // TUNING, and the mistake in it: I first widened this to
-    // max(sum of baked posts, <main>) on the theory that the sum reads low
-    // because the shell adds chrome the crawler view lacks. Measured on a 390px
-    // viewport that produced 4,866px against a real 4,235px of rendered posts --
-    // 631px of reserved blank space, 75% of the viewport, that never released
-    // because the content never reached it. The tighter estimate measured better
-    // on BOTH counts: CLS 0.126 and no gap. Under-reserving costs a small
-    // residual shift; over-reserving costs a visible hole. Take the small shift.
-    // Never reserve something absurd if the measurement goes wrong.
-    if (!(reservePx > 0) || reservePx > 20000) reservePx = 0;
-  } catch (e) { reservePx = 0; }
-
   var ldNode = document.querySelector('script[type="application/ld+json"]');
   var seo = {
     canonical: attr('link[rel=canonical]', 'href'),
@@ -111,20 +84,13 @@
      cache. The ?v= tags are content hashes; scripts/version_static_refs.py repins
      references inside .js sources, so these stay correct automatically. */
   try {
-    [['/static/js/tmr-forum-app.js?v=f4a18bf8a8be', 'script'],
+    [['/static/js/tmr-forum-app.js?v=03aed4aa5842', 'script'],
      ['/static/css/tmr-forum-app.css?v=2403843992ed', 'style']].forEach(function (a) {
       var l = document.createElement('link');
       l.rel = 'preload'; l.as = a[1]; l.href = a[0];
       document.head.appendChild(l);
     });
   } catch (e) { /* preload is an optimisation only; never block the swap */ }
-
-  /* CLS_FOOTER_CHURN_20260912: tell tmr-linkhub.js not to build a sitewide
-     footer on this page. The shell that replaces it carries its own, and
-     adding then removing one measured as a 0.335 layout shift on a 390px
-     viewport. The catch() below lowers this again if the swap never happens,
-     and linkhub's 1s reconcile loop then puts the footer back. */
-  window.__TMRLH_SWAP_PENDING = true;
 
   fetch('/forum/', { headers: { Accept: 'text/html' }, credentials: 'same-origin' })
     .then(function (r) {
@@ -140,7 +106,7 @@
       // markers are the shell's own view container plus the script tag that pulls
       // the app in -- both of which are what actually has to be present for the
       // swap to produce a working page.
-      if (html.indexOf('id="viewThread"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=f4a18bf8a8be') < 0) {
+      if (html.indexOf('id="viewThread"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=03aed4aa5842') < 0) {
         throw new Error('unexpected shell payload');
       }
 
@@ -148,7 +114,6 @@
         'window.__TMR_FORUM_THREAD_ID=' + safeJson(tid) + ';' +
         'window.__TMR_FORUM_THREAD_SLUG=' + safeJson(window.__TMR_FORUM_THREAD_SLUG || '') + ';' +
         'window.__TMR_FORUM_SEO=' + safeJson(seo) + ';' +
-        'window.__TMR_FORUM_RESERVE_PX=' + safeJson(reservePx) + ';' +
         '<\/script>';
 
       // Runs at the END of the shell's <head>, so the shell's own canonical/title
@@ -198,9 +163,6 @@
       } catch (e) { /* non-fatal */ }
     })
     .catch(function () {
-      /* Swap failed: the baked page is what the visitor gets, so it needs the
-         sitewide footer after all. linkhub's reconcile loop picks this up. */
-      window.__TMRLH_SWAP_PENDING = false;
       /* Baked static thread remains on screen. */
       revealBaked();
     });

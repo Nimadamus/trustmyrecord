@@ -73,20 +73,13 @@
      cache. The ?v= tags are content hashes; scripts/version_static_refs.py repins
      references inside .js sources, so these stay correct automatically. */
   try {
-    [['/static/js/tmr-forum-app.js?v=f4a18bf8a8be', 'script'],
+    [['/static/js/tmr-forum-app.js?v=03aed4aa5842', 'script'],
      ['/static/css/tmr-forum-app.css?v=2403843992ed', 'style']].forEach(function (a) {
       var l = document.createElement('link');
       l.rel = 'preload'; l.as = a[1]; l.href = a[0];
       document.head.appendChild(l);
     });
   } catch (e) { /* preload is an optimisation only; never block the swap */ }
-
-  /* CLS_FOOTER_CHURN_20260912: tell tmr-linkhub.js not to build a sitewide
-     footer on this page. The shell that replaces it carries its own, and
-     adding then removing one measured as a 0.335 layout shift on a 390px
-     viewport. The catch() below lowers this again if the swap never happens,
-     and linkhub's 1s reconcile loop then puts the footer back. */
-  window.__TMRLH_SWAP_PENDING = true;
 
   fetch('/forum/', { headers: { Accept: 'text/html' }, credentials: 'same-origin' })
     .then(function (r) {
@@ -102,7 +95,7 @@
       // markers are the shell's own view container plus the script tag that pulls
       // the app in -- both of which are what actually has to be present for the
       // swap to produce a working page.
-      if (html.indexOf('id="viewThreads"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=f4a18bf8a8be') < 0) {
+      if (html.indexOf('id="viewThreads"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=03aed4aa5842') < 0) {
         throw new Error('unexpected shell payload');
       }
 
@@ -133,9 +126,6 @@
       document.close();
     })
     .catch(function (err) {
-      /* Swap failed: the baked page is what the visitor gets, so it needs the
-         sitewide footer after all. linkhub's reconcile loop picks this up. */
-      window.__TMRLH_SWAP_PENDING = false;
       // Baked page stays; log for diagnostics only.
       revealBaked();
       if (window.console && console.warn) console.warn('cat hydrate skipped:', err && err.message);
