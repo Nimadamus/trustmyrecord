@@ -64,14 +64,38 @@
     ld: ldNode ? ldNode.textContent : null
   };
 
+  /* PERF_SHELL_SPLIT_20260911: the /forum/ shell no longer carries its CSS and JS
+     inline -- they are two cacheable files now. In this document.write() path the
+     shell's own <link rel=preload> is useless, because it is not discovered until
+     the shell has already been written and parsed, which is the same moment the
+     real tags are found. So kick both fetches off HERE, in parallel with the shell
+     fetch, and by the time the shell is parsed they are in flight or already in
+     cache. The ?v= tags are content hashes; scripts/version_static_refs.py repins
+     references inside .js sources, so these stay correct automatically. */
+  try {
+    [['/static/js/tmr-forum-app.js?v=03aed4aa5842', 'script'],
+     ['/static/css/tmr-forum-app.css?v=2403843992ed', 'style']].forEach(function (a) {
+      var l = document.createElement('link');
+      l.rel = 'preload'; l.as = a[1]; l.href = a[0];
+      document.head.appendChild(l);
+    });
+  } catch (e) { /* preload is an optimisation only; never block the swap */ }
+
   fetch('/forum/', { headers: { Accept: 'text/html' }, credentials: 'same-origin' })
     .then(function (r) {
       if (!r.ok) throw new Error('shell HTTP ' + r.status);
       return r.text();
     })
     .then(function (html) {
-      // Only swap if this really is the forum app shell.
-      if (html.indexOf('showThreadsList') < 0 || html.indexOf('viewThreads') < 0) {
+      // Sanity: only swap if this really is the forum app shell. If /forum/ ever
+      // changes shape, keep the baked page rather than blanking the screen.
+      // PERF_SHELL_SPLIT_20260911: this used to look for function NAMES
+      // (showThreadDetail / showThreadsList), which only worked while the whole
+      // app was inline in the shell. The app now lives in tmr-forum-app.js, so the
+      // markers are the shell's own view container plus the script tag that pulls
+      // the app in -- both of which are what actually has to be present for the
+      // swap to produce a working page.
+      if (html.indexOf('id="viewThreads"') < 0 || html.indexOf('/static/js/tmr-forum-app.js?v=03aed4aa5842') < 0) {
         throw new Error('unexpected shell payload');
       }
 
