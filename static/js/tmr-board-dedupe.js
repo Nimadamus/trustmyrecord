@@ -45,6 +45,52 @@
   var inFlight = new Map();
   var memo = new Map();
 
+  /* TMR_READ_COALESCE_20260911 (Nima). The board is not the only endpoint this
+   * page asks for more than once.
+   *
+   * Measured on the live page 2026-09-11, after the board itself was fixed: one
+   * load issued 23 API calls, among them /api/picks three times and
+   * /api/auth/me twice. Fetched one at a time the origin answers each of these
+   * in 0.26s; issued together in the page's opening burst they took 4 to 9
+   * seconds, because it is a single Node process and the burst is what saturates
+   * it. Cutting the burst down is therefore worth more than it looks.
+   *
+   * These get IN-FLIGHT coalescing only, never a memo: if two identical GETs are
+   * genuinely open at the same moment, one answer is the right answer for both,
+   * and the moment the first settles the next call goes to the network as
+   * normal. Nothing is ever served from a previous request.
+   *
+   * It is an allowlist rather than a blanket rule over /api/, and each entry was
+   * read server side before being added. GET /api/picks is a pure read
+   * (routes/picks.js). GET /api/auth/me is a read plus an idempotent
+   * ADD COLUMN IF NOT EXISTS (routes/auth.js). The avatar, metrics and health
+   * endpoints are reads. Anything not listed here keeps its own request, which
+   * is the safe default for an endpoint whose GET might not be pure. */
+  var COALESCE_READS = [
+    /\/api\/picks$/,
+    /\/api\/auth\/me$/,
+    /\/api\/health$/,
+    /\/api\/users\/[^/]+\/avatar$/,
+    /\/api\/users\/[^/]+\/metrics$/,
+  ];
+
+  function coalesceableRead(url) {
+    if (!url) return null;
+    var parsed;
+    try {
+      parsed = new URL(url, window.location.href);
+    } catch (e) {
+      return null;
+    }
+    for (var i = 0; i < COALESCE_READS.length; i += 1) {
+      if (COALESCE_READS[i].test(parsed.pathname)) {
+        parsed.searchParams.sort();
+        return parsed.toString();
+      }
+    }
+    return null;
+  }
+
   function requestUrl(input) {
     if (typeof input === 'string') return input;
     if (input && typeof input.url === 'string') return input.url;
@@ -123,8 +169,28 @@
     var method = requestMethod(input, init);
     if (method !== 'GET') return nativeFetch(input, init);
 
-    var url = boardTarget(requestUrl(input));
-    if (!url) return nativeFetch(input, init);
+    var raw = requestUrl(input);
+    var url = boardTarget(raw);
+    if (!url) {
+      /* TMR_READ_COALESCE_20260911. Not the board, but possibly one of the
+       * duplicated reads above. Same in-flight sharing, no memo. */
+      var readUrl = coalesceableRead(raw);
+      if (!readUrl) return nativeFetch(input, init);
+      var readInit = sharedInit(input, init);
+      var readKey = readUrl + authTag(readInit);
+      var openRead = inFlight.get(readKey);
+      if (!openRead) {
+        openRead = nativeFetch(readUrl, readInit).then(function (response) {
+          inFlight.delete(readKey);
+          return response;
+        }, function (error) {
+          inFlight.delete(readKey);
+          throw error;
+        });
+        inFlight.set(readKey, openRead);
+      }
+      return openRead.then(function (response) { return response.clone(); });
+    }
     var shared = sharedInit(input, init);
     var key = url + authTag(shared);
 

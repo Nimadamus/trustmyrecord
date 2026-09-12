@@ -164,6 +164,49 @@ function install(options) {
       `${calls.length} request(s)`);
   }
 
+  // ---- 3b. Duplicated reads share one in-flight request ------------------
+  // TMR_READ_COALESCE_20260911. The page issued /api/picks three times and
+  // /api/auth/me twice in one load. These share while open, and only while open.
+  console.log('Duplicated reads are coalesced in flight, never memoised');
+  {
+    const deferred = [];
+    const { fetch, calls } = install({ deferred });
+    const a = fetch(`${API}/picks`);
+    const b = fetch(`${API}/picks`);
+    const c = fetch(`${API}/auth/me`);
+    const d = fetch(`${API}/auth/me`);
+    check('two concurrent /picks and two /auth/me make TWO requests',
+      calls.length === 2, `${calls.length}: ${calls.map((x) => x.url).join(' | ')}`);
+    deferred.forEach((fn) => fn());
+    const [ra, rb, rc, rd] = await Promise.all([a, b, c, d]);
+    check('both /picks callers share one response', ra.marker === rb.marker);
+    check('both /auth/me callers share one response', rc.marker === rd.marker);
+    check('/picks and /auth/me are not confused for each other', ra.marker !== rc.marker);
+    check('each caller still gets its own Response object', ra !== rb && rc !== rd);
+
+    // The critical difference from the board: no memo. Once the first call has
+    // settled, the next one must go to the network, because this data is user
+    // state that a POST elsewhere on the page can invalidate at any moment.
+    const later = fetch(`${API}/picks`);
+    deferred.forEach((fn) => fn());
+    await later;
+    check('a LATER /picks call is not served from a memo', calls.length === 3,
+      `${calls.length} request(s)`);
+  }
+  {
+    const { fetch, calls } = install();
+    // A path that merely contains an allowlisted word must not match.
+    await Promise.all([fetch(`${API}/picks/pending`), fetch(`${API}/picks/pending`)]);
+    check('a non-allowlisted read is never coalesced', calls.length === 2,
+      `${calls.length} request(s)`);
+    await Promise.all([fetch(`${API}/auth/me/sessions`), fetch(`${API}/auth/me/sessions`)]);
+    check('a deeper path under an allowlisted one is not coalesced', calls.length === 4,
+      `${calls.length} request(s)`);
+    await Promise.all([fetch(`${API}/picks`, { method: 'POST', body: '{}' }), fetch(`${API}/picks`, { method: 'POST', body: '{}' })]);
+    check('a POST to an allowlisted path is never coalesced', calls.length === 6,
+      `${calls.length} request(s)`);
+  }
+
   // ---- 4. Negative controls: everything else is untouched ----------------
   console.log('Non-board traffic is passed straight through');
   {
