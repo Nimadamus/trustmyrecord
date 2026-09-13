@@ -365,6 +365,31 @@
         /* Same gold badge, one shade down so the lettering clears 4.5:1 on white.
            The mobile card copy sits on navy and keeps the original #B98505. */
         body.tmr-light[data-tmr-route="my-pending-picks"] .table-wrap .status-pill { color: #855D00 !important; }
+        /* PENDING_MOBILE_LIGHT_20260913: on phones the cards painted navy text
+           (#07182A) on a navy card, so the pick and line were invisible and only
+           the grey market label ("Spread") showed. Mobile now uses light panels. */
+        @media (max-width: 820px) {
+            body.tmr-light[data-tmr-route="my-pending-picks"] .summary-item,
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-panel,
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card {
+                background: #FFFFFF !important;
+                border-color: #D2DEEA !important;
+                box-shadow: 0 6px 18px rgba(7,24,42,0.06) !important;
+            }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-panel { background: #F4F7FA !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .summary-label,
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card-label { color: #4A6076 !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .summary-value,
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card-value { color: #07182A !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .summary-hint { color: #0B4FA8 !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .pick-main { color: #0B4FA8 !important; font-size: 15px; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .pick-sub { color: #2E4459 !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .status-pill { color: #855D00 !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .report-state { color: #4A6076 !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .report-state .report-when { color: #2E4459 !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .report-state.reported { color: #07733F !important; }
+            body.tmr-light[data-tmr-route="my-pending-picks"] .pending-card .report-state.reported .report-when { color: #065C33 !important; }
+        }
         @media print {
             body { background: #02050A; }
             .pending-page { padding-top: 24px; }
