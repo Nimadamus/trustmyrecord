@@ -303,4 +303,88 @@ ok('a missing model probability degrades to a coin flip, not to a crash', () => 
   assert.ok(r.probabilities.AE1.playoff >= 0);
 });
 
+/* ------------------------- the six guarantees asked for by name ---------- */
+
+ok('GUARANTEE: a completed game can never be overwritten, by a pick or a draw', () => {
+  const g = game('AE1', 'AE2', 31, 7);
+  const byPick = E.resolveResults([g], { [g.id]: 'AE2' }, null)[0];
+  const bySim = E.resolveResults([g], {}, { [g.id]: 'AE2' })[0];
+  [byPick, bySim].forEach((r) => {
+    assert.strictEqual(r.source, 'actual');
+    assert.strictEqual(r.home, 31);
+    assert.strictEqual(r.away, 7);
+  });
+  const r2 = E.simulateSeason(TEAMS, [g], { [g.id]: 'AE2' }, 25, 1);
+  assert.strictEqual(r2.simulatedGames, 0, 'a completed game is never in the simulated pool');
+});
+
+ok('GUARANTEE: every club plays exactly 17 games in the real 2026 fixture', () => {
+  const fsx = require('fs');
+  const p2 = path.join(__dirname, '..', 'nfl-playoff-simulator', 'data', 'playoff-inputs-2026.json');
+  if (!fsx.existsSync(p2)) { console.log('      (fixture absent, skipped)'); return; }
+  const d = JSON.parse(fsx.readFileSync(p2, 'utf8'));
+  const n = {};
+  d.games.forEach((gg) => { n[gg.home] = (n[gg.home] || 0) + 1; n[gg.away] = (n[gg.away] || 0) + 1; });
+  assert.strictEqual(Object.keys(n).length, 32);
+  Object.keys(n).forEach((k) => assert.strictEqual(n[k], 17, k + ' plays ' + n[k] + ' games'));
+});
+
+ok('GUARANTEE: exactly 14 clubs make the field, 7 per conference, every time', () => {
+  const rank = {}; TEAMS.forEach((t, i) => { rank[t.id] = i; });
+  const games = fullSeason((h, a) => rank[h] < rank[a]);
+  const s = E.seedAll(TEAMS, games, {}, null);
+  assert.strictEqual(s.AFC.seeds.length, 7);
+  assert.strictEqual(s.NFC.seeds.length, 7);
+  const all = s.AFC.seeds.concat(s.NFC.seeds);
+  assert.strictEqual(all.length, 14);
+  assert.strictEqual(new Set(all).size, 14, 'no club may appear twice');
+  s.AFC.seeds.forEach((id) => assert.strictEqual(TEAMS.find((t) => t.id === id).conference, 'AFC'));
+  s.NFC.seeds.forEach((id) => assert.strictEqual(TEAMS.find((t) => t.id === id).conference, 'NFC'));
+});
+
+ok('GUARANTEE: seeds 1 to 4 are division winners under twenty random seasons', () => {
+  for (let trial = 0; trial < 20; trial += 1) {
+    const rnd = E.mulberry32(1000 + trial);
+    const order = TEAMS.map((t) => t.id).sort(() => rnd() - 0.5);
+    const rank = {}; order.forEach((id, i) => { rank[id] = i; });
+    const games = fullSeason((h, a) => rank[h] < rank[a]);
+    const s = E.seedAll(TEAMS, games, {}, null);
+    ['AFC', 'NFC'].forEach((c) => {
+      const divs = s[c].seeds.slice(0, 4).map((id) => TEAMS.find((t) => t.id === id).division);
+      assert.strictEqual(new Set(divs).size, 4, `trial ${trial} ${c}: seeds 1-4 must be four different divisions`);
+      s[c].seeds.slice(4).forEach((id) => {
+        assert.strictEqual(s[c].divisionWinners.indexOf(id), -1,
+          `trial ${trial} ${c}: a division winner must not appear in the wild cards`);
+      });
+    });
+  }
+});
+
+ok('GUARANTEE: ties are reported transparently, never resolved silently', () => {
+  const games = [
+    game('AE1', 'AE2', 20, 10), game('AE2', 'AE1', 20, 10),
+    game('AE1', 'AE3', 30, 0), game('AE1', 'AE4', 0, 30),
+    game('AE2', 'AE3', 0, 30), game('AE2', 'AE4', 0, 30),
+    game('AE2', 'NE1', 30, 0), game('AE1', 'NE2', 0, 30),
+  ];
+  const st = E.buildStandings(TEAMS, E.resolveResults(games, {}, null));
+  const r = E.rankPool('division', st, ['AE1', 'AE2'], { confPool: [], leaguePool: [] });
+  assert.strictEqual(r.notes.length, 1, 'a broken tie must produce exactly one note');
+  const n = r.notes[0];
+  assert.deepStrictEqual(n.teams.slice().sort(), ['AE1', 'AE2']);
+  assert.ok(typeof n.resolvedBy === 'string' && n.resolvedBy.length, 'the note must name the step');
+  assert.strictEqual(n.unresolved, false);
+});
+
+ok('GUARANTEE: the same seed gives the same run, a different seed does not', () => {
+  const rank = {}; TEAMS.forEach((t, i) => { rank[t.id] = i; });
+  const games = fullSeason((h, a) => rank[h] < rank[a]).map((g, i) =>
+    (i % 4 === 0 ? Object.assign({}, g, { completed: false, home_score: null, away_score: null, home_win_prob: 0.58 }) : g));
+  const a1 = E.simulateSeason(TEAMS, games, {}, 120, 424242, { withBracket: true });
+  const a2 = E.simulateSeason(TEAMS, games, {}, 120, 424242, { withBracket: true });
+  assert.deepStrictEqual(a1.probabilities, a2.probabilities, 'same seed must reproduce exactly');
+  const b1 = E.simulateSeason(TEAMS, games, {}, 120, 424243, { withBracket: true });
+  assert.notDeepStrictEqual(a1.probabilities, b1.probabilities);
+});
+
 console.log(`\nnfl-playoff-engine: ${passed} passed${process.exitCode === 1 ? ', FAILURES' : ', 0 failed'}`);

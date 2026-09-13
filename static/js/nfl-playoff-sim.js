@@ -190,6 +190,25 @@
     });
     w.appendChild(row);
 
+    // FRESHNESS. A projection that cannot say how old it is, is a stale
+    // projection. The stamp is always shown when odds are on offer, and when the
+    // snapshot is absent the odds module is omitted entirely rather than
+    // replaced with a guess.
+    if (S.data.projections_available && S.data.projections_generated_at) {
+      var age = S.data.projections_age_seconds;
+      var when = new Date(S.data.projections_generated_at);
+      var f = el('p', 'fresh');
+      f.appendChild(el('span', 'dot' + (age > S.data.projections_max_age_seconds / 2 ? ' warm' : ''), ''));
+      f.appendChild(document.createTextNode(
+        'Game projections built ' + (age < 90 ? 'just now'
+          : age < 5400 ? (Math.round(age / 60) + ' minutes ago')
+            : (Math.round(age / 3600) + ' hours ago'))
+        + ' (' + when.toLocaleString() + ') from the TrustMyRecord NFL model.'));
+      w.appendChild(f);
+    } else if (S.data.projection_state === 'building') {
+      w.appendChild(el('p', 'fresh', 'Game projections are being built. Picking and the bracket work now; odds appear on the next load.'));
+    }
+
     if (S.data.projections_available) {
       var sim = el('div', 'ctl-row');
       var lbl = el('label', 'sr-only', 'Number of simulations'); lbl.htmlFor = 'simN';

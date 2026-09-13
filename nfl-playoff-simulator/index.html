@@ -37,7 +37,7 @@
 <style>
   :root{
     --bg:#0a0f1a; --bg2:#0e1524; --card:#111a2b; --line:#1f2b40;
-    --ink:#e8eef7; --mut:#94a3b8; --dim:#5b6b82;
+    --ink:#e8eef7; --mut:#94a3b8; --dim:#8592a6;
     --accent:#38bdf8; --accent2:#4DA3FF; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
     --r:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -66,6 +66,9 @@
   .sel{font:inherit;font-size:.86rem;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
   .ctl-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
   .ctl-stat{margin:0 0 4px;color:#b9c6d8;font-size:.9rem}
+  .fresh{margin:6px 0 2px;color:var(--mut);font-size:.8rem;display:flex;align-items:center;gap:7px}
+  .fresh .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:0 0 auto}
+  .fresh .dot.warm{background:var(--warn)}
   .tabs{display:flex;gap:6px;margin:0 0 12px}
   .tab{font:inherit;font-weight:700;font-size:.86rem;padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer}
   .tab.is-on{background:var(--accent2);border-color:var(--accent2);color:#04101f}
@@ -103,7 +106,10 @@
   .wk.is-on{background:var(--accent2);border-color:var(--accent2);color:#04101f;font-weight:700}
   .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
   .game{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;position:relative}
-  .game.is-final{opacity:.78}
+  /* A blanket opacity on the card dragged the 'Final' tag to a 4.4:1 ratio.
+     The played game is dimmed by dimming its BUTTONS, so the tag keeps full
+     contrast. Found by the axe audit, not by eye. */
+  .game.is-final .gteam{opacity:.72}
   .gbtns{display:grid;gap:4px}
   .gteam{display:flex;align-items:center;gap:7px;font:inherit;font-size:.84rem;background:transparent;border:1px solid transparent;border-radius:7px;padding:6px 8px;color:var(--ink);cursor:pointer;width:100%;text-align:left}
   .gteam:hover:not(:disabled){border-color:var(--line);background:rgba(255,255,255,.03)}
@@ -113,7 +119,7 @@
   .gab{font-family:var(--mono);font-weight:700}
   .gprob,.gscore{margin-left:auto;font-family:var(--mono);font-size:.78rem;color:var(--mut)}
   .gteam.is-pick .gprob{color:var(--accent)}
-  .tag{position:absolute;top:6px;right:8px;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+  .tag{position:absolute;top:6px;right:8px;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
   .focus .focus-line{color:#b9c6d8;margin:0 0 6px}
   .verdict{margin:0 0 8px;color:var(--ink);font-weight:600}
   .clinch{margin:0 0 10px;font-size:.88rem;color:var(--mut)}
@@ -134,6 +140,11 @@
   .seo h2{font-size:1.1rem;margin:24px 0 8px}
   .seo p,.seo li{color:#b9c6d8;font-size:.93rem;line-height:1.66}
   .seo ul{padding-left:20px}
+  /* Without this the prose links fell back to the browser default #0000ee on a
+     near-black background. The axe audit caught it; the eye did not. */
+  .seo a,.faq a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .seo a:hover,.seo a:focus,.faq a:hover,.faq a:focus{color:#7dd3fc}
+  a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   .faq details{border:1px solid var(--line);border-radius:10px;padding:11px 15px;margin:8px 0;background:var(--card)}
   .faq summary{cursor:pointer;font-weight:640;color:var(--ink)}
   .divider{height:1px;background:var(--line);margin:26px 0 6px;border:0}
