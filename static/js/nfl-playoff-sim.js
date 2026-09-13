@@ -14,7 +14,12 @@
   var E = window.TMRPlayoffEngine;
   var SEASON = 2026;
   var STORAGE = 'tmr-nfl-playoff-picks-v1';
-  var API = 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=' + SEASON;
+  // The live endpoint in production; the local branch route when previewing.
+  // Whichever answers first wins, and the baked snapshot is the last resort, so
+  // the page is never blank because an API is down.
+  var API = (location.port === '8100'
+    ? 'http://127.0.0.1:8199/api/nfl/public/playoff-inputs?season='
+    : 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=') + SEASON;
   var FALLBACK = 'data/playoff-inputs-' + SEASON + '.json';
 
   var S = {
@@ -195,18 +200,46 @@
     // snapshot is absent the odds module is omitted entirely rather than
     // replaced with a guess.
     if (S.data.projections_available && S.data.projections_generated_at) {
-      var age = S.data.projections_age_seconds;
       var when = new Date(S.data.projections_generated_at);
+      // Age is recomputed from the timestamp, never read from the payload's own
+      // age field. The stored fallback carries the age it had when it was WRITTEN,
+      // so trusting it made an hour-old snapshot announce itself as built just now.
+      var age = Math.max(0, Math.round((Date.now() - when.getTime()) / 1000));
+      var maxAge = S.data.projections_max_age_seconds || 43200;
       var f = el('p', 'fresh');
-      f.appendChild(el('span', 'dot' + (age > S.data.projections_max_age_seconds / 2 ? ' warm' : ''), ''));
-      f.appendChild(document.createTextNode(
-        'Game projections built ' + (age < 90 ? 'just now'
-          : age < 5400 ? (Math.round(age / 60) + ' minutes ago')
-            : (Math.round(age / 3600) + ' hours ago'))
-        + ' (' + when.toLocaleString() + ') from the TrustMyRecord NFL model.'));
+      f.appendChild(el('span', 'dot' + (age > maxAge / 2 ? ' warm' : ''), ''));
+      var howLong = age < 90 ? 'just now'
+        : age < 5400 ? (Math.round(age / 60) + ' minutes ago')
+          : age < 172800 ? (Math.round(age / 3600) + ' hours ago')
+            : (Math.round(age / 86400) + ' days ago');
+      f.appendChild(document.createTextNode(S.source === 'snapshot'
+        ? ('Live data is unavailable, so this is a stored snapshot. Game projections built '
+          + howLong + ' (' + when.toLocaleString() + ') from the TrustMyRecord NFL model.')
+        : ('Game projections built ' + howLong + ' (' + when.toLocaleString() + ') '
+          + 'from the TrustMyRecord NFL model.')));
       w.appendChild(f);
     } else if (S.data.projection_state === 'building') {
       w.appendChild(el('p', 'fresh', 'Game projections are being built. Picking and the bracket work now; odds appear on the next load.'));
+    }
+
+    // SOURCE freshness, a different question from projection freshness: numbers
+    // rebuilt a minute ago on three-day-old scores are three days old. The last
+    // completed kickoff is the one stamp a reader can check against the real
+    // world, so it is shown rather than described.
+    var src = S.data.source_data;
+    if (src && src.last_completed_kickoff) {
+      var k = new Date(src.last_completed_kickoff);
+      w.appendChild(el('p', 'fresh sub',
+        'Results are current through the game that kicked off ' + k.toLocaleString() + '.'));
+    }
+    var status = S.data.freshness_status;
+    if (status === 'stale_sources' && src && src.stale_feeds && src.stale_feeds.length) {
+      w.appendChild(el('p', 'stale-warning', 'Some source feeds have not refreshed on schedule ('
+        + src.stale_feeds.join(', ') + '), so the scores and rosters behind these numbers may be '
+        + 'behind the real world. Picking and the bracket are unaffected.'));
+    } else if (status === 'stale_projection') {
+      w.appendChild(el('p', 'stale-warning', 'These projections are more than half a day old and '
+        + 'are due to be rebuilt. Picking and the bracket are unaffected.'));
     }
 
     if (S.data.projections_available) {
@@ -241,6 +274,32 @@
     return w;
   }
 
+
+  /**
+   * PROVISIONAL SEEDING.
+   *
+   * In the first weeks of a season almost every club is level, so the order that
+   * falls out of the tiebreaker chain is not an earned seed: it is the chain
+   * running out of evidence. Showing "1 seed" against an 0-0 club with no
+   * qualification implies a standing that does not exist yet, so the table says
+   * so instead. The threshold is three games, which is the point at which
+   * division and conference records start separating clubs on their own.
+   */
+  var PROVISIONAL_GAMES = 3;
+  function playedCount(st, id) {
+    var r = st[id].overall;
+    return r.w + r.l + r.t;
+  }
+  function provisionalSet(s, c) {
+    var out = {};
+    var notes = s[c].notes || [];
+    notes.forEach(function (n) { n.teams.forEach(function (id) { out[id] = true; }); });
+    s[c].seeds.forEach(function (id) {
+      if (playedCount(s.standings, id) < PROVISIONAL_GAMES) out[id] = true;
+    });
+    return out;
+  }
+
   function seeded() {
     return E.seedAll(S.data.teams, S.data.games, S.picks, null);
   }
@@ -268,14 +327,29 @@
       var box = el('div', 'confbox' + (S.tab === c ? '' : ' is-hidden'));
       box.setAttribute('role', 'tabpanel');
       box.setAttribute('aria-label', c + ' seeding');
+      var prov = provisionalSet(s, c);
+      var provCount = s[c].seeds.filter(function (id) { return prov[id]; }).length;
+      if (provCount) {
+        var pb = el('p', 'provisional-banner');
+        pb.appendChild(el('b', null, 'Provisional order.'));
+        pb.appendChild(document.createTextNode(
+          ' ' + (provCount === s[c].seeds.length ? 'All ' + provCount : provCount + ' of these ' + s[c].seeds.length)          + ' clubs are level on the records played so far, '
+          + 'so their position comes from the tiebreaker chain rather than from anything earned on the field. '
+          + 'Seeds firm up as the season separates them.'));
+        box.appendChild(pb);
+      }
       var tbl = el('table', 'seeds');
       var cap = el('caption', null, c + ' seeds. One to four are division winners, five to seven are wild cards.');
       tbl.appendChild(cap);
       var thead = el('thead');
       var tr = el('tr');
-      ['Seed', 'Team', 'Record', 'Div', 'Conf', S.sims ? 'Playoff odds' : ''].forEach(function (t) {
-        if (t === '') return;
-        var th = el('th', null, t); th.scope = 'col'; tr.appendChild(th);
+      // The numeric columns are right aligned in the body, so their headers have
+      // to be too: left aligned headers sat a column-width away from the figures
+      // they name and RECORD appeared to label the DIV column.
+      [['Seed', 0], ['Team', 0], ['Record', 1], ['Div', 1], ['Conf', 1],
+        [S.sims ? 'Playoff odds' : '', 1]].forEach(function (h) {
+        if (h[0] === '') return;
+        var th = el('th', h[1] ? 'num' : null, h[0]); th.scope = 'col'; tr.appendChild(th);
       });
       thead.appendChild(tr); tbl.appendChild(thead);
       var tb = el('tbody');
@@ -284,7 +358,12 @@
         var row = el('tr', i === 0 ? 'is-bye' : (i < 4 ? 'is-div' : 'is-wc'));
         if (S.focus === id) row.className += ' is-focus';
         var seedCell = el('td', 'seed', String(i + 1));
-        if (i === 0) seedCell.appendChild(el('span', 'badge', 'bye'));
+        if (prov[id]) {
+          var pc = el('span', 'badge prov', 'prov');
+          pc.title = 'Provisional: level with other clubs on the records played so far.';
+          seedCell.appendChild(pc);
+          row.className += ' is-prov';
+        } else if (i === 0) seedCell.appendChild(el('span', 'badge', 'bye'));
         row.appendChild(seedCell);
         var tdTeam = el('td', 'team');
         var lg = logo(id);
@@ -342,16 +421,27 @@
     return sec;
   }
 
+  /**
+   * Both conferences and the Super Bowl they produce.
+   *
+   * The advancement rule is the better seed, every round. That is a CONVENTION,
+   * not a prediction, and the panel says so: the model projects regular-season
+   * games, and nothing here knows who wins a hypothetical January matchup.
+   * Showing only the conference of the open standings tab, which is what the
+   * first cut did, also left the Super Bowl unreachable while the page promised
+   * a bracket through it.
+   */
   function bracketPanel() {
     var s = seeded();
     var sec = el('section', 'panel');
     sec.id = 'bracket';
     sec.appendChild(el('h2', null, 'The bracket'));
     var wrap = el('div', 'brackets');
+    var champions = {};
     ['AFC', 'NFC'].forEach(function (c) {
-      if (S.tab !== c) return;
       var seeds = s[c].seeds;
       var b = E.bracket(seeds, function (h, a) { return seeds.indexOf(h) < seeds.indexOf(a) ? h : a; });
+      champions[c] = b.champion;
       var col = el('div', 'bracket');
       col.appendChild(el('h3', null, c));
       [['Wild Card', b.wildcard], ['Divisional', b.divisional], ['Conference Championship', b.conference]]
@@ -370,13 +460,38 @@
           });
           col.appendChild(rd);
         });
-      var bye = el('p', 'bye-note');
-      bye.appendChild(el('b', null, abbr(seeds[0])));
-      bye.appendChild(document.createTextNode(' has the first-round bye as the 1 seed. Every round after the wild card reseeds, so the lowest surviving seed always visits the highest.'));
-      col.appendChild(bye);
+      if (seeds.length) {
+        var bye = el('p', 'bye-note');
+        bye.appendChild(el('b', null, abbr(seeds[0])));
+        bye.appendChild(document.createTextNode(' has the first-round bye as the 1 seed.'));
+        col.appendChild(bye);
+      }
       wrap.appendChild(col);
     });
     sec.appendChild(wrap);
+
+    if (champions.AFC && champions.NFC) {
+      var sb = el('div', 'superbowl');
+      sb.appendChild(el('h3', null, 'Super Bowl'));
+      var card = el('div', 'match sb');
+      [['AFC', champions.AFC], ['NFC', champions.NFC]].forEach(function (r) {
+        var row = el('div', 'mteam');
+        row.appendChild(el('span', 'mseed', r[0]));
+        row.appendChild(el('span', 'mab', abbr(r[1])));
+        row.appendChild(el('span', 'mfull', name(r[1])));
+        sb.title = '';
+        card.appendChild(row);
+      });
+      sb.appendChild(card);
+      sb.appendChild(el('p', 'bye-note',
+        'Neither club is marked as the winner. Nothing on this page projects a Super Bowl.'));
+      sec.appendChild(sb);
+    }
+
+    sec.appendChild(el('p', 'bye-note',
+      'Every round after the wild card reseeds, so the lowest surviving seed always visits the highest. '
+      + 'The bracket advances the better seed in every round: it shows the path your picks create, '
+      + 'not a forecast of who wins in January.'));
     return sec;
   }
 
@@ -412,6 +527,10 @@
         b.type = 'button';
         b.disabled = !!g.completed;
         b.setAttribute('aria-pressed', chosen ? 'true' : 'false');
+        // Which club is at home is the whole point of a home win probability, and
+        // nothing in the card said so. The marker sits in a fixed-width slot on
+        // both rows so the logos stay in one column.
+        b.appendChild(el('span', 'gat', id === g.home ? '@' : ''));
         var lg = logo(id);
         if (lg) { var im = el('img'); im.src = lg; im.alt = ''; im.loading = 'lazy'; im.width = 20; im.height = 20; b.appendChild(im); }
         b.appendChild(el('span', 'gab', abbr(id)));
@@ -460,14 +579,23 @@
     if (S.sims && S.sims.probabilities[id]) {
       var p = S.sims.probabilities[id];
       var ul = el('ul', 'odds-list');
+      // The first two come from simulating the remaining SCHEDULE with the
+      // model's own game probabilities. The last two add playoff rounds, and the
+      // model does not project hypothetical January matchups, so those rounds are
+      // coin flips. The labels say so rather than passing a 50/50 bracket off as
+      // a forecast.
       [['Make the playoffs', p.playoff], ['Take the 1 seed', p.topSeed],
-        ['Win the conference', p.conference], ['Win the Super Bowl', p.superbowl]].forEach(function (r) {
+        ['Win the conference \u2020', p.conference],
+        ['Win the Super Bowl \u2020', p.superbowl]].forEach(function (r) {
         var li = el('li');
         li.appendChild(el('span', null, r[0]));
         li.appendChild(el('b', null, pctText(r[1])));
         ul.appendChild(li);
       });
       sec.appendChild(ul);
+      sec.appendChild(el('p', 'odds-note',
+        '\u2020 Playoff rounds are treated as 50/50. The model projects regular-season '
+        + 'games only, so these two figures measure seeding and the bye, not matchup quality.'));
     }
 
     var rem = S.data.games.filter(function (g) {
@@ -503,19 +631,29 @@
     if (!notes.length) {
       sec.appendChild(el('p', 'muted', 'No ties needed breaking in the current standings.'));
     } else {
+      // resolvedBy already reads 'tied through net points in all games', so the
+      // UI must not prepend 'are tied through' as well. It did, and every
+      // unresolved line read 'are tied through tied through net points'.
       var ul = el('ul', 'tb');
+      var anyUnresolved = false;
       notes.forEach(function (n) {
         var li = el('li');
         li.appendChild(el('b', null, n.teams.map(abbr).join(', ')));
         if (n.unresolved) {
-          li.appendChild(document.createTextNode(' are tied through ' + n.resolvedBy + '. '));
-          li.appendChild(el('em', null, 'The league’s remaining steps are ' + (n.remaining || E.UNIMPLEMENTABLE).join(' and ') + ', which this simulator does not compute, so they are shown as tied.'));
+          anyUnresolved = true;
+          li.appendChild(document.createTextNode(' are ' + n.resolvedBy
+            + ', and the next step is ' + (n.remaining || E.UNIMPLEMENTABLE).join(' and ') + '.'));
         } else {
           li.appendChild(document.createTextNode(' separated by ' + n.resolvedBy + '.'));
         }
         ul.appendChild(li);
       });
       sec.appendChild(ul);
+      // Said once, under the list, rather than repeated on all twelve lines.
+      if (anyUnresolved) {
+        sec.appendChild(el('p', 'odds-note',
+          'Steps this simulator does not compute are named rather than guessed, and the clubs stay shown as tied. Early in a season most groups reach them, because clubs level on every record played so far are genuinely inseparable.'));
+      }
     }
     return sec;
   }
