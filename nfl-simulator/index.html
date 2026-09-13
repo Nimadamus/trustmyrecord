@@ -1672,6 +1672,7 @@ function simRenderSavedCard(out,saved,why){
   card.appendChild(note);
   simSavedActions(card,saved);
   out.innerHTML='';out.appendChild(card);
+  try{card.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}
 }
 
 /* /nfl-simulator/?savedId=N&mode=view|rerun — the return path from the

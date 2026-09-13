@@ -84,7 +84,10 @@
             if (!head || !body) return null;
             var cols = Array.prototype.map.call(head.querySelectorAll('th'), function (th) { return th.textContent.trim(); });
             var rows = Array.prototype.map.call(body.querySelectorAll('tr'), function (tr) {
-                return Array.prototype.map.call(tr.querySelectorAll('th,td'), function (c) { return c.textContent.trim(); });
+                return Array.prototype.map.call(tr.querySelectorAll('th,td'), function (c) {
+                    var abbr = c.querySelector('.ls-abbr'); // team cell also holds the logo's fallback text
+                    return (abbr || c).textContent.trim();
+                });
             });
             if (rows.length !== 2 || rows[0].length !== cols.length || cols.length > 30) return null;
             return { cols: cols, away: rows[0], home: rows[1] };
