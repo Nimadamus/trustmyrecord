@@ -68,8 +68,27 @@
             projectedScore: txt('projectedScoreValue'), winProbability: txt('winProbabilityValue'),
             expectedRuns: txt('expectedRunsValue'), totalRange: txt('totalRangeValue'),
             runEnvironment: txt('runEnvironmentValue'), confidence: txt('simulationConfidenceValue'),
-            simulationMode: txt('simulationModeValue'), dataMode: txt('dataModeValue')
+            simulationMode: txt('simulationModeValue'), dataMode: txt('dataModeValue'),
+            // SAVED_SIMS_REDESIGN_20260913: awayScore/homeScore are the runs in the
+            // one simulated game shown in the box score (expectedRuns is the
+            // average). Say so explicitly, and keep that game's line score so a
+            // reopened save shows the same innings the box score showed.
+            scoreKind: 'simulated',
+            lineScore: captureLineScore()
         };
+    }
+
+    function captureLineScore() {
+        try {
+            var head = qs('boxScoreHeadRow'), body = qs('boxScoreBody');
+            if (!head || !body) return null;
+            var cols = Array.prototype.map.call(head.querySelectorAll('th'), function (th) { return th.textContent.trim(); });
+            var rows = Array.prototype.map.call(body.querySelectorAll('tr'), function (tr) {
+                return Array.prototype.map.call(tr.querySelectorAll('th,td'), function (c) { return c.textContent.trim(); });
+            });
+            if (rows.length !== 2 || rows[0].length !== cols.length || cols.length > 30) return null;
+            return { cols: cols, away: rows[0], home: rows[1] };
+        } catch (e) { return null; }
     }
 
     function esc(s) {
@@ -119,21 +138,16 @@
 
     /* -------------------------------------------------- history auto-save */
 
-    var lastSavedSignature = null;
-
-    function signature(inputs, result) {
-        try { return JSON.stringify(inputs) + '|' + (result.awayScore || '') + '-' + (result.homeScore || '') + '|' + (result.winner || ''); }
-        catch (e) { return null; }
-    }
-
+    /* SAVED_SIMS_REDESIGN_20260913: one save per run. The old guard skipped a
+       run whose inputs and score matched the previous save, which silently
+       merged two separate runs that happened to land on the same score. The
+       box score panel is set to 'projected' exactly once per completed run
+       (runSimulation -> renderResult -> renderBoxScore is its only writer), so
+       each observed render is its own run and is saved as its own row. */
     function autoSave(inputs, result) {
         if (FLAGS.autoSave === false) return;
         if (!window.TMRSimGate.isLoggedIn()) return;
         if (!window.api || typeof window.api.request !== 'function') return;
-
-        var sig = signature(inputs, result);
-        if (sig && sig === lastSavedSignature) return;
-        lastSavedSignature = sig;
 
         var name = (result.awayTeam && result.homeTeam) ? (result.awayTeam + ' @ ' + result.homeTeam) : null;
 

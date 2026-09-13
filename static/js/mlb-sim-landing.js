@@ -486,13 +486,16 @@
         if (!isLoggedIn() || !window.api || typeof window.api.request !== 'function') return;
         var section = byId('simv2ReturnLoop');
         if (!section) return;
-        window.api.request('/mlb-simulator-save?limit=3', { method: 'GET' }).then(function (resp) {
-            var results = resp && Array.isArray(resp.results) ? resp.results : [];
+        // SAVED_SIMS_REDESIGN_20260913: MLB saves only. The store also holds NFL
+        // runs, which used to be linked here into the MLB simulator.
+        window.api.request('/mlb-simulator-save?limit=10&sport=mlb', { method: 'GET' }).then(function (resp) {
+            var results = (resp && Array.isArray(resp.results) ? resp.results : [])
+                .filter(function (r) { return !r.simulation_type || r.simulation_type === 'game'; }).slice(0, 3);
             var list = byId('simv2RecentSims');
             if (results.length && list) {
                 list.innerHTML = results.map(function (r) {
                     var s = r.summarized_result || {};
-                    var label = (s.away_team && s.home_team) ? (s.away_team + ' @ ' + s.home_team) : ('Simulation #' + r.id);
+                    var label = r.name || ((s.awayTeam && s.homeTeam) ? (s.awayTeam + ' @ ' + s.homeTeam) : ('Simulation #' + r.id));
                     return '<a href="/mlb-simulator/?savedId=' + encodeURIComponent(r.id) + '&mode=view">' + esc(label) + '</a>';
                 }).join('');
             } else if (list) {

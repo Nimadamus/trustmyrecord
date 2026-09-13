@@ -149,6 +149,16 @@
       '.simc-secondary button,.simc-secondary a{font-size:0.82rem;padding:8px 12px;}' +
       '.simc-summary{margin-top:14px;padding:14px;border-radius:10px;background:#0c0c14;border:1px solid #23233a;font-size:0.9rem;}' +
       '.simc-summary strong{color:#fff;}' +
+      '.simc-kicker{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#38bdf8;margin-bottom:4px;}' +
+      '.simc-score{display:grid;gap:4px;}' +
+      '.simc-team{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:1rem;font-weight:650;}' +
+      '.simc-team b{font-size:1.6rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums;}' +
+      '.simc-team.simc-loss,.simc-team.simc-loss b{color:#94a3b8;}' +
+      '.simc-kind{margin:8px 0;font-size:.78rem;font-weight:700;color:#38bdf8;}' +
+      '.simc-line{overflow-x:auto;margin:8px 0;}' +
+      '.simc-line table{border-collapse:collapse;font-size:.82rem;min-width:100%;}' +
+      '.simc-line th,.simc-line td{padding:4px 8px;text-align:center;border-bottom:1px solid #23233a;white-space:nowrap;}' +
+      '.simc-line th:first-child,.simc-line td:first-child{text-align:left;}' +
       '@media (max-width:600px){.simc-panel{padding:16px;}.simc-row{flex-direction:column;align-items:stretch;}.simc-btn{width:100%;text-align:center;}}';
     document.head.appendChild(s);
   }
@@ -250,7 +260,7 @@
         '<h3>Saved to Your Simulation History</h3>' +
         '<p id="simcSaveState">Saving this result to your account&hellip;</p>' +
         '<div class="simc-row"><button type="button" class="simc-btn primary" id="simcSaveDirectBtn" style="display:none">Save</button>' +
-        '<a class="simc-btn secondary" href="/mlb-simulator/saved/">My Simulation History</a></div>';
+        '<a class="simc-btn secondary" href="/sports-simulators/saved/">My Simulation History</a></div>';
       target.after(panel);
       var stateEl = qs('simcSaveState');
       function markSaved() {
@@ -332,24 +342,52 @@
     var main = document.querySelector('main') || document.body;
     var card = document.createElement('div');
     card.className = 'simc-panel';
+    card.id = 'simcSavedCard';
+    if (saved.id) card.setAttribute('data-saved-id', saved.id);
     var r = saved.summarized_result || {};
+    var e = escHtml;
     var bannerHtml = opts && opts.banner ? '<div class="simc-banner">' + opts.banner + '</div>' : '';
+    // SAVED_SIMS_REDESIGN_20260913: every MLB save's awayScore/homeScore is the
+    // one simulated game from its box score; expectedRuns is the run average.
+    // Label both so neither is mistaken for the other.
+    var hasScore = r.awayScore != null && r.awayScore !== '' && r.awayScore !== '--';
+    var a = Number(r.awayScore), h = Number(r.homeScore);
+    var cls = function (mine, theirs) { return hasScore && mine !== theirs ? (mine > theirs ? ' simc-win' : ' simc-loss') : ''; };
+    var line = r.lineScore && Array.isArray(r.lineScore.cols) ? r.lineScore : null;
+    var lineHtml = line
+      ? '<div class="simc-line"><table><thead><tr>' + line.cols.map(function (c) { return '<th>' + e(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        '<tr>' + line.away.map(function (c) { return '<td>' + e(c) + '</td>'; }).join('') + '</tr>' +
+        '<tr>' + line.home.map(function (c) { return '<td>' + e(c) + '</td>'; }).join('') + '</tr></tbody></table></div>'
+      : '';
     card.innerHTML =
       bannerHtml +
-      '<h3>' + (saved.name || 'Saved Simulation') + '</h3>' +
+      '<div class="simc-kicker">Saved result</div>' +
+      '<h3>' + e(saved.name || 'Saved Simulation') + '</h3>' +
       '<div class="simc-summary">' +
-      '<div><strong>' + (r.awayTeam || 'Away') + '</strong> ' + (r.awayScore || '') + ' &nbsp;&ndash;&nbsp; <strong>' + (r.homeTeam || 'Home') + '</strong> ' + (r.homeScore || '') + '</div>' +
-      (r.winner ? '<div>Winner: ' + r.winner + '</div>' : '') +
-      (r.winProbability ? '<div>Win probability: ' + r.winProbability + '</div>' : '') +
-      (saved.created_at ? '<div class="simc-note">Saved ' + new Date(saved.created_at).toLocaleString() + '</div>' : '') +
+      (hasScore
+        ? '<div class="simc-score"><div class="simc-team' + cls(a, h) + '"><span>' + e(r.awayTeam || 'Away') + '</span><b>' + e(r.awayScore) + '</b></div>' +
+          '<div class="simc-team' + cls(h, a) + '"><span>' + e(r.homeTeam || 'Home') + '</span><b>' + e(r.homeScore) + '</b></div></div>' +
+          '<div class="simc-kind">Simulated final score</div>'
+        : '<div>' + e(r.awayTeam || 'Away') + ' at ' + e(r.homeTeam || 'Home') + '</div>') +
+      lineHtml +
+      (r.expectedRuns ? '<div>Expected runs (average): ' + e(r.expectedRuns) + '</div>' : '') +
+      (r.winProbability ? '<div>Win probability: ' + e(r.winProbability) + '</div>' : '') +
+      '<div class="simc-note">' + (saved.created_at ? 'Saved ' + e(new Date(saved.created_at).toLocaleString()) + '. ' : '') +
+      (hasScore ? 'This is the simulated game you saved.' : '') + '</div>' +
       '</div>' +
-      '<div class="simc-row" style="margin-top:14px;"><button type="button" class="simc-btn primary" id="simcRerunBtn">Run This Simulation Again</button>' +
-      '<a class="simc-btn secondary" href="/mlb-simulator/saved/">My Saved Simulations</a></div>';
+      '<div class="simc-row" style="margin-top:14px;"><button type="button" class="simc-btn primary" id="simcRerunBtn">Run again with current data</button>' +
+      '<a class="simc-btn secondary" href="/sports-simulators/saved/">My Saved Simulations</a></div>';
     main.insertBefore(card, main.firstChild);
     qs('simcRerunBtn').addEventListener('click', function () {
       card.remove();
       applyInputsAndRun(saved.input_parameters, true);
       if (saved.id) { api('/' + saved.id + '/rerun', { method: 'POST' }).catch(function () {}); }
+    });
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://trustmyrecord.com/sports-simulators/saved/">
+<title>My Saved Simulations | TrustMyRecord Sports Simulators</title>
+<meta name="description" content="Every MLB and NFL simulation you have run on TrustMyRecord in one place. Filter by sport, search by matchup, reopen a saved result or run the matchup again with current data.">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:title" content="My Saved Simulations" />
+<meta property="og:description" content="Reopen, rerun, rename or delete the MLB and NFL simulations saved to your TrustMyRecord account." />
+<meta property="og:url" content="https://trustmyrecord.com/sports-simulators/saved/" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/backend-api.js?v=954ceb0ab9ff"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<link rel="stylesheet" href="/static/css/tmr-saved-sims.css?v=000000000000">
+<link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=ced0ab69322a">
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+</head>
+<body class="tmr-ds-shell tmr-ds--dark ss-page">
+<!-- CLS: reserve the shared header's height until tmr-ds-nav.js lands it
+     (same pattern as /sports-simulators/). -->
+<div id="dsNavReserve" aria-hidden="true" style="height:70px"></div>
+<script>
+(function () {
+  var r = document.getElementById('dsNavReserve');
+  if (!r) return;
+  var drop = function () { if (r && r.parentNode) { r.parentNode.removeChild(r); r = null; } };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () {
+    if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); }
+  });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('load', function () {
+    setTimeout(function () { o.disconnect(); drop(); }, 2000);
+  });
+}());
+</script>
+
+<main class="ss-shell" id="savedSims">
+  <nav class="ss-crumb" aria-label="Breadcrumb">
+    <a href="/">Home</a><i aria-hidden="true">&rsaquo;</i>
+    <a href="/sports-simulators/">Sports Simulators</a><i aria-hidden="true">&rsaquo;</i>
+    <span aria-current="page">My Saved Simulations</span>
+  </nav>
+
+  <header class="ss-head">
+    <div class="ss-head-copy">
+      <h1>My Saved Simulations</h1>
+      <p id="ssCountLine" class="ss-countline">Every simulation you run while signed in is saved here.</p>
+    </div>
+    <div class="ss-new" id="ssNew">
+      <button type="button" class="ss-btn ss-btn-primary" id="ssNewBtn" aria-haspopup="true" aria-expanded="false" aria-controls="ssNewMenu">
+        <span aria-hidden="true" class="ss-plus">+</span> New simulation
+      </button>
+      <div class="ss-menu" id="ssNewMenu" role="menu" hidden>
+        <a role="menuitem" href="/nfl-simulator/"><span class="ss-badge" data-sport="nfl">NFL</span><span>NFL Simulator<small>Any matchup, 2026 rosters</small></span></a>
+        <a role="menuitem" href="/mlb-simulator/"><span class="ss-badge" data-sport="mlb">MLB</span><span>MLB Simulator<small>Current or historical teams</small></span></a>
+      </div>
+    </div>
+  </header>
+
+  <section id="ssGate" class="ss-panel ss-state" data-state="loading" aria-live="polite">
+    <p>Checking your sign-in status…</p>
+  </section>
+
+  <section id="ssContent" hidden>
+    <div class="ss-toolbar" role="search">
+      <div class="ss-filters" role="radiogroup" aria-label="Filter by sport" id="ssFilters">
+        <button type="button" role="radio" aria-checked="true" data-sport="all">All <span class="ss-n" data-count="all"></span></button>
+        <button type="button" role="radio" aria-checked="false" data-sport="nfl">NFL <span class="ss-n" data-count="nfl"></span></button>
+        <button type="button" role="radio" aria-checked="false" data-sport="mlb">MLB <span class="ss-n" data-count="mlb"></span></button>
+      </div>
+      <div class="ss-search">
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <label class="ss-sr" for="ssSearch">Search by team, matchup or name</label>
+        <input type="search" id="ssSearch" placeholder="Search team, matchup or name" autocomplete="off" maxlength="80">
+      </div>
+      <label class="ss-sort">
+        <span class="ss-sr">Sort</span>
+        <select id="ssSort">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </label>
+    </div>
+
+    <p id="ssResultLine" class="ss-resultline" aria-live="polite"></p>
+    <div id="ssList" class="ss-list" data-state="loading" aria-busy="true"></div>
+    <div class="ss-more-wrap">
+      <button type="button" class="ss-btn ss-btn-ghost" id="ssMore" hidden>Load more</button>
+    </div>
+
+    <section class="ss-panel ss-follow" aria-labelledby="ssFollowTitle">
+      <h2 id="ssFollowTitle">Teams you follow</h2>
+      <div id="ssFollowed" class="ss-chips" data-state="loading"><p class="ss-dim">Loading followed teams…</p></div>
+    </section>
+  </section>
+
+  <p class="ss-foot">Simulator output is a model-based estimate for research and entertainment, not betting advice. A <b>simulated final score</b> is one game played out by the engine. A <b>projected average</b> is the mean score across every simulation in the run.</p>
+</main>
+
+<div class="ss-modal" id="ssDelete" role="dialog" aria-modal="true" aria-labelledby="ssDeleteTitle" aria-describedby="ssDeleteBody" hidden>
+  <div class="ss-modal-card">
+    <h2 id="ssDeleteTitle">Delete this saved simulation?</h2>
+    <p id="ssDeleteBody"></p>
+    <p class="ss-dim">This removes it from your history for good. Other saves of the same matchup are not affected.</p>
+    <div class="ss-modal-actions">
+      <button type="button" class="ss-btn ss-btn-ghost" data-modal="cancel">Cancel</button>
+      <button type="button" class="ss-btn ss-btn-danger" data-modal="confirm">Delete</button>
+    </div>
+  </div>
+</div>
+<div class="ss-toast" id="ssToast" role="status" aria-live="polite" hidden></div>
+
+<script src="/static/js/tmr-saved-sims.js?v=000000000000"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.18d27a6a1a1c.js"></script>
+<script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+</body>
+</html>

@@ -1362,6 +1362,9 @@ async function showMethodology(){
    ========================================================================== */
 const SIM_PICK_INTENT_KEY='tmr_sim_pick_intent';
 let SIM_LAST_SAVE_SIG=null;
+/* Set while a saved result is being reopened: the render wrapper checks the
+   replay against the saved row instead of saving it as a new run. */
+let SIM_VIEW=null;
 
 function simCaptureState(){
   return {mode:STATE.mode,season:STATE.season,week:STATE.week,selRef:STATE.selRef,
@@ -1426,20 +1429,42 @@ function simAutoSave(d){
   if(!window.TMRSimGate||!window.TMRSimGate.isLoggedIn())return;
   if(!window.api||typeof window.api.request!=='function')return;
   const g=d.game,p=d.projection;
+  /* SAVED_SIMS_REDESIGN_20260913. Saves made before this stored only the
+     rounded ensemble average under awayScore/homeScore. A save now records the
+     simulated game that the scoreboard and Box Score show (scoreKind
+     'simulated'), the average separately, and the run's seed, so View result
+     can replay the exact game. awayScore/homeScore carry the simulated game,
+     matching what MLB saves have always meant by them. */
+  const rep=(d.box_score&&!d.box_score.unavailable&&d.box_score.representative)||null;
+  const avgA=p&&p.score?String(p.score.away):null,avgH=p&&p.score?String(p.score.home):null;
+  const seed=d.meta&&d.meta.seed!=null?d.meta.seed:null;
   const summarized={
     awayTeam:g.away,homeTeam:g.home,
-    awayScore:p&&p.score?String(p.score.away):null,homeScore:p&&p.score?String(p.score.home):null,
+    awayAbbr:g.away_abbr||abbrOf(g.away),homeAbbr:g.home_abbr||abbrOf(g.home),
+    scoreKind:rep?'simulated':'average',
+    awayScore:rep?String(rep.away_score):avgA,homeScore:rep?String(rep.home_score):avgH,
+    simulatedAwayScore:rep?String(rep.away_score):null,simulatedHomeScore:rep?String(rep.home_score):null,
+    simulatedOt:rep?!!rep.ot:null,
+    lineAway:rep&&rep.away&&Array.isArray(rep.away.line)?rep.away.line:null,
+    lineHome:rep&&rep.home&&Array.isArray(rep.home.line)?rep.home.line:null,
+    projectedAwayScore:avgA,projectedHomeScore:avgH,
     winner:(p&&p.win_probability&&p.win_probability.home>=p.win_probability.away)?g.home:g.away,
     winProbability:p&&p.win_probability?pct(Math.max(p.win_probability.home,p.win_probability.away),1):null,
     simulations:d.meta&&d.meta.simulations,
+    seed,dataFreshness:d.meta&&d.meta.data_freshness||null,
     venue:d.environment&&d.environment.summary?d.environment.summary.venue:null,
     kickoffWindow:d.environment?d.environment.kickoff_window_label:null,
     spread:p&&p.spread?p.spread.line:null,total:p&&p.total?p.total.line:null
   };
   const inputs=simCaptureState();
-  let sig;try{sig=JSON.stringify(inputs)+'|'+summarized.awayScore+'-'+summarized.homeScore}catch(e){sig=null}
+  /* One save per run. The seed identifies a run, so two separate runs are two
+     saves even when their scores match; only a re-render of the same run (same
+     seed, same settings) is skipped. Without a seed, fall back to the result
+     object itself. */
+  let sig;try{sig=seed!=null?JSON.stringify(inputs)+'|seed:'+seed:null}catch(e){sig=null}
   if(sig&&sig===SIM_LAST_SAVE_SIG)return;
-  SIM_LAST_SAVE_SIG=sig;
+  if(!sig&&simAutoSave.last===d)return;
+  SIM_LAST_SAVE_SIG=sig;simAutoSave.last=d;
   window.api.request('/mlb-simulator-save',{method:'POST',body:{
     name:`${g.away} @ ${g.home}`,simulation_type:'nfl_game',
     input_parameters:inputs,summarized_result:summarized
@@ -1468,7 +1493,7 @@ function simRenderConversion(out,d){
     '<div id="simPickTeams" role="radiogroup" aria-label="Pick a side" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
     '<button type="button" class="btn" id="simPickCta">Add This Pick to My Verified Record</button>'+
-    '<a class="btn ghost" href="/mlb-simulator/saved/">My Simulation History</a>'+
+    '<a class="btn ghost" href="/sports-simulators/saved/">My Simulation History</a>'+
     '<span class="dim" id="simSavedNote"></span></div>';
 
   const teams=$('#simPickTeams',panel);
@@ -1519,6 +1544,13 @@ function installSimGate(){
     return _runCustom(seed);
   };
   renderResult=function(out,d){
+    if(SIM_VIEW&&d&&!d.unavailable){
+      const view=SIM_VIEW;SIM_VIEW=null;
+      if(!simSavedMatches(view.saved,d)){simRenderSavedCard(out,view.saved,'changed');return}
+      const r=_renderResult(out,d);
+      try{simMarkSavedView(out,view.saved)}catch(e){}
+      return r;
+    }
     const r=_renderResult(out,d);
     try{
       if(d&&!d.unavailable){
@@ -1560,6 +1592,88 @@ function installSimGate(){
   simHandleSavedId(hadResume);
 }
 
+/* ---- reopening a saved run (SAVED_SIMS_REDESIGN_20260913) ---- */
+function simSavedMatches(saved,d){
+  const r=saved.summarized_result||{};
+  const rep=d.box_score&&!d.box_score.unavailable&&d.box_score.representative;
+  const p=d.projection;
+  return !!(rep&&p&&p.score&&
+    String(rep.away_score)===String(r.simulatedAwayScore)&&String(rep.home_score)===String(r.simulatedHomeScore)&&
+    String(p.score.away)===String(r.projectedAwayScore)&&String(p.score.home)===String(r.projectedHomeScore));
+}
+/* Run again: current data, a fresh seed, a NEW save. The original row is only
+   stamped with last_rerun_at, never overwritten. */
+function simRerunSaved(saved){
+  simRunNow(saved.input_parameters);
+  if(saved.id)window.api.request('/mlb-simulator-save/'+encodeURIComponent(saved.id)+'/rerun',{method:'POST'}).catch(()=>{});
+}
+function simSavedWhen(saved){
+  try{return saved.created_at?new Date(saved.created_at).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):''}catch(e){return ''}
+}
+function simSavedActions(node,saved){
+  const row=el('div');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px';
+  row.innerHTML='<button type="button" class="btn" data-sim-saved="rerun">Run again with current data</button>'+
+    '<a class="btn ghost" href="/sports-simulators/saved/">My Saved Simulations</a>';
+  row.querySelector('[data-sim-saved="rerun"]').onclick=()=>{simRerunSaved(saved)};
+  node.appendChild(row);
+}
+/* Banner over a replay that reproduced the saved game exactly. */
+function simMarkSavedView(out,saved){
+  const b=el('div','panel');b.id='simSavedBanner';b.dataset.savedId=saved.id;
+  b.style.cssText='border-color:rgba(56,189,248,.45);background:linear-gradient(180deg,rgba(29,127,232,.12),transparent)';
+  b.innerHTML='<div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">Saved result</div>'+
+    '<h3 style="margin:4px 0 2px">'+esc(saved.name||'Saved simulation')+'</h3>'+
+    '<div class="muted" style="font-size:.88rem">Saved '+esc(simSavedWhen(saved))+'. This is the saved game, replayed from its seed: the scoreboard and Box Score below are the result you saved.</div>';
+  simSavedActions(b,saved);
+  out.insertBefore(b,out.firstChild);
+}
+/* The saved row on its own: legacy saves (average only) and runs whose data
+   has changed since they were saved. */
+function simRenderSavedCard(out,saved,why){
+  const r=saved.summarized_result||{};
+  const aAbbr=r.awayAbbr||abbrOf(r.awayTeam),hAbbr=r.homeAbbr||abbrOf(r.homeTeam);
+  const simulated=r.scoreKind==='simulated'&&r.simulatedAwayScore!=null;
+  const aPts=simulated?r.simulatedAwayScore:r.awayScore,hPts=simulated?r.simulatedHomeScore:r.homeScore;
+  const sims=r.simulations?fmtN(r.simulations):null;
+  const card=el('div','panel');card.id='simSavedCard';card.dataset.savedId=saved.id;card.dataset.scoreKind=simulated?'simulated':'average';
+  card.innerHTML='<div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">Saved result</div>'+
+    '<h3 style="margin:4px 0 12px">'+esc(saved.name||'Saved simulation')+'</h3>';
+  const grid=el('div','mh-grid');
+  const win=simulated&&Number(aPts)!==Number(hPts)?(Number(aPts)>Number(hPts)?'a':'h'):null;
+  const side=(abbr,name,role,pts,lost)=>{
+    const s=el('div','mh-team');s.appendChild(teamMark(abbr,48));
+    s.appendChild(Object.assign(el('div','nm'),{textContent:name||abbr}));
+    s.appendChild(Object.assign(el('div','role'),{textContent:role}));
+    const pt=Object.assign(el('div','pts'+(lost?' l':'')),{textContent:pts==null?'–':pts});pt.style.borderBottomColor=col(abbr);s.appendChild(pt);
+    return s;
+  };
+  grid.appendChild(side(aAbbr,r.awayTeam,'Away',aPts,win==='h'));
+  const mid=el('div','mh-mid');
+  mid.innerHTML='<div class="mh-scorelabel" data-sim-score-label>'+(simulated?'Simulated final score'+(r.simulatedOt?' · OT':''):'Projected average'+(sims?' of '+sims+' simulations':''))+'</div><div class="at">@</div>';
+  grid.appendChild(mid);
+  grid.appendChild(side(hAbbr,r.homeTeam,'Home',hPts,win==='a'));
+  card.appendChild(grid);
+  if(simulated&&Array.isArray(r.lineAway)&&Array.isArray(r.lineHome)){
+    const q=r.lineAway.map((_,i)=>i<4?String(i+1):'OT');
+    const ls=el('div','linescore');
+    ls.innerHTML='<table><thead><tr><th></th>'+q.map(x=>'<th>'+x+'</th>').join('')+'<th>T</th></tr></thead><tbody>'+
+      '<tr><td>'+esc(aAbbr)+'</td>'+r.lineAway.map(x=>'<td>'+esc(x)+'</td>').join('')+'<td><b>'+esc(aPts)+'</b></td></tr>'+
+      '<tr><td>'+esc(hAbbr)+'</td>'+r.lineHome.map(x=>'<td>'+esc(x)+'</td>').join('')+'<td><b>'+esc(hPts)+'</b></td></tr></tbody></table>';
+    card.appendChild(ls);
+  }
+  const facts=[];
+  if(simulated&&r.projectedAwayScore!=null)facts.push('Projected average'+(sims?' of '+sims+' simulations':'')+': '+esc(aAbbr)+' <b>'+esc(r.projectedAwayScore)+'</b> – '+esc(hAbbr)+' <b>'+esc(r.projectedHomeScore)+'</b>');
+  if(r.winner&&r.winProbability)facts.push('Projected winner '+esc(r.winner)+' ('+esc(r.winProbability)+')');
+  if(facts.length){const f=el('div','mh-avg');f.innerHTML=facts.join(' · ');card.appendChild(f)}
+  const note=el('p','muted');note.style.cssText='font-size:.86rem;margin:12px 0 0';
+  note.textContent='Saved '+simSavedWhen(saved)+'. '+(simulated
+    ?'This is the simulated game you saved.'
+    :'This save holds the projected average'+(sims?' of its '+sims+' simulations':'')+'.');
+  card.appendChild(note);
+  simSavedActions(card,saved);
+  out.innerHTML='';out.appendChild(card);
+}
+
 /* /nfl-simulator/?savedId=N&mode=view|rerun — the return path from the
    member's simulation history (see static/js/mlb-sim-saved.js). Absent the
    parameter this is a no-op and the page is an ordinary simulator. */
@@ -1576,24 +1690,26 @@ async function simHandleSavedId(hadResume){
     if(saved&&saved.input_parameters){
       await simRestoreState(saved.input_parameters);
       window.TMRSimGate.track('simulator_saved_reopened',{simulation_type:'nfl_game',view_mode:mode});
-      if(mode==='rerun')simRunNow(saved.input_parameters);
+      if(mode==='rerun')simRerunSaved(saved);
       else{
         const r=saved.summarized_result||{};
-        const out=$('#result');
-        const card=el('div','panel');
-        card.innerHTML='<h3 style="margin-top:0">'+esc(saved.name||'Saved simulation')+'</h3>'+
-          '<div class="mono" style="font-size:1.05rem">'+esc(r.awayTeam||'Away')+' '+esc(r.awayScore||'')+
-          ' &nbsp;&ndash;&nbsp; '+esc(r.homeTeam||'Home')+' '+esc(r.homeScore||'')+'</div>'+
-          (r.winner?'<div class="muted" style="margin-top:6px">Projected winner: '+esc(r.winner)+(r.winProbability?' ('+esc(r.winProbability)+')':'')+'</div>':'')+
-          (saved.created_at?'<div class="dim" style="margin-top:6px">Saved '+esc(new Date(saved.created_at).toLocaleString())+'</div>':'')+
-          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'+
-          '<button type="button" class="btn" id="simReopenRun">Run This Simulation Again</button>'+
-          '<a class="btn ghost" href="/mlb-simulator/saved/">My Simulation History</a></div>';
-        out.innerHTML='';out.appendChild(card);
-        $('#simReopenRun',card).onclick=()=>{out.innerHTML='';simRunNow(saved.input_parameters)};
+        const s=saved.input_parameters;
+        if(r.scoreKind==='simulated'&&r.seed!=null){
+          /* Replay the saved seed. The render wrapper shows the full scoreboard
+             and Box Score only if the replay reproduces the saved game exactly;
+             if the simulator's data has moved on since, it shows the saved
+             result instead of a different game under the saved label. */
+          SIM_VIEW={saved};
+          const ref=s.mode==='custom'?null:(s.selRef||STATE.selRef);
+          if(s.mode==='custom')await runCustom(r.seed);
+          else if(ref)await runScheduled(ref,r.seed);
+          if(SIM_VIEW){SIM_VIEW=null;simRenderSavedCard($('#result'),saved,'changed')}
+        }else{
+          simRenderSavedCard($('#result'),saved,'legacy');
+        }
       }
     }
-  }catch(e){/* not found / not yours — page still works as a normal simulator */}
+  }catch(e){SIM_VIEW=null;/* not found / not yours — page still works as a normal simulator */}
   try{
     const u=new URL(location.href);u.searchParams.delete('savedId');u.searchParams.delete('mode');
     history.replaceState({},'',u.toString());
