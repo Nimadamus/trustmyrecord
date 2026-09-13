@@ -265,9 +265,22 @@
     sb.type = 'button';
     sb.addEventListener('click', function () {
       var url = location.origin + location.pathname + (encodePicks() ? '?p=' + encodePicks() : '');
-      if (navigator.clipboard) navigator.clipboard.writeText(url);
-      sb.textContent = 'Link copied';
-      setTimeout(function () { sb.textContent = 'Copy a link to these picks'; }, 1800);
+      // The address bar is the share link. The clipboard is a convenience on
+      // top of it: it is denied outright in a lot of contexts, and writeText
+      // REJECTS rather than returning false, which threw an uncaught error on
+      // every denied click. A share button that can only work with clipboard
+      // permission is a share button that does not work.
+      try { history.replaceState(null, '', url); } catch (e) { /* file:// and the like */ }
+      var done = function (msg) {
+        sb.textContent = msg;
+        setTimeout(function () { sb.textContent = 'Copy a link to these picks'; }, 2200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done('Link copied'); },
+          function () { done('Link is in the address bar'); });
+      } else {
+        done('Link is in the address bar');
+      }
     });
     share.appendChild(sb);
     w.appendChild(share);
@@ -384,7 +397,12 @@
         tb.appendChild(row);
       });
       tbl.appendChild(tb);
-      box.appendChild(tbl);
+      // The odds column pushes the table past 390px, and a page that scrolls
+      // sideways as a whole is a broken page. The table scrolls inside its own
+      // box instead, which is the one element allowed to.
+      var tw = el('div', 'tablewrap');
+      tw.appendChild(tbl);
+      box.appendChild(tw);
 
       // In the hunt: the next clubs out, which is the half of the picture a
       // seeds-only table hides.
