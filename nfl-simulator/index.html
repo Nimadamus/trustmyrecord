@@ -70,7 +70,7 @@
   .board-team .tab{color:var(--dim);font-size:.72rem;font-weight:700;letter-spacing:.05em}
   .board-team .win{color:var(--good);font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
   .board-score{font-family:var(--mono);font-weight:800;font-size:2.9rem;line-height:1;letter-spacing:-.02em;white-space:nowrap}
-  .board-score .l{opacity:.45}
+  .board-score .l{color:#b9c5d6}
   .board-score .w{color:var(--ink)}
   .board-mid{text-align:center;color:var(--dim);font-size:.72rem}
   .linescore{margin-top:14px;overflow-x:auto}
@@ -171,7 +171,11 @@
   .mh-team{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
   .mh-team .nm{font-weight:730;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .mh-team .role{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-  .mh-team .pts{font-family:var(--mono);font-weight:800;font-size:2.4rem;line-height:1}
+  .mh-team .pts{font-family:var(--mono);font-weight:800;font-size:2.4rem;line-height:1;color:var(--ink);padding-bottom:5px;border-bottom:3px solid transparent}
+  .mh-team .pts.l{color:#b9c5d6}
+  .mh-scorelabel{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#cdd8e8}
+  .mh-avg{margin-top:12px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#0b1220;font-size:.84rem;color:#cdd8e8;text-align:center}
+  .mh-avg b{font-family:var(--mono);color:var(--ink)}
   .mh-team .wp{font-size:.78rem;color:var(--mut);font-weight:650}
   .mh-mid{text-align:center;color:var(--dim);font-size:.8rem;font-weight:700}
   .mh-mid .at{font-size:1.1rem;color:var(--dim)}
@@ -894,27 +898,44 @@ function renderResult(out,d){
   const g=d.game,p=d.projection,env=d.environment;
   const hAbbr=g.home_abbr||abbrOf(g.home),aAbbr=g.away_abbr||abbrOf(g.away);
   const homeWP=p.win_probability.home,awayWP=p.win_probability.away;
+  const nSims=fmtN(d.meta.simulations);
+  /* SIM_SCORE_SYNC_20260913. The big scoreboard used to print the rounded
+     ensemble average while the "One simulation" card printed a sampled game,
+     so Simulate again changed one and not the other (GB-MIN read 21-25 on the
+     board and 10-31, then 21-14, on the card). The scoreboard, the card and the
+     Box Score tab now all read this ONE object, the sampled game, and the
+     average is shown separately under its own label. */
+  const rep=(d.box_score&&!d.box_score.unavailable&&d.box_score.representative)||null;
 
   /* ---- premium matchup header ---- */
   const mh=el('div','mh');
   mh.style.borderTop=`2px solid ${col(homeWP>=awayWP?hAbbr:aAbbr)}`;
+  if(rep){mh.dataset.simAway=rep.away_score;mh.dataset.simHome=rep.home_score}
   const grid=el('div','mh-grid');
-  const side=(abbr,name,roleLabel,ptsv,wpv)=>{
+  const side=(abbr,name,roleLabel,ptsv,wpv,won)=>{
     const s=el('div','mh-team');
     s.appendChild(teamMark(abbr,52));
     s.appendChild(Object.assign(el('div','nm'),{textContent:name}));
     s.appendChild(Object.assign(el('div','role'),{textContent:roleLabel}));
-    s.appendChild(Object.assign(el('div','pts'),{textContent:nz(ptsv),style:`color:${col(abbr)==='#000000'?'#e8eef7':col(abbr)};text-shadow:0 0 1px rgba(0,0,0,.4)`}));
+    const pt=Object.assign(el('div','pts'+(won===false?' l':'')),{textContent:nz(ptsv)});
+    pt.style.borderBottomColor=col(abbr);
+    s.appendChild(pt);
     s.appendChild(Object.assign(el('div','wp'),{textContent:pct(wpv)+' win'}));
     return s;
   };
   const neutral=env&&env.neutral;
-  grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',p.score.away,awayWP));
+  const aPts=rep?rep.away_score:p.score.away, hPts=rep?rep.home_score:p.score.home;
+  const tie=rep&&rep.away_score===rep.home_score;
+  grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,rep&&!tie?aPts>hPts:null));
   const mid=el('div','mh-mid');
-  mid.innerHTML=`<div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
+  mid.innerHTML=`<div class="mh-scorelabel">${rep?`Simulated final score${rep.ot?' · OT':''}`:`Projected score — average of ${nSims} simulations`}</div><div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
   grid.appendChild(mid);
-  grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',p.score.home,homeWP));
+  grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,rep&&!tie?hPts>aPts:null));
   mh.appendChild(grid);
+  const avg=el('div','mh-avg');
+  avg.innerHTML=(rep?`Projected score — average of ${nSims} simulations: ${esc(aAbbr)} <b>${nz(p.score.away)}</b> – ${esc(hAbbr)} <b>${nz(p.score.home)}</b> · `:'')
+    +`Win probability from all ${nSims} simulations: ${esc(aAbbr)} <b>${pct(awayWP)}</b> · ${esc(hAbbr)} <b>${pct(homeWP)}</b>`;
+  mh.appendChild(avg);
 
   /* environment summary strip */
   if(env){
@@ -946,7 +967,7 @@ function renderResult(out,d){
 
   /* ---- win probability bar ---- */
   const wpp=el('div','panel');
-  wpp.innerHTML=`<h3>Win probability</h3><div style="height:12px;border-radius:8px;overflow:hidden;background:#0b1220;display:flex;border:1px solid var(--line)">
+  wpp.innerHTML=`<h3>Win probability · all ${nSims} simulations</h3><div style="height:12px;border-radius:8px;overflow:hidden;background:#0b1220;display:flex;border:1px solid var(--line)">
     <i style="display:block;height:100%;width:${(awayWP*100).toFixed(1)}%;background:${col(aAbbr)}"></i>
     <i style="display:block;height:100%;width:${(homeWP*100).toFixed(1)}%;background:${col(hAbbr)}"></i></div>
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.82rem"><span>${esc(g.away)} <b class="mono">${pct(awayWP)}</b></span><span><b class="mono">${pct(homeWP)}</b> ${esc(g.home)}</span></div>`;
@@ -955,16 +976,16 @@ function renderResult(out,d){
   /* ---- summary cards ---- */
   const k=el('div','kpis');
   const cards=[
-    `<div class="kpi"><div class="k">Projected score</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · average of ${fmtN(d.meta.simulations)} sims</div></div>`,
+    `<div class="kpi" data-kpi="avg"><div class="k">Projected score — average of ${nSims} simulations</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)}</div></div>`,
     // The average is the projection; THIS is a game. Both belong at the top,
     // because a reader who only sees the average reasonably concludes the model
     // thinks a seven-point favourite wins by seven. It does not: at the spread
     // of outcomes this model produces, and the one the real NFL produces, a
     // seven-point favourite loses outright about one game in four.
-    (d.box_score&&d.box_score.representative)
-      ? `<div class="kpi"><div class="k">One simulation</div><div class="v">${nz(d.box_score.representative.away_score)}–${nz(d.box_score.representative.home_score)}</div><div class="s">a single game from the run${d.box_score.representative.ot?' · OT':''} · run it again for another</div></div>`
+    rep
+      ? `<div class="kpi" data-kpi="sim" data-sim-away="${rep.away_score}" data-sim-home="${rep.home_score}"><div class="k">Simulated final score</div><div class="v">${nz(rep.away_score)}–${nz(rep.home_score)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · the game on the scoreboard and in the Box Score${rep.ot?' · OT':''}</div></div>`
       : '',
-    `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)}</div></div>`,
+    `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)} · all ${nSims} simulations</div></div>`,
     `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`,
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
     `<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem">${nz(p.confidence_range.margin_low)} … ${nz(p.confidence_range.margin_high)}</div><div class="s">80% of sims</div></div>`,
@@ -1005,7 +1026,7 @@ function renderResult(out,d){
   const charts=el('div','chartgrid');
   charts.appendChild(chartCard('Win probability',svgWinDonut(homeWP,awayWP,hAbbr,aAbbr),
     `<div class="legend"><span><i style="background:${col(hAbbr)}"></i>${esc(hAbbr)} ${pct(homeWP)}</span><span><i style="background:${col(aAbbr)}"></i>${esc(aAbbr)} ${pct(awayWP)}</span></div>`));
-  charts.appendChild(chartCard('Projected points by team',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
+  charts.appendChild(chartCard('Projected points by team · average of '+nSims+' simulations',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
   if(p.distributions&&p.distributions.margin&&p.distributions.margin.length){
     // MARKER_COLLISION_20260817: both markers were always drawn, so on a
     // typical game where the median margin is a point or two off zero the
@@ -1196,11 +1217,12 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     const q=['1','2','3','4'];const hasOt=(rep.home.line.length>4||rep.away.line.length>4);if(hasOt)q.push('OT');
     const pad=a=>{const x=a.slice();while(x.length<q.length)x.push(0);return x};
     const board=el('div','board');
+    board.dataset.simAway=rep.away_score;board.dataset.simHome=rep.home_score;
     const bt=el('div','board-teams');
     const teamSide=(cls,abbr,name,won)=>{const s=el('div','board-team '+cls);s.appendChild(teamMark(abbr,44));const info=el('div','info');info.appendChild(Object.assign(el('div','tn'),{textContent:name}));const meta=el('div','tab');meta.textContent=abbr;info.appendChild(meta);if(won)info.appendChild(Object.assign(el('div','win'),{textContent:'▲ Winner'}));s.appendChild(info);return s};
     bt.appendChild(teamSide('away',aAbbr,g.away,awayWon));
     const mid=el('div','board-mid');
-    mid.innerHTML=`<div class="board-score"><span class="${awayWon?'w':'l'}">${rep.away_score}</span> <span class="l" style="font-size:1.4rem;vertical-align:middle">–</span> <span class="${homeWon?'w':'l'}">${rep.home_score}</span></div><div style="margin-top:6px">FINAL${rep.ot?' / OT':''}</div>`;
+    mid.innerHTML=`<div class="board-score"><span class="${awayWon?'w':'l'}">${rep.away_score}</span> <span class="l" style="font-size:1.4rem;vertical-align:middle">–</span> <span class="${homeWon?'w':'l'}">${rep.home_score}</span></div><div style="margin-top:6px">SIMULATED FINAL SCORE${rep.ot?' / OT':''}</div>`;
     bt.appendChild(mid);
     bt.appendChild(teamSide('home',hAbbr,g.home,homeWon));
     board.appendChild(bt);
