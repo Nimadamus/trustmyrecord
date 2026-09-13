@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NFL Playoff Simulator 2026 | Build the Bracket and Seeding</title>
+<meta name="description" content="Pick the rest of the NFL season and watch the playoff picture rebuild: division winners, all seven seeds per conference, real NFL tiebreakers and the full bracket through the Super Bowl." />
+<link rel="canonical" href="https://trustmyrecord.com/nfl-playoff-simulator/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="NFL Playoff Simulator 2026" />
+<meta property="og:description" content="Pick every remaining game and watch the seeds, the tiebreakers and the bracket rebuild. Free, no account needed." />
+<meta property="og:url" content="https://trustmyrecord.com/nfl-playoff-simulator/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NFL Playoff Simulator 2026" />
+<meta name="twitter:description" content="Pick every remaining NFL game and watch the playoff seeding and bracket rebuild with real league tiebreakers." />
+<link rel="icon" type="image/png" href="/static/favicon.png" />
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"TrustMyRecord NFL Playoff Simulator","applicationCategory":"SportsApplication","operatingSystem":"Web","url":"https://trustmyrecord.com/nfl-playoff-simulator/","description":"Pick the remaining NFL games and the simulator rebuilds division standings, all seven seeds in each conference using the league's published tiebreakers, and the full 14-team bracket through the Super Bowl. Playoff odds come from simulating the unpicked games with the TrustMyRecord NFL model.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"TrustMyRecord","url":"https://trustmyrecord.com/"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"TrustMyRecord","item":"https://trustmyrecord.com/"},
+{"@type":"ListItem","position":2,"name":"Sports Simulators","item":"https://trustmyrecord.com/sports-simulators/"},
+{"@type":"ListItem","position":3,"name":"NFL Playoff Simulator","item":"https://trustmyrecord.com/nfl-playoff-simulator/"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How does the NFL playoff simulator work?","acceptedAnswer":{"@type":"Answer","text":"Pick the winner of any remaining game and the standings, division races, conference seeding and the full bracket rebuild immediately. Games already played always use their real result and cannot be overridden. You can pick every game yourself, fill the rest in one click, or simulate the unpicked games thousands of times for playoff odds."}},
+{"@type":"Question","name":"Which NFL tiebreakers does it apply?","acceptedAnswer":{"@type":"Answer","text":"Head to head, division record, common games with a four game minimum, conference record, strength of victory, strength of schedule, the combined rankings in points scored and allowed within the conference and across the league, net points in common games and net points in all games. Only the highest placed club in a division is eligible for a wild card, and that rule is applied before the wild card sequence. A tie among three or more clubs reduces to two and then restarts at the first step."}},
+{"@type":"Question","name":"Are there tiebreakers it does not compute?","acceptedAnswer":{"@type":"Answer","text":"Two. Best net touchdowns in all games is not derivable from the data held, because defensive and return scores are recorded as points rather than as touchdown counts. A coin toss is not implementable by definition. When the sequence reaches either step the clubs are shown as tied and the page says which step it reached, rather than inventing an order."}},
+{"@type":"Question","name":"Where do the playoff odds come from?","acceptedAnswer":{"@type":"Answer","text":"Each unpicked game carries a home win probability from the TrustMyRecord NFL model, the same drive level model that runs the NFL game simulator. The page draws each unpicked game against that probability thousands of times, rebuilds the seeding every iteration and reports how often each club reaches the field. Games you have picked are held fixed and never redrawn."}},
+{"@type":"Question","name":"Do I need an account?","acceptedAnswer":{"@type":"Answer","text":"No. The playoff simulator is free and runs entirely in your browser. Your picks are kept on your own device and a share link carries them without storing anything."}}]}
+</script>
+
+<style>
+  :root{
+    --bg:#0a0f1a; --bg2:#0e1524; --card:#111a2b; --line:#1f2b40;
+    --ink:#e8eef7; --mut:#94a3b8; --dim:#5b6b82;
+    --accent:#38bdf8; --accent2:#4DA3FF; --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --r:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+  .hero{padding:30px 0 10px}
+  .hero h1{font-size:1.72rem;margin:0 0 8px;letter-spacing:-.02em}
+  .hero p{color:#b9c6d8;margin:0 0 6px;max-width:74ch}
+  .crumbs{font-size:.8rem;color:var(--dim);margin:0 0 14px}
+  .crumbs a{color:var(--mut);text-decoration:none}
+  .crumbs a:hover,.crumbs a:focus{color:var(--accent);text-decoration:underline}
+  .panel{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:14px 0}
+  .panel h2{font-size:1.08rem;margin:0 0 12px;letter-spacing:-.01em}
+  .panel h3{font-size:.95rem;margin:14px 0 6px}
+  h3.sub{color:var(--mut);font-size:.82rem;text-transform:uppercase;letter-spacing:.05em}
+  .muted{color:var(--mut)}
+  .small{font-size:.82rem}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .btn{font:inherit;font-size:.86rem;border-radius:9px;padding:8px 13px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .btn:hover:not(:disabled){border-color:var(--accent)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.primary{background:linear-gradient(180deg,#6d7bff,#5766f0);border-color:#5766f0;color:#fff;font-weight:700}
+  .btn:focus-visible,.tab:focus-visible,.wk:focus-visible,.gteam:focus-visible,.linkish:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .sel{font:inherit;font-size:.86rem;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+  .ctl-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .ctl-stat{margin:0 0 4px;color:#b9c6d8;font-size:.9rem}
+  .tabs{display:flex;gap:6px;margin:0 0 12px}
+  .tab{font:inherit;font-weight:700;font-size:.86rem;padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer}
+  .tab.is-on{background:var(--accent2);border-color:var(--accent2);color:#04101f}
+  .is-hidden{display:none}
+  table.seeds{width:100%;border-collapse:collapse;font-size:.88rem}
+  .seeds caption{caption-side:top;text-align:left;color:var(--mut);font-size:.8rem;padding:0 0 8px}
+  .seeds th,.seeds td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+  .seeds th{color:var(--mut);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em}
+  .seeds td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+  .seeds td.strong{color:var(--ink);font-weight:700}
+  .seeds td.seed{font-family:var(--mono);font-weight:700;width:62px}
+  .seeds td.team{display:flex;align-items:center;gap:7px}
+  .seeds tr.is-bye{background:rgba(52,211,153,.07)}
+  .seeds tr.is-div{background:rgba(77,163,255,.05)}
+  .seeds tr.is-focus{outline:2px solid var(--accent);outline-offset:-2px}
+  .badge{margin-left:6px;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;background:var(--good);color:#04281c;border-radius:4px;padding:1px 5px;font-family:var(--sans);font-weight:800}
+  .linkish{background:none;border:0;color:var(--ink);font:inherit;padding:0;cursor:pointer;text-align:left}
+  .linkish:hover{color:var(--accent);text-decoration:underline}
+  ul.hunt{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+  ul.hunt li{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:.82rem;font-family:var(--mono)}
+  .hunt .ab{font-weight:700;color:var(--ink)}
+  .hunt .odds{margin-left:7px;color:var(--accent)}
+  .brackets{display:grid;gap:16px}
+  .bracket h3{margin:0 0 8px;font-size:1rem}
+  .round{margin:0 0 12px}
+  .round h4{margin:0 0 6px;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:700}
+  .match{display:inline-block;vertical-align:top;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:0 8px 8px 0;min-width:104px;background:var(--card)}
+  .mteam{display:flex;align-items:center;gap:8px;padding:6px 10px;font-family:var(--mono);font-size:.84rem;color:var(--mut)}
+  .mteam+.mteam{border-top:1px solid var(--line)}
+  .mteam.is-win{color:var(--ink);background:rgba(52,211,153,.1);font-weight:700}
+  .mseed{color:var(--dim);min-width:12px}
+  .bye-note{color:var(--mut);font-size:.82rem;margin:6px 0 0}
+  .weeknav{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 12px}
+  .wk{font:inherit;font-family:var(--mono);font-size:.8rem;width:34px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer}
+  .wk.is-on{background:var(--accent2);border-color:var(--accent2);color:#04101f;font-weight:700}
+  .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+  .game{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;position:relative}
+  .game.is-final{opacity:.78}
+  .gbtns{display:grid;gap:4px}
+  .gteam{display:flex;align-items:center;gap:7px;font:inherit;font-size:.84rem;background:transparent;border:1px solid transparent;border-radius:7px;padding:6px 8px;color:var(--ink);cursor:pointer;width:100%;text-align:left}
+  .gteam:hover:not(:disabled){border-color:var(--line);background:rgba(255,255,255,.03)}
+  .gteam.is-pick{border-color:var(--accent2);background:rgba(77,163,255,.14);font-weight:700}
+  .gteam.is-won{color:var(--good);font-weight:700}
+  .gteam:disabled{cursor:default}
+  .gab{font-family:var(--mono);font-weight:700}
+  .gprob,.gscore{margin-left:auto;font-family:var(--mono);font-size:.78rem;color:var(--mut)}
+  .gteam.is-pick .gprob{color:var(--accent)}
+  .tag{position:absolute;top:6px;right:8px;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+  .focus .focus-line{color:#b9c6d8;margin:0 0 6px}
+  .verdict{margin:0 0 8px;color:var(--ink);font-weight:600}
+  .clinch{margin:0 0 10px;font-size:.88rem;color:var(--mut)}
+  .clinch.in{color:var(--good);font-weight:700}
+  .clinch.out{color:var(--bad);font-weight:700}
+  ul.odds-list{list-style:none;margin:8px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px}
+  ul.odds-list li{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:.85rem}
+  ul.odds-list b{font-family:var(--mono)}
+  ul.sched{list-style:none;margin:6px 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+  ul.sched li{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:.8rem;font-family:var(--mono)}
+  .wk-chip{color:var(--dim);margin-right:6px}
+  .pickchip{margin-left:6px;color:var(--accent)}
+  ul.tb{margin:0;padding-left:18px;color:#b9c6d8;font-size:.88rem}
+  ul.tb li{margin:0 0 7px}
+  ul.tb em{color:var(--mut);font-style:normal}
+  .notice{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:12px 14px;background:var(--card)}
+  .seo{max-width:900px;margin:26px auto 0;padding:0 16px}
+  .seo h2{font-size:1.1rem;margin:24px 0 8px}
+  .seo p,.seo li{color:#b9c6d8;font-size:.93rem;line-height:1.66}
+  .seo ul{padding-left:20px}
+  .faq details{border:1px solid var(--line);border-radius:10px;padding:11px 15px;margin:8px 0;background:var(--card)}
+  .faq summary{cursor:pointer;font-weight:640;color:var(--ink)}
+  .divider{height:1px;background:var(--line);margin:26px 0 6px;border:0}
+  footer.pf{color:var(--dim);font-size:.8rem;padding:24px 16px 40px;text-align:center}
+  @media (min-width:860px){ .brackets{grid-template-columns:1fr} }
+  @media (max-width:560px){
+    .hero h1{font-size:1.4rem}
+    .panel{padding:12px}
+    .games{grid-template-columns:1fr 1fr}
+    .seeds th,.seeds td{padding:6px 5px;font-size:.8rem}
+    .seeds td.seed{width:48px}
+    .match{min-width:92px}
+  }
+</style>
+</head>
+<body>
+<a class="sr-only" href="#app">Skip to the simulator</a>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">TrustMyRecord</a> &rsaquo; <a href="/sports-simulators/">Sports Simulators</a> &rsaquo; <span aria-current="page">NFL Playoff Simulator</span>
+  </nav>
+
+  <header class="hero">
+    <h1>NFL Playoff Simulator</h1>
+    <p>Pick the rest of the 2026 season and watch the playoff picture rebuild: division races, all seven seeds in each conference, the league&rsquo;s real tiebreakers and the full bracket through the Super Bowl. Games already played keep their real result and cannot be overridden. Free, and no account needed.</p>
+  </header>
+
+  <div id="app" aria-live="polite"><p class="muted">Loading the 2026 schedule&hellip;</p></div>
+
+  <section class="seo" aria-label="About the NFL Playoff Simulator">
+    <h2>What this does</h2>
+    <p>Every pick you make rewrites the standings and everything downstream of them. Division records, conference records, head to head results and strength of schedule are all recomputed, the four division winners are seeded one through four, the three wild cards are seeded five through seven, and the bracket redraws with the one seed on a bye. Rounds after the wild card reseed, so the lowest surviving seed always visits the highest.</p>
+
+    <h2>The tiebreakers, and the two it will not guess</h2>
+    <p>Ties are broken with the league&rsquo;s published sequence: head to head, division record, common games with a four game minimum, conference record, strength of victory, strength of schedule, the combined rankings in points scored and allowed inside the conference and then across the league, net points in common games, and net points in all games. Two rules that are easy to get wrong are handled explicitly: only the highest placed club in a division is eligible for a wild card, applied before the wild card sequence rather than after it, and a tie among three or more clubs reduces to two and then restarts at the first step.</p>
+    <p>Two published steps are not computed here. Best net touchdowns in all games is not derivable from the data this site holds, because defensive and return scores are recorded as points rather than as touchdown counts. A coin toss is not implementable by definition, and simulating one would present a coin flip as a resolved outcome. When the sequence reaches either step the clubs are shown as tied, and the page names the step it reached.</p>
+
+    <h2>Where the odds come from</h2>
+    <p>Each game you have not picked carries a home win probability from the TrustMyRecord NFL model, the same drive level model behind the <a href="/nfl-simulator/">NFL game simulator</a>. Choosing a simulation count draws every unpicked game against its own probability, rebuilds the seeding from scratch each iteration, and reports how often each club reaches the field. Your picks are held fixed and never redrawn, and the whole run happens in your browser.</p>
+    <p>The model&rsquo;s own measured accuracy is published on the game simulator: on the 2025 holdout season, 285 games it never saw while being fitted, its calibrated win probabilities scored a Brier of 0.2217 against 0.2500 for a coin flip, and it picked the winner 63.9 percent of the time. It did not beat the closing spread or total. Season long playoff odds inherit those game level inputs and have not themselves been scored against a holdout, so they are a projection rather than a measured claim.</p>
+
+    <h2>Clinching and elimination</h2>
+    <p>Pick a club to focus on and the page enumerates the remaining combinations that still matter to it. A club that makes the field under every one of them has clinched; a club that misses under all of them is eliminated; anything else is reported as still alive. When the number of combinations is too large to enumerate honestly the page says so rather than guessing.</p>
+
+    <hr class="divider" />
+    <h2 id="faq">NFL Playoff Simulator FAQ</h2>
+    <div class="faq">
+      <details><summary>How does the NFL playoff simulator work?</summary><p>Pick the winner of any remaining game and the standings, division races, conference seeding and the full bracket rebuild immediately. Games already played always use their real result and cannot be overridden. You can pick every game yourself, fill the rest in one click, or simulate the unpicked games thousands of times for playoff odds.</p></details>
+      <details><summary>Which NFL tiebreakers does it apply?</summary><p>Head to head, division record, common games with a four game minimum, conference record, strength of victory, strength of schedule, the combined rankings in points scored and allowed within the conference and across the league, net points in common games and net points in all games. Only the highest placed club in a division is eligible for a wild card, and that rule is applied before the wild card sequence. A tie among three or more clubs reduces to two and then restarts at the first step.</p></details>
+      <details><summary>Are there tiebreakers it does not compute?</summary><p>Two. Best net touchdowns in all games is not derivable from the data held, because defensive and return scores are recorded as points rather than as touchdown counts. A coin toss is not implementable by definition. When the sequence reaches either step the clubs are shown as tied and the page says which step it reached, rather than inventing an order.</p></details>
+      <details><summary>Where do the playoff odds come from?</summary><p>Each unpicked game carries a home win probability from the TrustMyRecord NFL model, the same drive level model that runs the NFL game simulator. The page draws each unpicked game against that probability thousands of times, rebuilds the seeding every iteration and reports how often each club reaches the field. Games you have picked are held fixed and never redrawn.</p></details>
+      <details><summary>Do I need an account?</summary><p>No. The playoff simulator is free and runs entirely in your browser. Your picks are kept on your own device and a share link carries them without storing anything.</p></details>
+    </div>
+
+    <hr class="divider" />
+    <h2>Related TrustMyRecord tools</h2>
+    <ul>
+      <li><a href="/nfl-simulator/">NFL game simulator</a>, for a single matchup with a projected score and a full box score.</li>
+      <li><a href="/sports-simulators/">Sports simulators</a>, the MLB, NFL, NBA and NHL suite.</li>
+      <li><a href="/handicapping/nfl/">NFL matchups today</a>, the week&rsquo;s board with research on every game.</li>
+      <li><a href="/nfl-pick-tracker/">NFL pick tracker</a>, for turning a projection into a graded, public record.</li>
+    </ul>
+  </section>
+</main>
+<footer class="pf">TrustMyRecord NFL Playoff Simulator &middot; a model projection, not betting advice.</footer>
+
+<script src="/static/js/nfl-playoff-engine.js"></script>
+<script src="/static/js/nfl-playoff-sim.js"></script>
+</body>
+</html>
