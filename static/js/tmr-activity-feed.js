@@ -97,22 +97,25 @@
   /* ---- formatting -------------------------------------------------------- */
   /* ACCURATE, NOT ROUNDED DOWN TO THE HOUR (2026-09-13). The loop now holds a
      full 24 hours, and "1 hr ago" on an event from 1 hr 56 min ago was off by
-     nearly an hour. Hours carry their minutes and days their hours, in the
-     compact form so the username beside it keeps its room. The strip never
-     says "today": a rolling 24 hours crosses midnight. The exact time is on
-     hover (the ago span's title), in the visitor's own time zone. */
+     nearly an hour. Hours carry their minutes and days their hours.
+     The compact form is measured, not a style choice: on the 433px lane at
+     1440px, "2h 29m ago" beside a team badge truncated a 15 character
+     username that "2 hr ago" left whole, and "2h 29m" did not. So no "ago":
+     "45s", "12m", "2h 29m", "1d 3h". The strip never says "today": a rolling
+     24 hours crosses midnight. The exact time is on hover (the span's title),
+     in the visitor's own time zone. */
   function timeAgo(iso) {
     var t = Date.parse(iso);
     if (!t) return '';
     var s = Math.floor((Date.now() - t) / 1000);
     if (s < 0) s = 0;
     if (s < 8) return 'just now';
-    if (s < 60) return s + 's ago';
+    if (s < 60) return s + 's';
     var m = Math.floor(s / 60);
-    if (m < 60) return m + 'm ago';
-    if (s < 86400) return Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '') + ' ago';
+    if (m < 60) return m + 'm';
+    if (s < 86400) return Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '');
     var d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600);
-    return d + 'd' + (h ? ' ' + h + 'h' : '') + ' ago';
+    return d + 'd' + (h ? ' ' + h + 'h' : '');
   }
 
   function exactTime(iso) {
