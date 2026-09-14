@@ -1,0 +1,84 @@
+name: IndexNow
+
+# Tells Bing and the other IndexNow engines about indexable public URLs that
+# were created, materially changed, deleted or redirected since the last run.
+#
+# Every TMR page ships as a commit to main and GitHub Pages deploys main, so
+# this job diffs the last processed commit against the newest successful Pages
+# deployment. scripts/indexnow.py decides what qualifies, checks every URL
+# live (200, self canonical, no noindex, robots allowed), dedupes and submits
+# one batch. State and the submission log live on the `indexnow-state` branch.
+#
+# Scheduled, not on push: most content commits carry [skip ci], and a push
+# event would fire before Pages has deployed the page anyway. It never runs
+# inside a publish, so an IndexNow failure cannot break one.
+
+on:
+  schedule:
+    - cron: '7,27,47 * * * *'
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'Optional space separated URLs to submit now (same safety checks apply). Blank = normal run.'
+        required: false
+      dry_run:
+        description: 'Plan and verify only, send nothing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+
+      - name: Checkout state branch
+        uses: actions/checkout@v5
+        with:
+          ref: indexnow-state
+          path: .indexnow-state
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Submit changed URLs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URLS: ${{ github.event.inputs.urls }}
+          DRY: ${{ github.event.inputs.dry_run }}
+        run: |
+          flags=""
+          if [ "$DRY" = "true" ]; then flags="--dry-run"; fi
+          if [ -n "$URLS" ]; then
+            python scripts/indexnow.py submit $URLS --state .indexnow-state $flags
+          else
+            python scripts/indexnow.py auto --state .indexnow-state $flags
+          fi
+
+      - name: Save state and log
+        if: always()
+        working-directory: .indexnow-state
+        run: |
+          git config user.name "tmr-indexnow-bot"
+          git config user.email "tmr-indexnow-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -q -m "indexnow: state $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q origin HEAD:indexnow-state
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### IndexNow" >> "$GITHUB_STEP_SUMMARY"
+          tail -n 1 .indexnow-state/log.jsonl 2>/dev/null | python -c "import sys,json;d=json.loads(sys.stdin.read() or '{}');print('result: %s, submitted: %s, http: %s, pending: %s' % (d.get('result'), d.get('submitted_count'), [h.get('status') for h in d.get('http',[])], d.get('pending_total')))" >> "$GITHUB_STEP_SUMMARY" || true
