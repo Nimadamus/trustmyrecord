@@ -36,8 +36,17 @@
   var API = window.TMR_API_BASE || 'https://trustmyrecord-api.onrender.com/api';
   var ROTATE_MS = 5000;        // dwell time on each item
   var ANIM_MS = 240;           // must match the CSS transition
-  var BACKLOG = 28;            // recent events fetched on load — enough to cycle
-  var MAX_QUEUE = 60;          // a burst can never grow the queue without bound
+  /* The whole last 24 hours, capped per member on the server (2026-09-13).
+     28 was the newest 28 events, which on a busy evening was one grading run
+     covering 90 minutes, while members who played earlier in the day were
+     never reachable. */
+  var BACKLOG = 80;            // /api/activity/recent?limit= (server max 80)
+  var MAX_QUEUE = 120;         // a burst can never grow the queue without bound
+  /* Same caps the server applies to the backlog, enforced again on whatever
+     the stream adds, so a member who is busy while the page is open cannot
+     take over the loop the server just balanced. */
+  var TYPE_CAP = 2;            // cards per member per kind of activity
+  var MEMBER_CAP = 4;          // cards per member
   var AGO_TICK_MS = 10000;     // "just now" -> "12 sec ago" while an item is up
   var FIRST_EVENT_GRACE_MS = 6000;
   var POLL_MS = 60000;         // fallback refresh when the stream is not up
@@ -86,16 +95,39 @@
   }
 
   /* ---- formatting -------------------------------------------------------- */
+  /* ACCURATE, NOT ROUNDED DOWN TO THE HOUR (2026-09-13). The loop now holds a
+     full 24 hours, and "1 hr ago" on an event from 1 hr 56 min ago was off by
+     nearly an hour. Hours carry their minutes and days their hours, in the
+     compact form so the username beside it keeps its room. The strip never
+     says "today": a rolling 24 hours crosses midnight. The exact time is on
+     hover (the ago span's title), in the visitor's own time zone. */
   function timeAgo(iso) {
     var t = Date.parse(iso);
     if (!t) return '';
     var s = Math.floor((Date.now() - t) / 1000);
     if (s < 0) s = 0;
     if (s < 8) return 'just now';
-    if (s < 60) return s + ' sec ago';
-    if (s < 3600) return Math.floor(s / 60) + ' min ago';
-    if (s < 86400) return Math.floor(s / 3600) + ' hr ago';
-    return Math.floor(s / 86400) + ' d ago';
+    if (s < 60) return s + 's ago';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ago';
+    if (s < 86400) return Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '') + ' ago';
+    var d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600);
+    return d + 'd' + (h ? ' ' + h + 'h' : '') + ' ago';
+  }
+
+  function exactTime(iso) {
+    var t = Date.parse(iso);
+    if (!t) return '';
+    try {
+      return new Date(t).toLocaleString(undefined, {
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+      });
+    } catch (e) { return new Date(t).toString(); }
+  }
+
+  function setAgo(span, iso) {
+    span.textContent = timeAgo(iso);
+    span.title = exactTime(iso);
   }
 
   function initials(name) {
@@ -152,7 +184,7 @@
 
     var ago = document.createElement('span');
     ago.className = 'tkact-ago';
-    ago.textContent = timeAgo(ev.created_at);
+    setAgo(ago, ev.created_at);
     head.appendChild(ago);
 
     var row = document.createElement('span');
@@ -220,7 +252,7 @@
 
     var ago = document.createElement('span');
     ago.className = 'tkact-ago';
-    ago.textContent = timeAgo(ev.created_at);
+    setAgo(ago, ev.created_at);
     who.appendChild(ago);
 
     var act = document.createElement('span');
@@ -334,6 +366,89 @@
     for (var j = ring.length - 1; j >= 0; j--) if (ring[j].id === id) ring.splice(j, 1);
   }
 
+  /* Gone for good: a card the server no longer returns, or one a cap pushed
+     out. Forgetting the id is what lets it come back if it becomes eligible
+     again (a member's newer card ages out of the window, say). */
+  function removeHeld(id) {
+    drop(id);
+    delete seen[id];
+    delete seenOld[id];
+  }
+
+  function heldCopy(id) {
+    for (var i = 0; i < ring.length; i++) if (ring[i].id === id) return ring[i];
+    return null;
+  }
+
+  /* A correction rewrites a card without it being new activity (a misgraded
+     pick fixed, a pick voided out of a session). It is swapped in where it
+     stands, in the queue and in the loop, rather than jumping to the front. */
+  function replaceInPlace(ev) {
+    for (var i = 0; i < queue.length; i++) if (queue[i].id === ev.id) queue[i] = ev;
+    for (var j = 0; j < ring.length; j++) if (ring[j].id === ev.id) ring[j] = ev;
+  }
+
+  function memberOf(ev) {
+    return ev && ev.user ? String(ev.user.id != null ? ev.user.id : ev.user.username) : '';
+  }
+
+  /* The server's caps, applied to what the loop holds after an insert. The
+     member's OLDEST extra card goes; never the one just added and never the
+     one being read. */
+  function enforceCaps(ev) {
+    var m = memberOf(ev);
+    if (!m) return;
+    var guard = current && current.data ? current.data.id : null;
+    function oldest(sameType) {
+      for (var i = ring.length - 1; i >= 0; i--) {
+        var r = ring[i];
+        if (r.id === ev.id || r.id === guard || memberOf(r) !== m) continue;
+        if (sameType && r.type !== ev.type) continue;
+        return r;
+      }
+      return null;
+    }
+    function count(sameType) {
+      var n = 0;
+      for (var i = 0; i < ring.length; i++) {
+        if (memberOf(ring[i]) === m && (!sameType || ring[i].type === ev.type)) n++;
+      }
+      return n;
+    }
+    var victim;
+    while (count(true) > TYPE_CAP && (victim = oldest(true))) removeHeld(victim.id);
+    while (count(false) > MEMBER_CAP && (victim = oldest(false))) removeHeld(victim.id);
+  }
+
+  /* The backlog re-read is the source of truth for membership. Anything held
+     that the server no longer returns, and that is not newer than what it
+     returned, has left: aged out of the 24 hours, capped out by a newer card
+     from the same member, voided, or made private. Live arrivals newer than
+     the answer are kept; the stream may simply be ahead of it. */
+  function reconcile(events) {
+    if (!events || !events.length) return;
+    var keep = Object.create(null);
+    var newest = 0;
+    for (var i = 0; i < events.length; i++) {
+      keep[events[i].id] = true;
+      newest = Math.max(newest, Date.parse(events[i].created_at) || 0);
+    }
+    for (var j = ring.length - 1; j >= 0; j--) {
+      var r = ring[j];
+      if (keep[r.id]) continue;
+      if ((Date.parse(r.created_at) || 0) > newest) continue;
+      removeHeld(r.id);
+    }
+  }
+
+  function remember(id, fresh) {
+    if (seen[id] == null) {
+      if (seenCount >= MAX_SEEN) { seenOld = seen; seen = Object.create(null); seenCount = 0; }
+      seenCount++;
+    }
+    seen[id] = fresh;
+  }
+
   /* If the superseded copy is the one being read right now, correct it where it
      stands rather than yanking it: same node, new sentence, new age. */
   function refreshCurrent(ev) {
@@ -342,7 +457,7 @@
     var act = node.querySelector('.tkact-act');
     if (act) { act.textContent = ev.text || ''; act.title = ev.text || ''; }
     node.__at = ev.created_at;
-    if (node.__ago) node.__ago.textContent = timeAgo(ev.created_at);
+    if (node.__ago) setAgo(node.__ago, ev.created_at);
     current.data = ev;
   }
 
@@ -353,7 +468,8 @@
       var ev = events[i];
       if (!ev || !ev.id) continue;
       var fresh = freshnessOf(ev);
-      var held = seen[ev.id] || seenOld[ev.id] || 0;
+      var held = seen[ev.id] != null ? seen[ev.id] : (seenOld[ev.id] != null ? seenOld[ev.id] : 0);
+      var copy = held ? heldCopy(ev.id) : null;
       /* AN ID IS NOT AN IDENTITY HERE. The backend rewrites an event row in
          place -- tmr_activity_emit() folds a second pick into the standing row,
          keeps its id, sets created_at = now() and re-NOTIFYs that same id --
@@ -361,8 +477,10 @@
          the superseded line on the strip with its old text and its old age.
          That was the stale feed reported on 2026-09-08. An id is a duplicate
          only while the copy we already hold is at least as fresh. */
-      if (held && fresh <= held) continue;
-      if (held) { refreshCurrent(ev); drop(ev.id); }
+      /* A grade session's card is rebuilt from the picks, so a correction can
+         change its sentence without moving its time: same freshness, new text
+         is still an update. */
+      if (held && (fresh < held || (fresh === held && (!copy || copy.text === ev.text)))) continue;
       /* The id set is bounded for the life of a tab. TWO generations rather
          than one: when the young set fills it becomes the old set and a fresh
          one starts, and a lookup checks both. Clearing a single set instead
@@ -370,11 +488,21 @@
          visitor would watch the same events cycle round a second time -- and an
          id now has to age out of two full generations before that is even
          possible. Memory is bounded at 2 x MAX_SEEN ids either way. */
-      if (seenCount >= MAX_SEEN) { seenOld = seen; seen = Object.create(null); seenCount = 0; }
-      if (!seen[ev.id]) seenCount++;
-      seen[ev.id] = fresh;
+      remember(ev.id, fresh);
+      if (held) {
+        refreshCurrent(ev);
+        /* Newer activity folded into a card we hold ("3 picks" became "5
+           picks") is new: it goes to the front. A rewrite whose time did not
+           move is a correction: it stays where it is. */
+        if (copy && (Date.parse(ev.created_at) || 0) <= (Date.parse(copy.created_at) || 0)) {
+          replaceInPlace(ev);
+          continue;
+        }
+        drop(ev.id);
+      }
       if (front) { queue.unshift(ev); ring.unshift(ev); }
       else { queue.push(ev); ring.push(ev); }
+      enforceCaps(ev);
       added++;
     }
     if (queue.length > MAX_QUEUE) queue.length = MAX_QUEUE;
@@ -387,7 +515,7 @@
     rotateTimer = setInterval(advance, ROTATE_MS);
     agoTimer = setInterval(function () {
       if (current && current.node && current.node.__ago) {
-        current.node.__ago.textContent = timeAgo(current.node.__at);
+        setAgo(current.node.__ago, current.node.__at);
       }
     }, AGO_TICK_MS);
     /* The stream is the fast path, not the only guarantee. A slow backlog
@@ -429,6 +557,7 @@
          oldest first and the newest ends up at the head of the queue. No
          pre-filter on `seen` here: enqueue decides, and it is the only place
          that knows a known id can still carry a NEWER version of the event. */
+      reconcile(events);
       var batch = [];
       for (var i = events.length - 1; i >= 0; i--) batch.push(events[i]);
       if (enqueue(batch, true) && !current) advance();
@@ -495,7 +624,7 @@
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) return;
       if (current && current.node && current.node.__ago) {
-        current.node.__ago.textContent = timeAgo(current.node.__at);
+        setAgo(current.node.__ago, current.node.__at);
       }
       /* Back from another tab. If the stream carried us through, its events
          are already queued; if it did not, this is the catch-up. */
