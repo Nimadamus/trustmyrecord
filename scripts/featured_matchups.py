@@ -580,7 +580,7 @@ def main(argv):
     if len(argv) >= 2 and argv[1] == "resolve":
         reg = load()
         sport = argv[2] if len(argv) > 2 else "nfl"
-        print(json.dumps(resolve(reg, sport), indent=2, ensure_ascii=False))
+        print(json.dumps(resolve(reg, sport), indent=2, ensure_ascii=True))
         return 0
     if len(argv) >= 2 and argv[1] == "sync":
         return sync(check="--check" in argv)
