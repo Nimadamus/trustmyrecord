@@ -2008,6 +2008,10 @@
         /* A stat that does not fit its card wraps at a smaller size instead of being clipped. */
         body.profile-page #profileHeader .profile-rail-value.is-fit-wrap{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word;font-size:clamp(17px,1.45vw,23px)!important;line-height:1.18!important;}
         body.profile-page #profileHeader .profile-rail-value.is-fit-wrap.is-fit-small{font-size:15px!important;overflow-wrap:anywhere;}
+        /* The top stat rail (with its sport tabs) is the one Advanced Capper Metrics view. The lower
+           duplicate section stays in the DOM because its metrics load feeds the rail; it is never shown. */
+        html body.profile-page #profileAdvancedMetricsSection,
+        html body.profile-page.tmr-social-profile #profileAdvancedMetricsSection{display:none!important;}
         /* Verified Record badge: centered at the top of the header card, clear of the sport tabs. */
         @media (min-width:721px){
           body.profile-page.tmr-social-profile #profileHeader.profile-header{padding-top:54px!important;}
