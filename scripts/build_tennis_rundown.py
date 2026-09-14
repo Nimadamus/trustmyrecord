@@ -85,7 +85,6 @@ def player_cell(p, surface):
     rank = card.get("rank")
     rec = card.get("record") or {}
     surf = card.get("surface_record")
-    initials = "".join(w[0] for w in str(p.get("name") or "").split()[:2]).upper()
     bits = []
     if rank:
         bits.append("No. %s" % esc(rank))
@@ -105,11 +104,11 @@ def player_cell(p, surface):
             esc(form.get("wins", 0)), esc(form.get("losses", 0)), esc(form["n"])))
     return (
         '<div class="rd-p">'
-        '<span class="rd-face"><span>%s</span>'
+        '<span class="rd-face"><span class="rd-sil" aria-hidden="true"></span>'
         '<img src="%s" alt="%s" loading="lazy" decoding="async" onerror="this.dataset.missing=1"></span>'
         '<div><p class="rd-pn">%s</p><p class="rd-pm">%s</p>'
         '<div class="rd-ps">%s</div></div></div>' % (
-            esc(initials), esc(p.get("headshot")), esc(p.get("name")),
+            esc(p.get("headshot")), esc(p.get("name")),
             esc(p.get("name")), esc(" · ".join(bits)), "".join(stats)))
 
 
@@ -221,6 +220,8 @@ border:1px solid var(--rd-line);display:grid;place-items:center}}
 .rd-face img{{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
 object-position:top center;background:#0d1726}}
 .rd-face img[data-missing]{{display:none}}
+.rd-face .rd-sil{{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='25' r='12' fill='%23dce8f7' fill-opacity='.5'/%3E%3Cpath d='M8 66c0-15 10.7-25 24-25s24 10 24 25z' fill='%23dce8f7' fill-opacity='.5'/%3E%3C/svg%3E") center bottom/100% auto no-repeat}}
+.rd-face:has(img:not([data-missing])) .rd-sil{{display:none}}
 .rd-pn{{margin:0;font:800 1rem/1.25 Inter,sans-serif}}
 .rd-pm{{margin:2px 0 7px;color:var(--rd-mut);font-size:.78rem}}
 .rd-ps{{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem;color:var(--rd-mut)}}
