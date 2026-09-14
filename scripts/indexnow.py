@@ -460,22 +460,36 @@ def plan(old, new):
     return out, skipped
 
 
-def deployed_sha(token):
-    """head_sha of the newest successful GitHub Pages deployment."""
-    api = "https://api.github.com/repos/%s/actions/runs?event=dynamic&status=success&per_page=50" % REPO_SLUG
-    req = urllib.request.Request(api, headers={"Accept": "application/vnd.github+json", "User-Agent": UA,
-                                               **({"Authorization": "Bearer " + token} if token else {})})
+def github_api(path, token):
+    req = urllib.request.Request("https://api.github.com/repos/%s/%s" % (REPO_SLUG, path),
+                                 headers={"Accept": "application/vnd.github+json", "User-Agent": UA,
+                                          **({"Authorization": "Bearer " + token} if token else {})})
     with urllib.request.urlopen(req, timeout=30) as r:
-        runs = json.load(r).get("workflow_runs", [])
-    for run in runs:
-        if run.get("name") == "pages build and deployment" and run.get("head_branch") == "main":
-            return run["head_sha"]
-    return None
+        return json.load(r)
+
+
+def deployed_sha(token):
+    """head_sha of the newest successful GitHub Pages deployment of main.
+
+    The runs list is not reliably ordered (on 2026-09-14 it returned a Sep 7
+    deployment first), so pick by created_at instead of taking the first."""
+    runs = github_api("actions/runs?event=dynamic&status=success&branch=main&per_page=50", token).get("workflow_runs", [])
+    runs = [r for r in runs if r.get("name") == "pages build and deployment" and r.get("head_branch") == "main"]
+    return max(runs, key=lambda r: r.get("created_at", ""))["head_sha"] if runs else None
+
+
+def is_ahead(old, new, token):
+    """True when `new` is `old` or a descendant of it. Never diff backwards."""
+    if old == new:
+        return True
+    return github_api("compare/%s...%s" % (old, new), token).get("status") in ("ahead", "identical")
 
 
 def ensure_commit(sha):
     if subprocess.run(["git", "cat-file", "-e", sha + "^{commit}"], capture_output=True).returncode != 0:
-        git("fetch", "--quiet", "--depth=1", "origin", sha)
+        shallow = git("rev-parse", "--is-shallow-repository").strip() == b"true"
+        # a depth-limited fetch into a full clone would make that clone shallow
+        git("fetch", "--quiet", *(["--depth=1"] if shallow else []), "origin", sha)
 
 
 # ---------------------------------------------------------------- run
@@ -555,6 +569,10 @@ def cmd_auto(a):
             save_state(a.state, state)
         return 0
     old = state["last_sha"]
+    if not a.to and not is_ahead(old, target, token):
+        append_log(a.state, {"ts": iso(), "source": "auto", "result": "deployed commit is not ahead of last processed, waiting",
+                             "last_sha": old, "deployed": target})
+        return 0
     candidates = {u: dict(v) for u, v in state["pending"].items()}
     skipped = {}
     if old != target:
