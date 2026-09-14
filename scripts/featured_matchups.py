@@ -278,10 +278,14 @@ CARD_CSS = (
     "text-transform:uppercase}"
     ".mm-gotw-when{display:block;color:#93a4bb;font-size:.9rem;margin:-4px 0 8px}"
     ".mm-gotw-when:empty{display:none}"
-    ".mm-gotw-cta{display:inline-block;margin-top:4px;font-weight:800;color:#FFC93C;font-size:.9rem}")
+    ".mm-gotw-cta{display:inline-block;margin-top:4px;font-weight:800;color:#FFC93C;font-size:.9rem}"
+    ".mm-gotw-archive{margin:10px 2px 0;font-size:.84rem;line-height:1.7;color:#93a4bb}"
+    ".mm-gotw-archive span{font-weight:800;color:#cbd5e1;margin-right:6px}"
+    ".mm-gotw-archive a{color:#9fc6ff;text-decoration:none}"
+    ".mm-gotw-archive a:hover{text-decoration:underline}")
 
 
-def card_html(reg, sport, feature, root=ROOT):
+def card_html(reg, sport, feature, root=ROOT, now=None):
     """The hub card, wrapped in MK markers so sync can refresh it between hub
     rebakes. Rendered hidden when nothing is featured, so the browser can still
     fill it if the registry moves on before the next bake."""
@@ -298,6 +302,7 @@ def card_html(reg, sport, feature, root=ROOT):
         '                <span class="mm-gotw-cta"><span data-feat="cta">%s</span> &rsaquo;</span>\n'
         '            </a>\n'
         '        </section>\n'
+        '%s'
         '        <style>%s</style>\n'
         '        <script src="%s" defer></script>\n'
         '        <!--/MK:featured-card-%s-->\n'
@@ -306,7 +311,29 @@ def card_html(reg, sport, feature, root=ROOT):
          esc(f.get("label") or "%s Featured Matchup" % reg["sports"][sport].get("label", "")),
          esc(f.get("headline") or ""), esc(when),
          esc(f.get("cta") or "Read the full breakdown"),
-         CARD_CSS, esc(runtime_src(root)), esc(sport))
+         archive_html(reg, sport, now), CARD_CSS, esc(runtime_src(root)), esc(sport))
+
+
+def archive_html(reg, sport, now=None, limit=12):
+    """Every finished feature of the sport, newest first. A featured article
+    leaves the card when its game ends; this list keeps it one click from its
+    hub for good, so a retired feature never becomes an orphan page."""
+    now = now or now_utc()
+    s = reg["sports"][sport]
+    grace = dt.timedelta(minutes=float(reg.get("grace_minutes", DEFAULT_GRACE_MINUTES)))
+    past = []
+    for f in s.get("features") or []:
+        k = parse_utc(f.get("kickoff_utc"))
+        if (f.get("href") and k is not None and now >= k + grace
+                and (f.get("status") or "active") != "withdrawn"):
+            past.append((k, f))
+    past.sort(key=lambda kf: kf[0], reverse=True)
+    if not past:
+        return ""
+    links = " &middot; ".join('<a href="%s">%s</a>' % (esc(f["href"]), esc(f.get("headline") or f.get("matchup")))
+                              for _, f in past[:limit])
+    return ('        <p class="mm-gotw-archive"><span>Earlier %s features</span> %s</p>\n'
+            % (esc(s.get("label", sport.upper())), links))
 
 
 def strip_html(reg, sport, feature, root=ROOT):
@@ -360,7 +387,7 @@ def render_surfaces(reg, now=None, root=ROOT, read=None):
         if hub_file and os.path.exists(os.path.join(root, hub_file)):
             path = os.path.join(root, hub_file)
             text = read(path)
-            card = card_html(reg, sport, feature, root)
+            card = card_html(reg, sport, feature, root, now)
             m = CARD_BLOCK.search(text)
             if m and m.group(1) == sport:
                 writes.append((path, text[:m.start()] + card + text[m.end():]))
