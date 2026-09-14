@@ -494,7 +494,7 @@ def ensure_commit(sha):
 
 # ---------------------------------------------------------------- run
 
-def process(candidates, state, state_dir, dry_run, source):
+def process(candidates, state, state_dir, dry_run, source, prefiltered=None):
     """Verify live, dedupe, submit, log. Mutates state. Never raises on HTTP trouble."""
     submit, skipped = [], {}
     for url, info in sorted(candidates.items()):
@@ -546,7 +546,7 @@ def process(candidates, state, state_dir, dry_run, source):
         "urls": [{"url": u, "kind": k} for u, k in submit],
         "http": [{"status": r["status"], "ok": r["ok"], "body": r["body"][:300], "url_count": r["url_count"]}
                  for r in results],
-        "skipped": skipped, "deferred": len(overflow), "pending_total": len(state["pending"]),
+        "skipped": skipped, "prefiltered": prefiltered or {}, "deferred": len(overflow), "pending_total": len(state["pending"]),
         "result": "nothing to submit" if not submit else ("ok" if ok else "FAILED"),
     }
     append_log(state_dir, record)
@@ -588,18 +588,17 @@ def cmd_auto(a):
         for url, kind in found.items():
             candidates[url] = {"kind": kind, "first_seen": candidates.get(url, {}).get("first_seen", now())}
     print("range %s..%s: %d candidates, %d filtered before live checks" % (old[:10], target[:10], len(candidates), len(skipped)))
-    record = process(candidates, state, a.state, a.dry_run, "auto %s..%s" % (old[:10], target[:10]))
+    reasons = {}
+    for why in skipped.values():
+        k = why.split(" /")[0]
+        reasons[k] = reasons.get(k, 0) + 1
+    record = process(candidates, state, a.state, a.dry_run, "auto %s..%s" % (old[:10], target[:10]), reasons)
     record_skips = len(skipped)
     state["last_sha"] = target
     state["last_run"] = iso()
     if not a.dry_run:
         save_state(a.state, state)
-    reasons = {}
-    for why in skipped.values():
-        k = why.split(" /")[0]
-        reasons[k] = reasons.get(k, 0) + 1
     print("result=%s submitted=%d pre-filtered=%d %s" % (record["result"], record["submitted_count"], record_skips, json.dumps(reasons, sort_keys=True)))
-    append_log(a.state, {"ts": iso(), "source": "auto prefilter", "prefiltered": reasons})
     return 0
 
 
