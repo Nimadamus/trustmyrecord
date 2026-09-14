@@ -281,7 +281,7 @@ CARD_CSS = (
     ".mm-gotw-cta{display:inline-block;margin-top:4px;font-weight:800;color:#FFC93C;font-size:.9rem}"
     ".mm-gotw-archive{margin:10px 2px 0;font-size:.84rem;line-height:1.7;color:#93a4bb}"
     ".mm-gotw-archive span{font-weight:800;color:#cbd5e1;margin-right:6px}"
-    ".mm-gotw-archive a{color:#9fc6ff;text-decoration:none}"
+    ".mm-gotw-archive a{color:#9fc6ff!important;text-decoration:none}"
     ".mm-gotw-archive a:hover{text-decoration:underline}")
 
 
