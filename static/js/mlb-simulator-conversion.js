@@ -25,7 +25,9 @@
   if (FLAGS.conversionPanel === false) return;
 
   var API_BASE_ENDPOINT = '/mlb-simulator-save';
-  var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect', 'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'];
+  var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect', 'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect', 'simDepthSelect', 'simMarketModeSelect'];
+  // MLB_SAVED_SETTINGS_20260913: saved since this date. Older saves do not have them.
+  var SETTING_IDS = ['simDepthSelect', 'simMarketModeSelect'];
   var MODE_BUTTON_IDS = { current: 'currentModeButton', historical: 'historicalModeButton', mixed: 'mixedModeButton' };
 
   function qs(id) { return document.getElementById(id); }
@@ -112,7 +114,7 @@
           if (el && inputs[id] !== undefined) { el.value = inputs[id]; fire(el, 'change'); }
         });
         setTimeout(function () {
-          ['awayPitcherSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'].forEach(function (id) {
+          ['awayPitcherSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'].concat(SETTING_IDS).forEach(function (id) {
             var el = qs(id);
             if (el && inputs[id] !== undefined) { el.value = inputs[id]; fire(el, 'change'); }
           });
@@ -380,9 +382,84 @@
     main.insertBefore(card, main.firstChild);
     qs('simcRerunBtn').addEventListener('click', function () {
       card.remove();
-      applyInputsAndRun(saved.input_parameters, true);
-      if (saved.id) { api('/' + saved.id + '/rerun', { method: 'POST' }).catch(function () {}); }
+      rerunSaved(saved);
     });
+  }
+
+  /* Run again. A save that holds every setting runs straight away with them.
+     A save made before depth and market mode were kept is set up but not run:
+     those two are put back to the page defaults, never guessed, and the member
+     sees which defaults will be used and runs it themselves. Nothing about the
+     original save is changed; the stamp is only sent once a run starts. */
+  function missingSettings(inputs) {
+    return SETTING_IDS.filter(function (id) { return !inputs || inputs[id] === undefined || inputs[id] === null || inputs[id] === ''; });
+  }
+  function stampRerun(saved) {
+    if (saved && saved.id) { api('/' + saved.id + '/rerun', { method: 'POST' }).catch(function () {}); }
+  }
+  function rerunSaved(saved) {
+    var inputs = (saved && saved.input_parameters) || {};
+    var missing = missingSettings(inputs);
+    if (!missing.length) {
+      applyInputsAndRun(inputs, true);
+      stampRerun(saved);
+      return;
+    }
+    applyInputsAndRun(inputs, false);
+    setTimeout(function () {
+      missing.forEach(function (id) {
+        var el = qs(id);
+        if (!el || !el.options) return;
+        for (var i = 0; i < el.options.length; i++) {
+          if (el.options[i].defaultSelected) { el.value = el.options[i].value; fire(el, 'change'); break; }
+        }
+      });
+      renderSettingsNotice(saved, missing);
+    }, 950);
+  }
+  function renderSettingsNotice(saved, missing) {
+    injectStyle();
+    var old = qs('simcSettingsNotice');
+    if (old) old.remove();
+    var e = escHtml;
+    var names = { simDepthSelect: 'Simulation depth', simMarketModeSelect: 'Market mode' };
+    var main = document.querySelector('main') || document.body;
+    var box = document.createElement('div');
+    box.className = 'simc-panel';
+    box.id = 'simcSettingsNotice';
+    box.setAttribute('role', 'status');
+    box.innerHTML =
+      '<div class="simc-kicker">Run again</div>' +
+      '<h3>' + e(saved.name || 'Saved simulation') + '</h3>' +
+      '<p class="simc-note" style="margin:0 0 10px">' + (missing.length === 2 ? 'Simulation depth and market mode were' : e(names[missing[0]]) + ' was') +
+      ' not saved with this simulation. The matchup and its other settings are restored; ' + (missing.length === 2 ? 'these use' : 'it uses') + ' the defaults below. Review them, then run.</p>' +
+      '<ul class="simc-defaults" style="margin:0 0 12px;padding-left:18px">' +
+      missing.map(function (id) { var el = qs(id); var o = el && el.options ? el.options[el.selectedIndex] : null; return '<li data-setting="' + id + '"><b>' + e(names[id]) + ':</b> ' + e(o ? o.textContent.trim() : 'Default') + '</li>'; }).join('') +
+      '</ul>' +
+      '<div class="simc-row"><button type="button" class="simc-btn primary" id="simcNoticeRun">Run simulation</button>' +
+      '<button type="button" class="simc-btn secondary" id="simcNoticeReview">Review settings</button></div>';
+    main.insertBefore(box, main.firstChild);
+    // Changing a default before running is reflected in the notice.
+    missing.forEach(function (id) {
+      var el = qs(id);
+      if (!el) return;
+      el.addEventListener('change', function () {
+        var li = box.querySelector('[data-setting="' + id + '"]');
+        var o = el.options[el.selectedIndex];
+        if (li && o) li.innerHTML = '<b>' + e(names[id]) + ':</b> ' + e(o.textContent.trim());
+      });
+    });
+    qs('simcNoticeRun').addEventListener('click', function () {
+      box.remove();
+      var runBtn = qs('runSimulationButton');
+      if (runBtn) runBtn.click();
+      stampRerun(saved);
+    });
+    qs('simcNoticeReview').addEventListener('click', function () {
+      var el = qs(missing[0]);
+      if (el) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} el.focus({ preventScroll: true }); }
+    });
+    try { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) {}
   }
 
   function escHtml(s) {
@@ -423,8 +500,7 @@
     try {
       var resp = await api('/' + encodeURIComponent(id));
       if (mode === 'rerun') {
-        applyInputsAndRun(resp.saved.input_parameters, true);
-        api('/' + id + '/rerun', { method: 'POST' }).catch(function () {});
+        rerunSaved(resp.saved);
       } else {
         // SIM_AUTH_GATE_20260808: reopening a saved run now also re-applies its
         // inputs to the form (without running it), so "View" leaves the member

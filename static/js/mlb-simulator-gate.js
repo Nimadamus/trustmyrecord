@@ -30,6 +30,11 @@
     var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect',
         'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect',
         'simWeatherSelect', 'simulationCountSelect'];
+    /* MLB_SAVED_SETTINGS_20260913: simulation depth and market mode change the
+       result, so saves carry them too. Kept out of FIELD_IDS on purpose: that
+       list also drives the activation funnel's "configured" events, which stay
+       exactly as they were. */
+    var SETTING_IDS = ['simDepthSelect', 'simMarketModeSelect'];
     var MODE_BUTTON_IDS = { current: 'currentModeButton', historical: 'historicalModeButton', mixed: 'mixedModeButton' };
     var STEP_MS = 220;
 
@@ -53,7 +58,7 @@
 
     function captureState() {
         var out = { mode: currentMode() };
-        FIELD_IDS.forEach(function (id) {
+        FIELD_IDS.concat(SETTING_IDS).forEach(function (id) {
             var el = qs(id);
             if (el) out[id] = el.value;
         });
@@ -131,7 +136,7 @@
         return wait(STEP_MS)
             .then(function () { setGroup(['awayPoolSelect', 'homePoolSelect']); return wait(STEP_MS); })
             .then(function () { setGroup(['awayTeamSelect', 'homeTeamSelect']); return wait(STEP_MS); })
-            .then(function () { setGroup(['awayPitcherSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect']); return wait(STEP_MS); });
+            .then(function () { setGroup(['awayPitcherSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'].concat(SETTING_IDS)); return wait(STEP_MS); });
     }
 
     function runNow() {
