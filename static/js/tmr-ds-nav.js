@@ -343,7 +343,7 @@
      live -- poll the HTML for the hash instead. */
   var FOOTER = [
     ['Platform', [
-      ['/sportsbook/', 'Sportsbook'],
+      ['/sportsbook/', 'Picks Board'],
       ['/profile/', 'My Record'],
       ['/marketplace/', 'Pick Marketplace'],
       ['/premium/', 'Premium']
@@ -480,14 +480,14 @@
      destination. Opt-in per menu rather than a blanket rule, because
      /handicappers/ is an approved locked page and must keep its own tab.
      Requested 2026-08-31. */
-  function menu(label, list, alsoCurrent, hideOnOwnPage) {
+  function menu(label, list, alsoCurrent, hideOnOwnPage, key) {
     if (hideOnOwnPage && list.length && isCurrent(list[0][0])) return '';
     var on = flat(list).some(function (r) { return isCurrent(r[0]); }) ||
       (alsoCurrent || []).some(function (h) { return isCurrent(h); });
     var cur = currentIn(list);
     /* data-menu names the dropdown for the stylesheet (tmr-navbar.css gives
        Sportsbook and Tools one shared width); it carries no behaviour. */
-    return '<div class="ds-menu' + (on ? ' is-current' : '') + '" data-menu="' + esc(label.toLowerCase()) + '">' +
+    return '<div class="ds-menu' + (on ? ' is-current' : '') + '" data-menu="' + esc(key || label.toLowerCase()) + '">' +
       '<button type="button" class="ds-navitem ds-navitem--trigger" aria-expanded="false" aria-haspopup="true">' + label + '</button>' +
       '<div class="ds-menu-panel" role="menu" aria-label="' + label + ' links">' +
       list.map(function (r) {
@@ -527,7 +527,9 @@
         '<div class="ds-nav-panel">' +
           '<div class="ds-mainnav">' +
             todayLink() +
-            menu('Sportsbook', SPORTSBOOK, ['/handicapping/'], true) +
+            /* 'Picks Board', not 'Sportsbook' (2026-09-13): TrustMyRecord takes no wagers, and the
+               old label implied it did. data-menu keeps the 'sportsbook' key the stylesheets target. */
+            menu('Picks Board', SPORTSBOOK, ['/handicapping/'], true, 'sportsbook') +
             menu('Handicappers', HANDICAPPERS) +
             menu('Online Gaming', SPORTS_GAMING, SPORTS_GAMING_ALSO) +
             menu('Compete', COMPETE) +

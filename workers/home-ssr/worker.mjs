@@ -833,50 +833,9 @@ function buildRewriter(data, slate) {
     rw.on('.explore .ei .badge2', new NthHtmlCell(2, `<span class="bl"></span>${esc(eligible)} public records`));
   }
 
-  /* ---- LIVE COMPETITION card (replaced Capper of the Week, 2026-08-16) -----
-     The card rotates through several views in the browser. The edge paints the
-     FIRST one — the server's own ordering, so it is the same view tmr-home-live
-     .js starts on and there is no swap when the script takes over. Rows are
-     built the same way compRowHtml() builds them; keep the two in lockstep.
-
-     If the competition payload is missing or every view was dropped for lack of
-     real data, nothing is injected and the card's skeleton stays for the page
-     JS to settle honestly. The edge never invents a standing. */
-  const competition = data.competition;
-  const compViews = (competition && Array.isArray(competition.views))
-    ? competition.views.filter((v) => v && Array.isArray(v.rows) && v.rows.length)
-    : [];
-  const compFooter = competition && competition.footer;
-
-  if (compFooter && compFooter.competitors != null && compFooter.verified_picks != null) {
-    rw.on('.spot .comp-foot', new TextCell(
-      `${num(compFooter.competitors).toLocaleString('en-US')} competitors · ` +
-      `${num(compFooter.verified_picks).toLocaleString('en-US')} verified picks · standings update live`
-    ));
-  }
-
-  if (compViews.length) {
-    const view = compViews[0];
-    rw.on('.spot .bd', new SettleCell());
-    rw.on('.spot .comp-cat', new TextCell(view.label || ''));
-    rw.on('.spot .comp-note', new TextCell(view.note || ''));
-    /* The section accent, painted at the edge for the same reason the rows are:
-       the page script applies the identical class a moment later, and if the
-       first paint carried the default accent the label would visibly change
-       colour on load. */
-    rw.on('aside.spot', new AccentCell(`comp-acc-${view.section || 'sportsbook'}`));
-    /* The footer CTA belongs to the view being painted. The destination comes
-       from the payload (services/homeCompetition's CTA map), never from a
-       second table in here that could drift out of step with it. */
-    if (view.cta && view.cta.href && view.cta.label) {
-      rw.on('.spot .comp-cta', new CtaCell(view.cta.href, `${view.cta.label} →`));
-    }
-    rw.on('.spot .comp-stage', new HtmlCell(
-      '<div class="comp-view is-on">' +
-      view.rows.map((r, i) => compRowHtml(view, r, i)).join('') +
-      '</div>'
-    ));
-  }
+  /* The hero's Live Competition card was replaced on 2026-09-13 by a static
+     sample pick receipt that fetches nothing, so there is nothing to inject.
+     The helper functions above are kept only for the unused compRowHtml export. */
 
   return rw;
 }

@@ -542,6 +542,20 @@ def fmt_units(v):
     v = num(v)
     return ("+" if v > 0 else "") + f"{v:.2f}u"
 
+def pt_stamp(iso):
+    """'Sep 13, 2026 7:41 PM PT' from an ISO UTC timestamp, or '' when unparseable."""
+    try:
+        t = datetime.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+        try:
+            from zoneinfo import ZoneInfo
+            t = t.astimezone(ZoneInfo("America/Los_Angeles"))
+        except Exception:
+            # No tzdata: US Pacific is UTC-7 from the second Sunday of March to the first Sunday of November.
+            t = t.astimezone(datetime.timezone(datetime.timedelta(hours=-7 if 3 < t.month < 11 else -8)))
+        return f"{MONTHS[t.month]} {t.day}, {t.year} {t.strftime('%I:%M %p').lstrip('0')} PT"
+    except Exception:
+        return ""
+
 MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 def short_date(iso):
     try:
@@ -707,6 +721,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     if avg_amer is not None:
         stats.append(stat(fmt_amer(avg_amer), "Avg Odds"))
     stats_html = "".join(stats)
+    as_of = pt_stamp((m or {}).get("generated_at")) if m else ""
     # A member with nothing graded gets one honest tile, not a grid of zeros
     # that reads like broken data.
     if tp < 1:
@@ -776,17 +791,26 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
             st = r.get("status")
             badge = {"won": "WON", "lost": "LOST", "push": "PUSH"}.get(st, st.upper())
             cls = {"won": "win", "lost": "loss", "push": "push"}.get(st, "")
+            # STAKE IS NOT RESULT (2026-09-13). The old single "Units" column printed the
+            # stake as "+5.00u" beside LOST and PUSH, which reads as profit. Risk is shown
+            # unsigned, and Net is the graded result_units, signed and coloured by outcome.
+            risk = num(r.get("risk_units")) or num(r.get("units"))
+            net = num(r.get("result_units")) if r.get("result_units") is not None else (
+                -risk if st == "lost" else 0.0 if st == "push" else None)
+            net_s = "" if net is None else ("+" if net > 0 else "") + f"{net:.2f}u"
             d_s = short_date(r.get("graded_at") or r.get("commence_time"))
             rows.append(
                 f'<tr><td>{e(d_s)}</td><td>{e(sport_label(r.get("sport_key")))}</td>'
                 f'<td>{e(matchup)}</td><td>{e(pick)}{(" (" + odds + ")") if odds else ""}</td>'
-                f'<td>{e(fmt_units(num(r.get("units"))))}</td><td class="u-{cls}">{e(badge)}</td></tr>')
+                f'<td class="u-risk">{e(f"{risk:.2f}u")}</td><td class="u-{cls}">{e(net_s)}</td>'
+                f'<td class="u-{cls}">{e(badge)}</td></tr>')
         recent_html = (
             '<section class="u-block"><h2>Recent graded picks</h2>'
             '<table class="u-table"><thead><tr><th>Date</th><th>Sport</th><th>Matchup</th>'
-            '<th>Pick</th><th>Units</th><th>Result</th></tr></thead>'
+            '<th>Pick</th><th>Risk</th><th>Net</th><th>Result</th></tr></thead>'
             f'<tbody>{"".join(rows)}</tbody></table>'
-            '<p class="u-note">Graded picks only. Pending picks are excluded until they settle.</p></section>')
+            '<p class="u-note">Graded picks only. Pending picks are excluded until they settle. '
+            'Risk is the stake; Net is what the pick won or lost after grading.</p></section>')
 
     related_html = ""
     if siblings:
@@ -859,7 +883,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
 .u-table th,.u-table td{{text-align:left;padding:9px 11px;border-bottom:1px solid #20202e;}}
 .u-table th{{color:#8890ad;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}}
 .u-win{{color:#00ff88;font-weight:700;}}.u-loss{{color:#ff5566;font-weight:700;}}.u-push{{color:#9aa;font-weight:700;}}
-.u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}
+.u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}.u-risk{{color:#aab3cc;}}
 .u-scroll{{overflow-x:auto;}}
 .u-how{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:16px 18px;color:#a9b0c8;line-height:1.6;font-size:14px;margin-top:26px;}}
 .u-cta{{display:inline-block;margin-top:14px;background:#ffd700;color:#1a1200;font-family:'Barlow',sans-serif;
@@ -899,6 +923,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
   <section class="u-stats" id="uStats">
     {stats_html}
   </section>
+  {('<p class="u-note u-asof">Record updated ' + e(as_of) + '</p>') if as_of else ''}
   {awards_html(awards or [])}
   <div id="uDeep">
   {sport_html}

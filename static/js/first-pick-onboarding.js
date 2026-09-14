@@ -724,8 +724,12 @@
                 '<div class="tmr-fp-modal__seal" aria-hidden="true">&#10003;</div>' +
                 '<h3 id="tmr-fp-modal-title">Your first pick is locked.</h3>' +
                 '<p>This pick is now part of your permanent verified record and cannot be edited after game time.</p>' +
+                /* DEFERRED PREFERENCES (2026-09-13): signup no longer asks for a headline,
+                   favorite teams or an avatar. The first locked pick is where we ask. */
+                '<p style="margin-top:10px">Next, finish your profile: add a headline, your favorite teams and a photo so your record looks like you.</p>' +
                 '<div class="tmr-fp-modal__actions">' +
                     '<a class="tmr-fp-btn tmr-fp-btn--primary" id="tmr-fp-modal-record" href="/my-record/">View My Record</a>' +
+                    '<a class="tmr-fp-btn tmr-fp-btn--ghost" id="tmr-fp-modal-profile" href="/usercp/">Finish My Profile</a>' +
                     '<button type="button" class="tmr-fp-btn tmr-fp-btn--ghost" id="tmr-fp-modal-another">Submit Another Pick</button>' +
                 '</div>' +
             '</div>';

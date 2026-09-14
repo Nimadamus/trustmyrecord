@@ -1674,3 +1674,56 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
   .comp-title{font-size:39px}
   .comp-stage{margin-top:18px;height:180px}
 }
+
+/* ============================================================ SAMPLE RECEIPT ==
+   The hero's right-hand card since 2026-09-13 (Nima): a FIXED sample of one
+   entry on a public record, replacing the rotating Live Competition standings.
+   It is static markup with no script and no data, so its height never changes
+   after first paint. Stake and net result sit on separate lines so a stake can
+   never be read as a return.
+   ============================================================================ */
+.spot.rcpt .hd{gap:21px}
+.spot.rcpt .hd b{font-size:17px;white-space:nowrap}
+.rcpt-tag{font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line-2);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.spot.rcpt .bd{padding:28px 36px 24px}
+.rcpt-pick{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;
+  font-size:36px;font-weight:900;line-height:1.08;color:var(--ink);letter-spacing:-.01em}
+.rcpt-odds{color:#7FB6FF;margin-left:6px}
+.rcpt-game{margin-top:8px;font-size:16px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.rcpt-lines{margin:18px 0 0;padding:0;border-top:1px dashed var(--line-2)}
+.rcpt-lines>div{display:flex;align-items:baseline;justify-content:space-between;gap:18px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.rcpt-lines dt{font-size:15px;font-weight:700;color:var(--muted);white-space:nowrap}
+.rcpt-lines dd{margin:0;font-size:16px;font-weight:700;color:var(--ink);text-align:right;min-width:0}
+.rcpt-lines>.rcpt-net{border-bottom:0;padding-top:12px}
+.rcpt-lines>.rcpt-net dt{color:var(--ink);font-weight:900}
+.rcpt-lines>.rcpt-net dd{display:flex;align-items:center;gap:12px}
+.rcpt-lines>.rcpt-net dd b{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
+.rcpt-badge{font-size:12.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--green);
+  background:var(--green-soft);border-radius:6px;padding:4px 9px}
+.rcpt-note{margin:10px 0 0;font-size:14px;font-weight:600;color:var(--muted);line-height:1.4}
+.rcpt-note b{font-weight:900}
+.spot.rcpt .ft{gap:18px}
+.rcpt-foot{font-size:15px;min-width:0}
+.spot.rcpt .ft a{white-space:nowrap}
+@media(max-width:640px){
+  .spot.rcpt .hd,.spot.rcpt .bd,.spot.rcpt .ft{padding-left:20px;padding-right:20px}
+  .spot.rcpt .hd{gap:12px}
+  .spot.rcpt .hd b{font-size:14px;letter-spacing:.08em;white-space:normal}
+  .rcpt-tag{font-size:11px;padding:4px 9px}
+  .rcpt-pick{font-size:28px}
+  .rcpt-lines>div{flex-wrap:wrap;gap:4px 12px}
+  .rcpt-lines dt,.rcpt-lines dd{font-size:14px}
+  .spot.rcpt .ft{flex-wrap:wrap}
+}
+/* ================================================== COMPACT TICKER (2026-09-13) ==
+   Nima: the sports ticker was taking too much of the first screen. The rotating
+   two-line intel strip under each game is dropped from the strip, the row loses
+   most of its vertical padding, and the Live on TMR column is held to the
+   height of one game card, so the value proposition sits higher on the page. */
+.ticker .gm .gm-in{display:none}
+.ticker .ticker-in{padding-top:6px;padding-bottom:6px}
+.ticker .tkact{height:84px;gap:6px}
+.ticker .ticker-games,.ticker .ticker-track,.ticker .ticker-page{min-height:84px}
+@media(max-width:640px){.ticker .ticker-games,.ticker .ticker-track,.ticker .ticker-page{min-height:64px}}
+.board .lb-asof{padding:10px 4px 0;font-size:13px;font-weight:600;color:var(--muted);text-align:right}

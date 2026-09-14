@@ -1527,7 +1527,7 @@
                 : '<span class="badge p">Pending</span>';
       var ru = num(p.result_units);
       var units = st === 'pending' || !st ? num(p.units).toFixed(1) + 'u'
-                : '<span class="' + (ru >= 0 ? 'pos' : 'neg') + '">' + sign(ru) + 'u</span>';
+                : '<span class="' + (ru > 0 ? 'pos' : ru < 0 ? 'neg' : '') + '">' + sign(ru) + 'u</span>';
       var sel = p.selection || p.pick || p.market_type || 'Pick';
       var line = spreadSuffix(p);
       var odds = p.odds_snapshot != null ? ' (' + (num(p.odds_snapshot) > 0 ? '+' : '') + p.odds_snapshot + ')' : '';
@@ -1545,6 +1545,18 @@
   }
 
   /* ---------- 3. LEADERBOARD --------------------------------------------- */
+  /* RECORD TIMESTAMP (2026-09-13). The leaderboard states when its figures were
+     computed, in Pacific time, from the same payload the rows came from. It
+     lives INSIDE the baked region, so the 30 minute snapshot carries the time
+     of its own data and can never pass for a live read. */
+  function leaderboardUpdated(iso) {
+    var body = el('.board .card:nth-child(2) .body'); if (!body || !iso) return;
+    var t = new Date(iso); if (isNaN(t.getTime())) return;
+    var n = body.querySelector('.lb-asof');
+    if (!n) { n = document.createElement('div'); n.className = 'lb-asof'; body.appendChild(n); }
+    n.textContent = 'Updated ' + t.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
+  }
+
   function leaderboard(users) {
     var body = el('.board .card:nth-child(2) .body'); if (!body || !users) return;
     var ranked = users.filter(function (u) { return num(u.total_picks) > 0; })
@@ -2210,7 +2222,8 @@
     /* FIRST, THE TABLE THIS BROWSER ALREADY HAS. Before a request is made, so
        the competition card is real standings in the first frame rather than a
        shimmer that may resolve into "Temporarily unavailable". */
-    compPaintCached();
+    /* The Live Competition card was replaced by a static sample receipt on
+       2026-09-13, so nothing here paints or polls competition standings. */
     ticker();
     startTickerRefresh();
     sportsTalk();
@@ -2248,16 +2261,13 @@
       lwReveal('tmr-lw-b1');
 
       var rows = d.leaderboard || [];
-      if (rows.length) leaderboard(rows);
+      if (rows.length) { leaderboard(rows); leaderboardUpdated(d.generated_at); }
       lwReveal('tmr-lw-b2');
-
-      applyCompetition(d.competition);
     });
   }
 
   /* Legacy per-endpoint path, kept verbatim as the bootstrap fallback. */
   function legacyBoot() {
-    competitionOnly();
     // Three requests feed the stats stripe; the counter fires when the last of
     // them has settled. Whatever they did not fill gets an honest dash then,
     // rather than shimmering until the 12s backstop.
@@ -2286,7 +2296,7 @@
     j('/users/leaderboard?sortBy=net_units&limit=10', 8000).then(function (d) {
       if (!d) { statsDone(); lwReveal('tmr-lw-b2'); return; }
       var rows = d.leaderboard || [];
-      if (rows.length) leaderboard(rows);
+      if (rows.length) { leaderboard(rows); leaderboardUpdated(d.generated_at || new Date().toISOString()); }
       // Only the "public records" badge. The Pick Makers cell is owned by the
       // directory-metrics call above — feeding it from here too would put a
       // second definition behind one label again.

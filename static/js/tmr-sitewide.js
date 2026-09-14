@@ -583,9 +583,9 @@
             <div class="tmr-global-nav__panel">
                 <div class="tmr-sportsbook-menu${(SPORTSBOOK_GROUP.has(currentFile) || (location.pathname || "").indexOf("/handicapping") === 0) ? " is-current" : ""}">
                     <button class="tmr-sportsbook-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
-                        Sportsbook
+                        Picks Board
                     </button>
-                    <div class="tmr-sportsbook-menu__panel" role="menu" aria-label="Sportsbook links">
+                    <div class="tmr-sportsbook-menu__panel" role="menu" aria-label="Picks Board links">
                         ${renderSportsbookRows(sportsbookMenuRoutes, sportsbookCurrentHref())}
                     </div>
                 </div>
@@ -1262,7 +1262,7 @@
                         <div class="tmr-search-section">
                             <div class="tmr-search-label">Quick jumps</div>
                             <div class="tmr-search-grid">
-                                <a href="/sportsbook/"><strong>Sportsbook</strong><span>Lock picks before games start</span></a>
+                                <a href="/sportsbook/"><strong>Picks Board</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
                                 <a href="/handicappers/"><strong>Handicappers</strong><span>Find members and compare records</span></a>
                                 <a href="/online-gaming/"><strong>Online Gaming</strong><span>MLB The Show, Madden NFL, NBA 2K, EA SPORTS FC, EA SPORTS NHL</span></a>
@@ -1525,7 +1525,7 @@
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="/sportsbook/">Sportsbook</a>
+                        <a href="/sportsbook/">Picks Board</a>
                         <a href="/tmr-coin/">TMR Coin</a>
                         <a href="/my-record/">My Record</a>
                         <a href="/marketplace/">Pick Marketplace</a>

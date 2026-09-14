@@ -2907,7 +2907,7 @@
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
                               <th>Submitted</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Line</th><th class="num">Odds</th><th class="num">Units</th>
+                              <th class="num">Line</th><th class="num">Odds</th><th class="num">Stake</th>
                               <th>Result</th><th class="num">Net</th>
                               <th class="tmrx-share-col"><span class="tmrsh-sr">Share</span></th>
                             </tr></thead>
@@ -2995,7 +2995,7 @@
                             </div>
                             <div class="capper-history-scroll">
                                 <table class="capper-history-table">
-                                    <thead><tr><th>Submitted</th><th>Sport</th><th>Game</th><th>Pick</th><th>Line</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
+                                    <thead><tr><th>Submitted</th><th>Sport</th><th>Game</th><th>Pick</th><th>Line</th><th>Odds</th><th>Stake</th><th>Result</th><th>Profit/Loss</th></tr></thead>
                                     <tbody id="capHistoryBody"><tr><td colspan="9">Loading picks...</td></tr></tbody>
                                 </table>
                             </div>
@@ -3233,7 +3233,7 @@
                             <th><button type="button" class="ledger-sort-button" data-sort-key="market" onclick="setTableSort('market')">Market</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="line" onclick="setTableSort('line')">Line</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Odds</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Stake</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="net_units" onclick="setTableSort('net_units')">Net Units</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="closing_line" onclick="setTableSort('closing_line')">Closing Line</button></th>
@@ -8330,9 +8330,16 @@
     function renderProfileAdvancedMetricsStrip(data, opts) {
         opts = opts || {};
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
-        if (statusEl) statusEl.textContent = opts.sport
+        /* RECORD TIMESTAMP (2026-09-13): every public record states when it was computed,
+           in Pacific time, so a cached or baked copy can never pass for the live figure. */
+        let asOf = '';
+        try {
+            const g = data && data.generated_at ? new Date(data.generated_at) : null;
+            if (g && !isNaN(g.getTime())) asOf = ' \u00b7 Updated ' + g.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
+        } catch (e) { asOf = ''; }
+        if (statusEl) statusEl.textContent = (opts.sport
             ? (advSportLabel(opts.sport) + ' \u00b7 verified backend metrics')
-            : 'Verified backend metrics';
+            : 'Verified backend metrics') + asOf;
         if (!opts.sport) window.__tmrAdvMetricsAll = data;
         try { buildAdvancedSportBar(data, opts.sport || ''); } catch (e) { console.warn('[Profile] sport bar build failed:', e); }
         const s = (data && data.summary) || {};
@@ -11475,7 +11482,7 @@
             if (r === 'pending') return '<span class="pm-pending">—</span>';
             if (!Number.isFinite(ru)) return '<span class="pm-pending">—</span>';
             const cls = ru > 0 ? 'pm-pos' : ru < 0 ? 'pm-neg' : '';
-            return '<span class="' + cls + '">' + (ru >= 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
+            return '<span class="' + cls + '">' + (ru > 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
         };
         const escHtml = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const fmtDate = (ts) => {
@@ -12976,7 +12983,7 @@
             const v = pickPL(p);
             pl = formatSignedUnits(v);
             plc = v > 0 ? 'positive' : v < 0 ? 'negative' : 'zero';
-        } else if (status === 'push') { pl = '+0.00u'; }
+        } else if (status === 'push') { pl = '0.00u'; }
         else { pl = '--'; }
 
         const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
@@ -12993,7 +13000,7 @@
             '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
             '<td data-label="Line">' + line + '</td>' +
             '<td data-label="Odds">' + odds + '</td>' +
-            '<td data-label="Units">' + units + '</td>' +
+            '<td data-label="Stake">' + units + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
             '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + netUnitsSubline + '</td>' +
             '<td data-label="Closing Line" class="ledger-closing"><div>' + formatLineValue(closingLine) + '</div>' + (p.closing_book_title ? '<div class="ledger-muted">' + p.closing_book_title + '</div>' : '') + '</td>' +

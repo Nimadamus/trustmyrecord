@@ -336,7 +336,7 @@
                 <a href="/">TRUST<span>MY</span>RECORD</a>
             </div>
             <h2>Welcome to TrustMyRecord.</h2>
-            <p>Create your sports fan profile. Claim your favorite teams, build a permanent verified record, and own your sports identity.</p>
+            <p>Create your account in under a minute. Build a permanent verified record, then add your teams, headline and photo after your first pick.</p>
             <div class="trust-list">
                 <div class="trust-item"><strong>Make your first pick</strong><span>Start simple with a side, total, or moneyline.</span></div>
                 <div class="trust-item"><strong>Locked receipts</strong><span>Picks are made before results and stay attached to your history.</span></div>
@@ -346,10 +346,10 @@
         <div class="content">
             <div style="margin:0 0 18px;padding:13px 16px;border-radius:14px;border:1px solid rgba(212,167,44,0.45);background:linear-gradient(135deg,rgba(58,46,7,0.55),rgba(92,71,8,0.45));">
                 <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#ffd966;margin-bottom:4px;">&#9733; Founding Member</div>
-                <div style="font-size:13.5px;line-height:1.55;color:#f3e7c0;">Be one of the first fans on TrustMyRecord. Claim your username, pick your teams, and lock a permanent profile and Founding Member badge before launch.</div>
+                <div style="font-size:13.5px;line-height:1.55;color:#f3e7c0;">Be one of the first fans on TrustMyRecord. Claim your username and lock a permanent profile and Founding Member badge before launch.</div>
             </div>
             <h1>Create Your <span class="accent">Sports Profile</span></h1>
-            <p class="sub">Create your sports fan profile. Claim your teams, lock a permanent verified record, and grab your Founding Member badge.</p>
+            <p class="sub">Username, email and password. That is all it takes. Your teams, headline and photo can wait until after your first pick.</p>
 
             <form id="direct-register-form">
                 <div class="field">
@@ -367,43 +367,6 @@
                 <div class="field">
                     <label for="confirmValue">Confirm Password</label>
                     <input id="confirmValue" type="password" autocomplete="new-password" required>
-                </div>
-
-                <div class="field">
-                    <label for="headlineValue">Headline <span style="color:var(--muted);font-weight:500;">(140 chars, shows on your profile)</span></label>
-                    <input id="headlineValue" type="text" maxlength="140" placeholder="e.g. Sharp MLB cap. Pittsburgh born. Run line specialist.">
-                </div>
-
-                <div class="field">
-                    <label>Favorite Sports <span style="color:var(--muted);font-weight:500;">(pick all that apply)</span></label>
-                    <div id="favSportsGrid" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
-                        <!-- chips injected by JS -->
-                    </div>
-                </div>
-
-                <div class="field">
-                    <label>Favorite Teams <span style="color:var(--muted);font-weight:500;">(claim your teams by league)</span></label>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <select id="favTeamSport" aria-label="League" style="flex:1;min-width:120px;border-radius:14px;background:#e7eef9;color:#101625;padding:13px 14px;font-size:0.98rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);"></select>
-                        <select id="favTeamPick" aria-label="Team" style="flex:1.6;min-width:150px;border-radius:14px;background:#e7eef9;color:#101625;padding:13px 14px;font-size:0.98rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);"></select>
-                        <button type="button" id="favTeamAdd" style="border:0;border-radius:14px;padding:0 20px;font-weight:800;color:#062023;background:var(--cyan);cursor:pointer;">Add</button>
-                    </div>
-                    <div id="favTeamChips" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;"></div>
-                    <input id="favTeamsValue" type="hidden" value="">
-                </div>
-
-                <div class="field">
-                    <label for="heardAboutValue">How did you hear about us? <span style="color:var(--muted);font-weight:500;">(optional)</span></label>
-                    <select id="heardAboutValue" style="width:100%;border-radius:14px;background:#e7eef9;color:#101625;padding:13px 14px;font-size:0.98rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);">
-                        <option value="">Select one...</option>
-                        <option value="google_search">Google / search engine</option>
-                        <option value="ai_chatbot">ChatGPT or another AI chatbot</option>
-                        <option value="social_media">Social media</option>
-                        <option value="friend_referral">A friend or referral link</option>
-                        <option value="forum_reddit">Reddit / a forum</option>
-                        <option value="capper_content">A handicapper's content/link</option>
-                        <option value="other">Other</option>
-                    </select>
                 </div>
 
                 <div class="field" style="margin-bottom:18px;padding:13px 15px;border-radius:14px;border:1px solid rgba(255,143,143,0.35);background:rgba(255,107,107,0.08);">
@@ -444,31 +407,6 @@
                 -->
                 <div id="turnstileMount" class="field" style="display:none;margin-bottom:14px;"></div>
 
-
-                <!--
-                  PICK AN AVATAR, OR ONE GETS PICKED FOR YOU (2026-09-08).
-                  89 of the first 162 members finished signup with no photo and
-                  never came back for one, which is how the boards filled up
-                  with identical faceless rows. This step cannot be walked past:
-                  a new account either uploads a photo or accepts the one the
-                  site drew for them, and it says in plain words which is
-                  happening. The preview is live, so what they accept here is
-                  exactly what every other page will show.
-                -->
-                <div class="field" id="avatarStep">
-                    <label for="avUploadBtn">Your avatar</label>
-                    <div class="av-row">
-                        <span class="av-preview" id="avPreview" aria-live="polite"></span>
-                        <div class="av-copy">
-                            <p class="av-note" id="avNote">Pick an avatar, or one gets picked for you. This is the one we drew &mdash; it is yours until you upload a photo.</p>
-                            <div class="av-actions">
-                                <button type="button" class="av-btn is-primary" id="avUploadBtn">Upload a photo</button>
-                                <button type="button" class="av-btn" id="avKeepBtn">Use the one we drew</button>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="file" id="avFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-                </div>
 
                 <div id="message" class="message"></div>
                 <button id="submitBtn" class="submit" type="submit">CREATE ACCOUNT</button>
@@ -775,12 +713,17 @@
                         try { await window.api.ready; } catch (error) {}
                     }
 
-                    var headline = (document.getElementById('headlineValue').value || '').trim();
+                    /* SHORT FUNNEL (2026-09-13): headline, sports, teams, avatar and the referral
+                       question moved out of signup; they are asked for after the first pick.
+                       Each read stays null-safe so the API receives the same optional shape. */
+                    var headlineEl = document.getElementById('headlineValue');
+                    var headline = headlineEl ? (headlineEl.value || '').trim() : '';
                     var favoriteSports = (typeof window.collectFavSports === 'function') ? window.collectFavSports() : [];
                     var favoriteTeams = (typeof window.collectFavTeams === 'function') ? window.collectFavTeams() : [];
                     var signupSource = null;
                     try { signupSource = JSON.parse(localStorage.getItem('tmr_first_touch')); } catch (error) {}
-                    var heardAbout = (document.getElementById('heardAboutValue').value || '').trim() || undefined;
+                    var heardAboutEl = document.getElementById('heardAboutValue');
+                    var heardAbout = heardAboutEl ? ((heardAboutEl.value || '').trim() || undefined) : undefined;
 
                     // SIGNUP_HARDENING_20260823: bot-guard fields. All three
                     // are additive -- an older cached copy of this page that
