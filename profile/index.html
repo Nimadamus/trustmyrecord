@@ -1993,6 +1993,21 @@
         .profile-advanced-sportchip.is-active{background:linear-gradient(135deg,#2b8cff,#4DA3FF);border-color:transparent;color:#04111a;box-shadow:0 6px 16px rgba(43,140,255,.28);}
         .profile-advanced-sportchip:focus-visible{outline:2px solid #4DA3FF;outline-offset:2px;}
         .profile-advanced-sportchip .chip-n{margin-left:6px;font-weight:900;opacity:.7;letter-spacing:.04em;}
+        /* PROFILE_RAIL_SPORT_20260914: sport selector above the top stat rail. Same chip language as the
+           Advanced Metrics sport bar; scrolls sideways on narrow screens instead of crushing the tabs. */
+        .profile-rail-block{display:flex;flex-direction:column;min-width:0;}
+        .profile-rail-sportbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;width:100%;min-width:0;margin:0 0 12px;}
+        .profile-rail-sporttabs{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px;}
+        .profile-rail-sporttabs::-webkit-scrollbar{display:none;}
+        #profileHeader .profile-rail-sporttab{-webkit-appearance:none;appearance:none;flex:0 0 auto;white-space:nowrap;cursor:pointer;margin:0;padding:7px 13px!important;border-radius:999px!important;border:1px solid rgba(148,163,184,.18)!important;background:transparent!important;color:#aebbd0!important;box-shadow:none!important;font:900 11px/1 'Barlow','Inter',sans-serif!important;letter-spacing:.08em;text-transform:uppercase;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+        #profileHeader .profile-rail-sporttab:hover{color:#e8f1ff!important;border-color:rgba(148,163,184,.42)!important;background:rgba(148,163,184,.08)!important;}
+        #profileHeader .profile-rail-sporttab.is-active{background:linear-gradient(135deg,#2b8cff,#4DA3FF)!important;border-color:transparent!important;color:#04111a!important;box-shadow:0 6px 16px rgba(43,140,255,.28)!important;}
+        #profileHeader .profile-rail-sporttab:focus-visible{outline:2px solid #4DA3FF;outline-offset:2px;}
+        .profile-rail-sportctx{flex-basis:100%;min-height:11px;margin:0 2px;color:#7f93ad;font:900 10.5px/1 'Barlow','Inter',sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .profile-rail-sportctx.is-sport{color:#4DA3FF;}
+        .profile-rail.is-busy{opacity:.55;transition:opacity .15s ease;}
+        /* Two-column header: the Verified Record badge sits over the rail column's top-right corner. */
+        @media (min-width:1181px){body.profile-page.tmr-social-profile #railSportBar .profile-rail-sporttabs{max-width:calc(100% - 150px);}}
         /* ACM_GRID_20260912. Eleven cards, and CLV spans two columns because it
            is the one metric that carries a sample line as well as a status line
            -- it needs WIDTH, not the extra height that used to stretch it past
@@ -7718,7 +7733,7 @@
         const fill = function () {
             tries += 1;
             const card = document.querySelector('.profile-rail-card--avg-odds .profile-rail-value');
-            if (card) {
+            if (card && !(window.__tmrRailSport && window.__tmrRailSport.id)) {
                 const current = (card.textContent || '').trim();
                 // Only fill a placeholder. A real value already on screen is left alone.
                 if (!current || current === 'N/A' || current === 'Loading...' ||
@@ -8621,6 +8636,9 @@
         if (!opts.sport) {
             window.__tmrCorrelation = (data && data.correlation) || null;
             try { applyRailCorrelation(); } catch (_) {}
+            window.__tmrRailOverallMetrics = data || null;
+            try { refreshRailSportBar(); } catch (e) { console.warn('[Profile] rail sport bar failed:', e); }
+            try { applyRailSportView(); } catch (_) {}
         }
         try { renderAdvancedSportDiversity(opts.sport || ''); } catch (e) { console.warn('[Profile] sport diversity failed:', e); }
     }
@@ -11647,15 +11665,17 @@
                   'style="display:inline-block;background:linear-gradient(135deg,#1D7FE8,#1D7FE8);color:#06231f;font-weight:800;text-decoration:none;border-radius:10px;padding:10px 20px;font-size:14px;">Post Your First Pick</a></p>' +
               '</div>'
             : '';
-        const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Graded Picks</span><span class="profile-rail-value">' + gradedProfilePicks + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (canShowRecordStats ? (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + (canShowFinancialStats ? signedClass(netUnitsValue) : ' is-neutral') + '">' + (canShowFinancialStats ? fmtSigned(netUnitsValue, 'u', 2) : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
-            '<div class="profile-rail-card profile-rail-card--avg-odds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
+        const rail = '<div class="profile-rail-block">' + buildRailSportBar() +
+            '<div class="profile-rail" aria-label="Pick monitor stats">' +
+            '<div class="profile-rail-card" data-rail-stat="graded"><span class="profile-rail-label">Graded Picks</span><span class="profile-rail-value">' + gradedProfilePicks + '</span></div>' +
+            '<div class="profile-rail-card" data-rail-stat="record"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
+            '<div class="profile-rail-card" data-rail-stat="winrate"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (canShowRecordStats ? (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card" data-rail-stat="units"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + (canShowFinancialStats ? signedClass(netUnitsValue) : ' is-neutral') + '">' + (canShowFinancialStats ? fmtSigned(netUnitsValue, 'u', 2) : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card" data-rail-stat="roi"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card" data-rail-stat="rank"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
+            '<div class="profile-rail-card profile-rail-card--avg-odds" data-rail-stat="avgodds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
             '<div class="profile-rail-card profile-rail-card--corr"><span class="profile-rail-label">Correlated Picks <span class="profile-corr-info" id="railCorrInfo" role="button" tabindex="0" aria-label="What are correlated picks?" title="Correlated picks are multiple picks that depend on the SAME game outcome in the same direction (for example a team moneyline plus that team’s spread, or a game total over plus a team total over). It is NOT just any two picks on the same game. A high share means the record has less independent sample than the raw pick count suggests. Click to see details.">?</span></span><span class="profile-rail-value rail-corr-value" id="railCorrValue">&mdash;</span><span class="profile-rail-corr-sub" id="railCorrSub"></span></div>' +
+            '</div>' +
             '</div>' +
             '<details class="profile-corr-panel" id="railCorrPanel" hidden>' +
               '<summary>Correlated Picks &mdash; what this means &amp; how it was counted</summary>' +
@@ -11802,14 +11822,200 @@
         // Fill the top-rail Correlated Picks card if correlation data already
         // arrived (metrics fetch and profile render race; whichever lands last wins).
         try { applyRailCorrelation(); } catch (_) {}
+        try { applyRailSportView(); } catch (_) {}
         try { if (window.TMRRenderProfileAwardsPreview) window.TMRRenderProfileAwardsPreview(); } catch (_) {}
     }
+
+    /* ===================================================================
+       PROFILE_RAIL_SPORT_20260914 -- sport selector for the top stat rail.
+       OVERALL is the untouched existing render (renderProfileHeader + the
+       canonical /api/users/:username record). A sport tab fills the SAME cards
+       from GET /users/:name/metrics?sport=<catalog id>: record, units, ROI,
+       win rate, average odds and correlated picks recomputed server side over
+       only that sport's graded picks, plus that sport's leaderboard rank.
+       Tabs come from the overall payload's sport_groups, so a sport with no
+       graded picks never gets a tab. One request per sport per page view.
+       =================================================================== */
+    /* A hoisted accessor, not a const: renderProfileHeader can run before this
+       part of the script has executed, and a const would throw there. */
+    function railSportState() {
+        return window.__tmrRailSport || (window.__tmrRailSport = { id: '', seq: 0, cache: Object.create(null) });
+    }
+    function railSportEsc(x) {
+        return String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+    function railSportGroups() {
+        const d = window.__tmrRailOverallMetrics;
+        const rows = d && Array.isArray(d.sport_groups) ? d.sport_groups : [];
+        return rows.filter((g) => g && g.id && Number(g.graded_picks) > 0);
+    }
+    function railSportLabel(id) {
+        const g = railSportGroups().find((x) => x.id === id);
+        return g ? g.label : String(id || '').toUpperCase();
+    }
+    function buildRailSportBar() {
+        const groups = railSportGroups();
+        if (!groups.length) return '';
+        const tabs = [{ id: '', label: 'Overall' }].concat(groups).map((g) => {
+            const on = g.id === railSportState().id;
+            return '<button type="button" role="tab" class="profile-rail-sporttab' + (on ? ' is-active' : '') + '"' +
+                ' aria-selected="' + (on ? 'true' : 'false') + '" tabindex="' + (on ? '0' : '-1') + '"' +
+                ' data-rail-sport="' + railSportEsc(g.id) + '">' + railSportEsc(g.label) + '</button>';
+        }).join('');
+        return '<div class="profile-rail-sportbar" id="railSportBar">' +
+            '<div class="profile-rail-sporttabs" role="tablist" aria-label="Filter profile stats by sport">' + tabs + '</div>' +
+            '<span class="profile-rail-sportctx' + (railSportState().id ? ' is-sport' : '') + '" id="railSportCtx" aria-live="polite">' +
+            (railSportState().id ? railSportEsc(railSportLabel(railSportState().id)) + ' Performance' : 'Overall Performance') + '</span>' +
+            '</div>';
+    }
+    function refreshRailSportBar() {
+        const rail = document.querySelector('#profileHeader .profile-rail');
+        if (!rail) return;
+        const html = buildRailSportBar();
+        const existing = document.getElementById('railSportBar');
+        if (existing) {
+            const scroller = existing.querySelector('.profile-rail-sporttabs');
+            const left = scroller ? scroller.scrollLeft : 0;
+            if (!html) { existing.remove(); return; }
+            existing.outerHTML = html;
+            const next = document.querySelector('#railSportBar .profile-rail-sporttabs');
+            if (next) next.scrollLeft = left;
+        } else if (html) {
+            rail.insertAdjacentHTML('beforebegin', html);
+        }
+    }
+    function syncRailSportTabs(ctxText) {
+        document.querySelectorAll('#railSportBar [data-rail-sport]').forEach((btn) => {
+            const on = (btn.getAttribute('data-rail-sport') || '') === railSportState().id;
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            btn.setAttribute('tabindex', on ? '0' : '-1');
+        });
+        const ctx = document.getElementById('railSportCtx');
+        if (ctx) {
+            ctx.textContent = ctxText != null ? ctxText : (railSportState().id ? railSportLabel(railSportState().id) + ' Performance' : 'Overall Performance');
+            ctx.classList.toggle('is-sport', !!railSportState().id);
+        }
+    }
+    function setRailBusy(on) {
+        const rail = document.querySelector('#profileHeader .profile-rail');
+        if (!rail) return;
+        rail.classList.toggle('is-busy', !!on);
+        if (on) rail.setAttribute('aria-busy', 'true'); else rail.removeAttribute('aria-busy');
+    }
+    function railSportUsername() {
+        const params = new URLSearchParams(window.location.search || '');
+        return (profileData && profileData.username) || params.get('user') || params.get('username') || profileUsername;
+    }
+    function railSportCacheKey(id) {
+        return String(railSportUsername() || '').toLowerCase() + '|' + id;
+    }
+    function focusRailSportTab(id) {
+        const btn = document.querySelector('#railSportBar [data-rail-sport="' + railSportEsc(id) + '"]');
+        if (btn) { try { btn.focus({ preventScroll: true }); } catch (_) { btn.focus(); } }
+    }
+    function restoreRailOverall(hadFocus, ctxText) {
+        setRailBusy(false);
+        // The exact existing overall render, then the overall avg-odds fill.
+        renderProfileHeader(profileData || {});
+        try { applyRailAvgOdds(window.__tmrRailOverallMetrics); } catch (_) {}
+        if (ctxText) syncRailSportTabs(ctxText);
+        if (hadFocus) focusRailSportTab('');
+    }
+    async function selectRailSport(id) {
+        const want = String(id || '');
+        if (want === railSportState().id) return;
+        const hadFocus = !!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#railSportBar'));
+        railSportState().id = want;
+        const seq = ++railSportState().seq;
+        syncRailSportTabs();
+        if (!want) { restoreRailOverall(hadFocus); return; }
+        const key = railSportCacheKey(want);
+        if (!railSportState().cache[key]) {
+            setRailBusy(true);
+            let data = null;
+            try {
+                data = await fetchAdvancedMetricsForSport(railSportUsername(), want);
+            } catch (err) {
+                console.warn('[Profile] rail sport metrics unavailable:', err && err.message ? err.message : err);
+            }
+            if (seq !== railSportState().seq) return;   // a later click already won
+            setRailBusy(false);
+            if (!data || !data.summary) {
+                const label = railSportLabel(want);
+                railSportState().id = '';
+                restoreRailOverall(hadFocus, label + ' stats unavailable, showing overall');
+                return;
+            }
+            railSportState().cache[key] = data;
+        }
+        applyRailSportView();
+    }
+    function applyRailSportView() {
+        if (!railSportState().id) return;
+        const data = railSportState().cache[railSportCacheKey(railSportState().id)];
+        const rail = document.querySelector('#profileHeader .profile-rail');
+        if (!data || !data.summary || !rail) return;
+        const s = data.summary;
+        const signedClass = (value) => value > 0 ? ' is-positive' : value < 0 ? ' is-negative' : ' is-neutral';
+        const fmtSigned = (value, suffix, decimals) => (value > 0 ? '+' : '') + value.toFixed(decimals == null ? 1 : decimals) + (suffix || '');
+        const setCard = (key, text, cls, label) => {
+            const el = rail.querySelector('[data-rail-stat="' + key + '"]');
+            if (!el) return;
+            const v = el.querySelector('.profile-rail-value');
+            if (v) { v.textContent = text; v.className = 'profile-rail-value' + (cls || ''); }
+            if (label != null) { const l = el.querySelector('.profile-rail-label'); if (l) l.textContent = label; }
+        };
+        const graded = Number(s.total_picks || 0);
+        const wins = Number(s.wins || 0), losses = Number(s.losses || 0), pushes = Number(s.pushes || 0);
+        const decisions = wins + losses;
+        const winRate = Number(s.win_rate || 0);
+        const net = Number(s.net_units || 0);
+        const roi = Number(s.roi || 0);
+        setCard('graded', String(graded), '');
+        setCard('record', wins + '-' + losses + '-' + pushes, signedClass(wins - losses));
+        setCard('winrate', decisions > 0 ? winRate.toFixed(1) + '%' : 'N/A', decisions > 0 ? signedClass(winRate - 50) : ' is-neutral');
+        setCard('units', fmtSigned(net, 'u', 2), signedClass(net));
+        setCard('roi', graded > 0 ? fmtSigned(roi, '%') : 'N/A', graded > 0 ? signedClass(roi) : ' is-neutral');
+        const sr = data.sport_rank;
+        const label = (data.sport && data.sport.label) || railSportLabel(railSportState().id);
+        if (sr) {
+            // Same wording as the overall card; the label already names the sport.
+            const rankValue = sr.rank
+                ? 'Ranked #' + sr.rank + (sr.ranked_count ? ' of ' + sr.ranked_count : '')
+                : (graded < Number(sr.min_graded_picks || 20)
+                    ? 'Unranked until ' + Number(sr.min_graded_picks || 20) + ' graded picks'
+                    : 'Not ranked yet');
+            setCard('rank', rankValue, '', label + ' Rank');
+        } else {
+            // No sport-specific rank in this payload: say plainly the number is the overall one.
+            setCard('rank', (profileData && profileData.ranking_status) || 'Unranked', '', 'Overall Rank');
+        }
+        const odds = Number(s.avg_odds);
+        setCard('avgodds', Number.isFinite(odds) && odds !== 0 ? ((odds > 0 ? '+' : '') + Math.round(odds)) : 'N/A', '');
+        try { applyRailCorrelation(data.correlation || null); } catch (_) {}
+        syncRailSportTabs();
+    }
+    document.addEventListener('click', (ev) => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest('#railSportBar [data-rail-sport]') : null;
+        if (!btn) return;
+        ev.preventDefault();
+        selectRailSport(btn.getAttribute('data-rail-sport') || '');
+    });
+    document.addEventListener('keydown', (ev) => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest('#railSportBar [data-rail-sport]') : null;
+        if (!btn || (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft')) return;
+        const tabs = Array.from(document.querySelectorAll('#railSportBar [data-rail-sport]'));
+        const i = tabs.indexOf(btn);
+        const next = tabs[(i + (ev.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+        if (next) { ev.preventDefault(); try { next.focus({ preventScroll: true }); } catch (_) { next.focus(); } }
+    });
 
     // Populates the top-rail "Correlated Picks" stat (next to Avg Odds) from the
     // /metrics correlation payload. Idempotent; safe to call before or after the
     // data loads. Source: services/pickCorrelation.js (regular ledger picks only).
-    function applyRailCorrelation() {
-        const corr = window.__tmrCorrelation || null;
+    function applyRailCorrelation(corrOverride) {
+        const corr = corrOverride !== undefined ? corrOverride : (window.__tmrCorrelation || null);
         const v = document.getElementById('railCorrValue');
         const s = document.getElementById('railCorrSub');
         if (!v) return; // rail not rendered yet
