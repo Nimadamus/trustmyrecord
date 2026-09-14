@@ -102,7 +102,7 @@ def et_clock(iso):
 
 def face(name, shot):
     initials = "".join(w[0] for w in str(name or "").split() if w)[:2].upper()
-    img = ('<img src="%s" alt="%s" loading="lazy" decoding="async">' % (esc(shot), esc(name))
+    img = ('<img src="%s" alt="%s" loading="lazy" decoding="async" onerror="this.dataset.missing=1">' % (esc(shot), esc(name))
            if shot else "")
     return '<span class="tn-face"><span>%s</span>%s</span>' % (esc(initials), img)
 
