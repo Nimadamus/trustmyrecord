@@ -594,7 +594,12 @@ def cmd_auto(a):
     state["last_run"] = iso()
     if not a.dry_run:
         save_state(a.state, state)
-    print("result=%s submitted=%d pre-filtered=%d" % (record["result"], record["submitted_count"], record_skips))
+    reasons = {}
+    for why in skipped.values():
+        k = why.split(" /")[0]
+        reasons[k] = reasons.get(k, 0) + 1
+    print("result=%s submitted=%d pre-filtered=%d %s" % (record["result"], record["submitted_count"], record_skips, json.dumps(reasons, sort_keys=True)))
+    append_log(a.state, {"ts": iso(), "source": "auto prefilter", "prefiltered": reasons})
     return 0
 
 
