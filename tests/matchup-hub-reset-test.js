@@ -59,6 +59,8 @@ fs.copyFileSync(path.join(ROOT, 'scripts', 'schema_event.py'),
 // so the temp tree needs both or the bake dies on ModuleNotFoundError.
 fs.copyFileSync(path.join(ROOT, 'scripts', 'team_logos.py'),
                 path.join(tmp, 'scripts', 'team_logos.py'));
+fs.copyFileSync(path.join(ROOT, 'scripts', 'featured_matchups.py'),
+  path.join(tmp, 'scripts', 'featured_matchups.py'));
 fs.mkdirSync(path.join(tmp, 'data'), { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'data', 'team-logos.json'),
                 path.join(tmp, 'data', 'team-logos.json'));

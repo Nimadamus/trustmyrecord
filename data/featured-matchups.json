@@ -1,0 +1,62 @@
+{
+  "_readme": "THE ONE SOURCE OF TRUTH for which article is the current featured matchup of a managed sport. Every featured surface (the sport's Matchup of the Day door, the NFL Game of the Week door, the handicapping hub card, the sportsbook strip) is baked from this file by scripts/featured_matchups.py and re-resolved in the browser by static/js/tmr-featured.js. To feature an article: append an entry with its href and real kickoff, then run `python scripts/featured_matchups.py sync`. Never hand edit a door, card or strip. Entries are never deleted: a finished game simply stops resolving. A published NFL Game File from the database is appended here automatically by the Matchup of the Day bake. See the header of scripts/featured_matchups.py for the resolution rule.",
+  "grace_minutes": 210,
+  "sports": {
+    "nfl": {
+      "label": "NFL",
+      "hub": "/handicapping/nfl/",
+      "hub_file": "handicapping/nfl/index.html",
+      "doors": [
+        {"file": "matchup-of-the-day/nfl/index.html", "url": "/matchup-of-the-day/nfl/", "eyebrow": "NFL Matchup of the Day"},
+        {"file": "nfl-game-of-the-week/index.html", "url": "/nfl-game-of-the-week/", "eyebrow": "NFL Game of the Week"}
+      ],
+      "strips": [
+        {"file": "sportsbook/index.html", "marker": "featuredStripNfl"}
+      ],
+      "features": [
+        {
+          "id": "nfl-2026-w1-sf-lar-gotw",
+          "source": "hand",
+          "status": "active",
+          "href": "/nfl/49ers-vs-rams-week-1-2026/",
+          "headline": "49ers vs Rams at the MCG, Week 1",
+          "matchup": "49ers vs Rams",
+          "when": "Thursday, September 10 · Week 1 · Melbourne",
+          "label": "NFL Game of the Week",
+          "cta": "Read the full breakdown",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/sf.png&h=96&w=96",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/lar.png&h=96&w=96",
+          "kickoff_utc": "2026-09-11T00:35:00Z"
+        },
+        {
+          "id": "game-file-131",
+          "source": "game-file",
+          "status": "active",
+          "href": "/matchup-of-the-day/san-francisco-49ers-los-angeles-rams-donald-is-out-in-melbourne/",
+          "headline": "San Francisco Opens in Melbourne Without Having to Block Aaron Donald, and It Matters Less Than You Think",
+          "matchup": "San Francisco 49ers vs. Los Angeles Rams",
+          "when": "",
+          "label": "NFL Matchup of the Day",
+          "cta": "Read the full breakdown",
+          "away_logo": "",
+          "home_logo": "",
+          "kickoff_utc": "2026-09-11T00:35:00Z"
+        },
+        {
+          "id": "nfl-2026-w1-buf-hou",
+          "source": "hand",
+          "status": "active",
+          "href": "/nfl/bills-texans-josh-allen-under-anderson-and-hunter/",
+          "headline": "Bills at Texans: Josh Allen Under Anderson and Hunter",
+          "matchup": "Bills at Texans",
+          "when": "Sunday, September 13 · Week 1",
+          "label": "NFL Sunday Spotlight",
+          "cta": "Deep Dive, Prediction & 1,000 Simulations",
+          "away_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/buf.png&h=96&w=96",
+          "home_logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/hou.png&h=96&w=96",
+          "kickoff_utc": "2026-09-13T17:00:00Z"
+        }
+      ]
+    }
+  }
+}

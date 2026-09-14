@@ -211,6 +211,14 @@ def gotw_block_disabled(sport):
 
 def gotw_block(sport):
     """The sport's Matchup of the Day, surfaced at the top of its hub."""
+    # FEATURED_SOURCE_OF_TRUTH_20260914. A sport named in
+    # data/featured-matchups.json takes its card from that registry, the same
+    # one its doors and the sportsbook strip are baked from, and the card
+    # carries the runtime hook that retires a finished game on the clock.
+    import featured_matchups
+    reg = featured_matchups.load()
+    if reg and sport in reg["sports"]:
+        return featured_matchups.card_html(reg, sport, featured_matchups.resolve(reg, sport))
     art = featured_article(sport)
     if not art:
         return ""
@@ -1325,6 +1333,20 @@ def main():
     else:
         print("partial run (%s), sitemap block left alone" % ", ".join(wanted))
     bake_tennis()
+    sync_featured()
+
+
+def sync_featured():
+    """FEATURED_SOURCE_OF_TRUTH_20260914. Re-bake every featured surface (doors,
+    hub card, sportsbook strip) from data/featured-matchups.json on this cron,
+    so the baked HTML follows the kickoff clock between Matchup of the Day bakes
+    and not only in the reader's browser. Same reasoning as bake_tennis(): no
+    workflow token exists to add a step, and it must never fail the sport bake."""
+    try:
+        import featured_matchups
+        featured_matchups.sync()
+    except Exception as exc:  # noqa: BLE001 - never fails the sport bake
+        print("FEATURED: surfaces not synced (%s)" % exc)
 
 
 def bake_tennis():

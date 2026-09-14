@@ -64,6 +64,12 @@ import urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from schema_event import event_description, sports_event  # noqa: E402
 from team_logos import team_logo  # noqa: E402
+# FEATURED_SOURCE_OF_TRUTH_20260914. The featured article of a managed sport
+# (NFL) is named in data/featured-matchups.json and nowhere else. This bake
+# used to rewrite /matchup-of-the-day/nfl/ from the newest NFL Game File on
+# every hourly run of ANY lane, which is how a hand pointed feature got
+# reverted to a game already played. See scripts/featured_matchups.py.
+import featured_matchups  # noqa: E402
 
 API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
 SITE = "https://trustmyrecord.com"
@@ -1755,6 +1761,14 @@ def main():
             if not a.get(field):
                 sys.exit("ABORT: article %s is missing %s" % (a.get("id"), field))
 
+    # A published, featured Game File of a managed sport joins the registry with
+    # its real kickoff, so it competes for the feature by the same clock rule as
+    # a hand built article instead of overriding it by being newest.
+    featured_path = os.path.join(ROOT, "data", "featured-matchups.json")
+    featured_reg = featured_matchups.load(featured_path)
+    featured_registry_changed = featured_matchups.upsert_game_files(featured_reg, articles)
+    featured_managed = set(featured_matchups.managed_sports(featured_reg))
+
     # Newest first, so "previous" walks backwards through the archive.
     #
     # Sorted by the day each piece COVERS (archive_day), not the moment it went
@@ -1959,6 +1973,8 @@ def main():
                 hub_file)
             writes.append((hub_file, hub_text))
         for sport, articles in sorted(by_sport.items()):
+            if sport in featured_managed:
+                continue    # baked from the registry below, never from "newest"
             # ONE FEATURED ARTICLE PER SPORT DOOR, ALWAYS. `daily` is
             # newest-first, so the door is the newest published Game File for
             # that sport, exactly as the nav promises.
@@ -1987,7 +2003,7 @@ def main():
         # left alone: a sport that published yesterday keeps yesterday's piece
         # on its door until today's lands, which is the honest answer.
         for sport, hub in sorted(NAV_SPORT_HUBS.items()):
-            if by_sport.get(sport):
+            if by_sport.get(sport) or sport in featured_managed:
                 continue
             door = os.path.join(MOTD_DIR, sport, "index.html")
             if os.path.exists(door):
@@ -2083,6 +2099,13 @@ def main():
                 hubs.append(("%s/matchups/%s/" % (SITE, sport), today_iso))
     sitemap = update_sitemap(read(SITEMAP), sitemap_block(ordered, hubs))
     writes.append((SITEMAP, sitemap))
+
+    # Every featured surface of a managed sport (its doors, the hub card, the
+    # sportsbook strip), rendered from the one registry on every bake.
+    if featured_reg:
+        if featured_registry_changed:
+            writes.append((featured_path, json.dumps(featured_reg, indent=2, ensure_ascii=False) + chr(10)))
+        writes.extend(featured_matchups.render_surfaces(featured_reg, root=ROOT))
 
     # ---- orphan report. REPORT ONLY. Nothing here deletes anything. ---------
     known = {a["slug"] for a in ordered}

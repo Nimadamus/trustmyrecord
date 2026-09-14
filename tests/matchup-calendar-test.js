@@ -118,6 +118,7 @@ for (const rel of ['matchups', 'matchups/mlb', 'matchup-of-the-day', 'scripts', 
 // the sandbox needs both or every article in here renders an initials badge.
 for (const rel of ['scripts/build_matchup_articles.py', 'scripts/build_matchup_graphics.py',
                    'scripts/schema_event.py', 'scripts/team_logos.py',
+                   'scripts/featured_matchups.py',
                    'data/team-logos.json',
                    'matchups/index.html', 'matchups/mlb/index.html',
                    'matchup-of-the-day/index.html']) {

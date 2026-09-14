@@ -27,6 +27,8 @@ do not expand it, do not "improve" it into something larger.
   graded-game engine cannot answer.
 - The featured game comes from `featured_article()`, which reads
   `/matchup-of-the-day/<sport>/`. There is no second hand-maintained featured system.
+  For NFL (and any sport in `data/featured-matchups.json`) that registry is the single
+  source of truth; see `scripts/featured_matchups.py`.
 
 Full detail, including what to keep and what not to re-wire, is in the first section of
 `DEVELOPMENT_RULES.md`.
