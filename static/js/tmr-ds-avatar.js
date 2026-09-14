@@ -577,17 +577,26 @@
      API for /users/Profile/avatar, which 404s on every page load. These are the
      UI words that sit next to an avatar and are never somebody's username. */
   var NOT_A_MEMBER = /^(profile|account|settings|menu|login|log in|sign in|sign up|register|user|guest|you|me|my profile|my account|avatar|member|admin|search|home|notifications|messages)$/i;
+  /* PLACEHOLDER_HANDLE_20260914: logged out, the sportsbook profile card still
+     carries its template text "@username", and the named-element branch read
+     that as a member and requested /users/%40username/avatar (404) on every
+     load. Template placeholders are not members either, with or without "@". */
+  var PLACEHOLDER_NAME = /^(username|user name|user_name|display ?name|your name|your username|handle|name|member name)$/i;
+  function notAMember(text) {
+    var t = String(text || '').trim().replace(/^@+/, '');
+    return !t || NOT_A_MEMBER.test(t) || PLACEHOLDER_NAME.test(t);
+  }
 
   function subjectFor(el) {
     var node = el;
     for (var i = 0; node && i < 5; i += 1) {
       var u = node.getAttribute && (node.getAttribute('data-username') || node.getAttribute('data-user'));
-      if (u) return { username: u, id: node.getAttribute('data-user-id') || null };
+      if (u && !notAMember(u)) return { username: u, id: node.getAttribute('data-user-id') || null };
       node = node.parentElement;
     }
     var img = el.tagName === 'IMG' ? el : el.querySelector('img[alt]');
     if (img && img.alt && img.alt.trim() && !/avatar/i.test(img.alt)
-      && !NOT_A_MEMBER.test(img.alt.trim())) return { username: img.alt.trim(), id: null };
+      && !notAMember(img.alt)) return { username: img.alt.trim(), id: null };
     /* The row around the slot names the member three different ways across the
        site: /u/<name>/, /profile/?user=<name>, and an @handle. All three are
        read, because a feed row and a leaderboard row do not agree. */
@@ -597,17 +606,17 @@
       for (var k = 0; k < links.length; k += 1) {
         var href = links[k].getAttribute('href') || '';
         var m = href.match(/\/u\/([^/?#]+)/) || href.match(/[?&](?:user|username|u)=([^&#]+)/);
-        if (m) return { username: decodeURIComponent(m[1]), id: null };
+        if (m && !notAMember(decodeURIComponent(m[1]))) return { username: decodeURIComponent(m[1]), id: null };
       }
       var handle = row.querySelector('[class*="handle"]');
-      if (handle && /^@\S{2,}/.test((handle.textContent || '').trim())) {
+      if (handle && /^@\S{2,}/.test((handle.textContent || '').trim()) && !notAMember(handle.textContent)) {
         return { username: handle.textContent.trim().replace(/^@/, ''), id: null };
       }
       var named = row.querySelector('[class*="username"],[class*="-name"]');
       if (named) {
         var namedText = (named.textContent || '').trim();
-        if (namedText.length >= 2 && !NOT_A_MEMBER.test(namedText)) {
-          return { username: namedText, id: null };
+        if (namedText.length >= 2 && !notAMember(namedText)) {
+          return { username: namedText.replace(/^@+/, ''), id: null };
         }
       }
       row = row.parentElement;
@@ -617,7 +626,7 @@
        while the homepage calls them "FI": treat 2+ characters as a name and
        nothing shorter. */
     var text = (el.textContent || '').trim();
-    if (text.length >= 2 && !NOT_A_MEMBER.test(text)) return { username: text, id: null };
+    if (text.length >= 2 && !notAMember(text)) return { username: text, id: null };
     /* On a member's own page the URL is the most reliable name there is. */
     var onProfile = String(location.pathname || '').match(/^\/u\/([^/?#]+)/);
     if (onProfile) return { username: decodeURIComponent(onProfile[1]), id: null };

@@ -1503,6 +1503,24 @@
     catch (e) { return null; }
   }
 
+  function missingSubject(node, sport, kind) {
+    var league = sport ? String(sport).toUpperCase() : '';
+    empty(node,
+      kind === 'team' ? 'No team selected' : 'No matchup selected',
+      kind === 'team'
+        ? 'This page shows the archived simulations for one ' + (league ? league + ' ' : '') + 'team. Open it from a team link on the results page, or run a simulation first.'
+        : 'This page shows the archived simulations for one ' + (league ? league + ' ' : '') + 'matchup. Open it from a matchup link on the results page, or run a simulation first.',
+      { label: 'Open the ' + (league ? league + ' ' : '') + 'simulator', href: simulatorPathFor(sport) });
+    var box = node.querySelector('.sa-empty');
+    if (box && sport) {
+      var back = el('a', 'sa-cta', 'See all ' + league + ' simulation results');
+      back.href = resultsPathFor(sport);
+      back.style.marginLeft = '10px';
+      box.appendChild(back);
+    }
+    return Promise.resolve(null);
+  }
+
   function mount(node) {
     var kind = node.dataset.sa;
     var sport = node.dataset.sport || param('sport') || null;
@@ -1524,6 +1542,12 @@
       });
     }
     if (kind === 'matchup') {
+      /* SIM_RESULTS_MISSING_PARAM_20260914: opened bare, with no slug or
+         matchup in the URL, the API answers 400 and the page used to throw an
+         uncaught error behind an empty panel. Say what is missing instead. */
+      if (!(node.dataset.slug || param('slug') || node.dataset.matchup || param('matchup'))) {
+        return missingSubject(node, sport, 'matchup');
+      }
       return renderMatchup(node, sport, {
         slug: node.dataset.slug || param('slug'),
         matchup: node.dataset.matchup || param('matchup'),
@@ -1533,6 +1557,9 @@
       });
     }
     if (kind === 'team') {
+      if (!(node.dataset.slug || param('slug') || node.dataset.team || param('team'))) {
+        return missingSubject(node, sport, 'team');
+      }
       return renderTeam(node, sport, {
         slug: node.dataset.slug || param('slug'),
         team: node.dataset.team || param('team'),
@@ -1559,7 +1586,13 @@
     if (!nodes.length) return;
     loadSports().then(function () {
       Array.prototype.forEach.call(nodes, function (node) {
-        try { mount(node); } catch (e) { errorState(node); }
+        /* The renderers already paint an error state before they reject; a
+           declarative mount has no caller to hand the rejection to, so it is
+           settled here rather than surfacing as an unhandled rejection. */
+        try {
+          var pending = mount(node);
+          if (pending && typeof pending.catch === 'function') pending.catch(function () {});
+        } catch (e) { errorState(node); }
       });
     });
   }
