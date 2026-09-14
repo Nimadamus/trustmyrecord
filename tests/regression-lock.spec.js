@@ -558,7 +558,8 @@ test.describe('core route and content locks', () => {
     if (!(await sportsbookLink.isVisible())) {
       // Jul 29 nav reconciliation moved Sportsbook links inside a dropdown —
       // open its trigger before asserting the destination link.
-      const trigger = nav.getByRole('button', { name: /^sportsbook$/i }).first();
+      // The trigger reads 'Picks Board' since 2026-09-13 (TMR takes no wagers).
+      const trigger = nav.getByRole('button', { name: /^(picks board|sportsbook)$/i }).first();
       if (await trigger.count()) await trigger.click();
     }
     await expect(sportsbookLink).toBeVisible();
