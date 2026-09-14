@@ -390,6 +390,9 @@
             'cursor:pointer;padding:8px;width:100%;}',
             '.tsg-later:hover{color:#9fb0c7;}',
             '.tsg-note{margin:14px 0 0;font-size:.78rem;color:#6b7a94;text-align:center;}',
+            '.tsg-bal{display:flex;justify-content:space-between;gap:12px;margin:0 0 18px;padding:12px 14px;border-radius:10px;',
+            'background:#0c0c14;border:1px solid #23233a;font-size:.9rem;color:#cbd6e6;}',
+            '.tsg-bal b{color:#fff;font-size:1.05rem;}',
             '.tsg-x{position:absolute;top:12px;right:12px;background:none;border:none;color:#6b7a94;font-size:1.35rem;',
             'line-height:1;cursor:pointer;padding:6px 10px;border-radius:8px;}',
             '.tsg-x:hover{color:#fff;background:rgba(255,255,255,.06);}',
@@ -434,15 +437,15 @@
             '<span class="tsg-badge">Free account &middot; unlocks now</span>' +
             '<h2 id="tsgTitle">' + esc(headline) + '</h2>' +
             (ctxLine ? '<div class="tsg-ctx">' + ctxLine + '</div>' : '') +
-            '<p>Your ' + esc(label) + ' setup is already saved. Finish in about 30 seconds and it runs the moment you land back here &mdash; nothing to re-pick.</p>' +
+            '<p>Your ' + esc(label) + ' setup is already saved. Finish in about 30 seconds and it runs the moment you land back here, with nothing to re-pick.</p>' +
             '<ul class="tsg-list">' +
-            '<li>Run unlimited simulations, free</li>' +
+            '<li>One free run a day on every simulator</li>' +
             '<li>Every run saved to your simulation history</li>' +
             '<li>Turn a projection into a timestamped, auto-graded verified pick</li>' +
             '</ul>' +
             '<div class="tsg-actions">' +
             '<button type="button" class="tsg-btn is-primary" id="tsgSignup">Create Free Account &amp; Run It</button>' +
-            '<a class="tsg-btn is-ghost" id="tsgLogin" href="#">I already have an account &mdash; log in</a>' +
+            '<a class="tsg-btn is-ghost" id="tsgLogin" href="#">I already have an account, log in</a>' +
             '</div>' +
             '<button type="button" class="tsg-later" id="tsgLater">Not right now</button>' +
             '<p class="tsg-note">No credit card. No spam. Your picks stay yours.</p>' +
@@ -547,6 +550,149 @@
         return false;
     }
 
+    /* ------------------------------------------------------ TMR run meter */
+    /* SIM_RUN_METER_20260914. Nima's rule: every simulator needs an account;
+       a member gets ONE free run per simulator per day, then each run costs
+       METER_COST TMR, with a prompt to buy TMR when the balance is short.
+       The server (/api/simulator-runs) decides free or paid and keeps the
+       ledger; this only asks it before a run starts. */
+    var METER_COST = 5;
+    var meterAutoPay = false;   // the member said yes once on this page view
+    var meterPending = null;    // one decision at a time; extra clicks wait on it
+
+    function meterKey() { return (cfg && (cfg.meterKey || cfg.simulator)) || null; }
+
+    function fmtTmr(v) { return Number(v || 0).toLocaleString('en-US'); }
+
+    function meterRequest(path, opts) {
+        var o = opts || {};
+        try { if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) o.signal = AbortSignal.timeout(12000); } catch (e) { }
+        return window.api.request(path, o);
+    }
+
+    function newRunKey() {
+        return meterKey() + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function chargeRun() {
+        var label = (cfg && cfg.label) || 'simulator';
+        return meterRequest('/simulator-runs/charge', { method: 'POST', body: { sim: meterKey(), idempotencyKey: newRunKey() } })
+            .then(function (d) {
+                if (d && d.charged) {
+                    toast(fmtTmr(d.charged) + ' TMR used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
+                } else if (d && d.metered && d.isFree) {
+                    toast('This is your free ' + label + ' run for today. Extra runs cost ' + METER_COST + ' TMR.');
+                }
+                track('simulator_run_metered', { charged: d && d.charged ? 'yes' : 'no', simulator: meterKey() });
+                return true;
+            }, function (e) {
+                var st = e && e.status;
+                if (st === 402) {
+                    meterAutoPay = false;
+                    return askToPay({ balance: null, canAfford: false });
+                }
+                if (st === 403) { toast('Your TMR wallet is frozen, so extra runs are unavailable. Contact support.'); return false; }
+                if (st === 401) { toast('Please log in again to keep simulating.'); return false; }
+                // The meter being unreachable is our outage, not the member's.
+                // The run goes ahead rather than breaking the tool.
+                track('simulator_run_meter_unreachable', { simulator: meterKey() });
+                return true;
+            });
+    }
+
+    function goBuy() {
+        track('simulator_buy_tmr_clicked', { simulator: meterKey() });
+        setTimeout(function () { window.location.href = '/wallet/get-tmr/#buy'; }, 120);
+    }
+
+    function askToPay(st) {
+        return new Promise(function (resolve) {
+            if (modalEl) closeModal(null);
+            injectStyle();
+            var label = (cfg && cfg.label) || 'simulator';
+            var hasBalance = st && st.balance != null;
+            var canAfford = !!(st && st.canAfford);
+            var overlay = document.createElement('div');
+            overlay.className = 'tsg-overlay';
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.setAttribute('aria-labelledby', 'tsgMeterTitle');
+            overlay.innerHTML =
+                '<div class="tsg-card">' +
+                '<button type="button" class="tsg-x" id="tsgMeterClose" aria-label="Close">&times;</button>' +
+                '<span class="tsg-badge">TMR run</span>' +
+                '<h2 id="tsgMeterTitle">' + (canAfford
+                    ? 'You have used your free ' + esc(label) + ' run for today'
+                    : 'You need TMR for another ' + esc(label) + ' run') + '</h2>' +
+                '<p>Every member gets one free run a day on each simulator. Each extra run costs ' + METER_COST +
+                ' TMR. Your free run comes back at midnight Pacific.</p>' +
+                (hasBalance ? '<div class="tsg-bal"><span>Your TMR balance</span><b>' + fmtTmr(st.balance) + ' TMR</b></div>' : '') +
+                '<div class="tsg-actions">' +
+                (canAfford
+                    ? '<button type="button" class="tsg-btn is-primary" id="tsgMeterPay">Run it for ' + METER_COST + ' TMR</button>' +
+                      '<button type="button" class="tsg-btn is-ghost" id="tsgMeterBuy">Buy more TMR</button>'
+                    : '<button type="button" class="tsg-btn is-primary" id="tsgMeterBuy">Buy TMR</button>') +
+                '</div>' +
+                '<button type="button" class="tsg-later" id="tsgMeterLater">Not right now</button>' +
+                '<p class="tsg-note">Pay by card. TMR goes straight into your TrustMyRecord wallet. $5 buys 250 TMR.</p>' +
+                '</div>';
+            document.body.appendChild(overlay);
+            modalEl = overlay;
+            document.addEventListener('keydown', onKeydown, true);
+
+            var settled = false;
+            function finish(v, reason) {
+                if (settled) return;
+                settled = true;
+                if (modalEl === overlay) closeModal(null);
+                if (reason) track('simulator_meter_dismissed', { dismiss_reason: reason, simulator: meterKey() });
+                resolve(v);
+            }
+            var pay = qs('tsgMeterPay');
+            if (pay) pay.addEventListener('click', function () {
+                meterAutoPay = true;
+                settled = true;
+                closeModal(null);
+                resolve(chargeRun());
+            });
+            qs('tsgMeterBuy').addEventListener('click', function () { finish(false, null); goBuy(); });
+            qs('tsgMeterLater').addEventListener('click', function () { finish(false, 'not_now'); });
+            qs('tsgMeterClose').addEventListener('click', function () { finish(false, 'close_button'); });
+            overlay.addEventListener('click', function (e) { if (e.target === overlay) finish(false, 'backdrop'); });
+            // Escape goes through closeModal(); make sure the promise still settles.
+            var watch = setInterval(function () {
+                if (!overlay.parentNode) { clearInterval(watch); finish(false, null); }
+            }, 250);
+            track('simulator_meter_impression', { simulator: meterKey(), can_afford: canAfford ? 'yes' : 'no' });
+            setTimeout(function () { try { (pay || qs('tsgMeterBuy')).focus(); } catch (e) { } }, 30);
+        });
+    }
+
+    function decideRun() {
+        if (meterAutoPay) return chargeRun();
+        return meterRequest('/simulator-runs/status?sim=' + encodeURIComponent(meterKey()))
+            .then(function (st) {
+                if (!st || !st.metered || st.freeAvailable) return chargeRun();
+                if (st.isFrozen) { toast('Your TMR wallet is frozen, so extra runs are unavailable. Contact support.'); return false; }
+                return askToPay(st);
+            }, function (e) {
+                if (e && e.status === 401) { toast('Please log in again to keep simulating.'); return false; }
+                track('simulator_run_meter_unreachable', { simulator: meterKey() });
+                return true;
+            });
+    }
+
+    /* Resolves TRUE when the run may start. Logged out opens the signup gate. */
+    function authorizeRun(meta) {
+        if (!requireAuth(meta)) return Promise.resolve(false);
+        if (FLAGS.meter === false || !cfg || !meterKey()) return Promise.resolve(true);
+        if (!window.api || typeof window.api.request !== 'function') return Promise.resolve(true);
+        if (meterPending) return meterPending.then(function () { return false; });
+        meterPending = decideRun().then(function (v) { meterPending = null; return v; },
+                                        function () { meterPending = null; return true; });
+        return meterPending;
+    }
+
     /* --------------------------------------------------- resume after auth */
 
     function urlFlag(name) {
@@ -598,7 +744,7 @@
         try { apply = cfg.restoreState ? cfg.restoreState(stored.state) : null; }
         catch (e) { apply = null; }
 
-        toast('Welcome in — your ' + ((cfg && cfg.label) || 'simulation') + ' setup was restored. Running it now.');
+        toast('Welcome in. Your ' + ((cfg && cfg.label) || 'simulation') + ' setup was restored. Running it now.');
 
         Promise.resolve(apply).then(function () {
             try { if (typeof cfg.runNow === 'function') cfg.runNow(stored.state); } catch (e) { }
@@ -629,7 +775,9 @@
         if (!selectors || !selectors.length) return;
         // Always-on, non-blocking: records the attempt for EVERY visitor so
         // CONFIGURE -> RUN is measurable, then the guard below decides.
+        var meterPass = false;   // true only while re-dispatching an approved click
         document.addEventListener('click', function (e) {
+            if (meterPass) return;
             var t0 = e.target;
             if (!t0 || !t0.closest) return;
             for (var k = 0; k < selectors.length; k++) {
@@ -638,14 +786,23 @@
         }, true);
 
         document.addEventListener('click', function (e) {
-            if (isLoggedIn() || FLAGS.gate === false) return;
+            if (meterPass) return;
+            var loggedIn = isLoggedIn();
+            if (!loggedIn && FLAGS.gate === false) return;
+            if (loggedIn && FLAGS.meter === false) return;
             var t = e.target;
             if (!t || !t.closest) return;
             for (var i = 0; i < selectors.length; i++) {
-                if (t.closest(selectors[i])) {
+                var hit = t.closest(selectors[i]);
+                if (hit) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
-                    requireAuth({ trigger: selectors[i] });
+                    if (!loggedIn) { requireAuth({ trigger: selectors[i] }); return; }
+                    authorizeRun({ trigger: selectors[i] }).then(function (go) {
+                        if (!go || !hit.isConnected) return;
+                        meterPass = true;
+                        try { hit.click(); } finally { meterPass = false; }
+                    });
                     return;
                 }
             }
@@ -671,6 +828,9 @@
 
         /* Adapters whose run path IS reachable as a function call this directly. */
         requireAuth: requireAuth,
+
+        /* Signup gate plus the daily free run / TMR meter. Resolves true to run. */
+        authorizeRun: authorizeRun,
 
         /* Adapters whose run path is not a click can record the attempt directly. */
         noteRunAttempt: noteRunAttempt,

@@ -248,7 +248,7 @@
      registers its gate adapter as it boots. Kill switches: gate:false =
      run freely again, resume:false = no auto-resume after auth,
      autoSave:false = no simulation-history write. Flip + redeploy. -->
-<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true };</script>
+<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true, meter: true };</script>
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=954ceb0ab9ff"></script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
@@ -1534,14 +1534,20 @@ function installSimGate(){
 
   const _runScheduled=runScheduled,_runCustom=runCustom,_renderResult=renderResult;
 
+  /* SIM_RUN_METER_20260914: a new draw (no seed) is a run and goes through the
+     daily free run / TMR meter. A re-run that carries the shown result's seed
+     is the same simulation with a setting changed, so it is not charged. */
+  const _authorizeRun=(meta,seed)=>{
+    if(!window.TMRSimGate.requireAuth(meta))return Promise.resolve(false);
+    if(seed!=null||!window.TMRSimGate.authorizeRun)return Promise.resolve(true);
+    return window.TMRSimGate.authorizeRun(meta);
+  };
   runScheduled=function(ref,seed){
     STATE.selRef=ref;
-    if(!window.TMRSimGate.requireAuth({sim_mode:'weekly'}))return Promise.resolve();
-    return _runScheduled(ref,seed);
+    return _authorizeRun({sim_mode:'weekly'},seed).then(ok=>ok?_runScheduled(ref,seed):undefined);
   };
   runCustom=function(seed){
-    if(!window.TMRSimGate.requireAuth({sim_mode:'custom'}))return Promise.resolve();
-    return _runCustom(seed);
+    return _authorizeRun({sim_mode:'custom'},seed).then(ok=>ok?_runCustom(seed):undefined);
   };
   renderResult=function(out,d){
     if(SIM_VIEW&&d&&!d.unavailable){

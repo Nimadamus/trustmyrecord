@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get TMR Coin | TrustMyRecord</title>
-    <meta name="description" content="What TMR Coin does on TrustMyRecord, how much you can earn, and how buying will work when it opens. Honest figures, no promises about value.">
+    <meta name="description" content="Buy TMR with a card and it goes straight into your TrustMyRecord wallet. See what TMR does on the site and how to earn it.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/wallet/get-tmr/">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -58,6 +58,17 @@
         .gt-basis { margin:12px 0 0; padding:0; list-style:none; font-size:13px; color:var(--muted); }
         .gt-basis li { padding:9px 0; border-top:1px solid var(--line); line-height:1.65; }
         .gt-msg { font-size:13.5px; color:var(--muted); }
+        .gt-packs { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:6px 0 12px; }
+        .gt-pack { border:1px solid var(--line); border-radius:12px; padding:14px; background:#FBFDFF; text-align:left; font:inherit; color:var(--text); cursor:pointer; }
+        .gt-pack:hover, .gt-pack:focus-visible { border-color:var(--gold); outline:none; }
+        .gt-pack[disabled] { cursor:not-allowed; opacity:.55; }
+        .gt-pack .tmr { font-family:Barlow, Inter, sans-serif; font-weight:800; font-size:22px; color:var(--gold); display:block; }
+        .gt-pack .usd { font-weight:800; font-size:16px; display:block; margin-top:2px; }
+        .gt-pack .runs { color:var(--muted); font-size:12.5px; display:block; margin-top:4px; }
+        .gt-result { border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.6; margin:0 0 20px; }
+        .gt-result.ok { background:rgba(12,122,114,.1); color:var(--teal); border:1px solid rgba(12,122,114,.3); }
+        .gt-result.wait { background:#FFFCF4; color:var(--muted); border:1px solid var(--line); }
+        .gt-result.err { background:rgba(188,55,46,.08); color:var(--stop); border:1px solid rgba(188,55,46,.3); }
         table.gt-orders { width:100%; border-collapse:collapse; font-size:13.5px; }
         table.gt-orders th, table.gt-orders td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
         table.gt-orders th { font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
@@ -73,9 +84,10 @@
 <main class="gt-page">
     <p class="gt-kicker">TMR Coin</p>
     <h1>What TMR is for, and how you get it</h1>
-    <p class="gt-lede">TMR is the currency of competition on TrustMyRecord. Before anything else, here is
-        what it actually does on the site, and what your balance can reach today. No claims about what
-        TMR is worth appear on this page, because we cannot honestly make any.</p>
+    <p class="gt-lede">TMR is the currency of competition on TrustMyRecord. Buy it with a card and it lands
+        straight in your TrustMyRecord wallet, ready to use. No crypto wallet, nothing to set up.</p>
+
+    <div class="gt-result" id="purchaseResult" hidden></div>
 
     <section class="gt-card">
         <h2>What TMR does here</h2>
@@ -94,8 +106,7 @@
         <div class="gt-card">
             <span class="gt-tag live">Live now</span>
             <h2>Earn it</h2>
-            <p class="sub">Earning is deliberately small. It is how you show you are good, not how you
-                fund an account.</p>
+            <p class="sub">Earning is deliberately small, so it rewards real activity on the site.</p>
             <ul class="gt-reach">
                 <li><span>Signing up</span><span class="yes">25 TMR, once</span></li>
                 <li><span>Your first sportsbook pick</span><span class="yes">10 TMR, once</span></li>
@@ -108,36 +119,26 @@
                 away. <a href="/wallet/earn/">See your earning history →</a></p>
         </div>
 
-        <div class="gt-card">
-            <span class="gt-tag soon" id="buyTag">Not open yet</span>
+        <div class="gt-card" id="buy">
+            <span class="gt-tag soon" id="buyTag">Loading</span>
             <h2>Buy it</h2>
-            <p class="sub" id="buySub">Buying TMR is built but not switched on. You can see exactly what
-                it would cost; nothing can be charged.</p>
-            <div class="gt-calc">
-                <div>
-                    <label for="amt">Amount of TMR</label>
-                    <input id="amt" type="number" min="100" step="100" value="5000">
-                </div>
-                <div>
-                    <label for="basis">Priced using</label>
-                    <select id="basis"></select>
-                </div>
-                <button class="gt-btn" id="buyBtn" disabled>Not available yet</button>
-            </div>
-            <div class="gt-out" id="calcOut"></div>
-            <ul class="gt-basis" id="basisNotes"></ul>
+            <p class="sub" id="buySub">Pick a pack. You pay by card on a secure Stripe checkout and the TMR goes
+                straight into your wallet.</p>
+            <div class="gt-packs" id="packs"></div>
+            <p class="gt-msg" id="buyMsg"></p>
         </div>
     </section>
 
     <section class="gt-card">
-        <h2>About the numbers above</h2>
-        <div class="gt-notice" id="disclosure">Loading pricing disclosure…</div>
+        <h2>About buying TMR</h2>
+        <div class="gt-notice">TMR you buy is for use on TrustMyRecord: simulator runs, BetLegend Pro reports,
+            tips and the other features listed above. It stays in your TrustMyRecord wallet and cannot be cashed
+            out. It is not an investment and we make no claim about what it is worth.</div>
     </section>
 
     <section class="gt-card" id="ordersCard" hidden>
         <h2>Your TMR orders</h2>
-        <p class="sub">Orders you have started. While buying is switched off, an order records a held
-            price and nothing more.</p>
+        <p class="sub">Your recent TMR purchases.</p>
         <table class="gt-orders"><thead><tr>
             <th>Reference</th><th>Amount</th><th>Status</th><th>Created</th>
         </tr></thead><tbody id="ordersBody"></tbody></table>
@@ -146,6 +147,8 @@
     <p class="gt-msg" id="msg"></p>
 </main>
 
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/backend-api.js?v=954ceb0ab9ff"></script>
 <script>
 (function () {
     var $ = function (id) { return document.getElementById(id); };
@@ -157,6 +160,7 @@
     // What TMR buys. Fixed here rather than fetched because these are the live
     // catalogue prices and the page must render them even signed out.
     var USES = [
+        { amt: '5', title: 'Simulator runs', body: 'One free run a day on each simulator, then 5 TMR a run.' },
         { amt: '5', title: 'BetLegend Pro reports', body: 'Run extra matchup reports at 5 TMR each, after the free one each day.' },
         { amt: '500', title: 'Early access badge', body: 'A profile badge marking you as an early TMR participant.' },
         { amt: '1,500', title: 'Custom forum flair', body: 'Choose a custom colour and title for your forum posts.' },
@@ -169,31 +173,9 @@
                esc(u.title) + '</strong><span>' + esc(u.body) + '</span></div>';
     }).join('');
 
-    var state = { prices: [], enabled: false, min: 100, max: 1000000 };
-
-    function renderCalc() {
-        var amt = Number($('amt').value || 0);
-        var basis = $('basis').value;
-        var p = state.prices.filter(function (x) { return x.basis === basis; })[0];
-        if (!p || !amt) { $('calcOut').innerHTML = ''; return; }
-        var cents = Math.round(amt * p.unitPriceUsd * 100);
-        var warn = '';
-        if (amt < state.min) warn = 'The smallest order is ' + n(state.min) + ' TMR.';
-        else if (amt > state.max) warn = 'The largest order is ' + n(state.max) + ' TMR.';
-        $('calcOut').innerHTML =
-            '<div class="price">' + money(cents) + '</div>' +
-            '<div>' + n(amt) + ' TMR at the ' + esc(p.basis) + ' rate.</div>' +
-            (warn ? '<div style="color:var(--stop);font-weight:700;margin-top:6px;">' + esc(warn) + '</div>' : '');
-    }
-
-    function renderBasisNotes() {
-        $('basisNotes').innerHTML = state.prices.map(function (p) {
-            return '<li><strong>' + esc(p.basis) + '</strong> — ' + esc(p.what) + ' ' + esc(p.caveat) + '</li>';
-        }).join('');
-    }
-
     function reach(balance) {
         var items = [
+            { label: 'A simulator run', cost: 5 },
             { label: 'A BetLegend Pro report', cost: 5 },
             { label: 'Early access badge', cost: 500 },
             { label: 'Custom forum flair', cost: 1500 },
@@ -206,38 +188,112 @@
         }).join('');
     }
 
-    fetch('/api/tmr/acquire/status').then(function (r) { return r.json(); }).then(function (d) {
-        state.prices = d.prices || [];
-        state.enabled = !!d.enabled;
-        state.min = d.minTmr || 100;
-        state.max = d.maxTmr || 1000000;
-        $('amt').min = state.min;
+    // TMR_STORE_20260914: card checkout, $5 = 250 TMR. The server holds the
+    // real prices; these only draw the buttons.
+    var PACKS = [
+        { key: 'tmr_250', tmr: 250, cents: 500 },
+        { key: 'tmr_500', tmr: 500, cents: 1000 },
+        { key: 'tmr_1250', tmr: 1250, cents: 2500 }
+    ];
+    var buying = false;
 
-        $('basis').innerHTML = state.prices.map(function (p) {
-            return '<option value="' + esc(p.basis) + '">' + esc(p.basis) + '</option>';
+    function loggedIn() { return !!(window.api && window.api.isLoggedIn && window.api.isLoggedIn()); }
+
+    function renderPacks(enabled) {
+        $('packs').innerHTML = PACKS.map(function (p) {
+            return '<button type="button" class="gt-pack" data-pack="' + p.key + '"' + (enabled ? '' : ' disabled') + '>' +
+                   '<span class="tmr">' + n(p.tmr) + ' TMR</span>' +
+                   '<span class="usd">' + money(p.cents) + '</span>' +
+                   '<span class="runs">' + n(p.tmr / 5) + ' extra simulator runs</span></button>';
         }).join('');
-        renderBasisNotes();
-        renderCalc();
+    }
 
-        $('disclosure').innerHTML = esc(d.priceDisclosure || '') +
-            (state.prices.length > 1
-                ? ' Both bases are shown side by side for that reason.'
-                : '');
+    function showResult(kind, text) {
+        var box = $('purchaseResult');
+        box.className = 'gt-result ' + kind;
+        box.textContent = text;
+        box.hidden = false;
+        try { box.scrollIntoView({ block: 'center' }); } catch (e) { }
+    }
 
-        if (state.enabled) {
-            $('buyTag').textContent = 'Open';
-            $('buyTag').className = 'gt-tag live';
-            $('buyBtn').disabled = false;
-            $('buyBtn').textContent = 'Continue';
-            $('buyBtn').style.cursor = 'pointer';
-            $('buySub').textContent = 'Choose an amount and continue to checkout.';
+    function newKey(pack) {
+        return 'buy_' + pack + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    $('packs').addEventListener('click', function (ev) {
+        var btn = ev.target.closest('.gt-pack');
+        if (!btn || btn.disabled || buying) return;
+        var pack = btn.getAttribute('data-pack');
+        if (!loggedIn()) {
+            window.location.href = '/login/?next=' + encodeURIComponent('/wallet/get-tmr/#buy');
+            return;
         }
-    }).catch(function () {
-        $('disclosure').textContent = 'Pricing information is unavailable right now.';
+        buying = true;
+        $('buyMsg').textContent = 'Opening secure checkout…';
+        window.api.request('/tmr/acquire/buy', { method: 'POST', body: { pack: pack, idempotencyKey: newKey(pack) } })
+            .then(function (d) {
+                if (d && d.url) { window.location.href = d.url; return; }
+                throw new Error('Checkout did not open.');
+            })
+            .catch(function (e) {
+                buying = false;
+                $('buyMsg').textContent = (e && e.data && e.data.error) || (e && e.message) || 'Checkout did not open. Try again.';
+            });
     });
 
-    $('amt').addEventListener('input', renderCalc);
-    $('basis').addEventListener('change', renderCalc);
+    function loadStatus() {
+        window.api.request('/tmr/acquire/status').then(function (d) {
+            var enabled = !!(d && d.enabled);
+            renderPacks(enabled);
+            $('buyTag').textContent = enabled ? 'Open' : 'Closed';
+            $('buyTag').className = 'gt-tag ' + (enabled ? 'live' : 'soon');
+            if (!enabled) $('buySub').textContent = 'Buying TMR is closed right now. Check back soon.';
+            else if (!loggedIn()) $('buyMsg').innerHTML = '<a href="/login/?next=%2Fwallet%2Fget-tmr%2F%23buy">Log in</a> or <a href="/register/">sign up free</a> to buy TMR.';
+        }).catch(function () {
+            renderPacks(false);
+            $('buyTag').textContent = 'Unavailable';
+            $('buySub').textContent = 'Buying is unavailable right now. Try again in a minute.';
+        });
+    }
+
+    // Back from Stripe: credit the TMR and say so.
+    function handleReturn() {
+        var q = new URLSearchParams(window.location.search);
+        var outcome = q.get('purchase');
+        var ref = q.get('order');
+        if (!outcome) return;
+        try { history.replaceState(null, '', window.location.pathname); } catch (e) { }
+        if (outcome === 'cancelled') { showResult('wait', 'Checkout cancelled. You were not charged.'); return; }
+        if (outcome !== 'success' || !ref) return;
+        showResult('wait', 'Payment received. Adding your TMR…');
+        var tries = 0;
+        function confirm() {
+            tries += 1;
+            window.api.request('/tmr/acquire/orders/' + encodeURIComponent(ref) + '/confirm', { method: 'POST', body: {} })
+                .then(function (d) {
+                    if (d && d.status === 'fulfilled') {
+                        showResult('ok', n(d.tmrAmount) + ' TMR added to your wallet. Your balance is ' + n(d.balance) + ' TMR.');
+                        loadAccount();
+                    } else if (tries < 8) {
+                        setTimeout(confirm, 2500);
+                    } else {
+                        showResult('wait', 'Your payment is still being confirmed. Your TMR will appear in your wallet within a few minutes.');
+                    }
+                })
+                .catch(function () {
+                    if (tries < 8) setTimeout(confirm, 2500);
+                    else showResult('err', 'We could not confirm this purchase yet. If you were charged, your TMR will appear shortly. Order ' + ref + '.');
+                });
+        }
+        confirm();
+    }
+
+    function whenApi(fn) {
+        if (window.api && window.api.request) fn();
+        else window.addEventListener('load', fn);
+    }
+    whenApi(loadStatus);
+    whenApi(handleReturn);
 
     // Signed-in extras. A signed-out visitor still gets the whole page above.
     function loadAccount() {
@@ -254,12 +310,14 @@
         });
 
         window.api.request('/tmr/acquire/orders').then(function (d) {
-            var rows = (d && d.orders) || [];
+            var rows = ((d && d.orders) || []).filter(function (o) { return o.status !== 'quoted'; });
             if (!rows.length) return;
             $('ordersCard').hidden = false;
             $('ordersBody').innerHTML = rows.map(function (o) {
+                var label = { fulfilled: 'Added to wallet', pending_payment: 'Awaiting payment', paid: 'Paid', quoted: 'Not paid',
+                              expired: 'Expired, not charged', cancelled: 'Cancelled', failed: 'Payment failed', refunded: 'Refunded' }[o.status] || o.status;
                 return '<tr><td>' + esc(o.order_ref) + '</td><td>' + n(o.tmr_amount) +
-                       ' TMR</td><td>' + esc(o.status) + '</td><td>' +
+                       ' TMR</td><td>' + esc(label) + '</td><td>' +
                        esc(new Date(o.created_at).toLocaleDateString()) + '</td></tr>';
             }).join('');
         }).catch(function () { /* no orders, or signed out */ });

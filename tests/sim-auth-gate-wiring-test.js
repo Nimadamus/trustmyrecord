@@ -31,7 +31,11 @@ function ok(name, cond, extra) {
 
 const SIM_PAGES = [
     { path: 'mlb-simulator/index.html', label: 'MLB simulator' },
-    { path: 'nfl-simulator/index.html', label: 'NFL simulator' }
+    { path: 'nfl-simulator/index.html', label: 'NFL simulator' },
+    // SIM_RUN_METER_20260914: every simulator needs an account to run.
+    { path: 'nba-simulator/index.html', label: 'NBA simulator' },
+    { path: 'nhl-simulator/index.html', label: 'NHL simulator' },
+    { path: 'nfl-playoff-simulator/index.html', label: 'NFL playoff simulator' }
 ];
 
 // ---- 1 + 2: every gated simulator loads the core and declares kill switches
@@ -138,6 +142,38 @@ for (const page of SIM_PAGES) {
     ok('MLB adapter supplies capture/restore/run',
         /captureState\s*:/.test(mlb) && /restoreState\s*:/.test(mlb) && /runNow\s*:/.test(mlb));
     ok('gate owns a single storage key', (gate.match(/tmr_sim_gate_pending/g) || []).length >= 1);
+}
+
+// ---- SIM_RUN_METER_20260914: one free run per simulator per day, then TMR
+{
+    const gate = read('static/js/sim-auth-gate.js');
+    const adapter = read('static/js/sim-run-gate.js');
+    ok('gate asks the server before a signed-in run', /\/simulator-runs\/status\?sim=/.test(gate) && /\/simulator-runs\/charge/.test(gate));
+    ok('gate exposes authorizeRun', /authorizeRun: authorizeRun/.test(gate));
+    ok('gate has a meter kill switch', /FLAGS\.meter === false/.test(gate));
+    ok('gate sends a short balance to the buy page', /\/wallet\/get-tmr\/#buy/.test(gate));
+    ok('gate never tells members runs are unlimited', !/unlimited simulations/i.test(gate));
+    for (const page of SIM_PAGES) {
+        const html = read(page.path);
+        const flags = html.match(/window\.SIM_GATE_FLAGS\s*=\s*\{([^}]*)\}/);
+        ok(page.label + ' ships with the meter ON', !!flags && /\bmeter\s*:\s*true\b/.test(flags[1]));
+        ok(page.label + ' loads backend-api.js (meter needs window.api)', /\/static\/js\/backend-api\.js/.test(html));
+    }
+    [['nba-simulator/index.html', 'nba'], ['nhl-simulator/index.html', 'nhl'], ['nfl-playoff-simulator/index.html', 'nfl_playoff']]
+        .forEach(([path, sport]) => {
+            const html = read(path);
+            ok(path + ' loads the run gate adapter for ' + sport,
+                html.indexOf('sim-run-gate.js" data-sport="' + sport + '"') > -1);
+            ok(path + ' loads the gate core before the adapter',
+                html.indexOf('sim-auth-gate.js') > -1 && html.indexOf('sim-auth-gate.js') < html.indexOf('sim-run-gate.js'));
+        });
+    ok('NBA/NHL adapter loads after tmr-sim-core and before the app',
+        ['nba', 'nhl'].every(sp => {
+            const html = read(sp + '-simulator/index.html');
+            const core = html.search(/tmr-sim-core\.[0-9a-f]+\.js/), ad = html.indexOf('sim-run-gate.js'), app = html.indexOf(sp + '-simulator-app.js');
+            return core > -1 && core < ad && ad < app;
+        }));
+    ok('adapter meters a new draw and lets a same-seed re-run through', /opts && opts\.seed/.test(adapter) && /authorizeRun\(/.test(adapter));
 }
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
