@@ -25,7 +25,9 @@
   if (FLAGS.conversionPanel === false) return;
 
   var API_BASE_ENDPOINT = '/mlb-simulator-save';
-  var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect', 'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'];
+  var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect', 'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect', 'simDepthSelect', 'simMarketModeSelect'];
+  // MLB_SAVED_SETTINGS_20260913: saved since this date. Older saves do not have them.
+  var SETTING_IDS = ['simDepthSelect', 'simMarketModeSelect'];
   var MODE_BUTTON_IDS = { current: 'currentModeButton', historical: 'historicalModeButton', mixed: 'mixedModeButton' };
 
   function qs(id) { return document.getElementById(id); }
@@ -112,7 +114,7 @@
           if (el && inputs[id] !== undefined) { el.value = inputs[id]; fire(el, 'change'); }
         });
         setTimeout(function () {
-          ['awayPitcherSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'].forEach(function (id) {
+          ['awayPitcherSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect'].concat(SETTING_IDS).forEach(function (id) {
             var el = qs(id);
             if (el && inputs[id] !== undefined) { el.value = inputs[id]; fire(el, 'change'); }
           });
@@ -149,6 +151,16 @@
       '.simc-secondary button,.simc-secondary a{font-size:0.82rem;padding:8px 12px;}' +
       '.simc-summary{margin-top:14px;padding:14px;border-radius:10px;background:#0c0c14;border:1px solid #23233a;font-size:0.9rem;}' +
       '.simc-summary strong{color:#fff;}' +
+      '.simc-kicker{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#38bdf8;margin-bottom:4px;}' +
+      '.simc-score{display:grid;gap:4px;}' +
+      '.simc-team{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:1rem;font-weight:650;}' +
+      '.simc-team b{font-size:1.6rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums;}' +
+      '.simc-team.simc-loss,.simc-team.simc-loss b{color:#94a3b8;}' +
+      '.simc-kind{margin:8px 0;font-size:.78rem;font-weight:700;color:#38bdf8;}' +
+      '.simc-line{overflow-x:auto;margin:8px 0;}' +
+      '.simc-line table{border-collapse:collapse;font-size:.82rem;min-width:100%;}' +
+      '.simc-line th,.simc-line td{padding:4px 8px;text-align:center;border-bottom:1px solid #23233a;white-space:nowrap;}' +
+      '.simc-line th:first-child,.simc-line td:first-child{text-align:left;}' +
       '@media (max-width:600px){.simc-panel{padding:16px;}.simc-row{flex-direction:column;align-items:stretch;}.simc-btn{width:100%;text-align:center;}}';
     document.head.appendChild(s);
   }
@@ -250,7 +262,7 @@
         '<h3>Saved to Your Simulation History</h3>' +
         '<p id="simcSaveState">Saving this result to your account&hellip;</p>' +
         '<div class="simc-row"><button type="button" class="simc-btn primary" id="simcSaveDirectBtn" style="display:none">Save</button>' +
-        '<a class="simc-btn secondary" href="/mlb-simulator/saved/">My Simulation History</a></div>';
+        '<a class="simc-btn secondary" href="/sports-simulators/saved/">My Simulation History</a></div>';
       target.after(panel);
       var stateEl = qs('simcSaveState');
       function markSaved() {
@@ -332,24 +344,127 @@
     var main = document.querySelector('main') || document.body;
     var card = document.createElement('div');
     card.className = 'simc-panel';
+    card.id = 'simcSavedCard';
+    if (saved.id) card.setAttribute('data-saved-id', saved.id);
     var r = saved.summarized_result || {};
+    var e = escHtml;
     var bannerHtml = opts && opts.banner ? '<div class="simc-banner">' + opts.banner + '</div>' : '';
+    // SAVED_SIMS_REDESIGN_20260913: every MLB save's awayScore/homeScore is the
+    // one simulated game from its box score; expectedRuns is the run average.
+    // Label both so neither is mistaken for the other.
+    var hasScore = r.awayScore != null && r.awayScore !== '' && r.awayScore !== '--';
+    var a = Number(r.awayScore), h = Number(r.homeScore);
+    var cls = function (mine, theirs) { return hasScore && mine !== theirs ? (mine > theirs ? ' simc-win' : ' simc-loss') : ''; };
+    var line = r.lineScore && Array.isArray(r.lineScore.cols) ? r.lineScore : null;
+    var lineHtml = line
+      ? '<div class="simc-line"><table><thead><tr>' + line.cols.map(function (c) { return '<th>' + e(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        '<tr>' + line.away.map(function (c) { return '<td>' + e(c) + '</td>'; }).join('') + '</tr>' +
+        '<tr>' + line.home.map(function (c) { return '<td>' + e(c) + '</td>'; }).join('') + '</tr></tbody></table></div>'
+      : '';
     card.innerHTML =
       bannerHtml +
-      '<h3>' + (saved.name || 'Saved Simulation') + '</h3>' +
+      '<div class="simc-kicker">Saved result</div>' +
+      '<h3>' + e(saved.name || 'Saved Simulation') + '</h3>' +
       '<div class="simc-summary">' +
-      '<div><strong>' + (r.awayTeam || 'Away') + '</strong> ' + (r.awayScore || '') + ' &nbsp;&ndash;&nbsp; <strong>' + (r.homeTeam || 'Home') + '</strong> ' + (r.homeScore || '') + '</div>' +
-      (r.winner ? '<div>Winner: ' + r.winner + '</div>' : '') +
-      (r.winProbability ? '<div>Win probability: ' + r.winProbability + '</div>' : '') +
-      (saved.created_at ? '<div class="simc-note">Saved ' + new Date(saved.created_at).toLocaleString() + '</div>' : '') +
+      (hasScore
+        ? '<div class="simc-score"><div class="simc-team' + cls(a, h) + '"><span>' + e(r.awayTeam || 'Away') + '</span><b>' + e(r.awayScore) + '</b></div>' +
+          '<div class="simc-team' + cls(h, a) + '"><span>' + e(r.homeTeam || 'Home') + '</span><b>' + e(r.homeScore) + '</b></div></div>' +
+          '<div class="simc-kind">Simulated final score</div>'
+        : '<div>' + e(r.awayTeam || 'Away') + ' at ' + e(r.homeTeam || 'Home') + '</div>') +
+      lineHtml +
+      (r.expectedRuns ? '<div>Expected runs (average): ' + e(r.expectedRuns) + '</div>' : '') +
+      (r.winProbability ? '<div>Win probability: ' + e(r.winProbability) + '</div>' : '') +
+      '<div class="simc-note">' + (saved.created_at ? 'Saved ' + e(new Date(saved.created_at).toLocaleString()) + '. ' : '') +
+      (hasScore ? 'This is the simulated game you saved.' : '') + '</div>' +
       '</div>' +
-      '<div class="simc-row" style="margin-top:14px;"><button type="button" class="simc-btn primary" id="simcRerunBtn">Run This Simulation Again</button>' +
-      '<a class="simc-btn secondary" href="/mlb-simulator/saved/">My Saved Simulations</a></div>';
+      '<div class="simc-row" style="margin-top:14px;"><button type="button" class="simc-btn primary" id="simcRerunBtn">Run again with current data</button>' +
+      '<a class="simc-btn secondary" href="/sports-simulators/saved/">My Saved Simulations</a></div>';
     main.insertBefore(card, main.firstChild);
     qs('simcRerunBtn').addEventListener('click', function () {
       card.remove();
-      applyInputsAndRun(saved.input_parameters, true);
-      if (saved.id) { api('/' + saved.id + '/rerun', { method: 'POST' }).catch(function () {}); }
+      rerunSaved(saved);
+    });
+  }
+
+  /* Run again. A save that holds every setting runs straight away with them.
+     A save made before depth and market mode were kept is set up but not run:
+     those two are put back to the page defaults, never guessed, and the member
+     sees which defaults will be used and runs it themselves. Nothing about the
+     original save is changed; the stamp is only sent once a run starts. */
+  function missingSettings(inputs) {
+    return SETTING_IDS.filter(function (id) { return !inputs || inputs[id] === undefined || inputs[id] === null || inputs[id] === ''; });
+  }
+  function stampRerun(saved) {
+    if (saved && saved.id) { api('/' + saved.id + '/rerun', { method: 'POST' }).catch(function () {}); }
+  }
+  function rerunSaved(saved) {
+    var inputs = (saved && saved.input_parameters) || {};
+    var missing = missingSettings(inputs);
+    if (!missing.length) {
+      applyInputsAndRun(inputs, true);
+      stampRerun(saved);
+      return;
+    }
+    applyInputsAndRun(inputs, false);
+    setTimeout(function () {
+      missing.forEach(function (id) {
+        var el = qs(id);
+        if (!el || !el.options) return;
+        for (var i = 0; i < el.options.length; i++) {
+          if (el.options[i].defaultSelected) { el.value = el.options[i].value; fire(el, 'change'); break; }
+        }
+      });
+      renderSettingsNotice(saved, missing);
+    }, 950);
+  }
+  function renderSettingsNotice(saved, missing) {
+    injectStyle();
+    var old = qs('simcSettingsNotice');
+    if (old) old.remove();
+    var e = escHtml;
+    var names = { simDepthSelect: 'Simulation depth', simMarketModeSelect: 'Market mode' };
+    var main = document.querySelector('main') || document.body;
+    var box = document.createElement('div');
+    box.className = 'simc-panel';
+    box.id = 'simcSettingsNotice';
+    box.setAttribute('role', 'status');
+    box.innerHTML =
+      '<div class="simc-kicker">Run again</div>' +
+      '<h3>' + e(saved.name || 'Saved simulation') + '</h3>' +
+      '<p class="simc-note" style="margin:0 0 10px">' + (missing.length === 2 ? 'Simulation depth and market mode were' : e(names[missing[0]]) + ' was') +
+      ' not saved with this simulation. The matchup and its other settings are restored; ' + (missing.length === 2 ? 'these use' : 'it uses') + ' the defaults below. Review them, then run.</p>' +
+      '<ul class="simc-defaults" style="margin:0 0 12px;padding-left:18px">' +
+      missing.map(function (id) { var el = qs(id); var o = el && el.options ? el.options[el.selectedIndex] : null; return '<li data-setting="' + id + '"><b>' + e(names[id]) + ':</b> ' + e(o ? o.textContent.trim() : 'Default') + '</li>'; }).join('') +
+      '</ul>' +
+      '<div class="simc-row"><button type="button" class="simc-btn primary" id="simcNoticeRun">Run simulation</button>' +
+      '<button type="button" class="simc-btn secondary" id="simcNoticeReview">Review settings</button></div>';
+    main.insertBefore(box, main.firstChild);
+    // Changing a default before running is reflected in the notice.
+    missing.forEach(function (id) {
+      var el = qs(id);
+      if (!el) return;
+      el.addEventListener('change', function () {
+        var li = box.querySelector('[data-setting="' + id + '"]');
+        var o = el.options[el.selectedIndex];
+        if (li && o) li.innerHTML = '<b>' + e(names[id]) + ':</b> ' + e(o.textContent.trim());
+      });
+    });
+    qs('simcNoticeRun').addEventListener('click', function () {
+      box.remove();
+      var runBtn = qs('runSimulationButton');
+      if (runBtn) runBtn.click();
+      stampRerun(saved);
+    });
+    qs('simcNoticeReview').addEventListener('click', function () {
+      var el = qs(missing[0]);
+      if (el) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} el.focus({ preventScroll: true }); }
+    });
+    try { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) {}
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
 
@@ -385,8 +500,7 @@
     try {
       var resp = await api('/' + encodeURIComponent(id));
       if (mode === 'rerun') {
-        applyInputsAndRun(resp.saved.input_parameters, true);
-        api('/' + id + '/rerun', { method: 'POST' }).catch(function () {});
+        rerunSaved(resp.saved);
       } else {
         // SIM_AUTH_GATE_20260808: reopening a saved run now also re-applies its
         // inputs to the form (without running it), so "View" leaves the member

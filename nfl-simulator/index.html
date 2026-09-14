@@ -70,7 +70,7 @@
   .board-team .tab{color:var(--dim);font-size:.72rem;font-weight:700;letter-spacing:.05em}
   .board-team .win{color:var(--good);font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
   .board-score{font-family:var(--mono);font-weight:800;font-size:2.9rem;line-height:1;letter-spacing:-.02em;white-space:nowrap}
-  .board-score .l{opacity:.45}
+  .board-score .l{color:#b9c5d6}
   .board-score .w{color:var(--ink)}
   .board-mid{text-align:center;color:var(--dim);font-size:.72rem}
   .linescore{margin-top:14px;overflow-x:auto}
@@ -169,15 +169,19 @@
   .mh::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5}
   .mh-grid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;position:relative}
   .mh-team{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
-  .mh-team .nm{font-weight:730;font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .mh-team .nm{font-weight:730;font-size:1.02rem;line-height:1.2;max-width:100%;overflow-wrap:break-word;text-wrap:balance}
   .mh-team .role{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-  .mh-team .pts{font-family:var(--mono);font-weight:800;font-size:2.4rem;line-height:1}
+  .mh-team .pts{font-family:var(--mono);font-weight:800;font-size:2.4rem;line-height:1;color:var(--ink);padding-bottom:5px;border-bottom:3px solid transparent}
+  .mh-team .pts.l{color:#b9c5d6}
+  .mh-scorelabel{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#cdd8e8}
+  .mh-avg{margin-top:12px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#0b1220;font-size:.84rem;color:#cdd8e8;text-align:center}
+  .mh-avg b{font-family:var(--mono);color:var(--ink)}
   .mh-team .wp{font-size:.78rem;color:var(--mut);font-weight:650}
   .mh-mid{text-align:center;color:var(--dim);font-size:.8rem;font-weight:700}
   .mh-mid .at{font-size:1.1rem;color:var(--dim)}
   .envstrip{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;position:relative}
   .envstrip .chip{background:rgba(255,255,255,.03)}
-  @media(max-width:640px){ .mh-team .pts{font-size:1.8rem} .mh-team .nm{font-size:.9rem} }
+  @media(max-width:640px){ .mh-team .pts{font-size:1.8rem} .mh-team .nm{font-size:.9rem} .mh-grid{gap:8px} .mh-mid{max-width:5.5rem} }
   /* MOBILE_LABEL_SIZE_20260827: the control labels above every input -- Season,
      Simulations, Venue / home field, Kickoff window -- computed to 10.5px on a
      390px phone, from .fld>span{font-size:.7rem}. Uppercase text with letter
@@ -894,27 +898,44 @@ function renderResult(out,d){
   const g=d.game,p=d.projection,env=d.environment;
   const hAbbr=g.home_abbr||abbrOf(g.home),aAbbr=g.away_abbr||abbrOf(g.away);
   const homeWP=p.win_probability.home,awayWP=p.win_probability.away;
+  const nSims=fmtN(d.meta.simulations);
+  /* SIM_SCORE_SYNC_20260913. The big scoreboard used to print the rounded
+     ensemble average while the "One simulation" card printed a sampled game,
+     so Simulate again changed one and not the other (GB-MIN read 21-25 on the
+     board and 10-31, then 21-14, on the card). The scoreboard, the card and the
+     Box Score tab now all read this ONE object, the sampled game, and the
+     average is shown separately under its own label. */
+  const rep=(d.box_score&&!d.box_score.unavailable&&d.box_score.representative)||null;
 
   /* ---- premium matchup header ---- */
   const mh=el('div','mh');
   mh.style.borderTop=`2px solid ${col(homeWP>=awayWP?hAbbr:aAbbr)}`;
+  if(rep){mh.dataset.simAway=rep.away_score;mh.dataset.simHome=rep.home_score}
   const grid=el('div','mh-grid');
-  const side=(abbr,name,roleLabel,ptsv,wpv)=>{
+  const side=(abbr,name,roleLabel,ptsv,wpv,won)=>{
     const s=el('div','mh-team');
     s.appendChild(teamMark(abbr,52));
     s.appendChild(Object.assign(el('div','nm'),{textContent:name}));
     s.appendChild(Object.assign(el('div','role'),{textContent:roleLabel}));
-    s.appendChild(Object.assign(el('div','pts'),{textContent:nz(ptsv),style:`color:${col(abbr)==='#000000'?'#e8eef7':col(abbr)};text-shadow:0 0 1px rgba(0,0,0,.4)`}));
+    const pt=Object.assign(el('div','pts'+(won===false?' l':'')),{textContent:nz(ptsv)});
+    pt.style.borderBottomColor=col(abbr);
+    s.appendChild(pt);
     s.appendChild(Object.assign(el('div','wp'),{textContent:pct(wpv)+' win'}));
     return s;
   };
   const neutral=env&&env.neutral;
-  grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',p.score.away,awayWP));
+  const aPts=rep?rep.away_score:p.score.away, hPts=rep?rep.home_score:p.score.home;
+  const tie=rep&&rep.away_score===rep.home_score;
+  grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,rep&&!tie?aPts>hPts:null));
   const mid=el('div','mh-mid');
-  mid.innerHTML=`<div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
+  mid.innerHTML=`<div class="mh-scorelabel">${rep?`Simulated final score${rep.ot?' · OT':''}`:`Projected score — average of ${nSims} simulations`}</div><div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
   grid.appendChild(mid);
-  grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',p.score.home,homeWP));
+  grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,rep&&!tie?hPts>aPts:null));
   mh.appendChild(grid);
+  const avg=el('div','mh-avg');
+  avg.innerHTML=(rep?`Projected score — average of ${nSims} simulations: ${esc(aAbbr)} <b>${nz(p.score.away)}</b> – ${esc(hAbbr)} <b>${nz(p.score.home)}</b> · `:'')
+    +`Win probability from all ${nSims} simulations: ${esc(aAbbr)} <b>${pct(awayWP)}</b> · ${esc(hAbbr)} <b>${pct(homeWP)}</b>`;
+  mh.appendChild(avg);
 
   /* environment summary strip */
   if(env){
@@ -946,7 +967,7 @@ function renderResult(out,d){
 
   /* ---- win probability bar ---- */
   const wpp=el('div','panel');
-  wpp.innerHTML=`<h3>Win probability</h3><div style="height:12px;border-radius:8px;overflow:hidden;background:#0b1220;display:flex;border:1px solid var(--line)">
+  wpp.innerHTML=`<h3>Win probability · all ${nSims} simulations</h3><div style="height:12px;border-radius:8px;overflow:hidden;background:#0b1220;display:flex;border:1px solid var(--line)">
     <i style="display:block;height:100%;width:${(awayWP*100).toFixed(1)}%;background:${col(aAbbr)}"></i>
     <i style="display:block;height:100%;width:${(homeWP*100).toFixed(1)}%;background:${col(hAbbr)}"></i></div>
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.82rem"><span>${esc(g.away)} <b class="mono">${pct(awayWP)}</b></span><span><b class="mono">${pct(homeWP)}</b> ${esc(g.home)}</span></div>`;
@@ -955,16 +976,16 @@ function renderResult(out,d){
   /* ---- summary cards ---- */
   const k=el('div','kpis');
   const cards=[
-    `<div class="kpi"><div class="k">Projected score</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · average of ${fmtN(d.meta.simulations)} sims</div></div>`,
+    `<div class="kpi" data-kpi="avg"><div class="k">Projected score — average of ${nSims} simulations</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)}</div></div>`,
     // The average is the projection; THIS is a game. Both belong at the top,
     // because a reader who only sees the average reasonably concludes the model
     // thinks a seven-point favourite wins by seven. It does not: at the spread
     // of outcomes this model produces, and the one the real NFL produces, a
     // seven-point favourite loses outright about one game in four.
-    (d.box_score&&d.box_score.representative)
-      ? `<div class="kpi"><div class="k">One simulation</div><div class="v">${nz(d.box_score.representative.away_score)}–${nz(d.box_score.representative.home_score)}</div><div class="s">a single game from the run${d.box_score.representative.ot?' · OT':''} · run it again for another</div></div>`
+    rep
+      ? `<div class="kpi" data-kpi="sim" data-sim-away="${rep.away_score}" data-sim-home="${rep.home_score}"><div class="k">Simulated final score</div><div class="v">${nz(rep.away_score)}–${nz(rep.home_score)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · the game on the scoreboard and in the Box Score${rep.ot?' · OT':''}</div></div>`
       : '',
-    `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)}</div></div>`,
+    `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)} · all ${nSims} simulations</div></div>`,
     `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`,
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
     `<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem">${nz(p.confidence_range.margin_low)} … ${nz(p.confidence_range.margin_high)}</div><div class="s">80% of sims</div></div>`,
@@ -1005,7 +1026,7 @@ function renderResult(out,d){
   const charts=el('div','chartgrid');
   charts.appendChild(chartCard('Win probability',svgWinDonut(homeWP,awayWP,hAbbr,aAbbr),
     `<div class="legend"><span><i style="background:${col(hAbbr)}"></i>${esc(hAbbr)} ${pct(homeWP)}</span><span><i style="background:${col(aAbbr)}"></i>${esc(aAbbr)} ${pct(awayWP)}</span></div>`));
-  charts.appendChild(chartCard('Projected points by team',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
+  charts.appendChild(chartCard('Projected points by team · average of '+nSims+' simulations',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
   if(p.distributions&&p.distributions.margin&&p.distributions.margin.length){
     // MARKER_COLLISION_20260817: both markers were always drawn, so on a
     // typical game where the median margin is a point or two off zero the
@@ -1196,11 +1217,12 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     const q=['1','2','3','4'];const hasOt=(rep.home.line.length>4||rep.away.line.length>4);if(hasOt)q.push('OT');
     const pad=a=>{const x=a.slice();while(x.length<q.length)x.push(0);return x};
     const board=el('div','board');
+    board.dataset.simAway=rep.away_score;board.dataset.simHome=rep.home_score;
     const bt=el('div','board-teams');
     const teamSide=(cls,abbr,name,won)=>{const s=el('div','board-team '+cls);s.appendChild(teamMark(abbr,44));const info=el('div','info');info.appendChild(Object.assign(el('div','tn'),{textContent:name}));const meta=el('div','tab');meta.textContent=abbr;info.appendChild(meta);if(won)info.appendChild(Object.assign(el('div','win'),{textContent:'▲ Winner'}));s.appendChild(info);return s};
     bt.appendChild(teamSide('away',aAbbr,g.away,awayWon));
     const mid=el('div','board-mid');
-    mid.innerHTML=`<div class="board-score"><span class="${awayWon?'w':'l'}">${rep.away_score}</span> <span class="l" style="font-size:1.4rem;vertical-align:middle">–</span> <span class="${homeWon?'w':'l'}">${rep.home_score}</span></div><div style="margin-top:6px">FINAL${rep.ot?' / OT':''}</div>`;
+    mid.innerHTML=`<div class="board-score"><span class="${awayWon?'w':'l'}">${rep.away_score}</span> <span class="l" style="font-size:1.4rem;vertical-align:middle">–</span> <span class="${homeWon?'w':'l'}">${rep.home_score}</span></div><div style="margin-top:6px">SIMULATED FINAL SCORE${rep.ot?' / OT':''}</div>`;
     bt.appendChild(mid);
     bt.appendChild(teamSide('home',hAbbr,g.home,homeWon));
     board.appendChild(bt);
@@ -1340,6 +1362,9 @@ async function showMethodology(){
    ========================================================================== */
 const SIM_PICK_INTENT_KEY='tmr_sim_pick_intent';
 let SIM_LAST_SAVE_SIG=null;
+/* Set while a saved result is being reopened: the render wrapper checks the
+   replay against the saved row instead of saving it as a new run. */
+let SIM_VIEW=null;
 
 function simCaptureState(){
   return {mode:STATE.mode,season:STATE.season,week:STATE.week,selRef:STATE.selRef,
@@ -1404,20 +1429,42 @@ function simAutoSave(d){
   if(!window.TMRSimGate||!window.TMRSimGate.isLoggedIn())return;
   if(!window.api||typeof window.api.request!=='function')return;
   const g=d.game,p=d.projection;
+  /* SAVED_SIMS_REDESIGN_20260913. Saves made before this stored only the
+     rounded ensemble average under awayScore/homeScore. A save now records the
+     simulated game that the scoreboard and Box Score show (scoreKind
+     'simulated'), the average separately, and the run's seed, so View result
+     can replay the exact game. awayScore/homeScore carry the simulated game,
+     matching what MLB saves have always meant by them. */
+  const rep=(d.box_score&&!d.box_score.unavailable&&d.box_score.representative)||null;
+  const avgA=p&&p.score?String(p.score.away):null,avgH=p&&p.score?String(p.score.home):null;
+  const seed=d.meta&&d.meta.seed!=null?d.meta.seed:null;
   const summarized={
     awayTeam:g.away,homeTeam:g.home,
-    awayScore:p&&p.score?String(p.score.away):null,homeScore:p&&p.score?String(p.score.home):null,
+    awayAbbr:g.away_abbr||abbrOf(g.away),homeAbbr:g.home_abbr||abbrOf(g.home),
+    scoreKind:rep?'simulated':'average',
+    awayScore:rep?String(rep.away_score):avgA,homeScore:rep?String(rep.home_score):avgH,
+    simulatedAwayScore:rep?String(rep.away_score):null,simulatedHomeScore:rep?String(rep.home_score):null,
+    simulatedOt:rep?!!rep.ot:null,
+    lineAway:rep&&rep.away&&Array.isArray(rep.away.line)?rep.away.line:null,
+    lineHome:rep&&rep.home&&Array.isArray(rep.home.line)?rep.home.line:null,
+    projectedAwayScore:avgA,projectedHomeScore:avgH,
     winner:(p&&p.win_probability&&p.win_probability.home>=p.win_probability.away)?g.home:g.away,
     winProbability:p&&p.win_probability?pct(Math.max(p.win_probability.home,p.win_probability.away),1):null,
     simulations:d.meta&&d.meta.simulations,
+    seed,dataFreshness:d.meta&&d.meta.data_freshness||null,
     venue:d.environment&&d.environment.summary?d.environment.summary.venue:null,
     kickoffWindow:d.environment?d.environment.kickoff_window_label:null,
     spread:p&&p.spread?p.spread.line:null,total:p&&p.total?p.total.line:null
   };
   const inputs=simCaptureState();
-  let sig;try{sig=JSON.stringify(inputs)+'|'+summarized.awayScore+'-'+summarized.homeScore}catch(e){sig=null}
+  /* One save per run. The seed identifies a run, so two separate runs are two
+     saves even when their scores match; only a re-render of the same run (same
+     seed, same settings) is skipped. Without a seed, fall back to the result
+     object itself. */
+  let sig;try{sig=seed!=null?JSON.stringify(inputs)+'|seed:'+seed:null}catch(e){sig=null}
   if(sig&&sig===SIM_LAST_SAVE_SIG)return;
-  SIM_LAST_SAVE_SIG=sig;
+  if(!sig&&simAutoSave.last===d)return;
+  SIM_LAST_SAVE_SIG=sig;simAutoSave.last=d;
   window.api.request('/mlb-simulator-save',{method:'POST',body:{
     name:`${g.away} @ ${g.home}`,simulation_type:'nfl_game',
     input_parameters:inputs,summarized_result:summarized
@@ -1446,7 +1493,7 @@ function simRenderConversion(out,d){
     '<div id="simPickTeams" role="radiogroup" aria-label="Pick a side" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
     '<button type="button" class="btn" id="simPickCta">Add This Pick to My Verified Record</button>'+
-    '<a class="btn ghost" href="/mlb-simulator/saved/">My Simulation History</a>'+
+    '<a class="btn ghost" href="/sports-simulators/saved/">My Simulation History</a>'+
     '<span class="dim" id="simSavedNote"></span></div>';
 
   const teams=$('#simPickTeams',panel);
@@ -1497,6 +1544,13 @@ function installSimGate(){
     return _runCustom(seed);
   };
   renderResult=function(out,d){
+    if(SIM_VIEW&&d&&!d.unavailable){
+      const view=SIM_VIEW;SIM_VIEW=null;
+      if(!simSavedMatches(view.saved,d)){simRenderSavedCard(out,view.saved,'changed');return}
+      const r=_renderResult(out,d);
+      try{simMarkSavedView(out,view.saved)}catch(e){}
+      return r;
+    }
     const r=_renderResult(out,d);
     try{
       if(d&&!d.unavailable){
@@ -1538,6 +1592,89 @@ function installSimGate(){
   simHandleSavedId(hadResume);
 }
 
+/* ---- reopening a saved run (SAVED_SIMS_REDESIGN_20260913) ---- */
+function simSavedMatches(saved,d){
+  const r=saved.summarized_result||{};
+  const rep=d.box_score&&!d.box_score.unavailable&&d.box_score.representative;
+  const p=d.projection;
+  return !!(rep&&p&&p.score&&
+    String(rep.away_score)===String(r.simulatedAwayScore)&&String(rep.home_score)===String(r.simulatedHomeScore)&&
+    String(p.score.away)===String(r.projectedAwayScore)&&String(p.score.home)===String(r.projectedHomeScore));
+}
+/* Run again: current data, a fresh seed, a NEW save. The original row is only
+   stamped with last_rerun_at, never overwritten. */
+function simRerunSaved(saved){
+  simRunNow(saved.input_parameters);
+  if(saved.id)window.api.request('/mlb-simulator-save/'+encodeURIComponent(saved.id)+'/rerun',{method:'POST'}).catch(()=>{});
+}
+function simSavedWhen(saved){
+  try{return saved.created_at?new Date(saved.created_at).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):''}catch(e){return ''}
+}
+function simSavedActions(node,saved){
+  const row=el('div');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px';
+  row.innerHTML='<button type="button" class="btn" data-sim-saved="rerun">Run again with current data</button>'+
+    '<a class="btn ghost" href="/sports-simulators/saved/">My Saved Simulations</a>';
+  row.querySelector('[data-sim-saved="rerun"]').onclick=()=>{simRerunSaved(saved)};
+  node.appendChild(row);
+}
+/* Banner over a replay that reproduced the saved game exactly. */
+function simMarkSavedView(out,saved){
+  const b=el('div','panel');b.id='simSavedBanner';b.dataset.savedId=saved.id;
+  b.style.cssText='border-color:rgba(56,189,248,.45);background:linear-gradient(180deg,rgba(29,127,232,.12),transparent)';
+  b.innerHTML='<div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">Saved result</div>'+
+    '<h3 style="margin:4px 0 2px">'+esc(saved.name||'Saved simulation')+'</h3>'+
+    '<div class="muted" style="font-size:.88rem">Saved '+esc(simSavedWhen(saved))+'. This is the saved game, replayed from its seed: the scoreboard and Box Score below are the result you saved.</div>';
+  simSavedActions(b,saved);
+  out.insertBefore(b,out.firstChild);
+}
+/* The saved row on its own: legacy saves (average only) and runs whose data
+   has changed since they were saved. */
+function simRenderSavedCard(out,saved,why){
+  const r=saved.summarized_result||{};
+  const aAbbr=r.awayAbbr||abbrOf(r.awayTeam),hAbbr=r.homeAbbr||abbrOf(r.homeTeam);
+  const simulated=r.scoreKind==='simulated'&&r.simulatedAwayScore!=null;
+  const aPts=simulated?r.simulatedAwayScore:r.awayScore,hPts=simulated?r.simulatedHomeScore:r.homeScore;
+  const sims=r.simulations?fmtN(r.simulations):null;
+  const card=el('div','panel');card.id='simSavedCard';card.dataset.savedId=saved.id;card.dataset.scoreKind=simulated?'simulated':'average';
+  card.innerHTML='<div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">Saved result</div>'+
+    '<h3 style="margin:4px 0 12px">'+esc(saved.name||'Saved simulation')+'</h3>';
+  const grid=el('div','mh-grid');
+  const win=simulated&&Number(aPts)!==Number(hPts)?(Number(aPts)>Number(hPts)?'a':'h'):null;
+  const side=(abbr,name,role,pts,lost)=>{
+    const s=el('div','mh-team');s.appendChild(teamMark(abbr,48));
+    s.appendChild(Object.assign(el('div','nm'),{textContent:name||abbr}));
+    s.appendChild(Object.assign(el('div','role'),{textContent:role}));
+    const pt=Object.assign(el('div','pts'+(lost?' l':'')),{textContent:pts==null?'–':pts});pt.style.borderBottomColor=col(abbr);s.appendChild(pt);
+    return s;
+  };
+  grid.appendChild(side(aAbbr,r.awayTeam,'Away',aPts,win==='h'));
+  const mid=el('div','mh-mid');
+  mid.innerHTML='<div class="mh-scorelabel" data-sim-score-label>'+(simulated?'Simulated final score'+(r.simulatedOt?' · OT':''):'Projected average'+(sims?' of '+sims+' simulations':''))+'</div><div class="at">@</div>';
+  grid.appendChild(mid);
+  grid.appendChild(side(hAbbr,r.homeTeam,'Home',hPts,win==='a'));
+  card.appendChild(grid);
+  if(simulated&&Array.isArray(r.lineAway)&&Array.isArray(r.lineHome)){
+    const q=r.lineAway.map((_,i)=>i<4?String(i+1):'OT');
+    const ls=el('div','linescore');
+    ls.innerHTML='<table><thead><tr><th></th>'+q.map(x=>'<th>'+x+'</th>').join('')+'<th>T</th></tr></thead><tbody>'+
+      '<tr><td>'+esc(aAbbr)+'</td>'+r.lineAway.map(x=>'<td>'+esc(x)+'</td>').join('')+'<td><b>'+esc(aPts)+'</b></td></tr>'+
+      '<tr><td>'+esc(hAbbr)+'</td>'+r.lineHome.map(x=>'<td>'+esc(x)+'</td>').join('')+'<td><b>'+esc(hPts)+'</b></td></tr></tbody></table>';
+    card.appendChild(ls);
+  }
+  const facts=[];
+  if(simulated&&r.projectedAwayScore!=null)facts.push('Projected average'+(sims?' of '+sims+' simulations':'')+': '+esc(aAbbr)+' <b>'+esc(r.projectedAwayScore)+'</b> – '+esc(hAbbr)+' <b>'+esc(r.projectedHomeScore)+'</b>');
+  if(r.winner&&r.winProbability)facts.push('Projected winner '+esc(r.winner)+' ('+esc(r.winProbability)+')');
+  if(facts.length){const f=el('div','mh-avg');f.innerHTML=facts.join(' · ');card.appendChild(f)}
+  const note=el('p','muted');note.style.cssText='font-size:.86rem;margin:12px 0 0';
+  note.textContent='Saved '+simSavedWhen(saved)+'. '+(simulated
+    ?'This is the simulated game you saved.'
+    :'This save holds the projected average'+(sims?' of its '+sims+' simulations':'')+'.');
+  card.appendChild(note);
+  simSavedActions(card,saved);
+  out.innerHTML='';out.appendChild(card);
+  try{card.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}
+}
+
 /* /nfl-simulator/?savedId=N&mode=view|rerun — the return path from the
    member's simulation history (see static/js/mlb-sim-saved.js). Absent the
    parameter this is a no-op and the page is an ordinary simulator. */
@@ -1554,24 +1691,26 @@ async function simHandleSavedId(hadResume){
     if(saved&&saved.input_parameters){
       await simRestoreState(saved.input_parameters);
       window.TMRSimGate.track('simulator_saved_reopened',{simulation_type:'nfl_game',view_mode:mode});
-      if(mode==='rerun')simRunNow(saved.input_parameters);
+      if(mode==='rerun')simRerunSaved(saved);
       else{
         const r=saved.summarized_result||{};
-        const out=$('#result');
-        const card=el('div','panel');
-        card.innerHTML='<h3 style="margin-top:0">'+esc(saved.name||'Saved simulation')+'</h3>'+
-          '<div class="mono" style="font-size:1.05rem">'+esc(r.awayTeam||'Away')+' '+esc(r.awayScore||'')+
-          ' &nbsp;&ndash;&nbsp; '+esc(r.homeTeam||'Home')+' '+esc(r.homeScore||'')+'</div>'+
-          (r.winner?'<div class="muted" style="margin-top:6px">Projected winner: '+esc(r.winner)+(r.winProbability?' ('+esc(r.winProbability)+')':'')+'</div>':'')+
-          (saved.created_at?'<div class="dim" style="margin-top:6px">Saved '+esc(new Date(saved.created_at).toLocaleString())+'</div>':'')+
-          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'+
-          '<button type="button" class="btn" id="simReopenRun">Run This Simulation Again</button>'+
-          '<a class="btn ghost" href="/mlb-simulator/saved/">My Simulation History</a></div>';
-        out.innerHTML='';out.appendChild(card);
-        $('#simReopenRun',card).onclick=()=>{out.innerHTML='';simRunNow(saved.input_parameters)};
+        const s=saved.input_parameters;
+        if(r.scoreKind==='simulated'&&r.seed!=null){
+          /* Replay the saved seed. The render wrapper shows the full scoreboard
+             and Box Score only if the replay reproduces the saved game exactly;
+             if the simulator's data has moved on since, it shows the saved
+             result instead of a different game under the saved label. */
+          SIM_VIEW={saved};
+          const ref=s.mode==='custom'?null:(s.selRef||STATE.selRef);
+          if(s.mode==='custom')await runCustom(r.seed);
+          else if(ref)await runScheduled(ref,r.seed);
+          if(SIM_VIEW){SIM_VIEW=null;simRenderSavedCard($('#result'),saved,'changed')}
+        }else{
+          simRenderSavedCard($('#result'),saved,'legacy');
+        }
       }
     }
-  }catch(e){/* not found / not yours — page still works as a normal simulator */}
+  }catch(e){SIM_VIEW=null;/* not found / not yours — page still works as a normal simulator */}
   try{
     const u=new URL(location.href);u.searchParams.delete('savedId');u.searchParams.delete('mode');
     history.replaceState({},'',u.toString());
@@ -1586,6 +1725,7 @@ boot().then(installSimGate,installSimGate);
   <script defer src="/static/js/pick-progress-nudge.js?v=df4043fd5769"></script>
   <script defer src="/static/js/first-pick-onboarding.js?v=ceb09eef6250"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/tmr-lc-yield.js?v=83f3225bf6d6"></script>
 <style id="select-visible-fix-20260913">
 /* SELECT_VISIBLE_20260913: light text on a native dropdown. Safari can paint its own light
    control behind author text, leaving the chosen value invisible. Drawn by the page instead. */
