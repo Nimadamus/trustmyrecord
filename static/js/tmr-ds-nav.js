@@ -305,7 +305,12 @@
     ['/forum/', 'Forums'],
     ['/sports-talk/', 'Sports Talk'],
     ['/chat/', 'Chat'],
-    ['/messages/', 'Messages']
+    ['/messages/', 'Messages'],
+    /* TMR Coin rejoined the dropdowns on 2026-09-14 (Nima: the coin info page
+       must be reachable from the menu). It left Tools on 2026-08-27 and was
+       then only in the footer, so no dropdown led to /tmr-coin/. It sits here
+       because the coin is the community's economy. */
+    ['/tmr-coin/', 'TMR Coin']
   ];
   /* TMR Coin was in this list from 2026-08-10 until 2026-08-27, when it was
      removed: Tools is for the analytical products (simulators, TrendSpotter,

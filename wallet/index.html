@@ -281,6 +281,11 @@
                     <h3>No transactions yet</h3>
                     <p>TMR you earn or receive will show up here with a running balance.</p>
                 </div>
+                <div id="txError" class="empty-state" hidden>
+                    <h3>Could not load transactions</h3>
+                    <p>Your balance above is current. The history did not arrive in time.</p>
+                    <button id="txRetryBtn" class="btn" type="button">Retry</button>
+                </div>
                 <div id="txPanel" hidden>
                     <div class="table-wrap">
                         <table>
@@ -607,16 +612,27 @@
             el('txCards').innerHTML = rows.map(txCardHtml).join('');
             el('txMoreWrap').hidden = !state.txHasMore;
         }
+        // History loads on its own, after the balance is on screen. A slow or
+        // failed history read shows its own Retry instead of holding the whole
+        // wallet behind the skeleton.
         async function loadTx(append) {
             var opts = { limit: 25 };
             if (state.txDirection) opts.direction = state.txDirection;
             if (append && state.txNext != null) opts.before = state.txNext;
-            var data = await window.api.getWalletTransactions(opts);
-            var list = (data && data.transactions) || [];
-            state.txRows = append ? state.txRows.concat(list) : list;
-            state.txHasMore = !!(data && data.has_more);
-            state.txNext = (data && data.next_before) || null;
-            renderTx();
+            try {
+                var data = await window.api.getWalletTransactions(opts);
+                var list = (data && data.transactions) || [];
+                state.txRows = append ? state.txRows.concat(list) : list;
+                state.txHasMore = !!(data && data.has_more);
+                state.txNext = (data && data.next_before) || null;
+                el('txError').hidden = true;
+                renderTx();
+            } catch (e) {
+                if (append) return;
+                el('txEmpty').hidden = true;
+                el('txPanel').hidden = true;
+                el('txError').hidden = false;
+            }
         }
         el('txFilters').addEventListener('click', function (ev) {
             var chip = ev.target.closest('.chip');
@@ -629,6 +645,7 @@
             loadTx(false);
         });
         el('txMoreBtn').addEventListener('click', function () { loadTx(true); });
+        el('txRetryBtn').addEventListener('click', function () { loadTx(false); });
 
         // ---- transfers ------------------------------------------------------
         var pendingTransfer = null;
@@ -828,10 +845,12 @@
             el('authRetryBtn').hidden = true;
             setTimeout(function () { window.location.href = '/login/?next=/wallet/'; }, 900);
         }
-        function showLoadError() {
+        function showLoadError(retrying) {
             content.hidden = true; skeleton.hidden = true; authState.hidden = false;
-            el('authHeading').textContent = 'Could not load your wallet';
-            el('authMessage').textContent = 'The server did not respond. Your balance is safe. Tap Retry.';
+            el('authHeading').textContent = retrying ? 'Your wallet is taking longer than usual' : 'Could not load your wallet';
+            el('authMessage').textContent = retrying
+                ? 'The server is slow to respond. Your balance is safe. Retrying now, or tap Retry.'
+                : 'The server did not respond. Your balance is safe. Tap Retry.';
             el('authLoginBtn').hidden = true;
             el('authRetryBtn').hidden = false;
         }
@@ -846,28 +865,60 @@
         var attempt = 0;
         var retryTimer = null;
 
+        // WALLET_SKELETON_DEADLINE_20260914: the skeleton is never on screen for
+        // more than BOOT_DEADLINE_MS. Boot used to await config, summary and the
+        // transaction list one after another, each under backend-api.js's 20s
+        // GET budget, and only showed the error after four such attempts. When
+        // the API was saturated (seen 2026-09-14 12:09 PT, minutes after a
+        // deploy: responses 10s+ late) that held the skeleton for minutes.
+        // Config and summary now load together; the deadline switches the page
+        // to a visible retry state; a response that lands after the deadline
+        // still renders the wallet.
+        var BOOT_DEADLINE_MS = 12000;
+        var loaded = false;
+
+        function withDeadline(promise, ms) {
+            return new Promise(function (resolve, reject) {
+                var t = setTimeout(function () { reject(new Error('Wallet request timed out')); }, ms);
+                promise.then(function (v) { clearTimeout(t); resolve(v); },
+                             function (e) { clearTimeout(t); reject(e); });
+            });
+        }
+
+        function showWallet(cfg, summary) {
+            state.config = cfg;
+            applyConfig(cfg);
+            state.summary = summary;
+            renderSummary(summary);
+            if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+            loaded = true;
+            attempt = 0;
+            skeleton.hidden = true;
+            authState.hidden = true;
+            content.hidden = false;
+            loadTx(false);
+        }
+
         async function boot() {
             if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+            if (loaded) return;
             if (!(window.api && window.api.isLoggedIn())) { showLoginRequired(); return; }
+            if (authState.hidden) skeleton.hidden = false;
+            var core = Promise.all([window.api.getWalletConfig(), window.api.getWalletSummary()]);
+            core.then(function (r) { if (!loaded) showWallet(r[0], r[1]); }, function () {});
             try {
-                skeleton.hidden = false;
-                authState.hidden = true;
-                state.config = await window.api.getWalletConfig();
-                applyConfig(state.config);
-                await refreshSummary();
-                await loadTx(false);
-                skeleton.hidden = true;
-                content.hidden = false;
-                attempt = 0;
+                await withDeadline(core, BOOT_DEADLINE_MS);
             } catch (error) {
+                if (loaded) return;
                 if (error && (error.status === 401 || error.status === 403)) { showLoginRequired(); return; }
                 if (attempt < RETRY_DELAYS_MS.length) {
                     var delay = RETRY_DELAYS_MS[attempt];
                     attempt += 1;
+                    showLoadError(true);
                     retryTimer = setTimeout(function () { boot(); }, delay);
                     return;
                 }
-                showLoadError();
+                showLoadError(false);
             }
         }
         el('authRetryBtn').addEventListener('click', function () { attempt = 0; boot(); });
