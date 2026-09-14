@@ -52,7 +52,25 @@ def sources():
                 out.append(rel)
     return out
 
+def sync_featured():
+    """FEATURED_SOURCE_OF_TRUTH_20260914. This script runs in the Static Asset
+    Versions workflow on EVERY push to main, and that workflow commits whatever
+    it changes. So this is where a newly pushed feature page is guaranteed to
+    reach every featured surface within minutes, even if whoever pushed it never
+    ran the sync: the page's own tmr-featured tags are folded into
+    data/featured-matchups.json and every door, hub card and strip is re-baked.
+    It must never break asset pinning, so a failure only prints."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import featured_matchups
+        featured_matchups.sync()
+    except Exception as exc:  # noqa: BLE001
+        print("FEATURED: surfaces not synced (%s)" % exc)
+
+
 def run(check_only):
+    if not check_only:
+        sync_featured()
     changed, missing = [], set()
     # Loader JS files reference other assets, so rewriting their internals
     # changes their own hash; iterate to a fixpoint (leaf tags stabilize

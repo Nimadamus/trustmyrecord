@@ -55,6 +55,12 @@ const REG = {
         { id: 'no-href', kickoff_utc: iso(BASE + 3 * H) },
       ],
     },
+    tennis: {
+      grace_minutes: 300,
+      features: [
+        { id: 'tennis-long-match', href: '/matchup-of-the-day/tennis-long/', kickoff_utc: iso(BASE + 4 * H) },
+      ],
+    },
   },
 };
 const INSTANTS = {
@@ -64,6 +70,7 @@ const INSTANTS = {
   'monday in progress': BASE + 12 * H + 3 * H,
   'monday finished': BASE + 12 * H + 3.5 * H,
   'last game finished': BASE + 6 * 24 * H + 4 * H,
+  'long tennis match still on': BASE + 4 * H + 4.5 * H,
 };
 const EXPECT = {
   'before anything': 'monday',
@@ -72,6 +79,17 @@ const EXPECT = {
   'monday in progress': 'monday',
   'monday finished': 'sunday-next',
   'last game finished': null,
+  'long tennis match still on': 'monday',
+};
+/* The all sports answer at each instant: earliest live kickoff in any sport. */
+const EXPECT_ANY = {
+  'before anything': 'tennis-long-match',
+  'embargo lifted': 'embargoed',
+  'embargoed game in progress': 'embargoed',
+  'monday in progress': 'monday',
+  'monday finished': 'sunday-next',
+  'last game finished': null,
+  'long tennis match still on': 'tennis-long-match',
 };
 
 const sandbox = { window: {}, document: { readyState: 'complete' }, setTimeout, setInterval, clearTimeout };
@@ -88,6 +106,8 @@ out = {}
 for name, ms in instants.items():
     f = fm.resolve(reg, 'nfl', dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc))
     out[name] = f["id"] if f else None
+    a = fm.resolve(reg, '*', dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc))
+    out[name + ' [all sports]'] = a["id"] if a else None
 print(json.dumps(out))
 `, JSON.stringify(REG), JSON.stringify(INSTANTS)], { encoding: 'utf8' });
 if (py.status !== 0) {
@@ -97,9 +117,13 @@ if (py.status !== 0) {
   for (const [name, ms] of Object.entries(INSTANTS)) {
     const j = jsResolve(REG, 'nfl', ms);
     const jid = j ? j.id : null;
+    const ja = jsResolve(REG, '*', ms);
+    const jaid = ja ? ja.id : null;
+    if (jaid !== pyOut[name + ' [all sports]']) bad(`${name} [all sports]: JS ${jaid}, Python ${pyOut[name + ' [all sports]']}`);
     if (jid !== pyOut[name]) bad(`${name}: JS resolved ${jid}, Python resolved ${pyOut[name]}`);
     else if (jid !== EXPECT[name]) bad(`${name}: resolved ${jid}, expected ${EXPECT[name]}`);
-    else ok(`${name}: both resolvers pick ${jid}`);
+    else if (jaid !== EXPECT_ANY[name]) bad(`${name} [all sports]: resolved ${jaid}, expected ${EXPECT_ANY[name]}`);
+    else ok(`${name}: both resolvers pick ${jid} (all sports: ${jaid})`);
   }
 }
 
@@ -122,7 +146,8 @@ for (const [sport, s] of Object.entries(reg.sports)) {
     const hub = fs.readFileSync(path.join(ROOT, s.hub_file), 'utf8');
     const card = hub.match(new RegExp(`<!--MK:featured-card-${sport}-->([\\s\\S]*?)<!--/MK:featured-card-${sport}-->`));
     const href = card && card[1].match(/data-feat-link href="([^"]+)"/);
-    if (!card) bad(`${s.hub_file}: featured card is not the registry card`);
+    if (!card && /mm-gotw/.test(hub)) bad(`${s.hub_file}: featured card is not the registry card`);
+    else if (!card) ok(`${s.hub_file}: no featured card slot on this hub`);
     else if (!href || !hrefs.has(href[1])) bad(`${s.hub_file}: card names ${href && href[1]}, not in the registry`);
     else ok(`${s.hub_file}: card baked from the registry (${href[1]})`);
     if (/class="mm-sec mm-gotw">/.test(hub)) bad(`${s.hub_file}: still carries an unmarked legacy card`);
@@ -139,6 +164,43 @@ const check = spawnSync('python', [path.join(ROOT, 'scripts/featured_matchups.py
 if (check.status === 0) ok('sync --check: every surface matches the registry right now');
 else warn('sync --check reports a surface behind the clock; tmr-featured.js corrects it in the browser '
           + 'and the next bake rewrites it:\n' + check.stdout);
+
+for (const door of reg.all_doors || []) {
+  const html = fs.readFileSync(path.join(ROOT, door.file), 'utf8');
+  if (!/data-tmr-featured-door="\*"/.test(html)) bad(`${door.url}: not baked as an all sports registry door`);
+  else ok(`${door.url}: all sports door baked from the registry`);
+}
+for (const sport of ['mlb', 'ncaaf', 'nfl', 'soccer', 'tennis']) {
+  if (!reg.sports[sport]) bad(`registry: ${sport} is not managed, so its door can go stale`);
+}
+
+/* ---------------------------- 2b. publishing a page IS designating it */
+const registered = new Set(Object.values(reg.sports).flatMap((s) => s.features.map((f) => f.href)));
+const tagged = [];
+(function walk(dir, rel) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) {
+      if (!rel && ['.git', 'node_modules', 'static', 'tests', 'scripts', 'data', 'matchup-of-the-day'].includes(e.name)) continue;
+      walk(path.join(dir, e.name), rel + '/' + e.name);
+    } else if (e.name === 'index.html') {
+      const head = fs.readFileSync(path.join(dir, e.name), 'utf8').slice(0, 20000);
+      if (head.includes('name="tmr-featured"')) tagged.push(rel + '/');
+    }
+  }
+})(ROOT, '');
+for (const href of tagged) {
+  if (!registered.has(href)) bad(`${href}: declares tmr-featured but is not in the registry; run python scripts/featured_matchups.py sync`);
+}
+ok(`${tagged.length} self declared feature page(s), all registered`);
+/* Every hand built NFL feature under /nfl/ must declare itself, or it can sit
+   live on the site while every featured surface still shows an older game. */
+for (const e of fs.readdirSync(path.join(ROOT, 'nfl'), { withFileTypes: true })) {
+  if (!e.isDirectory()) continue;
+  const f = path.join(ROOT, 'nfl', e.name, 'index.html');
+  if (fs.existsSync(f) && !fs.readFileSync(f, 'utf8').slice(0, 20000).includes('name="tmr-featured"')) {
+    bad(`/nfl/${e.name}/: an NFL feature page without <meta name="tmr-featured">`);
+  }
+}
 
 /* ------------------------------------------------ 3. no hand kept lists */
 const sportsbook = fs.readFileSync(path.join(ROOT, 'sportsbook/index.html'), 'utf8');
@@ -171,6 +233,7 @@ const NOW = Date.now();
 const TODAY_ISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
 fs.writeFileSync(path.join(tmp, 'data/featured-matchups.json'), JSON.stringify({
   grace_minutes: 210,
+  all_doors: [{ file: 'matchup-of-the-day/today/index.html', url: '/matchup-of-the-day/today/', eyebrow: 'Today', hub: '/matchup-of-the-day/' }],
   sports: { nfl: {
     label: 'NFL', hub: '/handicapping/nfl/',
     doors: [{ file: 'matchup-of-the-day/nfl/index.html', url: '/matchup-of-the-day/nfl/', eyebrow: 'NFL Matchup of the Day' },
@@ -210,6 +273,16 @@ try {
   } else {
     bad('bake: the NFL Game File was not registered: ' + JSON.stringify(reg9901));
   }
+  const today = fs.readFileSync(path.join(tmp, 'matchup-of-the-day/today/index.html'), 'utf8');
+  if (/data-tmr-featured-door="\*"/.test(today) && /data-baked-href="\/nfl\/hand-built-live\/"/.test(today)) {
+    ok('bake: /today/ is the all sports registry door and opens the live feature, not the played Game File');
+  } else {
+    bad('bake: /today/ was not baked from the registry');
+  }
+  const section = fs.readFileSync(path.join(tmp, 'matchup-of-the-day/index.html'), 'utf8');
+  const lead = section.match(/<!--MK:motdToday-->([\s\S]*?)<!--\/MK:motdToday-->/);
+  if (lead && !/played-nfl-game-file/.test(lead[1])) ok('bake: the section lead card does not show the played Game File');
+  else bad('bake: the section lead card still shows a game that has been played');
   if (fs.existsSync(path.join(tmp, 'matchup-of-the-day/played-nfl-game-file/index.html'))) {
     ok('bake: the Game File itself is still published at its permanent URL');
   } else {

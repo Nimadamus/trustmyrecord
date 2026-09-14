@@ -36,11 +36,22 @@ The rule now:
     registry, if the Python and JS resolvers ever disagree, or if a hand kept
     feature list reappears anywhere.
 
-Editorial workflow: publish the article, append one entry (href, kickoff_utc,
-headline, matchup, when, label, logos), run `python scripts/featured_matchups.py
-sync`, commit. Nothing else is edited by hand. A published database Game File
-for a managed sport that carries featured_on is appended automatically by
-build_matchup_articles.py via upsert_game_files().
+EVERY SPORT (extended 2026-09-14 the same day, after NCAAF and soccer were
+found opening games played two days earlier): mlb, ncaaf, nfl, soccer and
+tennis doors, /matchup-of-the-day/today/ (an all sports door) and the section's
+lead card all follow the clock, each sport with its own grace_minutes.
+
+How an article gets featured, with no second edit anywhere:
+  * Database Game File: the Matchup of the Day bake registers it with its
+    kickoff (upsert_game_files).
+  * Hand built page (e.g. /nfl/<slug>/): the page carries
+    <meta name="tmr-featured" content="nfl"> and <meta name="tmr-featured-kickoff">
+    (plus headline, matchup, when, label, cta, logos). discover_pages() folds it
+    in on every sync, and a sync runs on EVERY push to main inside the Static
+    Asset Versions workflow (scripts/version_static_refs.py), on every Matchup of
+    the Day bake, and on the sport hub cron. Running it locally just makes it
+    immediate.
+  * To pull a feature early, set its registry status to "withdrawn".
 
   python scripts/featured_matchups.py sync            write every surface
   python scripts/featured_matchups.py sync --check    exit 1 if any surface is stale
@@ -110,10 +121,12 @@ def resolve(reg, sport, now=None):
     """The active featured entry for `sport`, or None. Mirrors resolve() in
     static/js/tmr-featured.js line for line; the sync test holds them equal."""
     now = now or now_utc()
+    if sport == "*":
+        return resolve_any(reg, now)[1]
     s = (reg or {}).get("sports", {}).get(sport)
     if not s:
         return None
-    grace = dt.timedelta(minutes=float(reg.get("grace_minutes", DEFAULT_GRACE_MINUTES)))
+    grace = dt.timedelta(minutes=grace_minutes(reg, sport))
     best, best_k = None, None
     for f in s.get("features") or []:
         if not isinstance(f, dict) or (f.get("status") or "active") != "active":
@@ -134,6 +147,102 @@ def resolve(reg, sport, now=None):
     return best
 
 
+def grace_minutes(reg, sport):
+    """How long after kickoff a game stays featured. Per sport when the sport
+    sets it (a tennis match runs longer than a soccer match), else the registry
+    default."""
+    s = (reg or {}).get("sports", {}).get(sport) or {}
+    if s.get("grace_minutes") is not None:
+        return float(s["grace_minutes"])
+    return float((reg or {}).get("grace_minutes", DEFAULT_GRACE_MINUTES))
+
+
+def resolve_any(reg, now=None):
+    """(sport, entry) with the earliest live kickoff across every sport, for the
+    all sports surfaces (/matchup-of-the-day/today/ and the section's lead card)."""
+    now = now or now_utc()
+    best = (None, None)
+    for sport in managed_sports(reg):
+        f = resolve(reg, sport, now)
+        if f and (best[1] is None or parse_utc(f["kickoff_utc"]) < parse_utc(best[1]["kickoff_utc"])):
+            best = (sport, f)
+    return best
+
+
+def expires_at(reg, sport, feature):
+    k = parse_utc((feature or {}).get("kickoff_utc"))
+    if k is None:
+        return ""
+    return (k + dt.timedelta(minutes=grace_minutes(reg, sport))).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+# --------------------------------------------------------------- page discovery
+
+META = re.compile(r'<meta\s+name="(tmr-featured(?:-[a-z-]+)?)"\s+content="([^"]*)"\s*/?>', re.I)
+DISCOVERY_SKIP = {".git", "node_modules", "static", "tests", "scripts", "data", "matchup-of-the-day"}
+
+
+def discover_pages(reg, root=ROOT):
+    """A hand built feature page registers ITSELF. It carries
+
+        <meta name="tmr-featured" content="nfl">
+        <meta name="tmr-featured-kickoff" content="2026-09-15T00:15:00Z">
+        <meta name="tmr-featured-headline" content="...">   (plus optional
+        -matchup, -when, -label, -cta, -away-logo, -home-logo)
+
+    and every sync folds it into the registry keyed by its URL, so publishing the
+    page IS designating it; nobody has to remember a second edit. Database Game
+    Files are registered by the bake instead (upsert_game_files). Returns True
+    when the registry changed."""
+    if not reg:
+        return False
+    changed = False
+    for dirpath, dirnames, filenames in os.walk(root):
+        rel_dir = os.path.relpath(dirpath, root).replace(os.sep, "/")
+        if rel_dir == ".":
+            dirnames[:] = [d for d in dirnames if d not in DISCOVERY_SKIP]
+        if "index.html" not in filenames:
+            continue
+        path = os.path.join(dirpath, "index.html")
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            head = fh.read(20000)
+        if 'name="tmr-featured"' not in head:
+            continue
+        meta = {k.lower(): html.unescape(v) for k, v in META.findall(head)}
+        sport = meta.get("tmr-featured", "").strip().lower()
+        s = reg["sports"].get(sport)
+        if not s:
+            raise ValueError("%s declares tmr-featured=%r, which is not a sport in the registry" % (path, sport))
+        k = parse_utc(meta.get("tmr-featured-kickoff"))
+        if k is None:
+            raise ValueError("%s declares tmr-featured but has no valid tmr-featured-kickoff (UTC, with Z)" % path)
+        href = "/" + rel_dir.strip("/") + "/"
+        entry = {
+            "id": "page:" + href, "source": "page", "status": "active", "href": href,
+            "headline": meta.get("tmr-featured-headline") or meta.get("tmr-featured-matchup") or href,
+            "matchup": meta.get("tmr-featured-matchup", ""),
+            "when": meta.get("tmr-featured-when", ""),
+            "label": meta.get("tmr-featured-label") or "%s Featured Matchup" % s.get("label", sport.upper()),
+            "cta": meta.get("tmr-featured-cta") or "Read the full breakdown",
+            "away_logo": meta.get("tmr-featured-away-logo", ""),
+            "home_logo": meta.get("tmr-featured-home-logo", ""),
+            "kickoff_utc": k.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+        features = s.setdefault("features", [])
+        current = next((f for f in features if f.get("href") == href), None)
+        if current is None:
+            features.append(entry)
+            changed = True
+            continue
+        for key, value in entry.items():
+            if key == "status":
+                continue      # a withdrawal made in the registry survives
+            if current.get(key) != value:
+                current[key] = value
+                changed = True
+    return changed
+
+
 def upsert_game_files(reg, articles):
     """Register every published, featured database Game File of a managed sport.
 
@@ -146,7 +255,10 @@ def upsert_game_files(reg, articles):
     for a in articles or []:
         sport = a.get("sport")
         s = reg["sports"].get(sport)
-        if not s or not a.get("angle_key") or not a.get("featured_on"):
+        # Every published Game File of the sport, not only the day's cover: the
+        # door used to open whichever was newest, so an extra piece on a busy day
+        # has to stay eligible. The clock decides between them.
+        if not s or not a.get("angle_key"):
             continue
         if (a.get("status") or "published") not in ("published", "updated"):
             continue
@@ -224,7 +336,7 @@ DOOR_TEMPLATE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-<main class="t" data-tmr-featured-door="{sport}" data-baked-href="{baked}" data-baked-kickoff="{kickoff}" data-hub="{hub}">
+<main class="t" data-tmr-featured-door="{sport}" data-baked-href="{baked}" data-baked-kickoff="{kickoff}" data-grace="{grace}" data-hub="{hub}">
   <p>{eyebrow}</p>
   <a href="{target}">{headline}</a>{note}
 </main>
@@ -235,9 +347,17 @@ DOOR_TEMPLATE = """<!DOCTYPE html>
 """
 
 
-def door_html(reg, sport, door, feature, root=ROOT):
-    s = reg["sports"][sport]
-    hub = s.get("hub") or "/"
+def door_html(reg, sport, door, feature, root=ROOT, feature_sport=None):
+    """A stable door. sport "*" is an all sports door: it opens whichever game
+    in any sport is next up, and links the Matchup of the Day section when
+    nothing is."""
+    if sport == "*":
+        s = {"label": "Matchup of the Day", "hub": door.get("hub") or "/matchup-of-the-day/"}
+        grace = grace_minutes(reg, feature_sport) if feature_sport else DEFAULT_GRACE_MINUTES
+    else:
+        s = reg["sports"][sport]
+        grace = grace_minutes(reg, sport)
+    hub = door.get("hub") or s.get("hub") or "/"
     if feature:
         return DOOR_TEMPLATE.format(
             title=esc("%s: %s | TrustMyRecord" % (door["eyebrow"], feature.get("matchup") or feature.get("headline"))),
@@ -247,7 +367,7 @@ def door_html(reg, sport, door, feature, root=ROOT):
             kickoff=esc(feature.get("kickoff_utc") or ""),
             hub=esc(hub), sport=esc(sport), eyebrow=esc(door["eyebrow"]),
             headline=esc(feature.get("headline") or feature.get("matchup")),
-            note="", runtime=esc(runtime_src(root)), baked=esc(feature["href"]),
+            note="", runtime=esc(runtime_src(root)), baked=esc(feature["href"]), grace=int(grace),
             refresh='<noscript><meta http-equiv="refresh" content="0; url=%s"></noscript>\n'
                     % esc(feature["href"]))
     # Nothing featured: a plain, self canonical page that links the hub. No
@@ -259,9 +379,10 @@ def door_html(reg, sport, door, feature, root=ROOT):
         canonical=esc(SITE + door["url"]),
         target=esc(hub), kickoff="", hub=esc(hub), sport=esc(sport),
         eyebrow=esc(door["eyebrow"]),
-        headline=esc("%s handicapping: every game on the board" % s.get("label", sport.upper())),
+        headline=esc(("%s handicapping: every game on the board" % s.get("label", sport.upper()))
+                     if sport != "*" else "Every Matchup of the Day, by sport and by date"),
         note="\n  <small>The next featured matchup publishes ahead of its kickoff.</small>",
-        runtime=esc(runtime_src(root)), baked="", refresh="")
+        runtime=esc(runtime_src(root)), baked="", refresh="", grace=int(grace))
 
 
 CARD_CSS = (
@@ -311,7 +432,7 @@ def card_html(reg, sport, feature, root=ROOT, now=None):
          esc(f.get("label") or "%s Featured Matchup" % reg["sports"][sport].get("label", "")),
          esc(f.get("headline") or ""), esc(when),
          esc(f.get("cta") or "Read the full breakdown"),
-         archive_html(reg, sport, now), CARD_CSS, esc(runtime_src(root)), esc(sport))
+         archive_html(reg, sport, now) if reg["sports"][sport].get("archive") else "", CARD_CSS, esc(runtime_src(root)), esc(sport))
 
 
 def archive_html(reg, sport, now=None, limit=12):
@@ -383,6 +504,7 @@ def render_surfaces(reg, now=None, root=ROOT, read=None):
         feature = resolve(reg, sport, now)
         for door in s.get("doors") or []:
             writes.append((os.path.join(root, door["file"]), door_html(reg, sport, door, feature, root)))
+        # A hub that has no card slot yet (never baked with one) is left alone.
         hub_file = s.get("hub_file")
         if hub_file and os.path.exists(os.path.join(root, hub_file)):
             path = os.path.join(root, hub_file)
@@ -402,6 +524,10 @@ def render_surfaces(reg, now=None, root=ROOT, read=None):
             if os.path.exists(path):
                 writes.append((path, _replace_marker(read(path), strip["marker"],
                                                      strip_html(reg, sport, feature, root), path)))
+    any_sport, any_feature = resolve_any(reg, now)
+    for door in reg.get("all_doors") or []:
+        writes.append((os.path.join(root, door["file"]),
+                       door_html(reg, "*", door, any_feature, root, feature_sport=any_sport)))
     return writes
 
 
@@ -428,6 +554,11 @@ def sync(check=False, now=None, root=ROOT):
         print("featured: no registry at data/featured-matchups.json; nothing to sync")
         return 0
     stale = []
+    reg_path = os.path.join(root, "data", "featured-matchups.json")
+    if discover_pages(reg, root):
+        stale.append("data/featured-matchups.json")
+        if not check:
+            save(reg, reg_path)
     for path, text in render_surfaces(reg, now=now, root=root):
         current = open(path, encoding="utf-8").read() if os.path.exists(path) else None
         if current is not None and _normalise(current) == _normalise(text):

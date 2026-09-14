@@ -131,7 +131,7 @@ working on the Handicapping Hub follows this and nothing else.
 - add a second featured-game system. The hand-edited `GAME_OF_THE_WEEK` dict was removed on
   Sep 9, 2026; `featured_article()` reads the sport's own `/matchup-of-the-day/<sport>/`
   index and links the newest article, or renders nothing when the lane has none.
-  **Except a sport named in `data/featured-matchups.json` (NFL, since Sep 14, 2026):** that
+  **Superseded for every sport on Sep 14, 2026 (mlb, ncaaf, nfl, soccer, tennis, and /today/):** a hand built feature page registers itself with `<meta name="tmr-featured">` tags on the next push. For those sports that
   registry is the ONE source of truth for its featured article. Its doors, hub card and the
   sportsbook strip are all baked from it by `scripts/featured_matchups.py`, the browser
   re-resolves it through `static/js/tmr-featured.js`, and a game retires on its own kickoff

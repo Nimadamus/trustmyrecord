@@ -27,8 +27,10 @@ do not expand it, do not "improve" it into something larger.
   graded-game engine cannot answer.
 - The featured game comes from `featured_article()`, which reads
   `/matchup-of-the-day/<sport>/`. There is no second hand-maintained featured system.
-  For NFL (and any sport in `data/featured-matchups.json`) that registry is the single
-  source of truth; see `scripts/featured_matchups.py`.
+  EVERY sport's featured matchup now comes from `data/featured-matchups.json` and retires on
+  its kickoff clock; see `scripts/featured_matchups.py`. A hand built feature page must carry
+  `<meta name="tmr-featured">` and `<meta name="tmr-featured-kickoff">`; it then registers
+  itself on the next push. Never hand edit a door, hub card or strip.
 
 Full detail, including what to keep and what not to re-wire, is in the first section of
 `DEVELOPMENT_RULES.md`.

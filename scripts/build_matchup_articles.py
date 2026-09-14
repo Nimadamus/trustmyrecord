@@ -1870,10 +1870,25 @@ def main():
         # /today/ handoff pointing at yesterday's piece while today's sat live
         # in the archive below it. `ordered` is already newest-first.
         motd_lead = daily[0] if daily else None
+        lead_expires = ""
+        if featured_reg:
+            # FEATURED_SOURCE_OF_TRUTH_20260914. Newest is not the same as
+            # current: the newest piece can be a game that ended hours ago. The
+            # lead is the Game File whose game is next up across every sport, by
+            # the registry's clock, and the card carries the moment its game
+            # ends so the browser drops it on time between bakes.
+            any_sport, any_feature = featured_matchups.resolve_any(featured_reg)
+            motd_lead = next((a for a in daily if any_feature
+                              and article_href(a) == any_feature.get("href")), None)
+            if motd_lead:
+                lead_expires = featured_matchups.expires_at(featured_reg, any_sport, any_feature)
         motd_rest = [a for a in daily if not motd_lead or a["slug"] != motd_lead["slug"]]
         text = read(motd_path)
         text = replace_marker(text, "motdToday",
-                              card_html(motd_lead, lead=True) if motd_lead else
+                              ('<div data-tmr-expires="%s">%s</div><script src="%s" defer></script>'
+                               % (esc(lead_expires), card_html(motd_lead, lead=True),
+                                  esc(featured_matchups.runtime_src(ROOT)))
+                               if lead_expires else card_html(motd_lead, lead=True)) if motd_lead else
                               '<p class="gf-empty">Today&rsquo;s Matchup of the Day is being '
                               'prepared. It publishes in the morning, ahead of first pitch.</p>',
                               motd_path)
@@ -1910,7 +1925,9 @@ def main():
         # permanent URL rather than this one, and it is deliberately kept out of
         # the sitemap for the same reason. It is not noindexed: it is a real
         # page with a real link on it, and it hands off in about a frame.
-        if motd_lead:
+        # With a registry, /today/ is an all sports door baked by
+        # featured_matchups.render_surfaces from the same clock rule.
+        if motd_lead and not (featured_reg and featured_reg.get("all_doors")):
             target = article_href(motd_lead)
             today_dir = os.path.join(MOTD_DIR, "today")
             headline = motd_lead.get("h1") or ("%s vs. %s" % (

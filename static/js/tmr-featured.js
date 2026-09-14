@@ -32,10 +32,27 @@
     return isNaN(n) ? null : n;
   }
 
+  function graceMinutes(reg, sport) {
+    var s = reg && reg.sports && reg.sports[sport];
+    if (s && s.grace_minutes != null) return Number(s.grace_minutes);
+    return reg && reg.grace_minutes != null ? Number(reg.grace_minutes) : DEFAULT_GRACE_MINUTES;
+  }
+
+  /* Earliest live game across every sport, for the all sports surfaces. */
+  function resolveAny(reg, now) {
+    var best = null, bestK = null, sports = Object.keys((reg && reg.sports) || {}).sort();
+    for (var i = 0; i < sports.length; i++) {
+      var f = resolve(reg, sports[i], now);
+      if (f && (best === null || t(f.kickoff_utc) < bestK)) { best = f; bestK = t(f.kickoff_utc); }
+    }
+    return best;
+  }
+
   function resolve(reg, sport, now) {
+    if (sport === '*') return resolveAny(reg, now);
     var s = reg && reg.sports && reg.sports[sport];
     if (!s) return null;
-    var grace = (reg.grace_minutes == null ? DEFAULT_GRACE_MINUTES : Number(reg.grace_minutes)) * 60000;
+    var grace = graceMinutes(reg, sport) * 60000;
     var best = null, bestK = null;
     var list = s.features || [];
     for (var i = 0; i < list.length; i++) {
@@ -81,6 +98,7 @@
     var baked = el.getAttribute('data-baked-href');
     var bakedKick = t(el.getAttribute('data-baked-kickoff'));
     var hub = el.getAttribute('data-hub') || '/';
+    var bakedGrace = Number(el.getAttribute('data-grace')) || DEFAULT_GRACE_MINUTES;
     var gone = false;
     function go(url) {
       if (gone) return;
@@ -91,7 +109,7 @@
        itself names a game that has already finished. */
     function fallback() {
       if (!baked) return;   // baked with nothing featured: this page is the answer
-      if (bakedKick !== null && Date.now() >= bakedKick + DEFAULT_GRACE_MINUTES * 60000) go(hub);
+      if (bakedKick !== null && Date.now() >= bakedKick + bakedGrace * 60000) go(hub);
       else go(baked);
     }
     var timer = setTimeout(fallback, 2500);
@@ -102,7 +120,7 @@
       /* Nothing featured: a door baked empty stays put (it already links the
          hub); a door baked with a game that has since finished goes to the hub. */
       if (f) go(safeHref(f.href));
-      else if (baked) go(safeHref(reg.sports[sport] && reg.sports[sport].hub) || hub);
+      else if (baked) go(hub);
     });
   }
 
@@ -142,13 +160,24 @@
     }
   }
 
-  function refresh() { load(bindAll); }
+  /* Any baked element that names the moment its game ends (data-tmr-expires)
+     is removed from view at that moment, registry or not. Used for cards baked
+     from a Game File, such as the Matchup of the Day section's lead card. */
+  function expire() {
+    var els = d.querySelectorAll('[data-tmr-expires]'), now = Date.now();
+    for (var i = 0; i < els.length; i++) {
+      var x = t(els[i].getAttribute('data-tmr-expires'));
+      if (x !== null && now >= x) els[i].hidden = true;
+    }
+  }
 
-  w.TMRFeatured = { resolve: resolve, load: load, door: door, refresh: refresh };
+  function refresh() { expire(); load(bindAll); }
+
+  w.TMRFeatured = { resolve: resolve, resolveAny: resolveAny, load: load, door: door, refresh: refresh };
 
   if (d.querySelector && d.querySelectorAll) {
     var start = function () {
-      if (!d.querySelector('[data-tmr-featured]')) return;
+      if (!d.querySelector('[data-tmr-featured],[data-tmr-expires]')) return;
       refresh();
       /* A tab left open across the end of a broadcast retires the game too. */
       setInterval(refresh, 60000);
