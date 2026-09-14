@@ -161,3 +161,11 @@ false-positive loop during the June 3 SEO repair). Verification for anything sta
 NOT the publish log — it is: (1) the Contents API PUT returns a commit sha, (2) the live URL
 returns 200 and matches the staged file (hash compare), (3) `python scripts/seo_audit.py`
 exits 0. Do not remove the exemption; do not stage TMR deploy files anywhere else.
+
+## 11. IndexNow (September 14, 2026)
+IndexNow supplements `sitemap.xml`; it never replaces it.
+- Key `4f623a1ebf25c5359dc7bcbc36f6715f`, served at `https://trustmyrecord.com/4f623a1ebf25c5359dc7bcbc36f6715f.txt`. Never delete or rename that file.
+- `.github/workflows/indexnow.yml` runs `scripts/indexnow.py auto` at :07, :27 and :47. It diffs the last processed commit against the newest successful GitHub Pages deployment and submits one batch to `https://api.indexnow.org/indexnow`.
+- A URL is sent only if it is in the sitemap (or just left it and now answers 404/410 or redirects), is not under an excluded prefix (`/u/`, `/forum/`, account, admin, wallet and similar), changed materially (numbers, dates and markup ignored), and passes live checks: 200, exact self canonical, no noindex, robots allowed. Updates are sent at most once per 24h per URL.
+- State and the JSON submission log live on the `indexnow-state` branch (`state.json`, `log.jsonl`). Manual send: Actions, IndexNow, Run workflow, with URLs.
+- No publish script calls IndexNow, so a failed submission can never break a publish. Nothing else needs to change when a new page family ships, as long as it lands in the sitemap.
