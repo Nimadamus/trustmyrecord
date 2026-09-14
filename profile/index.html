@@ -2008,8 +2008,14 @@
         /* A stat that does not fit its card wraps at a smaller size instead of being clipped. */
         body.profile-page #profileHeader .profile-rail-value.is-fit-wrap{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word;font-size:clamp(17px,1.45vw,23px)!important;line-height:1.18!important;}
         body.profile-page #profileHeader .profile-rail-value.is-fit-wrap.is-fit-small{font-size:15px!important;overflow-wrap:anywhere;}
-        /* Two-column header: the Verified Record badge sits over the rail column's top-right corner. */
-        @media (min-width:1181px){body.profile-page.tmr-social-profile #railSportBar .profile-rail-sporttabs{max-width:calc(100% - 150px);}}
+        /* Verified Record badge: centered at the top of the header card, clear of the sport tabs. */
+        @media (min-width:721px){
+          body.profile-page.tmr-social-profile #profileHeader.profile-header{padding-top:54px!important;}
+          body.profile-page.tmr-social-profile #profileHeader.profile-header::after{top:14px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;white-space:nowrap!important;}
+        }
+        @media (max-width:720px){
+          body.profile-page.tmr-social-profile #profileHeader.profile-header::after{justify-self:center!important;}
+        }
         /* ACM_GRID_20260912. Eleven cards, and CLV spans two columns because it
            is the one metric that carries a sample line as well as a status line
            -- it needs WIDTH, not the extra height that used to stretch it past
