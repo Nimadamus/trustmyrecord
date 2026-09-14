@@ -1997,8 +1997,7 @@
            Advanced Metrics sport bar; scrolls sideways on narrow screens instead of crushing the tabs. */
         .profile-rail-block{display:flex;flex-direction:column;min-width:0;}
         .profile-rail-sportbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;width:100%;min-width:0;margin:0 0 12px;}
-        .profile-rail-sporttabs{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px;}
-        .profile-rail-sporttabs::-webkit-scrollbar{display:none;}
+        .profile-rail-sporttabs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;max-width:100%;padding:2px;}
         #profileHeader .profile-rail-sporttab{-webkit-appearance:none;appearance:none;flex:0 0 auto;white-space:nowrap;cursor:pointer;margin:0;padding:7px 13px!important;border-radius:999px!important;border:1px solid rgba(148,163,184,.18)!important;background:transparent!important;color:#aebbd0!important;box-shadow:none!important;font:900 11px/1 'Barlow','Inter',sans-serif!important;letter-spacing:.08em;text-transform:uppercase;transition:background .15s ease,color .15s ease,border-color .15s ease;}
         #profileHeader .profile-rail-sporttab:hover{color:#e8f1ff!important;border-color:rgba(148,163,184,.42)!important;background:rgba(148,163,184,.08)!important;}
         #profileHeader .profile-rail-sporttab.is-active{background:linear-gradient(135deg,#2b8cff,#4DA3FF)!important;border-color:transparent!important;color:#04111a!important;box-shadow:0 6px 16px rgba(43,140,255,.28)!important;}
@@ -2006,6 +2005,9 @@
         .profile-rail-sportctx{flex-basis:100%;min-height:11px;margin:0 2px;color:#7f93ad;font:900 10.5px/1 'Barlow','Inter',sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .profile-rail-sportctx.is-sport{color:#4DA3FF;}
         .profile-rail.is-busy{opacity:.55;transition:opacity .15s ease;}
+        /* A stat that does not fit its card wraps at a smaller size instead of being clipped. */
+        body.profile-page #profileHeader .profile-rail-value.is-fit-wrap{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word;font-size:clamp(17px,1.45vw,23px)!important;line-height:1.18!important;}
+        body.profile-page #profileHeader .profile-rail-value.is-fit-wrap.is-fit-small{font-size:15px!important;overflow-wrap:anywhere;}
         /* Two-column header: the Verified Record badge sits over the rail column's top-right corner. */
         @media (min-width:1181px){body.profile-page.tmr-social-profile #railSportBar .profile-rail-sporttabs{max-width:calc(100% - 150px);}}
         /* ACM_GRID_20260912. Eleven cards, and CLV spans two columns because it
@@ -8639,6 +8641,7 @@
             window.__tmrRailOverallMetrics = data || null;
             try { refreshRailSportBar(); } catch (e) { console.warn('[Profile] rail sport bar failed:', e); }
             try { applyRailSportView(); } catch (_) {}
+            try { fitRailValues(); } catch (_) {}
         }
         try { renderAdvancedSportDiversity(opts.sport || ''); } catch (e) { console.warn('[Profile] sport diversity failed:', e); }
     }
@@ -11823,6 +11826,7 @@
         // arrived (metrics fetch and profile render race; whichever lands last wins).
         try { applyRailCorrelation(); } catch (_) {}
         try { applyRailSportView(); } catch (_) {}
+        try { fitRailValues(); } catch (_) {}
         try { if (window.TMRRenderProfileAwardsPreview) window.TMRRenderProfileAwardsPreview(); } catch (_) {}
     }
 
@@ -11853,8 +11857,13 @@
         const g = railSportGroups().find((x) => x.id === id);
         return g ? g.label : String(id || '').toUpperCase();
     }
+    const RAIL_SPORT_ORDER = ['nfl', 'nba', 'mlb', 'ncaaf', 'ncaab', 'nhl', 'soccer', 'tennis'];
     function buildRailSportBar() {
-        const groups = railSportGroups();
+        const groups = railSportGroups().slice().sort((a, b) => {
+            const ia = RAIL_SPORT_ORDER.indexOf(a.id), ib = RAIL_SPORT_ORDER.indexOf(b.id);
+            if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            return Number(b.graded_picks) - Number(a.graded_picks);
+        });
         if (!groups.length) return '';
         const tabs = [{ id: '', label: 'Overall' }].concat(groups).map((g) => {
             const on = g.id === railSportState().id;
@@ -11951,6 +11960,28 @@
         }
         applyRailSportView();
     }
+    let railFitRetries = 0;
+    function fitRailValues() {
+        const hdr = document.getElementById('profileHeader');
+        // Measuring a hidden header reads every width as 0; try again once it paints.
+        if (hdr && !hdr.getClientRects().length) {
+            if (railFitRetries++ < 40) setTimeout(() => { try { fitRailValues(); } catch (_) {} }, 250);
+            return;
+        }
+        railFitRetries = 0;
+        document.querySelectorAll('#profileHeader .profile-rail-value').forEach((v) => {
+            v.classList.remove('is-fit-wrap', 'is-fit-small');
+            if (v.scrollWidth <= v.clientWidth + 1) return;
+            v.classList.add('is-fit-wrap');
+            if (v.scrollWidth <= v.clientWidth + 1) return;
+            v.classList.add('is-fit-small');
+        });
+    }
+    let railFitTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(railFitTimer);
+        railFitTimer = setTimeout(() => { try { fitRailValues(); } catch (_) {} }, 120);
+    });
     function applyRailSportView() {
         if (!railSportState().id) return;
         const data = railSportState().cache[railSportCacheKey(railSportState().id)];
@@ -11995,6 +12026,7 @@
         setCard('avgodds', Number.isFinite(odds) && odds !== 0 ? ((odds > 0 ? '+' : '') + Math.round(odds)) : 'N/A', '');
         try { applyRailCorrelation(data.correlation || null); } catch (_) {}
         syncRailSportTabs();
+        try { fitRailValues(); } catch (_) {}
     }
     document.addEventListener('click', (ev) => {
         const btn = ev.target && ev.target.closest ? ev.target.closest('#railSportBar [data-rail-sport]') : null;
