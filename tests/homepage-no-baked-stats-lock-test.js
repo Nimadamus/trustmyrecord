@@ -51,19 +51,53 @@ for (const [id, what] of SKELETON_SLOTS) {
     `#${id} (${what}) has a baked number in it — that number WILL go stale: ${shown}`);
 }
 
-/* ---------- 2-4. the hero card is a fixed, labelled sample ------------------ */
-// Until 2026-09-13 the <!--MK:homeCapper--> region held the rotating LIVE
-// COMPETITION standings, which had to ship as skeletons. Nima replaced it with a
-// static sample pick receipt. It names no member and prints no live figure, so
-// the rule is now the opposite one: it must say it is a sample, and it must not
-// contain a real username link or a region any script or the edge fills.
-const rcpt = /<aside class="spot rcpt"[\s\S]*?<\/aside>/.exec(html);
-assert.ok(rcpt, 'index.html lost the sample receipt hero card (aside.spot.rcpt)');
-assert.ok(/Sample pick receipt/.test(rcpt[0]) && /Illustration only, not a real pick\./.test(rcpt[0]),
-  'the hero receipt must be labelled as a sample and as not a real pick');
-assert.ok(!/href="\/u\//.test(rcpt[0]) && !/MK:/.test(rcpt[0]),
-  'the sample receipt must not link a real member or carry a baked/injected region');
-assert.ok(!/<aside class="spot comp"/.test(html), 'the retired Live Competition card is back in index.html');
+/* ---------- 2. the hero card ships as a skeleton --------------------------- */
+// The <!--MK:homeCapper--> region held the Capper of the Week card until
+// 2026-08-16 and now holds the LIVE COMPETITION module. The marker name is kept
+// so the prerender anchor (scripts/prerender_home_snapshot.cjs) and the edge
+// renderer keep pointing at the same region; what it contains changed, the rule
+// that it must ship EMPTY did not.
+const spotRegion = /<!--MK:homeCapper-->([\s\S]*?)<!--\/MK:homeCapper-->/.exec(html);
+assert.ok(spotRegion, 'index.html lost the <!--MK:homeCapper--> region');
+assert.ok(/class="bd is-skel"/.test(spotRegion[1]),
+  'the hero card must ship in its skeleton state (class="bd is-skel")');
+
+/* ---------- 3. no competitor, number or event is baked into the card ------- */
+// The card names real members and prints their real units. A baked row would be
+// a WRONG member with a WRONG number on the front page — the same class of bug
+// as the stale counts above, with somebody's name attached.
+// The permanent headline is copy, not a statistic: it is the same sentence on
+// every load and cannot go stale, so it is the one thing in here that is baked.
+// Everything else in the region must read empty.
+const rowText = spotRegion[1]
+  .replace(/<div class="comp-title">[\s\S]*?<\/div>/, '')
+  .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+assert.strictEqual(rowText, '',
+  `the competition card has baked content — every row must be a skeleton: ${rowText}`);
+assert.ok(/<div class="comp-title">The TMR race never stops<\/div>/.test(spotRegion[1]),
+  'the permanent LIVE COMPETITION headline is missing from the card');
+for (const needle of ['comp-nm" href', 'data-val=', 'comp-ago', 'comp-dl']) {
+  assert.ok(!spotRegion[1].includes(needle),
+    `the competition card ships a rendered "${needle}" — rows must arrive from the API, never from the markup`);
+}
+// The footer counts ship as a placeholder for the same reason.
+const compFoot = /<span class="comp-foot">([\s\S]*?)<\/span>/.exec(html);
+assert.ok(compFoot, 'index.html lost the competition card footer (.comp-foot)');
+assert.ok(/class="sk"/.test(compFoot[1]) && !/\d/.test(compFoot[1].replace(/<[^>]*>/g, '')),
+  `the competition footer has a baked count — it must be a skeleton: ${compFoot[1]}`);
+
+/* ---------- 4. client and edge render the card from ONE payload shape ------ */
+// Both write the footer sentence from footer.competitors / footer.verified_picks
+// and both build rows through compRowHtml. If either drifts, the edge paints one
+// thing and the script repaints another — a visible swap on load.
+assert.ok(js.includes("' competitors · '") && js.includes("' verified picks · standings update live'"),
+  'tmr-home-live.js must write the competition footer sentence from the payload footer');
+assert.ok(worker.includes('competitors · ') && worker.includes('verified picks · standings update live'),
+  'worker.mjs must write the same competition footer sentence as the client');
+for (const [src, name] of [[js, 'tmr-home-live.js'], [worker, 'worker.mjs']]) {
+  assert.ok(src.includes('compRowHtml'),
+    `${name} must build competition rows through compRowHtml so the two stay byte-identical`);
+}
 
 /* ---------- 5. the hero eyebrow and the stripe read the SAME source -------- */
 assert.ok(js.includes("setText(document.getElementById('tmrEyebrowPicks'), picksText)"),
