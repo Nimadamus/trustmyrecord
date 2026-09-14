@@ -8,7 +8,7 @@
  * awayScore/homeScore keys:
  *   - MLB rows ('game') have always saved the box score of one simulated game.
  *   - NFL rows ('nfl_game') saved before SIM_SCORE_SYNC_20260913 hold only the
- *     rounded average of the whole run. They are labelled "Projected average"
+ *     rounded average of the whole run. They are labelled "Model average"
  *     and nothing here invents a single game for them.
  *   - NFL rows saved after it carry scoreKind:'simulated' plus the average in
  *     projectedAwayScore/projectedHomeScore, and are labelled accordingly.
@@ -108,6 +108,53 @@
         return isFinite(n) ? n : null;
     }
 
+    /* SAVED_SIMS_POLISH_20260913. Every figure on a card is read from the saved
+       row itself. Nothing is looked up from the current model, so an old save
+       shows exactly what it held when it was made, and a field it never saved
+       is simply left off the card. */
+    var MLB_WEATHER = { clear: 'Clear weather', cloudy: 'Cloudy', 'light-rain': 'Light rain', 'heavy-rain': 'Heavy rain', wind: 'Windy', heat: 'Extreme heat', cold: 'Cold' };
+    var MLB_DEPTH = { '500': 'Quick depth (500 games)', '2000': 'Standard depth (2,000 games)', '10000': 'Deep depth (10,000 games)' };
+    var MLB_MARKET = { pure: 'Pure TMR model', market: 'Market-informed' };
+
+    function pctText(v) {
+        var m = /(\d+(?:\.\d+)?)\s*%/.exec(String(v || ''));
+        return m ? m[1] + '%' : '';
+    }
+    function winProbability(m, r) {
+        var pct = pctText(r.winProbability);
+        if (!pct) return null;
+        var team = '';
+        if (m.sport === 'nfl') {
+            team = r.winner || '';
+        } else {
+            var abbr = String(r.winProbability).replace(/\s*\d+(?:\.\d+)?\s*%.*$/, '').trim().toUpperCase();
+            if (abbr && abbr === m.away.abbr) team = m.away.name;
+            else if (abbr && abbr === m.home.abbr) team = m.home.name;
+            else if (r.winner) team = String(r.winner).replace(/\s*\d+(?:\.\d+)?\s*%.*$/, '').trim();
+            else team = abbr;
+        }
+        return team ? { team: team, pct: pct } : null;
+    }
+    function configChips(m, r, inp) {
+        var chips = [];
+        if (m.sport === 'nfl') {
+            if (inp.mode === 'custom') chips.push('Custom matchup');
+            else {
+                var wk = /^2:(\d+)$/.exec(String(inp.week || ''));
+                if (wk && inp.season) chips.push(inp.season + ' Week ' + wk[1]);
+                else if (wk) chips.push('Week ' + wk[1]);
+            }
+            if (r.venue) chips.push(String(r.venue).replace(/\s*\((home)\)\s*$/i, ' home'));
+            if (r.kickoffWindow) chips.push(String(r.kickoffWindow));
+        } else if (m.sport === 'mlb') {
+            if (inp.simWeatherSelect && MLB_WEATHER[inp.simWeatherSelect]) chips.push(MLB_WEATHER[inp.simWeatherSelect]);
+            if (inp.simDepthSelect && MLB_DEPTH[inp.simDepthSelect]) chips.push(MLB_DEPTH[inp.simDepthSelect]);
+            if (inp.simMarketModeSelect && MLB_MARKET[inp.simMarketModeSelect]) chips.push(MLB_MARKET[inp.simMarketModeSelect]);
+            if (r.simulationMode) chips.push(String(r.simulationMode));
+        }
+        return chips;
+    }
+
     function model(saved) {
         var r = saved.summarized_result || {};
         var inp = saved.input_parameters || {};
@@ -118,27 +165,33 @@
             home: teamInfo(sport, r.homeTeam, inp.homeTeamSelect, r.homeAbbr),
             created: saved.created_at, rerun: saved.last_rerun_at,
             sims: num(r.simulations) || (sport === 'mlb' ? num(inp.simulationCountSelect) : null),
-            winProb: r.winProbability || null,
-            score: null, avgLine: ''
+            score: null, stats: [], chips: []
         };
         m.defaultName = m.away.name + ' @ ' + m.home.name;
         m.customName = (saved.name && saved.name.trim() && saved.name.trim() !== m.defaultName) ? saved.name.trim() : '';
+        m.winProb = winProbability(m, r);
 
         if (sport === 'nfl') {
             if (r.scoreKind === 'simulated' && num(r.simulatedAwayScore) !== null) {
                 m.score = { away: num(r.simulatedAwayScore), home: num(r.simulatedHomeScore), kind: 'simulated', ot: !!r.simulatedOt };
-                if (num(r.projectedAwayScore) !== null) {
-                    m.avgLine = 'Projected average ' + m.away.abbr + ' ' + r.projectedAwayScore + ', ' + m.home.abbr + ' ' + r.projectedHomeScore;
+                if (num(r.projectedAwayScore) !== null && num(r.projectedHomeScore) !== null) {
+                    m.stats.push(['Model average', m.away.abbr + ' ' + r.projectedAwayScore + ' · ' + m.home.abbr + ' ' + r.projectedHomeScore]);
                 }
             } else if (num(r.awayScore) !== null) {
+                // Saved before single games were kept: the only score this row holds is the average.
                 m.score = { away: num(r.awayScore), home: num(r.homeScore), kind: 'average' };
             }
         } else if (sport === 'mlb') {
             if (num(r.awayScore) !== null) m.score = { away: num(r.awayScore), home: num(r.homeScore), kind: 'simulated' };
-            if (r.expectedRuns) m.avgLine = 'Expected runs (average) ' + r.expectedRuns.replace(/\s*\/\s*/, ', ');
+            // The MLB engine's expected runs are its own run expectation for the
+            // matchup, not a mean of the games played, so they are named as such.
+            if (r.expectedRuns) m.stats.push(['Model expected runs', String(r.expectedRuns).replace(/\s*\/\s*/, ' · ')]);
         } else if (num(r.awayScore) !== null) {
             m.score = { away: num(r.awayScore), home: num(r.homeScore), kind: 'unknown' };
         }
+        if (m.winProb) m.stats.push([m.winProb.team + ' win probability', m.winProb.pct]);
+        if (m.sims && !(m.score && m.score.kind === 'average')) m.stats.push([sport === 'nfl' ? 'Simulations in model average' : 'Simulations run', fmtN(m.sims)]);
+        m.chips = configChips(m, r, inp);
         return m;
     }
 
@@ -152,6 +205,13 @@
         if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
         return d.toLocaleString(undefined, opts);
     }
+    // Two runs of one matchup can be seconds apart, so cards carry the second and the zone.
+    function fmtPrecise(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d)) return '';
+        return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', timeZoneName: 'short' });
+    }
     function logoHtml(t) {
         return '<span class="ss-logo" aria-hidden="true"><b>' + esc(t.abbr) + '</b>' +
             (t.logo ? '<img src="' + esc(t.logo) + '" alt="" loading="lazy" onerror="this.remove()" onload="this.previousSibling.style.visibility=\'hidden\'">' : '') +
@@ -159,63 +219,69 @@
     }
     function scoreLabel(m) {
         if (!m.score) return 'Score not saved';
-        if (m.score.kind === 'simulated') return 'Simulated final score' + (m.score.ot ? ' · OT' : '');
-        if (m.score.kind === 'average') return 'Projected average' + (m.sims ? ' of ' + fmtN(m.sims) + ' simulations' : '');
+        if (m.score.kind === 'simulated') return 'This run' + (m.score.ot ? ' · overtime' : '');
+        if (m.score.kind === 'average') return 'Model average' + (m.sims ? ' of ' + fmtN(m.sims) + ' simulations' : '');
         return 'Saved score';
     }
     function teamRow(t, pts, side, m) {
         var s = m.score;
         var cls = 'ss-team';
+        var won = false;
         if (s && s.kind !== 'average' && s.away !== s.home) {
-            var won = side === 'away' ? s.away > s.home : s.home > s.away;
+            won = side === 'away' ? s.away > s.home : s.home > s.away;
             cls += won ? ' is-win' : ' is-loss';
         }
         return '<div class="' + cls + '">' + logoHtml(t) +
             '<span class="ss-tname">' + esc(t.name) + '<small>' + (side === 'away' ? 'Away' : 'Home') + '</small></span>' +
-            '<span class="ss-pts">' + (pts === null || pts === undefined ? '&ndash;' : esc(pts)) + '</span></div>';
+            '<span class="ss-pts">' + (won ? '<span class="ss-sr">Winner, </span>' : '') + (pts === null || pts === undefined ? '&ndash;' : esc(pts)) + '</span></div>';
     }
 
     function cardHtml(m) {
         var title = m.customName || m.defaultName;
         var renaming = state.renamingId === m.id;
-        var details = [];
-        if (m.winProb) details.push('Win probability ' + esc(m.winProb));
-        if (m.sims && m.score && m.score.kind !== 'average') details.push(fmtN(m.sims) + (m.sims === 1 ? ' simulation' : ' simulations'));
         var viewHref = m.meta.path + '?savedId=' + encodeURIComponent(m.id) + '&mode=view';
         var rerunHref = m.meta.path + '?savedId=' + encodeURIComponent(m.id) + '&mode=rerun';
+        var menuId = 'ssCardMenu' + m.id;
+        var precise = fmtPrecise(m.created);
 
-        return '<article class="ss-card" data-id="' + m.id + '" data-sport="' + esc(m.sport) + '" data-score-kind="' + (m.score ? m.score.kind : 'none') + '">' +
+        return '<article class="ss-card" data-id="' + m.id + '" data-sport="' + esc(m.sport) + '" data-score-kind="' + (m.score ? m.score.kind : 'none') + '" aria-labelledby="ssCardTitle' + m.id + '">' +
             '<div class="ss-card-top">' +
             '<span class="ss-badge" data-sport="' + esc(m.sport) + '">' + esc(m.meta.label) + '</span>' +
-            '<time datetime="' + esc(m.created) + '" title="' + esc(m.created ? new Date(m.created).toString() : '') + '">Saved ' + esc(fmtWhen(m.created)) + '</time>' +
-            '</div>' +
+            '<div class="ss-card-id">' +
             (renaming
                 ? '<form class="ss-rename" data-id="' + m.id + '">' +
                   '<label class="ss-sr" for="ssRename' + m.id + '">Simulation name</label>' +
                   '<input id="ssRename' + m.id + '" type="text" maxlength="120" value="' + esc(title) + '" placeholder="' + esc(m.defaultName) + '">' +
-                  '<button type="submit" class="ss-btn ss-btn-primary ss-btn-sm">Save</button>' +
-                  '<button type="button" class="ss-btn ss-btn-ghost ss-btn-sm" data-action="rename-cancel">Cancel</button>' +
+                  '<span class="ss-rename-actions"><button type="submit" class="ss-btn ss-btn-primary ss-btn-sm">Save name</button>' +
+                  '<button type="button" class="ss-btn ss-btn-ghost ss-btn-sm" data-action="rename-cancel">Cancel</button></span>' +
                   '<small class="ss-dim">Leave blank to use the matchup name.</small></form>'
-                // The scoreboard already names both teams, so the matchup title is
-                // only shown when the member has given the save its own name.
-                : (m.customName
-                    ? '<h3 class="ss-title">' + esc(m.customName) + '</h3>'
-                    : '<h3 class="ss-sr">' + esc(m.defaultName) + '</h3>')) +
+                : '<h3 class="ss-title" id="ssCardTitle' + m.id + '">' + esc(title) + '</h3>') +
+            '<time datetime="' + esc(m.created) + '">Saved ' + esc(precise) + '</time>' +
+            '</div>' +
+            '<div class="ss-more">' +
+            '<button type="button" class="ss-more-btn" data-action="menu" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" aria-label="More actions for ' + esc(title) + ', saved ' + esc(precise) + '">' +
+            '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><circle cx="4" cy="10" r="1.8" fill="currentColor"/><circle cx="10" cy="10" r="1.8" fill="currentColor"/><circle cx="16" cy="10" r="1.8" fill="currentColor"/></svg></button>' +
+            '<div class="ss-card-menu" id="' + menuId + '" role="menu" hidden>' +
+            '<button type="button" role="menuitem" data-action="rename">Rename</button>' +
+            '<button type="button" role="menuitem" data-action="delete" class="is-danger">Delete</button>' +
+            '</div></div>' +
+            '</div>' +
             '<div class="ss-board" aria-label="' + esc(scoreLabel(m) + ': ' + m.away.name + ' ' + (m.score ? m.score.away : '') + ', ' + m.home.name + ' ' + (m.score ? m.score.home : '')) + '">' +
+            '<p class="ss-scorekind" data-kind="' + (m.score ? m.score.kind : 'none') + '">' + esc(scoreLabel(m)) + '</p>' +
             teamRow(m.away, m.score ? m.score.away : null, 'away', m) +
             teamRow(m.home, m.score ? m.score.home : null, 'home', m) +
             '</div>' +
-            '<p class="ss-scorekind" data-kind="' + (m.score ? m.score.kind : 'none') + '">' + esc(scoreLabel(m)) + '</p>' +
-            (m.avgLine ? '<p class="ss-detail">' + esc(m.avgLine) + '</p>' : '') +
-            (details.length ? '<p class="ss-detail">' + details.join(' · ') + '</p>' : '') +
-            (m.rerun ? '<p class="ss-detail ss-dim">Last run again ' + esc(fmtWhen(m.rerun)) + '</p>' : '') +
+            (m.stats.length
+                ? '<dl class="ss-stats">' + m.stats.map(function (s) { return '<div><dt>' + esc(s[0]) + '</dt><dd>' + esc(s[1]) + '</dd></div>'; }).join('') + '</dl>'
+                : '') +
+            (m.chips.length || m.rerun
+                ? '<ul class="ss-config" aria-label="Saved settings">' + m.chips.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') +
+                  (m.rerun ? '<li class="is-rerun">Last run again ' + esc(fmtWhen(m.rerun)) + '</li>' : '') + '</ul>'
+                : '') +
             '<div class="ss-actions">' +
-            '<a class="ss-btn ss-btn-primary ss-btn-sm" href="' + viewHref + '" data-action="view">View result</a>' +
-            '<a class="ss-btn ss-btn-ghost ss-btn-sm" href="' + rerunHref + '" data-action="rerun">Run again</a>' +
-            '<span class="ss-actions-quiet">' +
-            '<button type="button" class="ss-link" data-action="rename" aria-label="Rename ' + esc(title) + '">Rename</button>' +
-            '<button type="button" class="ss-link ss-link-danger" data-action="delete" aria-label="Delete ' + esc(title) + '">Delete</button>' +
-            '</span></div>' +
+            '<a class="ss-btn ss-btn-primary" href="' + viewHref + '" data-action="view">View result</a>' +
+            '<a class="ss-btn ss-btn-ghost" href="' + rerunHref + '" data-action="rerun">Run again</a>' +
+            '</div>' +
             '</article>';
     }
 
@@ -264,6 +330,7 @@
             list.setAttribute('data-state', 'empty');
             more.hidden = true;
             byId('ssResultLine').textContent = '';
+            byId('ssMoreNote').textContent = '';
             if (state.q || (state.sport !== 'all' && anySaves)) {
                 list.innerHTML = '<div class="ss-empty"><h2>No saved simulations match</h2><p>' +
                     (state.q ? 'Nothing matches “' + esc(state.q) + '”' : 'You have no ' + esc(sportMeta(state.sport).label) + ' saves yet') +
@@ -285,6 +352,9 @@
             ' · ' + (state.sort === 'oldest' ? 'oldest first' : 'newest first');
         more.hidden = state.rows.length >= state.total;
         more.textContent = 'Load ' + fmtN(Math.min(PAGE_SIZE, state.total - state.rows.length)) + ' more';
+        byId('ssMoreNote').textContent = state.rows.length >= state.total
+            ? 'All ' + fmtN(state.total) + ' shown'
+            : fmtN(state.rows.length) + ' of ' + fmtN(state.total) + ' shown';
     }
 
     function renderError(err) {
@@ -459,7 +529,7 @@
     function cancelRename(id) {
         state.renamingId = null;
         var card = rerenderCard(id);
-        var btn = card && card.querySelector('[data-action="rename"]');
+        var btn = card && card.querySelector('.ss-more-btn');
         if (btn) btn.focus();
     }
     function submitRename(form) {
@@ -476,7 +546,7 @@
             else if (row) row.name = name;
             state.renamingId = null;
             var card = rerenderCard(id);
-            var btn = card && card.querySelector('[data-action="rename"]');
+            var btn = card && card.querySelector('.ss-more-btn');
             if (btn) btn.focus();
             toast(name ? 'Renamed to “' + name + '”' : 'Name reset to the matchup');
             track('simulator_saved_renamed', { simulation_type: row && row.simulation_type });
@@ -488,13 +558,13 @@
 
     var pendingDelete = null;
     var lastFocus = null;
-    function openDelete(id) {
+    function openDelete(id, keepFocusTarget) {
         var row = rowById(id);
         if (!row) return;
         var m = model(row);
         pendingDelete = id;
-        lastFocus = document.activeElement;
-        var when = fmtWhen(m.created);
+        if (!keepFocusTarget) lastFocus = document.activeElement;
+        var when = fmtPrecise(m.created);
         byId('ssDeleteBody').innerHTML = '<b>' + esc(m.customName || m.defaultName) + '</b>' +
             (m.score ? ' · ' + esc(m.away.abbr) + ' ' + esc(m.score.away) + ', ' + esc(m.home.abbr) + ' ' + esc(m.score.home) : '') +
             (when ? ' · saved ' + esc(when) : '');
@@ -543,6 +613,84 @@
         });
     }
 
+    /* ---- per-card overflow menu (Rename, Delete) ---- */
+    var openMenu = null;
+    function closeCardMenu(focusButton) {
+        if (!openMenu) return;
+        var btn = openMenu.btn;
+        openMenu.menu.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        openMenu = null;
+        if (focusButton && document.contains(btn)) btn.focus();
+    }
+    function toggleCardMenu(btn) {
+        var menu = byId(btn.getAttribute('aria-controls'));
+        if (!menu) return;
+        var wasOpen = openMenu && openMenu.menu === menu;
+        closeCardMenu(false);
+        if (wasOpen) return;
+        menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+        openMenu = { btn: btn, menu: menu };
+        var first = menu.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+    }
+
+    /* ---- come back to the same place after View result / Run again ----
+       The filters already live in the URL. What a reload loses is how far the
+       member had paged and where the card sat on screen, so that is kept for the
+       tab, for an hour, and used only when they arrive back from a simulator. */
+    var RETURN_KEY = 'tmr_saved_sims_return';
+    function rememberPlace(id) {
+        try {
+            var c = document.querySelector('.ss-card[data-id="' + id + '"]');
+            sessionStorage.setItem(RETURN_KEY, JSON.stringify({
+                search: location.search, rows: state.rows.length, id: String(id),
+                offset: c ? Math.round(c.getBoundingClientRect().top) : 0,
+                scrollY: Math.round(window.scrollY), at: Date.now()
+            }));
+        } catch (e) {}
+    }
+    function takePlace() {
+        var saved = null;
+        try { saved = JSON.parse(sessionStorage.getItem(RETURN_KEY) || 'null'); sessionStorage.removeItem(RETURN_KEY); } catch (e) { return null; }
+        if (!saved || Date.now() - saved.at > 60 * 60 * 1000) return null;
+        var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+        var fromSim = /\/(nfl|mlb)-simulator\//.test(document.referrer || '');
+        if (nav.type !== 'back_forward' && !fromSim) return null;
+        if (location.search && location.search !== saved.search) return null;
+        return saved;
+    }
+    function restorePlace(place) {
+        if (!place) return;
+        if (!location.search && place.search) {
+            try { history.replaceState(null, '', location.pathname + place.search + location.hash); } catch (e) {}
+        }
+        try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+    }
+    function scrollToPlace(place) {
+        var card = document.querySelector('.ss-card[data-id="' + place.id + '"]');
+        if (card) {
+            window.scrollTo(0, Math.max(0, card.getBoundingClientRect().top + window.scrollY - (place.offset || 0)));
+            card.classList.add('is-returned');
+            var link = card.querySelector('[data-action="view"]');
+            if (link) try { link.focus({ preventScroll: true }); } catch (e) {}
+        } else {
+            window.scrollTo(0, place.scrollY || 0);
+        }
+    }
+    function loadUntil(place) {
+        return load(true).then(function () {
+            function step() {
+                var need = Math.min(place.rows || PAGE_SIZE, state.total);
+                var have = !!document.querySelector('.ss-card[data-id="' + place.id + '"]');
+                if (have || state.rows.length >= need || state.rows.length >= state.total) return null;
+                return load(false).then(step);
+            }
+            return step();
+        }).then(function () { requestAnimationFrame(function () { scrollToPlace(place); }); });
+    }
+
     function wire() {
         var searchTimer = null;
         byId('ssSearch').addEventListener('input', function (e) {
@@ -589,9 +737,11 @@
             var card = el.closest('.ss-card');
             var id = card && card.getAttribute('data-id');
             var action = el.getAttribute('data-action');
+            if (action === 'menu') { toggleCardMenu(el); return; }
+            if (el.getAttribute('role') === 'menuitem') closeCardMenu(false);
             if (action === 'rename') startRename(id);
             else if (action === 'rename-cancel') cancelRename(id);
-            else if (action === 'delete') openDelete(id);
+            else if (action === 'delete') { lastFocus = card && card.querySelector('.ss-more-btn'); openDelete(id, true); }
             else if (action === 'retry') load(true);
             else if (action === 'clear-filters') {
                 state.q = ''; state.sport = 'all';
@@ -599,6 +749,7 @@
                 syncFilterChips(); syncUrl(); load(true);
             } else if (action === 'view' || action === 'rerun') {
                 var row = rowById(id);
+                rememberPlace(id);
                 track(action === 'view' ? 'simulator_saved_view_clicked' : 'simulator_saved_rerun_clicked', { simulation_type: row && row.simulation_type });
             }
         });
@@ -610,7 +761,17 @@
         });
         list.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && e.target.closest('.ss-rename')) cancelRename(e.target.closest('.ss-rename').getAttribute('data-id'));
+            var menu = e.target.closest('.ss-card-menu');
+            if (menu) {
+                var items = Array.prototype.slice.call(menu.querySelectorAll('[role="menuitem"]'));
+                var i = items.indexOf(document.activeElement);
+                if (e.key === 'Escape') { closeCardMenu(true); e.preventDefault(); }
+                else if (e.key === 'ArrowDown') { items[(i + 1) % items.length].focus(); e.preventDefault(); }
+                else if (e.key === 'ArrowUp') { items[(i + items.length - 1) % items.length].focus(); e.preventDefault(); }
+                else if (e.key === 'Tab') closeCardMenu(false);
+            }
         });
+        document.addEventListener('click', function (e) { if (openMenu && !e.target.closest('.ss-more')) closeCardMenu(false); });
 
         var modal = byId('ssDelete');
         modal.addEventListener('click', function (e) {
@@ -693,9 +854,11 @@
             if (!user || !user.id) throw new Error('not authenticated');
             gate.hidden = true;
             content.hidden = false;
+            var place = takePlace();
+            restorePlace(place);
             readUrl();
             wire();
-            load(true);
+            if (place) loadUntil(place); else load(true);
             loadFollowed();
             track('simulator_return_visit', {});
         }).catch(function () {
