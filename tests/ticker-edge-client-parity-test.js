@@ -227,6 +227,27 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
   failures.push('SCOREBUG_SPORTS differs between the edge and the client');
 }
 
+/* AN UPCOMING COLLEGE GAME IS A ONE-LINE CARD (Nima, 2026-09-14: Syracuse at
+   Pitt "looks totally different ... doesn't look like the others"). Only a game
+   with a score is a scorebug, and the rule lives in two files. */
+{
+  const edgeRow = new Function(`${wsrc.slice(0, cut)};return {espnTickerHtml};`)();
+  const up = { sport: 'cfb', away: 'Syracuse', home: 'Pitt', status: 'scheduled', start_time_pt: 'Thu 4:30 PM',
+    away_logo: 'https://a.espncdn.com/x.png', home_logo: 'https://a.espncdn.com/y.png', href: '/sportsbook/',
+    insights: [{ category: 'line', text: 'Favored by 10.5', team_label: 'Pittsburgh Panthers' }], insight_mode: 'preview',
+    espn_event_id: '401700009' };
+  const done = Object.assign({}, up, { status: 'final', away_score: 21, home_score: 30, status_detail: 'Final', period: 4 });
+  const upHtml = edgeRow.espnTickerHtml([up], 'cfb');
+  const doneHtml = edgeRow.espnTickerHtml([done], 'cfb');
+  if (/gm--bug/.test(upHtml) || !/class="gm gm--cfb" data-sport="cfb"/.test(upHtml)) {
+    failures.push(`edge draws an upcoming college game as a scorebug: ${upHtml.slice(0, 160)}`);
+  }
+  if (!/gm--bug/.test(doneHtml)) failures.push('edge no longer draws a finished college game as a scorebug');
+  if (csrc.indexOf("if (SCOREBUG_SPORTS[row.key] && g.status !== 'scheduled')") === -1) {
+    failures.push('client renderTicker does not route an upcoming college game to the one-line card');
+  }
+}
+
 /* THE BOTTOM LINE LABEL. The client and the worker each join `team_label` to
    the text themselves, so a fixture carrying no labels would compare two
    renderers that are both drawing nothing and call it agreement. */

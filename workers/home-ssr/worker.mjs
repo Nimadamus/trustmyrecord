@@ -612,10 +612,9 @@ function tickerHtml(games) {
    The recap strip is rendered here too. It was missing from the football row,
    so a finished game arrived carrying insights and the card discarded them. */
 function espnTickerHtml(games, key) {
-  if (SCOREBUG_SPORTS[key]) {
-    return (games || []).map((g) => scorebugCard(g, key)).join('');
-  }
-  return (games || []).map((g) => (
+  /* An upcoming game draws the one-line card on every row; the scorebug is for
+     a game with a score to show. Same rule as the client's renderTicker. */
+  return (games || []).map((g) => (SCOREBUG_SPORTS[key] && g.status !== 'scheduled' ? scorebugCard(g, key) : (
     `<a class="gm gm--${key}" data-sport="${key}"` +
     ` href="${esc(g.href || '/sportsbook/')}">` +
     '<span class="gm-top">' +
@@ -625,7 +624,7 @@ function espnTickerHtml(games, key) {
     '</span>' +
     insightStrip(g) +
     '</a>'
-  )).join('');
+  ))).join('');
 }
 
 /* Kept as a named wrapper so nothing that referenced it has to change. */
