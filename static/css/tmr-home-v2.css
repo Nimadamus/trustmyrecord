@@ -234,7 +234,7 @@ a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
    This is keyed on .gm--bug, not on .gm--cfb: it is the card shape, and NFL can
    have it by adding one key in tmr-home-live.js. */
 .gm.gm--bug{width:406px;gap:0;padding:8px 15px 9px}
-.gm.gm--bug .gb-hd{display:flex;align-items:center;gap:10px;height:16px;margin-bottom:3px}
+.gm.gm--bug .gb-hd{display:flex;align-items:center;gap:10px;height:16px;margin-bottom:1px}
 .gm.gm--bug .gb-lbl{color:#5E7C99;font-size:11.5px;font-weight:900;letter-spacing:.15em;
   text-transform:uppercase;white-space:nowrap}
 /* The chip keeps its own colours and its own two wordings; only its size and
@@ -245,7 +245,7 @@ a.gm:hover{background:rgba(34,210,192,.10);border-color:rgba(34,210,192,.34)}
 /* 26px is the logo box plus its optical breathing room; 34px holds a three
    digit score, which college football does reach. */
 .gm.gm--bug .gb-r{display:grid;grid-template-columns:24px minmax(0,1fr) 34px;
-  align-items:center;column-gap:10px;height:28px;width:100%}
+  align-items:center;column-gap:10px;height:24px;width:100%}
 .gm.gm--bug .gb-r img{width:24px;height:24px;object-fit:contain}
 .gm.gm--bug .gb-tn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:#B6CDE2;font-size:16.5px;font-weight:700;line-height:1.15}
@@ -260,12 +260,16 @@ a.gm--bug:hover .gb-tn{color:#DFEBF6}
    possession, drawn only while the API names a side. */
 .gm.gm--bug .gb-pos{display:inline-block;width:10px;height:6px;border-radius:50%;
   background:var(--brand-lt);margin-left:8px;vertical-align:middle;position:relative;top:-1px}
-/* The strip is shorter here than on a baseball card because the scorebug above
-   it is two rows tall and the card as a whole has to stay inside the height the
-   homepage's locked geometry allows. Two lines still fit at this size. */
-.gm.gm--bug .gm-in{width:100%;height:35px;margin-top:5px}
-.gm.gm--bug .gm-in-l{font-size:14px;line-height:1.22;gap:7px}
-.gm.gm--bug .gm-in-l .ts{width:7px;height:7px;margin-top:4px}
+/* SAME TYPE AS A BASEBALL CARD (Nima, 2026-09-14: "the NFL ticker highlight
+   information is written in smaller font than MLB make it larger"). The strip
+   was 14px against the one-line card's 18px. The card may not grow - it has to
+   stay inside the 134px the homepage's locked geometry reserves - so the 12px
+   the taller two-line strip needs comes out of the scorebug instead: club rows
+   28px to 24px (the logo box is 24px), header gap 3px to 1px, strip gap 5px to
+   3px. 16+1 + 2x24 + 3+47 is the same 112px of content as before. */
+.gm.gm--bug .gm-in{width:100%;height:47px;margin-top:3px}
+.gm.gm--bug .gm-in-l{font-size:18px;line-height:1.3;gap:9px}
+.gm.gm--bug .gm-in-l .ts{width:9px;height:9px;margin-top:6px}
 
 /* ---------- ROTATING INTEL STRIP (Nima, 2026-08-21) -------------------------
    Replaces the two permanent recent-form rows and the permanent trend row. The
@@ -396,7 +400,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
      The card fills the lane rather than sizing to 406px, and every metric that
      drives its HEIGHT is pinned so the three parts still add up under the
      reservation the block above promises: 6+6 padding, a 14px header, two 20px
-     club rows and a 27px strip is 95px with the border. The school drops to its
+     club rows and a 28px strip is 96px with the border. The school drops to its
      abbreviation here through the same .sf/.sa switch every other card uses, so
      "#4 Ohio State" becomes "#4 OSU" only where there is genuinely no room. */
   /* flex-shrink 0, and it is not cosmetic. layoutTicker measures every card in
@@ -418,8 +422,8 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
   .ticker-page>.gm--bug .gb-tn{font-size:12.5px}
   .ticker-page>.gm--bug .gb-sc{font-size:14px}
   .ticker-page>.gm--bug .gb-pos{width:8px;height:5px;margin-left:6px}
-  .ticker-page>.gm--bug .gm-in{width:100%;height:27px;margin-top:2px}
-  .ticker-page>.gm--bug .gm-in-l{font-size:11px;gap:5px;line-height:1.18}
+  .ticker-page>.gm--bug .gm-in{width:100%;height:28px;margin-top:2px}
+  .ticker-page>.gm--bug .gm-in-l{font-size:11.5px;gap:6px;line-height:1.18}
   .ticker-page>.gm--bug .gm-in-l>b{-webkit-line-clamp:2}
   .ticker-page>.gm--bug .gm-in-l .ts{width:6px;height:6px;margin-top:3px}
   /* THE SCHOOL, NOT ITS INITIALS, WHEREVER IT FITS (Nima, 2026-09-05: "use
@@ -1646,16 +1650,16 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
      card would take the one-line card's padding and its 42px strip. Measured
      at 1440px: 118px against the 127px reservation below. */
   .gm.gm--bug{width:380px;padding:7px 14px 8px}
-  .gm.gm--bug .gb-hd{height:15px;margin-bottom:3px}
+  .gm.gm--bug .gb-hd{height:15px;margin-bottom:1px}
   .gm.gm--bug .gb-lbl{font-size:11px}
   .gm.gm--bug .gb-hd .st{font-size:12px;padding-left:8px}
-  .gm.gm--bug .gb-r{height:26px;grid-template-columns:23px minmax(0,1fr) 32px;column-gap:9px}
+  .gm.gm--bug .gb-r{height:23px;grid-template-columns:23px minmax(0,1fr) 32px;column-gap:9px}
   .gm.gm--bug .gb-r img{width:23px;height:23px}
   .gm.gm--bug .gb-tn{font-size:15.5px}
   .gm.gm--bug .gb-sc{font-size:18.5px}
-  .gm.gm--bug .gm-in{width:100%;height:35px;margin-top:5px}
-  .gm.gm--bug .gm-in-l{font-size:13.5px;gap:7px}
-  .gm.gm--bug .gm-in-l .ts{width:7px;height:7px;margin-top:4px}
+  .gm.gm--bug .gm-in{width:100%;height:45px;margin-top:3px}
+  .gm.gm--bug .gm-in-l{font-size:17px;gap:8px}
+  .gm.gm--bug .gm-in-l .ts{width:8px;height:8px;margin-top:6px}
   /* THE RESERVATION MOVES WITH THE CARD. The lane holds a real matchup card's
      height from the first frame so a late slate cannot push the hero down; a
      smaller card against the old 134px box would have re-opened exactly that
