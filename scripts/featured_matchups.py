@@ -27,8 +27,11 @@ The rule now:
     start_utc has arrived), the one with the EARLIEST kickoff. So a game is
     featured up to and through its own broadcast and retires on the clock, and
     the next designated game takes over by itself. A finished game can never be
-    the current feature. If nothing qualifies, there is no feature: doors show
-    a plain page pointing at the sport's hub, and the card and strip hide.
+    the current feature. If nothing qualifies, the LATEST published entry
+    (newest kickoff) stays the feature until the next one is registered: a
+    door always opens a real article, never a placeholder page (Nima,
+    2026-09-15: "in a case there's no update we will always show the latest
+    page").
   * Every surface is baked from resolve() here, and static/js/tmr-featured.js
     runs the SAME rule in the browser against the same JSON, so a page baked
     before kickoff still rolls over at the right minute without a rebuild.
@@ -118,11 +121,44 @@ def now_utc():
 
 
 def resolve(reg, sport, now=None):
-    """The active featured entry for `sport`, or None. Mirrors resolve() in
-    static/js/tmr-featured.js line for line; the sync test holds them equal."""
+    """The featured entry for `sport`: the live one, else the latest published
+    one, else None (only when the sport has no entry at all). Mirrors resolve()
+    in static/js/tmr-featured.js line for line; the sync test holds them equal."""
     now = now or now_utc()
     if sport == "*":
         return resolve_any(reg, now)[1]
+    return resolve_live(reg, sport, now) or resolve_latest(reg, sport, now)
+
+
+def resolve_latest(reg, sport, now=None):
+    """The active entry with the newest kickoff that has already started its
+    window (start_utc reached). The fallback feature when nothing is live."""
+    now = now or now_utc()
+    s = (reg or {}).get("sports", {}).get(sport)
+    if not s:
+        return None
+    best, best_k = None, None
+    for f in s.get("features") or []:
+        if not isinstance(f, dict) or (f.get("status") or "active") != "active":
+            continue
+        if not f.get("href"):
+            continue
+        k = parse_utc(f.get("kickoff_utc"))
+        if k is None:
+            continue
+        if f.get("start_utc"):
+            st = parse_utc(f.get("start_utc"))
+            if st is None or now < st:
+                continue
+        if best is None or k > best_k:
+            best, best_k = f, k
+    return best
+
+
+def resolve_live(reg, sport, now=None):
+    """The live featured entry for `sport` (earliest kickoff not yet past its
+    grace), or None."""
+    now = now or now_utc()
     s = (reg or {}).get("sports", {}).get(sport)
     if not s:
         return None
@@ -163,9 +199,14 @@ def resolve_any(reg, now=None):
     now = now or now_utc()
     best = (None, None)
     for sport in managed_sports(reg):
-        f = resolve(reg, sport, now)
+        f = resolve_live(reg, sport, now)
         if f and (best[1] is None or parse_utc(f["kickoff_utc"]) < parse_utc(best[1]["kickoff_utc"])):
             best = (sport, f)
+    if best[1] is None:
+        for sport in managed_sports(reg):
+            f = resolve_latest(reg, sport, now)
+            if f and (best[1] is None or parse_utc(f["kickoff_utc"]) > parse_utc(best[1]["kickoff_utc"])):
+                best = (sport, f)
     return best
 
 
@@ -370,19 +411,15 @@ def door_html(reg, sport, door, feature, root=ROOT, feature_sport=None):
             note="", runtime=esc(runtime_src(root)), baked=esc(feature["href"]), grace=int(grace),
             refresh='<noscript><meta http-equiv="refresh" content="0; url=%s"></noscript>\n'
                     % esc(feature["href"]))
-    # Nothing featured: a plain, self canonical page that links the hub. No
-    # refresh, because a stub whose canonical and refresh disagree is exactly
-    # what tests/seo-indexability-regression-test.js forbids.
+    # A sport with no article at all: no placeholder page, forward straight to
+    # the hub (canonical and refresh agree, as seo-indexability requires).
     return DOOR_TEMPLATE.format(
         title=esc("%s | TrustMyRecord" % door["eyebrow"]),
-        description=esc("%s: the next featured matchup publishes ahead of its kickoff. Every game on the board is in the %s handicapping hub." % (door["eyebrow"], s.get("label", sport.upper()))),
-        canonical=esc(SITE + door["url"]),
-        target=esc(hub), kickoff="", hub=esc(hub), sport=esc(sport),
-        eyebrow=esc(door["eyebrow"]),
-        headline=esc(("%s handicapping: every game on the board" % s.get("label", sport.upper()))
-                     if sport != "*" else "Every Matchup of the Day, by sport and by date"),
-        note="\n  <small>The next featured matchup publishes ahead of its kickoff.</small>",
-        runtime=esc(runtime_src(root)), baked="", refresh="", grace=int(grace))
+        description=esc(door["eyebrow"]),
+        canonical=esc(SITE + hub), target=esc(hub), kickoff="", hub=esc(hub),
+        sport=esc(sport), eyebrow=esc(door["eyebrow"]), headline=esc(door["eyebrow"]),
+        note="", runtime=esc(runtime_src(root)), baked=esc(hub), grace=int(grace),
+        refresh='<meta http-equiv="refresh" content="0; url=%s">\n' % esc(hub))
 
 
 CARD_CSS = (
@@ -446,6 +483,7 @@ def archive_html(reg, sport, now=None, limit=12):
     for f in s.get("features") or []:
         k = parse_utc(f.get("kickoff_utc"))
         if (f.get("href") and k is not None and now >= k + grace
+                and f is not resolve(reg, sport, now)
                 and (f.get("status") or "active") != "withdrawn"):
             past.append((k, f))
     past.sort(key=lambda kf: kf[0], reverse=True)

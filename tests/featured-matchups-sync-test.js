@@ -78,7 +78,7 @@ const EXPECT = {
   'embargoed game in progress': 'embargoed',
   'monday in progress': 'monday',
   'monday finished': 'sunday-next',
-  'last game finished': null,
+  'last game finished': 'sunday-next',  // nothing live: the latest article stays, never a placeholder
   'long tennis match still on': 'monday',
 };
 /* The all sports answer at each instant: earliest live kickoff in any sport. */
@@ -88,7 +88,7 @@ const EXPECT_ANY = {
   'embargoed game in progress': 'embargoed',
   'monday in progress': 'monday',
   'monday finished': 'sunday-next',
-  'last game finished': null,
+  'last game finished': 'sunday-next',
   'long tennis match still on': 'tennis-long-match',
 };
 

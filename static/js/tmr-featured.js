@@ -10,10 +10,10 @@
  * tests/featured-matchups-sync-test.js runs both over the same fixtures.
  *
  * Surfaces:
- *   [data-tmr-featured-door]  a stable door: forwards to the active article,
- *                             or to the sport hub when nothing is featured.
- *   [data-tmr-featured]       a card or strip: filled from the active entry,
- *                             hidden when nothing is featured.
+ *   [data-tmr-featured-door]  a stable door: forwards to the live article, or
+ *                             to the latest one when nothing is live. Never a
+ *                             placeholder page.
+ *   [data-tmr-featured]       a card or strip: filled from the same entry.
  * Text is set with textContent, never innerHTML.
  */
 (function (w, d) {
@@ -41,15 +41,47 @@
   /* Earliest live game across every sport, for the all sports surfaces. */
   function resolveAny(reg, now) {
     var best = null, bestK = null, sports = Object.keys((reg && reg.sports) || {}).sort();
-    for (var i = 0; i < sports.length; i++) {
-      var f = resolve(reg, sports[i], now);
+    var i, f;
+    for (i = 0; i < sports.length; i++) {
+      f = resolveLive(reg, sports[i], now);
       if (f && (best === null || t(f.kickoff_utc) < bestK)) { best = f; bestK = t(f.kickoff_utc); }
+    }
+    if (best !== null) return best;
+    for (i = 0; i < sports.length; i++) {
+      f = resolveLatest(reg, sports[i], now);
+      if (f && (best === null || t(f.kickoff_utc) > bestK)) { best = f; bestK = t(f.kickoff_utc); }
     }
     return best;
   }
 
+  /* Live entry, else the latest published one: a door never lands on a
+     placeholder. Same as resolve() in featured_matchups.py. */
   function resolve(reg, sport, now) {
     if (sport === '*') return resolveAny(reg, now);
+    return resolveLive(reg, sport, now) || resolveLatest(reg, sport, now);
+  }
+
+  function resolveLatest(reg, sport, now) {
+    var s = reg && reg.sports && reg.sports[sport];
+    if (!s) return null;
+    var best = null, bestK = null;
+    var list = s.features || [];
+    for (var i = 0; i < list.length; i++) {
+      var f = list[i];
+      if (!f || typeof f !== 'object' || (f.status || 'active') !== 'active') continue;
+      if (!f.href) continue;
+      var k = t(f.kickoff_utc);
+      if (k === null) continue;
+      if (f.start_utc) {
+        var st = t(f.start_utc);
+        if (st === null || now < st) continue;
+      }
+      if (best === null || k > bestK) { best = f; bestK = k; }
+    }
+    return best;
+  }
+
+  function resolveLive(reg, sport, now) {
     var s = reg && reg.sports && reg.sports[sport];
     if (!s) return null;
     var grace = graceMinutes(reg, sport) * 60000;
@@ -96,31 +128,22 @@
     if (!el) return;
     var sport = el.getAttribute('data-tmr-featured-door');
     var baked = el.getAttribute('data-baked-href');
-    var bakedKick = t(el.getAttribute('data-baked-kickoff'));
     var hub = el.getAttribute('data-hub') || '/';
-    var bakedGrace = Number(el.getAttribute('data-grace')) || DEFAULT_GRACE_MINUTES;
     var gone = false;
     function go(url) {
       if (gone) return;
       gone = true;
       if (url && url !== w.location.pathname) w.location.replace(url);
     }
-    /* The registry could not be read in time. Trust the bake, unless the bake
-       itself names a game that has already finished. */
-    function fallback() {
-      if (!baked) return;   // baked with nothing featured: this page is the answer
-      if (bakedKick !== null && Date.now() >= bakedKick + bakedGrace * 60000) go(hub);
-      else go(baked);
-    }
+    /* The registry could not be read in time: trust the bake. A finished game
+       is still the latest article, which beats any placeholder. */
+    function fallback() { go(safeHref(baked) || hub); }
     var timer = setTimeout(fallback, 2500);
     load(function (reg) {
       clearTimeout(timer);
       if (!reg) return fallback();
       var f = resolve(reg, sport, Date.now());
-      /* Nothing featured: a door baked empty stays put (it already links the
-         hub); a door baked with a game that has since finished goes to the hub. */
-      if (f) go(safeHref(f.href));
-      else if (baked) go(hub);
+      go((f && safeHref(f.href)) || safeHref(baked) || hub);
     });
   }
 
@@ -173,7 +196,7 @@
 
   function refresh() { expire(); load(bindAll); }
 
-  w.TMRFeatured = { resolve: resolve, resolveAny: resolveAny, load: load, door: door, refresh: refresh };
+  w.TMRFeatured = { resolve: resolve, resolveLive: resolveLive, resolveLatest: resolveLatest, resolveAny: resolveAny, load: load, door: door, refresh: refresh };
 
   if (d.querySelector && d.querySelectorAll) {
     var start = function () {
