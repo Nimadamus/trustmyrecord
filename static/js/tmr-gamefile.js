@@ -61,3 +61,18 @@
     paint();
   });
 }());
+/* Ads: tmr-ads.js owns every placement rule and does nothing until enabled.
+   Requested after load so it can never compete with first paint. */
+(function () {
+    if (window.__tmrAdsHook) return;
+    window.__tmrAdsHook = true;
+    var go = function () {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = '/static/js/tmr-ads.js?h=' + Math.floor(Date.now() / 3600000);
+        document.head.appendChild(s);
+    };
+    var idle = function () { (window.requestIdleCallback || setTimeout)(go, { timeout: 3000 }); };
+    if (document.readyState === 'complete') idle();
+    else window.addEventListener('load', idle);
+})();
