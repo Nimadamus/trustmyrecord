@@ -8,7 +8,7 @@
   function runOff(kind, payload, fallback) {
     return new Promise(function (resolve, reject) {
       var w;
-      try { w = new Worker('/static/js/sim-season-worker.js'); } catch (e) { w = null; }
+      try { w = new Worker('/static/js/sim-season-worker.js?v=b473a28c73d4'); } catch (e) { w = null; }
       if (!w) { try { resolve(fallback()); } catch (err) { reject(err); } return; }
       var done = false;
       w.onmessage = function (e) {
