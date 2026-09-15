@@ -42,7 +42,17 @@ const FIXTURE = path.join(__dirname, 'fixtures', 'nav-mlb-slate-postgame.json');
    what a card does across VISITS, not what it does in some fixed number of
    seconds. A row that pages more finely takes longer to come round, and that
    is a fact about the layout rather than a reason to accept a frozen card. */
-const PAGE_MS = 24000;
+/* READ FROM THE SHIPPED SCRIPT, never restated here. This was a literal 24000
+   left over from before the 2026-09-08 retune to 40s, which silently cut the
+   watch to about 1.3 passes of the row: a card whose page only came round once
+   read two lines and failed, and WHICH cards came round twice depended on where
+   the carousel happened to start. */
+const PAGE_MS = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const m = /var TICKER_ROTATE_MS = (\d+);/.exec(src);
+  if (!m) throw new Error('TICKER_ROTATE_MS not found in tmr-home-live.js');
+  return Number(m[1]);
+})();
 const SAMPLE_MS = 1000;
 
 /* What "rotating" means, per card, inside that window. */
@@ -113,19 +123,44 @@ function sample(page) {
   /* Narrow enough that the row genuinely pages - which is the condition the bug
      needed. A single-page row rotates on its own and never showed the defect. */
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  /* DETERMINISM (2026-09-15). Three things made this proof pass or fail
+     depending on the run, none of them about the ticker:
+       1. the fake clock was installed but never paused, so it kept running in
+          REAL time between steps - every page.evaluate and every slow CI
+          moment shifted the carousel's phase by a few hundred milliseconds;
+       2. CSS transitions run on the real clock, so whether a page slide's
+          transitionend beat advanceLeavingPage's fake-clock fallback timer
+          was a race, and it decides whether a leaving card turns over;
+       3. fonts and team logos were fetched from the internet, and their
+          arrival re-lays the row at an arbitrary moment.
+     So: the network stops at this server, transitions are off (the fallback
+     timer is the production path for reduced motion and hidden tabs), and the
+     clock only moves when this proof moves it. */
+  await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (r) => r.abort());
   await context.route('**/api/**', (r) => r.fulfill({
     status: 200, contentType: 'application/json', headers: CORS, body: JSON.stringify({ ok: true })
   }));
   await context.route('**/api/nav/mlb-slate*', (r) => r.fulfill({
     status: 200, contentType: 'application/json', headers: CORS, body: JSON.stringify(slate)
   }));
-  await context.clock.install({ time: new Date(`${slate.slate_date}T21:00:00-07:00`) });
+  const start = new Date(`${slate.slate_date}T21:00:00-07:00`);
+  await context.clock.install({ time: start });
+  await context.clock.pauseAt(new Date(start.getTime() + 1000));
 
   const page = await context.newPage();
   page.on('pageerror', (err) => failures.push(`page error: ${err.message}`));
+  await page.addInitScript(() => {
+    const css = '*,*::before,*::after{transition:none!important;animation:none!important}';
+    document.addEventListener('DOMContentLoaded', () => {
+      const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    });
+  });
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
+  for (let i = 0; i < 150 && !(await page.$('.ticker .gm:not(.is-skel):not(.is-msg)')); i++) {
+    await context.clock.runFor(100);
+  }
   await page.waitForSelector('.ticker .gm:not(.is-skel):not(.is-msg)', { timeout: 15000 });
-  await page.waitForTimeout(600);
+  await context.clock.runFor(600);
 
   const seen = new Map();      // card key -> { teams, isFinal, lines, texts:Set }
   const pagesSeen = new Set();

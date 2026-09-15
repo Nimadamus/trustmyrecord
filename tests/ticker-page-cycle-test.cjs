@@ -33,7 +33,15 @@ const { chromium } = require('@playwright/test');
 const ROOT = path.resolve(__dirname, '..');
 const PORT = Number(process.env.TMR_PAGE_CYCLE_PORT || 4199);
 const FIXTURE = path.join(__dirname, 'fixtures', 'nav-mlb-slate-postgame.json');
-const ROTATE_MS = 24000;          // TICKER_ROTATE_MS in static/js/tmr-home-live.js
+/* READ FROM THE SHIPPED SCRIPT (2026-09-15). This was a literal 24000 left over
+   from before the 2026-09-08 retune to 40s, so every page "held for MORE than
+   24s" and the relayout check below walked too few seconds to see a hand over. */
+const ROTATE_MS = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const m = /var TICKER_ROTATE_MS = (\d+);/.exec(src);
+  if (!m) throw new Error('TICKER_ROTATE_MS not found in tmr-home-live.js');
+  return Number(m[1]);
+})();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -118,6 +126,12 @@ function visits(samples) {
   const browser = await chromium.launch();
   const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' };
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  /* DETERMINISM, same three causes as the starvation proof: a fake clock that
+     kept running in real time, CSS transitions racing advanceLeavingPage's
+     fallback timer, and fonts and logos arriving from the internet mid watch.
+     Network stops at this server, transitions are off, the clock only moves
+     when this proof moves it. */
+  await context.route(/^https?:\/\/(?!127\.0\.0\.1)/, (r) => r.abort());
 
   let served = JSON.parse(JSON.stringify(slate));
   await context.route('**/api/**', (r) => r.fulfill({
@@ -140,13 +154,24 @@ function visits(samples) {
       { id: 'a3', kind: 'join', username: 'newcomer', text: 'Joined TMR', created_at: `${slate.slate_date}T20:10:00Z` }
     ] })
   }));
-  await context.clock.install({ time: new Date(`${slate.slate_date}T21:00:00-07:00`) });
+  const start = new Date(`${slate.slate_date}T21:00:00-07:00`);
+  await context.clock.install({ time: start });
+  await context.clock.pauseAt(new Date(start.getTime() + 1000));
 
   const page = await context.newPage();
   page.on('pageerror', (err) => failures.push(`page error: ${err.message}`));
+  await page.addInitScript(() => {
+    const css = '*,*::before,*::after{transition:none!important;animation:none!important}';
+    document.addEventListener('DOMContentLoaded', () => {
+      const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    });
+  });
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
+  for (let i = 0; i < 150 && !(await page.$('.ticker .gm:not(.is-skel):not(.is-msg)')); i++) {
+    await context.clock.runFor(100);
+  }
   await page.waitForSelector('.ticker .gm:not(.is-skel):not(.is-msg)', { timeout: 15000 });
-  await page.waitForTimeout(600);
+  await context.clock.runFor(600);
 
   /* PAGINATION HAS TO SETTLE BEFORE ANY OF THIS MEANS ANYTHING. Cards are
      content sized, so the first layout runs against the metric fallback faces
@@ -247,10 +272,17 @@ function visits(samples) {
      only when the 90s refresh happens to land, which is not something a fixture
      can place inside a given page's window. */
   const midPage = [];
+  /* To the START of a page first, so "8s into the page" is a fact and not an
+     assumption about where the passes above happened to stop. */
+  const parked = (await read(page)).index;
+  for (let i = 0; i < ROTATE_MS / 1000 + 5 && (await read(page)).index === parked; i += 1) {
+    await context.clock.runFor(1000);
+  }
   await walk(context, page, 8, midPage);            // 8s into the page on screen
   const beforeNudge = await read(page);
   await page.evaluate(() => window.dispatchEvent(new Event('resize')));
-  await page.waitForTimeout(400);                   // past the 180ms debounce
+  await context.clock.runFor(400);                  // past the 180ms debounce
+  await page.waitForTimeout(50);
   const afterNudge = await read(page);
   check(afterNudge.pages === beforeNudge.pages,
     `the relayout changed the page count (${beforeNudge.pages} -> ${afterNudge.pages}), `
@@ -262,7 +294,7 @@ function visits(samples) {
      left. Walk 20s: it must have handed over. Under the defect it has banked a
      fresh 24s and is still there. */
   const rest = [];
-  await walk(context, page, 20, rest);
+  await walk(context, page, ROTATE_MS / 1000 - 8 + 4, rest);
   const handedOver = rest.some((s) => s.index !== beforeNudge.index);
   check(handedOver,
     `the page on screen was still there ${rest.length}s after a relayout landed `
