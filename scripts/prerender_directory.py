@@ -17,6 +17,8 @@ Idempotent: re-running replaces content between <!--MK:key--> markers, so a
 30-min cron/GitHub Action can call it repeatedly without drift.
 """
 import gzip, json, os, sys, re, html, math, time, datetime, urllib.request, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from prerender_report import record
 
 API  = "https://trustmyrecord-api.onrender.com/api"
 SITE = "https://trustmyrecord.com"
@@ -834,10 +836,14 @@ def bake_homepage(rows, now):
 
 def main():
     now = datetime.datetime.now(datetime.timezone.utc)
-    rows = collect()
-    if not rows:
-        print("no eligible members - aborting (will not blank pages)")
-        sys.exit(1)
+    try:
+        rows = collect()
+    except Exception as ex:
+        print(f"member collection failed ({type(ex).__name__}: {ex}) - /handicappers/ keeps its last good bake")
+        rows = []
+    if "--dry-run" in sys.argv and not rows:
+        print("no eligible members")
+        return
     if "--dry-run" in sys.argv:
         print(f"eligible members: {len(rows)}")
         for r in rows[:8]:
@@ -845,12 +851,37 @@ def main():
         print("\nSAMPLE handicappers row:\n", handi_row(rows[0], now)[:400])
         print("\nSAMPLE leaderboard row:\n", lead_row(rows[0], 0)[:400])
         return
-    n1, tp, act = bake_handicappers(rows, now)
-    n2 = bake_leaderboards()
-    n3 = bake_homepage(rows, now)
-    print(f"handicappers: baked {n1} rows, {tp} total picks, {act} active")
-    print(f"leaderboards: baked {n2} rows")
-    print(f"homepage: baked {n3} preview rows + highlights")
+    # PRERENDER_ISOLATION_20260915: each page bakes on its own. Every bake reads
+    # its file, builds the whole new text and writes once at the end, so a page
+    # that raises has written nothing and keeps its last good version while the
+    # other pages still refresh. A failure used to abort main() and freeze all three.
+    failed = 0
+    try:
+        if not rows:
+            # Never blank the directory: no member list means no rewrite at all.
+            raise RuntimeError("no eligible members from the API - refusing to bake an empty directory")
+        n1, tp, act = bake_handicappers(rows, now)
+        print(f"handicappers: baked {n1} rows, {tp} total picks, {act} active")
+        record("directory", "/handicappers/", "ok" if n1 else "failed", "" if n1 else "no rows")
+    except Exception as ex:
+        failed += 1
+        record("directory", "/handicappers/", "failed", f"{type(ex).__name__}: {ex}")
+    try:
+        n2 = bake_leaderboards()
+        print(f"leaderboards: baked {n2} rows")
+        record("directory", "/leaderboards/", "ok")
+    except Exception as ex:
+        failed += 1
+        record("directory", "/leaderboards/", "failed", f"{type(ex).__name__}: {ex}")
+    try:
+        if rows:
+            n3 = bake_homepage(rows, now)
+            print(f"homepage: baked {n3} preview rows + highlights")
+    except Exception as ex:
+        failed += 1
+        record("directory", "/ (legacy preview)", "failed", f"{type(ex).__name__}: {ex}")
+    if failed >= 2 and not rows:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

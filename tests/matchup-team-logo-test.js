@@ -166,7 +166,18 @@ for (const dir of dirs) {
        way the bake does, then accept the mark if it is THAT club's file. The
        string compare stays as the fallback for a name the registry does not
        know, so a genuinely mismatched mark is still caught. */
-    const club = index[sport] && index[sport].get(slug(name));
+    /* ALT NAME FALLBACK (2026-09-15). The card splits a club name into a city and
+       a nickname line, and for a name whose "location" is the whole club name the
+       split can land anywhere: "Inter Miami CF" was printed as city "Inter CF",
+       nick "Miami", so city + nick read "Inter CF Miami", which no registry key
+       matches. The string fallback then failed a mark that was exactly right
+       (20232-usa.inter_miami.png) and, because this guard sits in the prerender
+       job's SEO gate, stopped every leaderboard refresh for hours. The alt text
+       carries the club's unsplit name, so resolve through it before giving up.
+       A mark that belongs to a different club still fails: the resolved club's
+       own names must appear in the filename. */
+    const altName = decode(alt).replace(/\s+logo$/i, '').trim();
+    const club = index[sport] && (index[sport].get(slug(name)) || index[sport].get(slug(altName)));
     const flatBase = base.replace(/[^a-z0-9]+/gi, '').toLowerCase();
     const belongs = club
       ? [club.slug, club.display, club.short, club.nick]

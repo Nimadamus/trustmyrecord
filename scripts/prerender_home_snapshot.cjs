@@ -16,9 +16,11 @@
  * (progressive enhancement), exactly like scripts/prerender_directory.py does for
  * /handicappers/ and /leaderboards/.
  *
- * Fail-closed: if any region is still showing a placeholder when the timeout expires,
- * NOTHING is written and the process exits non-zero. A stale-but-real homepage is
- * always better than one that bakes placeholders back in.
+ * Fail-safe per region (PRERENDER_ISOLATION_20260915): each region is baked on its
+ * own. A region still showing a placeholder when the timeout expires keeps its last
+ * good markup and is logged as failed; the regions that did populate are still
+ * written. A stale-but-real region is always better than a placeholder. Only a
+ * document-level problem (lost critical CSS, a missing marker) writes nothing.
  *
  *   node scripts/prerender_home_snapshot.cjs [--dry-run]
  */
@@ -29,6 +31,13 @@ const http = require('http');
 const ROOT = path.dirname(__dirname);
 const HOME = path.join(ROOT, 'index.html');
 const TIMEOUT_MS = 120000;
+
+// Page-level result lines for scripts/prerender_run.py (see prerender_report.py).
+function record(page, status, reason) {
+  const line = { t: Date.now() / 1000, stage: 'home_snapshot', page, status, reason: String(reason || '').slice(0, 500) };
+  if (process.env.PRERENDER_REPORT_FILE) fs.appendFileSync(process.env.PRERENDER_REPORT_FILE, JSON.stringify(line) + '\n');
+  if (status !== 'ok') console.error('  [' + status + '] home_snapshot ' + page + ': ' + line.reason);
+}
 
 // Region key -> selector whose innerHTML the page's own JS owns.
 // `need` is a selector that MUST exist inside the region before it counts as
@@ -118,7 +127,8 @@ function isPlaceholder(html) {
 
     await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'domcontentloaded' });
 
-    // Wait for the page's own scripts to fill every region.
+    // Wait for the page's own scripts to fill every region. A region that never
+    // fills is handled below, per region, instead of failing the whole bake.
     await page.waitForFunction((regions) => {
       return regions.every(r => {
         const el = document.querySelector(r.sel);
@@ -128,13 +138,18 @@ function isPlaceholder(html) {
         const stripped = h.replace(/<!--[\s\S]*?-->/g, '').trim();
         return stripped && !/class="loading"/.test(h) && !/>\s*—\s*</.test(h);
       });
-    }, REGIONS, { timeout: TIMEOUT_MS });
+    }, REGIONS, { timeout: TIMEOUT_MS }).catch(() => {
+      console.error('prerender_home_snapshot: not every region populated within ' + TIMEOUT_MS + 'ms; baking the ones that did');
+    });
 
     // outerHTML, not innerHTML: the <!--MK:--> markers wrap the element from the
     // outside, so replacing the whole element keeps exactly one marker pair forever.
     const baked = await page.evaluate((regions) => {
       const o = {};
-      for (const r of regions) o[r.key] = document.querySelector(r.sel).outerHTML;
+      for (const r of regions) {
+        const el = document.querySelector(r.sel);
+        o[r.key] = el && (!r.need || el.querySelector(r.need)) ? el.outerHTML : '';
+      }
       return o;
     }, REGIONS);
 
@@ -142,22 +157,29 @@ function isPlaceholder(html) {
     let changed = 0;
     for (const r of REGIONS) {
       const html = baked[r.key];
+      const re = new RegExp(`(<!--MK:${r.key}-->)[\\s\\S]*?(<!--/MK:${r.key}-->)`);
+      // A missing anchor is a document problem, not a region problem: write nothing.
+      if (!re.test(text)) throw new Error(`marker <!--MK:${r.key}--> missing from index.html - the homepage markup lost its prerender anchor`);
+      let problem = null;
       // Markers sit OUTSIDE the captured element, so a capture can never contain one.
-      // If that ever changes, every run would nest another pair - fail instead.
+      // If that ever changes, every run would nest another pair.
       if (html.includes(`<!--MK:${r.key}-->`) || html.includes(`<!--/MK:${r.key}-->`))
-        throw new Error(`region ${r.key} captured its own marker - refusing to write`);
-      if (isPlaceholder(html)) throw new Error(`region ${r.key} came back empty or as a placeholder - refusing to write`);
+        problem = 'captured its own marker';
+      else if (isPlaceholder(html)) problem = 'came back empty or as a placeholder';
       // The pixel route above means a swapped-in chip can only come from markup
       // that never had an <img> to begin with. A capture that carries one anyway
       // means the route stopped covering the avatar URL, and baking it would
-      // resume the flapping - fail loudly instead of shipping the drift.
-      if (/class="avl"/.test(html) && /onerror=/.test(html))
-        throw new Error(`region ${r.key} baked an avatar fallback chip - the avatar route no longer covers these requests`);
-      const re = new RegExp(`(<!--MK:${r.key}-->)[\\s\\S]*?(<!--/MK:${r.key}-->)`);
-      if (!re.test(text)) throw new Error(`marker <!--MK:${r.key}--> missing from index.html - the homepage markup lost its prerender anchor`);
+      // resume the flapping.
+      else if (/class="avl"/.test(html) && /onerror=/.test(html))
+        problem = 'baked an avatar fallback chip - the avatar route no longer covers these requests';
+      if (problem) {
+        record(r.key, 'kept', problem + ' - previous markup kept');
+        continue;
+      }
       const next = text.replace(re, (_m, a, b) => a + html + b);
       if (next !== text) changed++;
       text = next;
+      record(r.key, 'ok');
     }
 
     // Never let a broken snapshot through: the document must keep its own identity.

@@ -46,6 +46,8 @@ Build only. Does NOT commit or deploy. Run from the repo root:
 Add --dry-run to print the eligible/excluded sets without writing files.
 """
 import gzip, json, os, sys, html, urllib.request, urllib.error, urllib.parse, datetime, re, shutil
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from prerender_report import record
 
 API   = "https://trustmyrecord-api.onrender.com/api"
 SITE  = "https://trustmyrecord.com"
@@ -1129,42 +1131,73 @@ def main():
         return
 
     os.makedirs(UDIR, exist_ok=True)
+    # PRERENDER_ISOLATION_20260915: every profile renders on its own. The page is
+    # built in memory and written only when complete, so a member whose fetch or
+    # render fails keeps their previous page and every other member still bakes.
+    # One member's failed picks request used to abort the whole run.
+    full_ok = compact_ok = 0
     for d in eligible_pages:
         un = d["username"]
-        recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
-        m = fetch_metrics(un)
-        awards = fetch_awards(un)
         ddir = os.path.join(UDIR, un)
-        os.makedirs(ddir, exist_ok=True)
-        with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
+        try:
+            recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
+            m = fetch_metrics(un)
+            awards = fetch_awards(un)
             sibs = [x for x in sorted(elig_names) if x != un]
-            f.write(page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs, awards=awards))
+            page = page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs, awards=awards)
+            if not page or not page.strip():
+                raise ValueError("empty HTML generated")
+            os.makedirs(ddir, exist_ok=True)
+            with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
+                f.write(page)
+            full_ok += 1
+            record("profiles", f"/u/{un}/", "ok")
+        except Exception as ex:
+            existed = os.path.isfile(os.path.join(ddir, "index.html"))
+            record("profiles", f"/u/{un}/", "kept" if existed else "failed", f"{type(ex).__name__}: {ex}")
+            if not existed:
+                elig_names.discard(un)  # no page on disk: no sitemap <loc> for it
     for un in to_compact:
         # SOFT404_20260809: compact pages get the SAME baked record data as full
         # ones. These three calls are the whole fix -- the data was always
         # available, the old compact template just never printed it.
-        recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
-        m = fetch_metrics(un)
         try:
-            det = get(f"{API}/users/{urllib.parse.quote(un)}")
-            det = det.get("user", det)
-        except Exception:
-            det = None
-        sibs = [x for x in sorted(elig_names) if x != un]
-        os.makedirs(os.path.join(UDIR, un), exist_ok=True)
-        with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(compact_html(un, awards=fetch_awards(un), d=det, recent=recent,
-                                 avg_amer=avg_amer, sport_rows=sport_rows, m=m,
-                                 siblings=sibs))
+            recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
+            m = fetch_metrics(un)
+            try:
+                det = get(f"{API}/users/{urllib.parse.quote(un)}")
+                det = det.get("user", det)
+            except Exception:
+                det = None
+            sibs = [x for x in sorted(elig_names) if x != un]
+            page = compact_html(un, awards=fetch_awards(un), d=det, recent=recent,
+                                avg_amer=avg_amer, sport_rows=sport_rows, m=m,
+                                siblings=sibs)
+            if not page or not page.strip():
+                raise ValueError("empty HTML generated")
+            os.makedirs(os.path.join(UDIR, un), exist_ok=True)
+            with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
+                f.write(page)
+            compact_ok += 1
+            record("profiles", f"/u/{un}/ (compact)", "ok")
+        except Exception as ex:
+            existed = os.path.isfile(os.path.join(UDIR, un, "index.html"))
+            record("profiles", f"/u/{un}/ (compact)", "kept" if existed else "failed", f"{type(ex).__name__}: {ex}")
     for un in zombies:
         shutil.rmtree(os.path.join(UDIR, un), ignore_errors=True)
-    print(f"wrote {len(eligible_pages)} full + {len(to_compact)} compact pages under {UDIR} (ALL index, follow)")
+    print(f"wrote {full_ok}/{len(eligible_pages)} full + {compact_ok}/{len(to_compact)} compact pages under {UDIR} (ALL index, follow)")
     if zombies:
         print(f"pruned {len(zombies)} page(s) for accounts the API 404s (now correctly 404): {zombies}")
     if skipped_test:
         print(f"skipped {len(skipped_test)} QA/test account(s), never published: {skipped_test}")
 
-    write_edge_fallback_template()
+    try:
+        write_edge_fallback_template()
+        record("profiles", "static/prerender/u-fallback.html", "ok")
+    except BaseException as ex:  # the template raises SystemExit when it refuses to write
+        if isinstance(ex, KeyboardInterrupt):
+            raise
+        record("profiles", "static/prerender/u-fallback.html", "kept", f"{type(ex).__name__}: {ex}")
 
     regen_sitemap(sorted(elig_names))
 

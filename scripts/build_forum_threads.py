@@ -25,6 +25,8 @@ Build only. Does NOT commit or deploy. Run from the repo root:
 Add --dry-run to print what would be written without touching files.
 """
 import gzip, json, os, sys, html, re, urllib.request, urllib.error, datetime, shutil
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from prerender_report import record
 
 # Thread titles contain emoji. Never let a console encoding kill the build.
 for _s in (sys.stdout, sys.stderr):
@@ -698,6 +700,7 @@ def main():
             posts = fetch_posts(tid)
         except Exception as ex:
             print(f"  ! thread {tid}: fetch failed ({ex}) — skipped, keeping any existing page")
+            record("forum", f"/forum/thread/{tid}/", "kept", f"fetch failed: {ex}")
             # Keep the sitemap stable too: the page is still on disk and still
             # 200, so dropping its <loc> for one flaky fetch would churn the
             # sitemap for no reason.
@@ -720,14 +723,29 @@ def main():
         return
 
     os.makedirs(TDIR, exist_ok=True)
+    # PRERENDER_ISOLATION_20260915: one thread that cannot render is skipped and
+    # logged; its previous page (if any) stays on disk and every other thread is
+    # still written. An empty render used to raise SystemExit for the whole run.
+    written = 0
     for tid, slug, t, posts in built:
         d = os.path.join(TDIR, str(tid), slug)
-        os.makedirs(d, exist_ok=True)
-        html_out = page_html(t, posts)
-        if not html_out.strip():
-            raise SystemExit(f"ABORT: empty HTML generated for thread {tid}")
-        with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(html_out)
+        try:
+            html_out = page_html(t, posts)
+            if not html_out.strip():
+                raise ValueError("empty HTML generated")
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
+                f.write(html_out)
+            written += 1
+            record("forum", f"/forum/thread/{tid}/{slug}/", "ok")
+        except Exception as ex:
+            existed = os.path.isfile(os.path.join(d, "index.html"))
+            record("forum", f"/forum/thread/{tid}/{slug}/", "kept" if existed else "failed",
+                   f"render failed: {type(ex).__name__}: {ex}")
+            if not existed:
+                # No page on disk: keep it out of the sitemap so the SEO gate never
+                # sees a <loc> that would 404.
+                entries[:] = [e for e in entries if e[0] != thread_url(tid, slug)]
 
     # Dirs for threads that are GONE are removed. Dirs for a RENAMED thread's old
     # slug are NOT removed: an edited title must never break the original URL, so
@@ -757,7 +775,7 @@ def main():
                         f.write(stub)
                     redirected += 1
 
-    print(f"wrote {len(built)} thread pages under {TDIR} (all index, follow); "
+    print(f"wrote {written} of {len(built)} thread pages under {TDIR} (all index, follow); "
           f"removed {removed} gone-thread dirs; {redirected} renamed-slug redirect stubs")
     regen_sitemap(entries)
 
@@ -769,6 +787,7 @@ def main():
         cats = list_categories()
     except Exception as ex:
         print(f"  ! categories fetch failed ({ex}) - keeping existing category pages")
+        record("forum", "/forum/<category>/ (all)", "kept", f"categories fetch failed: {ex}")
         cats = []
     by_cat = {}
     for tid, slug, t, posts in built:
@@ -779,12 +798,20 @@ def main():
     for c in cats:
         cthreads = by_cat.get(c["slug"], [])
         d = os.path.join(ROOT, "forum", c["slug"])
-        os.makedirs(d, exist_ok=True)
-        page = cat_page_html(c, cthreads)
-        if not page.strip():
-            raise SystemExit(f"ABORT: empty HTML generated for category {c['slug']}")
-        with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(page)
+        try:
+            page = cat_page_html(c, cthreads)
+            if not page.strip():
+                raise ValueError("empty HTML generated")
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
+                f.write(page)
+            record("forum", f"/forum/{c['slug']}/", "ok")
+        except Exception as ex:
+            existed = os.path.isfile(os.path.join(d, "index.html"))
+            record("forum", f"/forum/{c['slug']}/", "kept" if existed else "failed",
+                   f"render failed: {type(ex).__name__}: {ex}")
+            if not existed:
+                continue
         # EMPTY_BOARD_20260809: a board with zero threads renders "No threads yet.
         # Be the first to post." over ~370 characters of nav. That is a real page
         # and it stays live, linked from /forum/ and from every thread crumb -- but
