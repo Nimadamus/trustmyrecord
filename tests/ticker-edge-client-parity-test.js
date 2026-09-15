@@ -220,8 +220,9 @@ BUG_CARDS.forEach((g) => {
   }
 });
 
-/* THE ROW THAT OPTS IN. NFL must keep the one-line card until somebody decides
-   otherwise, and this is the switch that decides it - in two files. */
+/* THE ROWS THAT OPT IN. College since 2026-09-05, NFL since 2026-09-14; this
+   is the switch that decides it, in two files. */
+if (!clientBug.SCOREBUG_SPORTS.nfl) failures.push('client no longer draws a started NFL game as a scorebug');
 if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
     !== String(Object.keys(clientBug.SCOREBUG_SPORTS).sort())) {
   failures.push('SCOREBUG_SPORTS differs between the edge and the client');
@@ -243,9 +244,108 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
     failures.push(`edge draws an upcoming college game as a scorebug: ${upHtml.slice(0, 160)}`);
   }
   if (!/gm--bug/.test(doneHtml)) failures.push('edge no longer draws a finished college game as a scorebug');
-  if (csrc.indexOf("if (SCOREBUG_SPORTS[row.key] && g.status !== 'scheduled')") === -1) {
+  if (csrc.indexOf("if (SCOREBUG_SPORTS[key] && g.status !== 'scheduled')") === -1) {
     failures.push('client renderTicker does not route an upcoming college game to the one-line card');
   }
+}
+
+/* ONE STRIP, EVERY SPORT, ONE ORDER (Nima, 2026-09-14: the live Broncos at
+   Chiefs game sat on page nine of ten behind eight MLB cards). The whole lane
+   is rendered through both implementations over a mixed slate and diffed, and
+   the order itself is held to the priority rule. */
+{
+  const LANE_FNS = ['logoImg', 'isFootball', 'footballStatus', 'statusChip', 'rankedName', 'nameSpan',
+    'bugRow', 'postgameDwell', 'insightStrip', 'pitcherLine', 'scorebugCard',
+    'mlbCardHtml', 'espnCardHtml', 'tickerTier', 'tickerOrder'];
+  const clientLane = new Function(
+    ['INSIGHT_ROTATE_MS', 'POSTGAME_DWELL_MIN_MS', 'POSTGAME_DWELL_STEP_MS', 'POSTGAME_DWELL_STEPS']
+      .map((n) => `var ${n} = ${constOf(n)};`).join('')
+    + ESC
+    + `var TICKER_ORD_Q = ${clientArray('TICKER_ORD_Q')};`
+    + `var SCOREBUG_SPORTS = ${clientObject('SCOREBUG_SPORTS')};`
+    + `var SPORT_LABEL = ${clientObject('SPORT_LABEL')};`
+    + `var TICKER_SPORT_ORDER = ${clientArray('TICKER_SPORT_ORDER')};`
+    + LANE_FNS.map(grab).join('')
+    + ';return {tickerOrder:tickerOrder,mlbCardHtml:mlbCardHtml,espnCardHtml:espnCardHtml};'
+  )();
+  const edgeLane = new Function(`${wsrc.slice(0, cut)};return {slateTickerHtml, tickerOrder};`)();
+
+  const nflLive = { sport: 'nfl', id: 'espn:401872931', espn_event_id: '401872931', away: 'DEN', home: 'KC',
+    away_team_name: 'Denver Broncos', home_team_name: 'Kansas City Chiefs',
+    away_logo: 'https://a.espncdn.com/den.png', home_logo: 'https://a.espncdn.com/kc.png',
+    status: 'live', status_label: 'LIVE', status_detail: '14:39 - 4th', period: 4, clock: '14:39',
+    possession: 'home', away_score: 10, home_score: 31, href: '/sportsbook/',
+    insights: [{ category: 'live_state', group: 'context', text: 'Lead by 21 in the 4th quarter', team_label: 'Kansas City Chiefs' }],
+    insight_mode: 'live' };
+  const nflFinal = Object.assign({}, nflLive, { id: 'espn:1', espn_event_id: '1', away: 'LV', home: 'LAC',
+    status: 'final', status_detail: 'Final', period: 4, clock: null, possession: 'away', away_score: 20, home_score: 17,
+    insight_mode: 'postgame' });
+  const nflNext = { sport: 'nfl', id: 'espn:2', away: 'BUF', home: 'MIA', status: 'scheduled',
+    start_time_pt: 'Thu 5:15 PM', lookahead: true, href: '/sportsbook/' };
+  const mixed = Object.assign({}, slate, { nfl_games: [nflFinal, nflLive, nflNext], nba_games: [], nhl_games: [],
+    cfb_games: [BUG_CARDS[2], BUG_CARDS[3]] });
+
+  const rows = [
+    { key: 'mlb', games: mixed.games || [] }, { key: 'nfl', games: mixed.nfl_games },
+    { key: 'nba', games: [] }, { key: 'nhl', games: [] }, { key: 'cfb', games: mixed.cfb_games }
+  ];
+  const order = clientLane.tickerOrder(rows);
+  const clientHtml = order.map((e) => (e.key === 'mlb' ? clientLane.mlbCardHtml(e.g) : clientLane.espnCardHtml(e.g, e.key))).join('');
+  const edgeHtml = edgeLane.slateTickerHtml(mixed);
+  compared += 1;
+  if (clientHtml !== edgeHtml) {
+    let at = 0;
+    while (at < clientHtml.length && clientHtml[at] === edgeHtml[at]) at += 1;
+    failures.push(`whole lane differs between edge and client at byte ${at}
+`
+      + `    edge  : ${edgeHtml.slice(Math.max(0, at - 80), at + 160)}
+`
+      + `    client: ${clientHtml.slice(Math.max(0, at - 80), at + 160)}`);
+  }
+  const edgeOrder = edgeLane.tickerOrder(rows).map((e) => e.key + ':' + (e.g.away || '')).join(',');
+  if (edgeOrder !== order.map((e) => e.key + ':' + (e.g.away || '')).join(',')) {
+    failures.push('tickerOrder differs between edge and client');
+  }
+
+  /* The priority rule itself. */
+  const tier = (g) => (g.lookahead || g.carryover) ? 4 : g.status === 'live' ? 0
+    : (g.status === 'delayed' || g.status === 'suspended') ? 1 : g.status === 'final' ? 2 : g.status === 'scheduled' ? 3 : 4;
+  for (let i = 1; i < order.length; i++) {
+    if (tier(order[i].g) < tier(order[i - 1].g)) {
+      failures.push(`priority broken: ${order[i].key} ${order[i].g.away} (${order[i].g.status}) after ${order[i - 1].key} ${order[i - 1].g.away} (${order[i - 1].g.status})`);
+      break;
+    }
+  }
+  if (!order.length || order[0].g !== nflLive) {
+    failures.push(`a live NFL game in a strip with fewer live NFL than MLB games does not lead: first is ${order[0] && order[0].key}`);
+  }
+  if (order[order.length - 1].g !== nflNext) failures.push('a lookahead fixture is not at the back of the strip');
+  /* Inside a tier the sports alternate: no two cards of a sport in a row while
+     another sport still has a card left in that tier. */
+  [0, 2, 3].forEach((t) => {
+    const inTier = order.filter((e) => tier(e.g) === t);
+    const counts = {};
+    inTier.forEach((e) => { counts[e.key] = (counts[e.key] || 0) + 1; });
+    for (let i = 1; i < inTier.length; i++) {
+      if (inTier[i].key !== inTier[i - 1].key) { counts[inTier[i - 1].key] -= 1; continue; }
+      counts[inTier[i - 1].key] -= 1;
+      const othersLeft = Object.keys(counts).some((k) => k !== inTier[i].key && counts[k] > 0);
+      if (othersLeft) { failures.push(`tier ${t}: two ${inTier[i].key} cards in a row while another sport waits`); break; }
+    }
+  });
+  if (order.length !== rows.reduce((n, r) => n + r.games.length, 0)) failures.push('tickerOrder dropped or duplicated a card');
+
+  /* The live NFL card is a scorebug with the quarter, the clock, both scores and
+     the ball on the home side; the final carries no possession marker. */
+  const liveHtml = clientLane.espnCardHtml(nflLive, 'nfl');
+  if (!/gm--nfl gm--bug/.test(liveHtml)) failures.push('live NFL card is not a scorebug');
+  if (!/<span class="gb-lbl">NFL<\/span>/.test(liveHtml)) failures.push('live NFL scorebug does not name its league');
+  if (!/14:39/.test(liveHtml) || !/4th Quarter|4Q/.test(liveHtml)) failures.push('live NFL scorebug lacks the clock or quarter');
+  const bugRows = liveHtml.match(/<span class="gb-r[\s\S]*?<span class="gb-sc">[^<]*<\/span><\/span>/g) || [];
+  if (bugRows.length !== 2 || /gb-pos/.test(bugRows[0]) || !/gb-pos/.test(bugRows[1])) {
+    failures.push('possession marker is not on the home row only');
+  }
+  if (/gb-pos/.test(clientLane.espnCardHtml(nflFinal, 'nfl'))) failures.push('a final NFL game draws a possession marker');
 }
 
 /* THE BOTTOM LINE LABEL. The client and the worker each join `team_label` to

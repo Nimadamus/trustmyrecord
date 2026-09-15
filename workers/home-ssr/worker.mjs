@@ -474,17 +474,20 @@ function nameSpan(logo, rank, name, abbr) {
    bakes this markup with no viewport to read, and any difference between the
    two shows up as a flicker the moment the client re-renders. See the long note
    on the client side for why the college card is shaped this way. */
-const SCOREBUG_SPORTS = { cfb: 1 };
+/* NFL joined the scorebug on 2026-09-14, same as the client. */
+const SCOREBUG_SPORTS = { cfb: 1, nfl: 1 };
 const SPORT_LABEL = { cfb: 'CFB', nfl: 'NFL', nba: 'NBA', nhl: 'NHL' };
 
-function bugRow(logo, rank, name, abbr, score, win) {
+function bugRow(logo, rank, name, abbr, score, win, ball) {
   const full = rankedName(rank, name);
   const brief = abbr ? rankedName(rank, abbr) : full;
   const inner = brief === full ? esc(full)
     : `<span class="sf">${esc(full)}</span><span class="sa">${esc(brief)}</span>`;
+  /* Possession marker: lockstep with bugRow() in tmr-home-live.js. */
   return `<span class="gb-r${win ? ' is-win' : ''}">` +
     logoImg(logo) +
-    `<span class="gb-tn">${inner}</span>` +
+    `<span class="gb-tn">${inner}` +
+      `${ball ? '<i class="gb-pos" role="img" aria-label="Possession"></i>' : ''}</span>` +
     `<span class="gb-sc">${typeof score === 'number' ? esc(String(score)) : ''}</span>` +
     '</span>';
 }
@@ -504,8 +507,8 @@ function scorebugCard(g, key) {
     ` href="${esc(g.href || '/sportsbook/')}">` +
     `<span class="gb-hd"><span class="gb-lbl">${esc(label)}</span>` +
       statusChip(g, true) + '</span>' +
-    bugRow(g.away_logo, g.away_rank, g.away, g.away_abbr, aw, awWin) +
-    bugRow(g.home_logo, g.home_rank, g.home, g.home_abbr, hm, hmWin) +
+    bugRow(g.away_logo, g.away_rank, g.away, g.away_abbr, aw, awWin, g.status === 'live' && g.possession === 'away') +
+    bugRow(g.home_logo, g.home_rank, g.home, g.home_abbr, hm, hmWin, g.status === 'live' && g.possession === 'home') +
     insightStrip(g) +
     '</a>';
 }
@@ -586,7 +589,11 @@ function insightStrip(g) {
 }
 
 function tickerHtml(games) {
-  return games.map((g) => {
+  return games.map((g) => mlbCardHtml(g)).join('');
+}
+
+function mlbCardHtml(g) {
+  {
     const dh = g.game_label ? `<em class="gm-dh">${esc(g.game_label)}</em>` : '';
     const off = g.status === 'postponed' || g.status === 'cancelled';
     let html = `<a class="gm${off ? ' is-off' : ''}"` +
@@ -602,7 +609,7 @@ function tickerHtml(games) {
          backend folds both into insights[] (Nima, 2026-08-21). */
       insightStrip(g);
     return html + '</a>';
-  }).join('');
+  }
 }
 
 /* The ESPN rows (football, basketball, hockey) - a byte-for-byte port of the
@@ -612,9 +619,13 @@ function tickerHtml(games) {
    The recap strip is rendered here too. It was missing from the football row,
    so a finished game arrived carrying insights and the card discarded them. */
 function espnTickerHtml(games, key) {
+  return (games || []).map((g) => espnCardHtml(g, key)).join('');
+}
+
+function espnCardHtml(g, key) {
   /* An upcoming game draws the one-line card on every row; the scorebug is for
-     a game with a score to show. Same rule as the client's renderTicker. */
-  return (games || []).map((g) => (SCOREBUG_SPORTS[key] && g.status !== 'scheduled' ? scorebugCard(g, key) : (
+     a game with a score to show. Same rule as the client's espnCardHtml. */
+  return (SCOREBUG_SPORTS[key] && g.status !== 'scheduled' ? scorebugCard(g, key) : (
     `<a class="gm gm--${key}" data-sport="${key}"` +
     ` href="${esc(g.href || '/sportsbook/')}">` +
     '<span class="gm-top">' +
@@ -624,7 +635,60 @@ function espnTickerHtml(games, key) {
     '</span>' +
     insightStrip(g) +
     '</a>'
-  ))).join('');
+  ));
+}
+
+/* PRIORITY ACROSS SPORTS: a port of tickerTier()/tickerOrder() in
+   tmr-home-live.js, lockstep rule as above. Live, then stopped, then finals,
+   then upcoming, then anything flagged off today's slate; inside a tier the
+   sports take turns, the smaller sport first. */
+const TICKER_SPORT_ORDER = ['nfl', 'mlb', 'nba', 'nhl', 'cfb'];
+
+function tickerTier(g) {
+  const s = String((g && g.status) || 'scheduled');
+  if (g && (g.lookahead || g.carryover)) return 4;
+  return s === 'live' ? 0
+    : (s === 'delayed' || s === 'suspended') ? 1
+    : s === 'final' ? 2
+    : s === 'scheduled' ? 3
+    : 4;
+}
+
+function tickerOrder(rows) {
+  const tiers = [{}, {}, {}, {}, {}];
+  (rows || []).forEach((row) => {
+    (row.games || []).forEach((g) => {
+      const b = tiers[tickerTier(g)];
+      (b[row.key] = b[row.key] || []).push(g);
+    });
+  });
+  const rank = (k) => {
+    const i = TICKER_SPORT_ORDER.indexOf(k);
+    return i < 0 ? TICKER_SPORT_ORDER.length : i;
+  };
+  const out = [];
+  tiers.forEach((b) => {
+    const keys = Object.keys(b).sort((x, y) => (b[x].length - b[y].length) || (rank(x) - rank(y)));
+    for (let n = 0, more = true; more; n++) {
+      more = false;
+      for (let k = 0; k < keys.length; k++) {
+        const list = b[keys[k]];
+        if (n < list.length) { out.push({ key: keys[k], g: list[n] }); more = true; }
+      }
+    }
+  });
+  return out;
+}
+
+/* The whole lane, every sport, in the client's order. */
+function slateTickerHtml(slate) {
+  return tickerOrder([
+    { key: 'mlb', games: slate.games || [] },
+    { key: 'nfl', games: slate.nfl_games || [] },
+    { key: 'nba', games: slate.nba_games || [] },
+    { key: 'nhl', games: slate.nhl_games || [] },
+    { key: 'cfb', games: slate.cfb_games || [] }
+  ]).map((e) => (e.key === 'mlb' ? mlbCardHtml(e.g) : espnCardHtml(e.g, e.key))).join('');
 }
 
 /* Kept as a named wrapper so nothing that referenced it has to change. */
@@ -795,11 +859,7 @@ function buildRewriter(data, slate) {
       'aria-busy': 'false',
     }));
     rw.on('.ticker .ticker-games', new HtmlCell(
-      `<div class="ticker-track"><div class="ticker-page">${tickerHtml(slate.games || [])}`
-      + `${espnTickerHtml(slate.nfl_games, 'nfl')}`
-      + `${espnTickerHtml(slate.nba_games, 'nba')}`
-      + `${espnTickerHtml(slate.nhl_games, 'nhl')}`
-      + `${espnTickerHtml(slate.cfb_games, 'cfb')}</div></div>`
+      `<div class="ticker-track"><div class="ticker-page">${slateTickerHtml(slate)}</div></div>`
     ));
   }
 
