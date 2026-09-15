@@ -25,7 +25,10 @@
       var units = (pos ? '+' : '') + num(u.net_units);
       var roi = ((Number(u.roi) || 0) >= 0 ? '+' : '') + (num(u.roi)) + '%';
       var rec = (u.wins || 0) + '-' + (u.losses || 0) + (u.pushes ? '-' + u.pushes : '');
-      h += '<tr><td>' + (i + 1) + '</td>' +
+      // CANONICAL_RANKING_20260914: the official sport rank from the API, or NR.
+      // The row index is a position, never a rank.
+      var official = Number(u.official_rank) > 0 ? '#' + Number(u.official_rank) : 'NR';
+      h += '<tr><td title="' + esc(u.ranking_status || 'Not Ranked') + '">' + official + '</td>' +
         '<td><a href="/u/' + encodeURIComponent(u.username) + '/">' + esc(u.display_name || u.username) + '</a></td>' +
         '<td>' + rec + '</td>' +
         '<td class="' + cls + '">' + units + '</td>' +
@@ -40,7 +43,7 @@
     var sport = el.getAttribute('data-sport');
     var label = el.getAttribute('data-label') || sport;
     el.innerHTML = '<div class="seo-card">Loading the ' + esc(label) + ' leaderboard&hellip;</div>';
-    fetch(API + '/users/leaderboard?sport=' + encodeURIComponent(sport) + '&sortBy=net_units&limit=10&minPicks=1')
+    fetch(API + '/users/leaderboard?sport=' + encodeURIComponent(sport) + '&sortBy=rank&limit=10&minPicks=1')
       .then(function (r) { return r.json(); })
       .then(function (d) { render(el, (d && d.leaderboard) || [], label); })
       .catch(function () {

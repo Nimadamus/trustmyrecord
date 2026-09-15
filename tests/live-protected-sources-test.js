@@ -69,8 +69,8 @@ async function main() {
   assert(handicappers.includes('25+ graded picks'), 'live handicappers should show the graded-picks threshold copy');
   // NET_UNITS_FILTER_20260817: positive-unit eligibility no longer exists.
 
-  assert(leaderboards.includes('sortBy=net_units'), 'live leaderboards should request net-unit ranking');
-  assert(leaderboards.includes('20 graded picks'), 'live leaderboards should disclose public rank threshold');
+  assert(leaderboards.includes('officialRankCell'), 'live leaderboards should print the official rank, not a row index');
+  assert(leaderboards.includes('25 graded picks'), 'live leaderboards should disclose the official rank threshold');
   assert(!leaderboards.includes('positive net units'), 'live leaderboards must not reintroduce the deleted positive-unit gate copy');
 
   assert(streaks.includes("if (status === 'push' || status === 'pushed') continue;"), 'live streaks should keep push-neutral current streak behavior');

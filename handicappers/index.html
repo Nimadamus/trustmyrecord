@@ -601,13 +601,14 @@
         .hm-sort[aria-sort="ascending"], .hm-sort[aria-sort="descending"] { color: var(--teal); }
         .hm-sort-arrow { font-size: 0.7rem; }
 
-        #hmRows { counter-reset: hmRank; }
-        .hm-tier-header { counter-reset: hmRank; }
-
-        .hm-member-row { counter-increment: hmRank; cursor: pointer; }
+        /* CANONICAL_RANKING_20260914: the # column is the member's OFFICIAL TMR
+           rank for the selected sport scope (data-official-rank, from the API),
+           or NR. It used to be a CSS counter, i.e. the row's position, which
+           restarted under every tier header and on every page. */
+        .hm-member-row { cursor: pointer; }
 
         .hm-member-row::before {
-            content: counter(hmRank);
+            content: attr(data-official-rank);
             font-size: 0.7rem;
             font-variant-numeric: tabular-nums;
             color: var(--muted);
@@ -995,6 +996,7 @@
             <div class="hm-field">
                 <label for="hmSort">Sort by</label>
                 <select class="hm-select" id="hmSort">
+                    <option value="rank">TMR rank</option>
                     <option value="units">Net units</option>
                     <option value="roi">ROI</option>
                     <option value="winRate">Win percentage</option>
@@ -1130,9 +1132,9 @@
         // 'all' is grouped into stacked tier sections; the rest are flat lists.
         const RECENT_ACTIVE_DAYS = 7;
         const TIER_VIEWS = {
-            all:        { tiers: ['verified', 'rising', 'new'],           grouped: true,  sort: 'units',  minPicks: 0 },
-            verified:   { tiers: ['verified'],                            grouped: false, sort: 'units' },
-            pickmakers: { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'units' },
+            all:        { tiers: ['verified', 'rising', 'new'],           grouped: true,  sort: 'rank',   minPicks: 0 },
+            verified:   { tiers: ['verified'],                            grouped: false, sort: 'rank' },
+            pickmakers: { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'rank' },
             active:     { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'active', activeDays: RECENT_ACTIVE_DAYS },
             following:  { tiers: ['verified', 'rising', 'new'],           grouped: false, sort: 'active', minPicks: 0, followedOnly: true }
         };
@@ -1196,6 +1198,7 @@
         // Sort state for the leaderboard table. Each field has a default direction
         // that matches "highest first" semantics for the user-visible metric.
         const SORT_DEFAULT_DIRS = {
+            rank: 'asc',
             username: 'asc',
             record: 'desc',
             units: 'desc',
@@ -1207,7 +1210,7 @@
             streak: 'desc',
             active: 'desc'
         };
-        let sortState = { field: 'units', dir: 'desc' };
+        let sortState = { field: 'rank', dir: 'asc' };
         const social = window.socialSystem || (typeof SocialSystem !== 'undefined' ? new SocialSystem() : null);
         const DIRECTORY_API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
         const DIRECTORY_TIMEOUT_MS = 9000;
@@ -1819,7 +1822,9 @@
             // Leaderboard first so its richer rows (wins/losses/win_rate) win the
             // uniqUsers dedup over the leaner /users rows for the same member.
             const requests = [
-                directoryRequest('/users/leaderboard?sortBy=net_units&limit=250'),
+                // sortBy=rank&minPicks=1: every active member with a graded pick,
+                // in official order, each row carrying its official rank block.
+                directoryRequest('/users/leaderboard?sortBy=rank&minPicks=1&limit=100'),
                 fetchAllUsers()
             ];
             const settled = await Promise.allSettled(requests);
@@ -1837,7 +1842,48 @@
                 const failed = settled.find(result => result.status === 'rejected');
                 if (failed) throw failed.reason;
             }
-            return uniqUsers(users).filter(isProductionDirectoryUser);
+            const unique = uniqUsers(users).filter(isProductionDirectoryUser);
+            officialRanksByScope.all = officialRankMapFrom(users);
+            return unique;
+        }
+
+        // CANONICAL_RANKING_20260914. Official ranks per sport scope, keyed by
+        // lowercase username. 'all' comes with the member fetch; a sport scope is
+        // fetched from the same canonical endpoint the first time it is selected.
+        // Nothing on this page computes a rank.
+        var officialRanksByScope = { all: new Map() };
+        var officialRankRequests = {};
+        function officialRankMapFrom(rows) {
+            const map = new Map();
+            (rows || []).forEach(function(row, index) {
+                if (!row || !row.username || row.official_rank === undefined) return;
+                map.set(String(row.username).toLowerCase(), {
+                    rank: Number(row.official_rank) > 0 ? Number(row.official_rank) : null,
+                    status: String(row.ranking_status || 'Not Ranked'),
+                    order: index
+                });
+            });
+            return map;
+        }
+        function officialRankScopeKey() {
+            const sport = (els.sport && els.sport.value) || 'all';
+            return sport === 'all' ? 'all' : String(sport).toLowerCase();
+        }
+        function ensureOfficialRanksForScope() {
+            const key = officialRankScopeKey();
+            if (officialRanksByScope[key] || officialRankRequests[key]) return;
+            officialRankRequests[key] = directoryRequest('/users/leaderboard?sport=' + encodeURIComponent(key) + '&sortBy=rank&minPicks=1&limit=100')
+                .then(function(data) {
+                    const known = !(data && data.sport && data.sport.known === false);
+                    officialRanksByScope[key] = known ? officialRankMapFrom((data && data.leaderboard) || []) : new Map();
+                })
+                .catch(function() { officialRanksByScope[key] = new Map(); })
+                .then(function() { applyFilters(); });
+        }
+        function officialRankFor(member) {
+            const map = officialRanksByScope[officialRankScopeKey()];
+            const hit = map ? map.get(String(member.username || '').toLowerCase()) : null;
+            return hit || { rank: null, status: 'Not Ranked', order: Number.MAX_SAFE_INTEGER };
         }
 
         async function mapWithConcurrency(items, limit, mapper) {
@@ -2042,10 +2088,12 @@
             return Math.max(getActivityTime(member), row ? getTime(row.last_graded_at) : 0);
         }
 
+        // CANONICAL_RANKING_20260914: a Units / ROI / Win % / Streak leader card
+        // may only feature a member who holds an official TMR rank in the
+        // selected scope. The old page-side gate (25 graded, units > 0, active
+        // 30 days) skipped ROI > 0 and the 3-member field rule.
         function isQualifiedTopPerformer(member) {
-            return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS
-                && Number(member?.stats?.units || 0) > 0
-                && featuredActivityTime(member) > Date.now() - (30 * 24 * 60 * 60 * 1000);
+            return !!officialRankFor(member).rank;
         }
 
         // Tier of a member, by verified (graded) pick volume. Every listed member
@@ -2459,7 +2507,7 @@
             return null;
         }
 
-        const FEATURED_MIN_LABEL = 'Requires ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, activity in the last 30 days, and positive net units.';
+        const FEATURED_MIN_LABEL = 'Requires an official TMR rank: ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, activity in the last 30 days, positive units and ROI, and at least 3 qualified handicappers.';
         const STREAK_INFO = FEATURED_MIN_LABEL + ' Longest active run of ' + MIN_STREAK_LENGTH + '+ consecutive graded wins. Ties: higher net units, then more graded picks.';
         const ACTIVE_INFO = 'Most official picks submitted or graded in the last 30 days (' + MIN_ACTIVE_PICKS_30D + '+ required). Only real locked picks count. Fills the grid when nobody currently qualifies for Hottest Last 30 Days or Best Current Streak.';
         function renderFeaturedLeaders() {
@@ -2565,7 +2613,7 @@
 
             els.featured.innerHTML = cards.length
                 ? cards.join('')
-                : '<div class="hm-feat-empty">No featured leaders yet. Members qualify with ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, recent activity, and positive net units.</div>';
+                : '<div class="hm-feat-empty">No featured leaders yet. Members qualify with an official TMR rank: ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, recent activity, positive units and ROI, and at least 3 qualified handicappers.</div>';
             els.featured.removeAttribute('aria-busy');
         }
 
@@ -2611,22 +2659,17 @@
             return Math.max(total, gradedCount(member)) >= required;
         }
 
-        // Volume-shrunk sort scoring (v8): low-graded-volume members are pulled
-        // toward the neutral baseline so a 1-0 spike does not dominate the table.
-        // Ramp = min(1, gradedCount / 20). units/roi shrink toward 0; winRate
-        // shrinks toward the 50% prior. Raw data, record math, and autograder
-        // outputs are unchanged - this only affects the default sort order.
-        const RANK_SHRINK_THRESHOLD = 20;
-        function rankShrinkRamp(member) {
-            const g = gradedCount(member);
-            return Math.min(1, g / RANK_SHRINK_THRESHOLD);
-        }
+        // CANONICAL_RANKING_20260914: column sorts order rows by the raw value
+        // shown in that column. The volume shrink ramp that used to reorder
+        // units/ROI/win% here was a browser-side ranking of its own; the
+        // official order is the 'rank' key, read from the API.
         const SORT_KEYS = {
+            rank: m => { const o = officialRankFor(m); return o.rank ? o.rank : 1e6 + Math.min(o.order, 1e6); },
             username: m => String(m.username || '').toLowerCase(),
             record: m => Number(m.stats.wins || 0),
-            units: m => Number(m.stats.units || 0) * rankShrinkRamp(m),
-            roi: m => m.stats.roi == null ? -Infinity : Number(m.stats.roi) * rankShrinkRamp(m),
-            winRate: m => m.stats.winRate == null ? -Infinity : 50 + (Number(m.stats.winRate) - 50) * rankShrinkRamp(m),
+            units: m => Number(m.stats.units || 0),
+            roi: m => m.stats.roi == null ? -Infinity : Number(m.stats.roi),
+            winRate: m => m.stats.winRate == null ? -Infinity : Number(m.stats.winRate),
             totalPicks: m => Number(m.stats.totalPicks || 0),
             graded: m => gradedCount(m),
             newest: m => getTime(m.createdAt),
@@ -2635,7 +2678,7 @@
         };
 
         function buildComparator(field, dir) {
-            const getKey = SORT_KEYS[field] || SORT_KEYS.units;
+            const getKey = SORT_KEYS[field] || SORT_KEYS.rank;
             const factor = dir === 'asc' ? 1 : -1;
             return (a, b) => {
                 const ka = getKey(a);
@@ -2694,6 +2737,7 @@
                     member.displayName.toLowerCase().includes(q);
             });
 
+            ensureOfficialRanksForScope();
             visibleMembers.sort(buildComparator(sortState.field, sortState.dir));
             renderSummary();
             renderRows();
@@ -2773,7 +2817,8 @@
             const badgeHtml = badge
                 ? '<span class="hm-badge hm-badge--' + badge.cls + '" title="' + escapeHtml(badge.title) + '">' + escapeHtml(badge.label) + '</span>'
                 : '';
-            return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel) + '">' +
+            const official = officialRankFor(member);
+            return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" data-official-rank="' + (official.rank ? '#' + official.rank : 'NR') + '" title="' + escapeHtml(official.status) + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel + ', ' + official.status) + '">' +
                 '<div class="hm-user">' +
                     '<a class="hm-avatar-link" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">' +
                         '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar" onerror="this.onerror=null;this.src=&#39;https://trustmyrecord.com/static/media/TMR-avatar-256.jpg&#39;">' +

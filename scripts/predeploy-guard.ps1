@@ -285,7 +285,7 @@ try {
     Assert-MatchStaleQuarantine "Handicappers" $handicappers "<div>Active</div>" "handicappers redesign moved the Active label out of a bare <div>"
     Assert-Match "Handicappers" $handicappers "formatLastActive" "Active column formatter is missing."
     Assert-MatchStaleQuarantine "Handicappers" $handicappers "Minimum 20 graded picks" "ranking eligibility copy was rewritten; specific 20-pick wording no longer used"
-    Assert-Match "Handicappers" $handicappers "positive net units" "positive-unit rank eligibility copy is missing."
+    Assert-Match "Handicappers" $handicappers "positive units and ROI" "official rank eligibility copy is missing."
 
     # Homepage atomicity. GitHub Pages ignores ?v= query strings, so a browser
     # holding a stale index.html (Cache-Control: max-age=600) would otherwise

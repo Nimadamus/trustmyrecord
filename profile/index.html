@@ -11198,7 +11198,7 @@
         const stats = calcCapStats(rows);
         const rankText = profileData && profileData.ranking_status
             ? profileData.ranking_status
-            : (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
+            : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Not Ranked');
 
         // Pending picks count from the same filtered ledger.
         const pendingCount = rows.filter(p => capStatus(p) === 'pending').length;
@@ -11542,18 +11542,20 @@
         currentLeaderboardRank = null;
         if (!api || typeof api.getLeaderboard !== 'function' || !profileData || !profileData.username) return;
         try {
-            const data = await api.getLeaderboard({ sortBy: 'net_units', limit: 250 });
+            // CANONICAL_RANKING_20260914: read the row's OFFICIAL rank. The row's
+            // index in this list is a position, never a rank.
+            const data = await api.getLeaderboard({ sortBy: 'rank', minPicks: 1, limit: 100 });
             const pool = Array.isArray(data) ? data :
                 Array.isArray(data.users) ? data.users :
                 Array.isArray(data.leaderboard) ? data.leaderboard :
                 Array.isArray(data.rankings) ? data.rankings :
                 [];
             const username = String(profileData.username || '').toLowerCase();
-            const idx = pool.findIndex(function(entry) {
+            const row = pool.find(function(entry) {
                 const candidate = String(entry.username || entry.user_name || entry.handle || '').toLowerCase();
                 return candidate === username;
             });
-            if (idx !== -1) currentLeaderboardRank = idx + 1;
+            if (row && Number(row.official_rank) > 0) currentLeaderboardRank = Number(row.official_rank);
         } catch (error) {
             console.warn('[Profile] Leaderboard rank unavailable:', error);
         }
@@ -11568,7 +11570,7 @@
             : 'N/A';
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
-        const rankText = p.ranking_status || (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
+        const rankText = p.ranking_status || (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Not Ranked');
         const ledgerStats = getProfileLedgerStats();
         const statsLoadError = p.__statsLoadError || '';
         const profileHasRecordFields = [p.wins, p.losses, p.pushes].some(function(value) {
@@ -12021,16 +12023,13 @@
         const sr = data.sport_rank;
         const label = (data.sport && data.sport.label) || railSportLabel(railSportState().id);
         if (sr) {
-            // Same wording as the overall card; the label already names the sport.
-            const rankValue = sr.rank
-                ? 'Ranked #' + sr.rank + (sr.ranked_count ? ' of ' + sr.ranked_count : '')
-                : (graded < Number(sr.min_graded_picks || 20)
-                    ? 'Unranked until ' + Number(sr.min_graded_picks || 20) + ' graded picks'
-                    : 'Not ranked yet');
+            // CANONICAL_RANKING_20260914: the API's own string, "#2 of 6 qualified"
+            // or "Not Ranked: below break even". Same wording as the overall card.
+            const rankValue = String(sr.ranking_status || sr.status || (sr.rank ? '#' + sr.rank : 'Not Ranked'));
             setCard('rank', rankValue, '', label + ' Rank');
         } else {
             // No sport-specific rank in this payload: say plainly the number is the overall one.
-            setCard('rank', (profileData && profileData.ranking_status) || 'Unranked', '', 'Overall Rank');
+            setCard('rank', (profileData && profileData.ranking_status) || 'Not Ranked', '', 'Overall Rank');
         }
         const odds = Number(s.avg_odds);
         setCard('avgodds', Number.isFinite(odds) && odds !== 0 ? ((odds > 0 ? '+' : '') + Math.round(odds)) : 'N/A', '');
@@ -12150,7 +12149,7 @@
         };
         const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
         set('sidebarTrackedPicks', String(totalPicks));
-        set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
+        set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Not Ranked'));
 
         // Advanced Metrics top-line panel — populate from real fields where they exist;
         // never fabricate. Anything missing keeps its '—' placeholder.

@@ -447,7 +447,7 @@ function compRowHtml(view, row, i) {
   const href = c.href || (c.username ? `/u/${encodeURIComponent(c.username)}/` : '/handicappers/');
   const tone = view.tone === 'signed' ? (num(row.value) < 0 ? 'neg' : 'pos') : 'flat';
   return `<div class="comp-row${i === 0 ? ' r1' : ''}">` +
-    `<span class="comp-rk">${row.rank || i + 1}</span>` +
+    `<span class="comp-rk">${row.rank != null ? row.rank : ''}</span>` +
     compAvatar(c) +
     '<span class="comp-id">' +
       `<a class="comp-nm" href="${esc(href)}">${esc(c.username || '')}</a>` +

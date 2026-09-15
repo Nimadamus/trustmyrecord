@@ -1019,8 +1019,12 @@ async function loadTopCappers() {
            sorting those by units produced a "Top Cappers" order that disagreed
            with /leaderboards/ and with the rank printed on a profile. This is
            the same endpoint and the same ordering the leaderboard page uses. */
-        const data = await api.request('/users/leaderboard?sortBy=net_units&limit=10');
-        const users = (data.leaderboard || data.users || []).filter(isRealPublicFeedUser);
+        // CANONICAL_RANKING_20260914: "Top Cappers" means officially ranked
+        // members, in official order. A losing record is never a top capper.
+        const data = await api.request('/users/leaderboard?sortBy=rank&limit=10');
+        const users = (data.leaderboard || data.users || [])
+            .filter(isRealPublicFeedUser)
+            .filter(u => Number(u.official_rank) > 0);
         if (users.length) {
             el.innerHTML = users.slice(0, 3).map(u => {
                 const units = Number(u.net_units || 0);
@@ -1034,7 +1038,7 @@ async function loadTopCappers() {
             return;
         }
     } catch(e) {}
-    el.innerHTML = '<div class="rs-empty">Top cappers will appear once verified public records have enough graded picks.</div>';
+    el.innerHTML = '<div class="rs-empty">Top cappers appear once members earn an official TMR rank: 25 graded picks, recent activity, positive units and ROI, and 3 qualified handicappers.</div>';
 }
 
 async function loadArenaWatch() {

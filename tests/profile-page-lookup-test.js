@@ -131,7 +131,7 @@ async function main() {
   // not fail the deploy (540 vs 539 on 2026-09-02 was exactly that).
   assert(Math.abs(Number(profileUser.win_rate) - stats.winRate) <= 0.1, 'profile win rate should match ledger');
 
-  const leaderboardResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/leaderboard?sortBy=net_units&limit=250');
+  const leaderboardResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/leaderboard?sortBy=rank&minPicks=1&limit=100');
   assert.strictEqual(leaderboardResponse.status, 200, 'leaderboard should load');
   const leaderboardData = await leaderboardResponse.json();
   const leaderboardUser = (leaderboardData.leaderboard || []).find((user) => profileLookupKey(user.username) === 'betlegend');
@@ -140,9 +140,10 @@ async function main() {
     assert.strictEqual(`${leaderboardUser.wins}-${leaderboardUser.losses}-${leaderboardUser.pushes}`, stats.record, 'leaderboard record should match ledger');
     assert(Math.abs(Number(leaderboardUser.win_rate) - stats.winRate) <= 0.1, 'leaderboard win rate should match ledger');
     assert.strictEqual(Math.round(Number(leaderboardUser.net_units) * 100), Math.round(stats.net * 100), 'leaderboard net units should match ledger');
+    assert.strictEqual(profileUser.leaderboard_rank || null, leaderboardUser.official_rank || null, 'profile rank equals the board official rank');
   } else {
     assert.strictEqual(profileUser.leaderboard_rank, null, 'unranked BetLegend profile rank should be hidden');
-    assert.strictEqual(profileUser.ranking_status, 'Not ranked yet', 'unranked BetLegend should show Not ranked yet');
+    assert(/^Not Ranked/.test(String(profileUser.ranking_status)), 'unranked BetLegend should read Not Ranked');
   }
 
   console.log('profile-page-lookup-test: ok');

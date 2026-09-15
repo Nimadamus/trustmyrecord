@@ -84,8 +84,8 @@ assert(
   'the per-author record map must not fall back to this batch\'s wins_count as a lifetime record'
 );
 assert(
-  override.includes("api.request('/users/leaderboard?sortBy=net_units&limit=10')"),
-  'Top Cappers must read the canonical ranked leaderboard, not a client-sorted directory slice'
+  override.includes("api.request('/users/leaderboard?sortBy=rank&limit=10')") && override.includes('Number(u.official_rank) > 0'),
+  'Top Cappers must read the canonical ranked leaderboard and list officially ranked members only'
 );
 assert(
   social.includes('const wr = Number(u.win_rate || 0);'),

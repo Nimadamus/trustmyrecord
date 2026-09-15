@@ -26733,6 +26733,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const enhancedShowSection = window.showSection;
     window.showSection = function(sectionId) {
+        // CANONICAL_RANKING_20260914: the in-page leaderboards section ranked
+        // members in the browser from localStorage. Official ranks live on
+        // /leaderboards/, which reads the canonical ranking API.
+        if (sectionId === 'leaderboards') {
+            window.location.href = '/leaderboards/';
+            return;
+        }
         if (enhancedShowSection) enhancedShowSection.apply(this, arguments);
 
         if (sectionId === 'leaderboards') {

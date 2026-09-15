@@ -200,9 +200,24 @@ def collect():
             "win_rate": num(d.get("win_rate")),
             "current_streak": int(num(d.get("current_streak"))),
             "last_pick_at": last_pick_at,
+            # CANONICAL_RANKING_20260914: the member's official overall rank,
+            # exactly as GET /users/<name> reports it. Never a row position.
+            "official_rank": official_rank_of(d.get("leaderboard_rank")),
+            "ranking_status": d.get("ranking_status") or "Not Ranked",
         })
-    rows.sort(key=lambda r: r["net_units"], reverse=True)
+    # Official order first (ranked members by rank), then everyone else by units.
+    rows.sort(key=lambda r: (r["official_rank"] is None, r["official_rank"] or 0, -r["net_units"]))
     return rows
+
+def official_rank_of(value):
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return None
+    return n if n > 0 else None
+
+def official_rank_text(r):
+    return f'#{r["official_rank"]}' if r.get("official_rank") else "NR"
 
 # ---------- formatters (mirror the page JS exactly) ----------
 def e(s):
@@ -290,7 +305,7 @@ def handi_row(r, now):
         if badge else ""
     )
     return (
-        f'<div class="hm-row hm-member-row" data-username="{e(r["username"])}" data-profile-href="{href}" role="link" tabindex="0" aria-label="{e(label)}">'
+        f'<div class="hm-row hm-member-row" data-username="{e(r["username"])}" data-profile-href="{href}" data-official-rank="{official_rank_text(r)}" title="{e(r.get("ranking_status") or "Not Ranked")}" role="link" tabindex="0" aria-label="{e(label)}">'
         f'<div class="hm-user">'
         f'<a class="hm-avatar-link" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
         f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"{avatar_onerror(r["username"])}></a>'
@@ -310,14 +325,19 @@ def handi_row(r, now):
 
 def lead_row(r, idx):
     href = f"/u/{e(r['username'])}/"
-    rank_cls = "gold" if idx == 0 else "silver" if idx == 1 else "bronze" if idx == 2 else ""
+    # CANONICAL_RANKING_20260914: the official rank from the API row, or NR.
+    # Medal classes match the page's own .rank.top-1/2/3 rules.
+    rank = r.get("official_rank")
+    rank_cls = f"top-{rank}" if rank and rank <= 3 else ("" if rank else "rank-nr")
+    rank_txt = f"#{rank}" if rank else "NR"
+    status = e(r.get("ranking_status") or "Not Ranked")
     # NO LETTER TILE (2026-09-08). Every row is an <img> on the member's own
     # identity: clean_avatar() has already turned an absent upload into the
     # resolver route, so a baked leaderboard row shows the club mark with no JS.
     avatar = f'<img class="avatar" src="{e(r["avatar_url"] or clean_avatar("", r["username"]))}" alt="{e(r["display_name"])} avatar"{avatar_onerror(r["username"])}>'
     return (
         f'<tr>'
-        f'<td><span class="rank {rank_cls}">#{idx + 1}</span></td>'
+        f'<td><span class="rank {rank_cls}" title="{status}" aria-label="{status}">{rank_txt}</span></td>'
         f'<td><div class="person">{avatar}<div class="person-meta">'
         f'<a class="person-name" href="{href}" data-action="open-profile" data-username="{e(r["username"])}" data-source="board">{e(r["display_name"])}</a>'
         f'<span class="person-sub">@{e(r["username"])} &bull; All sports &bull; streak {e(streak(r["current_streak"]))}</span>'
@@ -414,7 +434,8 @@ def collect_leaderboard_view():
     hydrated board has shown losing records since, while this still baked
     winners only, so the first paint visibly reshuffled on hydrate. The page
     applies NO client-side row filter any more; neither does this."""
-    d = get(f"{API}/users/leaderboard?sortBy=net_units&limit=100&minPicks=5")
+    # CANONICAL_RANKING_20260914: the page defaults to TMR rank order at 25 picks.
+    d = get(f"{API}/users/leaderboard?sortBy=rank&limit=100&minPicks=25")
     entries = d.get("leaderboard", []) if isinstance(d, dict) else []
     total_eligible = d.get("total_eligible_handicappers") if isinstance(d, dict) else None
     rows = []
@@ -432,13 +453,15 @@ def collect_leaderboard_view():
             "win_rate": num(u.get("win_rate")),
             "current_streak": int(num(u.get("current_streak"))),
             "last_pick_at": u.get("last_pick_at") or "",
+            "official_rank": official_rank_of(u.get("official_rank")),
+            "ranking_status": u.get("ranking_status") or "Not Ranked",
         }
         # loadHandicappers() visibility rule: a username, and nothing else.
         # Eligibility (minimum graded picks + recent activity) is the API's,
         # and is already applied to every row it returned.
         if r["username"]:
             rows.append(r)
-    rows.sort(key=lambda r: r["net_units"], reverse=True)  # default sort 'units'
+    # default sort 'rank': the server's official order, kept as returned.
     try:
         total_eligible = int(total_eligible)
     except (TypeError, ValueError):
@@ -490,10 +513,13 @@ def bake_leaderboards():
 #   totalPicks >= 5 && net units > 0, ranked by net units desc.
 # No homepage-only logic: the top 5 here is by construction the top 5 a visitor
 # sees on /leaderboards/ with default filters.
-HOME_PREVIEW_MIN_PICKS = 5  # mirrors leaderboards sampleFilter default '5'
+# CANONICAL_RANKING_20260914: the preview lists OFFICIALLY RANKED members only,
+# in official order, with the official rank. A thin field bakes an honest
+# "no official ranks" row instead of numbering whoever is on top.
+HOME_PREVIEW_MIN_PICKS = 25  # the official rank's sample floor
 
 def collect_home_leaderboard():
-    d = get(f"{API}/users/leaderboard?sortBy=net_units&limit=100&minPicks={HOME_PREVIEW_MIN_PICKS}")
+    d = get(f"{API}/users/leaderboard?sortBy=rank&limit=100&minPicks={HOME_PREVIEW_MIN_PICKS}")
     entries = d.get("leaderboard", []) if isinstance(d, dict) else []
     out = []
     for r in entries:
@@ -506,22 +532,25 @@ def collect_home_leaderboard():
             "total_picks": int(num(r.get("total_picks"))),
             "net_units": num(r.get("net_units")),
             "roi": num(r.get("roi")),
+            "official_rank": official_rank_of(r.get("official_rank")),
         }
-        # exact page rule: entry.totalPicks >= 5 && entry.units > 0
-        if row["username"] and row["total_picks"] >= HOME_PREVIEW_MIN_PICKS and row["net_units"] > 0:
+        if row["username"] and row["official_rank"]:
             out.append(row)
-    if not out:
-        raise RuntimeError("home leaderboard preview: 0 eligible entries from live API - "
-                           "refusing to bake an empty/blank preview (last good bake stays live)")
-    # server already orders net_units DESC, total_picks DESC, username ASC; keep it.
+    if not isinstance(d, dict) or "leaderboard" not in d:
+        raise RuntimeError("home leaderboard preview: no board from live API - "
+                           "refusing to bake (last good bake stays live)")
+    # Server order is the official order; an empty list is a real state.
     return out
 
 def home_preview_rows(rows, k=5):
     out = []
-    for i, r in enumerate(rows[:k]):
+    if not rows:
+        return ('<tr><td class="rk">NR</td><td colspan="4">No official ranks issued yet: a rank needs 25 graded picks, '
+                'recent activity, positive units and ROI, and 3 qualified handicappers.</td></tr>')
+    for r in rows[:k]:
         href = f"/u/{e(r['username'])}/"
         out.append(
-            f'<tr><td class="rk">#{i+1}</td>'
+            f'<tr><td class="rk">#{r["official_rank"]}</td>'
             f'<td><a href="{href}">{e(r["display_name"])}</a></td>'
             f'<td>{e(rec(r))}</td>'
             f'<td class="{lclass(r["net_units"])}">{e(units_u(r["net_units"]))}</td>'

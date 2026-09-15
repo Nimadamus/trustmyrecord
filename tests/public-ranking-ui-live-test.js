@@ -58,17 +58,31 @@ function ledgerStats(picks) {
 }
 
 async function main() {
-  const leaderboard = await getJson(`${API}/users/leaderboard?sortBy=net_units&limit=100`);
+  // CANONICAL_RANKING_20260914: an official rank needs 25 graded picks, recent
+  // activity, net units > 0 AND ROI > 0, and 3 qualified members. Losing and
+  // thin records are listed with "Not Ranked", never a number.
+  const leaderboard = await getJson(`${API}/users/leaderboard?sortBy=rank&minPicks=1&limit=100`);
   const ranked = leaderboard.leaderboard || [];
-  ranked.forEach((user, index) => {
-    // NET_UNITS_FILTER_20260817: the API no longer gates public rank on
-    // net_units > 0; losing records are ranked by the same 20-pick rule.
-    assert(Number(user.total_picks || user.graded_picks) >= 20, `${user.username} must have 20+ graded picks`);
-    assert.strictEqual(user.ranking_status, `Ranked #${index + 1}`, `${user.username} should have sequential public rank text`);
+  const official = ranked.filter((user) => user.official_rank);
+  const n = leaderboard.ranking ? leaderboard.ranking.qualified_count : 0;
+  assert(official.length === 0 || n >= 3, 'numbered ranks require at least 3 qualified handicappers');
+  official.forEach((user, index) => {
+    assert.strictEqual(user.official_rank, index + 1, `${user.username} official ranks lead the rank order`);
+    assert.strictEqual(user.ranking_status, `#${index + 1} of ${n} qualified`, `${user.username} rank label carries its denominator`);
+    assert(Number(user.graded_picks) >= 25, `${user.username} must have 25+ graded picks`);
+    assert(Number(user.net_units) > 0 && Number(user.roi) > 0, `${user.username} must be profitable to hold a rank`);
+  });
+  ranked.forEach((user) => {
     assert(!TEST_USERNAME_RE.test(String(user.username || '')), `${user.username} must not be a test/QA account`);
-    if (index > 0) {
-      assert(Number(ranked[index - 1].net_units) >= Number(user.net_units), 'leaderboard must be sorted by net units first');
+    if (Number(user.net_units) <= 0 || Number(user.roi) <= 0 || Number(user.graded_picks) < 25) {
+      assert.strictEqual(user.rank, null, `${user.username} cannot hold a numbered rank`);
+      assert(/^Not Ranked/.test(String(user.ranking_status)), `${user.username} reads Not Ranked`);
     }
+  });
+  const byRoi = await getJson(`${API}/users/leaderboard?sortBy=roi&minPicks=1&limit=100`);
+  const officialByName = Object.fromEntries(ranked.map((u) => [u.username, u.rank]));
+  (byRoi.leaderboard || []).forEach((user) => {
+    assert.strictEqual(user.rank, officialByName[user.username], `${user.username}: a sort never changes the official rank`);
   });
 
   const directory = await getJson(`${API}/users?limit=250&offset=0`);
@@ -85,8 +99,10 @@ async function main() {
   }
   profiles.forEach((user) => {
     assert.strictEqual(String(user.username || '').toLowerCase(), 'betlegend', 'profile lookup normalization should resolve BETLEGEND');
-    // NET_UNITS_FILTER_20260817: rank follows the 20-graded-pick rule only, so a losing record can hold a public rank.
-    if (Number(user.graded_picks) >= 20) { assert(/^Ranked #\d+$/.test(String(user.ranking_status)), 'eligible BETLEGEND should carry a numeric public rank'); assert(Number.isInteger(Number(user.leaderboard_rank)), 'eligible BETLEGEND should expose leaderboard_rank'); } else { assert.strictEqual(user.leaderboard_rank, null, 'ineligible BETLEGEND must not have a public rank'); assert.strictEqual(user.ranking_status, 'Not ranked yet', 'ineligible BETLEGEND should show Not ranked yet'); }
+    // CANONICAL_RANKING_20260914: the profile rank is the board's official rank.
+    assert.strictEqual(user.leaderboard_rank || null, officialByName.BetLegend || officialByName.betlegend || null, 'BETLEGEND profile rank equals the board');
+    if (user.leaderboard_rank) assert(/^#\d+ of \d+ qualified$/.test(String(user.ranking_status)), 'a ranked profile carries "#k of N qualified"');
+    else assert(/^Not Ranked/.test(String(user.ranking_status)), 'an unranked profile reads Not Ranked');
   });
 
   // Page the whole ledger: BetLegend passed 100 graded picks long ago, and one

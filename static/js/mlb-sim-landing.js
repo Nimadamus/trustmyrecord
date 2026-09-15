@@ -459,14 +459,19 @@
                 setStat('simv2StatVerified', d.metrics.verified_handicappers);
             }
         });
-        fetchJson(API_BASE + '/users/leaderboard?sortBy=net_units&limit=3', 9000).then(function (d) {
+        // CANONICAL_RANKING_20260914: officially ranked members only, with their
+        // official rank. Nothing shows when no official ranks are issued.
+        fetchJson(API_BASE + '/users/leaderboard?sortBy=rank&limit=10', 9000).then(function (d) {
             var el = byId('simv2LeaderPreview');
-            if (!el || !d || !Array.isArray(d.leaderboard) || !d.leaderboard.length) return;
-            el.innerHTML = d.leaderboard.map(function (u, i) {
+            var ranked = d && Array.isArray(d.leaderboard)
+                ? d.leaderboard.filter(function (u) { return Number(u.official_rank) > 0; }).slice(0, 3)
+                : [];
+            if (!el || !ranked.length) return;
+            el.innerHTML = ranked.map(function (u) {
                 var rec = (u.wins != null && u.losses != null) ? (u.wins + '–' + u.losses) : '';
                 var units = (u.net_units != null) ? ((u.net_units >= 0 ? '+' : '') + Number(u.net_units).toFixed(1) + 'u') : '';
                 return '<a class="simv2-leader" href="/profile/?username=' + encodeURIComponent(u.username) + '">' +
-                    '<i>#' + (i + 1) + '</i><b>' + esc(u.display_name || u.username) + '</b>' +
+                    '<i>#' + Number(u.official_rank) + '</i><b>' + esc(u.display_name || u.username) + '</b>' +
                     '<span>' + esc(rec) + '</span><em>' + esc(units) + '</em></a>';
             }).join('');
             el.previousElementSibling && (el.previousElementSibling.hidden = false);

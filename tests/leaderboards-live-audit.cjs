@@ -171,8 +171,8 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
     null, { timeout: 30000 });
 
   // ---- 1. default board -----------------------------------------------------
-  console.log('\n[1] Default board (All sports, 5 picks, Net units)');
-  const apiAll = await api('/users/leaderboard?sortBy=net_units&limit=100&minPicks=5');
+  console.log('\n[1] Default board (All sports, 25 picks, TMR rank)');
+  const apiAll = await api('/users/leaderboard?sortBy=rank&limit=100&minPicks=25');
   let b = await settle(page, (s) => s.rows.length > 0);
   check('default board renders rows', b.rows.length > 0, 'rows=' + b.rows.length);
   check('default row count equals API', b.rows.length === apiAll.leaderboard.length, b.rows.length + ' vs ' + apiAll.leaderboard.length);
@@ -182,7 +182,7 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
 
   // ---- 2. sport dropdown is data-driven -------------------------------------
   console.log('\n[2] Sport dropdown is data-driven');
-  const apiSports = await api('/users/leaderboard/sports?minPicks=5');
+  const apiSports = await api('/users/leaderboard/sports?minPicks=25');
   const optValues = b.sportOptions.map((o) => o.split('|')[0]);
   check('options come from the API catalog',
     apiSports.sports.every((s) => optValues.includes(s.id)),
@@ -200,7 +200,7 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
   // ---- 3. THE REPORTED FAILURE: MLB + 5 picks -------------------------------
   console.log('\n[3] MLB + 5 picks (the exact reported failure)');
   await setFilters(page, { sport: 'mlb', minPicks: '5' });
-  const apiMlb = await api('/users/leaderboard?sortBy=net_units&limit=100&minPicks=5&sport=mlb');
+  const apiMlb = await api('/users/leaderboard?sortBy=rank&limit=100&minPicks=5&sport=mlb');
   b = await settle(page, (s) => s.rows.length === apiMlb.leaderboard.length && s.rows.length > 0 && s.rows.every((r) => r.sub.includes('MLB')));
   check('MLB board is NOT empty', b.rows.length > 0, 'rows=' + b.rows.length);
   check('MLB row count equals API', b.rows.length === apiMlb.leaderboard.length, b.rows.length + ' vs ' + apiMlb.leaderboard.length);
@@ -228,7 +228,9 @@ async function setFilters(page, { sport, sort, minPicks, search }) {
     const streak = row.current_streak > 0 ? 'W' + row.current_streak
       : row.current_streak < 0 ? 'L' + Math.abs(row.current_streak) : '0';
     if (!ui.sub.includes('streak ' + streak)) statMismatch.push(i + ' streak ' + ui.sub + '/' + streak);
-    if (ui.rank !== '#' + (i + 1)) statMismatch.push(i + ' rank ' + ui.rank);
+    // CANONICAL_RANKING_20260914: the rank cell is the official rank or NR, never the row index.
+    const officialCell = row.official_rank ? '#' + row.official_rank : 'NR';
+    if (ui.rank !== officialCell) statMismatch.push(i + ' rank ' + ui.rank + '/' + officialCell);
   });
   check('every MLB stat (record, ROI, units, win%, picks, streak, rank) matches the API',
     statMismatch.length === 0, statMismatch.slice(0, 5).join(' | '));
