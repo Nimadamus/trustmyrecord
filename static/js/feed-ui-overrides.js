@@ -531,7 +531,11 @@ async function postComment(id, type) {
 }
 
 async function initAuth() {
-    if (typeof api !== 'undefined' && api.ready) {
+    // Only a stored session needs the backend probe before auth state is read;
+    // anonymous visitors skip the (up to 2.5s) wait so the feed starts at once.
+    let hasStoredSession = true;
+    try { if (typeof api !== 'undefined' && typeof api.loadTokens === 'function') { api.loadTokens(); hasStoredSession = !!(api.token || api.refreshToken); } } catch (e) {}
+    if (hasStoredSession && typeof api !== 'undefined' && api.ready) {
         try {
             await Promise.race([
                 api.ready,
@@ -708,6 +712,34 @@ function aggregateFeedItems(items) {
     return [...pickGroups.values(), ...nonPicks];
 }
 
+async function loadHydratedActivePolls(pollData) {
+    const activePolls = (pollData.polls || []).filter(isRealPublicFeedUser);
+    // /polls/active does not include the per-option array, which left
+    // feed poll cards rendering "Poll options are not available."
+    // Hydrate the options (and true vote totals) from each poll detail.
+    return Promise.all(activePolls.map(async p => {
+        const questionCount = parseInt(p.question_count) || 0;
+        let options = Array.isArray(p.options) ? p.options : [];
+        let totalVotes = parseInt(p.total_votes != null ? p.total_votes : p.vote_count) || 0;
+        let userVote = null;
+        let allowChange = p.allow_vote_change;
+        if (!options.length && questionCount <= 1) {
+            try {
+                const detail = await api.request('/polls/' + p.id);
+                options = (detail.options || []).map(o => ({
+                    id: o.id,
+                    text: o.option_text,
+                    votes: parseInt(o.vote_count) || 0
+                }));
+                totalVotes = parseInt(detail.total_votes) || totalVotes;
+                userVote = detail.user_vote || null;
+                if (detail.poll && detail.poll.allow_vote_change != null) allowChange = detail.poll.allow_vote_change;
+            } catch(e) {}
+        }
+        return { p: p, options: options, totalVotes: totalVotes, questionCount: questionCount, userVote: userVote, allowChange: allowChange };
+    }));
+}
+
 async function loadFeed() {
     const c = document.getElementById('feedList');
     if (!c) return;
@@ -718,7 +750,25 @@ async function loadFeed() {
             const filterParam = currentFilter === 'hot-takes' ? 'posts'
                 : currentFilter === 'site-updates' ? 'site_updates'
                 : currentFilter;
-            const data = await api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
+            const feedEndpoint = '/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam);
+            // FEED_PARALLEL_20260914: the side sources used to be fetched one after
+            // another behind /feed. They are independent reads, so start them all
+            // now and merge them in the original order once they land.
+            const discoverPromise = (currentFilter === 'all' || currentFilter === 'picks')
+                ? api.request('/social/discover?limit=12').catch(() => null) : null;
+            const pollsPromise = (currentFilter === 'all' || currentFilter === 'polls')
+                ? api.request('/polls/active?limit=5').then(loadHydratedActivePolls).catch(() => null) : null;
+            const notifViewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+            const notifPromise = ((currentFilter === 'all' || currentFilter === 'following') && notifViewer)
+                ? api.request('/notifications?limit=20').catch(() => null) : null;
+            let data;
+            try {
+                data = await api.request(feedEndpoint);
+            } catch (firstErr) {
+                // One retry covers a transient API restart before showing "unavailable".
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                data = await api.request(feedEndpoint);
+            }
             items = (data.feed || []).filter(isRealPublicFeedUser).map(item => {
                 if (
                     item.item_type === 'pick' ||
@@ -733,7 +783,8 @@ async function loadFeed() {
 
             if (currentFilter === 'all' || currentFilter === 'picks') {
                 try {
-                    const discover = await api.request('/social/discover?limit=12');
+                    const discover = await discoverPromise;
+                    if (!discover) throw new Error('discover unavailable');
                     const picks = (discover.picks || [])
                         .filter(isRealPublicFeedUser)
                         .filter(p => p && p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()))
@@ -753,32 +804,8 @@ async function loadFeed() {
 
             if (currentFilter === 'all' || currentFilter === 'polls') {
                 try {
-                    const pollData = await api.request('/polls/active?limit=5');
-                    const activePolls = (pollData.polls || []).filter(isRealPublicFeedUser);
-                    // /polls/active does not include the per-option array, which left
-                    // feed poll cards rendering "Poll options are not available."
-                    // Hydrate the options (and true vote totals) from each poll detail.
-                    const hydrated = await Promise.all(activePolls.map(async p => {
-                        const questionCount = parseInt(p.question_count) || 0;
-                        let options = Array.isArray(p.options) ? p.options : [];
-                        let totalVotes = parseInt(p.total_votes != null ? p.total_votes : p.vote_count) || 0;
-                        let userVote = null;
-                        let allowChange = p.allow_vote_change;
-                        if (!options.length && questionCount <= 1) {
-                            try {
-                                const detail = await api.request('/polls/' + p.id);
-                                options = (detail.options || []).map(o => ({
-                                    id: o.id,
-                                    text: o.option_text,
-                                    votes: parseInt(o.vote_count) || 0
-                                }));
-                                totalVotes = parseInt(detail.total_votes) || totalVotes;
-                                userVote = detail.user_vote || null;
-                                if (detail.poll && detail.poll.allow_vote_change != null) allowChange = detail.poll.allow_vote_change;
-                            } catch(e) {}
-                        }
-                        return { p: p, options: options, totalVotes: totalVotes, questionCount: questionCount, userVote: userVote, allowChange: allowChange };
-                    }));
+                    const hydrated = await pollsPromise;
+                    if (!hydrated) throw new Error('polls unavailable');
                     hydrated.forEach(h => items.push({
                         item_type: 'poll',
                         post_type: 'poll',
@@ -809,9 +836,9 @@ async function loadFeed() {
             // trivia events surface in the feed when the backend emits them.
             if (currentFilter === 'all' || currentFilter === 'following') {
                 try {
-                    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
-                    if (viewer) {
-                        const notif = await api.request('/notifications?limit=20');
+                    const viewer = notifViewer;
+                    const notif = viewer ? await notifPromise : null;
+                    if (viewer && notif) {
                         const allowed = new Set(['pick_graded','friend_accepted','achievement','challenge_joined','challenge_won','challenge_lost','trivia_created','trivia_answered','comment_created','reply_created','poll_voted','blog_published','recap_posted','follow','followed']);
                         (notif.notifications || []).filter(n => allowed.has(String(n.type))).filter(isRealPublicFeedUser).forEach(n => items.push({
                             item_type: 'activity',
