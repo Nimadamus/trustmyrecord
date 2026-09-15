@@ -490,7 +490,14 @@ function rivalrySlug(sport, a, b) {
    yet gets one, built from both clubs' own projections and every meeting on the
    schedule with the model's win probability. Marked MK:leagueSimRivalry so a
    rebuild owns them and never touches the hand built matchup pages. */
-function writeRivalries(sport, inputs, result, shell) {
+function writeRivalries() {
+  /* DISABLED 2026-09-15 by Nima: this created 137 NBA and NHL pages that were
+     never asked for. It writes nothing and returns nothing, so no page, no hub
+     grid row and no sitemap entry can come back from it. */
+  return [];
+}
+
+function writeRivalriesDisabled(sport, inputs, result, shell) {
   const L = LEAGUE[sport];
   const nhl = sport === 'nhl';
   const made = [];
@@ -652,7 +659,9 @@ function patchTeams(sport, inputs, result) {
     }).join('');
     const rivals = result.teams.filter((x) => x.division === t.division && x.abbr !== t.abbr)
       .sort((a, b) => (sport === 'nhl' ? b.points_mean - a.points_mean : b.wins_mean - a.wins_mean));
-    const pairUrl = (x) => `/${sport}-simulator/${rivalrySlug(sport, t, x)}/`;
+    /* Link a division rival only if that pairing already has a page; the
+       generator that made 137 new ones was disabled 2026-09-15. */
+    const pairUrl = (x) => { const slug = rivalrySlug(sport, t, x); return fs.existsSync(path.join(ROOT, sport + '-simulator', slug, 'index.html')) ? `/${sport}-simulator/${slug}/` : `/${sport}-simulator/teams/${slugOf(x.name)}/`; };
     const kpi = (v, label) => `<div class="lsimt-kpi"><b>${v}</b><span>${label}</span></div>`;
     const block = `<!--MK:leagueSimTeam-->
   <style>
@@ -686,7 +695,7 @@ function patchTeams(sport, inputs, result) {
   <section class="panel">
     <h2>The ${esc(t.division)} race</h2>
     <div class="linkgrid">
-      ${rivals.map((x) => `<a href="${pairUrl(x)}">${esc(nick)} vs ${esc(x.short)}<small>${esc(x.short)}: ${sport === 'nhl' ? UI_one(x.points_mean) + ' points' : UI_one(x.wins_mean) + ' wins'}, ${pctText(x.division_title)} division</small></a>`).join('\n      ')}
+      ${rivals.map((x) => `<a href="${pairUrl(x)}">${esc(x.name)}<small>${esc(x.short)}: ${sport === 'nhl' ? UI_one(x.points_mean) + ' points' : UI_one(x.wins_mean) + ' wins'}, ${pctText(x.division_title)} division</small></a>`).join('\n      ')}
     </div>
   </section>
   <!--/MK:leagueSimTeam-->
@@ -771,9 +780,8 @@ if (require.main === module) (async () => {
       fs.writeFileSync(out, page(sport, mode, inputs, result, shell));
       console.log(`wrote ${path.relative(ROOT, out)}`);
     }
-    const rivalries = writeRivalries(sport, inputs, result, shell);
+    const rivalries = writeRivalries();
     patchHub(sport, inputs, rivalries);
-    console.log(`${sport}: ${rivalries.filter((r) => !r.existing).length} rivalry pages written, ${rivalries.filter((r) => r.existing).length} already hand built, ${patchSitemapUrls(rivalries.map((r) => r.url))} new sitemap entries`);
     console.log(`${sport}: ${patchTeams(sport, inputs, result)} team pages carry the projection`);
     console.log(`${sport}: ${patchMatchups(sport, inputs, result)} matchup pages carry both projections`);
     console.log(`patched ${sport}-simulator/index.html`);
