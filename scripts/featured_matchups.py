@@ -74,6 +74,9 @@ REGISTRY = os.path.join(ROOT, "data", "featured-matchups.json")
 SITE = "https://trustmyrecord.com"
 RUNTIME_JS = "static/js/tmr-featured.js"
 DEFAULT_GRACE_MINUTES = 210
+# A game whose status the schedule rotation has marked with one of these is over
+# for featuring purposes, whatever the clock says (NFL_SCHEDULE_ROTATION_20260915).
+ENDED_STATES = ("final", "postponed", "canceled")
 
 
 # ------------------------------------------------------------------ registry
@@ -123,7 +126,12 @@ def now_utc():
 def resolve(reg, sport, now=None):
     """The featured entry for `sport`: the live one, else the latest published
     one, else None (only when the sport has no entry at all). Mirrors resolve()
-    in static/js/tmr-featured.js line for line; the sync test holds them equal."""
+    in static/js/tmr-featured.js line for line; the sync test holds them equal.
+
+    A sport with "selection": "schedule" (the NFL, NFL_SCHEDULE_ROTATION_20260915)
+    resolves only the entries scripts/nfl_featured_rotation.py wrote from the real
+    schedule, and an entry whose game_state is final, postponed or canceled is
+    never live, so game status retires a game and the clock is only a safety cap."""
     now = now or now_utc()
     if sport == "*":
         return resolve_any(reg, now)[1]
@@ -137,11 +145,16 @@ def resolve_latest(reg, sport, now=None):
     s = (reg or {}).get("sports", {}).get(sport)
     if not s:
         return None
+    scheduled = s.get("selection") == "schedule"
     best, best_k = None, None
     for f in s.get("features") or []:
         if not isinstance(f, dict) or (f.get("status") or "active") != "active":
             continue
         if not f.get("href"):
+            continue
+        if scheduled and f.get("source") != "rotation":
+            continue
+        if f.get("game_state") in ("postponed", "canceled"):
             continue
         k = parse_utc(f.get("kickoff_utc"))
         if k is None:
@@ -163,11 +176,16 @@ def resolve_live(reg, sport, now=None):
     if not s:
         return None
     grace = dt.timedelta(minutes=grace_minutes(reg, sport))
+    scheduled = s.get("selection") == "schedule"
     best, best_k = None, None
     for f in s.get("features") or []:
         if not isinstance(f, dict) or (f.get("status") or "active") != "active":
             continue
         if not f.get("href"):
+            continue
+        if scheduled and f.get("source") != "rotation":
+            continue
+        if f.get("game_state") in ENDED_STATES:
             continue
         k = parse_utc(f.get("kickoff_utc"))
         if k is None:
@@ -487,6 +505,16 @@ def archive_html(reg, sport, now=None, limit=12):
                 and (f.get("status") or "active") != "withdrawn"):
             past.append((k, f))
     past.sort(key=lambda kf: kf[0], reverse=True)
+    # A rotation entry and the hand built page it links share one href.
+    current = resolve(reg, sport, now)
+    seen = {current.get("href")} if current else set()
+    unique = []
+    for k, f in past:
+        if f["href"] in seen or f.get("game_state") in ("postponed", "canceled"):
+            continue
+        seen.add(f["href"])
+        unique.append((k, f))
+    past = unique
     if not past:
         return ""
     links = " &middot; ".join('<a href="%s">%s</a>' % (esc(f["href"]), esc(f.get("headline") or f.get("matchup")))
@@ -614,12 +642,51 @@ def sync(check=False, now=None, root=ROOT):
     return 0
 
 
+def rotate(dry=False, now=None, root=ROOT, fetch=None):
+    """NFL_SCHEDULE_ROTATION_20260915. Read the real NFL schedule, queue the next
+    featured games into the registry, then bake every surface. A schedule feed
+    that cannot be read changes nothing and never fails the caller: the queued
+    entries and the browser's safety cap carry the site until the next run."""
+    import nfl_featured_rotation as rot
+    now = now or now_utc()
+    reg_path = os.path.join(root, "data", "featured-matchups.json")
+    reg = load(reg_path)
+    if not reg or rot.SPORT not in reg["sports"]:
+        print("featured rotation: no NFL registry; nothing to rotate")
+        return 0
+    try:
+        raw = (fetch or rot.fetch_events)(now)
+    except Exception as exc:  # noqa: BLE001 - a feed outage must not fail a bake
+        print("featured rotation: WARN schedule feed unreadable (%s); registry left as it is" % exc)
+        return 0 if dry else sync(now=now, root=root)
+    games = [g for g in (rot.normalize(e) for e in raw) if g]
+    if not games:
+        print("featured rotation: WARN schedule feed returned no games; registry left as it is")
+        return 0 if dry else sync(now=now, root=root)
+    discover_pages(reg, root)
+    changed, lines, picks = rot.apply(reg, games, now, root, resolve)
+    print("featured rotation: %d games read, next featured slots:" % len(games))
+    print(rot.describe(picks, reg, root))
+    if lines:
+        print("\n".join(lines))
+    current = resolve(reg, rot.SPORT, now)
+    print("featured rotation: current NFL feature %s" % (
+        "%s (%s) -> %s" % (current.get("matchup"), current.get("game_state"), current.get("href")) if current else "none"))
+    if dry:
+        return 0
+    if changed:
+        save(reg, reg_path)
+    return sync(now=now, root=root)
+
+
 def main(argv):
     if len(argv) >= 2 and argv[1] == "resolve":
         reg = load()
         sport = argv[2] if len(argv) > 2 else "nfl"
         print(json.dumps(resolve(reg, sport), indent=2, ensure_ascii=True))
         return 0
+    if len(argv) >= 2 and argv[1] == "rotate":
+        return rotate(dry="--dry" in argv)
     if len(argv) >= 2 and argv[1] == "sync":
         return sync(check="--check" in argv)
     print(__doc__)

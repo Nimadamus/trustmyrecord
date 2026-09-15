@@ -1344,7 +1344,9 @@ def sync_featured():
     workflow token exists to add a step, and it must never fail the sport bake."""
     try:
         import featured_matchups
-        featured_matchups.sync()
+        # NFL_SCHEDULE_ROTATION_20260915: rotate reads the NFL schedule first
+        # (so a freshly baked breakdown is linked at once), then syncs.
+        featured_matchups.rotate()
     except Exception as exc:  # noqa: BLE001 - never fails the sport bake
         print("FEATURED: surfaces not synced (%s)" % exc)
 

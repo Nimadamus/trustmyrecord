@@ -55,7 +55,9 @@ for (const d of doors) {
   if (FILLER.test(d.text)) { fail(`${label}: placeholder wording`); continue; }
   if (!d.has_articles) { pass(`${label}: sport has no article yet (forwards to hub)`); continue; }
   const baked = (d.text.match(/data-baked-href="([^"]*)"/) || [])[1];
-  if (!baked || !/^\/[^/]/.test(baked) || baked.startsWith('/handicapping/')) fail(`${label}: baked "${baked || ''}" is not an article`);
+  /* A sport hub (/handicapping/nfl/) is filler; a game's own breakdown under it
+     (/handicapping/nfl/<game>/, what the NFL schedule rotation links) is an article. */
+  if (!baked || !/^\/[^/]/.test(baked) || /^\/handicapping\/[^/]+\/?$/.test(baked)) fail(`${label}: baked "${baked || ''}" is not an article`);
   else pass(`${label} -> ${baked}`);
 }
 

@@ -62,6 +62,12 @@ STAGES = [
     ("home_highlights", [PY, "scripts/verify_home_highlights.py"], ["index.html"], None),
     ("profiles", [PY, "scripts/build_profile_pages.py"], ["u", "sitemap.xml", "static/prerender"], None),
     ("forum", [PY, "scripts/build_forum_threads.py"], ["forum", "sitemap.xml"], None),
+    # NFL_SCHEDULE_ROTATION_20260915: reads the real NFL schedule, retires a
+    # finished featured game by its status and queues the next ones, then bakes
+    # every featured surface. This refresh is the cadence that keeps it moving.
+    ("featured_rotation", [PY, "scripts/featured_matchups.py", "rotate"],
+     ["data/featured-matchups.json", "matchup-of-the-day", "nfl-game-of-the-week",
+      "handicapping", "sportsbook/index.html"], None),
     ("asset_refs", [PY, "scripts/version_static_refs.py"], ["."], None),
 ]
 GATES = [

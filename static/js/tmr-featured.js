@@ -26,6 +26,11 @@
 
   var REGISTRY = '/data/featured-matchups.json';
   var DEFAULT_GRACE_MINUTES = 210;
+  /* NFL_SCHEDULE_ROTATION_20260915. A sport with selection "schedule" resolves
+     only the entries scripts/nfl_featured_rotation.py wrote from the real
+     schedule, and a game_state below is never live: status retires a game, the
+     clock (grace_minutes) is only the safety cap. Same as featured_matchups.py. */
+  var ENDED_STATES = ['final', 'postponed', 'canceled'];
   var pending = null;
 
   function t(value) {
@@ -69,12 +74,15 @@
   function resolveLatest(reg, sport, now) {
     var s = reg && reg.sports && reg.sports[sport];
     if (!s) return null;
+    var scheduled = s.selection === 'schedule';
     var best = null, bestK = null;
     var list = s.features || [];
     for (var i = 0; i < list.length; i++) {
       var f = list[i];
       if (!f || typeof f !== 'object' || (f.status || 'active') !== 'active') continue;
       if (!f.href) continue;
+      if (scheduled && f.source !== 'rotation') continue;
+      if (f.game_state === 'postponed' || f.game_state === 'canceled') continue;
       var k = t(f.kickoff_utc);
       if (k === null) continue;
       if (f.start_utc) {
@@ -90,12 +98,15 @@
     var s = reg && reg.sports && reg.sports[sport];
     if (!s) return null;
     var grace = graceMinutes(reg, sport) * 60000;
+    var scheduled = s.selection === 'schedule';
     var best = null, bestK = null;
     var list = s.features || [];
     for (var i = 0; i < list.length; i++) {
       var f = list[i];
       if (!f || typeof f !== 'object' || (f.status || 'active') !== 'active') continue;
       if (!f.href) continue;
+      if (scheduled && f.source !== 'rotation') continue;
+      if (ENDED_STATES.indexOf(f.game_state) !== -1) continue;
       var k = t(f.kickoff_utc);
       if (k === null) continue;
       if (f.start_utc) {

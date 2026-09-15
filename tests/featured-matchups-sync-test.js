@@ -127,6 +127,57 @@ if (py.status !== 0) {
   }
 }
 
+/* ------------- 1b. NFL schedule rotation: parity + transitions (NFL_SCHEDULE_ROTATION_20260915) */
+const SREG = {
+  grace_minutes: 210,
+  sports: {
+    nfl: {
+      selection: 'schedule',
+      grace_minutes: 360,
+      features: [
+        { id: 'hand-page-latest', source: 'page', href: '/nfl/hand/', kickoff_utc: iso(BASE + 30 * H) },
+        { id: 'mnf-final', source: 'rotation', game_state: 'final', href: '/h/mnf/', kickoff_utc: iso(BASE - 2 * H) },
+        { id: 'tnf-postponed', source: 'rotation', game_state: 'postponed', href: '/h/tnf/', kickoff_utc: iso(BASE + 60 * H) },
+        { id: 'sunday', source: 'rotation', game_state: 'scheduled', href: '/h/sun/', kickoff_utc: iso(BASE + 104 * H) },
+        { id: 'monday-next', source: 'rotation', game_state: 'scheduled', href: '/h/mon/', kickoff_utc: iso(BASE + 128 * H) },
+      ],
+    },
+  },
+};
+const SINSTANTS = {
+  'MNF just final, cap not reached': BASE - 1 * H,
+  'sunday game in progress': BASE + 106 * H,
+  'sunday past safety cap, never marked': BASE + 110.5 * H,
+  'everything past': BASE + 200 * H,
+};
+const SEXPECT = {
+  'MNF just final, cap not reached': 'sunday',
+  'sunday game in progress': 'sunday',
+  'sunday past safety cap, never marked': 'monday-next',
+  'everything past': 'monday-next',
+};
+const spy = spawnSync('python', ['-c', `
+import sys, json, datetime as dt
+sys.path.insert(0, ${JSON.stringify(path.join(ROOT, 'scripts'))})
+import featured_matchups as fm
+reg = json.loads(sys.argv[1]); instants = json.loads(sys.argv[2])
+print(json.dumps({n: (fm.resolve(reg, 'nfl', dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc)) or {}).get('id') for n, ms in instants.items()}))
+`, JSON.stringify(SREG), JSON.stringify(SINSTANTS)], { encoding: 'utf8' });
+if (spy.status !== 0) {
+  bad('python schedule resolver did not run: ' + spy.stderr);
+} else {
+  const sOut = JSON.parse(spy.stdout);
+  for (const [name, ms] of Object.entries(SINSTANTS)) {
+    const j = (jsResolve(SREG, 'nfl', ms) || {}).id;
+    if (j !== sOut[name]) bad(`schedule: ${name}: JS ${j}, Python ${sOut[name]}`);
+    else if (j !== SEXPECT[name]) bad(`schedule: ${name}: resolved ${j}, expected ${SEXPECT[name]}`);
+    else ok(`schedule: ${name}: both resolvers pick ${j}`);
+  }
+}
+const rotTest = spawnSync('python', [path.join(ROOT, 'tests/featured-nfl-rotation-test.py')], { encoding: 'utf8' });
+if (rotTest.status !== 0) bad('tests/featured-nfl-rotation-test.py failed:\n' + (rotTest.stdout || '').split('\n').filter((l) => /FAIL|Error/.test(l)).join('\n') + rotTest.stderr);
+else ok('NFL rotation transitions (tests/featured-nfl-rotation-test.py) pass');
+
 /* --------------------------------------- 2. every surface wired to registry */
 const reg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/featured-matchups.json'), 'utf8'));
 for (const [sport, s] of Object.entries(reg.sports)) {
