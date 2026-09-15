@@ -51,7 +51,7 @@
   /* ----------------------------------------------------------- season view */
 
   function seasonTables(result) {
-    SPORT = result.sport === 'mlb' ? null : result.sport;
+    SPORT = result.sport;
     var nhl = result.sport === 'nhl', mlb = result.sport === 'mlb';
     var groups = {};
     result.teams.forEach(function (t) {
@@ -94,7 +94,7 @@
   /* ---------------------------------------------------------- playoff view */
 
   function oddsTable(result) {
-    SPORT = result.sport === 'mlb' ? null : result.sport;
+    SPORT = result.sport;
     var nhl = result.sport === 'nhl', mlb = result.sport === 'mlb';
     var list = result.teams.slice().sort(function (a, b) {
       return b.champion - a.champion || b.final - a.final || b.playoffs - a.playoffs;

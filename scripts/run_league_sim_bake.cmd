@@ -17,7 +17,7 @@ node scripts\build_mlb_odds_page.js                        >> "%LOG%" 2>&1 || go
 node tests\league-season-engine-test.js                    >> "%LOG%" 2>&1 || goto :fail
 node tests\seo-indexability-regression-test.js             >> "%LOG%" 2>&1 || goto :fail
 
-git add mlb-playoff-odds data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator >> "%LOG%" 2>&1
+git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator >> "%LOG%" 2>&1
 git diff --cached --quiet && (echo no change >> "%LOG%" & goto :done)
 git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]" >> "%LOG%" 2>&1 || goto :fail
 git fetch origin -q                                        || goto :fail

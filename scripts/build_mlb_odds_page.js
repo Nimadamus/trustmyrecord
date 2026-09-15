@@ -245,6 +245,186 @@ ${shell.tail}
 `);
 }
 
+/* MLB_TEAM_SIM_PAGES_20260915 -- /mlb-simulator/teams/<team>/ for all 30 clubs,
+   the page family NBA, NHL and NFL already have. Built from the same live
+   inputs and the same projection as /mlb-playoff-odds/: the club's real record,
+   run differential, model strength, projected wins and every postseason
+   chance, its last ten results and every game left with the model's win
+   probability. The MLB simulator hub carries the grid between
+   <!--MK:mlbTeamSims--> markers. */
+const TEAM_CSS = `
+  table.sched{width:100%;border-collapse:collapse;font-size:.88rem}
+  table.sched th,table.sched td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:left;white-space:nowrap}
+  table.sched thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6)}
+  table.sched td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .w{color:#34d399;font-weight:700}.l{color:#f87171;font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;margin:10px 0}
+  .kpi{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:12px;padding:10px 12px}
+  .kpi b{display:block;font-size:1.35rem}
+  .kpi span{font-size:.78rem;color:var(--mut,#9fb0c6)}
+  .tlogo{width:52px;height:52px;vertical-align:middle;margin-right:10px}
+`;
+
+function teamPages(inp, result, shell) {
+  const pct = H.pctText;
+  const byAbbr = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t]));
+  const dayOf = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
+  const slug = (t) => H.slugOf(t.name);
+  const out = [];
+  for (const t of inp.teams) {
+    const p = result.teams.find((x) => x.abbr === t.espn_abbr);
+    const mine = inp.schedule.filter((g) => g.home === t.espn_abbr || g.away === t.espn_abbr);
+    const done = mine.filter((g) => g.final && g.home_score != null);
+    const left = mine.filter((g) => !g.final);
+    const last10 = done.slice(-10);
+    const res = (g) => {
+      const home = g.home === t.espn_abbr, us = home ? g.home_score : g.away_score, them = home ? g.away_score : g.home_score;
+      return { won: us > them, us, them, opp: byAbbr[home ? g.away : g.home], home };
+    };
+    const l10 = last10.map(res), l10w = l10.filter((r) => r.won).length;
+    const probFor = (g) => { const c = inp.matchups[g.home][g.away]; return g.home === t.espn_abbr ? c.p : 1 - c.p; };
+    const expLeft = left.reduce((s, g) => s + probFor(g), 0);
+    const rd = t.rs - t.ra;
+    const divMates = inp.teams.filter((x) => x.division === t.division && x !== t)
+      .map((x) => ({ t: x, p: result.teams.find((y) => y.abbr === x.espn_abbr) }))
+      .sort((a, b) => b.p.wins_mean - a.p.wins_mean);
+    const url = `/mlb-simulator/teams/${slug(t)}/`;
+    const h1 = `${t.name} Simulator`;
+    const title = `${t.name} Simulator ${inp.season} | Playoff Odds, Projected Wins and Schedule`;
+    const desc = `${t.name} ${inp.season}: ${t.w} and ${t.l}, ${H.UI_one(p.wins_mean)} projected wins, ${pct(p.playoffs)} playoff odds, ${pct(p.division_title)} to win the ${t.division} and ${pct(p.champion)} to win the World Series, with every game left simulated.`;
+    const sched = [...last10.map((g) => {
+      const r = res(g);
+      return `<tr><td>${esc(dayOf(g.date))}</td><td>${r.home ? 'vs' : 'at'} <a href="/mlb-simulator/teams/${slug(r.opp)}/">${esc(r.opp.name)}</a></td><td class="r"><span class="${r.won ? 'w' : 'l'}">${r.won ? 'W' : 'L'} ${r.us} to ${r.them}</span></td></tr>`;
+    }), ...left.map((g) => {
+      const home = g.home === t.espn_abbr, opp = byAbbr[home ? g.away : g.home];
+      return `<tr><td>${esc(dayOf(g.date))}</td><td>${home ? 'vs' : 'at'} <a href="/mlb-simulator/teams/${slug(opp)}/">${esc(opp.name)}</a></td><td class="r">${Math.round(probFor(g) * 100)}% to win</td></tr>`;
+    })].join('');
+    const faqs = [
+      [`What are the ${t.name}' playoff odds?`, `They reach the ${inp.season} postseason in ${pct(p.playoffs)} of ${H.count(result.runs)} simulated finishes, win the ${t.division} in ${pct(p.division_title)}, earn a first round bye in ${pct(p.direct)} and win the World Series in ${pct(p.champion)}.`],
+      [`How many games will the ${t.name} win?`, `They are ${t.w} and ${t.l} with ${left.length} games left. The model expects about ${H.UI_one(expLeft)} more wins, and eight of every ten simulated finishes end between ${p.wins_p10} and ${p.wins_p90} wins.`],
+      [`How are the ${t.short} rated?`, `From runs scored and allowed: ${t.rs} scored and ${t.ra} allowed, a run differential of ${rd > 0 ? '+' : ''}${rd}, turned into a Pythagorean record and pulled toward .500 by ${REGRESS_GAMES} games of average play. That rates them as a .${String(Math.round(t.strength * 1000)).padStart(3, '0')} team, and each game uses log5 with a home field edge.`],
+    ];
+    const faq = H.faqBlock(faqs);
+    const ld = [
+      { '@context': 'https://schema.org', '@type': 'WebPage', name: h1, url: SITE + url, description: desc, dateModified: inp.generated_at },
+      { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+        { '@type': 'ListItem', position: 2, name: 'MLB Simulator', item: SITE + '/mlb-simulator/' },
+        { '@type': 'ListItem', position: 3, name: 'MLB Playoff Odds', item: SITE + URL },
+        { '@type': 'ListItem', position: 4, name: h1, item: SITE + url }] },
+    ];
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- MLB_TEAM_SIM_PAGES_20260915. Baked by scripts/build_mlb_odds_page.js. Do not edit by hand. -->
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${SITE}${url}" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="${esc(h1)}" />
+<meta property="og:description" content="${esc(desc)}" />
+<meta property="og:url" content="${SITE}${url}" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="${SITE}/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+${ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}
+<script type="application/ld+json">${faq.ld}</script>
+${shell.head}
+<style>${H.CSS}${TEAM_CSS}</style>
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<main class="wrap lsim-wrap">
+  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
+    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/mlb-simulator/" style="color:inherit;text-decoration:none;">MLB Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="${URL}" style="color:inherit;text-decoration:none;">MLB Playoff Odds</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <span aria-current="page" style="font-weight:600;">${esc(h1)}</span>
+  </nav>
+  <section class="hero lsim-hero">
+    <h1><img class="tlogo" src="${esc(t.logo)}" alt="" width="52" height="52">${esc(h1)}</h1>
+    <p>The ${esc(t.name)} are ${t.w} and ${t.l} with a run differential of ${rd > 0 ? '+' : ''}${rd}${last10.length ? `, ${l10w} and ${last10.length - l10w} over their last ${last10.length}` : ''}. With ${left.length} games left, ${H.count(result.runs)} simulated finishes put them at ${H.UI_one(p.wins_mean)} wins.</p>
+    <div class="kpis">
+      <div class="kpi"><b>${pct(p.playoffs)}</b><span>make the playoffs</span></div>
+      <div class="kpi"><b>${pct(p.division_title)}</b><span>win the ${esc(t.division)}</span></div>
+      <div class="kpi"><b>${pct(p.direct)}</b><span>first round bye</span></div>
+      <div class="kpi"><b>${pct(p.champion)}</b><span>win the World Series</span></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>${esc(t.short)} last ${last10.length} and every game left</h2>
+    <p class="small">Final scores for the last ten games, then each remaining game with the model's probability that the ${esc(t.short)} win it.</p>
+    <div class="tscroll"><table class="sched"><thead><tr><th>Date</th><th>Opponent</th><th class="r">Result or odds</th></tr></thead><tbody>${sched}</tbody></table></div>
+  </section>
+  <section class="panel">
+    <h2>The ${esc(t.division)} race</h2>
+    <div class="linkgrid">
+      ${divMates.map((m) => `<a href="/mlb-simulator/teams/${slug(m.t)}/">${esc(m.t.name)}<small>${m.t.w} and ${m.t.l}, ${pct(m.p.division_title)} division, ${pct(m.p.playoffs)} playoffs</small></a>`).join('\n      ')}
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Simulate the ${esc(t.short)}</h2>
+    <div class="linkgrid">
+      <a href="/mlb-simulator/">MLB Simulator<small>Any ${esc(t.short)} game, pitch by pitch</small></a>
+      <a href="${URL}">MLB Playoff Odds<small>All 30 teams, live</small></a>
+      <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>Build and lock your bracket</small></a>
+      <a href="/handicapping/mlb/">MLB Matchups Today<small>Today's board</small></a>
+    </div>
+  </section>
+  <section class="lsim-copy">
+    <h2 id="faq">Common questions</h2>
+    ${faq.html}
+  </section>
+</main>
+<div class="foot wrap">TrustMyRecord MLB Simulator &middot; a model projection, not betting advice</div>
+${shell.tail}
+</body>
+</html>
+`;
+    out.push({ url, html, name: t.name, division: t.division });
+  }
+  return out;
+}
+
+function patchMlbHub(pages) {
+  const file = path.join(ROOT, 'mlb-simulator', 'index.html');
+  let html = fs.readFileSync(file, 'utf8');
+  const divs = [...new Set(pages.map((p) => p.division))].sort();
+  const block = `<!--MK:mlbTeamSims-->
+<section aria-label="MLB team simulators" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
+  <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#e8e8f0;margin:0 0 6px;">Simulate a single MLB team</h2>
+  <p style="color:#9aa4b5;margin:0 0 14px;font-size:.92rem;">Every club's live playoff odds, projected wins and every game left. <a href="/mlb-playoff-odds/" style="color:#00aeff;">All 30 teams on one page</a>.</p>
+  ${divs.map((d) => `<div style="margin:0 0 12px;"><div style="color:#ffd700;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">${esc(d)}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;">${pages.filter((p) => p.division === d).map((p) => `<a href="${p.url}" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">${esc(p.name)}</a>`).join('')}</div></div>`).join('\n  ')}
+</section>
+<!--/MK:mlbTeamSims-->`;
+  const re = /<!--MK:mlbTeamSims-->[\s\S]*?<!--\/MK:mlbTeamSims-->/;
+  if (re.test(html)) html = html.replace(re, block);
+  else {
+    const at = html.indexOf('<!-- tmr-internal-cluster : SEO internal linking (insert-only) -->');
+    if (at < 0) throw new Error('mlb hub: internal cluster anchor missing');
+    html = html.slice(0, at) + block + '\n' + html.slice(at);
+  }
+  fs.writeFileSync(file, html);
+}
+
+function patchSitemap(urls) {
+  const file = path.join(ROOT, 'sitemap.xml');
+  let xml = fs.readFileSync(file, 'utf8');
+  const nl = xml.includes('\r\n') ? '\r\n' : '\n';
+  const today = new Date().toISOString().slice(0, 10);
+  const add = urls.filter((u) => !xml.includes(`<loc>${SITE}${u}</loc>`)).map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod></url>`);
+  if (!add.length) return 0;
+  const anchor = `  <url><loc>${SITE}${URL}</loc>`;
+  const at = xml.indexOf(anchor);
+  if (at < 0) throw new Error('sitemap: /mlb-playoff-odds/ anchor missing');
+  xml = xml.slice(0, at) + add.join(nl) + nl + xml.slice(at);
+  fs.writeFileSync(file, xml);
+  return add.length;
+}
+
 (async () => {
   const inp = await buildInputs();
   const seed = Number(inp.generated_at.slice(0, 10).replace(/-/g, '')) || 1;
@@ -254,6 +434,14 @@ ${shell.tail}
   const out = path.join(ROOT, 'mlb-playoff-odds', 'index.html');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, page(inp, result, H.shellAssets()));
+  const pages = teamPages(inp, result, H.shellAssets());
+  for (const pg of pages) {
+    const f = path.join(ROOT, pg.url.replace(/^\//, ''), 'index.html');
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, pg.html);
+  }
+  patchMlbHub(pages);
+  console.log(`mlb: ${pages.length} team pages, ${patchSitemap(pages.map((p) => p.url))} new sitemap entries`);
   const sum = (k) => result.teams.reduce((s, t) => s + t[k], 0);
   console.log(`mlb odds: ${inp.games_final} final, ${inp.schedule.length - inp.games_final} left, playoffs sum ${sum('playoffs').toFixed(2)}, champion sum ${sum('champion').toFixed(3)}`);
 })().catch((e) => { console.error('FAILED:', e.message); process.exit(1); });
