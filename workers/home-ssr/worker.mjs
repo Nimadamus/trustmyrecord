@@ -539,10 +539,11 @@ function pitcherLine(g) {
 /* IN LOCKSTEP WITH static/js/tmr-home-live.js. The worker bakes the same
    data-dwell the client would compute, so a difference here is a visible jump
    the moment the client re-renders. Raised with it on 2026-09-08. */
-const POSTGAME_DWELL_MIN_MS = 20000;
-const POSTGAME_DWELL_STEP_MS = 2000;
-const POSTGAME_DWELL_STEPS = 5;
-const INSIGHT_ROTATE_MS = 12000;
+/* 4 to 5s from 2026-09-14 (Nima: no highlight up more than 5 seconds). */
+const POSTGAME_DWELL_MIN_MS = 4000;
+const POSTGAME_DWELL_STEP_MS = 500;
+const POSTGAME_DWELL_STEPS = 3;
+const INSIGHT_ROTATE_MS = 5000;
 
 function postgameDwell(g) {
   /* MLB cards are keyed by game_pk; ESPN cards carry espn_event_id instead.
