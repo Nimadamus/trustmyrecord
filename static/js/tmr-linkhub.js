@@ -137,6 +137,7 @@
         'mlb-game-simulator': 'MLB Game Simulator',
         'mlb-season-simulator': 'MLB Season Simulator',
         'mlb-playoff-simulator': 'MLB Playoff Simulator',
+        'nfl-season-simulator': 'NFL Season Simulator',
         'nba-season-simulator': 'NBA Season Simulator',
         'nba-playoff-simulator': 'NBA Playoff Simulator',
         'nhl-season-simulator': 'NHL Season Simulator',

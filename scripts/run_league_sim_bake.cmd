@@ -11,10 +11,11 @@ echo ---- %DATE% %TIME% >> "%LOG%"
 git fetch origin -q                                        || goto :fail
 git reset -q --hard origin/main                            >> "%LOG%" 2>&1 || goto :fail
 node scripts\build_league_sim_pages.js                     >> "%LOG%" 2>&1 || goto :fail
+node scripts\build_nfl_season_page.js                      >> "%LOG%" 2>&1 || goto :fail
 node tests\league-season-engine-test.js                    >> "%LOG%" 2>&1 || goto :fail
 node tests\seo-indexability-regression-test.js             >> "%LOG%" 2>&1 || goto :fail
 
-git add nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator >> "%LOG%" 2>&1
+git add nfl-season-simulator nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator >> "%LOG%" 2>&1
 git diff --cached --quiet && (echo no change >> "%LOG%" & goto :done)
 git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]" >> "%LOG%" 2>&1 || goto :fail
 git fetch origin -q                                        || goto :fail

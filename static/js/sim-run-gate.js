@@ -29,6 +29,7 @@
         nba: { label: 'NBA matchup', path: '/nba-simulator/', global: 'TMRNbaSim' },
         nhl: { label: 'NHL matchup', path: '/nhl-simulator/', global: 'TMRNhlSim' },
         nfl_playoff: { label: 'NFL playoff', path: '/nfl-playoff-simulator/' },
+        nfl_season: { label: 'NFL season', path: '/nfl-season-simulator/' },
         nba_season: { label: 'NBA season', path: '/nba-season-simulator/' },
         nba_playoff: { label: 'NBA playoff', path: '/nba-playoff-simulator/' },
         nhl_season: { label: 'NHL season', path: '/nhl-season-simulator/' },
@@ -49,7 +50,7 @@
 
     /* One button runs the whole simulation on these pages: guard it, the same
        way as the NFL playoff simulator. */
-    if (sport === 'nfl_playoff' || /^(nba|nhl)_(season|playoff)$/.test(sport)) {
+    if (sport === 'nfl_playoff' || sport === 'nfl_season' || /^(nba|nhl)_(season|playoff)$/.test(sport)) {
         G.register({
             simulator: sport,
             label: page.label,

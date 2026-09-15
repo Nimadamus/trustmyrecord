@@ -464,7 +464,9 @@ function patchMatchups(sport, inputs, result) {
   return n;
 }
 
-(async () => {
+module.exports = { shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one };
+
+if (require.main === module) (async () => {
   const shell = shellAssets();
   for (const sport of ['nba', 'nhl']) {
     const inputs = await inputsFor(sport);
