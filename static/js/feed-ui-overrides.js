@@ -750,7 +750,7 @@ async function loadFeed() {
             const filterParam = currentFilter === 'hot-takes' ? 'posts'
                 : currentFilter === 'site-updates' ? 'site_updates'
                 : currentFilter;
-            const feedEndpoint = '/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam);
+            const fetchFeedPage = () => api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
             // FEED_PARALLEL_20260914: the side sources used to be fetched one after
             // another behind /feed. They are independent reads, so start them all
             // now and merge them in the original order once they land.
@@ -763,11 +763,11 @@ async function loadFeed() {
                 ? api.request('/notifications?limit=20').catch(() => null) : null;
             let data;
             try {
-                data = await api.request(feedEndpoint);
+                data = await fetchFeedPage();
             } catch (firstErr) {
                 // One retry covers a transient API restart before showing "unavailable".
                 await new Promise(resolve => setTimeout(resolve, 1500));
-                data = await api.request(feedEndpoint);
+                data = await fetchFeedPage();
             }
             items = (data.feed || []).filter(isRealPublicFeedUser).map(item => {
                 if (
