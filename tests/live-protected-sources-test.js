@@ -73,7 +73,10 @@ async function main() {
   assert(leaderboards.includes('25 graded picks'), 'live leaderboards should disclose the official rank threshold');
   assert(!leaderboards.includes('positive net units'), 'live leaderboards must not reintroduce the deleted positive-unit gate copy');
 
-  assert(streaks.includes("if (status === 'push' || status === 'pushed') continue;"), 'live streaks should keep push-neutral current streak behavior');
+  // STREAK_TESTS_20260915: push handling moved to settlement groups on 2026-09-07
+  // (1d471855c6); a group holding only pushes is dropped, matching the server.
+  assert(streaks.includes('if (!wins && !losses) return;'), 'live streaks should keep push-neutral current streak behavior (push-only settlement groups dropped)');
+  assert(streaks.includes("pushed: 'push',"), 'live streaks should normalise a pushed status to push');
   assert(streaks.includes('pick && pick.graded_at'), 'live streaks should prefer graded_at ordering');
 
   console.log('live protected sources test passed');

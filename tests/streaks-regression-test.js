@@ -9,7 +9,16 @@ const source = fs.readFileSync(path.join(root, 'static', 'js', 'streaks.js'), 'u
 const profile = fs.readFileSync(path.join(root, 'profile', 'index.html'), 'utf8');
 
 assert(source.includes('function calculateStreaks(picks, options)'), 'shared streak calculator must remain available');
-assert(source.includes("if (status === 'push') continue;"), 'pushes must remain neutral inside current streak calculation');
+/* STREAK_TESTS_20260915: since 1d471855c6 (2026-09-07, "the client uses the same
+   settlement rules as the server") pushes are not skipped in a loop any more. They
+   are normalised to 'push', never counted as a win or a loss inside a settlement
+   group, and a group holding only pushes is dropped, which is what keeps a push
+   neutral, the same as the server's SQL, which selects only won/lost rows. Assert
+   that mechanism; the behavioural cases below prove the result. */
+assert(source.includes("pushed: 'push',"), 'a "pushed" status must normalise to push');
+assert(source.includes("const bucket = pick.status === 'won' ? group.wins : pick.status === 'lost' ? group.losses : null;"),
+  'a push must never count as a win or a loss inside a settlement group');
+assert(source.includes('if (!wins && !losses) return;'), 'a settlement group holding only pushes must be dropped (push-neutral streaks)');
 assert(source.includes('pick && pick.graded_at'), 'streak ordering must prefer graded_at');
 assert(source.includes('pick && pick.locked_at'), 'streak ordering must keep locked_at fallback');
 assert(!profile.includes('Pushes reset streaks.'), 'profile copy must not claim pushes reset streaks');
