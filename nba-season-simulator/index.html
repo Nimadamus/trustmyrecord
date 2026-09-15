@@ -176,10 +176,12 @@
 
   <section class="lsim-copy">
     <h2>How the NBA season simulator works</h2>
-    <p>Every game on the 2026-27 schedule is played out 10,000 times. A game that is already final keeps its real result. Every other game is decided by the same calibrated win probability the <a href="/nba-simulator/">NBA Simulator</a> reports for that matchup: team strength solved from three seasons of results against the schedule each team actually played, a home court edge, and a calibration fitted on seasons the model never trained on.</p>
+    <p>Every game on the 2026-27 schedule is played out 10,000 times. A game that is already final keeps its real result. Every other game is decided by the calibrated win probability the <a href="/nba-simulator/">NBA Simulator</a> reports for that matchup: team strength solved from three seasons of results against the schedule each club actually played, a home court edge, and a calibration fitted on seasons the model never trained on.</p>
 <p>The league publishes 80 games per team in advance. The last two for each team are set in December once the NBA Cup group stage is decided, so the simulator plays those two against conference opponents until the league names them.</p>
     <h2>The 2026-27 NBA playoff format</h2>
     <p>Each conference sends six teams straight to the playoffs. The teams that finish seventh through tenth play the play-in tournament: seven hosts eight and the winner takes the 7 seed, nine hosts ten and the loser goes home, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. The first round is 1 against 8, 4 against 5, 2 against 7 and 3 against 6, the bracket stays fixed, and every series is best of seven with home court to the team with the better regular season record, played at the higher seed in games one, two, five and seven.</p>
+    <h2>How accurate is it</h2>
+    <p>The game simulator's calibrated probability scored a Brier of 0.24021 on an untouched 2025-26 season, against 0.25000 for a coin flip.</p>
     <h2>Tiebreakers</h2>
     <p>Ties in the standings are settled by head to head winning percentage between the tied teams, then by a random draw. The NBA's later steps, division record, conference record and record against playoff teams, are not applied. Across thousands of simulated seasons they change a seed rarely, and they are listed here rather than approximated.</p>
     <h2>What the projection does not know</h2>
@@ -247,9 +249,9 @@
   </section>
 </main>
 <div class="foot wrap">TrustMyRecord NBA Season Simulator &middot; a model projection, not betting advice &middot; <a href="/nba-season-simulator/#faq">FAQ</a></div>
-<script defer src="/static/js/league-season-engine.js?v=1b508f784d8b"></script>
-<script defer src="/static/js/league-season-sim.js?v=b86b7e62f55c"></script>
-<script defer src="/static/js/sim-run-gate.js?v=89ce800cee84" data-sport="nba_season"></script>
+<script defer src="/static/js/league-season-engine.js"></script>
+<script defer src="/static/js/league-season-sim.js"></script>
+<script defer src="/static/js/sim-run-gate.js" data-sport="nba_season"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
 <script src="/static/js/tmr-ds-nav.5e5a91d4b99c.js"></script>
 <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>

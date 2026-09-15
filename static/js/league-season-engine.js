@@ -129,7 +129,10 @@
         return;
       }
       var c = prob(inputs, g.home, g.away);
-      var homeWon = forced[g.id] ? forced[g.id] === 'home' : rng() < c.p;
+      /* A scheduled game can carry its own forecast for that date (rest, back
+         to backs); the pair table is the fallback. */
+      var ph = typeof g.p_home === 'number' ? g.p_home : c.p;
+      var homeWon = forced[g.id] ? forced[g.id] === 'home' : rng() < ph;
       var extra = sport === 'nhl' ? rng() < (c.ot || 0) : false;
       applyGame(sport, recs, g.home, g.away, homeWon, extra);
     });
