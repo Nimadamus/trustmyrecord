@@ -44,6 +44,7 @@ const LEAGUE = {
     label: 'NHL', games: 84, cup: 'the Stanley Cup', trophy: 'Stanley Cup', finals: 'Stanley Cup Final',
     hub: '/nhl-simulator/', archive: '/nhl-simulator/results/', unit: 'points', other: 'nba',
   },
+  mlb: { label: 'MLB', games: 162, finals: 'World Series', hub: '/mlb-simulator/', unit: 'wins' },
 };
 
 async function inputsFor(sport) {
@@ -513,7 +514,7 @@ function patchMatchups(sport, inputs, result) {
   return n;
 }
 
-module.exports = { shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one };
+module.exports = { shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel };
 
 if (require.main === module) (async () => {
   const shell = shellAssets();

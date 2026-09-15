@@ -51,11 +51,11 @@
   /* ----------------------------------------------------------- season view */
 
   function seasonTables(result) {
-    SPORT = result.sport;
-    var nhl = result.sport === 'nhl';
+    SPORT = result.sport === 'mlb' ? null : result.sport;
+    var nhl = result.sport === 'nhl', mlb = result.sport === 'mlb';
     var groups = {};
     result.teams.forEach(function (t) {
-      var key = nhl ? t.conference + '|' + t.division : t.conference + '|';
+      var key = nhl || mlb ? t.conference + '|' + t.division : t.conference + '|';
       (groups[key] || (groups[key] = [])).push(t);
     });
     var keys = Object.keys(groups).sort();
@@ -65,16 +65,21 @@
       var list = groups[k].slice().sort(function (a, b) {
         return nhl ? b.points_mean - a.points_mean : b.wins_mean - a.wins_mean;
       });
-      var title = nhl ? div + ' Division' : conf + ' Conference';
+      var title = mlb ? div : nhl ? div + ' Division' : conf + ' Conference';
       html += '<div class="lsim-card"><h3>' + esc(title) + (nhl ? ' <small>' + esc(conf) + ' Conference</small>' : '') + '</h3>'
         + '<div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th>'
-        + (nhl
+        + (mlb
+          ? '<th scope="col">Wins</th><th scope="col">80% range</th><th scope="col">Division</th><th scope="col">Bye</th><th scope="col">Playoffs</th><th scope="col">World Series</th>'
+          : nhl
           ? '<th scope="col">Points</th><th scope="col">80% range</th><th scope="col">Wins</th><th scope="col">Division</th><th scope="col">Playoffs</th><th scope="col">Cup</th>'
           : '<th scope="col">Wins</th><th scope="col">80% range</th><th scope="col">Top 6</th><th scope="col">Play in</th><th scope="col">Playoffs</th><th scope="col">Title</th>')
         + '</tr></thead><tbody>';
       list.forEach(function (t) {
         html += '<tr><th scope="row">' + team(t) + '</th>'
-          + (nhl
+          + (mlb
+            ? '<td class="num">' + one(t.wins_mean) + '</td><td class="rng">' + t.wins_p10 + ' to ' + t.wins_p90 + '</td>'
+              + '<td class="p"' + heat(t.division_title) + '>' + pct(t.division_title) + '</td><td class="p"' + heat(t.direct) + '>' + pct(t.direct) + '</td><td class="p"' + heat(t.playoffs) + '>' + pct(t.playoffs) + '</td><td class="p"' + heat(t.champion * 4) + '>' + pct(t.champion) + '</td>'
+            : nhl
             ? '<td class="num">' + one(t.points_mean) + '</td><td class="rng">' + t.points_p10 + ' to ' + t.points_p90 + '</td><td class="num">' + one(t.wins_mean) + '</td>'
               + '<td class="p"' + heat(t.division_title) + '>' + pct(t.division_title) + '</td><td class="p"' + heat(t.playoffs) + '>' + pct(t.playoffs) + '</td><td class="p"' + heat(t.champion * 4) + '>' + pct(t.champion) + '</td>'
             : '<td class="num">' + one(t.wins_mean) + '</td><td class="rng">' + t.wins_p10 + ' to ' + t.wins_p90 + ' wins</td>'
@@ -89,14 +94,14 @@
   /* ---------------------------------------------------------- playoff view */
 
   function oddsTable(result) {
-    SPORT = result.sport;
-    var nhl = result.sport === 'nhl';
+    SPORT = result.sport === 'mlb' ? null : result.sport;
+    var nhl = result.sport === 'nhl', mlb = result.sport === 'mlb';
     var list = result.teams.slice().sort(function (a, b) {
       return b.champion - a.champion || b.final - a.final || b.playoffs - a.playoffs;
     });
     var html = '<div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th>'
-      + '<th scope="col">Playoffs</th><th scope="col">Second round</th><th scope="col">Conference final</th>'
-      + '<th scope="col">' + (nhl ? 'Cup Final' : 'NBA Finals') + '</th><th scope="col">' + (nhl ? 'Win the Cup' : 'Win the title') + '</th></tr></thead><tbody>';
+      + '<th scope="col">Playoffs</th><th scope="col">' + (mlb ? 'Division Series' : 'Second round') + '</th><th scope="col">' + (mlb ? 'LCS' : 'Conference final') + '</th>'
+      + '<th scope="col">' + (mlb ? 'World Series' : nhl ? 'Cup Final' : 'NBA Finals') + '</th><th scope="col">' + (mlb ? 'Win it all' : nhl ? 'Win the Cup' : 'Win the title') + '</th></tr></thead><tbody>';
     list.forEach(function (t) {
       html += '<tr><th scope="row">' + team(t) + '</th>'
         + '<td class="p"' + heat(t.playoffs) + '>' + pct(t.playoffs) + '</td>'
@@ -123,10 +128,11 @@
     var smp = result.sample;
     if (!smp) return '';
     var R = smp.playoffs.rounds;
-    var nhl = result.sport === 'nhl';
-    var names = ['First round', 'Second round', 'Conference finals', nhl ? 'Stanley Cup Final' : 'NBA Finals'];
+    var nhl = result.sport === 'nhl', mlb = result.sport === 'mlb';
+    var names = mlb ? ['Wild Card Series', 'Division Series', 'League Championship Series', 'World Series']
+      : ['First round', 'Second round', 'Conference finals', nhl ? 'Stanley Cup Final' : 'NBA Finals'];
     var html = '';
-    if (!nhl) {
+    if (!nhl && !mlb) {
       Object.keys(smp.seeding).sort().forEach(function (conf) {
         var pi = smp.seeding[conf].playInResults || [];
         html += '<div class="lsim-card"><h3>' + esc(conf) + ' Conference play in</h3><ul class="series">';
@@ -144,7 +150,7 @@
     });
     var champ = nameOf(result, smp.playoffs.champion.abbr);
     return '<p class="champ">' + logo(champ) + ' In this simulated season the <b>' + esc(champ.name) + '</b> '
-      + (nhl ? 'win the Stanley Cup.' : 'win the NBA title.') + '</p><div class="lsim-grid">' + html + '</div>';
+      + (mlb ? 'win the World Series.' : nhl ? 'win the Stanley Cup.' : 'win the NBA title.') + '</p><div class="lsim-grid">' + html + '</div>';
   }
 
   function stamp(result, inputs) {
@@ -230,7 +236,7 @@
         btn.disabled = true;
         status.textContent = 'Reading the live schedule';
         var got = inputs ? Promise.resolve(inputs)
-          : fetch(API + sport + '/public/season-inputs', { credentials: 'omit' }).then(function (r) {
+          : fetch(el.getAttribute('data-inputs') || (API + sport + '/public/season-inputs'), { credentials: 'omit' }).then(function (r) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
           });
@@ -247,11 +253,10 @@
           runOff('league', { inputs: inp, n: n, seed: seed, opts: { forced: forced } }, function () {
             return E.project(inp, n, seed, { forced: forced });
           }).then(function (result) {
-            if (mode === 'season') d.getElementById('lsimTables').innerHTML = seasonTables(result);
-            else {
-              d.getElementById('lsimOdds').innerHTML = oddsTable(result);
-              d.getElementById('lsimBracket').innerHTML = bracket(result);
-            }
+            var tb = d.getElementById('lsimTables'), od = d.getElementById('lsimOdds'), br = d.getElementById('lsimBracket');
+            if (tb) tb.innerHTML = seasonTables(result);
+            if (od) od.innerHTML = oddsTable(result);
+            if (br) br.innerHTML = bracket(result);
             d.getElementById('lsimStamp').innerHTML = stamp(result, inp);
             var k = Object.keys(forced).length;
             status.textContent = 'Done' + (k ? ', with your ' + k + (k === 1 ? ' pick' : ' picks') + ' locked in' : '') + '. Press again for a fresh set of seasons.';

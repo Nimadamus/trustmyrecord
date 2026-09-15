@@ -257,17 +257,40 @@
   }
 
   var PATTERN = [1, 1, 0, 0, 1, 0, 1]; // games at the higher seed's arena
+  /* MLB: the Wild Card Series is best of three, every game at the higher seed;
+     the Division Series best of five, 2-2-1; the LCS and World Series best of
+     seven, 2-3-2. */
+  var MLB_PATTERN = { 3: [1, 1, 1], 5: [1, 1, 0, 0, 1], 7: [1, 1, 0, 0, 0, 1, 1] };
 
-  function series(inputs, a, b, rng) {
+  function series(inputs, a, b, rng, length) {
     var hi = better(inputs.sport, a, b), lo = hi === a ? b : a;
+    var len = length || 7, need = (len + 1) / 2;
+    var pat = inputs.sport === 'mlb' ? MLB_PATTERN[len] : PATTERN;
     var wh = 0, wl = 0, games = 0;
-    while (wh < 4 && wl < 4) {
-      var atHi = PATTERN[games] === 1;
+    while (wh < need && wl < need) {
+      var atHi = pat[games] === 1;
       var winner = atHi ? playGame(inputs, hi, lo, rng) : playGame(inputs, lo, hi, rng);
       if (winner === hi) wh++; else wl++;
       games++;
     }
-    return { winner: wh === 4 ? hi : lo, loser: wh === 4 ? lo : hi, games: games, hi: hi.abbr, lo: lo.abbr, score: [Math.max(wh, wl), Math.min(wh, wl)] };
+    return { winner: wh === need ? hi : lo, loser: wh === need ? lo : hi, games: games, hi: hi.abbr, lo: lo.abbr, score: [Math.max(wh, wl), Math.min(wh, wl)] };
+  }
+
+  /* MLB (12 team format): in each league the three division winners by record
+     take seeds 1 to 3, the three best remaining records seeds 4 to 6. Seeds 1
+     and 2 skip the Wild Card Series. */
+  function seedMlb(recs, rng) {
+    var confs = byConference(recs), out = {};
+    Object.keys(confs).sort().forEach(function (conf) {
+      var ranked = order('mlb', confs[conf], rng);
+      var seen = {}, winners = [], rest = [];
+      ranked.forEach(function (r) {
+        if (!seen[r.division]) { seen[r.division] = true; winners.push(r); } else rest.push(r);
+      });
+      var seeds = winners.slice(0, 3).concat(rest.slice(0, 3));
+      out[conf] = { ranked: ranked, seeds: seeds, divisionWinners: winners.slice(0, 3), wildcards: rest.slice(0, 3) };
+    });
+    return out;
   }
 
   function playoffs(inputs, seeding, rng) {
@@ -275,7 +298,15 @@
     var confNames = Object.keys(seeding).sort();
     confNames.forEach(function (conf) {
       var s = seeding[conf], r1 = [], r2 = [], cf;
-      if (sport === 'nba') {
+      if (sport === 'mlb') {
+        var ms = s.seeds;
+        var w36 = series(inputs, ms[2], ms[5], rng, 3);
+        var w45 = series(inputs, ms[3], ms[4], rng, 3);
+        r1.push(w36, w45);
+        /* The 1 seed meets the 4 v 5 winner, the 2 seed the 3 v 6 winner. */
+        r2.push(series(inputs, ms[0], w45.winner, rng, 5));
+        r2.push(series(inputs, ms[1], w36.winner, rng, 5));
+      } else if (sport === 'nba') {
         var seeds = s.seeds;
         var pairs = [[0, 7], [3, 4], [1, 6], [2, 5]];
         pairs.forEach(function (p) { r1.push(series(inputs, seeds[p[0]], seeds[p[1]], rng)); });
@@ -307,7 +338,8 @@
 
   function runOnce(inputs, rng, opts) {
     var recs = simulateSeason(inputs, rng, opts);
-    var seeding = inputs.sport === 'nba' ? seedNba(recs, rng, inputs, rng) : seedNhl(recs, rng);
+    var seeding = inputs.sport === 'nba' ? seedNba(recs, rng, inputs, rng)
+      : inputs.sport === 'mlb' ? seedMlb(recs, rng) : seedNhl(recs, rng);
     var po = playoffs(inputs, seeding, rng);
     return { records: recs, seeding: seeding, playoffs: po };
   }
@@ -341,7 +373,14 @@
       });
       Object.keys(one.seeding).forEach(function (conf) {
         var s = one.seeding[conf];
-        if (sport === 'nba') {
+        if (sport === 'mlb') {
+          acc[s.ranked[0].abbr].top_seed++;
+          s.divisionWinners.forEach(function (r) { acc[r.abbr].division_title++; });
+          s.seeds.forEach(function (r, idx) {
+            acc[r.abbr].playoffs++;
+            if (idx < 2) { acc[r.abbr].direct++; acc[r.abbr].round2++; } else acc[r.abbr].play_in++;
+          });
+        } else if (sport === 'nba') {
           acc[s.ranked[0].abbr].top_seed++;
           s.ranked.slice(0, 6).forEach(function (r) { acc[r.abbr].direct++; });
           s.playIn.forEach(function (r) { acc[r.abbr].play_in++; });

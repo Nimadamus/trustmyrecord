@@ -5,8 +5,8 @@ const assert = require('assert');
 const E = require('../static/js/league-season-engine.js');
 
 function league(sport) {
-  const confs = sport === 'nba' ? { East: ['A', 'B', 'C'], West: ['D', 'E', 'F'] } : { East: ['A', 'B'], West: ['C', 'D'] };
-  const per = sport === 'nba' ? 5 : 8;
+  const confs = sport === 'nhl' ? { East: ['A', 'B'], West: ['C', 'D'] } : { East: ['A', 'B', 'C'], West: ['D', 'E', 'F'] };
+  const per = sport === 'nhl' ? 8 : 5;
   const teams = [];
   Object.entries(confs).forEach(([c, divs]) => divs.forEach((d) => {
     for (let i = 0; i < per; i++) teams.push({ espn_abbr: d + i, name: 'Team ' + d + i, short: d + i, conference: c, division: d });
@@ -19,7 +19,7 @@ function league(sport) {
     matchups[h.espn_abbr][a.espn_abbr] = sport === 'nhl' ? { p, ot: 0.22 } : { p };
   }); });
   const schedule = []; let id = 0;
-  const target = sport === 'nba' ? 80 : 84;
+  const target = sport === 'nba' ? 80 : sport === 'mlb' ? 162 : 84;
   for (let round = 0; schedule.length < teams.length * target / 2; round++) {
     for (let i = 0; i < teams.length && schedule.length < teams.length * target / 2; i++) {
       const h = teams[i], a = teams[(i + 1 + round) % teams.length];
@@ -31,7 +31,7 @@ function league(sport) {
   return { sport, teams, matchups, schedule };
 }
 
-for (const sport of ['nba', 'nhl']) {
+for (const sport of ['nba', 'nhl', 'mlb']) {
   const inp = league(sport);
   const r = E.project(inp, 400, 7);
   const sum = (k) => r.teams.reduce((s, t) => s + t[k], 0);
@@ -39,7 +39,8 @@ for (const sport of ['nba', 'nhl']) {
   assert.ok(Math.abs(sum('final') - 2) < 1e-9, `${sport} two finalists`);
   assert.ok(Math.abs(sum('conf_final') - 4) < 1e-9, `${sport} four conference finalists`);
   assert.ok(Math.abs(sum('round2') - 8) < 1e-9, `${sport} eight second round teams`);
-  assert.ok(Math.abs(sum('playoffs') - 16) < 1e-9, `${sport} sixteen playoff teams`);
+  assert.ok(Math.abs(sum('playoffs') - (sport === 'mlb' ? 12 : 16)) < 1e-9, `${sport} playoff field size`);
+  if (sport === 'mlb') { assert.ok(Math.abs(sum('division_title') - 6) < 1e-9, 'mlb six division winners'); assert.ok(Math.abs(sum('direct') - 4) < 1e-9, 'mlb four byes'); }
   if (sport === 'nba') assert.ok(Math.abs(sum('play_in') - 8) < 1e-9, 'nba eight play-in teams');
   if (sport === 'nhl') assert.ok(Math.abs(sum('division_title') - 4) < 1e-9, 'nhl four division winners');
   r.teams.forEach((t) => {
@@ -49,7 +50,7 @@ for (const sport of ['nba', 'nhl']) {
   const one = E.runOnce(inp, E.mulberry32(3));
   const gp = Object.values(one.records).map((x) => x.gp);
   if (sport === 'nba') assert.ok(Math.max(...gp) <= 82, 'nba never more than 82 games');
-  else assert.ok(gp.every((g) => g === gp[0]), 'nhl every club plays the same count on a balanced schedule');
+  else if (sport === 'nhl') assert.ok(gp.every((g) => g === gp[0]), 'nhl every club plays the same count on a balanced schedule');
   /* The final game is locked: across seeds the home side always has that win. */
   const g0 = inp.schedule[0];
   for (let s = 1; s < 20; s++) {
