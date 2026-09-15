@@ -14,10 +14,15 @@
  *                             to the latest one when nothing is live. Never a
  *                             placeholder page.
  *   [data-tmr-featured]       a card or strip: filled from the same entry.
+ *   <a href="<door url>">     ANY link to a door (Featured Matchups menu on
+ *                             desktop and mobile, homepage, hub links) is
+ *                             pointed straight at the article, so the click
+ *                             opens the game article with no door in between.
  * Text is set with textContent, never innerHTML.
  */
 (function (w, d) {
   'use strict';
+  if (w.TMRFeatured) return;   // the nav and a page can both load this file
 
   var REGISTRY = '/data/featured-matchups.json';
   var DEFAULT_GRACE_MINUTES = 210;
@@ -194,16 +199,59 @@
     }
   }
 
-  function refresh() { expire(); load(bindAll); }
+  /* Door url -> the article it opens right now, from the same resolver. */
+  var direct = null;
+  function directMap(reg) {
+    var map = {}, now = Date.now(), sports = Object.keys(reg.sports || {});
+    for (var i = 0; i < sports.length; i++) {
+      var f = resolve(reg, sports[i], now), href = f && safeHref(f.href);
+      var doors = reg.sports[sports[i]].doors || [];
+      for (var j = 0; j < doors.length; j++) if (href && doors[j].url) map[doors[j].url] = href;
+    }
+    var any = resolveAny(reg, now), anyHref = any && safeHref(any.href);
+    var all = reg.all_doors || [];
+    for (var k = 0; k < all.length; k++) if (anyHref && all[k].url) map[all[k].url] = anyHref;
+    return map;
+  }
+  function doorPath(a) {
+    var raw = a.getAttribute('data-tmr-door') || a.getAttribute('href') || '';
+    return raw.replace(/^https?:\/\/(www\.)?trustmyrecord\.com/i, '').split(/[?#]/)[0];
+  }
+  function retargetOne(a) {
+    if (!direct || !a || !a.getAttribute) return;
+    var path = doorPath(a), href = direct[path];
+    if (!href) return;
+    if (!a.hasAttribute('data-tmr-door')) a.setAttribute('data-tmr-door', path);
+    if (a.getAttribute('href') !== href) a.setAttribute('href', href);
+  }
+  function retarget(reg) {
+    if (!reg) return;
+    direct = directMap(reg);
+    var as = d.querySelectorAll('a[href],a[data-tmr-door]');
+    for (var i = 0; i < as.length; i++) retargetOne(as[i]);
+  }
+  /* Menus built or rebuilt after load (mobile drawer, dropdowns) are caught at
+     the moment of the click, before the browser follows the link. */
+  function onPoint(e) {
+    var a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (a) retargetOne(a);
+  }
+  if (d.addEventListener) {
+    d.addEventListener('pointerdown', onPoint, true);
+    d.addEventListener('click', onPoint, true);
+    d.addEventListener('focusin', onPoint, true);
+  }
 
-  w.TMRFeatured = { resolve: resolve, resolveLive: resolveLive, resolveLatest: resolveLatest, resolveAny: resolveAny, load: load, door: door, refresh: refresh };
+  function refresh() { expire(); load(function (reg) { bindAll(reg); retarget(reg); }); }
+
+  w.TMRFeatured = { resolve: resolve, resolveLive: resolveLive, resolveLatest: resolveLatest, retarget: retarget, resolveAny: resolveAny, load: load, door: door, refresh: refresh };
 
   if (d.querySelector && d.querySelectorAll) {
     var start = function () {
-      if (!d.querySelector('[data-tmr-featured],[data-tmr-expires]')) return;
       refresh();
-      /* A tab left open across the end of a broadcast retires the game too. */
-      setInterval(refresh, 60000);
+      /* A tab left open across the end of a broadcast retires the game too.
+         Pages that only carry door links need the one read on load. */
+      if (d.querySelector('[data-tmr-featured],[data-tmr-expires]')) setInterval(refresh, 60000);
     };
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', start);
     else start();

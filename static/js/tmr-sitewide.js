@@ -1763,3 +1763,13 @@
     window.TMR.formatGameTimeET = formatGameTimeET;
     window.TMR.formatSubmittedET = formatSubmittedET;
 })();
+
+/* FEATURED MATCHUPS DIRECT (2026-09-15): Featured Matchups menu links open
+   today's article directly. See static/js/tmr-featured.js. */
+(function () {
+    if (window.TMRFeatured || document.querySelector('script[src^="/static/js/tmr-featured"]')) return;
+    var s = document.createElement('script');
+    s.src = '/static/js/tmr-featured.js';
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+})();
