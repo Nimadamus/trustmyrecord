@@ -1,16 +1,26 @@
 name: Prerender Directory Refresh
 
-# Keeps the crawler-visible rows on /handicappers/ and /leaderboards/ fresh.
-# scripts/prerender_directory.py pulls the live Render API and bakes real member
-# rows + hero counts into the static HTML (GitHub Pages = legacy, source main/,
-# so a push to main republishes automatically). Commits made by GITHUB_TOKEN do
-# not trigger `on: push` workflows, so this cannot loop; we also only commit when
-# the generated output actually changed and tag the message [skip ci].
+# Keeps the crawler-visible rows on /handicappers/ and /leaderboards/, the homepage
+# live regions, the /u/ profile pages and the /forum/ thread pages fresh.
+# The generators pull the live Render API and bake real data into static HTML
+# (GitHub Pages = legacy, source main/, so a push to main republishes
+# automatically). Commits made by GITHUB_TOKEN do not trigger `on: push`
+# workflows, so this cannot loop; we also only commit when the generated output
+# actually changed and tag the message [skip ci].
+#
+# PRERENDER_ISOLATION_20260915. Every generator and gate used to be its own step,
+# so the first failure anywhere killed the job before the commit step. A logo check
+# on one soccer Game File (a page this job does not build) failed the SEO gate on
+# every run from at least 2026-09-14 23:37 PDT, and the leaderboard and directory
+# bakes, which were correct, never shipped. scripts/prerender_run.py now runs each
+# generator, validator and gate in isolation, restores only what failed to its last
+# good version, and reports pages attempted / succeeded / kept / failed with reasons
+# and durations. The job commits everything good, THEN fails if anything failed.
 
 on:
   schedule:
-    # Every 30 minutes. Script is stdlib-only and hits a free-tier Render API;
-    # if rate/limits ever bite, change to '0 * * * *' (hourly).
+    # Every 30 minutes. The generators are stdlib-only and hit a free-tier Render
+    # API; if rate/limits ever bite, change to '0 * * * *' (hourly).
     - cron: '*/30 * * * *'
   workflow_dispatch:
   repository_dispatch:
@@ -29,7 +39,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - name: Checkout main
         uses: actions/checkout@v5
@@ -39,74 +49,32 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Bake directory + homepage (/handicappers/, /leaderboards/, /)
-        run: python scripts/prerender_directory.py
-
-      - name: Set up Node (homepage snapshot prerender)
+      - name: Set up Node
         uses: actions/setup-node@v5
         with:
           node-version: 22
 
       # Same pattern as every other Playwright workflow in this repo: install from
       # the repo's own lockfile so the module and the downloaded browser are the
-      # same version. Installing an ad-hoc pinned playwright alongside the lock
-      # gives you a module and a browser build that do not match, and launch fails.
+      # same version. These only feed the homepage snapshot stage, so a failed
+      # install fails that one stage (reported below), never the whole refresh.
       - run: npm install
+        continue-on-error: true
       - run: npx playwright install --with-deps chromium
+        continue-on-error: true
 
-      - name: Bake real live data into the homepage first paint
-        # Runs the homepage's own JS against the live API and writes the resulting
-        # markup into index.html between <!--MK:--> markers, so the first frame shows
-        # real numbers instead of em-dash placeholders. Fail-closed: if any region is
-        # still a placeholder when it times out, nothing is written and this fails.
-        run: node scripts/prerender_home_snapshot.cjs
-
-      - name: Verify homepage highlights are reproducible from live graded picks
-        # Fail closed: if any baked "Live highlights" row cannot be re-derived from
-        # real graded picks (fake/stale/hand-injected), the job stops here and the
-        # commit step never runs - nothing fake can reach the live homepage.
-        run: python scripts/verify_home_highlights.py
-
-      - name: Regenerate eligible /u/ profile pages + sitemap
-        run: python scripts/build_profile_pages.py
-
-      - name: Regenerate crawlable /forum/thread/<id>/<slug>/ pages + sitemap
-        # Every thread gets a real indexable URL. Fails closed: if the API's own
-        # reported thread total does not match what was enumerated, the script
-        # aborts rather than emit a short list that would drop live threads out
-        # of the sitemap. A failure here stops the commit; the last good bake stays.
-        run: python scripts/build_forum_threads.py
-
-      - name: SEO indexability gate (fail closed before anything is published)
-        # SEO_20260809. The generators in the two steps above are what actually
-        # publishes /u/ and /forum/ URLs and rewrites sitemap.xml, on a 30-minute
-        # cron, with no human in the loop. Every indexation problem this repo has
-        # had reached production through exactly this path and was only noticed
-        # weeks later in Search Console.
-        #
-        # This gate runs BEFORE the commit step, so a bad bake is never pushed:
-        # a sitemap URL that would 404, an accidental noindex, a redirect stub in
-        # the sitemap, a profile page that stopped baking its record (the soft-404
-        # regression), or an internal link to a URL that does not exist all stop
-        # the job here and leave the last good bake live.
-        run: npm run test:seo
-
-      - name: /u/ existence gate (edge fallback template + worker wiring)
-        # EDGE_FALLBACK_20260810. This step regenerates
-        # static/prerender/u-fallback.html, which is what the Cloudflare worker
-        # serves for a member whose page has not been baked yet. If that
-        # template or the worker's use of it regresses, every newly registered
-        # member's canonical URL goes back to 404ing for ~10 minutes and nobody
-        # finds out until someone clicks the newest-member link.
-        run: npm run test:uprofile
-
-      - name: Re-pin static asset refs to content hashes
-        # Any mutable /static/ JS/CSS whose bytes changed gets a new ?v tag in
-        # every referencing page (and loader JS) in the SAME commit, so
-        # returning visitors' browsers and the CF edge (4h TTL, query-keyed)
-        # fetch the new bytes immediately. Newly generated profile/forum pages
-        # inherit current tags too.
-        run: python scripts/version_static_refs.py
+      - name: Rebuild every prerendered page (isolated per stage, page, validator and gate)
+        id: run
+        # Stages, in order: directory (/handicappers/, /leaderboards/), homepage
+        # snapshot (index.html live regions), homepage highlights check, /u/
+        # profile pages + sitemap + edge fallback template, /forum/ thread pages
+        # + sitemap, static asset ref re-pin. Baked ranks are verified against the
+        # live canonical ranking API (scripts/verify_cached_ranks.py); a page that
+        # does not match is restored to its last good version. Gates: SEO
+        # indexability, /u/ edge fallback, Game File logos. A gate failure caused
+        # by this run reverts the stage that caused it; a pre-existing one is a
+        # warning and does not block the pages that rebuilt correctly.
+        run: python scripts/prerender_run.py
 
       - name: Commit only if generated output changed
         run: |
@@ -126,15 +94,30 @@ jobs:
           git add -u
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."
-          else
-            git config user.name "tmr-prerender-bot"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore(prerender): refresh crawlable directory + homepage + profile pages + forum threads + sitemap [skip ci]"
-            git push origin HEAD:main
-            echo "Pushed refreshed prerender output."
+            exit 0
           fi
+          git config user.name "tmr-prerender-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(prerender): refresh crawlable directory + homepage + profile pages + forum threads + sitemap [skip ci]"
+          # main moves while a run is in flight (asset re-pin bots, other pushes).
+          # Rebase onto it and retry instead of throwing away a whole good bake.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed refreshed prerender output."
+              exit 0
+            fi
+            git pull --rebase origin main || { git rebase --abort; echo "::error::rebase onto main conflicted; this run's bake was not published"; exit 1; }
+          done
+          echo "::error::push to main failed three times; this run's bake was not published"
+          exit 1
+
+      - name: Fail the run when any page or stage failed (after publishing the good ones)
+        if: steps.run.outputs.errors != '' && steps.run.outputs.errors != '0'
+        run: |
+          echo "::error::Prerender: ${{ steps.run.outputs.pages_failed }} page(s) and ${{ steps.run.outputs.stages_failed }} stage(s) failed out of ${{ steps.run.outputs.pages_attempted }} page(s) attempted. Everything else was published. See the run summary for reasons."
+          exit 1
 
       - name: Log refresh failure (last good bake stays live)
         if: failure()
         run: |
-          echo "::error::Prerender refresh FAILED (trigger: ${{ github.event_name }}). No commit was made, so the last successfully calculated leaderboard preview remains live on trustmyrecord.com. Inspect the failed step above; the homepage was NOT blanked or corrupted."
+          echo "::error::Prerender refresh reported failures (trigger: ${{ github.event_name }}). Pages that rebuilt correctly were committed; pages that failed kept their last good version. See the run summary table for each failure and its reason."
