@@ -120,14 +120,13 @@ function renderFeedHeader(item, actionHtml) {
     '<div class="fi-action-label">' + actionHtml + '</div>';
 }
 
-function renderActionRow(itemId, type, liked, likesCount, commentsCount, includeReply) {
+function renderActionRow(itemId, type, liked, likesCount, commentsCount) {
     const likeFn = type === 'pick' ? 'likePick' : 'likeFeedPost';
     const idArg = jsArg(itemId);
     const typeArg = jsArg(type);
     return '<div class="fi-actions">' +
         '<button class="fi-action ' + (liked ? 'is-liked liked' : '') + '" onclick="' + likeFn + '(' + idArg + ', this)"><i class="fas fa-heart"></i> Like <span>' + (Number(likesCount) || 0) + '</span></button>' +
         '<button class="fi-action" onclick="toggleComments(' + idArg + ', ' + typeArg + ')"><i class="fas fa-comment"></i> Comment <span>' + (Number(commentsCount) || 0) + '</span></button>' +
-        (includeReply ? '<button class="fi-action" onclick="toggleComments(' + idArg + ', ' + typeArg + ')"><i class="fas fa-reply"></i> Reply</button>' : '') +
         '<button class="fi-action" onclick="sharePost(' + idArg + ')"><i class="fas fa-share"></i> Share</button>' +
     '</div>' +
     '<div class="comments-section" id="cs-' + (type === 'pick' ? 'pick' : 'fp') + '-' + feedId(itemId) + '"></div>';
@@ -260,7 +259,7 @@ function renderPickCard(item) {
     return '<div class="feed-item" data-id="' + esc(id) + '" data-type="pick">' +
         renderFeedHeader(item, action) +
         body +
-        renderActionRow(id, 'pick', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count, false) +
+        renderActionRow(id, 'pick', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count) +
     '</div>';
 }
 
@@ -271,7 +270,7 @@ function renderTextPost(item) {
     return '<div class="feed-item" data-id="' + esc(id) + '" data-type="feed_post">' +
         renderFeedHeader(item, action) +
         '<div class="fi-content">' + esc(item.content || item.body || item.text || '') + '</div>' +
-        renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count, true) +
+        renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count) +
     '</div>';
 }
 
@@ -301,7 +300,7 @@ function renderPollCard(item) {
         renderFeedHeader(item, '<i class="fas fa-square-poll-vertical"></i> created a poll') +
         '<div class="fi-content">' + esc(item.content || item.title || '') + '</div>' +
         '<div class="pick-embed">' + body + '</div>' +
-        renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count, true) +
+        renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count) +
     '</div>';
 }
 
