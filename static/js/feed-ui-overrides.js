@@ -757,6 +757,50 @@ async function loadFeed() {
     }
 }
 
+// FEED_PARALLEL_20260914: the side sources used to be fetched one after another
+// behind /feed. They are independent reads, so they all start together and are
+// merged in the original order once they land.
+function startFeedSources(filter, offset) {
+    const filterParam = filter === 'hot-takes' ? 'posts'
+        : filter === 'site-updates' ? 'site_updates'
+        : filter;
+    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    const fetchFeedPage = () => api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + offset + '&filter=' + encodeURIComponent(filterParam));
+    const sources = {
+        filter: filter,
+        offset: offset,
+        viewerName: viewer ? String(viewer.username || viewer.id || '') : '',
+        startedAt: Date.now(),
+        fetchFeedPage: fetchFeedPage,
+        feed: fetchFeedPage(),
+        discover: (filter === 'all' || filter === 'picks')
+            ? fetchDiscoverTop(12, true).catch(() => null) : null,
+        polls: (filter === 'all' || filter === 'polls')
+            ? api.request('/polls/active?limit=5').then(loadHydratedActivePolls).catch(() => null) : null,
+        notifViewer: viewer,
+        notif: ((filter === 'all' || filter === 'following') && viewer)
+            ? api.request('/notifications?limit=20').catch(() => null) : null
+    };
+    sources.feed.catch(() => {});
+    return sources;
+}
+
+// FEED_PREFETCH_20260914: the first page of sources is started as soon as this
+// script runs (see the bottom of the file), which on a slow phone is close to a
+// second before DOMContentLoaded. The first loadFeed() adopts it when it is for
+// the same tab, offset and viewer and is still fresh; anything else fetches anew.
+let _feedPrefetchedSources = null;
+function takeFeedSources() {
+    const pre = _feedPrefetchedSources;
+    _feedPrefetchedSources = null;
+    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    const viewerName = viewer ? String(viewer.username || viewer.id || '') : '';
+    if (pre && pre.filter === currentFilter && pre.offset === feedOffset && pre.viewerName === viewerName && Date.now() - pre.startedAt < 15000) {
+        return pre;
+    }
+    return startFeedSources(currentFilter, feedOffset);
+}
+
 async function loadFeedItems() {
     const c = document.getElementById('feedList');
     if (!c) return;
@@ -764,23 +808,15 @@ async function loadFeedItems() {
     let items = [];
     try {
         if (api && typeof api.request === 'function') {
-            const filterParam = currentFilter === 'hot-takes' ? 'posts'
-                : currentFilter === 'site-updates' ? 'site_updates'
-                : currentFilter;
-            const fetchFeedPage = () => api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
-            // FEED_PARALLEL_20260914: the side sources used to be fetched one after
-            // another behind /feed. They are independent reads, so start them all
-            // now and merge them in the original order once they land.
-            const discoverPromise = (currentFilter === 'all' || currentFilter === 'picks')
-                ? fetchDiscoverTop(12, true).catch(() => null) : null;
-            const pollsPromise = (currentFilter === 'all' || currentFilter === 'polls')
-                ? api.request('/polls/active?limit=5').then(loadHydratedActivePolls).catch(() => null) : null;
-            const notifViewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
-            const notifPromise = ((currentFilter === 'all' || currentFilter === 'following') && notifViewer)
-                ? api.request('/notifications?limit=20').catch(() => null) : null;
+            const sources = takeFeedSources();
+            const fetchFeedPage = sources.fetchFeedPage;
+            const discoverPromise = sources.discover;
+            const pollsPromise = sources.polls;
+            const notifViewer = sources.notifViewer;
+            const notifPromise = sources.notif;
             let data;
             try {
-                data = await fetchFeedPage();
+                data = await sources.feed;
             } catch (firstErr) {
                 // One retry covers a transient API restart before showing "unavailable".
                 await new Promise(resolve => setTimeout(resolve, 1500));
@@ -1061,4 +1097,13 @@ function toggleType(type) {
             });
         }
     } catch (e) {}
+})();
+
+(function () {
+    try {
+        if (!document.getElementById('feedList') || typeof api === 'undefined' || !api || typeof api.request !== 'function') return;
+        _feedPrefetchedSources = startFeedSources(currentFilter, feedOffset);
+    } catch (e) {
+        _feedPrefetchedSources = null;
+    }
 })();
