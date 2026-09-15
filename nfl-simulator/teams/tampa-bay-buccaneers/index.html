@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- NFL_TEAM_SIM_PAGES_20260915. Baked by scripts/build_nfl_team_pages.js. Do not edit by hand. -->
+<title>Tampa Bay Buccaneers Simulator 2026 | Projected Record, Playoff Odds and Schedule</title>
+<meta name="description" content="Tampa Bay Buccaneers 2026 season simulation: 8.0 projected wins, 42% playoff odds, 39% to win the NFC South, and every game on the schedule with the model's win probability.">
+<link rel="canonical" href="https://trustmyrecord.com/nfl-simulator/teams/tampa-bay-buccaneers/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Tampa Bay Buccaneers Simulator" />
+<meta property="og:description" content="Tampa Bay Buccaneers 2026 season simulation: 8.0 projected wins, 42% playoff odds, 39% to win the NFC South, and every game on the schedule with the model's win probability." />
+<meta property="og:url" content="https://trustmyrecord.com/nfl-simulator/teams/tampa-bay-buccaneers/" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Tampa Bay Buccaneers Simulator","url":"https://trustmyrecord.com/nfl-simulator/teams/tampa-bay-buccaneers/","description":"Tampa Bay Buccaneers 2026 season simulation: 8.0 projected wins, 42% playoff odds, 39% to win the NFC South, and every game on the schedule with the model's win probability.","dateModified":"2026-09-15T21:49:08.578Z"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://trustmyrecord.com/"},{"@type":"ListItem","position":2,"name":"Sports Simulators","item":"https://trustmyrecord.com/sports-simulators/"},{"@type":"ListItem","position":3,"name":"NFL Simulator","item":"https://trustmyrecord.com/nfl-simulator/"},{"@type":"ListItem","position":4,"name":"Tampa Bay Buccaneers Simulator","item":"https://trustmyrecord.com/nfl-simulator/teams/tampa-bay-buccaneers/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How many games will the Tampa Bay Buccaneers win in 2026?","acceptedAnswer":{"@type":"Answer","text":"Across 10,000 simulated seasons the Tampa Bay Buccaneers average 8.0 wins, with eight of every ten seasons between 5 and 10. Games already played count at their real result."}},{"@type":"Question","name":"What are the Tampa Bay Buccaneers' playoff odds?","acceptedAnswer":{"@type":"Answer","text":"They make the playoffs in 42% of simulated seasons, win the NFC South in 39% and earn the 1 seed in 1%, with every season seeded by the NFL's tiebreakers."}},{"@type":"Question","name":"How is the Buccaneers simulation built?","acceptedAnswer":{"@type":"Answer","text":"Each remaining game is decided by that game's own win probability from the TrustMyRecord NFL model, the drive level model behind the NFL Simulator, and the season is replayed 10,000 times. The page is rebuilt twice a day from the latest schedule and results."}}]}</script>
+<link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=586504a3e714">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=ced0ab69322a">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/backend-api.js?v=30ee5c8b5184"></script>
+<script defer src="/static/js/sim-auth-gate.js?v=0e0e4d245dc9"></script>
+<style>
+  .lsim-wrap{max-width:1180px}
+  .lsim-hero h1{font-size:clamp(1.6rem,3.2vw,2.2rem);margin:0 0 8px;letter-spacing:-.02em}
+  .lsim-hero p{max-width:78ch;margin:0 0 8px;color:var(--mut,#9fb0c6)}
+  .lsim-run{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 4px}
+  .lsim-run select{font:inherit;padding:8px 10px;border-radius:9px;border:1px solid var(--line,#23324a);background:var(--card,#111a2b);color:inherit}
+  .lsim-run .btn{font-weight:800}
+  #lsimStatus{font-size:.86rem;color:var(--mut,#9fb0c6)}
+  #lsimStamp{font-size:.82rem;color:var(--mut,#9fb0c6);margin:6px 0 0}
+  .lsim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px}
+  .lsim-card{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:14px;padding:12px 14px;min-width:0}
+  .lsim-card h3{margin:2px 0 10px;font-size:1rem}
+  .lsim-card h3 small{font-weight:600;color:var(--mut,#9fb0c6);font-size:.78rem;margin-left:6px}
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.lsim{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
+  table.lsim th,table.lsim td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:right;white-space:nowrap}
+  table.lsim thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6);font-weight:700}
+  table.lsim th[scope=row],table.lsim thead th:first-child{text-align:left}
+  table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
+  table.lsim td.num,table.lsim td.rng{font-variant-numeric:tabular-nums}
+  table.lsim td.rng{color:var(--mut,#9fb0c6)}
+  .lz{opacity:.45}
+  .lt{display:inline-flex;align-items:center;gap:7px}
+  .lt img{width:22px;height:22px;object-fit:contain}
+  .lt .ls{display:none}
+  @media (max-width:640px){.lt .ln{display:none}.lt .ls{display:inline}table.lsim{min-width:0;font-size:.8rem}table.lsim th,table.lsim td{padding:6px 5px}}
+  ul.series{list-style:none;margin:0;padding:0}
+  ul.series li{padding:6px 0;border-bottom:1px solid var(--line,#23324a);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  ul.series .sc{margin-left:auto;color:var(--mut,#9fb0c6);font-size:.82rem}
+  .champ{display:flex;align-items:center;gap:8px;font-size:1rem;margin:4px 0 12px}
+  .champ img{width:30px;height:30px}
+  .lsim-copy{max-width:80ch}
+  .lsim-copy h2{margin:26px 0 8px}
+  .lsim-copy p,.lsim-copy li{line-height:1.65}
+  .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px;margin:6px 0 12px}
+  .pick{display:flex;align-items:center;gap:6px;border:1px solid var(--line,#23324a);border-radius:10px;padding:6px}
+  .pick .at{color:var(--mut,#9fb0c6);font-size:.78rem}
+  .pk{flex:1;display:flex;align-items:center;gap:6px;font:inherit;font-size:.86rem;background:transparent;color:inherit;border:1px solid transparent;border-radius:8px;padding:6px 8px;cursor:pointer;min-width:0}
+  .pk img{width:22px;height:22px}
+  .pk small{margin-left:auto;color:var(--mut,#9fb0c6)}
+  .pk:hover{border-color:var(--line,#23324a)}
+  .pk.on{border-color:#38bdf8;background:rgba(56,189,248,.16);font-weight:700}
+  .pk:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+  .slate{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px;margin:8px 0}
+  .slate a,.slate div{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line,#23324a);border-radius:10px;text-decoration:none;color:inherit;font-size:.88rem}
+
+  table.sched{width:100%;border-collapse:collapse;font-size:.88rem}
+  table.sched th,table.sched td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:left;white-space:nowrap}
+  table.sched thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6)}
+  table.sched td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .w{color:#34d399;font-weight:700}.l{color:#f87171;font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;margin:10px 0}
+  .kpi{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:12px;padding:10px 12px}
+  .kpi b{display:block;font-size:1.35rem}
+  .kpi span{font-size:.78rem;color:var(--mut,#9fb0c6)}
+  .tlogo{width:56px;height:56px;vertical-align:middle;margin-right:10px}
+</style>
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<main class="wrap lsim-wrap">
+  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
+    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/sports-simulators/" style="color:inherit;text-decoration:none;">Sports Simulators</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/nfl-simulator/" style="color:inherit;text-decoration:none;">NFL Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <span aria-current="page" style="font-weight:600;">Tampa Bay Buccaneers Simulator</span>
+  </nav>
+
+  <section class="hero lsim-hero">
+    <h1><img class="tlogo" src="https://a.espncdn.com/i/teamlogos/nfl/500/tb.png" alt="" width="56" height="56">Tampa Bay Buccaneers Simulator</h1>
+    <p>The Buccaneers are 0 and 1 through 1 game. Across 10,000 simulated 2026 seasons they average 8.0 wins, and eight of every ten seasons land between 5 and 10.</p>
+    <div class="kpis">
+      <div class="kpi"><b>8.0</b><span>projected wins</span></div>
+      <div class="kpi"><b>39%</b><span>win the NFC South</span></div>
+      <div class="kpi"><b>42%</b><span>make the playoffs</span></div>
+      <div class="kpi"><b>1%</b><span>earn the 1 seed</span></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Buccaneers 2026 schedule, simulated</h2>
+    <p class="small">Final games show the score. Every other game shows the TrustMyRecord NFL model's probability that the Buccaneers win it.</p>
+    <div class="tscroll"><table class="sched"><thead><tr><th>Week</th><th>Date</th><th>Opponent</th><th class="r">Result or odds</th></tr></thead><tbody><tr><td>Week 1</td><td>Sun, Sep 13</td><td>at <a href="/nfl-simulator/teams/cincinnati-bengals/">Cincinnati Bengals</a></td><td class="r"><span class="l">L 27 to 33</span></td></tr><tr><td>Week 2</td><td>Sun, Sep 20</td><td>vs <a href="/nfl-simulator/teams/cleveland-browns/">Cleveland Browns</a></td><td class="r">69% to win</td></tr><tr><td>Week 3</td><td>Sun, Sep 27</td><td>vs <a href="/nfl-simulator/teams/minnesota-vikings/">Minnesota Vikings</a></td><td class="r">38% to win</td></tr><tr><td>Week 4</td><td>Sun, Oct 4</td><td>vs <a href="/nfl-simulator/teams/green-bay-packers/">Green Bay Packers</a></td><td class="r">50% to win</td></tr><tr><td>Week 5</td><td>Thu, Oct 8</td><td>at <a href="/nfl-simulator/teams/dallas-cowboys/">Dallas Cowboys</a></td><td class="r">49% to win</td></tr><tr><td>Week 6</td><td>Sun, Oct 18</td><td>vs <a href="/nfl-simulator/teams/pittsburgh-steelers/">Pittsburgh Steelers</a></td><td class="r">56% to win</td></tr><tr><td>Week 7</td><td>Sun, Oct 25</td><td>at <a href="/nfl-simulator/teams/carolina-panthers/">Carolina Panthers</a></td><td class="r">51% to win</td></tr><tr><td>Week 8</td><td>Sun, Nov 1</td><td>vs <a href="/nfl-simulator/teams/atlanta-falcons/">Atlanta Falcons</a></td><td class="r">62% to win</td></tr><tr><td>Week 9</td><td>Sun, Nov 8</td><td>at <a href="/nfl-simulator/teams/chicago-bears/">Chicago Bears</a></td><td class="r">39% to win</td></tr><tr><td>Week 11</td><td>Sun, Nov 22</td><td>at <a href="/nfl-simulator/teams/detroit-lions/">Detroit Lions</a></td><td class="r">35% to win</td></tr><tr><td>Week 12</td><td>Mon, Nov 30</td><td>vs <a href="/nfl-simulator/teams/carolina-panthers/">Carolina Panthers</a></td><td class="r">61% to win</td></tr><tr><td>Week 13</td><td>Sun, Dec 6</td><td>vs <a href="/nfl-simulator/teams/los-angeles-chargers/">Los Angeles Chargers</a></td><td class="r">56% to win</td></tr><tr><td>Week 14</td><td>Sun, Dec 13</td><td>at <a href="/nfl-simulator/teams/baltimore-ravens/">Baltimore Ravens</a></td><td class="r">32% to win</td></tr><tr><td>Week 15</td><td>Sun, Dec 20</td><td>vs <a href="/nfl-simulator/teams/new-orleans-saints/">New Orleans Saints</a></td><td class="r">58% to win</td></tr><tr><td>Week 16</td><td>Sat, Dec 26</td><td>at <a href="/nfl-simulator/teams/atlanta-falcons/">Atlanta Falcons</a></td><td class="r">50% to win</td></tr><tr><td>Week 17</td><td>Sat, Jan 2</td><td>vs <a href="/nfl-simulator/teams/los-angeles-rams/">Los Angeles Rams</a></td><td class="r">42% to win</td></tr><tr><td>Week 18</td><td>Sat, Jan 9</td><td>at <a href="/nfl-simulator/teams/new-orleans-saints/">New Orleans Saints</a></td><td class="r">48% to win</td></tr></tbody></table></div>
+    <p>The toughest game left on the model's numbers is week 14, at the Baltimore Ravens, where the Buccaneers win 32% of the time.</p>
+  </section>
+  <section class="panel">
+    <h2>The NFC South race</h2>
+    <div class="linkgrid">
+      <a href="/nfl-simulator/buccaneers-vs-falcons/">Buccaneers vs Falcons<small>Falcons: 6.8 wins, 19% division</small></a>
+      <a href="/nfl-simulator/buccaneers-vs-panthers/">Buccaneers vs Panthers<small>Panthers: 6.3 wins, 14% division</small></a>
+      <a href="/nfl-simulator/buccaneers-vs-saints/">Buccaneers vs Saints<small>Saints: 7.5 wins, 29% division</small></a>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Simulate the Buccaneers</h2>
+    <div class="linkgrid">
+      <a href="/nfl-simulator/">NFL Simulator<small>Any Buccaneers game with a full box score</small></a>
+      <a href="/nfl-season-simulator/">NFL Season Simulator<small>All 32 teams, projected</small></a>
+      <a href="/nfl-playoff-simulator/">NFL Playoff Simulator<small>Pick the games, build the bracket</small></a>
+    </div>
+  </section>
+  <section class="lsim-copy">
+    <h2 id="faq">Common questions</h2>
+    <h3>How many games will the Tampa Bay Buccaneers win in 2026?</h3>
+<p>Across 10,000 simulated seasons the Tampa Bay Buccaneers average 8.0 wins, with eight of every ten seasons between 5 and 10. Games already played count at their real result.</p>
+<h3>What are the Tampa Bay Buccaneers' playoff odds?</h3>
+<p>They make the playoffs in 42% of simulated seasons, win the NFC South in 39% and earn the 1 seed in 1%, with every season seeded by the NFL's tiebreakers.</p>
+<h3>How is the Buccaneers simulation built?</h3>
+<p>Each remaining game is decided by that game's own win probability from the TrustMyRecord NFL model, the drive level model behind the NFL Simulator, and the season is replayed 10,000 times. The page is rebuilt twice a day from the latest schedule and results.</p>
+  </section>
+</main>
+<div class="foot wrap">TrustMyRecord NFL Simulator &middot; a model projection, not betting advice</div>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.4130d3240b43.js"></script>
+<script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+</body>
+</html>
