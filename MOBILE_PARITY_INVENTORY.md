@@ -162,7 +162,7 @@ Recorded so the next audit does not re-chase them.
 | `nav:back-button` / handicappers-search failures in early runs | harness bugs: an off-screen selector, and `fill()` not firing the input event. Both pass when driven the way a user drives them. |
 | "unreachable" controls under an open menu | the harness left the nav overlay open while hit-testing the page beneath it. |
 | Tap targets under 24px | inline links at their own line height, not standalone controls. |
-| `/approved/homepage-v2/`, `/preview/home/` | frozen design snapshots outside the sitemap. |
+| `/approved/homepage-v2/`, `/preview/home/` | frozen design snapshots outside the sitemap; removed 2026-09-15 (stale hard-coded leaderboard), preserved at tag `archive/stale-homepage-copies-20260915`. |
 
 ---
 
