@@ -253,12 +253,25 @@ class TrustMyRecordAPI {
     static get READ_COALESCE_PATTERN() {
         // /users/:name, /users/:name/metrics, /users/:name/stats/<x>, /picks.
         // The stats/breakdowns read was measured going out twice per profile view.
-        return /^\/(users\/[^/]+(\/(metrics|stats\/[a-z-]+))?|picks)(\?|$)/;
+        // HEADER_READ_DEDUPE_20260915: /coins/balance and /notifications/unread-count
+        // were measured going out twice per logged-in page (header + nav badges /
+        // notification badge). Any write through this client clears the shared
+        // reads (see request()), so a balance read after a spend is always fresh.
+        return /^\/(users\/[^/]+(\/(metrics|stats\/[a-z-]+))?|picks|coins\/balance|notifications\/unread-count)(\?|$)/;
     }
 
     async request(endpoint, options = {}) {
         const method = (options.method || 'GET').toUpperCase();
         if (method !== 'GET' || options.body || options.__noCoalesce) {
+            if (method !== 'GET' && this._readCoalesce) {
+                // A write can change any shared read (balance, unread count, picks):
+                // drop them before and after it so no later caller reuses an old answer.
+                this._readCoalesce.clear();
+                const clearAfter = () => { if (this._readCoalesce) this._readCoalesce.clear(); };
+                const write = this._requestUncoalesced(endpoint, options);
+                write.then(clearAfter, clearAfter);
+                return write;
+            }
             return this._requestUncoalesced(endpoint, options);
         }
         if (!TrustMyRecordAPI.READ_COALESCE_PATTERN.test(endpoint)) {

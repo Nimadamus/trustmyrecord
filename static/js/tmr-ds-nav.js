@@ -799,22 +799,24 @@
 
     if (typeof window.toggleNotifications !== 'function') loadChain(NOTIF_CHAIN);
 
-    (S ? S.authFetch(API + '/notifications/unread-count')
-       : fetch(API + '/notifications/unread-count', {
-           headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
-         }))
-      .then(function (r) { return r.ok ? r.json() : null; })
+    // HEADER_READ_DEDUPE_20260915: where the page has the shared API client, read
+    // through it so the header and the page's own badge code share one request.
+    var sharedApi = window.api && typeof window.api.request === 'function' ? window.api : null;
+    function headerRead(path) {
+      if (sharedApi) return sharedApi.request(path).catch(function () { return null; });
+      return (S ? S.authFetch(API + path)
+        : fetch(API + path, { headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() } }))
+        .then(function (r) { return r.ok ? r.json() : null; });
+    }
+
+    headerRead('/notifications/unread-count')
       .then(function (d) {
         var n = d && (d.unreadCount != null ? d.unreadCount : (d.count != null ? d.count : d.unread));
         var b = document.getElementById('homeNotifBadge');
         if (b && n > 0) { b.textContent = n > 99 ? '99+' : n; b.hidden = false; b.style.display = 'inline'; }
       }).catch(function () {});
 
-    (S ? S.authFetch(API + '/coins/balance')
-       : fetch(API + '/coins/balance', {
-           headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
-         }))
-      .then(function (r) { return r.ok ? r.json() : null; })
+    headerRead('/coins/balance')
       .then(function (d) {
         if (!d || d.balance == null) return;
         var pill = document.getElementById('navCoinPill');
