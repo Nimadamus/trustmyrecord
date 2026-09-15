@@ -388,32 +388,71 @@ function pickPanel(sport, inputs) {
 }
 
 /* The hub block: links to the cluster plus the next real slate. */
-function hubBlock(sport, inputs) {
+function hubBlock(sport, inputs, rivalries) {
   const L = LEAGUE[sport];
   const now = Date.now();
   const upcoming = inputs.schedule.filter((g) => !g.final && Date.parse(g.date) >= now - 6 * 3600e3);
   const first = upcoming[0];
   const day = first ? ptDate(first.date) : null;
-  const games = first ? upcoming.filter((g) => ptDate(g.date) === day).slice(0, 15) : [];
-  const name = (a) => (inputs.teams.find((t) => t.espn_abbr === a) || {}).name || a;
-  const hp = (g) => { const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away]; return c ? ` <small>${esc(name(g.home))} ${Math.round(c.p * 100)}%</small>` : ''; };
-  const slate = games.map((g) => `<div>${esc(name(g.away))} at ${esc(name(g.home))}${hp(g)}</div>`).join('');
+  const games = first ? upcoming.filter((g) => ptDate(g.date) === day).slice(0, 16) : [];
+  const team = (a) => inputs.teams.find((t) => t.espn_abbr === a) || { name: a, short: a };
+  const img = (t) => (t.logo ? `<img src="${esc(t.logo)}" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px">` : '');
+  const time = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT';
+  const cards = games.map((g) => {
+    const h = team(g.home), a = team(g.away);
+    const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+    const ph = c ? Math.round(c.p * 100) : null;
+    return `<div class="lsimh-game">
+        <div class="lsimh-row">${img(a)}<span>${esc(a.name)}</span><b>${ph == null ? '' : 100 - ph + '%'}</b></div>
+        <div class="lsimh-row">${img(h)}<span>${esc(h.name)}</span><b>${ph == null ? '' : ph + '%'}</b></div>
+        <div class="lsimh-meta">${esc(time(g.date))}${ph == null ? '' : ` &middot; <span class="lsimh-bar"><i style="width:${100 - ph}%"></i></span>`}</div>
+      </div>`;
+  }).join('');
+  const divs = [...new Set((rivalries || []).map((r) => r.div))].sort();
+  const rivalGrid = divs.map((d) => `<h3>${esc(d)} Division</h3><div class="linkgrid">${rivalries.filter((r) => r.div === d).map((r) => `<a href="${r.url}">${esc(r.label)}<small>Meetings and win probability</small></a>`).join('')}</div>`).join('');
   return `<!--MK:leagueSimCluster-->
+  <style>
+    .lsimh-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px;margin:10px 0}
+    .lsimh-game{border:1px solid var(--line,#23324a);border-radius:12px;padding:10px 12px}
+    .lsimh-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+    .lsimh-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lsimh-meta{font-size:.78rem;opacity:.75;margin-top:4px;display:flex;align-items:center;gap:6px}
+    .lsimh-bar{display:inline-block;width:80px;height:6px;border-radius:3px;background:rgba(56,189,248,.35);overflow:hidden}
+    .lsimh-bar i{display:block;height:100%;background:#f59e0b}
+  </style>
+  ${cards ? `<section class="panel" id="todaysGames">
+    <h2>Next ${L.label} games: ${esc(day)}</h2>
+    <p>The percentage is each team's win probability from the same calibrated model this simulator runs. Choose the game in the simulator above to play it out with a full box score.</p>
+    <div class="lsimh-games">${cards}</div>
+  </section>` : ''}
   <section class="panel" id="seasonPlayoffSims">
     <h2>${L.label} season and playoff simulators</h2>
     <div class="linkgrid">
       <a href="/${sport}-season-simulator/">${L.label} Season Simulator<small>Projected ${inputs.season_label} standings and ${L.unit}</small></a>
       <a href="/${sport}-playoff-simulator/">${L.label} Playoff Simulator<small>${sport === 'nba' ? 'Play-in, seeds and title odds' : 'Wild cards, bracket and Stanley Cup odds'}</small></a>
     </div>
-    ${slate ? `<h3>Next ${L.label} games, ${esc(day)}</h3><div class="slate" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px">${slate}</div>` : ''}
+  </section>
+  ${rivalGrid ? `<section class="panel" id="divisionRivalries">
+    <h2>${L.label} division rivalries</h2>
+    ${rivalGrid}
+  </section>` : ''}
+  <section class="panel" id="buildRecord">
+    <h2>Don't just simulate. Build a record.</h2>
+    <p>A simulation is a read on a game. It only becomes worth something when you put it on the line and let it be graded. On TrustMyRecord every pick is timestamped before the game, graded automatically from the final score and added to a public record that cannot be edited or deleted, so your ${L.label} reads build a win rate, units and ROI anyone can check.</p>
+    <div class="linkgrid">
+      <a href="/sportsbook/">Sportsbook<small>Lock a pick from today's board</small></a>
+      <a href="/${sport}-pick-tracker/">${L.label} Pick Tracker<small>Track your ${L.label} record</small></a>
+      ${fs.existsSync(path.join(ROOT, sport + '-handicappers', 'index.html')) ? `<a href="/${sport}-handicappers/">${L.label} Handicappers<small>Verified ${L.label} records</small></a>` : `<a href="/handicappers/">Handicappers<small>Verified records in every sport</small></a>`}
+      <a href="/leaderboards/">Leaderboards<small>The top verified records</small></a>
+    </div>
   </section>
   <!--/MK:leagueSimCluster-->`;
 }
 
-function patchHub(sport, inputs) {
+function patchHub(sport, inputs, rivalries) {
   const file = path.join(ROOT, sport + '-simulator', 'index.html');
   let html = fs.readFileSync(file, 'utf8');
-  const block = hubBlock(sport, inputs);
+  const block = hubBlock(sport, inputs, rivalries);
   const re = /<!--MK:leagueSimCluster-->[\s\S]*?<!--\/MK:leagueSimCluster-->/;
   if (re.test(html)) html = html.replace(re, block);
   else html = html.replace(/(<div id="result"><\/div>)/, `$1\n  ${block}`);
@@ -429,6 +468,150 @@ function slugOf(name) {
   return String(name).normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
+/* One URL per division pair: an existing hand built matchup page in either
+   order wins, otherwise the pair is written alphabetically. */
+function rivalrySlug(sport, a, b) {
+  const x = slugOf(a.short || a.name), y = slugOf(b.short || b.name);
+  const dir = path.join(ROOT, sport + '-simulator');
+  if (fs.existsSync(path.join(dir, `${x}-vs-${y}`, 'index.html'))) return `${x}-vs-${y}`;
+  if (fs.existsSync(path.join(dir, `${y}-vs-${x}`, 'index.html'))) return `${y}-vs-${x}`;
+  return [x, y].sort().join('-vs-');
+}
+
+/* DIVISION RIVALRY PAGES, what NFL has: every division pair that has no page
+   yet gets one, built from both clubs' own projections and every meeting on the
+   schedule with the model's win probability. Marked MK:leagueSimRivalry so a
+   rebuild owns them and never touches the hand built matchup pages. */
+function writeRivalries(sport, inputs, result, shell) {
+  const L = LEAGUE[sport];
+  const nhl = sport === 'nhl';
+  const made = [];
+  const divs = {};
+  result.teams.forEach((t) => { (divs[t.division] || (divs[t.division] = [])).push(t); });
+  for (const d of Object.keys(divs).sort()) {
+    const list = divs[d].slice().sort((a, b) => a.short.localeCompare(b.short));
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i], b = list[j];
+        const slug = rivalrySlug(sport, a, b);
+        const file = path.join(ROOT, sport + '-simulator', slug, 'index.html');
+        if (fs.existsSync(file) && !/NBA_NHL_RIVALRY_20260915/.test(fs.readFileSync(file, 'utf8'))) {
+          made.push({ url: `/${sport}-simulator/${slug}/`, label: `${a.short} vs ${b.short}`, div: d, existing: true });
+          continue;
+        }
+        const meets = inputs.schedule.filter((g) => (g.home === a.abbr && g.away === b.abbr) || (g.home === b.abbr && g.away === a.abbr));
+        const byAbbr = { [a.abbr]: a, [b.abbr]: b };
+        const day = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        const rows = meets.map((g) => {
+          const h = byAbbr[g.home], w = byAbbr[g.away];
+          const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+          const res = g.final && g.home_score != null ? `Final: ${esc(w.short)} ${g.away_score}, ${esc(h.short)} ${g.home_score}`
+            : c ? `${esc(h.short)} ${Math.round(c.p * 100)}%, ${esc(w.short)} ${100 - Math.round(c.p * 100)}%` : '';
+          return `<tr><td>${esc(day(g.date))}</td><td>${esc(w.name)} at ${esc(h.name)}</td><td class="r">${res}</td></tr>`;
+        }).join('');
+        const stat = (t) => nhl ? `${UI_one(t.points_mean)} points` : `${UI_one(t.wins_mean)} wins`;
+        const url = `/${sport}-simulator/${slug}/`;
+        const h1 = `${a.short} vs ${b.short} Simulator`;
+        const title = `${a.short} vs ${b.short} ${inputs.season_label} | Win Probability, Schedule and ${d} Odds`;
+        const desc = `${a.name} vs ${b.name} in ${inputs.season_label}: all ${meets.length} meetings with the model's win probability, and each team's projected ${L.unit}, ${d} Division title and playoff odds.`;
+        const faqs = [
+          [`Who wins ${a.short} vs ${b.short}?`, meets.filter((g) => !g.final).slice(0, 4).map((g) => {
+            const c = inputs.matchups[g.home][g.away];
+            return `${day(g.date)}: the ${byAbbr[g.home].short} win at home ${Math.round(c.p * 100)}% of the time.`;
+          }).join(' ') || 'Every meeting this season is final.'],
+          [`Who is favored in the ${d} Division?`, `Across ${count(result.runs)} simulated seasons the ${a.short} win the division ${pctText(a.division_title)} of the time and the ${b.short} ${pctText(b.division_title)}.`],
+        ];
+        const faq = faqBlock(faqs);
+        const kp = (t) => `<div class="kpi"><b>${t.logo ? `<img src="${esc(t.logo)}" alt="" width="22" height="22"> ` : ''}${stat(t)}</b><span>${esc(t.short)}: ${pctText(t.division_title)} division, ${pctText(t.playoffs)} playoffs, ${pctText(t.champion)} ${nhl ? 'Stanley Cup' : 'title'}</span></div>`;
+        const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- NBA_NHL_RIVALRY_20260915. Baked by scripts/build_league_sim_pages.js. Do not edit by hand. -->
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${SITE}${url}" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="${esc(h1)}" />
+<meta property="og:description" content="${esc(desc)}" />
+<meta property="og:url" content="${SITE}${url}" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="${SITE}/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+  { '@type': 'ListItem', position: 2, name: `${L.label} Simulator`, item: SITE + L.hub },
+  { '@type': 'ListItem', position: 3, name: h1, item: SITE + url }] })}</script>
+<script type="application/ld+json">${faq.ld}</script>
+${shell.head}
+<style>${CSS}
+  table.sched{width:100%;border-collapse:collapse;font-size:.88rem}
+  table.sched th,table.sched td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:left;white-space:nowrap}
+  table.sched td.r{text-align:right}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin:10px 0}
+  .kpi{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:12px;padding:10px 12px}
+  .kpi b{display:flex;align-items:center;gap:6px;font-size:1.2rem}.kpi span{font-size:.8rem;color:var(--mut,#9fb0c6)}
+</style>
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<main class="wrap lsim-wrap">
+  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
+    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="${L.hub}" style="color:inherit;text-decoration:none;">${L.label} Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <span aria-current="page" style="font-weight:600;">${esc(h1)}</span>
+  </nav>
+  <section class="hero lsim-hero">
+    <h1>${esc(h1)}</h1>
+    <p>The ${esc(a.name)} and the ${esc(b.name)} share the ${esc(d)} Division and meet ${meets.length} times in ${esc(inputs.season_label)}. Across ${count(result.runs)} simulated seasons the ${esc(a.short)} average ${stat(a)} and the ${esc(b.short)} ${stat(b)}.</p>
+    <div class="kpis">${kp(a)}${kp(b)}</div>
+  </section>
+  <section class="panel">
+    <h2>${esc(a.short)} and ${esc(b.short)} meetings in ${esc(inputs.season_label)}</h2>
+    <div class="tscroll"><table class="sched"><thead><tr><th>Date</th><th>Game</th><th class="r">Result or model odds</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p>Simulate any of these games with a full box score in the <a href="${L.hub}">${L.label} Simulator</a>, or lock in a result and rerun the season in the <a href="/${sport}-season-simulator/">${L.label} Season Simulator</a>.</p>
+  </section>
+  <section class="panel">
+    <h2>More</h2>
+    <div class="linkgrid">
+      <a href="/${sport}-simulator/teams/${slugOf(a.name)}/">${esc(a.name)}<small>Season projection and full schedule</small></a>
+      <a href="/${sport}-simulator/teams/${slugOf(b.name)}/">${esc(b.name)}<small>Season projection and full schedule</small></a>
+      <a href="/${sport}-playoff-simulator/">${L.label} Playoff Simulator<small>Every team's odds</small></a>
+    </div>
+  </section>
+  <section class="lsim-copy"><h2 id="faq">Common questions</h2>${faq.html}</section>
+</main>
+<div class="foot wrap">TrustMyRecord ${L.label} Simulator &middot; a model projection, not betting advice</div>
+${shell.tail}
+</body>
+</html>
+`;
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, html);
+        made.push({ url, label: `${a.short} vs ${b.short}`, div: d, existing: false });
+      }
+    }
+  }
+  return made;
+}
+
+function patchSitemapUrls(urls) {
+  const file = path.join(ROOT, 'sitemap.xml');
+  let xml = fs.readFileSync(file, 'utf8');
+  const nl = xml.includes('\r\n') ? '\r\n' : '\n';
+  const today = new Date().toISOString().slice(0, 10);
+  const add = urls.filter((u) => !xml.includes(`<loc>${SITE}${u}</loc>`)).map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod></url>`);
+  if (!add.length) return 0;
+  const anchor = `  <url><loc>${SITE}/nba-season-simulator/</loc>`;
+  const at = xml.indexOf(anchor);
+  if (at < 0) throw new Error('sitemap anchor missing');
+  xml = xml.slice(0, at) + add.join(nl) + nl + xml.slice(at);
+  fs.writeFileSync(file, xml);
+  return add.length;
+}
+
 function patchTeams(sport, inputs, result) {
   const L = LEAGUE[sport];
   const re = /<!--MK:leagueSimTeam-->[\s\S]*?<!--\/MK:leagueSimTeam-->\s*/;
@@ -441,13 +624,61 @@ function patchTeams(sport, inputs, result) {
     const line = sport === 'nba'
       ? `Across ${count(result.runs)} simulated ${esc(inputs.season_label)} seasons the ${esc(t.name)} average ${UI_one(t.wins_mean)} wins, and eight of every ten seasons land between ${t.wins_p10} and ${t.wins_p90}. They finish in the top six of the ${esc(t.conference)} Conference ${pctText(t.direct)} of the time, make the playoffs ${pctText(t.playoffs)} of the time, reach the NBA Finals ${pctText(t.final)} and win the title ${pctText(t.champion)}.`
       : `Across ${count(result.runs)} simulated ${esc(inputs.season_label)} seasons the ${esc(t.name)} average ${UI_one(t.points_mean)} points, and eight of every ten seasons land between ${t.points_p10} and ${t.points_p90}. They win the ${esc(t.division)} Division ${pctText(t.division_title)} of the time, make the playoffs ${pctText(t.playoffs)}, reach the Stanley Cup Final ${pctText(t.final)} and win the Cup ${pctText(t.champion)}.`;
+    /* The full season, game by game: final scores once played, the model's
+       win probability for this club before. Plus the division race. */
+    const mine = inputs.schedule.filter((g) => g.home === t.abbr || g.away === t.abbr);
+    const byAbbr = Object.fromEntries(result.teams.map((x) => [x.abbr, x]));
+    const day = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
+    const rows = mine.map((g) => {
+      const home = g.home === t.abbr, opp = byAbbr[home ? g.away : g.home];
+      if (!opp) return '';
+      let cell;
+      if (g.final && g.home_score != null) {
+        const us = home ? g.home_score : g.away_score, them = home ? g.away_score : g.home_score;
+        cell = `<b style="color:${us > them ? '#34d399' : '#f87171'}">${us > them ? 'W' : 'L'} ${us} to ${them}</b>`;
+      } else {
+        const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+        cell = c ? `${Math.round((home ? c.p : 1 - c.p) * 100)}% to win` : '';
+      }
+      return `<tr><td>${esc(day(g.date))}</td><td>${home ? 'vs' : 'at'} <a href="/${sport}-simulator/teams/${slugOf(opp.name)}/">${esc(opp.name)}</a></td><td style="text-align:right">${cell}</td></tr>`;
+    }).join('');
+    const rivals = result.teams.filter((x) => x.division === t.division && x.abbr !== t.abbr)
+      .sort((a, b) => (sport === 'nhl' ? b.points_mean - a.points_mean : b.wins_mean - a.wins_mean));
+    const pairUrl = (x) => `/${sport}-simulator/${rivalrySlug(sport, t, x)}/`;
+    const kpi = (v, label) => `<div class="lsimt-kpi"><b>${v}</b><span>${label}</span></div>`;
     const block = `<!--MK:leagueSimTeam-->
+  <style>
+    .lsimt-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;margin:12px 0}
+    .lsimt-kpi{border:1px solid var(--line,#23324a);border-radius:12px;padding:10px 12px}
+    .lsimt-kpi b{display:block;font-size:1.3rem}.lsimt-kpi span{font-size:.78rem;opacity:.75}
+    .lsimt-scroll{overflow-x:auto;max-height:560px;overflow-y:auto}
+    .lsimt-table{width:100%;border-collapse:collapse;font-size:.88rem}
+    .lsimt-table th,.lsimt-table td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:left;white-space:nowrap}
+    .lsimt-table thead th{position:sticky;top:0;background:var(--card,#111a2b);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
+  </style>
   <section class="panel">
     <h2>${esc(nick)} ${esc(inputs.season_label)} season projection</h2>
     <p>${line}</p>
+    <div class="lsimt-kpis">
+      ${sport === 'nhl' ? kpi(UI_one(t.points_mean), 'projected points') : kpi(UI_one(t.wins_mean), 'projected wins')}
+      ${kpi(pctText(t.division_title), `win the ${esc(t.division)}`)}
+      ${kpi(pctText(t.playoffs), 'make the playoffs')}
+      ${kpi(pctText(t.champion), sport === 'nhl' ? 'win the Stanley Cup' : 'win the NBA title')}
+    </div>
     <div class="linkgrid">
       <a href="/${sport}-season-simulator/">${L.label} Season Simulator<small>All ${inputs.teams.length} teams, projected</small></a>
       <a href="/${sport}-playoff-simulator/">${L.label} Playoff Simulator<small>Every team's odds, round by round</small></a>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>${esc(nick)} ${esc(inputs.season_label)} schedule, simulated</h2>
+    <p>All ${mine.length} games. Final games show the score; every other game shows the model's probability that the ${esc(nick)} win it.</p>
+    <div class="lsimt-scroll"><table class="lsimt-table"><thead><tr><th>Date</th><th>Opponent</th><th style="text-align:right">Result or odds</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </section>
+  <section class="panel">
+    <h2>The ${esc(t.division)} race</h2>
+    <div class="linkgrid">
+      ${rivals.map((x) => `<a href="${pairUrl(x)}">${esc(nick)} vs ${esc(x.short)}<small>${esc(x.short)}: ${sport === 'nhl' ? UI_one(x.points_mean) + ' points' : UI_one(x.wins_mean) + ' wins'}, ${pctText(x.division_title)} division</small></a>`).join('\n      ')}
     </div>
   </section>
   <!--/MK:leagueSimTeam-->
@@ -532,7 +763,9 @@ if (require.main === module) (async () => {
       fs.writeFileSync(out, page(sport, mode, inputs, result, shell));
       console.log(`wrote ${path.relative(ROOT, out)}`);
     }
-    patchHub(sport, inputs);
+    const rivalries = writeRivalries(sport, inputs, result, shell);
+    patchHub(sport, inputs, rivalries);
+    console.log(`${sport}: ${rivalries.filter((r) => !r.existing).length} rivalry pages written, ${rivalries.filter((r) => r.existing).length} already hand built, ${patchSitemapUrls(rivalries.map((r) => r.url))} new sitemap entries`);
     console.log(`${sport}: ${patchTeams(sport, inputs, result)} team pages carry the projection`);
     console.log(`${sport}: ${patchMatchups(sport, inputs, result)} matchup pages carry both projections`);
     console.log(`patched ${sport}-simulator/index.html`);
