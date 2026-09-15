@@ -429,7 +429,22 @@ class TrustMyRecordAPI {
         return data;
     }
 
-    async refreshAccessToken(baseUrlOverride) {
+    // REFRESH_SINGLE_FLIGHT_20260914: every caller that finds the access token
+    // expired used to start its own POST /auth/refresh, so a page that fires
+    // several reads at once could renew the same session several times. Now one
+    // renewal runs at a time and every concurrent caller awaits that same result
+    // ('success' | 'invalid' | 'network' -- unchanged, and never a logout).
+    refreshAccessToken(baseUrlOverride) {
+        if (!this.refreshToken) return Promise.resolve('invalid');
+        if (this._refreshInFlight) return this._refreshInFlight;
+        const flight = this._refreshAccessTokenOnce(baseUrlOverride);
+        this._refreshInFlight = flight;
+        const clear = () => { if (this._refreshInFlight === flight) this._refreshInFlight = null; };
+        flight.then(clear, clear);
+        return flight;
+    }
+
+    async _refreshAccessTokenOnce(baseUrlOverride) {
         if (!this.refreshToken) return 'invalid';
         try {
             const refreshBaseUrl = baseUrlOverride || this.baseUrl;
