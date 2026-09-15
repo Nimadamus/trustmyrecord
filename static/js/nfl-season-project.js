@@ -72,6 +72,9 @@
     if (v < 0.005) return '&lt;1%';
     return Math.round(v * 100) + '%';
   }
+  function slug(name) {
+    return String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
   function heat(v) { return ' style="--h:' + (Math.round(Math.max(0, Math.min(1, v || 0)) * 100) / 100) + '"'; }
   function wins(v) { return (Math.round(v * 10) / 10).toFixed(1); }
 
@@ -83,7 +86,7 @@
       return '<div class="lsim-card"><h3>' + esc(k) + '</h3><div class="tscroll"><table class="lsim"><thead><tr>'
         + '<th scope="col">Team</th><th scope="col">Wins</th><th scope="col">80% range</th><th scope="col">Division</th><th scope="col">Playoffs</th><th scope="col">1 seed</th>'
         + '</tr></thead><tbody>' + list.map(function (t) {
-          return '<tr><th scope="row"><span class="lt"><img src="' + esc(t.logo) + '" alt="" width="22" height="22" loading="lazy"><span class="ln">' + esc(t.name) + '</span><span class="ls">' + esc(t.short) + '</span></span></th>'
+          return '<tr><th scope="row"><a class="lt" href="/nfl-simulator/teams/' + slug(t.name) + '/"><img src="' + esc(t.logo) + '" alt="" width="22" height="22" loading="lazy"><span class="ln">' + esc(t.name) + '</span><span class="ls">' + esc(t.short) + '</span></a></th>'
             + '<td class="num">' + wins(t.wins_mean) + '</td><td class="rng">' + t.wins_p10 + ' to ' + t.wins_p90 + '</td>'
             + '<td class="p"' + heat(t.division_title) + '>' + pct(t.division_title) + '</td>'
             + '<td class="p"' + heat(t.playoffs) + '>' + pct(t.playoffs) + '</td>'

@@ -140,6 +140,8 @@ const CSS = `
   table.lsim td.rng{color:var(--mut,#9fb0c6)}
   .lz{opacity:.45}
   .lt{display:inline-flex;align-items:center;gap:7px}
+  a.lt{color:inherit;text-decoration:none}
+  a.lt:hover .ln,a.lt:hover .ls{text-decoration:underline}
   .lt img{width:22px;height:22px;object-fit:contain}
   .lt .ls{display:none}
   @media (max-width:640px){.lt .ln{display:none}.lt .ls{display:inline}table.lsim{min-width:0;font-size:.8rem}table.lsim th,table.lsim td{padding:6px 5px}}

@@ -34,8 +34,14 @@
   function logo(t) {
     return t.logo ? '<img src="' + esc(t.logo) + '" alt="" width="22" height="22" loading="lazy">' : '';
   }
+  function slug(name) {
+    return String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  /* The team name links to that club's own simulator page. */
+  var SPORT = null;
   function team(t) {
-    return '<span class="lt">' + logo(t) + '<span class="ln">' + esc(t.name) + '</span><span class="ls">' + esc(t.short || t.abbr) + '</span></span>';
+    var inner = logo(t) + '<span class="ln">' + esc(t.name) + '</span><span class="ls">' + esc(t.short || t.abbr) + '</span>';
+    return SPORT ? '<a class="lt" href="/' + SPORT + '-simulator/teams/' + slug(t.name) + '/">' + inner + '</a>' : '<span class="lt">' + inner + '</span>';
   }
   function heat(v) {
     var a = Math.max(0, Math.min(1, v || 0));
@@ -45,6 +51,7 @@
   /* ----------------------------------------------------------- season view */
 
   function seasonTables(result) {
+    SPORT = result.sport;
     var nhl = result.sport === 'nhl';
     var groups = {};
     result.teams.forEach(function (t) {
@@ -82,6 +89,7 @@
   /* ---------------------------------------------------------- playoff view */
 
   function oddsTable(result) {
+    SPORT = result.sport;
     var nhl = result.sport === 'nhl';
     var list = result.teams.slice().sort(function (a, b) {
       return b.champion - a.champion || b.final - a.final || b.playoffs - a.playoffs;
@@ -147,6 +155,28 @@
       + esc(when) + ', ' + inputs.games_final.toLocaleString('en-US') + ' of the ' + inputs.schedule.length.toLocaleString('en-US') + ' scheduled regular season games final.';
   }
 
+  /* Off the main thread when the browser allows it; the same engine on the
+     main thread otherwise, so the button always works. */
+  function runOff(kind, payload, fallback) {
+    return new Promise(function (resolve, reject) {
+      var w;
+      try { w = new Worker('/static/js/sim-season-worker.js'); } catch (e) { w = null; }
+      if (!w) { try { resolve(fallback()); } catch (err) { reject(err); } return; }
+      var done = false;
+      w.onmessage = function (e) {
+        done = true; w.terminate();
+        if (e.data && e.data.ok) resolve(e.data.result);
+        else { try { resolve(fallback()); } catch (err) { reject(err); } }
+      };
+      w.onerror = function () {
+        if (done) return; done = true; w.terminate();
+        try { resolve(fallback()); } catch (err) { reject(err); }
+      };
+      payload.kind = kind;
+      w.postMessage(payload);
+    });
+  }
+
   var renderers = { seasonTables: seasonTables, oddsTable: oddsTable, bracket: bracket, stamp: stamp, esc: esc };
 
   /* ------------------------------------------------------------ controller */
@@ -210,13 +240,13 @@
           var n = Number(runsSel && runsSel.value) || 2000;
           var seed = (Math.random() * 4294967295) >>> 0;
           status.textContent = 'Playing ' + n.toLocaleString('en-US') + ' seasons';
-          /* Yield to the browser so the status paints before the work starts. */
-          setTimeout(function () {
-            /* Only picks for games still open count; a pick on a game that has
-               since gone final is dropped rather than overriding the score. */
-            var forced = {};
-            inp.schedule.forEach(function (g) { if (!g.final && picks[g.id]) forced[g.id] = picks[g.id]; });
-            var result = E.project(inp, n, seed, { forced: forced });
+          /* Only picks for games still open count; a pick on a game that has
+             since gone final is dropped rather than overriding the score. */
+          var forced = {};
+          inp.schedule.forEach(function (g) { if (!g.final && picks[g.id]) forced[g.id] = picks[g.id]; });
+          runOff('league', { inputs: inp, n: n, seed: seed, opts: { forced: forced } }, function () {
+            return E.project(inp, n, seed, { forced: forced });
+          }).then(function (result) {
             if (mode === 'season') d.getElementById('lsimTables').innerHTML = seasonTables(result);
             else {
               d.getElementById('lsimOdds').innerHTML = oddsTable(result);
@@ -226,7 +256,10 @@
             var k = Object.keys(forced).length;
             status.textContent = 'Done' + (k ? ', with your ' + k + (k === 1 ? ' pick' : ' picks') + ' locked in' : '') + '. Press again for a fresh set of seasons.';
             btn.disabled = false;
-          }, 30);
+          }).catch(function () {
+            status.textContent = 'The simulation did not finish. The projection above is the latest published one.';
+            btn.disabled = false;
+          });
         }).catch(function () {
           status.textContent = 'The live schedule did not load. The projection above is the latest published one.';
           btn.disabled = false;
