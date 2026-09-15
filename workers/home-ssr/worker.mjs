@@ -156,32 +156,101 @@ async function getBootstrap(ctx) {
    edge for EDGE_TTL_SECONDS, on a short timeout, and entirely optional — if it
    is not here in time the document keeps its skeleton lane and the page JS
    fills it exactly as before. */
+/* LAST KNOWN GOOD AT THE EDGE (2026-09-15). The same rule the page script
+   applies (see LAST KNOWN GOOD SLATE in tmr-home-live.js), for the first paint
+   of a visitor who arrives mid restart: a clean slate is kept for LKG_TTL_SECONDS
+   beside the short cache; a failed, malformed or degraded answer is baked from
+   it instead, row by row, and the lane is flagged so the page fetches the real
+   slate a few seconds later. holdRows() is lockstep with the client's. */
+const SLATE_LKG_KEY = 'https://trustmyrecord.com/__edge-cache/mlb-slate-lkg-v1';
+const LKG_TTL_SECONDS = 10 * 60;
+const TK_ROW_KEYS = ['games', 'nfl_games', 'nba_games', 'nhl_games', 'cfb_games'];
+const TK_ROW_HOLD_MS = 5 * 60 * 1000;
+/* A first paint is only ever baked from a copy this fresh: older than that,
+   the loading lane and the page's own fetch are the honest answer. */
+const TK_EDGE_LKG_MAX_MS = 5 * 60 * 1000;
+
+function slateUsable(p, today) {
+  return !!(p && typeof p === 'object' && !Array.isArray(p) && p.ok !== false
+    && typeof p.slate_date === 'string' && (!today || p.slate_date === today)
+    && Array.isArray(p.games));
+}
+
+function holdRows(p, lkg, now) {
+  const out = Object.assign({}, p);
+  const rowAt = {};
+  const held = [];
+  const same = !!(lkg && lkg.payload && lkg.payload.slate_date === p.slate_date);
+  TK_ROW_KEYS.forEach((key) => {
+    const fresh = p[key];
+    const old = same ? lkg.payload[key] : null;
+    const oldAt = same && lkg.rowAt ? lkg.rowAt[key] : null;
+    const hadCards = Array.isArray(old) && old.length > 0;
+    const suspect = !Array.isArray(fresh)
+      || (fresh.length === 0 && hadCards)
+      || (key === 'games' && (p.degraded === true || p.mlb_available === false)
+        && hadCards && fresh.length < old.length);
+    if (suspect && hadCards && oldAt != null && now - oldAt <= TK_ROW_HOLD_MS) {
+      out[key] = old;
+      rowAt[key] = oldAt;
+      held.push(key);
+    } else {
+      if (!Array.isArray(fresh)) out[key] = [];
+      rowAt[key] = now;
+    }
+  });
+  return { payload: out, rowAt, held };
+}
+
+async function readSlateLkg(cache) {
+  try {
+    const hit = await cache.match(new Request(SLATE_LKG_KEY));
+    return hit ? await hit.json() : null;
+  } catch (e) { return null; }
+}
+
 async function getSlate(ctx) {
   const cache = caches.default;
   const cacheKey = new Request(SLATE_CACHE_KEY);
   const hit = await cache.match(cacheKey);
   if (hit) return hit.json();
 
-  const resp = await fetch(API_SLATE, {
-    headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(API_TIMEOUT_MS),
-  });
-  if (!resp.ok) return null;
-  const body = await resp.text();
-  const data = JSON.parse(body);
-  /* A payload with no MLB row but a live NFL row is still worth baking - the
-     strip carries both sports, and one failed feed must not cost the other its
-     first paint. Only a payload with neither is refused. */
-  if (!data || data.ok === false ||
-      (!Array.isArray(data.games) && !Array.isArray(data.nfl_games)
-        && !Array.isArray(data.cfb_games))) return null;
-  ctx.waitUntil(cache.put(cacheKey, new Response(body, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': `public, max-age=${EDGE_TTL_SECONDS}`,
-    },
-  })));
-  return data;
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: SLATE_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+  const now = Date.now();
+  let data = null;
+  let body = null;
+  try {
+    const resp = await fetch(API_SLATE, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+    });
+    if (resp.ok) {
+      body = await resp.text();
+      try { data = JSON.parse(body); } catch (e) { data = null; }
+    }
+  } catch (e) { data = null; }
+
+  const lkg = await readSlateLkg(cache);
+  if (slateUsable(data, today)) {
+    const merged = holdRows(data, lkg, now);
+    const put = (key, value, ttl) => ctx.waitUntil(cache.put(new Request(key), new Response(value, {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` },
+    })));
+    if (!merged.held.length) {
+      put(SLATE_CACHE_KEY, body, EDGE_TTL_SECONDS);
+      put(SLATE_LKG_KEY, JSON.stringify({ payload: data, rowAt: merged.rowAt, goodAt: now }), LKG_TTL_SECONDS);
+      return data;
+    }
+    put(SLATE_LKG_KEY, JSON.stringify({ payload: merged.payload, rowAt: merged.rowAt,
+      goodAt: (lkg && lkg.goodAt) || now }), LKG_TTL_SECONDS);
+    return Object.assign(merged.payload, { __lkg: (lkg && lkg.goodAt) || now });
+  }
+  if (lkg && slateUsable(lkg.payload, today) && lkg.goodAt && now - lkg.goodAt <= TK_EDGE_LKG_MAX_MS) {
+    return Object.assign({}, lkg.payload, { __lkg: lkg.goodAt });
+  }
+  return null;
 }
 
 class TextCell {
@@ -859,10 +928,10 @@ function buildRewriter(data, slate) {
         || ((slate.nba_games && slate.nba_games.length) || 0)
         || ((slate.nhl_games && slate.nhl_games.length) || 0)
         || ((slate.cfb_games && slate.cfb_games.length) || 0))) {
-    rw.on('.ticker .ticker-games', new AttrCell({
+    rw.on('.ticker .ticker-games', new AttrCell(Object.assign({
       'data-slate-date': slate.slate_date,
       'aria-busy': 'false',
-    }));
+    }, slate.__lkg ? { 'data-slate-lkg': String(slate.__lkg) } : {})));
     rw.on('.ticker .ticker-games', new HtmlCell(
       `<div class="ticker-track"><div class="ticker-page">${slateTickerHtml(slate)}</div></div>`
     ));
