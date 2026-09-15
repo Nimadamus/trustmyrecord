@@ -353,7 +353,11 @@ function renderMilestoneCard(item) {
         '<button class="fi-action fi-congrats ' + (item.congratsed_by_user ? 'is-congratsed' : '') + '" onclick="toggleCongrats(' + jsArg(id) + ', this)">' +
             '<i class="fas fa-hands-clapping"></i> Congrats <span>' + (Number(item.likes_count) || 0) + '</span>' +
         '</button>' +
-    '</div>';
+        (mtype === 'joined'
+            ? '<button class="fi-action" onclick="toggleComments(' + jsArg(id) + ', ' + jsArg('milestone') + ')"><i class="fas fa-comment"></i> Comment <span>' + (Number(item.comments_count) || 0) + '</span></button>'
+            : '') +
+    '</div>' +
+    (mtype === 'joined' ? '<div class="comments-section" id="cs-ms-' + feedId(id) + '"></div>' : '');
 
     return '<div class="feed-item fi-milestone" data-id="' + esc(id) + '" data-type="milestone">' +
         renderFeedHeader(item, action) +
@@ -446,9 +450,18 @@ function openModal(type) {
     window.location.href = type === 'signup' ? '/register/' : '/login/';
 }
 
+function commentsElId(id, normalizedType) {
+    const prefix = normalizedType === 'pick' ? 'cs-pick-' : (normalizedType === 'milestone' ? 'cs-ms-' : 'cs-fp-');
+    return prefix + feedId(id);
+}
+
+function milestoneNumericId(id) {
+    return String(id).replace(/^milestone:/, '');
+}
+
 async function toggleComments(id, type) {
-    const normalizedType = type === 'pick' ? 'pick' : 'feed_post';
-    const elId = normalizedType === 'pick' ? 'cs-pick-' + feedId(id) : 'cs-fp-' + feedId(id);
+    const normalizedType = type === 'pick' ? 'pick' : (type === 'milestone' ? 'milestone' : 'feed_post');
+    const elId = commentsElId(id, normalizedType);
     const el = document.getElementById(elId);
     if (!el) return;
 
@@ -461,7 +474,9 @@ async function toggleComments(id, type) {
     el.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.85rem;">Loading comments...</div>';
 
     try {
-        const endpoint = normalizedType === 'pick' ? '/picks/' + encodeURIComponent(id) + '/comments' : '/feed/' + encodeURIComponent(id) + '/comments';
+        const endpoint = normalizedType === 'pick' ? '/picks/' + encodeURIComponent(id) + '/comments'
+            : normalizedType === 'milestone' ? '/milestones/' + encodeURIComponent(milestoneNumericId(id)) + '/comments'
+            : '/feed/' + encodeURIComponent(id) + '/comments';
         const data = await api.request(endpoint);
         const comments = data.comments || [];
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
@@ -469,7 +484,7 @@ async function toggleComments(id, type) {
 
         if (user) {
             html += '<div class="cmt-input-row">' +
-                '<input class="cmt-input" id="ci-' + normalizedType + '-' + feedId(id) + '" placeholder="Write a comment..." onkeypress="if(event.key===\'Enter\')postComment(' + jsArg(id) + ',' + jsArg(normalizedType) + ')">' +
+                '<input class="cmt-input" id="ci-' + normalizedType + '-' + feedId(id) + '" placeholder="' + (normalizedType === 'milestone' ? 'Write a welcome...' : 'Write a comment...') + '" onkeypress="if(event.key===\'Enter\')postComment(' + jsArg(id) + ',' + jsArg(normalizedType) + ')">' +
                 '<button class="cmt-submit" onclick="postComment(' + jsArg(id) + ',' + jsArg(normalizedType) + ')">Post</button>' +
             '</div>';
         }
@@ -497,16 +512,17 @@ async function toggleComments(id, type) {
 }
 
 async function postComment(id, type) {
-    const normalizedType = type === 'pick' ? 'pick' : 'feed_post';
+    const normalizedType = type === 'pick' ? 'pick' : (type === 'milestone' ? 'milestone' : 'feed_post');
     const input = document.getElementById('ci-' + normalizedType + '-' + feedId(id));
     if (!input || !input.value.trim()) return;
 
     try {
-        const endpoint = normalizedType === 'pick' ? '/picks/' + encodeURIComponent(id) + '/comment' : '/feed/' + encodeURIComponent(id) + '/comment';
+        const endpoint = normalizedType === 'pick' ? '/picks/' + encodeURIComponent(id) + '/comment'
+            : normalizedType === 'milestone' ? '/milestones/' + encodeURIComponent(milestoneNumericId(id)) + '/comment'
+            : '/feed/' + encodeURIComponent(id) + '/comment';
         await api.request(endpoint, { method: 'POST', body: { content: input.value.trim() } });
         input.value = '';
-        const elId = normalizedType === 'pick' ? 'cs-pick-' + feedId(id) : 'cs-fp-' + feedId(id);
-        const el = document.getElementById(elId);
+        const el = document.getElementById(commentsElId(id, normalizedType));
         if (el) el.classList.remove('show');
         toggleComments(id, normalizedType);
     } catch(e) {
