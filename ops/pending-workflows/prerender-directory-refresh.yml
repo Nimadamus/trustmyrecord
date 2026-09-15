@@ -1,0 +1,123 @@
+name: Prerender Directory Refresh
+
+# Keeps the crawler-visible rows on /handicappers/ and /leaderboards/, the homepage
+# live regions, the /u/ profile pages and the /forum/ thread pages fresh.
+# The generators pull the live Render API and bake real data into static HTML
+# (GitHub Pages = legacy, source main/, so a push to main republishes
+# automatically). Commits made by GITHUB_TOKEN do not trigger `on: push`
+# workflows, so this cannot loop; we also only commit when the generated output
+# actually changed and tag the message [skip ci].
+#
+# PRERENDER_ISOLATION_20260915. Every generator and gate used to be its own step,
+# so the first failure anywhere killed the job before the commit step. A logo check
+# on one soccer Game File (a page this job does not build) failed the SEO gate on
+# every run from at least 2026-09-14 23:37 PDT, and the leaderboard and directory
+# bakes, which were correct, never shipped. scripts/prerender_run.py now runs each
+# generator, validator and gate in isolation, restores only what failed to its last
+# good version, and reports pages attempted / succeeded / kept / failed with reasons
+# and durations. The job commits everything good, THEN fails if anything failed.
+
+on:
+  schedule:
+    # Every 30 minutes. The generators are stdlib-only and hit a free-tier Render
+    # API; if rate/limits ever bite, change to '0 * * * *' (hourly).
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    # Fired by the backend grader (services/prerenderNotifier.js in
+    # trustmyrecord-backend) right after a grading run that changed records,
+    # so the homepage leaderboard preview never waits for the next cron tick.
+    types: [tmr-grading-completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prerender-directory-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # Same pattern as every other Playwright workflow in this repo: install from
+      # the repo's own lockfile so the module and the downloaded browser are the
+      # same version. These only feed the homepage snapshot stage, so a failed
+      # install fails that one stage (reported below), never the whole refresh.
+      - run: npm install
+        continue-on-error: true
+      - run: npx playwright install --with-deps chromium
+        continue-on-error: true
+
+      - name: Rebuild every prerendered page (isolated per stage, page, validator and gate)
+        id: run
+        # Stages, in order: directory (/handicappers/, /leaderboards/), homepage
+        # snapshot (index.html live regions), homepage highlights check, /u/
+        # profile pages + sitemap + edge fallback template, /forum/ thread pages
+        # + sitemap, static asset ref re-pin. Baked ranks are verified against the
+        # live canonical ranking API (scripts/verify_cached_ranks.py); a page that
+        # does not match is restored to its last good version. Gates: SEO
+        # indexability, /u/ edge fallback, Game File logos. A gate failure caused
+        # by this run reverts the stage that caused it; a pre-existing one is a
+        # warning and does not block the pages that rebuilt correctly.
+        run: python scripts/prerender_run.py
+
+      - name: Commit only if generated output changed
+        run: |
+          # Stage every crawlable SEO surface, incl. NEW profile dirs for users
+          # that just crossed the graded-pick threshold (untracked files need
+          # `git add` before a --cached diff can see them) and NEW/renamed forum
+          # thread dirs.
+          # `forum` (not just forum/thread) so a NEW board directory from
+          # build_forum_threads.py's category pass is committed too — an untracked
+          # new dir was previously invisible to `git add -u` and never shipped.
+          # static/prerender/u-fallback.html is the compact-profile template the
+          # Cloudflare worker serves for a member whose /u/ page has not been
+          # baked yet (EDGE_FALLBACK_20260810). It is regenerated from the same
+          # renderer on every run, so it must ship in the same commit or the
+          # edge would serve a page built from a stale template.
+          git add -A handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml static/prerender
+          git add -u
+          if git diff --cached --quiet; then
+            echo "No data change in generated output — skipping commit."
+            exit 0
+          fi
+          git config user.name "tmr-prerender-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(prerender): refresh crawlable directory + homepage + profile pages + forum threads + sitemap [skip ci]"
+          # main moves while a run is in flight (asset re-pin bots, other pushes).
+          # Rebase onto it and retry instead of throwing away a whole good bake.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed refreshed prerender output."
+              exit 0
+            fi
+            git pull --rebase origin main || { git rebase --abort; echo "::error::rebase onto main conflicted; this run's bake was not published"; exit 1; }
+          done
+          echo "::error::push to main failed three times; this run's bake was not published"
+          exit 1
+
+      - name: Fail the run when any page or stage failed (after publishing the good ones)
+        if: steps.run.outputs.errors != '' && steps.run.outputs.errors != '0'
+        run: |
+          echo "::error::Prerender: ${{ steps.run.outputs.pages_failed }} page(s) and ${{ steps.run.outputs.stages_failed }} stage(s) failed out of ${{ steps.run.outputs.pages_attempted }} page(s) attempted. Everything else was published. See the run summary for reasons."
+          exit 1
+
+      - name: Log refresh failure (last good bake stays live)
+        if: failure()
+        run: |
+          echo "::error::Prerender refresh reported failures (trigger: ${{ github.event_name }}). Pages that rebuilt correctly were committed; pages that failed kept their last good version. See the run summary table for each failure and its reason."
