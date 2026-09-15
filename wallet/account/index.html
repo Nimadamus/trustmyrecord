@@ -183,8 +183,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
         '<dt>Network</dt><dd>Base</dd>' +
         '<dt>Linked</dt><dd>' + new Date(w.linkedAt).toLocaleDateString() + '</dd></dl>' +
         '<div class="row" style="margin-top:13px"><button class="btn ghost" id="btnRelink">Change wallet</button>' +
-        '<button class="btn" id="btnWithdraw" disabled>Withdraw TMR</button>' +
-        (soon ? '<span class="tag soon">Withdrawal activating</span>' : '') + '</div>';
+        '<button class="btn" id="btnWithdraw"' + (soon ? ' disabled' : '') + '>Withdraw TMR</button>' +
+        (soon ? '<span class="tag soon">Withdrawal activating</span>' : '<button class="btn ghost" id="btnWatch">Show TMR in my wallet app</button>') + '</div>' +
+        '<div id="wdForm" style="display:none;margin-top:14px"></div>';
     } else {
       $('walletBox').innerHTML =
         '<p style="margin:0 0 12px;font-size:13.5px;color:var(--acct-muted)">No wallet linked yet. Linking a wallet you control is the first step to moving TMR out of TrustMyRecord.</p>' +
@@ -193,9 +194,103 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     }
     var link = $('btnLink') || $('btnRelink');
     if (link) link.onclick = linkWallet;
+    if ($('btnWithdraw') && !soon) $('btnWithdraw').onclick = openWithdraw;
+    if ($('btnWatch')) $('btnWatch').onclick = watchToken;
     $('walletNote').textContent = soon
       ? 'Moving TMR to your own wallet is not possible. Your TMR is held for you here in the meantime, and you can spend it anywhere on TrustMyRecord today.'
-      : 'You can move TMR from TrustMyRecord to the wallet above at any time.';
+      : 'You can move TMR from TrustMyRecord to the wallet above. TrustMyRecord pays the network fee.';
+    if (!soon) loadWithdrawals().catch(function () { });
+  }
+
+  /* TMR_WITHDRAWALS_20260914: site TMR to the member's own wallet on Base. */
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  async function openWithdraw() {
+    var box = $('wdForm');
+    box.style.display = 'block';
+    box.innerHTML = '<div class="skel">Checking your limits…</div>';
+    try {
+      var st = await window.api.request('/tmr-coin/withdrawals/status');
+      if (!st.enabled) { box.innerHTML = '<div class="warn">Withdrawals are not open right now.</div>'; return; }
+      if (!st.eligible || st.frozen) { box.innerHTML = '<div class="warn">This account cannot withdraw TMR. Contact support.</div>'; return; }
+      var max = Math.min(st.available, st.remainingTodayTmr);
+      if (max < st.minTmr) {
+        box.innerHTML = '<div class="warn">You need at least ' + fmt(st.minTmr) + ' TMR available to withdraw. Available now: ' + fmt(st.available) +
+          ' TMR. Left in your 24 hour limit: ' + fmt(st.remainingTodayTmr) + ' TMR.</div>';
+        return;
+      }
+      var wdRequestId = uuid();
+      box.innerHTML =
+        '<div class="row"><label for="wdAmount" style="font-size:13px;font-weight:700">Amount</label>' +
+        '<input id="wdAmount" type="number" min="' + st.minTmr + '" max="' + max + '" step="1" value="' + st.minTmr + '" style="width:140px;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;font:inherit">' +
+        '<button class="btn ghost" id="wdMax" type="button">Max</button>' +
+        '<button class="btn" id="wdSend" type="button">Send to my wallet</button></div>' +
+        '<div class="note">Sends to ' + st.linkedWallet + ' on Base. Minimum ' + fmt(st.minTmr) + ' TMR, up to ' + fmt(st.dailyMaxTmr) +
+        ' TMR every 24 hours. TMR you withdraw leaves your TrustMyRecord balance. Transfers on the blockchain cannot be reversed.</div>';
+      $('wdMax').onclick = function () { $('wdAmount').value = max; };
+      $('wdSend').onclick = async function () {
+        var amt = Math.floor(Number($('wdAmount').value));
+        if (!amt || amt < st.minTmr || amt > max) { say('Enter an amount between ' + fmt(st.minTmr) + ' and ' + fmt(max) + ' TMR.', true); return; }
+        $('wdSend').disabled = true;
+        say('Sending ' + fmt(amt) + ' TMR…');
+        try {
+          await window.api.request('/tmr-coin/withdrawals', { method: 'POST', body: { amount: amt, requestId: wdRequestId } });
+          box.style.display = 'none';
+          say(fmt(amt) + ' TMR is on its way to your wallet. It usually arrives within a minute.');
+          await loadAccount();
+          await loadTx(false);
+        } catch (e) {
+          $('wdSend').disabled = false;
+          say((e && e.data && e.data.error) || (e && e.message) || 'Withdrawal failed.', true);
+        }
+      };
+    } catch (e) {
+      box.innerHTML = '<div class="warn">' + ((e && e.data && e.data.error) || 'Could not load withdrawal limits.') + '</div>';
+    }
+  }
+
+  var wdPoll = null;
+  async function loadWithdrawals() {
+    var d = await window.api.request('/tmr-coin/withdrawals?limit=10');
+    var rows = (d && d.withdrawals) || [];
+    var host = $('wdList');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'wdList';
+      host.style.marginTop = '16px';
+      $('walletBox').parentNode.appendChild(host);
+    }
+    if (!rows.length) { host.innerHTML = ''; return; }
+    var LABEL = { reserved: 'Sending', broadcast: 'Confirming', confirmed: 'Arrived', refunded: 'Returned to your balance', failed: 'Under review', requested: 'Sending', reorged: 'Under review' };
+    var explorer = (state.account && state.account.token && state.account.token.explorerUrl || 'https://basescan.org/token/').replace(/\/token\/.*$/, '');
+    host.innerHTML = '<div class="scroll"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Status</th><th>Transaction</th></tr></thead><tbody>' +
+      rows.map(function (w) {
+        var tx = w.tx_hash ? '<a href="' + explorer + '/tx/' + w.tx_hash + '" target="_blank" rel="noopener">' + w.tx_hash.slice(0, 10) + '…</a>' : '';
+        return '<tr><td>' + new Date(w.requested_at).toLocaleString() + '</td><td class="num">' + fmt(w.amount) + '</td><td>' +
+          (LABEL[w.status] || w.status) + '</td><td>' + tx + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    var open = rows.some(function (w) { return w.status === 'reserved' || w.status === 'broadcast' || w.status === 'requested'; });
+    if (open && !wdPoll) {
+      wdPoll = setInterval(function () {
+        loadWithdrawals().then(function () { }).catch(function () { });
+      }, 10000);
+    } else if (!open && wdPoll) {
+      clearInterval(wdPoll); wdPoll = null;
+      loadAccount().catch(function () { });
+    }
+  }
+
+  async function watchToken() {
+    if (!window.ethereum || !state.account || !state.account.token) { say('No wallet app detected in this browser.', true); return; }
+    try {
+      await window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: {
+        address: state.account.token.contract, symbol: 'TMR', decimals: 18 } } });
+    } catch (e) { say(e && e.message ? e.message : 'Your wallet app did not add TMR.', true); }
   }
 
   function renderToken(d) {
@@ -222,7 +317,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     marketplace_sale: 'Marketplace sale', marketplace_purchase: 'Marketplace purchase',
     contest_prize: 'Contest prize', challenge_stake: 'Challenge stake',
     challenge_win: 'Challenge win', challenge_refund: 'Challenge refund',
-    redemption: 'Redemption', reversed: 'Reversed', withdrawal: 'Withdrawal'
+    redemption: 'Redemption', reversed: 'Reversed', withdrawal: 'Withdrawal',
+    withdrawal_reserved: 'Withdrawn to wallet', withdrawal_refund: 'Withdrawal returned'
   };
 
   async function loadTx(more) {
@@ -257,10 +353,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       say('Waiting for your wallet…');
       var accts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       var address = accts[0];
-      var n = await window.api.request('/tmr-coin/link-wallet/nonce', { method: 'POST', body: JSON.stringify({ address: address }) });
+      var n = await window.api.request('/tmr-coin/link-wallet/nonce', { method: 'POST', body: {} });
       var message = n.message || n.nonce;
       var signature = await window.ethereum.request({ method: 'personal_sign', params: [message, address] });
-      await window.api.request('/tmr-coin/link-wallet', { method: 'POST', body: JSON.stringify({ address: address, message: message, signature: signature }) });
+      await window.api.request('/tmr-coin/link-wallet', { method: 'POST', body: { walletAddress: address, signature: signature } });
       say('Wallet linked.');
       await loadAccount();
     } catch (e) {
