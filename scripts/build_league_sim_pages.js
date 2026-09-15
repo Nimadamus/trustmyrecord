@@ -415,6 +415,55 @@ function patchTeams(sport, inputs, result) {
   return n;
 }
 
+/* Each existing matchup page (/nba-simulator/76ers-vs-celtics/) gets the two
+   clubs' season projections and their real meetings on the 2026-27 schedule,
+   between <!--MK:leagueSimMatchup--> markers. Placed before the "More matchups"
+   list. A slug that does not resolve to two clubs is skipped. */
+function patchMatchups(sport, inputs, result) {
+  const L = LEAGUE[sport];
+  const byShort = new Map(result.teams.map((t) => [slugOf(t.short || t.name), t]));
+  const dir = path.join(ROOT, sport + '-simulator');
+  const re = /<!--MK:leagueSimMatchup-->[\s\S]*?<!--\/MK:leagueSimMatchup-->\s*/;
+  let n = 0;
+  for (const d of fs.readdirSync(dir)) {
+    const m = d.match(/^(.+)-vs-(.+)$/);
+    const file = path.join(dir, d, 'index.html');
+    if (!m || !fs.existsSync(file)) continue;
+    const a = byShort.get(m[1]), h = byShort.get(m[2]);
+    if (!a || !h) continue;
+    const meets = inputs.schedule.filter((g) => (g.home === a.abbr && g.away === h.abbr) || (g.home === h.abbr && g.away === a.abbr));
+    const proj = (t) => sport === 'nba'
+      ? `the ${esc(t.name)} average ${UI_one(t.wins_mean)} wins, make the playoffs ${pctText(t.playoffs)} of the time and win the title ${pctText(t.champion)}`
+      : `the ${esc(t.name)} average ${UI_one(t.points_mean)} points, make the playoffs ${pctText(t.playoffs)} of the time and win the Stanley Cup ${pctText(t.champion)}`;
+    const list = meets.map((g) => {
+      const home = g.home === a.abbr ? a : h, away = home === a ? h : a;
+      const res = g.final && g.home_score != null ? ` <small>final ${g.away_score} to ${g.home_score}</small>` : '';
+      return `<li>${esc(ptDate(g.date))}: ${esc(away.short)} at ${esc(home.short)}${res}</li>`;
+    }).join('');
+    let html = fs.readFileSync(file, 'utf8');
+    const block = `<!--MK:leagueSimMatchup-->
+  <h2>${esc(a.short)} and ${esc(h.short)} in the ${esc(inputs.season_label)} season</h2>
+  <p>Across ${count(result.runs)} simulated ${esc(inputs.season_label)} seasons ${proj(a)}. Over the same seasons ${proj(h)}.</p>
+  ${meets.length ? `<p>They meet ${meets.length === 1 ? 'once' : meets.length + ' times'} on the ${esc(inputs.season_label)} regular season schedule:</p>
+  <ul>${list}</ul>` : ''}
+  <div class="linkgrid">
+    <a href="/${sport}-season-simulator/">${L.label} Season Simulator<small>Every team's projected ${L.unit}</small></a>
+    <a href="/${sport}-playoff-simulator/">${L.label} Playoff Simulator<small>Every team's odds, round by round</small></a>
+  </div>
+  <!--/MK:leagueSimMatchup-->
+  `;
+    if (re.test(html)) html = html.replace(re, block);
+    else {
+      const hit = new RegExp('<hr class="divider" />' + String.fromCharCode(92) + 's*<h2>More ' + L.label + ' matchups').exec(html);
+      if (!hit) continue;
+      html = html.slice(0, hit.index) + block + html.slice(hit.index);
+    }
+    fs.writeFileSync(file, html);
+    n++;
+  }
+  return n;
+}
+
 (async () => {
   const shell = shellAssets();
   for (const sport of ['nba', 'nhl']) {
@@ -433,6 +482,7 @@ function patchTeams(sport, inputs, result) {
     }
     patchHub(sport, inputs);
     console.log(`${sport}: ${patchTeams(sport, inputs, result)} team pages carry the projection`);
+    console.log(`${sport}: ${patchMatchups(sport, inputs, result)} matchup pages carry both projections`);
     console.log(`patched ${sport}-simulator/index.html`);
   }
 })().catch((e) => { console.error('FAILED:', e.message); process.exit(1); });
