@@ -151,6 +151,15 @@ const CSS = `
   .lsim-copy{max-width:80ch}
   .lsim-copy h2{margin:26px 0 8px}
   .lsim-copy p,.lsim-copy li{line-height:1.65}
+  .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px;margin:6px 0 12px}
+  .pick{display:flex;align-items:center;gap:6px;border:1px solid var(--line,#23324a);border-radius:10px;padding:6px}
+  .pick .at{color:var(--mut,#9fb0c6);font-size:.78rem}
+  .pk{flex:1;display:flex;align-items:center;gap:6px;font:inherit;font-size:.86rem;background:transparent;color:inherit;border:1px solid transparent;border-radius:8px;padding:6px 8px;cursor:pointer;min-width:0}
+  .pk img{width:22px;height:22px}
+  .pk small{margin-left:auto;color:var(--mut,#9fb0c6)}
+  .pk:hover{border-color:var(--line,#23324a)}
+  .pk.on{border-color:#38bdf8;background:rgba(56,189,248,.16);font-weight:700}
+  .pk:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
   .slate{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px;margin:8px 0}
   .slate a,.slate div{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line,#23324a);border-radius:10px;text-decoration:none;color:inherit;font-size:.88rem}
 `;
@@ -240,10 +249,7 @@ function page(sport, mode, inputs, result, shell) {
   <section class="panel"><h2>One simulated ${season} postseason</h2>
   <div id="lsimBracket">${UI.bracket(result)}</div></section>`;
 
-  const slate = F.openerGames.slice(0, 16).map((g) => {
-    const a = inputs.teams.find((t) => t.espn_abbr === g.away), h = inputs.teams.find((t) => t.espn_abbr === g.home);
-    return a && h ? `<div>${esc(a.name)} at ${esc(h.name)}</div>` : '';
-  }).join('');
+  const picks = pickPanel(sport, inputs);
 
   return `<!doctype html>
 <html lang="en">
@@ -291,6 +297,8 @@ ${shell.head}
     <p id="lsimStamp">${UI.stamp(result, inputs)}</p>
   </section>
 
+  ${picks}
+
   ${body}
 
   <section class="lsim-copy">
@@ -302,7 +310,7 @@ ${shell.head}
     ${tiebreak}
     <h2>What the projection does not know</h2>
     ${limits}
-    ${slate ? `<h2>Opening night, ${esc(ptDate(F.opener.date))}</h2>\n    <div class="slate">${slate}</div>\n    <p>Simulate any of these games on its own, with a projected score and a full box score, in the <a href="${L.hub}">${sportName} Simulator</a>.</p>` : ''}
+
     <h2 id="faq">${esc(h1)} FAQ</h2>
     ${faq.html}
   </section>
@@ -338,6 +346,44 @@ ${shell.tail}
 
 function UI_one(v) { return (Math.round(v * 10) / 10).toFixed(1); }
 
+/* PICK THE NEXT GAMES, the NFL Playoff Simulator's interaction for NBA and NHL.
+   The next three game days that are not final, each game with the model's win
+   probability for both sides. A visitor taps a winner; Run then plays every
+   season with that result fixed (engine opts.forced) and the picks are kept on
+   the device. Server rendered, so the matchups and probabilities are crawlable. */
+function pickPanel(sport, inputs) {
+  const L = LEAGUE[sport];
+  const now = Date.now();
+  const open = inputs.schedule.filter((g) => !g.final && Date.parse(g.date) >= now - 6 * 3600e3);
+  const days = [];
+  for (const g of open) {
+    const day = ptDate(g.date);
+    if (days.indexOf(day) < 0) { if (days.length === 3) break; days.push(day); }
+  }
+  const team = (a) => inputs.teams.find((t) => t.espn_abbr === a);
+  const img = (t) => (t && t.logo ? `<img src="${esc(t.logo)}" alt="" width="22" height="22" loading="lazy">` : '');
+  const rows = days.map((day) => {
+    const games = open.filter((g) => ptDate(g.date) === day).slice(0, 16).map((g) => {
+      const h = team(g.home), a = team(g.away);
+      const cell = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+      if (!h || !a || !cell) return '';
+      const ph = Math.round(cell.p * 100);
+      return `<div class="pick" data-game="${esc(g.id)}">
+        <button type="button" class="pk" data-side="away" aria-pressed="false">${img(a)}<span>${esc(a.short)}</span><small>${100 - ph}%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false">${img(h)}<span>${esc(h.short)}</span><small>${ph}%</small></button>
+      </div>`;
+    }).join('');
+    return games ? `<h3>${esc(day)}</h3><div class="picks">${games}</div>` : '';
+  }).join('');
+  if (!rows) return '';
+  return `<section class="panel" id="lsimPicks">
+    <h2>Pick the next ${L.label} games</h2>
+    <p class="small">Tap the team you think wins. The percentage is the model's win probability for that side. Your picks stay on this device, and the next Run plays every season with those results locked in. <span id="lsimPickCount"></span> <button type="button" class="btn" id="lsimClearPicks" hidden>Clear picks</button></p>
+    ${rows}
+  </section>`;
+}
+
 /* The hub block: links to the cluster plus the next real slate. */
 function hubBlock(sport, inputs) {
   const L = LEAGUE[sport];
@@ -347,7 +393,8 @@ function hubBlock(sport, inputs) {
   const day = first ? ptDate(first.date) : null;
   const games = first ? upcoming.filter((g) => ptDate(g.date) === day).slice(0, 15) : [];
   const name = (a) => (inputs.teams.find((t) => t.espn_abbr === a) || {}).name || a;
-  const slate = games.map((g) => `<div>${esc(name(g.away))} at ${esc(name(g.home))}</div>`).join('');
+  const hp = (g) => { const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away]; return c ? ` <small>${esc(name(g.home))} ${Math.round(c.p * 100)}%</small>` : ''; };
+  const slate = games.map((g) => `<div>${esc(name(g.away))} at ${esc(name(g.home))}${hp(g)}</div>`).join('');
   return `<!--MK:leagueSimCluster-->
   <section class="panel" id="seasonPlayoffSims">
     <h2>${L.label} season and playoff simulators</h2>

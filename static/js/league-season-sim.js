@@ -163,6 +163,38 @@
       var runsSel = d.getElementById('lsimRuns');
       var inputs = null;
       if (!btn) return;
+      /* Picks: game id -> 'home' | 'away', kept on this device per sport. */
+      var KEY = 'tmr-lsim-picks-' + sport;
+      var picks = {};
+      try { picks = JSON.parse(root.localStorage.getItem(KEY) || '{}') || {}; } catch (e) { picks = {}; }
+      var countEl = d.getElementById('lsimPickCount');
+      var clearBtn = d.getElementById('lsimClearPicks');
+      function paint() {
+        var rows = d.querySelectorAll('.pick[data-game]'), shown = 0;
+        for (var i = 0; i < rows.length; i++) {
+          var id = rows[i].getAttribute('data-game');
+          var btns = rows[i].querySelectorAll('.pk');
+          for (var j = 0; j < btns.length; j++) {
+            var on = picks[id] === btns[j].getAttribute('data-side');
+            btns[j].classList.toggle('on', on);
+            btns[j].setAttribute('aria-pressed', on ? 'true' : 'false');
+          }
+          if (picks[id]) shown++;
+        }
+        var total = Object.keys(picks).length;
+        if (countEl) countEl.textContent = total ? total + (total === 1 ? ' game picked.' : ' games picked.') : '';
+        if (clearBtn) clearBtn.hidden = !total;
+      }
+      function store() { try { root.localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) { /* private mode */ } }
+      d.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('.pick .pk') : null;
+        if (!b) return;
+        var id = b.parentNode.getAttribute('data-game'), side = b.getAttribute('data-side');
+        if (picks[id] === side) delete picks[id]; else picks[id] = side;
+        store(); paint();
+      });
+      if (clearBtn) clearBtn.addEventListener('click', function () { picks = {}; store(); paint(); });
+      paint();
       btn.addEventListener('click', function () {
         if (btn.disabled) return;
         btn.disabled = true;
@@ -180,14 +212,19 @@
           status.textContent = 'Playing ' + n.toLocaleString('en-US') + ' seasons';
           /* Yield to the browser so the status paints before the work starts. */
           setTimeout(function () {
-            var result = E.project(inp, n, seed);
+            /* Only picks for games still open count; a pick on a game that has
+               since gone final is dropped rather than overriding the score. */
+            var forced = {};
+            inp.schedule.forEach(function (g) { if (!g.final && picks[g.id]) forced[g.id] = picks[g.id]; });
+            var result = E.project(inp, n, seed, { forced: forced });
             if (mode === 'season') d.getElementById('lsimTables').innerHTML = seasonTables(result);
             else {
               d.getElementById('lsimOdds').innerHTML = oddsTable(result);
               d.getElementById('lsimBracket').innerHTML = bracket(result);
             }
             d.getElementById('lsimStamp').innerHTML = stamp(result, inp);
-            status.textContent = 'Done. Press again for a fresh set of seasons.';
+            var k = Object.keys(forced).length;
+            status.textContent = 'Done' + (k ? ', with your ' + k + (k === 1 ? ' pick' : ' picks') + ' locked in' : '') + '. Press again for a fresh set of seasons.';
             btn.disabled = false;
           }, 30);
         }).catch(function () {
