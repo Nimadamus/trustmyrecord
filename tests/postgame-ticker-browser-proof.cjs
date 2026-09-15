@@ -30,6 +30,27 @@ const http = require('http');
 const { chromium } = require('@playwright/test');
 
 const ROOT = path.resolve(__dirname, '..');
+/* THE TIMING RULE, READ FROM THE SHIPPED SCRIPT (2026-09-15). Nima, 2026-09-14:
+   a normal ticker highlight is up "no more than 5 seconds" before the next
+   one (commit 0ecaeff8). Breaking moments keep their card for ten minutes by a
+   separate rule and are not a dwell. Reading the constants here means a
+   deliberate retune moves the test with it, while the 5 second ceiling itself
+   stays pinned below. */
+const TIMING = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const num = (name) => {
+    const m = new RegExp(`var ${name} = (\\d+);`).exec(src);
+    if (!m) throw new Error(`${name} not found in tmr-home-live.js`);
+    return Number(m[1]);
+  };
+  const min = num('POSTGAME_DWELL_MIN_MS');
+  const step = num('POSTGAME_DWELL_STEP_MS');
+  const steps = num('POSTGAME_DWELL_STEPS');
+  return { pregame: num('INSIGHT_ROTATE_MS'), dwellMin: min, dwellMax: min + step * (steps - 1),
+    tick: num('INSIGHT_TICK_MS'), page: num('TICKER_ROTATE_MS') };
+})();
+const DWELL_CEILING_MS = 5000;
+
 const PORT = Number(process.env.TMR_POSTGAME_PROOF_PORT || 4194);
 const FIXTURE = path.join(__dirname, 'fixtures', 'nav-mlb-slate-postgame.json');
 
@@ -139,14 +160,10 @@ function readCards(page) {
     check(c.onCategory === 'decisions', `${c.teams}: first line should be the pitching decision, got ${c.onCategory}`);
     check(/^WP: /.test(c.onText) || /^LP: /.test(c.onText),
       `${c.teams}: decisions line should read "WP: ... / LP: ... [/ SV: ...]", got "${c.onText}"`);
-    /* The band Nima asked for is "roughly 10 to 20 seconds"; the values were
-       raised to 14-22s on 2026-08-24 when the lines got denser, and this
-       assertion was not moved with them. Note that on a PAGED row the effective
-       dwell is capped again at runtime so a card gets through more than one
-       line before its page slides away - see stripDwell() - which is a property
-       of the clock, not of this attribute. */
-    check(c.dwell >= 14000 && c.dwell <= 22000,
-      `${c.teams}: dwell ${c.dwell}ms is outside the 14-22s band the cards are built on`);
+    /* The 5 second rule (0ecaeff8): a final's own dwell sits inside the band
+       the script defines, and never above 5 seconds. */
+    check(c.dwell >= TIMING.dwellMin && c.dwell <= TIMING.dwellMax && c.dwell <= DWELL_CEILING_MS,
+      `${c.teams}: dwell ${c.dwell}ms is outside the ${TIMING.dwellMin / 1000}-${TIMING.dwellMax / 1000}s band (ceiling 5s)`);
     check(!c.clipped, `${c.teams}: the visible line's text is clipped inside its box`);
     check(new Set(c.allCategories).size === c.allCategories.length,
       `${c.teams}: a category repeats on one card: ${c.allCategories.join(',')}`);

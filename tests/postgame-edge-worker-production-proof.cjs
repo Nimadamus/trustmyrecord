@@ -26,6 +26,27 @@ const http = require('http');
 const { chromium } = require('@playwright/test');
 
 const ROOT = path.resolve(__dirname, '..');
+/* THE TIMING RULE, READ FROM THE SHIPPED SCRIPT (2026-09-15). Nima, 2026-09-14:
+   a normal ticker highlight is up "no more than 5 seconds" before the next
+   one (commit 0ecaeff8). Breaking moments keep their card for ten minutes by a
+   separate rule and are not a dwell. Reading the constants here means a
+   deliberate retune moves the test with it, while the 5 second ceiling itself
+   stays pinned below. */
+const TIMING = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const num = (name) => {
+    const m = new RegExp(`var ${name} = (\\d+);`).exec(src);
+    if (!m) throw new Error(`${name} not found in tmr-home-live.js`);
+    return Number(m[1]);
+  };
+  const min = num('POSTGAME_DWELL_MIN_MS');
+  const step = num('POSTGAME_DWELL_STEP_MS');
+  const steps = num('POSTGAME_DWELL_STEPS');
+  return { pregame: num('INSIGHT_ROTATE_MS'), dwellMin: min, dwellMax: min + step * (steps - 1),
+    tick: num('INSIGHT_TICK_MS'), page: num('TICKER_ROTATE_MS') };
+})();
+const DWELL_CEILING_MS = 5000;
+
 const FIXTURE = path.join(__dirname, 'fixtures', 'nav-mlb-slate-postgame.json');
 const PORT = Number(process.env.TMR_EDGE_PROOF_PORT || 4321);
 const LIVE = 'https://trustmyrecord.com/';
@@ -215,13 +236,11 @@ function serve(html) {
       check(c.n >= 5 && c.n <= 10, `${label} ${c.teams}: ${c.n} items, expected 5-10`);
       check(c.onCat === 'decisions', `${label} ${c.teams}: first line is ${c.onCat}, expected decisions`);
       check(/^WP: .+/.test(c.onText), `${label} ${c.teams}: decisions line reads "${c.onText}"`);
-      /* 14-22s since 2026-08-24, when the lines got denser. On a PAGED row the
-         effective dwell is capped again at runtime so a card turns over more
-         than once before its page slides away - a property of the clock in
-         tmr-home-live.js, not of this attribute. */
-      check(c.dwell >= 14000 && c.dwell <= 22000,
-        `${label} ${c.teams}: dwell ${c.dwell}ms outside the 14-22s band`);
-      check(c.dwell !== 5000, `${label} ${c.teams}: stale 5s pregame dwell on a FINAL card`);
+      /* The 5 second rule (0ecaeff8): the final's dwell is the script's band,
+         never above 5 seconds. The old "not the 5s pregame beat" check went
+         with it: pregame and final now share the same ceiling. */
+      check(c.dwell >= TIMING.dwellMin && c.dwell <= TIMING.dwellMax && c.dwell <= DWELL_CEILING_MS,
+        `${label} ${c.teams}: dwell ${c.dwell}ms outside the ${TIMING.dwellMin / 1000}-${TIMING.dwellMax / 1000}s band (ceiling 5s)`);
       check(!c.clipped, `${label} ${c.teams}: visible line is clipped`);
       check(new Set(c.texts).size === c.texts.length, `${label} ${c.teams}: duplicate line text`);
     });

@@ -29,11 +29,35 @@ const { chromium } = require('@playwright/test');
 
 const ROOT = path.resolve(__dirname, '..');
 const PORT = Number(process.env.TMR_DWELL_PROOF_PORT || 4196);
+/* THE TIMING RULE, READ FROM THE SHIPPED SCRIPT (2026-09-15). Nima, 2026-09-14:
+   a normal ticker highlight is up "no more than 5 seconds" before the next
+   one (commit 0ecaeff8). Breaking moments keep their card for ten minutes by a
+   separate rule and are not a dwell. Reading the constants here means a
+   deliberate retune moves the test with it, while the 5 second ceiling itself
+   stays pinned below. */
+const TIMING = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const num = (name) => {
+    const m = new RegExp(`var ${name} = (\\d+);`).exec(src);
+    if (!m) throw new Error(`${name} not found in tmr-home-live.js`);
+    return Number(m[1]);
+  };
+  const min = num('POSTGAME_DWELL_MIN_MS');
+  const step = num('POSTGAME_DWELL_STEP_MS');
+  const steps = num('POSTGAME_DWELL_STEPS');
+  return { pregame: num('INSIGHT_ROTATE_MS'), dwellMin: min, dwellMax: min + step * (steps - 1),
+    tick: num('INSIGHT_TICK_MS'), page: num('TICKER_ROTATE_MS') };
+})();
+const DWELL_CEILING_MS = 5000;
+
 const FIXTURE = path.join(__dirname, 'fixtures', 'nav-mlb-slate-postgame.json');
 
-/* A few seconds, in his words. The band the cards are built on is 10-20s; this
-   is the floor below which a line has flashed rather than been shown. */
-const MIN_READ_MS = 6000;
+/* A few seconds, in his words, and since 2026-09-14 "no more than 5 seconds".
+   The floor is the shortest dwell the script hands a card, less one heartbeat
+   (a line can appear part way through a tick): below that a line has flashed.
+   The ceiling is the longest dwell plus one heartbeat and one sample. */
+const MIN_READ_MS = TIMING.dwellMin - TIMING.tick;
+const MAX_READ_MS = Math.max(TIMING.dwellMax, TIMING.pregame) + TIMING.tick + 500;
 const SAMPLE_MS = 500;
 const WATCH_MS = 6 * 60 * 1000;
 
@@ -155,6 +179,7 @@ const read = (page) => page.evaluate(() => {
      reader, and the shortest hold any of them got away with. */
   const showing = new Map();
   const shortest = new Map();
+  const longest = new Map();
   const trail = new Map();
   let t = 0;
 
@@ -174,6 +199,8 @@ const read = (page) => page.evaluate(() => {
           const ms = t - held.since;
           const worst = shortest.get(r.key);
           if (!worst || ms < worst.ms) shortest.set(r.key, { ms, at: t, text: held.text, next: r.text });
+          const most = longest.get(r.key);
+          if (!most || ms > most.ms) longest.set(r.key, { ms, at: t, text: held.text, next: r.text });
         }
         showing.set(r.key, { text: r.text, since: t });
       }
@@ -195,6 +222,13 @@ const read = (page) => page.evaluate(() => {
     check(m.ms >= MIN_READ_MS,
       `${key}: a line held for only ${(m.ms / 1000).toFixed(1)}s before being replaced `
       + `("${m.text}" -> "${m.next}") - under the ${MIN_READ_MS / 1000}s a reader needs`);
+  });
+  /* AND NOT LONGER THAN THE RULE. Only holds that ended with the line being
+     replaced on screen count, so a card that slid away mid line is not one. */
+  [...longest.entries()].forEach(([key, m]) => {
+    check(m.ms <= MAX_READ_MS,
+      `${key}: a line stayed up ${(m.ms / 1000).toFixed(1)}s ("${m.text}") - over the `
+      + `${MAX_READ_MS / 1000}s the 5 second rule allows`);
   });
 
   if (process.env.DWELL_DEBUG) {

@@ -36,6 +36,13 @@ const FIXTURE = path.join(__dirname, 'fixtures', 'nav-mlb-slate-postgame.json');
 /* READ FROM THE SHIPPED SCRIPT (2026-09-15). This was a literal 24000 left over
    from before the 2026-09-08 retune to 40s, so every page "held for MORE than
    24s" and the relayout check below walked too few seconds to see a hand over. */
+const DWELL_MAX_MS = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const n = (name) => Number((new RegExp(`var ${name} = (\\d+);`).exec(src) || [])[1]);
+  const v = Math.max(n('INSIGHT_ROTATE_MS'), n('POSTGAME_DWELL_MIN_MS') + n('POSTGAME_DWELL_STEP_MS') * (n('POSTGAME_DWELL_STEPS') - 1));
+  if (!v) throw new Error('ticker dwell constants not found');
+  return v;
+})();
 const ROTATE_MS = (() => {
   const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
   const m = /var TICKER_ROTATE_MS = (\d+);/.exec(src);
@@ -248,7 +255,13 @@ function visits(samples) {
        it opened on: the leaving-page turn plus its own dwell is two steps
        through a list of two. The invariant is about a card that HAS more to say
        and says the same thing anyway. */
-    if (lineCount.get(key) >= 3 && list[0] === list[1]) {
+    /* UNDER THE 5 SECOND RULE a page window shows a card up to
+       TICKER_ROTATE_MS / dwell lines. A card with no more lines than that is
+       read in full on every visit, so opening on the same sentence hides
+       nothing - the invariant is for a card that has MORE to say than one
+       visit can show. */
+    const perVisit = Math.floor(ROTATE_MS / DWELL_MAX_MS);
+    if (lineCount.get(key) >= 3 && lineCount.get(key) > perVisit && list[0] === list[1]) {
       repeated.push(`${key} (${lineCount.get(key)} lines): "${list[0]}"`);
     }
   });

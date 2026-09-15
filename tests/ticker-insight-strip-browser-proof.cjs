@@ -35,7 +35,16 @@ const PORT = Number(process.env.TMR_PROOF_PORT || 4181);
 
 /* The rotation is INSIGHT_ROTATE_MS (5000) with a per-card stagger, so a single
    card is guaranteed to have advanced inside ~6s. Sample past two of them. */
-const DWELL_MS = 5200;
+/* One full turn of the slowest line plus the largest per card stagger
+   (4 heartbeats) and a heartbeat of slack, from the shipped constants: under
+   the 5 second rule that is about 10 seconds of real time. */
+const DWELL_MS = (() => {
+  const src = fs.readFileSync(path.join(ROOT, 'static', 'js', 'tmr-home-live.js'), 'utf8');
+  const n = (name) => Number((new RegExp(`var ${name} = (\\d+);`).exec(src) || [])[1]);
+  const max = Math.max(n('INSIGHT_ROTATE_MS'), n('POSTGAME_DWELL_MIN_MS') + n('POSTGAME_DWELL_STEP_MS') * (n('POSTGAME_DWELL_STEPS') - 1));
+  if (!max) throw new Error('ticker dwell constants not found');
+  return max + 5 * n('INSIGHT_TICK_MS');
+})();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -86,8 +95,10 @@ function readStrip(page) {
         const on = lines.filter((l) => l.classList.contains('is-on'));
         const live = on[0] || null;
         const body = live ? live.querySelector('b') : null;
+        const laneBox = (document.querySelector('.ticker .ticker-games') || c).getBoundingClientRect();
         return {
           teams: [...c.querySelectorAll('.gm-top .t, .gb-r .gb-tn')].map((t) => t.textContent.trim()).join(' @ '),
+          onScreen: r.width > 0 && r.left >= laneBox.left - 2 && r.right <= laneBox.right + 2,
           w: round(r.width), h: round(r.height), top: round(r.top),
           hasStrip: !!strip,
           stripH: strip ? round(strip.getBoundingClientRect().height) : 0,
@@ -223,10 +234,17 @@ function readStrip(page) {
   }
   await page.screenshot({ path: path.join(OUT_DIR, 'desktop-1440-frame-4.png'), clip: { x: 0, y: 0, width: 1440, height: 200 } });
 
-  const rotated = frames[0].cards.filter((c, i) =>
-    frames.some((f) => f.cards[i] && f.cards[i].visible !== c.visible)).length;
-  check(rotated === frames[0].cards.length,
-    `only ${rotated} of ${frames[0].cards.length} cards ever changed their line`);
+  /* ONLY THE PAGE ON SCREEN ROTATES (2026-08-25, visibleStrips): a card on a
+     page nobody can see holds its line so the reader does not arrive to find it
+     spent. So the proof is about the cards a reader could watch: every card that
+     was on screen in two consecutive frames, a dwell apart, changed its line. */
+  const watched = frames[0].cards.map((c, i) => i).filter((i) =>
+    frames.some((f, k) => k > 0 && f.cards[i] && frames[k - 1].cards[i] && f.cards[i].onScreen && frames[k - 1].cards[i].onScreen));
+  const rotated = watched.filter((i) => frames.some((f, k) => k > 0 && f.cards[i] && frames[k - 1].cards[i]
+    && f.cards[i].onScreen && frames[k - 1].cards[i].onScreen && f.cards[i].visible !== frames[k - 1].cards[i].visible)).length;
+  check(watched.length > 0, 'no card stayed on screen across two frames - nothing to watch');
+  check(rotated === watched.length,
+    `only ${rotated} of ${watched.length} on screen cards changed their line within a dwell`);
 
   /* Every card, every frame, same box. A single pixel of drift here is the bug
      this design exists to prevent. */
