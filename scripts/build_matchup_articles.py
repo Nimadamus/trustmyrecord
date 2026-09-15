@@ -1419,29 +1419,15 @@ MOTD_EMPTY_TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- NO_FILLER_DOOR_20260915. A sport with no article yet forwards straight to
+     its hub. Never a placeholder page (Nima, 2026-09-15). -->
 <title>{eyebrow} | TrustMyRecord</title>
-<meta name="description" content="{eyebrow}: the next featured matchup publishes in the morning.">
-<link rel="canonical" href="{self_abs}">
-<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<style>
-  html,body{{margin:0;background:#070910;color:#CBD5E1;
-    font:500 15px/1.6 Inter,system-ui,-apple-system,'Segoe UI',sans-serif}}
-  .t{{max-width:34rem;margin:0 auto;padding:22vh 24px 0}}
-  .t p.k{{color:#8A97A8;margin:0 0 14px;font-size:12px;font-weight:800;
-    letter-spacing:.16em;text-transform:uppercase}}
-  .t h1{{margin:0 0 10px;font-size:1.4rem;line-height:1.25;
-    letter-spacing:-.02em;color:#F7F9FC}}
-  .t a{{color:#F7F9FC;font-weight:800;text-decoration:none;
-    border-bottom:2px solid #35E0CB}}
-</style>
+<meta name="description" content="{eyebrow}">
+<link rel="canonical" href="{hub_abs}">
+<meta http-equiv="refresh" content="0; url={hub}">
+<script>location.replace({hub_js});</script>
 </head>
-<body>
-<main class="t">
-  <p class="k">{eyebrow}</p>
-  <h1>The next featured matchup publishes in the morning.</h1>
-  <p>Every game on today&#39;s board is in the <a href="{hub}">{label} handicapping hub</a>.</p>
-</main>
-</body>
+<body></body>
 </html>
 """
 
@@ -1880,7 +1866,9 @@ def main():
             any_sport, any_feature = featured_matchups.resolve_any(featured_reg)
             motd_lead = next((a for a in daily if any_feature
                               and article_href(a) == any_feature.get("href")), None)
-            if motd_lead:
+            # Only a LIVE feature carries an expiry. When nothing is live the
+            # lead is the latest article standing in, and it must stay visible.
+            if motd_lead and featured_matchups.resolve_live(featured_reg, any_sport) is any_feature:
                 lead_expires = featured_matchups.expires_at(featured_reg, any_sport, any_feature)
         motd_rest = [a for a in daily if not motd_lead or a["slug"] != motd_lead["slug"]]
         text = read(motd_path)
@@ -2028,8 +2016,7 @@ def main():
             writes.append((door, MOTD_EMPTY_TEMPLATE.format(
                 eyebrow=esc("%s Matchup of the Day" % SPORT_LABEL.get(sport, sport.upper())),
                 label=esc(SPORT_LABEL.get(sport, sport.upper())),
-                hub=esc(hub),
-                self_abs=esc("%s/matchup-of-the-day/%s/" % (SITE, sport)),
+                hub=esc(hub), hub_abs=esc(SITE + hub), hub_js=json.dumps(hub),
             )))
 
     else:
