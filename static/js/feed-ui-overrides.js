@@ -34,7 +34,7 @@ function getAvatarHtml(item, className) {
     /* NO_LETTER_FLASH_20260907: no picture is the resolver route, not an initial.
        It answers the upload, else the favourite-team club mark, else the neutral
        silhouette - the same face the member wears everywhere else. */
-    return '<div class="' + className + '"><img src="' + esc((((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent((item.username || display) || '') + '/avatar')) + '" alt="' + esc(display) + ' avatar" loading="lazy"></div>';
+    return '<div class="' + className + '"><img src="' + esc((((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent((item.username || display) || '') + '/avatar?s=96')) + '" alt="' + esc(display) + ' avatar" loading="lazy"></div>';
 }
 
 /* LIFETIME record only. Every field read here is attached by the backend from
@@ -493,7 +493,7 @@ async function toggleComments(id, type) {
             html += comments.map(c => {
                 const username = c.username || '';
                 return '<div class="cmt-item">' +
-                    '<div class="cmt-avatar"><img src="' + esc(c.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar')) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>' +
+                    '<div class="cmt-avatar"><img src="' + esc(c.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar?s=96')) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>' +
                     '<div class="cmt-body">' +
                         '<div class="cmt-author"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + esc(c.display_name || c.username || 'User') + '</a></div>' +
                         '<div class="cmt-text">' + esc(c.content) + '</div>' +
@@ -559,7 +559,7 @@ async function initAuth() {
         if (composerCard) composerCard.style.display = 'block';
         if (compAvatar) {
             const avatar = user.avatar_url || user.avatar || user.profile_image_url;
-            compAvatar.innerHTML = '<img src="' + esc(avatar || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar')) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+            compAvatar.innerHTML = '<img src="' + esc(avatar || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar?s=96')) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
         }
         loadSidebarStats(user);
         // Follow state only feeds the Suggested rail, which loads after the feed,
@@ -772,7 +772,7 @@ async function loadFeedItems() {
             // another behind /feed. They are independent reads, so start them all
             // now and merge them in the original order once they land.
             const discoverPromise = (currentFilter === 'all' || currentFilter === 'picks')
-                ? api.request('/social/discover?limit=12').catch(() => null) : null;
+                ? fetchDiscoverTop(12, true).catch(() => null) : null;
             const pollsPromise = (currentFilter === 'all' || currentFilter === 'polls')
                 ? api.request('/polls/active?limit=5').then(loadHydratedActivePolls).catch(() => null) : null;
             const notifViewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
@@ -936,11 +936,27 @@ function compactPickLabel(p) {
     return status === 'pending' || status === 'locked' ? 'Locked picks submitted' : 'Picks graded';
 }
 
+// DISCOVER_SHARED_20260914: the feed, Trending and Arena Watch each asked for
+// /social/discover (limit 12, 5 and 3) on every load. The endpoint orders by the
+// same keys, so the top 5 and top 3 are the first rows of the limit=12 answer;
+// fetch it once and slice. The feed always fetches fresh; the rails reuse that
+// answer for 60s at most.
+let _discoverTopPromise = null;
+let _discoverTopAt = 0;
+function fetchDiscoverTop(limit, fresh) {
+    if (fresh || !_discoverTopPromise || Date.now() - _discoverTopAt > 60000) {
+        _discoverTopAt = Date.now();
+        _discoverTopPromise = api.request('/social/discover?limit=12');
+        _discoverTopPromise.catch(() => { _discoverTopPromise = null; });
+    }
+    return _discoverTopPromise.then(data => Object.assign({}, data, { picks: ((data && data.picks) || []).slice(0, limit) }));
+}
+
 async function loadTrending() {
     const el = document.getElementById('trendingList');
     if (!el) return;
     try {
-        const data = await api.request('/social/discover?limit=5');
+        const data = await fetchDiscoverTop(5);
         const picks = (data.picks || []).filter(isRealPublicFeedUser).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
         if (picks.length) {
             const grouped = {};
@@ -975,7 +991,7 @@ async function loadTopCappers() {
                 const sign = units >= 0 ? '+' : '';
                 const display = u.display_name || u.username || 'User';
                 /* NO_LETTER_FLASH: no upload is the resolver route, not an initial. */
-                const avaSrc = u.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(u.username || '') + '/avatar');
+                const avaSrc = u.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(u.username || '') + '/avatar?s=96');
                 const avatar = '<img src="' + esc(avaSrc) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 return '<div class="rs-user"><div class="rs-user-avatar">' + avatar + '</div><div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=' + encodeURIComponent(u.username || '') + '">' + esc(display) + '</a></div><div class="rs-user-detail">' + esc(String(u.total_picks || 0)) + ' picks - <span style="color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';font-weight:700;">' + sign + units.toFixed(2) + 'u</span>' + (u.roi != null ? ' - ' + Number(u.roi).toFixed(1) + '% ROI' : '') + '</div></div></div>';
             }).join('');
@@ -989,7 +1005,7 @@ async function loadArenaWatch() {
     const el = document.getElementById('arenaWatchList');
     if (!el) return;
     try {
-        const data = await api.request('/social/discover?limit=3');
+        const data = await fetchDiscoverTop(3);
         const picks = (data.picks || []).filter(isRealPublicFeedUser).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
         if (picks.length) {
             const grouped = {};
