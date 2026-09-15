@@ -309,6 +309,19 @@ a.gm--bug:hover .gb-tn{color:#DFEBF6}
 .gm .gm-in-l[data-href]:not([data-href=""]){cursor:pointer}
 .gm .gm-in-l[data-href]:not([data-href=""]):hover{color:#DFEBF6}
 a.gm:hover .gm-in-l.is-on{color:#C4DCF0}
+/* A BREAKING MOMENT (2026-09-14): the newest play on a card wears a pulsing
+   dot and how long ago it happened, for ten minutes, then reads like any other
+   line. The chip is empty in the markup and filled by the page script. */
+.gm .gm-in-l .gm-ago{display:none}
+.gm .gm-in-l.is-brk .gm-ago:not(:empty){display:inline-block;flex:0 0 auto;margin-top:.2em;
+  padding:0 .45em;border-radius:4px;background:rgba(255,84,89,.16);color:#FF7478;
+  font-style:normal;font-size:.62em;font-weight:800;letter-spacing:.04em;line-height:1.7;white-space:nowrap}
+/* body.tmr-ds is named because the design system sheet colours the dot with
+   that extra class. */
+.gm .gm-in-l.is-brk .ts,body.tmr-ds .gm .gm-in-l.is-brk .ts{background:#FF5459;opacity:1;animation:gmBrkPulse 1.6s ease-out infinite}
+@keyframes gmBrkPulse{0%{box-shadow:0 0 0 0 rgba(255,84,89,.55)}
+  70%{box-shadow:0 0 0 6px rgba(255,84,89,0)}100%{box-shadow:0 0 0 0 rgba(255,84,89,0)}}
+@media (prefers-reduced-motion:reduce){.gm .gm-in-l.is-brk .ts,body.tmr-ds .gm .gm-in-l.is-brk .ts{animation:none}}
 @media (prefers-reduced-motion:reduce){
   /* No travel, and a fade short enough to read as a swap rather than motion. */
   .gm .gm-in-l{transition:opacity .12s linear;transform:none}

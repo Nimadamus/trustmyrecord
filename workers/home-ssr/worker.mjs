@@ -563,11 +563,15 @@ function insightStrip(g) {
     const meta = ins.sample
       ? `Sample ${ins.sample}${ins.period ? ` · ${ins.period}` : ''}`
       : (ins.period || '');
+    /* Breaking moment: lockstep with insightStrip() in tmr-home-live.js. */
+    const brk = ins.breaking && ins.event_at ? String(ins.event_at) : '';
     lines += `<span class="gm-in-l${i === 0 ? ' is-on' : ''}"` +
       ` data-cat="${esc(ins.category || '')}"` +
       ` data-href="${esc(ins.href || '')}"` +
+      `${brk ? ` data-brk="${esc(brk)}"` : ''}` +
       `${meta ? ` title="${esc(meta)}"` : ''}>` +
       '<i class="ts" aria-hidden="true"></i>' +
+      `${brk ? '<em class="gm-ago"></em>' : ''}` +
       /* THE BOTTOM LINE FORMAT (Nima, 2026-08-24): full team name, colon,
          fact. Byte-for-byte the same join as tmr-home-live.js - the client
          ADOPTS this markup and returns early, so any difference here is a

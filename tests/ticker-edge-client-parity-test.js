@@ -275,7 +275,11 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
     away_logo: 'https://a.espncdn.com/den.png', home_logo: 'https://a.espncdn.com/kc.png',
     status: 'live', status_label: 'LIVE', status_detail: '14:39 - 4th', period: 4, clock: '14:39',
     possession: 'home', away_score: 10, home_score: 31, href: '/sportsbook/',
-    insights: [{ category: 'live_state', group: 'context', text: 'Lead by 21 in the 4th quarter', team_label: 'Kansas City Chiefs' }],
+    insights: [
+      { category: 'breaking_td_pass', text: 'Caught a 2 yard touchdown pass from Patrick Mahomes with 14:39 left in the game',
+        team_label: 'Kenneth Walker III', breaking: true, event_at: '2026-09-15T02:38:58.000Z' },
+      { category: 'live_state', group: 'context', text: 'Lead by 21 in the 4th quarter', team_label: 'Kansas City Chiefs' }
+    ],
     insight_mode: 'live' };
   const nflFinal = Object.assign({}, nflLive, { id: 'espn:1', espn_event_id: '1', away: 'LV', home: 'LAC',
     status: 'final', status_detail: 'Final', period: 4, clock: null, possession: 'away', away_score: 20, home_score: 17,
@@ -346,6 +350,14 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
     failures.push('possession marker is not on the home row only');
   }
   if (/gb-pos/.test(clientLane.espnCardHtml(nflFinal, 'nfl'))) failures.push('a final NFL game draws a possession marker');
+  /* A BREAKING MOMENT carries its time and an empty age chip, in both files,
+     and an ordinary line carries neither. */
+  if (!/<span class="gm-in-l is-on"[^>]*data-brk="2026-09-15T02:38:58.000Z"[^>]*><i class="ts" aria-hidden="true"><\/i><em class="gm-ago"><\/em><b>Kenneth Walker III: /.test(liveHtml)) {
+    failures.push(`breaking line markup is wrong: ${liveHtml.slice(liveHtml.indexOf('gm-in-l'), liveHtml.indexOf('gm-in-l') + 260)}`);
+  }
+  if ((liveHtml.match(/data-brk=/g) || []).length !== 1 || (liveHtml.match(/gm-ago/g) || []).length !== 1) {
+    failures.push('an ordinary insight line carries breaking markup');
+  }
 }
 
 /* THE BOTTOM LINE LABEL. The client and the worker each join `team_label` to
