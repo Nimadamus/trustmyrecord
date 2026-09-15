@@ -200,6 +200,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       ? 'Moving TMR to your own wallet is not possible. Your TMR is held for you here in the meantime, and you can spend it anywhere on TrustMyRecord today.'
       : 'You can move TMR from TrustMyRecord to the wallet above. TrustMyRecord pays the network fee.';
     if (!soon) loadWithdrawals().catch(function () { });
+    loadDeposits().catch(function () { });
   }
 
   /* TMR_WITHDRAWALS_20260914: site TMR to the member's own wallet on Base. */
@@ -285,6 +286,43 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     }
   }
 
+  /* TMR_DEPOSITS_20260915: the member's own TMR on Base into their site balance. */
+  var depPoll = null;
+  async function loadDeposits() {
+    var d = await window.api.request('/tmr-coin/deposits/status');
+    var host = $('depBox');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'depBox';
+      host.style.marginTop = '16px';
+      $('walletBox').parentNode.appendChild(host);
+    }
+    if (!d || !d.enabled || !d.depositAddress || !d.linkedWallet) { host.innerHTML = ''; return; }
+    var rows = d.deposits || [];
+    var LABEL = { credited: 'Added to your balance', unmatched: 'Under review', ignored: 'Too small to credit' };
+    host.innerHTML =
+      '<h3 style="margin:0 0 8px;font-size:15px">Bring TMR in from your wallet</h3>' +
+      '<p style="margin:0 0 10px;font-size:13.5px;color:var(--acct-muted)">Send TMR on Base from your linked wallet to the address below and it is added to your TrustMyRecord balance, one for one. Send from any other wallet and it cannot be matched to you. Whole TMR is credited; anything under 1 TMR stays in your wallet.</p>' +
+      '<dl class="kv"><dt>Send to</dt><dd><code id="depAddr">' + d.depositAddress + '</code></dd>' +
+      '<dt>Network</dt><dd>Base</dd>' +
+      '<dt>From</dt><dd>' + d.linkedWallet + '</dd></dl>' +
+      '<div class="row" style="margin-top:10px"><button class="btn ghost" id="btnCopyDep">Copy address</button></div>' +
+      (rows.length ? '<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Status</th><th>Transaction</th></tr></thead><tbody>' +
+        rows.map(function (r) {
+          return '<tr><td>' + new Date(r.at).toLocaleString() + '</td><td class="num">' + fmt(r.amount) + '</td><td>' +
+            (LABEL[r.status] || r.status) + '</td><td><a href="' + r.txUrl + '" target="_blank" rel="noopener">' + r.txHash.slice(0, 10) + '…</a></td></tr>';
+        }).join('') + '</tbody></table></div>' : '');
+    var copy = $('btnCopyDep');
+    if (copy) copy.onclick = function () {
+      var text = d.depositAddress;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { say('Address copied.'); }).catch(function () { say(text); });
+      } else { say(text); }
+    };
+    if (!depPoll) {
+      depPoll = setInterval(function () { loadDeposits().catch(function () { }); }, 30000);
+    }
+  }
   async function watchToken() {
     if (!window.ethereum || !state.account || !state.account.token) { say('No wallet app detected in this browser.', true); return; }
     try {
@@ -318,7 +356,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     contest_prize: 'Contest prize', challenge_stake: 'Challenge stake',
     challenge_win: 'Challenge win', challenge_refund: 'Challenge refund',
     redemption: 'Redemption', reversed: 'Reversed', withdrawal: 'Withdrawal',
-    withdrawal_reserved: 'Withdrawn to wallet', withdrawal_refund: 'Withdrawal returned'
+    withdrawal_reserved: 'Withdrawn to wallet', withdrawal_refund: 'Withdrawal returned',
+    deposit: 'Brought in from your wallet'
   };
 
   async function loadTx(more) {
