@@ -27,7 +27,7 @@
        revealed; pages where no placement qualifies make no Google ad request.
 
    Switches:
-     ENABLED false            no ad requests anywhere (current state)
+     ENABLED false            no ad requests anywhere
      SLOTS[key] empty         that placement stays off even when ENABLED
      ?tmr_ads=preview         draws labelled grey boxes in the real spots, no Google
      ?tmr_ads=off             disables ads for that page view
@@ -38,12 +38,12 @@
     window.__tmrAds = true;
 
     var CLIENT = 'ca-pub-3995543166394162';
-    var ENABLED = false;
+    var ENABLED = true;
     var SLOTS = {
-        home: '',
-        article: '',
-        article2: '',
-        leaderboard: ''
+        home: '1899274090',         /* tmr-home-lower */
+        article: '9142892189',      /* tmr-article-mid */
+        article2: '3890565501',     /* tmr-article-lower */
+        leaderboard: '3030366247'   /* tmr-leaderboard-lower */
     };
 
     var mode = '';
