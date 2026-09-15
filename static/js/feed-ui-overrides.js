@@ -530,12 +530,17 @@ async function postComment(id, type) {
     }
 }
 
+let _feedFollowingStatePromise = null;
+
 async function initAuth() {
     // Only a stored session needs the backend probe before auth state is read;
     // anonymous visitors skip the (up to 2.5s) wait so the feed starts at once.
+    // A member whose profile is already restored from storage does not need it
+    // either: the feed request carries their token regardless.
     let hasStoredSession = true;
     try { if (typeof api !== 'undefined' && typeof api.loadTokens === 'function') { api.loadTokens(); hasStoredSession = !!(api.token || api.refreshToken); } } catch (e) {}
-    if (hasStoredSession && typeof api !== 'undefined' && api.ready) {
+    const storedUser = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (hasStoredSession && !storedUser && typeof api !== 'undefined' && api.ready) {
         try {
             await Promise.race([
                 api.ready,
@@ -557,7 +562,9 @@ async function initAuth() {
             compAvatar.innerHTML = '<img src="' + esc(avatar || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar')) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
         }
         loadSidebarStats(user);
-        await hydrateFollowingState();
+        // Follow state only feeds the Suggested rail, which loads after the feed,
+        // so fetch it alongside the feed instead of in front of it.
+        _feedFollowingStatePromise = hydrateFollowingState();
     } else {
         if (composerCard) composerCard.style.display = 'none';
         if (loginBanner) loginBanner.style.display = 'flex';
@@ -741,6 +748,16 @@ async function loadHydratedActivePolls(pollData) {
 }
 
 async function loadFeed() {
+    try {
+        await loadFeedItems();
+    } finally {
+        if (_feedFollowingStatePromise) {
+            try { await _feedFollowingStatePromise; } catch (e) {}
+        }
+    }
+}
+
+async function loadFeedItems() {
     const c = document.getElementById('feedList');
     if (!c) return;
 
