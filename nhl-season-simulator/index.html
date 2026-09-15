@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- NBA_NHL_SIM_CLUSTER_20260915. Baked by scripts/build_league_sim_pages.js. Do not edit by hand. -->
+<title>NHL Season Simulator 2026-27 | Projected Standings, Wins and Playoff Odds</title>
+<meta name="description" content="Simulate the 2026-27 NHL season 10,000 times: projected points for all 32 teams, the 80% range, division title and playoff odds, from the real 84 game schedule.">
+<link rel="canonical" href="https://trustmyrecord.com/nhl-season-simulator/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="NHL Season Simulator 2026-27" />
+<meta property="og:description" content="Simulate the 2026-27 NHL season 10,000 times: projected points for all 32 teams, the 80% range, division title and playoff odds, from the real 84 game schedule." />
+<meta property="og:url" content="https://trustmyrecord.com/nhl-season-simulator/" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NHL Season Simulator 2026-27" />
+<meta name="twitter:description" content="Simulate the 2026-27 NHL season 10,000 times: projected points for all 32 teams, the 80% range, division title and playoff odds, from the real 84 game schedule." />
+<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TrustMyRecord NHL Season Simulator","applicationCategory":"SportsApplication","operatingSystem":"Web","url":"https://trustmyrecord.com/nhl-season-simulator/","description":"Simulate the 2026-27 NHL season 10,000 times: projected points for all 32 teams, the 80% range, division title and playoff odds, from the real 84 game schedule.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"dateModified":"2026-09-15T17:09:40.043Z"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://trustmyrecord.com/"},{"@type":"ListItem","position":2,"name":"Sports Simulators","item":"https://trustmyrecord.com/sports-simulators/"},{"@type":"ListItem","position":3,"name":"NHL Simulator","item":"https://trustmyrecord.com/nhl-simulator/"},{"@type":"ListItem","position":4,"name":"NHL Season Simulator","item":"https://trustmyrecord.com/nhl-season-simulator/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does the NHL season simulator work?","acceptedAnswer":{"@type":"Answer","text":"It plays every game on the 2026-27 NHL schedule 10,000 times. Final games keep their real results and every other game is decided by the calibrated win probability from the TrustMyRecord NHL game model, then the standings, seeds and playoffs are played out for each simulated season."}},{"@type":"Question","name":"How many games are in the 2026-27 NHL season?","acceptedAnswer":{"@type":"Answer","text":"Each NHL team plays 84 games in 2026-27, 1,344 games in all."}},{"@type":"Question","name":"What does the 80% range mean?","acceptedAnswer":{"@type":"Answer","text":"Eight of every ten simulated seasons land inside it. The other two fall above or below. It shows how much a team's points can swing on the same schedule and the same ratings."}},{"@type":"Question","name":"Does the simulator update during the season?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each time the page is rebuilt it reads the schedule and every final result again, so completed games stop being simulated and the projection narrows as the season goes on."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"The published projection is free to read with no account. Running your own set of seasons needs a free account and uses the daily free simulator run."}}]}</script>
+<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
+<link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=586504a3e714">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=ced0ab69322a">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/backend-api.js?v=30ee5c8b5184"></script>
+<script defer src="/static/js/sim-auth-gate.js?v=0e0e4d245dc9"></script>
+<style>
+  .lsim-wrap{max-width:1180px}
+  .lsim-hero h1{font-size:clamp(1.6rem,3.2vw,2.2rem);margin:0 0 8px;letter-spacing:-.02em}
+  .lsim-hero p{max-width:78ch;margin:0 0 8px;color:var(--mut,#9fb0c6)}
+  .lsim-run{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 4px}
+  .lsim-run select{font:inherit;padding:8px 10px;border-radius:9px;border:1px solid var(--line,#23324a);background:var(--card,#111a2b);color:inherit}
+  .lsim-run .btn{font-weight:800}
+  #lsimStatus{font-size:.86rem;color:var(--mut,#9fb0c6)}
+  #lsimStamp{font-size:.82rem;color:var(--mut,#9fb0c6);margin:6px 0 0}
+  .lsim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px}
+  .lsim-card{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:14px;padding:12px 14px;min-width:0}
+  .lsim-card h3{margin:2px 0 10px;font-size:1rem}
+  .lsim-card h3 small{font-weight:600;color:var(--mut,#9fb0c6);font-size:.78rem;margin-left:6px}
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.lsim{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
+  table.lsim th,table.lsim td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:right;white-space:nowrap}
+  table.lsim thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6);font-weight:700}
+  table.lsim th[scope=row],table.lsim thead th:first-child{text-align:left}
+  table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
+  table.lsim td.num,table.lsim td.rng{font-variant-numeric:tabular-nums}
+  table.lsim td.rng{color:var(--mut,#9fb0c6)}
+  .lz{opacity:.45}
+  .lt{display:inline-flex;align-items:center;gap:7px}
+  .lt img{width:22px;height:22px;object-fit:contain}
+  .lt .ls{display:none}
+  @media (max-width:640px){.lt .ln{display:none}.lt .ls{display:inline}table.lsim{min-width:0;font-size:.8rem}table.lsim th,table.lsim td{padding:6px 5px}}
+  ul.series{list-style:none;margin:0;padding:0}
+  ul.series li{padding:6px 0;border-bottom:1px solid var(--line,#23324a);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  ul.series .sc{margin-left:auto;color:var(--mut,#9fb0c6);font-size:.82rem}
+  .champ{display:flex;align-items:center;gap:8px;font-size:1rem;margin:4px 0 12px}
+  .champ img{width:30px;height:30px}
+  .lsim-copy{max-width:80ch}
+  .lsim-copy h2{margin:26px 0 8px}
+  .lsim-copy p,.lsim-copy li{line-height:1.65}
+  .slate{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px;margin:8px 0}
+  .slate a,.slate div{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line,#23324a);border-radius:10px;text-decoration:none;color:inherit;font-size:.88rem}
+</style>
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<main class="wrap lsim-wrap" id="lsim" data-sport="nhl" data-mode="season">
+  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
+    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/sports-simulators/" style="color:inherit;text-decoration:none;">Sports Simulators</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/nhl-simulator/" style="color:inherit;text-decoration:none;">NHL Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <span aria-current="page" style="font-weight:600;">NHL Season Simulator</span>
+  </nav>
+  <section class="hero lsim-hero">
+    <h1>NHL Season Simulator</h1>
+    <p>The 2026-27 regular season opens Tuesday, September 29, 2026. Across 10,000 simulated seasons the Colorado Avalanche average 118.3 points and finish as champions 33% of the time, ahead of the Tampa Bay Lightning at 14%. Press Run to play a fresh set of seasons from today's schedule and results.</p>
+    <div class="lsim-run">
+      <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+      <button class="btn primary" type="button" id="runSim">Run the season</button>
+      <span id="lsimStatus" role="status" aria-live="polite"></span>
+    </div>
+    <p id="lsimStamp">10,000 simulated 2026-27 seasons, schedule and results read September 15, 2026 at 10:09 AM PT, 0 of the 1,344 scheduled regular season games final.</p>
+  </section>
+
+  <section class="panel"><h2>Projected 2026-27 NHL standings</h2>
+  <div id="lsimTables" class="lsim-grid"><div class="lsim-card"><h3>Atlantic Division <small>Eastern Conference</small></h3><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th><th scope="col">Points</th><th scope="col">80% range</th><th scope="col">Wins</th><th scope="col">Division</th><th scope="col">Playoffs</th><th scope="col">Cup</th></tr></thead><tbody><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/tb.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Tampa Bay Lightning</span><span class="ls">Lightning</span></span></th><td class="num">110.6</td><td class="rng">100 to 121</td><td class="num">52.0</td><td class="p" style="--h:0.5">50%</td><td class="p" style="--h:0.96">96%</td><td class="p" style="--h:0.58">14%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/buf.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Buffalo Sabres</span><span class="ls">Sabres</span></span></th><td class="num">105.7</td><td class="rng">95 to 116</td><td class="num">49.3</td><td class="p" style="--h:0.24">24%</td><td class="p" style="--h:0.88">88%</td><td class="p" style="--h:0.28">7%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/ott.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Ottawa Senators</span><span class="ls">Senators</span></span></th><td class="num">100.5</td><td class="rng">90 to 111</td><td class="num">46.4</td><td class="p" style="--h:0.1">10%</td><td class="p" style="--h:0.71">71%</td><td class="p" style="--h:0.11">3%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/mtl.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Montreal Canadiens</span><span class="ls">Canadiens</span></span></th><td class="num">99.7</td><td class="rng">89 to 110</td><td class="num">46.0</td><td class="p" style="--h:0.08">8%</td><td class="p" style="--h:0.68">68%</td><td class="p" style="--h:0.1">2%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/bos.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Boston Bruins</span><span class="ls">Bruins</span></span></th><td class="num">98.7</td><td class="rng">88 to 109</td><td class="num">45.3</td><td class="p" style="--h:0.07">7%</td><td class="p" style="--h:0.64">64%</td><td class="p" style="--h:0.09">2%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/det.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Detroit Red Wings</span><span class="ls">Red Wings</span></span></th><td class="num">87.7</td><td class="rng">77 to 99</td><td class="num">39.2</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0.16">16%</td><td class="p" style="--h:0.01">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/fla.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Florida Panthers</span><span class="ls">Panthers</span></span></th><td class="num">85.1</td><td class="rng">74 to 96</td><td class="num">37.9</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0.1">10%</td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/tor.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Toronto Maple Leafs</span><span class="ls">Maple Leafs</span></span></th><td class="num">76.2</td><td class="rng">66 to 87</td><td class="num">33.1</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0">&lt;1%</td></tr></tbody></table></div></div><div class="lsim-card"><h3>Metropolitan Division <small>Eastern Conference</small></h3><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th><th scope="col">Points</th><th scope="col">80% range</th><th scope="col">Wins</th><th scope="col">Division</th><th scope="col">Playoffs</th><th scope="col">Cup</th></tr></thead><tbody><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/car.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Carolina Hurricanes</span><span class="ls">Hurricanes</span></span></th><td class="num">106.2</td><td class="rng">95 to 117</td><td class="num">49.6</td><td class="p" style="--h:0.48">48%</td><td class="p" style="--h:0.89">89%</td><td class="p" style="--h:0.35">9%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/wsh.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Washington Capitals</span><span class="ls">Capitals</span></span></th><td class="num">101.2</td><td class="rng">90 to 112</td><td class="num">46.7</td><td class="p" style="--h:0.22">22%</td><td class="p" style="--h:0.74">74%</td><td class="p" style="--h:0.15">4%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/cbj.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Columbus Blue Jackets</span><span class="ls">Blue Jackets</span></span></th><td class="num">95.2</td><td class="rng">84 to 106</td><td class="num">43.3</td><td class="p" style="--h:0.07">7%</td><td class="p" style="--h:0.48">48%</td><td class="p" style="--h:0.05">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/phi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Philadelphia Flyers</span><span class="ls">Flyers</span></span></th><td class="num">94.8</td><td class="rng">84 to 106</td><td class="num">43.1</td><td class="p" style="--h:0.07">7%</td><td class="p" style="--h:0.46">46%</td><td class="p" style="--h:0.04">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/nyr.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New York Rangers</span><span class="ls">Rangers</span></span></th><td class="num">94.4</td><td class="rng">84 to 105</td><td class="num">42.9</td><td class="p" style="--h:0.06">6%</td><td class="p" style="--h:0.44">44%</td><td class="p" style="--h:0.03">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/pit.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Pittsburgh Penguins</span><span class="ls">Penguins</span></span></th><td class="num">94.1</td><td class="rng">83 to 105</td><td class="num">43.0</td><td class="p" style="--h:0.06">6%</td><td class="p" style="--h:0.43">43%</td><td class="p" style="--h:0.03">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/nyi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New York Islanders</span><span class="ls">Islanders</span></span></th><td class="num">89.1</td><td class="rng">78 to 100</td><td class="num">39.8</td><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0.22">22%</td><td class="p" style="--h:0.01">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/nj.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New Jersey Devils</span><span class="ls">Devils</span></span></th><td class="num">88.7</td><td class="rng">78 to 99</td><td class="num">39.6</td><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0.2">20%</td><td class="p" style="--h:0.01">&lt;1%</td></tr></tbody></table></div></div><div class="lsim-card"><h3>Central Division <small>Western Conference</small></h3><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th><th scope="col">Points</th><th scope="col">80% range</th><th scope="col">Wins</th><th scope="col">Division</th><th scope="col">Playoffs</th><th scope="col">Cup</th></tr></thead><tbody><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/col.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Colorado Avalanche</span><span class="ls">Avalanche</span></span></th><td class="num">118.3</td><td class="rng">108 to 128</td><td class="num">56.4</td><td class="p" style="--h:0.76">76%</td><td class="p" style="--h:1">&gt;99%</td><td class="p" style="--h:1">33%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/dal.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Dallas Stars</span><span class="ls">Stars</span></span></th><td class="num">107.4</td><td class="rng">97 to 118</td><td class="num">50.2</td><td class="p" style="--h:0.16">16%</td><td class="p" style="--h:0.97">97%</td><td class="p" style="--h:0.37">9%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/min.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Minnesota Wild</span><span class="ls">Wild</span></span></th><td class="num">100.5</td><td class="rng">90 to 111</td><td class="num">46.3</td><td class="p" style="--h:0.04">4%</td><td class="p" style="--h:0.86">86%</td><td class="p" style="--h:0.13">3%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/uta.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Utah Mammoth</span><span class="ls">Mammoth</span></span></th><td class="num">98.4</td><td class="rng">88 to 109</td><td class="num">45.2</td><td class="p" style="--h:0.03">3%</td><td class="p" style="--h:0.79">79%</td><td class="p" style="--h:0.09">2%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/stl.png" alt="" width="22" height="22" loading="lazy"><span class="ln">St. Louis Blues</span><span class="ls">Blues</span></span></th><td class="num">95.0</td><td class="rng">84 to 106</td><td class="num">43.2</td><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0.66">66%</td><td class="p" style="--h:0.05">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/wpg.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Winnipeg Jets</span><span class="ls">Jets</span></span></th><td class="num">88.1</td><td class="rng">77 to 99</td><td class="num">39.3</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0.32">32%</td><td class="p" style="--h:0.01">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/nsh.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Nashville Predators</span><span class="ls">Predators</span></span></th><td class="num">86.3</td><td class="rng">75 to 97</td><td class="num">38.4</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0.24">24%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/chi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Chicago Blackhawks</span><span class="ls">Blackhawks</span></span></th><td class="num">74.0</td><td class="rng">63 to 85</td><td class="num">31.6</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr></tbody></table></div></div><div class="lsim-card"><h3>Pacific Division <small>Western Conference</small></h3><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th><th scope="col">Points</th><th scope="col">80% range</th><th scope="col">Wins</th><th scope="col">Division</th><th scope="col">Playoffs</th><th scope="col">Cup</th></tr></thead><tbody><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/vgk.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Vegas Golden Knights</span><span class="ls">Golden Knights</span></span></th><td class="num">96.1</td><td class="rng">85 to 107</td><td class="num">43.9</td><td class="p" style="--h:0.41">41%</td><td class="p" style="--h:0.84">84%</td><td class="p" style="--h:0.09">2%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/edm.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Edmonton Oilers</span><span class="ls">Oilers</span></span></th><td class="num">94.4</td><td class="rng">84 to 105</td><td class="num">43.1</td><td class="p" style="--h:0.32">32%</td><td class="p" style="--h:0.78">78%</td><td class="p" style="--h:0.06">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/la.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Los Angeles Kings</span><span class="ls">Kings</span></span></th><td class="num">89.6</td><td class="rng">79 to 100</td><td class="num">40.2</td><td class="p" style="--h:0.14">14%</td><td class="p" style="--h:0.59">59%</td><td class="p" style="--h:0.02">1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/ana.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Anaheim Ducks</span><span class="ls">Ducks</span></span></th><td class="num">83.7</td><td class="rng">73 to 95</td><td class="num">37.2</td><td class="p" style="--h:0.04">4%</td><td class="p" style="--h:0.3">30%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/cgy.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Calgary Flames</span><span class="ls">Flames</span></span></th><td class="num">83.3</td><td class="rng">72 to 94</td><td class="num">36.7</td><td class="p" style="--h:0.04">4%</td><td class="p" style="--h:0.29">29%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/sea.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Seattle Kraken</span><span class="ls">Kraken</span></span></th><td class="num">82.9</td><td class="rng">72 to 94</td><td class="num">36.5</td><td class="p" style="--h:0.04">4%</td><td class="p" style="--h:0.27">27%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/sj.png" alt="" width="22" height="22" loading="lazy"><span class="ln">San Jose Sharks</span><span class="ls">Sharks</span></span></th><td class="num">74.4</td><td class="rng">64 to 85</td><td class="num">32.1</td><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0.06">6%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nhl/500/van.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Vancouver Canucks</span><span class="ls">Canucks</span></span></th><td class="num">63.7</td><td class="rng">54 to 74</td><td class="num">26.4</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr></tbody></table></div></div></div></section>
+
+  <section class="lsim-copy">
+    <h2>How the NHL season simulator works</h2>
+    <p>Every game on the 2026-27 schedule is played out 10,000 times. A game that is already final keeps its real result, including whether it went past regulation. Every other game is decided by the same calibrated win probability the <a href="/nhl-simulator/">NHL Simulator</a> reports for that matchup, and by how often that matchup reaches overtime, because the team that loses in overtime or a shootout still takes a point.</p>
+<p>The 2026-27 season is 84 games per team, 1,344 games in all, and every one of them is on the schedule the simulator reads.</p>
+    <h2>The 2026-27 NHL playoff format</h2>
+    <p>Teams earn two points for a win and one for a loss in overtime or a shootout. The top three teams in each of the 4 divisions make the playoffs, and the next two teams in each conference by points take the wild cards. The division winner with more points plays the second wild card, the other division winner plays the first, and the second and third place teams in each division meet. The bracket stays inside the division through the second round, and every series is best of seven with home ice to the team with more points.</p>
+    <h2>Tiebreakers</h2>
+    <p>Ties in points are settled by regulation wins, then by points in the games between the tied teams, then by a random draw. The NHL's later steps, such as goal differential, are not applied, and they are listed here rather than approximated.</p>
+    <h2>What the projection does not know</h2>
+    <p>The model rates teams on results already played. A trade, a signing or an injury changes a team's rating only once games are played with it, so early in the season a team that rebuilt over the summer is rated on the roster it had. The win probability for a game in March does not know rest, back to backs or the starting goalie that night. The model data was last built Tuesday, August 25, 2026 at 6:41 PM PT.</p>
+    <h2>Opening night, Tuesday, September 29, 2026</h2>
+    <div class="slate"><div>Florida Panthers at Carolina Hurricanes</div><div>Montreal Canadiens at Toronto Maple Leafs</div><div>New York Rangers at Boston Bruins</div><div>Vancouver Canucks at Edmonton Oilers</div><div>Chicago Blackhawks at Vegas Golden Knights</div></div>
+    <p>Simulate any of these games on its own, with a projected score and a full box score, in the <a href="/nhl-simulator/">NHL Simulator</a>.</p>
+    <h2 id="faq">NHL Season Simulator FAQ</h2>
+    <h3>How does the NHL season simulator work?</h3>
+<p>It plays every game on the 2026-27 NHL schedule 10,000 times. Final games keep their real results and every other game is decided by the calibrated win probability from the TrustMyRecord NHL game model, then the standings, seeds and playoffs are played out for each simulated season.</p>
+<h3>How many games are in the 2026-27 NHL season?</h3>
+<p>Each NHL team plays 84 games in 2026-27, 1,344 games in all.</p>
+<h3>What does the 80% range mean?</h3>
+<p>Eight of every ten simulated seasons land inside it. The other two fall above or below. It shows how much a team's points can swing on the same schedule and the same ratings.</p>
+<h3>Does the simulator update during the season?</h3>
+<p>Yes. Each time the page is rebuilt it reads the schedule and every final result again, so completed games stop being simulated and the projection narrows as the season goes on.</p>
+<h3>Is it free?</h3>
+<p>The published projection is free to read with no account. Running your own set of seasons needs a free account and uses the daily free simulator run.</p>
+  </section>
+
+  <section class="panel">
+    <h2>More NHL simulators</h2>
+    <div class="linkgrid">
+    <a href="/nhl-simulator/">NHL Simulator<small>Simulate any game with a full box score</small></a>
+    <a href="/nhl-playoff-simulator/">NHL Playoff Simulator<small>Seeds, bracket and title odds</small></a>
+    <a href="/nhl-simulator/results/">NHL Simulation Results<small>Archived simulations</small></a>
+    <a href="/nba-season-simulator/">NBA Season Simulator<small>The same tool for the NBA</small></a>
+    <a href="/mlb-season-simulator/">MLB Season Simulator<small>Baseball</small></a>
+    <a href="/nfl-playoff-simulator/">NFL Playoff Simulator<small>Football</small></a>
+    <a href="/sports-simulators/">All Sports Simulators<small>MLB, NFL, NBA and NHL</small></a>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Simulate a single NHL team</h2>
+    <div class="linkgrid">
+    <a href="/nhl-simulator/teams/anaheim-ducks/">Anaheim Ducks<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/boston-bruins/">Boston Bruins<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/buffalo-sabres/">Buffalo Sabres<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/calgary-flames/">Calgary Flames<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/carolina-hurricanes/">Carolina Hurricanes<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/chicago-blackhawks/">Chicago Blackhawks<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/colorado-avalanche/">Colorado Avalanche<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/columbus-blue-jackets/">Columbus Blue Jackets<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/dallas-stars/">Dallas Stars<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/detroit-red-wings/">Detroit Red Wings<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/edmonton-oilers/">Edmonton Oilers<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/florida-panthers/">Florida Panthers<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/los-angeles-kings/">Los Angeles Kings<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/minnesota-wild/">Minnesota Wild<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/montreal-canadiens/">Montreal Canadiens<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/nashville-predators/">Nashville Predators<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/new-jersey-devils/">New Jersey Devils<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/new-york-islanders/">New York Islanders<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/new-york-rangers/">New York Rangers<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/ottawa-senators/">Ottawa Senators<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/philadelphia-flyers/">Philadelphia Flyers<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/pittsburgh-penguins/">Pittsburgh Penguins<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/san-jose-sharks/">San Jose Sharks<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/seattle-kraken/">Seattle Kraken<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/st-louis-blues/">St Louis Blues<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/tampa-bay-lightning/">Tampa Bay Lightning<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/toronto-maple-leafs/">Toronto Maple Leafs<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/utah-mammoth/">Utah Mammoth<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/vancouver-canucks/">Vancouver Canucks<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/vegas-golden-knights/">Vegas Golden Knights<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/washington-capitals/">Washington Capitals<small>Team simulator</small></a>
+    <a href="/nhl-simulator/teams/winnipeg-jets/">Winnipeg Jets<small>Team simulator</small></a>
+    </div>
+  </section>
+</main>
+<div class="foot wrap">TrustMyRecord NHL Season Simulator &middot; a model projection, not betting advice &middot; <a href="/nhl-season-simulator/#faq">FAQ</a></div>
+<script defer src="/static/js/league-season-engine.js"></script>
+<script defer src="/static/js/league-season-sim.js"></script>
+<script defer src="/static/js/sim-run-gate.js" data-sport="nhl_season"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.4130d3240b43.js"></script>
+<script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+</body>
+</html>
