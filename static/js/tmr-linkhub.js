@@ -841,7 +841,7 @@
     var go = function () {
         var s = document.createElement('script');
         s.async = true;
-        s.src = '/static/js/tmr-ads.js?h=' + Math.floor(Date.now() / 3600000);
+        s.src = '/static/js/tmr-ads.js?v=b45607eb2157?h=' + Math.floor(Date.now() / 3600000);
         document.head.appendChild(s);
     };
     var idle = function () { (window.requestIdleCallback || setTimeout)(go, { timeout: 3000 }); };
