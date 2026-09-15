@@ -297,9 +297,9 @@ ${shell.head}
     <p id="lsimStamp">${UI.stamp(result, inputs)}</p>
   </section>
 
-  ${picks}
-
   ${body}
+
+  ${picks}
 
   <section class="lsim-copy">
     <h2>How the ${sportName} ${mode} simulator works</h2>
