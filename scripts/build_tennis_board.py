@@ -178,6 +178,116 @@ def board_html(slate):
     return "".join(out)
 
 
+def _implied(price):
+    """A displayed American price back to its implied probability, 0..1."""
+    try:
+        n = float(str(price).replace("+", ""))
+    except (TypeError, ValueError):
+        return None
+    if n == 0:
+        return None
+    return 100.0 / (n + 100.0) if n > 0 else (-n) / ((-n) + 100.0)
+
+
+def _wl(rec):
+    """A win loss record dict as (wins, losses, win rate)."""
+    if not isinstance(rec, dict):
+        return None
+    w, l = rec.get("wins"), rec.get("losses")
+    try:
+        w, l = int(w), int(l)
+    except (TypeError, ValueError):
+        return None
+    if w + l <= 0:
+        return None
+    return w, l, 100.0 * w / (w + l)
+
+
+def analysis_paras(m, surf):
+    """What the featured match's numbers are worth.
+
+    TENNIS_ANALYSIS_DEPTH_20260916. The module listed a ranking, a record, a
+    surface record and a price, all true and none of them compared. These lines
+    compare them: the surface split against the overall one, the ranking gap
+    against what the market is charging, and the format, which is the single
+    biggest lever on an underdog's chances in this sport.
+    """
+    out = []
+    ps = m.get("players") or []
+    if len(ps) < 2:
+        return out
+    ml = (m.get("market") or {}).get("moneyline") or {}
+    cards = [(p.get("card") or {}) for p in ps]
+    names = [p.get("name") or "the player" for p in ps]
+    novig = [ml.get("noVigPctA"), ml.get("noVigPctB")]
+    prices = [american(ml.get("a")), american(ml.get("b"))]
+    ranks = [c.get("rank") for c in cards]
+
+    # the price, the fair number and the ranking behind it
+    if novig[0] is not None and novig[1] is not None:
+        i = 0 if novig[0] >= novig[1] else 1
+        line = ("With the book's margin taken out the market makes %s a %.1f%% favourite."
+                % (names[i], float(novig[i])))
+        be = _implied(prices[i])
+        if be:
+            line += (" The ticket at %s only pays if that holds %.1f%% of the time, so the price "
+                     "is asking for a little more than the fair number does."
+                     % (prices[i], be * 100.0))
+        try:
+            ra, rb = int(ranks[0]), int(ranks[1])
+            gap = abs(ra - rb)
+            if gap >= 1:
+                line += (" The ranking gap behind it is %d places, %s at No. %d against No. %d, "
+                         "and ranking is a season long average that says less about one match on "
+                         "one surface than the split below does." % (gap, names[i], ranks[i],
+                                                                     ranks[1 - i]))
+        except (TypeError, ValueError):
+            pass
+        out.append(line)
+
+    # the surface split, which is the number that actually applies
+    bits = []
+    for i in (0, 1):
+        sr, ov = _wl(cards[i].get("surface_record")), _wl(cards[i].get("record"))
+        if not sr:
+            continue
+        txt = "%s is %d-%d on %s this year, a %.0f%% clip" % (
+            names[i], sr[0], sr[1], (surf or "this surface").lower(), sr[2])
+        if ov and abs(sr[2] - ov[2]) >= 8:
+            txt += (", against %.0f%% across every surface, so %s plays %s here than the season "
+                    "record suggests" % (ov[2], names[i],
+                                         "better" if sr[2] > ov[2] else "worse"))
+        bits.append(txt)
+    if bits:
+        out.append(". ".join(b[0].upper() + b[1:] for b in bits) +
+                   ". A surface record is the smaller sample and the more relevant one, and on a "
+                   "short season it is worth reading as a lean rather than as proof.")
+
+    # the format, which decides how much variance the underdog gets
+    bo = m.get("best_of")
+    try:
+        bo = int(bo)
+    except (TypeError, ValueError):
+        bo = None
+    if bo:
+        out.append("It is best of %d, which matters more than it looks. The shorter the match "
+                   "the more one break of serve decides it, so %s"
+                   % (bo, ("best of three keeps the underdog live and is the format where a "
+                           "favourite's price is most often too short."
+                           if bo == 3 else
+                           "best of five gives the better player time to make the gap tell, "
+                           "which is when a favourite's price is most often fair.")))
+    return out
+
+
+def analysis_html(m, surf):
+    paras = analysis_paras(m, surf)
+    if not paras:
+        return ""
+    return ('<div class="tn-read"><h3>What the numbers are worth</h3>%s</div>'
+            % "".join("<p>%s</p>" % esc(t) for t in paras))
+
+
 def featured_html(slate):
     """The marquee match as static HTML: the two players facing each other with
     the context, the price and the season line. The script replaces it with the
@@ -249,8 +359,8 @@ def featured_html(slate):
            % (esc(m.get("result") or et_clock(m.get("start_utc") or "")),
               esc("Final" if m.get("completed") else (m.get("round") or ""))))
     return ('<div class="tn-research is-featured"><div class="tn-ctx">%s</div>'
-            '<div class="tn-vs">%s%s%s</div></div>'
-            % ("".join(pills), side(0), mid, side(1)))
+            '<div class="tn-vs">%s%s%s</div>%s</div>'
+            % ("".join(pills), side(0), mid, side(1), analysis_html(m, surf)))
 
 
 def rankings_html(tour="atp"):

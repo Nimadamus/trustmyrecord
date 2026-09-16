@@ -937,6 +937,86 @@ def _board_row(g, i, H):
     return '<tr data-i="%d">%s</tr>' % (i, "".join(cells))
 
 
+def _f2(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _read(g):
+    """What the measured columns are worth, as sentences, computed here.
+
+    SOCCER_ANALYSIS_DEPTH_20260916. The card and the panel measured these two
+    clubs in a dozen columns and left every comparison to the reader. These
+    lines do the comparison: the goal environment the two sides imply against
+    the number the book posted, finishing measured against the chances that
+    created it, and what the price is charging over the fair one. Every figure
+    quoted is a value already in this payload.
+    """
+    out = []
+    a, h = g.get("away") or {}, g.get("home") or {}
+    an = (a.get("short") or a.get("name") or g.get("away_name") or "the visitor")
+    hn = (h.get("short") or h.get("name") or g.get("home_name") or "the host")
+    sa, sh = (a.get("season") or {}), (h.get("season") or {})
+
+    # goal environment against the posted total
+    agp, hgp = _f2(sa.get("gpm")), _f2(sh.get("gpm"))
+    aga, hga = _f2(sa.get("gapm")), _f2(sh.get("gapm"))
+    if None not in (agp, hgp, aga, hga):
+        env = (agp + hga) / 2.0 + (hgp + aga) / 2.0
+        line = ("Cross each attack with the defence it is facing and the two season rates imply "
+                "about %.2f goals in this match: %s score %.2f and concede %.2f, %s score %.2f "
+                "and concede %.2f." % (env, an, agp, aga, hn, hgp, hga))
+        tot = _f2(g.get("tot_point"))
+        if tot:
+            line += (" The book has the total at %g, so the raw rates sit %.2f goals %s the "
+                     "number, before anyone adjusts for the home ground, the rest or who is "
+                     "actually fit." % (tot, abs(env - tot), "above" if env > tot else "below"))
+        out.append(line)
+
+    # finishing against the chances that created it
+    bits = []
+    for name, sx in ((an, sa), (hn, sh)):
+        g_pm, xg = _f2(sx.get("gpm")), _f2(sx.get("xg"))
+        if None in (g_pm, xg) or abs(g_pm - xg) < 0.15:
+            continue
+        bits.append("%s are scoring %.2f a match on %.2f expected, which is finishing %s what "
+                    "the chances have been worth"
+                    % (name, g_pm, xg, "well above" if g_pm > xg else "well below"))
+    if bits:
+        out.append(("%s. Finishing swings like that are the least repeatable thing a football "
+                    "team does, so the honest read is that the goals move back toward the "
+                    "chances, not that the form continues."
+                    % ". ".join(b[0].upper() + b[1:] for b in bits)))
+
+    # the priced favourite, the fair number and what the ticket demands
+    pa, ph = g.get("p_away"), g.get("p_home")
+    if pa and ph:
+        fav_home = ph >= pa
+        fav, fair, price = ((hn, ph, g.get("ml_home")) if fav_home
+                            else (an, pa, g.get("ml_away")))
+        raw = implied(price)
+        line = ("Strip the margin out of the two prices and %s is a %.1f%% side." % (fav, fair * 100.0))
+        if raw:
+            line += (" The ticket itself breaks even at %.1f%%, and the gap between those two "
+                     "numbers is the book's cut, paid before a ball is kicked." % (raw * 100.0))
+        out.append(line)
+
+    # what the recent sample says about the total that is actually posted
+    tot = _f2(g.get("tot_point"))
+    la, lh = (a.get("last10") or {}), (h.get("last10") or {})
+    if tot and la.get("n") and lh.get("n"):
+        o25 = (la.get("o25") or 0) + (lh.get("o25") or 0)
+        n = la["n"] + lh["n"]
+        btts = (la.get("btts") or 0) + (lh.get("btts") or 0)
+        out.append("Across their last %d matches between them, %d went over 2.5 goals and %d saw "
+                   "both teams score. That is recent form on a small sample, not a projection, "
+                   "and it is the sample the %g on the board has to be read against."
+                   % (n, o25, btts, tot))
+    return out
+
+
 def _payload(g, H):
     """The JSON the analysis panel is drawn from. Only measured values."""
     def side(team, fallback):
@@ -962,6 +1042,7 @@ def _payload(g, H):
                      for k, v in sorted((g["extra"].get("tt") or {}).items())],
               "book": (g["board"].get("markets") or {}).get("book")},
         "x": g["h2h"],
+        "r": _read(g),
     }
 
 
@@ -1101,6 +1182,11 @@ JS = """
         (m.tt||[]).forEach(function(t){mk+=kv('Team total, '+t[0],'o'+t[1]+' '+(t[2]||''));});
         mk+=kv('Priced by',m.book||'the sportsbook feed');
         out+=mk+'</div>';
+        if(g.r&&g.r.length){
+          var rd='<div class="sh-box"><h4>What the numbers are worth</h4>';
+          g.r.forEach(function(t){rd+='<p class="sh-msub" style="margin:0 0 9px">'+esc(t)+'</p>';});
+          out+=rd+'</div>';
+        }
         out+='<div class="sh-grid2">'+formBox(a,a.n)+formBox(h,h.n)+'</div>';
         var bars=cmp('Goals / match',sa.gpm,sh.gpm,2)+cmp('Conceded / match',sa.gapm,sh.gapm,2)+
           cmp('xG / match',sa.xg,sh.xg,2)+cmp('xG against / match',sa.xga,sh.xga,2)+
