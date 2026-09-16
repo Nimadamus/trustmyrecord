@@ -344,6 +344,19 @@
                 });
         }
 
+        // PICK_LABEL_20260916: totals read "O 9" / team totals "Yankees O 4.5", not "9 +9".
+        function pickLabel(p) {
+            var sel = String(p.selection || '');
+            var mt = p.market_type || p.market || '';
+            if (mt === 'totals' || mt === 'team_totals') {
+                var ou = /\bunder\b/i.test(sel) ? 'U' : (/\bover\b/i.test(sel) ? 'O' : '');
+                var m = sel.match(/-?\d+(?:\.\d+)?/);
+                var n = (p.line !== null && p.line !== undefined && p.line !== '') ? Number(p.line) : (m ? m[0] : '');
+                var team = mt === 'team_totals' ? teamNick(sel.replace(/\s*\b(over|under)\b.*$/i, '')) + ' ' : '';
+                return (team + ou + ' ' + n).trim();
+            }
+            return (teamNick(sel) || sel) + signedLine(p.line);
+        }
         // ---------------- reveal board ----------------
         function pickChip(p) {
             if (p.sealed) {
@@ -362,7 +375,7 @@
             var units = (p.units !== null && p.units !== undefined) ? ' · ' + Number(p.units).toFixed(1) + 'u' : '';
             return '<div class="pchip ' + cls + '">'
                 + '<span class="pu">' + escapeHtml(p.username) + '</span>'
-                + '<span class="ps">' + escapeHtml(teamNick(p.selection) || p.selection) + escapeHtml(signedLine(p.line))
+                + '<span class="ps">' + escapeHtml(pickLabel(p))
                 + ' <span class="po">' + fmtOdds(p.odds) + '</span>' + escapeHtml(units) + '</span>'
                 + net + '</div>';
         }
