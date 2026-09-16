@@ -439,7 +439,10 @@
             '.tsg-overlay .tsg-later:hover{color:#E7F1FF !important;-webkit-text-fill-color:#E7F1FF !important;',
             'background:rgba(255,255,255,.05);}',
             '.tsg-overlay .tsg-later:focus-visible{outline:2px solid #7FE9DC;outline-offset:2px;}',
-            '.tsg-overlay .tsg-note{margin:16px auto 0 !important;max-width:36ch;font-size:.78rem !important;',
+            /* p.tsg-note, not .tsg-note: the body-copy rule above is also a
+               `.tsg-overlay .tsg-card p` match, so a plain class selector lost to
+               it and the small print rendered at body size. */
+            '.tsg-overlay .tsg-card p.tsg-note{margin:16px auto 0 !important;max-width:36ch;font-size:.78rem !important;',
             'line-height:1.55 !important;color:#7E91AC !important;-webkit-text-fill-color:#7E91AC !important;text-align:center;}',
             '.tsg-overlay .tsg-x{position:absolute;top:14px;right:14px;background:none;border:none;',
             'color:#8496B0 !important;-webkit-text-fill-color:#8496B0 !important;',
