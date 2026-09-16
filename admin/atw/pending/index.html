@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Around the Web pending picks</title>
+<!--
+  Owner only. This page ships no pending data: every row is fetched at view time from
+  /api/admin/atw/pending, which sits behind the backend adminOnly guard. A logged out visitor or a
+  normal member gets 401 or 403 and sees the refusal notice, never a pick. ATW_PENDING_ADMIN_20260915
+-->
+<style>
+:root{--bg:#081524;--panel:#0C2138;--panel2:#102A45;--line:#1B3A5C;--ink:#EAF2FA;--ink2:#B9D0E6;
+--muted:#7593B1;--brand:#4DA3FF;--good:#3FD08A;--bad:#FF6B6B;--warn:#FFC93C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink2);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif;padding:24px 16px 60px}
+.wrap{max-width:1500px;margin:0 auto}
+h1{margin:0 0 4px;font-size:26px;color:var(--ink);letter-spacing:-.02em}
+.sub{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+.flag{display:inline-block;margin:0 0 18px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,201,60,.45);
+background:rgba(255,201,60,.10);color:var(--warn);font-weight:800;font-size:12.5px}
+a{color:var(--brand);text-decoration:none}a:hover{text-decoration:underline}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.bar input,.bar select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:8px;
+background:var(--panel);color:var(--ink);font:600 14px Inter,Arial,sans-serif}
+.bar input{min-width:200px}
+.count{padding:6px 12px;border-radius:999px;background:rgba(77,163,255,.14);color:var(--brand);font-weight:800;font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{position:sticky;top:0;background:var(--panel2);color:var(--muted);font-size:11px;font-weight:900;letter-spacing:.1em;
+text-transform:uppercase;text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--ink)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--panel2)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.who{color:var(--ink);font-weight:800}
+.sel{color:var(--ink);font-weight:700}
+.why{color:var(--warn);font-weight:700;font-size:13px}
+.rev{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(255,107,107,.15);
+color:var(--bad);font-size:11px;font-weight:900}
+.empty{padding:36px;text-align:center;color:var(--muted)}
+.deny{padding:36px;text-align:center;color:var(--bad);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Around the Web pending picks</h1>
+  <p class="sub">Every open pick the watchdog is tracking, across all handicappers. Owner only.</p>
+  <div class="flag">Not public. The API refuses anyone but the owner account.</div>
+  <div class="bar">
+    <input id="q" placeholder="Filter by handicapper">
+    <select id="source"><option value="">All sources</option></select>
+    <select id="sport"><option value="">All sports</option></select>
+    <select id="reason"><option value="">All reasons</option></select>
+    <select id="review"><option value="">Review: any</option><option value="only">Held for review</option><option value="none">Not flagged</option></select>
+    <select id="age"><option value="">Any age</option><option value="6">Older than 6 h</option><option value="24">Older than 24 h</option><option value="72">Older than 3 days</option></select>
+    <span class="count" id="count">loading</span>
+  </div>
+  <div id="out"><div class="empty">Loading...</div></div>
+</div>
+<script>
+(function () {
+  var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
+    ? String(window.CONFIG.api.baseUrl).replace(/\/+$/, '')
+    : 'https://trustmyrecord-api.onrender.com/api';
+  var KEYS = ['trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];
+  var rows = [], sortKey = 'event_start', sortDir = 1;
+
+  function tok() {
+    for (var i = 0; i < KEYS.length; i++) { try { var v = localStorage.getItem(KEYS[i]); if (v) return v; } catch (e) {} }
+    return null;
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pt(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short',
+        day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
+    } catch (e) { return iso; }
+  }
+  function age(iso) {
+    if (!iso) return '';
+    var h = (Date.now() - new Date(iso).getTime()) / 3600000;
+    if (h < 1) return Math.max(0, Math.round(h * 60)) + 'm';
+    if (h < 48) return Math.round(h) + 'h';
+    return Math.round(h / 24) + 'd';
+  }
+  function num(v, sign) {
+    if (v == null || v === '') return '';
+    var n = Number(v);
+    return (sign && n > 0 ? '+' : '') + String(n).replace('-', '−');
+  }
+  function fill(sel, vals) {
+    var el = document.getElementById(sel);
+    vals.sort().forEach(function (v) {
+      if (!v) return;
+      var o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o);
+    });
+  }
+  function visible() {
+    var q = document.getElementById('q').value.trim().toLowerCase();
+    var src = document.getElementById('source').value, sp = document.getElementById('sport').value;
+    var rs = document.getElementById('reason').value, rv = document.getElementById('review').value;
+    var ag = parseFloat(document.getElementById('age').value || '0');
+    return rows.filter(function (r) {
+      if (q && String(r.handle || '').toLowerCase().indexOf(q) < 0) return false;
+      if (src && r.source !== src) return false;
+      if (sp && r.league !== sp) return false;
+      if (rs && r.pending_reason !== rs) return false;
+      if (rv === 'only' && !r.review_flag) return false;
+      if (rv === 'none' && r.review_flag) return false;
+      if (ag && (Date.now() - new Date(r.captured_at).getTime()) / 3600000 < ag) return false;
+      return true;
+    });
+  }
+  var COLS = [
+    ['handle', 'Handicapper'], ['source', 'Source'], ['league', 'Sport'], ['event_label', 'Event'],
+    ['event_start', 'Starts'], ['selection', 'Selection'], ['market', 'Market'], ['line', 'Line'],
+    ['odds', 'Odds'], ['units', 'Units'], ['captured_at', 'Captured'], ['age', 'Age'], ['pending_reason', 'Status']
+  ];
+  function render() {
+    var list = visible().slice().sort(function (a, b) {
+      var k = sortKey === 'age' ? 'captured_at' : sortKey;
+      var x = a[k], y = b[k];
+      if (k === 'line' || k === 'odds' || k === 'units') { x = Number(x || 0); y = Number(y || 0); }
+      else { x = String(x == null ? '' : x).toLowerCase(); y = String(y == null ? '' : y).toLowerCase(); }
+      return x < y ? -sortDir : x > y ? sortDir : 0;
+    });
+    document.getElementById('count').textContent =
+      list.length + ' pending / ' + new Set(list.map(function (r) { return String(r.handle).toLowerCase(); })).size + ' handicappers';
+    if (!list.length) { document.getElementById('out').innerHTML = '<div class="empty">Nothing pending.</div>'; return; }
+    var h = '<table><thead><tr>' + COLS.map(function (c) {
+      var arrow = sortKey === c[0] ? (sortDir === 1 ? ' ▲' : ' ▼') : '';
+      return '<th data-k="' + c[0] + '">' + c[1] + arrow + '</th>';
+    }).join('') + '</tr></thead><tbody>';
+    list.forEach(function (r) {
+      var link = r.profile_slug ? '/around-the-web/' + encodeURIComponent(r.profile_slug) + '/' : null;
+      h += '<tr><td class="who">' + (link ? '<a href="' + link + '">' + esc(r.handle) + '</a>' : esc(r.handle)) + '</td>'
+        + '<td>' + esc(r.source) + '</td><td>' + esc(r.league || '') + '</td>'
+        + '<td>' + esc(r.event_label || '') + '</td><td>' + esc(pt(r.event_start)) + '</td>'
+        + '<td class="sel">' + esc(r.selection || '') + '</td>'
+        + '<td>' + esc((r.period && r.period !== 'game' ? r.period.toUpperCase() + ' ' : '') + (r.market || '')) + '</td>'
+        + '<td class="num">' + num(r.line, true) + '</td><td class="num">' + num(r.odds, true) + '</td>'
+        + '<td class="num">' + (r.units == null ? '' : esc(r.units)) + '</td>'
+        + '<td>' + esc(pt(r.captured_at)) + '</td><td class="num">' + esc(age(r.captured_at)) + '</td>'
+        + '<td class="why">' + esc(r.pending_reason || '') + (r.review_flag ? '<span class="rev">review</span>' : '') + '</td></tr>';
+    });
+    document.getElementById('out').innerHTML = h + '</tbody></table>';
+    Array.prototype.forEach.call(document.querySelectorAll('th[data-k]'), function (th) {
+      th.onclick = function () {
+        var k = th.getAttribute('data-k');
+        if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = 1; }
+        render();
+      };
+    });
+  }
+
+  var t = tok();
+  if (!t) {
+    document.getElementById('out').innerHTML = '<div class="deny">Sign in as the owner account to view pending picks.</div>';
+    document.getElementById('count').textContent = '';
+    return;
+  }
+  fetch(API + '/admin/atw/pending?limit=5000', { headers: { Authorization: 'Bearer ' + t } })
+    .then(function (r) {
+      if (r.status === 401 || r.status === 403) throw new Error('denied');
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    })
+    .then(function (d) {
+      rows = (d && d.rows) || [];
+      fill('source', Array.from(new Set(rows.map(function (r) { return r.source; }))));
+      fill('sport', Array.from(new Set(rows.map(function (r) { return r.league; }))));
+      fill('reason', Array.from(new Set(rows.map(function (r) { return r.pending_reason; }))));
+      ['q', 'source', 'sport', 'reason', 'review', 'age'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', render);
+        document.getElementById(id).addEventListener('change', render);
+      });
+      render();
+    })
+    .catch(function (e) {
+      document.getElementById('count').textContent = '';
+      document.getElementById('out').innerHTML = String(e.message) === 'denied'
+        ? '<div class="deny">This account is not authorised to view pending picks.</div>'
+        : '<div class="deny">Could not load pending picks.</div>';
+    });
+})();
+</script>
+</body>
+</html>
