@@ -35,6 +35,7 @@ never fail a build: the page degrades to the data it does have.
 """
 
 import base64
+import datetime
 import hashlib
 import json
 import os
@@ -144,7 +145,36 @@ def norm_name(v):
 # ---------------------------------------------------------------- ESPN clubs
 
 def scoreboard(sport, dates):
-    """Every event ESPN is carrying across `dates` (YYYYMMDD-YYYYMMDD)."""
+    """Every event ESPN is carrying across `dates` (YYYYMMDD or YYYYMMDD-YYYYMMDD).
+
+    ESPN's scoreboard accepts a range in the query string and then answers it
+    with an EMPTY event list. Measured 2026-09-16 on the NFL feed:
+    ?dates=20260916-20260918 returns 0 events, ?dates=20260917 returns the one
+    event that is actually there (DET @ BUF). A range therefore silently
+    stripped every club id off the page, and with the id went the logos, the
+    headshots, the season team stats and the whole comparison section. Ask a
+    day at a time and merge, which is what the callers always meant.
+    """
+    a, _, b = dates.partition("-")
+    if b and b != a:
+        merged = {}
+        try:
+            d0 = datetime.datetime.strptime(a, "%Y%m%d").date()
+            d1 = datetime.datetime.strptime(b, "%Y%m%d").date()
+        except ValueError:
+            return _scoreboard_day(sport, dates)
+        # A guard, not a limit: no caller wants a year of scoreboards.
+        if (d1 - d0).days > 14:
+            d1 = d0 + datetime.timedelta(days=14)
+        while d0 <= d1:
+            merged.update(_scoreboard_day(sport, d0.strftime("%Y%m%d")))
+            d0 += datetime.timedelta(days=1)
+        return merged
+    return _scoreboard_day(sport, a)
+
+
+def _scoreboard_day(sport, dates):
+    """Every event ESPN is carrying on one `dates` value."""
     path = ESPN_PATH.get(sport)
     if not path:
         return {}
