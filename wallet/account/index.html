@@ -299,7 +299,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     }
     if (!d || !d.enabled || !d.depositAddress || !d.linkedWallet) { host.innerHTML = ''; return; }
     var rows = d.deposits || [];
-    var LABEL = { credited: 'Added to your balance', unmatched: 'Under review', ignored: 'Too small to credit' };
+    var LABEL = { credited: 'Added to your balance', unmatched: 'Under review', ignored: 'Too small to credit', reorged: 'Reversed, block dropped' };
     host.innerHTML =
       '<h3 style="margin:0 0 8px;font-size:15px">Bring TMR in from your wallet</h3>' +
       '<p style="margin:0 0 10px;font-size:13.5px;color:var(--acct-muted)">Send TMR on Base from your linked wallet to the address below and it is added to your TrustMyRecord balance, one for one. Send from any other wallet and it cannot be matched to you. Whole TMR is credited; anything under 1 TMR stays in your wallet.</p>' +
@@ -307,10 +307,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       '<dt>Network</dt><dd>Base</dd>' +
       '<dt>From</dt><dd>' + d.linkedWallet + '</dd></dl>' +
       '<div class="row" style="margin-top:10px"><button class="btn ghost" id="btnCopyDep">Copy address</button></div>' +
-      (rows.length ? '<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Status</th><th>Transaction</th></tr></thead><tbody>' +
+      (rows.length ? '<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Date</th><th>From</th><th class="num">Sent</th><th class="num">Credited</th><th>Status</th><th class="num">Confirmations</th><th>Transaction</th></tr></thead><tbody>' +
         rows.map(function (r) {
-          return '<tr><td>' + new Date(r.at).toLocaleString() + '</td><td class="num">' + fmt(r.amount) + '</td><td>' +
-            (LABEL[r.status] || r.status) + '</td><td><a href="' + r.txUrl + '" target="_blank" rel="noopener">' + r.txHash.slice(0, 10) + '…</a></td></tr>';
+          var sent = (typeof r.sent === 'number' ? r.sent : r.amount);
+          var sentText = (sent === Math.round(sent)) ? fmt(sent) : String(sent);
+          var confs = (typeof r.confirmations === 'number') ? fmt(r.confirmations) : '—';
+          return '<tr><td>' + new Date(r.at).toLocaleString() + '</td>' +
+            '<td>' + (r.from ? r.from.slice(0, 6) + '…' + r.from.slice(-4) : '—') + '</td>' +
+            '<td class="num">' + sentText + '</td><td class="num">' + fmt(r.credited || 0) + '</td><td>' +
+            (LABEL[r.status] || r.status) + '</td><td class="num">' + confs + '</td>' +
+            '<td><a href="' + r.txUrl + '" target="_blank" rel="noopener">' + r.txHash.slice(0, 10) + '…</a></td></tr>';
         }).join('') + '</tbody></table></div>' : '');
     var copy = $('btnCopyDep');
     if (copy) copy.onclick = function () {
