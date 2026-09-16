@@ -614,6 +614,24 @@
         .tmr-game-rule { padding: 3px 9px; border-radius: 5px; background: rgba(11, 79, 168,0.08); border: 1px solid rgba(11, 79, 168,.28); color: #0B4FA8; font-size: 0.7rem; font-weight: 650; }
         .tmr-q { border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; margin: 12px 0; background: var(--surface-2); }
         .tmr-q-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        /* NFL daily cards: type pill, matchup chips, logos and headshots. */
+        .tmr-q.nfl-q { position: relative; overflow: hidden; padding-top: 11px; }
+        .tmr-q.nfl-q::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--accent), var(--accent-2, var(--accent))); }
+        .nfl-q-top { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 9px; }
+        .nfl-q-type { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: var(--accent-dim); color: var(--accent); font-size: 0.7rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+        .nfl-q-game { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-1); font-size: 0.72rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+        .nfl-q-game .at { color: var(--text-muted, #7b8794); font-weight: 600; }
+        .nfl-q-kick { font-size: 0.7rem; color: var(--text-muted, #7b8794); font-weight: 650; margin-left: 2px; }
+        .nfl-logo { width: 20px; height: 20px; object-fit: contain; flex: 0 0 auto; }
+        .nfl-logo.lg { width: 26px; height: 26px; }
+        .nfl-head { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; object-position: top; background: var(--surface-1); border: 1px solid var(--border); flex: 0 0 auto; }
+        .nfl-head.sm { width: 30px; height: 30px; }
+        .nfl-q-titlewrap { display: flex; align-items: center; gap: 10px; }
+        .tmr-q.nfl-q .tmr-q-head { align-items: center; }
+        .nfl-opt-lead { display: inline-flex; align-items: center; gap: 4px; margin-right: 2px; vertical-align: middle; }
+        .tmr-q.nfl-q .tmr-q-opt label { min-height: 44px; }
+        .tmr-q.nfl-q .tmr-q-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+        @media (max-width: 520px) { .tmr-q.nfl-q .tmr-q-opts { grid-template-columns: 1fr; } }
         .tmr-q-title { font-weight: 650; color: var(--text); font-size: var(--fs-base); }
         .tmr-q-num { color: var(--accent); font-weight: 800; font-size: 0.67rem; letter-spacing: 0.08em; text-transform: uppercase; }
         .tmr-q-worth { color: var(--gold); font-weight: 700; font-size: 0.72rem; white-space: nowrap; }
@@ -2953,6 +2971,49 @@
         if (fill) fill.style.width = (total ? Math.round((done / total) * 100) : 0) + '%';
     }
 
+    // NFL card visuals (q.display / o.show come from services/nflQuizBot.js).
+    function nflLogoHtml(abbr, cls) {
+        if (!abbr) return '';
+        return '<img class="nfl-logo' + (cls ? ' ' + cls : '') + '" loading="lazy" alt="" aria-hidden="true" src="https://a.espncdn.com/i/teamlogos/nfl/500/' +
+            escHtml(String(abbr).toLowerCase()) + '.png" onerror="this.style.display=\'none\'">';
+    }
+    function nflHeadHtml(id, abbr, cls) {
+        if (!id) return nflLogoHtml(abbr);
+        return '<img class="nfl-head' + (cls ? ' ' + cls : '') + '" loading="lazy" alt="" aria-hidden="true" src="https://a.espncdn.com/i/headshots/nfl/players/full/' +
+            escHtml(String(id)) + '.png" onerror="this.onerror=null;this.src=\'https://a.espncdn.com/i/teamlogos/nfl/500/' + escHtml(String(abbr || '').toLowerCase()) + '.png\'">';
+    }
+    function nflKickTxt(k) {
+        var d = new Date(k);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    }
+    function nflGameChip(g) {
+        return '<span class="nfl-q-game">' + nflLogoHtml(g.away.abbr) + escHtml(g.away.abbr) + ' <span class="at">@</span> ' +
+            escHtml(g.home.abbr) + nflLogoHtml(g.home.abbr) + '</span>';
+    }
+    function nflTopHtml(q) {
+        var d = q.display;
+        if (!d) return '';
+        var games = d.games || [];
+        var chips = games.length <= 2 ? games.map(nflGameChip).join('') : '';
+        var kick = games.length === 1 ? '<span class="nfl-q-kick"><i class="fas fa-clock" aria-hidden="true"></i> ' + escHtml(nflKickTxt(games[0].kickoff)) + '</span>' : '';
+        return '<div class="nfl-q-top"><span class="nfl-q-type"><i class="fas fa-' + escHtml(d.icon || 'football') + '" aria-hidden="true"></i> ' + escHtml(d.type) + '</span>' + chips + kick + '</div>';
+    }
+    function nflOptLead(q, o) {
+        var sh = o && o.show;
+        if (!q.display || !sh) return '';
+        if (sh.player) return '<span class="nfl-opt-lead">' + nflHeadHtml(sh.player, sh.abbr, 'sm') + '</span>';
+        if (sh.abbr) return '<span class="nfl-opt-lead">' + nflLogoHtml(sh.abbr, 'lg') + '</span>';
+        if (sh.game != null && q.display.games && q.display.games[sh.game]) {
+            var g = q.display.games[sh.game];
+            return '<span class="nfl-opt-lead">' + nflLogoHtml(g.away.abbr) + nflLogoHtml(g.home.abbr) + '</span>';
+        }
+        return '';
+    }
+    // A 50/50 line (no sportsbook price) says nothing; do not badge it.
+    function nflHideModel(q, o) {
+        return !!q.display && o.model_prob != null && Math.abs(o.model_prob - 0.5) < 0.011;
+    }
     function renderGame() {
         var g = state.currentGame;
         if (!g || !g.parent) return;
@@ -3023,7 +3084,9 @@
                 ? '<div class="tmr-q-reason"><i class="fas fa-' + (pr.state === 'void' ? 'ban' : 'triangle-exclamation') + '"></i> ' +
                   escHtml(pr.message) + '</div>'
                 : '';
-            var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span>' + qBadge + '</div>' +
+            var lead = (q.display && q.display.player) ? nflHeadHtml(q.display.player.id, q.display.player.abbr)
+                     : (q.display && q.display.team) ? nflLogoHtml(q.display.team.abbr, 'lg') : '';
+            var head = nflTopHtml(q) + '<div class="tmr-q-head"><div' + (lead ? ' class="nfl-q-titlewrap"' : '') + '>' + lead + '<div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span>' + qBadge + '</div></div>' +
                        '<span class="tmr-q-worth">' + worth + ' pts</span></div>' + reasonLine;
             var body = '';
             if (q.scoring_mode === 'closest') {
@@ -3055,18 +3118,18 @@
                         var cls = 'tmr-q-opt' + (correct?' is-correct':'') + (you?' is-yourpick':'');
                         var tags = (correct?'<span class="tmr-q-tag correct">Correct</span>':'') + (you?'<span class="tmr-q-tag you">You</span>':'');
                         var ptsTag = (qGraded && you && ua && ua.points_earned!=null) ? '<span class="tmr-q-tag pts">+' + ua.points_earned + '</span>' : '';
-                        var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
-                        return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + modelBadge + '</span>' +
+                        var modelBadge = (o.model_prob!=null && !nflHideModel(q, o)) ? '<span class="tmr-q-model" title="Model implied probability">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
+                        return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + nflOptLead(q, o) + escHtml(o.option_text) + tags + ptsTag + modelBadge + '</span>' +
                                '<span class="tmr-q-res-pct">' + pctText + '% &middot; ' + vc + '</span></div>' +
                                '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:0%" data-w="' + Math.min(100,pct).toFixed(1) + '"></div></div></div>';
                     }).join('') + '</div>';
                 } else {
                     body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
                         var checked = yourOpt === parseInt(o.id);
-                        var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability + payoff if correct">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
+                        var modelBadge = (o.model_prob!=null && !nflHideModel(q, o)) ? '<span class="tmr-q-model" title="Model implied probability + payoff if correct">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
                         return '<div class="tmr-q-opt' + (checked?' is-checked':'') + '"><label>' +
                                '<input type="radio" name="q_' + q.id + '" value="' + o.id + '" data-qid="' + q.id + '" data-mode="option" onchange="markGameChoice(this)"' + (checked?' checked':'') + '> ' +
-                               '<span>' + escHtml(o.option_text) + '</span>' + modelBadge + '</label></div>';
+                               nflOptLead(q, o) + '<span>' + escHtml(o.option_text) + '</span>' + modelBadge + '</label></div>';
                     }).join('') + '</div>';
                     if (q.scoring_mode === 'confidence') {
                         var cval = ua && ua.confidence_level ? ua.confidence_level : 50;
@@ -3076,7 +3139,7 @@
                     }
                 }
             }
-            return '<div class="tmr-q">' + head + body + '</div>';
+            return '<div class="tmr-q' + (q.display ? ' nfl-q' : '') + '">' + head + body + '</div>';
         }).join('');
         qsHtml = '<div id="gameQuestions">' + qsHtml + '</div>';
 
