@@ -97,6 +97,11 @@ def section(title, body, eyebrow=None, lede=None, note=None, anchor=None):
 
 
 def logo_img(src, alt, cls="", size=48):
+    # ONE_CLUB_MARK_PER_PAGE_20260916. The club marks belong in the hero and
+    # nowhere else. Repeating the same two badges down the scoreline, the
+    # comparison header, every form row and every story card put 12 logo tags
+    # on a two club page for 2 clubs, which is noise, not illustration. The
+    # text label those icons sat next to was already carrying the meaning.
     if not src:
         return ""
     return ('<img%s src="%s" alt="%s" width="%d" height="%d" loading="lazy" decoding="async">'
@@ -273,8 +278,8 @@ def compare(ctx, rows, note=None):
         '                    <span class="hx-cmp-vs">VS</span>\n'
         '                    <span class="hx-cmp-club hx-cmp-club--home"><b>%s</b>%s</span>\n'
         '                </div>\n' % (
-            logo_img(a.get("logo"), "", "", 34), esc(a.get("short") or a.get("name")),
-            esc(h.get("short") or h.get("name")), logo_img(h.get("logo"), "", "", 34)))
+            "", esc(a.get("short") or a.get("name")),
+            esc(h.get("short") or h.get("name")), ""))
 
     body = []
     for r in live:
@@ -369,9 +374,9 @@ def model_panel(ctx, m):
         '                        <div class="hx-score-side">%s<span class="hx-score-v%s">%s</span>'
         '<span class="hx-score-abbr">%s</span></div>\n'
         '                    </div>\n' % (
-            logo_img(a.get("logo"), "", "", 46), " is-win" if a_win else "", esc(ascore),
+            "", " is-win" if a_win else "", esc(ascore),
             esc(a.get("abbr") or a.get("short")),
-            logo_img(h.get("logo"), "", "", 46), "" if a_win else " is-win", esc(hscore),
+            "", "" if a_win else " is-win", esc(hscore),
             esc(h.get("abbr") or h.get("short"))))
 
     aw = max(8.0, min(92.0, awp * 100.0))
@@ -458,7 +463,7 @@ def form_block(rows):
             '                    %s\n'
             '                    <span class="hx-form-bits">%s</span>\n'
             '                </div>\n' % (
-                logo_img(r.get("logo"), "", "", 30), esc(r["name"]),
+                "", esc(r["name"]),
                 ('<span class="hx-seq">%s</span>' % seq) if seq else "", tags))
     return '            <div class="hx-card">\n%s            </div>\n' % "".join(out)
 
@@ -515,7 +520,7 @@ def stories(items):
         shot = ('<img class="hx-story-shot" src="%s" alt="%s" width="184" height="184" '
                 'loading="lazy" decoding="async">' % (esc(s["photo"]), esc(s.get("photo_alt") or ""))
                 ) if s.get("photo") else ""
-        mark = logo_img(s.get("logo"), "", "", 22)
+        mark = ""
         paras = "".join("<p>%s</p>" % esc(p) for p in s.get("paras") or [])
         out.append(
             '                <article class="hx-story-card hx-story-card--%s">\n'
