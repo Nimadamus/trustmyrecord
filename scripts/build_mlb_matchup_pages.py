@@ -493,6 +493,114 @@ def markets_from(bg):
     return out
 
 
+def _f(v):
+    """A stat value as a float, or None. The feed hands back strings."""
+    try:
+        return float(str(v).strip())
+    except (TypeError, ValueError, AttributeError):
+        return None
+
+
+def analysis_paras(away, home, aw_o, hm_o, aw_tp, hm_tp, aw_bp, hm_bp, market):
+    """What the tables above are worth, in runs and in cents.
+
+    MLB_ANALYSIS_DEPTH_20260916. The page printed R/G, OPS, staff ERA and a
+    bullpen split and left the reader to do the work. These paragraphs do the
+    work: they cross each offence with the staff it is actually facing, turn a
+    bullpen gap into the runs it is worth over the innings a bullpen throws,
+    and say what the posted price demands against what the two prices together
+    imply. Every number quoted is in a table on this page.
+    """
+    out = []
+    aw_o, hm_o = aw_o or {}, hm_o or {}
+    aw_tp, hm_tp = aw_tp or {}, hm_tp or {}
+    aw_bp, hm_bp = aw_bp or {}, hm_bp or {}
+
+    # --- the run environment, crossed rather than listed --------------------
+    a_rpg, h_rpg = _f(aw_o.get("runs_per_game")), _f(hm_o.get("runs_per_game"))
+    a_ra, h_ra = _f(aw_tp.get("runs_allowed_per_game")), _f(hm_tp.get("runs_allowed_per_game"))
+    if None not in (a_rpg, h_rpg, a_ra, h_ra):
+        a_exp = (a_rpg + h_ra) / 2.0
+        h_exp = (h_rpg + a_ra) / 2.0
+        crude = a_exp + h_exp
+        line = ("Cross each offence with the staff it is actually facing and you get a rough run "
+                "environment for this game: %s score %s a game against a staff giving up %s, "
+                "which splits to %s, and %s score %s against %s allowed, which splits to %s. "
+                "Put together that is about %s runs."
+                % (nickname(away), num(a_rpg, 2), num(h_ra, 2), num(a_exp, 2),
+                   nickname(home), num(h_rpg, 2), num(a_ra, 2), num(h_exp, 2), num(crude, 1)))
+        tot = market.get("total") or {}
+        raw = (tot.get("over") or {}).get("raw_line")
+        posted = _f(raw)
+        if posted:
+            diff = crude - posted
+            line += (" The board is at %s, so the season rates sit %s runs %s the number."
+                     % (num(posted, 1), num(abs(diff), 1), "above" if diff > 0 else "below"))
+            line += (" That is a matchup neutral estimate and nothing more: it carries no park, "
+                     "no starting pitcher and no weather, all three of which the book has already "
+                     "priced. Read it as the baseline the adjustments are moving away from, not "
+                     "as a number to bet into.")
+        else:
+            line += (" That is a matchup neutral estimate: no park, no starting pitcher, no "
+                     "weather.")
+        out.append(line)
+
+    # --- the bullpen, in runs over the innings it throws ---------------------
+    a_pen, h_pen = _f(aw_bp.get("era")), _f(hm_bp.get("era"))
+    if None not in (a_pen, h_pen) and abs(a_pen - h_pen) >= 0.25:
+        lead, lv, trail, tv = ((away, a_pen, home, h_pen) if a_pen < h_pen
+                               else (home, h_pen, away, a_pen))
+        per_game = (tv - lv) * 3.0 / 9.0
+        out.append("The bullpens are the gap nobody prices until the sixth: %s at %s against %s "
+                   "for %s. A modern pen throws about three innings a night, so that difference "
+                   "is worth roughly %s runs a game to %s, and it lands in exactly the innings "
+                   "where a one run lead is either protected or handed back."
+                   % (nickname(lead), num(lv, 2), num(tv, 2), nickname(trail),
+                      num(per_game, 2), nickname(lead)))
+
+    # --- what kind of offence, not just how much -----------------------------
+    a_ops, h_ops = _f(aw_o.get("ops")), _f(hm_o.get("ops"))
+    a_iso, h_iso = _f(aw_o.get("iso")), _f(hm_o.get("iso"))
+    if None not in (a_ops, h_ops) and abs(a_ops - h_ops) >= 0.015:
+        lead, lv, trail, tv = ((away, a_ops, home, h_ops) if a_ops > h_ops
+                               else (home, h_ops, away, a_ops))
+        line = ("On the season %s carries the better bat, %s OPS against %s."
+                % (nickname(lead), num(lv, 3), num(tv, 3)))
+        if None not in (a_iso, h_iso):
+            i_lead = away if a_iso > h_iso else home
+            line += (" The shape of it matters as much as the size: isolated power runs %s for "
+                     "%s and %s for %s, and the club with the power is the one that can score "
+                     "without stringing three hits together, which is the only way most teams "
+                     "score against a good bullpen."
+                     % (num(a_iso, 3), nickname(away), num(h_iso, 3), nickname(home)))
+            if i_lead is not lead:
+                line += (" Those two point at different clubs here, so the better offence and the "
+                         "more dangerous one are not the same team tonight.")
+        out.append(line)
+
+    # --- the price, with the book's margin named -----------------------------
+    ml = market.get("ml") or {}
+    pa, ph = None, None
+    for sel, odds in ml.items():
+        if str(sel).strip() == str(away).strip():
+            pa = odds
+        elif str(sel).strip() == str(home).strip():
+            ph = odds
+    ia, ih = implied(pa), implied(ph)
+    if ia and ih:
+        hold = (ia + ih - 1.0) * 100.0
+        fa, fh = ia / (ia + ih), ih / (ia + ih)
+        fav, fp, fair, be = ((home, ph, fh, ih) if ih > ia else (away, pa, fa, ia))
+        out.append("The two moneyline prices add up to %s%% rather than 100, and that %s points "
+                   "is the book's margin, charged whichever side you take. Take it out and %s is "
+                   "a %s side. The ticket itself still needs %s to break even at %s, so the "
+                   "difference between the fair number and the break even is what the price costs "
+                   "you before the game starts."
+                   % (num((ia + ih) * 100.0, 1), num(hold, 1), nickname(fav),
+                      pct(fair * 100.0, 1), pct(be * 100.0, 1), fp))
+    return out
+
+
 def trends_for(trend_feed, g):
     away, home = g["away_team"].upper(), g["home_team"].upper()
     hits = []
@@ -1066,6 +1174,19 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
         b.append('          <p class="mm-sub">Team season stats are not available from the provider '
                  'for this date.</p>\n')
     b.append("        </section>\n")
+
+    # ---- what the numbers are worth ---------------------------------------
+    paras = analysis_paras(away, home, aw_o, hm_o, aw_tp, hm_tp, aw_bp, hm_bp, market or {})
+    if paras:
+        b.append('        <section class="mm-sec" aria-labelledby="mm-analysis">\n')
+        b.append('          <h2 id="mm-analysis">What the numbers are worth</h2>\n')
+        b.append('          <p class="mm-sub">The tables above measure these two clubs. This '
+                 'reads them: each offence crossed with the staff it is facing, the bullpen gap '
+                 'in runs rather than in ERA, and what the posted price is charging over the '
+                 'fair one.</p>\n')
+        for para in paras:
+            b.append('          <p>%s</p>\n' % esc(para))
+        b.append("        </section>\n")
 
     # ---- trends -----------------------------------------------------------
     # Two different things, labelled as two different things:
