@@ -249,6 +249,11 @@ console.log('\nnoindex allowlist');
     // This exception covers this one admin route and nothing else: public TMR
     // pages are never noindex.
     SITE + '/admin/growth/',
+    // Around the Web pending picks, owner only. Same private, login gated surface as the
+    // consoles above: linked from nowhere public, useless without the owner session, and every
+    // row it renders comes from an adminOnly API that refuses everybody else. The page itself
+    // ships no data. Authorised by the site owner on 2026-09-15 for this one route.
+    SITE + '/admin/atw/pending/',
     // Admin-only TMR economy health dashboard (earn-to-spend funnel, sinks,
     // velocity, member liability). Identical surface to the three consoles
     // above: linked only from /admin/, answers 401 without an admin session,
