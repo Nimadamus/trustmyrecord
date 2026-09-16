@@ -4364,6 +4364,10 @@
             loadLeaderboard({ reset: true });
             var hash = window.location.hash || '';
             var pid = hash.indexOf('#poll-') === 0 ? parseInt(hash.substring(6)) : 0;
+            // #today = today's featured daily card, so a fixed link always lands on it.
+            if (!pid && hash === '#today') {
+                try { var ft = await api.request('/polls/featured'); pid = ft && ft.featured ? parseInt(ft.featured.id) : 0; } catch (e) { pid = 0; }
+            }
             await loadSection();
             if (pid) openPoll(pid);
         })();
