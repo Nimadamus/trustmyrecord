@@ -189,6 +189,17 @@ TEAM_ROWS = {
         ("Total yards per game", "passing.netYardsPerGame", False, True, "", 0.9),
         ("Passing yards per game", "passing.netPassingYardsPerGame", False, True, "", 0.7),
         ("Rushing yards per game", "rushing.rushingYardsPerGame", False, True, "", 0.7),
+        # EFFICIENCY_ROWS_20260916. Yardage says how far a club moves the ball,
+        # which is not the same question as whether the drive ends in points.
+        # Third down decides whether it continues at all, the red zone decides
+        # whether it is worth 7 or 3, and the turnover column decides who gets
+        # the extra possession. A page that prints yards and stops is describing
+        # the game, not handicapping it.
+        ("Third down conversion rate", "miscellaneous.thirdDownConvPct", False, True, "%", 0.85),
+        ("Red zone touchdown rate", "miscellaneous.redzoneTouchdownPct", False, True, "%", 0.8),
+        ("Turnover differential", "miscellaneous.turnOverDifferential", False, True, "", 0.75),
+        ("First downs per game", "miscellaneous.firstDownsPerGame", False, True, "", 0.6),
+        ("Sacks", "defensive.sacks", False, True, "", 0.45),
         ("Completion rate", "passing.completionPct", False, True, "%", 0.5),
         ("Touchdowns scored", "scoring.totalTouchdowns", False, True, "", 0.5),
         ("Interceptions thrown", "passing.interceptions", False, False, "", 0.45),
@@ -373,6 +384,182 @@ def model_from_sim(sim, away, home, mk):
 
 
 # ---------------------------------------------------------------- storylines
+
+def _cmp_row(cmp_rows, label):
+    for r in cmp_rows or []:
+        if (r.get("label") == label and r.get("away_cmp") is not None
+                and r.get("home_cmp") is not None):
+            return r
+    return None
+
+
+def _sides(r, a, h):
+    """A comparison row read as (leader, leader value, trailer, trailer value)."""
+    av, hv = float(r["away_cmp"]), float(r["home_cmp"])
+    a_ahead = (av > hv) if r.get("higher", True) else (av < hv)
+    return (a, av, h, hv) if a_ahead else (h, hv, a, av)
+
+
+def _pctstr(v):
+    return "%.1f%%" % float(v)
+
+
+def _odds_num(v):
+    """A displayed American price back to a number, or None."""
+    try:
+        return int(str(v).replace("+", "").replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+
+
+def analysis_cards(ctx, model, cmp_rows, mk, facts, hist):
+    """The cards that argue from the numbers instead of restating them.
+
+    ANALYSIS_DEPTH_20260916. Everything above these cards is a measurement. A
+    reader can already see that one club converts more third downs. What they
+    cannot see is what that is worth IN THIS GAME, on this number, against this
+    price. Each card below turns one measured column into the possession, the
+    point or the cent it is actually worth, and every figure it quotes is
+    printed elsewhere on the page.
+    """
+    a, h = ctx["away"], ctx["home"]
+    out = []
+
+    def A(c):
+        return c.get("location") or c["name"]
+
+    # --- where drives end: third down, red zone, takeaways ------------------
+    paras = []
+    r3 = _cmp_row(cmp_rows, "Third down conversion rate")
+    if r3:
+        lead, lv, trail, tv = _sides(r3, a, h)
+        att = []
+        for st, gp in ((facts.get("a_stats"), facts.get("a_gp")),
+                       (facts.get("h_stats"), facts.get("h_gp"))):
+            v = enrich.statf(st, "miscellaneous.thirdDownAttempts")
+            if v and gp:
+                att.append(v / gp)
+        per_game = (sum(att) / len(att)) if att else None
+        line = ("Third down is the down that decides whether a drive keeps going or hands the "
+                "ball back, and %s is converting %s of them against %s for %s."
+                % (A(lead), _pctstr(lv), _pctstr(tv), A(trail)))
+        if per_game and per_game >= 4:
+            extra = (lv - tv) / 100.0 * per_game
+            line += (" These two are seeing about %.0f third downs a game, so that edge is worth "
+                     "roughly %.1f extra sets of downs to %s, which is a drive that lives instead "
+                     "of a punt." % (per_game, extra, A(lead)))
+        paras.append(line)
+    rz = _cmp_row(cmp_rows, "Red zone touchdown rate")
+    if rz:
+        lead, lv, trail, tv = _sides(rz, a, h)
+        paras.append("Inside the 20 the difference between a touchdown and a field goal is four "
+                     "points every single trip, and %s is finishing %s of its red zone trips "
+                     "with a touchdown against %s for %s. Three trips a game at that gap is most "
+                     "of a score, and none of it shows up in a yardage column."
+                     % (A(lead), _pctstr(lv), _pctstr(tv), A(trail)))
+    to = _cmp_row(cmp_rows, "Turnover differential")
+    if to:
+        lead, lv, trail, tv = _sides(to, a, h)
+        if abs(lv - tv) >= 1:
+            paras.append("Turnovers move scores faster than anything else on the page: %s is %+g "
+                         "on the season against %+g for %s. An extra possession is worth about "
+                         "two points of expectation on its own, and it is also the least stable "
+                         "number here, so it is a reason to respect a side rather than to price "
+                         "one." % (A(lead), lv, tv, A(trail)))
+    if paras:
+        out.append({"kicker": "Efficiency", "side": "gold",
+                    "title": "Where the drives actually end", "paras": paras})
+
+    # --- the model against the price, in probability ------------------------
+    if model and model.get("home_wp") is not None:
+        fav_home = model["home_score"] >= model["away_score"]
+        fav = h if fav_home else a
+        wp = model["home_wp"] if fav_home else model["away_wp"]
+        fair = (mk.get("ml_fair") or (None, None))[1 if fav_home else 0]
+        price = None
+        for row in ((mk.get("moneyline") or {}).get("rows") or []):
+            if row[0] == (fav.get("short") or fav["name"]):
+                price = row[1]
+        paras = []
+        if fair is not None:
+            gap = (wp - fair) * 100.0
+            paras.append("Take the book's margin out of the moneyline and the market makes %s a "
+                         "%s side. The model makes it %s. That %.1f point gap is the whole "
+                         "disagreement, and it runs %s the favourite."
+                         % (A(fav), enrich.pct(fair, 1), enrich.pct(wp, 1), abs(gap),
+                            "with" if gap > 0 else "against"))
+            # The break even is the PRICE's own implied number, vig included,
+            # not the no vig fair one. They are different questions and quoting
+            # the fair number as a break even understates what the ticket costs:
+            # -200 breaks even at 66.7%, and 66.3% is what it is worth after the
+            # book's margin comes out.
+            be = enrich.implied(_odds_num(price)) if price else None
+            if price and be is not None:
+                paras.append("At %s the ticket breaks even at %s, and the model has %s winning "
+                             "%s of the time. %s"
+                             % (price, enrich.pct(be, 1), A(fav), enrich.pct(wp, 1),
+                                ("The price is asking for more than the simulation gives back, "
+                                 "which is why the number, not the team, is the thing to argue "
+                                 "with here." if wp < be else
+                                 "That is the less common case where the favourite is the value "
+                                 "rather than the tax on it.")))
+        if paras:
+            out.append({"kicker": "The price", "side": "gold",
+                        "title": "The model against the number", "paras": paras})
+
+    # --- variance and the key numbers ---------------------------------------
+    chips = dict((c[0], c[1]) for c in (model or {}).get("chips") or [])
+    if chips.get("One score game"):
+        sp = (mk.get("spread_by_side") or {}).get(h["name"])
+        paras = ["%s of the ten thousand runs finish inside one score and %s land on exactly "
+                 "three points, which is the most common margin in the sport and the reason "
+                 "three and seven are priced differently from four and eight."
+                 % (chips.get("One score game"),
+                    chips.get("Decided by exactly 3", "a meaningful share"))]
+        if sp is not None:
+            fav = h if sp < 0 else a
+            n = abs(float(sp))
+            if float(n).is_integer():
+                exact = chips.get("Decided by exactly %g" % n)
+                paras.append("The board is laying %g with %s, so a %g point win is a push and the "
+                             "stake comes back%s. To cash it the favourite has to get to %g, and "
+                             "the margins cluster on three and seven rather than spreading "
+                             "evenly, so the gap between this number and the next key one is "
+                             "worth more than the single point it looks like."
+                             % (n, A(fav), n,
+                                (", which %s of the runs do" % exact) if exact else "", n + 1))
+            else:
+                paras.append("The board is laying %g with %s, so there is no push to hide behind. "
+                             "Every one of those one score finishes settles the ticket one way or "
+                             "the other." % (n, A(fav)))
+        if chips.get("Decided by 14+"):
+            paras.append("The other tail is real as well. %s of the runs are decided by fourteen "
+                         "or more, so this is not a game that only knows how to be close."
+                         % chips["Decided by 14+"])
+        out.append({"kicker": "Variance", "side": "gold",
+                    "title": "What actually beats the number", "paras": paras})
+
+    # --- how much sample is behind any of it --------------------------------
+    gp = [x for x in (facts.get("a_gp"), facts.get("h_gp")) if x]
+    paras = []
+    if gp and max(gp) <= 4:
+        played = "one game" if max(gp) == 1 else "%d games" % int(max(gp))
+        paras.append("Read every season rate above against its sample, because these clubs have "
+                     "played %s. A per game figure off that many games swings by whole points on "
+                     "a single drive, so the simulation leans on drive level inputs and roster "
+                     "quality rather than on a rate that has barely had time to exist." % played)
+    ms = ((hist or {}).get("matchup_summary") or {})
+    n = ms.get("games") or ms.get("total_games")
+    if n:
+        paras.append("The series numbers are a different sample again, %d meetings between clubs "
+                     "that have turned over their rosters and their coaching staffs since most "
+                     "of them were played. That is context for how the fixture tends to go, not "
+                     "evidence about this one." % int(n))
+    if paras:
+        out.append({"kicker": "The sample", "side": "gold",
+                    "title": "How much is actually behind these numbers", "paras": paras})
+    return out
+
 
 def storylines(ctx, model, sim, hist, cmp_rows, duel_spec, photos, stat_season):
     """Every card below is generated from a number printed elsewhere on the page."""
@@ -660,6 +847,18 @@ def render(bld, sport, g, hist, slate, extras, built_at, hook=None):
         b.append(ui.section("The story of the game", ui.stories(st), eyebrow="Read first",
                             lede="Every line in these cards is generated from a number printed "
                                  "elsewhere on this page. Nothing here is opinion."))
+
+    deep = analysis_cards(ctx, model, cmp_rows, mk,
+                          {"a_stats": a_stats, "h_stats": h_stats,
+                           "a_gp": a_gp, "h_gp": h_gp}, hist)
+    if deep:
+        b.append(ui.section("What the numbers are worth", ui.stories(deep),
+                            eyebrow="The analysis",
+                            lede="The section above measures these two clubs. This one prices "
+                                 "what the measurements are worth: the possession a third down "
+                                 "edge buys, the points a red zone rate is really carrying, and "
+                                 "where the simulation and the board disagree.",
+                            anchor="analysis"))
 
     b.append(injury_section(sport, g, teams_by_name, injuries, away, home))
     b.append(coverage_section(hist))
