@@ -360,46 +360,106 @@
         if (qs(STYLE_ID)) return;
         var s = document.createElement('style');
         s.id = STYLE_ID;
+        /* EVERY declaration below that sets a colour or a type face is
+           !important, and the selectors are scoped under .tsg-overlay so they
+           out-specify the page.
+
+           WHY: the design system sets `body.tmr-ds h1,h2,h3,h4 { color: var(--ink) }`
+           (tmr-ds.css). That is one class plus two elements, which BEATS
+           `.tsg-card h2`, so the simulator pages rendered this modal's headline
+           in --ink: #07182A navy on the #12121A card, in Barlow Condensed
+           uppercase at 36px. Reported unreadable 2026-09-15 with a screenshot
+           and reproduced live on /mlb-simulator/ (computed rgb(7,24,42)).
+           A modal is a surface of its own: it cannot inherit page heading
+           colour, or the next page that restyles headings breaks it again. */
         s.textContent = [
             '.tsg-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;',
-            'padding:20px;background:rgba(4,8,16,.78);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);',
+            'padding:24px 16px;background:rgba(3,7,14,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);',
             'font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;overflow-y:auto;}',
-            '.tsg-card{width:100%;max-width:440px;box-sizing:border-box;background:#12121a;color:#e8e8f0;',
-            'border:1px solid #2a2a4a;border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.6);',
-            'position:relative;animation:tsgIn .18s ease-out;}',
+            '.tsg-overlay .tsg-card{width:100%;max-width:468px;box-sizing:border-box;margin:auto;',
+            'background:linear-gradient(180deg,#151a26 0%,#0e1119 62%,#0c0e15 100%);',
+            'border:1px solid rgba(0,174,255,.22);border-radius:20px;padding:34px 32px 26px;',
+            'box-shadow:0 28px 80px rgba(0,0,0,.66),0 0 0 1px rgba(255,255,255,.03) inset,',
+            '0 -1px 0 rgba(0,174,255,.10) inset;position:relative;animation:tsgIn .18s ease-out;text-align:left;}',
             '@keyframes tsgIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}',
-            '@media (prefers-reduced-motion:reduce){.tsg-card{animation:none}}',
-            '.tsg-badge{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.08em;',
-            'text-transform:uppercase;color:#04211f;background:linear-gradient(135deg,#2DD4BF,#7FEBDC);',
-            'padding:5px 11px;border-radius:999px;margin-bottom:14px;}',
-            '.tsg-card h2{margin:0 0 10px;font-family:Barlow,Inter,sans-serif;font-size:1.32rem;line-height:1.25;font-weight:800;color:#fff;}',
-            '.tsg-card p{margin:0 0 16px;font-size:.94rem;line-height:1.55;color:#a7b4c9;}',
-            '.tsg-ctx{margin:0 0 16px;padding:11px 13px;border-radius:10px;background:#0c0c14;border:1px solid #23233a;',
-            'font-size:.86rem;color:#cbd6e6;}',
-            '.tsg-ctx b{color:#fff;}',
-            '.tsg-list{list-style:none;margin:0 0 20px;padding:0;}',
-            '.tsg-list li{position:relative;padding-left:24px;margin-bottom:8px;font-size:.88rem;color:#9fb0c7;line-height:1.45;}',
-            '.tsg-list li:before{content:"";position:absolute;left:5px;top:.52em;width:7px;height:7px;border-radius:50%;background:#2DD4BF;}',
-            '.tsg-actions{display:flex;flex-direction:column;gap:10px;}',
-            '.tsg-btn{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;cursor:pointer;',
-            'border:none;border-radius:10px;padding:13px 18px;font:800 .95rem Inter,system-ui,sans-serif;transition:filter .15s ease;}',
-            '.tsg-btn:hover{filter:brightness(1.08);}',
-            '.tsg-btn.is-primary{background:linear-gradient(135deg,#00AEFF,#2DD4BF);color:#04121c;}',
-            '.tsg-btn.is-ghost{background:transparent;color:#8fd8ff;border:1px solid rgba(0,174,255,.42);}',
-            '.tsg-later{margin-top:6px;background:none;border:none;color:#6b7a94;font:600 .82rem Inter,system-ui,sans-serif;',
-            'cursor:pointer;padding:8px;width:100%;}',
-            '.tsg-later:hover{color:#9fb0c7;}',
-            '.tsg-note{margin:14px 0 0;font-size:.78rem;color:#6b7a94;text-align:center;}',
-            '.tsg-bal{display:flex;justify-content:space-between;gap:12px;margin:0 0 18px;padding:12px 14px;border-radius:10px;',
-            'background:#0c0c14;border:1px solid #23233a;font-size:.9rem;color:#cbd6e6;}',
-            '.tsg-bal b{color:#fff;font-size:1.05rem;}',
-            '.tsg-x{position:absolute;top:12px;right:12px;background:none;border:none;color:#6b7a94;font-size:1.35rem;',
-            'line-height:1;cursor:pointer;padding:6px 10px;border-radius:8px;}',
-            '.tsg-x:hover{color:#fff;background:rgba(255,255,255,.06);}',
-            '.tsg-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:100001;max-width:min(92vw,520px);',
-            'box-sizing:border-box;padding:12px 18px;border-radius:12px;background:linear-gradient(135deg,#2DD4BF,#7FEBDC);',
-            'color:#04211f;font:700 .88rem Inter,system-ui,sans-serif;box-shadow:0 12px 34px rgba(0,0,0,.45);text-align:center;}',
-            '@media (max-width:600px){.tsg-card{padding:22px 18px;border-radius:14px;}.tsg-card h2{font-size:1.15rem;}}'
+            '@media (prefers-reduced-motion:reduce){.tsg-overlay .tsg-card{animation:none}}',
+            '.tsg-overlay .tsg-badge{display:inline-flex;align-items:center;gap:7px;',
+            'font:800 .7rem/1 Inter,system-ui,sans-serif !important;letter-spacing:.11em !important;',
+            'text-transform:uppercase !important;color:#04211f !important;-webkit-text-fill-color:#04211f !important;',
+            'background:linear-gradient(135deg,#2DD4BF,#7FEBDC) !important;padding:7px 13px;border-radius:999px;',
+            'margin:0 0 18px !important;}',
+            '.tsg-overlay .tsg-card h2{margin:0 0 12px !important;font-family:Barlow,Inter,system-ui,sans-serif !important;',
+            'font-size:1.5rem !important;line-height:1.24 !important;font-weight:800 !important;letter-spacing:-.01em !important;',
+            'text-transform:none !important;color:#F4F8FF !important;-webkit-text-fill-color:#F4F8FF !important;',
+            'text-shadow:none !important;}',
+            '.tsg-overlay .tsg-card p{margin:0 0 20px !important;font-size:.95rem !important;line-height:1.62 !important;',
+            'font-weight:400 !important;color:#AEBFD6 !important;-webkit-text-fill-color:#AEBFD6 !important;}',
+            '.tsg-overlay .tsg-card p b,.tsg-overlay .tsg-card p strong{color:#E7F1FF !important;',
+            '-webkit-text-fill-color:#E7F1FF !important;}',
+            '.tsg-overlay .tsg-ctx{margin:0 0 18px !important;padding:12px 14px;border-radius:12px;',
+            'background:rgba(8,12,20,.9);border:1px solid rgba(255,255,255,.07);font-size:.86rem !important;',
+            'line-height:1.5 !important;color:#C6D4E8 !important;-webkit-text-fill-color:#C6D4E8 !important;}',
+            '.tsg-overlay .tsg-ctx b{color:#fff !important;-webkit-text-fill-color:#fff !important;}',
+            '.tsg-overlay .tsg-list{list-style:none;margin:0 0 22px;padding:0;}',
+            '.tsg-overlay .tsg-list li{position:relative;padding-left:26px;margin-bottom:9px;font-size:.89rem !important;',
+            'line-height:1.5 !important;color:#AEBFD6 !important;-webkit-text-fill-color:#AEBFD6 !important;}',
+            '.tsg-overlay .tsg-list li:before{content:"";position:absolute;left:6px;top:.55em;width:7px;height:7px;',
+            'border-radius:50%;background:#2DD4BF;}',
+            '.tsg-overlay .tsg-bal{display:flex;align-items:center;justify-content:space-between;gap:14px;',
+            'margin:0 0 10px !important;padding:15px 17px;border-radius:14px;background:rgba(0,174,255,.055);',
+            'border:1px solid rgba(0,174,255,.20);}',
+            '.tsg-overlay .tsg-bal span{font:600 .74rem/1 Inter,system-ui,sans-serif !important;',
+            'letter-spacing:.09em !important;text-transform:uppercase !important;color:#8FA6C4 !important;',
+            '-webkit-text-fill-color:#8FA6C4 !important;}',
+            '.tsg-overlay .tsg-bal b{font:800 1.3rem/1 Barlow,Inter,sans-serif !important;color:#FFFFFF !important;',
+            '-webkit-text-fill-color:#FFFFFF !important;white-space:nowrap;}',
+            '.tsg-overlay .tsg-cost{display:flex;align-items:center;justify-content:space-between;gap:14px;',
+            'margin:0 0 22px !important;padding:0 17px;font:600 .82rem/1.5 Inter,system-ui,sans-serif !important;',
+            'color:#8FA6C4 !important;-webkit-text-fill-color:#8FA6C4 !important;}',
+            '.tsg-overlay .tsg-cost b{font-weight:800 !important;color:#7FE9DC !important;',
+            '-webkit-text-fill-color:#7FE9DC !important;}',
+            '.tsg-overlay .tsg-actions{display:flex;flex-direction:column;gap:11px;}',
+            '.tsg-overlay .tsg-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;',
+            'box-sizing:border-box;text-align:center;text-decoration:none !important;cursor:pointer;border:none;',
+            'border-radius:13px;padding:14px 20px;font:800 1rem/1.2 Inter,system-ui,sans-serif !important;',
+            'letter-spacing:.01em !important;text-transform:none !important;',
+            'transition:filter .15s ease,transform .15s ease,box-shadow .15s ease;}',
+            '.tsg-overlay .tsg-btn:hover{filter:brightness(1.06);transform:translateY(-1px);}',
+            '.tsg-overlay .tsg-btn:active{transform:translateY(0);}',
+            '.tsg-overlay .tsg-btn:focus-visible{outline:2px solid #7FE9DC;outline-offset:3px;}',
+            '.tsg-overlay .tsg-btn.is-primary{background:linear-gradient(135deg,#00AEFF,#2DD4BF) !important;',
+            'color:#04121c !important;-webkit-text-fill-color:#04121c !important;box-shadow:0 10px 26px rgba(0,174,255,.28);}',
+            '.tsg-overlay .tsg-btn.is-ghost{background:rgba(0,174,255,.07) !important;color:#BFE6FF !important;',
+            '-webkit-text-fill-color:#BFE6FF !important;border:1px solid rgba(0,174,255,.45) !important;',
+            'font-weight:700 !important;box-shadow:none;}',
+            '.tsg-overlay .tsg-later{display:block;margin:14px auto 0;background:none;border:none;',
+            'font:700 .88rem/1 Inter,system-ui,sans-serif !important;color:#A7BAD4 !important;',
+            '-webkit-text-fill-color:#A7BAD4 !important;cursor:pointer;padding:11px 14px;border-radius:9px;width:auto;',
+            'text-decoration:underline;text-decoration-color:rgba(167,186,212,.45);text-underline-offset:3px;}',
+            '.tsg-overlay .tsg-later:hover{color:#E7F1FF !important;-webkit-text-fill-color:#E7F1FF !important;',
+            'background:rgba(255,255,255,.05);}',
+            '.tsg-overlay .tsg-later:focus-visible{outline:2px solid #7FE9DC;outline-offset:2px;}',
+            '.tsg-overlay .tsg-note{margin:16px auto 0 !important;max-width:36ch;font-size:.78rem !important;',
+            'line-height:1.55 !important;color:#7E91AC !important;-webkit-text-fill-color:#7E91AC !important;text-align:center;}',
+            '.tsg-overlay .tsg-x{position:absolute;top:14px;right:14px;background:none;border:none;',
+            'color:#8496B0 !important;-webkit-text-fill-color:#8496B0 !important;',
+            'font:400 1.45rem/1 Inter,system-ui,sans-serif !important;cursor:pointer;padding:5px 11px;border-radius:9px;}',
+            '.tsg-overlay .tsg-x:hover{color:#fff !important;-webkit-text-fill-color:#fff !important;',
+            'background:rgba(255,255,255,.07);}',
+            '.tsg-overlay .tsg-x:focus-visible{outline:2px solid #7FE9DC;outline-offset:2px;}',
+            '.tsg-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:100001;',
+            'max-width:min(92vw,520px);box-sizing:border-box;padding:13px 19px;border-radius:12px;',
+            'background:linear-gradient(135deg,#2DD4BF,#7FEBDC);color:#04211f !important;',
+            '-webkit-text-fill-color:#04211f !important;font:700 .88rem/1.45 Inter,system-ui,sans-serif !important;',
+            'box-shadow:0 12px 34px rgba(0,0,0,.45);text-align:center;}',
+            '@media (max-width:600px){.tsg-overlay{padding:18px 16px;align-items:flex-start;}',
+            '.tsg-overlay .tsg-card{padding:26px 20px 22px;border-radius:16px;}',
+            '.tsg-overlay .tsg-card h2{font-size:1.28rem !important;}',
+            '.tsg-overlay .tsg-card p{font-size:.92rem !important;margin-bottom:18px !important;}',
+            '.tsg-overlay .tsg-bal{padding:13px 15px;}.tsg-overlay .tsg-bal b{font-size:1.2rem !important;}',
+            '.tsg-overlay .tsg-cost{padding:0 15px;}',
+            '.tsg-overlay .tsg-btn{min-height:50px;font-size:.96rem !important;}}',
+            '@media (max-height:640px){.tsg-overlay{align-items:flex-start;}}'
         ].join('');
         document.head.appendChild(s);
     }
@@ -617,6 +677,9 @@
             overlay.setAttribute('role', 'dialog');
             overlay.setAttribute('aria-modal', 'true');
             overlay.setAttribute('aria-labelledby', 'tsgMeterTitle');
+            /* Hierarchy, top to bottom: badge, headline, what the rule is,
+               the balance, what THIS run costs, primary action, secondary
+               action, dismissal, then the small print. */
             overlay.innerHTML =
                 '<div class="tsg-card">' +
                 '<button type="button" class="tsg-x" id="tsgMeterClose" aria-label="Close">&times;</button>' +
@@ -624,9 +687,10 @@
                 '<h2 id="tsgMeterTitle">' + (canAfford
                     ? 'You have used your free ' + esc(label) + ' run for today'
                     : 'You need TMR for another ' + esc(label) + ' run') + '</h2>' +
-                '<p>Every member gets one free run a day on each simulator. Each extra run costs ' + METER_COST +
-                ' TMR. Your free run comes back at midnight Pacific.</p>' +
-                (hasBalance ? '<div class="tsg-bal"><span>Your TMR balance</span><b>' + fmtTmr(st.balance) + ' TMR</b></div>' : '') +
+                '<p>Every member gets one free run a day on each simulator, and your free run comes back at ' +
+                'midnight Pacific. Until then, each extra run costs <b>' + METER_COST + ' TMR</b>.</p>' +
+                (hasBalance ? '<div class="tsg-bal"><span>Your TMR balance</span><b>' + fmtTmr(st.balance) + ' TMR</b></div>' +
+                    '<div class="tsg-cost"><span>This run</span><b>' + METER_COST + ' TMR</b></div>' : '') +
                 '<div class="tsg-actions">' +
                 (canAfford
                     ? '<button type="button" class="tsg-btn is-primary" id="tsgMeterPay">Run it for ' + METER_COST + ' TMR</button>' +
