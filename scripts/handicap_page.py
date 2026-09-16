@@ -548,8 +548,7 @@ def analysis_cards(ctx, model, cmp_rows, mk, facts, hist):
                      "played %s. A per game figure off that many games swings by whole points on "
                      "a single drive, so the simulation leans on drive level inputs and roster "
                      "quality rather than on a rate that has barely had time to exist." % played)
-    ms = ((hist or {}).get("matchup_summary") or {})
-    n = ms.get("games") or ms.get("total_games")
+    n = ((hist or {}).get("head_to_head") or {}).get("lifetime_meetings")
     if n:
         paras.append("The series numbers are a different sample again, %d meetings between clubs "
                      "that have turned over their rosters and their coaching staffs since most "
