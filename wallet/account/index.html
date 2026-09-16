@@ -297,7 +297,23 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       host.style.marginTop = '16px';
       $('walletBox').parentNode.appendChild(host);
     }
-    if (!d || !d.enabled || !d.depositAddress || !d.linkedWallet) { host.innerHTML = ''; return; }
+    if (!d || !d.enabled || !d.depositAddress) {
+      // Say it plainly rather than showing nothing: the address is deliberately
+      // withheld until deposits are open, so nobody sends coins into a closed door.
+      host.innerHTML =
+        '<h3 style="margin:0 0 8px;font-size:15px">Bring TMR in from your wallet</h3>' +
+        '<p style="margin:0;font-size:13.5px;color:var(--acct-muted)">Moving TMR from your own wallet into TrustMyRecord is not open yet. ' +
+        'When it is, a deposit address appears here and coins you send from your linked wallet are added to your balance one for one. ' +
+        'Do not send TMR anywhere until then.</p>' +
+        '<div class="row" style="margin-top:10px"><span class="tag soon">Deposits activating</span></div>';
+      return;
+    }
+    if (!d.linkedWallet) {
+      host.innerHTML =
+        '<h3 style="margin:0 0 8px;font-size:15px">Bring TMR in from your wallet</h3>' +
+        '<p style="margin:0;font-size:13.5px;color:var(--acct-muted)">Link a Base wallet first. Deposits are matched to your account by the wallet they came from, so coins sent from an unlinked wallet have to be reviewed by hand.</p>';
+      return;
+    }
     var rows = d.deposits || [];
     var LABEL = { credited: 'Added to your balance', unmatched: 'Under review', ignored: 'Too small to credit', reorged: 'Reversed, block dropped' };
     host.innerHTML =
@@ -308,6 +324,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       '<dt>Network</dt><dd>Base</dd>' +
       '<dt>From</dt><dd>' + d.linkedWallet + '</dd></dl>' +
       '<div class="row" style="margin-top:10px"><button class="btn ghost" id="btnCopyDep">Copy address</button></div>' +
+      '<p style="margin:10px 0 0;font-size:12.5px;color:var(--acct-muted)">A deposit appears below once it has ' +
+      ((d.confirmationsRequired || 12) + ' confirmations on Base, usually under a minute.') + '</p>' +
       (rows.length ? '<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Date</th><th>From</th><th class="num">Sent</th><th class="num">Credited</th><th>Status</th><th class="num">Confirmations</th><th>Transaction</th></tr></thead><tbody>' +
         rows.map(function (r) {
           var sent = (typeof r.sent === 'number' ? r.sent : r.amount);
