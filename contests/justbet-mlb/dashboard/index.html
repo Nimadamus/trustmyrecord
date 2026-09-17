@@ -619,7 +619,25 @@
 
     <script>
     (function () {
-        const CONTEST_ID = 'justbet-mlb';
+        // INTEGRITY_TEST_CONTEST_20260917: ?contest=integrity-test-20260917 shows the hidden production
+        // integrity test contest on this same page (unlinked, no prize). Anything else is the real contest.
+        const CONTEST_ID = (function () {
+            try {
+                const q = new URLSearchParams(window.location.search).get('contest');
+                if (q === 'integrity-test-20260917') return q;
+            } catch (e) {}
+            return 'justbet-mlb';
+        })();
+        if (CONTEST_ID !== 'justbet-mlb') {
+            document.addEventListener('DOMContentLoaded', () => {
+                const b = document.createElement('div');
+                b.id = 'integrity-test-banner';
+                b.style.cssText = 'margin:12px 0;padding:12px 16px;border-radius:12px;background:#BC372E;color:#fff;font-weight:900;text-align:center;';
+                b.textContent = 'INTEGRITY TEST CONTEST: test accounts and synthetic games only. This is not the JustBet contest.';
+                const main = document.querySelector('main.page') || document.body;
+                main.insertBefore(b, main.firstElementChild);
+            });
+        }
         // LAUNCH_GATE_20260829.
         //
         // This used to be a hardcoded `const PRELAUNCH = true` that had to be
