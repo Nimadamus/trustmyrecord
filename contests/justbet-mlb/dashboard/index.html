@@ -322,6 +322,20 @@
             .jb-slip-inputs { grid-template-columns: 1fr; }
         }
 
+
+        /* CONTEST_INTEGRITY_UI_20260917 */
+        .integrity-note { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; border: 1px solid #f0c449; background: #FFFBEF; color: #07182A; font-size: .92rem; font-weight: 700; }
+        .integrity-note i { color: #8A6206; margin-right: 6px; }
+        .ibadge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+        .ibadge.sealed { background: #07182A; color: #fff; }
+        .ibadge.revealed { background: #0A8B4E; color: #fff; }
+        .tp .ibadge { margin-left: 2px; }
+        .g-head .ibadge { margin-left: 8px; }
+        #my-contest-picks { margin: 0 0 14px; }
+        #my-contest-picks table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+        #my-contest-picks th, #my-contest-picks td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        #my-contest-picks th { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+        #my-contest-picks .mp-wrap { overflow-x: auto; }
         /* ======== CONTESTANT GRID (CONTESTANT_GRID_20260916) ======== */
         .cg-head, .cg-row { display: grid; grid-template-columns: 44px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 76px 64px 56px; gap: 10px; align-items: center; }
         .cg-head { padding: 0 12px 6px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
@@ -571,6 +585,8 @@
                      GET /leaderboard and every pick from GET /picks, both built on
                      tmr_contest_picks only, so this grid, the full standings page
                      and the board can never disagree. -->
+                <p class="integrity-note" id="contest-integrity-note"><i class="fa-solid fa-shield-halved"></i>Contest picks remain sealed until each game locks. Once a game goes off the board, all submitted picks for that game are automatically revealed publicly.</p>
+                <div id="my-contest-picks" hidden></div>
                 <div class="cg-head" aria-hidden="true">
                     <span>Rank</span><span>Contestant</span><span>Today</span><span>Overall</span><span>Units</span><span>Pending</span><span>Picks</span>
                 </div>
@@ -827,7 +843,7 @@
             const net = (p.units_net !== null && p.units_net !== undefined)
                 ? `<span class="pn ${Number(p.units_net) > 0 ? 'units-pos' : Number(p.units_net) < 0 ? 'units-neg' : 'units-zero'}">${Number(p.units_net) > 0 ? '+' : ''}${Number(p.units_net).toFixed(2)}u</span>` : '';
             const units = (p.units !== null && p.units !== undefined) ? `<span class="pw">${Number(p.units).toFixed(1)}u</span>` : '';
-            return `<div class="pchip ${cls}" title="${escapeHtml(p.username)} · ${escapeHtml(p.selection)}${escapeHtml(line)} · ${fmtOdds(p.odds)}"><span class="pu">${escapeHtml(p.username)}</span><span class="ps">${escapeHtml(pickLabel(p))}</span><span class="po">${fmtOdds(p.odds)}</span>${units}${net}</div>`;
+            return `<div class="pchip ${cls}" title="${escapeHtml(p.username)} · ${escapeHtml(p.selection)}${escapeHtml(line)} · ${fmtOdds(p.odds)} · Submitted ${escapeHtml(fmtStamp(p.submitted_at))} · Revealed ${escapeHtml(fmtStamp(p.revealed_at || p.locked_at || p.game_start_at))}"><span class="pu">${escapeHtml(p.username)}</span><span class="ps">${escapeHtml(pickLabel(p))}</span><span class="po">${fmtOdds(p.odds)}</span>${units}${net}</div>`;
         }
 
         function renderBoard(games, picks) {
@@ -869,7 +885,7 @@
                 const other = c.picks.filter(p => !MARKET_CELLS.some(m => m.key === (p.market_type || '')));
                 const otherCell = other.length ? `<div class="g-mkt" style="grid-column: 1 / -1;"><div class="mk">Other</div>${other.map(pickChip).join('')}</div>` : '';
                 return `<div class="game-card${started ? ' is-live' : ''}">
-                    <div class="g-head"><span class="g-teams">${escapeHtml(teamNick(c.away))}<span class="at">@</span>${escapeHtml(teamNick(c.home))}</span><span class="g-time">${fmtTime(c.start)}</span></div>
+                    <div class="g-head"><span class="g-teams">${escapeHtml(teamNick(c.away))}<span class="at">@</span>${escapeHtml(teamNick(c.home))}</span><span class="g-time">${fmtTime(c.start)}</span>${started ? '<span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed: game locked</span>' : ''}</div>
                     <div class="g-markets">${cells}${otherCell}</div>
                 </div>`;
             }).join('');
@@ -967,13 +983,14 @@
         function todayChip(p) {
             const game = `${teamNick(String(p.game || '').split(' @ ')[0])} @ ${teamNick(String(p.game || '').split(' @ ')[1] || '')}`;
             if (p.sealed) {
-                return `<span class="tp sealed" title="${escapeAttr(p.game)}: sealed until first pitch"><span class="tg">${escapeHtml(game)}</span><span class="ts"><i class="fa-solid fa-lock"></i> Sealed</span></span>`;
+                return `<span class="tp sealed" title="Sealed until this pick's game starts"><span class="ibadge sealed"><i class="fa-solid fa-lock"></i> Sealed: game not started</span></span>`;
             }
             const res = (p.result && p.result !== 'pending') ? p.result : '';
             const cls = res ? `res-${res}` : '';
             const label = res === 'won' ? 'W' : res === 'lost' ? 'L' : res === 'push' ? 'P' : res === 'void' ? 'Void' : (new Date(p.game_start_at) <= new Date() ? 'Live' : '');
             const sel = pickLabel(p);
-            return `<span class="tp ${cls}" title="${escapeAttr(p.game)} · ${escapeAttr(p.selection)}${escapeAttr(signedLine(p.line))} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u"><span class="tg">${escapeHtml(game)}</span><span class="ts">${escapeHtml(sel)} ${fmtOdds(p.odds)}</span>${label ? `<span class="tr">${label}</span>` : ''}</span>`;
+            const audit = `Submitted ${fmtStamp(p.submitted_at)} · Locked ${fmtStamp(p.locked_at || p.game_start_at)}${p.revealed_at ? ' · Revealed ' + fmtStamp(p.revealed_at) : ''}`;
+            return `<span class="tp ${cls}" title="${escapeAttr(p.game)} · ${escapeAttr(p.selection)}${escapeAttr(signedLine(p.line))} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u · ${escapeAttr(audit)}"><span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed</span><span class="tg">${escapeHtml(game)}</span><span class="ts">${escapeHtml(sel)} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u</span>${label ? `<span class="tr">${label}</span>` : ''}</span>`;
         }
         function renderLeaderboard(data, picks) {
             const body = $('#lb-body');
@@ -986,8 +1003,14 @@
             }
             const today = (data && data.today_et) || etDate(new Date());
             const byUser = new Map();
+            const sealedByUser = new Map();
             (picks || []).forEach((p) => {
-                if (p.sealed || !p.game_start_at || etDate(new Date(p.game_start_at)) !== today) return;
+                if (p.sealed) {
+                    const sk = p.user_id != null ? String(p.user_id) : String(p.username || '').toLowerCase();
+                    sealedByUser.set(sk, (sealedByUser.get(sk) || []).concat([p]));
+                    return;
+                }
+                if (!p.game_start_at || etDate(new Date(p.game_start_at)) !== today) return;
                 const k = p.user_id != null ? String(p.user_id) : String(p.username || '').toLowerCase();
                 if (!byUser.has(k)) byUser.set(k, []);
                 byUser.get(k).push(p);
@@ -997,7 +1020,8 @@
                 const uname = e.username == null ? '—' : String(e.username);
                 const t = e.today || {};
                 const mine = (byUser.get(String(e.user_id)) || byUser.get(uname.toLowerCase()) || [])
-                    .slice().sort((x, y) => new Date(x.game_start_at) - new Date(y.game_start_at) || String(x.id).localeCompare(String(y.id)));
+                    .slice().sort((x, y) => new Date(x.game_start_at) - new Date(y.game_start_at) || String(x.id).localeCompare(String(y.id)))
+                    .concat(sealedByUser.get(String(e.user_id)) || []);
                 const net = Number(e.units_net) || 0;
                 const tNet = Number(t.units_net) || 0;
                 return `<div class="cg-item" role="listitem">
@@ -1012,7 +1036,7 @@
                             <span class="cg-stat"><span class="cg-lbl">Picks</span>${e.picks_used || 0}<small>of ${e.picks_max || 50}</small></span>
                         </span>
                     </div>
-                    <div class="cg-today">${mine.length ? mine.map(todayChip).join('') : (Number(t.pending) > 0 ? `<span class="none"><i class="fa-solid fa-lock"></i> ${t.pending} pending, revealed at first pitch</span>` : '<span class="none">No picks yet today</span>')}</div>
+                    <div class="cg-today">${mine.length ? mine.map(todayChip).join('') : '<span class="none">No picks yet today</span>'}</div>
                 </div>`;
             }).join('');
             if (foot) {
@@ -1020,6 +1044,34 @@
                     + `"Today" is the ${escapeHtml(today)} slate (Eastern date of first pitch). Picks stay sealed until first pitch. `
                     + `Pushes and voided (postponed or cancelled) games score 0 units and never count as a win or a loss.`;
             }
+        }
+
+        // CONTEST_MY_PICKS_20260917: a signed in participant sees their own picks in full, sealed or
+        // not, from GET /my-picks (their rows only). Everyone else only ever gets sealed placeholders.
+        function authToken() {
+            const keys = ['tmr_auth_token', 'trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];
+            for (const k of keys) { try { const v = localStorage.getItem(k); if (v) return v; } catch (e) {} }
+            return null;
+        }
+        const fmtStamp = (iso) => iso ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '';
+        async function loadMyPicks() {
+            const box = $('#my-contest-picks');
+            const tok = authToken();
+            if (!box || !tok) { if (box) box.hidden = true; return; }
+            try {
+                const r = await fetch(API('/my-picks'), { headers: { Authorization: 'Bearer ' + tok }, credentials: 'include' });
+                if (!r.ok) { box.hidden = true; return; }
+                const d = await r.json();
+                const rows = d.picks || [];
+                box.hidden = false;
+                box.innerHTML = `<h3 style="margin:0 0 6px;font-size:1rem;">Your contest picks (${rows.length} of 50)</h3>` + (rows.length
+                    ? `<div class="mp-wrap"><table><thead><tr><th>Status</th><th>Game</th><th>Pick</th><th>Odds</th><th>Units</th><th>Result</th><th>Submitted</th><th>Revealed</th></tr></thead><tbody>` +
+                      rows.map((p) => `<tr><td>${p.status === 'sealed' ? '<span class="ibadge sealed"><i class="fa-solid fa-lock"></i> Sealed: game not started</span>' : '<span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed: game locked</span>'}</td>` +
+                        `<td>${escapeHtml(p.game)}<br><small>${fmtTime(p.game_start_at)}</small></td><td>${escapeHtml(pickLabel(p))}</td><td>${fmtOdds(p.odds)}</td><td>${Number(p.units).toFixed(2)}</td>` +
+                        `<td>${escapeHtml(p.result)}${p.units_net != null ? ` (${Number(p.units_net) > 0 ? '+' : ''}${Number(p.units_net).toFixed(2)}u)` : ''}</td><td>${fmtStamp(p.submitted_at)}</td><td>${fmtStamp(p.revealed_at)}</td></tr>`).join('') +
+                      `</tbody></table></div>`
+                    : '<div class="none">You have not made any contest picks yet.</div>');
+            } catch (e) { box.hidden = true; }
         }
         async function loadLeaderboard() {
             if (!boardActive()) return;
@@ -1032,6 +1084,7 @@
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const picks = pr.ok ? ((await pr.json()).picks || []) : [];
                 renderLeaderboard(await r.json(), picks);
+                loadMyPicks();
             } catch {
                 body.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Standings temporarily unavailable. Try refresh.</div>`;
             }
