@@ -323,51 +323,124 @@
         }
 
 
-        /* CONTEST_INTEGRITY_UI_20260917 */
-        .integrity-note { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; border: 1px solid #f0c449; background: #FFFBEF; color: #07182A; font-size: .92rem; font-weight: 700; }
-        .integrity-note i { color: #8A6206; margin-right: 6px; }
-        .ibadge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+        /* CONTEST_INTEGRITY_UI_20260917 + CONTEST_LB_DESIGN_20260917 (presentation only) */
+        .integrity-note { margin: 0 0 16px; padding: 12px 16px; border-radius: 12px; border: 1px solid #D2DEEA; border-left: 4px solid #0B4FA8; background: linear-gradient(180deg, #F4F8FD, #EEF4FB); color: #2E4459; font-size: .88rem; font-weight: 600; line-height: 1.5; display: flex; gap: 12px; align-items: flex-start; }
+        .integrity-note i { flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #07182A; color: #fff; font-size: .9rem; margin: 1px 0 0; }
+        .integrity-note .in-title { display: block; font-family: "Barlow", sans-serif; font-weight: 900; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: #07182A; margin-bottom: 1px; }
+        .ibadge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: .66rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; line-height: 1.5; }
         .ibadge.sealed { background: #07182A; color: #fff; }
         .ibadge.revealed { background: #0A8B4E; color: #fff; }
-        .tp .ibadge { margin-left: 2px; }
         .g-head .ibadge { margin-left: 8px; }
-        #my-contest-picks { margin: 0 0 14px; }
-        #my-contest-picks table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-        #my-contest-picks th, #my-contest-picks td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-        #my-contest-picks th { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+        /* status vocabulary: sealed navy, revealed green dot, live subtle, win green, loss red, push neutral, void gray */
+        .st { display: inline-flex; align-items: center; gap: 5px; font-size: .66rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+        .st-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+        .st-revealed { color: #0A8B4E; }
+        .st-live { color: #B4232B; }
+        .st-live .st-dot { animation: stpulse 1.6s ease-in-out infinite; }
+        @keyframes stpulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+        .st-final { color: #5E7590; }
+        .st-sealed { color: #fff; background: #07182A; padding: 3px 8px; border-radius: 6px; }
+        .rs { display: inline-block; min-width: 38px; text-align: center; padding: 1px 6px; border-radius: 5px; font-size: .66rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+        .rs-won { background: rgba(10,139,78,.12); color: #0A8B4E; }
+        .rs-lost { background: rgba(188,55,46,.12); color: #BC372E; }
+        .rs-push { background: rgba(7,24,42,.07); color: #2E4459; }
+        .rs-void { background: rgba(7,24,42,.05); color: #7A8BA0; }
+        .rs-pending { background: transparent; color: #7A8BA0; }
+        /* ---- my picks ---- */
+        #my-contest-picks { margin: 0 0 18px; border: 1px solid #D2DEEA; border-radius: 12px; background: #fff; overflow: hidden; }
+        #my-contest-picks .mp-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #E3EBF3; }
+        #my-contest-picks .mp-title h3 { margin: 0; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1rem; color: #07182A; letter-spacing: .01em; }
+        #my-contest-picks .mp-title span { color: #5E7590; font-size: .8rem; font-weight: 700; }
         #my-contest-picks .mp-wrap { overflow-x: auto; }
+        #my-contest-picks table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+        #my-contest-picks th { text-align: left; padding: 8px 12px; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: #5E7590; font-weight: 800; background: #F6F9FC; border-bottom: 1px solid #E3EBF3; white-space: nowrap; }
+        #my-contest-picks td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #EEF3F8; vertical-align: middle; color: #07182A; }
+        #my-contest-picks tr:last-child td { border-bottom: 0; }
+        #my-contest-picks td.num { font-family: "Barlow", sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; }
+        #my-contest-picks .mp-game { font-weight: 700; }
+        #my-contest-picks td small, #my-contest-picks td.stamp { color: #5E7590; font-size: .76rem; font-weight: 600; white-space: nowrap; }
+        #my-contest-picks td small { display: block; }
+        #my-contest-picks .mp-pick { font-weight: 800; }
+        #my-contest-picks .none { padding: 12px 16px; color: #5E7590; font-weight: 600; }
         /* ======== CONTESTANT GRID (CONTESTANT_GRID_20260916) ======== */
-        .cg-head, .cg-row { display: grid; grid-template-columns: 44px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 76px 64px 56px; gap: 10px; align-items: center; }
-        .cg-head { padding: 0 12px 6px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
-        .cg-head span:nth-child(n+3) { text-align: right; }
-        .cg-list { display: flex; flex-direction: column; gap: 8px; }
-        .cg-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: rgba(7,24,42,0.02); min-width: 0; }
+        .cg-head { display: none; }
+        .cg-list { display: flex; flex-direction: column; gap: 10px; }
+        .cg-item { border: 1px solid #D2DEEA; border-radius: 14px; background: #fff; min-width: 0; box-shadow: 0 1px 2px rgba(7,24,42,.05); overflow: hidden; }
+        .cg-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 18px; align-items: center; padding: 12px 16px; }
         .cg-row > * { min-width: 0; }
-        .cg-user { display: flex; align-items: center; gap: 9px; min-width: 0; }
-        .cg-user img, .cg-user .cg-ava { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(7,24,42,0.08); }
-        .cg-user a { font-weight: 800; color: #07182A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-        .cg-stat { text-align: right; font-family: "Barlow", sans-serif; font-weight: 800; white-space: nowrap; }
-        .cg-stat small { display: block; font-family: inherit; font-size: 0.7rem; color: var(--faint); font-weight: 700; }
-        .cg-lbl { display: none; }
-        .cg-today { margin-top: 8px; padding-top: 8px; border-top: 1px dotted #D2DEEA; display: flex; flex-wrap: wrap; gap: 6px; }
-        .cg-today .none { color: var(--faint); font-size: 0.8rem; font-weight: 700; }
-        .tp { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 8px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; border: 1px solid var(--line); background: #fff; color: #07182A; }
-        .tp .tg { color: var(--faint); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .tp .ts { white-space: nowrap; font-weight: 800; }
-        .tp.res-won { border-color: rgba(10,139,78,.45); } .tp.res-won .tr { color: #0A8B4E; }
-        .tp.res-lost { border-color: rgba(188,55,46,.45); } .tp.res-lost .tr { color: #BC372E; }
-        .tp.res-push .tr, .tp.res-void .tr { color: #8A6206; }
-        .tp.sealed { background: rgba(7,24,42,0.04); }
-        .tp .tr { font-weight: 900; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .04em; }
-        @media (max-width: 720px) {
-            .cg-head { display: none; }
-            .cg-row { grid-template-columns: 36px minmax(0, 1fr) auto; row-gap: 6px; }
-            .cg-row .cg-stat { grid-column: auto; text-align: left; }
-            .cg-row .cg-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
-            .cg-row .cg-stats .cg-stat { text-align: left; }
-            .cg-lbl { display: block; font-size: 0.62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
+        .cg-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .cg-id .lb-rank { width: 30px; height: 30px; font-size: .95rem; flex-shrink: 0; background: #EEF3F8; }
+        .cg-id .lb-rank.r1 { background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
+        .cg-id .lb-rank.r2 { background: linear-gradient(180deg, #e2e8f0, #94a3b8); }
+        .cg-id .lb-rank.r3 { background: linear-gradient(180deg, #D9A441, #B98505); }
+        .cg-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .cg-user img, .cg-user .cg-ava { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(7,24,42,0.08); border: 2px solid #fff; box-shadow: 0 0 0 1px #D2DEEA; }
+        .cg-user a { font-family: "Barlow", sans-serif; font-weight: 800; font-size: 1.05rem; color: #07182A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .cg-user .cg-tied { color: #7A8BA0; font-size: .62rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; flex-shrink: 0; }
+        .cg-stats, .cg-usage { display: flex; align-items: stretch; }
+        .cg-stat { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; padding: 0 14px; font-family: "Barlow", sans-serif; white-space: nowrap; min-width: 0; }
+        .cg-stat + .cg-stat { border-left: 1px solid #E3EBF3; }
+        .cg-lbl { display: block; font-family: "Inter", system-ui, sans-serif; font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: #7A8BA0; font-weight: 800; margin-bottom: 2px; }
+        .cg-val { font-size: 1.2rem; font-weight: 800; color: #07182A; line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .cg-val.units-pos { color: #0A8B4E; } .cg-val.units-neg { color: #BC372E; } .cg-val.units-zero { color: #07182A; }
+        .cg-sub { font-size: .72rem; font-weight: 700; color: #7A8BA0; line-height: 1.2; }
+        .cg-sub.units-pos { color: #0A8B4E; } .cg-sub.units-neg { color: #BC372E; } .cg-sub.units-zero { color: #7A8BA0; }
+        .cg-usage { background: #F6F9FC; border-radius: 10px; padding: 6px 0; }
+        .cg-usage .cg-val { font-size: 1.05rem; }
+        .cg-usage .cg-val small { font-size: .72rem; color: #7A8BA0; font-weight: 700; margin-left: 1px; }
+        .cg-today { padding: 10px 16px 12px; border-top: 1px solid #EEF3F8; background: #FAFCFE; display: flex; flex-wrap: wrap; gap: 8px; }
+        .cg-today .none { color: #7A8BA0; font-size: .8rem; font-weight: 600; }
+        /* game group: one card per game, that contestant's picks on it stacked inside */
+        .gp { border: 1px solid #D2DEEA; border-radius: 10px; background: #fff; min-width: 230px; max-width: 100%; flex: 0 1 auto; overflow: hidden; }
+        .gp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 10px; border-bottom: 1px solid #EEF3F8; }
+        .gp-game { font-family: "Barlow", sans-serif; font-weight: 800; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: #2E4459; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .gp-flags { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .gp-line { display: flex; align-items: center; gap: 10px; padding: 7px 10px; font-size: .9rem; }
+        .gp-line + .gp-line { border-top: 1px dashed #E3EBF3; }
+        .gp-sel { font-weight: 800; color: #07182A; white-space: nowrap; }
+        .gp-odds { font-family: "Barlow", sans-serif; font-weight: 700; color: #2E4459; white-space: nowrap; }
+        .gp-u { margin-left: auto; font-family: "Barlow", sans-serif; font-weight: 800; color: #07182A; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E3EBF3; }
+        .gp-net { font-family: "Barlow", sans-serif; font-weight: 800; font-size: .8rem; white-space: nowrap; }
+        .gp.sealed-group { background: #F3F6FA; border-style: dashed; border-color: #B9C8D8; display: flex; align-items: center; gap: 10px; padding: 7px 12px; min-width: 0; }
+        .gp-sealed-txt { font-size: .8rem; font-weight: 600; color: #2E4459; }
+        .gp-sealed-txt b { color: #07182A; font-weight: 900; }
+        @media (max-width: 860px) {
+            .cg-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 10px; }
+            .cg-row .cg-stats { grid-column: 1 / -1; order: 3; background: #F6F9FC; border-radius: 10px; padding: 8px 0; }
+            .cg-row .cg-stats .cg-stat { flex: 1 1 0; align-items: flex-start; padding: 0 12px; }
+            .cg-usage { background: transparent; padding: 0; }
+            .cg-usage .cg-stat { padding: 0 0 0 12px; }
+            .cg-usage .cg-stat + .cg-stat { border-left: 0; }
         }
-        @media (min-width: 721px) { .cg-row .cg-stats { display: contents; } }
+        @media (max-width: 560px) {
+            .integrity-note { font-size: .84rem; padding: 12px; }
+            .cg-row { padding: 12px; gap: 10px; }
+            .cg-id { gap: 9px; }
+            .cg-user img, .cg-user .cg-ava { width: 34px; height: 34px; }
+            .cg-user a { font-size: 1rem; }
+            .cg-val { font-size: 1.08rem; }
+            .cg-usage .cg-val { font-size: .98rem; }
+            .cg-row { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 0; }
+            .cg-row .cg-id { grid-column: 1 / -1; }
+            .cg-row .cg-stats { grid-column: 1 / 2; order: 3; border-radius: 10px 0 0 10px; }
+            .cg-row .cg-usage { grid-column: 2 / 3; order: 4; background: #F6F9FC; border-radius: 0 10px 10px 0; padding: 8px 0; border-left: 1px solid #E3EBF3; }
+            .cg-row .cg-stats .cg-stat, .cg-row .cg-usage .cg-stat { flex: 1 1 0; align-items: flex-start; padding: 0 8px; }
+            .cg-row .cg-usage .cg-stat + .cg-stat { border-left: 1px solid #E3EBF3; }
+            .cg-val, .cg-usage .cg-val { font-size: 1rem; }
+            .cg-lbl { font-size: .56rem; letter-spacing: .08em; }
+            .cg-row .cg-stats, .cg-row .cg-usage { align-self: stretch; }
+            .cg-today { padding: 10px 12px 12px; }
+            .gp { flex: 1 1 100%; min-width: 0; }
+            #my-contest-picks thead { display: none; }
+            #my-contest-picks table, #my-contest-picks tbody, #my-contest-picks td { display: block; width: 100%; min-width: 0 !important; }
+            #my-contest-picks tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; padding: 12px 14px; border-bottom: 1px solid #EEF3F8; }
+            #my-contest-picks td { padding: 0; border: 0; min-width: 0; }
+            #my-contest-picks td[data-l]::before { content: attr(data-l); display: block; font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: #7A8BA0; font-weight: 800; margin-bottom: 1px; }
+            #my-contest-picks td.c-status { grid-column: 1 / -1; }
+            #my-contest-picks td.c-game { grid-column: 1 / -1; }
+            #my-contest-picks td.stamp { white-space: normal; }
+            #my-contest-picks td.stamp.c-sub { grid-column: 1 / 3; }
+        }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=0ca29c02a6b6">
 <script defer src="/static/js/tmr-linkhub.js?v=7666c1d88cd5"></script>
@@ -585,7 +658,7 @@
                      GET /leaderboard and every pick from GET /picks, both built on
                      tmr_contest_picks only, so this grid, the full standings page
                      and the board can never disagree. -->
-                <p class="integrity-note" id="contest-integrity-note"><i class="fa-solid fa-shield-halved"></i>Contest picks remain sealed until each game locks. Once a game goes off the board, all submitted picks for that game are automatically revealed publicly.</p>
+                <p class="integrity-note" id="contest-integrity-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span><span class="in-title">Contest Integrity</span>Contest picks remain sealed until each game locks. Once a game goes off the board, all submitted picks for that game are automatically revealed publicly.</span></p>
                 <div id="my-contest-picks" hidden></div>
                 <div class="cg-head" aria-hidden="true">
                     <span>Rank</span><span>Contestant</span><span>Today</span><span>Overall</span><span>Units</span><span>Pending</span><span>Picks</span>
@@ -1005,17 +1078,27 @@
             const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || `${API_BASE}/api`;
             return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(e.user_id != null ? e.user_id : e.username) + '/avatar';
         }
-        function todayChip(p) {
-            const game = `${teamNick(String(p.game || '').split(' @ ')[0])} @ ${teamNick(String(p.game || '').split(' @ ')[1] || '')}`;
-            if (p.sealed) {
-                return `<span class="tp sealed" title="Sealed until this pick's game starts"><span class="ibadge sealed"><i class="fa-solid fa-lock"></i> Sealed: game not started</span></span>`;
-            }
-            const res = (p.result && p.result !== 'pending') ? p.result : '';
-            const cls = res ? `res-${res}` : '';
-            const label = res === 'won' ? 'W' : res === 'lost' ? 'L' : res === 'push' ? 'P' : res === 'void' ? 'Void' : (new Date(p.game_start_at).getTime() <= Date.now() + serverOffsetMs ? 'Live' : '');
-            const sel = pickLabel(p);
-            const audit = `Submitted ${fmtStamp(p.submitted_at)} · Locked ${fmtStamp(p.locked_at || p.game_start_at)}${p.revealed_at ? ' · Revealed ' + fmtStamp(p.revealed_at) : ''}`;
-            return `<span class="tp ${cls}" title="${escapeAttr(p.game)} · ${escapeAttr(p.selection)}${escapeAttr(signedLine(p.line))} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u · ${escapeAttr(audit)}"><span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed</span><span class="tg">${escapeHtml(game)}</span><span class="ts">${escapeHtml(sel)} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u</span>${label ? `<span class="tr">${label}</span>` : ''}</span>`;
+        // CONTEST_LB_DESIGN_20260917: presentation only. Revealed picks are grouped per game; sealed picks
+        // carry no game data from the API, so they collapse into one sealed tile per contestant.
+        const resultBadge = (res) => res === 'won' ? '<span class="rs rs-won">Win</span>' : res === 'lost' ? '<span class="rs rs-lost">Loss</span>'
+            : res === 'push' ? '<span class="rs rs-push">Push</span>' : res === 'void' ? '<span class="rs rs-void">Void</span>' : '';
+        function gameGroup(list) {
+            const p0 = list[0];
+            const parts = String(p0.game || '').split(' @ ');
+            const game = `${teamNick(parts[0])} @ ${teamNick(parts[1] || '')}`;
+            const graded = list.every((p) => p.result && p.result !== 'pending');
+            const started = new Date(p0.game_start_at).getTime() <= Date.now() + serverOffsetMs;
+            const state = graded ? '<span class="st st-final">Final</span>' : started ? '<span class="st st-live"><span class="st-dot"></span>Live</span>' : '';
+            const lines = list.map((p) => {
+                const res = (p.result && p.result !== 'pending') ? p.result : '';
+                const audit = `Submitted ${fmtStamp(p.submitted_at)} · Locked ${fmtStamp(p.locked_at || p.game_start_at)}${p.revealed_at ? ' · Revealed ' + fmtStamp(p.revealed_at) : ''}`;
+                const net = (res && p.units_net !== null && p.units_net !== undefined) ? `<span class="gp-net ${unitsClass(p.units_net)}">${signedU(p.units_net)}</span>` : '';
+                return `<div class="gp-line" title="${escapeAttr(p.game)} · ${escapeAttr(p.selection)}${escapeAttr(signedLine(p.line))} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u · ${escapeAttr(audit)}"><span class="gp-sel">${escapeHtml(pickLabel(p))}</span><span class="gp-odds">${fmtOdds(p.odds)}</span>${resultBadge(res)}${net}<span class="gp-u">${Number(p.units || 0).toFixed(1)}u</span></div>`;
+            }).join('');
+            return `<div class="gp"><div class="gp-head"><span class="gp-game">${escapeHtml(game)}</span><span class="gp-flags"><span class="st st-revealed"><span class="st-dot"></span>Revealed</span>${state}</span></div>${lines}</div>`;
+        }
+        function sealedGroup(n) {
+            return `<div class="gp sealed-group"><span class="st st-sealed"><i class="fa-solid fa-lock"></i> Sealed</span><span class="gp-sealed-txt"><b>${n}</b> ${n === 1 ? 'pick' : 'picks'} hidden · reveals at game lock</span></div>`;
         }
         function renderLeaderboard(data, picks) {
             const body = $('#lb-body');
@@ -1049,19 +1132,26 @@
                     .concat(sealedByUser.get(String(e.user_id)) || []);
                 const net = Number(e.units_net) || 0;
                 const tNet = Number(t.units_net) || 0;
+                const revealed = mine.filter((p) => !p.sealed);
+                const sealedN = mine.length - revealed.length;
+                const groups = new Map();
+                revealed.forEach((p) => { const gk = p.game_id || p.game; if (!groups.has(gk)) groups.set(gk, []); groups.get(gk).push(p); });
+                const picksHtml = [...groups.values()].map(gameGroup).join('') + (sealedN ? sealedGroup(sealedN) : '');
                 return `<div class="cg-item" role="listitem">
                     <div class="cg-row">
-                        <span><span class="lb-rank ${rankCls}">${e.rank}</span></span>
-                        <span class="cg-user"><img src="${escapeAttr(avaSrc(e))}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null;"><a href="/profile/${encodeURIComponent(uname)}/" title="${escapeAttr(uname)}">${escapeHtml(uname)}</a>${e.tied_on_units && e.picks_used ? '<span class="sub" style="margin-left:4px;">tied</span>' : ''}</span>
+                        <span class="cg-id"><span class="lb-rank ${rankCls}">${e.rank}</span>
+                        <span class="cg-user"><img src="${escapeAttr(avaSrc(e))}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null;"><a href="/profile/${encodeURIComponent(uname)}/" title="${escapeAttr(uname)}">${escapeHtml(uname)}</a>${e.tied_on_units && e.picks_used ? '<span class="cg-tied">tied</span>' : ''}</span></span>
                         <span class="cg-stats">
-                            <span class="cg-stat"><span class="cg-lbl">Today</span>${wlp(t.wins, t.losses, t.pushes)}<small class="${unitsClass(tNet)}">${signedU(tNet)}</small></span>
-                            <span class="cg-stat"><span class="cg-lbl">Overall</span>${wlp(e.wins, e.losses, e.pushes)}<small>${e.voids ? `${e.voids} void` : '&nbsp;'}</small></span>
-                            <span class="cg-stat ${unitsClass(net)}"><span class="cg-lbl">Units</span>${signedU(net)}</span>
-                            <span class="cg-stat"><span class="cg-lbl">Pending</span>${e.pending || 0}<small>not graded</small></span>
-                            <span class="cg-stat"><span class="cg-lbl">Picks</span>${e.picks_used || 0}<small>of ${e.picks_max || 50}</small></span>
+                            <span class="cg-stat"><span class="cg-lbl">Today</span><span class="cg-val">${wlp(t.wins, t.losses, t.pushes)}</span><span class="cg-sub ${unitsClass(tNet)}">${signedU(tNet)}</span></span>
+                            <span class="cg-stat"><span class="cg-lbl">Overall</span><span class="cg-val">${wlp(e.wins, e.losses, e.pushes)}</span><span class="cg-sub">${e.voids ? `${e.voids} void` : '&nbsp;'}</span></span>
+                            <span class="cg-stat"><span class="cg-lbl">Units</span><span class="cg-val ${unitsClass(net)}">${signedU(net)}</span><span class="cg-sub">&nbsp;</span></span>
+                        </span>
+                        <span class="cg-usage">
+                            <span class="cg-stat"><span class="cg-lbl">Picks</span><span class="cg-val">${e.picks_used || 0}<small>/${e.picks_max || 50}</small></span></span>
+                            <span class="cg-stat"><span class="cg-lbl">Pending</span><span class="cg-val">${e.pending || 0}</span></span>
                         </span>
                     </div>
-                    <div class="cg-today">${mine.length ? mine.map(todayChip).join('') : '<span class="none">No picks yet today</span>'}</div>
+                    <div class="cg-today">${picksHtml || '<span class="none">No picks yet today</span>'}</div>
                 </div>`;
             }).join('');
             if (foot) {
@@ -1089,11 +1179,17 @@
                 const d = await r.json();
                 const rows = d.picks || [];
                 box.hidden = false;
-                box.innerHTML = `<h3 style="margin:0 0 6px;font-size:1rem;">Your contest picks (${rows.length} of 50)</h3>` + (rows.length
+                const sealedN = rows.filter((p) => p.status === 'sealed').length;
+                box.innerHTML = `<div class="mp-title"><h3>Your Contest Picks</h3><span>${rows.length} of 50 used${sealedN ? ` · ${sealedN} sealed` : ''}</span></div>` + (rows.length
                     ? `<div class="mp-wrap"><table><thead><tr><th>Status</th><th>Game</th><th>Pick</th><th>Odds</th><th>Units</th><th>Result</th><th>Submitted</th><th>Revealed</th></tr></thead><tbody>` +
-                      rows.map((p) => `<tr><td>${p.status === 'sealed' ? '<span class="ibadge sealed"><i class="fa-solid fa-lock"></i> Sealed: game not started</span>' : '<span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed: game locked</span>'}</td>` +
-                        `<td>${escapeHtml(p.game)}<br><small>${fmtTime(p.game_start_at)}</small></td><td>${escapeHtml(pickLabel(p))}</td><td>${fmtOdds(p.odds)}</td><td>${Number(p.units).toFixed(2)}</td>` +
-                        `<td>${escapeHtml(p.result)}${p.units_net != null ? ` (${Number(p.units_net) > 0 ? '+' : ''}${Number(p.units_net).toFixed(2)}u)` : ''}</td><td>${fmtStamp(p.submitted_at)}</td><td>${fmtStamp(p.revealed_at)}</td></tr>`).join('') +
+                      rows.map((p) => {
+                        const res = (p.result && p.result !== 'pending') ? p.result : '';
+                        const status = p.status === 'sealed' ? '<span class="st st-sealed"><i class="fa-solid fa-lock"></i> Sealed</span>' : '<span class="st st-revealed"><span class="st-dot"></span>Revealed</span>';
+                        const result = res ? `${resultBadge(res)}${p.units_net != null ? ` <span class="gp-net ${unitsClass(p.units_net)}">${signedU(p.units_net)}</span>` : ''}` : '<span class="rs rs-pending">Pending</span>';
+                        return `<tr><td class="c-status">${status}</td>` +
+                        `<td class="c-game"><span class="mp-game">${escapeHtml(p.game)}</span><small>${fmtTime(p.game_start_at)}</small></td><td class="c-pick" data-l="Pick"><span class="mp-pick">${escapeHtml(pickLabel(p))}</span></td><td class="num" data-l="Odds">${fmtOdds(p.odds)}</td><td class="num" data-l="Units">${Number(p.units).toFixed(2)}u</td>` +
+                        `<td data-l="Result" class="c-sub">${result}</td><td class="stamp c-sub" data-l="Submitted">${fmtStamp(p.submitted_at)}</td><td class="stamp" data-l="Revealed">${p.revealed_at ? fmtStamp(p.revealed_at) : '—'}</td></tr>`;
+                      }).join('') +
                       `</tbody></table></div>`
                     : '<div class="none">You have not made any contest picks yet.</div>');
             } catch (e) { box.hidden = true; }
