@@ -414,7 +414,7 @@
                 if (foot) foot.textContent = '';
                 return;
             }
-            var now = Date.now();
+            var now = Date.now() + serverOffsetMs;   // SERVER_CLOCK_20260917
             var sealedCount = 0, revealedCount = 0;
             grid.innerHTML = cards.map(function (c) {
                 var started = c.start && new Date(c.start).getTime() <= now;

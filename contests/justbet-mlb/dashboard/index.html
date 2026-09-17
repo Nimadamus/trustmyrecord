@@ -893,7 +893,8 @@
             }
 
             grid.innerHTML = cards.map(c => {
-                const started = c.start && new Date(c.start) <= new Date();
+                // SERVER_CLOCK_20260917: the REVEALED badge follows the server clock, not the viewer's device clock.
+                const started = c.start && new Date(c.start).getTime() <= Date.now() + serverOffsetMs;
                 const cells = MARKET_CELLS.map(m => {
                     const mPicks = c.picks.filter(p => (p.market_type || '') === m.key);
                     const inner = mPicks.length ? mPicks.map(pickChip).join('') : `<div class="none">—</div>`;
@@ -1011,7 +1012,7 @@
             }
             const res = (p.result && p.result !== 'pending') ? p.result : '';
             const cls = res ? `res-${res}` : '';
-            const label = res === 'won' ? 'W' : res === 'lost' ? 'L' : res === 'push' ? 'P' : res === 'void' ? 'Void' : (new Date(p.game_start_at) <= new Date() ? 'Live' : '');
+            const label = res === 'won' ? 'W' : res === 'lost' ? 'L' : res === 'push' ? 'P' : res === 'void' ? 'Void' : (new Date(p.game_start_at).getTime() <= Date.now() + serverOffsetMs ? 'Live' : '');
             const sel = pickLabel(p);
             const audit = `Submitted ${fmtStamp(p.submitted_at)} · Locked ${fmtStamp(p.locked_at || p.game_start_at)}${p.revealed_at ? ' · Revealed ' + fmtStamp(p.revealed_at) : ''}`;
             return `<span class="tp ${cls}" title="${escapeAttr(p.game)} · ${escapeAttr(p.selection)}${escapeAttr(signedLine(p.line))} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u · ${escapeAttr(audit)}"><span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed</span><span class="tg">${escapeHtml(game)}</span><span class="ts">${escapeHtml(sel)} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(1)}u</span>${label ? `<span class="tr">${label}</span>` : ''}</span>`;
