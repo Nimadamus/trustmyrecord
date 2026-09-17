@@ -116,7 +116,7 @@
                     '<li><strong>Contest rules.</strong> Contest runs Sept 17 through <strong>Sept 30</strong> (last picks before 12:00 AM PT Oct 1).</li>' +
                     '<li><strong>50 picks</strong> per entrant. MLB only.</li>' +
                     '<li><strong>Moneylines, run lines, totals, team totals, First 5 lines and First 5 totals.</strong> Posted lines only: <strong>no alt lines, no alt totals, no props</strong>.</li>' +
-                    '<li>One pick per market per game. Every pick is final: no edits, no deletes.</li>' +
+                    '<li><strong>No correlated picks:</strong> one side and one total per game (one of moneyline / run line / F5 line, and one of game total / team total / F5 total). Every pick is final: no edits, no deletes.</li>' +
                     '<li><strong>Half a unit minimum.</strong> Win up to 5 units on a favorite, risk up to 5 units on an underdog.</li>' +
                     '<li>Picks must be in before first pitch and stay sealed until the game starts.</li>' +
                     '<li><strong>Most units won wins.</strong> Ties: win %, then earliest first pick.</li>' +

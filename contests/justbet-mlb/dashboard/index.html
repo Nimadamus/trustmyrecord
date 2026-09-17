@@ -503,7 +503,7 @@
                 <li><strong>Field:</strong> registration closed when the contest opened. Only registered entrants can make contest picks.</li>
                 <li><strong>50 picks</strong> per entrant, made any time during the contest.</li>
                 <li><strong>MLB only.</strong> Moneylines, run lines, game totals, team totals, First 5 moneylines, First 5 run lines and First 5 totals. Posted lines only: <strong>no alt lines, no alt totals and no props</strong>.</li>
-                <li><strong>One pick per market per game</strong> (at most one pick each on the moneyline, run line, total, team total, First 5 moneyline, First 5 run line and First 5 total of any game).</li>
+                <li><strong>No correlated picks.</strong> One side and one total per game: at most one of the moneyline, run line, First 5 moneyline or First 5 run line, and at most one of the game total, team total or First 5 total.</li>
                 <li><strong>Stakes:</strong> half a unit minimum. On a favorite you can <strong>win up to 5 units</strong>; on an underdog you can <strong>risk up to 5 units</strong>.</li>
                 <li><strong>Every pick is final</strong> the moment you submit it. No edits and no deletes.</li>
                 <li>Picks must be in <strong>before first pitch</strong>. Once a game starts it comes off the board and can no longer be picked.</li>
@@ -568,41 +568,43 @@
             .prelaunch-bar i { color: var(--justbet); font-size: 1.05rem; flex-shrink: 0; }
             .prelaunch-bar strong { color: #07182A; }
 
-            /* ======== CONTEST BOARD (game-centric, BOARD_GAMECARDS_20260605) ========
-               Inverted layout: one compact card PER GAME (not contestants x games),
-               picks live inside their game card under ML / RL / Total cells.
-               No horizontal scrolling at any viewport by design. */
-            .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
-            .game-card { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 10px 12px; min-width: 0; }
-            .game-card.is-live { border-color: rgba(10,139,78,.28); }
-            .g-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-            .g-teams { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.98rem; color: #07182A; letter-spacing: 0.02em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .g-teams .at { color: var(--faint); font-size: 0.78rem; margin: 0 4px; }
-            .g-time { color: var(--faint); font-size: 0.72rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-            .g-markets { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
-            .g-mkt { border: 1px solid #D2DEEA; border-radius: 8px; padding: 5px 7px; min-width: 0; background: rgba(7,24,42,0.054); }
-            .g-mkt .mk { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 800; margin-bottom: 4px; }
-            .g-mkt .none { color: #3d4a5c; font-weight: 700; font-size: 0.8rem; }
-            .pchip { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 0.76rem; line-height: 1.25; padding: 2px 0; }
-            .pchip + .pchip { border-top: 1px dotted #D2DEEA; }
-            .pchip .pu { color: #2E4459; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-            .pchip .ps { font-weight: 800; color: #07182A; white-space: nowrap; flex-shrink: 0; margin-left: auto; }
-            .pchip .po { color: #2E4459; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-            .pchip .pw { color: var(--faint); font-weight: 800; font-size: 0.72rem; }
-            .pchip .pn { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.72rem; }
-            .pchip.res-won .ps { color: #0A8B4E; }
-            .pchip.res-lost .ps { color: #BC372E; }
-            .pchip.res-push .ps, .pchip.res-void .ps { color: #8A6206; }
-            .pchip.sealed .ps { color: #07182A; font-weight: 700; }
-            .pchip.sealed .ps i { font-size: 0.66rem; margin-right: 3px; color: #2E4459; }
-            .board-foot { margin-top: 10px; color: var(--muted); font-size: 0.82rem; }
-            .preview-banner {
-                display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
-                padding: 9px 14px; border-radius: 10px;
-                border: 1px solid rgba(188,55,46,.28); background: rgba(7,24,42,0.054);
-                color: #BC372E; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase;
+            /* ======== CONTEST BOARD (CONTEST_GAME_BOARD_20260917) ========
+               One card per game that actually has contest picks, answering "what was
+               picked on this game?". Before first pitch a card shows only a sealed
+               count; after the game locks it lists every pick on it. Same /picks feed
+               and same server-side reveal as the standings above: no second source. */
+            .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; align-items: start; }
+            .game-card { border: 1px solid #D2DEEA; background: #fff; border-radius: 14px; min-width: 0; overflow: hidden; box-shadow: 0 1px 2px rgba(7,24,42,.05); }
+            .game-card.is-live { border-color: rgba(10,139,78,.35); }
+            .game-card.is-final { border-color: #C6D3E1; }
+            .g-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 14px; border-bottom: 1px solid #EEF3F8; background: #FAFCFE; }
+            .g-teams { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1rem; color: #07182A; letter-spacing: .01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .g-teams .at { color: #7A8BA0; font-weight: 800; font-size: .8rem; margin: 0 5px; }
+            .g-meta { display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0; }
+            .g-time { color: #5E7590; font-size: .74rem; font-weight: 800; white-space: nowrap; letter-spacing: .04em; }
+            .g-score { font-family: "Barlow", sans-serif; font-weight: 900; font-size: .8rem; color: #07182A; white-space: nowrap; }
+            .g-picks { display: flex; flex-direction: column; }
+            .g-pick { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 9px 14px; align-items: center; }
+            .g-pick + .g-pick { border-top: 1px solid #EEF3F8; }
+            .g-pick .gp-who { display: flex; align-items: center; gap: 7px; min-width: 0; }
+            .g-pick .gp-who a { font-weight: 800; color: #07182A; font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .g-pick .gp-who img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(7,24,42,.08); }
+            .g-pick .gp-bet { grid-column: 1 / 2; display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: .92rem; }
+            .g-pick .gp-bet b { font-weight: 800; color: #07182A; white-space: nowrap; }
+            .g-pick .gp-bet .o { font-family: "Barlow", sans-serif; font-weight: 700; color: #2E4459; }
+            .g-pick .gp-right { grid-row: 1 / span 2; grid-column: 2 / 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+            .g-pick .gp-units { font-family: "Barlow", sans-serif; font-weight: 800; color: #07182A; white-space: nowrap; }
+            .g-sealed { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #F3F6FA; border-top: 1px solid #EEF3F8; }
+            .g-sealed .txt { font-size: .84rem; font-weight: 600; color: #2E4459; }
+            .g-sealed .txt b { color: #07182A; font-weight: 900; }
+            .g-sealed .txt small { display: block; color: #7A8BA0; font-weight: 600; font-size: .74rem; margin-top: 1px; }
+            @media (max-width: 560px) {
+                .board-grid { grid-template-columns: 1fr; gap: 10px; }
+                .g-head { padding: 10px 12px; }
+                .g-teams { font-size: .95rem; }
+                .g-pick { padding: 9px 12px; }
             }
-            @media (max-width: 480px) { .g-markets { grid-template-columns: 1fr; } }
+            .board-foot { margin-top: 10px; color: var(--muted); font-size: 0.82rem; }
         </style>
         <section class="panel dash-main">
             <div class="block" id="contest-status">
@@ -675,7 +677,7 @@
                     <h2>Contest Board</h2>
                     <button class="refresh-btn" id="refresh-board"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
                 </div>
-                <div id="board-preview-banner" class="preview-banner" hidden><i class="fa-solid fa-flask"></i> Dev Preview — sample data, not real picks. Local only.</div>
+
                 <div class="board-grid" id="board-grid"></div>
                 <p class="board-foot" id="board-foot"></p>
             </div>
@@ -874,15 +876,8 @@
         // ACTIVATION: renders ONLY when PRELAUNCH=false (real /games + /picks data), or
         // in DEV PREVIEW (localhost + ?preview=board) with clearly-labeled sample data.
         // The preview can NEVER activate on the live domain — hostname-gated.
-        const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-        const PREVIEW_BOARD = IS_LOCAL && new URLSearchParams(window.location.search).get('preview') === 'board';
-        const boardActive = () => (!PRELAUNCH || PREVIEW_BOARD);
+        const boardActive = () => !PRELAUNCH;
 
-        const MARKET_CELLS = [
-            { key: 'h2h', label: 'Moneyline' },
-            { key: 'spreads', label: 'Run Line' },
-            { key: 'totals', label: 'Total' },
-        ];
 
         // "New York Yankees" -> "Yankees"; keeps two-word nicknames (Red Sox, White Sox, Blue Jays).
         function teamNick(name) {
@@ -921,71 +916,83 @@
             }
             return `${pre}${teamNick(sel) || sel}${signedLine(p.line)}`;
         }
-        function pickChip(p) {
-            if (p.sealed) {
-                return `<div class="pchip sealed"><span class="pu">${escapeHtml(p.username)}</span><span class="ps"><i class="fa-solid fa-lock"></i>Sealed</span></div>`;
-            }
-            const res = (p.result && p.result !== 'pending') ? p.result : '';
-            const cls = res === 'won' ? 'res-won' : res === 'lost' ? 'res-lost' : res === 'push' ? 'res-push' : res === 'void' ? 'res-void' : '';
-            // The API returns line_snapshot as `line` on a revealed pick. Without
-            // it a run line showed a bare team name and a total showed a bare
-            // "Over", so nobody could check what number was actually taken.
-            const line = signedLine(p.line);
-            const net = (p.units_net !== null && p.units_net !== undefined)
-                ? `<span class="pn ${Number(p.units_net) > 0 ? 'units-pos' : Number(p.units_net) < 0 ? 'units-neg' : 'units-zero'}">${Number(p.units_net) > 0 ? '+' : ''}${Number(p.units_net).toFixed(2)}u</span>` : '';
-            const units = (p.units !== null && p.units !== undefined) ? `<span class="pw">${Number(p.units).toFixed(1)}u</span>` : '';
-            return `<div class="pchip ${cls}" title="${escapeHtml(p.username)} · ${escapeHtml(p.selection)}${escapeHtml(line)} · ${fmtOdds(p.odds)} · Submitted ${escapeHtml(fmtStamp(p.submitted_at))} · Revealed ${escapeHtml(fmtStamp(p.revealed_at || p.locked_at || p.game_start_at))}"><span class="pu">${escapeHtml(p.username)}</span><span class="ps">${escapeHtml(pickLabel(p))}</span><span class="po">${fmtOdds(p.odds)}</span>${units}${net}</div>`;
-        }
 
-        function renderBoard(games, picks) {
+        // CONTEST_GAME_BOARD_20260917 (Nima): the board answers "what was picked on this game?".
+        // Revealed picks come from the same GET /picks feed the standings use; sealed picks are
+        // counted per game from sealed_by_game, an aggregate that carries no username, side, line
+        // or units. Nothing here decides what is sealed: the server does, exactly as before.
+        function boardPickRow(p) {
+            const res = (p.result && p.result !== 'pending') ? p.result : '';
+            const net = (res && p.units_net !== null && p.units_net !== undefined) ? `<span class="gp-net ${unitsClass(p.units_net)}">${signedU(p.units_net)}</span>` : '';
+            const audit = `Submitted ${fmtStamp(p.submitted_at)} · Locked ${fmtStamp(p.locked_at || p.game_start_at)}${p.revealed_at ? ' · Revealed ' + fmtStamp(p.revealed_at) : ''}`;
+            const uname = String(p.username || '');
+            return `<div class="g-pick" title="${escapeAttr(uname)} · ${escapeAttr(p.selection)}${escapeAttr(signedLine(p.line))} ${fmtOdds(p.odds)} · ${Number(p.units || 0).toFixed(2)}u · ${escapeAttr(audit)}">
+                <span class="gp-who"><img src="${escapeAttr(avaSrc({ user_id: p.user_id, username: uname }))}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null;"><a href="/profile/${encodeURIComponent(uname)}/">${escapeHtml(uname)}</a></span>
+                <span class="gp-bet"><b>${escapeHtml(pickLabel(p))}</b><span class="o">${fmtOdds(p.odds)}</span></span>
+                <span class="gp-right"><span class="gp-units">${Number(p.units || 0).toFixed(2)}u</span>${res ? resultBadge(res) + net : '<span class="st st-revealed"><span class="st-dot"></span>Revealed</span>'}</span>
+            </div>`;
+        }
+        function renderBoard(games, picks, sealedByGame) {
             const grid = $('#board-grid');
             const foot = $('#board-foot');
+            const now = Date.now() + serverOffsetMs;
 
-            // Cards keyed by game label; defensively add a card for any pick whose
-            // game is missing from the board so no real pick is ever dropped.
-            // DOUBLEHEADER_20260901. Keyed by game id, not by the "Away @ Home"
-            // label: both halves of a doubleheader share a label, so the label
-            // key merged two separate games into a single card carrying one
-            // start time and both games' picks.
+            // DOUBLEHEADER_20260901: keyed by game id, never by the "Away @ Home" label, because both
+            // halves of a doubleheader share a label and would merge into one card.
             const cardMap = new Map();
-            (games || []).forEach(g => cardMap.set(g.id || gameLabel(g), { label: gameLabel(g), away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] }));
-            (picks || []).forEach(p => {
-                const key = p.game_id || p.game;
-                if (!cardMap.has(key)) {
-                    const [away, home] = String(p.game).split(' @ ');
-                    cardMap.set(key, { label: p.game, away: away || p.game, home: home || '', start: p.game_start_at, picks: [] });
-                }
-                cardMap.get(key).picks.push(p);
+            const card = (key, label, away, home, start) => {
+                if (!cardMap.has(key)) cardMap.set(key, { label, away, home, start, picks: [], sealed: 0 });
+                return cardMap.get(key);
+            };
+            (games || []).forEach(g => card(g.id || gameLabel(g), gameLabel(g), g.away_team, g.home_team, g.commence_time));
+            (picks || []).filter(p => !p.sealed).forEach((p) => {
+                const [away, home] = String(p.game || '').split(' @ ');
+                const c = card(p.game_id || p.game, p.game || '', away || p.game, home || '', p.game_start_at);
+                if (!c.start) c.start = p.game_start_at;
+                c.picks.push(p);
             });
-            const cards = [...cardMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
+            (sealedByGame || []).forEach((s) => {
+                const [away, home] = String(s.game || '').split(' @ ');
+                const c = card(s.game_id || s.game, s.game || '', away || s.game, home || '', s.game_start_at);
+                c.sealed += Number(s.sealed_picks) || 0;
+            });
 
-            if (!cards.length) {
-                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-baseball"></i>The contest slate will appear here once the daily board is posted.</div>`;
-                if (foot) foot.textContent = '';
+            const all = [...cardMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
+            const active = all.filter(c => c.picks.length || c.sealed);
+            const quiet = all.filter(c => !c.picks.length && !c.sealed);
+
+            if (!active.length) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-baseball"></i>No contest picks on today's slate yet.</div>`;
+                if (foot) foot.innerHTML = quiet.length ? `<strong>${quiet.length}</strong> games on the board with no contest picks yet.` : '';
                 return;
             }
 
-            grid.innerHTML = cards.map(c => {
-                // SERVER_CLOCK_20260917: the REVEALED badge follows the server clock, not the viewer's device clock.
-                const started = c.start && new Date(c.start).getTime() <= Date.now() + serverOffsetMs;
-                const cells = MARKET_CELLS.map(m => {
-                    const mPicks = c.picks.filter(p => (p.market_type || '') === m.key);
-                    const inner = mPicks.length ? mPicks.map(pickChip).join('') : `<div class="none">—</div>`;
-                    return `<div class="g-mkt"><div class="mk">${m.label}</div>${inner}</div>`;
-                }).join('');
-                // Picks with unknown market types still render (defensive, never dropped).
-                const other = c.picks.filter(p => !MARKET_CELLS.some(m => m.key === (p.market_type || '')));
-                const otherCell = other.length ? `<div class="g-mkt" style="grid-column: 1 / -1;"><div class="mk">Other</div>${other.map(pickChip).join('')}</div>` : '';
-                return `<div class="game-card${started ? ' is-live' : ''}">
-                    <div class="g-head"><span class="g-teams">${escapeHtml(teamNick(c.away))}<span class="at">@</span>${escapeHtml(teamNick(c.home))}</span><span class="g-time">${fmtTime(c.start)}</span>${started ? '<span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed: game locked</span>' : ''}</div>
-                    <div class="g-markets">${cells}${otherCell}</div>
+            grid.innerHTML = active.map(c => {
+                const started = c.start && new Date(c.start).getTime() <= now;
+                const graded = c.picks.length && c.picks.every(p => p.result && p.result !== 'pending');
+                const state = graded ? '<span class="st st-final">Final</span>'
+                    : started ? '<span class="st st-live"><span class="st-dot"></span>Live</span>'
+                    : `<span class="g-time">${fmtTime(c.start)}</span>`;
+                const body = c.picks.length
+                    ? `<div class="g-picks">${c.picks.slice().sort((a, b) => String(a.username || '').localeCompare(String(b.username || ''))).map(boardPickRow).join('')}</div>`
+                    : '';
+                const sealed = c.sealed
+                    ? `<div class="g-sealed"><span class="st st-sealed"><i class="fa-solid fa-lock"></i> Sealed</span><span class="txt"><b>${c.sealed}</b> contest ${c.sealed === 1 ? 'pick' : 'picks'} sealed<small>Reveals automatically when the game locks</small></span></div>`
+                    : '';
+                return `<div class="game-card${graded ? ' is-final' : started ? ' is-live' : ''}">
+                    <div class="g-head"><span class="g-teams">${escapeHtml(teamNick(c.away))}<span class="at">@</span>${escapeHtml(teamNick(c.home))}</span><span class="g-meta">${state}${started ? '<span class="ibadge revealed"><i class="fa-solid fa-lock-open"></i> Revealed</span>' : ''}</span></div>
+                    ${body}${sealed}
                 </div>`;
             }).join('');
 
-            const totalPicks = cards.reduce((n, c) => n + c.picks.length, 0);
-            if (foot) foot.innerHTML = `Showing <strong>${cards.length}</strong> games · <strong>${totalPicks}</strong> contest picks. Picks are sealed until first pitch.`;
+            const revealedPicks = active.reduce((n, c) => n + c.picks.length, 0);
+            const sealedPicks = active.reduce((n, c) => n + c.sealed, 0);
+            if (foot) {
+                foot.innerHTML = `<strong>${active.length}</strong> games with contest picks · <strong>${revealedPicks}</strong> revealed · <strong>${sealedPicks}</strong> still sealed.`
+                    + (quiet.length ? ` ${quiet.length} more games on the board have no contest picks.` : '')
+                    + ` Sealed picks show only a count until their game starts.`;
+            }
         }
-
 
         // REVEAL_AT_FIRST_PITCH_CLIENT_20260917 (Nima: picks exposed immediately when the game goes off
         // the board). The server unseals at first pitch; this page refetches 2 seconds after every
@@ -1009,13 +1016,6 @@
         async function loadBoard() {
             if (!boardActive()) return;
             const grid = $('#board-grid');
-            if (PREVIEW_BOARD && PRELAUNCH) {
-                // LOCAL-ONLY sample data, clearly labeled. Never reachable on the live
-                // domain (IS_LOCAL gate) and never mixed with real API data.
-                $('#board-preview-banner').hidden = false;
-                renderBoard(SAMPLE_GAMES, SAMPLE_PICKS);
-                return;
-            }
             try {
                 const [gamesResp, picksResp] = await Promise.all([
                     fetch(API('/games?scope=full'), { credentials: 'include' }),
@@ -1026,52 +1026,15 @@
                 const picksData = await picksResp.json();
                 noteServerTime(picksData.server_time);
                 scheduleRevealRefresh(gamesData.games);
-                // PENDING_NO_GAME_20260916 (Nima): a pick that has not reached first pitch shows only as a pending
-                // count on the contestant grid; no game, market or side until the game is off the board.
-                renderBoard(gamesData.games || [], (picksData.picks || []).filter((p) => !p.sealed));
+                // PENDING_NO_GAME_20260916 (Nima): a sealed pick never carries its game, market or side.
+                // The board shows only the per game sealed COUNT the server aggregates.
+                renderBoard(gamesData.games || [], picksData.picks || [], picksData.sealed_by_game || []);
             } catch {
                 grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation"></i>Contest board temporarily unavailable. Try refresh.</div>`;
             }
         }
 
-        // Sample fixtures for the local dev preview ONLY (?preview=board on localhost).
-        // Generic demo usernames — never real members, never shown on the live site.
-        const SAMPLE_GAMES = [
-            { away_team: 'New York Yankees', home_team: 'Boston Red Sox', commence_time: '2026-06-05T23:10:00Z' },
-            { away_team: 'Los Angeles Dodgers', home_team: 'San Francisco Giants', commence_time: '2026-06-06T02:15:00Z' },
-            { away_team: 'Chicago Cubs', home_team: 'St. Louis Cardinals', commence_time: '2026-06-05T23:45:00Z' },
-            { away_team: 'Houston Astros', home_team: 'Texas Rangers', commence_time: '2026-06-06T00:05:00Z' },
-            { away_team: 'Atlanta Braves', home_team: 'Philadelphia Phillies', commence_time: '2026-06-05T22:35:00Z' },
-            { away_team: 'San Diego Padres', home_team: 'Arizona Diamondbacks', commence_time: '2026-06-06T01:40:00Z' },
-            { away_team: 'Toronto Blue Jays', home_team: 'Baltimore Orioles', commence_time: '2026-06-05T23:05:00Z' },
-            { away_team: 'Seattle Mariners', home_team: 'Oakland Athletics', commence_time: '2026-06-06T02:40:00Z' },
-            { away_team: 'Cleveland Guardians', home_team: 'Detroit Tigers', commence_time: '2026-06-05T22:40:00Z' },
-            { away_team: 'Milwaukee Brewers', home_team: 'Cincinnati Reds', commence_time: '2026-06-05T22:40:00Z' },
-            { away_team: 'Minnesota Twins', home_team: 'Kansas City Royals', commence_time: '2026-06-06T00:10:00Z' },
-            { away_team: 'New York Mets', home_team: 'Washington Nationals', commence_time: '2026-06-05T22:45:00Z' },
-            { away_team: 'Tampa Bay Rays', home_team: 'Miami Marlins', commence_time: '2026-06-05T22:40:00Z' },
-            { away_team: 'Colorado Rockies', home_team: 'Los Angeles Angels', commence_time: '2026-06-06T01:38:00Z' },
-            { away_team: 'Pittsburgh Pirates', home_team: 'Chicago White Sox', commence_time: '2026-06-06T00:10:00Z' },
-        ];
-        const SAMPLE_PICKS = [
-            { username: 'DemoCapper1', game: 'New York Yankees @ Boston Red Sox', market_type: 'h2h', selection: 'New York Yankees', odds: -135, sealed: false, result: 'won' },
-            { username: 'DemoCapper2', game: 'New York Yankees @ Boston Red Sox', market_type: 'totals', selection: 'Over', line: 8.5, odds: -110, sealed: false, result: 'lost' },
-            { username: 'DemoCapper3', game: 'New York Yankees @ Boston Red Sox', market_type: 'spreads', selection: 'Boston Red Sox', line: '+1.5', odds: -150, sealed: false, result: 'pending' },
-            { username: 'DemoCapper4', game: 'Los Angeles Dodgers @ San Francisco Giants', market_type: 'h2h', selection: 'Los Angeles Dodgers', odds: -160, sealed: true },
-            { username: 'DemoCapper5', game: 'Chicago Cubs @ St. Louis Cardinals', market_type: 'totals', selection: 'Under', line: 9, odds: -105, sealed: true },
-            { username: 'DemoCapper1', game: 'Atlanta Braves @ Philadelphia Phillies', market_type: 'spreads', selection: 'Atlanta Braves', line: '-1.5', odds: +140, sealed: false, result: 'push' },
-            { username: 'DemoCapper6', game: 'Toronto Blue Jays @ Baltimore Orioles', market_type: 'h2h', selection: 'Baltimore Orioles', odds: -120, sealed: true },
-            { username: 'DemoCapper2', game: 'Seattle Mariners @ Oakland Athletics', market_type: 'h2h', selection: 'Seattle Mariners', odds: -170, sealed: false, result: 'pending' },
-            { username: 'DemoCapper7', game: 'Minnesota Twins @ Kansas City Royals', market_type: 'totals', selection: 'Over', line: 8, odds: -115, sealed: true },
-        ];
 
-        // ---------------- contestant grid + standings ----------------
-        // ONE SOURCE: /leaderboard supplies every number (rank, today, overall,
-        // units) and /picks supplies the pick chips. Both read tmr_contest_picks
-        // only; nothing here recomputes a record.
-        const etDate = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-        const wlp = (w, l, p) => `${w || 0}-${l || 0}-${p || 0}`;
-        const signedU = (n) => { const v = Number(n) || 0; return `${v > 0 ? '+' : ''}${v.toFixed(2)}u`; };
         function avaSrc(e) {
             const u = { id: e.user_id, username: e.username };
             if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(u);
