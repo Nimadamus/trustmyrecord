@@ -441,14 +441,16 @@
 
         // REVEAL_AT_FIRST_PITCH_CLIENT_20260917: refetch 2 seconds after every first pitch, poll every 15 seconds.
         var revealTimers = {};
+        // SERVER_CLOCK_20260917: timers use the server clock from /picks server_time, not the device clock.
+        var serverOffsetMs = 0;
         function scheduleRevealRefresh(games) {
-            var now = Date.now();
+            var now = Date.now() + serverOffsetMs;
             (games || []).forEach(function (g) {
                 var t = Date.parse(g && g.commence_time);
                 if (!isFinite(t) || t <= now || t - now > 6 * 3600 * 1000) return;
                 var key = (g.id || '') + '|' + t;
                 if (revealTimers[key]) return;
-                revealTimers[key] = setTimeout(function () { loadLeaderboard(); loadReveal(); }, t - now + 2000);
+                revealTimers[key] = setTimeout(function () { loadLeaderboard(); loadReveal(); }, t - now + 1500);
             });
         }
         function loadReveal() {
@@ -456,6 +458,8 @@
                 fetch(API('/games?scope=full'), { credentials: 'include' }).then(function (r) { return r.ok ? r.json() : { games: [] }; }).catch(function () { return { games: [] }; }),
                 fetch(API('/picks'), { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
             ]).then(function (out) {
+                var st = Date.parse(out[1] && out[1].server_time);
+                if (isFinite(st)) serverOffsetMs = st - Date.now();
                 scheduleRevealRefresh(out[0].games || []);
                 // PENDING_NO_GAME_20260916 (Nima): pending picks never show which game they are on.
                 renderReveal(out[0].games || [], (out[1].picks || []).filter(function (p) { return !p.sealed; }));

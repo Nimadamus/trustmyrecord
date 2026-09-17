@@ -917,14 +917,19 @@
         // the board). The server unseals at first pitch; this page refetches 2 seconds after every
         // first pitch on the slate instead of waiting for the next poll, and polls every 15 seconds.
         const revealTimers = new Map();
+        // SERVER_CLOCK_20260917: reveal timers run on the server's clock (server_time from /picks),
+        // not the viewer's device clock, so a phone or PC whose clock is off still reloads the
+        // moment a game locks. Measured 2026-09-17: a laptop 7.5s behind the server.
+        let serverOffsetMs = 0;
+        function noteServerTime(iso) { const t = Date.parse(iso); if (Number.isFinite(t)) serverOffsetMs = t - Date.now(); }
         function scheduleRevealRefresh(games) {
-            const now = Date.now();
+            const now = Date.now() + serverOffsetMs;
             (games || []).forEach((g) => {
                 const t = Date.parse(g && g.commence_time);
                 if (!Number.isFinite(t) || t <= now || t - now > 6 * 3600 * 1000) return;
                 const key = (g.id || '') + '|' + t;
                 if (revealTimers.has(key)) return;
-                revealTimers.set(key, setTimeout(() => { loadBoard(); loadLeaderboard(); }, t - now + 2000));
+                revealTimers.set(key, setTimeout(() => { loadBoard(); loadLeaderboard(); }, t - now + 1500));
             });
         }
         async function loadBoard() {
@@ -944,8 +949,9 @@
                 ]);
                 if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
                 const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
-                scheduleRevealRefresh(gamesData.games);
                 const picksData = await picksResp.json();
+                noteServerTime(picksData.server_time);
+                scheduleRevealRefresh(gamesData.games);
                 // PENDING_NO_GAME_20260916 (Nima): a pick that has not reached first pitch shows only as a pending
                 // count on the contestant grid; no game, market or side until the game is off the board.
                 renderBoard(gamesData.games || [], (picksData.picks || []).filter((p) => !p.sealed));
@@ -1100,7 +1106,9 @@
                     fetch(API('/picks'), { credentials: 'include' }),
                 ]);
                 if (!r.ok) throw new Error('HTTP ' + r.status);
-                const picks = pr.ok ? ((await pr.json()).picks || []) : [];
+                const pj = pr.ok ? await pr.json() : {};
+                noteServerTime(pj.server_time);
+                const picks = pj.picks || [];
                 renderLeaderboard(await r.json(), picks);
                 loadMyPicks();
             } catch {
