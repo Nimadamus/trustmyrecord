@@ -282,6 +282,17 @@
     // one-book rule threw the main line away and left the tab showing whichever
     // rung happened to come first. Merge the rungs instead, exactly as the alt
     // spread and alt total ladders already do.
+    // CONTEST_MARKETS_ONLY_20260917 (Nima): in Contest Mode (?contest=...) the book shows only what the
+    // contest accepts: moneyline, run line, total (Game Lines) and team totals. Alt lines, alt totals,
+    // player props, First 5, 1st inning, halves and periods are removed before anything renders.
+    var CONTEST_MODE = (function () { try { return !!new URLSearchParams(window.location.search).get('contest'); } catch (e) { return false; } })();
+    function contestOnly(g) {
+        if (!CONTEST_MODE || !g || !g.groups) return g;
+        Object.keys(g.groups).forEach(function (k) {
+            if (!LINE_GROUPS[k] && !isTeamTotalKey(k)) delete g.groups[k];
+        });
+        return g;
+    }
     function isTeamTotalKey(key) { return /team[_ -]?totals?$/.test(String(key || '')); }
     function scopeBooks(key, items) {
         if (key === 'alt_spreads' || key === 'alt_totals' || isTeamTotalKey(key)) return mergeLadder(items);
@@ -753,7 +764,7 @@
                         return;
                     }
                     var games = d.games || [];
-                    state.games = games.map(function (g) { return normalise(g, sportKey); })
+                    state.games = games.map(function (g) { return contestOnly(normalise(g, sportKey)); })
                         .filter(function (g) { return !g.started && (g.main || Object.keys(g.groups).length); });
                     // A later attempt succeeding must leave no trace of the
                     // earlier failures: no stale error, no stuck spinner, and

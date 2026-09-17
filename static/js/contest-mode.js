@@ -84,6 +84,16 @@
         '#tmr-contest-mode-banner .tmr-cm-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:rgba(15,23,42,0.55); border:1px solid rgba(255,184,0,0.4); color:#ffe4a3; font-size:0.78rem; font-weight:800; letter-spacing:0.04em; }',
         '#tmr-contest-mode-banner .tmr-cm-exit { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; background:rgba(15,23,42,0.85); color:#ffe4a3; border:1px solid rgba(255,184,0,0.45); font-weight:800; font-size:0.85rem; letter-spacing:0.03em; cursor:pointer; text-decoration:none; }',
         '#tmr-contest-mode-banner .tmr-cm-exit:hover { background:rgba(15,23,42,1); border-color:#f0c449; }',
+        // CONTEST_MARKETS_ONLY_UI_20260917 (Nima: only moneylines, run lines and totals, no alternates, no props).
+        // In Contest Mode the board shows Game Lines and Team Totals only. Alt lines, first 5, halves,
+        // specials and props are hidden, and the server refuses them anyway.
+        'body.tmr-contest-mode .tmr-group:not([data-category="game-lines"]):not([data-category="team-totals"]) { display: none !important; }',
+        'body.tmr-contest-mode .tmr-filter-pill[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="all"]), body.tmr-contest-mode .tmr-card-filter-tab[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="all"]), body.tmr-contest-mode .tmr-family-tab[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="all"]) { display: none !important; }',
+        'body.tmr-contest-mode .tmr-market-card[data-scope="f5"] .tmr-group { display: none !important; }',
+        'body.tmr-contest-mode .sbn-drow--prop, body.tmr-contest-mode .sbn-dprops, body.tmr-contest-mode .prop-notice { display: none !important; }',
+        '#tmr-contest-mode-banner .tmr-cm-rules { margin: 8px 0 0; padding-left: 18px; font-size: 0.86rem; color: #f5e8c9; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; row-gap: 2px; }',
+        '#tmr-contest-mode-banner .tmr-cm-rules strong { color: #fff; }',
+        '@media (max-width: 720px) { #tmr-contest-mode-banner .tmr-cm-rules { grid-template-columns: 1fr; } }',
         '#tmr-contest-mode-banner .tmr-cm-dash { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; background:linear-gradient(180deg,#f0c449,#d4a72c); color:#1a1206; font-weight:900; font-size:0.85rem; letter-spacing:0.03em; cursor:pointer; text-decoration:none; border:1px solid #b4881d; }',
     ].join('\n');
     document.head.appendChild(css);
@@ -103,6 +113,16 @@
                 '<div class="tmr-cm-title">Contest Mode: ' + escapeHtml(meta.name) + '</div>' +
                 '<div class="tmr-cm-body">Picks submitted here count <strong>only for the JustBet MLB contest leaderboard</strong> and <strong>will not affect your public profile record</strong>, ROI, units, or regular pick history.</div>' +
                 '<div class="tmr-cm-body" style="margin-top:6px; opacity:.92;">Every contest pick stays sealed from everyone until that game’s first pitch, then reveals in full. Contest scoring pays your units to win at a minus price and risks your units at a plus price. Pushes and postponed games score 0.</div>' +
+                '<ol class="tmr-cm-rules">' +
+                    '<li><strong>Contest rules.</strong> Contest runs Sept 17 through <strong>Sept 30</strong> (last picks before 12:00 AM PT Oct 1).</li>' +
+                    '<li><strong>50 picks</strong> per entrant. MLB only.</li>' +
+                    '<li><strong>Moneylines, run lines, totals</strong> (and team totals). Posted lines only: <strong>no alt lines, no alt totals, no props</strong>.</li>' +
+                    '<li>One pick per market per game. Every pick is final: no edits, no deletes.</li>' +
+                    '<li><strong>Half a unit minimum.</strong> Win up to 5 units on a favorite, risk up to 5 units on an underdog.</li>' +
+                    '<li>Picks must be in before first pitch and stay sealed until the game starts.</li>' +
+                    '<li><strong>Most units won wins.</strong> Ties: win %, then earliest first pick.</li>' +
+                    '<li>Pushes, postponed and cancelled games score 0. Prizes $1,500 / $750 / $250.</li>' +
+                '</ol>' +
                 '<div class="tmr-cm-pillrow" style="margin-top:8px;">' +
                     '<span class="tmr-cm-pill" id="tmr-cm-pill-status"><i class="fas fa-shield-halved" aria-hidden="true"></i> Registration: loading…</span>' +
                     '<span class="tmr-cm-pill" id="tmr-cm-pill-picks"><i class="fas fa-vault" aria-hidden="true"></i> Picks used: loading…</span>' +
