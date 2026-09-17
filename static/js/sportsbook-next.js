@@ -1180,9 +1180,9 @@
                 state.submitting = false;
                 if (saved.length) {
                     showConfirm(saved, failed);
-                    toast(saved.length === 1
-                        ? 'Pick successfully submitted to your record.'
-                        : saved.length + ' picks successfully submitted to your record.');
+                    toast(CONTEST_MODE
+                        ? (saved.length === 1 ? 'Contest pick submitted. It stays sealed until first pitch.' : saved.length + ' contest picks submitted. They stay sealed until first pitch.')
+                        : (saved.length === 1 ? 'Pick successfully submitted to your record.' : saved.length + ' picks successfully submitted to your record.'));
                 }
                 if (failed) {
                     state.subError = failed + (failed === 1 ? ' pick could not be saved.' : ' picks could not be saved.') +

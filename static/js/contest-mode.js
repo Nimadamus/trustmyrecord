@@ -310,12 +310,25 @@
             newInit.credentials = 'include';
             newInit.body = JSON.stringify(transformed);
             return origFetch(targetUrl, newInit).then(function (resp) {
+                if (!resp || !resp.ok) return resp;
                 // Bump the picks-used counter on success.
-                if (resp && resp.ok) {
-                    preflightPickCount();
-                    showInlineSuccess();
-                }
-                return resp;
+                preflightPickCount();
+                showInlineSuccess();
+                // CONTEST_RESPONSE_SHAPE_20260917: the sportsbook confirms a save only when the reply
+                // carries pick.id (the regular /api/picks shape). The contest endpoint answers
+                // { ok, id, submitted_at, sealed_until }, so a SAVED contest pick was shown as
+                // "Pick could not be submitted" (Nima, 2026-09-17 09:03 PDT; pick 559 was saved).
+                return resp.clone().json().then(function (j) {
+                    var pick = Object.assign({}, transformed, {
+                        id: j && j.id != null ? j.id : null,
+                        submitted_at: j && j.submitted_at,
+                        sealed_until: j && j.sealed_until,
+                        status: 'pending',
+                        contest_id: contestId
+                    });
+                    var body = Object.assign({}, j, { ok: true, pick: pick, contest_pick: true });
+                    return new Response(JSON.stringify(body), { status: resp.status, headers: { 'Content-Type': 'application/json' } });
+                }).catch(function () { return resp; });
             });
         });
     }
