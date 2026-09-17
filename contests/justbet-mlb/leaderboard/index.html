@@ -442,7 +442,8 @@
                 fetch(API('/games?scope=full'), { credentials: 'include' }).then(function (r) { return r.ok ? r.json() : { games: [] }; }).catch(function () { return { games: [] }; }),
                 fetch(API('/picks'), { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
             ]).then(function (out) {
-                renderReveal(out[0].games || [], out[1].picks || []);
+                // PENDING_NO_GAME_20260916 (Nima): pending picks never show which game they are on.
+                renderReveal(out[0].games || [], (out[1].picks || []).filter(function (p) { return !p.sealed; }));
             }).catch(function () {
                 $('#reveal-grid').innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">'
                     + '<i class="fa-solid fa-triangle-exclamation"></i>Board temporarily unavailable. Try refresh.</div>';
@@ -466,5 +467,6 @@
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.5e5a91d4b99c.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script defer src="/static/js/contest-enter-cta.js?v=18ec62cb125f"></script>
 </body>
 </html>

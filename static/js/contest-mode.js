@@ -252,6 +252,27 @@
                 if (Number.isFinite(n2)) transformed.line = n2;
             }
 
+
+            // CONTEST_UNITS_RULE_20260916 (Nima): minimum half a unit; risk up to 5 on a dog,
+            // win up to 5 on a favorite. The contest stores units as TO WIN on a minus price
+            // and RISK on a plus price, so a stake entered the other way is converted first.
+            (function () {
+                var O = Number(oddsVal);
+                var U = Number(payload.units);
+                var mode = String(payload.stake_mode || payload.units_mode || payload.unitsMode || '').toLowerCase().replace('towin', 'to_win');
+                if (Number.isFinite(O) && Number.isFinite(U) && Math.abs(O) >= 100) {
+                    if (O < 0 && mode === 'risk') U = U * 100 / Math.abs(O);
+                    if (O > 0 && mode === 'to_win') U = U * 100 / O;
+                    transformed.units = Math.round(U * 100) / 100;
+                }
+            })();
+            if (!(Number(transformed.units) >= 0.5 && Number(transformed.units) <= 5)) {
+                var favorite = Number(oddsVal) < 0;
+                return Promise.resolve(contestError(
+                    'Contest picks are half a unit minimum. ' + (favorite
+                        ? 'On a favorite you can win up to 5 units (this pick would win ' + transformed.units + ').'
+                        : 'On an underdog you can risk up to 5 units (this pick would risk ' + transformed.units + ').')));
+            }
             // Client-side guard so an entrant gets a plain sentence instead of a
             // raw 400 from the API. The server enforces all of this again; this
             // is only for the message.

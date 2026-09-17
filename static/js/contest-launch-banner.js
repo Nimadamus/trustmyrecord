@@ -16,12 +16,12 @@
   try { if (sessionStorage.getItem('tmrContestLaunchDismissed') === '1') return; } catch (e) {}
   function paint() {
     var live = Date.now() >= START;
-    el.querySelector('.cl-t').textContent = live ? 'JustBet MLB Contest is LIVE' : 'JustBet MLB Contest starts tonight';
+    el.querySelector('.cl-t').textContent = live ? 'The contest is LIVE: make your picks now' : 'JustBet MLB Contest starts tonight';
     el.querySelector('.cl-s').textContent = live
       ? '$2,500 cash. 50 MLB picks each, sealed until first pitch. Enter your contest picks now.'
       : 'Picks open 12:00 AM PT / 3:00 AM ET. $2,500 cash. Registration closes at midnight PT.';
     var go = el.querySelector('.cl-go');
-    go.textContent = live ? 'Enter Contest Picks' : 'Register Now';
+    go.textContent = live ? 'ENTER HERE' : 'Register Now';
     go.href = live ? '/sportsbook/?contest=justbet-mlb' : '/contests/justbet-mlb/register/';
   }
   paint();

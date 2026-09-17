@@ -323,7 +323,7 @@
         }
 
         /* ======== CONTESTANT GRID (CONTESTANT_GRID_20260916) ======== */
-        .cg-head, .cg-row { display: grid; grid-template-columns: 44px minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) 76px 56px; gap: 10px; align-items: center; }
+        .cg-head, .cg-row { display: grid; grid-template-columns: 44px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 76px 64px 56px; gap: 10px; align-items: center; }
         .cg-head { padding: 0 12px 6px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
         .cg-head span:nth-child(n+3) { text-align: right; }
         .cg-list { display: flex; flex-direction: column; gap: 8px; }
@@ -349,7 +349,7 @@
             .cg-head { display: none; }
             .cg-row { grid-template-columns: 36px minmax(0, 1fr) auto; row-gap: 6px; }
             .cg-row .cg-stat { grid-column: auto; text-align: left; }
-            .cg-row .cg-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+            .cg-row .cg-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
             .cg-row .cg-stats .cg-stat { text-align: left; }
             .cg-lbl { display: block; font-size: 0.62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
         }
@@ -397,6 +397,37 @@
                     <i class="fa-solid fa-up-right-from-square"></i> JustBet Signup
                 </a>
             </div>
+        </section>
+
+        <!-- CONTEST_RULES_TOP_20260916 (Nima: "post all rules top of the new contest page"). -->
+        <style>
+            .rules-top { margin: 16px 0 18px; padding: 18px 20px; border-radius: 16px; border: 2px solid #f0c449; background: #FFFBEF; color: #07182A; }
+            .rules-top h2 { margin: 0 0 10px; font-family: Barlow, Inter, sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; font-size: 1.35rem; color: #07182A; }
+            .rules-top ol { margin: 0; padding-left: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; row-gap: 6px; }
+            .rules-top li { line-height: 1.45; font-size: .95rem; }
+            .rules-top li strong { color: #07182A; }
+            .rules-top .rules-cta { display: inline-flex; margin-top: 14px; padding: 11px 18px; border-radius: 10px; background: linear-gradient(180deg,#f0c449,#d4a72c); color: #1a1206; font-weight: 900; text-decoration: none; text-transform: uppercase; letter-spacing: .04em; }
+            @media (max-width: 760px) { .rules-top ol { grid-template-columns: 1fr; } }
+        </style>
+        <section class="rules-top" id="contest-rules-top" aria-labelledby="contest-rules-top-h">
+            <h2 id="contest-rules-top-h"><i class="fa-solid fa-list-check"></i> Contest Rules</h2>
+            <ol>
+                <li><strong>Dates:</strong> the contest opens at 12:00 AM PT (3:00 AM ET) on Thursday, September 17, 2026. <strong>September 30 is the final day</strong>: the last picks must be in before 12:00 AM PT on October 1.</li>
+                <li><strong>Field:</strong> registration closed when the contest opened. Only registered entrants can make contest picks.</li>
+                <li><strong>50 picks</strong> per entrant, made any time during the contest.</li>
+                <li><strong>MLB only.</strong> Moneylines, run lines, game totals and team totals. Posted lines only: <strong>no alt lines and no props</strong>.</li>
+                <li><strong>One pick per market per game</strong> (one moneyline, one run line, one total and one team total pick at most on any game).</li>
+                <li><strong>Stakes:</strong> half a unit minimum. On a favorite you can <strong>win up to 5 units</strong>; on an underdog you can <strong>risk up to 5 units</strong>.</li>
+                <li><strong>Every pick is final</strong> the moment you submit it. No edits and no deletes.</li>
+                <li>Picks must be in <strong>before first pitch</strong>. Once a game starts it comes off the board and can no longer be picked.</li>
+                <li><strong>Sealed until first pitch.</strong> Nobody can see which game you picked until it starts; the grid only shows your pending count. When a game goes off the board, every pick on it is revealed.</li>
+                <li><strong>Most units won wins.</strong> Ties go to the higher win percentage, then to whoever made their first pick earliest.</li>
+                <li><strong>Pushes, postponed and cancelled games</strong> score 0 units and count as neither a win nor a loss.</li>
+                <li><strong>Prizes:</strong> $2,500 cash. 1st place $1,500, 2nd place $750, 3rd place $250.</li>
+                <li>Contest picks are tracked separately and <strong>never change your regular TrustMyRecord record</strong>.</li>
+                <li>One entry per person and one per household. Your JustBet account must be opened through the official contest signup link.</li>
+            </ol>
+            <a class="rules-cta" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-trophy"></i>&nbsp; Enter your contest picks here</a>
         </section>
 
         <!-- ========================= MAIN PANEL (compact, single-card layout) =========================
@@ -541,7 +572,7 @@
                      tmr_contest_picks only, so this grid, the full standings page
                      and the board can never disagree. -->
                 <div class="cg-head" aria-hidden="true">
-                    <span>Rank</span><span>Contestant</span><span>Today</span><span>Overall</span><span>Units</span><span>Picks</span>
+                    <span>Rank</span><span>Contestant</span><span>Today</span><span>Overall</span><span>Units</span><span>Pending</span><span>Picks</span>
                 </div>
                 <div class="cg-list" id="lb-body" role="list"></div>
                 <p class="board-foot" id="lb-foot"></p>
@@ -864,7 +895,9 @@
                 if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
                 const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
                 const picksData = await picksResp.json();
-                renderBoard(gamesData.games || [], picksData.picks || []);
+                // PENDING_NO_GAME_20260916 (Nima): a pick that has not reached first pitch shows only as a pending
+                // count on the contestant grid; no game, market or side until the game is off the board.
+                renderBoard(gamesData.games || [], (picksData.picks || []).filter((p) => !p.sealed));
             } catch {
                 grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation"></i>Contest board temporarily unavailable. Try refresh.</div>`;
             }
@@ -937,7 +970,7 @@
             const today = (data && data.today_et) || etDate(new Date());
             const byUser = new Map();
             (picks || []).forEach((p) => {
-                if (!p.game_start_at || etDate(new Date(p.game_start_at)) !== today) return;
+                if (p.sealed || !p.game_start_at || etDate(new Date(p.game_start_at)) !== today) return;
                 const k = p.user_id != null ? String(p.user_id) : String(p.username || '').toLowerCase();
                 if (!byUser.has(k)) byUser.set(k, []);
                 byUser.get(k).push(p);
@@ -956,12 +989,13 @@
                         <span class="cg-user"><img src="${escapeAttr(avaSrc(e))}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null;"><a href="/profile/${encodeURIComponent(uname)}/" title="${escapeAttr(uname)}">${escapeHtml(uname)}</a>${e.tied_on_units && e.picks_used ? '<span class="sub" style="margin-left:4px;">tied</span>' : ''}</span>
                         <span class="cg-stats">
                             <span class="cg-stat"><span class="cg-lbl">Today</span>${wlp(t.wins, t.losses, t.pushes)}<small class="${unitsClass(tNet)}">${signedU(tNet)}</small></span>
-                            <span class="cg-stat"><span class="cg-lbl">Overall</span>${wlp(e.wins, e.losses, e.pushes)}<small>${e.voids ? `${e.voids} void` : (e.pending ? `${e.pending} pending` : '&nbsp;')}</small></span>
+                            <span class="cg-stat"><span class="cg-lbl">Overall</span>${wlp(e.wins, e.losses, e.pushes)}<small>${e.voids ? `${e.voids} void` : '&nbsp;'}</small></span>
                             <span class="cg-stat ${unitsClass(net)}"><span class="cg-lbl">Units</span>${signedU(net)}</span>
+                            <span class="cg-stat"><span class="cg-lbl">Pending</span>${e.pending || 0}<small>not graded</small></span>
                             <span class="cg-stat"><span class="cg-lbl">Picks</span>${e.picks_used || 0}<small>of ${e.picks_max || 50}</small></span>
                         </span>
                     </div>
-                    <div class="cg-today">${mine.length ? mine.map(todayChip).join('') : '<span class="none">No picks yet today</span>'}</div>
+                    <div class="cg-today">${mine.length ? mine.map(todayChip).join('') : (Number(t.pending) > 0 ? `<span class="none"><i class="fa-solid fa-lock"></i> ${t.pending} pending, revealed at first pitch</span>` : '<span class="none">No picks yet today</span>')}</div>
                 </div>`;
             }).join('');
             if (foot) {
@@ -1024,6 +1058,7 @@
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.5e5a91d4b99c.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script defer src="/static/js/contest-enter-cta.js?v=18ec62cb125f"></script>
 <style id="dark-text-fix-20260913">
 /* DARK_TEXT_ON_DARK_20260913: the light theme pass recoloured this text navy but left its
    surface dark, so it read navy on navy on every device. Light text restored. */
