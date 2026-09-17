@@ -1034,6 +1034,9 @@
         }
 
 
+        const etDate = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+        const wlp = (w, l, p) => `${w || 0}-${l || 0}-${p || 0}`;
+        const signedU = (n) => { const v = Number(n) || 0; return `${v > 0 ? '+' : ''}${v.toFixed(2)}u`; };
         function avaSrc(e) {
             const u = { id: e.user_id, username: e.username };
             if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src(u);
