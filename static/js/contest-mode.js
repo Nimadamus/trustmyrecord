@@ -87,9 +87,8 @@
         // CONTEST_MARKETS_ONLY_UI_20260917 (Nima: only moneylines, run lines and totals, no alternates, no props).
         // In Contest Mode the board shows Game Lines and Team Totals only. Alt lines, first 5, halves,
         // specials and props are hidden, and the server refuses them anyway.
-        'body.tmr-contest-mode .tmr-group:not([data-category="game-lines"]):not([data-category="team-totals"]) { display: none !important; }',
-        'body.tmr-contest-mode .tmr-filter-pill[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="all"]), body.tmr-contest-mode .tmr-card-filter-tab[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="all"]), body.tmr-contest-mode .tmr-family-tab[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="all"]) { display: none !important; }',
-        'body.tmr-contest-mode .tmr-market-card[data-scope="f5"] .tmr-group { display: none !important; }',
+        'body.tmr-contest-mode .tmr-group:not([data-category="game-lines"]):not([data-category="team-totals"]):not([data-category="first-5"]) { display: none !important; }',
+        'body.tmr-contest-mode .tmr-filter-pill[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="first-5"]):not([data-filter="all"]), body.tmr-contest-mode .tmr-card-filter-tab[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="first-5"]):not([data-filter="all"]), body.tmr-contest-mode .tmr-family-tab[data-filter]:not([data-filter="game-lines"]):not([data-filter="team-totals"]):not([data-filter="first-5"]):not([data-filter="all"]) { display: none !important; }',
         'body.tmr-contest-mode .sbn-drow--prop, body.tmr-contest-mode .sbn-dprops, body.tmr-contest-mode .prop-notice { display: none !important; }',
         '#tmr-contest-mode-banner .tmr-cm-rules { margin: 8px 0 0; padding-left: 18px; font-size: 0.86rem; color: #f5e8c9; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; row-gap: 2px; }',
         '#tmr-contest-mode-banner .tmr-cm-rules strong { color: #fff; }',
@@ -116,7 +115,7 @@
                 '<ol class="tmr-cm-rules">' +
                     '<li><strong>Contest rules.</strong> Contest runs Sept 17 through <strong>Sept 30</strong> (last picks before 12:00 AM PT Oct 1).</li>' +
                     '<li><strong>50 picks</strong> per entrant. MLB only.</li>' +
-                    '<li><strong>Moneylines, run lines, totals</strong> (and team totals). Posted lines only: <strong>no alt lines, no alt totals, no props</strong>.</li>' +
+                    '<li><strong>Moneylines, run lines, totals, team totals, First 5 lines and First 5 totals.</strong> Posted lines only: <strong>no alt lines, no alt totals, no props</strong>.</li>' +
                     '<li>One pick per market per game. Every pick is final: no edits, no deletes.</li>' +
                     '<li><strong>Half a unit minimum.</strong> Win up to 5 units on a favorite, risk up to 5 units on an underdog.</li>' +
                     '<li>Picks must be in before first pitch and stay sealed until the game starts.</li>' +
@@ -203,8 +202,8 @@
     // routes/contests.js: a market is only offered if the contest grader can
     // actually settle it from the final team score. The f5_* family was offered
     // for months and could never grade.
-    var CONTEST_MARKETS = ['h2h', 'spreads', 'totals', 'team_totals'];
-    var LINE_MARKETS = ['spreads', 'totals', 'team_totals'];
+    var CONTEST_MARKETS = ['h2h', 'spreads', 'totals', 'team_totals', 'f5_h2h', 'f5_spreads', 'f5_totals'];
+    var LINE_MARKETS = ['spreads', 'totals', 'team_totals', 'f5_spreads', 'f5_totals'];
 
     // Shape a local refusal like a fetch Response so the sportsbook's existing
     // .then(result)/.catch(err) handling shows the message unchanged.
@@ -298,7 +297,7 @@
             // is only for the message.
             if (CONTEST_MARKETS.indexOf(marketType) === -1) {
                 return Promise.resolve(contestError(
-                    'That market is not part of this contest. Contest picks are moneyline, run line, total and team total on MLB games.'));
+                    'That market is not part of this contest. Contest picks are moneyline, run line, total, team total, First 5 moneyline, First 5 run line and First 5 total on MLB games.'));
             }
             if (LINE_MARKETS.indexOf(marketType) !== -1 && transformed.line == null) {
                 return Promise.resolve(contestError(

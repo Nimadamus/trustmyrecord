@@ -283,13 +283,13 @@
     // rung happened to come first. Merge the rungs instead, exactly as the alt
     // spread and alt total ladders already do.
     // CONTEST_MARKETS_ONLY_20260917 (Nima): in Contest Mode (?contest=...) the book shows only what the
-    // contest accepts: moneyline, run line, total (Game Lines) and team totals. Alt lines, alt totals,
-    // player props, First 5, 1st inning, halves and periods are removed before anything renders.
+    // contest accepts: moneyline, run line, total (Game Lines), team totals and First 5 (moneyline, run line,
+    // total). Alt lines, alt totals, player props, 1st inning, halves and periods are removed before anything renders.
     var CONTEST_MODE = (function () { try { return !!new URLSearchParams(window.location.search).get('contest'); } catch (e) { return false; } })();
     function contestOnly(g) {
         if (!CONTEST_MODE || !g || !g.groups) return g;
         Object.keys(g.groups).forEach(function (k) {
-            if (!LINE_GROUPS[k] && !isTeamTotalKey(k)) delete g.groups[k];
+            if (!LINE_GROUPS[k] && !isTeamTotalKey(k) && k !== 'first_5') delete g.groups[k];
         });
         return g;
     }

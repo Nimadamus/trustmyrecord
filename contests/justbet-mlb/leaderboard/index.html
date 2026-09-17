@@ -348,14 +348,15 @@
         function pickLabel(p) {
             var sel = String(p.selection || '');
             var mt = p.market_type || p.market || '';
-            if (mt === 'totals' || mt === 'team_totals') {
+            var pre = /^f5_/.test(mt) ? 'F5 ' : '';
+            if (mt === 'totals' || mt === 'team_totals' || mt === 'f5_totals') {
                 var ou = /\bunder\b/i.test(sel) ? 'U' : (/\bover\b/i.test(sel) ? 'O' : '');
                 var m = sel.match(/-?\d+(?:\.\d+)?/);
                 var n = (p.line !== null && p.line !== undefined && p.line !== '') ? Number(p.line) : (m ? m[0] : '');
                 var team = mt === 'team_totals' ? teamNick(sel.replace(/\s*\b(over|under)\b.*$/i, '')) + ' ' : '';
-                return (team + ou + ' ' + n).trim();
+                return (pre + team + ou + ' ' + n).trim();
             }
-            return (teamNick(sel) || sel) + signedLine(p.line);
+            return pre + (teamNick(sel) || sel) + signedLine(p.line);
         }
         // ---------------- reveal board ----------------
         function pickChip(p) {

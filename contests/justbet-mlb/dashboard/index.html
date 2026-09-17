@@ -415,8 +415,8 @@
                 <li><strong>Dates:</strong> the contest opens at 12:00 AM PT (3:00 AM ET) on Thursday, September 17, 2026. <strong>September 30 is the final day</strong>: the last picks must be in before 12:00 AM PT on October 1.</li>
                 <li><strong>Field:</strong> registration closed when the contest opened. Only registered entrants can make contest picks.</li>
                 <li><strong>50 picks</strong> per entrant, made any time during the contest.</li>
-                <li><strong>MLB only.</strong> Moneylines, run lines, game totals and team totals. Posted lines only: <strong>no alt lines and no props</strong>.</li>
-                <li><strong>One pick per market per game</strong> (one moneyline, one run line, one total and one team total pick at most on any game).</li>
+                <li><strong>MLB only.</strong> Moneylines, run lines, game totals, team totals, First 5 moneylines, First 5 run lines and First 5 totals. Posted lines only: <strong>no alt lines, no alt totals and no props</strong>.</li>
+                <li><strong>One pick per market per game</strong> (at most one pick each on the moneyline, run line, total, team total, First 5 moneyline, First 5 run line and First 5 total of any game).</li>
                 <li><strong>Stakes:</strong> half a unit minimum. On a favorite you can <strong>win up to 5 units</strong>; on an underdog you can <strong>risk up to 5 units</strong>.</li>
                 <li><strong>Every pick is final</strong> the moment you submit it. No edits and no deletes.</li>
                 <li>Picks must be in <strong>before first pitch</strong>. Once a game starts it comes off the board and can no longer be picked.</li>
@@ -805,13 +805,14 @@
         function pickLabel(p) {
             const sel = String(p.selection || '');
             const mt = p.market_type || p.market || '';
-            if (mt === 'totals' || mt === 'team_totals') {
+            const pre = /^f5_/.test(mt) ? 'F5 ' : '';
+            if (mt === 'totals' || mt === 'team_totals' || mt === 'f5_totals') {
                 const ou = /\bunder\b/i.test(sel) ? 'U' : (/\bover\b/i.test(sel) ? 'O' : '');
                 const n = (p.line !== null && p.line !== undefined && p.line !== '') ? Number(p.line) : (sel.match(/-?\d+(?:\.\d+)?/) || [''])[0];
                 const team = mt === 'team_totals' ? teamNick(sel.replace(/\s*\b(over|under)\b.*$/i, '')) + ' ' : '';
-                return `${team}${ou} ${n}`.trim();
+                return `${pre}${team}${ou} ${n}`.trim();
             }
-            return `${teamNick(sel) || sel}${signedLine(p.line)}`;
+            return `${pre}${teamNick(sel) || sel}${signedLine(p.line)}`;
         }
         function pickChip(p) {
             if (p.sealed) {
