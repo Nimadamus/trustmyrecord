@@ -669,9 +669,9 @@
                 <p class="board-foot" id="lb-foot"></p>
             </div>
 
-            <!-- CONTEST BOARD (hidden until the contest window opens, or in the
-                 local-only dev preview). One compact card per game; each
-                 contestant pick renders inside its game's ML / RL / Total cell. -->
+            <!-- CONTEST BOARD (hidden until the contest window opens). One card per
+                 game that has contest picks: revealed picks in full, a sealed count
+                 before first pitch. Real contest data only, never sample data. -->
             <div class="block" id="contest-board" hidden>
                 <div class="block-head">
                     <h2>Contest Board</h2>
@@ -873,9 +873,8 @@
         // Game-centric board: one compact card per game, contestant picks render inside
         // their game's ML / RL / Total cell. No contestants-x-games matrix, so the layout
         // can never need horizontal scrolling regardless of entrant count.
-        // ACTIVATION: renders ONLY when PRELAUNCH=false (real /games + /picks data), or
-        // in DEV PREVIEW (localhost + ?preview=board) with clearly-labeled sample data.
-        // The preview can NEVER activate on the live domain — hostname-gated.
+        // ACTIVATION: renders ONLY when PRELAUNCH=false, from the live /games + /picks
+        // feeds. There is no sample or preview mode: the board shows real picks or nothing.
         const boardActive = () => !PRELAUNCH;
 
 
