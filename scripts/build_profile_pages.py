@@ -145,24 +145,121 @@ SHARE_HEAD = (
 #
 # The skeleton mirrors the real profile's geometry (avatar + name + 4 stat tiles
 # + table) so the swap is not a layout jump.
+# PROFILE_UI_20260917 -- the baked /u/ page is not just an SEO snapshot: it is what a
+# visitor sees whenever the /profile/ app swap does not land (slow shell fetch, or the
+# API health gate saying no). It has to look like a TMR handicapper page on its own.
+# Held as a plain constant, NOT inline in the f-string template, so the braces do not
+# have to be doubled and the stylesheet stays readable.
+PROFILE_CSS = """\
+/* Ground colour, so the dark profile never sits on the light site ramp even if
+   tmr-ds-user.css (which owns the finished look) fails to load. */
+body.tmr-ds{background:#0b0b12;}
+:root{--u-blue:#00aeff;--u-blue-d:#0067d6;--u-pos:#22e08a;--u-neg:#ff5f70;--u-ink:#eef1f8;--u-mute:#8e98b4;--u-line:#23233a;}
+.u-wrap{max-width:1180px;margin:0 auto;padding:18px 20px 64px;color:var(--u-ink);font-family:'Inter',system-ui,sans-serif;}
+.u-wrap a{color:var(--u-blue);text-decoration:none;}
+.u-wrap a:hover{text-decoration:underline;}
+.u-crumb{font-size:12px;color:var(--u-mute);margin:0 0 12px;letter-spacing:.02em;}
+.u-crumb span{color:#c9d0e4;}
+.u-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(0,174,255,.13),rgba(0,174,255,0) 46%),linear-gradient(180deg,#13131f,#0d0d15);
+  border:1px solid var(--u-line);border-radius:18px;padding:20px 22px;margin:0 0 14px;}
+.u-head::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--u-blue),var(--u-blue-d) 55%,transparent);}
+.u-id{min-width:0;}
+.u-avatar{width:92px;height:92px;border-radius:50%;object-fit:cover;background:#0b0b12;flex:none;
+  border:2px solid rgba(0,174,255,.55);box-shadow:0 0 0 4px rgba(0,174,255,.10),0 10px 26px rgba(0,0,0,.45);}
+img.u-avatar{display:block;}
+.u-avatar--mono{display:grid;place-items:center;font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:34px;letter-spacing:.02em;color:#fff;}
+.u-avatar--team{display:grid;place-items:center;padding:11px;}
+.u-avatar--team img{width:100%;height:100%;object-fit:contain;display:block;}
+.u-name{margin:0;font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,42px);line-height:1.02;letter-spacing:.005em;color:#fff;overflow-wrap:anywhere;}
+.u-tag{color:var(--u-mute);font-size:13px;margin:5px 0 0;}
+.u-tag b{color:var(--u-blue);font-weight:700;}
+.u-bio{color:#b9c2d8;margin:8px 0 0;font-size:14px;line-height:1.5;max-width:64ch;}
+.u-chips{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0 0;}
+.u-chip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:#b9c2d8;background:rgba(255,255,255,.045);border:1px solid var(--u-line);border-radius:999px;padding:5px 11px;}
+.u-chip b{color:#fff;font-weight:800;letter-spacing:.04em;}
+.u-chip--rank{color:#ffd86a;border-color:rgba(255,216,106,.32);background:rgba(255,216,106,.08);}
+.u-chip--verified{color:var(--u-pos);border-color:rgba(34,224,138,.32);background:rgba(34,224,138,.08);}
+.u-actions{margin:0 0 14px;}
+.u-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0;}
+.u-stat{display:flex;flex-direction:column-reverse;gap:7px;position:relative;overflow:hidden;
+  background:linear-gradient(165deg,#15151f,#0e0e17);border:1px solid var(--u-line);border-radius:14px;padding:13px 15px 14px;}
+.u-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#262638;}
+.u-stat b{font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:clamp(21px,2.1vw,27px);line-height:1;letter-spacing:.01em;color:#fff;font-variant-numeric:tabular-nums;}
+.u-stat span{color:#7f89a6;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;line-height:1.25;}
+.u-stat.is-pos::before{background:linear-gradient(180deg,#2bf59a,#00b869);}
+.u-stat.is-neg::before{background:linear-gradient(180deg,#ff7b88,#d62b3e);}
+.u-stat:has(b.pos)::before{background:linear-gradient(180deg,#2bf59a,#00b869);}
+.u-stat:has(b.neg)::before{background:linear-gradient(180deg,#ff7b88,#d62b3e);}
+.u-stat.is-pos b,.u-stat b.pos{color:var(--u-pos);}
+.u-stat.is-neg b,.u-stat b.neg{color:var(--u-neg);}
+.u-asof{margin:9px 0 0;}
+.u-block{margin-top:22px;}
+.u-block h2{font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:15px;letter-spacing:.13em;text-transform:uppercase;color:#dfe5f3;margin:0 0 10px;display:flex;align-items:center;gap:9px;}
+.u-block h2::before{content:"";width:3px;height:15px;border-radius:2px;background:linear-gradient(180deg,var(--u-blue),var(--u-blue-d));}
+.u-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;background:#11111b;border:1px solid var(--u-line);border-radius:14px;overflow:hidden;font-variant-numeric:tabular-nums;}
+.u-table th,.u-table td{text-align:left;padding:10px 14px;border-bottom:1px solid #1b1b28;}
+.u-table th{color:#7f89a6;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;background:#15151f;white-space:nowrap;}
+.u-table td:first-child{color:#e7ebf6;font-weight:600;}
+.u-table tbody tr:nth-child(even){background:rgba(255,255,255,.017);}
+.u-table tbody tr:hover{background:rgba(0,174,255,.055);}
+.u-table tbody tr:last-child td{border-bottom:0;}
+.u-t--split th:not(:first-child),.u-t--split td:not(:first-child){text-align:right;}
+.u-t--picks th:nth-last-child(-n+3),.u-t--picks td:nth-last-child(-n+3){text-align:right;}
+.u-win{color:var(--u-pos);font-weight:800;}.u-loss{color:var(--u-neg);font-weight:800;}.u-push{color:var(--u-mute);font-weight:800;}
+.u-note{color:#7f89a6;font-size:12px;margin:9px 0 0;line-height:1.5;}.u-risk{color:#aab3cc;}
+.u-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.u-how{background:linear-gradient(180deg,#13131f,#0d0d15);border:1px solid var(--u-line);border-radius:14px;padding:15px 18px;color:#aeb7cd;line-height:1.6;font-size:13.5px;margin-top:20px;}
+.u-how strong{color:#e7ebf6;}
+.u-cta{display:inline-block;margin-top:16px;background:linear-gradient(135deg,#ffd700,#f0a800);color:#1a1200;font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:17px;letter-spacing:.06em;text-transform:uppercase;padding:13px 26px;border-radius:12px;box-shadow:0 8px 22px rgba(255,190,0,.18);}
+.u-cta:hover{text-decoration:none!important;filter:brightness(1.06);}
+.u-links{margin-top:14px;font-size:13.5px;color:#8e98b4;line-height:2;}
+.u-links strong{color:#e7ebf6;}
+.u-awards{margin-top:22px;background:linear-gradient(145deg,rgba(17,24,39,.98),rgba(7,10,18,.98));border:1px solid rgba(255,215,0,.24);border-radius:16px;padding:18px 20px;}
+.u-awards-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;}
+.u-awards h2{margin:0;font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:15px;letter-spacing:.13em;text-transform:uppercase;color:#f3e7bd;}
+.u-awards-kicker{color:#aab6c9;font-size:12px;margin:4px 0 0;}
+.u-awards-count{color:#ffd86a;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+.u-award-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+.u-award-card{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;min-height:92px;padding:13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,215,0,.18);}
+.u-award-badge{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,244,180,.28),rgba(255,193,7,.06) 62%,transparent 63%);border:1px solid rgba(255,215,0,.35);}
+.u-award-badge svg{width:42px;height:42px;}
+.u-award-name{color:#f8fafc;font-weight:800;font-size:15px;line-height:1.25;}
+.u-award-period{color:#ffd86a;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
+.u-award-stats{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}
+.u-award-stat{white-space:nowrap;}.u-award-stat + .u-award-stat::before{content:" · ";color:#68758b;}
+@media(max-width:860px){.u-stats,.u-substats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:620px){
+.u-wrap{padding:14px 14px 56px;}
+.u-head{gap:14px;padding:16px;border-radius:15px;}
+.u-avatar{width:68px;height:68px;}
+.u-avatar--mono{font-size:25px;}
+.u-avatar--team{padding:8px;}
+.u-name{font-size:26px;}
+.u-chip{font-size:10px;padding:4px 9px;}
+.u-table{font-size:12.5px;}
+.u-table th,.u-table td{padding:9px 10px;}
+}"""
+
 BOOT_CSS = """
 body.tmr-u-booting>main,body.tmr-u-booting>.tmr-global-nav,body.tmr-u-booting>footer{visibility:hidden!important;}
 #tmrUBoot{display:none;}
 body.tmr-u-booting #tmrUBoot{display:block;position:fixed;inset:0;z-index:2147483000;background:#0b0b12;overflow:hidden;}
-.tmr-uboot-wrap{max-width:820px;margin:0 auto;padding:26px 18px;}
+.tmr-uboot-wrap{max-width:1180px;margin:0 auto;padding:22px 20px;}
 .tmr-uboot-brand{display:flex;align-items:center;gap:9px;font-family:'Barlow Condensed','Barlow',Inter,system-ui,sans-serif;font-weight:800;letter-spacing:.06em;font-size:19px;color:#e8e8f0;text-transform:uppercase;}
 .tmr-uboot-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#00aeff,#0067d6);color:#fff;font-size:12px;letter-spacing:0;}
 .tmr-uboot-brand em{font-style:normal;color:#00aeff;}
-.tmr-uboot-head{display:flex;gap:16px;align-items:center;margin:30px 0 6px;}
-.tmr-uboot-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0;}
-.tmr-uboot-card{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;}
+.tmr-uboot-head{display:flex;gap:20px;align-items:center;margin:24px 0 6px;}
+.tmr-uboot-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0;}
+.tmr-uboot-card{background:linear-gradient(165deg,#15151f,#0e0e17);border:1px solid #23233a;border-radius:14px;padding:14px;}
 .tmr-uboot-rows{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;margin-top:22px;}
 .tmr-uboot-b{background:#1c1c28;border-radius:6px;position:relative;overflow:hidden;}
 .tmr-uboot-b+.tmr-uboot-b{margin-top:10px;}
 .tmr-uboot-b::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:tmrUBootShim 1.25s infinite;}
 @keyframes tmrUBootShim{100%{transform:translateX(100%);}}
 @media (prefers-reduced-motion:reduce){.tmr-uboot-b::after{animation:none;}}
-@media(max-width:640px){.tmr-uboot-stats{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:860px){.tmr-uboot-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
 """
 
 BOOT_NOSCRIPT = ('<noscript><style>body.tmr-u-booting>main,body.tmr-u-booting>.tmr-global-nav,'
@@ -175,7 +272,7 @@ BOOT_SKELETON = (
     '<div class="tmr-uboot-brand"><span class="tmr-uboot-mark">TMR</span>'
     '<span>Trust<em>My</em>Record</span></div>'
     '<div class="tmr-uboot-head">'
-    '<div class="tmr-uboot-b" style="width:64px;height:64px;border-radius:50%"></div>'
+    '<div class="tmr-uboot-b" style="width:92px;height:92px;border-radius:50%"></div>'
     '<div style="flex:1">'
     '<div class="tmr-uboot-b" style="width:min(240px,62%);height:24px"></div>'
     '<div class="tmr-uboot-b" style="width:min(160px,44%);height:12px"></div>'
@@ -540,6 +637,12 @@ def fmt_amer(o):
     o = int(round(o))
     return (f"+{o}" if o > 0 else str(o))
 
+def tone_of(v):
+    """'pos' / 'neg' / '' from the sign of an already-computed number."""
+    v = num(v)
+    return "pos" if v > 0 else "neg" if v < 0 else ""
+
+
 def fmt_units(v):
     v = num(v)
     return ("+" if v > 0 else "") + f"{v:.2f}u"
@@ -588,6 +691,94 @@ def derive(picks):
     # recent 5 graded by graded_at desc
     graded_sorted = sorted(graded, key=lambda p: p.get("graded_at") or "", reverse=True)
     return graded_sorted[:5], avg_amer, sport_rows, len(graded)
+
+_HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _hex(v, fallback):
+    """Only ever let a real #rrggbb out of the API and into a style attribute."""
+    v = (v or "").strip()
+    return v if _HEX_RE.match(v) else fallback
+
+
+def _initials(name):
+    parts = [p for p in re.split(r"[\s._-]+", (name or "").strip()) if p]
+    if not parts:
+        return "?"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[1][0]).upper()
+
+
+def avatar_markup(d, disp, avatar_url):
+    """AVATAR_PARITY_20260917.
+
+    The API moved a member's face onto a structured `avatar` object on 2026-09-05
+    ("every member has a face, everywhere on the site"): {kind:'team-logo'|...,
+    mark, primary, secondary, ink, logo}. `avatar_url` is null for most members
+    now, and this builder only ever read `avatar_url` -- so the baked header
+    rendered NO face at all while the app rendered the team crest. Read the new
+    object first, fall back to the stored URL, and fall back again to the same
+    initials monogram the app draws. Nothing here is invented: the mark, the
+    colours and the crest all come from the member's own profile.
+    """
+    e = html.escape
+    av = d.get("avatar") if isinstance(d.get("avatar"), dict) else None
+    logo = (av or {}).get("logo") or ""
+    if av and av.get("kind") == "team-logo" and logo.startswith("http"):
+        bg = _hex(av.get("primary"), "#101018")
+        ring = _hex(av.get("secondary"), "#00aeff")
+        return (f'<span class="u-avatar u-avatar--team" style="background:{bg};border-color:{ring}">'
+                f'<img src="{e(logo)}" alt="{e(disp)} avatar" width="70" height="70" '
+                f'onerror="this.remove()"></span>')
+    if avatar_url:
+        return (f'<img class="u-avatar" src="{e(avatar_url)}" alt="{e(disp)} avatar" '
+                f'width="92" height="92" onerror="this.remove()">')
+    mark = ((av or {}).get("mark") or _initials(disp))[:2].upper()
+    c1 = _hex((av or {}).get("primary"), "#00aeff")
+    c2 = _hex((av or {}).get("secondary"), "#0067d6")
+    ink = _hex((av or {}).get("ink"), "#ffffff")
+    return (f'<span class="u-avatar u-avatar--mono" aria-hidden="true" '
+            f'style="background:linear-gradient(135deg,{c1},{c2});color:{ink}">{e(mark)}</span>')
+
+
+def member_since(iso):
+    """'May 2026' from the API timestamp. Blank when there is nothing to say."""
+    try:
+        t = datetime.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+    except Exception:
+        return ""
+    return t.strftime("%b %Y")
+
+
+def identity_chips(d, graded_total):
+    """The line of status pills under the handle.
+
+    Every pill is a fact already on the member's own /api/users record -- rank
+    label, verification status, ledger size, join month, favourite teams. A pill
+    whose field is empty is simply not rendered; nothing is padded.
+    """
+    e = html.escape
+    chips = []
+    if d.get("verification_status") == "verified":
+        chips.append('<span class="u-chip u-chip--verified">Verified record</span>')
+    rank = (d.get("rank_label") or d.get("ranking_status") or "").strip()
+    if rank:
+        chips.append(f'<span class="u-chip u-chip--rank">Rank <b>{e(rank)}</b></span>')
+    if graded_total:
+        chips.append(f'<span class="u-chip">Ledger <b>{int(graded_total)} graded</b></span>')
+    since = member_since(d.get("created_at"))
+    if since:
+        chips.append(f'<span class="u-chip">Member since <b>{e(since)}</b></span>')
+    if int(num(d.get("follower_count"))):
+        chips.append(f'<span class="u-chip">Followers <b>{int(num(d.get("follower_count")))}</b></span>')
+    teams = [str(t).strip() for t in (d.get("favorite_teams") or []) if str(t).strip()]
+    if teams:
+        chips.append(f'<span class="u-chip">Fan of <b>{e(", ".join(teams[:2]))}</b></span>')
+    if d.get("is_founding_member"):
+        chips.append('<span class="u-chip">Founding member</span>')
+    return f'<div class="u-chips">{"".join(chips)}</div>' if chips else ""
+
 
 def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=None,
               compact=False):
@@ -700,26 +891,32 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     # browser's broken-image glyph. A stored avatar_url can be the API's
     # /users/<id>/avatar proxy, which 204s on an empty avatar and 404s on any
     # query error.
-    avatar_html = (f'<img class="u-avatar" src="{e(avatar)}" alt="{e(disp)} avatar" '
-                   f'width="84" height="84" onerror="this.remove()">') if avatar else ""
+    avatar_html = avatar_markup(d, disp, avatar)
+    chips_html = identity_chips(d, tp)
     bio_html = f'<p class="u-bio">{e(bio)}</p>' if bio else ""
     share_html = share_button(un, disp)
 
-    def stat(big, lab):
-        return f'<div class="u-stat"><b>{e(big)}</b><span>{e(lab)}</span></div>'
+    def stat(big, lab, tone=""):
+        # tone is PRESENTATION ONLY -- it colours the tile from the sign of a number
+        # that is computed exactly as before. No value is rounded, re-derived or
+        # re-ordered here.
+        card = "u-stat" + (f" is-{tone}" if tone else "")
+        bcls = f' class="u-num {tone}"' if tone else ""
+        return f'<div class="{card}"><b{bcls}>{e(big)}</b><span>{e(lab)}</span></div>'
     stats = [
         stat(rec, f"Record (W-L{'-P' if p else ''})"),
-        stat(fmt_units(units), "Net Units"),
+        stat(fmt_units(units), "Net Units", tone_of(units)),
         # Signed, 1-decimal: the exact format the profile app's ROI tile uses
         # (fmtSigned(s.roi,'%',1)), so the baked value never visibly flips
         # (e.g. -10.41% -> -10.4%) when the app hydrates over this page.
-        stat(("+" if roi > 0 else "") + f"{roi:.1f}%", "ROI"),
+        stat(("+" if roi > 0 else "") + f"{roi:.1f}%", "ROI", tone_of(roi)),
         stat(f"{wr:.1f}%", "Win Rate"),
         stat(str(tp), "Graded Picks"),
-        stat(("W" + str(cur)) if cur > 0 else ("L" + str(abs(cur))) if cur < 0 else "0", "Current Streak"),
+        stat(("W" + str(cur)) if cur > 0 else ("L" + str(abs(cur))) if cur < 0 else "0",
+             "Current Streak", tone_of(cur)),
     ]
     if best:
-        stats.append(stat("W" + str(best), "Best Streak"))
+        stats.append(stat("W" + str(best), "Best Streak", "pos"))
     if avg_amer is not None:
         stats.append(stat(fmt_amer(avg_amer), "Avg Odds"))
     stats_html = "".join(stats)
@@ -769,7 +966,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
             for lab, g, roi, wr in srows)
         sport_html = (
             '<section class="u-block"><h2>Sport-by-sport breakdown</h2>'
-            '<div class="u-scroll"><table class="u-table"><thead><tr><th>Sport</th><th>Record</th>'
+            '<div class="u-scroll"><table class="u-table u-t--split"><thead><tr><th>Sport</th><th>Record</th>'
             '<th>Picks</th><th>Units</th><th>ROI</th><th>Win %</th></tr></thead>'
             f'<tbody>{rows}</tbody></table></div></section>')
     elif sport_rows:
@@ -778,7 +975,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
             for lab, c in sport_rows)
         sport_html = (
             '<section class="u-block"><h2>Sport breakdown</h2>'
-            '<table class="u-table"><thead><tr><th>Sport</th><th>Record</th><th>Graded</th></tr></thead>'
+            '<table class="u-table u-t--split"><thead><tr><th>Sport</th><th>Record</th><th>Graded</th></tr></thead>'
             f'<tbody>{rows}</tbody></table></section>')
 
     recent_html = ""
@@ -808,9 +1005,9 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
                 f'<td class="u-{cls}">{e(badge)}</td></tr>')
         recent_html = (
             '<section class="u-block"><h2>Recent graded picks</h2>'
-            '<table class="u-table"><thead><tr><th>Date</th><th>Sport</th><th>Matchup</th>'
+            '<div class="u-scroll"><table class="u-table u-t--picks"><thead><tr><th>Date</th><th>Sport</th><th>Matchup</th>'
             '<th>Pick</th><th>Risk</th><th>Net</th><th>Result</th></tr></thead>'
-            f'<tbody>{"".join(rows)}</tbody></table>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>'
             '<p class="u-note">Graded picks only. Pending picks are excluded until they settle. '
             'Risk is the stake; Net is what the pick won or lost after grading.</p></section>')
 
@@ -865,46 +1062,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
 {ld}
 </script>
 <style>
-.u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
-.u-wrap a{{color:#00aeff;text-decoration:none;}}
-.u-crumb{{font-size:13px;color:#8890ad;margin:0 0 14px;}}
-.u-crumb span{{color:#c9d0e4;}}
-.u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
-.u-actions{{margin:2px 0 10px;}}
-.u-avatar{{border-radius:50%;object-fit:cover;border:2px solid #262636;}}
-.u-name{{font-size:26px;margin:0;font-family:'Barlow',sans-serif;}}
-.u-bio{{color:#9aa;margin:6px 0 0;}}
-.u-tag{{color:#8890ad;font-size:13px;margin:2px 0 0;}}
-.u-stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0;}}
-.u-stat{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;}}
-.u-stat b{{display:block;font-size:20px;}}
-.u-stat span{{color:#9aa;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}}
-.u-block{{margin-top:26px;}}
-.u-block h2{{font-family:'Barlow',sans-serif;font-size:18px;margin:0 0 10px;}}
-.u-table{{width:100%;border-collapse:collapse;font-size:14px;background:#13131c;border:1px solid #262636;border-radius:12px;overflow:hidden;}}
-.u-table th,.u-table td{{text-align:left;padding:9px 11px;border-bottom:1px solid #20202e;}}
-.u-table th{{color:#8890ad;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}}
-.u-win{{color:#00ff88;font-weight:700;}}.u-loss{{color:#ff5566;font-weight:700;}}.u-push{{color:#9aa;font-weight:700;}}
-.u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}.u-risk{{color:#aab3cc;}}
-.u-scroll{{overflow-x:auto;}}
-.u-how{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:16px 18px;color:#a9b0c8;line-height:1.6;font-size:14px;margin-top:26px;}}
-.u-cta{{display:inline-block;margin-top:14px;background:#ffd700;color:#1a1200;font-family:'Barlow',sans-serif;
-  font-weight:800;padding:12px 22px;border-radius:11px;}}
-.u-links{{margin-top:14px;font-size:14px;}}
-.u-awards{{margin-top:26px;background:linear-gradient(145deg,rgba(17,24,39,.98),rgba(7,10,18,.98));border:1px solid rgba(255,215,0,.24);border-radius:16px;padding:20px;}}
-.u-awards-head{{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}}
-.u-awards h2{{margin:0;font-family:'Barlow',Inter,sans-serif;font-size:21px;}}
-.u-awards-kicker{{color:#aab6c9;font-size:12px;margin:4px 0 0;}}
-.u-awards-count{{color:#ffd86a;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}}
-.u-award-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
-.u-award-card{{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;min-height:92px;padding:13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,215,0,.18);}}
-.u-award-badge{{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,244,180,.28),rgba(255,193,7,.06) 62%,transparent 63%);border:1px solid rgba(255,215,0,.35);}}
-.u-award-badge svg{{width:42px;height:42px;}}
-.u-award-name{{color:#f8fafc;font-weight:800;font-size:15px;line-height:1.25;}}
-.u-award-period{{color:#ffd86a;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}}
-.u-award-stats{{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}}
-.u-award-stat{{white-space:nowrap;}}.u-award-stat + .u-award-stat::before{{content:" · ";color:#68758b;}}
-@media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
+{PROFILE_CSS}
 {BOOT_CSS}</style>
 {BOOT_NOSCRIPT}
 {boot_script(un)}
@@ -915,10 +1073,11 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
   <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>{e(disp)}</span></nav>
   <div class="u-head">
     {avatar_html}
-    <div>
+    <div class="u-id">
       <h1 class="u-name">{e(disp)}</h1>
-      <p class="u-tag">@{e(un)} · {e(tagline)}</p>
+      <p class="u-tag"><b>@{e(un)}</b> · {e(tagline)}</p>
       {bio_html}
+      {chips_html}
     </div>
   </div>
   {share_html}
