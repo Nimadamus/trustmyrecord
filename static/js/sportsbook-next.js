@@ -286,10 +286,32 @@
     // contest accepts: moneyline, run line, total (Game Lines), team totals and First 5 (moneyline, run line,
     // total). Alt lines, alt totals, player props, 1st inning, halves and periods are removed before anything renders.
     var CONTEST_MODE = (function () { try { return !!new URLSearchParams(window.location.search).get('contest'); } catch (e) { return false; } })();
-    function contestOnly(g) {
+    // CONTEST_POSTED_LINES_ONLY_20260917: inside the allowed groups, keep only lines the book
+    // actually posts (the board's bookmakers). The First 5 group carries alternate F5 run lines and
+    // totals and one team total ladder carried a second book's rung; the server refuses those, so
+    // they are not offered on the contest page at all.
+    function postedKey(mt, sel, line) {
+        // A moneyline has no number (the page normalises it to 0, the book omits it).
+        var noLine = /(^|_)h2h$/.test(String(mt)) || line == null || line === '';
+        return String(mt) + '|' + String(sel || '').toLowerCase() + '|' + (noLine ? '' : Number(line));
+    }
+    function contestOnly(g, raw) {
         if (!CONTEST_MODE || !g || !g.groups) return g;
+        var posted = {};
+        ((raw && raw.bookmakers) || []).forEach(function (b) {
+            ((b && b.markets) || []).forEach(function (m) {
+                ((m && m.outcomes) || []).forEach(function (o) {
+                    var sel = m.key === 'team_totals' || /team_totals$/.test(m.key) ? (o.description + ' ' + o.name) : o.name;
+                    posted[postedKey(m.key, sel, o.point)] = 1;
+                });
+            });
+        });
         Object.keys(g.groups).forEach(function (k) {
-            if (!LINE_GROUPS[k] && !isTeamTotalKey(k) && k !== 'first_5') delete g.groups[k];
+            if (!LINE_GROUPS[k] && !isTeamTotalKey(k) && k !== 'first_5') { delete g.groups[k]; return; }
+            var grp = g.groups[k];
+            if (!grp || !Array.isArray(grp.items)) return;
+            grp.items = grp.items.filter(function (i) { return posted[postedKey(i.marketType, i.selection, i.line)] === 1; });
+            if (!grp.items.length) delete g.groups[k];
         });
         return g;
     }
@@ -764,7 +786,7 @@
                         return;
                     }
                     var games = d.games || [];
-                    state.games = games.map(function (g) { return contestOnly(normalise(g, sportKey)); })
+                    state.games = games.map(function (g) { return contestOnly(normalise(g, sportKey), g); })
                         .filter(function (g) { return !g.started && (g.main || Object.keys(g.groups).length); });
                     // A later attempt succeeding must leave no trace of the
                     // earlier failures: no stale error, no stuck spinner, and
