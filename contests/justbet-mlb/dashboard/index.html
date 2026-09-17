@@ -878,6 +878,21 @@
             if (foot) foot.innerHTML = `Showing <strong>${cards.length}</strong> games · <strong>${totalPicks}</strong> contest picks. Picks are sealed until first pitch.`;
         }
 
+
+        // REVEAL_AT_FIRST_PITCH_CLIENT_20260917 (Nima: picks exposed immediately when the game goes off
+        // the board). The server unseals at first pitch; this page refetches 2 seconds after every
+        // first pitch on the slate instead of waiting for the next poll, and polls every 15 seconds.
+        const revealTimers = new Map();
+        function scheduleRevealRefresh(games) {
+            const now = Date.now();
+            (games || []).forEach((g) => {
+                const t = Date.parse(g && g.commence_time);
+                if (!Number.isFinite(t) || t <= now || t - now > 6 * 3600 * 1000) return;
+                const key = (g.id || '') + '|' + t;
+                if (revealTimers.has(key)) return;
+                revealTimers.set(key, setTimeout(() => { loadBoard(); loadLeaderboard(); }, t - now + 2000));
+            });
+        }
         async function loadBoard() {
             if (!boardActive()) return;
             const grid = $('#board-grid');
@@ -895,6 +910,7 @@
                 ]);
                 if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
                 const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
+                scheduleRevealRefresh(gamesData.games);
                 const picksData = await picksResp.json();
                 // PENDING_NO_GAME_20260916 (Nima): a pick that has not reached first pitch shows only as a pending
                 // count on the contestant grid; no game, market or side until the game is off the board.
@@ -1036,8 +1052,8 @@
                 loadLeaderboard();
                 // Sealed picks reveal at first pitch, and standings move as games
                 // finish, without anyone reloading the page.
-                setInterval(loadBoard, 60000);
-                setInterval(loadLeaderboard, 60000);
+                setInterval(loadBoard, 15000);
+                setInterval(loadLeaderboard, 15000);
             }
         }
 
