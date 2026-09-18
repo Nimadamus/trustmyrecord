@@ -44,8 +44,10 @@ for when in (now, now + dt.timedelta(days=400)):
     for p, text in fm.render_surfaces(reg, now=when, root=${JSON.stringify(ROOT)}, read=lambda p: open(p, encoding="utf-8").read()):
         rel = p.replace("\\\\", "/").split(${JSON.stringify(ROOT.replace(/\\/g, '/'))} + "/")[-1]
         if rel in doors:
+            feat = fm.resolve(reg, doors[rel], when) if doors[rel] in reg["sports"] or doors[rel] == "*" else None
             out.append({"file": rel, "sport": doors[rel], "when": when.isoformat(), "text": text,
-                        "has_articles": has.get(doors[rel], any(has.values()))})
+                        "has_articles": has.get(doors[rel], any(has.values())),
+                        "article": (feat or {}).get("article")})
 print(json.dumps(out))
 `;
 const doors = JSON.parse(execFileSync('python', ['-c', py], { cwd: ROOT, encoding: 'utf8', env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8' }) }));
@@ -54,6 +56,9 @@ for (const d of doors) {
   const label = `${d.file} at ${d.when.slice(0, 10)}`;
   if (FILLER.test(d.text)) { fail(`${label}: placeholder wording`); continue; }
   if (!d.has_articles) { pass(`${label}: sport has no article yet (forwards to hub)`); continue; }
+  /* A rotation game queued before its breakdown exists links the hub by design
+     (nfl_featured_rotation.build_entry); the next rotation run swaps the article in. */
+  if (d.article === 'none') { pass(`${label}: queued game has no article yet (forwards to hub)`); continue; }
   const baked = (d.text.match(/data-baked-href="([^"]*)"/) || [])[1];
   /* A sport hub (/handicapping/nfl/) is filler; a game's own breakdown under it
      (/handicapping/nfl/<game>/, what the NFL schedule rotation links) is an article. */
