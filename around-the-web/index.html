@@ -966,29 +966,44 @@ body.tmr-ds .hm-page .aw-mission{margin:8px 0 30px;padding:clamp(44px,6vw,80px) 
   // LIST ORDER (Nima, Sep 17): a real sortable stats table. Every column sorts the WHOLE filtered set on its numeric
   // value (never the formatted text), no pinning, and the # is the row's position in that order. Rows with nothing to
   // rank on (no priced picks, no graded picks, no last pick) always go last in both directions.
+  function statsFor(h, key){ return key === "all" ? h : (h.by_sport[key] || { graded: 0, priced: 0 }); }
+  // Wins and losses from the "W-L-P" record; pushes are not decisions.
+  function decisions(s){ var p = String(s.record || "").split("-").map(Number); return { w: p[0] || 0, l: p[1] || 0 }; }
   function sortValue(h, k, key){
-    var s = key === "all" ? h : (h.by_sport[key] || { graded: 0, priced: 0 });
+    var s = statsFor(h, key);
     if (k === "units") return s.priced ? Number(s.units) : null;
     if (k === "roi") return s.priced ? Number(s.roi) : null;
-    if (k === "winRate") return s.win_rate == null ? null : Number(s.win_rate);
+    if (k === "winRate" || k === "record") {
+      // Exact wins / (wins + losses) from the record; the baked win_rate is rounded to 0.1 and would fake ties.
+      if (!s.graded) return null;
+      var d = decisions(s);
+      return d.w + d.l ? d.w / (d.w + d.l) : null;
+    }
     if (k === "graded") return Number(s.graded || 0);
     if (k === "streak") return h.graded ? Number(h.streak || 0) : null;
     if (k === "recent") return h.last_pick_at ? Date.parse(h.last_pick_at) : null;
-    if (k === "record") {
-      if (!s.graded) return null;
-      var p = String(s.record).split("-").map(Number);   // wins minus losses, then win rate, then more picks
-      return (p[0] - p[1]) * 1e6 + (s.win_rate == null ? 0 : s.win_rate) * 1e3 + s.graded;
-    }
     return null;
+  }
+  // Win % / Record ties (Nima, Sep 17): the bigger sample goes first in both directions. More decided picks (W+L),
+  // then more graded picks (pushes included), then more units where the account has priced picks.
+  function winRateTies(a, b, key){
+    var sa = statsFor(a, key), sb = statsFor(b, key), da = decisions(sa), db = decisions(sb);
+    var ua = sa.priced ? Number(sa.units) : null, ub = sb.priced ? Number(sb.units) : null;
+    return (db.w + db.l) - (da.w + da.l)
+      || Number(sb.graded || 0) - Number(sa.graded || 0)
+      || (ua === null || ub === null ? (ua === null) - (ub === null) : ub - ua);
   }
   function sortList(list, sort, dir, key){
     var sign = dir === "asc" ? 1 : -1;
     return list.sort(function(a, b){
-      var byName = a.handle.toLowerCase().localeCompare(b.handle.toLowerCase());
+      // Final tiebreaker is deterministic: handle A to Z, then the unique username.
+      var byName = a.handle.toLowerCase().localeCompare(b.handle.toLowerCase())
+        || (a.username < b.username ? -1 : a.username > b.username ? 1 : 0);
       if (sort === "username") return sign * byName;
       var x = sortValue(a, sort, key), y = sortValue(b, sort, key);
       if (x === null || y === null) return (x === null) - (y === null) || byName;
-      return sign * (x - y) || byName;
+      var ties = sort === "winRate" || sort === "record" ? winRateTies(a, b, key) : 0;
+      return sign * (x - y) || ties || byName;
     });
   }
   function row(h, i){
