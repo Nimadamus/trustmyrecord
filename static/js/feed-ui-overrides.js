@@ -262,7 +262,7 @@ function renderMilestoneCard(item) {
             '<i class="fas fa-hands-clapping"></i> Congrats <span>' + (Number(item.likes_count) || 0) + '</span>' +
         '</button>' +
         (mtype === 'joined'
-            ? '<button class="fi-action" onclick="toggleComments(' + jsArg(id) + ', ' + jsArg('milestone') + ')"><i class="fas fa-comment"></i> Comment <span>' + (Number(item.comments_count) || 0) + '</span></button>'
+            ? '<button class="fi-action" onclick="toggleComments(' + jsArg(id) + ', ' + jsArg('milestone') + ')"><i class="fas fa-comment"></i> Comment <span id="cc-ms-' + feedId(id) + '">' + (Number(item.comments_count) || 0) + '</span></button>'
             : '') +
     '</div>' +
     (mtype === 'joined' ? '<div class="comments-section" id="cs-ms-' + feedId(id) + '"></div>' : '');
@@ -403,7 +403,9 @@ async function toggleComments(id, type) {
                 return '<div class="cmt-item">' +
                     '<div class="cmt-avatar"><img src="' + esc(c.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar?s=96')) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>' +
                     '<div class="cmt-body">' +
-                        '<div class="cmt-author"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + esc(c.display_name || c.username || 'User') + '</a></div>' +
+                        '<div class="cmt-author"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + esc(c.display_name || c.username || 'User') + '</a>' +
+                            (c.is_official_bot ? ' <span class="cmt-official" title="Official TrustMyRecord account"><i class="fas fa-circle-check"></i> Official</span>' : '') +
+                        '</div>' +
                         '<div class="cmt-text">' + esc(c.content) + '</div>' +
                         '<div class="cmt-time">' + esc(timeAgo(c.created_at)) + '</div>' +
                     '</div>' +
@@ -419,22 +421,62 @@ async function toggleComments(id, type) {
     }
 }
 
+// One click = one comment: a post in flight blocks every other submit for the
+// same box (Enter and the Post button both call this), and the button stays
+// disabled until the server answers.
+const _commentInFlight = {};
+
+function commentErrorText(e) {
+    const status = e && e.status;
+    if (status === 401 || status === 403) return 'Your session expired. Log in again to comment.';
+    if (status === 404) return 'This post is no longer available.';
+    if (status === 400 || status === 422) return (e && e.message) || 'Comments must be 1 to 1000 characters.';
+    if (status === 429) return 'Slow down a moment, then try again.';
+    return 'Could not reach TrustMyRecord. Your comment is still in the box, tap Post to try again.';
+}
+
 async function postComment(id, type) {
     const normalizedType = type === 'pick' ? 'pick' : (type === 'milestone' ? 'milestone' : 'feed_post');
-    const input = document.getElementById('ci-' + normalizedType + '-' + feedId(id));
+    const inputId = 'ci-' + normalizedType + '-' + feedId(id);
+    const input = document.getElementById(inputId);
     if (!input || !input.value.trim()) return;
+    if (_commentInFlight[inputId]) return;
+    _commentInFlight[inputId] = true;
+    const row = input.closest('.cmt-input-row');
+    const btn = row ? row.querySelector('.cmt-submit') : null;
+    const errEl = row ? row.parentNode.querySelector('.cmt-error') : null;
+    if (errEl) errEl.remove();
+    input.disabled = true;
+    if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
 
     try {
         const endpoint = normalizedType === 'pick' ? '/picks/' + encodeURIComponent(id) + '/comment'
             : normalizedType === 'milestone' ? '/milestones/' + encodeURIComponent(milestoneNumericId(id)) + '/comment'
             : '/feed/' + encodeURIComponent(id) + '/comment';
-        await api.request(endpoint, { method: 'POST', body: { content: input.value.trim() } });
+        const res = await api.request(endpoint, { method: 'POST', body: { content: input.value.trim() } });
         input.value = '';
+        if (normalizedType === 'milestone' && !(res && res.duplicate)) {
+            const count = document.getElementById('cc-ms-' + feedId(id));
+            if (count) count.textContent = String((Number(count.textContent) || 0) + 1);
+        }
         const el = document.getElementById(commentsElId(id, normalizedType));
         if (el) el.classList.remove('show');
-        toggleComments(id, normalizedType);
+        await toggleComments(id, normalizedType);
     } catch(e) {
-        alert('Failed to post comment');
+        console.error('Post comment failed:', e && e.status, e && e.message);
+        input.disabled = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'Post'; }
+        if (row) {
+            const msg = document.createElement('div');
+            msg.className = 'cmt-error';
+            msg.setAttribute('role', 'alert');
+            msg.textContent = commentErrorText(e);
+            row.insertAdjacentElement('afterend', msg);
+        } else {
+            alert(commentErrorText(e));
+        }
+    } finally {
+        _commentInFlight[inputId] = false;
     }
 }
 
