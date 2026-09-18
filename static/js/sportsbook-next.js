@@ -198,6 +198,18 @@
         var s = String(n);
         return (signed && n > 0) ? '+' + s : s;
     }
+    /* OU_LINE_UNSIGNED_20260918: an Over/Under names its side in words, so its
+       number never carries a sign ("Over 22.5", not "Over +22.5"). Spreads,
+       run lines, puck lines and odds keep theirs. isTotal() below excludes team
+       totals on purpose (bucketing), so the sign decision uses this instead.
+       Display only: pick payloads, stored labels and API data are unchanged. */
+    function isOverUnder(mt, side) {
+        return /total/i.test(String(mt || '')) || /_rounds$/.test(String(mt || '')) ||
+            /^(over|under)$/i.test(String(side || ''));
+    }
+    // The feed's selection_label signs totals ("Under +24.5"). Strip only a "+"
+    // that directly follows the word Over/Under; nothing else is touched.
+    function ouText(t) { return String(t == null ? '' : t).replace(/\b(Over|Under)(\s+)\+(?=\d)/gi, '$1$2'); }
     function impliedProb(o) {
         var n = num(o); if (n == null) return null;
         return n > 0 ? 100 / (n + 100) : Math.abs(n) / (Math.abs(n) + 100);
@@ -1804,7 +1816,7 @@
                 // a moneyline has no line, and an empty left half reads as a
                 // broken cell in a panel this wide, so it says what it is
                 var top = ou ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
-                    : (noLine ? 'ML' : fmtLine(i.line, !isTotal(String(mt))));
+                    : (noLine ? 'ML' : fmtLine(i.line, !isOverUnder(mt, i.side)));
                 var bottom = fmtOdds(i.odds);
                 var sel = ou && key !== 'player_props' ? side : i.selection;
                 var label = i.label || (sel + (noLine ? '' : ' ' + fmtLine(i.line)));
@@ -1813,7 +1825,7 @@
                     data: pickData(g, mt, sel, label, i.line, i.odds, title, i.book || book)
                 }) + '</span>';
             }).join('');
-            return '<div class="sbn-drow"><span class="sbn-dside">' + esc(side) + '</span><div class="sbn-dgrid">' + cells + '</div></div>';
+            return '<div class="sbn-drow"><span class="sbn-dside">' + esc(ouText(side)) + '</span><div class="sbn-dgrid">' + cells + '</div></div>';
         }).join('');
         return '<section class="sbn-dsec' + (open ? ' is-open' : '') + '"><h4>' + esc(title) +
             '<span class="sbn-count">' + items.length + '</span>' +
@@ -2030,7 +2042,7 @@
         var c = state.confirm;
         if (!c || !c.items.length) return '';
         var rows = c.items.map(function (it) {
-            return '<li class="sbn-okrow"><span class="sbn-oksel">' + esc(it.label) + ' <b>' + fmtOdds(it.odds) + '</b></span>' +
+            return '<li class="sbn-okrow"><span class="sbn-oksel">' + esc(ouText(it.label)) + ' <b>' + fmtOdds(it.odds) + '</b></span>' +
                 '<span class="sbn-okgame">' + esc(it.game) + (it.groupLabel ? ' &middot; ' + esc(it.groupLabel) : '') + '</span></li>';
         }).join('');
         return '<div class="sbn-ok" role="status">' +
@@ -2180,11 +2192,11 @@
         var rows = state.picks.map(function (p, i) {
             var st = stakeFor(p);
             return '<div class="sbn-sliprow">' +
-                '<div class="sbn-slipmain"><div class="sbn-slipsel">' + esc(p.label) + '</div>' +
+                '<div class="sbn-slipmain"><div class="sbn-slipsel">' + esc(ouText(p.label)) + '</div>' +
                 '<div class="sbn-slipgame">' + esc(p.game) + '</div>' +
                 '<div class="sbn-slipmeta">' + esc(p.groupLabel || 'Full Game') + ' &middot; <b>' + fmtOdds(p.odds) + '</b>' +
                 (p.book ? ' &middot; ' + esc(p.book) : '') + '</div></div>' +
-                '<button type="button" class="sbn-slipx" data-remove="' + i + '" aria-label="Remove ' + esc(p.label) + '">&times;</button>' +
+                '<button type="button" class="sbn-slipx" data-remove="' + i + '" aria-label="Remove ' + esc(ouText(p.label)) + '">&times;</button>' +
                 // A11Y_20260904: the "Units" label was floating free - no `for`,
                 // so it named nothing and the field leaned on an aria-label that
                 // duplicated it. Associated properly now, one id per slip row.
