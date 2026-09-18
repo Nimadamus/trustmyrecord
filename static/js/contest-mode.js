@@ -93,6 +93,9 @@
         '#tmr-contest-mode-banner .tmr-cm-rules { margin: 8px 0 0; padding-left: 18px; font-size: 0.86rem; color: #f5e8c9; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; row-gap: 2px; }',
         '#tmr-contest-mode-banner .tmr-cm-rules strong { color: #fff; }',
         '@media (max-width: 720px) { #tmr-contest-mode-banner .tmr-cm-rules { grid-template-columns: 1fr; } }',
+        // CONTEST_BANNER_MOBILE_UNSTICK_20260918: on a phone the banner is taller than the screen, so a sticky
+        // banner covered the whole viewport and the board scrolled underneath it. It scrolls away on phones now.
+        '@media (max-width: 720px) { #tmr-contest-mode-banner { position: relative; top: auto; } }',
         '#tmr-contest-mode-banner .tmr-cm-dash { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; background:linear-gradient(180deg,#f0c449,#d4a72c); color:#1a1206; font-weight:900; font-size:0.85rem; letter-spacing:0.03em; cursor:pointer; text-decoration:none; border:1px solid #b4881d; }',
     ].join('\n');
     document.head.appendChild(css);
@@ -171,7 +174,7 @@
                 }, 1200);
                 return { status: status };
             }
-            var label = status === 'verified_eligible' ? 'Verified' : (status === 'pending_verification' ? 'Registered (pending)' : status);
+            var label = status === 'verified_eligible' ? 'Verified' : ((status === 'pending_verification' || status === 'needs_info') ? 'Registered' : status);
             if (statusPill) statusPill.innerHTML = '<i class="fas fa-shield-halved"></i> Registration: ' + escapeHtml(label);
             return { status: status };
         }).catch(function () {
