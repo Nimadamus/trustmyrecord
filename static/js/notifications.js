@@ -668,6 +668,7 @@ function getNotifTone(type) {
     if (t === 'forum_mod_action') return 'mod';
     if (t.indexOf('reply') !== -1 || t.indexOf('subscription') !== -1 || t.indexOf('quote') !== -1) return 'reply';
     if (t === 'new_message' || t === 'message') return 'message';
+    if (t === 'poll_results') return 'challenge';
     if (t.indexOf('challenge') !== -1) return 'challenge';
     if (t.indexOf('premium') !== -1) return 'premium';
     if (t.indexOf('forum') !== -1) return 'forum';
@@ -721,6 +722,11 @@ function getNotificationDestination(notification) {
     }
     if (type === 'challenge_invite' || type === 'challenge_result' || type === 'challenge') return '/challenges/';
     if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
+    // Graded poll -> the permanent final results page with everyone's standings.
+    if (type === 'poll_results' || resourceType === 'poll_results') {
+        const rid = notification?.resource_id || notification?.resourceId;
+        return rid ? '/polls/history/?poll=' + encodeURIComponent(rid) : '/polls/history/';
+    }
     // Daily featured Prediction Quiz reminder -> deep-link straight to the quiz.
     if (type === 'daily_quiz' || resourceType === 'quiz') {
         const qid = notification?.resource_id || notification?.resourceId;
