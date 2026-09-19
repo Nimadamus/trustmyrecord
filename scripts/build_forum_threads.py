@@ -630,6 +630,8 @@ def regen_sitemap_cats(entries):
         xml = f.read()
     xml = re.sub(r"\s*<!-- BEGIN_FORUM_CAT_URLS -->.*?<!-- END_FORUM_CAT_URLS -->",
                  "", xml, flags=re.S)
+    # A category already listed elsewhere in the sitemap stays there once; a duplicate <loc> fails the SEO gate.
+    entries = [(u, lm) for u, lm in entries if f"<loc>{u}</loc>" not in xml]
     block = ["  <!-- BEGIN_FORUM_CAT_URLS -->"]
     for url, lastmod in entries:
         lm = f"<lastmod>{lastmod}</lastmod>" if lastmod else ""
