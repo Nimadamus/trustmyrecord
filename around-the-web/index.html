@@ -1004,8 +1004,10 @@ body.tmr-ds .hm-page .aw-mission{margin:8px 0 30px;padding:clamp(44px,6vw,80px) 
       if (ea !== eb) return ea - eb;
       if (sort === "username") return sign * byName;
       var x = sortValue(a, sort, key), y = sortValue(b, sort, key);
-      if (x === null || y === null) return (x === null) - (y === null) || byName;
-      var ties = sort === "winRate" || sort === "record" ? winRateTies(a, b, key) : 0;
+      // Equal values (Nima, Sep 18): most graded picks first, then handle / username, in both directions.
+      var byGraded = Number(statsFor(b, key).graded || 0) - Number(statsFor(a, key).graded || 0);
+      if (x === null || y === null) return (x === null) - (y === null) || byGraded || byName;
+      var ties = sort === "winRate" || sort === "record" ? winRateTies(a, b, key) : byGraded;
       return sign * (x - y) || ties || byName;
     });
   }
