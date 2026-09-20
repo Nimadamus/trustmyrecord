@@ -2444,7 +2444,7 @@
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
-                              <th>Submitted</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
+                              <th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
                               <th class="num">Line</th><th class="num">Odds</th><th class="num">Units</th>
                               <th>Result</th><th class="num">Net</th>
                             </tr></thead>
@@ -8560,6 +8560,13 @@
     const SETTLED_RE = /^(won|lost|push|void|cancelled)$/i;
     let tmrxLedgerPicks = [];   // full settled public history, newest first
     let tmrxLedgerPage = 1;
+    function tmrxLedgerEventMs(p) {
+        const ms = Date.parse((p && (p.commence_time || p.graded_at || p.locked_at || p.created_at)) || '');
+        return Number.isFinite(ms) ? ms : 0;
+    }
+    function tmrxLedgerDateValue(p) {
+        return (p && (p.commence_time || p.graded_at || p.locked_at || p.created_at)) || null;
+    }
 
     async function tmrxRenderPickHistory(username) {
         const tbody = document.querySelector('#tmrxTablePicks tbody');
@@ -8580,16 +8587,18 @@
                 const resp = await window.api.request('/picks' + '?username=' + encodeURIComponent(username) + '&limit=' + PAGE + '&offset=' + offset);
                 const batch = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
                 all = all.concat(batch);
-                if (!resp || !resp.pagination || !resp.pagination.hasMore || batch.length < PAGE) break;
+                if (batch.length < PAGE) break;
+                if (resp && resp.pagination && resp.pagination.hasMore === false) break;
             }
         } catch (err) {
             tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
             return;
         }
         // Public Ledger = settled picks only; pending stays hidden until graded.
+        // Recency is the GAME date (commence_time), same key Bet History uses.
         tmrxLedgerPicks = all
             .filter(p => !p.redacted && SETTLED_RE.test(p.status))
-            .sort((a, b) => new Date(b.created_at || b.locked_at || 0) - new Date(a.created_at || a.locked_at || 0));
+            .sort((a, b) => (tmrxLedgerEventMs(b) - tmrxLedgerEventMs(a)) || (Number(b.id || 0) - Number(a.id || 0)));
         tmrxLedgerPage = 1;
         if (meta) meta.textContent = tmrxLedgerPicks.length + ' settled public pick' + (tmrxLedgerPicks.length === 1 ? '' : 's');
         if (!tmrxLedgerPicks.length) {
@@ -8642,7 +8651,7 @@
         };
         tbody.innerHTML = picks.map(p => {
             if (p.redacted) {
-                return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
+                return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(tmrxLedgerDateValue(p)) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
             const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
@@ -8652,7 +8661,7 @@
             const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
             const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
             return '<tr class="' + rowStatusClass(p.status) + '">' +
-                '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
+                '<td>' + fmtDate(tmrxLedgerDateValue(p)) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
                 '<td>' + game + '</td>' +
                 '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
