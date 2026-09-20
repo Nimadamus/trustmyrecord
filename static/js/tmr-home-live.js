@@ -164,7 +164,7 @@
      At 40s it is 19.5s, so a reader gets a dense recap line for about the time
      it takes to read one, still two lines per visit, and a card that comes back
      round having moved on. */
-  var TICKER_ROTATE_MS = 40000;        // dwell time on each group before advancing
+  var TICKER_ROTATE_MS = 12000;        // one game at a time; 12s then the next card
   /* PREGAME lines. Originally "around 4-6 seconds" (Nima, 2026-08-14); he asked
      on 2026-08-24 for every timing to sit a few seconds longer, so 8s. The
      per-card offset below still matters more than the interval: without it
@@ -827,29 +827,28 @@
   }
 
   function tickerOrder(rows) {
-    var tiers = [{}, {}, {}, {}, {}];
+    /* League-complete (2026-09-20): finish every game in a sport before the
+       next sport. Inside a sport keep live / delayed / final / scheduled /
+       lookahead. Empty sports are skipped. */
+    var bySport = {};
     (rows || []).forEach(function (row) {
       (row.games || []).forEach(function (g) {
-        var b = tiers[tickerTier(g)];
-        (b[row.key] = b[row.key] || []).push(g);
+        (bySport[row.key] = bySport[row.key] || []).push(g);
       });
     });
-    var rank = function (k) {
-      var i = TICKER_SPORT_ORDER.indexOf(k);
-      return i < 0 ? TICKER_SPORT_ORDER.length : i;
-    };
     var out = [];
-    tiers.forEach(function (b) {
-      var keys = Object.keys(b).sort(function (x, y) {
-        return (b[x].length - b[y].length) || (rank(x) - rank(y));
-      });
-      for (var n = 0, more = true; more; n++) {
-        more = false;
-        for (var k = 0; k < keys.length; k++) {
-          var list = b[keys[k]];
-          if (n < list.length) { out.push({ key: keys[k], g: list[n] }); more = true; }
-        }
-      }
+    var seen = {};
+    TICKER_SPORT_ORDER.forEach(function (key) {
+      var list = bySport[key];
+      if (!list || !list.length) return;
+      seen[key] = 1;
+      list.slice().sort(function (a, b) {
+        return tickerTier(a) - tickerTier(b);
+      }).forEach(function (g) { out.push({ key: key, g: g }); });
+    });
+    Object.keys(bySport).forEach(function (key) {
+      if (seen[key]) return;
+      (bySport[key] || []).forEach(function (g) { out.push({ key: key, g: g }); });
     });
     return out;
   }
@@ -1010,23 +1009,28 @@
     track.appendChild(row);
 
     var vw = lane.clientWidth;
-    var GAP = 12;
+    var pinW = 0;
+    cards.forEach(function (c) { if (c.offsetWidth > pinW) pinW = c.offsetWidth; });
+    var narrow = false;
+    try { narrow = !!(window.matchMedia && window.matchMedia('(max-width:1179px)').matches); } catch (e1) {}
+    if (!narrow && pinW > 0) {
+      lane.style.flex = '0 0 ' + pinW + 'px';
+      lane.style.width = pinW + 'px';
+      lane.style.maxWidth = pinW + 'px';
+      lane.style.minWidth = pinW + 'px';
+    } else {
+      lane.style.flex = '';
+      lane.style.width = '';
+      lane.style.maxWidth = '';
+      lane.style.minWidth = '';
+    }
+
     var pages = [];
     if (vw <= 0) {
       pages = [cards.slice()];                 // hidden/unmeasurable: one group, no clipping
     } else {
-      var cur = [], used = 0;
-      var sportOf = function (c) { return c.getAttribute('data-sport') || 'mlb'; };
-      cards.forEach(function (c) {
-        var w = c.offsetWidth;
-        var add = w + (cur.length ? GAP : 0);
-        /* A sport never shares a row: the NFL cards start their own page even
-           when the MLB one has width to spare. */
-        var breakHere = cur.length && sportOf(cur[cur.length - 1]) !== sportOf(c);
-        if (cur.length && (breakHere || used + add > vw)) { pages.push(cur); cur = []; used = 0; add = w; }
-        cur.push(c); used += add;
-      });
-      if (cur.length) pages.push(cur);
+      /* One game at a time in the left lane; leftover width is the center column. */
+      cards.forEach(function (c) { pages.push([c]); });
     }
 
     track.innerHTML = '';
@@ -1227,27 +1231,10 @@
      once a pass; a strip with one sport is the straight line it always was.
      Every page is reached inside one pass. */
   function visitSequence(pages) {
-    var sports = [], by = {};
-    pages.forEach(function (grp, i) {
-      var sp = grp[0] ? (grp[0].getAttribute('data-sport') || 'mlb') : 'mlb';
-      if (!by[sp]) { by[sp] = { all: [], live: [], next: 0, lap: 0 }; sports.push(sp); }
-      by[sp].all.push(i);
-      if (grp.some(function (c) { return c.querySelector('.st.is-live'); })) by[sp].live.push(i);
-    });
+    /* Straight walk: tickerOrder already finished each league before the next. */
     var seq = [];
-    if (sports.length < 2) { pages.forEach(function (g, i) { seq.push(i); }); return seq; }
-    var left = pages.length;
-    while (left > 0) {
-      for (var k = 0; k < sports.length && left > 0; k++) {
-        var b = by[sports[k]];
-        if (b.next < b.all.length) { seq.push(b.all[b.next++]); left--; }
-        else if (b.live.length) { seq.push(b.live[b.lap++ % b.live.length]); }
-      }
-    }
-    var out = [];
-    seq.forEach(function (v) { if (!out.length || out[out.length - 1] !== v) out.push(v); });
-    while (out.length > 1 && out[0] === out[out.length - 1]) out.pop();
-    return out;
+    pages.forEach(function (g, i) { seq.push(i); });
+    return seq;
   }
 
   /* Position in the sequence of page `idx` (an index into tkPagesCanon),

@@ -712,10 +712,10 @@ function espnCardHtml(g, key) {
   ));
 }
 
-/* PRIORITY ACROSS SPORTS: a port of tickerTier()/tickerOrder() in
-   tmr-home-live.js, lockstep rule as above. Live, then stopped, then finals,
-   then upcoming, then anything flagged off today's slate; inside a tier the
-   sports take turns, the smaller sport first. */
+/* League-complete order: a port of tickerTier()/tickerOrder() in
+   tmr-home-live.js, lockstep rule as above. Finish every game in a sport
+   before the next sport; inside a sport, live / delayed / final / scheduled /
+   lookahead. Empty sports are skipped. */
 const TICKER_SPORT_ORDER = ['nfl', 'mlb', 'nba', 'nhl', 'cfb'];
 
 function tickerTier(g) {
@@ -729,27 +729,24 @@ function tickerTier(g) {
 }
 
 function tickerOrder(rows) {
-  const tiers = [{}, {}, {}, {}, {}];
+  const bySport = {};
   (rows || []).forEach((row) => {
     (row.games || []).forEach((g) => {
-      const b = tiers[tickerTier(g)];
-      (b[row.key] = b[row.key] || []).push(g);
+      (bySport[row.key] = bySport[row.key] || []).push(g);
     });
   });
-  const rank = (k) => {
-    const i = TICKER_SPORT_ORDER.indexOf(k);
-    return i < 0 ? TICKER_SPORT_ORDER.length : i;
-  };
   const out = [];
-  tiers.forEach((b) => {
-    const keys = Object.keys(b).sort((x, y) => (b[x].length - b[y].length) || (rank(x) - rank(y)));
-    for (let n = 0, more = true; more; n++) {
-      more = false;
-      for (let k = 0; k < keys.length; k++) {
-        const list = b[keys[k]];
-        if (n < list.length) { out.push({ key: keys[k], g: list[n] }); more = true; }
-      }
-    }
+  const seen = {};
+  TICKER_SPORT_ORDER.forEach((key) => {
+    const list = bySport[key];
+    if (!list || !list.length) return;
+    seen[key] = 1;
+    list.slice().sort((a, b) => tickerTier(a) - tickerTier(b))
+      .forEach((g) => { out.push({ key, g }); });
+  });
+  Object.keys(bySport).forEach((key) => {
+    if (seen[key]) return;
+    (bySport[key] || []).forEach((g) => { out.push({ key, g }); });
   });
   return out;
 }

@@ -311,32 +311,41 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
     failures.push('tickerOrder differs between edge and client');
   }
 
-  /* The priority rule itself. */
+  /* League-complete order: each sport is a contiguous block in TICKER_SPORT_ORDER;
+     inside a sport, live / delayed / final / scheduled / lookahead. */
   const tier = (g) => (g.lookahead || g.carryover) ? 4 : g.status === 'live' ? 0
     : (g.status === 'delayed' || g.status === 'suspended') ? 1 : g.status === 'final' ? 2 : g.status === 'scheduled' ? 3 : 4;
-  for (let i = 1; i < order.length; i++) {
-    if (tier(order[i].g) < tier(order[i - 1].g)) {
-      failures.push(`priority broken: ${order[i].key} ${order[i].g.away} (${order[i].g.status}) after ${order[i - 1].key} ${order[i - 1].g.away} (${order[i - 1].g.status})`);
+  const sportBlocks = [];
+  order.forEach((e) => {
+    if (!sportBlocks.length || sportBlocks[sportBlocks.length - 1].key !== e.key) {
+      sportBlocks.push({ key: e.key, games: [e] });
+    } else {
+      sportBlocks[sportBlocks.length - 1].games.push(e);
+    }
+  });
+  const sportRank = (k) => {
+    const i = ['nfl', 'mlb', 'nba', 'nhl', 'cfb'].indexOf(k);
+    return i < 0 ? 99 : i;
+  };
+  for (let i = 1; i < sportBlocks.length; i++) {
+    if (sportRank(sportBlocks[i].key) < sportRank(sportBlocks[i - 1].key)) {
+      failures.push(`sport order broken: ${sportBlocks[i].key} after ${sportBlocks[i - 1].key}`);
       break;
     }
   }
-  if (!order.length || order[0].g !== nflLive) {
-    failures.push(`a live NFL game in a strip with fewer live NFL than MLB games does not lead: first is ${order[0] && order[0].key}`);
-  }
-  if (order[order.length - 1].g !== nflNext) failures.push('a lookahead fixture is not at the back of the strip');
-  /* Inside a tier the sports alternate: no two cards of a sport in a row while
-     another sport still has a card left in that tier. */
-  [0, 2, 3].forEach((t) => {
-    const inTier = order.filter((e) => tier(e.g) === t);
-    const counts = {};
-    inTier.forEach((e) => { counts[e.key] = (counts[e.key] || 0) + 1; });
-    for (let i = 1; i < inTier.length; i++) {
-      if (inTier[i].key !== inTier[i - 1].key) { counts[inTier[i - 1].key] -= 1; continue; }
-      counts[inTier[i - 1].key] -= 1;
-      const othersLeft = Object.keys(counts).some((k) => k !== inTier[i].key && counts[k] > 0);
-      if (othersLeft) { failures.push(`tier ${t}: two ${inTier[i].key} cards in a row while another sport waits`); break; }
+  sportBlocks.forEach((b) => {
+    for (let i = 1; i < b.games.length; i++) {
+      if (tier(b.games[i].g) < tier(b.games[i - 1].g)) {
+        failures.push(`priority broken inside ${b.key}: ${b.games[i].g.away} (${b.games[i].g.status}) after ${b.games[i - 1].g.away} (${b.games[i - 1].g.status})`);
+        break;
+      }
     }
   });
+  if (!order.length || order[0].g !== nflLive) {
+    failures.push(`a live NFL game does not lead its league: first is ${order[0] && order[0].key}`);
+  }
+  const nflLast = order.filter((e) => e.key === 'nfl').pop();
+  if (!nflLast || nflLast.g !== nflNext) failures.push('a lookahead NFL fixture is not at the back of the NFL block');
   if (order.length !== rows.reduce((n, r) => n + r.games.length, 0)) failures.push('tickerOrder dropped or duplicated a card');
 
   /* The live NFL card is a scorebug with the quarter, the clock, both scores and

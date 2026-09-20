@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tmr-build="346592ad2cd9">
+<html lang="en" data-tmr-build="a77711408e6d">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -251,7 +251,7 @@ img{display:block;max-width:100%}
    the strip exactly one row tall so the page never grows and never overflows sideways. */
 .ticker-in{max-width:2580px;margin:0 auto;padding:14px 43px;display:flex;align-items:stretch;gap:0;
   overflow:hidden}
-.ticker-games{flex:1 1 auto;min-width:0;position:relative;overflow:hidden}
+.ticker-games{flex:0 0 auto;min-width:0;position:relative;overflow:hidden;margin-right:12px}
 /* 2026-09-08: .5s to .8s. Nima asked for the transitions to "feel deliberate
    rather than rushed"; on a 40s page window the slide is the only moving part a
    reader ever sees, so it is the one place that reads as haste. */
@@ -1410,11 +1410,49 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 }
 /* Below this the row belongs to the sports ticker alone. */
 @media (max-width:1179px){.tkact{display:none}}
+@media (max-width:1179px){.tkcenter{display:none}.ticker-games{flex:1 1 auto !important;width:auto !important;max-width:none !important;min-width:0 !important;margin-right:0}}
 @media (prefers-reduced-motion:reduce){
   .tkact-item{transition:none}
   .tkact-lbl{transition:none}
   .tkact-item.is-in,.tkact-item.is-out{opacity:0;transform:none}
 }
+
+/* Compact contest bar + slogan in the leftover center of the ticker row.
+   Height is pinned to the 114px Live on TMR column so the strip cannot grow. */
+.tkcenter{
+  flex:1 1 auto;min-width:0;align-self:center;height:114px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:0 18px;box-sizing:border-box}
+.tkcontest{
+  display:flex;align-items:center;gap:12px;height:32px;width:min(500px,100%);
+  padding:0 10px;border-radius:8px;border:1.5px solid #F0C449;
+  background:linear-gradient(90deg,#3A2A06,#1C1606);
+  box-shadow:0 0 12px rgba(240,196,73,.18);box-sizing:border-box}
+.tkc-ic{
+  flex:0 0 auto;width:22px;height:22px;border-radius:6px;display:flex;
+  align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
+  font-size:12px;font-weight:900;line-height:1}
+.tkc-msg{display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap;overflow:hidden}
+.tkc-msg b{color:#FFF;font-size:12px;font-weight:900;letter-spacing:.06em;
+  text-transform:uppercase;font-family:Barlow,Inter,system-ui,sans-serif}
+.tkc-msg span{color:#F5E8C9;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.tkc-go{
+  flex:0 0 auto;display:inline-flex;align-items:center;height:22px;padding:0 10px;
+  border-radius:6px;background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
+  font-size:11px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+  text-decoration:none;white-space:nowrap}
+.tkslogan{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;text-align:center;pointer-events:none;max-width:720px;width:100%}
+.tkslogan-lead{display:block;color:#7F9BB4;font-size:14.5px;font-weight:500;
+  letter-spacing:.016em;line-height:1.28}
+.tkslogan-end{display:block;color:#F2F8FC;font-size:16px;font-weight:700;
+  letter-spacing:.01em;line-height:1.28}
+.tkslogan-end em{font-style:normal;color:#22D2C0;font-weight:900;font-size:1.06em;
+  letter-spacing:.04em;white-space:nowrap;
+  text-shadow:0 0 14px rgba(34,210,192,.7),0 0 24px rgba(34,210,192,.28);
+  background:linear-gradient(180deg,transparent 58%,rgba(34,210,192,.45) 58%);
+  padding:0 1px 1px}
 
 
 /* =========================================================== PHONE TIER =====
@@ -2299,7 +2337,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 
 
 
-<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
+<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><div class="tkcontest" role="status"><span class="tkc-ic" aria-hidden="true">&#9733;</span><span class="tkc-msg"><b>The contest is live</b><span>$2,500 · 50 MLB picks</span></span><a class="tkc-go" href="/sportsbook/?contest=justbet-mlb">Enter here</a></div><div class="tkslogan" role="note"><span class="tkslogan-lead">In a world where the truth can get buried beneath the noise,</span><span class="tkslogan-end">Trust My Record is where <em>results do the talking</em>.</span></div></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
 <section class="hero"><div class="hero-bg" aria-hidden="true"></div>
   <div class="grain"></div>
@@ -2576,7 +2614,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 })();
 </script>
-<script src="/static/js/tmr-home-live.346592ad2cd9.js"></script>
+<script src="/static/js/tmr-home-live.a77711408e6d.js"></script>
 <!-- HERO ANIMATION, STARTED AFTER THE PAGE IS PAINTED (2026-08-25).
      The still frame is already on screen (see .hero-bg in the critical CSS);
      this decodes the 1.21MB motion plate off the critical path and swaps the
@@ -2623,7 +2661,5 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
   <script defer src="/static/js/pick-progress-nudge.js?v=df4043fd5769"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 
-<!-- CONTEST_LAUNCH_HOMEPAGE_BANNER_20260916: floating contest launch banner (overlay, no layout impact). -->
-<script defer src="/static/js/contest-launch-banner.js?v=3a8a0eb36b16"></script>
 </body>
 </html>
