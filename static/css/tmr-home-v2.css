@@ -166,7 +166,7 @@ img{display:block;max-width:100%}
    the strip exactly one row tall so the page never grows and never overflows sideways. */
 .ticker-in{max-width:2580px;margin:0 auto;padding:14px 43px;display:flex;align-items:stretch;gap:0;
   overflow:hidden}
-.ticker-games{flex:1 1 auto;min-width:0;position:relative;overflow:hidden}
+.ticker-games{flex:0 0 auto;min-width:0;position:relative;overflow:hidden;margin-right:12px}
 /* 2026-09-08: .5s to .8s. Nima asked for the transitions to "feel deliberate
    rather than rushed"; on a 40s page window the slide is the only moving part a
    reader ever sees, so it is the one place that reads as haste. */
@@ -1325,11 +1325,47 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 }
 /* Below this the row belongs to the sports ticker alone. */
 @media (max-width:1179px){.tkact{display:none}}
+@media (max-width:1179px){.tkcenter{display:none}.ticker-games{flex:1 1 auto !important;width:auto !important;max-width:none !important;min-width:0 !important;margin-right:0}}
 @media (prefers-reduced-motion:reduce){
   .tkact-item{transition:none}
   .tkact-lbl{transition:none}
   .tkact-item.is-in,.tkact-item.is-out{opacity:0;transform:none}
 }
+
+/* Compact contest bar + slogan in the leftover center of the ticker row.
+   Height is pinned to the 114px Live on TMR column so the strip cannot grow. */
+.tkcenter{
+  flex:1 1 auto;min-width:0;align-self:center;height:114px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:0 18px;box-sizing:border-box}
+.tkcontest{
+  display:flex;align-items:center;gap:12px;height:46px;width:min(500px,100%);
+  padding:0 16px;border-radius:8px;border:1.5px solid #F0C449;
+  background:linear-gradient(90deg,#3A2A06,#1C1606);
+  box-shadow:0 0 12px rgba(240,196,73,.18);box-sizing:border-box}
+.tkc-ic{
+  flex:0 0 auto;width:26px;height:26px;border-radius:6px;display:flex;
+  align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
+  font-size:13px;font-weight:900;line-height:1}
+.tkc-msg{display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap;overflow:hidden}
+.tkc-msg b{color:#FFF;font-size:13px;font-weight:900;letter-spacing:.06em;
+  text-transform:uppercase;font-family:Barlow,Inter,system-ui,sans-serif}
+.tkc-msg span{color:#F5E8C9;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.tkc-go{
+  flex:0 0 auto;display:inline-flex;align-items:center;height:28px;padding:0 14px;
+  border-radius:6px;background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
+  font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+  text-decoration:none;white-space:nowrap}
+.tkslogan{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;text-align:center;pointer-events:none;max-width:720px;width:100%}
+.tkslogan-lead{display:block;color:#7F9BB4;font-size:14.5px;font-weight:500;
+  letter-spacing:.016em;line-height:1.28}
+.tkslogan-end{display:block;color:#F2F8FC;font-size:16px;font-weight:700;
+  letter-spacing:.01em;line-height:1.28}
+.tkslogan-end em{font-style:normal;color:#3EE8FF;font-weight:900;font-size:1.08em;
+  letter-spacing:.04em;white-space:nowrap;text-decoration:none;background:none;
+  text-shadow:0 0 8px rgba(62,232,255,.32)}
 
 
 /* =========================================================== PHONE TIER =====
