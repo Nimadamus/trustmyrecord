@@ -128,8 +128,8 @@
        both is two prompts for one action. The panel's CTA sits with the result
        they just produced, so it wins and this stands down.
 
-       Before a run there is no competing CTA, so the strip still appears. The
-       NFL simulator has no such panel and is unaffected. */
+       Before a run there is no competing CTA, so the strip still appears.
+       After an NFL run the Take the {team} buttons own the screen. */
     function competingPickCta() {
         try {
             /* Two components can own the pick CTA on a page this nudge runs on:
@@ -139,6 +139,7 @@
                prediction they just voted for - so both win and this stands
                down. Neither is modified. */
             return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]')
+                || !!document.querySelector('[data-sim-take-team]')
                 || !!document.getElementById('tmr-poll-bridge');
         } catch (e) { return false; }
     }

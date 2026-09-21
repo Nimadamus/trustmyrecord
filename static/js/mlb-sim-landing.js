@@ -328,61 +328,51 @@
         return { away: away.trim(), home: home.trim(), winner: winner.trim() };
     }
 
+    function takeTheLabel(name) {
+        var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return 'Take this side';
+        var nick = parts[parts.length - 1];
+        if (/^(sox|jays)$/i.test(nick) && parts.length >= 2) nick = parts.slice(-2).join(' ');
+        return 'Take the ' + nick;
+    }
+
     function renderPickPanel() {
         var anchor = byId('simcConversionPanel') || byId('boxScorePanel');
         if (!anchor) return;
-        var m = currentMatchup();
         var panel = document.createElement('section');
         panel.id = 'simv2PickPanel';
         panel.className = 'simv2-convert';
-        panel.setAttribute('aria-label', 'Lock in your prediction');
+        panel.setAttribute('aria-label', 'Take a side');
         panel.innerHTML =
-            '<h2>Think the simulator got it right?</h2>' +
-            '<p>Lock in your prediction before the game starts. Your pick is timestamped, graded automatically, and added to a public record you cannot edit afterward. Picks are submitted one at a time as straight picks — never a parlay — and nothing is submitted until you confirm it on the pick board.</p>' +
-            '<div class="simv2-pickteam" role="radiogroup" aria-label="Team to back" id="simv2PickTeamGroup"></div>' +
-            '<div class="simv2-convert-row" id="simv2ConvertRow"></div>';
+            '<h2>Take a side</h2>' +
+            '<p>The sim is research. Tap a team and the sportsbook opens that moneyline. Confirm there to put it on your public record.</p>' +
+            '<div class="simv2-take-row" id="simv2ConvertRow"></div>';
         anchor.after(panel);
         refreshPickPanel();
     }
 
     function refreshPickPanel() {
         var m = currentMatchup();
-        var group = byId('simv2PickTeamGroup');
         var row = byId('simv2ConvertRow');
-        if (!group || !row || !m.away || !m.home) return;
-        var def = (m.winner && m.winner.toLowerCase().indexOf(m.away.toLowerCase()) !== -1) ? m.away : m.home;
-        group.innerHTML = [m.away, m.home].map(function (t) {
-            return '<button type="button" role="radio" aria-checked="' + (t === def) + '" class="simv2-teamchoice' +
-                (t === def ? ' is-on' : '') + '" data-team="' + esc(t) + '">' + esc(t) + '</button>';
+        if (!row || !m.away || !m.home) return;
+        row.innerHTML = [m.away, m.home].map(function (t) {
+            return '<button type="button" class="simv2-btn simv2-btn-gold simv2-take-btn" data-sim-take-team="' +
+                esc(t) + '">' + esc(takeTheLabel(t)) + '</button>';
         }).join('');
-        group.onclick = function (e) {
-            var b = e.target.closest('.simv2-teamchoice');
+        row.onclick = function (e) {
+            var b = e.target.closest('[data-sim-take-team]');
             if (!b) return;
-            Array.prototype.forEach.call(group.children, function (c) {
-                c.classList.toggle('is-on', c === b);
-                c.setAttribute('aria-checked', c === b ? 'true' : 'false');
-            });
+            onTakeTeam(b.getAttribute('data-sim-take-team'));
         };
-        if (isLoggedIn()) {
-            row.innerHTML = '<button type="button" class="simv2-btn simv2-btn-gold" id="simv2PickCta">Add This Pick to My Verified Record</button>' +
-                '<a class="simv2-btn simv2-btn-ghost" href="/handicappers/">View Verified Handicappers</a>';
-        } else {
-            row.innerHTML = '<button type="button" class="simv2-btn simv2-btn-gold" id="simv2PickCta">Create Free Account &amp; Lock This Pick</button>' +
-                '<a class="simv2-btn simv2-btn-ghost" href="/handicappers/">View Verified Handicappers</a>';
-        }
-        var cta = byId('simv2PickCta');
-        if (cta) cta.addEventListener('click', onPickCta);
     }
 
-    function onPickCta() {
-        var group = byId('simv2PickTeamGroup');
-        var sel = group ? group.querySelector('.is-on') : null;
+    function onTakeTeam(team) {
         var m = currentMatchup();
         var g = window.__simv2ActiveSlateGame || null;
         var intent = {
             v: 1,
             ts: Date.now(),
-            pick_team: sel ? sel.getAttribute('data-team') : m.winner,
+            pick_team: team || m.winner,
             away_team_name: g ? g.away_team_name : m.away,
             home_team_name: g ? g.home_team_name : m.home,
             board_game_id: g ? g.board_game_id : null,
@@ -390,7 +380,7 @@
             source: 'mlb-simulator'
         };
         try { localStorage.setItem(PICK_INTENT_KEY, JSON.stringify(intent)); } catch (e) { }
-        track('simulator_pick_started', { logged_in: isLoggedIn() ? 'yes' : 'no' });
+        track('simulator_pick_started', { logged_in: isLoggedIn() ? 'yes' : 'no', pick_team: intent.pick_team });
         if (isLoggedIn()) {
             window.location.href = '/sportsbook/?simpick=1';
         } else {

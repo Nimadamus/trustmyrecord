@@ -318,6 +318,8 @@ test('the strip stands down when another first-pick CTA owns the screen', () => 
   assert.ok(/function competingFirstPickCta/.test(ONBOARDING));
   assert.ok(/#simcConversionPanel a\[href\^="\/sportsbook\/"\]/.test(ONBOARDING),
     'must key off the real MLB panel CTA');
+  assert.ok(/\[data-sim-take-team\]/.test(ONBOARDING),
+    'must also stand down for the Take the {team} buttons');
   // The render path must consult it.
   const render = ONBOARDING.slice(ONBOARDING.indexOf('function renderReminder'));
   assert.ok(/competingFirstPickCta\(\)/.test(render.slice(0, 400)),
@@ -335,10 +337,10 @@ test('the MLB prediction CTA is not removed, only deferred to', () => {
   assert.ok(!/tmr-fp-reminder/.test(conv), 'no strip logic leaked into the MLB component');
 });
 
-test('NFL gets the strip as its activation path, with no custom component', () => {
+test('NFL loads the strip and owns the post-run take-team panel', () => {
   const nfl = read('nfl-simulator/index.html');
   assert.ok(/first-pick-onboarding/.test(nfl), 'NFL must load the shared strip');
-  assert.ok(!/simcConversionPanel/.test(nfl), 'NFL has no competing panel');
+  assert.ok(/data-sim-take-team/.test(nfl), 'NFL take-team buttons exist after a run');
   assert.ok(!/mlb-simulator-conversion/.test(nfl), 'and must not borrow the MLB one');
 });
 
@@ -375,6 +377,7 @@ test('the nudge stands down for the MLB panel exactly as the zero-pick strip doe
   // just produced, so it wins.
   assert.ok(/function competingPickCta/.test(NUDGE));
   assert.ok(/#simcConversionPanel a\[href\^="\/sportsbook\/"\]/.test(NUDGE));
+  assert.ok(/\[data-sim-take-team\]/.test(NUDGE), 'nudge stands down for take-team buttons too');
   const render = NUDGE.slice(NUDGE.indexOf('function render('));
   assert.ok(/competingPickCta\(\)/.test(render.slice(0, 400)), 'render must check first');
   assert.ok(/standDownWhenAnotherCtaAppears/.test(NUDGE), 'and retire a visible one');

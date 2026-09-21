@@ -596,8 +596,9 @@
        competing CTA, and a visitor who never runs a simulation should still be
        asked. The panel is built asynchronously, hence the observer below.
 
-       The NFL simulator has no such panel, so the strip is the activation path
-       there throughout - which is the point of loading it on both. */
+       The NFL simulator paints two Take the {team} buttons after a run
+       (#simConvertPanel [data-sim-take-team]), so the strip stands down
+       there the same way. Before a run there is no competing CTA. */
     function competingFirstPickCta() {
         try {
             /* Two components can own the pick CTA on a page this strip runs on.
@@ -607,6 +608,7 @@
                more specific than "Start your verified record", so both win and
                this stands down. Neither is modified. */
             return !!document.querySelector('#simcConversionPanel a[href^="/sportsbook/"]')
+                || !!document.querySelector('[data-sim-take-team]')
                 || !!document.getElementById('tmr-poll-bridge');
         } catch (e) { return false; }
     }

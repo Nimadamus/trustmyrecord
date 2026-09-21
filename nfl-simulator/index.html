@@ -1568,53 +1568,47 @@ function simAutoSave(d){
 }
 
 /* ---- post-result activation panel: simulation -> verified pick ---- */
+function simTakeLabel(name){
+  const parts=String(name||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length)return 'Take this side';
+  let nick=parts[parts.length-1];
+  if(/^(sox|jays)$/i.test(nick)&&parts.length>=2) nick=parts.slice(-2).join(' ');
+  return 'Take the '+nick;
+}
+function simGoPick(team,g){
+  try{localStorage.setItem(SIM_PICK_INTENT_KEY,JSON.stringify({
+    v:1,ts:Date.now(),pick_team:team,away_team_name:g.away,home_team_name:g.home,
+    board_game_id:null,sport:'NFL',source:'nfl-simulator'
+  }))}catch(e){}
+  if(window.TMRSimGate)window.TMRSimGate.track('simulator_pick_started',{simulation_type:'nfl_game',pick_team:team});
+  window.location.href='/sportsbook/?simpick=1';
+}
 function simRenderConversion(out,d){
   if(!window.TMRSimGate)return;
   const g=d.game,p=d.projection;
   if(!g||!p||!p.win_probability)return;
-  const favHome=p.win_probability.home>=p.win_probability.away;
-  const proj=favHome?g.home:g.away;
 
   const panel=el('div','panel');
   panel.id='simConvertPanel';
   panel.style.cssText='margin-top:14px;border:1px solid rgba(29, 127, 232,.35);background:linear-gradient(180deg,rgba(29, 127, 232,.07),transparent)';
   panel.innerHTML=
-    '<h3 style="margin-top:0">Turn this into a verified pick</h3>'+
-    '<p class="muted" style="font-size:.9rem;margin:0 0 10px">Lock it before kickoff and TrustMyRecord timestamps it, grades it automatically, and counts it toward your public record. The simulation is research; the record is proof.</p>'+
-    '<div id="simPickTeams" role="radiogroup" aria-label="Pick a side" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>'+
+    '<h3 style="margin-top:0">Take a side</h3>'+
+    '<p class="muted" style="font-size:.9rem;margin:0 0 12px">The sim is research. Tap a team and the sportsbook opens that moneyline. Confirm there to put it on your public record.</p>'+
+    '<div id="simPickTeams" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-    '<button type="button" class="btn" id="simPickCta">Add This Pick to My Verified Record</button>'+
     '<a class="btn ghost" href="/sports-simulators/saved/">My Simulation History</a>'+
     '<span class="dim" id="simSavedNote"></span></div>';
 
   const teams=$('#simPickTeams',panel);
   [g.away,g.home].forEach(name=>{
-    const b=el('button',null,name);
-    b.type='button';b.setAttribute('role','radio');
-    b.dataset.team=name;
-    b.className='btn ghost'+(name===proj?' on':'');
-    b.style.cssText='font-size:.85rem;padding:8px 14px'+(name===proj?';border-color:#1D7FE8;color:#1D7FE8':'');
-    b.setAttribute('aria-checked',name===proj?'true':'false');
-    b.onclick=()=>{
-      for(const c of teams.children){
-        const on=c===b;
-        c.setAttribute('aria-checked',on?'true':'false');
-        c.style.borderColor=on?'#1D7FE8':'';c.style.color=on?'#1D7FE8':'';
-      }
-    };
+    const b=el('button',null,simTakeLabel(name));
+    b.type='button';
+    b.setAttribute('data-sim-take-team',name);
+    b.className='btn';
+    b.style.cssText='font-size:1rem;padding:12px 18px;font-weight:800';
+    b.onclick=()=>simGoPick(name,g);
     teams.appendChild(b);
   });
-
-  $('#simPickCta',panel).onclick=()=>{
-    let sel=proj;
-    for(const c of teams.children)if(c.getAttribute('aria-checked')==='true')sel=c.dataset.team;
-    try{localStorage.setItem(SIM_PICK_INTENT_KEY,JSON.stringify({
-      v:1,ts:Date.now(),pick_team:sel,away_team_name:g.away,home_team_name:g.home,
-      board_game_id:null,sport:'NFL',source:'nfl-simulator'
-    }))}catch(e){}
-    window.TMRSimGate.track('simulator_pick_started',{simulation_type:'nfl_game'});
-    window.location.href='/sportsbook/?simpick=1';
-  };
 
   out.appendChild(panel);
 }
@@ -1819,8 +1813,8 @@ async function simHandleSavedId(hadResume){
 boot().then(installSimGate,installSimGate);
 </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.9c56a8899f27.js"></script>
-  <script defer src="/static/js/pick-progress-nudge.js?v=df4043fd5769"></script>
-  <script defer src="/static/js/first-pick-onboarding.js?v=e4c73a53ad1b"></script>
+  <script defer src="/static/js/pick-progress-nudge.js?v=simtake0921"></script>
+  <script defer src="/static/js/first-pick-onboarding.js?v=simtake0921"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
     <script src="/static/js/tmr-lc-yield.js?v=83f3225bf6d6"></script>
 <style id="select-visible-fix-20260913">
