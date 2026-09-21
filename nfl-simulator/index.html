@@ -96,6 +96,9 @@
   .game{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 13px;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s;display:flex;flex-direction:column;gap:8px}
   .game:hover{border-color:var(--accent);transform:translateY(-1px)}
   .game.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset,0 8px 24px -12px rgba(56,189,248,.5)}
+  .game.on-board{border-color:var(--accent)}
+  .on-board-tag{margin-left:auto;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+  #boardAimNote{color:var(--mut);font-size:.86rem;margin:10px 0 0}
   .g-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .team{display:flex;align-items:center;gap:8px;min-width:0}
   .badge{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:.72rem;color:#fff;flex:0 0 auto}
@@ -349,6 +352,7 @@
     </div>
   </div>
 
+  <p id="boardAimNote" hidden></p>
   <div id="games" class="games"></div>
   <div id="result"></div>
 
@@ -693,7 +697,12 @@ async function boot(){
   STATE.season=2026;
   await Promise.all([loadSchedule(true),loadTeams()]);
   updateChips();
-  try{await runFromUrl()}catch(e){/* a malformed link must not break the page */}
+  let fromUrl=false;
+  try{fromUrl=await runFromUrl()}catch(e){/* a malformed link must not break the page */}
+  /* Do not auto-run: that would burn the daily meter and pop the signup gate
+     on every landing. Preselect the live board game so Take the {team} can
+     actually lock. Shared links (?ref= / ?home=) keep ownership of the page. */
+  if(!fromUrl){try{await aimAtLiveBoard()}catch(e){}}
 }
 /* A11Y_20260903: the `on` class was the ONLY signal of which option was
    active, so nothing announced the chosen simulation count, venue, window or
@@ -793,7 +802,10 @@ function renderGames(){
        headers further down this file already do it. */
     c.setAttribute('role','option');
     c.setAttribute('tabindex','0');
-    c.setAttribute('aria-selected',STATE.selRef===g.ref?'true':'false');
+    const on=STATE.selRef===g.ref;
+    c.classList.toggle('sel',on);
+    c.setAttribute('aria-selected',on?'true':'false');
+    if(on&&window.__simBoardGame)c.classList.add('on-board');
     c.setAttribute('aria-label',g.away+' at '+g.home+(g.final?', final '+g.final.away+' to '+g.final.home:'')+', '+g.status);
     c.onclick=()=>pickGame(g);
     c.onkeydown=(e)=>{if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){e.preventDefault();pickGame(g)}};
@@ -808,8 +820,94 @@ function defaultWindowFor(g){
   if(h>=15)return 'early';             // ~11am-2pm ET
   return 'intl';                        // early UTC = London morning window
 }
+function simTeamNick(s){
+  const parts=String(s||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length)return '';
+  let nick=parts[parts.length-1].toLowerCase();
+  if(/^(sox|jays)$/i.test(nick)&&parts.length>=2) nick=parts.slice(-2).join(' ').toLowerCase();
+  return nick;
+}
+function simSameTeam(a,b){
+  const la=String(a||'').toLowerCase().trim(), lb=String(b||'').toLowerCase().trim();
+  if(!la||!lb)return false;
+  if(la===lb)return true;
+  if(la.indexOf(lb)!==-1||lb.indexOf(la)!==-1)return true;
+  const na=simTeamNick(a), nb=simTeamNick(b);
+  return !!(na&&nb&&na===nb&&na.length>=3);
+}
+function simGameOnBoard(sim,board){
+  return !!(sim&&board&&simSameTeam(sim.home,board.home_team)&&simSameTeam(sim.away,board.away_team));
+}
+function simFeaturedPrefers(board,feat){
+  if(!board||!feat)return false;
+  const blob=((feat.matchup||'')+' '+(feat.away||'')+' '+(feat.home||'')+' '+(feat.headline||'')).toLowerCase();
+  const home=simTeamNick(board.home_team), away=simTeamNick(board.away_team);
+  return !!(home&&away&&blob.indexOf(home)!==-1&&blob.indexOf(away)!==-1);
+}
+function simPickBoardTarget(simGames,boardGames,feat){
+  const upcoming=(boardGames||[]).filter(b=>b&&b.home_team&&b.away_team&&(!b.commence_time||Date.parse(b.commence_time)>=Date.now()-30*60*1000));
+  const lockable=[];
+  for(const b of upcoming){
+    const sim=(simGames||[]).find(g=>g&&g.status==='upcoming'&&simGameOnBoard(g,b));
+    if(sim)lockable.push({sim,board:b});
+  }
+  if(!lockable.length)return null;
+  const preferred=feat?lockable.find(x=>simFeaturedPrefers(x.board,feat)):null;
+  if(preferred)return preferred;
+  lockable.sort((a,b)=>Date.parse(a.board.commence_time||0)-Date.parse(b.board.commence_time||0));
+  return lockable[0];
+}
+function highlightBoardGame(g,board){
+  STATE.selRef=g.ref;
+  window.__simBoardGame={id:board&&board.id,home:board&&board.home_team,away:board&&board.away_team};
+  const box=$('#games');
+  if(box)for(const c of box.children){
+    const on=c.dataset.ref===g.ref;
+    c.classList.toggle('sel',on);
+    c.classList.toggle('on-board',on);
+    c.setAttribute('aria-selected',on?'true':'false');
+    if(on){
+      const meta=c.querySelector('.g-meta');
+      if(meta&&!meta.querySelector('.on-board-tag'))
+        meta.appendChild(Object.assign(el('span','on-board-tag'),{textContent:'On the board'}));
+    }
+  }
+  if(!STATE.lastRun){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
+  STATE.venue='home';STATE.venueTouched=false;
+  relabelVenue();updateChips();
+  const note=$('#boardAimNote');
+  if(note){
+    note.hidden=false;
+    note.textContent='On the board: '+g.away+' at '+g.home+'. Tap to simulate.';
+  }
+}
+async function aimAtLiveBoard(){
+  if(STATE.mode!=='weekly')return;
+  const TMR_API=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://trustmyrecord-api.onrender.com/api';
+  const boardP=fetch(TMR_API+'/games/board/americanfootball_nfl',{headers:{Accept:'application/json'},credentials:'omit'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const featP=fetch('/data/featured-matchups.json?b='+Math.floor(Date.now()/60000),{credentials:'omit',cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const boardJson=await boardP;
+  const boardGames=(boardJson&&Array.isArray(boardJson.games))?boardJson.games:[];
+  if(!boardGames.length)return;
+  const featReg=await featP;
+  const feat=featReg&&window.TMRFeatured&&typeof window.TMRFeatured.resolveLive==='function'
+    ? (window.TMRFeatured.resolveLive(featReg,'nfl',Date.now())||window.TMRFeatured.resolve(featReg,'nfl',Date.now()))
+    : (featReg&&featReg.sports&&featReg.sports.nfl&&(featReg.sports.nfl.features||[]).filter(f=>f&&(f.status||'active')==='active'&&f.kickoff_utc&&Date.parse(f.kickoff_utc)>=Date.now()-3.5*60*60*1000).sort((a,b)=>Date.parse(a.kickoff_utc)-Date.parse(b.kickoff_utc))[0]);
+  const hit=simPickBoardTarget(STATE.games,boardGames,feat);
+  if(!hit)return;
+  const g=hit.sim;
+  const meta=(STATE.weeksMeta||[]).find(w=>w&&w.week===g.week&&g.is_postseason===(w.season_type_code===3));
+  const weekVal=meta?(meta.season_type_code+':'+meta.week):((g.is_postseason?3:2)+':'+g.week);
+  const weekSel=$('#week');
+  if(weekSel&&weekSel.value!==weekVal&&Array.from(weekSel.options).some(o=>o.value===weekVal)){
+    weekSel.value=weekVal;STATE.week=weekVal;renderGames();
+  }
+  highlightBoardGame(g,hit.board);
+}
 function pickGame(g){
   STATE.selRef=g.ref;
+  const board=window.__simBoardGame;
+  if(!(board&&simGameOnBoard(g,board))) window.__simBoardGame=null;
   /* A11Y_20260903: the selection was carried by a class alone, so a screen
      reader was never told which game is current. The listbox state moves with
      it here rather than only on the next full render. */
@@ -1576,9 +1674,17 @@ function simTakeLabel(name){
   return 'Take the '+nick;
 }
 function simGoPick(team,g){
+  const board=window.__simBoardGame;
+  let boardId=null;
+  if(board&&board.id&&g){
+    const hn=(g.home||'').toLowerCase(), an=(g.away||'').toLowerCase();
+    const bh=(board.home||'').toLowerCase(), ba=(board.away||'').toLowerCase();
+    if(hn&&an&&bh&&ba&&(hn===bh||hn.indexOf(bh)!==-1||bh.indexOf(hn)!==-1)&&(an===ba||an.indexOf(ba)!==-1||ba.indexOf(an)!==-1))
+      boardId=board.id;
+  }
   try{localStorage.setItem(SIM_PICK_INTENT_KEY,JSON.stringify({
     v:1,ts:Date.now(),pick_team:team,away_team_name:g.away,home_team_name:g.home,
-    board_game_id:null,sport:'NFL',source:'nfl-simulator'
+    board_game_id:boardId||null,sport:'NFL',source:'nfl-simulator'
   }))}catch(e){}
   if(window.TMRSimGate)window.TMRSimGate.track('simulator_pick_started',{simulation_type:'nfl_game',pick_team:team});
   window.location.href='/sportsbook/?simpick=1';

@@ -167,6 +167,7 @@
                 return;
             }
             renderSlate(section, games, data);
+            aimSlateAtBoard(games);
         });
     }
 
@@ -249,26 +250,64 @@
         setTimeout(function () { retrySelect(selId, name, tries - 1, delay, cb); }, delay);
     }
 
-    function loadSlateMatchup(g, btn) {
+    function loadSlateMatchup(g, btn, quiet) {
         var cur = byId('currentModeButton');
         if (cur && !cur.classList.contains('active')) cur.click();
-        btn.disabled = true;
-        btn.textContent = 'Loading…';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Loading…';
+        }
         setTimeout(function () {
             retrySelect('awayTeamSelect', g.away_team_name, 20, 400, function () {
                 retrySelect('homeTeamSelect', g.home_team_name, 20, 400, function () {
                     if (g.away_pitcher) retrySelect('awayPitcherSelect', g.away_pitcher, 20, 400);
                     if (g.home_pitcher) retrySelect('homePitcherSelect', g.home_pitcher, 20, 400);
                     window.__simv2ActiveSlateGame = g;
-                    btn.disabled = false;
-                    btn.textContent = 'Simulate Matchup';
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'Simulate Matchup';
+                    }
                     setStep('starters');
-                    var ws = document.querySelector('.sim-workspace');
-                    if (ws) ws.scrollIntoView({ behavior: motionOk() ? 'smooth' : 'auto', block: 'start' });
-                    track('simulator_matchup_loaded', { source: 'slate' });
+                    if (!quiet) {
+                        var ws = document.querySelector('.sim-workspace');
+                        if (ws) ws.scrollIntoView({ behavior: motionOk() ? 'smooth' : 'auto', block: 'start' });
+                    }
+                    track('simulator_matchup_loaded', { source: quiet ? 'board_default' : 'slate' });
                 });
             });
         }, 150);
+    }
+
+    function slateTeamNick(s) {
+        var parts = String(s || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '';
+        var nick = parts[parts.length - 1].toLowerCase();
+        if (/^(sox|jays)$/i.test(nick) && parts.length >= 2) nick = parts.slice(-2).join(' ').toLowerCase();
+        return nick;
+    }
+
+    function aimSlateAtBoard(games) {
+        var lockable = (games || []).filter(function (g) {
+            return g && g.board_game_id && g.status === 'scheduled';
+        });
+        if (!lockable.length) return;
+        loadSlateMatchup(lockable[0], null, true);
+        fetchJson('/data/featured-matchups.json?b=' + Math.floor(Date.now() / 60000), 4000).then(function (reg) {
+            var list = reg && reg.sports && reg.sports.mlb && reg.sports.mlb.features;
+            if (!Array.isArray(list)) return;
+            var feat = list.filter(function (f) {
+                return f && (f.status || 'active') === 'active' && f.kickoff_utc &&
+                    Date.parse(f.kickoff_utc) >= Date.now() - 3.5 * 60 * 60 * 1000;
+            }).sort(function (a, b) { return Date.parse(a.kickoff_utc) - Date.parse(b.kickoff_utc); })[0] || null;
+            if (!feat) return;
+            var blob = ((feat.matchup || '') + ' ' + (feat.headline || '')).toLowerCase();
+            var preferred = lockable.find(function (g) {
+                var home = slateTeamNick(g.home_team_name || g.home);
+                var away = slateTeamNick(g.away_team_name || g.away);
+                return home && away && blob.indexOf(home) !== -1 && blob.indexOf(away) !== -1;
+            });
+            if (preferred && preferred !== lockable[0]) loadSlateMatchup(preferred, null, true);
+        });
     }
 
     /* ------------------------------------------------------------------ */
