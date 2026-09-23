@@ -502,9 +502,9 @@ def cat_page_html(cat, cat_threads):
     # the generic site sections.
     _SPORT_LINKS = {
         "mlb":    [("/handicapping/mlb/", "MLB Handicapping Hub"), ("/mlb-pick-tracker/", "MLB pick tracker"), ("/mlb-simulator/", "MLB simulator")],
-        "nba":    [("/nba-pick-tracker/", "NBA pick tracker"), ("/nba-handicappers/", "NBA handicappers")],
+        "nba":    [("/nba-simulator/", "NBA Game Simulator"), ("/nba-season-simulator/", "NBA Season Simulator"), ("/nba-playoff-simulator/", "NBA Playoff Simulator"), ("/nba-pick-tracker/", "NBA Pick Tracker"), ("/nba-handicappers/", "NBA Handicappers")],
         "nfl":    [("/nfl-pick-tracker/", "NFL pick tracker"), ("/nfl-simulator/", "NFL Simulator"), ("/nfl-season-simulator/", "NFL Season Simulator"), ("/nfl-playoff-simulator/", "NFL Playoff Simulator"), ("/nfl-handicappers/", "NFL handicappers")],
-        "nhl":    [("/nhl-pick-tracker/", "NHL pick tracker")],
+        "nhl":    [("/nhl-simulator/", "NHL Game Simulator"), ("/nhl-season-simulator/", "NHL Season Simulator"), ("/nhl-playoff-simulator/", "NHL Playoff Simulator"), ("/nhl-pick-tracker/", "NHL Pick Tracker")],
         "soccer": [("/soccer-pick-tracker/", "Soccer pick tracker")],
     }
     sport_links = "".join(

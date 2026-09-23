@@ -1,261 +1,262 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<!-- NBA_NHL_SIM_CLUSTER_20260915. Baked by scripts/build_league_sim_pages.js. Do not edit by hand. -->
-<title>NBA Playoff Simulator 2026-27 | Bracket, Seeds and Title Odds</title>
-<meta name="description" content="Simulate the 2026-27 NBA playoffs 10,000 times: the play-in tournament, seeds, every series best of seven and each team's odds to win the NBA title.">
-<link rel="canonical" href="https://trustmyrecord.com/nba-playoff-simulator/" />
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-<meta property="og:type" content="website" />
-<meta property="og:title" content="NBA Playoff Simulator 2026-27" />
-<meta property="og:description" content="Simulate the 2026-27 NBA playoffs 10,000 times: the play-in tournament, seeds, every series best of seven and each team's odds to win the NBA title." />
-<meta property="og:url" content="https://trustmyrecord.com/nba-playoff-simulator/" />
-<meta property="og:site_name" content="TrustMyRecord" />
-<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="NBA Playoff Simulator 2026-27" />
-<meta name="twitter:description" content="Simulate the 2026-27 NBA playoffs 10,000 times: the play-in tournament, seeds, every series best of seven and each team's odds to win the NBA title." />
-<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png" />
-<link rel="icon" type="image/png" href="/static/favicon.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TrustMyRecord NBA Playoff Simulator","applicationCategory":"SportsApplication","operatingSystem":"Web","url":"https://trustmyrecord.com/nba-playoff-simulator/","description":"Simulate the 2026-27 NBA playoffs 10,000 times: the play-in tournament, seeds, every series best of seven and each team's odds to win the NBA title.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"dateModified":"2026-09-22T21:20:34.208Z"}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://trustmyrecord.com/"},{"@type":"ListItem","position":2,"name":"Sports Simulators","item":"https://trustmyrecord.com/sports-simulators/"},{"@type":"ListItem","position":3,"name":"NBA Simulator","item":"https://trustmyrecord.com/nba-simulator/"},{"@type":"ListItem","position":4,"name":"NBA Playoff Simulator","item":"https://trustmyrecord.com/nba-playoff-simulator/"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does the NBA playoff simulator work?","acceptedAnswer":{"@type":"Answer","text":"It plays out the rest of the 2026-27 regular season, seeds each conference with the real NBA format, plays the play-in tournament, and then plays every series game by game, best of seven, with home court to the better regular season team. It repeats that 10,000 times and counts how often each team reaches each round."}},{"@type":"Question","name":"How is the NBA play-in tournament simulated?","acceptedAnswer":{"@type":"Answer","text":"Seven hosts eight for the 7 seed, nine hosts ten to stay alive, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. Each game uses the same win probability as any other game between those teams at that arena."}},{"@type":"Question","name":"Who is favored to win the NBA title?","acceptedAnswer":{"@type":"Answer","text":"In the current projection the Oklahoma City Thunder win it 27% of the time, ahead of the Boston Celtics at 22%. Those numbers move as results come in."}},{"@type":"Question","name":"Why does the simulated bracket change each time?","acceptedAnswer":{"@type":"Answer","text":"A single bracket is one season out of thousands. The odds table is the summary of all of them; the bracket shows what one of those seasons looked like."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"The published odds and bracket are free to read with no account. Running your own set needs a free account and uses the daily free simulator run."}}]}</script>
-<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
-<link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=586504a3e714">
-<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
-<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
-<link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=ced0ab69322a">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
-<script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
-<script src="/static/js/config.js?v=430b4bba7b37"></script>
-<script src="/static/js/backend-api.js?v=30ee5c8b5184"></script>
-<script defer src="/static/js/sim-auth-gate.js?v=43b7157267d7"></script>
-<style>
-  .lsim-wrap{max-width:1180px}
-  .lsim-hero h1{font-size:clamp(1.6rem,3.2vw,2.2rem);margin:0 0 8px;letter-spacing:-.02em}
-  .lsim-hero p{max-width:78ch;margin:0 0 8px;color:var(--mut,#9fb0c6)}
-  .lsim-run{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 4px}
-  .lsim-run select{font:inherit;padding:8px 10px;border-radius:9px;border:1px solid var(--line,#23324a);background:var(--card,#111a2b);color:inherit}
-  .lsim-run .btn{font-weight:800}
-  #lsimStatus{font-size:.86rem;color:var(--mut,#9fb0c6)}
-  #lsimStamp{font-size:.82rem;color:var(--mut,#9fb0c6);margin:6px 0 0}
-  .lsim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px}
-  .lsim-card{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:14px;padding:12px 14px;min-width:0}
-  .lsim-card h3{margin:2px 0 10px;font-size:1rem}
-  .lsim-card h3 small{font-weight:600;color:var(--mut,#9fb0c6);font-size:.78rem;margin-left:6px}
-  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table.lsim{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
-  table.lsim th,table.lsim td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:right;white-space:nowrap}
-  table.lsim thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6);font-weight:700}
-  table.lsim th[scope=row],table.lsim thead th:first-child{text-align:left}
-  table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
-  table.lsim td.num,table.lsim td.rng{font-variant-numeric:tabular-nums}
-  table.lsim td.rng{color:var(--mut,#9fb0c6)}
-  .lz{opacity:.45}
-  .lt{display:inline-flex;align-items:center;gap:7px}
-  a.lt{color:inherit;text-decoration:none}
-  a.lt:hover .ln,a.lt:hover .ls{text-decoration:underline}
-  .lt img{width:22px;height:22px;object-fit:contain}
-  .lt .ls{display:none}
-  @media (max-width:640px){.lt .ln{display:none}.lt .ls{display:inline}table.lsim{min-width:0;font-size:.8rem}table.lsim th,table.lsim td{padding:6px 5px}}
-  ul.series{list-style:none;margin:0;padding:0}
-  ul.series li{padding:6px 0;border-bottom:1px solid var(--line,#23324a);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-  ul.series .sc{margin-left:auto;color:var(--mut,#9fb0c6);font-size:.82rem}
-  .champ{display:flex;align-items:center;gap:8px;font-size:1rem;margin:4px 0 12px}
-  .champ img{width:30px;height:30px}
-  .lsim-copy{max-width:80ch}
-  .lsim-copy h2{margin:26px 0 8px}
-  .lsim-copy p,.lsim-copy li{line-height:1.65}
-  .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px;margin:6px 0 12px}
-  .pick{display:flex;align-items:center;gap:6px;border:1px solid var(--line,#23324a);border-radius:10px;padding:6px}
-  .pick .at{color:var(--mut,#9fb0c6);font-size:.78rem}
-  .pk{flex:1;display:flex;align-items:center;gap:6px;font:inherit;font-size:.86rem;background:transparent;color:inherit;border:1px solid transparent;border-radius:8px;padding:6px 8px;cursor:pointer;min-width:0}
-  .pk img{width:22px;height:22px}
-  .pk small{margin-left:auto;color:var(--mut,#9fb0c6)}
-  .pk:hover{border-color:var(--line,#23324a)}
-  .pk.on{border-color:#38bdf8;background:rgba(56,189,248,.16);font-weight:700}
-  .pk:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
-  .slate{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px;margin:8px 0}
-  .slate a,.slate div{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line,#23324a);border-radius:10px;text-decoration:none;color:inherit;font-size:.88rem}
-</style>
-</head>
-<body class="tmr-ds-shell tmr-ds--dark">
-<main class="wrap lsim-wrap" id="lsim" data-sport="nba" data-mode="playoff">
-  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
-    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
-    <a href="/sports-simulators/" style="color:inherit;text-decoration:none;">Sports Simulators</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
-    <a href="/nba-simulator/" style="color:inherit;text-decoration:none;">NBA Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
-    <span aria-current="page" style="font-weight:600;">NBA Playoff Simulator</span>
-  </nav>
-  <section class="hero lsim-hero">
-    <h1>NBA Playoff Simulator</h1>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- NBA_NHL_SIM_CLUSTER_20260915. Baked by scripts/build_league_sim_pages.js. Do not edit by hand. -->
+<title>NBA Playoff Simulator 2026-27 | Postseason Predictor and Bracket</title>
+<meta name="description" content="Free NBA playoff simulator for 2026-27. Simulate the play-in, the seeds and the bracket through the NBA title.">
+<link rel="canonical" href="https://trustmyrecord.com/nba-playoff-simulator/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="NBA Playoff Simulator 2026-27" />
+<meta property="og:description" content="Free NBA playoff simulator for 2026-27. Simulate the play-in, the seeds and the bracket through the NBA title." />
+<meta property="og:url" content="https://trustmyrecord.com/nba-playoff-simulator/" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="NBA Playoff Simulator 2026-27" />
+<meta name="twitter:description" content="Free NBA playoff simulator for 2026-27. Simulate the play-in, the seeds and the bracket through the NBA title." />
+<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TrustMyRecord NBA Playoff Simulator","applicationCategory":"SportsApplication","operatingSystem":"Web","url":"https://trustmyrecord.com/nba-playoff-simulator/","description":"Free NBA playoff simulator for 2026-27. Simulate the play-in, the seeds and the bracket through the NBA title.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"dateModified":"2026-09-22T21:20:34.208Z"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://trustmyrecord.com/"},{"@type":"ListItem","position":2,"name":"Sports Simulators","item":"https://trustmyrecord.com/sports-simulators/"},{"@type":"ListItem","position":3,"name":"NBA Simulator","item":"https://trustmyrecord.com/nba-simulator/"},{"@type":"ListItem","position":4,"name":"NBA Playoff Simulator","item":"https://trustmyrecord.com/nba-playoff-simulator/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does the NBA playoff simulator work?","acceptedAnswer":{"@type":"Answer","text":"It plays out the rest of the 2026-27 regular season, seeds each conference with the real NBA format, plays the play-in tournament, and then plays every series game by game, best of seven, with home court to the better regular season team. It repeats that 10,000 times and counts how often each team reaches each round."}},{"@type":"Question","name":"How is the NBA play-in tournament simulated?","acceptedAnswer":{"@type":"Answer","text":"Seven hosts eight for the 7 seed, nine hosts ten to stay alive, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. Each game uses the same win probability as any other game between those teams at that arena."}},{"@type":"Question","name":"Who is favored to win the NBA title?","acceptedAnswer":{"@type":"Answer","text":"In the current projection the Oklahoma City Thunder win it 27% of the time, ahead of the Boston Celtics at 22%. Those numbers move as results come in."}},{"@type":"Question","name":"Why does the simulated bracket change each time?","acceptedAnswer":{"@type":"Answer","text":"A single bracket is one season out of thousands. The odds table is the summary of all of them; the bracket shows what one of those seasons looked like."}},{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"The published odds and bracket are free to read with no account. Running your own set needs a free account and uses the daily free simulator run."}}]}</script>
+<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
+<link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=586504a3e714">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=ced0ab69322a">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/backend-api.js?v=30ee5c8b5184"></script>
+<script defer src="/static/js/sim-auth-gate.js?v=43b7157267d7"></script>
+<style>
+  .lsim-wrap{max-width:1180px}
+  .lsim-hero h1{font-size:clamp(1.6rem,3.2vw,2.2rem);margin:0 0 8px;letter-spacing:-.02em}
+  .lsim-hero p{max-width:78ch;margin:0 0 8px;color:var(--mut,#9fb0c6)}
+  .lsim-run{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 4px}
+  .lsim-run select{font:inherit;padding:8px 10px;border-radius:9px;border:1px solid var(--line,#23324a);background:var(--card,#111a2b);color:inherit}
+  .lsim-run .btn{font-weight:800}
+  #lsimStatus{font-size:.86rem;color:var(--mut,#9fb0c6)}
+  #lsimStamp{font-size:.82rem;color:var(--mut,#9fb0c6);margin:6px 0 0}
+  .lsim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px}
+  .lsim-card{background:var(--card,#111a2b);border:1px solid var(--line,#23324a);border-radius:14px;padding:12px 14px;min-width:0}
+  .lsim-card h3{margin:2px 0 10px;font-size:1rem}
+  .lsim-card h3 small{font-weight:600;color:var(--mut,#9fb0c6);font-size:.78rem;margin-left:6px}
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.lsim{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
+  table.lsim th,table.lsim td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:right;white-space:nowrap}
+  table.lsim thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6);font-weight:700}
+  table.lsim th[scope=row],table.lsim thead th:first-child{text-align:left}
+  table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
+  table.lsim td.num,table.lsim td.rng{font-variant-numeric:tabular-nums}
+  table.lsim td.rng{color:var(--mut,#9fb0c6)}
+  .lz{opacity:.45}
+  .lt{display:inline-flex;align-items:center;gap:7px}
+  a.lt{color:inherit;text-decoration:none}
+  a.lt:hover .ln,a.lt:hover .ls{text-decoration:underline}
+  .lt img{width:22px;height:22px;object-fit:contain}
+  .lt .ls{display:none}
+  @media (max-width:640px){.lt .ln{display:none}.lt .ls{display:inline}table.lsim{min-width:0;font-size:.8rem}table.lsim th,table.lsim td{padding:6px 5px}}
+  ul.series{list-style:none;margin:0;padding:0}
+  ul.series li{padding:6px 0;border-bottom:1px solid var(--line,#23324a);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  ul.series .sc{margin-left:auto;color:var(--mut,#9fb0c6);font-size:.82rem}
+  .champ{display:flex;align-items:center;gap:8px;font-size:1rem;margin:4px 0 12px}
+  .champ img{width:30px;height:30px}
+  .lsim-copy{max-width:80ch}
+  .lsim-copy h2{margin:26px 0 8px}
+  .lsim-copy p,.lsim-copy li{line-height:1.65}
+  .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px;margin:6px 0 12px}
+  .pick{display:flex;align-items:center;gap:6px;border:1px solid var(--line,#23324a);border-radius:10px;padding:6px}
+  .pick .at{color:var(--mut,#9fb0c6);font-size:.78rem}
+  .pk{flex:1;display:flex;align-items:center;gap:6px;font:inherit;font-size:.86rem;background:transparent;color:inherit;border:1px solid transparent;border-radius:8px;padding:6px 8px;cursor:pointer;min-width:0}
+  .pk img{width:22px;height:22px}
+  .pk small{margin-left:auto;color:var(--mut,#9fb0c6)}
+  .pk:hover{border-color:var(--line,#23324a)}
+  .pk.on{border-color:#38bdf8;background:rgba(56,189,248,.16);font-weight:700}
+  .pk:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
+  .slate{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px;margin:8px 0}
+  .slate a,.slate div{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line,#23324a);border-radius:10px;text-decoration:none;color:inherit;font-size:.88rem}
+</style>
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<main class="wrap lsim-wrap" id="lsim" data-sport="nba" data-mode="playoff">
+  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
+    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/sports-simulators/" style="color:inherit;text-decoration:none;">Sports Simulators</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/nba-simulator/" style="color:inherit;text-decoration:none;">NBA Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <span aria-current="page" style="font-weight:600;">NBA Playoff Simulator</span>
+  </nav>
+  <section class="hero lsim-hero">
+    <h1>NBA Playoff Simulator</h1>
     <p>The 2026-27 regular season opens Tuesday, October 20, 2026. Across 10,000 simulated postseasons the Oklahoma City Thunder win the NBA title 27% of the time and reach the NBA Finals 48% of the time. Below the odds is one complete simulated bracket, series by series. Press Run for a new set.</p>
-    <div class="lsim-run">
-      <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
-      <button class="btn primary" type="button" id="runSim">Run the playoffs</button>
-      <span id="lsimStatus" role="status" aria-live="polite"></span>
-    </div>
-    <p id="lsimStamp">10,000 simulated 2026-27 seasons, schedule and results read September 22, 2026 at 2:20 PM PT, 0 of the 1,200 scheduled regular season games final.</p>
-  </section>
-
-  <section class="panel"><h2>2026-27 NBA playoff odds</h2>
-  <div id="lsimOdds"><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th><th scope="col">Playoffs</th><th scope="col">Second round</th><th scope="col">Conference final</th><th scope="col">NBA Finals</th><th scope="col">Win the title</th></tr></thead><tbody><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/oklahoma-city-thunder/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Oklahoma City Thunder</span><span class="ls">Thunder</span></a></th><td class="p" style="--h:1">&gt;99%</td><td class="p" style="--h:0.91">91%</td><td class="p" style="--h:1">72%</td><td class="p" style="--h:1">48%</td><td class="p" style="--h:1">27%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/boston-celtics/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Boston Celtics</span><span class="ls">Celtics</span></a></th><td class="p" style="--h:0.99">99%</td><td class="p" style="--h:0.8">80%</td><td class="p" style="--h:0.85">57%</td><td class="p" style="--h:0.91">37%</td><td class="p" style="--h:0.86">22%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/san-antonio-spurs/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><span class="ln">San Antonio Spurs</span><span class="ls">Spurs</span></a></th><td class="p" style="--h:1">&gt;99%</td><td class="p" style="--h:0.87">87%</td><td class="p" style="--h:0.95">63%</td><td class="p" style="--h:0.9">36%</td><td class="p" style="--h:0.73">18%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/detroit-pistons/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Detroit Pistons</span><span class="ls">Pistons</span></a></th><td class="p" style="--h:0.99">99%</td><td class="p" style="--h:0.78">78%</td><td class="p" style="--h:0.79">52%</td><td class="p" style="--h:0.78">31%</td><td class="p" style="--h:0.71">18%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/new-york-knicks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New York Knicks</span><span class="ls">Knicks</span></a></th><td class="p" style="--h:0.95">95%</td><td class="p" style="--h:0.6">60%</td><td class="p" style="--h:0.44">30%</td><td class="p" style="--h:0.32">13%</td><td class="p" style="--h:0.22">5%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/denver-nuggets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Denver Nuggets</span><span class="ls">Nuggets</span></a></th><td class="p" style="--h:0.98">98%</td><td class="p" style="--h:0.65">65%</td><td class="p" style="--h:0.4">27%</td><td class="p" style="--h:0.22">9%</td><td class="p" style="--h:0.1">3%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/charlotte-hornets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Charlotte Hornets</span><span class="ls">Hornets</span></a></th><td class="p" style="--h:0.83">83%</td><td class="p" style="--h:0.41">41%</td><td class="p" style="--h:0.26">18%</td><td class="p" style="--h:0.17">7%</td><td class="p" style="--h:0.1">2%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/cleveland-cavaliers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Cleveland Cavaliers</span><span class="ls">Cavaliers</span></a></th><td class="p" style="--h:0.95">95%</td><td class="p" style="--h:0.52">52%</td><td class="p" style="--h:0.32">21%</td><td class="p" style="--h:0.18">7%</td><td class="p" style="--h:0.09">2%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/atlanta-hawks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Atlanta Hawks</span><span class="ls">Hawks</span></a></th><td class="p" style="--h:0.82">82%</td><td class="p" style="--h:0.35">35%</td><td class="p" style="--h:0.18">12%</td><td class="p" style="--h:0.08">3%</td><td class="p" style="--h:0.03">1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/houston-rockets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Houston Rockets</span><span class="ls">Rockets</span></a></th><td class="p" style="--h:0.92">92%</td><td class="p" style="--h:0.43">43%</td><td class="p" style="--h:0.19">13%</td><td class="p" style="--h:0.06">3%</td><td class="p" style="--h:0.02">1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/los-angeles-lakers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Los Angeles Lakers</span><span class="ls">Lakers</span></a></th><td class="p" style="--h:0.94">94%</td><td class="p" style="--h:0.45">45%</td><td class="p" style="--h:0.19">12%</td><td class="p" style="--h:0.06">3%</td><td class="p" style="--h:0.02">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/toronto-raptors/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Toronto Raptors</span><span class="ls">Raptors</span></a></th><td class="p" style="--h:0.62">62%</td><td class="p" style="--h:0.18">18%</td><td class="p" style="--h:0.07">5%</td><td class="p" style="--h:0.03">1%</td><td class="p" style="--h:0.01">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/orlando-magic/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Orlando Magic</span><span class="ls">Magic</span></a></th><td class="p" style="--h:0.69">69%</td><td class="p" style="--h:0.16">16%</td><td class="p" style="--h:0.04">3%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/la-clippers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><span class="ln">LA Clippers</span><span class="ls">Clippers</span></a></th><td class="p" style="--h:0.77">77%</td><td class="p" style="--h:0.2">20%</td><td class="p" style="--h:0.06">4%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/miami-heat/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Miami Heat</span><span class="ls">Heat</span></a></th><td class="p" style="--h:0.51">51%</td><td class="p" style="--h:0.11">11%</td><td class="p" style="--h:0.03">2%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/minnesota-timberwolves/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Minnesota Timberwolves</span><span class="ls">Timberwolves</span></a></th><td class="p" style="--h:0.83">83%</td><td class="p" style="--h:0.24">24%</td><td class="p" style="--h:0.08">5%</td><td class="p" style="--h:0.02">1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/portland-trail-blazers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/por.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Portland Trail Blazers</span><span class="ls">Trail Blazers</span></a></th><td class="p" style="--h:0.62">62%</td><td class="p" style="--h:0.12">12%</td><td class="p" style="--h:0.03">2%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/philadelphia-76ers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Philadelphia 76ers</span><span class="ls">76ers</span></a></th><td class="p" style="--h:0.54">54%</td><td class="p" style="--h:0.09">9%</td><td class="p" style="--h:0.02">1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/phoenix-suns/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Phoenix Suns</span><span class="ls">Suns</span></a></th><td class="p" style="--h:0.65">65%</td><td class="p" style="--h:0.12">12%</td><td class="p" style="--h:0.03">2%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/golden-state-warriors/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Golden State Warriors</span><span class="ls">Warriors</span></a></th><td class="p" style="--h:0.18">18%</td><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/milwaukee-bucks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Milwaukee Bucks</span><span class="ls">Bucks</span></a></th><td class="p" style="--h:0.07">7%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/new-orleans-pelicans/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/no.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New Orleans Pelicans</span><span class="ls">Pelicans</span></a></th><td class="p" style="--h:0.06">6%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/dallas-mavericks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Dallas Mavericks</span><span class="ls">Mavericks</span></a></th><td class="p" style="--h:0.03">3%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/chicago-bulls/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/chi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Chicago Bulls</span><span class="ls">Bulls</span></a></th><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/sacramento-kings/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sac.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Sacramento Kings</span><span class="ls">Kings</span></a></th><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/indiana-pacers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ind.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Indiana Pacers</span><span class="ls">Pacers</span></a></th><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/memphis-grizzlies/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mem.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Memphis Grizzlies</span><span class="ls">Grizzlies</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/utah-jazz/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/utah.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Utah Jazz</span><span class="ls">Jazz</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/brooklyn-nets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bkn.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Brooklyn Nets</span><span class="ls">Nets</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/washington-wizards/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/wsh.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Washington Wizards</span><span class="ls">Wizards</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr></tbody></table></div></div></section>
-  <section class="panel"><h2>One simulated 2026-27 postseason</h2>
-  <div id="lsimBracket"><p class="champ"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"> In this simulated season the <b>Detroit Pistons</b> win the NBA title.</p><div class="lsim-grid"><div class="lsim-card"><h3>Eastern Conference play in</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy"><b>Heat</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy">76ers</span> <span class="sc">7 seed</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="22" height="22" loading="lazy">Magic</span> <span class="sc">stays alive</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy">76ers</span> <span class="sc">8 seed</span></li></ul></div><div class="lsim-card"><h3>Western Conference play in</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy"><b>Warriors</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy">Timberwolves</span> <span class="sc">7 seed</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><b>Clippers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/por.png" alt="" width="22" height="22" loading="lazy">Trail Blazers</span> <span class="sc">stays alive</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><b>Clippers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy">Timberwolves</span> <span class="sc">8 seed</span></li></ul></div><div class="lsim-card"><h3>First round</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="22" height="22" loading="lazy">Celtics</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy"><b>Cavaliers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="22" height="22" loading="lazy">Raptors</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy"><b>Knicks</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy">Heat</span> <span class="sc">4 games to 1</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><b>Hornets</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" alt="" width="22" height="22" loading="lazy">Hawks</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><b>Thunder</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy">Clippers</span> <span class="sc">4 games to 0</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy"><b>Suns</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="22" height="22" loading="lazy">Rockets</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><b>Spurs</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy">Warriors</span> <span class="sc">4 games to 0</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy"><b>Lakers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="22" height="22" loading="lazy">Nuggets</span> <span class="sc">4 games to 1</span></li></ul></div><div class="lsim-card"><h3>Second round</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy">Cavaliers</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><b>Hornets</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy">Knicks</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><b>Thunder</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy">Suns</span> <span class="sc">4 games to 1</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><b>Spurs</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy">Lakers</span> <span class="sc">4 games to 0</span></li></ul></div><div class="lsim-card"><h3>Conference finals</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy">Hornets</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><b>Thunder</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy">Spurs</span> <span class="sc">4 games to 0</span></li></ul></div><div class="lsim-card"><h3>NBA Finals</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy">Thunder</span> <span class="sc">4 games to 2</span></li></ul></div></div></div></section>
-
-  <section class="panel" id="lsimPicks">
-    <h2>Pick the next NBA games</h2>
-    <p class="small">Tap the team you think wins. The percentage is the model's win probability for that side. Your picks stay on this device, and the next Run plays every season with those results locked in. <span id="lsimPickCount"></span> <button type="button" class="btn" id="lsimClearPicks" hidden>Clear picks</button></p>
-    <h3>Tuesday, October 20, 2026</h3><div class="picks"><div class="pick" data-game="401909088">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="22" height="22" loading="lazy"><span>Celtics</span><small>45%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><span>Pistons</span><small>55%</small></button>
-      </div><div class="pick" data-game="401909089">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy"><span>76ers</span><small>26%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy"><span>Knicks</span><small>74%</small></button>
-      </div><div class="pick" data-game="401909090">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><span>Thunder</span><small>47%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><span>Spurs</span><small>53%</small></button>
-      </div></div><h3>Wednesday, October 21, 2026</h3><div class="picks"><div class="pick" data-game="401909835">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" alt="" width="22" height="22" loading="lazy"><span>Bucks</span><small>63%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/wsh.png" alt="" width="22" height="22" loading="lazy"><span>Wizards</span><small>37%</small></button>
-      </div><div class="pick" data-game="401909834">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" alt="" width="22" height="22" loading="lazy"><span>Hawks</span><small>53%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="22" height="22" loading="lazy"><span>Magic</span><small>47%</small></button>
-      </div><div class="pick" data-game="401909836">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><span>Hornets</span><small>87%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bkn.png" alt="" width="22" height="22" loading="lazy"><span>Nets</span><small>13%</small></button>
-      </div><div class="pick" data-game="401909837">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/chi.png" alt="" width="22" height="22" loading="lazy"><span>Bulls</span><small>15%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="22" height="22" loading="lazy"><span>Raptors</span><small>85%</small></button>
-      </div><div class="pick" data-game="401909091">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy"><span>Timberwolves</span><small>43%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy"><span>Heat</span><small>57%</small></button>
-      </div><div class="pick" data-game="401909839">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ind.png" alt="" width="22" height="22" loading="lazy"><span>Pacers</span><small>42%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/no.png" alt="" width="22" height="22" loading="lazy"><span>Pelicans</span><small>58%</small></button>
-      </div><div class="pick" data-game="401909838">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/utah.png" alt="" width="22" height="22" loading="lazy"><span>Jazz</span><small>44%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mem.png" alt="" width="22" height="22" loading="lazy"><span>Grizzlies</span><small>56%</small></button>
-      </div><div class="pick" data-game="401909840">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" alt="" width="22" height="22" loading="lazy"><span>Mavericks</span><small>16%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="22" height="22" loading="lazy"><span>Rockets</span><small>84%</small></button>
-      </div><div class="pick" data-game="401909841">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy"><span>Suns</span><small>43%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/por.png" alt="" width="22" height="22" loading="lazy"><span>Trail Blazers</span><small>57%</small></button>
-      </div><div class="pick" data-game="401909092">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy"><span>Warriors</span><small>24%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy"><span>Lakers</span><small>76%</small></button>
-      </div><div class="pick" data-game="401909842">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sac.png" alt="" width="22" height="22" loading="lazy"><span>Kings</span><small>17%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><span>Clippers</span><small>83%</small></button>
-      </div></div><h3>Thursday, October 22, 2026</h3><div class="picks"><div class="pick" data-game="401909093">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy"><span>Cavaliers</span><small>59%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy"><span>76ers</span><small>41%</small></button>
-      </div><div class="pick" data-game="401909094">
-        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="22" height="22" loading="lazy"><span>Nuggets</span><small>31%</small></button>
-        <span class="at">at</span>
-        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><span>Thunder</span><small>69%</small></button>
-      </div></div>
-  </section>
-
-  <section class="lsim-copy">
-    <h2>How the NBA playoff simulator works</h2>
-    <p>Every game on the 2026-27 schedule is played out 10,000 times. A game that is already final keeps its real result. Every other game is decided by NBA Forecasting V1, the frozen model behind these pages: an Elo rating replayed game by game, the opponent adjusted scoring margin, rest and back to backs. A scheduled game carries the forecast for its own date, so a club on the second night of a back to back is rated that way.</p>
-<p>That model is not the game simulator. The simulator plays possessions and produces a box score, and on an untouched 2025-26 season it scored a Brier of 0.24021 at picking winners. The forecast layer scored 0.20603 over the same 1,231 games, walk forward, having been frozen before that season started. Lower is better, and 0.25 is a coin flip. So the odds here come from the forecast and the <a href="/nba-simulator/">NBA Simulator</a> keeps the job it is better at.</p>
-    <h2>The 2026-27 NBA playoff format</h2>
-    <p>Each conference sends six teams straight to the playoffs. The teams that finish seventh through tenth play the play-in tournament: seven hosts eight and the winner takes the 7 seed, nine hosts ten and the loser goes home, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. The first round is 1 against 8, 4 against 5, 2 against 7 and 3 against 6, the bracket stays fixed, and every series is best of seven with home court to the team with the better regular season record, played at the higher seed in games one, two, five and seven.</p>
-    <h2>How accurate is it</h2>
-    <p>The model that sets these probabilities was frozen before the 2025-26 season and then scored once on it: Brier 0.20603, log loss 0.59947, and the winner called correctly in 68.97% of 1,231 games. The game simulator scored 0.24021 on the same season and a coin flip scores 0.25000. No number here was tuned on that season, which is what makes it a test rather than a fit.</p>
-    <h2>Tiebreakers</h2>
-    <p>Ties in the standings are settled by head to head winning percentage between the tied teams, then by a random draw. The NBA's later steps, division record, conference record and record against playoff teams, are not applied. Across thousands of simulated seasons they change a seed rarely, and they are listed here rather than approximated.</p>
-    <h2>What the projection does not know</h2>
-    <p>The model rates teams on results already played. A trade, a signing or an injury changes a team's rating only once games are played with it, so early in the season a team that rebuilt over the summer is rated on the roster it had. The win probability for a game in March does not know rest, back to backs or who sits that night. The model data was last built Tuesday, September 22, 2026 at 2:06 PM PT.</p>
-
-    <h2 id="faq">NBA Playoff Simulator FAQ</h2>
-    <h3>How does the NBA playoff simulator work?</h3>
-<p>It plays out the rest of the 2026-27 regular season, seeds each conference with the real NBA format, plays the play-in tournament, and then plays every series game by game, best of seven, with home court to the better regular season team. It repeats that 10,000 times and counts how often each team reaches each round.</p>
-<h3>How is the NBA play-in tournament simulated?</h3>
-<p>Seven hosts eight for the 7 seed, nine hosts ten to stay alive, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. Each game uses the same win probability as any other game between those teams at that arena.</p>
-<h3>Who is favored to win the NBA title?</h3>
-<p>In the current projection the Oklahoma City Thunder win it 27% of the time, ahead of the Boston Celtics at 22%. Those numbers move as results come in.</p>
-<h3>Why does the simulated bracket change each time?</h3>
-<p>A single bracket is one season out of thousands. The odds table is the summary of all of them; the bracket shows what one of those seasons looked like.</p>
-<h3>Is it free?</h3>
-<p>The published odds and bracket are free to read with no account. Running your own set needs a free account and uses the daily free simulator run.</p>
-  </section>
-
-  <section class="panel">
-    <h2>More NBA simulators</h2>
-    <div class="linkgrid">
-    <a href="/nba-simulator/">NBA Simulator<small>Simulate any game with a full box score</small></a>
-    <a href="/nba-season-simulator/">NBA Season Simulator<small>Projected standings and wins</small></a>
-    <a href="/nba-simulator/results/">NBA Simulation Results<small>Archived simulations</small></a>
-    <a href="/nhl-playoff-simulator/">NHL Playoff Simulator<small>The same tool for the NHL</small></a>
-    <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>Baseball</small></a>
-    <a href="/nfl-playoff-simulator/">NFL Playoff Simulator<small>Football</small></a>
-    <a href="/sports-simulators/">All Sports Simulators<small>MLB, NFL, NBA and NHL</small></a>
-    </div>
-  </section>
-  <section class="panel">
-    <h2>Simulate a single NBA team</h2>
-    <div class="linkgrid">
-    <a href="/nba-simulator/teams/atlanta-hawks/">Atlanta Hawks<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/boston-celtics/">Boston Celtics<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/brooklyn-nets/">Brooklyn Nets<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/charlotte-hornets/">Charlotte Hornets<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/chicago-bulls/">Chicago Bulls<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/cleveland-cavaliers/">Cleveland Cavaliers<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/dallas-mavericks/">Dallas Mavericks<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/denver-nuggets/">Denver Nuggets<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/detroit-pistons/">Detroit Pistons<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/golden-state-warriors/">Golden State Warriors<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/houston-rockets/">Houston Rockets<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/indiana-pacers/">Indiana Pacers<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/la-clippers/">La Clippers<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/los-angeles-lakers/">Los Angeles Lakers<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/memphis-grizzlies/">Memphis Grizzlies<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/miami-heat/">Miami Heat<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/milwaukee-bucks/">Milwaukee Bucks<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/minnesota-timberwolves/">Minnesota Timberwolves<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/new-orleans-pelicans/">New Orleans Pelicans<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/new-york-knicks/">New York Knicks<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/oklahoma-city-thunder/">Oklahoma City Thunder<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/orlando-magic/">Orlando Magic<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/philadelphia-76ers/">Philadelphia 76ers<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/phoenix-suns/">Phoenix Suns<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/portland-trail-blazers/">Portland Trail Blazers<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/sacramento-kings/">Sacramento Kings<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/san-antonio-spurs/">San Antonio Spurs<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/toronto-raptors/">Toronto Raptors<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/utah-jazz/">Utah Jazz<small>Team simulator</small></a>
-    <a href="/nba-simulator/teams/washington-wizards/">Washington Wizards<small>Team simulator</small></a>
-    </div>
-  </section>
-</main>
-<div class="foot wrap">TrustMyRecord NBA Playoff Simulator &middot; a model projection, not betting advice &middot; <a href="/nba-playoff-simulator/#faq">FAQ</a></div>
-<script defer src="/static/js/league-season-engine.js?v=d90fb9e57a1c"></script>
-<script defer src="/static/js/league-season-sim.js?v=e004f9def4ba"></script>
-<script defer src="/static/js/sim-run-gate.js?v=89ce800cee84" data-sport="nba_playoff"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
-<script src="/static/js/tmr-ds-nav.d2bbd089b464.js"></script>
-<script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
-</body>
-</html>
+    <p>This page is the postseason predictor. Full-season standings are on the <a href="/nba-season-simulator/">NBA Season Simulator</a>.</p>
+    <div class="lsim-run">
+      <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+      <button class="btn primary" type="button" id="runSim">Run the playoffs</button>
+      <span id="lsimStatus" role="status" aria-live="polite"></span>
+    </div>
+    <p id="lsimStamp">10,000 simulated 2026-27 seasons, schedule and results read September 22, 2026 at 2:20 PM PT, 0 of the 1,200 scheduled regular season games final.</p>
+  </section>
+
+  <section class="panel"><h2>2026-27 NBA playoff odds</h2>
+  <div id="lsimOdds"><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">Team</th><th scope="col">Playoffs</th><th scope="col">Second round</th><th scope="col">Conference final</th><th scope="col">NBA Finals</th><th scope="col">Win the title</th></tr></thead><tbody><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/oklahoma-city-thunder/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Oklahoma City Thunder</span><span class="ls">Thunder</span></a></th><td class="p" style="--h:1">&gt;99%</td><td class="p" style="--h:0.91">91%</td><td class="p" style="--h:1">72%</td><td class="p" style="--h:1">48%</td><td class="p" style="--h:1">27%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/boston-celtics/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Boston Celtics</span><span class="ls">Celtics</span></a></th><td class="p" style="--h:0.99">99%</td><td class="p" style="--h:0.8">80%</td><td class="p" style="--h:0.85">57%</td><td class="p" style="--h:0.91">37%</td><td class="p" style="--h:0.86">22%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/san-antonio-spurs/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><span class="ln">San Antonio Spurs</span><span class="ls">Spurs</span></a></th><td class="p" style="--h:1">&gt;99%</td><td class="p" style="--h:0.87">87%</td><td class="p" style="--h:0.95">63%</td><td class="p" style="--h:0.9">36%</td><td class="p" style="--h:0.73">18%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/detroit-pistons/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Detroit Pistons</span><span class="ls">Pistons</span></a></th><td class="p" style="--h:0.99">99%</td><td class="p" style="--h:0.78">78%</td><td class="p" style="--h:0.79">52%</td><td class="p" style="--h:0.78">31%</td><td class="p" style="--h:0.71">18%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/new-york-knicks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New York Knicks</span><span class="ls">Knicks</span></a></th><td class="p" style="--h:0.95">95%</td><td class="p" style="--h:0.6">60%</td><td class="p" style="--h:0.44">30%</td><td class="p" style="--h:0.32">13%</td><td class="p" style="--h:0.22">5%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/denver-nuggets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Denver Nuggets</span><span class="ls">Nuggets</span></a></th><td class="p" style="--h:0.98">98%</td><td class="p" style="--h:0.65">65%</td><td class="p" style="--h:0.4">27%</td><td class="p" style="--h:0.22">9%</td><td class="p" style="--h:0.1">3%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/charlotte-hornets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Charlotte Hornets</span><span class="ls">Hornets</span></a></th><td class="p" style="--h:0.83">83%</td><td class="p" style="--h:0.41">41%</td><td class="p" style="--h:0.26">18%</td><td class="p" style="--h:0.17">7%</td><td class="p" style="--h:0.1">2%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/cleveland-cavaliers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Cleveland Cavaliers</span><span class="ls">Cavaliers</span></a></th><td class="p" style="--h:0.95">95%</td><td class="p" style="--h:0.52">52%</td><td class="p" style="--h:0.32">21%</td><td class="p" style="--h:0.18">7%</td><td class="p" style="--h:0.09">2%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/atlanta-hawks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Atlanta Hawks</span><span class="ls">Hawks</span></a></th><td class="p" style="--h:0.82">82%</td><td class="p" style="--h:0.35">35%</td><td class="p" style="--h:0.18">12%</td><td class="p" style="--h:0.08">3%</td><td class="p" style="--h:0.03">1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/houston-rockets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Houston Rockets</span><span class="ls">Rockets</span></a></th><td class="p" style="--h:0.92">92%</td><td class="p" style="--h:0.43">43%</td><td class="p" style="--h:0.19">13%</td><td class="p" style="--h:0.06">3%</td><td class="p" style="--h:0.02">1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/los-angeles-lakers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Los Angeles Lakers</span><span class="ls">Lakers</span></a></th><td class="p" style="--h:0.94">94%</td><td class="p" style="--h:0.45">45%</td><td class="p" style="--h:0.19">12%</td><td class="p" style="--h:0.06">3%</td><td class="p" style="--h:0.02">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/toronto-raptors/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Toronto Raptors</span><span class="ls">Raptors</span></a></th><td class="p" style="--h:0.62">62%</td><td class="p" style="--h:0.18">18%</td><td class="p" style="--h:0.07">5%</td><td class="p" style="--h:0.03">1%</td><td class="p" style="--h:0.01">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/orlando-magic/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Orlando Magic</span><span class="ls">Magic</span></a></th><td class="p" style="--h:0.69">69%</td><td class="p" style="--h:0.16">16%</td><td class="p" style="--h:0.04">3%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/la-clippers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><span class="ln">LA Clippers</span><span class="ls">Clippers</span></a></th><td class="p" style="--h:0.77">77%</td><td class="p" style="--h:0.2">20%</td><td class="p" style="--h:0.06">4%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/miami-heat/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Miami Heat</span><span class="ls">Heat</span></a></th><td class="p" style="--h:0.51">51%</td><td class="p" style="--h:0.11">11%</td><td class="p" style="--h:0.03">2%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/minnesota-timberwolves/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Minnesota Timberwolves</span><span class="ls">Timberwolves</span></a></th><td class="p" style="--h:0.83">83%</td><td class="p" style="--h:0.24">24%</td><td class="p" style="--h:0.08">5%</td><td class="p" style="--h:0.02">1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/portland-trail-blazers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/por.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Portland Trail Blazers</span><span class="ls">Trail Blazers</span></a></th><td class="p" style="--h:0.62">62%</td><td class="p" style="--h:0.12">12%</td><td class="p" style="--h:0.03">2%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/philadelphia-76ers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Philadelphia 76ers</span><span class="ls">76ers</span></a></th><td class="p" style="--h:0.54">54%</td><td class="p" style="--h:0.09">9%</td><td class="p" style="--h:0.02">1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/phoenix-suns/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Phoenix Suns</span><span class="ls">Suns</span></a></th><td class="p" style="--h:0.65">65%</td><td class="p" style="--h:0.12">12%</td><td class="p" style="--h:0.03">2%</td><td class="p" style="--h:0.01">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/golden-state-warriors/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Golden State Warriors</span><span class="ls">Warriors</span></a></th><td class="p" style="--h:0.18">18%</td><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/milwaukee-bucks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Milwaukee Bucks</span><span class="ls">Bucks</span></a></th><td class="p" style="--h:0.07">7%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/new-orleans-pelicans/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/no.png" alt="" width="22" height="22" loading="lazy"><span class="ln">New Orleans Pelicans</span><span class="ls">Pelicans</span></a></th><td class="p" style="--h:0.06">6%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/dallas-mavericks/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Dallas Mavericks</span><span class="ls">Mavericks</span></a></th><td class="p" style="--h:0.03">3%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/chicago-bulls/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/chi.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Chicago Bulls</span><span class="ls">Bulls</span></a></th><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/sacramento-kings/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sac.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Sacramento Kings</span><span class="ls">Kings</span></a></th><td class="p" style="--h:0.02">2%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/indiana-pacers/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ind.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Indiana Pacers</span><span class="ls">Pacers</span></a></th><td class="p" style="--h:0.01">1%</td><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/memphis-grizzlies/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mem.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Memphis Grizzlies</span><span class="ls">Grizzlies</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/utah-jazz/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/utah.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Utah Jazz</span><span class="ls">Jazz</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/brooklyn-nets/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bkn.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Brooklyn Nets</span><span class="ls">Nets</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr><tr><th scope="row"><a class="lt" href="/nba-simulator/teams/washington-wizards/"><img src="https://a.espncdn.com/i/teamlogos/nba/500/wsh.png" alt="" width="22" height="22" loading="lazy"><span class="ln">Washington Wizards</span><span class="ls">Wizards</span></a></th><td class="p" style="--h:0">&lt;1%</td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td><td class="p" style="--h:0"><span class="lz">0%</span></td></tr></tbody></table></div></div></section>
+  <section class="panel"><h2>One simulated 2026-27 postseason</h2>
+  <div id="lsimBracket"><p class="champ"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"> In this simulated season the <b>Detroit Pistons</b> win the NBA title.</p><div class="lsim-grid"><div class="lsim-card"><h3>Eastern Conference play in</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy"><b>Heat</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy">76ers</span> <span class="sc">7 seed</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="22" height="22" loading="lazy">Magic</span> <span class="sc">stays alive</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy">76ers</span> <span class="sc">8 seed</span></li></ul></div><div class="lsim-card"><h3>Western Conference play in</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy"><b>Warriors</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy">Timberwolves</span> <span class="sc">7 seed</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><b>Clippers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/por.png" alt="" width="22" height="22" loading="lazy">Trail Blazers</span> <span class="sc">stays alive</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><b>Clippers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy">Timberwolves</span> <span class="sc">8 seed</span></li></ul></div><div class="lsim-card"><h3>First round</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="22" height="22" loading="lazy">Celtics</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy"><b>Cavaliers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="22" height="22" loading="lazy">Raptors</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy"><b>Knicks</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy">Heat</span> <span class="sc">4 games to 1</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><b>Hornets</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" alt="" width="22" height="22" loading="lazy">Hawks</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><b>Thunder</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy">Clippers</span> <span class="sc">4 games to 0</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy"><b>Suns</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="22" height="22" loading="lazy">Rockets</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><b>Spurs</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy">Warriors</span> <span class="sc">4 games to 0</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy"><b>Lakers</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="22" height="22" loading="lazy">Nuggets</span> <span class="sc">4 games to 1</span></li></ul></div><div class="lsim-card"><h3>Second round</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy">Cavaliers</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><b>Hornets</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy">Knicks</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><b>Thunder</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy">Suns</span> <span class="sc">4 games to 1</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><b>Spurs</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy">Lakers</span> <span class="sc">4 games to 0</span></li></ul></div><div class="lsim-card"><h3>Conference finals</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy">Hornets</span> <span class="sc">4 games to 2</span></li><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><b>Thunder</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy">Spurs</span> <span class="sc">4 games to 0</span></li></ul></div><div class="lsim-card"><h3>NBA Finals</h3><ul class="series"><li><span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><b>Pistons</b></span> beat <span class="lt"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy">Thunder</span> <span class="sc">4 games to 2</span></li></ul></div></div></div></section>
+
+  <section class="panel" id="lsimPicks">
+    <h2>Pick the next NBA games</h2>
+    <p class="small">Tap the team you think wins. The percentage is the model's win probability for that side. Your picks stay on this device, and the next Run plays every season with those results locked in. <span id="lsimPickCount"></span> <button type="button" class="btn" id="lsimClearPicks" hidden>Clear picks</button></p>
+    <h3>Tuesday, October 20, 2026</h3><div class="picks"><div class="pick" data-game="401909088">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="22" height="22" loading="lazy"><span>Celtics</span><small>45%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="22" height="22" loading="lazy"><span>Pistons</span><small>55%</small></button>
+      </div><div class="pick" data-game="401909089">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy"><span>76ers</span><small>26%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="22" height="22" loading="lazy"><span>Knicks</span><small>74%</small></button>
+      </div><div class="pick" data-game="401909090">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><span>Thunder</span><small>47%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sa.png" alt="" width="22" height="22" loading="lazy"><span>Spurs</span><small>53%</small></button>
+      </div></div><h3>Wednesday, October 21, 2026</h3><div class="picks"><div class="pick" data-game="401909835">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mil.png" alt="" width="22" height="22" loading="lazy"><span>Bucks</span><small>63%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/wsh.png" alt="" width="22" height="22" loading="lazy"><span>Wizards</span><small>37%</small></button>
+      </div><div class="pick" data-game="401909834">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/atl.png" alt="" width="22" height="22" loading="lazy"><span>Hawks</span><small>53%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="22" height="22" loading="lazy"><span>Magic</span><small>47%</small></button>
+      </div><div class="pick" data-game="401909836">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="22" height="22" loading="lazy"><span>Hornets</span><small>87%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bkn.png" alt="" width="22" height="22" loading="lazy"><span>Nets</span><small>13%</small></button>
+      </div><div class="pick" data-game="401909837">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/chi.png" alt="" width="22" height="22" loading="lazy"><span>Bulls</span><small>15%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="22" height="22" loading="lazy"><span>Raptors</span><small>85%</small></button>
+      </div><div class="pick" data-game="401909091">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="22" height="22" loading="lazy"><span>Timberwolves</span><small>43%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="22" height="22" loading="lazy"><span>Heat</span><small>57%</small></button>
+      </div><div class="pick" data-game="401909839">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ind.png" alt="" width="22" height="22" loading="lazy"><span>Pacers</span><small>42%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/no.png" alt="" width="22" height="22" loading="lazy"><span>Pelicans</span><small>58%</small></button>
+      </div><div class="pick" data-game="401909838">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/utah.png" alt="" width="22" height="22" loading="lazy"><span>Jazz</span><small>44%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mem.png" alt="" width="22" height="22" loading="lazy"><span>Grizzlies</span><small>56%</small></button>
+      </div><div class="pick" data-game="401909840">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" alt="" width="22" height="22" loading="lazy"><span>Mavericks</span><small>16%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="22" height="22" loading="lazy"><span>Rockets</span><small>84%</small></button>
+      </div><div class="pick" data-game="401909841">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="22" height="22" loading="lazy"><span>Suns</span><small>43%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/por.png" alt="" width="22" height="22" loading="lazy"><span>Trail Blazers</span><small>57%</small></button>
+      </div><div class="pick" data-game="401909092">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="22" height="22" loading="lazy"><span>Warriors</span><small>24%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="22" height="22" loading="lazy"><span>Lakers</span><small>76%</small></button>
+      </div><div class="pick" data-game="401909842">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/sac.png" alt="" width="22" height="22" loading="lazy"><span>Kings</span><small>17%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="22" height="22" loading="lazy"><span>Clippers</span><small>83%</small></button>
+      </div></div><h3>Thursday, October 22, 2026</h3><div class="picks"><div class="pick" data-game="401909093">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cle.png" alt="" width="22" height="22" loading="lazy"><span>Cavaliers</span><small>59%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="22" height="22" loading="lazy"><span>76ers</span><small>41%</small></button>
+      </div><div class="pick" data-game="401909094">
+        <button type="button" class="pk" data-side="away" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="22" height="22" loading="lazy"><span>Nuggets</span><small>31%</small></button>
+        <span class="at">at</span>
+        <button type="button" class="pk" data-side="home" aria-pressed="false"><img src="https://a.espncdn.com/i/teamlogos/nba/500/okc.png" alt="" width="22" height="22" loading="lazy"><span>Thunder</span><small>69%</small></button>
+      </div></div>
+  </section>
+
+  <section class="lsim-copy">
+    <h2>How the NBA playoff simulator works</h2>
+    <p>Every game on the 2026-27 schedule is played out 10,000 times. A game that is already final keeps its real result. Every other game is decided by NBA Forecasting V1, the frozen model behind these pages: an Elo rating replayed game by game, the opponent adjusted scoring margin, rest and back to backs. A scheduled game carries the forecast for its own date, so a club on the second night of a back to back is rated that way.</p>
+<p>That model is not the game simulator. The simulator plays possessions and produces a box score, and on an untouched 2025-26 season it scored a Brier of 0.24021 at picking winners. The forecast layer scored 0.20603 over the same 1,231 games, walk forward, having been frozen before that season started. Lower is better, and 0.25 is a coin flip. So the odds here come from the forecast and the <a href="/nba-simulator/">NBA Simulator</a> keeps the job it is better at.</p>
+    <h2>The 2026-27 NBA playoff format</h2>
+    <p>Each conference sends six teams straight to the playoffs. The teams that finish seventh through tenth play the play-in tournament: seven hosts eight and the winner takes the 7 seed, nine hosts ten and the loser goes home, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. The first round is 1 against 8, 4 against 5, 2 against 7 and 3 against 6, the bracket stays fixed, and every series is best of seven with home court to the team with the better regular season record, played at the higher seed in games one, two, five and seven.</p>
+    <h2>How accurate is it</h2>
+    <p>The model that sets these probabilities was frozen before the 2025-26 season and then scored once on it: Brier 0.20603, log loss 0.59947, and the winner called correctly in 68.97% of 1,231 games. The game simulator scored 0.24021 on the same season and a coin flip scores 0.25000. No number here was tuned on that season, which is what makes it a test rather than a fit.</p>
+    <h2>Tiebreakers</h2>
+    <p>Ties in the standings are settled by head to head winning percentage between the tied teams, then by a random draw. The NBA's later steps, division record, conference record and record against playoff teams, are not applied. Across thousands of simulated seasons they change a seed rarely, and they are listed here rather than approximated.</p>
+    <h2>What the projection does not know</h2>
+    <p>The model rates teams on results already played. A trade, a signing or an injury changes a team's rating only once games are played with it, so early in the season a team that rebuilt over the summer is rated on the roster it had. The win probability for a game in March does not know rest, back to backs or who sits that night. The model data was last built Tuesday, September 22, 2026 at 2:06 PM PT.</p>
+
+    <h2 id="faq">NBA Playoff Simulator FAQ</h2>
+    <h3>How does the NBA playoff simulator work?</h3>
+<p>It plays out the rest of the 2026-27 regular season, seeds each conference with the real NBA format, plays the play-in tournament, and then plays every series game by game, best of seven, with home court to the better regular season team. It repeats that 10,000 times and counts how often each team reaches each round.</p>
+<h3>How is the NBA play-in tournament simulated?</h3>
+<p>Seven hosts eight for the 7 seed, nine hosts ten to stay alive, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. Each game uses the same win probability as any other game between those teams at that arena.</p>
+<h3>Who is favored to win the NBA title?</h3>
+<p>In the current projection the Oklahoma City Thunder win it 27% of the time, ahead of the Boston Celtics at 22%. Those numbers move as results come in.</p>
+<h3>Why does the simulated bracket change each time?</h3>
+<p>A single bracket is one season out of thousands. The odds table is the summary of all of them; the bracket shows what one of those seasons looked like.</p>
+<h3>Is it free?</h3>
+<p>The published odds and bracket are free to read with no account. Running your own set needs a free account and uses the daily free simulator run.</p>
+  </section>
+
+  <section class="panel">
+    <h2>More NBA simulators</h2>
+    <div class="linkgrid">
+    <a href="/nba-simulator/">NBA Simulator<small>Simulate any game with a full box score</small></a>
+    <a href="/nba-season-simulator/">NBA Season Simulator<small>Projected standings and wins</small></a>
+    <a href="/nba-simulator/results/">NBA Simulation Results<small>Archived simulations</small></a>
+    <a href="/nhl-playoff-simulator/">NHL Playoff Simulator<small>The same tool for the NHL</small></a>
+    <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>Baseball</small></a>
+    <a href="/nfl-playoff-simulator/">NFL Playoff Simulator<small>Football</small></a>
+    <a href="/sports-simulators/">All Sports Simulators<small>MLB, NFL, NBA and NHL</small></a>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Simulate a single NBA team</h2>
+    <div class="linkgrid">
+    <a href="/nba-simulator/teams/atlanta-hawks/">Atlanta Hawks<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/boston-celtics/">Boston Celtics<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/brooklyn-nets/">Brooklyn Nets<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/charlotte-hornets/">Charlotte Hornets<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/chicago-bulls/">Chicago Bulls<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/cleveland-cavaliers/">Cleveland Cavaliers<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/dallas-mavericks/">Dallas Mavericks<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/denver-nuggets/">Denver Nuggets<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/detroit-pistons/">Detroit Pistons<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/golden-state-warriors/">Golden State Warriors<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/houston-rockets/">Houston Rockets<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/indiana-pacers/">Indiana Pacers<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/la-clippers/">La Clippers<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/los-angeles-lakers/">Los Angeles Lakers<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/memphis-grizzlies/">Memphis Grizzlies<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/miami-heat/">Miami Heat<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/milwaukee-bucks/">Milwaukee Bucks<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/minnesota-timberwolves/">Minnesota Timberwolves<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/new-orleans-pelicans/">New Orleans Pelicans<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/new-york-knicks/">New York Knicks<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/oklahoma-city-thunder/">Oklahoma City Thunder<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/orlando-magic/">Orlando Magic<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/philadelphia-76ers/">Philadelphia 76ers<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/phoenix-suns/">Phoenix Suns<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/portland-trail-blazers/">Portland Trail Blazers<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/sacramento-kings/">Sacramento Kings<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/san-antonio-spurs/">San Antonio Spurs<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/toronto-raptors/">Toronto Raptors<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/utah-jazz/">Utah Jazz<small>Team simulator</small></a>
+    <a href="/nba-simulator/teams/washington-wizards/">Washington Wizards<small>Team simulator</small></a>
+    </div>
+  </section>
+</main>
+<div class="foot wrap">TrustMyRecord NBA Playoff Simulator &middot; a model projection, not betting advice &middot; <a href="/nba-playoff-simulator/#faq">FAQ</a></div>
+<script defer src="/static/js/league-season-engine.js?v=d90fb9e57a1c"></script>
+<script defer src="/static/js/league-season-sim.js?v=e004f9def4ba"></script>
+<script defer src="/static/js/sim-run-gate.js?v=89ce800cee84" data-sport="nba_playoff"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.00a75310c2c6.js"></script>
+<script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+</body>
+</html>

@@ -190,14 +190,14 @@ function page(sport, mode, inputs, result, shell) {
   const sib = `/${sport}-${mode === 'season' ? 'playoff' : 'season'}-simulator/`;
   const season = inputs.season_label;
   const title = mode === 'season'
-    ? `${L.label} Season Simulator ${season} | Projected Standings, Wins and Playoff Odds`
-    : `${L.label} Playoff Simulator ${season} | Bracket, Seeds and ${nba ? 'Title' : 'Stanley Cup'} Odds`;
+    ? `${L.label} Season Simulator ${season} | Standings and Season Predictor`
+    : `${L.label} Playoff Simulator ${season} | ${nba ? 'Postseason Predictor and Bracket' : 'Stanley Cup Predictor'}`;
   const h1 = `${L.label} ${mode === 'season' ? 'Season' : 'Playoff'} Simulator`;
   const fav = F.fav, fav2 = F.fav2;
   const openerLine = F.opener ? `The ${season} regular season opens ${ptDate(F.opener.date)}` : `The ${season} schedule is not published yet`;
   const desc = mode === 'season'
-    ? `Simulate the ${season} ${L.label} season ${count(result.runs)} times: projected ${L.unit} for all ${F.teamCount} teams, the 80% range, ${nba ? 'top six, play-in' : 'division title'} and playoff odds, from the real ${L.games} game schedule.`
-    : `Simulate the ${season} ${L.label} playoffs ${count(result.runs)} times: ${nba ? 'the play-in tournament, ' : 'wild cards, '}seeds, every series best of seven and each team's odds to win ${nba ? 'the NBA title' : 'the Stanley Cup'}.`;
+    ? `Simulate the ${season} ${L.label} season ${count(result.runs)} times for projected ${L.unit}, an 80% range and standings for all ${F.teamCount} teams. A season predictor from the games already played.`
+    : `Free ${L.label} playoff simulator for ${season}. ${nba ? 'Simulate the play-in, the seeds and the bracket through the NBA title.' : 'Simulate wild cards, seeds and the bracket through the Stanley Cup.'}`;
 
   const formatNba = `<p>Each conference sends six teams straight to the playoffs. The teams that finish seventh through tenth play the play-in tournament: seven hosts eight and the winner takes the 7 seed, nine hosts ten and the loser goes home, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. The first round is 1 against 8, 4 against 5, 2 against 7 and 3 against 6, the bracket stays fixed, and every series is best of seven with home court to the team with the better regular season record, played at the higher seed in games one, two, five and seven.</p>`;
   const formatNhl = `<p>Teams earn two points for a win and one for a loss in overtime or a shootout. The top three teams in each of the ${F.divs.length} divisions make the playoffs, and the next two teams in each conference by points take the wild cards. The division winner with more points plays the second wild card, the other division winner plays the first, and the second and third place teams in each division meet. The bracket stays inside the division through the second round, and every series is best of seven with home ice to the team with more points.</p>`;
@@ -215,6 +215,9 @@ function page(sport, mode, inputs, result, shell) {
 
   const limits = `<p>The model rates teams on results already played. A trade, a signing or an injury changes a team's rating only once games are played with it, so early in the season a team that rebuilt over the summer is rated on the roster it had. The win probability for a game in March does not know rest, back to backs or ${nba ? 'who sits' : 'the starting goalie'} that night. The model data was last built ${F.builtAt ? ptDate(F.builtAt, true) : 'recently'}.</p>`;
 
+  const split = mode === 'season'
+    ? `<p>Those playoff percentages come from simulating the standings. To run the bracket, use the <a href="${sib}">${L.label} Playoff Simulator</a>.</p>`
+    : `<p>This page is the postseason predictor. Full-season standings are on the <a href="${sib}">${L.label} Season Simulator</a>.</p>`;
   const lead = mode === 'season'
     ? `<p>${esc(openerLine)}. Across ${count(result.runs)} simulated seasons the ${esc(fav.name)} ${nba ? `average ${UI_one(fav.wins_mean)} wins` : `average ${UI_one(fav.points_mean)} points`} and finish as champions ${pctText(fav.champion)} of the time, ahead of the ${esc(fav2.name)} at ${pctText(fav2.champion)}. Press Run to play a fresh set of seasons from today's schedule and results.</p>`
     : `<p>${esc(openerLine)}. Across ${count(result.runs)} simulated postseasons the ${esc(fav.name)} ${nba ? 'win the NBA title' : 'win the Stanley Cup'} ${pctText(fav.champion)} of the time and reach the ${esc(L.finals)} ${pctText(fav.final)} of the time. Below the odds is one complete simulated bracket, series by series. Press Run for a new set.</p>`;
@@ -294,6 +297,7 @@ ${shell.head}
   <section class="hero lsim-hero">
     <h1>${esc(h1)}</h1>
     ${lead}
+    ${split}
     <div class="lsim-run">
       <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
       <button class="btn primary" type="button" id="runSim">Run ${mode === 'season' ? 'the season' : 'the playoffs'}</button>

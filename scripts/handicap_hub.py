@@ -546,12 +546,25 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
     links.append(("MLB matchups, odds and probable pitchers", "/handicapping/mlb/", None))
     if S.get("simulator"):
         if sport == "nfl":
-            links.append(("NFL Simulator", S["simulator"], None))
+            links.append(("NFL Game Simulator", S["simulator"], None))
             links.append(("NFL Season Simulator", "/nfl-season-simulator/", None))
             links.append(("NFL Playoff Simulator", "/nfl-playoff-simulator/", None))
             links.append(("Trend Spotter", "/trendspotter/", None))
             links.append(("NFL Handicappers", "/nfl-handicappers/", None))
             links.append(("NFL Pick Tracker", "/nfl-pick-tracker/", None))
+        elif sport == "nba":
+            links.append(("NBA Game Simulator", S["simulator"], None))
+            links.append(("NBA Season Simulator", "/nba-season-simulator/", None))
+            links.append(("NBA Playoff Simulator", "/nba-playoff-simulator/", None))
+            links.append(("Trend Spotter", "/trendspotter/", None))
+            links.append(("NBA Handicappers", "/nba-handicappers/", None))
+            links.append(("NBA Pick Tracker", "/nba-pick-tracker/", None))
+        elif sport == "nhl":
+            links.append(("NHL Game Simulator", S["simulator"], None))
+            links.append(("NHL Season Simulator", "/nhl-season-simulator/", None))
+            links.append(("NHL Playoff Simulator", "/nhl-playoff-simulator/", None))
+            links.append(("Trend Spotter", "/trendspotter/", None))
+            links.append(("NHL Pick Tracker", "/nhl-pick-tracker/", None))
         else:
             links.append(("%s simulator" % label, S["simulator"], None))
     links.append(("BetLegend Pro, the research database behind these pages", "/betlegend-pro/", None))

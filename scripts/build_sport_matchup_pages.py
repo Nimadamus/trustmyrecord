@@ -916,19 +916,42 @@ def render_game(sport, g, hist, slate, extras, built_at, hook=None, preview=None
                                 built_at, hook)
 
 
-NFL_RESEARCH = (
-    '        <section class="mm-sec" aria-labelledby="mm-research">\n'
-    '            <h2 id="mm-research">Research this game</h2>\n'
-    '            <ul>\n'
-    '                <li><a href="/nfl-simulator/">NFL Game Simulator</a></li>\n'
-    '                <li><a href="/nfl-season-simulator/">NFL Season Simulator</a></li>\n'
-    '                <li><a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a></li>\n'
-    '                <li><a href="/trendspotter/">Trend Spotter</a></li>\n'
-    '                <li><a href="/nfl-handicappers/">NFL Handicappers</a></li>\n'
-    '                <li><a href="/nfl-pick-tracker/">NFL Pick Tracker</a></li>\n'
-    '            </ul>\n'
-    '        </section>\n'
-)
+def mm_research(sport):
+    rows = {
+        "nfl": [
+            ("/nfl-simulator/", "NFL Game Simulator"),
+            ("/nfl-season-simulator/", "NFL Season Simulator"),
+            ("/nfl-playoff-simulator/", "NFL Playoff Simulator"),
+            ("/trendspotter/", "Trend Spotter"),
+            ("/nfl-handicappers/", "NFL Handicappers"),
+            ("/nfl-pick-tracker/", "NFL Pick Tracker"),
+        ],
+        "nba": [
+            ("/nba-simulator/", "NBA Game Simulator"),
+            ("/nba-season-simulator/", "NBA Season Simulator"),
+            ("/nba-playoff-simulator/", "NBA Playoff Simulator"),
+            ("/trendspotter/", "Trend Spotter"),
+            ("/nba-handicappers/", "NBA Handicappers"),
+            ("/nba-pick-tracker/", "NBA Pick Tracker"),
+        ],
+        "nhl": [
+            ("/nhl-simulator/", "NHL Game Simulator"),
+            ("/nhl-season-simulator/", "NHL Season Simulator"),
+            ("/nhl-playoff-simulator/", "NHL Playoff Simulator"),
+            ("/trendspotter/", "Trend Spotter"),
+            ("/nhl-pick-tracker/", "NHL Pick Tracker"),
+        ],
+    }.get(sport)
+    if not rows:
+        return ""
+    items = "".join('                <li><a href="%s">%s</a></li>\n' % pair for pair in rows)
+    return (
+        '        <section class="mm-sec" aria-labelledby="mm-research">\n'
+        '            <h2 id="mm-research">Research this game</h2>\n'
+        '            <ul>\n%s'
+        '            </ul>\n'
+        '        </section>\n' % items
+    )
 
 
 def render_game_legacy(sport, g, hist, slate, extras, built_at, hook=None, preview=None):
@@ -989,7 +1012,7 @@ def render_game_legacy(sport, g, hist, slate, extras, built_at, hook=None, previ
          % (sport, esc(label)),
          (('                <li><a href="%s">Simulate this matchup</a></li>\n' % sim) if sim and sport != "nfl" else ""),
          '            </ul>\n        </section>\n',
-         (NFL_RESEARCH if sport == "nfl" else ""),
+         (mm_research(sport) if sport in ("nfl", "nba", "nhl") else ""),
          '        <p class="mm-note">Built %s. '
          '<a href="/handicapping/%s/">Back to the %s slate</a>, or the '
          '<a href="/handicapping/">handicapping hub</a>.</p>\n'
