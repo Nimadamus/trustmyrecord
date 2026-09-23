@@ -2922,14 +2922,15 @@
                         </div>
                       </div>
 
-                      <div class="tmrx-section">
+                      <div class="tmrx-section" id="tmrxPublicLedger">
                         <div class="tmrx-section-head">
                           <div>
                             <div class="tmrx-section-title">Public Ledger</div>
-                            <div class="tmrx-section-sub">Every settled public pick on the verified record. Pending picks stay hidden until graded. Every statistic on this page opens the bets behind it &mdash; <a id="tmrxFullHistoryLink" href="/pick-history/">open the full filterable bet history</a>.</div>
+                            <div class="tmrx-section-sub">Every settled public pick on the verified record. Pending picks stay hidden until graded. Choose a sport to see only that sport. The count, record, and units match the rows below. <a id="tmrxFullHistoryLink" href="/pick-history/">Open the full filterable bet history</a>.</div>
                           </div>
                           <div class="tmrx-meta" id="tmrxPickMeta"></div>
                         </div>
+                        <div class="tmrx-sport-picker" id="tmrxLedgerSportPicker" role="tablist" aria-label="Show one sport in the public ledger"></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
@@ -10033,6 +10034,96 @@
     const SETTLED_RE = /^(won|lost|push|void|cancelled)$/i;
     let tmrxLedgerPicks = [];   // full settled public history, newest first
     let tmrxLedgerPage = 1;
+    let tmrxLedgerSport = '';   // '' is every sport. A sport_key shows only that sport.
+    function tmrxLedgerSportId(p) {
+        return String((p && p.sport_key) || '').toLowerCase() || 'other';
+    }
+    function tmrxLedgerSportLabel(k) {
+        const m = { baseball_mlb:'MLB', baseball_npb:'Japan NPB', basketball_nba:'NBA', basketball_nba_summer:'NBA Summer League', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB', basketball_wnba:'WNBA', soccer_epl:'EPL', soccer_usa_mls:'MLS', other:'Other' };
+        const key = String(k || '').toLowerCase();
+        return m[key] || (key ? key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Other');
+    }
+    function tmrxCanonicalLedgerSport(raw, picks) {
+        const list = Array.isArray(picks) ? picks : tmrxLedgerPicks;
+        const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+        if (!key) return '';
+        const aliased = (typeof SPORT_QUERY_ALIASES !== 'undefined' && SPORT_QUERY_ALIASES[key]) || key;
+        const present = {};
+        list.forEach(p => { present[tmrxLedgerSportId(p)] = true; });
+        if (present[aliased]) return aliased;
+        let found = '';
+        list.forEach(p => {
+            const id = tmrxLedgerSportId(p);
+            const label = tmrxLedgerSportLabel(id).toLowerCase().replace(/[\s-]+/g, '_');
+            if (label === key) found = id;
+        });
+        return found;
+    }
+    function tmrxLedgerVisible() {
+        if (!tmrxLedgerSport) return tmrxLedgerPicks;
+        return tmrxLedgerPicks.filter(p => tmrxLedgerSportId(p) === tmrxLedgerSport);
+    }
+    function tmrxLedgerSummary(rows) {
+        let w = 0, l = 0, pushes = 0, net = 0;
+        (rows || []).forEach(row => {
+            const s = String(row && row.status || '').toLowerCase();
+            const graded = s === 'won' || s === 'lost' || s === 'push' || s === 'pushed';
+            if (s === 'won') w++;
+            else if (s === 'lost') l++;
+            else if (s === 'push' || s === 'pushed') pushes++;
+            if (!graded) return;
+            const n = Number(row.result_units);
+            if (Number.isFinite(n)) net += n;
+        });
+        return { n: (rows || []).length, w: w, l: l, pushes: pushes, net: net };
+    }
+    function tmrxLedgerMetaText(rows) {
+        const s = tmrxLedgerSummary(rows);
+        const rec = s.w + '-' + s.l + (s.pushes ? '-' + s.pushes : '');
+        const net = (s.net > 0 ? '+' : '') + s.net.toFixed(2) + 'u';
+        const who = tmrxLedgerSport ? tmrxLedgerSportLabel(tmrxLedgerSport) + ' · ' : '';
+        return who + s.n + ' settled public pick' + (s.n === 1 ? '' : 's') + ' · ' + rec + ' · ' + net;
+    }
+    function tmrxRenderLedgerSports() {
+        const picker = document.getElementById('tmrxLedgerSportPicker');
+        if (!picker) return;
+        const counts = {};
+        const order = [];
+        tmrxLedgerPicks.forEach(p => {
+            const id = tmrxLedgerSportId(p);
+            if (!counts[id]) { counts[id] = 0; order.push(id); }
+            counts[id]++;
+        });
+        order.sort((a, b) => counts[b] - counts[a] || tmrxLedgerSportLabel(a).localeCompare(tmrxLedgerSportLabel(b)));
+        if (tmrxLedgerSport && !counts[tmrxLedgerSport]) tmrxLedgerSport = '';
+        const btn = (id, label, count, on) =>
+            '<button type="button" role="tab" class="tmrx-sport-pill' + (on ? ' is-active' : '') + '" aria-selected="' + (on ? 'true' : 'false') + '" data-tmrx-ledger-sport="' + escapeHtml(id) + '">' +
+            escapeHtml(label) + '<span class="tmrx-sport-pill-count">' + count + '</span></button>';
+        let html = btn('', 'All', tmrxLedgerPicks.length, !tmrxLedgerSport);
+        order.forEach(id => { html += btn(id, tmrxLedgerSportLabel(id), counts[id], id === tmrxLedgerSport); });
+        picker.innerHTML = html;
+        picker.hidden = order.length < 2;
+    }
+    function tmrxApplyLedgerSport(sportKey, opts) {
+        opts = opts || {};
+        tmrxLedgerSport = tmrxCanonicalLedgerSport(sportKey, tmrxLedgerPicks);
+        tmrxLedgerPage = 1;
+        tmrxRenderLedgerSports();
+        tmrxRenderLedgerPage();
+        const sel = document.getElementById('filterSport');
+        if (sel && !opts.fromRecords) {
+            if (tmrxLedgerSport) ensureSportFilterOption(tmrxLedgerSport);
+            if (sel.value !== tmrxLedgerSport) sel.value = tmrxLedgerSport;
+            if (typeof applyFilters === 'function') applyFilters();
+        }
+        if (opts.updateUrl && typeof buildProfileSportFilterUrl === 'function') {
+            history.replaceState(null, '', buildProfileSportFilterUrl(tmrxLedgerSport));
+        }
+        if (opts.scroll) {
+            const target = document.getElementById('tmrxPublicLedger');
+            if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
     function tmrxLedgerEventMs(p) {
         const ms = Date.parse((p && (p.commence_time || p.graded_at || p.locked_at || p.created_at)) || '');
         return Number.isFinite(ms) ? ms : 0;
@@ -10075,8 +10166,12 @@
             .filter(p => !p.redacted && SETTLED_RE.test(p.status))
             .sort((a, b) => (tmrxLedgerEventMs(b) - tmrxLedgerEventMs(a)) || (Number(b.id || 0) - Number(a.id || 0)));
         tmrxLedgerPage = 1;
-        if (meta) meta.textContent = tmrxLedgerPicks.length + ' settled public pick' + (tmrxLedgerPicks.length === 1 ? '' : 's');
+        const requested = (typeof initialSportFilter !== 'undefined' && initialSportFilter) ||
+            (typeof urlParams !== 'undefined' && urlParams.get('sport')) || '';
+        tmrxLedgerSport = tmrxCanonicalLedgerSport(requested, tmrxLedgerPicks);
+        tmrxRenderLedgerSports();
         if (!tmrxLedgerPicks.length) {
+            if (meta) meta.textContent = tmrxLedgerMetaText([]);
             tbody.innerHTML = '<tr class="empty"><td colspan="11">No settled picks yet.</td></tr>';
             return;
         }
@@ -10087,12 +10182,21 @@
         const tbody = document.querySelector('#tmrxTablePicks tbody');
         const pager = document.getElementById('tmrxPicksPagination');
         if (!tbody) return;
-        const total = tmrxLedgerPicks.length;
+        const visible = tmrxLedgerVisible();
+        const meta = document.getElementById('tmrxPickMeta');
+        if (meta) meta.textContent = tmrxLedgerMetaText(visible);
+        const total = visible.length;
         const totalPages = Math.max(1, Math.ceil(total / TMRX_PICKS_PER_PAGE));
         if (tmrxLedgerPage > totalPages) tmrxLedgerPage = totalPages;
         if (tmrxLedgerPage < 1) tmrxLedgerPage = 1;
         const start = (tmrxLedgerPage - 1) * TMRX_PICKS_PER_PAGE;
-        const picks = tmrxLedgerPicks.slice(start, start + TMRX_PICKS_PER_PAGE);
+        const picks = visible.slice(start, start + TMRX_PICKS_PER_PAGE);
+        if (!total) {
+            const name = tmrxLedgerSport ? tmrxLedgerSportLabel(tmrxLedgerSport) : '';
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">' + (name ? 'No settled ' + name + ' picks.' : 'No settled picks yet.') + '</td></tr>';
+            if (pager) { pager.hidden = true; pager.innerHTML = ''; }
+            return;
+        }
         const fmtDate = (iso) => {
             if (!iso) return '—';
             try {
@@ -10107,10 +10211,7 @@
             if (!Number.isFinite(x) || x === 0) return '—';
             return (x > 0 ? '+' : '') + Math.round(x);
         };
-        const sportLabel = (k) => {
-            const m = { baseball_mlb:'MLB', baseball_npb:'Japan NPB', basketball_nba:'NBA', basketball_nba_summer:'NBA Summer League', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB' };
-            return m[String(k||'').toLowerCase()] || (k || '—').toUpperCase();
-        };
+        const sportLabel = (k) => tmrxLedgerSportLabel(k);
         const marketLabel = (k) => {
             return marketTypeLabel(k);
         };
@@ -10207,6 +10308,13 @@
             if (!Number.isFinite(p)) return;
             tmrxLedgerPage = p;
             tmrxRenderLedgerPage();
+            const sec = document.getElementById('tmrxTablePicks');
+            if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        document.addEventListener('click', function(e) {
+            const sportBtn = e.target.closest && e.target.closest('#tmrxLedgerSportPicker [data-tmrx-ledger-sport]');
+            if (!sportBtn) return;
+            tmrxApplyLedgerSport(sportBtn.getAttribute('data-tmrx-ledger-sport') || '', { updateUrl: true });
             const sec = document.getElementById('tmrxTablePicks');
             if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
@@ -16024,12 +16132,8 @@
         }
 
         applyFilters();
-
-        if (options.scroll) {
-            const target = document.querySelector('.picks-section') || document.getElementById('picksTableWrapper');
-            if (target && typeof target.scrollIntoView === 'function') {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+        if (typeof tmrxApplyLedgerSport === 'function') {
+            tmrxApplyLedgerSport(normalizedSport || '', { fromRecords: true, scroll: !!options.scroll });
         }
         return false;
     }
