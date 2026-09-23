@@ -549,6 +549,9 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
             links.append(("NFL Simulator", S["simulator"], None))
             links.append(("NFL Season Simulator", "/nfl-season-simulator/", None))
             links.append(("NFL Playoff Simulator", "/nfl-playoff-simulator/", None))
+            links.append(("Trend Spotter", "/trendspotter/", None))
+            links.append(("NFL Handicappers", "/nfl-handicappers/", None))
+            links.append(("NFL Pick Tracker", "/nfl-pick-tracker/", None))
         else:
             links.append(("%s simulator" % label, S["simulator"], None))
     links.append(("BetLegend Pro, the research database behind these pages", "/betlegend-pro/", None))

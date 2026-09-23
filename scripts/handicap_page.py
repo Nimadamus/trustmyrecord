@@ -861,6 +861,8 @@ def render(bld, sport, g, hist, slate, extras, built_at, hook=None):
 
     b.append(injury_section(sport, g, teams_by_name, injuries, away, home))
     b.append(coverage_section(hist))
+    if sport == "nfl":
+        b.append(nfl_research_section())
     b.append(related_section(bld, sport, g, slate, away, home))
 
     b.append('        <p class="hx-foot">Built %s. <a href="/handicapping/%s/">Back to the %s '
@@ -1055,13 +1057,22 @@ def related_section(bld, sport, g, slate, away, home):
     items.append(("Every %s game on the board" % bld.SPORTS[sport]["label"],
                   "/handicapping/%s/" % sport, None))
     sim_url = bld.SPORTS[sport].get("simulator")
-    if sim_url:
-        if sport == "nfl":
-            bucket = sum(ord(c) for c in bld.game_url(sport, g)) % 3
-            items.append((("NFL Game Simulator", "NFL Simulator", "NFL Matchup Simulator")[bucket], sim_url, None))
-            items.append((("NFL Season Simulator", "NFL Season Predictor", "NFL Standings Simulator")[bucket], "/nfl-season-simulator/", None))
-            items.append((("NFL Playoff Simulator", "NFL Playoff Predictor", "NFL Playoff Machine")[bucket], "/nfl-playoff-simulator/", None))
-        else:
-            items.append(("Simulate this matchup yourself", sim_url, None))
+    if sim_url and sport != "nfl":
+        items.append(("Simulate this matchup yourself", sim_url, None))
     return ui.section("Rest of the %s board" % bld.SPORTS[sport]["label"], ui.links(items),
                       eyebrow="Keep going")
+
+
+def nfl_research_section():
+    """Same job as the MLB research rail: the tools for this game, separate
+    from the list of other games on the board."""
+    items = [
+        ("NFL Game Simulator", "/nfl-simulator/", None),
+        ("NFL Season Simulator", "/nfl-season-simulator/", None),
+        ("NFL Playoff Simulator", "/nfl-playoff-simulator/", None),
+        ("Trend Spotter", "/trendspotter/", None),
+        ("NFL Handicappers", "/nfl-handicappers/", None),
+        ("NFL Pick Tracker", "/nfl-pick-tracker/", None),
+    ]
+    return ui.section("Research this game", ui.links(items), eyebrow="TrustMyRecord",
+                      anchor="research")
