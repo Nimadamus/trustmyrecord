@@ -503,7 +503,7 @@ def cat_page_html(cat, cat_threads):
     _SPORT_LINKS = {
         "mlb":    [("/handicapping/mlb/", "MLB Handicapping Hub"), ("/mlb-pick-tracker/", "MLB pick tracker"), ("/mlb-simulator/", "MLB simulator")],
         "nba":    [("/nba-pick-tracker/", "NBA pick tracker"), ("/nba-handicappers/", "NBA handicappers")],
-        "nfl":    [("/nfl-pick-tracker/", "NFL pick tracker"), ("/nfl-simulator/", "NFL simulator"), ("/nfl-handicappers/", "NFL handicappers")],
+        "nfl":    [("/nfl-pick-tracker/", "NFL pick tracker"), ("/nfl-simulator/", "NFL Simulator"), ("/nfl-season-simulator/", "NFL Season Simulator"), ("/nfl-playoff-simulator/", "NFL Playoff Simulator"), ("/nfl-handicappers/", "NFL handicappers")],
         "nhl":    [("/nhl-pick-tracker/", "NHL pick tracker")],
         "soccer": [("/soccer-pick-tracker/", "Soccer pick tracker")],
     }

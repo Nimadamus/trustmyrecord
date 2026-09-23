@@ -1056,6 +1056,12 @@ def related_section(bld, sport, g, slate, away, home):
                   "/handicapping/%s/" % sport, None))
     sim_url = bld.SPORTS[sport].get("simulator")
     if sim_url:
-        items.append(("Simulate this matchup yourself", sim_url, None))
+        if sport == "nfl":
+            bucket = sum(ord(c) for c in bld.game_url(sport, g)) % 3
+            items.append((("NFL Game Simulator", "NFL Simulator", "NFL Matchup Simulator")[bucket], sim_url, None))
+            items.append((("NFL Season Simulator", "NFL Season Predictor", "NFL Standings Simulator")[bucket], "/nfl-season-simulator/", None))
+            items.append((("NFL Playoff Simulator", "NFL Playoff Predictor", "NFL Playoff Machine")[bucket], "/nfl-playoff-simulator/", None))
+        else:
+            items.append(("Simulate this matchup yourself", sim_url, None))
     return ui.section("Rest of the %s board" % bld.SPORTS[sport]["label"], ui.links(items),
                       eyebrow="Keep going")

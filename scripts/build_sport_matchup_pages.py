@@ -972,7 +972,12 @@ def render_game_legacy(sport, g, hist, slate, extras, built_at, hook=None, previ
          '            <ul>\n', related,
          '                <li><a href="/handicapping/%s/">Every %s game on the board</a></li>\n'
          % (sport, esc(label)),
-         ('                <li><a href="%s">Simulate this matchup</a></li>\n' % sim) if sim else "",
+         ("".join('                <li><a href="%s">%s</a></li>\n' % pair for pair in (
+             (sim, ("NFL Game Simulator", "NFL Simulator", "NFL Matchup Simulator")[sum(ord(c) for c in game_url(sport, g)) % 3]),
+             ("/nfl-season-simulator/", ("NFL Season Simulator", "NFL Season Predictor", "NFL Standings Simulator")[sum(ord(c) for c in game_url(sport, g)) % 3]),
+             ("/nfl-playoff-simulator/", ("NFL Playoff Simulator", "NFL Playoff Predictor", "NFL Playoff Machine")[sum(ord(c) for c in game_url(sport, g)) % 3]),
+         )) if sport == "nfl" and sim else
+          (('                <li><a href="%s">Simulate this matchup</a></li>\n' % sim) if sim else "")),
          '            </ul>\n        </section>\n',
          '        <p class="mm-note">Built %s. '
          '<a href="/handicapping/%s/">Back to the %s slate</a>, or the '
@@ -1152,7 +1157,11 @@ def render_hub(sport, games, built_at, hist_by_pair=None, extras=None):
            'featured breakdown</a></li>\n' % (sport, esc(label)))
           if os.path.exists(os.path.join(REPO, MOTD_INDEX % sport)) else "",
           '                <li><a href="/handicapping/mlb/">MLB matchups, odds and probable pitchers</a></li>\n',
-          ('                <li><a href="%s">%s simulator</a></li>\n' % (sim, esc(label))) if sim else "",
+          ('                <li><a href="%s">NFL Simulator</a></li>\n'
+           '                <li><a href="/nfl-season-simulator/">NFL Season Simulator</a></li>\n'
+           '                <li><a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a></li>\n'
+           % sim) if sport == "nfl" and sim else
+          (('                <li><a href="%s">%s simulator</a></li>\n' % (sim, esc(label))) if sim else ""),
           '                <li><a href="/betlegend-pro/">BetLegend Pro, the research database '
           'behind these pages</a></li>\n',
           '            </ul>\n        </section>\n',

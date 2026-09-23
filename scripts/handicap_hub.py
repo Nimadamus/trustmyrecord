@@ -545,7 +545,12 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
         links.append(("%s Matchup of the Day" % label, "/matchup-of-the-day/%s/" % sport, None))
     links.append(("MLB matchups, odds and probable pitchers", "/handicapping/mlb/", None))
     if S.get("simulator"):
-        links.append(("%s simulator" % label, S["simulator"], None))
+        if sport == "nfl":
+            links.append(("NFL Simulator", S["simulator"], None))
+            links.append(("NFL Season Simulator", "/nfl-season-simulator/", None))
+            links.append(("NFL Playoff Simulator", "/nfl-playoff-simulator/", None))
+        else:
+            links.append(("%s simulator" % label, S["simulator"], None))
     links.append(("BetLegend Pro, the research database behind these pages", "/betlegend-pro/", None))
 
     b = [ui.body_open(ctx, "hx-hub", ' data-sport="%s"' % esc(sport)),

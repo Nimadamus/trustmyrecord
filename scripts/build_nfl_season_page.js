@@ -62,8 +62,8 @@ function page(d, result, shell) {
   const nextWeek = (d.games.find((g) => !g.completed) || {}).week;
   const slate = d.games.filter((g) => g.week === nextWeek);
   const team = (id) => d.teams.find((t) => t.id === id) || { name: id };
-  const title = `NFL Season Simulator ${season} | Projected Wins, Division Titles and Playoff Odds`;
-  const desc = `Simulate the rest of the ${season} NFL season ${H.count(result.runs)} times: projected wins and the 80% range for all 32 teams, division title, playoff and 1 seed odds, with real NFL tiebreakers.`;
+  const title = `NFL Season Simulator ${season} | Standings and Season Predictor`;
+  const desc = `Simulate the rest of the ${season} NFL season ${H.count(result.runs)} times for projected wins, an 80% range and division standings for all 32 teams. A season predictor from the games already played.`;
   const lead = `<p>${played ? `${played} of ${d.games.length} regular season games are final.` : `The ${season} regular season has not kicked off.`} Across ${H.count(result.runs)} simulated seasons the ${esc(top.name)} average ${H.UI_one(top.wins_mean)} wins and the ${esc(second.name)} ${H.UI_one(second.wins_mean)}. Every season is seeded with the same NFL tiebreakers as the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>. Press Run to play a fresh set from the latest results.</p>`;
   const faqs = [
     ['How does the NFL season simulator work?', `It plays every remaining game on the ${season} NFL schedule ${H.count(result.runs)} times. Games already played keep their real result, every other game is decided by that game's own win probability from the TrustMyRecord NFL model, and each simulated season is seeded with the NFL's tiebreakers.`],
@@ -71,6 +71,7 @@ function page(d, result, shell) {
     ['Which tiebreakers does it use?', 'Head to head, division record, common games, conference record, strength of victory, strength of schedule and the points based steps, in the league’s order. Best net touchdowns and the coin toss cannot be computed from the data held, and a tie that reaches them is left tied rather than guessed.'.replace('’', "'")],
     ['Does it update during the season?', 'Yes. Each rebuild reads the schedule, every final score and the model’s probabilities again, so played games stop being simulated and the ranges narrow week by week.'.replace('’', "'")],
     ['Is it free?', 'The published projection is free to read with no account. Running your own set of seasons needs a free account and uses the daily free simulator run.'],
+    ['Is this an NFL season predictor?', 'Yes. It is the season predictor and standings simulator for the current NFL season. It replays every remaining game and reports projected wins and division standings for all 32 teams. Picking games by hand and rebuilding the bracket is the job of the NFL Playoff Simulator.'],
   ];
   const faq = H.faqBlock(faqs);
   const ld = [
@@ -137,6 +138,7 @@ ${shell.head}
     <h2>How the NFL season simulator works</h2>
     <p>The ${season} regular season is ${weeks.length} weeks and ${d.games.length} games, 17 per team. Every game that has been played keeps its real score. Every game that has not is played out ${H.count(result.runs)} times, each time decided by that game's own home win probability from the TrustMyRecord NFL model, the drive level model behind the <a href="/nfl-simulator/">NFL Simulator</a>, trained on the ${esc(String(d.model && d.model.train_season_min))} to ${esc(String(d.model && d.model.train_season_max))} seasons and held out on ${esc(String(d.model && d.model.holdout_season))}.</p>
     <p>Each simulated season is then seeded the way the league does it: the four division winners in each conference take seeds 1 through 4, the three best remaining records take the wild cards, and ties go through the NFL's tiebreaker steps in order.</p>
+    <p>Division title and playoff percentages on this page come from simulating the standings. To pick the remaining games yourself and rebuild the bracket, use the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p>
     <h2>Tiebreakers</h2>
     <p>Head to head, division record, common games with a four game minimum, conference record, strength of victory, strength of schedule and the points based steps are all applied, in the league's order, and a tie among three or more clubs reduces to two and starts over. Best net touchdowns and the coin toss cannot be computed from the data held; a tie that reaches them stays tied rather than being settled by an invented number.</p>
     <h2>What the projection does not know</h2>
