@@ -557,6 +557,121 @@ LEGACY_CARD = re.compile(r'        <section class="mm-sec mm-gotw">.*?</section>
 CARD_BLOCK = re.compile(r"        <!--MK:featured-card-(\w+)-->\n.*?<!--/MK:featured-card-\1-->\n", re.S)
 
 
+def _asset(root, src):
+    try:
+        with open(os.path.join(root, "static", "ds-assets.json"), encoding="utf-8") as fh:
+            manifest = json.load(fh)
+    except (OSError, ValueError):
+        manifest = {}
+    return manifest.get(src) or ("/" + src)
+
+
+def _child_pages(root, index):
+    """Permanent pages already published under this section. The section URL
+    itself is not one of them."""
+    base = os.path.join(root, os.path.dirname(index["file"]))
+    prefix = index["url"].rstrip("/") + "/"
+    found = []
+    if not os.path.isdir(base):
+        return found
+    for name in sorted(os.listdir(base)):
+        page = os.path.join(base, name, "index.html")
+        if not os.path.isfile(page):
+            continue
+        try:
+            with open(page, encoding="utf-8") as fh:
+                text = fh.read(4000)
+        except OSError:
+            continue
+        title = re.search(r"<title>([^<]*)</title>", text)
+        label = html.unescape(title.group(1)).split(" | ")[0].strip() if title else name
+        found.append((prefix + name + "/", label))
+    return found
+
+
+def section_html(reg, sport, index, feature, root, now):
+    """A stable section. The URL, title, h1 and canonical never become the
+    matchup. The matchup is a link to its own permanent page."""
+    url = index["url"]
+    title = index.get("title") or index.get("h1") or "Featured"
+    h1 = index.get("h1") or title
+    lede = index.get("lede") or ""
+    feature = feature or {}
+    href = feature.get("href") or reg["sports"][sport].get("hub") or "/"
+    headline = feature.get("headline") or feature.get("matchup") or "Open the current matchup"
+    when = " · ".join(x for x in (feature.get("matchup"), feature.get("when")) if x)
+    seen = {url, href}
+    links = []
+    for child_href, label in _child_pages(root, index):
+        if child_href in seen:
+            continue
+        seen.add(child_href)
+        links.append((child_href, label))
+    archive = archive_html(reg, sport, now)
+    # archive_html returns a hub paragraph. Pull its anchors into this page.
+    for match in re.finditer(r'<a href="([^"]+)">([^<]+)</a>', archive):
+        if match.group(1) in seen:
+            continue
+        seen.add(match.group(1))
+        links.append((match.group(1), html.unescape(match.group(2))))
+    earlier = "".join('<li><a href="%s">%s</a></li>' % (esc(link), esc(label)) for link, label in links)
+    earlier_block = "<h2>Earlier games</h2><ul>%s</ul>" % earlier if earlier else ""
+    css = _asset(root, "static/css/tmr-ds.css")
+    header = _asset(root, "static/css/tmr-ds-header.css")
+    nav = _asset(root, "static/js/tmr-ds-nav.js")
+    runtime = runtime_src(root)
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>%s | TrustMyRecord</title>
+<meta name="description" content="%s">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="%s">
+<meta property="og:title" content="%s">
+<meta property="og:url" content="%s">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="%s">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css">
+<link rel="stylesheet" href="%s">
+<style>
+  body{margin:0;background:#070910;color:#e8eef7}
+  main{max-width:40rem;margin:0 auto;padding:48px 24px 72px}
+  h1{font:800 2.2rem/1.15 Inter,system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 12px}
+  p{font:500 1.05rem/1.6 Inter,system-ui,sans-serif;color:#c8d6e6}
+  .now{display:block;margin:22px 0;padding:18px 20px;border-radius:16px;text-decoration:none;color:inherit;border:1px solid rgba(255,201,60,.4);background:linear-gradient(120deg,rgba(255,201,60,.13),rgba(0,53,148,.16))}
+  .now b{display:block;font:800 1.25rem/1.25 Inter,system-ui,sans-serif}
+  .now span{display:block;margin-top:6px;color:#93a4bb}
+  h2{font:800 1rem/1.3 Inter,system-ui,sans-serif;margin:28px 0 8px}
+  ul{padding:0;list-style:none}
+  li{margin:8px 0}
+  a{color:#9fc6ff}
+</style>
+</head>
+<body>
+<main>
+<h1>%s</h1>
+<p>%s</p>
+<section data-tmr-featured="%s" data-tmr-featured-role="card">
+  <a class="now" data-feat-link href="%s">
+    <b data-feat="headline">%s</b>
+    <span data-feat="matchup_when">%s</span>
+  </a>
+</section>
+%s
+</main>
+<script src="/static/js/config.js"></script>
+<script src="%s"></script>
+<script src="%s" defer></script>
+</body>
+</html>
+""" % (
+        esc(title), esc(lede), esc(SITE + url), esc(title), esc(SITE + url),
+        esc(css), esc(header), esc(h1), esc(lede), esc(sport), esc(href),
+        esc(headline), esc(when), earlier_block, esc(nav), esc(runtime))
+
+
 def render_surfaces(reg, now=None, root=ROOT, read=None):
     """Every featured surface as (absolute path, new text). Pure: writes nothing.
 
@@ -571,6 +686,9 @@ def render_surfaces(reg, now=None, root=ROOT, read=None):
         feature = resolve(reg, sport, now)
         for door in s.get("doors") or []:
             writes.append((os.path.join(root, door["file"]), door_html(reg, sport, door, feature, root)))
+        for index in s.get("indexes") or []:
+            writes.append((os.path.join(root, index["file"]),
+                           section_html(reg, sport, index, feature, root, now)))
         # A hub that has no card slot yet (never baked with one) is left alone.
         hub_file = s.get("hub_file")
         if hub_file and os.path.exists(os.path.join(root, hub_file)):
