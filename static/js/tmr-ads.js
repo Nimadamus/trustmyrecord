@@ -5,12 +5,10 @@
    the site: which pages, which spot, which ad unit. Nothing else places ads, and
    AdSense Auto Ads stay OFF in the AdSense account.
 
-   Stage 1 placements (one per page, a second only on long matchup pages):
-     home        homepage, between "More on the platform" and the final CTA
-     article     handicapping matchup pages and Matchup of the Day articles,
-                 between editorial sections after several have rendered
-     article2    Matchup of the Day articles with 8+ sections only, four sections
-                 below the first ad (matchup pages stop at one)
+   Live now: homepage only, between "More on the platform" and the final CTA.
+   Wired and held (empty slot, no request):
+     article     handicapping matchup pages and Matchup of the Day articles
+     article2    long Matchup of the Day articles only
      leaderboard /leaderboards/, below every ranking panel
      (around-the-web profiles hydrate into the tabbed profile app with wallet
       and pick panels, so they carry no ad)
@@ -41,9 +39,9 @@
     var ENABLED = true;
     var SLOTS = {
         home: '1899274090',         /* tmr-home-lower */
-        article: '9142892189',      /* tmr-article-mid */
-        article2: '3890565501',     /* tmr-article-lower */
-        leaderboard: '3030366247'   /* tmr-leaderboard-lower */
+        article: '',
+        article2: '',
+        leaderboard: ''
     };
 
     var mode = '';
