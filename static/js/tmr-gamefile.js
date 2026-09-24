@@ -69,7 +69,7 @@
     var go = function () {
         var s = document.createElement('script');
         s.async = true;
-        s.src = '/static/js/tmr-ads.js?v=9c873057dc76?h=' + Math.floor(Date.now() / 3600000);
+        s.src = '/static/js/tmr-ads.js?v=71ad0e525eab?h=' + Math.floor(Date.now() / 3600000);
         document.head.appendChild(s);
     };
     var idle = function () { (window.requestIdleCallback || setTimeout)(go, { timeout: 3000 }); };
