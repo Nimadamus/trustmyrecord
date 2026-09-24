@@ -66,8 +66,8 @@ STAGES = [
     # finished featured game by its status and queues the next ones, then bakes
     # every featured surface. This refresh is the cadence that keeps it moving.
     ("featured_rotation", [PY, "scripts/featured_matchups.py", "rotate"],
-     ["data/featured-matchups.json", "matchup-of-the-day", "nfl-game-of-the-week",
-      "handicapping", "sportsbook/index.html"], None),
+     ["data/featured-matchups.json", "data/featured-urls.json", "matchup-of-the-day",
+      "nfl-game-of-the-week", "handicapping", "sportsbook/index.html", "sitemap.xml"], None),
     ("asset_refs", [PY, "scripts/version_static_refs.py"], ["."], None),
 ]
 GATES = [

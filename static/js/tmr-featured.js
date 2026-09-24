@@ -26,10 +26,10 @@
 
   var REGISTRY = '/data/featured-matchups.json';
   var DEFAULT_GRACE_MINUTES = 210;
-  /* NFL_SCHEDULE_ROTATION_20260915. A sport with selection "schedule" resolves
-     only the entries scripts/nfl_featured_rotation.py wrote from the real
-     schedule, and a game_state below is never live: status retires a game, the
-     clock (grace_minutes) is only the safety cap. Same as featured_matchups.py. */
+  /* A sport with selection "schedule" resolves only the entries the schedule
+     rotation wrote (nfl_featured_rotation.py for the NFL, sports_featured_rotation.py
+     for every other sport). A game_state below is never live: status retires a
+     game, and grace_minutes is only the safety cap. Same as featured_matchups.py. */
   var ENDED_STATES = ['final', 'postponed', 'canceled'];
   var pending = null;
 

@@ -128,10 +128,11 @@ def resolve(reg, sport, now=None):
     one, else None (only when the sport has no entry at all). Mirrors resolve()
     in static/js/tmr-featured.js line for line; the sync test holds them equal.
 
-    A sport with "selection": "schedule" (the NFL, NFL_SCHEDULE_ROTATION_20260915)
-    resolves only the entries scripts/nfl_featured_rotation.py wrote from the real
-    schedule, and an entry whose game_state is final, postponed or canceled is
-    never live, so game status retires a game and the clock is only a safety cap."""
+    A sport with "selection": "schedule" resolves only the entries the schedule
+    rotation wrote (nfl_featured_rotation.py for the NFL, sports_featured_rotation.py
+    for every other sport). An entry whose game_state is final, postponed or
+    canceled is never live, so game status retires a game and the clock is only
+    a safety cap."""
     now = now or now_utc()
     if sport == "*":
         return resolve_any(reg, now)[1]
@@ -643,35 +644,48 @@ def sync(check=False, now=None, root=ROOT):
 
 
 def rotate(dry=False, now=None, root=ROOT, fetch=None):
-    """NFL_SCHEDULE_ROTATION_20260915. Read the real NFL schedule, queue the next
-    featured games into the registry, then bake every surface. A schedule feed
-    that cannot be read changes nothing and never fails the caller: the queued
-    entries and the browser's safety cap carry the site until the next run."""
+    """Read the real schedules, queue the next featured game for every sport,
+    and bake every surface. One feed being down leaves that sport as it is and
+    never fails the caller. NFL stays on nfl_featured_rotation. Every other
+    sport in the registry is sports_featured_rotation, including a sport added
+    later by a "feed" object on its registry entry."""
     import nfl_featured_rotation as rot
+    import sports_featured_rotation as others
     now = now or now_utc()
     reg_path = os.path.join(root, "data", "featured-matchups.json")
     reg = load(reg_path)
-    if not reg or rot.SPORT not in reg["sports"]:
-        print("featured rotation: no NFL registry; nothing to rotate")
+    if not reg:
+        print("featured rotation: no registry; nothing to rotate")
         return 0
+    changed = False
+    if rot.SPORT in reg.get("sports", {}):
+        try:
+            raw = (fetch or rot.fetch_events)(now)
+        except Exception as exc:  # noqa: BLE001 - a feed outage must not fail a bake
+            print("featured rotation: WARN NFL schedule unreadable (%s); NFL registry left as it is" % exc)
+            raw = None
+        games = [g for g in (rot.normalize(e) for e in (raw or [])) if g] if raw else []
+        if raw is not None and not games:
+            print("featured rotation: WARN NFL schedule returned no games; NFL registry left as it is")
+        elif games:
+            discover_pages(reg, root)
+            did, lines, picks = rot.apply(reg, games, now, root, resolve)
+            changed = changed or did
+            print("featured rotation: %d NFL games read, next featured slots:" % len(games))
+            print(rot.describe(picks, reg, root))
+            if lines:
+                print("\n".join(lines))
+            current = resolve(reg, rot.SPORT, now)
+            print("featured rotation: current NFL feature %s" % (
+                "%s (%s) -> %s" % (current.get("matchup"), current.get("game_state"), current.get("href")) if current else "none"))
     try:
-        raw = (fetch or rot.fetch_events)(now)
-    except Exception as exc:  # noqa: BLE001 - a feed outage must not fail a bake
-        print("featured rotation: WARN schedule feed unreadable (%s); registry left as it is" % exc)
-        return 0 if dry else sync(now=now, root=root)
-    games = [g for g in (rot.normalize(e) for e in raw) if g]
-    if not games:
-        print("featured rotation: WARN schedule feed returned no games; registry left as it is")
-        return 0 if dry else sync(now=now, root=root)
-    discover_pages(reg, root)
-    changed, lines, picks = rot.apply(reg, games, now, root, resolve)
-    print("featured rotation: %d games read, next featured slots:" % len(games))
-    print(rot.describe(picks, reg, root))
-    if lines:
-        print("\n".join(lines))
-    current = resolve(reg, rot.SPORT, now)
-    print("featured rotation: current NFL feature %s" % (
-        "%s (%s) -> %s" % (current.get("matchup"), current.get("game_state"), current.get("href")) if current else "none"))
+        did, reports = others.apply_all(reg, now, root, resolve, write=not dry)
+    except Exception as exc:  # noqa: BLE001 - one sport feed must not fail the bake
+        print("featured rotation: WARN other sports (%s)" % exc)
+        did, reports = False, []
+    changed = changed or did
+    for line in reports:
+        print(line)
     if dry:
         return 0
     if changed:
