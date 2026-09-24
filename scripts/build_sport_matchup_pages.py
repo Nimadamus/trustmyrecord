@@ -1230,11 +1230,24 @@ def update_sitemap(urls, today):
     eol = "\r\n" if "\r\n" in raw else "\n"
     sm = raw.replace("\r\n", "\n")
 
+    # A page kept in another block (historical matchups that have left the
+    # live board) must not be emitted here too. A duplicate loc fails the SEO
+    # gate and throws away the whole hub bake.
+    if MARK_BEGIN in sm and MARK_END in sm:
+        outside = sm[:sm.index(MARK_BEGIN)] + sm[sm.index(MARK_END) + len(MARK_END):]
+    else:
+        outside = sm
+    already = set(re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", outside))
     rows = [MARK_BEGIN]
+    kept = 0
     for url, prio in urls:
-        rows.append('  <url><loc>%s%s</loc><lastmod>%s</lastmod>'
+        loc = "%s%s" % (SITE, url)
+        if loc in already:
+            continue
+        kept += 1
+        rows.append('  <url><loc>%s</loc><lastmod>%s</lastmod>'
                     '<changefreq>daily</changefreq><priority>%s</priority></url>'
-                    % (SITE, url, today, prio))
+                    % (loc, today, prio))
     rows.append(MARK_END)
     block = "\n".join(rows)
 
@@ -1246,7 +1259,7 @@ def update_sitemap(urls, today):
     out = sm.replace("\n", eol)
     if out != raw:
         io.open(path, "w", encoding="utf-8", newline="").write(out)
-        print("sitemap: %d matchup url(s) advertised" % len(urls))
+        print("sitemap: %d matchup url(s) advertised" % kept)
 
 
 # ---------------------------------------------------------------- main
