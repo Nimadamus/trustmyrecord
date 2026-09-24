@@ -860,7 +860,7 @@
 (function () {
     if (window.TMRFeatured || document.querySelector('script[src^="/static/js/tmr-featured"]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/tmr-featured.js?v=c91cba35f8bd';
+    s.src = '/static/js/tmr-featured.js?v=6d1832cc9f86';
     s.defer = true;
     (document.head || document.documentElement).appendChild(s);
 })();
