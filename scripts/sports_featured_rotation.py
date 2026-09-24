@@ -308,6 +308,8 @@ def normalize(event, sport):
         "favored": favored,
         "league": league,
         "round": _round_name(comp, event),
+        "starters": {"away": _starter(away), "home": _starter(home)},
+        "passers": {"away": _passer(away), "home": _passer(home)},
     }
 
 
@@ -317,6 +319,102 @@ def featurable(game, now):
     if game["state"] == "scheduled" and now - game["kickoff"] > dt.timedelta(hours=nfl.STALE_PRE_HOURS):
         return False
     return True
+
+
+def _person(name):
+    skip = {"jr", "sr", "ii", "iii", "iv"}
+    words = [word for word in slug_words(name) if word not in skip]
+    return words[-1] if words else ""
+
+
+def _starter(side):
+    for prob in side.get("probables") or []:
+        if not isinstance(prob, dict):
+            continue
+        athlete = prob.get("athlete") or {}
+        name = athlete.get("displayName")
+        if not name:
+            continue
+        stats = {}
+        for row in prob.get("statistics") or []:
+            if isinstance(row, dict) and row.get("name"):
+                stats[str(row["name"]).lower()] = row.get("displayValue")
+        return {"name": name, "era": stats.get("era"), "wins": stats.get("wins"), "losses": stats.get("losses")}
+    return None
+
+
+def _passer(side):
+    for group in side.get("leaders") or []:
+        if not isinstance(group, dict) or group.get("name") != "passingLeader":
+            continue
+        leaders = group.get("leaders") or []
+        if not leaders or not isinstance(leaders[0], dict):
+            return None
+        return ((leaders[0].get("athlete") or {}).get("displayName")) or None
+    return None
+
+
+def _record_sentence(game):
+    parts = []
+    for side in (game["away"], game["home"]):
+        rec = side.get("record")
+        if not rec or rec == (0, 0, 0):
+            continue
+        parts.append("%s has %d wins and %d losses" % (side["display"], rec[0], rec[1]))
+    if len(parts) == 2:
+        return "%s. %s." % (parts[0], parts[1][0].upper() + parts[1][1:])
+    return ""
+
+
+def specific_story(game):
+    """A slug and title that name this matchup, or None.
+
+    A record gap or a point spread is not enough. The slug has to carry a
+    pitcher, a quarterback, or the two players in a tennis match. No dates.
+    """
+    away, home = game["away"], game["home"]
+    starters = game.get("starters") or {}
+    left, right = starters.get("away"), starters.get("home")
+    if left and right and left.get("name") and right.get("name"):
+        angle = "%s-vs-%s" % (_person(left["name"]), _person(right["name"]))
+        if _person(left["name"]) and _person(right["name"]) and not re.search(r"\d", angle):
+            headline = "%s vs %s Preview: %s Faces %s" % (away["name"], home["name"], left["name"], right["name"])
+            lines = []
+            for club, arm in ((away["display"], left), (home["display"], right)):
+                if arm.get("era") and arm.get("wins") and arm.get("losses"):
+                    lines.append("%s starts %s, at %s wins and %s losses with an ERA of %s."
+                                 % (club, arm["name"], arm["wins"], arm["losses"], arm["era"]))
+                else:
+                    lines.append("%s starts %s." % (club, arm["name"]))
+            body = [" ".join(lines)]
+            rec = _record_sentence(game)
+            if rec:
+                body.append(rec)
+            if not DATE_IN_TITLE.search(headline):
+                return angle, headline, body
+    passers = game.get("passers") or {}
+    pa, ph = passers.get("away"), passers.get("home")
+    if pa and ph and _person(pa) and _person(ph) and not re.search(r"\d", _person(pa) + _person(ph)):
+        angle = "%s-vs-%s" % (_person(pa), _person(ph))
+        headline = "%s vs %s Preview: %s Faces %s" % (away["name"], home["name"], pa, ph)
+        body = ["The passing leader for %s is %s. The passing leader for %s is %s."
+                % (away["display"], pa, home["display"], ph)]
+        rec = _record_sentence(game)
+        if rec:
+            body.append(rec)
+        if not DATE_IN_TITLE.search(headline):
+            return angle, headline, body
+    if game.get("sport") == "tennis":
+        rnd = _round_angle(game.get("round"))
+        if not rnd:
+            return None
+        piece = rnd[0].replace("the-", "")
+        if _person(away["display"]) and _person(home["display"]) and not re.search(r"\d", piece):
+            headline = "%s vs %s Preview: %s" % (away["display"], home["display"], piece.replace("-", " "))
+            body = ["%s plays %s. %s" % (away["display"], home["display"], (rnd[2] if rnd else "Both players are in the draw."))]
+            if not DATE_IN_TITLE.search(headline):
+                return piece, headline, body
+    return None
 
 
 # ---------------------------------------------------------------- angles
@@ -568,6 +666,10 @@ def _href_for_slug(slug):
     return "/matchup-of-the-day/%s/" % slug
 
 
+def _href_for(sport, slug):
+    return "/%s/%s/" % (sport, slug)
+
+
 def _existing_article(reg, sport, game):
     for feature in (reg.get("sports") or {}).get(sport, {}).get("features") or []:
         if feature.get("source") not in ("page", "game-file"):
@@ -615,9 +717,8 @@ def _clock_line(game):
     return "%s, %s %d, %s" % (kick.strftime("%A"), kick.strftime("%B"), kick.day, clock)
 
 
-def _write_page(root, sport, game, spec, href, headline, lede, when_line):
-    slug = href.strip("/").split("/")[-1]
-    path = os.path.join(root, "matchup-of-the-day", slug, "index.html")
+def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=None):
+    path = os.path.join(root, href.strip("/").replace("/", os.sep), "index.html")
     if os.path.exists(path):
         _refresh_clock(path, when_line)
         return
@@ -685,8 +786,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line):
 <p class="eyebrow">%s Featured Matchup</p>
 <h1>%s</h1>
 <p class="when" data-feat-when>%s</p>
-<p>%s</p>
-<p>%s</p>
+%s
 <div class="links">%s</div>
 </main>
 <script src="/static/js/config.js"></script>
@@ -700,8 +800,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line):
         json.dumps(ld, indent=2),
         MARK, html.escape(sport), html.escape(game["id"]),
         html.escape(label), html.escape(headline), html.escape(when_line),
-        html.escape(lede),
-        html.escape("The matchup is %s and %s." % (game["away"]["display"], game["home"]["display"])),
+        "\n".join("<p>%s</p>" % html.escape(part) for part in (body or [lede])),
         link_html, html.escape(nav),
     )
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
@@ -740,18 +839,16 @@ def article_for(reg, root, store, sport, game, spec, taken, write=True):
     for row_key, row in store.items():
         if row.get("href"):
             owner[row["href"]] = row_key
-    for angle, headline, lede in angles(game):
+    story = specific_story(game)
+    if story:
+        angle, headline, body = story
         slug = build_slug(game["away"]["display"], game["home"]["display"], angle)
-        if not slug:
-            continue
-        href = _href_for_slug(slug)
-        if href in owner or href in taken:
-            if (owner.get(href) or taken.get(href)) != key:
-                continue
-        when_line = _clock_line(game)
-        if write:
-            _write_page(root, sport, game, spec, href, headline, lede, when_line)
-        store[key] = {"href": href, "slug": slug, "angle": angle, "headline": headline}
+        href = _href_for(sport, slug) if slug else ""
+        if slug and not (href in owner or href in taken and (owner.get(href) or taken.get(href)) != key):
+            when_line = _clock_line(game)
+            if write:
+                _write_page(root, sport, game, spec, href, headline, body[0], when_line, body)
+            store[key] = {"href": href, "slug": slug, "angle": angle, "headline": headline}
         taken[href] = key
         return href, headline, "Read the full breakdown", "angle"
     return None
@@ -771,8 +868,7 @@ def _sync_sitemap(root, store):
     seen = set(re.findall(r"<loc>\s*([^<]+?)\s*</loc>", outside))
     for row in store.values():
         href = (row or {}).get("href") or ""
-        slug = href.strip("/").split("/")[-1]
-        page = os.path.join(root, "matchup-of-the-day", slug, "index.html")
+        page = os.path.join(root, href.strip("/").replace("/", os.sep), "index.html")
         loc = SITE + href
         if not href or not os.path.exists(page) or loc in seen:
             continue

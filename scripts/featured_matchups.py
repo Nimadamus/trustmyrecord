@@ -67,6 +67,7 @@ import html
 import json
 import os
 import re
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -733,6 +734,68 @@ def _normalise(text):
     return text.replace("\r\n", "\n")
 
 
+MENU_SPORT = {"nfl-gotw": "nfl", "nfl": "nfl", "ncaaf": "ncaaf", "mlb": "mlb",
+              "tennis": "tennis", "soccer": "soccer"}
+FMENU = re.compile(r"/\*FMENU (\S+)\*/\s*\[\s*(['\"])([^'\"]+)\2")
+
+
+def _menu_targets(reg):
+    urls = set()
+    for spec in (reg.get("sports") or {}).values():
+        if spec.get("hub"):
+            urls.add(spec["hub"])
+        for door in spec.get("doors") or []:
+            if door.get("url"):
+                urls.add(door["url"])
+        for index in spec.get("indexes") or []:
+            if index.get("url"):
+                urls.add(index["url"])
+    return urls
+
+
+def rewrite_menus(reg, now=None, root=ROOT, write=True):
+    """Point each Featured Matchups row at that sport's current article.
+
+    The third field on the row stays the stable door, so a later game can
+    move the row without editing the label. A hub or a section URL is never
+    written into the row."""
+    now = now or now_utc()
+    blocked = _menu_targets(reg)
+    paths = ["static/js/tmr-ds-nav.js", "static/js/tmr-sitewide.js"]
+    try:
+        with open(os.path.join(root, "static", "ds-assets.json"), encoding="utf-8") as fh:
+            manifest = json.load(fh)
+        hashed = (manifest.get("static/js/tmr-ds-nav.js") or "").lstrip("/")
+        if hashed:
+            paths.append(hashed)
+    except (OSError, ValueError):
+        pass
+    stale = []
+
+    def repl(match):
+        sport = MENU_SPORT.get(match.group(1))
+        feature = resolve(reg, sport, now) if sport else None
+        href = (feature or {}).get("href")
+        if not href or href in blocked:
+            return match.group(0)
+        return match.group(0).replace(match.group(3), href, 1)
+
+    for rel in paths:
+        path = os.path.join(root, rel)
+        if not os.path.isfile(path):
+            continue
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        updated = FMENU.sub(repl, text)
+        if updated == text:
+            continue
+        stale.append(rel)
+        if write:
+            with open(path, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(updated)
+    return stale
+
+
 def sync(check=False, now=None, root=ROOT):
     reg = load(os.path.join(root, "data", "featured-matchups.json"))
     if not reg:
@@ -751,6 +814,7 @@ def sync(check=False, now=None, root=ROOT):
         stale.append(os.path.relpath(path, root))
         if not check:
             write_preserving_newlines(path, text)
+    stale.extend(rewrite_menus(reg, now=now, root=root, write=not check))
     for sport in managed_sports(reg):
         f = resolve(reg, sport, now)
         print("featured: %s -> %s" % (sport, f["href"] + " (" + f["id"] + ")" if f else "none active"))
@@ -808,7 +872,35 @@ def rotate(dry=False, now=None, root=ROOT, fetch=None):
         return 0
     if changed:
         save(reg, reg_path)
-    return sync(now=now, root=root)
+    code = sync(now=now, root=root)
+    submit_featured(reg, root)
+    return code
+
+
+def submit_featured(reg, root):
+    """Ask Search Console to read the sitemap and inspect the current articles.
+
+    The Indexing API is not used. A machine without the local credential file
+    skips this; the sitemap in the deploy is still how Google finds the pages.
+    """
+    if os.path.abspath(root) != os.path.abspath(ROOT):
+        return 0
+    script = r"C:\Users\BL\tools\gsc_submit.py"
+    creds = r"C:\Users\BL\google_credentials.json"
+    if not os.path.exists(script) or not os.path.exists(creds):
+        print("featured index: sitemap updated; Search Console submit skipped")
+        return 0
+    urls = []
+    for sport in managed_sports(reg):
+        feature = resolve(reg, sport)
+        href = (feature or {}).get("href") or ""
+        if href.startswith("/") and href not in _menu_targets(reg):
+            urls.append(SITE + href)
+    if not urls:
+        return 0
+    print("featured index: submitting %d articles" % len(urls))
+    result = subprocess.run([sys.executable, script] + urls, check=False)
+    return result.returncode
 
 
 def main(argv):

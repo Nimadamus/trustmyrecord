@@ -29,11 +29,11 @@
         // its full name because that lane is a weekly deep dive and the name is
         // the product.
         ["@sub", "Featured Matchups", [
-            ["/nfl-game-of-the-week/", "NFL Game of the Week"],
-            ["/matchup-of-the-day/ncaaf/", "NCAAF"],
-            ["/matchup-of-the-day/mlb/", "MLB"],
-            ["/matchup-of-the-day/tennis/", "Tennis"],
-            ["/matchup-of-the-day/soccer/", "Soccer"]
+            /*FMENU nfl-gotw*/ ["/handicapping/nfl/atlanta-11-6-against-spread-matchup-vs-packers/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
+            /*FMENU ncaaf*/ ["/matchup-of-the-day/wildcats-hoosiers-the-price-is-lopsided/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
+            /*FMENU mlb*/ ["/handicapping/mlb/rays-vs-yankees-823493/", "MLB", "/matchup-of-the-day/mlb/"],
+            /*FMENU tennis*/ ["/matchup-of-the-day/birrell-volynets-the-quarterfinals/", "Tennis", "/matchup-of-the-day/tennis/"],
+            /*FMENU soccer*/ ["/matchup-of-the-day/revolution-salt-lake-one-side-is-far-better/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those
         // pages opens on today's board for its league. All seven leagues since
@@ -175,7 +175,8 @@
                     + `<div class="tmr-sportsbook-sub__panel" role="menu" aria-label="${r[1]} links">`
                     + kids.map((k) => {
                         const active = k[0].split("#")[0].toLowerCase() === current;
-                        return `<a href="${k[0]}" role="menuitem"${active ? ' aria-current="page"' : ""}>${k[1]}</a>`;
+                        const door = typeof k[2] === "string" ? ` data-tmr-door="${k[2]}"` : "";
+                        return `<a href="${k[0]}"${door} role="menuitem"${active ? ' aria-current="page"' : ""}>${k[1]}</a>`;
                     }).join("")
                     + `</div></div>`;
             }

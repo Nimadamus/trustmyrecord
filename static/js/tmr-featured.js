@@ -218,6 +218,8 @@
       var f = resolve(reg, sports[i], now), href = f && safeHref(f.href);
       var doors = reg.sports[sports[i]].doors || [];
       for (var j = 0; j < doors.length; j++) if (href && doors[j].url) map[doors[j].url] = href;
+      var indexes = reg.sports[sports[i]].indexes || [];
+      for (var n = 0; n < indexes.length; n++) if (href && indexes[n].url) map[indexes[n].url] = href;
     }
     var any = resolveAny(reg, now), anyHref = any && safeHref(any.href);
     var all = reg.all_doors || [];

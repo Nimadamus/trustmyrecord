@@ -28,7 +28,7 @@ def check(ok, message):
 
 
 def event(eid, away, home, kick, state="pre", records=("90-60", "60-90"),
-          home_rec=None, road_rec=None, round_name="", league="MLB"):
+          home_rec=None, road_rec=None, round_name="", league="MLB", pitchers=None):
     names = {"pre": ("STATUS_SCHEDULED", "pre", False),
              "post": ("STATUS_FINAL", "post", True)}
     status_name, status_state, completed = names[state]
@@ -39,9 +39,15 @@ def event(eid, away, home, kick, state="pre", records=("90-60", "60-90"),
             records.append({"name": "Home", "type": "home", "summary": home_rec})
         if kind == "away" and road_rec:
             records.append({"name": "Road", "type": "road", "summary": road_rec})
-        return {"homeAway": kind, "records": records,
-                "team": {"abbreviation": short[:3].upper(), "shortDisplayName": short,
-                         "displayName": display, "name": short}}
+        row = {"homeAway": kind, "records": records,
+               "team": {"abbreviation": short[:3].upper(), "shortDisplayName": short,
+                        "displayName": display, "name": short}}
+        if pitchers and pitchers.get(kind):
+            row["probables"] = [{"athlete": {"displayName": pitchers[kind]}, "statistics": [
+                {"name": "wins", "displayValue": "10"},
+                {"name": "losses", "displayValue": "4"},
+                {"name": "ERA", "displayValue": "3.10"}]}]
+        return row
 
     return {
         "id": str(eid), "date": kick, "league": league,
@@ -84,7 +90,8 @@ def feed(url):
     if "baseball/mlb" in url and "20260928" in url:
         return {"events": [event("28", ("St. Louis Cardinals", "Cardinals"),
                                   ("Pittsburgh Pirates", "Pirates"), "2026-09-28T23:00:00Z",
-                                  records=("90-60", "70-80"), home_rec="50-20", road_rec="20-40")]}
+                                  records=("90-60", "70-80"), home_rec="50-20", road_rec="20-40",
+                                  pitchers={"away": "Kyle Leahy", "home": "Paul Skenes"})]}
     if "baseball/mlb" in url and "20260923" in url:
         return {"events": [event("23", ("St. Louis Cardinals", "Cardinals"),
                                   ("Pittsburgh Pirates", "Pirates"), "2026-09-23T23:00:00Z", state="post")]}
@@ -96,7 +103,8 @@ def feed(url):
         ]}]}]}
     if "example.test/cricket" in url and "20260925" in url:
         return {"events": [event("c1", ("Australia", "Australia"), ("India", "India"),
-                                  "2026-09-25T04:00:00Z", records=("12-2", "4-10"), league="Tests")]}
+                                  "2026-09-25T04:00:00Z", records=("12-2", "4-10"), league="Tests",
+                                  pitchers={"away": "Pat Cummins", "home": "Jasprit Bumrah"})]}
     return {"events": []}
 
 
@@ -119,17 +127,19 @@ def main():
         check(mlb and mlb.get("game_state") != "final", "current MLB feature is not a finished game")
         check(reg["sports"]["mlb"].get("selection") == "schedule", "MLB now follows the schedule")
         later = [f for f in reg["sports"]["mlb"]["features"] if f.get("event_id") == "MLB:28"]
-        check(len(later) == 1 and later[0]["href"] != mlb["href"] and "the-home-side-holds" in later[0]["href"],
-              "the rematch got a different angle, not the URL already used for these clubs")
-        check("2026" not in later[0]["href"] and "week" not in later[0]["href"] and not re.search(r"-\d", later[0]["href"]),
+        check(len(later) == 1 and later[0]["href"] == "/mlb/cardinals-pirates-leahy-vs-skenes/",
+              "the rematch got its own pitcher URL")
+        check("2026" not in later[0]["href"] and "week" not in later[0]["href"] and not re.search(r"\d", later[0]["href"]),
               "rematch URL has no date, week stamp, or id")
+        check("September" not in later[0]["headline"] and later[0]["headline"].startswith("Cardinals vs Pirates Preview:"),
+              "rematch title names the pitchers and has no date")
         tennis = fm.resolve_live(reg, "tennis", NOW)
-        check(tennis and tennis["href"].startswith("/matchup-of-the-day/") and "sonego" in tennis["href"],
+        check(tennis and tennis["href"].startswith("/tennis/") and "sonego" in tennis["href"],
               "tennis minted a permanent page for the live draw")
         check(tennis and not re.search(r"\d", (rot.load_store(root).get("tennis:ATP:m1") or {}).get("angle") or "9"),
               "tennis angle has no digits")
         cricket = fm.resolve_live(reg, "cricket", NOW)
-        check(cricket and cricket["href"] != (tennis or {}).get("href") and "australia" in cricket["href"],
+        check(cricket and cricket["href"].startswith("/cricket/") and "cummins-vs-bumrah" in cricket["href"],
               "a sport added with a feed object rotates without new code")
         hrefs = [f["href"] for s in reg["sports"].values() for f in s["features"] if f.get("source") == "rotation"]
         check(len(hrefs) == len(set(hrefs)), "no two featured games share a URL")
