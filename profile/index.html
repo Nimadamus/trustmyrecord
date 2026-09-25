@@ -8200,7 +8200,8 @@
             set('advRecord', s.record, { signed: wrSigned });
             set('advTotal', String(s.total_picks));
             set('advPushes', String(s.pushes || 0));
-            set('advPending', String(s.pending_picks || 0));
+            // pending_picks is owner only; a visitor keeps the local count or placeholder, never a made up 0.
+            if (s.pending_picks != null) set('advPending', String(s.pending_picks));
             set('advWinPct', wr.toFixed(1) + '%', { signed: wrSigned });
             const roi = Number(s.roi || 0);
             set('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', { signed: roi });
@@ -8894,7 +8895,7 @@
             setVal('tmrxRoi', fmtSigned(r, '%', 2), r);
             if (s.avg_odds != null) setVal('tmrxAvgOdds', fmtAmericanOdds(s.avg_odds));
             if (s.avg_units != null) setVal('tmrxAvgUnits', Number(s.avg_units).toFixed(2) + 'u');
-            setVal('tmrxPending', String(s.pending_picks || 0));
+            if (s.pending_picks != null) setVal('tmrxPending', String(s.pending_picks));
             setVal('tmrxGraded', String(s.total_picks));
         }
         if (st.current != null) {
