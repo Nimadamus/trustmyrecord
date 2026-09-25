@@ -535,7 +535,9 @@ class TrustMyRecordAPI {
 
     async logout() {
         try {
-            await this.request('/auth/logout', { method: 'POST' });
+            // Send this device's refresh token so the API ends only this
+            // session; with no token it deletes every session the member has.
+            await this.request('/auth/logout', { method: 'POST', body: { refreshToken: this.refreshToken } });
         } finally {
             this.clearTokens();
         }
