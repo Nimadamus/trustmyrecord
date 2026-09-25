@@ -248,7 +248,11 @@ ok(`${tagged.length} self declared feature page(s), all registered`);
 for (const e of fs.readdirSync(path.join(ROOT, 'nfl'), { withFileTypes: true })) {
   if (!e.isDirectory()) continue;
   const f = path.join(ROOT, 'nfl', e.name, 'index.html');
-  if (fs.existsSync(f) && !fs.readFileSync(f, 'utf8').slice(0, 20000).includes('name="tmr-featured"')) {
+  if (!fs.existsSync(f)) continue;
+  const head = fs.readFileSync(f, 'utf8').slice(0, 20000);
+  // A 301 stub left behind by a URL move (meta refresh to the new page) is not a feature page.
+  if (/http-equiv="refresh"/i.test(head)) continue;
+  if (!head.includes('name="tmr-featured"')) {
     bad(`/nfl/${e.name}/: an NFL feature page without <meta name="tmr-featured">`);
   }
 }
