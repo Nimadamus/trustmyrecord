@@ -27,6 +27,9 @@ Add --dry-run to print what would be written without touching files.
 import gzip, json, os, sys, html, re, urllib.request, urllib.error, datetime, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prerender_report import record
+# DATELESS_THREAD_URLS_20260924: the published slug of a thread whose API slug
+# carried a date is frozen in data/forum-slug-overrides.json (SEO 301 plan).
+from dateless_slug import public_slug
 
 # Thread titles contain emoji. Never let a console encoding kill the build.
 for _s in (sys.stdout, sys.stderr):
@@ -249,7 +252,7 @@ def author_block(name, when, is_op=False, headline=None):
 def page_html(t, posts):
     e = html.escape
     tid = t["id"]
-    slug = t.get("slug") or slugify(t.get("title"))
+    slug = public_slug(tid, t.get("slug") or slugify(t.get("title")))
     title_txt = (t.get("title") or "Thread").strip()
     url = thread_url(tid, slug)
     cat_name = t.get("category_name") or "Forum"
@@ -528,7 +531,7 @@ def cat_page_html(cat, cat_threads):
                     "itemListElement": [
                         {"@type": "ListItem", "position": i + 1,
                          "name": (t.get("title") or "Thread").strip(),
-                         "url": thread_url(t["id"], t.get("slug") or slugify(t.get("title")))}
+                         "url": thread_url(t["id"], public_slug(t["id"], t.get("slug") or slugify(t.get("title"))))}
                         for i, t in enumerate(cat_threads[:50])
                     ],
                 },
@@ -548,7 +551,7 @@ def cat_page_html(cat, cat_threads):
     if cat_threads:
         items = []
         for t in cat_threads:
-            slug_t = t.get("slug") or slugify(t.get("title"))
+            slug_t = public_slug(t["id"], t.get("slug") or slugify(t.get("title")))
             items.append(
                 f'<li class="fc-item"><a href="/forum/thread/{t["id"]}/{e(slug_t)}/">'
                 f'{e((t.get("title") or "Thread").strip())}</a>'
@@ -691,7 +694,7 @@ def main():
     # the existing page and sitemap entry exactly where they were, and only a
     # thread that is genuinely absent from the enumeration is pruned.
     for t0 in threads:
-        existing_slug = t0.get("slug") or slugify(t0.get("title"))
+        existing_slug = public_slug(t0["id"], t0.get("slug") or slugify(t0.get("title")))
         if existing_slug:
             keep[str(t0["id"])] = existing_slug
 
@@ -711,7 +714,7 @@ def main():
                 entries.append((thread_url(tid, kept_slug),
                                 (iso_date(t0.get("last_post_at") or t0.get("created_at")) or "")[:10]))
             continue
-        slug = t.get("slug") or slugify(t.get("title"))
+        slug = public_slug(tid, t.get("slug") or slugify(t.get("title")))
         keep[str(tid)] = slug
         built.append((tid, slug, t, posts))
         entries.append((thread_url(tid, slug),

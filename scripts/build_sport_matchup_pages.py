@@ -88,6 +88,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 import handicap_page  # noqa: E402
 import handicap_hub  # noqa: E402
+import dateless_slug  # noqa: E402
 
 # A deep preview costs a simulation and about a dozen feed calls, so it is
 # built for the games a reader is actually about to watch. Everything outside
@@ -499,7 +500,11 @@ def hook_slug(text, limit=7):
     it as the slug is what stops a slate of sixteen URLs reading as one template
     with the nouns swapped, and it does it with no date in the path, because the
     hook itself is what changed since yesterday."""
-    words = [w for w in slugify(text).split("-") if w and w not in _SLUG_STOP]
+    # DATELESS_SLUGS_20260924: a hook can quote a season ("since 2019") and a
+    # year in a URL is a date in a URL. dateless_slug.strip_dates removes years
+    # and calendar dates before the words are counted.
+    words = [w for w in dateless_slug.strip_dates(slugify(text)).split("-")
+             if w and w not in _SLUG_STOP]
     return "-".join(words[:limit])
 
 
@@ -526,7 +531,7 @@ def mint_slug(sport, g, hook, taken):
             slug = "%s-%s-vs-%s" % (base, away_n, home_n)
     else:
         slug = "%s-%s" % (pair, tail)
-    slug = slug.strip("-")[:110].strip("-")
+    slug = dateless_slug.strip_dates(slug.strip("-")[:110].strip("-")) or pair
     if not slug or slug in taken:
         slug = "%s-%s" % (slug or pair, tail)
     taken.add(slug)

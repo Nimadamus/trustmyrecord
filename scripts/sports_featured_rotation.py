@@ -24,6 +24,7 @@ import re
 import unicodedata
 
 import nfl_featured_rotation as nfl
+import dateless_slug
 
 SOURCE = "rotation"
 URL_STORE = "data/featured-urls.json"
@@ -584,6 +585,8 @@ def build_slug(away_name, home_name, angle):
     if len(slug) > 70:
         away, home = slug_words(away_name)[-1], slug_words(home_name)[-1]
         slug = re.sub(r"-+", "-", "%s-%s-%s" % (away, home, angle)).strip("-")
+    # DATELESS_SLUGS_20260924: never mint a URL carrying a date or year.
+    slug = dateless_slug.strip_dates(slug)
     if len(slug) > 70 or slug in RESERVED or not slug:
         return None
     return slug
