@@ -468,6 +468,12 @@
                 + ' <span class="po">' + fmtOdds(p.odds) + '</span>' + escapeHtml(units) + '</span>'
                 + net + '</div>';
         }
+        function etDay(ms) {
+            if (!isFinite(ms)) return '';
+            try {
+                return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+            } catch (e) { return ''; }
+        }
         function renderReveal(games, picks) {
             var grid = $('#reveal-grid');
             var foot = $('#reveal-foot');
@@ -484,8 +490,13 @@
                 map[key] = { label: label, away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] };
             });
             // Never drop a real pick because its game is missing from the slate.
+            // TODAY_ONLY_20260924: /picks returns the whole contest, so a pick
+            // off the slate is kept only when its game starts on today's
+            // Eastern date; earlier days no longer flood "Today's Picks".
+            var todayEt = etDay(Date.now() + serverOffsetMs);
             (picks || []).forEach(function (p) {
                 var key = p.game_id || p.game;
+                if (!map[key] && etDay(Date.parse(p.game_start_at)) !== todayEt) return;
                 if (!map[key]) {
                     var parts = String(p.game).split(' @ ');
                     map[key] = { label: p.game, away: parts[0] || p.game, home: parts[1] || '', start: p.game_start_at, picks: [] };
