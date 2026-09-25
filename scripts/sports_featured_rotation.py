@@ -717,6 +717,25 @@ def _clock_line(game):
     return "%s, %s %d, %s" % (kick.strftime("%A"), kick.strftime("%B"), kick.day, clock)
 
 
+OG_IMAGE = SITE + "/static/og/og-home.png"
+
+
+def featured_ld(event, name, description, canonical, published):
+    """Article + BreadcrumbList + SportsEvent graph for one featured page."""
+    org = {"@type": "Organization", "name": "TrustMyRecord", "url": SITE + "/"}
+    return {"@context": "https://schema.org", "@graph": [
+        {"@type": "Article", "headline": name[:110], "description": description,
+         "url": canonical, "mainEntityOfPage": canonical, "image": OG_IMAGE,
+         "datePublished": published, "dateModified": published,
+         "author": org, "publisher": org},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/"},
+            {"@type": "ListItem", "position": 2, "name": "Matchup of the Day",
+             "item": SITE + "/matchup-of-the-day/"},
+            {"@type": "ListItem", "position": 3, "name": name, "item": canonical}]},
+        event]}
+
+
 def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=None):
     path = os.path.join(root, href.strip("/").replace("/", os.sep), "index.html")
     if os.path.exists(path):
@@ -727,8 +746,21 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
     hub = (spec or {}).get("hub") or "/handicapping/%s/" % sport
     sim = (CATALOG.get(sport) or {}).get("simulator")
     canonical = SITE + href
-    title = "%s | TrustMyRecord" % headline
-    description = lede
+    # UNIQUE_FEATURED_TITLE_20260924: round and price angles ("This match is in
+    # the quarterfinals", "The price on this game is a pick") name neither side,
+    # so two features firing the same angle shared one <title>. When the
+    # headline names neither club, the matchup leads the title.
+    a_disp, h_disp = game["away"]["display"], game["home"]["display"]
+    if a_disp.lower() in headline.lower() or h_disp.lower() in headline.lower():
+        title = "%s | TrustMyRecord" % headline
+    else:
+        title = "%s %s %s: %s | TrustMyRecord" % (a_disp, "vs" if sport == "tennis" else "at",
+                                                  h_disp, headline)
+    # UNIQUE_FEATURED_DESC_20260924: the lede is an angle sentence shared by
+    # every game that fires the same angle ("The number is wide enough..." sat
+    # on four pages). The matchup now leads the meta description.
+    description = "%s %s %s. %s" % (game["away"]["display"], "vs" if sport == "tennis" else "at",
+                                     game["home"]["display"], lede)
     if DATE_IN_TITLE.search(title) or DATE_IN_TITLE.search(headline):
         raise ValueError("date in featured title")
     links = [("The %s board" % label, hub), ("Make a pick", "/sportsbook/"),
@@ -736,8 +768,10 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
     if sim:
         links.insert(1, ("Run it in the simulator", sim))
     link_html = "".join('<a href="%s">%s</a>' % (html.escape(url), html.escape(text)) for text, url in links)
-    ld = {
-        "@context": "https://schema.org",
+    # FEATURED_SCHEMA_20260924: tests/matchup-seo-contract-test.js requires
+    # every Matchup of the Day page to carry Article + BreadcrumbList +
+    # SportsEvent and an og:image. These pages shipped the event alone.
+    event = {
         "@type": "SportsEvent",
         "name": headline,
         "sport": label,
@@ -746,6 +780,8 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
         "homeTeam": {"@type": "SportsTeam", "name": game["home"]["display"]},
         "awayTeam": {"@type": "SportsTeam", "name": game["away"]["display"]},
     }
+    ld = featured_ld(event, title.replace(" | TrustMyRecord", ""), description, canonical,
+                     dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     nav = _asset(root, "static/js/tmr-ds-nav.js")
     css = _asset(root, "static/css/tmr-ds.css")
     header = _asset(root, "static/css/tmr-ds-header.css")
@@ -762,6 +798,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
 <meta property="og:title" content="%s">
 <meta property="og:description" content="%s">
 <meta property="og:url" content="%s">
+<meta property="og:image" content="%s">
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="%s">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css">
@@ -796,6 +833,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
 """ % (
         html.escape(title), html.escape(description), html.escape(canonical),
         html.escape(headline), html.escape(description), html.escape(canonical),
+        OG_IMAGE,
         html.escape(css), html.escape(header),
         json.dumps(ld, indent=2),
         MARK, html.escape(sport), html.escape(game["id"]),
@@ -885,6 +923,55 @@ def _sync_sitemap(root, store):
     if updated == text:
         return False
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(updated)
+    return True
+
+
+HUB_BEGIN = "<!--MK:featuredAngles-->"
+HUB_END = "<!--/MK:featuredAngles-->"
+HUB_ANCHOR = "<!--/MK:motdByMonth-->"
+
+
+def _sync_hub_links(root, store):
+    """ORPHAN_FEATURED_20260924: link every featured angle page from the
+    /matchup-of-the-day/ hub.
+
+    These pages were reachable only through the per sport door while they were
+    current; once a game retired from the door no page linked to it (13 pages on
+    2026-09-24, tests/matchup-seo-contract-test.js "not linked from the hub").
+    The block sits in its own marker, next to the monthly archive, so the daily
+    Matchup of the Day bake (which only rewrites its own motd* markers) keeps it."""
+    path = os.path.join(root, "matchup-of-the-day", "index.html")
+    if not os.path.exists(path):
+        return False
+    with open(path, encoding="utf-8", newline="") as fh:
+        text = fh.read()
+    rows = []
+    for row in store.values():
+        href = (row or {}).get("href") or ""
+        page = os.path.join(root, href.strip("/").replace("/", os.sep), "index.html")
+        if not href or not os.path.exists(page):
+            continue
+        with open(page, encoding="utf-8") as fh:
+            src = fh.read()
+        m = re.search(r"<title>([^<]+)</title>", src)
+        label = html.unescape(m.group(1)).replace(" | TrustMyRecord", "").strip() if m else row.get("headline") or href
+        k = re.search(r'"startDate":\s*"([^"]+)"', src)
+        kick = k.group(1) if k else ""
+        rows.append((kick, label, href))
+    rows.sort(reverse=True)
+    items = "".join('<li><a href="%s">%s</a></li>' % (html.escape(h), html.escape(l)) for _, l, h in rows)
+    block = (HUB_BEGIN + ('<h3 class="gf-mo-head">More featured matchups</h3><ul class="gf-mo-list">%s</ul>' % items
+                          if items else "") + HUB_END)
+    if HUB_BEGIN in text and HUB_END in text:
+        updated = re.sub(re.escape(HUB_BEGIN) + r".*?" + re.escape(HUB_END), lambda _m: block, text, count=1, flags=re.S)
+    elif HUB_ANCHOR in text:
+        updated = text.replace(HUB_ANCHOR, HUB_ANCHOR + block, 1)
+    else:
+        return False
+    if updated == text:
+        return False
+    with open(path, "w", encoding="utf-8", newline="") as fh:
         fh.write(updated)
     return True
 
@@ -1072,5 +1159,7 @@ def apply_all(reg, now, root, resolver, get=None, write=True):
         save_store(root, store)
         changed = True
     if write and _sync_sitemap(root, store):
+        changed = True
+    if write and _sync_hub_links(root, store):
         changed = True
     return changed, lines

@@ -791,9 +791,23 @@ def main():
         print(f"  ! categories fetch failed ({ex}) - keeping existing category pages")
         record("forum", "/forum/<category>/ (all)", "kept", f"categories fetch failed: {ex}")
         cats = []
+    # BOARD_LISTS_FROM_ENUMERATION_20260924: boards used to list only `built`,
+    # the threads whose per thread fetch succeeded THIS run. Any fetch that
+    # failed (cold start, rate limit) kept its page and sitemap entry but fell
+    # off its board, and nothing else links a thread page: 54 live threads had
+    # no inbound link on 2026-09-24 (the MLB board listed 72 of 116). Boards
+    # now list every enumerated thread whose page is on disk, using the fresh
+    # detail when this run has it and the enumeration row otherwise.
+    detail = {tid: t for tid, slug, t, posts in built}
     by_cat = {}
-    for tid, slug, t, posts in built:
-        by_cat.setdefault(t.get("category_slug") or "", []).append(t)
+    for t0 in threads:
+        tid = t0["id"]
+        slug = keep.get(str(tid))
+        if not slug or not os.path.isfile(os.path.join(TDIR, str(tid), slug, "index.html")):
+            continue
+        t = dict(detail.get(tid) or t0)
+        t["slug"] = slug
+        by_cat.setdefault(t.get("category_slug") or t0.get("category_slug") or "", []).append(t)
     for lst in by_cat.values():
         lst.sort(key=lambda t: (t.get("last_post_at") or t.get("created_at") or ""), reverse=True)
     cat_entries, empty_boards = [], []
