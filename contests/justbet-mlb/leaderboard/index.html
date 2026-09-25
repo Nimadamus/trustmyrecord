@@ -396,7 +396,7 @@
                     + '<div class="lb-main">'
                     + '<span class="lb-rank-wrap"><span class="lb-rank ' + rankCls + '">' + (e.rank || '—') + '</span></span>'
                     + '<span class="lb-who"><img src="' + avaSrc(e) + '" alt="" loading="lazy" onerror="this.removeAttribute(\'src\');this.onerror=null;">'
-                    + (uname ? '<a href="/profile/' + encodeURIComponent(uname) + '/">' + escapeHtml(uname) + '</a>' : '<span class="units-zero">—</span>')
+                    + (uname ? '<a href="/profile/?user=' + encodeURIComponent(uname) + '">' + escapeHtml(uname) + '</a>' : '<span class="units-zero">—</span>')
                     + (e.tied_on_units && used ? '<span class="tie-tag">tied</span>' : '') + '</span>'
                     + '<span class="lb-cell lb-record"><span class="k">Record</span>' + (e.wins || 0) + '-' + (e.losses || 0) + '-' + (e.pushes || 0) + '</span>'
                     + '<span class="lb-cell lb-units ' + unitsCls(net) + '"><span class="k">Units</span>' + signedU(net) + '</span>'

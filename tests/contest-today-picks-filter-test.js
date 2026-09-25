@@ -41,3 +41,9 @@ assert(grid.innerHTML.includes('[3]'), "today's off-slate pick kept");
 assert(!grid.innerHTML.includes('[2]'), 'earlier day pick must not show on Today\'s Picks');
 assert(!grid.innerHTML.includes('[4]'), 'off-slate pick with no start date must not show');
 console.log('PASS contest Today\'s Picks shows only today\'s picks');
+
+// CLOUD_AUDIT_20260924: member links point at the live profile route, not
+// /profile/<name>/ which only exists through the 404 page redirect.
+assert(!/href="\/profile\/' \+ encodeURIComponent\(uname\) \+ '\/"/.test(html), 'profile link must not rely on the 404 redirect');
+assert(/href="\/profile\/\?user=' \+ encodeURIComponent\(uname\) \+ '"/.test(html));
+console.log('PASS contest leaderboard profile links use /profile/?user=');
