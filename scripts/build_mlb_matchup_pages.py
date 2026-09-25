@@ -882,20 +882,28 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
     # <title> over 65 characters; a hook title that would be truncated by the
     # search result is not a title we wrote, so the deterministic form is used
     # instead and the hook still leads the page copy.
+    # DOUBLEHEADER_TITLES_20260924: both games of a doubleheader share the date
+    # and the frozen hook (the hook store keys on teams + date), so without the
+    # game number the two pages carried byte identical titles (Blue Jays vs
+    # Orioles 824784/824785, Cubs vs Red Sox 824703/824706). The URL was already
+    # unique by gamePk; the title now is too.
+    dh = (" Game %d" % int(g["game_number"])
+          if g.get("doubleheader") and g.get("game_number") else "")
     title = None
     if hook:
-        candidate = "%s vs %s: %s" % (away_n, home_n, hook[0])
+        candidate = "%s vs %s%s: %s" % (away_n, home_n, dh, hook[0])
         if len(candidate) <= 65:
             title = candidate
     if not title:
         for tail in ("Odds, Probable Pitchers, Stats", "Odds, Pitchers, Stats", "Odds & Stats", "Odds, Stats", "Odds"):
-            candidate = "%s vs %s, %s: %s" % (away_n, home_n, short_date(g["date"]), tail)
+            candidate = "%s vs %s, %s%s: %s" % (away_n, home_n, short_date(g["date"]), dh, tail)
             title = candidate
             if len(candidate) <= 65:
                 break
         if len(title) > 65:
-            title = "%s vs %s: %s" % (away_n, home_n, "Odds")
-    desc_bits = ["%s at %s on %s" % (away, home, date_long)]
+            title = "%s vs %s%s: %s" % (away_n, home_n, dh, "Odds")
+    desc_bits = ["%s at %s on %s%s" % (away, home, date_long,
+                                        (", game %d of a doubleheader" % int(g["game_number"])) if dh else "")]
     if start:
         desc_bits[0] += " at %s" % start
     if venue:

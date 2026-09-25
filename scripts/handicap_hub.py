@@ -582,6 +582,10 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
          ('        <p class="hx-lede">%s</p>\n' % esc(lede)) if lede else "",
          bld.gotw_block(sport),
          '        <section class="hx-sec">\n', tiles, body, '        </section>\n',
+         ui.section("Earlier %s matchups" % label,
+                    ui.links(bld.earlier_matchups(sport, {bld.game_url(sport, g) for g in games}))
+                    if hasattr(bld, "earlier_matchups") else "",
+                    eyebrow="Research pages"),
          ui.section("Elsewhere on TrustMyRecord", ui.links(links), eyebrow="Keep going"),
          '        <p class="hx-foot">Lines come from the sportsbook feed and refresh through the '
          'day. Club marks, records and form come from the league feed and the graded game '

@@ -756,12 +756,20 @@ def render(bld, sport, g, hist, slate, extras, built_at, hook=None):
     cmp_rows = comparison_rows(sport, a_stats, h_stats, a_gp, h_gp)
 
     # --- head --------------------------------------------------------------
+    # MEETING_DATE_IN_TITLE_20260924: a pair that meets more than once (NHL
+    # Kraken at Flames on Sep 20 and Oct 1, Oilers at Canucks on Sep 24 and
+    # Oct 1) got two permanent URLs with byte identical titles and descriptions.
+    # The game date, in Eastern time, now separates them. It lives in the title
+    # and description only, never in the URL.
+    gd = bld.et_date(g.get("commence"))
+    short_d = ("%s %d %d" % (gd.strftime("%b"), gd.day, gd.year)) if gd else ""
+    long_d = (" on %s %d, %d" % (gd.strftime("%B"), gd.day, gd.year)) if gd else ""
     title = ("%s vs %s: %s" % (g["away"], g["home"], hook[0]) if hook
-             else "%s vs %s: %s Odds, Head to Head and Betting Trends"
-             % (g["away"], g["home"], label))
-    desc = ("%s at %s. The line, the model's projected score and win probability, the head to head "
+             else "%s vs %s%s: %s Odds, Head to Head and Betting Trends"
+             % (g["away"], g["home"], (", " + short_d) if short_d else "", label))
+    desc = ("%s at %s%s. The line, the model's projected score and win probability, the head to head "
             "record, against the spread and over/under splits, and current form for both teams."
-            % (g["away"], g["home"]))
+            % (g["away"], g["home"], long_d))
     url = bld.SITE + bld.game_url(sport, g)
     crumbs = [("Handicapping", "/handicapping/"), (label, "/handicapping/%s/" % sport),
               ("%s at %s" % (away["short"], home["short"]), None)]

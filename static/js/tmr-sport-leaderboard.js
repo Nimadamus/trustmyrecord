@@ -13,7 +13,7 @@
   function render(el, rows, label) {
     if (!rows.length) {
       el.innerHTML = '<div class="seo-card">No graded ' + esc(label) +
-        ' picks on the board yet. <a href="/make-picks/">Log the first verified ' + esc(label) +
+        ' picks on the board yet. <a href="/sportsbook/">Log the first verified ' + esc(label) +
         ' pick</a> and claim the top spot.</div>';
       return;
     }

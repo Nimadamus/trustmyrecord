@@ -88,6 +88,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 import handicap_page  # noqa: E402
 import handicap_hub  # noqa: E402
+import dateless_slug  # noqa: E402
 
 # A deep preview costs a simulation and about a dozen feed calls, so it is
 # built for the games a reader is actually about to watch. Everything outside
@@ -499,7 +500,11 @@ def hook_slug(text, limit=7):
     it as the slug is what stops a slate of sixteen URLs reading as one template
     with the nouns swapped, and it does it with no date in the path, because the
     hook itself is what changed since yesterday."""
-    words = [w for w in slugify(text).split("-") if w and w not in _SLUG_STOP]
+    # DATELESS_SLUGS_20260924: a hook can quote a season ("since 2019") and a
+    # year in a URL is a date in a URL. dateless_slug.strip_dates removes years
+    # and calendar dates before the words are counted.
+    words = [w for w in dateless_slug.strip_dates(slugify(text)).split("-")
+             if w and w not in _SLUG_STOP]
     return "-".join(words[:limit])
 
 
@@ -526,7 +531,7 @@ def mint_slug(sport, g, hook, taken):
             slug = "%s-%s-vs-%s" % (base, away_n, home_n)
     else:
         slug = "%s-%s" % (pair, tail)
-    slug = slug.strip("-")[:110].strip("-")
+    slug = dateless_slug.strip_dates(slug.strip("-")[:110].strip("-")) or pair
     if not slug or slug in taken:
         slug = "%s-%s" % (slug or pair, tail)
     taken.add(slug)
@@ -1218,6 +1223,74 @@ MARK_BEGIN = "  <!-- BEGIN_SPORT_MATCHUP_URLS -->"
 MARK_END = "  <!-- END_SPORT_MATCHUP_URLS -->"
 
 
+_CANON_RE = re.compile(r'<link\s+rel="canonical"\s+href="([^"]+)"', re.I)
+_BUILT_RE = re.compile(r"Built (\d{4}-\d{2}-\d{2})")
+
+
+def historical_pages():
+    """(loc, lastmod) for every indexable per game page this builder owns.
+
+    Engine sports only; hub_only sports mint no per game pages. A page is
+    listed only when it names itself as canonical and carries neither noindex
+    nor a meta refresh, which is exactly what the SEO indexability gate
+    (tests/seo-indexability-regression-test.js) demands of a sitemap URL."""
+    out = []
+    for sport, cfg in sorted(SPORTS.items()):
+        if cfg.get("hub_only") or not cfg.get("engine"):
+            continue
+        base = os.path.join(REPO, "handicapping", sport)
+        if not os.path.isdir(base):
+            continue
+        for slug in sorted(os.listdir(base)):
+            f = os.path.join(base, slug, "index.html")
+            if not os.path.isfile(f):
+                continue
+            with io.open(f, encoding="utf-8", errors="ignore") as fh:
+                page = fh.read()
+            loc = "%s/handicapping/%s/%s/" % (SITE, sport, slug)
+            m = _CANON_RE.search(page)
+            low = page.lower()
+            if not m or m.group(1) != loc:
+                continue
+            if re.search(r'<meta[^>]+name="robots"[^>]+noindex', low) or 'http-equiv="refresh"' in low:
+                continue
+            b = _BUILT_RE.search(page)
+            out.append((loc, b.group(1) if b else None))
+    return out
+
+
+_TITLE_RE = re.compile(r"<title>([^<]+)</title>", re.I)
+_GAMEDAY_RE = re.compile(r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) "
+                         r"([A-Z][a-z]+ \d{1,2}, \d{4})")
+
+
+def earlier_matchups(sport, exclude, limit=120):
+    """Hub links to this sport's permanent game pages that have left the board.
+
+    ORPHAN_MATCHUPS_20260924: once a game left the board no page linked to it
+    (the hub and the sibling pages only list the live slate), so 18 NFL and NHL
+    research pages had no inbound link at all. Newest build first, capped so
+    the hub stays a hub; everything is also in the sitemap block above."""
+    rows = []
+    prefix = "%s/handicapping/%s/" % (SITE, sport)
+    for loc, lastmod in historical_pages():
+        if not loc.startswith(prefix):
+            continue
+        path = loc[len(SITE):]
+        if path in exclude:
+            continue
+        f = os.path.join(REPO, path.strip("/"), "index.html")
+        with io.open(f, encoding="utf-8", errors="ignore") as fh:
+            page = fh.read()
+        t = _TITLE_RE.search(page)
+        name = html.unescape(t.group(1)).split(":")[0].split(",")[0].strip() if t else path
+        d = _GAMEDAY_RE.search(page)
+        label = "%s, %s" % (name, d.group(1)) if d else name
+        rows.append((lastmod or "", label, path))
+    rows.sort(key=lambda r: (r[0], r[1]), reverse=True)
+    return [(label, path, None) for _, label, path in rows[:limit]]
+
+
 def update_sitemap(urls, today):
     """Rewrite this builder's block in sitemap.xml.
 
@@ -1240,14 +1313,31 @@ def update_sitemap(urls, today):
     already = set(re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", outside))
     rows = [MARK_BEGIN]
     kept = 0
+    seen = set()
     for url, prio in urls:
         loc = "%s%s" % (SITE, url)
-        if loc in already:
+        if loc in already or loc in seen:
             continue
+        seen.add(loc)
         kept += 1
         rows.append('  <url><loc>%s</loc><lastmod>%s</lastmod>'
                     '<changefreq>daily</changefreq><priority>%s</priority></url>'
                     % (loc, today, prio))
+    # SITEMAP_KEEPS_HISTORY_20260924: a matchup page is permanent (never
+    # renamed, deleted or de-indexed), but this block used to list only the
+    # games on today's board, so every page dropped out of the sitemap the
+    # morning after its game. 76 live, self canonical NFL and NHL pages were
+    # missing on 2026-09-24 and six had been patched in by hand. Every page on
+    # disk that is indexable (self canonical, no noindex, no refresh) is now
+    # advertised automatically, with the build date the page itself carries.
+    for loc, lastmod in historical_pages():
+        if loc in already or loc in seen:
+            continue
+        seen.add(loc)
+        kept += 1
+        rows.append('  <url><loc>%s</loc>%s'
+                    '<changefreq>weekly</changefreq><priority>0.5</priority></url>'
+                    % (loc, ("<lastmod>%s</lastmod>" % lastmod) if lastmod else ""))
     rows.append(MARK_END)
     block = "\n".join(rows)
 
