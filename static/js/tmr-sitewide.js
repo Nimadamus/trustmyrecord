@@ -29,9 +29,9 @@
         // its full name because that lane is a weekly deep dive and the name is
         // the product.
         ["@sub", "Featured Matchups", [
-            /*FMENU nfl-gotw*/ ["/handicapping/nfl/atlanta-11-6-against-spread-matchup-vs-packers/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
+            /*FMENU nfl-gotw*/ ["/handicapping/nfl/denver-won-7-last-10-vs-rams/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/matchup-of-the-day/wildcats-hoosiers-the-price-is-lopsided/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
-            /*FMENU mlb*/ ["/handicapping/mlb/rays-vs-yankees-823493/", "MLB", "/matchup-of-the-day/mlb/"],
+            /*FMENU mlb*/ ["/handicapping/mlb/braves-vs-marlins-823816/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU tennis*/ ["/matchup-of-the-day/birrell-volynets-the-quarterfinals/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/revolution-salt-lake-one-side-is-far-better/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
@@ -1474,7 +1474,7 @@
     // before this deferred script, so they're skipped.
     [
         ["/static/js/config.js?v=430b4bba7b37", "config.js"],
-        ["/static/js/backend-api.js?v=30ee5c8b5184", "backend-api.js"],
+        ["/static/js/backend-api.js?v=10c8f87858c0", "backend-api.js"],
         ["/static/js/auth-persistent.js?v=d479be477169", "auth-persistent.js"],
         ["/static/js/notifications.js?v=76df0ede5da6", "notifications.js"]
     ].forEach(([src, name]) => {
