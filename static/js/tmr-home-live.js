@@ -2743,10 +2743,10 @@
         return;
       }
       grow.innerHTML = c.slice(0, 3).map(function (x) {
-        var u = { id: x.creator_id, username: x.creator_username, avatar_url: x.creator_avatar };
+        var u = { id: x.creator_id, username: x.creator_username, avatar_url: x.creator_avatar_url || x.creator_avatar };
         return '<div class="mrow">' + avatar(u, 'mav') +
           '<span class="mt2"><b>' + esc(x.creator_username || 'Member') + '</b>' +
-          '<span>Open challenge &middot; ' + esc(x.sport || 'Any sport') + '</span></span>' +
+          '<span>Open challenge &middot; ' + esc(x.sport_game || x.sport || 'Any sport') + '</span></span>' +
           '<span class="go">Accept</span></div>';
       }).join('');
     });
