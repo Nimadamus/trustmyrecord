@@ -167,7 +167,7 @@
          its own Game Files this entry and the NCAAF one both landed on whichever
          piece happened to be newest. Each entry now points at its own sport's
          stable door, so the two can never collapse onto the same page again. */
-      /*FMENU mlb*/ ['/handicapping/mlb/braves-vs-marlins-823816/', 'MLB', '/matchup-of-the-day/mlb/'],
+      /*FMENU mlb*/ ['/matchup-of-the-day/guardians-royals-one-side-is-far-better/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
       /*FMENU tennis*/ ['/matchup-of-the-day/birrell-volynets-the-quarterfinals/', 'Tennis', '/matchup-of-the-day/tennis/'],
