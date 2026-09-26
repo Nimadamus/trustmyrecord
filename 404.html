@@ -94,6 +94,9 @@
         var query = window.location.search;
         var hash = window.location.hash;
         var profilePathMatch = path.match(/^profile\/([^\/?#]+)$/i);
+        // PROFILE_EXPLORER_20260926: /profile/<user>/<sport>/<team-slug> is the
+        // shareable form of a member's team page.
+        var profileTeamMatch = path.match(/^profile\/([^\/?#]+)\/([a-z0-9_]+)\/([a-z0-9-]+)$/i);
         var embedPathMatch   = path.match(/^embed\/([^\/?#]+)$/i);
         var forumThreadMatch = path.match(/^forum\/thread\/(\d+)(?:\/.*)?$/i);
         var userProfileMatch = path.match(/^u\/([^\/?#]+)$/i);
@@ -142,7 +145,14 @@
         };
 
         var mappedRoute = legacyRouteMap[path];
-        if (embedPathMatch) {
+        if (profileTeamMatch) {
+            var teamRel = new URLSearchParams(query).get('rel');
+            window.location.replace(window.location.origin + '/profile/team/?user=' +
+                encodeURIComponent(decodeURIComponent(profileTeamMatch[1])) +
+                '&sport=' + encodeURIComponent(profileTeamMatch[2].toLowerCase()) +
+                '&team=' + encodeURIComponent(profileTeamMatch[3].toLowerCase()) +
+                (teamRel ? '&rel=' + encodeURIComponent(teamRel) : '') + hash);
+        } else if (embedPathMatch) {
             // /embed/<username> -> /embed/?u=<username> (preserves ?size, ?theme, etc.)
             var embedQuery = '?u=' + encodeURIComponent(decodeURIComponent(embedPathMatch[1])) +
                 (query ? '&' + query.slice(1) : '');

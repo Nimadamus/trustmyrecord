@@ -1714,6 +1714,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-explore.css?v=20260926a">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
 </head>
 <body class="tmr-ds-shell profile-page tmr-social-profile">
@@ -2612,6 +2613,11 @@
                            backend `team` breakdown category (bucket = "<sport_key>|<team>"),
                            which counts won/lost/push only - voided and cancelled picks never
                            enter the aggregate. -->
+                      <!-- PROFILE_EXPLORER_20260926: Research Explorer. Sport x market
+                           scoped record, best/weakest areas, charts and every split,
+                           each number opening its own picks. /static/js/tmr-explore.js -->
+                      <div class="tmre" id="tmreSection" hidden><div id="tmreRoot"></div></div>
+
                       <div class="tmrx-section" id="tmrxTeamSection">
                         <div class="tmrx-section-head">
                           <div>
@@ -2914,7 +2920,8 @@
                               <tr data-tmrx-adv-top="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
                               <tr data-tmrx-adv-top="clv"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
                               <tr data-tmrx-adv-top="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
+                              <tr data-tmrx-adv-top="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
                               <tr data-tmrx-adv-top="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
@@ -3896,7 +3903,8 @@
                               <tr data-tmrx-adv="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
                               <tr data-tmrx-adv="clv"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
                               <tr data-tmrx-adv="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
+                              <tr data-tmrx-adv="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
                               <tr data-tmrx-adv="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
@@ -6377,6 +6385,7 @@
     <script src="/static/js/config.js?v=430b4bba7b37"></script>
     <script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
     <script src="/static/js/tmr-team-logo.js?v=3c857a27fcb0"></script>
+    <script src="/static/js/tmr-explore.js?v=20260926a"></script>
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
     <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
     <script src="/static/js/nav-badges.js?v=dca92f04da03"></script>
@@ -14348,6 +14357,7 @@
         // Performance by Team is backend-sourced and filter-independent; load it
         // on every refresh regardless of which advanced-stats branch runs.
         if (!teamSortInited) { initTeamBreakdownSort(); teamSortInited = true; }
+        tmreMount();
         loadTeamBreakdown();
         loadDepthBreakdowns();
         if (!profileUsername || !api || typeof api.getUserAdvancedStats !== 'function') {
@@ -14855,6 +14865,27 @@
     }
     /* Attribute string for a <tr>/<td> built as HTML. `cls` keeps the cell's
        existing class (usually "num") instead of replacing it. */
+    /* PROFILE_EXPLORER_20260926: every team name opens that member's page for
+       the club (/profile/team/). The slug and sport group rules live in
+       /static/js/tmr-explore.js so the link and the page agree. */
+    function tmrxTeamPageHref(sportKey, team, rel) {
+        if (window.TMRExplore) return window.TMRExplore.teamPageUrl(profileUsername, sportKey, team, rel);
+        return '/profile/team/?user=' + encodeURIComponent(profileUsername || '') + '&sport=' + encodeURIComponent(String(sportKey || '')) +
+            '&team=' + encodeURIComponent(String(team || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')) + (rel ? '&rel=' + rel : '');
+    }
+    let tmreMountedFor = null;
+    function tmreMount() {
+        const root = document.getElementById('tmreRoot');
+        if (!root || !window.TMRExplore || !profileUsername || tmreMountedFor === profileUsername) return;
+        tmreMountedFor = profileUsername;
+        let xs = '', xm = '';
+        try { const u = new URL(window.location.href); xs = u.searchParams.get('xs') || ''; xm = u.searchParams.get('xm') || ''; } catch (e) {}
+        window.TMRExplore.mount(root, {
+            username: profileUsername, mode: 'profile', sport: xs, market: xm, syncUrl: true,
+            onData: function () { const sec = document.getElementById('tmreSection'); if (sec) sec.hidden = false; }
+        });
+    }
+
     function tmrxDrillAttrs(category, bucket, label, cls) {
         const name = label == null ? '' : String(label);
         return ' class="tmrx-drillable' + (cls ? ' ' + cls : '') + '"' +
@@ -15215,7 +15246,7 @@
                 const sport = tmrxSportParts(parts.sportKey);
                 return [
                     '<td class="name"><span class="tmr-tl-row">' + tmrxTeamLogoHtml(parts.rest) +
-                        '<span class="tmr-tl-row-name">' + escapeHtml(parts.rest) + '</span></span></td>',
+                        '<a class="tmr-tl-row-name tmrx-team-page-link" href="' + escapeHtml(tmrxTeamPageHref(parts.sportKey, parts.rest, 'opponent')) + '">' + escapeHtml(parts.rest) + '</a></span></td>',
                     '<td class="league">' + escapeHtml(sport[1]) + '</td>'
                 ];
             }
@@ -15449,7 +15480,7 @@
                    sit under it, so the block reads as one team. */
                 const head = i === 0
                     ? '<td class="name"><span class="tmr-tl-row">' + tmrxTeamLogoHtml(entry.team) +
-                      '<span class="tmr-tl-row-name">' + escapeHtml(entry.team) + '</span></span></td>' +
+                      '<a class="tmr-tl-row-name tmrx-team-page-link" href="' + escapeHtml(tmrxTeamPageHref(entry.sportKey, entry.team)) + '">' + escapeHtml(entry.team) + '</a></span></td>' +
                       '<td class="league">' + escapeHtml(sport[1]) + '</td>'
                     : '<td class="name"></td><td class="league"></td>';
                 html.push(tmrxDepthRow(item.row, [head,
@@ -15698,7 +15729,7 @@
             const roiTxt = (r.roi >= 0 ? '+' : '') + r.roi.toFixed(1) + '%';
             const odds = r.avg_odds ? (r.avg_odds > 0 ? '+' + Math.round(r.avg_odds) : Math.round(r.avg_odds)) : '--';
             return '<tr' + tmrxDrillAttrs('team', r.sport_key + '|' + r.team, r.team) + '>' +
-                '<td class="tb-left tb-team">' + escapeHtml(r.team) + '</td>' +
+                '<td class="tb-left tb-team"><a class="tmrx-team-page-link" href="' + escapeHtml(tmrxTeamPageHref(r.sport_key, r.team)) + '">' + escapeHtml(r.team) + '</a></td>' +
                 '<td class="tb-left tb-league">' + escapeHtml(r.league) + '</td>' +
                 '<td>' + rec + '</td>' +
                 '<td class="' + uCls + '">' + uTxt + '</td>' +
@@ -15834,7 +15865,7 @@
             return '<tr class="tmrx-team-drill-row" role="button" tabindex="0" aria-expanded="false"' +
                 ' data-tmrx-team="' + escapeHtml(r.team) + '" data-tmrx-sport-key="' + escapeHtml(r.sport_key) + '">' +
                 '<td><span class="tmrx-team-cell"><span class="tmrx-drill-caret" aria-hidden="true">▶</span>' +
-                    tmrxTeamLogoHtml(r.team) + '<span class="tmrx-team-name">' + escapeHtml(r.team) + '</span></span></td>' +
+                    tmrxTeamLogoHtml(r.team) + '<a class="tmrx-team-name tmrx-team-page-link" href="' + escapeHtml(tmrxTeamPageHref(r.sport_key, r.team)) + '" title="' + escapeHtml('Full team page: every pick on ' + r.team) + '">' + escapeHtml(r.team) + '</a></span></td>' +
                 '<td class="tmrx-team-league-col">' + escapeHtml(r.league) + '</td>' +
                 /* The row expands into that club's picks inline; the Picks cell
                    opens the full filterable history for the same bucket. */
@@ -16007,6 +16038,7 @@
         const table = document.getElementById('tmrxTableTeamTop');
         if (table) {
             table.addEventListener('click', function (e) {
+                if (e.target.closest && e.target.closest('a')) return;
                 const row = e.target.closest && e.target.closest('tr.tmrx-team-drill-row');
                 if (row) tmrxToggleTeamDrilldown(row);
             });
@@ -17252,6 +17284,9 @@
          re-skinned for the dark table here. */
       .tmrx-team-cell, .tmrx-table td.name > .tmr-tl-row { display: inline-flex; align-items: center; gap: 9px; }
       .tmrx-team-name, .tmrx-table td.name > .tmr-tl-row > .tmr-tl-row-name { font-weight: 800; color: #f1f5fb; white-space: nowrap; }
+      /* PROFILE_EXPLORER_20260926: team names link to the team page. */
+      a.tmrx-team-page-link { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(77,163,255,.7); }
+      a.tmrx-team-page-link:hover { color: #4DA3FF; }
       .tmrx-tl-fallback { border: 1px solid #1F3350; background: rgba(31,51,80,.35); }
       /* 34px marks in a 12px-padded row would add 12px of height for nothing;
          8px keeps these three tables at a scannable 50px row. */

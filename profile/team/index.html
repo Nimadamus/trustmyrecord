@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Record | TrustMyRecord</title>
+  <link rel="canonical" id="canonicalLink" href="https://trustmyrecord.com/profile/team/">
+  <meta name="robots" content="index, follow">
+  <meta name="description" id="metaDescription" content="A handicapper's verified record on one team: every graded pick, split by market, home and away, favorite and underdog, opponent, month and more.">
+  <meta property="og:title" id="ogTitle" content="Team Record | TrustMyRecord">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+  <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+  <script defer src="/static/js/tmr-sitewide.js?v=2233666230d3"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+  <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+  <link rel="stylesheet" href="/static/css/tmr-explore.css?v=20260926a">
+  <link rel="stylesheet" href="/static/css/tmr-profile-tmrx.css?v=20260926a">
+  <style>
+    /* Page frame only; every panel below is the profile's own .tmrx component. */
+    body.team-record-page { margin: 0; background: #02050A; }
+    .trp { width: min(100% - 32px, 1280px); margin: 0 auto; padding: 22px 0 56px; }
+    .trp-back { display: inline-block; color: #9BA7B8; font-size: 12px; font-weight: 800; text-decoration: none; margin-bottom: 10px; }
+    .trp-back:hover { color: #4DA3FF; }
+    .trp-head { display: flex; align-items: center; gap: 14px; }
+    .trp-logo:empty { display: none; }
+    .trp-logo .trp-tl, .trp-logo img, .trp-logo svg { width: 52px; height: 52px; object-fit: contain; }
+    .trp h1.tmrx-section-title { font-size: 26px; margin: 2px 0 0; }
+    .trp-share { background: none; border: 0; color: #4DA3FF; font: inherit; font-weight: 800; cursor: pointer; padding: 0; }
+  </style>
+</head>
+<body class="tmr-site-shell tmr-ds-shell profile-page tmr-social-profile team-record-page" data-tmr-route="profile">
+  <main class="trp">
+    <section class="tmrx-stats">
+      <a class="trp-back" id="backLink" href="/handicappers/">&larr; Back to profile</a>
+      <div class="tmrx-section" style="margin-top:0">
+        <div class="tmrx-section-head">
+          <div class="trp-head">
+            <div class="trp-logo" id="teamLogo"></div>
+            <div>
+              <div class="tmrx-meta" id="eyebrow">VERIFIED TEAM RECORD</div>
+              <h1 class="tmrx-section-title" id="pageTitle">Loading&hellip;</h1>
+              <div class="tmrx-section-sub" id="pageSub">Every graded pick, verified and time stamped at lock. <button type="button" class="trp-share" id="shareBtn">Copy link</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="tmrx-sport-picker" id="relTabs" role="tablist" aria-label="View"></div>
+        <div class="tmrx-section-sub" id="relNote"></div>
+      </div>
+      <div class="tmre" id="exploreRoot"></div>
+      <div class="tmrx-section-sub" id="missing" hidden></div>
+    </section>
+  </main>
+
+  <script src="/static/js/config.js?v=430b4bba7b37"></script>
+  <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
+  <script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
+  <script src="/static/js/tmr-team-logo.js?v=3c857a27fcb0"></script>
+  <script src="/static/js/tmr-explore.js?v=20260926a"></script>
+  <script>
+  /* PROFILE_EXPLORER_20260926: one member's verified record on one club.
+     /profile/team/?user=<name>&sport=<nfl|mlb|...>&team=<slug>[&rel=opponent|team_game]
+     The pretty form /profile/<name>/<sport>/<team-slug> lands here via 404.html.
+     Every number below comes from /api/users/:name/explore and opens its picks. */
+  (function () {
+    var u = new URL(window.location.href);
+    var user = (u.searchParams.get('user') || '').trim();
+    var sport = (u.searchParams.get('sport') || '').trim().toLowerCase();
+    var slug = (u.searchParams.get('team') || '').trim().toLowerCase();
+    var rel = u.searchParams.get('rel') || 'team';
+    if (['team', 'opponent', 'team_game'].indexOf(rel) < 0) rel = 'team';
+    var titleEl = document.getElementById('pageTitle');
+    var missing = document.getElementById('missing');
+    if (!user || !sport || !slug) {
+      titleEl.textContent = 'Team record';
+      missing.hidden = false;
+      missing.textContent = 'Open a team from any handicapper profile to see their record on that club.';
+      return;
+    }
+    var key = sport + '|' + slug;
+    var guessName = slug.split('-').map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+    var teamName = guessName;
+    var SPORT_LABEL = { mlb: 'MLB', nfl: 'NFL', ncaaf: 'NCAAF', nba: 'NBA', nhl: 'NHL', wnba: 'WNBA', ncaab: 'NCAAB', soccer: 'Soccer', tennis: 'Tennis', mma: 'UFC/MMA', npb: 'NPB' };
+    var sportLabel = SPORT_LABEL[sport] || sport.toUpperCase();
+    document.getElementById('backLink').href = '/u/' + encodeURIComponent(user) + '/';
+    document.getElementById('backLink').textContent = '← Back to ' + user + '’s profile';
+    var pretty = 'https://trustmyrecord.com/profile/team/?user=' + encodeURIComponent(user) + '&sport=' + encodeURIComponent(sport) + '&team=' + encodeURIComponent(slug);
+    document.getElementById('canonicalLink').href = pretty;
+
+    var RELS = [
+      { id: 'team', label: function (t) { return 'Picks on the ' + t; }, note: 'Moneyline, spread and team totals on this club, every segment. This is the row on the profile’s Performance by Team.' },
+      { id: 'opponent', label: function (t) { return 'Betting against the ' + t; }, note: 'Moneyline and spread picks on this club’s opponent.' },
+      { id: 'team_game', label: function (t) { return 'Every pick in ' + t + ' games'; }, note: 'Everything bet in this club’s games: sides, totals and player props.' }
+    ];
+
+    function paint() {
+      var r = RELS.filter(function (x) { return x.id === rel; })[0];
+      document.getElementById('relTabs').innerHTML = RELS.map(function (x) {
+        return '<button type="button" class="tmrx-sport-pill' + (x.id === rel ? ' is-active' : '') + '" role="tab" data-rel="' + x.id + '">' + x.label(teamName).replace(/[<>&]/g, '') + '</button>';
+      }).join('');
+      document.getElementById('relNote').textContent = r.note;
+      var h1 = rel === 'opponent' ? user + ' betting against the ' + teamName
+        : rel === 'team_game' ? user + ' in ' + teamName + ' games'
+        : user + ' on the ' + teamName;
+      titleEl.textContent = h1;
+      document.getElementById('eyebrow').textContent = sportLabel.toUpperCase() + ' · VERIFIED TEAM RECORD';
+      document.title = h1 + ' | ' + sportLabel + ' record | TrustMyRecord';
+      document.getElementById('ogTitle').setAttribute('content', document.title);
+      document.getElementById('metaDescription').setAttribute('content', user + '’s verified ' + sportLabel + ' record on the ' + teamName + ': every graded pick, with market, home and away, favorite and underdog, opponent and monthly splits.');
+      if (window.TMRTeamLogo && typeof window.TMRTeamLogo.html === 'function') {
+        document.getElementById('teamLogo').innerHTML = window.TMRTeamLogo.html(teamName, { className: 'trp-tl' });
+      }
+    }
+
+    var root = document.getElementById('exploreRoot');
+    function mount() {
+      root.innerHTML = '';
+      missing.hidden = true;
+      window.TMRExplore.mount(root, {
+        username: user, mode: 'team', filters: [rel + ':' + key],
+        onError: function () {
+          paint();
+          missing.hidden = false;
+          missing.textContent = 'This record could not be loaded right now. Refresh to try again.';
+        },
+        onData: function (d) {
+          if (d.username) user = d.username;
+          if (d.team && d.team.name) teamName = d.team.name;
+          if (d.team && d.team.sport_label) sportLabel = d.team.sport_label;
+          paint();
+          if (!d.summary.picks) {
+            root.hidden = true;
+            missing.hidden = false;
+            missing.textContent = 'No settled picks here yet.';
+          }
+        }
+      });
+    }
+    document.getElementById('relTabs').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-rel]');
+      if (!b) return;
+      rel = b.getAttribute('data-rel');
+      var nu = new URL(window.location.href);
+      if (rel === 'team') nu.searchParams.delete('rel'); else nu.searchParams.set('rel', rel);
+      history.replaceState(null, '', nu.toString());
+      paint();
+      mount();
+    });
+    document.getElementById('shareBtn').addEventListener('click', function () {
+      var link = window.location.href;
+      try { navigator.clipboard.writeText(link); this.textContent = 'Copied'; } catch (e) {}
+    });
+    paint();
+    mount();
+  })();
+  </script>
+  <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.e1934d633bf4.js"></script>
+</body>
+</html>
