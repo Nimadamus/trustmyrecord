@@ -151,6 +151,9 @@
       '.tmr-take-inline{margin:18px 0}',
       '.tmr-take-login{display:block;margin:18px 0;padding:14px 16px;border-radius:15px;border:1px dashed rgba(34,210,192,.45);background:rgba(14,22,32,.04);font:600 15px/1.4 Inter,sans-serif;color:inherit;text-decoration:none}',
       '.tmr-take-login b{color:#0C948C}',
+      '.tmr-take-login a{color:#0C948C;text-decoration:underline}',
+      '.tmr-take-dock .tmr-take-login{margin:0;background:#0E1620;color:#EAF2FA;border-style:solid}',
+      '.tmr-take-dock .tmr-take-login b,.tmr-take-dock .tmr-take-login a{color:#22D2C0}',
       /* Clear the Live help bubble (bottom right) where the dock would reach it. */
       '@media (max-width:1100px){.tmr-take-dock{bottom:84px}}',
       '@media (max-width:600px){.tmr-take{padding:12px}.tmr-take-prompt{font-size:15px}.tmr-take-dock{bottom:80px;width:calc(100vw - 20px)}.tmr-take-post{padding:0 14px}}'
@@ -337,13 +340,22 @@
     };
   }
 
+  /* Logged out: the prompt, then Log in (returns here) or Create a free account. */
   function loginCta(ctx) {
     injectStyles();
-    var a = el('a', 'tmr-take-login');
-    a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search);
-    a.appendChild(document.createTextNode(promptFor(ctx) + ' '));
-    a.appendChild(el('b', null, 'Log in to share your take →'));
-    return a;
+    var box = el('div', 'tmr-take-login');
+    box.appendChild(el('span', null, promptFor(ctx) + ' '));
+    var login = el('a', null, 'Log in');
+    login.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search);
+    var join = el('a', null, 'create a free account');
+    join.href = '/register/';
+    var line = el('b');
+    line.appendChild(login);
+    line.appendChild(document.createTextNode(' or '));
+    line.appendChild(join);
+    line.appendChild(document.createTextNode(' to share your take.'));
+    box.appendChild(line);
+    return box;
   }
 
   /* ------------------------------------------------------------------ */
@@ -363,8 +375,27 @@
   }
 
   function dock() {
-    if (!currentUser() || document.querySelector('.tmr-take-dock, .tmr-take-pill')) return;
+    if (document.querySelector('.tmr-take-dock, .tmr-take-pill')) return;
     injectStyles();
+    if (!currentUser()) {
+      /* Logged out: a collapsed pill that opens the Log in / Create account card. */
+      var loPill = el('button', 'tmr-take-pill', '🔥 Share your take');
+      loPill.type = 'button';
+      var loBox = el('div', 'tmr-take-dock');
+      loBox.hidden = true;
+      var card = loginCta({ source: 'homepage', kind: 'general' });
+      var close = el('button', 'tmr-take-x', '×');
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Close');
+      close.style.cssText = 'float:right;margin:-4px -6px 0 8px';
+      close.addEventListener('click', function () { loBox.hidden = true; loPill.hidden = false; });
+      card.insertBefore(close, card.firstChild);
+      loBox.appendChild(card);
+      loPill.addEventListener('click', function () { loPill.hidden = true; loBox.hidden = false; });
+      document.body.appendChild(loBox);
+      document.body.appendChild(loPill);
+      return;
+    }
     var pill = el('button', 'tmr-take-pill', '🔥 Share your take');
     pill.type = 'button';
     var box = el('div', 'tmr-take-dock');
