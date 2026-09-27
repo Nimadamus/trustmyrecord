@@ -187,6 +187,7 @@ function teamPage(d, t, proj, all, shellAssets) {
       <a href="/nfl-simulator/">NFL Simulator<small>Any ${esc(t.nickname)} game with a full box score</small></a>
       <a href="/nfl-season-simulator/">NFL Season Simulator<small>All 32 teams, projected</small></a>
       <a href="/nfl-playoff-simulator/">NFL Playoff Simulator<small>Pick the games, build the bracket</small></a>
+      <a href="/betlegend-pro/nfl/${teamSlug(t)}/">${esc(t.name)} betting history<small>ATS, totals and every opponent</small></a>
     </div>
   </section>`;
   const faqs = [
@@ -230,6 +231,7 @@ function rivalryPage(d, a, b, proj, shellAssets) {
       <a href="/nfl-simulator/teams/${teamSlug(a)}/">${esc(a.name)} Simulator<small>Full schedule, simulated</small></a>
       <a href="/nfl-simulator/teams/${teamSlug(b)}/">${esc(b.name)} Simulator<small>Full schedule, simulated</small></a>
       <a href="/nfl-season-simulator/">NFL Season Simulator<small>All 32 teams, projected</small></a>
+      <a href="/betlegend-pro/nfl/${pairSlug(a, b)}/">${esc(a.nickname)} vs ${esc(b.nickname)} betting history<small>Every meeting with closing lines</small></a>
     </div>
   </section>`;
   const faqs = [
