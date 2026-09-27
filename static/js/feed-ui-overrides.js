@@ -178,7 +178,23 @@ function renderTextPost(item) {
     return '<div class="feed-item" data-id="' + esc(id) + '" data-type="feed_post">' +
         renderFeedHeader(item, action) +
         '<div class="fi-content">' + esc(item.content || item.body || item.text || '') + '</div>' +
+        renderTakeContext(item) +
         renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count) +
+    '</div>';
+}
+
+/* SHARE_YOUR_TAKE_20260927: what a Take was about (simulation, team, game),
+   written by static/js/tmr-take.js. context_url is a same-site path only
+   (validated server side and again here). */
+function renderTakeContext(item) {
+    const label = item.context_label || item.context_team;
+    if (!label) return '';
+    const url = String(item.context_url || '');
+    const safe = /^\/(?!\/)[^\s<>"']*$/.test(url) ? url : '';
+    const icon = item.context_source === 'simulator' ? 'fa-chart-bar' : 'fa-tag';
+    const inner = '<i class="fas ' + icon + '"></i> ' + esc(label);
+    return '<div class="fi-take-context" style="margin:6px 0 2px;font-size:12px;font-weight:600;opacity:.85">' +
+        (safe ? '<a href="' + esc(safe) + '" style="color:inherit;text-decoration:none">' + inner + '</a>' : inner) +
     '</div>';
 }
 

@@ -830,6 +830,14 @@
   }
 
   function render(app, d, box) {
+    /* SHARE_YOUR_TAKE_20260927: static/js/tmr-take.js places its composer after this box. */
+    try {
+      var tkA = d.matchup.away, tkH = d.matchup.home, tkP = d.projection.win_probability;
+      document.dispatchEvent(new CustomEvent('tmr:sim-result', { detail: {
+        sport: 'nba', away: { name: tkA.name, abbr: tkA.abbr }, home: { name: tkH.name, abbr: tkH.abbr },
+        away_wp: tkP.away, home_wp: tkP.home, simulations: d.meta && d.meta.simulations, anchor: box
+      } }));
+    } catch (e) { }
     box.appendChild(S.viewToggle(app));
     if (S.currentView() === 'box') { renderBroadcast(app, d, box); return; }
     var p = d.projection;

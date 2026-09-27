@@ -1091,6 +1091,8 @@ function renderResult(out,d){
   const hAbbr=g.home_abbr||abbrOf(g.home),aAbbr=g.away_abbr||abbrOf(g.away);
   const homeWP=p.win_probability.home,awayWP=p.win_probability.away;
   const nSims=fmtN(d.meta.simulations);
+  /* SHARE_YOUR_TAKE_20260927: static/js/tmr-take.js places its composer after this container. */
+  try{document.dispatchEvent(new CustomEvent('tmr:sim-result',{detail:{sport:'nfl',away:{name:g.away,abbr:aAbbr},home:{name:g.home,abbr:hAbbr},away_wp:awayWP,home_wp:homeWP,simulations:d.meta&&d.meta.simulations,game_id:g.id||g.game_id||null,anchor:out}}))}catch(e){}
   /* SIM_SCORE_SYNC_20260913. The big scoreboard used to print the rounded
      ensemble average while the "One simulation" card printed a sampled game,
      so Simulate again changed one and not the other (GB-MIN read 21-25 on the
@@ -1921,7 +1923,7 @@ async function simHandleSavedId(hadResume){
    auto-resume never fires against empty selectors. */
 boot().then(installSimGate,installSimGate);
 </script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.5fcdb74b3c38.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js"></script><script src="/static/js/tmr-ds-nav.5fcdb74b3c38.js"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
   <script defer src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>

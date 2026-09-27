@@ -2532,6 +2532,24 @@
                         </div>
                       </div>
 
+                      <!-- ===== TAKES (SHARE_YOUR_TAKE_20260927) =====
+                           The member's own Takes: feed posts written from the
+                           homepage, simulator or feed composer (static/js/tmr-take.js).
+                           Likes and replies live on the feed card each entry opens.
+                           Hidden for a visitor when the member has none; the owner
+                           sees a composer instead. -->
+                      <div class="tmrx-section tmrx-takes" id="profileTakes" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Takes</div>
+                            <div class="tmrx-section-sub">Sports takes this member shared on TrustMyRecord, newest first. Open one to like or reply.</div>
+                          </div>
+                          <div class="tmrx-meta" id="takesMeta"></div>
+                        </div>
+                        <div id="takesComposer"></div>
+                        <div class="takes-list" id="takesList"></div>
+                      </div>
+
                       <!-- ===== FORUM ACTIVITY (Jul 15, 2026) =====
                            The member's full forum history, newest first, in two
                            tabs: every reply they wrote (Posts) and every thread
@@ -7595,6 +7613,7 @@
             loadCommunityActivity(profileData.username || profileUsername || '');
             loadChallengeRecord(profileData.username || profileUsername || '');
             loadForumActivity(profileData.username || profileUsername || '');
+            loadProfileTakes(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
@@ -7900,6 +7919,63 @@
             });
         }
         faFetch(tab, faState.page[tab] || 1);
+    }
+
+    // SHARE_YOUR_TAKE_20260927: the member's Takes, from GET /api/feed?username=.
+    // Filtered to this member client side as well, so a backend that ignores
+    // ?username= can never put someone else's post on this profile.
+    async function loadProfileTakes(username) {
+        var section = document.getElementById('profileTakes');
+        var list = document.getElementById('takesList');
+        if (!section || !list || !username) return;
+        var own = !!isOwnProfile;
+        var items = [];
+        try {
+            var resp = await window.api.request('/feed?filter=posts&limit=50&username=' + encodeURIComponent(username));
+            items = ((resp && resp.feed) || []).filter(function (it) {
+                return it.item_type === 'feed_post'
+                    && String(it.username || '').toLowerCase() === username.toLowerCase()
+                    && it.post_type !== 'pick_share';
+            });
+        } catch (e) {
+            if (!own) return;
+        }
+        if (!items.length && !own) return;
+        section.hidden = false;
+        var meta = document.getElementById('takesMeta');
+        if (meta) meta.textContent = items.length ? (items.length + (items.length === 1 ? ' take' : ' takes')) : '';
+        if (own) {
+            var mountTake = function () {
+                if (!window.TMRTake) return;
+                window.TMRTake.mount(document.getElementById('takesComposer'), { source: 'profile', kind: 'general' }, {
+                    onPosted: function () { loadProfileTakes(username); }
+                });
+            };
+            if (window.TMRTake) mountTake(); else window.addEventListener('load', mountTake, { once: true });
+        }
+        list.textContent = '';
+        items.slice(0, 20).forEach(function (it) {
+            var a = document.createElement('a');
+            a.className = 'take-row';
+            a.href = '/feed/?post=' + encodeURIComponent(it.item_id);
+            a.style.cssText = 'display:block;padding:12px 0;border-top:1px solid rgba(127,146,168,.22);color:inherit;text-decoration:none';
+            var body = document.createElement('div');
+            body.style.cssText = 'font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word';
+            body.textContent = it.content || '';
+            var sub = document.createElement('div');
+            sub.style.cssText = 'margin-top:5px;font-size:12px;opacity:.75';
+            var bits = [];
+            var when = new Date(it.created_at);
+            if (!isNaN(when)) bits.push(when.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }));
+            if (it.sport) bits.push(String(it.sport).toUpperCase());
+            if (it.context_label || it.context_team) bits.push(it.context_label || it.context_team);
+            bits.push((Number(it.likes_count) || 0) + ' likes');
+            bits.push((Number(it.comments_count) || 0) + ' replies');
+            sub.textContent = bits.join(' · ');
+            a.appendChild(body);
+            a.appendChild(sub);
+            list.appendChild(a);
+        });
     }
 
     async function loadForumActivity(username) {
@@ -20140,7 +20216,7 @@
 })();
 </script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.5fcdb74b3c38.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js"></script><script src="/static/js/tmr-ds-nav.5fcdb74b3c38.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="tmr-profile-qa-20260909">
 /* =====================================================================

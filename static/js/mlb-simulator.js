@@ -8292,6 +8292,16 @@
         renderAggregate(state.aggregate);
         renderBoxScore(result);
         renderBullpenPanels(result);
+        /* SHARE_YOUR_TAKE_20260927: static/js/tmr-take.js places its composer after the result card. */
+        try {
+            document.dispatchEvent(new CustomEvent('tmr:sim-result', { detail: {
+                sport: 'mlb', away: { name: result.away.name, abbr: result.away.abbreviation },
+                home: { name: result.home.name, abbr: result.home.abbreviation },
+                away_wp: result.awayWin, home_wp: result.homeWin,
+                simulations: state.aggregate && state.aggregate.count > 1 ? state.aggregate.count : null,
+                anchor: resultCard
+            } }));
+        } catch (e) { }
     }
 
     function renderLoading(away, home) {
