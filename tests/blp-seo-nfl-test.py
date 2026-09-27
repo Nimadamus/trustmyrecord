@@ -104,6 +104,15 @@ for p in pages:
 
     # links
     main = s[s.index("<main"):s.index("</main>")]
+    for anchor in re.findall(r'href="#([^"]+)"', main):
+        if f'id="{anchor}"' not in main:
+            fail(f"{path}: jump link #{anchor} has no target")
+    if not re.search(r'<nav class="jump"', main):
+        fail(f"{path}: no jump navigation")
+    if "BetLegend Pro" in html.unescape(s):
+        fail(f"{path}: old brand spelling in visible text or metadata")
+    if 'href="/betlegend-pro/app/"' not in main:
+        fail(f"{path}: no link into the query builder")
     for href in re.findall(r'<a [^>]*href="([^"]+)"', main):
         if "?" in href:
             fail(f"{path}: parameter URL {href}")

@@ -189,13 +189,17 @@ visible = re.sub(r"\s+", " ", html.unescape(re.sub(r"<(?!/?(b|span|a|small|em)\b
 visible = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", visible))
 lead_b = all_a["l"] > all_a["w"]
 series = rec(all_a["l"], all_a["w"], all_a["t"]) if lead_b else su(all_a)
+level = all_a["l"] == all_a["w"]
+gap = abs(all_a["msum"]) / all_a["n"]
+gap_claim = ("averaged the same points per game" if round(gap, 1) == 0 else
+             f"the {na if all_a['msum'] > 0 else nb} have outscored the {nb if all_a['msum'] > 0 else na} by {gap:.1f} points a game")
 claims = {
     "meeting count": f"{all_a['n']} meetings",
-    "series": f"lead the series {series}",
+    "series": f"series is level at {su(all_a)}" if level else f"lead the series {series}",
     f"{na} ATS": f"the {na} are {ats(all_a)}",
     f"{nb} ATS": f"({nb} {rec(all_a['aL'], all_a['aW'], all_a['aP'])})",
     "over/under": f"the over is {ou(all_a)}",
-    "points per game gap": f"by {abs(all_a['msum']) / all_a['n']:.1f} points a game",
+    "points per game gap": gap_claim,
     "average margin tile": f"{all_a['absm'] / all_a['n']:.1f} pts",
     "one score games": f"{sum(1 for r in rows if abs(r['margin']) <= 8)} of {all_a['n']} decided by 8 or fewer",
     "ATS graded": f"{all_a['aW'] + all_a['aL'] + all_a['aP']} of {all_a['n']} meetings graded",
@@ -289,44 +293,66 @@ if mlr:
 
 # ------------------------------------------------------------------- D
 if "--espn" in sys.argv:
-    abbr = {"Chicago Bears": "chi", "Green Bay Packers": "gb"}
-    ab = {v: k for k, v in abbr.items()}
-    espn = {}
+    # ESPN team ids survive relocations (Oakland, San Diego, St. Louis, Houston Oilers), abbreviations do not.
+    logos = json.load(open(os.path.join(ROOT, "data", "team-logos.json"), encoding="utf-8"))["sports"]["nfl"]["teams"]
+    tid = {t["display"]: t["id"] for t in logos}
+    who = {tid[A]: A, tid[B]: B}
     ESPN_FROM = 2002  # ESPN's feed before this is incomplete and carries 0-0 placeholders and misdated games
+    espn, stamp = {}, {}
     for yr in sorted({season(r["date"]) for r in rows if season(r["date"]) >= ESPN_FROM}):
         for st in (2, 3):
-            url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{abbr[A]}/schedule?season={yr}&seasontype={st}"
-            try:
-                d = json.load(urllib.request.urlopen(url, timeout=30))
-            except Exception as exc:  # noqa: BLE001
-                notes.append(f"D ESPN {yr} type {st}: {exc}")
+            url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{tid[A]}/schedule?season={yr}&seasontype={st}"
+            d = None
+            for attempt in range(6):
+                try:
+                    d = json.load(urllib.request.urlopen(url, timeout=30))
+                    break
+                except Exception as exc:  # noqa: BLE001
+                    err = exc
+                    import time
+                    time.sleep(2 + 3 * attempt)
+            if d is None:
+                fails.append(f"D ESPN {yr} type {st} unreachable: {err}")
                 continue
             for ev in d.get("events", []):
                 comp = ev["competitions"][0]["competitors"]
-                teams = {c["team"]["abbreviation"].lower(): c for c in comp}
-                if abbr[B] in teams and abbr[A] in teams:
-                    home = next(c for c in comp if c["homeAway"] == "home")["team"]["abbreviation"].lower()
-                    sa = (teams[abbr[A]].get("score") or {}).get("value")
-                    sb = (teams[abbr[B]].get("score") or {}).get("value")
+                by = {c["team"]["id"]: c for c in comp}
+                if tid[A] in by and tid[B] in by:
+                    home = who[next(c for c in comp if c["homeAway"] == "home")["team"]["id"]]
+                    sa = (by[tid[A]].get("score") or {}).get("value")
+                    sb = (by[tid[B]].get("score") or {}).get("value")
                     if sa is not None and (sa, sb) != (0, 0):
-                        espn[ev["date"][:10]] = (ab.get(home), int(sa), int(sb))
-    matched = 0
+                        espn.setdefault(ev["date"][:10], []).append((home, int(sa), int(sb)))
+                        stamp[(ev["date"][:10], (home, int(sa), int(sb)))] = ev["date"]
     from datetime import date as _d, timedelta
     checked = [r for r in rows if season(r["date"]) >= ESPN_FROM]
+    matched = 0
+    used = set()
     for r in checked:
         dd = _d.fromisoformat(r["date"])
-        hit = next((espn[k] for k in ((dd + timedelta(days=o)).isoformat() for o in (0, 1, -1)) if k in espn), None)
-        if not hit:
-            notes.append(f"D ESPN has no {r['date']} meeting")
+        mine = (games[r["id"]]["home"], r["pf"], r["pa"])
+        keys = [(dd + timedelta(days=o)).isoformat() for o in (0, 1, -1)]
+        cands = [(k, v) for k in keys for v in espn.get(k, [])]
+        if not cands:
+            fails.append(f"D ESPN has no meeting near {r['date']}")
             continue
-        matched += 1
-        home_team = games[r["id"]]["home"]
-        if hit != (home_team, r["pf"], r["pa"]):
-            fails.append(f"D ESPN disagrees on {r['date']}: ESPN home {hit[0]} {hit[1]}-{hit[2]}, page home {home_team} {r['pf']}-{r['pa']}")
-    extra = [k for k in espn if not any(abs((_d.fromisoformat(k) - _d.fromisoformat(r["date"])).days) <= 1 for r in checked)]
-    notes.append(f"D ESPN matched {matched} of {len(checked)} meetings since {ESPN_FROM}; ESPN meetings missing from the page: {extra or 'none'}")
-    for k in extra:
-        fails.append(f"D ESPN lists a meeting on {k} that the page does not")
+        hit = next(((k, v) for k, v in cands if v == mine), None)
+        if hit:
+            matched += 1
+            used.add(hit)
+        else:
+            fails.append(f"D ESPN disagrees on {r['date']}: ESPN {cands[0][1]}, page {mine}")
+    extra = [(k, v) for k, vs in espn.items() for v in vs if (k, v) not in used]
+    notes.append(f"D ESPN matched {matched} of {len(checked)} meetings since {ESPN_FROM}")
+    for k, v in extra:
+        # A time of exactly midnight Eastern (05:00Z / 04:00Z) is ESPN's date only placeholder record; seen
+        # carrying scores from other games (a third 2004 Broncos vs Chiefs game, a 1969 Bears vs Packers game
+        # with the 1970 score). Reported, not failed, when every real meeting already matched.
+        placeholder = stamp.get((k, v), "").endswith(("T05:00Z", "T04:00Z"))
+        if placeholder and matched == len(checked):
+            notes.append(f"D ignored ESPN placeholder record {stamp[(k, v)]} {v}: not a real meeting")
+        else:
+            fails.append(f"D ESPN lists a meeting on {k} {v} that the page does not")
 
 b_fields = sum(1 for _ in rows) * 13
 ledger.insert(0, {"figure": "rows vs engine records", "recomputed_from_rows": f"{len(rows)} rows x 13 fields = {b_fields} field checks", "on_page": not any(f.startswith("B ") for f in fails)})

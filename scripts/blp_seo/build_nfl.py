@@ -40,6 +40,7 @@ from nfl_teams import DIVISIONS, DIVISION_OF, NICKNAME, TEAMS, division_pairs, m
 
 SITE = "https://trustmyrecord.com"
 BASE = "/betlegend-pro/nfl/"
+BRAND = "Bet Legend Pro"  # visible name; URLs and file names keep "betlegend-pro"
 ESPN_ABBR = {
     "Arizona Cardinals": "ari", "Atlanta Falcons": "atl", "Baltimore Ravens": "bal", "Buffalo Bills": "buf",
     "Carolina Panthers": "car", "Chicago Bears": "chi", "Cincinnati Bengals": "cin", "Cleveland Browns": "cle",
@@ -406,7 +407,7 @@ def page(assets, *, path, title, desc, h1, crumbs, body, schema, og_image, game_
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- BLP_SEO_NFL_PILOT_20260927. Built by scripts/blp_seo/build_nfl.py from verified BetLegend Pro data. Do not edit by hand. -->
+<!-- BLP_SEO_NFL_PILOT_20260927. Built by scripts/blp_seo/build_nfl.py from verified Bet Legend Pro data. Do not edit by hand. -->
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{SITE}{path}">
@@ -437,7 +438,7 @@ def page(assets, *, path, title, desc, h1, crumbs, body, schema, og_image, game_
 <main class="blpr">
 {crumb_html}
 {body}
-<p class="asof">Data through games played {fmt_date_long(modified)}. Records count every game in the BetLegend Pro NFL database for the span shown. Spread, total and moneyline records count only games with a closing number on file, and each table states how many games it counted.</p>
+<p class="asof">Data through games played {fmt_date_long(modified)}. Records count every game in the Bet Legend Pro NFL database for the span shown. Spread, total and moneyline records count only games with a closing number on file, and each table states how many games it counted.</p>
 </main>
 <script src="{assets.analytics}" defer></script>
 <script src="{assets.config}" defer></script>
@@ -450,10 +451,16 @@ def page(assets, *, path, title, desc, h1, crumbs, body, schema, og_image, game_
 """
 
 
-def cta(text, sub):
-    return (f'<section class="cta"><div><h2>{esc(text)}</h2><p>{sub}</p></div>'
-            '<div class="cta-actions"><a class="btn" href="/betlegend-pro/app/">Open BetLegend Pro</a>'
-            '<a class="btn ghost" href="/betlegend-pro/">How it works</a></div></section>')
+def cta(text, sub, button="Open Bet Legend Pro"):
+    return (f'<section class="cta" id="research"><div><h2>{esc(text)}</h2><p>{sub}</p></div>'
+            f'<div class="cta-actions"><a class="btn" href="/betlegend-pro/app/">{esc(button)}</a>'
+            '<a class="btn ghost" href="/betlegend-pro/">How Bet Legend Pro works</a></div></section>')
+
+
+def jump(items):
+    """Compact on-page navigation; every target is an id on this page (tested)."""
+    return ('<nav class="jump" aria-label="On this page">'
+            + "".join(f'<a href="#{i}">{esc(label)}</a>' for i, label in items) + "</nav>")
 
 
 def kpis(items):
@@ -605,7 +612,7 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
 
     last = rows[-1]
     su_all, ats_all, ou_all = su(allr), ats(allr), ou(allr)
-    title = f"{team} Betting History, ATS Record & Trends | BetLegend Pro"
+    title = f"{team} Betting History, ATS Record & Trends | Bet Legend Pro"
     desc = (f"{team} betting history: {su_all} straight up and {ats_all} ATS in {allr['n']:,} games since "
             f"{first_season}, with home, road, favorite and underdog splits.")
     h1 = f"{team} Betting History &amp; Research"
@@ -616,7 +623,7 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
             f"the spread over {allr['ats_n']:,} graded lines and <b>{ou_all}</b> on {allr['ou_n']:,} closing totals. "
             f"Most recent game: {fmt_date(last['date'])}, {'vs' if last['home'] else 'at'} {esc(last['opp_name'])}, "
             f"{'won' if last['m'] > 0 else ('lost' if last['m'] < 0 else 'tied')} {last['pf']}-{last['pa']}.")
-    hero = (f'<header class="hero">{logo(team, 72, "hl")}<div><p class="eyebrow">BetLegend Pro research &middot; NFL &middot; {esc(div)}</p>'
+    hero = (f'<header class="hero">{logo(team, 72, "hl", eager=True)}<div><p class="eyebrow">Bet Legend Pro research &middot; NFL &middot; {esc(div)}</p>'
             f'<h1>{h1}</h1><p class="lede">{lede}</p></div></header>')
     k = kpis([
         ("straight up", su_all, fmt_pct(su_pct(allr))),
@@ -628,7 +635,7 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
                   + "".join(f"<li>{n}</li>" for n in notes) + "</ul></section>") if notes else ""
 
     split_tbl = table(SPLIT_HEAD, [split_row(esc(lab), r) for lab, r in splits])
-    sec_splits = (f'<section class="panel"><h2>{esc(nk)} records by situation</h2>'
+    sec_splits = (f'<section class="panel" id="overview"><h2>{esc(nk)} records by situation</h2>'
                   f'<p class="sub">All seasons since {first_season}. Favorite and underdog use the closing spread.</p>{split_tbl}</section>')
 
     def bucket_tbl(rows_, first_col):
@@ -640,7 +647,7 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
                 f"<td class=\"n\">{f1(avg(r['tp'], r['n']))}</td></tr>" for lab, r in rows_ if r["n"]]
         return table(head, body)
 
-    sec_lines = (f'<section class="panel"><h2>By closing spread since {since}</h2>'
+    sec_lines = (f'<section class="panel" id="lines"><h2>By closing spread since {since}</h2>'
                  f'<p class="sub">{recent_r["ats_n"]:,} games with a closing spread, from the {esc(nk)} side of the number.</p>'
                  f'{bucket_tbl(spread_rows, "Closing spread")}</section>'
                  f'<section class="panel"><h2>By closing total since {since}</h2>'
@@ -658,7 +665,7 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
         season_rows.append(f"<tr><th scope=\"row\">{s}</th><td class=\"n\">{r['n']}</td><td>{su(r)}</td><td>{ats(r) if r['ats_n'] else ''}</td>"
                            f"<td>{ou(r) if r['ou_n'] else ''}</td><td class=\"n\">{f1(avg(r['pf'], r['n']))}</td>"
                            f"<td class=\"n\">{f1(avg(r['pa'], r['n']))}</td><td>{su(post) if post['n'] else ''}</td></tr>")
-    sec_seasons = (f'<section class="panel"><h2>Season by season</h2><p class="sub">The last {len(seasons)} seasons, regular season and '
+    sec_seasons = (f'<section class="panel" id="seasons"><h2>Season by season</h2><p class="sub">The last {len(seasons)} seasons, regular season and '
                    f'postseason together.</p>{table(season_head, season_rows)}</section>')
 
     sec_ml = ""
@@ -681,7 +688,7 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
         opp_rows.append(f"<tr><th scope=\"row\">{name}</th><td class=\"n\">{r['n']}</td><td>{su(r)}</td>"
                         f"<td>{ats(r) if r['ats_n'] else ''}</td><td>{ou(r) if r['ou_n'] else ''}</td>"
                         f"<td>{fmt_date(lm['date'])}, {res_of(lm)} {lm['pf']}-{lm['pa']}</td></tr>")
-    sec_opp = (f'<section class="panel"><h2>{esc(nk)} against every opponent</h2><p class="sub">Franchise history is kept together, '
+    sec_opp = (f'<section class="panel" id="opponents"><h2>{esc(nk)} against every opponent</h2><p class="sub">Franchise history is kept together, '
                f'so a relocated team counts under its current name. Linked opponents have a full head to head page.</p>'
                f'{table(opp_head, opp_rows)}</section>')
 
@@ -695,24 +702,28 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
         rg_rows.append(f"<tr data-game-id=\"{esc(x['id'])}\"><td>{fmt_date(x['date'])}</td><td>{'vs' if x['home'] else 'at'} {esc(x['opp_name'])}"
                        f"{' (playoffs)' if x['post'] else ''}</td><td><b class=\"r{res_of(x)}\">{res_of(x)}</b> {x['pf']}-{x['pa']}</td>"
                        f"<td>{fmt_line(x['line'])}</td><td>{ats_r}</td><td>{total_txt}</td><td>{ou_r}</td></tr>")
-    sec_recent = (f'<section class="panel"><h2>Last {cfg["recent_games"]} {esc(nk)} games</h2>{table(rg_head, rg_rows)}</section>')
+    sec_recent = (f'<section class="panel" id="recent"><h2>Last {cfg["recent_games"]} {esc(nk)} games</h2>{table(rg_head, rg_rows)}</section>')
 
     rival_links = "".join(
         f'<a href="{pair_url(team, r)}">{logo(r, 28)}<span>{esc(nk)} vs {esc(nick(r))}<small>'
         f'{esc(su(agg(by_opp[r])))} all time</small></span></a>' for r in rivals)
     division_links = "".join(f'<a href="{team_url(t)}">{logo(t, 28)}<span>{esc(t)}<small>Team research</small></span></a>'
                              for t in rivals)
-    sec_links = (f'<section class="panel"><h2>{esc(div)} head to head</h2><div class="linkgrid">{rival_links}</div></section>'
+    sec_links = (f'<section class="panel" id="related"><h2>{esc(div)} head to head</h2><div class="linkgrid">{rival_links}</div></section>'
                  f'<section class="panel"><h2>Keep researching</h2><div class="linkgrid">{division_links}'
                  f'<a href="/nfl-simulator/teams/{team_slug(team)}/"><span>{esc(nk)} 2026 simulator<small>Projected record and playoff odds</small></span></a>'
                  f'<a href="{BASE}"><span>NFL betting history<small>All 32 teams and every division rivalry</small></span></a>'
                  f'<a href="/handicapping/nfl/"><span>NFL handicapping hub<small>This week\'s games with research</small></span></a>'
                  f'</div></section>')
-    body = (hero + k + notes_html + sec_splits + sec_lines + sec_cal + sec_seasons + sec_ml + sec_opp + sec_recent
-            + cta(f"Build your own {nk} query", f"Stack conditions the tables above cannot: location, month, rest, streaks, the prior result, "
-                  f"line ranges and the opponent's situation too. Every answer lists the exact games behind it.")
-            + sec_links)
-    crumbs = [("TrustMyRecord", "/"), ("BetLegend Pro", "/betlegend-pro/"), ("NFL", BASE), (team, path)]
+    nav = jump([("overview", "Overview"), ("lines", "By spread and total"), ("seasons", "Season by season"),
+                ("opponents", "Every opponent"), ("recent", "Recent games"), ("related", "Rivalries"),
+                ("research", "Run custom research")])
+    body = (hero + nav + k + notes_html + sec_splits + sec_lines + sec_cal + sec_seasons + sec_ml + sec_opp + sec_recent + sec_links
+            + cta(f"Want to analyze the {team} under your own conditions?",
+                  f"Run a custom historical query in Bet Legend Pro. Stack what the tables above cannot: location, month, day, "
+                  f"rest, streaks, the prior result, line ranges and the opponent's situation. You get the straight up, ATS and "
+                  f"over/under record plus every qualifying game and why it counted.", button=f"Run a {nk} query"))
+    crumbs = [("TrustMyRecord", "/"), ("Bet Legend Pro", "/betlegend-pro/"), ("NFL", BASE), (team, path)]
     schema = [web_page(path, title, desc, sports_team(team), modified)]
     logo_url = f"https://a.espncdn.com/i/teamlogos/nfl/500/{ESPN_ABBR[team]}.png"
     htm = page(assets, path=path, title=title, desc=desc, h1=h1, crumbs=crumbs, body=body, schema=schema,
@@ -805,14 +816,17 @@ def build_pair(assets, games, engine, cfg, a0, b0, modified):
     series = su(r) if leader != b else rec(r["l"], r["w"], r["t"])
     lead_txt = (f"The {nick(leader)} lead the series {series}" if leader else f"The series is level at {su(r)}")
     b_ats = rec(r["al"], r["aw"], r["ap"])
-    margin_txt = (f"the {nick(leader)} have outscored the {nick(b if leader == a else a)} by {abs(signed):.1f} points a game"
-                  if leader and signed else "the average score is even")
+    if round(abs(signed), 1) == 0:
+        margin_txt = "the two teams have averaged the same points per game"
+    else:
+        up, down = (a, b) if signed > 0 else (b, a)
+        margin_txt = f"the {nick(up)} have outscored the {nick(down)} by {abs(signed):.1f} points a game"
 
     decades = defaultdict(list)
     for x in rows:
         decades[(x["season"] // 10) * 10].append(x)
 
-    title = f"{na} vs {nb} Betting History: ATS, Odds & Results | BetLegend Pro"
+    title = f"{na} vs {nb} Betting History: ATS, Odds & Results | Bet Legend Pro"
     lead_short = f"the {nick(leader)} lead {series}" if leader else f"the series is tied {su(r)}"
     desc = (f"All {r['n']} {na} vs {nb} games since {first['season']}: {lead_short}, the {na} are {ats(r)} ATS and the "
             f"over is {ou(r)}. Every score, closing spread and total.")
@@ -829,11 +843,10 @@ def build_pair(assets, games, engine, cfg, a0, b0, modified):
              f"{esc(na if lastg['m'] > 0 else nb)} {max(lastg['pf'], lastg['pa'])}-{min(lastg['pf'], lastg['pa'])}"
              f"{' (tie)' if lastg['m'] == 0 else ''}.")
     hero = (f'<header class="hero vs">{logo(a, 64, "hl", eager=True)}<span class="vsx">vs</span>{logo(b, 64, "hl", eager=True)}<div>'
-            f'<p class="eyebrow">BetLegend Pro research &middot; NFL &middot; {esc(DIVISION_OF[a])} rivalry</p>'
+            f'<p class="eyebrow">Bet Legend Pro research &middot; NFL &middot; {esc(DIVISION_OF[a])} rivalry</p>'
             f'<h1>{h1}</h1><p class="lede">{lede}</p><p class="lede">{lede2}</p></div></header>')
-    jump = ('<nav class="jump" aria-label="On this page">'
-            '<a href="#overview">Overview</a><a href="#recent">Recent meetings</a><a href="#decades">By decade</a>'
-            '<a href="#meetings">All meetings</a><a href="#related">Related matchups</a><a href="#research">Run custom research</a></nav>')
+    nav = jump([("overview", "Overview"), ("recent", "Recent meetings"), ("decades", "By decade"), ("meetings", "All meetings"),
+                ("related", "Related matchups"), ("research", "Run custom research")])
     k = kpis([
         ("series, straight up", series if leader else su(r), f"{nick(leader)} lead" if leader else "level"),
         (f"{na} against the spread", ats(r), f"{r['ats_n']} of {r['n']} meetings graded"),
@@ -916,14 +929,12 @@ def build_pair(assets, games, engine, cfg, a0, b0, modified):
                    f'<a href="/nfl-simulator/{matchup_slug(a, b)}/"><span>{esc(na)} vs {esc(nb)} simulator<small>This season\'s meetings, 10,000 simulations</small></span></a>'
                    f'<a href="{BASE}"><span>NFL betting history<small>All 32 teams and 48 rivalries</small></span></a>'
                    f'</div></section>')
-    sec_cta = (f'<section class="cta" id="research"><div><h2>Want to analyze {esc(na)} vs {esc(nb)} under your own conditions?</h2>'
-               f'<p>Run a custom historical query in BetLegend Pro. Choose who is home, the month and day, who was favored and by how much, '
-               f'the total, rest days, streaks and each team\'s last result. You get the straight up, ATS and over/under record '
-               f'plus every qualifying game and why it counted.</p></div>'
-               f'<div class="cta-actions"><a class="btn" href="/betlegend-pro/app/">Run a {esc(na)} vs {esc(nb)} query</a>'
-               f'<a class="btn ghost" href="/betlegend-pro/">How BetLegend Pro works</a></div></section>')
-    body = hero + jump + k + sec_over + sec_recent + sec_dec + sec_ml + sec_all + sec_related + sec_cta
-    crumbs = [("TrustMyRecord", "/"), ("BetLegend Pro", "/betlegend-pro/"), ("NFL", BASE), (a, team_url(a)), (f"{na} vs {nb}", path)]
+    sec_cta = cta(f"Want to analyze {na} vs {nb} under your own conditions?",
+                  "Run a custom historical query in Bet Legend Pro. Choose who is home, the month and day, who was favored and by how much, "
+                  "the total, rest days, streaks and each team's last result. You get the straight up, ATS and over/under record "
+                  "plus every qualifying game and why it counted.", button=f"Run a {na} vs {nb} query")
+    body = hero + nav + k + sec_over + sec_recent + sec_dec + sec_ml + sec_all + sec_related + sec_cta
+    crumbs = [("TrustMyRecord", "/"), ("Bet Legend Pro", "/betlegend-pro/"), ("NFL", BASE), (a, team_url(a)), (f"{na} vs {nb}", path)]
     schema = [web_page(path, title, desc, [sports_team(a), sports_team(b)], modified)]
     htm = page(assets, path=path, title=title, desc=desc, h1=h1, crumbs=crumbs, body=body, schema=schema,
                og_image=SITE + "/static/og/og-home.png", game_set=ids, modified=modified)
@@ -969,15 +980,15 @@ def build_hub(assets, games, engine, cfg, modified, team_stats, pair_stats, page
         dec[(x["season"] // 10) * 10].append(x)
     dec_rows = [league_row(f"{d}s", dec[d]) for d in sorted(dec, reverse=True)]
 
-    title = "NFL Betting History, ATS Records & Trends Database | BetLegend Pro"
+    title = "NFL Betting History, ATS Records & Trends Database | Bet Legend Pro"
     desc = (f"{r['n']:,} NFL games since {seasons[0]} with final scores, closing spreads and totals. Team ATS records, "
             f"48 division rivalry histories and league trends by season.")
     h1 = "NFL Betting History &amp; Research"
     path = BASE
-    lede = (f"Every NFL game in BetLegend Pro: <b>{r['n']:,}</b> games from {seasons[0]} through {fmt_date(allg[-1]['date'])}, "
+    lede = (f"Every NFL game in Bet Legend Pro: <b>{r['n']:,}</b> games from {seasons[0]} through {fmt_date(allg[-1]['date'])}, "
             f"{r['ats_n']:,} graded against a closing spread and {r['ou_n']:,} against a closing total. Home teams have won "
             f"{fmt_pct(su_pct(r))} and covered {fmt_pct(cover_pct(r))}. Favorites have won {fmt_pct(su_pct(fr))} and covered {fmt_pct(cover_pct(fr))}.")
-    hero = (f'<header class="hero"><div><p class="eyebrow">BetLegend Pro research &middot; NFL</p><h1>{h1}</h1>'
+    hero = (f'<header class="hero"><div><p class="eyebrow">Bet Legend Pro research &middot; NFL</p><h1>{h1}</h1>'
             f'<p class="lede">{lede}</p></div></header>')
     k = kpis([("NFL games on file", f"{r['n']:,}", f"{len(seasons)} seasons"),
               ("home team straight up", fmt_pct(su_pct(r)), su(r)),
@@ -996,7 +1007,7 @@ def build_hub(assets, games, engine, cfg, modified, team_stats, pair_stats, page
             for ps in [pair_stats[frozenset((x, y))]])
         div_cards.append(f'<div class="divcard"><h3>{esc(div)}</h3><div class="linkgrid tight">{team_links}</div>'
                          f'<ul class="rivals">{rivalry_links}</ul></div>')
-    sec_div = f'<section class="panel"><h2>Teams and division rivalries</h2><div class="divgrid">{"".join(div_cards)}</div></section>'
+    sec_div = f'<section class="panel" id="teams"><h2>Teams and division rivalries</h2><div class="divgrid">{"".join(div_cards)}</div></section>'
 
     since = cfg["since_realignment"]
     board = []
@@ -1010,26 +1021,30 @@ def build_hub(assets, games, engine, cfg, modified, team_stats, pair_stats, page
     bd_rows = [f"<tr><td class=\"n\">{i + 1}</td><th scope=\"row\"><a href=\"{team_url(t)}\">{esc(t)}</a></th><td class=\"n\">{x['n']}</td>"
                f"<td>{su(x)}</td><td>{ats(x)}</td><td class=\"n\">{fmt_pct(cover_pct(x))}</td><td>{ou(x)}</td><td class=\"n\">{fmt_pct(over_pct(x))}</td></tr>"
                for i, (t, x) in enumerate(board)]
-    sec_board = (f'<section class="panel"><h2>Against the spread since {since}</h2><p class="sub">All 32 teams since the league moved to '
+    sec_board = (f'<section class="panel" id="ats"><h2>Against the spread since {since}</h2><p class="sub">All 32 teams since the league moved to '
                  f'eight divisions, ranked by cover rate. Regular season and postseason.</p>{table(bd_head, bd_rows)}</section>')
-    sec_league = (f'<section class="panel"><h2>League trends, last 10 seasons</h2><p class="sub">From the home team\'s side, with favorites '
+    sec_league = (f'<section class="panel" id="trends"><h2>League trends, last 10 seasons</h2><p class="sub">From the home team\'s side, with favorites '
                   f'measured on the closing spread.</p>{table(lg_head, season_rows)}</section>'
                   f'<section class="panel"><h2>League trends by decade</h2>{table(lg_head, dec_rows)}</section>')
-    what = ('<section class="panel prose"><h2>What BetLegend Pro can answer about the NFL</h2>'
-            '<p>The team and rivalry pages here are fixed views of the same database the BetLegend Pro tool searches. '
+    what = ('<section class="panel prose"><h2>What Bet Legend Pro can answer about the NFL</h2>'
+            '<p>The team and rivalry pages here are fixed views of the same database the Bet Legend Pro tool searches. '
             'In the tool you choose two teams and stack conditions on either side: who was home, the month and day, whether a team '
             'was favored and by how much, rest days, winning or losing streaks, the result of the previous game, and the closing total. '
             'It returns the record straight up, against the spread and on the total, and lists every game that qualified with its final '
             'score, closing line and the reason it counted.</p></section>')
-    body = (hero + k + sec_div + sec_board + sec_league + what
-            + cta("Run your own NFL research", "Any two teams, any conditions, every game behind the answer.")
+    nav = jump([("teams", "Teams and rivalries"), ("ats", "ATS since 2002"), ("trends", "League trends"),
+                ("research", "Run custom research")])
+    body = (hero + nav + k + sec_div + sec_board + sec_league + what
+            + cta("Want to research any NFL matchup under your own conditions?",
+                  "Run a custom historical query in Bet Legend Pro: any two teams, who was home, the month, the line, rest and form. "
+                  "Every answer lists the exact games behind it.", button="Run an NFL query")
             + '<section class="panel"><h2>More NFL on TrustMyRecord</h2><div class="linkgrid">'
               '<a href="/nfl-simulator/"><span>NFL simulator<small>Simulate any 2026 matchup</small></span></a>'
               '<a href="/nfl-season-simulator/"><span>NFL season simulator<small>All 32 teams projected</small></span></a>'
               '<a href="/handicapping/nfl/"><span>NFL handicapping hub<small>This week\'s games with research</small></span></a>'
-              '<a href="/betlegend-pro/"><span>BetLegend Pro<small>How the research tool works</small></span></a>'
+              '<a href="/betlegend-pro/"><span>Bet Legend Pro<small>How the research tool works</small></span></a>'
               '</div></section>')
-    crumbs = [("TrustMyRecord", "/"), ("BetLegend Pro", "/betlegend-pro/"), ("NFL", path)]
+    crumbs = [("TrustMyRecord", "/"), ("Bet Legend Pro", "/betlegend-pro/"), ("NFL", path)]
     schema = [web_page(path, title, desc, {"@type": "SportsOrganization", "name": "National Football League",
                                            "sport": "American football"}, modified, kind="CollectionPage")]
     ids = sorted(games)
