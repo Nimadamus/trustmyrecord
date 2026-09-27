@@ -1,0 +1,117 @@
+/* BetLegend Pro research pages (/betlegend-pro/<sport>/...).
+   BLP_SEO_NFL_PILOT_20260927. Self contained and scoped to .blpr so it cannot
+   restyle anything else; the shared navbar keeps its own sheets. */
+.blpr-body { background: #070d19; }
+/* Metric matched stand in for Barlow while the web font loads, so the
+   headings do not rewrap (and shift the page) when it arrives. */
+@font-face { font-family: "Barlow Fallback"; src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 87%; ascent-override: 115%; descent-override: 23%; line-gap-override: 0%; }
+@font-face { font-family: "Inter Fallback"; src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 107.06%; ascent-override: 90.49%; descent-override: 22.56%; line-gap-override: 0%; }
+.blpr {
+  --bg: #070d19; --panel: #0e1729; --panel-2: #121e35; --line: rgba(148, 176, 222, .14);
+  --ink: #eef3fb; --ink-2: #b7c4da; --ink-3: #7f8fab; --blue: #1d7fe8; --teal: #7defdd;
+  --win: #37d399; --loss: #ff6b7a; --gold: #f5c451;
+  max-width: 1180px; margin: 0 auto; padding: 18px 16px 56px; color: var(--ink);
+  font: 400 15px/1.6 Inter, "Inter Fallback", sans-serif;
+  hyphens: manual; -webkit-hyphens: manual;
+}
+.blpr a { color: var(--teal); text-decoration: none; }
+.blpr a:hover { text-decoration: underline; }
+.blpr h1, .blpr h2, .blpr h3 { font-family: Barlow, "Barlow Fallback", sans-serif; color: var(--ink); letter-spacing: .005em; margin: 0; }
+.blpr h1 { font-size: clamp(28px, 4.2vw, 44px); line-height: 1.08; font-weight: 800; }
+.blpr h2 { font-size: 21px; font-weight: 800; margin-bottom: 10px; }
+.blpr h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.blpr p { color: var(--ink-2); margin: 0 0 10px; }
+.blpr b { color: var(--ink); font-weight: 700; }
+.blpr .nw { white-space: nowrap; }
+
+.blpr .crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-3); margin: 4px 0 16px; }
+.blpr .crumbs a { color: var(--ink-2); }
+.blpr .crumbs .sep { opacity: .5; }
+.blpr .crumbs [aria-current] { color: var(--ink); font-weight: 600; }
+
+.blpr .hero { display: flex; gap: 18px; align-items: flex-start; padding: 22px; border: 1px solid var(--line);
+  border-radius: 16px; background: radial-gradient(120% 140% at 0% 0%, rgba(29, 127, 232, .22), transparent 55%), var(--panel); }
+.blpr .hero .hl { flex: 0 0 auto; width: 72px; height: 72px; object-fit: contain; }
+.blpr .hero.vs { flex-wrap: wrap; }
+.blpr .hero.vs .hl { width: 60px; height: 60px; }
+.blpr .hero.vs > div { flex: 1 1 100%; }
+.blpr .vsx { font: 800 14px/60px Barlow, sans-serif; color: var(--ink-3); text-transform: uppercase; }
+.blpr .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin: 0 0 6px; }
+.blpr .lede { font-size: 16px; margin: 10px 0 0; max-width: 880px; }
+
+.blpr .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.blpr .kpi { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.blpr .kpi b { display: block; font: 800 24px/1.15 Barlow, "Barlow Fallback", sans-serif; color: var(--ink); font-variant-numeric: tabular-nums; }
+.blpr .kpi span { display: block; font-size: 12.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+.blpr .kpi small { display: block; font-size: 13px; color: var(--ink-2); }
+
+.blpr .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 14px 0; }
+.blpr .panel .sub { font-size: 13.5px; color: var(--ink-3); }
+.blpr .panel.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.blpr .panel.two > div { min-width: 0; }
+.blpr .notes ul { margin: 0; padding-left: 18px; color: var(--ink-2); }
+.blpr .notes li { margin: 4px 0; }
+.blpr .prose p { max-width: 900px; }
+
+.blpr .tscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--line); }
+.blpr table.dt { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.blpr .dt th, .blpr .dt td { padding: 8px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
+.blpr .dt thead th { position: sticky; top: 0; background: #16233d; color: var(--ink-3); font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em; }
+.blpr .dt tbody th { color: var(--ink); font-weight: 600; }
+.blpr .dt tbody tr:nth-child(even) { background: rgba(255, 255, 255, .018); }
+.blpr .dt tbody tr:hover { background: rgba(29, 127, 232, .08); }
+.blpr .dt .n { text-align: right; }
+.blpr .dt small { display: block; font-size: 11.5px; color: var(--ink-3); }
+.blpr .dt em { font-style: normal; font-size: 11px; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-left: 4px; }
+.blpr .rW { color: var(--win); }
+.blpr .rL { color: var(--loss); }
+.blpr .rT { color: var(--gold); }
+
+.blpr .linkgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.blpr .linkgrid a { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); font-weight: 600; }
+.blpr .linkgrid a:hover { border-color: rgba(125, 239, 221, .5); text-decoration: none; }
+.blpr .linkgrid small { display: block; font-weight: 400; font-size: 12.5px; color: var(--ink-3); }
+.blpr .linkgrid .tl { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
+.blpr .linkgrid.tight { grid-template-columns: 1fr; gap: 6px; }
+
+.blpr .divgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.blpr .divcard { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.blpr .divcard .linkgrid a { background: var(--panel); }
+.blpr .rivals { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13.5px; }
+.blpr .rivals li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-top: 1px dashed var(--line); }
+.blpr .rivals span { color: var(--ink-3); }
+
+.blpr .cta { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin: 18px 0;
+  padding: 20px; border-radius: 14px; border: 1px solid rgba(29, 127, 232, .45);
+  background: linear-gradient(135deg, rgba(29, 127, 232, .22), rgba(125, 239, 221, .08)); }
+.blpr .cta > div:first-child { flex: 1 1 420px; }
+.blpr .cta-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.blpr .btn { display: inline-block; padding: 11px 18px; border-radius: 10px; background: var(--blue); color: #fff; font-weight: 800; }
+.blpr .btn:hover { text-decoration: none; filter: brightness(1.1); }
+.blpr .btn.ghost { background: transparent; border: 1px solid rgba(255, 255, 255, .28); color: var(--ink); }
+.blpr .asof { font-size: 12.5px; color: var(--ink-3); margin-top: 22px; }
+
+@media (max-width: 860px) {
+  .blpr .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .blpr .panel.two { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .blpr { padding: 12px 12px 40px; }
+  .blpr .hero { padding: 16px; gap: 12px; }
+  .blpr .hero .hl { width: 52px; height: 52px; }
+  .blpr .kpi b { font-size: 20px; }
+  .blpr .panel { padding: 14px; }
+  .blpr .dt th, .blpr .dt td { padding: 7px 8px; font-size: 13px; }
+}
+
+/* The shared navbar (tmr-ds-nav.js) is prepended to <body> after first paint.
+   Reserve its exact height until it arrives so the page does not jump
+   (measured on the live site 2026-09-27: 71px up to ~1220px wide, then
+   growing to ~79px). The placeholder disappears the moment the bar exists. */
+.blpr-body::before { content: ""; display: block; background: rgba(2, 5, 10, .94);
+  height: clamp(71px, calc(71px + (100vw - 1220px) * .035), 79.2px); }
+.blpr-body:has(> nav.ds-nav)::before { display: none; }
