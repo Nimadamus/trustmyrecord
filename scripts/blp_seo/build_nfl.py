@@ -289,9 +289,12 @@ def f1(v):
     return "" if v is None else f"{v:.1f}"
 
 
-def logo(team, size=48, cls="tl"):
-    return (f'<img class="{cls}" src="https://a.espncdn.com/i/teamlogos/nfl/500/{ESPN_ABBR[team]}.png" '
-            f'alt="{esc(team)} logo" width="{size}" height="{size}" loading="lazy" decoding="async">')
+def logo(team, size=48, cls="tl", eager=False):
+    load = 'fetchpriority="high"' if eager else 'loading="lazy"'
+    # ESPN's resizer serves the mark at twice the display size (4 to 12 KB) instead of the 90 KB original.
+    px = 2 * size
+    return (f'<img class="{cls}" src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/{ESPN_ABBR[team]}.png&amp;w={px}&amp;h={px}" '
+            f'alt="{esc(team)} logo" width="{size}" height="{size}" {load} decoding="async">')
 
 
 def team_url(team):
@@ -422,7 +425,8 @@ def page(assets, *, path, title, desc, h1, crumbs, body, schema, og_image, game_
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="{FONTS}">
+<link rel="preload" as="style" href="{FONTS}" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="{FONTS}"></noscript>
 <link rel="stylesheet" href="{assets.ds}">
 <link rel="stylesheet" href="{assets.ds_header}">
 <link rel="stylesheet" href="{assets.navbar_css}">
@@ -722,6 +726,45 @@ def build_team(assets, games, engine, cfg, team, modified, pages_by_pair):
 
 # --------------------------------------------------------- matchup page
 
+def row_marks(x):
+    """ATS and O/U outcome letters for one game from x's side, or '' without a verified number."""
+    ats_r = "" if x["line"] is None else ("W" if x["m"] + x["line"] > 0 else ("L" if x["m"] + x["line"] < 0 else "P"))
+    ou_r = "" if x["total"] is None else ("O" if x["pf"] + x["pa"] > x["total"] else ("U" if x["pf"] + x["pa"] < x["total"] else "P"))
+    return ats_r, ou_r
+
+
+def favorite_of(x, a, b):
+    """Closing favorite by the verified spread, from the a-side line."""
+    if x["line"] is None:
+        return None
+    if x["line"] == 0:
+        return "PK"
+    return a if x["line"] < 0 else b
+
+
+def graded(rec_txt, n_graded, n_games):
+    if not n_graded:
+        return ""
+    return rec_txt if n_graded == n_games else f'{rec_txt}<small class="g">({n_graded} of {n_games})</small>'
+
+
+def meeting_rows(rows, a, b, na, nb):
+    out = []
+    for x in rows:
+        g = x["g"]
+        ats_r, ou_r = row_marks(x)
+        fav = favorite_of(x, a, b)
+        fav_txt = "" if fav is None else ("Pick'em" if fav == "PK" else nick(fav))
+        where = f"{esc(g['home_name'])}" + (f"<small>{esc(g['venue'])}</small>" if g.get("venue") else "")
+        tag = " <em>playoffs</em>" if x["post"] else ""
+        total_txt = "" if x["total"] is None else f"{x['total']:g}"
+        out.append(f"<tr data-game-id=\"{esc(x['id'])}\"><td>{fmt_date(x['date'])}{tag}</td><td>{where}</td>"
+                   f"<td><b class=\"r{res_of(x)}\">{res_of(x)}</b> {x['pf']}-{x['pa']}</td><td class=\"n\">{x['m']:+d}</td>"
+                   f"<td>{esc(fav_txt)}</td><td>{fmt_line(x['line'])}</td><td>{ats_r}</td><td>{total_txt}</td><td>{ou_r}</td>"
+                   f"<td>{fmt_ml(x['ml'])}</td></tr>")
+    return out
+
+
 def build_pair(assets, games, engine, cfg, a0, b0, modified):
     a, b = matchup_title_order(a0, b0)
     key = f"{a0}|{b0}"
@@ -730,16 +773,24 @@ def build_pair(assets, games, engine, cfg, a0, b0, modified):
     r = agg(rows)
     na, nb = nick(a), nick(b)
     first, lastg = rows[0], rows[-1]
-    at_a = agg([x for x in rows if x["home"]])
-    at_b = agg([x for x in rows if not x["home"]])
-    fav_rows = [x for x in rows if x["line"] is not None and x["line"] != 0]
-    fav_su_w = sum(1 for x in fav_rows if (x["m"] > 0) == (x["line"] < 0) and x["m"] != 0)
-    fav_su_l = sum(1 for x in fav_rows if (x["m"] > 0) != (x["line"] < 0) and x["m"] != 0)
-    fav_cov = sum(1 for x in fav_rows if ((x["m"] + x["line"]) > 0) == (x["line"] < 0) and x["m"] + x["line"] != 0)
-    fav_not = sum(1 for x in fav_rows if ((x["m"] + x["line"]) > 0) != (x["line"] < 0) and x["m"] + x["line"] != 0)
+    n_recent = cfg.get("recent_meetings", 10)
+
+    # ---- every split is a subset of `rows` (the page's one game set), seen from a named side
+    def side(xs, team):
+        return agg([persp(x["g"], team) for x in xs])
+
+    recent = rows[-n_recent:]
+    at_a = [x for x in rows if x["home"]]
+    at_b = [x for x in rows if not x["home"]]
+    fav_games = [x for x in rows if favorite_of(x, a, b) in (a, b)]
+    pickem = sum(1 for x in rows if favorite_of(x, a, b) == "PK")
+    fav_agg = agg([persp(x["g"], favorite_of(x, a, b)) for x in fav_games])
+    dog_agg = agg([persp(x["g"], b if favorite_of(x, a, b) == a else a) for x in fav_games])
     home_w = sum(1 for x in rows if (x["m"] > 0) == x["home"] and x["m"] != 0)
     home_l = sum(1 for x in rows if (x["m"] > 0) != x["home"] and x["m"] != 0)
     one_score = sum(1 for x in rows if abs(x["m"]) <= 8)
+    abs_margin = avg(sum(abs(x["m"]) for x in rows), r["n"])
+    signed = avg(sum(x["m"] for x in rows), r["n"])  # a-side
     newest_first = [res_of(x) for x in rows[::-1]]
     cur, cur_n = streak(newest_first)
     longest = {"W": 0, "L": 0}
@@ -754,6 +805,8 @@ def build_pair(assets, games, engine, cfg, a0, b0, modified):
     series = su(r) if leader != b else rec(r["l"], r["w"], r["t"])
     lead_txt = (f"The {nick(leader)} lead the series {series}" if leader else f"The series is level at {su(r)}")
     b_ats = rec(r["al"], r["aw"], r["ap"])
+    margin_txt = (f"the {nick(leader)} have outscored the {nick(b if leader == a else a)} by {abs(signed):.1f} points a game"
+                  if leader and signed else "the average score is even")
 
     decades = defaultdict(list)
     for x in rows:
@@ -766,97 +819,120 @@ def build_pair(assets, games, engine, cfg, a0, b0, modified):
     h1 = f"{na} vs {nb} Betting History"
     path = pair_url(a, b)
 
-    lede = (f"The {esc(a)} and {esc(b)} have met <b>{r['n']}</b> times since the {first['season']} season. {esc(lead_txt)}. "
-            f"Against the closing spread the {esc(na)} are <b>{ats(r)}</b> ({esc(nb)} {b_ats}), and the over is <b>{ou(r)}</b> "
-            f"in meetings with a closing total. Last meeting: {fmt_date(lastg['date'])}, "
-            f"{esc(na if lastg['m'] > 0 else nb)} {max(lastg['pf'], lastg['pa'])}-{min(lastg['pf'], lastg['pa'])}"
-            f"{' (tie)' if lastg['m'] == 0 else ''}.")
-    hero = (f'<header class="hero vs">{logo(a, 64, "hl")}<span class="vsx">vs</span>{logo(b, 64, "hl")}<div>'
+    lede = (f"Every <a href=\"{team_url(a)}\">{esc(a)}</a> vs <a href=\"{team_url(b)}\">{esc(b)}</a> game since the "
+            f"{first['season']} season: <b>{r['n']}</b> meetings with the final score, the closing point spread, the closing total "
+            f"and how each game graded against both. {esc(lead_txt)}. Against the spread the {esc(na)} are <b>{ats(r)}</b> "
+            f"({esc(nb)} {b_ats}), the over is <b>{ou(r)}</b>, and {margin_txt}.")
+    lede2 = (f"Below are the head to head results, ATS and over/under history, closing odds and scoring margins for this "
+             f"rivalry, split by venue, by favorite and underdog, by decade and over the last {len(recent)} meetings. "
+             f"Most recent meeting: {fmt_date(lastg['date'])}, "
+             f"{esc(na if lastg['m'] > 0 else nb)} {max(lastg['pf'], lastg['pa'])}-{min(lastg['pf'], lastg['pa'])}"
+             f"{' (tie)' if lastg['m'] == 0 else ''}.")
+    hero = (f'<header class="hero vs">{logo(a, 64, "hl", eager=True)}<span class="vsx">vs</span>{logo(b, 64, "hl", eager=True)}<div>'
             f'<p class="eyebrow">BetLegend Pro research &middot; NFL &middot; {esc(DIVISION_OF[a])} rivalry</p>'
-            f'<h1>{h1}</h1><p class="lede">{lede}</p></div></header>')
+            f'<h1>{h1}</h1><p class="lede">{lede}</p><p class="lede">{lede2}</p></div></header>')
+    jump = ('<nav class="jump" aria-label="On this page">'
+            '<a href="#overview">Overview</a><a href="#recent">Recent meetings</a><a href="#decades">By decade</a>'
+            '<a href="#meetings">All meetings</a><a href="#related">Related matchups</a><a href="#research">Run custom research</a></nav>')
     k = kpis([
         ("series, straight up", series if leader else su(r), f"{nick(leader)} lead" if leader else "level"),
-        (f"{na} against the spread", ats(r), f"{r['ats_n']} graded lines"),
-        ("over / under", ou(r), f"{r['ou_n']} closing totals"),
-        ("average combined points", f1(avg(r["tp"], r["n"])), f"{one_score} of {r['n']} decided by 8 or fewer"),
+        (f"{na} against the spread", ats(r), f"{r['ats_n']} of {r['n']} meetings graded"),
+        ("over / under", ou(r), f"{r['ou_n']} of {r['n']} meetings graded"),
+        ("average final margin", f"{abs_margin:.1f} pts", f"{one_score} of {r['n']} decided by 8 or fewer"),
     ])
 
-    loc_head = ("<thead><tr><th scope=\"col\">Played at</th><th class=\"n\" scope=\"col\">Games</th>"
-                f"<th scope=\"col\">{esc(na)} SU</th><th scope=\"col\">{esc(na)} ATS</th><th scope=\"col\">O/U</th>"
-                "<th class=\"n\" scope=\"col\">Avg combined</th></tr></thead>")
-    loc_rows = [f"<tr><th scope=\"row\">{esc(lab)}</th><td class=\"n\">{x['n']}</td><td>{su(x)}</td><td>{ats(x) if x['ats_n'] else ''}</td>"
-                f"<td>{ou(x) if x['ou_n'] else ''}</td><td class=\"n\">{f1(avg(x['tp'], x['n']))}</td></tr>"
-                for lab, x in ((f"{a} home games", at_a), (f"{b} home games", at_b)) if x["n"]]
-    fav_line = ""
-    if fav_rows:
-        fav_line = (f"<p>The closing favorite is <b>{rec(fav_su_w, fav_su_l)}</b> straight up and <b>{rec(fav_cov, fav_not)}</b> against "
-                    f"the spread in the {len(fav_rows)} meetings that had one. The home team is {rec(home_w, home_l)} straight up.</p>")
+    split_head = ("<thead><tr><th scope=\"col\">Split</th><th class=\"n\" scope=\"col\">Games</th><th scope=\"col\">SU</th>"
+                  "<th scope=\"col\">ATS</th><th scope=\"col\">O/U</th><th class=\"n\" scope=\"col\">Avg margin</th>"
+                  "<th class=\"n\" scope=\"col\">Avg total pts</th></tr></thead>")
+
+    def split(label, x):
+        return (f"<tr><th scope=\"row\">{label}</th><td class=\"n\">{x['n']}</td><td>{su(x)}</td>"
+                f"<td>{graded(ats(x), x['ats_n'], x['n'])}</td><td>{graded(ou(x), x['ou_n'], x['n'])}</td>"
+                f"<td class=\"n\">{(x['pf'] - x['pa']) / x['n']:+.1f}</td><td class=\"n\">{f1(avg(x['tp'], x['n']))}</td></tr>")
+    splits = [split(f"{esc(na)}, all meetings", r),
+              split(f"{esc(na)}, last {len(recent)} meetings", side(recent, a)),
+              split(f"{esc(na)} at home", side(at_a, a)),
+              split(f"{esc(nb)} at home", side(at_b, b))]
+    if fav_games:
+        splits += [split("Closing favorite", fav_agg), split("Closing underdog", dog_agg)]
+    fav_note = (f"Favorite and underdog use the verified closing spread; {len(fav_games)} meetings had a favorite"
+                + (f" and {pickem} closed pick'em" if pickem else "") + f". The home team is {rec(home_w, home_l)} straight up.")
     streak_line = ""
     if cur in ("W", "L"):
         who = na if cur == "W" else nb
-        streak_line = (f"<p>The {esc(who)} have won the last <b>{cur_n}</b> meeting{'s' if cur_n > 1 else ''}. "
-                       f"Longest run in the series: {esc(na)} {longest['W']}, {esc(nb)} {longest['L']}.</p>")
-    sec_loc = (f'<section class="panel"><h2>Home and road in this rivalry</h2>{table(loc_head, loc_rows)}{fav_line}{streak_line}</section>')
+        streak_line = (f" The {esc(who)} have won the last {cur_n} meeting{'s' if cur_n > 1 else ''}; the longest runs are "
+                       f"{esc(na)} {longest['W']} and {esc(nb)} {longest['L']}.")
+    sec_over = (f'<section class="panel" id="overview"><h2>{esc(na)} vs {esc(nb)} betting splits</h2>'
+                f'<p class="sub">Each row names whose record it is, and average margin is from that side. A count in brackets, such as '
+                f'(94 of 120), is how many of those meetings had a verified closing number to grade.</p>{table(split_head, splits)}'
+                f'<p>{fav_note}{streak_line}</p></section>')
+
+    mt_head = (f"<thead><tr><th scope=\"col\">Date</th><th scope=\"col\">Home team</th><th scope=\"col\">{esc(na)} result</th>"
+               f"<th class=\"n\" scope=\"col\">Margin</th><th scope=\"col\">Favorite</th><th scope=\"col\">{esc(na)} spread</th>"
+               f"<th scope=\"col\">ATS</th><th scope=\"col\">Total</th><th scope=\"col\">O/U</th><th scope=\"col\">{esc(na)} ML</th></tr></thead>")
+    rx = side(recent, a)
+    sec_recent = (f'<section class="panel" id="recent"><h2>Last {len(recent)} {esc(na)} vs {esc(nb)} meetings</h2>'
+                  f'<p class="sub">{esc(na)} {su(rx)} straight up, {ats(rx)} against the spread, over/under {ou(rx)}. '
+                  f'Results, margin, spread and moneyline are from the {esc(na)} side.</p>'
+                  f'{table(mt_head, meeting_rows(recent[::-1], a, b, na, nb), "dt games")}</section>')
 
     dec_head = ("<thead><tr><th scope=\"col\">Decade</th><th class=\"n\" scope=\"col\">Meetings</th>"
                 f"<th scope=\"col\">{esc(na)} SU</th><th scope=\"col\">{esc(na)} ATS</th><th scope=\"col\">O/U</th>"
-                "<th class=\"n\" scope=\"col\">Avg combined</th><th class=\"n\" scope=\"col\">Avg closing total</th></tr></thead>")
+                f"<th class=\"n\" scope=\"col\">{esc(na)} avg margin</th><th class=\"n\" scope=\"col\">Avg total pts</th>"
+                "<th class=\"n\" scope=\"col\">Avg closing total</th></tr></thead>")
     dec_rows = []
     for d in sorted(decades, reverse=True):
         x = agg(decades[d])
         tots = [y["total"] for y in decades[d] if y["total"] is not None]
-        dec_rows.append(f"<tr><th scope=\"row\">{d}s</th><td class=\"n\">{x['n']}</td><td>{su(x)}</td><td>{ats(x) if x['ats_n'] else ''}</td>"
-                        f"<td>{ou(x) if x['ou_n'] else ''}</td><td class=\"n\">{f1(avg(x['tp'], x['n']))}</td>"
+        dec_rows.append(f"<tr><th scope=\"row\">{d}s</th><td class=\"n\">{x['n']}</td><td>{su(x)}</td>"
+                        f"<td>{graded(ats(x), x['ats_n'], x['n'])}</td><td>{graded(ou(x), x['ou_n'], x['n'])}</td>"
+                        f"<td class=\"n\">{(x['pf'] - x['pa']) / x['n']:+.1f}</td><td class=\"n\">{f1(avg(x['tp'], x['n']))}</td>"
                         f"<td class=\"n\">{f1(avg(sum(tots), len(tots)))}</td></tr>")
-    sec_dec = f'<section class="panel"><h2>The rivalry by decade</h2>{table(dec_head, dec_rows)}</section>'
+    sec_dec = f'<section class="panel" id="decades"><h2>The rivalry by decade</h2>{table(dec_head, dec_rows)}</section>'
 
     sec_ml = ""
     if r["ml_n"]:
-        b_rows = [persp(games[x["id"]], b) for x in rows if x["ml"] is not None]
-        rb = agg(b_rows)
-        sec_ml = (f'<section class="panel"><h2>Moneyline in this matchup</h2><p class="sub">{r["ml_n"]} meetings with a closing moneyline on file, '
-                  f'one unit flat on each side.</p>'
+        rb = agg([persp(x["g"], b) for x in rows if x["ml"] is not None])
+        sec_ml = (f'<section class="panel"><h2>Moneyline in this matchup</h2><p class="sub">{r["ml_n"]} meetings with a verified closing '
+                  f'moneyline, one unit flat on each side.</p>'
                   + kpis([(f"{na} moneyline", rec(r["ml_w"], r["ml_l"]), f"{fmt_units(r['ml_u'])} units"),
                           (f"{nb} moneyline", rec(rb["ml_w"], rb["ml_l"]), f"{fmt_units(rb['ml_u'])} units")]) + "</section>")
 
-    mt_head = (f"<thead><tr><th scope=\"col\">Date</th><th scope=\"col\">Where</th><th scope=\"col\">{esc(na)} result</th>"
-               f"<th scope=\"col\">{esc(na)} spread</th><th scope=\"col\">ATS</th><th scope=\"col\">Total</th><th scope=\"col\">O/U</th>"
-               f"<th scope=\"col\">{esc(na)} ML</th></tr></thead>")
-    mt_rows = []
-    for x in rows[::-1]:
-        g = x["g"]
-        ats_r = "" if x["line"] is None else ("W" if x["m"] + x["line"] > 0 else ("L" if x["m"] + x["line"] < 0 else "P"))
-        ou_r = "" if x["total"] is None else ("O" if x["pf"] + x["pa"] > x["total"] else ("U" if x["pf"] + x["pa"] < x["total"] else "P"))
-        where = f"{esc(g['home_name'])}" + (f"<small>{esc(g['venue'])}</small>" if g.get("venue") else "")
-        tag = " <em>playoffs</em>" if x["post"] else ""
-        total_txt = "" if x["total"] is None else f"{x['total']:g}"
-        mt_rows.append(f"<tr data-game-id=\"{esc(x['id'])}\"><td>{fmt_date(x['date'])}{tag}</td><td>{where}</td>"
-                       f"<td><b class=\"r{res_of(x)}\">{res_of(x)}</b> {x['pf']}-{x['pa']}</td><td>{fmt_line(x['line'])}</td>"
-                       f"<td>{ats_r}</td><td>{total_txt}</td><td>{ou_r}</td><td>{fmt_ml(x['ml'])}</td></tr>")
-    sec_all = (f'<section class="panel"><h2>Every {esc(na)} vs {esc(nb)} game</h2><p class="sub">{r["n"]} meetings, newest first. '
-               f'Results, spreads and moneylines are from the {esc(na)} side, score {esc(na)} first.</p>{table(mt_head, mt_rows, "dt games")}</section>')
+    sec_all = (f'<section class="panel" id="meetings"><h2>Every {esc(na)} vs {esc(nb)} game</h2><p class="sub">{r["n"]} meetings, '
+               f'newest first. Score, margin, spread and moneyline are from the {esc(na)} side; the favorite is the team laying '
+               f'points at the close.</p>{table(mt_head, meeting_rows(rows[::-1], a, b, na, nb), "dt games")}</section>')
 
-    others_a = [t for t in DIVISIONS[DIVISION_OF[a]] if t not in (a, b)]
-    more = "".join(f'<a href="{pair_url(x, y)}"><span>{esc(nick(x))} vs {esc(nick(y))}<small>{esc(DIVISION_OF[a])} history</small></span></a>'
-                   for x in (a, b) for y in others_a)
-    sec_links = (f'<section class="panel"><h2>Keep researching</h2><div class="linkgrid">'
-                 f'<a href="{team_url(a)}">{logo(a, 28)}<span>{esc(a)}<small>Full team betting history</small></span></a>'
-                 f'<a href="{team_url(b)}">{logo(b, 28)}<span>{esc(b)}<small>Full team betting history</small></span></a>'
-                 f'<a href="/nfl-simulator/{matchup_slug(a, b)}/"><span>Simulate {esc(na)} vs {esc(nb)}<small>The 2026 matchup, 10,000 simulations</small></span></a>'
-                 f'{more}<a href="{BASE}"><span>NFL betting history<small>All 32 teams and 48 rivalries</small></span></a>'
-                 f'<a href="/handicapping/nfl/"><span>NFL handicapping hub<small>This week\'s games with research</small></span></a>'
-                 f'</div></section>')
-    body = (hero + k + sec_loc + sec_dec + sec_ml + sec_all
-            + cta(f"Filter every {na} vs {nb} game yourself",
-                  "Pick the venue, the month, the day, who was favored, the line range, rest and each team's streak or last result. "
-                  "BetLegend Pro lists every qualifying game and why it qualified.")
-            + sec_links)
+    others = [t for t in DIVISIONS[DIVISION_OF[a]] if t not in (a, b)]
+    cards = []
+    for x in (a, b):
+        for y in others:
+            ps = agg([persp(games[i], x) for i in engine["teams"][x]["ids"]
+                      if y in (games[i]["home"], games[i]["away"])])
+            cards.append(f'<a href="{pair_url(x, y)}">{logo(x, 24)}{logo(y, 24)}<span>{esc(nick(x))} vs {esc(nick(y))}'
+                         f'<small>{ps["n"]} meetings, {esc(nick(x))} {su(ps)}</small></span></a>')
+    sec_related = (f'<section class="panel" id="related"><h2>Related matchups</h2><div class="linkgrid">{"".join(cards)}'
+                   f'<a href="{team_url(a)}">{logo(a, 28)}<span>{esc(a)}<small>Team betting history</small></span></a>'
+                   f'<a href="{team_url(b)}">{logo(b, 28)}<span>{esc(b)}<small>Team betting history</small></span></a>'
+                   f'<a href="/nfl-simulator/{matchup_slug(a, b)}/"><span>{esc(na)} vs {esc(nb)} simulator<small>This season\'s meetings, 10,000 simulations</small></span></a>'
+                   f'<a href="{BASE}"><span>NFL betting history<small>All 32 teams and 48 rivalries</small></span></a>'
+                   f'</div></section>')
+    sec_cta = (f'<section class="cta" id="research"><div><h2>Want to analyze {esc(na)} vs {esc(nb)} under your own conditions?</h2>'
+               f'<p>Run a custom historical query in BetLegend Pro. Choose who is home, the month and day, who was favored and by how much, '
+               f'the total, rest days, streaks and each team\'s last result. You get the straight up, ATS and over/under record '
+               f'plus every qualifying game and why it counted.</p></div>'
+               f'<div class="cta-actions"><a class="btn" href="/betlegend-pro/app/">Run a {esc(na)} vs {esc(nb)} query</a>'
+               f'<a class="btn ghost" href="/betlegend-pro/">How BetLegend Pro works</a></div></section>')
+    body = hero + jump + k + sec_over + sec_recent + sec_dec + sec_ml + sec_all + sec_related + sec_cta
     crumbs = [("TrustMyRecord", "/"), ("BetLegend Pro", "/betlegend-pro/"), ("NFL", BASE), (a, team_url(a)), (f"{na} vs {nb}", path)]
     schema = [web_page(path, title, desc, [sports_team(a), sports_team(b)], modified)]
     htm = page(assets, path=path, title=title, desc=desc, h1=h1, crumbs=crumbs, body=body, schema=schema,
                og_image=SITE + "/static/og/og-home.png", game_set=ids, modified=modified)
     stats = {"a": a, "b": b, "meetings": r["n"], "su_a": su(r), "ats_a": ats(r), "ats_graded": r["ats_n"], "ou": ou(r),
-             "ou_graded": r["ou_n"], "avg_combined": avg(r["tp"], r["n"]), "first": first["date"], "last": lastg["date"]}
+             "ou_graded": r["ou_n"], "avg_combined": avg(r["tp"], r["n"]), "avg_abs_margin": abs_margin,
+             "avg_margin_a": signed, "first": first["date"], "last": lastg["date"],
+             "splits": {"last_n": su(side(recent, a)), "a_home": su(side(at_a, a)), "b_home": su(side(at_b, b)),
+                        "favorite_su": su(fav_agg), "favorite_ats": ats(fav_agg), "underdog_su": su(dog_agg),
+                        "underdog_ats": ats(dog_agg)}}
     return path, title, desc, htm, ids, stats
 
 
@@ -970,6 +1046,8 @@ def main():
     ap.add_argument("data_dir")
     ap.add_argument("--out", default=os.path.abspath(os.path.join(HERE, "..", "..")))
     ap.add_argument("--today", default=date.today().isoformat())
+    ap.add_argument("--only", help="write only this page path, e.g. /betlegend-pro/nfl/bears-vs-packers/ "
+                    "(every gate still runs over the whole set)")
     args = ap.parse_args()
     cfg = json.load(open(os.path.join(HERE, "config.json"), encoding="utf-8"))["nfl"]
     games_doc, engine, parity = load(args.data_dir)
@@ -1010,6 +1088,12 @@ def main():
 
     manifest = {"built_from": games_doc["meta"], "parity_checked_at": parity["checked_at"], "config": cfg,
                 "skipped_below_min_meetings": skipped, "pages": []}
+    man_path = os.path.join(args.out, "betlegend-pro", "nfl", "manifest.json")
+    if args.only:
+        gate(any(p[0] == args.only for p in built), f"--only {args.only} is not a page of this build")
+        prior = json.load(open(man_path, encoding="utf-8"))
+        manifest["pages"] = [p for p in prior["pages"] if p["url"] != SITE + args.only]
+        built = [p for p in built if p[0] == args.only]
     for path, title, desc, htm, ids, stats, kind in built:
         dest = os.path.join(args.out, path.strip("/").replace("/", os.sep), "index.html")
         os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -1019,11 +1103,11 @@ def main():
                                   "games": len(ids), "sha256": hashlib.sha256("\n".join(sorted(ids)).encode()).hexdigest(),
                                   "stats": {k: v for k, v in stats.items() if k != "vs"},
                                   "game_ids": sorted(ids) if kind != "hub" else None})
-    man_path = os.path.join(args.out, "betlegend-pro", "nfl", "manifest.json")
+    manifest["pages"].sort(key=lambda p: p["url"])
     with open(man_path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(manifest, fh, indent=1)
     print(f"built {len(built)} pages ({sum(1 for p in built if p[6] == 'team')} team, "
-          f"{sum(1 for p in built if p[6] == 'matchup')} matchup, 1 hub); skipped {len(skipped)} below {cfg['min_meetings']} meetings")
+          f"{sum(1 for p in built if p[6] == 'matchup')} matchup, {sum(1 for p in built if p[6] == 'hub')} hub); skipped {len(skipped)} below {cfg['min_meetings']} meetings")
 
 
 if __name__ == "__main__":
