@@ -2576,25 +2576,61 @@
         var rec = function (t) { return esc(t.wins + '-' + t.losses + (m.ties ? '-' + m.ties : '')); };
         var sc = m.scoring, mk = m.market || null, st = m.streaks;
 
+        // QUALIFYING_SAMPLE_20260927: this card is THE summary of the filtered
+        // query. Every figure is the server's arithmetic over one list of
+        // qualifying game ids (m.qualifying_game_ids), the same list the
+        // meetings table prints. Lifetime figures live in their own card at the
+        // bottom and are never mixed in here.
+        var ats = mk && mk.ats, ou = mk && mk.over_under, cl = m.closing_lines || null;
+        var rc = m.reconciliation || null;
+        var tableN = (d.team_1_report && d.team_1_report.total_qualifying_games != null)
+            ? d.team_1_report.total_qualifying_games : m.qualifying_games;
+        var idsN = (m.qualifying_game_ids || []).length;
+        var mismatch = (rc && rc.ok === false) || tableN !== m.qualifying_games
+            || (m.qualifying_game_ids && idsN !== m.qualifying_games);
+        var t1 = m.team_1.team, t2 = m.team_2.team;
         var result = '<section class="rcard is-answer">'
-            + '<div class="rcard-head"><h3>Head-to-head result</h3>'
-            + '<span class="range">' + fmtInt(m.qualifying_games) + ' qualifying meetings</span></div>'
+            + '<div class="rcard-head"><h3>Qualifying sample</h3>'
+            + '<span class="range">' + fmtInt(m.qualifying_games) + ' qualifying meeting'
+            + (m.qualifying_games === 1 ? '' : 's') + ', every condition applied</span></div>'
+            + (mismatch
+                ? '<p class="market-absent"><strong>Figures withheld:</strong> the summary and the '
+                    + 'games list did not reconcile to the same set of games, so these numbers are not '
+                    + 'shown as an answer. Please report this query.</p>' : '')
             + '<div class="kpis">'
-            + kpi(m.team_1.team + ' record', rec(m.team_1), pct(m.team_1.win_pct))
-            + kpi(m.team_2.team + ' record', rec(m.team_2), pct(m.team_2.win_pct))
+            + kpi('Meetings', fmtInt(m.qualifying_games), 'games that met every condition')
+            + kpi(t1 + ' record', rec(m.team_1), pct(m.team_1.win_pct))
+            + kpi(t2 + ' record', rec(m.team_2), pct(m.team_2.win_pct))
+            + ((ats && ats.eligible_games > 0)
+                ? kpi(t1 + ' ATS', esc(ats.wins + '-' + ats.losses + '-' + ats.pushes),
+                      (ats.cover_pct == null ? '' : ats.cover_pct + '% · ') + ats.eligible_games + ' of '
+                      + fmtInt(m.qualifying_games) + ' had a closing spread')
+                : kpi(t1 + ' ATS', DASH, 'no closing spread on file'))
+            + ((ou && ou.graded_games > 0)
+                ? kpi('Over / under', esc(ou.overs + '-' + ou.unders + '-' + ou.pushes),
+                      'over-under-push · ' + ou.graded_games + ' of ' + fmtInt(m.qualifying_games)
+                      + ' had a closing total')
+                : kpi('Over / under', DASH, 'no closing total on file'))
+            + (sc ? kpi('Avg margin (' + t1 + ')', signed(sc.avg_margin),
+                        t1 + ' points minus ' + t2 + ' points') : '')
+            + (sc ? kpi('Avg total points', num(sc.avg_combined), 'both teams, final score') : '')
+            + ((cl && cl.closing_line_games > 0)
+                ? kpi('Avg closing spread (' + t1 + ')', signed(cl.avg_closing_line),
+                      'minus = favored · ' + cl.closing_line_games + ' games') : '')
+            + ((cl && cl.closing_total_games > 0)
+                ? kpi('Avg closing total', num(cl.avg_closing_total), cl.closing_total_games + ' games') : '')
             + (sc ? kpi('Avg ' + m.scoring_noun + ' — ' + m.team_1.team, num(sc.avg_team_1),
                         'median ' + num(sc.median_team_1)) : '')
             + (sc ? kpi('Avg ' + m.scoring_noun + ' — ' + m.team_2.team, num(sc.avg_team_2),
                         'median ' + num(sc.median_team_2)) : '')
-            + (sc ? kpi('Average margin', num(sc.avg_margin),
-                        'combined ' + num(sc.avg_combined) + ' per game') : '')
             + kpi('Home side', fmtInt(m.home_side_wins) + '-' + fmtInt(m.away_side_wins),
                   'whichever team hosted')
             + '</div>'
             + ((st && st.current_label)
                 ? '<p class="note-s">' + esc(st.current_label) + '. ' + esc(st.longest_label) + '.</p>' : '')
-            + '<p class="note-s">Every figure here is the plain arithmetic of the qualifying meetings listed '
-            + 'below.</p></section>';
+            + '<p class="note-s">Every figure here is computed from the ' + fmtInt(m.qualifying_games)
+            + ' qualifying meetings listed below and nothing else. Lifetime figures, with no conditions '
+            + 'applied, are in a separate card at the bottom of this report.</p></section>';
 
         // Markets are conditional on real data. One with nothing behind it says
         // so in a sentence: an empty record reads as 0-0, which is a finding
@@ -2852,26 +2888,44 @@
         }
 
         var h2h = d.head_to_head;
+        // LIFETIME_SEPARATE_20260927: every meeting on file, no conditions.
+        // Placed last, titled as lifetime, and every label names the team.
+        var h2hN = h2h ? (h2h.lifetime_meetings != null ? h2h.lifetime_meetings : h2h.games_in_dataset) : 0;
+        var h2hAts = h2h && h2h.ats, h2hOu = h2h && h2h.ou, h2hCl = h2h && h2h.closing_lines;
         var h2hBlock = h2h
-            ? '<section class="rcard"><div class="rcard-head"><h3>Head-to-head</h3>'
-                + '<span class="range">Conditions above are not applied here</span></div><div class="kpis">'
-                + '<div class="kpi"><span>Meetings</span><strong>' + esc(h2h.games_in_dataset) + '</strong></div>'
+            ? '<section class="rcard" style="border-style:dashed">'
+                + '<div class="rcard-head"><h3>Lifetime head-to-head (filters not applied)</h3>'
+                + '<span class="range">All ' + fmtInt(h2hN) + ' meetings on file, no conditions</span></div>'
+                + '<p class="note-s"><strong>Not the qualifying sample.</strong> These figures cover every '
+                + 'meeting between these two teams in the database. None of the conditions you selected '
+                + 'are applied here.</p><div class="kpis">'
+                + '<div class="kpi"><span>Lifetime meetings</span><strong>' + fmtInt(h2hN) + '</strong></div>'
                 + '<div class="kpi"><span>' + esc(d.team_1) + ' record</span><strong>'
-                    + (h2h.record ? esc(h2h.record) : DASH) + '</strong></div>'
-                + '<div class="kpi"><span>Win %</span><strong>' + hxPct(h2h.win_pct) + '</strong></div>'
-                + '<div class="kpi"><span>ATS</span><strong>' + ((h2h.ats && h2h.ats.record) ? esc(h2h.ats.record) : DASH) + '</strong></div>'
-                + '<div class="kpi"><span>Over / under</span><strong>' + ((h2h.ou && h2h.ou.record) ? esc(h2h.ou.record) : DASH) + '</strong></div>'
-                + '<div class="kpi"><span>Avg margin</span><strong>' + signed(h2h.avg_margin) + '</strong></div>'
-                // From the server's own two averages, which cover every
-                // meeting. Averaging the transmitted game list instead
-                // answered for whatever subset happened to be in the payload:
-                // 9.4 over 250 rows sitting beside a Meetings count of 485,
-                // in a card where every other figure covers all 485.
-                + '<div class="kpi"><span>Avg total</span><strong>'
-                + num(h2h.avg_scored != null && h2h.avg_allowed != null
-                    ? Math.round((h2h.avg_scored + h2h.avg_allowed) * 10) / 10
-                    : avgTotal(h2h.games))
+                    + (h2h.record ? esc(h2h.record) : DASH) + '</strong><em>' + hxPct(h2h.win_pct) + '</em></div>'
+                + '<div class="kpi"><span>' + esc(d.team_2) + ' record</span><strong>'
+                    + (h2h.wins != null ? esc(h2h.losses + '-' + h2h.wins + (h2h.ties ? '-' + h2h.ties : '')) : DASH)
+                    + '</strong></div>'
+                + '<div class="kpi"><span>' + esc(d.team_1) + ' ATS</span><strong>'
+                    + ((h2hAts && h2hAts.wins != null) ? esc(h2hAts.wins + '-' + h2hAts.losses + '-' + h2hAts.pushes)
+                       : ((h2hAts && h2hAts.record) ? esc(h2hAts.record) : DASH))
+                    + '</strong><em>' + (h2hAts ? esc(h2hAts.eligible_games) + ' with a closing spread' : '') + '</em></div>'
+                + '<div class="kpi"><span>Over / under</span><strong>'
+                    + ((h2hOu && h2hOu.overs != null) ? esc(h2hOu.overs + '-' + h2hOu.unders + '-' + h2hOu.pushes)
+                       : ((h2hOu && h2hOu.record) ? esc(h2hOu.record) : DASH))
+                    + '</strong><em>' + (h2hOu ? esc(h2hOu.eligible_games) + ' with a closing total' : '') + '</em></div>'
+                + '<div class="kpi"><span>Avg margin (' + esc(d.team_1) + ')</span><strong>' + signed(h2h.avg_margin)
+                    + '</strong><em>' + esc(d.team_1) + ' points minus ' + esc(d.team_2) + ' points</em></div>'
+                // The server's own mean over every meeting, from unrounded sums.
+                + '<div class="kpi"><span>Avg total points</span><strong>'
+                + num(h2h.avg_combined != null ? h2h.avg_combined
+                    : (h2h.avg_scored != null && h2h.avg_allowed != null
+                        ? Math.round((h2h.avg_scored + h2h.avg_allowed) * 10) / 10
+                        : avgTotal(h2h.games)))
                 + '</strong></div>'
+                + ((h2hCl && h2hCl.closing_line_games > 0)
+                    ? '<div class="kpi"><span>Avg closing spread (' + esc(d.team_1) + ')</span><strong>'
+                        + signed(h2hCl.avg_closing_line) + '</strong><em>minus = favored · '
+                        + esc(h2hCl.closing_line_games) + ' games</em></div>' : '')
                 + '</div>'
                 // H2H_DENOMINATOR_20260817: the card prints "Meetings" from
                 // games_in_dataset (every meeting on file) while the record,
