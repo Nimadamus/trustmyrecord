@@ -363,8 +363,10 @@ class Assets:
         self.research_css = "/static/css/blp-research.css?v=" + hashlib.sha256(css).hexdigest()[:12]
 
 
-FONTS = ("https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@600;700;800"
-         "&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap")
+# Only the navbar's display faces come from Google. Inter and Barlow are self hosted and preloaded
+# (static/css/blp-research.css) so the page text never reflows when a web font arrives.
+FONTS = "https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&display=swap"
+PRELOAD_FONTS = ("/static/fonts/blp/inter-latin-wght.woff2", "/static/fonts/blp/barlow-latin-800.woff2")
 
 
 def breadcrumbs(items):
@@ -424,7 +426,7 @@ def page(assets, *, path, title, desc, h1, crumbs, body, schema, og_image, game_
 <meta name="twitter:description" content="{esc(desc)}">
 <meta name="twitter:image" content="{esc(og_image)}">
 <link rel="icon" type="image/png" href="/static/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+{"".join(f'<link rel="preload" href="{f}" as="font" type="font/woff2" crossorigin>' + chr(10) for f in PRELOAD_FONTS)}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="{FONTS}" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="{FONTS}"></noscript>
