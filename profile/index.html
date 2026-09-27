@@ -2542,11 +2542,10 @@
                         <div class="tmrx-section-head">
                           <div>
                             <div class="tmrx-section-title">Takes</div>
-                            <div class="tmrx-section-sub">Sports takes this member shared on TrustMyRecord, newest first. Open one to like or reply.</div>
+                            <div class="tmrx-section-sub">Sports takes from this member, newest first. Tap a take to open the conversation.</div>
                           </div>
                           <div class="tmrx-meta" id="takesMeta"></div>
                         </div>
-                        <div id="takesComposer"></div>
                         <div class="takes-list" id="takesList"></div>
                       </div>
 
@@ -7921,104 +7920,36 @@
         faFetch(tab, faState.page[tab] || 1);
     }
 
-    // SHARE_YOUR_TAKE_20260927: the member's Takes, from GET /api/feed?username=.
-    // Filtered to this member client side as well, so a backend that ignores
-    // ?username= can never put someone else's post on this profile.
-    // Paged 20 at a time with "Show more takes", so a member's older Takes are
-    // always reachable. The server answers ?username= with that member's posts
-    // only; the "Show more" button appears only when every row came back
-    // server-filtered, so paging never walks the global feed.
-    var TAKES_PAGE = 20;
-    async function fetchProfileTakes(username, offset) {
-        var resp = await window.api.request('/feed?filter=posts&limit=' + TAKES_PAGE + '&offset=' + offset
-            + '&username=' + encodeURIComponent(username));
-        var rows = (resp && resp.feed) || [];
-        var lower = username.toLowerCase();
-        var serverFiltered = rows.every(function (it) { return String(it.username || '').toLowerCase() === lower; });
-        var items = rows.filter(function (it) {
-            return it.item_type === 'feed_post'
-                && String(it.username || '').toLowerCase() === lower
-                && it.post_type !== 'pick_share';
-        });
-        return { items: items, more: serverFiltered && rows.length === TAKES_PAGE };
-    }
-
-    async function loadProfileTakes(username) {
+    // TAKES_FEED_20260927: the member's Takes as social cards, drawn by the
+    // shared Sports Takes feed (static/js/tmr-takes-feed.js): avatar, name,
+    // record, relative time, sport and team chips, Like / Reply / Share, and a
+    // thread sheet. The feed filters to this member client side as well, so a
+    // backend that ignores ?username= can never put someone else's post here.
+    // The owner gets the composer on top and a new take lands first, no reload.
+    function loadProfileTakes(username) {
         var section = document.getElementById('profileTakes');
         var list = document.getElementById('takesList');
         if (!section || !list || !username) return;
         var own = !!isOwnProfile;
-        var page = { items: [], more: false };
-        try {
-            page = await fetchProfileTakes(username, 0);
-        } catch (e) {
-            if (!own) return;
-        }
-        var items = page.items;
-        if (!items.length && !own) return;
-        section.hidden = false;
-        if (own) {
-            var mountTake = function () {
-                if (!window.TMRTake) return;
-                window.TMRTake.mount(document.getElementById('takesComposer'), { source: 'profile', kind: 'general' }, {
-                    onPosted: function () { loadProfileTakes(username); }
-                });
-            };
-            if (window.TMRTake) mountTake(); else window.addEventListener('load', mountTake, { once: true });
-        }
-        list.textContent = '';
-        appendTakeRows(list, items);
-        var offset = TAKES_PAGE;
-        var moreBtn = document.getElementById('takesMore');
-        if (moreBtn) moreBtn.remove();
-        if (page.more) {
-            moreBtn = document.createElement('button');
-            moreBtn.type = 'button';
-            moreBtn.id = 'takesMore';
-            moreBtn.className = 'ds-btn ghost';
-            moreBtn.textContent = 'Show more takes';
-            moreBtn.style.cssText = 'margin-top:10px';
-            moreBtn.addEventListener('click', async function () {
-                moreBtn.disabled = true;
-                moreBtn.textContent = 'Loading…';
-                try {
-                    var next = await fetchProfileTakes(username, offset);
-                    offset += TAKES_PAGE;
-                    appendTakeRows(list, next.items);
-                    if (next.more) { moreBtn.disabled = false; moreBtn.textContent = 'Show more takes'; }
-                    else moreBtn.remove();
-                } catch (e) {
-                    moreBtn.disabled = false;
-                    moreBtn.textContent = 'Could not load more. Try again';
-                }
+        var meta = document.getElementById('takesMeta');
+        var start = function () {
+            if (!window.TMRTakesFeed) return;
+            if (own) section.hidden = false;
+            window.TMRTakesFeed.mount(list, {
+                username: username,
+                composer: own,
+                composerContext: { source: 'profile', kind: 'general' },
+                emptyText: own ? 'No takes yet. Your first one shows up right here.' : 'No takes yet.',
+                onCount: function (n) {
+                    if (n) section.hidden = false;
+                    else if (!own) section.hidden = true;
+                    if (meta) meta.textContent = n ? (n + (n === 1 ? ' take' : ' takes')) : '';
+                },
+                onError: function () { if (!own) section.hidden = true; }
             });
-            list.parentNode.appendChild(moreBtn);
-        }
-    }
-
-    function appendTakeRows(list, items) {
-        items.forEach(function (it) {
-            var a = document.createElement('a');
-            a.className = 'take-row';
-            a.href = '/feed/?post=' + encodeURIComponent(it.item_id);
-            a.style.cssText = 'display:block;padding:12px 0;border-top:1px solid rgba(127,146,168,.22);color:inherit;text-decoration:none';
-            var body = document.createElement('div');
-            body.style.cssText = 'font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word';
-            body.textContent = it.content || '';
-            var sub = document.createElement('div');
-            sub.style.cssText = 'margin-top:5px;font-size:12px;opacity:.75';
-            var bits = [];
-            var when = new Date(it.created_at);
-            if (!isNaN(when)) bits.push(when.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }));
-            if (it.sport) bits.push(String(it.sport).toUpperCase());
-            if (it.context_label || it.context_team) bits.push(it.context_label || it.context_team);
-            bits.push((Number(it.likes_count) || 0) + ' likes');
-            bits.push((Number(it.comments_count) || 0) + ' replies');
-            sub.textContent = bits.join(' · ');
-            a.appendChild(body);
-            a.appendChild(sub);
-            list.appendChild(a);
-        });
+        };
+        if (window.TMRTakesFeed) start();
+        else window.addEventListener('load', start, { once: true });
     }
 
     async function loadForumActivity(username) {
@@ -17194,6 +17125,8 @@
       .tmrx-forum .fa-tabs { margin: 14px 22px 0 !important; }
       .tmrx-forum .fa-tab-count { opacity: .7; font-weight: 800; margin-left: 3px; }
       .tmrx-forum .fa-list { display: grid; gap: 10px; margin: 14px 22px 0; }
+      .tmrx-takes .takes-list { margin: 14px 22px 22px; max-width: 720px; }
+      @media (max-width: 600px) { .tmrx-takes .takes-list { margin: 12px 12px 14px; } }
       .tmrx-forum .fa-pagination { margin: 14px 22px 20px; }
       .fa-item {
         display: block; text-decoration: none; padding: 13px 15px;
@@ -20259,7 +20192,7 @@
 })();
 </script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=2e89815d2eb2"></script><script src="/static/js/tmr-ds-nav.5fcdb74b3c38.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=d058951b1170"></script><script src="/static/js/tmr-takes-feed.js?v=0610b5e40235"></script><script src="/static/js/tmr-ds-nav.5fcdb74b3c38.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="tmr-profile-qa-20260909">
 /* =====================================================================

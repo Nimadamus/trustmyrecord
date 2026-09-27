@@ -156,7 +156,33 @@
       '.tmr-take-dock .tmr-take-login b,.tmr-take-dock .tmr-take-login a{color:#22D2C0}',
       /* Clear the Live help bubble (bottom right) where the dock would reach it. */
       '@media (max-width:1100px){.tmr-take-dock{bottom:84px}}',
-      '@media (max-width:600px){.tmr-take{padding:12px}.tmr-take-prompt{font-size:15px}.tmr-take-dock{bottom:80px;width:calc(100vw - 20px)}.tmr-take-post{padding:0 14px}}'
+      '@media (max-width:600px){.tmr-take{padding:12px}.tmr-take-prompt{font-size:15px}.tmr-take-dock{bottom:80px;width:calc(100vw - 20px)}.tmr-take-post{padding:0 14px}}',
+      /* Feed variant (TAKES_FEED_20260927): the composer at the top of a Sports
+         Takes feed. Avatar left, headline, compact box, one-tap tags. */
+      '.tmr-take--feed{padding:16px 18px;border-color:rgba(115,139,174,.22);background:#0D1929;box-shadow:none}',
+      '.tmr-take--feed .tmr-take-fhead{display:flex;gap:12px;align-items:center;margin-bottom:12px}',
+      '.tmr-take--feed .tmr-take-fav{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;background:#13243A}',
+      '.tmr-take--feed .tmr-take-fav img,.tmr-take--feed .tmr-take-fav svg{width:100%;height:100%;display:block;object-fit:cover}',
+      '.tmr-take--feed .tmr-take-fav.is-team{background:#fff}',
+      '.tmr-take--feed .tmr-take-fav.is-team img{object-fit:contain;padding:18%;box-sizing:border-box}',
+      '.tmr-take--feed .tmr-take-h{font:800 19px/1.2 Inter,"Segoe UI",sans-serif;color:#F4F8FD;margin:0}',
+      '.tmr-take--feed .tmr-take-sub{font:13.5px/1.4 Inter,"Segoe UI",sans-serif;color:#8FA3BC;margin-top:2px}',
+      '.tmr-take--feed .tmr-take-row{align-items:stretch}',
+      '.tmr-take--feed .tmr-take-input{min-height:48px;padding:13px 15px;border-radius:12px;background:#07111C;border-color:rgba(115,139,174,.3);font-size:16px}',
+      '.tmr-take--feed .tmr-take-post{height:auto;min-height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(180deg,#14B8A6,#0C948C);font:800 15px/1 Inter,"Segoe UI",sans-serif;letter-spacing:0;text-transform:none;box-shadow:0 6px 18px rgba(20,184,166,.28)}',
+      '.tmr-take--feed .tmr-take-post:disabled{opacity:1;background:#1A2A3F;color:#5F7690;box-shadow:none}',
+      '.tmr-take--feed .tmr-take-foot{margin-top:10px}',
+      '.tmr-take-sport.is-on{background:rgba(34,210,192,.16);border-color:rgba(34,210,192,.6);color:#CFF8F2}',
+      '.tmr-take-pick{appearance:none;-webkit-appearance:none;max-width:210px;border:1px solid rgba(147,169,192,.3);background:#07111C;color:#C9D7E6;border-radius:999px;padding:4px 26px 4px 11px;font:600 12px/1.3 Inter,sans-serif;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#93A9C0 50%),linear-gradient(135deg,#93A9C0 50%,transparent 50%);background-position:calc(100% - 13px) 50%,calc(100% - 9px) 50%;background-size:4px 4px;background-repeat:no-repeat}',
+      '.tmr-take-pick:focus{outline:none;border-color:#22D2C0}',
+      /* Host pages restyle every button with !important rules; ID weight via :is() wins. */
+      ':is(.tmr-take--feed,#_tkf) .tmr-take-post{border:0!important;border-radius:12px!important;min-height:48px!important;padding:0 22px!important;background:linear-gradient(180deg,#14B8A6,#0C948C)!important;color:#fff!important;box-shadow:0 6px 18px rgba(20,184,166,.28)!important;text-transform:none!important;letter-spacing:0!important;font:800 15px/1 Inter,"Segoe UI",sans-serif!important}',
+      ':is(.tmr-take--feed,#_tkf) .tmr-take-post:disabled{background:#1A2A3F!important;color:#5F7690!important;box-shadow:none!important}',
+      ':is(.tmr-take--feed,#_tkf) .tmr-take-sport{min-height:0!important;padding:5px 11px!important;border:1px solid rgba(147,169,192,.3)!important;border-radius:999px!important;background:transparent!important;color:#93A9C0!important;font:700 12px/1.2 Inter,sans-serif!important;text-transform:none!important;letter-spacing:0!important}',
+      ':is(.tmr-take--feed,#_tkf) .tmr-take-sport:hover{color:#EAF2FA!important;border-color:#22D2C0!important}',
+      ':is(.tmr-take--feed,#_tkf) .tmr-take-sport.is-on{background:rgba(34,210,192,.16)!important;border-color:rgba(34,210,192,.6)!important;color:#CFF8F2!important}',
+      ':is(.tmr-take--feed,#_tkf) .tmr-take-input{resize:none!important}',
+      '@media (max-width:600px){.tmr-take--feed{padding:14px}.tmr-take--feed .tmr-take-h{font-size:17px}.tmr-take--feed .tmr-take-fav{width:38px;height:38px}:is(.tmr-take--feed,#_tkf) .tmr-take-post{padding:0 16px!important}.tmr-take-pick{max-width:46vw}}'
     ].join('');
     var s = el('style');
     s.id = 'tmr-take-css';
@@ -170,36 +196,109 @@
 
   var SPORTS = ['NFL', 'NCAAF', 'MLB', 'NBA', 'NHL', 'NCAAB', 'Soccer'];
 
+  /* Feed variant tag pickers. Team names match the TMRTeamLogo slugs so the
+     card can draw the club mark; matchups come from the live board. */
+  var TEAMS = {
+    NFL: 'Arizona Cardinals|Atlanta Falcons|Baltimore Ravens|Buffalo Bills|Carolina Panthers|Chicago Bears|Cincinnati Bengals|Cleveland Browns|Dallas Cowboys|Denver Broncos|Detroit Lions|Green Bay Packers|Houston Texans|Indianapolis Colts|Jacksonville Jaguars|Kansas City Chiefs|Las Vegas Raiders|Los Angeles Chargers|Los Angeles Rams|Miami Dolphins|Minnesota Vikings|New England Patriots|New Orleans Saints|New York Giants|New York Jets|Philadelphia Eagles|Pittsburgh Steelers|San Francisco 49ers|Seattle Seahawks|Tampa Bay Buccaneers|Tennessee Titans|Washington Commanders',
+    MLB: 'Arizona Diamondbacks|Athletics|Atlanta Braves|Baltimore Orioles|Boston Red Sox|Chicago Cubs|Chicago White Sox|Cincinnati Reds|Cleveland Guardians|Colorado Rockies|Detroit Tigers|Houston Astros|Kansas City Royals|Los Angeles Angels|Los Angeles Dodgers|Miami Marlins|Milwaukee Brewers|Minnesota Twins|New York Mets|New York Yankees|Philadelphia Phillies|Pittsburgh Pirates|San Diego Padres|San Francisco Giants|Seattle Mariners|St. Louis Cardinals|Tampa Bay Rays|Texas Rangers|Toronto Blue Jays|Washington Nationals',
+    NBA: 'Atlanta Hawks|Boston Celtics|Brooklyn Nets|Charlotte Hornets|Chicago Bulls|Cleveland Cavaliers|Dallas Mavericks|Denver Nuggets|Detroit Pistons|Golden State Warriors|Houston Rockets|Indiana Pacers|LA Clippers|Los Angeles Lakers|Memphis Grizzlies|Miami Heat|Milwaukee Bucks|Minnesota Timberwolves|New Orleans Pelicans|New York Knicks|Oklahoma City Thunder|Orlando Magic|Philadelphia 76ers|Phoenix Suns|Portland Trail Blazers|Sacramento Kings|San Antonio Spurs|Toronto Raptors|Utah Jazz|Washington Wizards',
+    NHL: 'Anaheim Ducks|Boston Bruins|Buffalo Sabres|Calgary Flames|Carolina Hurricanes|Chicago Blackhawks|Colorado Avalanche|Columbus Blue Jackets|Dallas Stars|Detroit Red Wings|Edmonton Oilers|Florida Panthers|Los Angeles Kings|Minnesota Wild|Montreal Canadiens|Nashville Predators|New Jersey Devils|New York Islanders|New York Rangers|Ottawa Senators|Philadelphia Flyers|Pittsburgh Penguins|San Jose Sharks|Seattle Kraken|St. Louis Blues|Tampa Bay Lightning|Toronto Maple Leafs|Utah Mammoth|Vancouver Canucks|Vegas Golden Knights|Washington Capitals|Winnipeg Jets'
+  };
+  var SPORT_KEYS = { NFL: 'americanfootball_nfl', NCAAF: 'americanfootball_ncaaf', MLB: 'baseball_mlb', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab' };
+  var gamesCache = {};
+
+  /* Upcoming and in progress games for one sport, next 36 hours, cached. */
+  function loadGames(sport) {
+    var key = SPORT_KEYS[sport];
+    if (!key) return Promise.resolve([]);
+    if (gamesCache[key]) return gamesCache[key];
+    gamesCache[key] = fetch(apiBase() + '/games?limit=40&sport=' + encodeURIComponent(key), { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (d) {
+        var horizon = Date.now() + 36 * 3600 * 1000;
+        return ((d && d.games) || []).filter(function (g) {
+          var t = Date.parse(g.commence_time);
+          return g.away_team && g.home_team && isFinite(t) && t < horizon;
+        });
+      })
+      .catch(function () { delete gamesCache[key]; return []; });
+    return gamesCache[key];
+  }
+
+  /* The signed in member's face for the feed composer: upload, else the first
+     favorite club's mark, else the neutral member mark. */
+  function memberFace(u) {
+    var box = el('span', 'tmr-take-fav');
+    var team = u && Array.isArray(u.favorite_teams) ? u.favorite_teams[0] : (u && u.favorite_team);
+    var logo = team && window.TMRTeamLogo && window.TMRTeamLogo.urlLight ? window.TMRTeamLogo.urlLight(team) : null;
+    var neutral = function () {
+      box.className = 'tmr-take-fav';
+      box.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="tkfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#17324F"/><stop offset="1" stop-color="#0B1B2E"/></linearGradient></defs><rect width="40" height="40" fill="url(#tkfg)"/><circle cx="20" cy="15.5" r="6.5" fill="#6FD9CC"/><path d="M7.5 36c1.6-7 6.6-10.5 12.5-10.5S30.9 29 32.5 36z" fill="#6FD9CC"/></svg>';
+    };
+    var withLogo = function () {
+      if (!logo) { neutral(); return; }
+      box.className = 'tmr-take-fav is-team';
+      box.textContent = '';
+      var img = el('img');
+      img.alt = team;
+      img.onerror = neutral;
+      img.src = logo;
+      box.appendChild(img);
+    };
+    var up = u && (u.avatar_url || u.avatarUrl);
+    if (up && typeof up === 'string') {
+      var img = el('img');
+      img.alt = u.username || '';
+      img.onerror = withLogo;
+      img.src = up;
+      box.appendChild(img);
+    } else withLogo();
+    return box;
+  }
+
   function build(ctx, opts) {
     ctx = ctx || {};
     opts = opts || {};
     injectStyles();
-    var state = { ctx: ctx, sport: ctx.sport || null, dropped: {}, posting: false };
+    var feed = opts.variant === 'feed';
+    var state = { ctx: ctx, sport: ctx.sport || null, dropped: {}, posting: false, team: null, game: null };
 
-    var root = el('section', 'tmr-take' + (opts.className ? ' ' + opts.className : ''));
+    var root = el('section', 'tmr-take' + (feed ? ' tmr-take--feed' : '') + (opts.className ? ' ' + opts.className : ''));
     root.setAttribute('aria-label', 'Share your sports take');
 
-    var head = el('div', 'tmr-take-head');
-    head.appendChild(el('div', 'tmr-take-kicker', '🔥 Share your sports take'));
-    if (opts.onClose) {
-      var x = el('button', 'tmr-take-x', '×');
-      x.type = 'button';
-      x.setAttribute('aria-label', 'Minimize');
-      x.addEventListener('click', opts.onClose);
-      head.appendChild(x);
+    var prompt;
+    if (feed) {
+      var fhead = el('div', 'tmr-take-fhead');
+      fhead.appendChild(memberFace(currentUser()));
+      var titles = el('div');
+      titles.appendChild(el('h3', 'tmr-take-h', 'What’s your take?'));
+      titles.appendChild(el('div', 'tmr-take-sub', 'React to today’s games, your team, or anything happening in sports.'));
+      fhead.appendChild(titles);
+      root.appendChild(fhead);
+      prompt = el('div');
+      prompt.textContent = 'What’s your take?';
+    } else {
+      var head = el('div', 'tmr-take-head');
+      head.appendChild(el('div', 'tmr-take-kicker', '🔥 Share your sports take'));
+      if (opts.onClose) {
+        var x = el('button', 'tmr-take-x', '×');
+        x.type = 'button';
+        x.setAttribute('aria-label', 'Minimize');
+        x.addEventListener('click', opts.onClose);
+        head.appendChild(x);
+      }
+      root.appendChild(head);
+      prompt = el('div', 'tmr-take-prompt', promptFor(ctx));
+      root.appendChild(prompt);
     }
-    root.appendChild(head);
-
-    var prompt = el('div', 'tmr-take-prompt', promptFor(ctx));
-    root.appendChild(prompt);
 
     var row = el('div', 'tmr-take-row');
     var input = el('textarea', 'tmr-take-input');
     input.rows = 1;
     input.maxLength = MAX_LEN + 50;
-    input.placeholder = ctx.placeholder || 'Type your take…';
+    input.placeholder = ctx.placeholder || (feed ? 'Share a take…' : 'Type your take…');
     input.setAttribute('aria-label', prompt.textContent);
-    var post = el('button', 'tmr-take-post', 'Post take');
+    var post = el('button', 'tmr-take-post', feed ? 'Post' : 'Post take');
     post.type = 'button';
     post.disabled = true;
     row.appendChild(input);
@@ -221,7 +320,7 @@
       tags.textContent = '';
       var c = state.ctx;
       var list = [];
-      if (state.sport && !state.dropped.sport) list.push(['sport', state.sport]);
+      if (state.sport && !state.dropped.sport && !(feed && !c.sport)) list.push(['sport', state.sport]);
       if (c.team && !state.dropped.team) list.push(['team', c.team]);
       if (c.label && !state.dropped.label) list.push(['label', c.label]);
       list.forEach(function (t) {
@@ -236,6 +335,7 @@
         chip.appendChild(rm);
         tags.appendChild(chip);
       });
+      if (feed) { renderFeedTags(c); return; }
       /* No context from the page: offer one-tap optional sport tags once the
          member starts typing. Never required. */
       if (!list.length && input.value.trim()) {
@@ -248,6 +348,55 @@
       }
     }
 
+    /* Feed variant: sport is one tap and always optional. Team and matchup
+       pickers appear once a sport is chosen, and only where the backend keeps
+       the tag (opts.contextPickers), so a member never tags something that
+       silently disappears. Page supplied context stays a removable chip. */
+    function renderFeedTags(c) {
+      if (c.team && !state.dropped.team) state.team = null;
+      var pageSport = !!c.sport;
+      if (!pageSport) {
+        SPORTS.forEach(function (sp) {
+          var on = state.sport === sp;
+          var b = el('button', 'tmr-take-sport' + (on ? ' is-on' : ''), sp);
+          b.type = 'button';
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.addEventListener('click', function () {
+            state.sport = on ? null : sp;
+            state.team = null;
+            state.game = null;
+            renderTags();
+          });
+          tags.appendChild(b);
+        });
+      }
+      if (!opts.contextPickers || !state.sport) return;
+      if (TEAMS[state.sport] && !(c.team && !state.dropped.team)) {
+        var ts = el('select', 'tmr-take-pick');
+        ts.setAttribute('aria-label', 'Tag a team');
+        ts.appendChild(new Option('Team', ''));
+        TEAMS[state.sport].split('|').forEach(function (t) { ts.appendChild(new Option(t, t, false, t === state.team)); });
+        ts.addEventListener('change', function () { state.team = ts.value || null; });
+        tags.appendChild(ts);
+      }
+      if (SPORT_KEYS[state.sport] && !(c.label && !state.dropped.label)) {
+        var gs = el('select', 'tmr-take-pick');
+        gs.setAttribute('aria-label', 'Tag a matchup');
+        gs.appendChild(new Option('Matchup', ''));
+        gs.hidden = true;
+        tags.appendChild(gs);
+        var forSport = state.sport;
+        loadGames(forSport).then(function (games) {
+          if (state.sport !== forSport || !gs.parentNode || !games.length) return;
+          games.forEach(function (g, i) {
+            gs.appendChild(new Option(g.away_team + ' @ ' + g.home_team, String(i), false, !!(state.game && state.game.id === g.id)));
+          });
+          gs.hidden = false;
+          gs.addEventListener('change', function () { state.game = gs.value === '' ? null : games[+gs.value]; });
+        });
+      }
+    }
+
     function sync() {
       var len = input.value.trim().length;
       post.disabled = state.posting || len === 0 || len > MAX_LEN;
@@ -255,6 +404,7 @@
       meta.className = 'tmr-take-meta' + (len > MAX_LEN ? ' is-over' : '');
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight + 2, 140) + 'px';
+      if (feed) return;
       if (!tags.childNodes.length || (!state.sport && !state.ctx.team && !state.ctx.label)) renderTags();
     }
 
@@ -283,6 +433,12 @@
       if (c.label && !state.dropped.label) body.context_label = c.label;
       if (c.game_id && !state.dropped.label) body.context_game_id = c.game_id;
       if (c.url && !state.dropped.label) body.context_url = c.url;
+      if (feed && state.team && !body.context_team) body.context_team = state.team;
+      if (feed && state.game && !body.context_label) {
+        body.context_label = state.game.away_team + ' @ ' + state.game.home_team;
+        if (/^\d+$/.test(String(state.game.id))) body.context_game_id = Number(state.game.id);
+      }
+      var idleLabel = feed ? 'Post' : 'Post take';
 
       S.authFetch(apiBase() + '/feed', {
         method: 'POST',
@@ -292,7 +448,7 @@
         return r.json().catch(function () { return {}; }).then(function (d) { return { r: r, d: d }; });
       }).then(function (res) {
         state.posting = false;
-        post.textContent = 'Post take';
+        post.textContent = idleLabel;
         if (res.r.status === 401 || res.r.status === 403) {
           show('err', ['Your session expired. ', link('Log in again', '/login/?next=' + encodeURIComponent(location.pathname + location.search)), ' and your take is still here.']);
           sync();
@@ -306,14 +462,16 @@
         }
         var id = res.d && res.d.post && res.d.post.id;
         input.value = '';
-        show('ok', ['Posted. Your take is live in the ', link('Community Feed', '/feed/' + (id ? '?post=' + encodeURIComponent(id) : '')), '.']);
-        try { document.dispatchEvent(new CustomEvent('tmr:take-posted', { detail: { post: res.d.post, context: c } })); } catch (err) { }
-        prompt.textContent = promptFor(c.kind && c.kind !== 'general' ? c : {});
+        if (feed) show('ok', ['Posted. Your take is live.']);
+        else show('ok', ['Posted. Your take is live in the ', link('Community Feed', '/feed/' + (id ? '?post=' + encodeURIComponent(id) : '')), '.']);
+        try { document.dispatchEvent(new CustomEvent('tmr:take-posted', { detail: { post: res.d.post, context: c, sent: body } })); } catch (err) { }
+        if (!feed) prompt.textContent = promptFor(c.kind && c.kind !== 'general' ? c : {});
+        else { state.team = null; state.game = null; state.sport = c.sport || null; renderTags(); }
         sync();
         if (opts.onPosted) opts.onPosted(res.d.post);
       }, function () {
         state.posting = false;
-        post.textContent = 'Post take';
+        post.textContent = idleLabel;
         show('err', ['Network error. Your take was not posted; it is still in the box.']);
         sync();
       });
