@@ -120,7 +120,8 @@ for p in pages:
     if p["game_ids"] is not None and hashlib.sha256("\n".join(p["game_ids"]).encode()).hexdigest() != p["sha256"]:
         fail(f"{path}: manifest id list does not hash to its digest")
     if p["kind"] == "matchup":
-        listed = re.findall(r'<tr data-game-id="([^"]+)"', main)
+        full = re.search(r'<section[^>]*id="meetings"[^>]*>(.*?)</section>', main, re.S)
+        listed = re.findall(r'<tr data-game-id="([^"]+)"', full.group(1) if full else main)
         if sorted(html.unescape(x) for x in listed) != p["game_ids"]:
             fail(f"{path}: meetings table lists {len(listed)} rows, not the page's game set")
 
