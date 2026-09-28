@@ -73,7 +73,7 @@
   /* Plain-language names for the categories the server knows, so the kicker
      says what kind of number this is. */
   var KICKERS = {
-    all: 'Full record', record: 'Full record', period: 'Recent window', rolling_form: 'Recent form',
+    all: 'Full record', record: 'Full record', period: 'Recent window', graded_period: 'Graded in window', rolling_form: 'Recent form',
     streak: 'Streak', split_sport: 'League', split_sport_group: 'Sport', split_market: 'Market type',
     split_odds_bucket: 'Odds range', split_fav_dog: 'Favorite vs underdog', split_unit_size: 'Unit size',
     split_day_of_week: 'Day of week', daypart: 'Day vs night', opponent: 'Team faded', team: 'Team',
@@ -218,6 +218,7 @@
   function legacyPair(cat, bucket) {
     if (cat === 'record') return { cat: 'all', bucket: '' };
     if (cat === 'drawdown') return { cat: 'all', bucket: '', relabel: true };
+    if (cat === 'graded_period') return { cat: 'period', bucket: bucket };
     if (cat === 'sport_filter') {
       var b = String(bucket || '').toLowerCase();
       if (SPORT_KEYS[b]) return { cat: SPORT_KEYS[b][0], bucket: SPORT_KEYS[b][1] };
