@@ -225,6 +225,14 @@
             color: var(--text);
             font-weight: 600;
         }
+        .tmr-pick-main { flex: 1; min-width: 0; }
+        .tmr-pick-game {
+            color: var(--muted);
+            font-size: 0.66rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .tmr-pick-meta {
             color: var(--muted);
             font-size: 0.7rem;
@@ -409,16 +417,50 @@
             return k.replace(/_/g,' ').toUpperCase();
         }
 
+        // PICK_MATCHUP_20260928: a pick never shows without its game, and a
+        // total or prop always carries its number ("Over 8.5", not "Over").
+        function cleanName(v) { return String(v == null ? '' : v).replace(/_/g, ' ').replace(/\s+/g, ' ').trim(); }
+        function pickGame(p) {
+            var away = cleanName(p && p.away_team), home = cleanName(p && p.home_team);
+            return away && home ? away + ' @ ' + home : (away || home);
+        }
+        function pickLabel(p) {
+            var mk = String((p && p.market_type) || '').toLowerCase();
+            var sel = cleanName(p && (p.selection || p.pick_text || p.market_label));
+            if (!sel) return '';
+            var n = (p.line_snapshot == null || p.line_snapshot === '') ? NaN : Number(p.line_snapshot);
+            var abs = Number.isFinite(n) ? String(Math.abs(n)) : '';
+            var has = abs && (' ' + sel + ' ').indexOf(' ' + abs + ' ') !== -1;
+            if (/team_?totals?/.test(mk)) {
+                var m = sel.match(/^(.*?)\s+(over|under)$/i);
+                if (m) return m[1] + ' Team Total ' + m[2].charAt(0).toUpperCase() + m[2].slice(1).toLowerCase() + (abs ? ' ' + abs : '');
+                return has || !abs ? sel : sel + ' ' + abs;
+            }
+            if (/spread|run_?line|puck_?line/.test(mk)) {
+                var ln = fmtLine(p.line_snapshot);
+                return !ln || (' ' + sel + ' ').indexOf(' ' + ln + ' ') !== -1 ? sel : sel + ' ' + ln;
+            }
+            if (/(^|_)h2h$|moneyline/.test(mk)) return /\b(ml|draw|tie)$/i.test(sel) ? sel : sel + ' ML';
+            if (/\b(over|under)$/i.test(sel) && abs && !has) return sel + ' ' + abs;
+            return sel;
+        }
+        function pickNameCell(p, fallback) {
+            var game = pickGame(p);
+            return '<div class="tmr-pick-main">'
+                + (game ? '<div class="tmr-pick-game" title="' + escapeHtml(game) + '">' + escapeHtml(game) + '</div>' : '')
+                + '<div class="tmr-pick-name">' + escapeHtml(pickLabel(p) || fallback) + '</div>'
+                + '</div>';
+        }
+
         function renderPickRow(p) {
             // p comes from /stats/advanced -> recentForm:
             // { id, market_type, selection, status, result_units, odds_snapshot, units, locked_at, sport_key }
             var status = String(p.status || '').toLowerCase();
             var resultLabel = status === 'won' ? 'W' : status === 'lost' ? 'L' : (status === 'push' ? 'P' : '·');
             var resultColor = status === 'won' ? 'var(--good)' : status === 'lost' ? 'var(--bad)' : 'var(--neutral)';
-            var name = p.selection || p.pick_text || p.market_label || '';
             var meta = sportShort(p.sport_key || p.sport);
             return '<div class="tmr-pick-row">'
-                +    '<div class="tmr-pick-name">' + escapeHtml(name || '—') + '</div>'
+                +    pickNameCell(p, '—')
                 +    '<div class="tmr-pick-meta">' + escapeHtml(meta) + '</div>'
                 +    '<div class="tmr-pick-result" style="color:' + resultColor + '">' + resultLabel + '</div>'
                 + '</div>';
@@ -458,17 +500,9 @@
             if (!Number.isFinite(n)) return '-';
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
-        function pendingPickLabel(pick) {
-            var selection = String(pick.selection || 'Pick').trim();
-            var line = fmtLine(pick.line_snapshot);
-            if (!line) return selection;
-            return new RegExp('(?:^|\\s)' + line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$').test(selection)
-                ? selection
-                : selection + ' ' + line;
-        }
         function renderPendingPickRow(pick) {
             return '<div class="tmr-pick-row">'
-                + '<div class="tmr-pick-name">' + escapeHtml(pendingPickLabel(pick)) + '</div>'
+                + pickNameCell(pick, 'Pick')
                 + '<div class="tmr-pick-meta">' + escapeHtml(sportShort(pick.sport_key)) + ' · ' + escapeHtml(fmtOdds(pick.odds_snapshot)) + ' · ' + escapeHtml(fmtUnitsPlain(pick.units)) + '</div>'
                 + '<div class="tmr-pick-result" style="color:#f4c95d">Pending</div>'
                 + '</div>';

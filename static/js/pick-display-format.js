@@ -152,7 +152,9 @@
             };
         }
 
-        if (isTotal(market)) {
+        /* "batter_total_bases" contains "total" but is a player prop: a name in
+           the selection means the name must stay ("Sal Stewart Over 1.5"). */
+        if (isTotal(market) && !stripLineSuffix(raw).replace(/\b(game\s+)?totals?\b/ig, '').trim()) {
             var gameTotalLine = totalLine(line);
             var totalLineLabel = side && gameTotalLine ? side + ' ' + gameTotalLine : (side || gameTotalLine || raw);
             return {
@@ -161,10 +163,30 @@
             };
         }
 
+        /* Player props store "Brock Purdy Over" with the number in line_snapshot. */
+        var propLine = totalLine(line);
+        if (propLine && /\b(over|under)$/i.test(raw)) {
+            return {
+                pickLabel: raw + ' ' + propLine,
+                lineLabel: propLine
+            };
+        }
+
         return {
             pickLabel: raw,
             lineLabel: lineText || '-'
         };
+    }
+
+    /* PICK_MATCHUP_20260928. A pick is never shown without the game it belongs
+       to: "Over 8.5" alone says nothing. "Away @ Home" in plain team names. */
+    function formatPickMatchup(pick) {
+        var p = pick || {};
+        var clean = function (v) { return text(v).replace(/_/g, ' ').replace(/\s+/g, ' ').trim(); };
+        var away = clean(p.away_team || p.awayTeam);
+        var home = clean(p.home_team || p.homeTeam);
+        if (away && home) return away + ' @ ' + home;
+        return away || home || clean(p.matchup || p.game_display || p.game);
     }
 
     /* ========================================================================
@@ -256,6 +278,7 @@
     window.TMR.formatPickLineLabel = function (pick) {
         return formatPickDisplay(pick).lineLabel;
     };
+    window.TMR.formatPickMatchup = formatPickMatchup;
     window.TMR.formatLeagueLabel = formatLeagueLabel;
     window.TMR.formatMarketLabel = formatMarketLabel;
     window.TMR.formatWagerCategory = formatWagerCategory;

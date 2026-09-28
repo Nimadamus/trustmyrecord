@@ -929,7 +929,12 @@ async function loadTrending() {
                 setRailCardVisibility('trendingList', true);
                 el.innerHTML = picks.map((p, i) => {
                     const sport = (p.sport_key || '').split('_')[1]?.toUpperCase() || '';
-                    return `<div class="rs-item"><span class="rs-rank">${i + 1}</span><span class="rs-text">${p.selection} ${formatMarketLabel(p.market_type)}</span><span class="rs-count">${sport}</span></div>`;
+                    // PICK_MATCHUP_20260928: name the game, and label the pick the shared way.
+                    const game = (window.TMR && TMR.formatPickMatchup) ? TMR.formatPickMatchup(p)
+                        : [p.away_team, p.home_team].filter(Boolean).join(' @ ');
+                    const label = (window.TMR && TMR.formatPickDisplayLabel) ? TMR.formatPickDisplayLabel(p)
+                        : (p.selection || '') + ' ' + formatMarketLabel(p.market_type);
+                    return `<div class="rs-item"><span class="rs-rank">${i + 1}</span><span class="rs-text">${game ? `<span class="rs-game" style="display:block;font-weight:600;font-size:.82em;color:var(--text-muted)">${esc(game)}</span>` : ''}${esc(label)}</span><span class="rs-count">${sport}</span></div>`;
                 }).join('');
                 return;
             }
