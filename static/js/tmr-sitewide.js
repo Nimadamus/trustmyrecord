@@ -1530,6 +1530,7 @@
                         <a href="/tmr-coin/">TMR Coin</a>
                         <a href="/my-record/">My Record</a>
                         <a href="/marketplace/">Pick Marketplace</a>
+                        <a href="/premium/">Premium</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
