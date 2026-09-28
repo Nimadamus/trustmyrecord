@@ -157,7 +157,7 @@
     }
 
     function getMarketLabel(marketType) {
-        return MARKET_LABELS[marketType] || String(marketType || 'Pick').replace(/_/g, ' ');
+        return MARKET_LABELS[marketType] || (window.TMR_MARKET_LABELS && marketType ? window.TMR_MARKET_LABELS.label(marketType) : String(marketType || 'Pick').replace(/_/g, ' '));
     }
 
     function formatLine(value, options) {

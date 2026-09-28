@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-    <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=6afc0c38a559"></script>
+    <script defer src="/static/js/tmr-terminology.js?v=0632f74dcb6b"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=4aca845d697f"></script>
     <style>
         /* -------------------------------------------------------------------
            TMR MATCH -- the peer-to-peer board, on the Concept A dark surface.
@@ -657,6 +657,7 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<script src="/static/js/tmr-market-labels.js?v=6026b1e47eeb"></script>
 </head>
 <body class="tmr-ds-shell tmr-theme-a">
     <main id="mk" class="mk-page">
@@ -913,8 +914,8 @@
         </div>
     </main>
 
-    <script src="/static/js/config.js?v=430b4bba7b37"></script>
-    <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
+    <script src="/static/js/config.js?v=42d35ea6f99d"></script>
+    <script src="/static/js/backend-api.js?v=2096f06031d1"></script>
     <script>
     (function () {
         var isLoggedIn = typeof isUserLoggedIn === 'function'
@@ -991,7 +992,7 @@
                 + '        <span class="side ' + esc(o.side) + '">' + (o.side === 'for' ? 'backing' : 'against') + '</span>' + status
                 + '      </div>'
                 + '      <div class="sub">' + (o.sport ? esc(o.sport) + '<span class="dot">&middot;</span>' : '')
-                + esc(o.event_label || o.event_ref) + '<span class="dot">&middot;</span>' + esc(o.market)
+                + esc(o.event_label || o.event_ref) + '<span class="dot">&middot;</span>' + esc((window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(o.market) : String(o.market || '').replace(/_/g, ' ')))
                 + '<span class="when"><span class="dot">&middot;</span>' + esc(when(o.created_at)) + '</span></div>'
                 + '    </div>'
                 + '    <div class="c-who"><span class="av">' + esc(initial(who)) + '</span><span class="nm">' + esc(who) + '</span></div>'
@@ -1095,7 +1096,7 @@
                 + '<div>'
                 + '  <div class="slip-pick">' + esc(takerLine(o)) + '</div>'
                 + '  <div class="slip-ev">' + (o.sport ? esc(o.sport) + ' &middot; ' : '') + esc(o.event_label || o.event_ref)
-                + '    &middot; ' + esc(o.market) + '</div>'
+                + '    &middot; ' + esc((window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(o.market) : String(o.market || '').replace(/_/g, ' '))) + '</div>'
                 + '</div>'
                 + '<div class="slip-line"><span>Price</span><b>' + esc(priceLabel(o.price_american)) + '</b></div>'
                 + '<div class="slip-line"><span>Open on this offer</span><b>' + num(remaining) + ' TMR</b></div>'
@@ -1461,6 +1462,6 @@
     })();
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.73d4ac473cfb.js"></script>
-    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/tmr-live-chat.js?v=4d6d06039ab0"></script>
 </body>
 </html>

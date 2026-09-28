@@ -76,10 +76,10 @@
     </script>
     <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-<script defer src="/static/js/tmr-sitewide.js?v=6afc0c38a559"></script>
-<script defer src="/static/js/tmr-drill.js?v=c68f34eb6d14"></script>
-<script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
-<link rel="stylesheet" href="/static/css/tmr-share.css?v=bbf82edbece4">
+<script defer src="/static/js/tmr-sitewide.js?v=4aca845d697f"></script>
+<script defer src="/static/js/tmr-drill.js?v=c8ea84f1d00f"></script>
+<script src="/static/js/tmr-doubleheader.js?v=df5e16ef781c"></script>
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=d0f75b6036cd">
 <script defer src="/static/js/tmr-share.js?v=eb28abdc3050"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1707,15 +1707,16 @@
       }
     }
     </style>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=358eec27a768">
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=e74fb17e2564">
-<script defer src="/static/js/tmr-linkhub.js?v=914b507d8b9c"></script>
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=062ff90758d0">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=a5e9b73a4ffe">
+<script defer src="/static/js/tmr-linkhub.js?v=12f45166ffd7"></script>
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
+<script src="/static/js/tmr-market-labels.js?v=6026b1e47eeb"></script>
 </head>
 <body class="tmr-ds-shell profile-page tmr-social-profile">
     <div class="profile-top-strip">
@@ -6392,15 +6393,15 @@
         };
     </script>
     <script src="/static/js/tmr-bucket-labels.js?v=3738644f59b9"></script>
-    <script src="/static/js/config.js?v=430b4bba7b37"></script>
-    <script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
-    <script src="/static/js/tmr-team-logo.js?v=3c857a27fcb0"></script>
+    <script src="/static/js/config.js?v=42d35ea6f99d"></script>
+    <script src="/static/js/tmr-team-logo-catalog.js?v=77f6bda70d36"></script>
+    <script src="/static/js/tmr-team-logo.js?v=febebac6094b"></script>
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-    <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
+    <script src="/static/js/backend-api.js?v=2096f06031d1"></script>
     <script src="/static/js/nav-badges.js?v=dca92f04da03"></script>
     <script src="/static/js/auth-persistent.js?v=d479be477169"></script>
-    <script src="/static/js/auto-grader-fixed.js?v=a309de1d7648"></script>
-    <script src="/static/js/justbet-promo.js?v=74080d56c634"></script>
+    <script src="/static/js/auto-grader-fixed.js?v=fa737bae38f0"></script>
+    <script src="/static/js/justbet-promo.js?v=8a590db41ef3"></script>
     <script>
     // ============================================================
     // Profile v2 - Pick Monitor Layout
@@ -12393,7 +12394,7 @@
                 list.innerHTML = details.map((c) => {
                     const legs = (c.picks || []).map((pk) =>
                         '<li><span class="profile-corr-ticket">' + esc(pk.ticket || '') + '</span> ' +
-                        esc(pk.market_type || '') + ' &mdash; <strong>' + esc(pk.selection || '') + '</strong>' +
+                        esc(marketTypeLabel(pk.market_type)) + ' &mdash; <strong>' + esc(pk.selection || '') + '</strong>' +
                         (pk.line ? ' (' + esc(pk.line) + ')' : '') +
                         ' <span class="profile-corr-status profile-corr-status--' + esc((pk.status || '').toLowerCase()) + '">' + esc(pk.status || '') + '</span></li>'
                     ).join('');
@@ -14429,6 +14430,7 @@
     }
 
     function marketTypeLabel(value) {
+        if (window.TMR_MARKET_LABELS && value) return window.TMR_MARKET_LABELS.label(value);
         const key = String(value || '').toLowerCase();
         return {
             h2h: 'Moneyline',
@@ -16075,6 +16077,7 @@
             return (x > 0 ? '+' : '') + Math.round(x);
         };
         const fmtMarket = function (m) {
+            if (window.TMR_MARKET_LABELS && m) return window.TMR_MARKET_LABELS.label(m);
             const map = {
                 h2h: 'Moneyline', spreads: 'Spread', totals: 'Total', team_totals: 'Team Total',
                 f5_h2h: 'F5 Moneyline', f5_spreads: 'F5 Spread', f5_totals: 'F5 Total',
@@ -16820,7 +16823,7 @@
         return [
             '<!-- TrustMyRecord auto-resizing widget -->',
             open,
-            '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js?v=6fe36463083e"',
+            '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js?v=c39f405b0350"',
             '  data-username="' + user + '"',
             '  data-theme="dark"',
             '  data-refresh="15000"',
@@ -17161,13 +17164,13 @@
     init();
     </script>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=6afc0c38a559 -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=4aca845d697f -->
 
 
     <script src="/static/js/streaks.js?v=80cb1ee32df5"></script>
     <script src="/static/js/platform-production-fix.js?v=8f20f0bedd7b"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=01c47cb4a4b0" defer></script>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=358eec27a768">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=062ff90758d0">
 
     <!-- ============================================================
          TMRX STATS REDESIGN (May 1 2026)
@@ -20272,7 +20275,7 @@
 })();
 </script>
 
-    <script defer src="/static/js/tmr-fan-identity.js?v=d98ab0971ef9"></script>
+    <script defer src="/static/js/tmr-fan-identity.js?v=088255840377"></script>
 <script src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
 <script>
 (function(){
@@ -20315,9 +20318,9 @@
   else load();
 })();
 </script>
-  <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=31562b071846"></script><script src="/static/js/tmr-takes-feed.js?v=0d7e1712f2bb"></script><script src="/static/js/tmr-ds-nav.73d4ac473cfb.js"></script>
-    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+  <script defer src="/static/js/pick-progress-nudge.js?v=bdcbe5a0f16d"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=d058951b1170"></script><script src="/static/js/tmr-takes-feed.js?v=8235aa34de41"></script><script src="/static/js/tmr-ds-nav.73d4ac473cfb.js"></script>
+    <script src="/static/js/tmr-live-chat.js?v=4d6d06039ab0"></script>
 <style id="tmr-profile-qa-20260909">
 /* =====================================================================
    PROFILE STATISTICS CONTAINMENT PASS -- 2026-09-09

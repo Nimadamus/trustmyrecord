@@ -136,6 +136,7 @@
     function marketLabel(mt) {
         if (LABELS[mt]) return LABELS[mt];
         var I = internals();
+        if (window.TMR_MARKET_LABELS && mt) return window.TMR_MARKET_LABELS.label(mt);
         return I && I.getMarketLabel ? I.getMarketLabel(mt) : String(mt || '').replace(/_/g, ' ');
     }
     function gameStarted(game) {

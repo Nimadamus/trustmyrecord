@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-    <script defer src="/static/js/tmr-sitewide.js?v=6afc0c38a559"></script>
-    <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=4aca845d697f"></script>
+    <script src="/static/js/tmr-doubleheader.js?v=df5e16ef781c"></script>
     <style>
         :root {
             --page-bg: #02050A;
@@ -397,8 +397,8 @@
             .pending-actions { display: none; }
         }
     </style>
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=e74fb17e2564">
-<script defer src="/static/js/tmr-linkhub.js?v=914b507d8b9c"></script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=a5e9b73a4ffe">
+<script defer src="/static/js/tmr-linkhub.js?v=12f45166ffd7"></script>
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
@@ -406,6 +406,7 @@
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script src="/static/js/tmr-market-labels.js?v=6026b1e47eeb"></script>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light" data-tmr-route="my-pending-picks">
     <main class="pending-page">
@@ -512,8 +513,8 @@
         </div>
     </main>
 
-    <script src="/static/js/config.js?v=430b4bba7b37"></script>
-    <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
+    <script src="/static/js/config.js?v=42d35ea6f99d"></script>
+    <script src="/static/js/backend-api.js?v=2096f06031d1"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -551,7 +552,7 @@
                 case 'f5_totals': return 'F5 Total';
                 case 'period_1_h2h': return '1st Period Moneyline';
                 case 'period_1_totals': return '1st Period Total';
-                default: return sportLabel(value);
+                default: return window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(value) : sportLabel(value);
             }
         }
         var TMR_TZ = 'America/New_York';
@@ -1037,6 +1038,6 @@
     })();
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.73d4ac473cfb.js"></script>
-    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/tmr-live-chat.js?v=4d6d06039ab0"></script>
 </body>
 </html>

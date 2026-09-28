@@ -88,6 +88,7 @@
   // next new market never shows a raw key either.
   function marketLabel(k) {
     if (MARKET_LABELS[k]) return MARKET_LABELS[k];
+    if (window.TMR_MARKET_LABELS && k) return window.TMR_MARKET_LABELS.label(k);
     return String(k || '').replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
   // Baseball calls the spread a run line; everywhere else it is just a spread.

@@ -4,7 +4,7 @@
     <!-- TMR_BOARD_DEDUPE_20260911. MUST stay the first script on the page: it
          wraps window.fetch, and it can only collapse a board request that is
          issued after it has installed. See static/js/tmr-board-dedupe.js. -->
-    <script src="/static/js/tmr-board-dedupe.js?v=cf96a1670c61"></script>
+    <script src="/static/js/tmr-board-dedupe.js?v=3101f2e03c4e"></script>
     <!-- ESPN_LOGO_THUMB_20260912. Every team crest on this page was requested
          from ESPN at 500px and drawn at 19-32px: 28 images, about 1MB, for
          roughly 90KB of pixels anyone can see. a.espncdn.com's combiner resizes
@@ -3307,8 +3307,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="/static/css/social.css?v=53415e93b875" rel="stylesheet">
-    <link href="/static/css/sportsbook.css?v=aab86be93d71" rel="stylesheet">
+    <link href="/static/css/social.css?v=d14044e6d8df" rel="stylesheet">
+    <link href="/static/css/sportsbook.css?v=b9a930ed94c3" rel="stylesheet">
 
     <style>
         :root {
@@ -10355,14 +10355,14 @@
          selectors across ~340 nodes. -->
     <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">
-    <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=358eec27a768">
+    <script src="/static/js/tmr-doubleheader.js?v=df5e16ef781c"></script>
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=062ff90758d0">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=002181a955ca">
     <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a
          sticky Contest Mode banner and reroutes POST /api/picks to
          POST /api/contests/<id>/picks. Without ?contest=... this script is a
          total no-op and the page behaves exactly like the regular sportsbook. -->
-    <script defer src="/static/js/contest-mode.js?v=0769fff5c0ed"></script>
+    <script defer src="/static/js/contest-mode.js?v=fa220fae21df"></script>
     <script defer src="/static/js/contest-entrant-guard.js?v=c01f79dc93e5"></script>
     <!-- In-slip contest toggle: when /sportsbook/ is loaded WITHOUT ?contest=...,
          eligible signed-in registered contestants see a "Submit as JustBet MLB
@@ -10374,8 +10374,8 @@
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Make Your Picks", "item": "https://trustmyrecord.com/sportsbook/"}]}
 </script>
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=e74fb17e2564">
-<script defer src="/static/js/tmr-linkhub.js?v=914b507d8b9c"></script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=a5e9b73a4ffe">
+<script defer src="/static/js/tmr-linkhub.js?v=12f45166ffd7"></script>
     <style id="tmr-sportsbook-polish-1">
     /* VISUAL POLISH SLICE 1 -- top-level sportsbook presentation (2026-08-10).
        Deliberately last in <head> so it settles the cascade by source order at
@@ -10493,8 +10493,9 @@
          rules. With the board flag off nothing matches .tmr-sbnext and this is inert. -->
     <style>@layer sbnext, sbv2;</style>
     <!-- SPORTSBOOK_V2_20260903: feature-flagged skin, dark by default (ROLLOUT_PERCENT in sportsbook-v2.js). Opt in with ?sbv2=1, out with ?sbv2=0. -->
-    <link rel="stylesheet" href="/static/css/sportsbook-v2.css?v=09347f7d1a8c">
-    <script src="/static/js/sportsbook-v2.js?v=c58bd91331c6"></script>
+    <link rel="stylesheet" href="/static/css/sportsbook-v2.css?v=a926f5805305">
+    <script src="/static/js/sportsbook-v2.js?v=119d3c671ab1"></script>
+<script src="/static/js/tmr-market-labels.js?v=6026b1e47eeb"></script>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-ds--dark" data-tmr-route="sportsbook" data-tmr-test-route="sportsbook">
     <script>
@@ -10714,7 +10715,7 @@
             </span>
             <span class="sb-gotw-cta"><span data-feat="cta">Full Breakdown, Odds &amp; 10,000 Simulations</span> <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
         </a>
-        <script src="/static/js/tmr-featured.js?v=6d1832cc9f86" defer></script>
+        <script src="/static/js/tmr-featured.js?v=ba7493bd64ec" defer></script>
         <!--/MK:featuredStripNfl-->
         <style>
             .sb-gotw[hidden]{display:none!important}
@@ -12175,7 +12176,7 @@ window.toggleSportFamily = function (family) {
                 case 'f5_h2h':      return 'F5 ML';
                 case 'f5_spreads':  return 'F5 Spread';
                 case 'f5_totals':   return 'F5 Total';
-                default:            return m ? String(m).replace(/_/g, ' ') : '';
+                default:            return m ? (window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(m) : String(m).replace(/_/g, ' ')) : '';
             }
         }
         function fmtUnits(u) {
@@ -22001,7 +22002,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
         </main>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=6afc0c38a559 -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=4aca845d697f -->
     </div>
 
     <script>
@@ -23489,9 +23490,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
     <!-- External Scripts -->
-    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/config.js?v=42d35ea6f99d"></script>
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-    <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
+    <script src="/static/js/backend-api.js?v=2096f06031d1"></script>
     <script src="/static/js/auth-persistent.js?v=d479be477169"></script>
     <script src="/static/js/nhl-markets.js?v=36669341eb11"></script>
     <script>
@@ -23704,13 +23705,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-duplicate-guard-ui.js?v=3a9f9a3763a2"></script>
-<script src="/static/js/tmr-drill.js?v=c68f34eb6d14"></script>
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=f880c86bb3f5&cb=20260927drill"></script>
+<script src="/static/js/sportsbook-duplicate-guard-ui.js?v=c8ae29d20d1a"></script>
+<script src="/static/js/tmr-drill.js?v=c8ea84f1d00f"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=c04c75ac5d3a&cb=20260927drill"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
-<script src="/static/js/sportsbook-multislip.js?v=2264c084f81e" defer></script>
+<script src="/static/js/sportsbook-multislip.js?v=9658af6a47e0" defer></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -23785,7 +23786,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(restoreLogos, 1200);
     })();
     </script>
-    <script src="/static/js/effects.js?v=62933ef29636"></script>
+    <script src="/static/js/effects.js?v=6cee31c72e01"></script>
     <script>
     (function() {
         if (window.__tmrInlineBoardHotfix) return;
@@ -24049,7 +24050,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
     </script>
 
-    <script src="/static/js/app.js?v=34c005c36530"></script>
+    <script src="/static/js/app.js?v=33de940597c8"></script>
     <!-- auto-grader-fixed.js removed Apr 30 2026: it was a legacy
          localStorage-side grader that re-rated picks from the local
          tmr_picks cache, double-counting against the real backend
@@ -31862,7 +31863,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=b9949cc26681">
     <link rel="stylesheet" href="/static/css/sportsbook-multislip.css?v=15d57fe5c3a7">
-    <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=8b835c91deca">
+    <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=18681de18751">
     <!-- The two redesign-override sheets used to be linked a THIRD time right
          here, between their <head> links and the @import tail guard immediately
          below that loads the very same two URLs. Removing a middle duplicate of
@@ -31873,7 +31874,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <style id="tmr-redesign-tail-guard">
     /* Inline backstop so nothing loaded later in <body> can overwrite the
        redesign. Source-order LAST + !important = absolute cascade win. */
-    @import url("/static/css/tmr-redesign-overrides.css?v=358eec27a768");
+    @import url("/static/css/tmr-redesign-overrides.css?v=062ff90758d0");
     @import url("/static/css/tmr-redesign-overrides-sportsbook.css?v=002181a955ca");
 
 </style>
@@ -35263,9 +35264,9 @@ document.addEventListener('DOMContentLoaded', function() {
          Player Props first) and falls back to smooth horizontal scrolling on
          very narrow viewports. Loaded last so its layout rules win the
          cascade over the redesign tail guard above. Layout only. -->
-    <link rel="stylesheet" href="/static/css/sportsbook-altgame.css?v=0e5e7a9168d4">
-    <link rel="stylesheet" href="/static/css/sportsbook-market-nav.css?v=ffea4040a3b5">
-    <script src="/static/js/sportsbook-market-nav.js?v=2c28e62168d7" defer></script>
+    <link rel="stylesheet" href="/static/css/sportsbook-altgame.css?v=208f01a635ab">
+    <link rel="stylesheet" href="/static/css/sportsbook-market-nav.css?v=f1d86f95dd12">
+    <script src="/static/js/sportsbook-market-nav.js?v=60e5ea3c5f64" defer></script>
     <script>
     // Stamp body[data-tmr-auth] so the Make Picks page can hide the
     // logged-out prompt the moment auth flips. Re-runs on auth events.
@@ -35476,19 +35477,19 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
     </script>
 <script src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
-<script defer src="/static/js/sim-pick-prefill.js?v=5c225c50674f"></script>
+<script defer src="/static/js/sim-pick-prefill.js?v=f3773667f890"></script>
 <!-- SIM_ACTIVATION_20260808: this is where a simulation becomes a verified
      pick, so the activation funnel observes pick submissions here to emit
      "first verified pick after a simulator signup". Read-only; it forwards
      every request untouched. Kill: window.TMR_FUNNEL_FLAGS={enabled:false}. -->
-<script defer src="/static/js/tmr-activation-funnel.js?v=1e4bb9d262f6"></script>
+<script defer src="/static/js/tmr-activation-funnel.js?v=19c57b2fd4e4"></script>
 <!-- SB_DEFAULT_BOARD_20260808: the lobby board is hardcoded to NBA, which is
      empty out of season, so anyone arriving directly (especially a member who
      just signed up through the simulator gate) landed on an empty board. This
      selects the first sport that actually has games, through the same
      window.TMR.setSport the visible tab calls. An explicit choice always wins.
      Kill: window.SB_DEFAULT_BOARD_FLAGS = { enabled: false }. -->
-<script defer src="/static/js/sportsbook-default-board.js?v=8bc4c765f703"></script>
+<script defer src="/static/js/sportsbook-default-board.js?v=896581ff8c21"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.73d4ac473cfb.js"></script>
 
 
@@ -35569,19 +35570,19 @@ document.addEventListener('DOMContentLoaded', function() {
          rollout flag (ROLLOUT_PERCENT in sportsbook-next-embed.js). With the flag off
          the embed script returns before touching the DOM and the classic board below
          renders exactly as it does today. Opt in with ?sbnext=1, out with ?sbnext=0. -->
-    <link rel="stylesheet" href="/static/css/sportsbook-next.css?v=e5a7f795947e">
-    <link rel="stylesheet" href="/static/css/sportsbook-next-embed.css?v=cd693843dd16">
-    <link rel="stylesheet" href="/static/css/sportsbook-next-v3.css?v=5042ce1e6d98">
-    <script src="/static/js/sportsbook-next-embed.js?v=8a6f1df89fd0"></script>
-    <script src="/static/js/sportsbook-next-logos.js?v=5f23e8d444f3"></script>
+    <link rel="stylesheet" href="/static/css/sportsbook-next.css?v=963e93e7cf3a">
+    <link rel="stylesheet" href="/static/css/sportsbook-next-embed.css?v=77c5233f02f9">
+    <link rel="stylesheet" href="/static/css/sportsbook-next-v3.css?v=622e1af11f0e">
+    <script src="/static/js/sportsbook-next-embed.js?v=2089a09816ac"></script>
+    <script src="/static/js/sportsbook-next-logos.js?v=be38a945dc85"></script>
     <!-- PROPS_STATE_20260912: the player-props load state machine, pure and
          unit-tested in Node. sportsbook-next.js requires it with no fallback,
          so a missing file surfaces as a visible message rather than a second
          untested copy of the mapping. Must load BEFORE sportsbook-next.js. -->
-    <script src="/static/js/props-state.js?v=516075a143c3"></script>
-    <script src="/static/js/sportsbook-next.js?v=97527a61a766"></script>
-    <script src="/static/js/sportsbook-next-tidy.js?v=876802e2cf9e"></script>
-    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/props-state.js?v=f142ece030d2"></script>
+    <script src="/static/js/sportsbook-next.js?v=cfa6097a04e6"></script>
+    <script src="/static/js/sportsbook-next-tidy.js?v=e4163d0dd775"></script>
+    <script src="/static/js/tmr-live-chat.js?v=4d6d06039ab0"></script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->

@@ -80,13 +80,14 @@
         body.mp-storefront-page .modal-foot label { font-size:12.5px; color:var(--muted); display:flex; gap:7px; align-items:center; margin-right:auto; }
         @media (max-width:560px) { body.mp-storefront-page .mp-shell { padding:20px 14px 56px; } body.mp-storefront-page .offer-price { text-align:left; } }
     </style>
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=e74fb17e2564">
-<script defer src="/static/js/tmr-linkhub.js?v=914b507d8b9c"></script>
-<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=25159a6930a1">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=a5e9b73a4ffe">
+<script defer src="/static/js/tmr-linkhub.js?v=12f45166ffd7"></script>
+<link rel="stylesheet" href="/static/css/tmr-marketplace-shell.css?v=b43245413269">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script src="/static/js/tmr-market-labels.js?v=6026b1e47eeb"></script>
 </head>
 <body class="mp-storefront-page tmr-ds">
 
@@ -120,10 +121,10 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/config.js?v=430b4bba7b37"></script>
-<script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
-<script src="/static/js/tmr-marketplace-shell.js?v=a3f4545023e1"></script>
-<script src="/static/js/tmr-drill.js?v=c68f34eb6d14"></script>
+<script src="/static/js/config.js?v=42d35ea6f99d"></script>
+<script src="/static/js/backend-api.js?v=2096f06031d1"></script>
+<script src="/static/js/tmr-marketplace-shell.js?v=17c19c83ba79"></script>
+<script src="/static/js/tmr-drill.js?v=c8ea84f1d00f"></script>
 <script>
 (function () {
     const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
@@ -157,6 +158,7 @@
         clearTimeout(t._h); t._h = setTimeout(function(){ t.style.display='none'; }, ms || 4200);
     }
     function marketLabel(m) {
+        if (window.TMR_MARKET_LABELS && m) return window.TMR_MARKET_LABELS.label(m);
         const map = { h2h:'Moneyline', spreads:'Spread', totals:'Total', team_totals:'Team Total',
             f5_h2h:'F5 Moneyline', f5_spreads:'F5 Runline', f5_totals:'F5 Total' };
         return map[m] || String(m || '').replace(/_/g,' ');
@@ -302,7 +304,7 @@
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
 <script src="/static/js/tmr-ds-nav.73d4ac473cfb.js"></script>
-    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/tmr-live-chat.js?v=4d6d06039ab0"></script>
 <style id="light-text-fix-20260913">
 /* LIGHT_TEXT_ON_LIGHT_20260913: pale text on a pale surface, unreadable on phones.
    Found by the full-site mobile legibility sweep; darkened to readable ink. */

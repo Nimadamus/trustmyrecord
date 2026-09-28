@@ -904,7 +904,7 @@
 
         return '<div class="hh-trend">' +
             '<div class="hh-trend__top">' +
-                '<span class="hh-trend__side">' + esc(String(t.market || "").replace(/_/g, " ")) + (t.side ? ' · <b>' + esc(t.side) + '</b>' : "") + '</span>' +
+                '<span class="hh-trend__side">' + esc((window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(t.market) : String(t.market || '').replace(/_/g, ' '))) + (t.side ? ' · <b>' + esc(t.side) + '</b>' : "") + '</span>' +
                 confBadge(t.confidence) +
             '</div>' +
             '<p class="hh-trend__claim">' + esc(t.statement || "") + '</p>' +

@@ -12,6 +12,7 @@ let viewerUser = null;
 let followingUserIds = new Set();
 
 function formatMarketLabel(marketType) {
+    if (window.TMR_MARKET_LABELS && marketType) return window.TMR_MARKET_LABELS.label(marketType);
     return {
         h2h: 'Moneyline',
         spreads: 'Spread',

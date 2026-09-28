@@ -206,6 +206,8 @@
     /* "2H Spread", "Spread". */
     function formatMarketLabel(pick) {
         var market = marketOf(pick || {});
+        /* static/js/tmr-market-labels.js is the one source of market names. */
+        if (window.TMR_MARKET_LABELS && market) return window.TMR_MARKET_LABELS.label(market, (pick || {}).sport_key);
         var seg = wagerSegment(market);
         var family = wagerFamilyLabel(market);
         if (!seg) return family === 'ML' ? 'Moneyline' : family;
