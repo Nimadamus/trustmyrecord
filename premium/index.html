@@ -363,6 +363,50 @@
             opacity: .55;
         }
 
+        /* TMR_PRO_ACCOUNT_20260928: a button the server has said this user may
+           use. Everything else keeps the inert look above. */
+        .pro-buy.is-live {
+            cursor: pointer;
+            opacity: 1;
+            background: var(--pro-brand-dark);
+            border-color: var(--pro-brand-dark);
+            color: #fff;
+        }
+        .pro-buy.is-live:hover, .pro-buy.is-live:focus-visible { filter: brightness(1.12); }
+        .pro-buy.is-busy { cursor: progress; opacity: .7; }
+        .pro-banner {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--pro-line);
+            background: var(--pro-page);
+            color: var(--pro-ink);
+            font-size: .95rem;
+            line-height: 1.5;
+        }
+        .pro-banner.is-good { border-color: #1D7A46; }
+        .pro-banner.is-warn { border-color: #A5620A; }
+        .pro-manage {
+            margin-left: 10px;
+            font: inherit;
+            font-weight: 700;
+            font-size: .85rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--pro-brand-dark);
+            background: transparent;
+            color: var(--pro-brand-dark);
+            cursor: pointer;
+        }
+        .pro-renew-note {
+            margin: 14px auto 0;
+            max-width: 720px;
+            text-align: center;
+            font-size: .88rem;
+            color: var(--pro-muted);
+            line-height: 1.5;
+        }
+
         .pro-buy-note {
             margin-top: 10px;
             font-size: .82rem;
@@ -501,7 +545,9 @@
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
 
-    <header class="pro-hero">
+    <!-- A div, not a header: tmr-ds-nav hides every legacy <header> on the page,
+         which blanked this hero (the H1 and the account panel) in production. -->
+    <div class="pro-hero">
         <div class="pro-wrap">
             <span class="pro-eyebrow">Research tools</span>
             <h1>TMR Pro</h1>
@@ -517,9 +563,11 @@
             <div class="pro-status" id="proStatus" aria-live="polite">
                 <span class="pro-chip" id="proStatusChip">Free account</span>
                 <span id="proStatusText"></span>
+                <button type="button" class="pro-manage" id="proManage" hidden>Manage subscription</button>
             </div>
+            <div class="pro-banner" id="proBanner" role="status" hidden></div>
         </div>
-    </header>
+    </div>
 
     <main>
         <!-- ================================================= the products -->
@@ -647,7 +695,7 @@
                         </p>
                         <button type="button" class="pro-buy" disabled aria-disabled="true"
                                 data-pro-buy="monthly">Coming soon</button>
-                        <p class="pro-buy-note">&nbsp;</p>
+                        <p class="pro-buy-note" id="proMonthlyNote">&nbsp;</p>
                     </div>
 
                     <div class="pro-price">
@@ -663,6 +711,12 @@
                         <p class="pro-buy-note">&nbsp;</p>
                     </div>
                 </div>
+                <p class="pro-renew-note" id="proRenewNote" hidden>
+                    Subscriptions renew automatically at the same price until you cancel.
+                    Cancel any time with Manage subscription on this page, and you keep
+                    TMR Pro until the end of the period you already paid for. Payment is
+                    handled by Stripe.
+                </p>
             </div>
         </section>
 
@@ -762,7 +816,7 @@
                     </details>
                     <details>
                         <summary>When can I subscribe?</summary>
-                        <p>
+                        <p id="proWhenAnswer">
                             Not yet. Checkout is not open, which is why the buttons on this page
                             do nothing. When it opens these buttons will start working and this
                             answer will change.
@@ -787,97 +841,223 @@
     </main>
 
     <script>
-    /* TMR_PRO_PRICING_PAGE_20260912.
-       Two jobs, and deliberately no others:
-         1. render the right state for a logged-out visitor, a logged-in free
-            user, or a Pro subscriber;
-         2. make certain nothing on this page can transact.
+    /* TMR_PRO_PRICING_PAGE_20260912, reworked TMR_PRO_ACCOUNT_20260928.
 
-       There is no checkout call here, and no Stripe price id: the server picks
-       the price when checkout opens, including whether a founding place is
-       available. This file cannot name a price even if it wanted to. */
+       The page never decides who may buy or at what price. It asks the
+       server two questions and draws what it is told:
+         GET /api/premium/checkout-status  (public) is checkout open to all?
+         GET /api/premium/me               (signed in) may THIS account buy,
+                                           is the founding rate on offer, and
+                                           what is its current subscription?
+       A buy button only becomes live when the server has said yes. The
+       server picks the Stripe price, including the founding substitution,
+       so nothing here can name a price. With checkout closed on the server
+       this page behaves exactly as before: "Coming soon" and inert. */
     (function () {
         'use strict';
 
-        var CHECKOUT_OPEN = false;   /* flipped only when checkout is approved */
+        /* tmr-session.js loads after this block, so both are resolved in start(). */
+        var S = null;
+        var API = 'https://trustmyrecord-api.onrender.com/api';
+        var LOGIN = '/login/?next=' + encodeURIComponent('/premium/#pricing');
 
-        /* ------------------------------------------------ inert purchase -- */
         var buttons = document.querySelectorAll('[data-pro-buy]');
-        Array.prototype.forEach.call(buttons, function (btn) {
-            btn.disabled = true;
-            btn.setAttribute('aria-disabled', 'true');
-            /* Belt and braces: a disabled button fires no click, but if anything
-               ever re-enables one by accident this still refuses to transact. */
-            btn.addEventListener('click', function (ev) {
-                ev.preventDefault();
-                ev.stopPropagation();
-            });
-        });
-
-        /* ---------------------------------------------------- auth state -- */
         var statusEl = document.getElementById('proStatus');
         var chipEl = document.getElementById('proStatusChip');
         var textEl = document.getElementById('proStatusText');
+        var manageEl = document.getElementById('proManage');
+        var bannerEl = document.getElementById('proBanner');
+        var monthlyNote = document.getElementById('proMonthlyNote');
+        var renewNote = document.getElementById('proRenewNote');
+        var whenAnswer = document.getElementById('proWhenAnswer');
 
-        function paint(state, user) {
-            if (!statusEl || !chipEl || !textEl) return;
-            var isPro = false;
-            if (user) {
-                var tier = String(user.subscription_tier || user.tier || '').toLowerCase();
-                var expires = user.subscription_expires_at ? new Date(user.subscription_expires_at) : null;
-                isPro = (tier === 'pro' || tier === 'elite') && (!expires || expires > new Date());
-            }
+        var LABEL = { founding: 'Join as a founding member', monthly: 'Subscribe monthly', annual: 'Subscribe annually' };
+        var mode = 'closed';          // closed | signin | buy | subscribed
+        var busy = false;
 
-            if (state === 'signed-in' && isPro) {
-                chipEl.textContent = 'TMR Pro';
-                chipEl.classList.add('is-pro');
-                textEl.textContent = 'Your subscription is active. All three tools are unlocked on your account.';
-                statusEl.classList.add('is-shown');
+        function fmtDate(iso) {
+            if (!iso) return '';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        function banner(msg, kind) {
+            if (!bannerEl) return;
+            if (!msg) { bannerEl.hidden = true; return; }
+            bannerEl.textContent = msg;
+            bannerEl.className = 'pro-banner' + (kind ? ' is-' + kind : '');
+            bannerEl.hidden = false;
+        }
+        function setButton(btn, live, label) {
+            btn.disabled = !live;
+            btn.setAttribute('aria-disabled', live ? 'false' : 'true');
+            btn.classList.toggle('is-live', live);
+            btn.textContent = label;
+        }
+        var foundingFull = false;
+        function paintButtons(foundingOffered) {
+            Array.prototype.forEach.call(buttons, function (btn) {
+                var kind = btn.getAttribute('data-pro-buy');
+                if (mode === 'buy') {
+                    if (kind === 'founding' && !foundingOffered) setButton(btn, false, foundingFull ? 'Founding places are taken' : 'Not available on this account');
+                    else setButton(btn, true, LABEL[kind]);
+                } else if (mode === 'signin') {
+                    setButton(btn, true, 'Sign in to subscribe');
+                } else if (mode === 'subscribed') {
+                    setButton(btn, false, 'You are subscribed');
+                } else {
+                    setButton(btn, false, 'Coming soon');
+                }
+            });
+            if (monthlyNote) {
+                monthlyNote.textContent = (mode === 'buy' && foundingOffered)
+                    ? 'While founding places last, a monthly subscription gets the founding rate.'
+                    : ' ';
+            }
+            var open = mode === 'buy' || mode === 'signin' || mode === 'subscribed';
+            if (renewNote) renewNote.hidden = !open;
+            if (whenAnswer && open) {
+                whenAnswer.textContent = 'Now. Pick a plan above. Checkout is handled by Stripe, and you can cancel any time from Manage subscription on this page.';
+            }
+        }
+        function paintStatus(chip, text, isPro, canManage) {
+            if (!statusEl) return;
+            chipEl.textContent = chip;
+            chipEl.classList.toggle('is-pro', !!isPro);
+            textEl.textContent = text;
+            if (manageEl) manageEl.hidden = !canManage;
+            statusEl.classList.add('is-shown');
+        }
+
+        function drawAccount(me) {
+            var sub = me && me.subscription;
+            if (sub) {
+                mode = 'subscribed';
+                var plan = sub.founding ? 'Founding member, monthly'
+                    : (sub.billing_period === 'yearly' ? 'Annual plan' : sub.billing_period === 'monthly' ? 'Monthly plan' : 'TMR Pro');
+                var when = fmtDate(sub.current_period_end || sub.expires_at);
+                var line;
+                if (sub.source && sub.source !== 'stripe') {
+                    line = 'TMR Pro is active on your account.' + (when ? ' Access runs to ' + when + '.' : '');
+                } else if (sub.cancel_at_period_end) {
+                    line = plan + '. Cancelled: you keep TMR Pro until ' + (when || 'the end of the paid period') + ', and you will not be charged again.';
+                } else if (sub.status === 'past_due') {
+                    line = plan + '. Your last payment did not go through. Update your card with Manage subscription to keep access.';
+                } else {
+                    line = plan + '. All three tools are unlocked.' + (when ? ' Renews ' + when + '.' : '');
+                }
+                paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
+                paintButtons(false);
                 return;
             }
-            if (state === 'signed-in') {
-                chipEl.textContent = 'Free account';
-                chipEl.classList.remove('is-pro');
-                textEl.textContent = CHECKOUT_OPEN
-                    ? 'You are on the free plan. Pick a plan below to upgrade.'
-                    : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.';
-                statusEl.classList.add('is-shown');
-                return;
-            }
-            if (state === 'signed-out') {
-                chipEl.textContent = 'Not signed in';
-                chipEl.classList.remove('is-pro');
-                textEl.textContent = 'A free account is all you need for profiles, pick tracking and leaderboards.';
-                statusEl.classList.add('is-shown');
-                return;
-            }
-            /* 'unknown': a cold start or a network blip. Say nothing rather than
-               claim a state, exactly as the shared session resolver does. */
-            statusEl.classList.remove('is-shown');
+            mode = me && me.checkout_open ? 'buy' : 'closed';
+            paintStatus('Free account', mode === 'buy'
+                ? 'You are on the free plan, and everything free stays free. Pick a plan below to add TMR Pro.'
+                : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.',
+                false, !!(me && me.can_manage_billing));
+            foundingFull = !!(me && me.founding && me.founding.seats_left === 0);
+            paintButtons(!!(me && me.founding && me.founding.offered));
+        }
+
+        function loadMe() {
+            return S.authFetch(API + '/premium/me').then(function (r) {
+                if (!r.ok) throw new Error('me ' + r.status);
+                return r.json();
+            });
+        }
+
+        function startCheckout(kind) {
+            if (busy) return;
+            if (mode === 'signin') { window.location.href = LOGIN; return; }
+            if (mode !== 'buy') return;
+            busy = true;
+            var btn = document.querySelector('[data-pro-buy="' + kind + '"]');
+            if (btn) { btn.classList.add('is-busy'); btn.textContent = 'Opening checkout'; }
+            banner('');
+            S.authFetch(API + '/premium/upgrade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier: 'pro', billing_period: kind === 'annual' ? 'yearly' : 'monthly' })
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+            }).then(function (x) {
+                if (x.r.ok && x.b.url) { window.location.href = x.b.url; return; }
+                if (x.r.status === 401) { window.location.href = LOGIN; return; }
+                banner(x.b.error || 'Checkout could not open. Nothing was charged. Please try again in a minute.', 'warn');
+                throw new Error('upgrade ' + x.r.status);
+            }).catch(function () {
+                busy = false;
+                if (btn) btn.classList.remove('is-busy');
+                loadMe().then(drawAccount).catch(function () {});
+            });
+        }
+
+        Array.prototype.forEach.call(buttons, function (btn) {
+            btn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                if (btn.disabled) return;
+                startCheckout(btn.getAttribute('data-pro-buy'));
+            });
+        });
+
+        if (manageEl) {
+            manageEl.addEventListener('click', function () {
+                manageEl.disabled = true;
+                S.authFetch(API + '/premium/portal', { method: 'POST' }).then(function (r) {
+                    return r.json().then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    if (x.r.ok && x.b.url) { window.location.href = x.b.url; return; }
+                    manageEl.disabled = false;
+                    banner('The billing page could not open right now. Please try again in a minute, or email support@trustmyrecord.com.', 'warn');
+                }).catch(function () {
+                    manageEl.disabled = false;
+                    banner('The billing page could not open right now. Please try again in a minute.', 'warn');
+                });
+            });
+        }
+
+        /* Coming back from Stripe. The webhook, not this redirect, grants
+           access, so after a success the page polls until the server shows
+           the subscription (normally a few seconds). */
+        var params = new URLSearchParams(window.location.search);
+        var purchase = params.get('purchase');
+        if (purchase && window.history && history.replaceState) {
+            history.replaceState(null, '', window.location.pathname + window.location.hash);
+        }
+        if (purchase === 'canceled') banner('Checkout was cancelled. You were not charged.', 'warn');
+        if (purchase === 'success') banner('Payment received. Turning on TMR Pro for your account now.', 'good');
+
+        function pollUntilActive(tries) {
+            loadMe().then(function (me) {
+                drawAccount(me);
+                if (me.subscription) { banner('TMR Pro is active. All three tools are unlocked on your account. A receipt is on its way to your email.', 'good'); return; }
+                if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
+                else banner('Payment received. Activation is taking longer than usual; refresh in a minute. If TMR Pro is not on within a few minutes, email support@trustmyrecord.com.', 'warn');
+            }).catch(function () {
+                if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
+            });
         }
 
         function start() {
-            var S = window.TMRSession;
-            if (!S) { paint('signed-out', null); return; }
-
-            /* The cached identity paints immediately so the panel does not flash. */
-            var cached = null;
-            try { cached = S.getCachedUser && S.getCachedUser(); } catch (e) { cached = null; }
-            if (cached) paint('signed-in', cached);
-            else if (!S.hasTokens || !S.hasTokens()) paint('signed-out', null);
-
-            if (!S.resolveUser) return;
-            S.resolveUser().then(function (res) {
-                if (!res) return;
-                paint(res.state || 'unknown', res.user || null);
-            }).catch(function () { /* keep whatever is on screen */ });
+            S = window.TMRSession || null;
+            if (S && S.api) API = S.api;
+            paintButtons(false);
+            if (!S) { paintStatus('Not signed in', 'A free account is all you need for profiles, pick tracking and leaderboards.', false, false); return; }
+            if (!S.hasTokens || !S.hasTokens()) {
+                paintStatus('Not signed in', 'A free account is all you need for profiles, pick tracking and leaderboards.', false, false);
+                fetch(API + '/premium/checkout-status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (b) {
+                    if (b && b.open_to_public) { mode = 'signin'; paintButtons(false); }
+                }).catch(function () {});
+                return;
+            }
+            if (purchase === 'success') { pollUntilActive(15); return; }
+            loadMe().then(drawAccount).catch(function () {
+                /* Cold start or a network blip: leave the inert page as is. */
+            });
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', start);
-        } else {
-            start();
-        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+        else start();
     })();
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.1b25cee2efb9.js"></script>
