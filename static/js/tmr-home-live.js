@@ -2053,13 +2053,18 @@
     return sel;
   }
 
-  function livePicks(users, emptyText) {
+  function livePicks(users, emptyText, serverOrder) {
     var card = el('.board .card:nth-child(1) .body'); if (!card || !users) return;
     var rows = [];
     users.forEach(function (u) {
       (u.picks || []).forEach(function (p) { rows.push({ u: u, p: p }); });
     });
-    rows.sort(function (a, b) {
+    /* LIVE_PICKS_DIVERSITY_20260928: live_picks arrives already ordered by
+       the API (recent picks rotated by member, services/livePicksRotation.js),
+       so it is rendered as sent. Re-sorting by time here would stack one
+       prolific member's picks back on top. Only the legacy
+       trend_highlights fallback is still sorted on the client. */
+    if (!serverOrder) rows.sort(function (a, b) {
       return new Date(b.p.created_at || b.p.game_time || 0) - new Date(a.p.created_at || a.p.game_time || 0);
     });
     rows = rows.slice(0, 6);
@@ -2129,7 +2134,7 @@
     });
     var empty = tab === 'all' ? 'No settled picks yet' : 'No settled ' + label + ' picks yet';
     if (lp.data) {
-      livePicks(lp.data[tab] || [], empty);
+      livePicks(lp.data[tab] || [], empty, true);
     } else if (lp.legacy) {
       var test = LP_LEGACY_TAB[tab];
       var users = !test ? lp.legacy : lp.legacy.map(function (u) {
