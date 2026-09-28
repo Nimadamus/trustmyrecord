@@ -214,6 +214,19 @@ def plain_excerpt(raw, limit=155):
     return t[:limit - 1].rsplit(" ", 1)[0] + "…"
 
 
+# SITEMAP_THIN_THREADS_20260928 (Nima approved, AdSense cleanup C): a thread
+# whose written text (opening post plus replies) is under SITEMAP_MIN_WORDS
+# words stays live and indexable but is left out of sitemap.xml. It returns
+# to the sitemap on its own once the discussion grows past the threshold.
+SITEMAP_MIN_WORDS = 150
+
+
+def thread_words(t, posts):
+    text = " ".join([plain_excerpt(t.get("content"), 10 ** 9)]
+                    + [plain_excerpt(p.get("content"), 10 ** 9) for p in posts])
+    return len(text.split())
+
+
 def has_profile_page(name):
     """True when /u/<name>/ actually exists in this checkout.
 
@@ -698,6 +711,7 @@ def main():
         if existing_slug:
             keep[str(t0["id"])] = existing_slug
 
+    thin_threads = 0
     for t0 in threads:
         tid = t0["id"]
         try:
@@ -717,10 +731,13 @@ def main():
         slug = public_slug(tid, t.get("slug") or slugify(t.get("title")))
         keep[str(tid)] = slug
         built.append((tid, slug, t, posts))
+        if thread_words(t, posts) < SITEMAP_MIN_WORDS:
+            thin_threads += 1
+            continue
         entries.append((thread_url(tid, slug),
                         (iso_date(t.get("last_post_at") or t.get("created_at")) or "")[:10]))
 
-    print(f"buildable: {len(built)} threads")
+    print(f"buildable: {len(built)} threads; {thin_threads} under {SITEMAP_MIN_WORDS} words kept out of the sitemap")
     if dry:
         for tid, slug, t, posts in built:
             print(f"  + /forum/thread/{tid}/{slug}/  ({len(posts)} replies)  {t.get('title')!r}")

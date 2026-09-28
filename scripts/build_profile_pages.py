@@ -1205,6 +1205,7 @@ def main():
     dry = "--dry-run" in sys.argv
     base = list_users()
     eligible_pages, excluded = [], []
+    graded_by = {}           # username -> settled picks, for the sitemap floor below
     linked_lowdata = set()   # every VERIFIED user the directory/leaderboard/sport
                              # boards can render (incl. 0-pick members) but who
                              # falls below GRADED_MIN. Each needs a real (compact)
@@ -1218,6 +1219,7 @@ def main():
             d = d.get("user", d)
         except Exception as ex:
             excluded.append((un, f"detail fetch failed: {ex}")); continue
+        graded_by[un] = graded_count(d)
         ok, why = eligible(d)
         if not ok:
             # Any verified, non-denylist, non-admin(unless allowlisted) member can
@@ -1358,15 +1360,33 @@ def main():
             raise
         record("profiles", "static/prerender/u-fallback.html", "kept", f"{type(ex).__name__}: {ex}")
 
-    regen_sitemap(sorted(elig_names))
+    regen_sitemap(sorted(elig_names), graded_by)
 
-def regen_sitemap(usernames):
+# SITEMAP_THIN_PROFILES_20260928 (Nima approved, AdSense cleanup C): a /u/ URL
+# written into the body of sitemap.xml (outside the managed block) is dropped
+# from the sitemap while that member has fewer than SITEMAP_MIN_GRADED settled
+# picks. The page itself is untouched: still live, still index,follow, same
+# URL and canonical. Only members whose count was actually read this run are
+# judged, so a failed fetch never removes anything. A dropped URL comes back
+# through the managed block once the member reaches GRADED_MIN.
+SITEMAP_MIN_GRADED = 10
+
+def regen_sitemap(usernames, graded_by=None):
     if not os.path.exists(SITEMAP):
         print("sitemap.xml not found, skipping"); return
     with open(SITEMAP, encoding="utf-8") as f:
         xml = f.read()
     xml = re.sub(r"\s*<!-- BEGIN_PROFILE_URLS -->.*?<!-- END_PROFILE_URLS -->",
                  "", xml, flags=re.S)
+    if graded_by:
+        def _thin(m):
+            n = graded_by.get(m.group(2))
+            return "" if (n is not None and n < SITEMAP_MIN_GRADED) else m.group(0)
+        before = xml.count("<loc>")
+        xml = re.sub(r"\n[ \t]*<url><loc>(" + re.escape(SITE) + r"/u/([^/<]+)/)</loc>.*?</url>",
+                     _thin, xml)
+        print(f"sitemap.xml: dropped {before - xml.count('<loc>')} /u/ URL(s) under "
+              f"{SITEMAP_MIN_GRADED} graded picks (pages stay live and indexable)")
     # DUP_LOC_20260910: the managed block is not the only place a /u/ URL can
     # live -- a batch of compact profile URLs was written straight into the body
     # of sitemap.xml on 2026-09-06. The moment one of those members crossed
