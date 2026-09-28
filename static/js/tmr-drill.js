@@ -260,6 +260,15 @@
      Watchdog research data): the same filters, order, paging and summary math
      as the server drilldown, applied in the browser. Rows use the server's
      pick shape (status, result_units, risk_units, odds, sport_key, ...). */
+  /* The server's ROI rule (pickMath.roiPercent): inputs settled to 6 decimals,
+     half away from zero, so a local ledger rounds a half cent the same way. */
+  function roiPercent(net, risked) {
+    var r = Math.round(num(risked) * 1e6) / 1e6;
+    if (!(r > 0)) return 0;
+    var x = ((Math.round(num(net) * 1e6) / 1e6) / r) * 100;
+    var out = (x < 0 ? -1 : 1) * (Math.round(Math.abs(x) * 100 + 1e-6) / 100);
+    return out === 0 ? 0 : out;
+  }
   function summarize(rows) {
     var w = 0, l = 0, p = 0, net = 0, risked = 0, oddsSum = 0, oddsN = 0;
     rows.forEach(function (r) {
@@ -276,7 +285,7 @@
       win_rate: dec ? Number(((w / dec) * 100).toFixed(2)) : 0,
       total_units_risked: Number(risked.toFixed(2)),
       net_units: Number(net.toFixed(2)),
-      roi: risked > 0 ? Number(((net / risked) * 100).toFixed(2)) : 0,
+      roi: roiPercent(net, risked),
       avg_odds: oddsN ? Number((oddsSum / oddsN).toFixed(2)) : 0
     };
   }
