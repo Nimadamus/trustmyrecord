@@ -1579,6 +1579,9 @@
                     <span>&copy; 2026 TrustMyRecord</span>
                     <a href="/terms/">Terms</a>
                     <a href="/privacy/">Privacy</a>
+                    <a href="/methodology/">Methodology</a>
+                    <a href="/editorial-standards/">Editorial Standards</a>
+                    <a href="/responsible-gambling/">Responsible Gambling</a>
                 </nav>
                 <p class="tmr-global-footer__disclaimer">TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
             </div>
