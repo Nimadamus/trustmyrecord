@@ -407,12 +407,15 @@
                                 (verified ? '<div class="verified">Verified Record</div>' : '') +
                             '</div>' +
                         '</div>' +
-                        '<div class="grid">' +
+                        /* STATS_DRILLDOWN_SITEWIDE_20260927: an embeddable widget, so the
+                           figures open the full public ledger (stats/advanced = category
+                           all) on TrustMyRecord in a new tab rather than a panel. */
+                        '<a class="grid" href="' + siteBase + '/pick-history/?user=' + encodeURIComponent(handle) + '&category=all&bucket=&label=' + encodeURIComponent('Every graded pick') + '&context=' + encodeURIComponent('Profile widget') + '" target="_blank" rel="noopener" title="View every pick behind these numbers" style="text-decoration:none;color:inherit;">' +
                             '<div class="stat"><div class="label">Record</div><div class="value">' + escapeHtml(record) + '</div></div>' +
                             '<div class="stat"><div class="label">ROI</div><div class="value ' + statClass(summary.roi) + '">' + escapeHtml(fmtPct(summary.roi)) + '</div></div>' +
                             '<div class="stat"><div class="label">Units</div><div class="value ' + statClass(summary.net_units) + '">' + escapeHtml(fmtUnits(summary.net_units)) + '</div></div>' +
                             '<div class="stat"><div class="label">Win Rate</div><div class="value">' + escapeHtml(Number(summary.win_rate || 0).toFixed(1) + '%') + '</div></div>' +
-                        '</div>' +
+                        '</a>' +
                         '<div class="recent">' +
                             '<div class="recent-label">Recent Form' + (totalPicks ? ' • ' + totalPicks + ' picks' : '') + '</div>' +
                             formBoxes(advancedResp.recentForm) +

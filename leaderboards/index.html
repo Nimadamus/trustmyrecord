@@ -518,6 +518,13 @@
         }
 
         .mini-link:hover { border-color: rgba(29, 127, 232,0.38); }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: the picks behind a record */
+        .mini-link--picks { border-color: rgba(77,163,255,0.4); color: #9fd0ff; background: rgba(77,163,255,0.08); }
+        .mini-link--picks:hover { background: rgba(77,163,255,0.18); color: #fff; }
+        tr.lb-drill-row { cursor: pointer; }
+        tr.lb-drill-row:hover td { background: rgba(77,163,255,0.05); }
+        .rail-picks { justify-self: start; margin: -4px 0 2px 12px; padding: 0; border: 0; background: none; color: #7cc0ff; font: 800 0.68rem/1.4 inherit; letter-spacing: 0.04em; cursor: pointer; text-transform: uppercase; }
+        .rail-picks:hover { color: #fff; text-decoration: underline; }
 
         .badge {
             display: inline-flex;
@@ -1536,6 +1543,36 @@
             };
         }
 
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: every board row opens the exact
+           graded picks behind its record, selected by the board's own scope:
+           the sport filter (the catalog rule the board counts with) and the
+           grading window (week / month / season = picks locked in the last
+           7 / 30 / 180 days). Public picks only, like the board. Verified live
+           against the leaderboard endpoints row by row. */
+        const BOARD_PERIOD_BUCKET = { week: '7d', month: '30d', season: '180d' };
+        function boardDrillAttrs(entry) {
+            const filters = currentFilters();
+            const scope = BOARD_TO_SCOPE[filters.board] || {};
+            const sport = (filters.sport && filters.sport !== 'all') ? filters.sport : '';
+            const period = scope.period ? BOARD_PERIOD_BUCKET[scope.period] : '';
+            let category = 'all', bucket = '', extra = '';
+            if (period) {
+                category = 'period'; bucket = period;
+                if (sport) extra = 'and=' + encodeURIComponent('sport_filter:' + sport);
+            } else if (sport) {
+                category = 'sport_filter'; bucket = sport;
+            }
+            const scopeText = [currentSportLabel() || 'All sports',
+                period ? ({ '7d': 'Last 7 days', '30d': 'Last 30 days', '180d': 'Last 180 days' })[period] : 'All time'].join(' · ');
+            const record = entry.wins + '-' + entry.losses + '-' + (entry.pushes || 0);
+            return ' data-drill-category="' + category + '" data-drill-bucket="' + escapeHtml(bucket) + '"'
+                + (extra ? ' data-drill-extra="' + escapeHtml(extra) + '"' : '')
+                + ' data-drill-user="' + escapeHtml(entry.username) + '"'
+                + ' data-drill-label="' + escapeHtml(entry.displayName + ' · ' + scopeText) + '"'
+                + ' data-drill-context="Leaderboard"'
+                + ' data-drill-expect="' + escapeHtml(entry.totalPicks + '|' + record + '|' + Number(entry.units || 0).toFixed(2)) + '"';
+        }
+
         function renderLeaderboard(entries) {
             const state = document.getElementById('leaderboardState');
             const wrap = document.getElementById('leaderboardWrap');
@@ -1577,7 +1614,7 @@
                 const record = entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : '');
                 const statClass = function(value) { return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral'; };
                 const streakLabel = entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0';
-                return '<tr>'
+                return '<tr class="lb-drill-row"' + boardDrillAttrs(entry) + ' tabindex="0" role="button" title="Open every pick behind this record">'
                     + '<td>' + officialRankCell(entry) + '</td>'
                     + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl, entry.username)
                     +     '<div class="person-meta">'
@@ -1590,6 +1627,7 @@
                     + '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>'
                     + '<td>' + entry.totalPicks + '</td>'
                     + '<td><div class="link-actions">'
+                    +     '<button type="button" class="mini-link mini-link--picks"' + boardDrillAttrs(entry) + '>View picks</button>'
                     +     '<a class="mini-link" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>'
                     +     '<a class="mini-link" href="/arena/?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>'
                     // SHARE_SYSTEM_PHASE1_20260721: shares the member's public
@@ -1623,7 +1661,12 @@
                     + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
                     + '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>'
                     + '<span class="badge">W' + entry.streak + ' current run</span>'
-                    + '</a>';
+                    + '</a>'
+                    + '<button type="button" class="rail-picks"'
+                    +   (currentFilters().sport && currentFilters().sport !== 'all'
+                        ? ' data-drill-category="sport_filter" data-drill-bucket="' + escapeHtml(currentFilters().sport) + '" data-drill-extra="' + escapeHtml('and=' + encodeURIComponent('streak:current')) + '"'
+                        : ' data-drill-category="streak" data-drill-bucket="current"')
+                    +   ' data-drill-user="' + escapeHtml(entry.username) + '" data-drill-label="' + escapeHtml(entry.displayName + ' current run') + '" data-drill-context="Leaderboard streaks" data-drill-expect="||">View the W' + entry.streak + ' run</button>';
             }).join('');
         }
 
@@ -1699,7 +1742,8 @@
                     + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
                     + '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>'
                     + '<span class="badge gold">Verified sample</span>'
-                    + '</a>';
+                    + '</a>'
+                    + '<button type="button" class="rail-picks"' + boardDrillAttrs(entry) + '>View all ' + entry.totalPicks + ' picks</button>';
             }).join('');
         }
 
@@ -2534,6 +2578,7 @@
             bootstrapHub();
         }
     </script>
+<script defer src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 </body>

@@ -421,7 +421,20 @@
       head.appendChild(vf);
     }
     var rec = recordText(it);
-    if (rec) { var r = el('span', 'tkf-rec', rec); r.title = 'Verified pick record'; head.appendChild(r); }
+    if (rec) {
+      var r = el('span', 'tkf-rec', rec);
+      r.title = 'Open every pick behind this record';
+      /* STATS_DRILLDOWN_SITEWIDE_20260927: the poster's canonical record opens
+         its picks wherever static/js/tmr-drill.js is loaded. */
+      r.setAttribute('data-drill-category', 'record');
+      r.setAttribute('data-drill-bucket', '');
+      r.setAttribute('data-drill-user', it.username || '');
+      r.setAttribute('data-drill-label', 'Verified record');
+      r.setAttribute('data-drill-context', 'Sports takes');
+      r.setAttribute('role', 'button');
+      r.tabIndex = 0;
+      head.appendChild(r);
+    }
     head.appendChild(el('span', 'tkf-dot', '·'));
     var time = el('a', 'tkf-time', relTime(it.created_at));
     time.href = '/feed/?post=' + encodeURIComponent(it.item_id);

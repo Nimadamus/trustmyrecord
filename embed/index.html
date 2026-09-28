@@ -376,6 +376,18 @@
             return siteBase + '/profile/?user=' + encodeURIComponent(username)
                  + '&utm_source=embed&utm_medium=widget&utm_campaign=user_profile&utm_content=' + encodeURIComponent(username);
         }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: this card lives in an iframe on
+           other sites, so a figure opens the full pick ledger on TrustMyRecord
+           in a new tab instead of a panel. public-stats is the public /metrics
+           rule (category all); a sport row is exactly one sport_key. */
+        var LEAGUE_KEYS = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl',
+            NCAAF: 'americanfootball_ncaaf', NCAAB: 'basketball_ncaab', WNBA: 'basketball_wnba' };
+        function drillLink(category, bucket, label) {
+            return siteBase + '/pick-history/?user=' + encodeURIComponent(username) + '&category=' + encodeURIComponent(category)
+                 + '&bucket=' + encodeURIComponent(bucket || '') + '&label=' + encodeURIComponent(label || '')
+                 + '&context=' + encodeURIComponent('Embedded profile card')
+                 + '&utm_source=embed&utm_medium=widget&utm_campaign=stat_drilldown&utm_content=' + encodeURIComponent(username);
+        }
         function pendingLink() {
             return siteBase + '/my-pending-picks/?user=' + encodeURIComponent(username)
                  + '&view=pending&utm_source=embed&utm_medium=widget&utm_campaign=pending_picks&utm_content=' + encodeURIComponent(username);
@@ -553,12 +565,12 @@
                     +   '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
                     + '</div>'
 
-                    + '<div class="tmr-grid">'
+                    + '<a class="tmr-grid" href="' + drillLink('all', '', 'Every graded pick') + '" target="_blank" rel="noopener" title="View every pick behind these numbers" style="text-decoration:none;color:inherit;">'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">Record</div><div class="tmr-stat-value">' + escapeHtml(record) + '</div></div>'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">Win Rate</div><div class="tmr-stat-value">' + escapeHtml(Number(summary.win_percentage || 0).toFixed(1) + '%') + '</div></div>'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">Net Units</div><div class="tmr-stat-value ' + statClass(summary.net_units) + '">' + escapeHtml(fmtUnits(summary.net_units)) + '</div></div>'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">ROI</div><div class="tmr-stat-value ' + statClass(summary.roi) + '">' + escapeHtml(fmtPct(summary.roi)) + '</div></div>'
-                    + '</div>'
+                    + '</a>'
 
                     + '<div class="tmr-recent">'
                     +   '<div class="tmr-recent-label">Sport Breakdown' + (totalPicks ? ' &middot; ' + totalPicks + ' graded picks' : '') + '</div>'
@@ -572,7 +584,11 @@
 
                     + (size === 'lg'
                         ? '<div class="tmr-picks">' + (sports.length ? sports.slice(0,5).map(function(it) {
-                            return '<div class="tmr-pick-row"><div class="tmr-pick-name">' + escapeHtml(it.sport || 'Sport') + '</div><div class="tmr-pick-meta">' + escapeHtml(it.record || '0-0-0') + '</div><div class="tmr-pick-result ' + statClass(it.net_units) + '">' + escapeHtml(fmtUnits(it.net_units)) + '</div></div>';
+                            var key = LEAGUE_KEYS[String(it.sport || '').toUpperCase()];
+                            var inner = '<div class="tmr-pick-name">' + escapeHtml(it.sport || 'Sport') + '</div><div class="tmr-pick-meta">' + escapeHtml(it.record || '0-0-0') + '</div><div class="tmr-pick-result ' + statClass(it.net_units) + '">' + escapeHtml(fmtUnits(it.net_units)) + '</div>';
+                            return key
+                                ? '<a class="tmr-pick-row" href="' + drillLink('split_sport', key, (it.sport || '') + ' picks') + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">' + inner + '</a>'
+                                : '<div class="tmr-pick-row">' + inner + '</div>';
                           }).join('') : '<div style="color:var(--muted);font-size:.72rem;padding:6px 0;">No graded picks yet</div>') + '</div>'
                         : '')
 

@@ -72,6 +72,23 @@ function getRecordText(item) {
 // (pushes, voids, and cancellations are processed but record-neutral). Never
 // exposes individual pick details. Returns '' when batch outcome data is absent
 // or incoherent (e.g. cumulative vs. batch scope mismatch).
+/* STATS_DRILLDOWN_SITEWIDE_20260927: the poster's lifetime record is the
+   canonical profile record, so it opens drilldown category "record" for that
+   member, checked against the exact fields the line printed. */
+function recordDrillAttrs(item, context) {
+    const username = getUsername(item);
+    const wins = item.record_wins ?? item.wins ?? item.user_wins;
+    const losses = item.record_losses ?? item.losses ?? item.user_losses;
+    const pushes = item.record_pushes ?? item.pushes ?? item.user_pushes;
+    if (!username || (wins == null && losses == null && pushes == null)) return '';
+    if (!(Number(wins || 0) + Number(losses || 0) + Number(pushes || 0))) return '';
+    const units = item.net_units ?? item.user_net_units;
+    const expect = '|' + [wins || 0, losses || 0, pushes || 0].join('-') + '|' + (units != null ? Number(units).toFixed(2) : '');
+    return ' data-drill-category="record" data-drill-bucket="" data-drill-user="' + esc(username) + '"' +
+        ' data-drill-label="' + esc(username) + ' lifetime record" data-drill-context="' + esc(context) + '"' +
+        ' data-drill-expect="' + esc(expect) + '" role="button" tabindex="0" title="View the picks behind this record"';
+}
+
 function getGradedBreakdownText(item) {
     const processed = Number(item.pick_count || item.count || 0);
     const wins = Number(item.wins_count || 0);
@@ -113,7 +130,7 @@ function renderFeedHeader(item, actionHtml) {
             '<div class="fi-user-subline">' +
                 '<span class="fi-sport">' + getSportOrTeam(item) + '</span>' +
                 '<span class="fi-dot">&bull;</span>' +
-                '<span class="fi-record">Record: ' + esc(getRecordText(item)) + '</span>' +
+                '<span class="fi-record"' + recordDrillAttrs(item, 'Community feed') + '>Record: ' + esc(getRecordText(item)) + '</span>' +
             '</div>' +
         '</div>' +
     '</div>' +
@@ -160,7 +177,7 @@ function renderPickCard(item) {
             (breakdown
                 ? '<div class="pe-team">' + esc(breakdown) + '</div>'
                 : '<div class="pe-team">Verified record updated.</div>') +
-            '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current overall record: ' + esc(getRecordText(item)) + '</div>' +
+            '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;"' + recordDrillAttrs(item, 'Community feed, graded pick update') + '>Current overall record: ' + esc(getRecordText(item)) + (recordDrillAttrs(item, '') && window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '') + '</div>' +
         '</div>';
     }
 
@@ -999,7 +1016,12 @@ async function loadTopCappers() {
                 /* NO_LETTER_FLASH: no upload is the resolver route, not an initial. */
                 const avaSrc = u.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(u.username || '') + '/avatar?s=96');
                 const avatar = '<img src="' + esc(avaSrc) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-                return '<div class="rs-user"><div class="rs-user-avatar">' + avatar + '</div><div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=' + encodeURIComponent(u.username || '') + '">' + esc(display) + '</a></div><div class="rs-user-detail">' + esc(String(u.total_picks || 0)) + ' picks - <span style="color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';font-weight:700;">' + sign + units.toFixed(2) + 'u</span>' + (u.roi != null ? ' - ' + Number(u.roi).toFixed(1) + '% ROI' : '') + '</div></div></div>';
+                /* STATS_DRILLDOWN_SITEWIDE_20260927: an overall leaderboard row is the
+                   /metrics rule, drilldown category "all". */
+                const drill = u.username ? ' data-drill-category="all" data-drill-bucket="" data-drill-user="' + esc(u.username) + '"' +
+                    ' data-drill-label="' + esc(display) + ' overall record" data-drill-context="Top Cappers"' +
+                    ' data-drill-expect="' + esc(String(u.total_picks || 0) + '||' + units.toFixed(2)) + '" role="button" tabindex="0"' : '';
+                return '<div class="rs-user"' + drill + '><div class="rs-user-avatar">' + avatar + '</div><div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=' + encodeURIComponent(u.username || '') + '">' + esc(display) + '</a></div><div class="rs-user-detail">' + esc(String(u.total_picks || 0)) + ' picks - <span style="color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';font-weight:700;">' + sign + units.toFixed(2) + 'u</span>' + (u.roi != null ? ' - ' + Number(u.roi).toFixed(1) + '% ROI' : '') + '</div>' + (drill && window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '') + '</div></div>';
             }).join('');
             return;
         }

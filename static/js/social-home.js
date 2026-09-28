@@ -101,12 +101,21 @@ async function loadSidebarStats(user) {
                compact widget may show fewer decimals -- it must not show a
                different number. */
             const wr = Number(u.win_rate || 0);
+            /* STATS_DRILLDOWN_SITEWIDE_20260927: the member's own canonical
+               record, drilldown category "record". */
+            const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+            const drill = ` data-drill-category="record" data-drill-bucket="" data-drill-user="${esc(user.username)}"`
+                + ` data-drill-label="Your lifetime record" data-drill-context="Your stats"`
+                + ` data-drill-expect="${u.total_picks || 0}|${wins}-${losses}-${pushes}|${Number(u.net_units || 0).toFixed(2)}" role="button" tabindex="0" style="cursor:pointer"`;
             document.getElementById('sidebarMyStats').innerHTML = `
+                <div${drill}>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;color:var(--text-secondary);">
                     <div><span style="font-weight:700;color:var(--text-primary);">${u.total_picks || 0}</span> picks</div>
                     <div><span style="font-weight:700;color:var(--accent-green);">${wr.toFixed(0)}%</span> win rate</div>
                     <div><span style="font-weight:700;color:var(--text-primary);">${wins}-${losses}-${pushes}</span> record</div>
                     <div><span style="font-weight:700;color:${parseFloat(u.net_units || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${parseFloat(u.net_units || 0) >= 0 ? '+' : ''}${parseFloat(u.net_units || 0).toFixed(1)}u</span></div>
+                </div>
+                ${window.TMRDrill ? '<div style="margin-top:8px">' + window.TMRDrill.ctaHtml('View picks') + '</div>' : ''}
                 </div>`;
         }
     } catch(e) {
@@ -947,7 +956,12 @@ async function loadTopCappers() {
                     const username = String(u.username || '');
                     const display = String(u.display_name || u.username || 'User');
                     const initial = (display[0] || '?').toUpperCase();
-                    return '<div class="rs-user">' +
+                    /* STATS_DRILLDOWN_SITEWIDE_20260927: leaderboard row = category "all". */
+                    const safe = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+                    const drill = username ? ' data-drill-category="all" data-drill-bucket="" data-drill-user="' + safe(username) + '"' +
+                        ' data-drill-label="' + safe(display) + ' overall record" data-drill-context="Top Cappers"' +
+                        ' data-drill-expect="' + (u.total_picks || 0) + '||' + units.toFixed(2) + '" role="button" tabindex="0"' : '';
+                    return '<div class="rs-user"' + drill + '>' +
                         '<div class="rs-rank">' + (i + 1) + '</div>' +
                         '<div class="rs-user-avatar">' + initial + '</div>' +
                         '<div class="rs-user-info">' +

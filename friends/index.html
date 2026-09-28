@@ -942,6 +942,7 @@
 <script src="/static/js/nav-badges.js?v=dca92f04da03"></script>
     <script src="/static/js/auth-persistent.js?v=d479be477169"></script>
     <script src="/static/js/notifications.js?v=76df0ede5da6"></script>
+    <script src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
     <script>
         let myUserId = null;
         let followingList = [];
@@ -967,8 +968,15 @@
                 ? `<img src="${user.avatar_url}" alt="${username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
                 : avatarLetter;
 
+            /* STATS_DRILLDOWN_SITEWIDE_20260927: these figures are the canonical
+               profile record (member search), so they open category "record". */
+            const safeU = String(user.username || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+            const drill = user.username && Number(user.total_picks) > 0
+                ? ` data-drill-category="record" data-drill-bucket="" data-drill-user="${safeU}" data-drill-label="${safeU} verified record" data-drill-context="Friends"`
+                  + ` data-drill-expect="${Number(user.total_picks) || 0}||${user.net_units != null ? (parseFloat(user.net_units) || 0).toFixed(2) : ''}" role="button" tabindex="0" style="cursor:pointer"`
+                : '';
             const statsHtml = user.total_picks != null
-                ? `<div class="friend-meta">${user.total_picks} picks${user.roi != null ? ' | ROI: ' + (parseFloat(user.roi) || 0).toFixed(1) + '%' : ''}${user.net_units != null ? ' | ' + parseFloat(user.net_units).toFixed(1) + 'u' : ''}</div>`
+                ? `<div class="friend-meta"${drill}>${user.total_picks} picks${user.roi != null ? ' | ROI: ' + (parseFloat(user.roi) || 0).toFixed(1) + '%' : ''}${user.net_units != null ? ' | ' + parseFloat(user.net_units).toFixed(1) + 'u' : ''}${drill && window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : ''}</div>`
                 : '';
 
             const verifiedBadge = user.verification_status === 'verified'

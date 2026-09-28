@@ -1348,6 +1348,11 @@
             unitsEl.textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits.toFixed(2);
             unitsEl.style.color = stats.totalUnits >= 0 ? '#00c853' : '#ff5252';
         }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: the tiles just written open the
+           picks behind them (server rule or local rows, whichever produced them). */
+        if (typeof window.sbWireHeadline === 'function') {
+            try { window.sbWireHeadline('mypicks', 'myStatsRecord', 'myStatsUnits', 'My Picks'); } catch (e) {}
+        }
     }
 
     function ensureMetadataFields() {
@@ -4221,6 +4226,28 @@
         renderPromoNotes();
     }
 
+    function consensusDrillRow(pick) {
+        const st = pick.status === 'pushed' ? 'push' : pick.status;
+        const odds = Number(pick.odds_snapshot);
+        return {
+            id: pick.id,
+            date: pick.locked_at || pick.created_at || null,
+            sport_key: pick.sport_key || '',
+            league: String(pick.sport_key || '').toUpperCase(),
+            matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
+            pick_label: pick.selection || '',
+            market_type: pick.market_type || '',
+            market_label: getMarketLabel(pick.market_type),
+            line_label: pick.line_snapshot == null ? '' : String(pick.line_snapshot),
+            odds: Number.isFinite(odds) && odds !== 0 ? odds : null,
+            risk_units: pick.risk_units != null ? pick.risk_units : (pick.units || 1),
+            result_units: parseFloat(pick.result_units || 0),
+            status: st,
+            final_score: pick.final_score || '',
+            player_name: pick.player_name || ''
+        };
+    }
+
     async function renderConsensusPanel() {
         const panel = document.getElementById('consensusPicksPanel');
         if (!panel) return;
@@ -4262,6 +4289,7 @@
                 market: getMarketLabel(pick.market_type)
             };
             existing.count += 1;
+            (existing.picks = existing.picks || []).push(pick);
             if (pick.status === 'won') existing.wins += 1;
             if (pick.status === 'lost') existing.losses += 1;
             if (pick.status === 'push') existing.pushes += 1;
@@ -4277,8 +4305,20 @@
             const decisions = row.wins + row.losses;
             const winRate = decisions ? Math.round((row.wins / decisions) * 100) + '%' : '0%';
             const units = (row.units >= 0 ? '+' : '') + row.units.toFixed(2) + 'u';
-            return '<div class="tmr-empty-state" style="text-align:left;margin-bottom:10px;">' +
-                '<strong>' + escapeHtml(row.label) + '</strong>' +
+            /* STATS_DRILLDOWN_SITEWIDE_20260927: the cluster's own picks, in
+               LOCAL MODE, so the count, record and units reconcile exactly. */
+            const me = getCurrentUser();
+            const drillId = 'sb:consensus:' + rows.indexOf(row);
+            window.__tmrDrillReg = window.__tmrDrillReg || {};
+            window.__tmrDrillReg[drillId] = {
+                user: (me && (me.username || me.name)) || '',
+                label: row.label,
+                context: 'Consensus positions',
+                rows: function() { return row.picks.map(consensusDrillRow); }
+            };
+            const drill = ' data-drill-local="' + drillId + '" data-drill-expect="' + row.count + '|' + row.wins + '-' + row.losses + '-' + row.pushes + '|' + row.units.toFixed(2) + '" role="button" tabindex="0"';
+            return '<div class="tmr-empty-state" style="text-align:left;margin-bottom:10px;"' + drill + '>' +
+                '<strong>' + escapeHtml(row.label) + '</strong>' + (window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '') +
                 '<div style="margin-top:4px;">' + escapeHtml(row.matchup) + ' | ' + escapeHtml(row.market) + '</div>' +
                 '<div style="margin-top:8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">' +
                 row.count + ' loaded pick' + (row.count === 1 ? '' : 's') + ' | ' +

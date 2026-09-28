@@ -55,6 +55,7 @@
         .lb-card.top3 { border-color: rgba(185,133,5,.40); }
         .lb-main { display: grid; grid-template-columns: 54px minmax(0, 1.5fr) 96px 104px 74px 66px 96px 74px; gap: 12px; align-items: center; padding: 14px 16px; }
         .lb-main > * { min-width: 0; }
+        .lb-record .tdr-cta { display: flex; width: max-content; margin: 5px 0 0; }
         .lb-who { display: flex; align-items: center; gap: 11px; min-width: 0; }
         .lb-who img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(7,24,42,.08); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); }
         .lb-who a { font-family: "Barlow", sans-serif; font-weight: 800; font-size: 1.08rem; color: #07182A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -233,6 +234,7 @@
 
     <div id="tmr-footer-placeholder"></div>
 
+    <script src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
     <script>
     (function () {
         var CONTEST_ID = 'justbet-mlb';
@@ -351,6 +353,48 @@
                     + '<span class="st st-revealed"><span class="st-dot"></span>Revealed</span>' + state + '</div>' + rows + '</div>';
             }).join('');
         }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: a standings row opens that
+           entrant's revealed, graded contest picks in LOCAL MODE, so the
+           record, the pick count (voids included) and the units reconcile
+           with the row by construction. Sealed picks are counted, never listed. */
+        function jbRiskUnits(p) {
+            var u = Number(p.units) || 0, o = Number(p.odds) || 0;
+            if (p.stake_mode === 'to_win' && o) return o < 0 ? u * Math.abs(o) / 100 : u * 100 / o;
+            return u;
+        }
+        function jbDrillRow(p) {
+            return {
+                id: null,
+                date: p.game_start_at || p.locked_at || p.submitted_at,
+                sport_key: 'baseball_mlb', league: 'MLB',
+                matchup: p.game || '',
+                pick_label: pickLabel(p),
+                market_type: p.market_type || p.market || '',
+                market_label: String(p.market_type || p.market || '').replace(/_/g, ' '),
+                line_label: (p.line === null || p.line === undefined || p.line === '') ? '' : String(p.line),
+                odds: Number(p.odds) || null,
+                risk_units: Number(jbRiskUnits(p).toFixed(4)),
+                result_units: Number(p.units_net) || 0,
+                status: p.result === 'pushed' ? 'push' : p.result,
+                final_score: '', player_name: ''
+            };
+        }
+        function jbGraded(p) { return !p.sealed && p.result && p.result !== 'pending'; }
+        function jbDrillAttrs(e, revealed, sealedN, context) {
+            if (!e || !e.username) return '';
+            var graded = (revealed || []).filter(jbGraded);
+            if (!graded.length && !sealedN) return '';
+            var id = 'contest:justbet:lb:' + (e.user_id != null ? e.user_id : String(e.username).toLowerCase());
+            window.__tmrDrillReg = window.__tmrDrillReg || {};
+            window.__tmrDrillReg[id] = {
+                user: String(e.username), label: String(e.username) + ' contest picks', context: context,
+                hidden: sealedN || 0,
+                rows: function () { return graded.map(jbDrillRow); }
+            };
+            var expect = ((e.wins || 0) + (e.losses || 0) + (e.pushes || 0) + (e.voids || 0)) + '|' +
+                (e.wins || 0) + '-' + (e.losses || 0) + '-' + (e.pushes || 0) + '|' + (Number(e.units_net) || 0).toFixed(2);
+            return ' data-drill-local="' + id + '" data-drill-expect="' + expect + '" role="button" tabindex="0"';
+        }
         function renderLeaderboard(data, picks) {
             var body = $('#lb-body');
             var foot = $('#lb-foot');
@@ -393,12 +437,13 @@
                     + (sealedN ? '<div class="pk sealed"><span class="st st-sealed"><i class="fa-solid fa-lock"></i> Sealed</span>'
                         + '<span class="txt"><b>' + sealedN + '</b> pick' + (sealedN === 1 ? '' : 's') + ' sealed · reveals automatically at game lock</span></div>' : '');
                 return '<div class="lb-card' + (e.rank <= 3 && used ? ' top3' : '') + '" role="listitem">'
-                    + '<div class="lb-main">'
+                    + '<div class="lb-main"' + jbDrillAttrs(e, mine, sealedN, 'JustBet MLB contest standings') + '>'
                     + '<span class="lb-rank-wrap"><span class="lb-rank ' + rankCls + '">' + (e.rank || '—') + '</span></span>'
                     + '<span class="lb-who"><img src="' + avaSrc(e) + '" alt="" loading="lazy" onerror="this.removeAttribute(\'src\');this.onerror=null;">'
                     + (uname ? '<a href="/profile/?user=' + encodeURIComponent(uname) + '">' + escapeHtml(uname) + '</a>' : '<span class="units-zero">—</span>')
                     + (e.tied_on_units && used ? '<span class="tie-tag">tied</span>' : '') + '</span>'
-                    + '<span class="lb-cell lb-record"><span class="k">Record</span>' + (e.wins || 0) + '-' + (e.losses || 0) + '-' + (e.pushes || 0) + '</span>'
+                    + '<span class="lb-cell lb-record"><span class="k">Record</span>' + (e.wins || 0) + '-' + (e.losses || 0) + '-' + (e.pushes || 0)
+                    + (used && window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '') + '</span>'
                     + '<span class="lb-cell lb-units ' + unitsCls(net) + '"><span class="k">Units</span>' + signedU(net) + '</span>'
                     + '<span class="lb-cell lb-winpct"><span class="k">Win %</span>' + pct(e.win_pct) + '</span>'
                     + '<span class="lb-cell lb-used"><span class="k">Used</span>' + used + '<small>/' + max + '</small></span>'

@@ -226,6 +226,43 @@
     const qs = new URLSearchParams(location.search);
     const username = qs.get('user') || qs.get('username') || '';
     const sportKey = normalizeSport(qs.get('sport') || '');
+    /* STATS_DRILLDOWN_SITEWIDE_20260927: every figure on this page opens the
+       picks behind it (static/js/tmr-drill.js). Server figures (the summary
+       strip and the unit size table, from /metrics?sport=) drill through the
+       same ?sport= rule on the server; figures this page computes from the
+       loaded pick list register exactly the picks they counted. */
+    window.TMR_DRILL_USER = username;
+    let drillSeq = 0;
+    function drillLocal(picks, label) {
+      const id = 'sport:' + (++drillSeq);
+      window.__tmrDrillReg = window.__tmrDrillReg || {};
+      window.__tmrDrillReg[id] = {
+        user: username, label: label, context: labelSport(sportKey) + ' breakdown',
+        rows: function () {
+          return picks.map(function (p) {
+            const st = String(p.status || '').toLowerCase();
+            return {
+              id: p.id, date: p.commence_time || p.locked_at || p.created_at,
+              sport_key: p.sport_key, league: labelSport(p.sport_key || sportKey),
+              matchup: p.away_team && p.home_team ? p.away_team + ' @ ' + p.home_team : '',
+              pick_label: formatPickDisplay(p), market_type: p.market_type || '',
+              market_label: MARKET_LABELS[p.market_type] || p.market_type || '',
+              line_label: p.line_snapshot == null ? '' : fmtLine(p.line_snapshot),
+              odds: p.odds_snapshot == null ? null : Number(p.odds_snapshot),
+              risk_units: actualStake(p), result_units: resultUnits(p),
+              status: isWinStatus(st) ? 'won' : isLossStatus(st) ? 'lost' : 'push',
+              player_name: p.player_name || ''
+            };
+          });
+        }
+      };
+      return ' data-drill-local="' + id + '" data-drill-label="' + esc(label) + '" data-drill-scope="1" role="button" tabindex="0"';
+    }
+    function drillServer(category, bucket, label) {
+      return ' data-drill-category="' + esc(category) + '" data-drill-bucket="' + esc(bucket) + '" data-drill-label="' + esc(label) + '"' +
+        (category === 'sport_filter' ? '' : ' data-drill-extra="and=' + encodeURIComponent('sport_filter:' + sportKey) + '"') +
+        ' data-drill-context="' + esc(labelSport(sportKey) + ' breakdown') + '" data-drill-scope="1" role="button" tabindex="0"';
+    }
 
     function normalizeSport(value) {
       const key = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
@@ -448,7 +485,7 @@
       return '<div class="mini-table-shell"><table><thead><tr><th colspan="6">' + esc(title) + '</th></tr><tr>' +
         '<th>Split</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th>' +
         '</tr></thead><tbody>' +
-        miniRowsFromGroups(valid).map(row => '<tr>' + row.map((cell, idx) => '<td class="' + (idx ? 'num ' : '') + (cell.cls || '') + '">' + cell.html + '</td>').join('') + '</tr>').join('') +
+        miniRowsFromGroups(valid).map((row, i) => '<tr' + drillLocal(valid[i].picks, title + ': ' + valid[i].label) + '>' + row.map((cell, idx) => '<td class="' + (idx ? 'num ' : '') + (cell.cls || '') + '">' + cell.html + '</td>').join('') + '</tr>').join('') +
         '</tbody></table></div>';
     }
     function unitBucketForPick(p) {
@@ -552,7 +589,8 @@
         ].filter(Boolean).join('');
         return '<article class="wager-card">' +
           '<div class="wager-head"><div><div class="wager-title">' + esc(labelSport(sportKey)) + ' ' + esc(item.label) + '</div><div class="wager-sub">Verified graded wager type profile</div></div><div class="wager-badge">' + esc(item.key) + '</div></div>' +
-          '<div class="stat-strip">' +
+          '<div class="stat-strip"' + drillLocal(cardPicks, labelSport(sportKey) + ' ' + item.label) +
+            ' data-drill-expect="' + esc(m.total + '|' + m.record + '|' + Number(m.net || 0).toFixed(2)) + '">' +
             formatStripCell('Picks', String(m.total), '') +
             formatStripCell('W-L-P', m.record, '') +
             formatStripCell('Win %', m.decisions ? m.winRate.toFixed(1) + '%' : '-', m.decisions ? (m.winRate >= 50 ? 'pos' : 'neg') : 'zero') +
@@ -562,7 +600,7 @@
             formatStripCell('ROI', signed(m.roi, '%', 2), signClass(m.roi)) +
             formatStripCell('Max Unit', m.maxUnit.toFixed(2) + 'u', '') +
           '</div>' +
-          '<div class="wager-body"><div class="metric-grid">' + advanced + '</div>' +
+          '<div class="wager-body"><div class="metric-grid"' + drillLocal(cardPicks, labelSport(sportKey) + ' ' + item.label) + ' data-drill-expect="||">' + advanced + '</div>' +
           (splitHtml ? '<div class="card-block"><div class="block-title">Verified Splits</div><div class="split-grid">' + splitHtml + '</div></div>' : '<div class="card-block"><div class="empty">No deeper verified split fields available for this wager type yet.</div></div>') +
           renderRecentPicks(cardPicks) +
           '</div></article>';
@@ -583,7 +621,7 @@
         return;
       }
       el.innerHTML = '<table><thead><tr>' + columns.map(c => '<th class="' + (c.num ? 'num' : '') + '">' + esc(c.label) + '</th>').join('') + '</tr></thead><tbody>' +
-        rows.map(row => '<tr>' + row.map((cell, idx) => '<td class="' + (columns[idx].num ? 'num ' : '') + (cell.cls || '') + '">' + cell.html + '</td>').join('') + '</tr>').join('') +
+        rows.map(row => '<tr' + (row._attr || '') + '>' + row.map((cell, idx) => '<td class="' + (columns[idx].num ? 'num ' : '') + (cell.cls || '') + '">' + cell.html + '</td>').join('') + '</tr>').join('') +
         '</tbody></table>';
     }
     function breakdownRows(items, keyLabel, includeOdds) {
@@ -598,6 +636,8 @@
         if (includeOdds) cells.push({ html: item.avg_odds != null ? fmtOdds(item.avg_odds) : '-' });
         cells.push({ html: signed(s.net, 'u', 2), cls: signClass(s.net) });
         cells.push({ html: signed(s.roi, '%', 2), cls: signClass(s.roi) });
+        cells._attr = item._picks ? drillLocal(item._picks, keyLabel(item))
+          : item._server ? drillServer(item._server[0], item._server[1], keyLabel(item)) : '';
         return cells;
       });
     }
@@ -630,7 +670,8 @@
         let team = teams.find(t => sel.includes(String(t).toLowerCase()));
         if (!team) return;
         const key = team;
-        const cell = map.get(key) || { key, total: 0, wins: 0, losses: 0, pushes: 0, net: 0, risked: 0 };
+        const cell = map.get(key) || { key, total: 0, wins: 0, losses: 0, pushes: 0, net: 0, risked: 0, picks: [] };
+        cell.picks.push(p);
         const status = String(p.status || '').toLowerCase();
         cell.total += 1;
         if (isWinStatus(status)) cell.wins += 1;
@@ -641,7 +682,7 @@
         map.set(key, cell);
       });
       return Array.from(map.values()).map(c => ({
-        key: c.key, total: c.total, wins: c.wins, losses: c.losses, pushes: c.pushes,
+        key: c.key, total: c.total, wins: c.wins, losses: c.losses, pushes: c.pushes, _picks: c.picks,
         net: Number(c.net.toFixed(2)),
         roi: c.risked > 0 ? Number(((c.net / c.risked) * 100).toFixed(2)) : 0,
       })).sort((a, b) => b.total - a.total || b.net - a.net);
@@ -659,6 +700,7 @@
       });
       return {
         key: label,
+        _picks: picks,
         total: cell.total,
         wins: cell.wins,
         losses: cell.losses,
@@ -716,11 +758,16 @@
       document.getElementById('sumWin').textContent = Number(s.wins || 0) + Number(s.losses || 0) > 0 ? win.toFixed(1) + '%' : '-';
       document.getElementById('sumWin').className = Number(s.wins || 0) + Number(s.losses || 0) > 0 ? (win >= 50 ? 'pos' : 'neg') : 'zero';
       document.getElementById('sumOdds').textContent = s.avg_odds != null ? fmtOdds(s.avg_odds) : '-';
+      document.querySelectorAll('.summary-grid .summary-cell').forEach(function (cell) {
+        cell.outerHTML = cell.outerHTML.replace('<div class="summary-cell"', '<div class="summary-cell"' +
+          drillServer('sport_filter', sportKey, labelSport(sportKey) + ' record') +
+          ' data-drill-expect="' + esc((Number(s.total_picks) || '') + '|' + (Number(s.wins || 0) + '-' + Number(s.losses || 0) + '-' + Number(s.pushes || 0)) + '|' + net.toFixed(2)) + '"');
+      });
       renderWagerTypeCards(picks);
       const splits = metrics.splits || {};
       table('unitTable',
         [{label:'Unit Size'}, {label:'Picks', num:true}, {label:'W-L-P', num:true}, {label:'Win %', num:true}, {label:'Net Units', num:true}, {label:'ROI', num:true}],
-        breakdownRows(sortUnitBucketsDesc(splits.by_unit_size, item => item.key), item => unitSizeLabel(item.key), false)
+        breakdownRows(sortUnitBucketsDesc(splits.by_unit_size, item => item.key).map(item => Object.assign({}, item, { _server: ['split_unit_size', item.key] })), item => unitSizeLabel(item.key), false)
       );
       const now = Date.now();
       const periodRows = [
@@ -757,6 +804,7 @@
       document.getElementById('ledger').innerHTML = '<div class="empty">No verified graded data yet for this category.</div>';
     });
   </script>
+<script defer src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="dark-text-fix-20260913">

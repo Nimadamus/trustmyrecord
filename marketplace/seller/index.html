@@ -43,6 +43,9 @@
         body.mp-storefront-page .sf-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(105px,1fr)); gap:8px; margin-top:16px; }
         body.mp-storefront-page .sf-stat { background:#F4F7FA; border:1px solid var(--line); border-radius:10px; padding:11px 8px; text-align:center; }
         body.mp-storefront-page .sf-stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:17px; }
+        .sf-stats[data-drill-category] { cursor:pointer; }
+        .sf-stats[data-drill-category]:hover .sf-stat { border-color:#4da3ff; }
+        .sf-stats[data-drill-category]:focus-visible { outline:2px solid #4da3ff; outline-offset:2px; border-radius:10px; }
         body.mp-storefront-page .sf-stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
         body.mp-storefront-page .pos { color:var(--green); } body.mp-storefront-page .neg { color:var(--red); }
         body.mp-storefront-page .offer h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:22px; }
@@ -120,6 +123,7 @@
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
 <script src="/static/js/tmr-marketplace-shell.js?v=a3f4545023e1"></script>
+<script src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 <script>
 (function () {
     const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
@@ -171,12 +175,17 @@
             '<div><div class="sf-name">' + esc(s.display_name || s.username) + (s.verified ? ' <span class="sf-verified">&#10003;</span>' : '') + '</div>' +
             '<div class="sf-user">@' + esc(s.username) + ' &middot; ' + s.completed_sales + ' marketplace sale' + (s.completed_sales===1?'':'s') + ' &middot; <a href="/profile/?user=' + encodeURIComponent(s.username) + '">Full profile &amp; pick history &rarr;</a></div></div>' +
         '</div>' +
-        '<div class="sf-stats">' +
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: storefront stats are user_stats,
+           the canonical profile record, so they open drilldown category "record". */
+        '<div class="sf-stats" data-drill-category="record" data-drill-bucket="" data-drill-user="' + esc(s.username) + '"' +
+            ' data-drill-label="' + esc(s.username) + ' verified record" data-drill-context="Seller storefront"' +
+            ' data-drill-expect="' + (Number(s.graded_picks) || 0) + '|' + (rec.wins || 0) + '-' + (rec.losses || 0) + '-' + (rec.pushes || 0) + '|' + (Number(s.net_units) || 0).toFixed(2) + '"' +
+            ' role="button" tabindex="0" title="View the picks behind this record">' +
             '<div class="sf-stat"><b>' + rec.wins + '-' + rec.losses + (rec.pushes?'-'+rec.pushes:'') + '</b><span>Record</span></div>' +
             '<div class="sf-stat"><b class="' + ((Number(s.net_units)||0)>=0?'pos':'neg') + '">' + units(s.net_units) + '</b><span>Net Units</span></div>' +
             '<div class="sf-stat"><b class="' + ((Number(s.roi)||0)>=0?'pos':'neg') + '">' + (Number(s.roi)||0).toFixed(1) + '%</b><span>ROI</span></div>' +
             '<div class="sf-stat"><b>' + s.graded_picks + '</b><span>Graded Picks</span></div>' +
-        '</div></div>';
+        '</div>' + (window.TMRDrill ? '<div style="margin-top:8px;text-align:right">' + window.TMRDrill.ctaHtml('View every pick behind these numbers') + '</div>' : '') + '</div>';
 
         const listings = store.listings && store.listings.length ? store.listings : (l ? [l] : []);
         if (!s.storefront_active || !listings.length) {

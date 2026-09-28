@@ -679,7 +679,7 @@
            Profile column. Every row reserves the Share slot (real button on the
            owner's row, an invisible placeholder elsewhere) so the View pill lands
            at the same x on every row and the column never looks cramped. */
-        .hm-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-width: 100px; }
+        .hm-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-width: 148px; }
 
         /* Share keeps the sitewide teal pill so it reads as the same control
            everywhere; height, vertical alignment and radius are matched to the
@@ -714,6 +714,12 @@
         }
         .hm-action-btn:hover { border-color: var(--teal); color: var(--teal); }
         .hm-action-btn--chevron { padding: 3px 8px; }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927 */
+        .hm-action-btn--picks { background: rgba(77,163,255,0.08); border-color: rgba(77,163,255,0.4); color: #9fd0ff; cursor: pointer; font-family: inherit; }
+        .hm-feat-picks { background: rgba(77,163,255,0.08); border: 1px solid rgba(77,163,255,0.4); color: #9fd0ff; cursor: pointer; font: inherit; font-size: 0.72rem; font-weight: 700; border-radius: var(--radius-sm); padding: 4px 11px; }
+        .hm-action-btn--picks:hover { background: rgba(77,163,255,0.18); color: #fff; }
+        .hm-stat.hm-drill[data-drill-category], .hm-stat.hm-drill[data-drill-local] { cursor: pointer; }
+        .hm-member-row:hover .hm-stat.hm-drill[data-drill-category], .hm-member-row:hover .hm-stat.hm-drill[data-drill-local] { text-decoration: underline dotted rgba(124,192,255,0.55); text-underline-offset: 3px; }
 
         /* Tier group headers inside the table */
         .hm-tier-header {
@@ -2247,8 +2253,10 @@
                     '<div class="hm-feat-id"><a href="' + href + '">' + escapeHtml(member.displayName) + '</a><span>@' + escapeHtml(member.username) + '</span></div>' +
                     followBtn +
                 '</div>' +
-                '<div class="hm-feat-stats">' + cells.map(featuredStatCell).join('') + '</div>' +
-                '<div class="hm-feat-meta"><span>' + escapeHtml(metaBits.join(' · ')) + '</span><span class="hm-feat-cta">' + shareButtonHtml(member, { className: 'hm-feat-share' }) + '<a class="hm-feat-view" href="' + href + '">View Profile</a></span></div>' +
+                '<div class="hm-feat-stats"' + (gradedCount(member) > 0 ? (opts.drill || hmDrillAttrs(member, stats)) : '') + '>' + cells.map(featuredStatCell).join('') + '</div>' +
+                '<div class="hm-feat-meta"><span>' + escapeHtml(metaBits.join(' · ')) + '</span><span class="hm-feat-cta">' + shareButtonHtml(member, { className: 'hm-feat-share' }) +
+                    (gradedCount(member) > 0 ? '<button type="button" class="hm-feat-picks"' + (opts.drill || hmDrillAttrs(member, stats)) + '>View picks</button>' : '') +
+                    '<a class="hm-feat-view" href="' + href + '">View Profile</a></span></div>' +
             '</div>';
         }
 
@@ -2579,6 +2587,8 @@
                     category: 'Best Current Streak',
                     member,
                     info: STREAK_INFO,
+                    drill: ' data-drill-category="streak" data-drill-bucket="current" data-drill-user="' + escapeHtml(member.username) + '"'
+                        + ' data-drill-label="' + escapeHtml(member.displayName + ' · current streak') + '" data-drill-context="Best current streak" data-drill-expect="||"',
                     cells: [
                         { label: 'Streak', value: formatStreak(member.stats.currentStreak), cls: statClass(member.stats.currentStreak) },
                         { label: 'Record', value: formatRecord(member.stats) },
@@ -2593,6 +2603,9 @@
                     category: 'Hottest Last 30 Days',
                     member: entry.member,
                     info: HOT_INFO,
+                    drill: ' data-drill-category="period" data-drill-bucket="30d" data-drill-user="' + escapeHtml(entry.member.username) + '"'
+                        + ' data-drill-label="' + escapeHtml(entry.member.displayName + ' · Last 30 days') + '" data-drill-context="Hottest last 30 days"'
+                        + ' data-drill-expect="' + escapeHtml(entry.hot.graded + '||' + Number(entry.hot.units || 0).toFixed(2)) + '"',
                     cells: [
                         { label: 'Units 30d', value: (entry.hot.units > 0 ? '+' : '') + entry.hot.units.toFixed(2), cls: statClass(entry.hot.units) },
                         { label: 'ROI 30d', value: formatPercent(entry.hot.roi, true), cls: statClass(entry.hot.roi) },
@@ -2807,6 +2820,53 @@
             }
         }
 
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: a row's record opens the exact picks
+           behind it. When this page computed the row itself (a Sport or Wager
+           Type filter, or a history it recounted with statsFromPicks) it hands
+           the drilldown those same graded picks; otherwise the row is the
+           canonical record and opens it from the server. */
+        function hmDrillAttrs(member, stats) {
+            const sport = (els.sport && els.sport.value) || 'all';
+            const wager = (els.wager && els.wager.value) || 'all';
+            const filtered = sport !== 'all' || wager !== 'all';
+            const record = Number(stats.wins || 0) + '-' + Number(stats.losses || 0) + '-' + Number(stats.pushes || 0);
+            const expect = ' data-drill-expect="' + escapeHtml('|' + record + '|' + Number(stats.units || 0).toFixed(2)) + '"';
+            const scopeLabel = [sport !== 'all' ? sport : '', wager !== 'all' ? (WAGER_LABELS[wager] || wager) : ''].filter(Boolean).join(' ');
+            const label = member.displayName + (scopeLabel ? ' · ' + scopeLabel : '');
+            const recounted = Array.isArray(member.rawPicks) && member.rawPicks.length;
+            if (!filtered && !recounted) {
+                return ' data-drill-category="record" data-drill-bucket="" data-drill-user="' + escapeHtml(member.username) + '"'
+                    + ' data-drill-label="' + escapeHtml(label) + '" data-drill-context="Handicapper directory"' + expect;
+            }
+            const id = 'hm:' + String(member.username).toLowerCase() + ':' + sport + ':' + wager;
+            const picks = (member.rawPicks || []).map(p => (p && p._status ? p : normalizePickMeta(p))).filter(p =>
+                ['won', 'lost', 'push'].includes(p._status) &&
+                (sport === 'all' || p._sport === sport) && pickMatchesWager(p, wager));
+            window.__tmrDrillReg = window.__tmrDrillReg || {};
+            window.__tmrDrillReg[id] = {
+                user: member.username, label: label, context: 'Handicapper directory',
+                rows: function () {
+                    return picks.map(function (p) {
+                        const rk = Number(p.risk_units);
+                        const stake = Number(p.units || p.stake || 1);
+                        const odds = Number(p.odds_snapshot || p.odds || p.price || -110);
+                        return {
+                            id: p.id, date: p.commence_time || p.locked_at || p.created_at,
+                            sport_key: p.sport_key || '', league: p._sport || p.sport_key || '',
+                            matchup: p.away_team && p.home_team ? p.away_team + ' @ ' + p.home_team : (p.game_display || ''),
+                            pick_label: p.pick_display || p.selection || '', market_type: p.market_type || '',
+                            market_label: WAGER_LABELS[p._wager] || p.market_type || '',
+                            line_label: p.line_snapshot == null ? '' : String(p.line_snapshot),
+                            odds: p.odds_snapshot == null ? null : Number(p.odds_snapshot),
+                            risk_units: Number.isFinite(rk) && rk > 0 ? rk : (odds < 0 ? stake * Math.abs(odds) / 100 : stake),
+                            result_units: pickPL(p), status: p._status, player_name: p.player_name || ''
+                        };
+                    });
+                }
+            };
+            return ' data-drill-local="' + escapeHtml(id) + '" data-drill-label="' + escapeHtml(label) + '" data-drill-context="Handicapper directory"' + expect;
+        }
+
         function memberRowHtml(member) {
             const stats = member.stats || defaultStats();
             const hasPicks = Number(stats.totalPicks || 0) > 0;
@@ -2825,14 +2885,14 @@
                     '</a>' +
                     '<div class="hm-name"><a class="hm-profile-name" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong></a><span>@' + escapeHtml(member.username) + '</span>' + badgeHtml + '</div>' +
                 '</div>' +
-                '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
-                '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
-                '<div class="hm-stat ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</div>' +
-                '<div class="hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
+                '<div class="hm-stat hm-drill" role="button" tabindex="0"' + (hasGraded ? hmDrillAttrs(member, stats) : '') + ' data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
+                '<div class="hm-stat hm-drill ' + statClass(stats.units) + '"' + (hasGraded ? hmDrillAttrs(member, stats) : '') + ' data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
+                '<div class="hm-stat hm-drill ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '"' + (hasGraded ? hmDrillAttrs(member, stats) : '') + ' data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</div>' +
+                '<div class="hm-stat hm-drill ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '"' + (hasGraded ? hmDrillAttrs(member, stats) : '') + ' data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
                 '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
                 '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
                 '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatPickActivity((stats && stats.lastActivity) || '', Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))) + '</div>' +
-                '<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">View</a>' + (shareButtonHtml(member, { compact: true, className: 'hm-action-share' }) || '<span class="hm-action-share-placeholder" aria-hidden="true"></span>') + '</div>' +
+                '<div class="hm-actions">' + (hasGraded ? '<button type="button" class="hm-action-btn hm-action-btn--picks"' + hmDrillAttrs(member, stats) + ' title="Open every pick behind this record">Picks</button>' : '') + '<a class="hm-action-btn hm-action-btn--view" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">View</a>' + (shareButtonHtml(member, { compact: true, className: 'hm-action-share' }) || '<span class="hm-action-share-placeholder" aria-hidden="true"></span>') + '</div>' +
             '</div>';
         }
 
@@ -3345,6 +3405,7 @@
         });
     })();
     </script>
+<script defer src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="select-visible-fix-20260913">

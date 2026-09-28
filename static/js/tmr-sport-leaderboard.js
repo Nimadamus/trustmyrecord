@@ -10,7 +10,18 @@
     });
   }
   function num(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+  /* STATS_DRILLDOWN_SITEWIDE_20260927: each row opens the member's graded
+     picks in this sport, through the same catalog rule the board counts with. */
+  function ensureDrill() {
+    if (window.TMRDrill || document.getElementById('tmr-drill-js')) return;
+    var sc = document.createElement('script');
+    sc.id = 'tmr-drill-js';
+    sc.defer = true;
+    sc.src = '/static/js/tmr-drill.js?v=0';
+    document.head.appendChild(sc);
+  }
   function render(el, rows, label) {
+    var sportId = String(el.getAttribute('data-sport') || '').toLowerCase();
     if (!rows.length) {
       el.innerHTML = '<div class="seo-card">No graded ' + esc(label) +
         ' picks on the board yet. <a href="/sportsbook/">Log the first verified ' + esc(label) +
@@ -28,7 +39,11 @@
       // CANONICAL_RANKING_20260914: the official sport rank from the API, or NR.
       // The row index is a position, never a rank.
       var official = Number(u.official_rank) > 0 ? '#' + Number(u.official_rank) : 'NR';
-      h += '<tr><td title="' + esc(u.ranking_status || 'Not Ranked') + '">' + official + '</td>' +
+      h += '<tr data-drill-category="sport_filter" data-drill-bucket="' + esc(sportId) + '" data-drill-user="' + esc(u.username) + '"' +
+        ' data-drill-label="' + esc((u.display_name || u.username) + ' · ' + label) + '" data-drill-context="' + esc(label + ' leaderboard') + '"' +
+        ' data-drill-expect="' + esc((u.graded_picks || u.total_picks || '') + '|' + (u.wins || 0) + '-' + (u.losses || 0) + '-' + (u.pushes || 0) + '|' + (Number(u.net_units) || 0).toFixed(2)) + '"' +
+        ' role="button" tabindex="0" style="cursor:pointer" title="Open every ' + esc(label) + ' pick behind this record">' +
+        '<td title="' + esc(u.ranking_status || 'Not Ranked') + '">' + official + '</td>' +
         '<td><a href="/u/' + encodeURIComponent(u.username) + '/">' + esc(u.display_name || u.username) + '</a></td>' +
         '<td>' + rec + '</td>' +
         '<td class="' + cls + '">' + units + '</td>' +
@@ -38,6 +53,7 @@
     h += '</tbody></table></div><p style="margin-top:10px"><a href="/handicappers/?sport=' + encodeURIComponent(label) +
       '">See the full verified ' + esc(label) + ' handicapper leaderboard &rarr;</a></p>';
     el.innerHTML = h;
+    ensureDrill();
   }
   function load(el) {
     var sport = el.getAttribute('data-sport');

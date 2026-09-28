@@ -81,6 +81,10 @@
         body.mp-browse-page .sc-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
         body.mp-browse-page .sc-stat { background: #F4F7FA; border: 1px solid var(--line); border-radius: 9px; padding: 8px 6px; text-align: center; }
         body.mp-browse-page .sc-stat b { display: block; font-family: 'JetBrains Mono',monospace; font-size: 14px; }
+        .sc-stats[data-drill-category] { cursor: pointer; border-radius: 10px; }
+        .sc-stats[data-drill-category]:hover .sc-stat { border-color: #4da3ff; }
+        .sc-stats[data-drill-category]:focus-visible { outline: 2px solid #4da3ff; outline-offset: 2px; }
+        .sc-drill { margin: 6px 0 0; text-align: right; }
         body.mp-browse-page .sc-stat span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
         body.mp-browse-page .pos { color: var(--green); } body.mp-browse-page .neg { color: var(--red); }
         body.mp-browse-page .sc-desc { color: #07182A; font-size: 13px; line-height: 1.5; min-height: 38px; }
@@ -205,6 +209,7 @@
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
 <script src="/static/js/tmr-marketplace-shell.js?v=a3f4545023e1"></script>
+<script src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 <script>
 (function () {
     const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
@@ -233,6 +238,17 @@
     function money(cents, currency) {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: (currency || 'usd').toUpperCase() }).format((cents || 0) / 100);
     }
+    /* STATS_DRILLDOWN_SITEWIDE_20260927: seller stats come from user_stats
+       (every graded pick since the record reset, private ones included), the
+       canonical profile record, so they open drilldown category "record". */
+    function drillAttrs(username, w, l, p, net, graded, context) {
+        if (!username) return '';
+        return ' data-drill-category="record" data-drill-bucket="" data-drill-user="' + esc(username) + '"' +
+            ' data-drill-label="' + esc(username) + ' verified record" data-drill-context="' + esc(context) + '"' +
+            ' data-drill-expect="' + (Number(graded) || 0) + '|' + (w || 0) + '-' + (l || 0) + '-' + (p || 0) + '|' + (Number(net) || 0).toFixed(2) + '"' +
+            ' role="button" tabindex="0" title="View the picks behind this record"';
+    }
+    function drillCta() { return window.TMRDrill ? '<div class="sc-drill">' + window.TMRDrill.ctaHtml('View picks') + '</div>' : ''; }
     function units(v) {
         const n = Number(v) || 0;
         return (n > 0 ? '+' : '') + n.toFixed(1);
@@ -272,12 +288,12 @@
                     '<div><div class="sc-name">' + esc(s.display_name || s.username) + (s.verified ? ' <span class="sc-verified" title="Verified">&#10003;</span>' : '') + '</div>' +
                     '<div class="sc-user">@' + esc(s.username) + ' &middot; ' + s.completed_sales + ' sale' + (s.completed_sales === 1 ? '' : 's') + '</div></div>' +
                 '</div>' +
-                '<div class="sc-stats">' +
+                '<div class="sc-stats"' + drillAttrs(s.username, rec.wins, rec.losses, rec.pushes, s.net_units, s.graded_picks, 'Pick marketplace') + '>' +
                     '<div class="sc-stat"><b>' + rec.wins + '-' + rec.losses + (rec.pushes ? '-' + rec.pushes : '') + '</b><span>Record</span></div>' +
                     '<div class="sc-stat"><b class="' + (nu >= 0 ? 'pos' : 'neg') + '">' + units(nu) + '</b><span>Units</span></div>' +
                     '<div class="sc-stat"><b class="' + (Number(s.roi) >= 0 ? 'pos' : 'neg') + '">' + (Number(s.roi) || 0).toFixed(1) + '%</b><span>ROI</span></div>' +
                     '<div class="sc-stat"><b>' + s.graded_picks + '</b><span>Graded</span></div>' +
-                '</div>' +
+                '</div>' + (s.username ? drillCta() : '') +
                 '<div class="sc-desc">' + esc((s.listing && s.listing.description) || '') + '</div>' +
                 (function () {
                     const PKG_LABEL = { single_pick: 'Single Pick', daily_access: 'Day Pass', weekly_access: 'Weekly Pass', monthly_access: 'Monthly Pass' };
@@ -408,12 +424,12 @@
                     '<div><div class="sc-name">' + esc(sel.username || '') + (sel.verified ? ' <span class="sc-verified" title="Verified">&#10003;</span>' : '') + '</div>' +
                     '<div class="sc-user">' + esc(l.product_label || l.product_type) + ' &middot; ' + (l.sold_count || 0) + ' sold</div></div>' +
                 '</div>' +
-                '<div class="sc-stats">' +
+                '<div class="sc-stats"' + (sel.has_verified_record ? drillAttrs(sel.username, stt.wins, stt.losses, stt.pushes, stt.net_units, stt.graded_picks, 'TMR marketplace') : '') + '>' +
                     '<div class="sc-stat"><b>' + rec + '</b><span>Record</span></div>' +
                     '<div class="sc-stat"><b class="' + (nu >= 0 ? 'pos' : 'neg') + '">' + units(nu) + '</b><span>Units</span></div>' +
                     '<div class="sc-stat"><b class="' + ((Number(stt.roi) || 0) >= 0 ? 'pos' : 'neg') + '">' + (Number(stt.roi) || 0).toFixed(1) + '%</b><span>ROI</span></div>' +
                     '<div class="sc-stat"><b>' + (stt.graded_picks || 0) + '</b><span>Graded</span></div>' +
-                '</div>' +
+                '</div>' + (sel.has_verified_record && sel.username ? drillCta() : '') +
                 '<div class="sc-desc">' + esc(l.description || l.title || '') + '</div>' +
                 '<div class="sc-sports"><span class="sc-pay">Pays in TMR</span>' +
                     (l.sports || []).slice(0, 3).map(function (sp) {

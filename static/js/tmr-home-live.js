@@ -2158,7 +2158,14 @@
       var r = num(u.official_rank);
       var rk = r <= 3 ? 'rk g' + r : 'rk';
       var w = u.wins != null ? u.wins + '-' + u.losses + (num(u.pushes) ? '-' + u.pushes : '') : num(u.total_picks) + ' picks';
-      return '<div class="lbr" title="' + esc(u.ranking_status || '') + '"><span class="' + rk + '">' + r + '</span>' +
+      /* STATS_DRILLDOWN_SITEWIDE_20260927: the row opens every graded pick
+         behind this record (static/js/tmr-drill.js; the board and the ledger
+         count the same public picks). */
+      var drill = u.wins != null
+        ? ' data-drill-category="all" data-drill-bucket="" data-drill-user="' + esc(u.username) + '" data-drill-label="' + esc(u.username + ' full record') + '"' +
+          ' data-drill-context="TMR rankings" data-drill-expect="' + esc(num(u.total_picks) + '|' + num(u.wins) + '-' + num(u.losses) + '-' + num(u.pushes) + '|' + num(u.net_units).toFixed(2)) + '" role="button" tabindex="0"'
+        : '';
+      return '<div class="lbr"' + drill + ' title="' + esc(u.ranking_status || '') + '"><span class="' + rk + '">' + r + '</span>' +
         avatar(u, 'ava') +
         '<span class="nm"><a href="/u/' + encodeURIComponent(u.username) + '/"><b>' + esc(u.username) + '</b></a><span>' + esc(w) + ' &middot; ' + num(u.total_picks) + ' picks</span></span>' +
         '<span class="un"><b class="' + (num(u.net_units) >= 0 ? 'pos' : 'neg') + '">' + sign(num(u.net_units)) + 'u</b>' +
@@ -2312,7 +2319,17 @@
     var c = row.competitor || {};
     var href = c.href || (c.username ? '/u/' + encodeURIComponent(c.username) + '/' : '/handicappers/');
     var tone = view.tone === 'signed' ? (num(row.value) < 0 ? 'neg' : 'pos') : 'flat';
-    return '<div class="comp-row' + (i === 0 ? ' r1' : '') + '">' +
+    /* STATS_DRILLDOWN_SITEWIDE_20260927: the all-time boards (units, ROI, win
+       rate) open the member's graded record; the streak board opens the run.
+       Boards counted on a grading-time window have no matching ledger and stay
+       plain. */
+    var drill = '';
+    if (c.username && (view.key === 'units' || view.key === 'roi' || view.key === 'winrate')) {
+      drill = ' data-drill-category="all" data-drill-bucket="" data-drill-user="' + esc(c.username) + '" data-drill-label="' + esc(c.username + ' full record') + '" data-drill-context="' + esc(view.label || 'Live competition') + '" role="button" tabindex="0"';
+    } else if (c.username && view.key === 'streaks') {
+      drill = ' data-drill-category="streak" data-drill-bucket="current" data-drill-user="' + esc(c.username) + '" data-drill-label="' + esc(c.username + ' current streak') + '" data-drill-context="Hot streaks" data-drill-expect="||" role="button" tabindex="0"';
+    }
+    return '<div class="comp-row' + (i === 0 ? ' r1' : '') + '"' + drill + '>' +
       /* An official rank, or a competition's own place. Never the row index:
          boards that are not rankings send rank null and show no number. */
       '<span class="comp-rk">' + (row.rank != null ? row.rank : '') + '</span>' +

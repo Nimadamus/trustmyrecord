@@ -16252,15 +16252,15 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
                     <!-- Stats Summary -->
                     <div class="mypicks-stats" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; margin-top: 20px;">
                         <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
-                            <div style="font-size: 28px; font-weight: 700; color: #00c853;" id="myStatsRecord">0-0</div>
+                            <div style="font-size: 28px; font-weight: 700; color: #00c853;" id="myStatsRecord" data-sb-drill="mypicks" aria-label="View every graded pick behind this record">0-0</div>
                             <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Record</div>
                         </div>
                         <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
-                            <div style="font-size: 28px; font-weight: 700; color: #00ffff;" id="myStatsWinRate">0%</div>
+                            <div style="font-size: 28px; font-weight: 700; color: #00ffff;" id="myStatsWinRate" data-sb-drill="mypicks">0%</div>
                             <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Win Rate</div>
                         </div>
                         <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
-                            <div style="font-size: 28px; font-weight: 700;" id="myStatsUnits" style="color: #00c853;">+0.00</div>
+                            <div style="font-size: 28px; font-weight: 700;" id="myStatsUnits" style="color: #00c853;" data-sb-drill="mypicks">+0.00</div>
                             <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Net Units</div>
                         </div>
                         <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
@@ -18070,19 +18070,19 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
 
         <!-- Primary Stats Row - Big Numbers -->
         <div class="primary-stats-row">
-            <div class="big-stat-card record-card">
+            <div class="big-stat-card record-card" data-sb-drill="headline" aria-label="View every graded pick behind this record">
                 <div class="big-stat-value" id="advRecordDisplay" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">RECORD (W-L-P)</div>
             </div>
-            <div class="big-stat-card win-rate-card">
+            <div class="big-stat-card win-rate-card" data-sb-drill="headline">
                 <div class="big-stat-value" id="advWinRate" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">WIN RATE</div>
             </div>
-            <div class="big-stat-card units-card">
+            <div class="big-stat-card units-card" data-sb-drill="headline">
                 <div class="big-stat-value" id="advUnitsProfit" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">UNITS +/-</div>
             </div>
-            <div class="big-stat-card roi-card">
+            <div class="big-stat-card roi-card" data-sb-drill="headline">
                 <div class="big-stat-value" id="advROI" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">ROI</div>
             </div>
@@ -18106,14 +18106,14 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
                 </div>
                 <div class="adv-stat-info" title="Average odds of all your picks">ℹ️</div>
             </div>
-            <div class="adv-stat-box">
+            <div class="adv-stat-box" data-sb-drill="streak-current">
                 <div class="adv-stat-icon">🔥</div>
                 <div class="adv-stat-data">
                     <span class="adv-stat-value" id="advCurrentStreak">-</span>
                     <span class="adv-stat-label">Current Streak</span>
                 </div>
             </div>
-            <div class="adv-stat-box">
+            <div class="adv-stat-box" data-sb-drill="streak-best">
                 <div class="adv-stat-icon">🏆</div>
                 <div class="adv-stat-data">
                     <span class="adv-stat-value" id="advBestStreak" aria-busy="true">&mdash;</span>
@@ -18127,7 +18127,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
                     <span class="adv-stat-label">Avg Units/Pick</span>
                 </div>
             </div>
-            <div class="adv-stat-box">
+            <div class="adv-stat-box" data-sb-drill="headline">
                 <div class="adv-stat-icon">📅</div>
                 <div class="adv-stat-data">
                     <span class="adv-stat-value" id="advTotalPicks" aria-busy="true">&mdash;</span>
@@ -23705,7 +23705,8 @@ document.addEventListener('DOMContentLoaded', function() {
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
 <script src="/static/js/sportsbook-duplicate-guard-ui.js?v=3a9f9a3763a2"></script>
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=a9218d56f07e&cb=20260901interlock"></script>
+<script src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=a9218d56f07e&cb=20260927drill"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
@@ -25514,6 +25515,8 @@ document.addEventListener('DOMContentLoaded', function() {
         renderMyRecordOddsRanges(picks);
         renderMyRecordPendingSummary(picks);
         renderMyRecordRecentForm(picks);
+        // After the Advanced Metrics table exists, so its Record row is wired too.
+        sbWireHeadline('headline', 'advRecordDisplay', 'advUnitsProfit', 'My Record');
 
         // Load history (hidden by default)
         filterAdvHistory('all');
@@ -25523,6 +25526,121 @@ document.addEventListener('DOMContentLoaded', function() {
         const el = document.getElementById(id);
         if (el) el.textContent = value;
     }
+
+    /* STATS_DRILLDOWN_SITEWIDE_20260927 -- every figure on My Record opens the
+       picks behind it. Figures the server aggregate produced (/metrics, parked
+       on window.__tmrOwnerMetrics) open the server drilldown with the same rule
+       (category all, streak). Figures this page computes from the pick list
+       open LOCAL MODE with exactly the rows that produced them, so they
+       reconcile by construction. The expected figure is read from what the
+       tile actually shows at click time. */
+    function sbDrillUser() {
+        try {
+            const u = window.auth && typeof window.auth.getCurrentUser === 'function' ? window.auth.getCurrentUser() : null;
+            return (u && (u.username || u.name)) || '';
+        } catch (e) { return ''; }
+    }
+    function sbDrillRow(p) {
+        const st = normalizeMyRecordStatus(p.status);
+        const odds = Number(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
+        const line = p.line_snapshot != null ? p.line_snapshot : p.line;
+        const risk = parseFloat(p.risk_units);
+        return {
+            id: p.id,
+            date: p.locked_at || p.created_at || p.timestamp || p.game_time || p.commence_time || null,
+            sport_key: p.sport_key || String(p.sport || '').toLowerCase(),
+            league: String(p.sport || p.sport_key || '').toUpperCase(),
+            matchup: (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : (p.matchup || p.game || ''),
+            pick_label: p.selection || p.pick || '',
+            market_type: p.market_type || p.betType || '',
+            market_label: p.betType || p.market_type || '',
+            line_label: line == null || line === '' ? '' : String(line),
+            odds: Number.isFinite(odds) && odds !== 0 ? odds : null,
+            risk_units: Number.isFinite(risk) && risk > 0 ? risk : (parseFloat(p.units) || 1),
+            result_units: st === 'pending' ? 0 : calculatePickUnits(p),
+            status: st,
+            final_score: p.final_score || '',
+            player_name: p.player_name || ''
+        };
+    }
+    function sbIsGraded(p) {
+        const st = normalizeMyRecordStatus(p.status);
+        return st === 'won' || st === 'lost' || st === 'push';
+    }
+    /* One registry, owned by tmr-drill.js: window.__tmrDrillReg[id]. Ids are
+       stable per figure so a re-render replaces the rows instead of piling up. */
+    function sbExpect(record, net, picks) {
+        const m = /(\d+)-(\d+)(?:-(\d+))?/.exec(String(record || ''));
+        const n = String(net == null ? '' : net).replace('\u2212', '-').replace(/[^\d.+\-]/g, '');
+        return (picks == null ? '' : String(picks)) + '|' + (m ? m[1] + '-' + m[2] + '-' + (m[3] || 0) : '') + '|' +
+            (n !== '' && isFinite(Number(n)) ? Number(n).toFixed(2) : '');
+    }
+    function sbRegister(id, rows, label, context) {
+        window.__tmrDrillReg = window.__tmrDrillReg || {};
+        window.__tmrDrillReg[id] = {
+            user: sbDrillUser(), label: label, context: context,
+            rows: function () { return (rows || []).map(sbDrillRow); }
+        };
+        return id;
+    }
+    function sbDrillAttrs(id, rows, label, context, expect) {
+        sbRegister(id, rows, label, context);
+        return ' data-drill-local="' + id + '" data-drill-expect="' + expect + '" role="button" tabindex="0"';
+    }
+    function sbDrillCta() {
+        return window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '';
+    }
+    function sbTileText(id) {
+        const el = document.getElementById(id);
+        return el ? (el.textContent || '') : '';
+    }
+    function sbClearDrill(el) {
+        ['data-drill-local', 'data-drill-category', 'data-drill-bucket', 'data-drill-user', 'data-drill-label',
+         'data-drill-context', 'data-drill-expect', 'role', 'tabindex'].forEach(function (a) { el.removeAttribute(a); });
+    }
+    /* The headline figures: when the /metrics aggregate answered they are the
+       server's numbers, so they open the server drilldown with the same rule
+       (category all, streak); otherwise they are the local fallback, so they
+       open exactly the graded rows it counted. Called by every writer of these
+       tiles, right after it writes them, with what it wrote. */
+    function sbWireHeadline(marker, recordId, unitsId, context) {
+        const srv = window.__tmrOwnerMetrics && window.__tmrOwnerMetrics.summary;
+        const user = sbDrillUser();
+        const expect = sbExpect(sbTileText(recordId), sbTileText(unitsId));
+        const picks = Array.isArray(window._cachedBackendPicks) ? window._cachedBackendPicks : [];
+        if (!srv) sbRegister('sb:' + marker, picks.filter(sbIsGraded), 'Every graded pick', context);
+        document.querySelectorAll('[data-sb-drill="' + marker + '"]').forEach(function (el) {
+            sbClearDrill(el);
+            if (!user) return;
+            if (srv) {
+                el.setAttribute('data-drill-category', 'all');
+                el.setAttribute('data-drill-bucket', '');
+                el.setAttribute('data-drill-user', user);
+                el.setAttribute('data-drill-label', 'Every graded pick');
+                el.setAttribute('data-drill-context', context);
+            } else {
+                el.setAttribute('data-drill-local', 'sb:' + marker);
+            }
+            el.setAttribute('data-drill-expect', expect);
+            el.setAttribute('role', 'button');
+            el.setAttribute('tabindex', '0');
+        });
+        if (marker !== 'headline') return;
+        ['current', 'best'].forEach(function (bucket) {
+            document.querySelectorAll('[data-sb-drill="streak-' + bucket + '"]').forEach(function (el) {
+                sbClearDrill(el);
+                if (!srv || !user) return;
+                el.setAttribute('data-drill-category', 'streak');
+                el.setAttribute('data-drill-bucket', bucket);
+                el.setAttribute('data-drill-user', user);
+                el.setAttribute('data-drill-label', bucket === 'best' ? 'Best win streak' : 'Current streak');
+                el.setAttribute('data-drill-context', context);
+                el.setAttribute('role', 'button');
+                el.setAttribute('tabindex', '0');
+            });
+        });
+    }
+    window.sbWireHeadline = sbWireHeadline;
 
     // Render sport breakdown table
     function renderSportBreakdown(picks) {
@@ -25550,8 +25668,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const winPct = (s.w + s.l) > 0 ? (s.w / (s.w + s.l) * 100).toFixed(1) : '0.0';
                 const roi = s.risked > 0 ? (s.units / s.risked * 100).toFixed(1) : '0.0';
                 const icon = ADVANCED_SPORT_ICONS[sport] || '🎯';
-                return `<tr>
-                    <td><span class="sport-icon">${icon}</span>${sport}</td>
+                const drillRows = picks.filter(p => (p.sport || 'OTHER').toUpperCase() === sport && (p.status === 'won' || p.status === 'lost' || p.status === 'push'));
+                return `<tr${sbDrillAttrs('sb:sport:' + sport, drillRows, sport + ' picks', 'My Record by sport', sbExpect(s.w + '-' + s.l + '-' + s.p, s.units))}>
+                    <td><span class="sport-icon">${icon}</span>${sport}${sbDrillCta()}</td>
                     <td>${s.w}-${s.l}-${s.p}</td>
                     <td>${winPct}%</td>
                     <td class="${s.units >= 0 ? 'positive' : 'negative'}">${s.units >= 0 ? '+' : ''}${s.units.toFixed(2)}</td>
@@ -25585,8 +25704,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .map(([type, s]) => {
                 const winPct = (s.w + s.l) > 0 ? (s.w / (s.w + s.l) * 100).toFixed(1) : '0.0';
                 const roi = s.risked > 0 ? (s.units / s.risked * 100).toFixed(1) : '0.0';
-                return `<tr>
-                    <td>${type}</td>
+                const drillRows = picks.filter(p => {
+                    let t = (p.betType || 'OTHER').toUpperCase();
+                    if (t === 'MONEYLINE') t = 'ML';
+                    return t === type && (p.status === 'won' || p.status === 'lost' || p.status === 'push');
+                });
+                return `<tr${sbDrillAttrs('sb:bettype:' + type, drillRows, type + ' picks', 'My Record by bet type', sbExpect(s.w + '-' + s.l + '-' + s.p, s.units))}>
+                    <td>${type}${sbDrillCta()}</td>
                     <td>${s.w}-${s.l}-${s.p}</td>
                     <td>${winPct}%</td>
                     <td class="${s.units >= 0 ? 'positive' : 'negative'}">${s.units >= 0 ? '+' : ''}${s.units.toFixed(2)}</td>
@@ -25732,18 +25856,30 @@ document.addEventListener('DOMContentLoaded', function() {
             .filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'lost'; })
             .sort(function(a, b) { return myRecordPickPL(a) - myRecordPickPL(b); })[0];
 
+        /* Each record row carries the predicate that produced it, so the same
+           rows open when it is clicked (STATS_DRILLDOWN_SITEWIDE_20260927). */
+        const mt = function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase(); };
+        const preds = {
+            fav: function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) < 0; },
+            dog: function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) > 0; },
+            spread: function(pick) { return mt(pick).indexOf('spread') !== -1; },
+            ml: function(pick) { return mt(pick).indexOf('h2h') !== -1 || mt(pick).indexOf('moneyline') !== -1; },
+            total: function(pick) { return mt(pick).indexOf('total') !== -1; },
+            segment: function(pick) { return /(first|second|period|f5|half)/i.test(String(pick.market_type || pick.betType || '')); }
+        };
+        const gradedWhere = function(pred) { return (picks || []).filter(function(pick) { return sbIsGraded(pick) && (!pred || pred(pick)); }); };
         const rows = [
-            ['Record', summary.wins + '-' + summary.losses + '-' + summary.pushes, 'Wins-Losses-Pushes'],
+            ['Record', summary.wins + '-' + summary.losses + '-' + summary.pushes, 'Wins-Losses-Pushes', 'headline'],
             ['Pending Picks', String(summary.total - summary.graded), 'Open picks awaiting grade'],
             ['Average Odds', formatOddsMyRecord(summary.avgOdds), 'Average American price'],
             ['Average Units', summary.avgUnits.toFixed(2) + 'u', 'Average size per pick'],
-            ['Favorite Record', buildRecordFromPicks(picks, function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) < 0; }), 'Negative-price decisions'],
-            ['Underdog Record', buildRecordFromPicks(picks, function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) > 0; }), 'Plus-money decisions'],
-            ['Spread Record', buildRecordFromPicks(picks, function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase().indexOf('spread') !== -1; }), 'Spread and alt spread markets'],
-            ['Moneyline Record', buildRecordFromPicks(picks, function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase().indexOf('h2h') !== -1 || String(pick.market_type || pick.betType || '').toLowerCase().indexOf('moneyline') !== -1; }), 'Straight side markets'],
-            ['Total Record', buildRecordFromPicks(picks, function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase().indexOf('total') !== -1; }), 'Game and team totals'],
-            ['Segment Record', buildRecordFromPicks(picks, function(pick) { return /(first|second|period|f5|half)/i.test(String(pick.market_type || pick.betType || '')); }), '1H, 2H, 1P and F5 markets'],
-            ['Last 10', buildRecordFromPicks(recentDecisions), 'Most recent graded sample'],
+            ['Favorite Record', buildRecordFromPicks(picks, preds.fav), 'Negative-price decisions', gradedWhere(preds.fav)],
+            ['Underdog Record', buildRecordFromPicks(picks, preds.dog), 'Plus-money decisions', gradedWhere(preds.dog)],
+            ['Spread Record', buildRecordFromPicks(picks, preds.spread), 'Spread and alt spread markets', gradedWhere(preds.spread)],
+            ['Moneyline Record', buildRecordFromPicks(picks, preds.ml), 'Straight side markets', gradedWhere(preds.ml)],
+            ['Total Record', buildRecordFromPicks(picks, preds.total), 'Game and team totals', gradedWhere(preds.total)],
+            ['Segment Record', buildRecordFromPicks(picks, preds.segment), '1H, 2H, 1P and F5 markets', gradedWhere(preds.segment)],
+            ['Last 10', buildRecordFromPicks(recentDecisions), 'Most recent graded sample', recentDecisions],
             ['Best Win', highestWin ? formatSignedUnitsMyRecord(myRecordPickPL(highestWin)) : '--', highestWin ? (highestWin.selection || 'Winning pick') : 'No winning picks yet'],
             ['Biggest Loss', biggestLoss ? formatSignedUnitsMyRecord(myRecordPickPL(biggestLoss)) : '--', biggestLoss ? (biggestLoss.selection || 'Losing pick') : 'No losing picks yet']
         ];
@@ -25764,7 +25900,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         body.innerHTML = rows.map(function(row) {
-            return '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td style="color: var(--text-muted);">' + row[2] + '</td></tr>';
+            let drill = '';
+            if (row[3] === 'headline') drill = ' data-sb-drill="headline"';
+            else if (row[3]) drill = sbDrillAttrs('sb:adv:' + row[0], row[3], row[0], 'My Record advanced metrics', sbExpect(row[1]));
+            return '<tr' + drill + '><td>' + row[0] + (drill ? sbDrillCta() : '') + '</td><td>' + row[1] + '</td><td style="color: var(--text-muted);">' + row[2] + '</td></tr>';
         }).join('');
     }
 
@@ -25797,7 +25936,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         container.innerHTML = groups.map(function(group) {
             const units = group.picks.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
-            return '<div class="my-record-mini-row"><div><div class="my-record-mini-name">' + group.label + '</div><span class="my-record-mini-note">' + buildRecordFromPicks(group.picks) + ' • ' + group.note + '</span></div><div class="my-record-mini-value ' + (units > 0 ? 'positive' : units < 0 ? 'negative' : '') + '">' + formatSignedUnitsMyRecord(units) + '</div></div>';
+            const drill = sbDrillAttrs('sb:price:' + group.label, group.picks, group.label, 'My Record price profile',
+                sbExpect(buildRecordFromPicks(group.picks), units));
+            return '<div class="my-record-mini-row"' + drill + '><div><div class="my-record-mini-name">' + group.label + sbDrillCta() + '</div><span class="my-record-mini-note">' + buildRecordFromPicks(group.picks) + ' • ' + group.note + '</span></div><div class="my-record-mini-value ' + (units > 0 ? 'positive' : units < 0 ? 'negative' : '') + '">' + formatSignedUnitsMyRecord(units) + '</div></div>';
         }).join('');
     }
 
@@ -25819,7 +25960,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (!rangePicks.length) return '';
             const units = rangePicks.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
-            return '<div class="my-record-mini-row"><div><div class="my-record-mini-name">' + range.label + '</div><span class="my-record-mini-note">' + buildRecordFromPicks(rangePicks) + ' • ' + range.note + '</span></div><div class="my-record-mini-value ' + (units > 0 ? 'positive' : units < 0 ? 'negative' : '') + '">' + formatSignedUnitsMyRecord(units) + '</div></div>';
+            const drill = sbDrillAttrs('sb:odds:' + range.label, rangePicks, range.label + ' (' + range.note + ')', 'My Record odds ranges',
+                sbExpect(buildRecordFromPicks(rangePicks), units));
+            return '<div class="my-record-mini-row"' + drill + '><div><div class="my-record-mini-name">' + range.label + sbDrillCta() + '</div><span class="my-record-mini-note">' + buildRecordFromPicks(rangePicks) + ' • ' + range.note + '</span></div><div class="my-record-mini-value ' + (units > 0 ? 'positive' : units < 0 ? 'negative' : '') + '">' + formatSignedUnitsMyRecord(units) + '</div></div>';
         }).filter(Boolean);
 
         container.innerHTML = rows.length ? rows.join('') : '<div class="my-record-empty">No graded picks yet.</div>';
@@ -25873,6 +26016,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = (pick.selection || 'Pick') + ' ' + odds;
             return '<div class="my-record-form-pill ' + status + '" title="' + title + '">' + label + '</div>';
         }).join('');
+        {
+            const recentUnits = recent.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
+            const key = sbRegister('sb:recent', recent, 'Last ' + recent.length + ' graded picks', 'My Record recent form');
+            container.setAttribute('data-drill-local', key);
+            container.setAttribute('data-drill-expect', sbExpect(buildRecordFromPicks(recent), recentUnits, recent.length));
+            container.setAttribute('role', 'button');
+            container.setAttribute('tabindex', '0');
+            container.setAttribute('aria-label', 'View the last ' + recent.length + ' graded picks');
+            container.insertAdjacentHTML('beforeend', sbDrillCta());
+        }
     }
 
     // Toggle full history visibility
@@ -27105,6 +27258,15 @@ document.addEventListener('DOMContentLoaded', function() {
             unitsEl.textContent = (totalUnits >= 0 ? '+' : '') + totalUnits.toFixed(2);
             unitsEl.style.color = totalUnits >= 0 ? '#00c853' : '#ff5252';
         }
+        /* These three tiles now show THIS local count, so they open these rows. */
+        sbRegister('sb:mypicks-legacy', graded.map(p => Object.assign({}, p, { result_units: parseFloat(p.result_units) || 0 })), 'Every graded pick', 'My Picks');
+        document.querySelectorAll('[data-sb-drill="mypicks"]').forEach(function (el) {
+            sbClearDrill(el);
+            el.setAttribute('data-drill-local', 'sb:mypicks-legacy');
+            el.setAttribute('data-drill-expect', sbExpect(wins + '-' + losses + '-' + pushes, totalUnits));
+            el.setAttribute('role', 'button');
+            el.setAttribute('tabindex', '0');
+        });
     }
 
     function switchPicksTab(tab) {

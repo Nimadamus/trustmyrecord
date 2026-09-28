@@ -67,6 +67,9 @@
         .empty-state { padding: 36px 22px; text-align: center; color: var(--muted); font-size: 0.95rem; border-radius: 12px; border: 1px dashed var(--line); background: rgba(7,24,42,0.048); }
         .privacy-note { margin-top: 18px; padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(11, 79, 168,.28); background: rgba(7,24,42,0.06); color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
         .privacy-note strong { color: #0B4FA8; }
+        tr[data-drill-category] { cursor: pointer; }
+        tr[data-drill-category]:hover td { background: rgba(77,163,255,.07); }
+        tr[data-drill-category]:focus-visible { outline: 2px solid #4da3ff; outline-offset: -2px; }
     </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "JustBet MLB Contest Participants", "item": "https://trustmyrecord.com/contests/justbet-mlb/participants/"}]}
@@ -200,7 +203,17 @@
                 units = '<span class="units-flat">—</span>';
                 roi = '<span class="units-flat">—</span>';
             }
-            return '<tr><td>' + member + '</td><td class="num">' + record + '</td><td class="num">' + picks +
+            /* STATS_DRILLDOWN_SITEWIDE_20260927: the row opens the picks behind
+               its overall record, with the same server rule that produced it. */
+            var drill = '';
+            if (s && Number(s.total_picks) > 0 && u !== '—') {
+                drill = ' data-drill-category="' + (s.__drill || 'all') + '" data-drill-bucket="" data-drill-user="' + escapeHtml(u) + '"' +
+                    ' data-drill-label="' + escapeHtml(u) + ' overall record" data-drill-context="JustBet MLB participants, overall TMR record"' +
+                    ' data-drill-expect="' + (s.total_picks | 0) + '|' + record + '|' + Number(s.net_units || 0).toFixed(2) + '"' +
+                    ' role="button" tabindex="0"';
+                if (window.TMRDrill) record += window.TMRDrill.ctaHtml('View picks');
+            }
+            return '<tr' + drill + '><td>' + member + '</td><td class="num">' + record + '</td><td class="num">' + picks +
                 '</td><td class="num">' + units + '</td><td class="num">' + roi + '</td><td>' + statusMark() + '</td></tr>';
         }
         async function fetchStats() {
@@ -211,18 +224,20 @@
             // participant on a losing record would falsely render "No graded picks
             // yet". Leaderboard rows win the merge; /users rows fill the rest.
             var map = {};
-            function absorb(arr) {
+            // drill: which server rule produced the row (leaderboard = /metrics
+            // rule "all", directory = canonical profile record "record").
+            function absorb(arr, drill) {
                 (arr || []).forEach(function (m) {
                     if (!m || !m.username) return;
                     var k = String(m.username).toLowerCase();
-                    if (!map[k]) map[k] = m;
+                    if (!map[k]) map[k] = Object.assign({ __drill: drill }, m);
                 });
             }
             try {
                 var r = await fetch(API_BASE + '/api/users/leaderboard?sortBy=net_units&limit=250');
                 if (r.ok) {
                     var d = await r.json();
-                    absorb(Array.isArray(d) ? d : (d.leaderboard || d.users || d.members || []));
+                    absorb(Array.isArray(d) ? d : (d.leaderboard || d.users || d.members || []), 'all');
                 }
             } catch (e) {}
             try {
@@ -231,7 +246,7 @@
                     if (!r2.ok) break;
                     var d2 = await r2.json();
                     var batch = (d2 && d2.users) || [];
-                    absorb(batch);
+                    absorb(batch, 'record');
                     if (batch.length < 100) break;
                 }
             } catch (e) {}
@@ -271,5 +286,6 @@
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script defer src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 </body>
 </html>

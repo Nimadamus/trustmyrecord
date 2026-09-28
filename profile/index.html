@@ -77,6 +77,7 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
 <script defer src="/static/js/tmr-sitewide.js?v=26b7e5db4220"></script>
+<script defer src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
 <script src="/static/js/tmr-doubleheader.js?v=412bebae16e9"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=bbf82edbece4">
 <script defer src="/static/js/tmr-share.js?v=eb28abdc3050"></script>
@@ -2596,16 +2597,16 @@
                           <div class="tmrx-equity-wrap"><svg class="tmrx-equity-svg" id="tmrxEquitySvgTop" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"></svg></div>
                           <div class="tmrx-equity-empty" id="tmrxEquityEmptyTop">Equity curve will draw once at least 2 graded picks exist.</div>
                           <div class="tmrx-dd-strip">
-                            <div class="tmrx-dd-cell"><div class="k">Peak</div><div class="v" id="tmrxDdPeakTop">&mdash;</div></div>
-                            <div class="tmrx-dd-cell"><div class="k">Max Drawdown</div><div class="v" id="tmrxDdMaxTop">&mdash;</div></div>
-                            <div class="tmrx-dd-cell"><div class="k">Worst Streak</div><div class="v" id="tmrxDdWorstTop">&mdash;</div></div>
-                            <div class="tmrx-dd-cell"><div class="k">Days Active</div><div class="v" id="tmrxDdDaysTop">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="peak" data-drill-label="Run to peak units" data-drill-context="Equity and drawdown" title="Open every bet behind Run to peak units"><div class="k">Peak</div><div class="v" id="tmrxDdPeakTop">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="max" data-drill-label="Max drawdown" data-drill-context="Equity and drawdown" title="Open every bet behind Max drawdown"><div class="k">Max Drawdown</div><div class="v" id="tmrxDdMaxTop">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="streak" data-drill-bucket="worst" data-drill-label="Worst losing streak" data-drill-context="Equity and drawdown" title="Open every bet behind Worst losing streak"><div class="k">Worst Streak</div><div class="v" id="tmrxDdWorstTop">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Equity and drawdown" data-drill-expect="||" title="Open every bet behind Full graded record"><div class="k">Days Active</div><div class="v" id="tmrxDdDaysTop">&mdash;</div></div>
                           </div>
                         </div>
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">Sport-level summary. Click a sport for its league / competition breakdown.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">Click a sport for its league breakdown, or any number for the picks behind it.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableSportTop">
                             <thead><tr><th>Sport</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -2615,7 +2616,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Market Type</div><div class="tmrx-section-sub">From <code>user_market_stats</code>. ML / Spread / Total / Team Total / First Five / Halves / Periods / Alts.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Market Type</div><div class="tmrx-section-sub">ML, spread, total, team total, first five, halves, periods and alts. Click any number for the picks behind it.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableMarketTop">
                             <thead><tr><th>Market</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -2691,7 +2692,7 @@
                             </div>
                           </div>
                           <div>
-                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Day of Week</div><div class="tmrx-section-sub">From <code>splits.by_day_of_week</code>.</div></div></div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Day of Week</div><div class="tmrx-section-sub">Game day of the week. Click any row for the picks behind it.</div></div></div>
                             <div class="tmrx-table-shell">
                               <table class="tmrx-table" id="tmrxTableDowTop">
                                 <thead><tr><th>Day</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -2916,23 +2917,23 @@
                           <table class="tmrx-table" id="tmrxTableAdvancedTop">
                             <thead><tr><th>Metric</th><th class="num">Value</th><th>Definition</th></tr></thead>
                             <tbody>
-                              <tr data-tmrx-adv-top="effective_units"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
-                              <tr data-tmrx-adv-top="effective_win_rate"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
-                              <tr data-tmrx-adv-top="z_score"><td class="name">Odds-Adjusted Z-Score</td><td class="num zero">&mdash;</td><td>Actual wins vs summed break-even wins from each pick's odds. Pushes excluded. Hidden until 5+ decisions.</td></tr>
-                              <tr data-tmrx-adv-top="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
-                              <tr data-tmrx-adv-top="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
-                              <tr data-tmrx-adv-top="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
-                              <tr data-tmrx-adv-top="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
-                              <tr data-tmrx-adv-top="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
-                              <tr data-tmrx-adv-top="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite. Hidden until 25+ decisions.</td></tr>
-                              <tr data-tmrx-adv-top="max_drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units.</td></tr>
-                              <tr data-tmrx-adv-top="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
-                              <tr data-tmrx-adv-top="win_rate_interval"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson interval: where the true win rate sits, given this sample. Hidden until 5+ decisions.</td></tr>
-                              <tr data-tmrx-adv-top="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
-                              <tr data-tmrx-adv-top="clv"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
-                              <tr data-tmrx-adv-top="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv-top="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
-                              <tr data-tmrx-adv-top="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
+                              <tr data-tmrx-adv-top="effective_units" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
+                              <tr data-tmrx-adv-top="effective_win_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
+                              <tr data-tmrx-adv-top="z_score" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Odds-Adjusted Z-Score</td><td class="num zero">&mdash;</td><td>Actual wins vs summed break-even wins from each pick's odds. Pushes excluded. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv-top="avg_odds" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
+                              <tr data-tmrx-adv-top="avg_units" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
+                              <tr data-tmrx-adv-top="avg_daily_picks" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
+                              <tr data-tmrx-adv-top="push_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
+                              <tr data-tmrx-adv-top="consistency" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
+                              <tr data-tmrx-adv-top="capper_rating" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite. Hidden until 25+ decisions.</td></tr>
+                              <tr data-tmrx-adv-top="max_drawdown" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="max" data-drill-label="Max drawdown" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Max drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units.</td></tr>
+                              <tr data-tmrx-adv-top="peak_units" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="peak" data-drill-label="Run to peak units" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Run to peak units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
+                              <tr data-tmrx-adv-top="win_rate_interval" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson interval: where the true win rate sits, given this sample. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv-top="break_even" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
+                              <tr data-tmrx-adv-top="clv" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
+                              <tr data-tmrx-adv-top="clv_beat_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
+                              <tr data-tmrx-adv-top="clv_line_moved" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_median" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv-top="clv_adj" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
                           </table>
@@ -3754,7 +3755,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">Sport-level summary. Click a sport for its league / competition breakdown.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">Click a sport for its league breakdown, or any number for the picks behind it.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableSport">
                             <thead><tr><th>Sport</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -3764,7 +3765,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Market Type</div><div class="tmrx-section-sub">From <code>user_market_stats</code>. ML / Spread / Total / Team Total / First Five / Halves / Periods / Alts.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Market Type</div><div class="tmrx-section-sub">ML, spread, total, team total, first five, halves, periods and alts. Click any number for the picks behind it.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableMarket">
                             <thead><tr><th>Market</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -3808,7 +3809,7 @@
                             </div>
                           </div>
                           <div>
-                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Day of Week</div><div class="tmrx-section-sub">From <code>splits.by_day_of_week</code>.</div></div></div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Day of Week</div><div class="tmrx-section-sub">Game day of the week. Click any row for the picks behind it.</div></div></div>
                             <div class="tmrx-table-shell">
                               <table class="tmrx-table" id="tmrxTableDow">
                                 <thead><tr><th>Day</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
@@ -3830,10 +3831,10 @@
                           <div class="tmrx-equity-wrap"><svg class="tmrx-equity-svg" id="tmrxEquitySvg" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"></svg></div>
                           <div class="tmrx-equity-empty" id="tmrxEquityEmpty">Equity curve will draw once at least 2 graded picks exist.</div>
                           <div class="tmrx-dd-strip">
-                            <div class="tmrx-dd-cell"><div class="k">Peak</div><div class="v" id="tmrxDdPeak">&mdash;</div></div>
-                            <div class="tmrx-dd-cell"><div class="k">Max Drawdown</div><div class="v" id="tmrxDdMax">&mdash;</div></div>
-                            <div class="tmrx-dd-cell"><div class="k">Worst Streak</div><div class="v" id="tmrxDdWorst">&mdash;</div></div>
-                            <div class="tmrx-dd-cell"><div class="k">Days Active</div><div class="v" id="tmrxDdDays">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="peak" data-drill-label="Run to peak units" data-drill-context="Equity and drawdown" title="Open every bet behind Run to peak units"><div class="k">Peak</div><div class="v" id="tmrxDdPeak">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="max" data-drill-label="Max drawdown" data-drill-context="Equity and drawdown" title="Open every bet behind Max drawdown"><div class="k">Max Drawdown</div><div class="v" id="tmrxDdMax">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="streak" data-drill-bucket="worst" data-drill-label="Worst losing streak" data-drill-context="Equity and drawdown" title="Open every bet behind Worst losing streak"><div class="k">Worst Streak</div><div class="v" id="tmrxDdWorst">&mdash;</div></div>
+                            <div class="tmrx-dd-cell tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Equity and drawdown" data-drill-expect="||" title="Open every bet behind Full graded record"><div class="k">Days Active</div><div class="v" id="tmrxDdDays">&mdash;</div></div>
                           </div>
                         </div>
                       </div>
@@ -3898,23 +3899,23 @@
                           <table class="tmrx-table" id="tmrxTableAdvanced">
                             <thead><tr><th>Metric</th><th class="num">Value</th><th>Definition</th></tr></thead>
                             <tbody>
-                              <tr data-tmrx-adv="effective_units"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
-                              <tr data-tmrx-adv="effective_win_rate"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
-                              <tr data-tmrx-adv="z_score"><td class="name">Odds-Adjusted Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal using each pick's break-even odds. Pushes excluded. Hidden until 5+ decisions.</td></tr>
-                              <tr data-tmrx-adv="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
-                              <tr data-tmrx-adv="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
-                              <tr data-tmrx-adv="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
-                              <tr data-tmrx-adv="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
-                              <tr data-tmrx-adv="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
-                              <tr data-tmrx-adv="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite (ROI &middot; sample &middot; eWP &middot; Z &middot; drawdown &middot; consistency). Hidden until 25+ decisions.</td></tr>
-                              <tr data-tmrx-adv="max_drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units along the equity curve.</td></tr>
-                              <tr data-tmrx-adv="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
-                              <tr data-tmrx-adv="win_rate_interval"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson score interval: the band the true win rate falls in at this sample size. Hidden until 5+ decisions.</td></tr>
-                              <tr data-tmrx-adv="break_even"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
-                              <tr data-tmrx-adv="clv"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
-                              <tr data-tmrx-adv="clv_beat_rate"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv="clv_line_moved"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_median"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
-                              <tr data-tmrx-adv="clv_adj"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
+                              <tr data-tmrx-adv="effective_units" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
+                              <tr data-tmrx-adv="effective_win_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
+                              <tr data-tmrx-adv="z_score" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Odds-Adjusted Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal using each pick's break-even odds. Pushes excluded. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv="avg_odds" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
+                              <tr data-tmrx-adv="avg_units" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
+                              <tr data-tmrx-adv="avg_daily_picks" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
+                              <tr data-tmrx-adv="push_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
+                              <tr data-tmrx-adv="consistency" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
+                              <tr data-tmrx-adv="capper_rating" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite (ROI &middot; sample &middot; eWP &middot; Z &middot; drawdown &middot; consistency). Hidden until 25+ decisions.</td></tr>
+                              <tr data-tmrx-adv="max_drawdown" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="max" data-drill-label="Max drawdown" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Max drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units along the equity curve.</td></tr>
+                              <tr data-tmrx-adv="peak_units" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="drawdown" data-drill-bucket="peak" data-drill-label="Run to peak units" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Run to peak units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
+                              <tr data-tmrx-adv="win_rate_interval" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Win Rate &mdash; 95% Range</td><td class="num zero">&mdash;</td><td>Wilson score interval: the band the true win rate falls in at this sample size. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv="break_even" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
+                              <tr data-tmrx-adv="clv" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
+                              <tr data-tmrx-adv="clv_beat_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
+                              <tr data-tmrx-adv="clv_line_moved" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_median" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv="clv_adj" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
                           </table>
@@ -4302,7 +4303,7 @@
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
                             <div class="tmr-chart-stage">
                                 <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Equity curve</div><div class="tmr-chart-stage__sub">Cumulative net units</div></div>
-                                <div class="tmr-chart-stage__canvas" id="advChartEquity">Chart populates when data exists</div>
+                                <div class="tmr-chart-stage__canvas tmrx-drillable" id="advChartEquity" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Equity curve" title="Open every bet behind the equity curve">Chart populates when data exists</div>
                             </div>
                             <div class="tmr-chart-stage">
                                 <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Drawdown</div><div class="tmr-chart-stage__sub">Peak-to-trough sequence</div></div>
@@ -6453,6 +6454,9 @@
         || (window.location.pathname || '').match(/^\/u\/([^/?#]+)/i);
     const requestedProfileLookup = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || (typeof window.__TMR_PROFILE_USERNAME === 'string' ? window.__TMR_PROFILE_USERNAME : '') || '').trim();
     let profileUsername = normalizeProfileLookup(requestedProfileLookup) || null;
+    /* STATS_DRILLDOWN_SITEWIDE_20260927: the site-wide ledger panel
+       (static/js/tmr-drill.js) reads whose record this is from here. */
+    window.TMR_DRILL_USER = function () { return profileUsername || ''; };
     const profileView = (urlParams.get('view') || '').trim().toLowerCase();
     const SPORT_QUERY_ALIASES = {
         mlb: 'baseball_mlb',
@@ -7012,6 +7016,45 @@
 
     function getPickTimestamp(pick) {
         return new Date(pick.locked_at || pick.created_at || 0).getTime();
+    }
+
+    /* STATS_DRILLDOWN_SITEWIDE_20260927: a profile pick in the ledger row shape
+       the site-wide drilldown renders (static/js/tmr-drill.js local mode), for
+       panels whose numbers the page itself computed from the loaded picks. The
+       panel registers exactly the rows it counted, so they reconcile. */
+    function tmrxToDrillRow(p) {
+        const st = normalizeStatus(p && p.status);
+        const risk = Number(p.risk_units) > 0 ? Number(p.risk_units) : Number(p.units || 0);
+        const home = p.home_team || (p.game && p.game.home_team) || '';
+        const away = p.away_team || (p.game && p.game.away_team) || '';
+        return {
+            id: p.id,
+            date: p.commence_time || p.game_time || p.locked_at || p.created_at,
+            sport_key: p.sport_key || '',
+            league: typeof pmSportLabel === 'function' ? pmSportLabel(p.sport_key) : (p.sport_key || ''),
+            matchup: p.game_display || (away && home ? away + ' @ ' + home : ''),
+            pick_label: formatPickDisplayValue(p),
+            market_type: p.market_type || '',
+            market_label: typeof pmMarketLabel === 'function' ? pmMarketLabel(p.market_type) : (p.market_type || ''),
+            line_label: p.line_snapshot == null ? '' : formatLineValue(p.line_snapshot),
+            odds: p.odds_snapshot == null ? null : Number(p.odds_snapshot),
+            risk_units: Number.isFinite(risk) ? risk : 0,
+            result_units: Number(pickPL(p).toFixed(4)),
+            status: st,
+            player_name: p.player_name || ''
+        };
+    }
+    function tmrxRegisterLocalDrill(id, picks, label, context) {
+        window.__tmrDrillReg = window.__tmrDrillReg || {};
+        const graded = (picks || []).filter(function (p) {
+            const st = normalizeStatus(p && p.status);
+            return st === 'won' || st === 'lost' || st === 'push';
+        });
+        window.__tmrDrillReg[id] = {
+            rows: function () { return graded.map(tmrxToDrillRow); },
+            label: label, context: context, user: profileUsername || ''
+        };
+        return id;
     }
 
     function formatOddsValue(value) {
@@ -8706,6 +8749,39 @@
             try { fitRailValues(); } catch (_) {}
         }
         try { renderAdvancedSportDiversity(opts.sport || ''); } catch (e) { console.warn('[Profile] sport diversity failed:', e); }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: each card opens the picks behind
+           it. All sports = the /metrics record (`all`); a sport = the same
+           ?sport= rule (`sport_filter`); drawdown = the peak to trough run of
+           that same set. */
+        try {
+            const sport = opts.sport || '';
+            const scopeLabel = sport ? advSportLabel(sport) : 'All sports';
+            const recText = graded > 0 ? Number(s.wins || 0) + '-' + Number(s.losses || 0) + '-' + Number(s.pushes || 0) : '';
+            const expect = recText ? (graded + '|' + recText + '|' + Number(s.net_units || 0).toFixed(2)) : '';
+            ['profileAdvRecord', 'profileAdvRoi', 'profileAdvUnits', 'profileAdvWinRate', 'profileAdvAvgOdds',
+             'profileAdvAvgUnitSize', 'profileAdvAvgDailyPicks', 'profileAdvZScore', 'profileAdvClv'].forEach((id) => {
+                const v = document.getElementById(id);
+                const card = v && (v.closest('article') || v.parentNode);
+                if (!card || graded <= 0) return;
+                tmrxDrillMark(card, sport ? 'sport_filter' : 'all', sport, scopeLabel + ' record');
+                card.setAttribute('data-drill-context', 'Advanced capper metrics');
+                card.removeAttribute('data-drill-extra');
+                if (expect) card.setAttribute('data-drill-expect', expect);
+            });
+            const ddEl = document.getElementById('profileAdvMaxDrawdown');
+            const ddCard = ddEl && (ddEl.closest('article') || ddEl.parentNode);
+            if (ddCard && maxDd != null && Number.isFinite(maxDd) && maxDd > 0) {
+                if (sport) {
+                    tmrxDrillMark(ddCard, 'sport_filter', sport, scopeLabel + ' max drawdown');
+                    ddCard.setAttribute('data-drill-extra', 'and=' + encodeURIComponent('drawdown:max'));
+                } else {
+                    tmrxDrillMark(ddCard, 'drawdown', 'max', 'Max drawdown');
+                    ddCard.removeAttribute('data-drill-extra');
+                }
+                ddCard.setAttribute('data-drill-context', 'Advanced capper metrics');
+                ddCard.setAttribute('data-drill-expect', '||' + (-Math.abs(maxDd)).toFixed(2));
+            }
+        } catch (_) {}
     }
 
     /* ===================================================================
@@ -10609,7 +10685,12 @@
             const color = roi >= 0 ? '#4ade80' : '#f87171';
             const label = formatBucketLabel(splitKey, b.key);
             const meta  = (Number(b.wins) || 0) + '-' + (Number(b.losses) || 0) + (b.pushes ? '-' + b.pushes : '');
-            return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+            /* STATS_DRILLDOWN_SITEWIDE_20260927: each bar opens its picks through
+               the same by_* classifier /metrics built it with. */
+            const drill = String(splitKey || '').indexOf('by_') === 0
+                ? tmrxDrillAttrs('split_' + String(splitKey).slice(3), b.key, label) + ' data-drill-scope="1" data-drill-context="Charts"'
+                : '';
+            return '<div' + drill + ' style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
                 + '<div style="flex:0 0 110px;font-size:.72rem;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + label + '">' + label + '</div>'
                 + '<div style="flex:1;background:rgba(255,255,255,0.04);border-radius:4px;height:14px;position:relative;overflow:hidden;">'
                 + '<div style="width:' + pct.toFixed(1) + '%;background:' + color + ';height:100%;opacity:0.78;"></div>'
@@ -12007,6 +12088,7 @@
         // Fill the top-rail Correlated Picks card if correlation data already
         // arrived (metrics fetch and profile render race; whichever lands last wins).
         try { applyRailCorrelation(); } catch (_) {}
+        try { railDrillSync(); } catch (_) {}
         try { applyRailSportView(); } catch (_) {}
         try { fitRailValues(); } catch (_) {}
         try { if (window.TMRRenderProfileAwardsPreview) window.TMRRenderProfileAwardsPreview(); } catch (_) {}
@@ -12075,7 +12157,35 @@
             rail.insertAdjacentHTML('beforebegin', html);
         }
     }
+    /* STATS_DRILLDOWN_SITEWIDE_20260927: every rail figure opens its picks.
+       Overall = the canonical header record (`record`, private picks counted,
+       listed only to the owner); a sport tab = the /metrics ?sport= rule
+       (`sport_filter`) that produced the tab's numbers. */
+    function railDrillSync() {
+        const rail = document.querySelector('#profileHeader .profile-rail');
+        if (!rail) return;
+        const sport = railSportState().id;
+        const label = sport ? railSportLabel(sport) + ' record' : 'Full record';
+        ['graded', 'record', 'winrate', 'units', 'roi', 'avgodds'].forEach((key) => {
+            const card = rail.querySelector('[data-rail-stat="' + key + '"]');
+            if (!card) return;
+            tmrxDrillMark(card, sport ? 'sport_filter' : 'record', sport || '', label);
+            card.setAttribute('data-drill-context', 'Profile header');
+            if (key === 'graded' || key === 'avgodds' || key === 'winrate' || key === 'roi') {
+                /* Cards that do not show the record itself: check the ledger
+                   against the record card beside them. */
+                const rec = rail.querySelector('[data-rail-stat="record"] .profile-rail-value');
+                const units = rail.querySelector('[data-rail-stat="units"] .profile-rail-value');
+                const r = rec ? rec.textContent.trim() : '';
+                const u = units ? String(units.textContent).replace(/[^0-9.+\-]/g, '') : '';
+                if (/^\d+-\d+(-\d+)?$/.test(r)) card.setAttribute('data-drill-expect', '|' + r + '|' + u);
+            } else {
+                card.removeAttribute('data-drill-expect');
+            }
+        });
+    }
     function syncRailSportTabs(ctxText) {
+        try { railDrillSync(); } catch (_) {}
         document.querySelectorAll('#railSportBar [data-rail-sport]').forEach((btn) => {
             const on = (btn.getAttribute('data-rail-sport') || '') === railSportState().id;
             btn.classList.toggle('is-active', on);
@@ -13307,6 +13417,20 @@
             summaryStat('Average Units', (summary ? Number(summary.avg_units || s.avgUnits || 0) : s.avgUnits).toFixed(2) + 'u', 'Average size per pick') +
             summaryStat('Best Streak', s.bestStreak + 'W', 'Longest win streak') +
             summaryStat('Avg CLV (no vig)', clv.display, clv.note, clv.className);
+        try {
+            const filtered = hasLocalOnlyFiltersActive();
+            tmrxRegisterLocalDrill('profile:summary', getFilteredPicks(),
+                filtered ? 'Filtered picks' : 'Full graded record', 'Picks summary');
+            const expect = gradedPicks + '|' + merged.wins + '-' + merged.losses + '-' + merged.pushes + '|' + Number(merged.netUnits || 0).toFixed(2);
+            document.querySelectorAll('#summaryGrid .summary-stat').forEach(function (card, i) {
+                if ([3, 5, 8, 9].indexOf(i) >= 0) return; // total incl. pending, pending, streak, CLV
+                card.setAttribute('data-drill-local', 'profile:summary');
+                card.setAttribute('data-drill-expect', expect);
+                card.setAttribute('role', 'button');
+                card.setAttribute('tabindex', '0');
+                card.classList.add('tmrx-drillable');
+            });
+        } catch (_) {}
     }
 
     function renderSummaryBarFromAdvanced(summary, fallbackStats) {
@@ -14941,6 +15065,7 @@
     /* Capture phase, so a drillable cell inside a row that also expands wins the
        click without the row toggling underneath it. */
     document.addEventListener('click', function (e) {
+        if (window.TMRDrill) return; // the site-wide ledger panel owns the click
         if (!e.target || !e.target.closest) return;
         const el = e.target.closest('[data-drill-category]');
         if (!el) return;
@@ -14950,6 +15075,7 @@
         tmrxOpenDrill(el);
     }, true);
     document.addEventListener('keydown', function (e) {
+        if (window.TMRDrill) return;
         if (e.key !== 'Enter' && e.key !== ' ') return;
         if (!e.target || !e.target.closest) return;
         const el = e.target.closest('[data-drill-category]');
@@ -20148,7 +20274,7 @@
 })();
 </script>
 
-    <script defer src="/static/js/tmr-fan-identity.js?v=3a5de929a49a"></script>
+    <script defer src="/static/js/tmr-fan-identity.js?v=d98ab0971ef9"></script>
 <script src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
 <script>
 (function(){
@@ -20192,7 +20318,7 @@
 })();
 </script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=31562b071846"></script><script src="/static/js/tmr-takes-feed.js?v=0610b5e40235"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=31562b071846"></script><script src="/static/js/tmr-takes-feed.js?v=0d7e1712f2bb"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="tmr-profile-qa-20260909">
 /* =====================================================================

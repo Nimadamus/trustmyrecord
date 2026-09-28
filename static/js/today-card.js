@@ -994,6 +994,24 @@
       }
       if (me.win_rate && me.total_picks) bits.push(Number(me.win_rate).toFixed(1) + '%');
       setText('tdWhoMeta', bits.join(' · ') || 'Member');
+      /* STATS_DRILLDOWN_SITEWIDE_20260927: /auth/me carries the canonical
+         profile record (user_stats), so the line opens drilldown category
+         "record" for this member. /auth/me sends no push count, so the check
+         is the pick count and the units. */
+      var meta = el('tdWhoMeta');
+      if (meta && me.username && me.total_picks) {
+        meta.setAttribute('data-drill-category', 'record');
+        meta.setAttribute('data-drill-bucket', '');
+        meta.setAttribute('data-drill-user', me.username);
+        meta.setAttribute('data-drill-label', 'Your lifetime record');
+        meta.setAttribute('data-drill-context', 'Today');
+        meta.setAttribute('data-drill-expect', Number(me.total_picks || 0) + '||' +
+          (me.net_units !== undefined && me.net_units !== null && isFinite(Number(me.net_units)) ? Number(me.net_units).toFixed(2) : ''));
+        meta.setAttribute('role', 'button');
+        meta.setAttribute('tabindex', '0');
+        meta.style.cursor = 'pointer';
+        if (window.TMRDrill) meta.insertAdjacentHTML('beforeend', window.TMRDrill.ctaHtml('View picks'));
+      }
       summary.name = me.display_name || me.username || null;
       renderSummary();
       var head = el('tdHead');

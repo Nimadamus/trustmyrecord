@@ -98,8 +98,8 @@
 
   var PERSONALITIES = ['analyst', 'homer', 'contrarian', 'sharp', 'degenerate', 'casual', 'historian', 'optimist', 'realist'];
 
-  function recordCard(title, value, sub, isPlaceholder) {
-    return '<div class="tmr-fi-stat' + (isPlaceholder ? ' is-soon' : '') + '">' +
+  function recordCard(title, value, sub, isPlaceholder, attrs) {
+    return '<div class="tmr-fi-stat' + (isPlaceholder ? ' is-soon' : '') + '"' + (attrs || '') + '>' +
       '<div class="tmr-fi-stat-label">' + esc(title) + '</div>' +
       '<div class="tmr-fi-stat-value">' + value + '</div>' +
       (sub ? '<div class="tmr-fi-stat-sub">' + sub + '</div>' : '') +
@@ -291,7 +291,11 @@
       columnHtml('Rival Teams', 'fa-bolt', 'rival', rivals, catalog, false, 'No rival teams added yet.') +
       '</div>' +
       '<div class="tmr-fi-stats">' +
-      recordCard('Verified Record', esc(vr.record || '0-0'), netStr + (vr.roi != null ? ' &middot; ' + Number(vr.roi).toFixed(1) + '% ROI' : ''), false) +
+      /* STATS_DRILLDOWN_SITEWIDE_20260927: the verified record opens every
+         graded pick behind it (static/js/tmr-drill.js, category `record`). */
+      recordCard('Verified Record', esc(vr.record || '0-0'), netStr + (vr.roi != null ? ' &middot; ' + Number(vr.roi).toFixed(1) + '% ROI' : ''), false,
+        ' role="button" tabindex="0" data-drill-category="record" data-drill-bucket="" data-drill-user="' + esc(p.username || '') +
+        '" data-drill-label="Verified record" data-drill-context="Fan identity" title="Open every pick behind this record"') +
       recordCard('Contest Record', (p.contest_record && p.contest_record.record) ? esc(p.contest_record.record) : '&mdash;', 'Coming soon', !(p.contest_record && p.contest_record.record)) +
       recordCard('Prediction Record', (p.prediction_record && p.prediction_record.record) ? esc(p.prediction_record.record) : '&mdash;', 'Coming soon', !(p.prediction_record && p.prediction_record.record)) +
       recordCard('KnowBall Score', (p.knowball_score == null ? '&mdash;' : esc(p.knowball_score)), 'Coming soon', p.knowball_score == null) +

@@ -1065,6 +1065,47 @@
         function sealedGroup(n) {
             return `<div class="gp sealed-group"><span class="st st-sealed"><i class="fa-solid fa-lock"></i> Sealed</span><span class="gp-sealed-txt"><b>${n}</b> ${n === 1 ? 'pick' : 'picks'} hidden · reveals at game lock</span></div>`;
         }
+        /* STATS_DRILLDOWN_SITEWIDE_20260927: the Overall, Units and Today
+           figures open that contestant's revealed, graded contest picks in
+           LOCAL MODE, so record, pick count (voids included) and units
+           reconcile with the row by construction. Sealed picks are counted,
+           never listed. */
+        function jbRiskUnits(p) {
+            const u = Number(p.units) || 0, o = Number(p.odds) || 0;
+            if (p.stake_mode === 'to_win' && o) return o < 0 ? u * Math.abs(o) / 100 : u * 100 / o;
+            return u;
+        }
+        function jbDrillRow(p) {
+            return {
+                id: null,
+                date: p.game_start_at || p.locked_at || p.submitted_at,
+                sport_key: 'baseball_mlb', league: 'MLB',
+                matchup: p.game || '',
+                pick_label: pickLabel(p),
+                market_type: p.market_type || p.market || '',
+                market_label: String(p.market_type || p.market || '').replace(/_/g, ' '),
+                line_label: (p.line === null || p.line === undefined || p.line === '') ? '' : String(p.line),
+                odds: Number(p.odds) || null,
+                risk_units: Number(jbRiskUnits(p).toFixed(4)),
+                result_units: Number(p.units_net) || 0,
+                status: p.result === 'pushed' ? 'push' : p.result,
+                final_score: '', player_name: ''
+            };
+        }
+        const jbGraded = (p) => !p.sealed && p.result && p.result !== 'pending';
+        function jbDrillAttrs(uname, revealed, sealedN, label, context, s, name) {
+            if (!uname || uname === '\u2014') return '';
+            const graded = (revealed || []).filter(jbGraded);
+            if (!graded.length && !sealedN) return '';
+            window.__tmrDrillReg = window.__tmrDrillReg || {};
+            window.__tmrDrillReg[name] = {
+                user: uname, label: label, context: context, hidden: sealedN || 0,
+                rows: () => graded.map(jbDrillRow)
+            };
+            const expect = ((s.wins || 0) + (s.losses || 0) + (s.pushes || 0) + (s.voids || 0)) + '|' +
+                (s.wins || 0) + '-' + (s.losses || 0) + '-' + (s.pushes || 0) + '|' + (Number(s.units_net) || 0).toFixed(2);
+            return ` data-drill-local="${name}" data-drill-expect="${expect}" role="button" tabindex="0"`;
+        }
         function renderLeaderboard(data, picks) {
             const body = $('#lb-body');
             const foot = $('#lb-foot');
@@ -1077,12 +1118,15 @@
             const today = (data && data.today_et) || etDate(new Date());
             const byUser = new Map();
             const sealedByUser = new Map();
+            const allByUser = new Map();
             (picks || []).forEach((p) => {
                 if (p.sealed) {
                     const sk = p.user_id != null ? String(p.user_id) : String(p.username || '').toLowerCase();
                     sealedByUser.set(sk, (sealedByUser.get(sk) || []).concat([p]));
                     return;
                 }
+                const ak = p.user_id != null ? String(p.user_id) : String(p.username || '').toLowerCase();
+                allByUser.set(ak, (allByUser.get(ak) || []).concat([p]));
                 if (!p.game_start_at || etDate(new Date(p.game_start_at)) !== today) return;
                 const k = p.user_id != null ? String(p.user_id) : String(p.username || '').toLowerCase();
                 if (!byUser.has(k)) byUser.set(k, []);
@@ -1102,14 +1146,19 @@
                 const groups = new Map();
                 revealed.forEach((p) => { const gk = p.game_id || p.game; if (!groups.has(gk)) groups.set(gk, []); groups.get(gk).push(p); });
                 const picksHtml = [...groups.values()].map(gameGroup).join('') + (sealedN ? sealedGroup(sealedN) : '');
+                const allRevealed = allByUser.get(String(e.user_id)) || allByUser.get(uname.toLowerCase()) || [];
+                const ctx = 'JustBet MLB contest standings';
+                const drillAll = jbDrillAttrs(uname, allRevealed, sealedN, uname + ' contest picks', ctx, e, 'contest:justbet:all:' + e.user_id);
+                const drillAll2 = drillAll ? jbDrillAttrs(uname, allRevealed, sealedN, uname + ' contest picks', ctx, e, 'contest:justbet:all:' + e.user_id) : '';
+                const drillToday = jbDrillAttrs(uname, revealed, sealedN, uname + ' contest picks today', ctx + ', today (' + today + ')', t, 'contest:justbet:today:' + e.user_id);
                 return `<div class="cg-item" role="listitem">
                     <div class="cg-row">
                         <span class="cg-id"><span class="lb-rank ${rankCls}">${e.rank}</span>
                         <span class="cg-user"><img src="${escapeAttr(avaSrc(e))}" alt="" loading="lazy" onerror="this.removeAttribute('src');this.onerror=null;"><a href="/profile/${encodeURIComponent(uname)}/" title="${escapeAttr(uname)}">${escapeHtml(uname)}</a>${e.tied_on_units && e.picks_used ? '<span class="cg-tied">tied</span>' : ''}</span></span>
                         <span class="cg-stats">
-                            <span class="cg-stat"><span class="cg-lbl">Today</span><span class="cg-val">${wlp(t.wins, t.losses, t.pushes)}</span><span class="cg-sub ${unitsClass(tNet)}">${signedU(tNet)}</span></span>
-                            <span class="cg-stat"><span class="cg-lbl">Overall</span><span class="cg-val">${wlp(e.wins, e.losses, e.pushes)}</span><span class="cg-sub">${e.voids ? `${e.voids} void` : '&nbsp;'}</span></span>
-                            <span class="cg-stat"><span class="cg-lbl">Units</span><span class="cg-val ${unitsClass(net)}">${signedU(net)}</span><span class="cg-sub">&nbsp;</span></span>
+                            <span class="cg-stat"${drillToday}><span class="cg-lbl">Today</span><span class="cg-val">${wlp(t.wins, t.losses, t.pushes)}</span><span class="cg-sub ${unitsClass(tNet)}">${signedU(tNet)}</span></span>
+                            <span class="cg-stat"${drillAll}><span class="cg-lbl">Overall</span><span class="cg-val">${wlp(e.wins, e.losses, e.pushes)}</span><span class="cg-sub">${e.voids ? `${e.voids} void` : '&nbsp;'}</span></span>
+                            <span class="cg-stat"${drillAll2}><span class="cg-lbl">Units</span><span class="cg-val ${unitsClass(net)}">${signedU(net)}</span><span class="cg-sub">${drillAll && window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '&nbsp;'}</span></span>
                         </span>
                         <span class="cg-usage">
                             <span class="cg-stat"><span class="cg-lbl">Picks</span><span class="cg-val">${e.picks_used || 0}<small>/${e.picks_max || 50}</small></span></span>
@@ -1215,6 +1264,7 @@
     })();
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.91d19a0817f8.js"></script>
+    <script defer src="/static/js/tmr-drill.js?v=0615c2bef872"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
     <script defer src="/static/js/contest-enter-cta.js?v=18ec62cb125f"></script>
 <style id="dark-text-fix-20260913">
