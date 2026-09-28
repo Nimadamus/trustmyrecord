@@ -62,9 +62,6 @@ STAGES = [
     ("home_highlights", [PY, "scripts/verify_home_highlights.py"], ["index.html"], None),
     ("profiles", [PY, "scripts/build_profile_pages.py"], ["u", "sitemap.xml", "static/prerender"], None),
     ("forum", [PY, "scripts/build_forum_threads.py"], ["forum", "sitemap.xml"], None),
-    # ATW_SITEMAP_FLOOR_20260928: Around the Web profiles under 5 graded picks
-    # stay live and indexable but out of the sitemap; they return on their own.
-    ("atw_sitemap_floor", [PY, "scripts/atw_sitemap_floor.py"], ["sitemap.xml"], None),
     # NFL_SCHEDULE_ROTATION_20260915: reads the real NFL schedule, retires a
     # finished featured game by its status and queues the next ones, then bakes
     # every featured surface. This refresh is the cadence that keeps it moving.
