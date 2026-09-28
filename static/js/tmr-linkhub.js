@@ -340,7 +340,6 @@
         'marketplace': [
             ['/handicappers/', 'Verified handicappers'],
             ['/leaderboards/', 'Leaderboards'],
-            ['/sell-your-picks/', 'Sell your picks'],
             ['/how-it-works/', 'How it works'],
             ['/forum/', 'Forum'],
             ['/rules/', 'Rules']

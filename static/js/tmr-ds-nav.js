@@ -352,8 +352,7 @@
     ['Platform', [
       ['/sportsbook/', 'Picks Board'],
       ['/profile/', 'My Record'],
-      ['/marketplace/', 'Pick Marketplace'],
-      ['/premium/', 'Premium']
+      ['/marketplace/', 'Pick Marketplace']
     ]],
     ['Explore', [
       /* TMR Game Files joined Explore on 2026-08-10. Before this the entire
