@@ -167,10 +167,10 @@
          its own Game Files this entry and the NCAAF one both landed on whichever
          piece happened to be newest. Each entry now points at its own sport's
          stable door, so the two can never collapse onto the same page again. */
-      /*FMENU mlb*/ ['/handicapping/mlb/cardinals-vs-brewers-823731/', 'MLB', '/matchup-of-the-day/mlb/'],
+      /*FMENU mlb*/ ['/mlb/red-sox-yankees-tolle-vs-schlittler/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      /*FMENU tennis*/ ['/tennis/khamutsianskaya-ibragimova-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
+      /*FMENU tennis*/ ['/tennis/majchrzak-fils-a-final-is/', 'Tennis', '/matchup-of-the-day/tennis/'],
       /* Added 2026-09-08, the day the soccer lane published its first Game
          File. The row went in only once /matchup-of-the-day/soccer/ was baked
          and serving: a menu entry pointing at a door that does not exist yet
