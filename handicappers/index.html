@@ -1073,6 +1073,7 @@
     <script data-hm-leaderboard-polish="1"></script>
     <script src="/static/js/config.js?v=430b4bba7b37"></script>
     <script src="/static/js/backend-api.js?v=10c8f87858c0"></script>
+    <script src="/static/js/streaks.js?v=6c4b606feb7b"></script>
     <script src="/static/js/stats-engine.js?v=0e874631bd61"></script>
     <script src="/static/js/social-system.js?v=d286ad9d1ffa"></script>
     <script>
@@ -1587,6 +1588,15 @@
                 }
             }
             if (streakType === 'lost') currentStreak = -currentStreak;
+            // The walk above is ENTRY order (locked_at/created_at), which is not
+            // a chronology of results. The canonical calculator orders by when
+            // each game ended, groups settlements and never gives 0 to a member
+            // with a decision; the server value still wins where it exists.
+            if (window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+                currentStreak = window.TMR.calculateStreaks(
+                    decisions.map(pick => Object.assign({}, pick, { status: pick._status }))
+                ).currentStreak;
+            }
 
             const sportCounts = {};
             normalized.forEach(pick => {

@@ -6752,7 +6752,15 @@
             else if (pick.status === cType) { cStreak++; }
             else break;
         }
-        const currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
+        let currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
+        // Entry order (locked_at/created_at) is not a chronology of results: use
+        // the canonical completion-order calculator whenever it is loaded.
+        if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+            const canon = window.TMR.calculateStreaks(graded);
+            currentStreak = canon.currentStreak;
+            bestStreak = canon.longestWinStreak;
+            worstStreak = canon.longestLossStreak;
+        }
 
         // Averages
         const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
@@ -6882,8 +6890,12 @@
             avgOdds,
             avgUnits,
             effectiveUnits,
-            currentStreak: streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0,
-            bestStreak,
+            currentStreak: (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function')
+                ? window.TMR.calculateStreaks(graded).currentStreak
+                : (streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0),
+            bestStreak: (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function')
+                ? window.TMR.calculateStreaks(graded).longestWinStreak
+                : bestStreak,
             lastGraded
         };
     }
@@ -11339,7 +11351,10 @@
         var settled = capMs(p.graded_at);
         if (start === null) return settled;
         if (settled === null) return start;
-        return Math.max(start, Math.min(settled, start + CAP_STREAK_CLAMP_MS));
+        // Graded more than 6h after first pitch = a backfill: place it where its
+        // game ended (first pitch + 3h), as services/canonicalStreak.js does.
+        if (settled > start + CAP_STREAK_CLAMP_MS) return start + 3 * 3600 * 1000;
+        return Math.max(start, settled);
     }
     // Oldest to newest, ties by pick id ascending -- identical to the backend's
     // ORDER BY, so the client can never disagree about "most recent".
@@ -11431,6 +11446,11 @@
         return american > 0 ? '+' + american : String(american);
     }
     function computeBestStreak(rows) {
+        // The shared canonical calculator (static/js/streaks.js) when loaded:
+        // completion order, settlement groups, split games.
+        if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+            return window.TMR.calculateStreaks(rows || []).longestWinStreak;
+        }
         const chrono = capStreakSortAsc(rows);
         let cur = 0, best = 0;
         for (const p of chrono) {
@@ -11485,6 +11505,10 @@
             const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
             const bestStreak = computeBestStreak(rows);
             const currentStreak = (function () {
+                if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+                    const c = window.TMR.calculateStreaks(rows || []).currentStreak;
+                    return c > 0 ? c + 'W' : c < 0 ? Math.abs(c) + 'L' : '0';
+                }
                 const chrono = capStreakSortAsc(rows).reverse(); // newest first
                 let n = 0, last = '';
                 for (const p of chrono) {
@@ -17167,7 +17191,7 @@
         <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=3d3cb81c50c9 -->
 
 
-    <script src="/static/js/streaks.js?v=80cb1ee32df5"></script>
+    <script src="/static/js/streaks.js?v=6c4b606feb7b"></script>
     <script src="/static/js/platform-production-fix.js?v=8f20f0bedd7b"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=01c47cb4a4b0" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=358eec27a768">
