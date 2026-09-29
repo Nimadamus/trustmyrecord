@@ -486,7 +486,9 @@
         if (modalEl) return;
         injectStyle();
 
-        var headline = (cfg && cfg.gateHeadline) || 'Create a free TrustMyRecord account to run your simulation and save your results.';
+        var headline = (cfg && cfg.gateHeadline) || (anonFreeRunAvailable()
+            ? 'Create a free TrustMyRecord account to run your simulation and save your results.'
+            : 'You used your free simulation. Create a free TrustMyRecord account to run another one and save your results.');
         var label = (cfg && cfg.label) || 'simulation';
 
         var overlay = document.createElement('div');
@@ -594,11 +596,25 @@
     }
 
     /* Returns TRUE when the run may proceed, FALSE when it was gated. */
+    /* ANON_FREE_RUN_20260928 (Nima): a signed-out visitor gets ONE free
+       simulation on the whole site and sees the complete result. The next run
+       asks for a free account. Kept in localStorage; if storage is blocked the
+       visitor still gets the run (the gate is a funnel, not a paywall). */
+    var ANON_FREE_KEY = 'tmr_sim_anon_free_used';
+    function anonFreeRunAvailable() {
+        try { return !localStorage.getItem(ANON_FREE_KEY); } catch (e) { return true; }
+    }
+    function useAnonFreeRun(meta) {
+        try { localStorage.setItem(ANON_FREE_KEY, String(Date.now())); } catch (e) { }
+        track('simulator_anon_free_run', meta || {});
+    }
+
     function requireAuth(meta) {
         noteRunAttempt(meta);
         if (FLAGS.gate === false) return true;
         if (!cfg) return true;
         if (isLoggedIn()) return true;
+        if (anonFreeRunAvailable()) { useAnonFreeRun(meta); return true; }
 
         writeStore({
             v: 1,
@@ -752,6 +768,7 @@
     /* Resolves TRUE when the run may start. Logged out opens the signup gate. */
     function authorizeRun(meta) {
         if (!requireAuth(meta)) return Promise.resolve(false);
+        if (!isLoggedIn()) return Promise.resolve(true);   /* the one anonymous free run */
         if (FLAGS.meter === false || !cfg || !meterKey()) return Promise.resolve(true);
         if (!window.api || typeof window.api.request !== 'function') return Promise.resolve(true);
         if (meterPending) return meterPending.then(function () { return false; });
@@ -864,7 +881,12 @@
                 if (hit) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
-                    if (!loggedIn) { requireAuth({ trigger: selectors[i] }); return; }
+                    if (!loggedIn) {
+                        if (!requireAuth({ trigger: selectors[i] })) return;
+                        meterPass = true;
+                        try { hit.click(); } finally { meterPass = false; }
+                        return;
+                    }
                     authorizeRun({ trigger: selectors[i] }).then(function (go) {
                         if (!go || !hit.isConnected) return;
                         meterPass = true;
