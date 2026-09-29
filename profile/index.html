@@ -2332,6 +2332,7 @@
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
                 <button type="button" class="profile-tab active" data-tab="picks" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
                 <button type="button" class="profile-tab" data-tab="record" role="tab">Picks</button>
+                <button type="button" class="profile-tab" data-tab="social" id="profileSocialTab" role="tab" aria-selected="false">Social <span id="profileSocialBadge" class="profile-tab-badge profile-tab-count" hidden>0</span></button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="gaming" role="tab">Online Gaming</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
@@ -2534,21 +2535,24 @@
                         </div>
                       </div>
 
-                      <!-- ===== TAKES (SHARE_YOUR_TAKE_20260927) =====
-                           The member's own Takes: feed posts written from the
-                           homepage, simulator or feed composer (static/js/tmr-take.js).
-                           Likes and replies live on the feed card each entry opens.
-                           Hidden for a visitor when the member has none; the owner
-                           sees a composer instead. -->
-                      <div class="tmrx-section tmrx-takes" id="profileTakes" hidden>
+                      <!-- ===== SOCIAL PREVIEW (SOCIAL_TAB_20260928) =====
+                           The Overview stays about the record. It carries only the
+                           member's three newest Takes and a way into the full
+                           feed, which lives on its own Social tab. Hidden for a
+                           visitor when the member has none; the owner gets a
+                           prompt to post instead. -->
+                      <div class="tmrx-section tmrx-takes tmr-social-preview" id="profileTakes" hidden>
                         <div class="tmrx-section-head">
                           <div>
-                            <div class="tmrx-section-title">Takes</div>
-                            <div class="tmrx-section-sub">Sports takes from this member, newest first. Tap a take to open the conversation.</div>
+                            <div class="tmrx-section-title">Latest Takes</div>
+                            <div class="tmrx-section-sub" id="takesMeta">Newest posts from this member</div>
                           </div>
-                          <div class="tmrx-meta" id="takesMeta"></div>
+                          <button type="button" class="tmr-social-link" data-open-social>View social feed <span aria-hidden="true">&rarr;</span></button>
                         </div>
                         <div class="takes-list" id="takesList"></div>
+                        <div class="tmr-social-cta">
+                          <button type="button" class="tmr-social-all" id="takesViewAll" data-open-social>View all takes</button>
+                        </div>
                       </div>
 
                       <!-- ===== FORUM ACTIVITY (Jul 15, 2026) =====
@@ -2933,7 +2937,8 @@
                               <tr data-tmrx-adv-top="break_even" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate these exact prices required. Positive = beating the number.</td></tr>
                               <tr data-tmrx-adv-top="clv" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b> &mdash; earlier picks have no closing number and are excluded, never counted as zero.</td></tr>
                               <tr data-tmrx-adv-top="clv_beat_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that got a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv-top="clv_line_moved" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv-top="clv_median" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv-top="clv_line_moved" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
+                              <tr data-tmrx-adv-top="clv_median" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv-top="clv_beat_rate_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv-top="clv_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
                               <tr data-tmrx-adv-top="clv_adj" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
@@ -3544,6 +3549,23 @@
                 </div><!-- /panel record -->
 
                 <!-- TAB: CHALLENGES -->
+                <!-- TAB: SOCIAL (SOCIAL_TAB_20260928): the member's full Takes feed,
+                     paged 10 at a time and loaded on scroll. Mounted the first
+                     time the tab opens, so the Overview never pays for it. -->
+                <div class="profile-tab-panel" data-panel="social">
+                    <div class="tmr-social-panel">
+                        <div class="tmr-social-head">
+                            <div>
+                                <div class="tmr-social-kicker">Social</div>
+                                <h2 class="tmr-social-title" id="socialTitle">Takes</h2>
+                                <div class="tmr-social-sub" id="socialSub">Every take from this member, newest first. Tap one to open the conversation.</div>
+                            </div>
+                            <div class="tmr-social-stat" id="socialStat" hidden><b id="socialCount">0</b><span>takes</span></div>
+                        </div>
+                        <div id="socialFeedList"></div>
+                    </div>
+                </div>
+
                 <div class="profile-tab-panel" data-panel="challenges">
                     <div class="profile-grid-2">
                         <div class="profile-feed-card">
@@ -3915,7 +3937,8 @@
                               <tr data-tmrx-adv="break_even" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Break-Even Gap</td><td class="num zero">&mdash;</td><td>Posted win rate minus the win rate the prices actually required. Positive = beating the number, whatever the raw percentage looks like.</td></tr>
                               <tr data-tmrx-adv="clv" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (posted price)</td><td class="num zero">&mdash;</td><td>Average edge over the closing price, in points of implied probability. <b>Tracked on picks made since closing-line capture went live</b>; earlier picks carry no closing number and are excluded rather than counted as zero. No estimates, per the no-fake-data rule.</td></tr>
                               <tr data-tmrx-adv="clv_beat_rate" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close</td><td class="num zero">&mdash;</td><td>Share of tracked picks that took a better price than the market closed at.</td></tr>
-                              <tr data-tmrx-adv="clv_line_moved" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>                              <tr data-tmrx-adv="clv_median" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
+                              <tr data-tmrx-adv="clv_line_moved" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Line Moved Your Way</td><td class="num zero">&mdash;</td><td>Spreads and totals only: how often the closing NUMBER moved away from the side already held.</td></tr>
+                              <tr data-tmrx-adv="clv_median" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Median CLV</td><td class="num zero">&mdash;</td><td>The middle priced pick. Most picks see no movement at all, so a median near zero is normal; it is shown so a mean carried by a handful of large rows cannot pass unnoticed.</td></tr><tr data-tmrx-adv="clv_beat_rate_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Beat the Close (no vig)</td><td class="num zero">&mdash;</td><td>Share of priced picks that beat the closing FAIR price. The same question the headline asks, so it reads lower than Beat the Close by roughly the vig.</td></tr><tr data-tmrx-adv="clv_novig" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">Avg CLV (no vig) — headline</td><td class="num zero">&mdash;</td><td>The same comparison against the closing price with the book’s hold divided out. A harsher question than beating the posted number, and it runs lower by roughly the vig. Shown only where the feed carried both sides.</td></tr>
                               <tr data-tmrx-adv="clv_adj" class="tmrx-drillable" role="button" tabindex="0" data-drill-category="all" data-drill-bucket="" data-drill-label="Full graded record" data-drill-context="Advanced metrics" data-drill-expect="||" title="Open every bet behind Full graded record"><td class="name">CLV (Line-Adjusted)</td><td class="num zero">&mdash;</td><td>For picks where the NUMBER moved and the juice did not — taking −2.5 into a −3.5 close is a better ticket at the same price. <b>Estimated</b> from a per-sport half-point table, kept separate from the headline CLV and never mixed into it.</td></tr>
 
                             </tbody>
@@ -6752,7 +6775,15 @@
             else if (pick.status === cType) { cStreak++; }
             else break;
         }
-        const currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
+        let currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
+        // Entry order (locked_at/created_at) is not a chronology of results: use
+        // the canonical completion-order calculator whenever it is loaded.
+        if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+            const canon = window.TMR.calculateStreaks(graded);
+            currentStreak = canon.currentStreak;
+            bestStreak = canon.longestWinStreak;
+            worstStreak = canon.longestLossStreak;
+        }
 
         // Averages
         const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
@@ -6882,8 +6913,12 @@
             avgOdds,
             avgUnits,
             effectiveUnits,
-            currentStreak: streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0,
-            bestStreak,
+            currentStreak: (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function')
+                ? window.TMR.calculateStreaks(graded).currentStreak
+                : (streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0),
+            bestStreak: (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function')
+                ? window.TMR.calculateStreaks(graded).longestWinStreak
+                : bestStreak,
             lastGraded
         };
     }
@@ -7964,30 +7999,120 @@
         faFetch(tab, faState.page[tab] || 1);
     }
 
-    // TAKES_FEED_20260927: the member's Takes as social cards, drawn by the
-    // shared Sports Takes feed (static/js/tmr-takes-feed.js): avatar, name,
-    // record, relative time, sport and team chips, Like / Reply / Share, and a
-    // thread sheet. The feed filters to this member client side as well, so a
-    // backend that ignores ?username= can never put someone else's post here.
-    // The owner gets the composer on top and a new take lands first, no reload.
+    // SOCIAL_TAB_20260928: the member's Takes, drawn by the shared Sports
+    // Takes feed (static/js/tmr-takes-feed.js), live in two places. The
+    // Overview shows a compact preview of the three newest; the Social tab holds
+    // the full feed, paged 10 at a time and loaded on scroll, mounted the first
+    // time the tab opens. The feed filters to this member client side as well,
+    // so a backend that ignores ?username= can never put someone else's post
+    // here. The owner's composer sits on the Social tab.
+    var socialState = { username: '', own: false, mounted: false, bound: false };
+
+    // The profile tab bar sticks under the site nav; this keeps its offset
+    // equal to the nav's real height at every width.
+    (function () {
+        function setNavH() {
+            var nav = document.querySelector('nav.ds-nav');
+            var pos = nav ? getComputedStyle(nav).position : '';
+            var h = (pos === 'sticky' || pos === 'fixed') ? Math.round(nav.getBoundingClientRect().height) : 0;
+            document.documentElement.style.setProperty('--tmr-nav-h', h + 'px');
+        }
+        setNavH();
+        window.addEventListener('resize', setNavH);
+        window.addEventListener('load', setNavH);
+    })();
+
+    function socialCountText(n, feed) {
+        return (feed && !feed.exhausted && n >= 50) ? '50+' : String(n);
+    }
+    function setSocialCount(n, feed) {
+        var txt = socialCountText(n, feed);
+        var badge = document.getElementById('profileSocialBadge');
+        if (badge) { badge.textContent = txt; badge.hidden = !n; }
+        var stat = document.getElementById('socialStat');
+        var cnt = document.getElementById('socialCount');
+        if (cnt) cnt.textContent = txt;
+        if (stat) {
+            stat.hidden = !n;
+            var lbl = stat.querySelector('span');
+            if (lbl) lbl.textContent = n === 1 ? 'take' : 'takes';
+        }
+        var all = document.getElementById('takesViewAll');
+        if (all) all.textContent = n > 3 ? ('View all ' + txt + ' takes') : 'Open social feed';
+    }
+
+    function mountSocialFeed() {
+        if (socialState.mounted || !socialState.username || !window.TMRTakesFeed) return;
+        var host = document.getElementById('socialFeedList');
+        if (!host) return;
+        socialState.mounted = true;
+        var own = socialState.own;
+        window.TMRTakesFeed.mount(host, {
+            username: socialState.username,
+            composer: own,
+            composerContext: { source: 'profile', kind: 'general' },
+            pageSize: 10,
+            autoLoad: true,
+            hideRecord: true,
+            emptyText: own ? 'No takes yet. Your first one shows up right here.' : 'No takes from this member yet.',
+            onCount: function (n, feed) { setSocialCount(n, feed); }
+        });
+    }
+
+    function openSocialTab() {
+        var tab = document.getElementById('profileSocialTab');
+        if (tab && !tab.classList.contains('active')) tab.click();
+        mountSocialFeed();
+        // The tab bar is sticky, so land the Social panel just under it.
+        var panel = document.querySelector('.profile-tab-panel[data-panel="social"]');
+        var bar = document.querySelector('.profile-tabs-section');
+        if (panel) {
+            var navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tmr-nav-h')) || 0;
+            var y = panel.getBoundingClientRect().top + window.pageYOffset - navH - (bar ? bar.offsetHeight : 0) - 4;
+            window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        }
+    }
+
+    function bindSocialTab() {
+        if (socialState.bound) return;
+        socialState.bound = true;
+        var bar = document.getElementById('profileTabsBar');
+        if (bar) bar.addEventListener('click', function (e) {
+            var btn = e.target.closest && e.target.closest('.profile-tab[data-tab="social"]');
+            if (btn) mountSocialFeed();
+        });
+        document.addEventListener('click', function (e) {
+            var t = e.target.closest && e.target.closest('[data-open-social]');
+            if (!t) return;
+            e.preventDefault();
+            openSocialTab();
+        });
+    }
+
     function loadProfileTakes(username) {
         var section = document.getElementById('profileTakes');
         var list = document.getElementById('takesList');
         if (!section || !list || !username) return;
         var own = !!isOwnProfile;
+        socialState.username = username;
+        socialState.own = own;
+        bindSocialTab();
         var meta = document.getElementById('takesMeta');
         var start = function () {
             if (!window.TMRTakesFeed) return;
-            if (own) section.hidden = false;
+            var panel = document.querySelector('.profile-tab-panel[data-panel="social"]');
+            if (panel && panel.classList.contains('active')) mountSocialFeed();
             window.TMRTakesFeed.mount(list, {
                 username: username,
-                composer: own,
-                composerContext: { source: 'profile', kind: 'general' },
-                emptyText: own ? 'No takes yet. Your first one shows up right here.' : 'No takes yet.',
-                onCount: function (n) {
-                    if (n) section.hidden = false;
-                    else if (!own) section.hidden = true;
-                    if (meta) meta.textContent = n ? (n + (n === 1 ? ' take' : ' takes')) : '';
+                compact: true,
+                pageSize: 3,
+                hideRecord: true,
+                emptyText: 'No takes yet. Share your first one from the Social tab.',
+                onCount: function (n, feed) {
+                    section.hidden = !n && !own;
+                    section.classList.toggle('is-empty', !n);
+                    if (meta) meta.textContent = n ? 'The newest posts from this member. The full feed lives on the Social tab.' : 'Nothing posted yet.';
+                    if (!socialState.mounted) setSocialCount(n, feed);
                 },
                 onError: function () { if (!own) section.hidden = true; }
             });
@@ -11339,7 +11464,10 @@
         var settled = capMs(p.graded_at);
         if (start === null) return settled;
         if (settled === null) return start;
-        return Math.max(start, Math.min(settled, start + CAP_STREAK_CLAMP_MS));
+        // Graded more than 6h after first pitch = a backfill: place it where its
+        // game ended (first pitch + 3h), as services/canonicalStreak.js does.
+        if (settled > start + CAP_STREAK_CLAMP_MS) return start + 3 * 3600 * 1000;
+        return Math.max(start, settled);
     }
     // Oldest to newest, ties by pick id ascending -- identical to the backend's
     // ORDER BY, so the client can never disagree about "most recent".
@@ -11431,6 +11559,11 @@
         return american > 0 ? '+' + american : String(american);
     }
     function computeBestStreak(rows) {
+        // The shared canonical calculator (static/js/streaks.js) when loaded:
+        // completion order, settlement groups, split games.
+        if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+            return window.TMR.calculateStreaks(rows || []).longestWinStreak;
+        }
         const chrono = capStreakSortAsc(rows);
         let cur = 0, best = 0;
         for (const p of chrono) {
@@ -11485,6 +11618,10 @@
             const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
             const bestStreak = computeBestStreak(rows);
             const currentStreak = (function () {
+                if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+                    const c = window.TMR.calculateStreaks(rows || []).currentStreak;
+                    return c > 0 ? c + 'W' : c < 0 ? Math.abs(c) + 'L' : '0';
+                }
                 const chrono = capStreakSortAsc(rows).reverse(); // newest first
                 let n = 0, last = '';
                 for (const p of chrono) {
@@ -17167,7 +17304,7 @@
         <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=3d3cb81c50c9 -->
 
 
-    <script src="/static/js/streaks.js?v=80cb1ee32df5"></script>
+    <script src="/static/js/streaks.js?v=6c4b606feb7b"></script>
     <script src="/static/js/platform-production-fix.js?v=8f20f0bedd7b"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=01c47cb4a4b0" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=358eec27a768">
@@ -17254,6 +17391,86 @@
       .tmrx-forum .fa-list { display: grid; gap: 10px; margin: 14px 22px 0; }
       .tmrx-takes .takes-list { margin: 14px 22px 22px; max-width: 720px; }
       @media (max-width: 600px) { .tmrx-takes .takes-list { margin: 12px 12px 14px; } }
+
+      /* SOCIAL_TAB_20260928: sticky profile nav, Overview preview, Social tab. */
+      body.profile-page .profile-tabs-section {
+        position: sticky; top: var(--tmr-nav-h, 0px); z-index: 60;
+        padding-top: 14px; padding-bottom: 10px; margin-bottom: -10px;
+        background: linear-gradient(180deg, rgba(5,7,13,.96) 0%, rgba(5,7,13,.92) 78%, rgba(5,7,13,0) 100%);
+        -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      }
+      body.profile-page .profile-tab .profile-tab-count {
+        background: rgba(61,155,255,.16); color: #9CCBFF; border: 1px solid rgba(61,155,255,.35);
+        font-variant-numeric: tabular-nums;
+      }
+      body.profile-page .profile-tab.active .profile-tab-count { background: #1D7FE8; color: #fff; border-color: #1D7FE8; }
+
+      .tmr-social-preview .tmrx-section-head { align-items: center; }
+      .tmr-social-preview .takes-list { max-width: none; }
+      body.profile-page :is(.tmr-social-link,#_tsl),
+      body.profile-page :is(.tmr-social-all,#_tsa) {
+        display: inline-flex !important; align-items: center; justify-content: center; gap: 8px;
+        font: 800 13px/1 Inter, "Segoe UI", sans-serif !important; letter-spacing: 0 !important; text-transform: none !important;
+        cursor: pointer; border-radius: 999px !important; white-space: nowrap; min-width: 0 !important; width: auto !important;
+        transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+      }
+      body.profile-page :is(.tmr-social-link,#_tsl) {
+        padding: 9px 14px !important; color: #9CCBFF !important;
+        background: rgba(61,155,255,.08) !important; border: 1px solid rgba(61,155,255,.3) !important; box-shadow: none !important;
+      }
+      body.profile-page :is(.tmr-social-link,#_tsl):hover { background: rgba(61,155,255,.16) !important; color: #fff !important; }
+      .tmr-social-cta { display: flex; justify-content: center; margin: 0 22px 22px; }
+      body.profile-page :is(.tmr-social-all,#_tsa) {
+        width: 100% !important; max-width: 420px; padding: 14px 22px !important; color: #fff !important;
+        background: linear-gradient(180deg, #2F8CFF 0%, #1D6FD8 100%) !important; border: 1px solid rgba(140,194,255,.35) !important;
+        box-shadow: 0 10px 26px -12px rgba(29,127,232,.8), inset 0 1px 0 rgba(255,255,255,.18) !important; font-size: 14px !important;
+      }
+      body.profile-page :is(.tmr-social-all,#_tsa):hover { transform: translateY(-1px); background: linear-gradient(180deg, #4A9DFF 0%, #2478E4 100%) !important; }
+      body.profile-page .tmr-social-preview.is-empty :is(.tmr-social-link,#_tsl) { display: none !important; }
+
+      /* The record panel is display:flex at all times. It belongs only to
+         Picks (active) and Overview (profile-flow-record); every other tab
+         shows its own panel alone. */
+      body.profile-page .profile-tab-panel[data-panel="record"]:not(.active):not(.profile-flow-record) { display: none !important; }
+      .tmr-social-panel { max-width: 760px; margin: 0 auto; }
+      .tmr-social-head {
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+        padding: 22px 24px; margin-bottom: 16px; border-radius: 20px;
+        background:
+          radial-gradient(120% 140% at 0% 0%, rgba(61,155,255,.18) 0%, rgba(61,155,255,0) 55%),
+          linear-gradient(180deg, #0F1D33 0%, #0A1526 100%);
+        border: 1px solid rgba(122,152,198,.2);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      }
+      .tmr-social-kicker { font: 800 11px/1 Inter, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #6FB2FF; }
+      .tmr-social-title { margin: 8px 0 6px !important; font: 900 26px/1.1 Inter, "Segoe UI", sans-serif !important; color: #F3F7FD !important; letter-spacing: -.01em; }
+      .tmr-social-sub { font: 500 14px/1.5 Inter, sans-serif; color: #8B9EB9; max-width: 460px; }
+      .tmr-social-stat { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+      .tmr-social-stat b { font: 900 30px/1 Inter, sans-serif; color: #fff; font-variant-numeric: tabular-nums; }
+      .tmr-social-stat span { margin-top: 4px; font: 700 11px/1 Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #8B9EB9; }
+      .tmr-social-panel .tkf-composer:not(:empty) { margin-bottom: 2px; }
+      .tmr-social-panel .tkf-composer:empty { display: none; }
+      .tmr-social-stat[hidden] { display: none !important; }
+      .tmr-social-panel .tkf-empty {
+        display: flex; flex-direction: column; align-items: center; gap: 12px;
+        padding: 40px 24px; border-radius: 18px; border: 1px solid rgba(122,152,198,.16);
+        background: linear-gradient(180deg, #0F1C31 0%, #0B1627 100%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+        font: 600 15px/1.5 Inter, "Segoe UI", sans-serif; color: #A9BBD0;
+      }
+      .tmr-social-panel .tkf-empty::before {
+        content: ""; width: 46px; height: 46px; border-radius: 50%;
+        background: rgba(61,155,255,.12) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236FB2FF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.5.4-1.3.1-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z'/%3E%3C/svg%3E") center / 22px no-repeat;
+        box-shadow: 0 0 0 1px rgba(61,155,255,.3);
+      }
+      @media (max-width: 600px) {
+        body.profile-page .profile-tabs-section { padding-top: 8px; }
+        .tmr-social-preview .tmrx-section-head { flex-wrap: wrap; gap: 10px; }
+        .tmr-social-cta { margin: 0 12px 16px; }
+        .tmr-social-head { padding: 18px 16px; border-radius: 16px; }
+        .tmr-social-title { font-size: 22px !important; }
+        .tmr-social-stat b { font-size: 24px; }
+      }
       .tmrx-forum .fa-pagination { margin: 14px 22px 20px; }
       .fa-item {
         display: block; text-decoration: none; padding: 13px 15px;
@@ -20319,7 +20536,7 @@
 })();
 </script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=31562b071846"></script><script src="/static/js/tmr-takes-feed.js?v=0d7e1712f2bb"></script><script src="/static/js/tmr-ds-nav.83270b679707.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-take.js?v=31562b071846"></script><script src="/static/js/tmr-takes-feed.js?v=0d3f5527b751"></script><script src="/static/js/tmr-ds-nav.83270b679707.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="tmr-profile-qa-20260909">
 /* =====================================================================
