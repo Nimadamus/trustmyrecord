@@ -423,31 +423,79 @@
         .pro-links a { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-page); color: var(--pro-ink); font-weight: 700; font-size: .9rem; text-decoration: none; }
         .pro-links a:hover { border-color: var(--pro-brand); }
 
-        /* TMR_PRO_PENDING_BOARD_20260928 */
-        .pro-board-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 6px 0 16px; font-size: .92rem; color: var(--pro-body); }
-        .pro-board-bar label { display: inline-flex; gap: 6px; align-items: center; }
-        .pro-board-bar input[type=checkbox] { width: 18px !important; height: 18px !important; min-width: 0 !important; margin: 0; flex: none; }
-        .pro-cons-row > span:last-child { white-space: nowrap; }
-        .pro-board-bar select { font: inherit; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
-        .pro-board-count { font-weight: 700; color: var(--pro-ink); }
-        .pro-cons { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; }
-        .pro-cons h3 { margin: 0 0 8px; font-size: 1.05rem; color: var(--pro-ink); }
-        .pro-cons-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pro-line); font-size: .92rem; color: var(--pro-body); }
-        .pro-cons-row:first-of-type { border-top: 0; }
-        .pro-cons-row b { color: var(--pro-ink); }
-        .pro-cappers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 14px; }
-        .pro-capper { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
-        .pro-capper-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-        .pro-capper-head a { font-weight: 800; color: var(--pro-ink); text-decoration: none; }
-        .pro-capper-rec { font-size: .85rem; color: var(--pro-muted); font-variant-numeric: tabular-nums; }
-        .pro-capper-rec .up { color: #1D7A46; font-weight: 700; }
-        .pro-capper-rec .down { color: #B3261E; font-weight: 700; }
-        .pro-pick { border-top: 1px solid var(--pro-line); margin-top: 10px; padding-top: 10px; font-size: .92rem; color: var(--pro-body); }
-        .pro-pick-sel { font-weight: 700; color: var(--pro-ink); }
-        .pro-pick-meta { font-size: .8rem; color: var(--pro-muted); margin-top: 2px; }
-        .pro-pick-meta a { color: var(--pro-brand); }
+        /* TMR_PRO_BOARD_V2_20260928: Handicapper Watchdog board */
         .pro-teaser { background: var(--pro-surface); border: 1px dashed var(--pro-line); border-radius: 14px; padding: 18px; color: var(--pro-body); line-height: 1.6; }
         .pro-teaser b { color: var(--pro-ink); }
+        #proBoard { font-variant-numeric: tabular-nums; }
+        .wd-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 4px 0 16px; }
+        .wd-search { flex: 1 1 200px; min-width: 0; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
+        .wd-bar select { width: auto !important; flex: 0 0 auto; max-width: 100%; font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
+        .wd-check { display: inline-flex; gap: 6px; align-items: center; color: var(--pro-body); font-size: .92rem; white-space: nowrap; }
+        .wd-check input { width: 16px !important; height: 16px !important; min-width: 0 !important; margin: 0; flex: none; }
+        .wd-count { flex-basis: 100%; font-size: .85rem; color: var(--pro-muted); }
+        .wd-count b { color: var(--pro-ink); }
+        .wd-cons { margin-bottom: 16px; }
+        .wd-cons h3 { margin: 0 0 8px; font-size: 1rem; color: var(--pro-ink); }
+        .wd-cons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 10px; }
+        .wd-cons-card { display: flex; gap: 12px; align-items: center; background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+        .wd-cons-n { flex: none; text-align: center; font-size: .78rem; color: var(--pro-muted); line-height: 1.2; min-width: 58px; }
+        .wd-cons-n b { display: block; font-size: 1.35rem; color: var(--pro-brand); }
+        .wd-cons-n span { display: block; }
+        .wd-cons-sel { font-weight: 700; color: var(--pro-ink); }
+        .wd-table-wrap { overflow-x: auto; background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; }
+        .wd-table { width: 100%; border-collapse: collapse; min-width: 0 !important; font-size: .92rem; }
+        .wd-table th { position: sticky; top: 0; background: var(--pro-surface); text-align: left; padding: 0; border-bottom: 1px solid var(--pro-line); }
+        .wd-table th.n, .wd-table td.n { text-align: right; }
+        .wd-sort { font: inherit; font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pro-muted); background: none; border: 0; padding: 10px 12px; cursor: pointer; white-space: nowrap; width: 100%; text-align: inherit; }
+        .wd-sort.on { color: var(--pro-brand); }
+        .wd-table td { padding: 10px 12px; border-top: 1px solid var(--pro-line); vertical-align: middle; color: var(--pro-body); }
+        .wd-row { cursor: pointer; }
+        .wd-row:hover td, .wd-row:focus td { background: var(--pro-page); }
+        .wd-row:focus { outline: 2px solid var(--pro-brand); outline-offset: -2px; }
+        .wd-picks-row td { border-top: 0; padding-top: 0; }
+        .wd-name { font-weight: 800; color: var(--pro-ink); }
+        .wd-sub { font-size: .78rem; color: var(--pro-muted); margin-top: 2px; }
+        .wd-muted { color: var(--pro-muted); font-size: .85rem; }
+        .wd-badge { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: #E6F0FF; color: var(--pro-brand); font-size: .68rem; font-weight: 800; letter-spacing: .04em; vertical-align: middle; }
+        .wd-rec { font-weight: 700; color: var(--pro-ink); white-space: nowrap; }
+        .up { color: #1D7A46 !important; font-weight: 700; }
+        .down { color: #B3261E !important; font-weight: 700; }
+        .wd-streak { display: inline-block; min-width: 36px; padding: 2px 8px; border-radius: 999px; font-weight: 800; font-size: .8rem; text-align: center; background: var(--pro-page); }
+        .wd-streak.up { background: #E3F4EA; }
+        .wd-streak.down { background: #FBE7E5; }
+        .wd-dots { display: inline-flex; gap: 3px; }
+        .wd-dots i { width: 8px; height: 8px; border-radius: 50%; background: #C9D3DE; }
+        .wd-dots i.w { background: #1D7A46; }
+        .wd-dots i.l { background: #B3261E; }
+        .wd-pend { display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--pro-brand-dark); color: #fff; font-weight: 800; font-size: .8rem; text-align: center; }
+        .wd-chip { display: inline-block; margin: 0 6px 6px 0; padding: 5px 10px; border-radius: 10px; background: var(--pro-page); border: 1px solid var(--pro-line); font-size: .82rem; color: var(--pro-ink); }
+        .wd-odds { color: var(--pro-muted); font-weight: 600; }
+        .wd-panel { position: fixed; inset: 0; z-index: 9999; background: rgba(7, 24, 42, .45); display: flex; justify-content: flex-end; }
+        .wd-panel[hidden] { display: none; }
+        body.wd-locked { overflow: hidden; }
+        .wd-sheet { position: relative; width: min(560px, 100%); height: 100%; overflow-y: auto; background: var(--pro-surface); padding: 22px 20px 40px; box-shadow: -8px 0 30px rgba(7, 24, 42, .2); }
+        .wd-close { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--pro-line); background: var(--pro-page); font-size: 1.3rem; line-height: 1; cursor: pointer; color: var(--pro-ink); }
+        .wd-head h3 { margin: 0 44px 4px 0; font-size: 1.4rem; color: var(--pro-ink); }
+        .wd-head a, .wd-pick a, .wd-full { color: var(--pro-brand); }
+        .wd-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 8px; }
+        .wd-stat { background: var(--pro-page); border: 1px solid var(--pro-line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+        .wd-stat span { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pro-muted); }
+        .wd-stat b { display: block; font-size: 1.02rem; color: var(--pro-ink); overflow-wrap: anywhere; }
+        .wd-sports { margin-bottom: 6px; }
+        .wd-sheet h4 { margin: 18px 0 8px; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-muted); }
+        .wd-pick { border: 1px solid var(--pro-line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+        .wd-pick-sel { font-weight: 800; color: var(--pro-ink); margin-bottom: 2px; }
+        .wd-res { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; text-transform: uppercase; background: var(--pro-page); color: var(--pro-muted); }
+        .wd-res.won { background: #E3F4EA; color: #1D7A46; }
+        .wd-res.lost { background: #FBE7E5; color: #B3261E; }
+        .wd-recent td { padding: 8px 10px; }
+        @media (max-width: 640px) {
+            .wd-table .hide-s { display: none; }
+            .wd-table td, .wd-sort { padding-left: 8px; padding-right: 8px; }
+            .wd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wd-sheet { padding: 18px 14px 40px; }
+        }
+
 
         .pro-buy-note {
             margin-top: 10px;
@@ -744,11 +792,12 @@
         <section class="pro-section" id="board">
             <div class="pro-wrap">
                 <div class="pro-section-head">
-                    <h2>Today's pending picks</h2>
+                    <h2>Handicapper Watchdog</h2>
                     <p>
-                        Picks from the handicappers we track around the web, before their games
-                        start, next to their graded records. TrustMyRecord members' own picks
-                        stay private until game time and are never shown here.
+                        Every pending pick from the outside handicappers we track on Covers, X,
+                        Reddit and more, with each handicapper's record, units, streak and recent
+                        form. Tap a handicapper for the full profile. TrustMyRecord members are
+                        never included.
                     </p>
                 </div>
                 <div id="proBoard">
@@ -1045,67 +1094,166 @@
         }
 
 
-        /* ------------------------------------------ pending picks board -- */
+        /* ------------------------- Handicapper Watchdog board (TMR Pro) -- */
+        /* TMR_PRO_BOARD_V2_20260928: a sortable list of the external handicappers
+           with picks pending, and a detail panel per handicapper. Data comes
+           from /api/pro/pending-board and /api/pro/handicapper; TMR members are
+           excluded on the server. */
         var boardEl = document.getElementById('proBoard');
         var boardData = null;
-        var boardFilter = { proven: true, league: 'all' };
+        var boardFilter = { proven: true, league: 'all', source: 'all', q: '' };
+        var boardSort = { key: 'units', dir: -1 };
         function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
         function odds(o) { if (o == null || o === '') return ''; var n = Number(o); return isNaN(n) ? esc(o) : (n > 0 ? '+' + n : String(n)); }
-        function line(l) { if (l == null || l === '') return ''; var n = Number(l); return isNaN(n) ? esc(l) : (n > 0 ? '+' + n : String(n)); }
+        function signed(n, d) { if (n == null || isNaN(n)) return '&ndash;'; var v = Number(n).toFixed(d == null ? 2 : d); return (n > 0 ? '+' : '') + v; }
+        function unitsCls(n) { return n == null ? '' : (n > 0 ? 'up' : n < 0 ? 'down' : ''); }
         function kick(iso) {
             var d = new Date(iso); if (isNaN(d.getTime())) return '';
             return d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT';
         }
+        function day(iso) { var d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }); }
+        function streakTag(s) {
+            if (!s) return '<span class="wd-streak">&ndash;</span>';
+            return '<span class="wd-streak ' + (s > 0 ? 'up' : 'down') + '">' + (s > 0 ? 'W' : 'L') + Math.abs(s) + '</span>';
+        }
+        function dots(list) {
+            if (!list || !list.length) return '<span class="wd-muted">&ndash;</span>';
+            return '<span class="wd-dots" aria-label="Last ' + list.length + ' results">' + list.slice(0, 10).map(function (r) { return '<i class="' + (r === 'W' ? 'w' : r === 'L' ? 'l' : 'p') + '"></i>'; }).join('') + '</span>';
+        }
+        function pickLabel(p) {
+            var sel = String(p.selection || '');
+            var hasLine = p.line != null && sel.indexOf(String(Math.abs(Number(p.line)))) === -1;
+            return esc(sel) + (hasLine ? ' ' + esc(p.line) : '') + (p.odds != null ? ' <span class="wd-odds">' + odds(p.odds) + '</span>' : '');
+        }
         function teaser(summary) {
             if (!boardEl) return;
             var t = summary && summary.picks
-                ? '<b>' + summary.picks + ' pending picks</b> from <b>' + summary.handicappers + ' tracked handicappers</b> are on the board right now, ' + summary.proven_handicappers + ' of them with 25 or more graded picks. TMR Pro shows every pick, the record behind it and where the proven handicappers agree.'
-                : 'The board fills up as the handicappers we track post their picks for the next games. TMR Pro shows every pick, the record behind it and where the proven handicappers agree.';
-            boardEl.innerHTML = '<div class="pro-teaser">' + t + '</div>';
+                ? '<b>' + summary.picks + ' pending picks</b> from <b>' + summary.handicappers + ' tracked handicappers</b> are on the board right now, ' + summary.proven_handicappers + ' of them with 25 or more graded picks.'
+                : 'The board fills up as the handicappers we track post their picks for the next games.';
+            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper\'s record, units and streak, and where the proven handicappers agree. <a href="#pricing">Get TMR Pro</a></div>';
+        }
+        function sortVal(c, k) {
+            if (k === 'name') return String(c.name || '').toLowerCase();
+            if (k === 'record') return (c.record.w + c.record.l) ? c.record.w / (c.record.w + c.record.l) : -1;
+            if (k === 'streak') return c.streak == null ? -99 : c.streak;
+            if (k === 'last10') return c.last10 ? c.last10.units : -99;
+            if (k === 'roi') return c.roi == null ? -999 : c.roi;
+            if (k === 'pending') return c.shown.length;
+            if (k === 'graded') return c.graded;
+            return c.units == null ? -999 : c.units;
         }
         function drawBoard() {
             if (!boardEl || !boardData) return;
-            var d = boardData;
-            var leagues = d.summary.leagues || [];
-            var cap = d.handicappers.filter(function (c) { return !boardFilter.proven || c.graded >= 25; }).map(function (c) {
-                var picks = c.picks.filter(function (p) { return boardFilter.league === 'all' || p.league === boardFilter.league; });
-                return picks.length ? { c: c, picks: picks } : null;
-            }).filter(Boolean);
-            var n = cap.reduce(function (a, x) { return a + x.picks.length; }, 0);
-            var html = '<div class="pro-board-bar"><span class="pro-board-count">' + n + ' picks from ' + cap.length + ' handicappers</span>' +
-                '<label><input type="checkbox" id="proBoardProven"' + (boardFilter.proven ? ' checked' : '') + '> Proven only (25+ graded picks)</label>' +
-                '<label>League <select id="proBoardLeague"><option value="all">All</option>' + leagues.map(function (l) { return '<option' + (boardFilter.league === l ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select></label>' +
-                '<span>Updated ' + esc(new Date(d.generated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT</span></div>';
-            var cons = (d.consensus || []).filter(function (g) { return g.proven >= 2 && (boardFilter.league === 'all' || g.league === boardFilter.league); }).slice(0, 8);
+            var d = boardData, f = boardFilter;
+            var q = f.q.trim().toLowerCase();
+            var rows = d.handicappers.filter(function (c) {
+                if (f.proven && !c.proven) return false;
+                if (f.source !== 'all' && c.source !== f.source) return false;
+                if (q && String(c.name).toLowerCase().indexOf(q) === -1) return false;
+                return true;
+            }).map(function (c) {
+                c.shown = c.picks.filter(function (p) { return f.league === 'all' || p.league === f.league; });
+                return c;
+            }).filter(function (c) { return c.shown.length; });
+            rows.sort(function (a, b) {
+                var x = sortVal(a, boardSort.key), y = sortVal(b, boardSort.key);
+                return (x < y ? -1 : x > y ? 1 : 0) * boardSort.dir || (b.graded - a.graded);
+            });
+            var picks = rows.reduce(function (n, c) { return n + c.shown.length; }, 0);
+            var sources = Array.from(new Set(d.handicappers.map(function (c) { return c.source; }).filter(Boolean))).sort();
+            var opt = function (v, cur) { return '<option' + (cur === v ? ' selected' : '') + '>' + esc(v) + '</option>'; };
+            var th = function (k, label, cls) {
+                var on = boardSort.key === k;
+                return '<th class="' + (cls || '') + '"><button type="button" class="wd-sort' + (on ? ' on' : '') + '" data-sort="' + k + '">' + label + (on ? (boardSort.dir < 0 ? ' &darr;' : ' &uarr;') : '') + '</button></th>';
+            };
+            var html = '<div class="wd-bar">' +
+                '<input type="search" id="wdSearch" class="wd-search" placeholder="Search handicappers" value="' + esc(f.q) + '" aria-label="Search handicappers">' +
+                '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> Proven (25+ graded)</label>' +
+                '<select id="wdLeague" aria-label="League"><option value="all">All leagues</option>' + (d.summary.leagues || []).map(function (l) { return opt(l, f.league); }).join('') + '</select>' +
+                '<select id="wdSource" aria-label="Source"><option value="all">All sources</option>' + sources.map(function (s) { return opt(s, f.source); }).join('') + '</select>' +
+                '<span class="wd-count"><b>' + picks + '</b> pending picks &middot; <b>' + rows.length + '</b> handicappers &middot; updated ' + esc(new Date(d.generated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT</span></div>';
+            var cons = (d.consensus || []).filter(function (g) { return g.proven >= 2 && (f.league === 'all' || g.league === f.league); }).slice(0, 6);
             if (cons.length) {
-                html += '<div class="pro-cons"><h3>Where the proven handicappers agree</h3>' + cons.map(function (g) {
-                    return '<div class="pro-cons-row"><span><b>' + esc(g.selection) + '</b> ' + esc(g.bet_type || '') + ' &middot; ' + esc(g.matchup || '') + ' &middot; ' + esc(kick(g.start)) + '</span><span><b>' + g.proven + '</b> proven, ' + g.cappers + ' total</span></div>';
-                }).join('') + '</div>';
+                html += '<div class="wd-cons"><h3>Where the proven handicappers agree</h3><div class="wd-cons-grid">' + cons.map(function (g) {
+                    return '<div class="wd-cons-card"><div class="wd-cons-n"><b>' + g.proven + '</b> proven<span>' + g.cappers + ' total</span></div><div><div class="wd-cons-sel">' + esc(g.selection) + ' <span class="wd-muted">' + esc(g.bet_type || '') + '</span></div><div class="wd-muted">' + esc(g.matchup || '') + ' &middot; ' + esc(kick(g.start)) + '</div></div></div>';
+                }).join('') + '</div></div>';
             }
-            if (!cap.length) {
+            if (!rows.length) {
                 html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
             } else {
-                html += '<div class="pro-cappers">' + cap.map(function (x) {
-                    var c = x.c, r = c.record || {};
-                    var u = c.units == null ? '' : ' &middot; <span class="' + (c.units >= 0 ? 'up' : 'down') + '">' + (c.units > 0 ? '+' : '') + c.units.toFixed(2) + 'u</span>';
-                    var head = c.profile_url ? '<a href="' + esc(c.profile_url) + '">' + esc(c.name) + '</a>' : '<b>' + esc(c.name) + '</b>';
-                    return '<div class="pro-capper"><div class="pro-capper-head">' + head +
-                        '<span class="pro-capper-rec">' + esc(c.source || '') + ' &middot; ' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + u + ' &middot; ' + c.graded + ' graded</span></div>' +
-                        x.picks.map(function (p) {
-                            var hasLine = p.line != null && String(p.selection || '').indexOf(String(Math.abs(Number(p.line)))) === -1;
-                            var sel = esc(p.selection || '') + (hasLine ? ' ' + (/total/i.test(p.bet_type || '') ? esc(p.line) : line(p.line)) : '') + (p.odds != null ? ' (' + odds(p.odds) + ')' : '');
-                            return '<div class="pro-pick"><div class="pro-pick-sel">' + sel + '</div><div class="pro-pick-meta">' +
-                                esc(p.league || '') + ' &middot; ' + esc(p.bet_type || '') + ' &middot; ' + esc(p.matchup || '') + ' &middot; ' + esc(kick(p.start)) +
-                                (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" rel="nofollow noopener" target="_blank">Original post</a>' : '') + '</div></div>';
-                        }).join('') + '</div>';
-                }).join('') + '</div>';
+                html += '<div class="wd-table-wrap"><table class="wd-table"><thead><tr>' + th('name', 'Handicapper') + th('record', 'Record') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + th('streak', 'Streak', 'n') + th('last10', 'Last 10', 'hide-s') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>' +
+                    rows.map(function (c) {
+                        var r = c.record;
+                        return '<tr class="wd-row" tabindex="0" data-key="' + esc(c.key) + '">' +
+                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div></td>' +
+                            '<td class="wd-rec">' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + '<div class="wd-sub">' + c.graded + ' graded</div></td>' +
+                            '<td class="n ' + unitsCls(c.units) + '">' + signed(c.units) + 'u</td>' +
+                            '<td class="n hide-s ' + unitsCls(c.roi) + '">' + (c.roi == null ? '&ndash;' : signed(c.roi, 1) + '%') + '</td>' +
+                            '<td class="n">' + streakTag(c.streak) + '</td>' +
+                            '<td class="hide-s">' + dots(c.last10_results) + '</td>' +
+                            '<td class="n"><span class="wd-pend">' + c.shown.length + '</span></td></tr>' +
+                            '<tr class="wd-picks-row"><td colspan="7">' + c.shown.map(function (p) {
+                                return '<span class="wd-chip"><b>' + pickLabel(p) + '</b> <span class="wd-muted">' + esc(p.league || '') + ' &middot; ' + esc(kick(p.start)) + '</span></span>';
+                            }).join('') + '</td></tr>';
+                    }).join('') + '</tbody></table></div>';
             }
+            html += '<div class="wd-panel" id="wdPanel" hidden></div>';
             boardEl.innerHTML = html;
-            var pv = document.getElementById('proBoardProven');
-            if (pv) pv.addEventListener('change', function () { boardFilter.proven = pv.checked; drawBoard(); });
-            var lg = document.getElementById('proBoardLeague');
-            if (lg) lg.addEventListener('change', function () { boardFilter.league = lg.value; drawBoard(); });
+            var on = function (id, ev, fn) { var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+            on('wdProven', 'change', function (e) { boardFilter.proven = e.target.checked; drawBoard(); });
+            on('wdLeague', 'change', function (e) { boardFilter.league = e.target.value; drawBoard(); });
+            on('wdSource', 'change', function (e) { boardFilter.source = e.target.value; drawBoard(); });
+            on('wdSearch', 'input', function (e) { boardFilter.q = e.target.value; var pos = e.target.selectionStart; drawBoard(); var s = document.getElementById('wdSearch'); if (s) { s.focus(); try { s.setSelectionRange(pos, pos); } catch (x) { } } });
+            Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-sort'), function (b) {
+                b.addEventListener('click', function () {
+                    var k = b.getAttribute('data-sort');
+                    boardSort = { key: k, dir: boardSort.key === k ? -boardSort.dir : (k === 'name' ? 1 : -1) };
+                    drawBoard();
+                });
+            });
+            Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-row'), function (tr) {
+                var open = function () { openCapper(tr.getAttribute('data-key')); };
+                tr.addEventListener('click', open);
+                tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+            });
         }
+        function closePanel() { var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); }
+        function openCapper(key) {
+            var panel = document.getElementById('wdPanel'); if (!panel) return;
+            panel.hidden = false; document.body.classList.add('wd-locked');
+            panel.innerHTML = '<div class="wd-sheet"><button type="button" class="wd-close" aria-label="Close">&times;</button><div class="wd-muted">Loading profile</div></div>';
+            panel.querySelector('.wd-close').addEventListener('click', closePanel);
+            ga('pro_watchdog_profile_open', {});
+            S.authFetch(API + '/pro/handicapper?key=' + encodeURIComponent(key)).then(function (r) {
+                return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'failed'); return j; });
+            }).then(function (h) {
+                var r = h.record, st = h.streaks || {};
+                var stat = function (label, val, cls) { return '<div class="wd-stat"><span>' + label + '</span><b class="' + (cls || '') + '">' + val + '</b></div>'; };
+                var f25 = h.form && h.form.last_25;
+                var html = '<div class="wd-sheet" role="dialog" aria-label="' + esc(h.name) + '"><button type="button" class="wd-close" aria-label="Close">&times;</button>' +
+                    '<div class="wd-head"><div><h3>' + esc(h.name) + (h.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</h3><div class="wd-muted">' + esc(h.source || '') +
+                    (h.tracked_since ? ' &middot; tracked since ' + esc(day(h.tracked_since)) : '') + (h.source_url ? ' &middot; <a href="' + esc(h.source_url) + '" target="_blank" rel="nofollow noopener">' + esc(h.source || 'Source') + ' profile</a>' : '') + '</div></div></div>' +
+                    '<div class="wd-stats">' + stat('Record', r.w + '-' + r.l + (r.p ? '-' + r.p : '')) + stat('Units', signed(h.units) + 'u', unitsCls(h.units)) + stat('ROI', h.roi == null ? '&ndash;' : signed(h.roi, 1) + '%', unitsCls(h.roi)) +
+                    stat('Win rate', h.win_rate == null ? '&ndash;' : Number(h.win_rate).toFixed(1) + '%') + stat('Streak', (st.current ? (st.current > 0 ? 'W' : 'L') + Math.abs(st.current) : '&ndash;'), st.current > 0 ? 'up' : st.current < 0 ? 'down' : '') +
+                    stat('Last 25', f25 ? f25.wins + '-' + f25.losses + (f25.pushes ? '-' + f25.pushes : '') + ' (' + signed(f25.net_units) + 'u)' : '&ndash;', f25 ? unitsCls(f25.net_units) : '') + '</div>' +
+                    (h.sports && h.sports.length ? '<div class="wd-muted wd-sports">' + h.sports.map(function (s) { return esc(s.label) + ' ' + s.graded_picks; }).join(' &middot; ') + ' graded</div>' : '') +
+                    '<h4>Pending picks</h4>' + h.pending.map(function (p) {
+                        return '<div class="wd-pick"><div class="wd-pick-sel">' + pickLabel(p) + '</div><div class="wd-muted">' + esc(p.league || '') + ' &middot; ' + esc(p.bet_type || '') + ' &middot; ' + esc(p.matchup || '') + ' &middot; ' + esc(kick(p.start)) +
+                            (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" target="_blank" rel="nofollow noopener">Original post</a>' : '') + '</div></div>';
+                    }).join('') +
+                    '<h4>Recent graded picks</h4>' + (h.recent.length ? '<div class="wd-table-wrap"><table class="wd-table wd-recent"><tbody>' + h.recent.map(function (x) {
+                        return '<tr><td class="wd-muted">' + esc(day(x.date)) + '</td><td><b>' + esc(x.pick || '') + '</b> ' + (x.odds != null ? '<span class="wd-odds">' + odds(x.odds) + '</span>' : '') + '<div class="wd-sub">' + esc(x.league || '') + ' &middot; ' + esc(x.matchup || '') + '</div></td><td class="n"><span class="wd-res ' + esc(x.result) + '">' + esc(x.result) + '</span></td><td class="n ' + unitsCls(x.units) + '">' + signed(x.units) + '</td></tr>';
+                    }).join('') + '</tbody></table></div>' : '<div class="wd-muted">No graded picks yet.</div>') +
+                    (h.profile_url ? '<p><a class="wd-full" href="' + esc(h.profile_url) + '">Full record and history</a></p>' : '') + '</div>';
+                panel.innerHTML = html;
+                panel.querySelector('.wd-close').addEventListener('click', closePanel);
+            }).catch(function (e) {
+                panel.innerHTML = '<div class="wd-sheet"><button type="button" class="wd-close" aria-label="Close">&times;</button><div class="pro-teaser">' + esc(e.message || 'That profile could not load right now.') + '</div></div>';
+                panel.querySelector('.wd-close').addEventListener('click', closePanel);
+            });
+        }
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
+        document.addEventListener('click', function (e) { var p = document.getElementById('wdPanel'); if (p && !p.hidden && e.target === p) closePanel(); });
         function loadBoard(isPro) {
             if (!boardEl) return;
             if (isPro) {
