@@ -183,6 +183,7 @@ function teamLinks(sport) {
 }
 
 function page(sport, mode, inputs, result, shell) {
+  if (mode === 'playoff') return playoffPage(sport, inputs, result, shell);
   const F = facts(sport, inputs, result);
   const L = F.L;
   const nba = sport === 'nba';
@@ -360,6 +361,271 @@ ${shell.tail}
 }
 
 function UI_one(v) { return (Math.round(v * 10) / 10).toFixed(1); }
+
+/* PLAYOFF_BRACKET_20260929: the NBA and NHL playoff simulator pages, rebuilt on
+   the /mlb-playoff-simulator/ model: one authoritative bracket tool with the real
+   format, the projected field, the odds, what the simulations say, and copy that
+   is its own rather than the season page's. The season pages are unchanged. */
+const PB = require('../static/js/playoff-bracket.js');
+
+function bracketCfg(sport, inputs, result) {
+  const nba = sport === 'nba';
+  const proj = {};
+  result.teams.forEach((t) => { proj[t.abbr] = t; });
+  const confs = [...new Set(inputs.teams.map((t) => t.conference))].sort();
+  const teams = {};
+  inputs.teams.forEach((t) => {
+    const p = proj[t.espn_abbr];
+    teams[t.espn_abbr] = { n: t.name, s: t.short, l: t.logo, c: t.conference, d: t.division,
+      r: Math.round((nba ? p.wins_mean : p.points_mean) * 10) / 10 };
+  });
+  const byR = (a, b) => teams[b].r - teams[a].r || proj[b].playoffs - proj[a].playoffs;
+  const seeds = {};
+  confs.forEach((conf) => {
+    const pool = Object.keys(teams).filter((k) => teams[k].c === conf).sort(byR);
+    if (nba) { seeds[conf] = pool.slice(0, 10); return; }
+    const divs = {}, rest = [];
+    [...new Set(pool.map((k) => teams[k].d))].sort().forEach((d) => {
+      const inDiv = pool.filter((k) => teams[k].d === d);
+      divs[d] = inDiv.slice(0, 3);
+      rest.push(...inDiv.slice(3));
+    });
+    seeds[conf] = { divs, order: Object.keys(divs), wc: rest.sort(byR).slice(0, 2) };
+  });
+  if (!nba) PB.reorderNhl({ teams }, seeds);
+  const k = Object.keys(teams).sort();
+  const p = k.map((h) => k.map((a) => (h === a ? 0.5 : Math.round(inputs.matchups[h][a].p * 10000) / 10000)));
+  return { league: sport, season: inputs.season_label, confs, teams, seeds, prob: { k, p },
+    trophy: nba ? 'NBA title' : 'Stanley Cup' };
+}
+
+function pictureTable(sport, cfg, result) {
+  const nba = sport === 'nba';
+  const proj = {};
+  result.teams.forEach((t) => { proj[t.abbr] = t; });
+  const T = cfg.teams;
+  const row = (slot, a) => `<tr><th scope="row">${esc(slot)}</th><td style="text-align:left"><span class="lt">${T[a].l ? `<img src="${esc(T[a].l)}" alt="" width="22" height="22" loading="lazy">` : ''}<span class="ln">${esc(T[a].n)}</span><span class="ls">${esc(T[a].s)}</span></span></td><td class="num">${UI_one(T[a].r)}</td><td class="num">${pctText(proj[a].playoffs)}</td><td class="num">${pctText(proj[a].champion)}</td></tr>`;
+  return cfg.confs.map((conf) => {
+    const s = cfg.seeds[conf];
+    const rows = nba
+      ? s.map((a, i) => row(i < 6 ? String(i + 1) : `${i + 1} (play-in)`, a)).join('')
+      : s.order.map((d) => s.divs[d].map((a, i) => row(`${d} ${i + 1}`, a)).join('')).join('') + s.wc.map((a, i) => row(`Wild card ${i + 1}`, a)).join('');
+    return `<div class="lsim-card"><h3>${esc(conf)} Conference</h3><div class="tscroll"><table class="lsim"><thead><tr><th scope="col">${nba ? 'Seed' : 'Spot'}</th><th scope="col" style="text-align:left">Team</th><th scope="col">Proj. ${nba ? 'wins' : 'points'}</th><th scope="col">Playoffs</th><th scope="col">${nba ? 'Title' : 'Cup'}</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  }).join('');
+}
+
+function saying(sport, inputs, result, F) {
+  const nba = sport === 'nba';
+  const L = F.L;
+  const confs = F.confs;
+  const out = [];
+  const fav = F.fav;
+  out.push(`<li><strong>The favorite is still an underdog to the field.</strong> The ${esc(fav.name)} win the ${nba ? 'NBA title' : 'Stanley Cup'} in ${pctText(fav.champion)} of ${count(result.runs)} simulated postseasons, the best of any club, which means someone else wins it in ${pctText(1 - fav.champion)} of them. ${nba ? 'Four rounds of best of seven' : 'Sixteen wins across four best of seven rounds'} is a long way to go, even for the best team.</li>`);
+  const confFav = confs.map((c) => result.teams.filter((t) => t.conference === c).sort((a, b) => b.final - a.final)[0]);
+  out.push(`<li><strong>The conference favorites.</strong> ${confFav.map((t, i) => `In the ${esc(confs[i])} the ${esc(t.name)} reach the ${esc(L.finals)} ${pctText(t.final)} of the time`).join('; ')}.</li>`);
+  if (nba) {
+    const pi = result.teams.slice().sort((a, b) => b.play_in - a.play_in)[0];
+    out.push(`<li><strong>The play-in is a real risk for good teams.</strong> The club most likely to end up there is the ${esc(pi.name)}, in the play-in ${pctText(pi.play_in)} of the time. Finishing seventh or eighth means one extra game, finishing ninth or tenth means two wins in a row on the road just to reach the first round.</li>`);
+  } else {
+    const wc = result.teams.slice().sort((a, b) => b.play_in - a.play_in)[0];
+    out.push(`<li><strong>The wild card race.</strong> The club most likely to get in as a wild card is the ${esc(wc.name)}, ${pctText(wc.play_in)} of the time. A wild card crosses to face a division winner in round one, so finishing third in a division is often the easier road.</li>`);
+  }
+  if (F.bubble.length) {
+    out.push(`<li><strong>Too close to call.</strong> ${(x => x.charAt(0).toUpperCase() + x.slice(1))(F.bubble.slice(0, 6).map((t) => `the ${esc(t.name)} (${pctText(t.playoffs)})`).join(', '))} make the playoffs in between 35% and 65% of simulated seasons. Those are the clubs whose next few weeks move the bracket most.</li>`);
+  }
+  if (!F.final) {
+    out.push(`<li><strong>Nothing has been played yet.</strong> No ${esc(inputs.season_label)} regular season game is final, so every number here comes from the model's ratings before ${nba ? 'the ball has been tipped' : 'the puck has been dropped'}. The page is rebuilt twice a day and tightens as results come in.</li>`);
+  }
+  return `<ul class="lsim-say">${out.join('\n')}</ul>`;
+}
+
+function playoffPage(sport, inputs, result, shell) {
+  const F = facts(sport, inputs, result);
+  const L = F.L;
+  const nba = sport === 'nba';
+  const sportName = L.label;
+  const url = `/${sport}-playoff-simulator/`;
+  const sib = `/${sport}-season-simulator/`;
+  const season = inputs.season_label;
+  const title = `${sportName} Playoff Simulator ${season} | ${nba ? 'Bracket Picker and Predictor' : 'Stanley Cup Bracket Predictor'}`;
+  const h1 = `${sportName} Playoff Simulator`;
+  const desc = nba
+    ? `Free NBA playoff simulator and bracket picker for ${season}. Pick every play-in game and series through the NBA Finals, or simulate the postseason ${count(result.runs)} times for title odds.`
+    : `Free NHL playoff simulator and bracket picker for ${season}. Set the wild cards, pick every series through the Stanley Cup Final, or simulate the playoffs ${count(result.runs)} times for Cup odds.`;
+  const fav = F.fav, fav2 = F.fav2;
+
+  const cfg = bracketCfg(sport, inputs, result);
+  const favState = PB.fill(cfg, { seeds: cfg.seeds, picks: {} }, 'fav');
+  const favChamp = PB.build(cfg, favState).champion;
+
+  const formatNba = `<p>Each conference sends six teams straight to the playoffs. The teams that finish seventh through tenth play the play-in tournament: seven hosts eight and the winner takes the 7 seed, nine hosts ten and the loser goes home, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. That is why the bracket above has a play-in column: a 9 or 10 seed has to win twice on the road to reach the first round.</p>
+<p>The first round is 1 against 8, 4 against 5, 2 against 7 and 3 against 6. The bracket is fixed, there is no reseeding, so the 1 seed's second round opponent is always the winner of 4 against 5. Every series is best of seven, played 2-2-1-1-1: the team with the better regular season record hosts games one, two, five and seven. Home court in the NBA Finals goes to the team with the better record, whichever conference it comes from.</p>`;
+  const formatNhl = `<p>Teams earn two points for a win and one for a loss in overtime or a shootout. The top three teams in each of the ${F.divs.length} divisions make the playoffs, and the next two teams in each conference by points take the wild cards, 16 teams in all. The division winner with more points plays the second wild card, the other division winner plays the first, and the second and third place teams in each division meet.</p>
+<p>The bracket stays inside the division through the second round, so the first two rounds decide a division champion on each side before the conference final. There is no reseeding. Every series is best of seven, played 2-2-1-1-1 with home ice to the team with more points, and that includes the Stanley Cup Final.</p>`;
+
+  const oddsHow = `<p>The percentage beside each team in the bracket is that team's chance to win that matchup. ${nba ? 'Play-in games are single games; every other round is' : 'Every round is'} a best of seven, and the chance is worked out exactly, game by game, from the model's single game win probability at each arena in the 2-2-1-1-1 order, so home ${nba ? 'court' : 'ice'} counts for what it is worth and no more. Your champion card multiplies every pick you made into the model's odds of that exact bracket, which is why a bracket full of favorites is still a long shot.</p>
+<p>The seeds start from the projected standings: every team's average ${L.unit} across ${count(result.runs)} simulated ${esc(season)} seasons, from the same game model the <a href="${sib}">${sportName} Season Simulator</a> uses. Edit seeds lets you set any field you like. The odds table is a different question answered the same way: it plays the regular season and the whole postseason ${count(result.runs)} times and counts how often each club reaches each round. How the model has scored on a season it never saw is on the season simulator and on the <a href="/methodology/#simulators">methodology page</a>.</p>`;
+
+  const faqs = [
+    [`What is an ${sportName} playoff simulator?`, `A tool that plays out the ${sportName} postseason. Here it does two jobs: a bracket picker where you choose the winner of every ${nba ? 'play-in game and series' : 'series'} through the ${L.finals}, and a predictor that simulates the ${season} season and playoffs ${count(result.runs)} times to give every team's odds of reaching each round.`],
+    [`How do I fill out an ${sportName} playoff bracket?`, `Click a team in any matchup to advance it. Later rounds fill in as you go, and changing an early pick clears only the picks that depended on it. Fill with favorites takes the model's favorite in every open matchup, Simulate the rest draws them from the model's odds, and Edit seeds lets you change the field before you start.`],
+    nba ? ['How does the NBA play-in tournament work?', 'Seven hosts eight and the winner is the 7 seed. Nine hosts ten and the loser is out. The loser of seven against eight then hosts the winner of nine against ten, and that winner is the 8 seed. The bracket above plays all three games.']
+      : ['How are the NHL wild cards decided?', 'After the top three teams in each division, the next two teams in each conference by points are the wild cards. The division winner with more points plays the second wild card and the other division winner plays the first.'],
+    [`Who is favored to win the ${season} ${nba ? 'NBA title' : 'Stanley Cup'}?`, `In the current projection the ${fav.name} win it ${pctText(fav.champion)} of the time, ahead of the ${fav2.name} at ${pctText(fav2.champion)}. Those numbers move as results come in, and the page is rebuilt twice a day.`],
+    [`Can I share my ${sportName} bracket?`, `Yes. Share bracket copies a link that carries your seeds and picks, and anyone who opens it sees the same bracket. Your bracket is also kept on your own device, so it is still there when you come back.`],
+    [`Is the ${sportName} playoff simulator free?`, `Yes. The bracket picker, the projected field and the published odds are free with no account. Running your own set of ${nba ? 'seasons' : 'seasons'} needs a free account and uses the daily free simulator run.`],
+  ];
+  const faq = faqBlock(faqs);
+
+  const ld = [
+    { '@context': 'https://schema.org', '@type': 'WebApplication', name: `TrustMyRecord ${h1}`, applicationCategory: 'SportsApplication',
+      operatingSystem: 'Web', url: SITE + url, description: desc, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      dateModified: inputs.generated_at },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Sports Simulators', item: SITE + '/sports-simulators/' },
+      { '@type': 'ListItem', position: 3, name: `${sportName} Simulator`, item: SITE + L.hub },
+      { '@type': 'ListItem', position: 4, name: h1, item: SITE + url }] },
+  ];
+  const openerLine = F.opener ? `The ${season} regular season opens ${ptDate(F.opener.date)}` : `The ${season} schedule is not published yet`;
+  const favC = cfg.teams[favChamp];
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- NBA_NHL_SIM_CLUSTER_20260915 + PLAYOFF_BRACKET_20260929. Baked by scripts/build_league_sim_pages.js. Do not edit by hand. -->
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${SITE}${url}" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="${esc(h1)} ${esc(season)}" />
+<meta property="og:description" content="${esc(desc)}" />
+<meta property="og:url" content="${SITE}${url}" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:image" content="${SITE}/static/og/og-home.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${esc(h1)} ${esc(season)}" />
+<meta name="twitter:description" content="${esc(desc)}" />
+<meta name="twitter:image" content="${SITE}/static/og/og-home.png" />
+<link rel="icon" type="image/png" href="/static/favicon.png">
+${ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}
+<script type="application/ld+json">${faq.ld}</script>
+<script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
+${shell.head}
+<link rel="stylesheet" href="/static/css/tmr-playoff-bracket.css?v=${PB_CSS_V}">
+<style>${CSS}
+  .lsim-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+  .lsim-links a{font-weight:700;font-size:.88rem;padding:8px 12px;border-radius:9px;border:1px solid var(--line,#23324a);text-decoration:none;color:inherit}
+  .lsim-links a:first-child{background:#38bdf8;border-color:#38bdf8;color:#06121f}
+  ul.lsim-say{padding-left:1.1em}
+  ul.lsim-say li{margin:0 0 10px}
+</style>
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<main class="wrap lsim-wrap" id="lsim" data-sport="${sport}" data-mode="playoff">
+  <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
+    <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="/sports-simulators/" style="color:inherit;text-decoration:none;">Sports Simulators</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <a href="${L.hub}" style="color:inherit;text-decoration:none;">${sportName} Simulator</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
+    <span aria-current="page" style="font-weight:600;">${esc(h1)}</span>
+  </nav>
+  <section class="hero lsim-hero">
+    <h1>${esc(h1)}</h1>
+    <p>Build the ${esc(season)} ${nba ? 'NBA playoff bracket from the play-in to the NBA Finals' : 'Stanley Cup playoff bracket from the wild cards to the Stanley Cup Final'}, pick every ${nba ? 'game and series' : 'series'} yourself or let the model fill it in, then check your call against ${count(result.runs)} simulated postseasons. ${esc(openerLine)}.</p>
+    <div class="lsim-links">
+      <a href="#bracket">Build your bracket</a>
+      <a href="#odds">${esc(season)} playoff odds</a>
+      <a href="${sib}">${sportName} Season Simulator</a>
+      <a href="${L.hub}">${sportName} Game Simulator</a>
+    </div>
+  </section>
+
+  <section class="panel" id="bracket">
+    <h2>Build your ${esc(season)} ${sportName} playoff bracket</h2>
+    <p>The bracket opens with the projected field and the model's favorite advanced in every ${nba ? 'game and series' : 'series'}, which ends with the ${esc(favC ? favC.n : fav.name)} winning the ${nba ? 'NBA title' : 'Stanley Cup'}. Click any team to change it. The percentage is that team's chance to win the matchup.</p>
+    ${PB.widget(cfg, favState)}
+  </section>
+
+  <section class="panel">
+    <h2>The projected ${esc(season)} ${sportName} playoff picture</h2>
+    <p>${nba ? 'Seeds one through ten in each conference' : 'The top three in every division and the two wild cards in each conference'}, ordered by projected ${L.unit} across ${count(result.runs)} simulated seasons. This is the field the bracket starts from.</p>
+    <div class="lsim-grid">${pictureTable(sport, cfg, result)}</div>
+  </section>
+
+  <section class="panel" id="odds"><h2>${esc(season)} ${sportName} playoff odds</h2>
+    <p>How often each club reaches each round across ${count(result.runs)} simulated ${esc(season)} seasons and postseasons. Press Run to play a fresh set from today's schedule and results.</p>
+    <div class="lsim-run">
+      <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+      <button class="btn primary" type="button" id="runSim">Run the playoffs</button>
+      <span id="lsimStatus" role="status" aria-live="polite"></span>
+    </div>
+    <p id="lsimStamp">${UI.stamp(result, inputs)}</p>
+    <div id="lsimOdds">${UI.oddsTable(result)}</div>
+  </section>
+
+  <section class="lsim-copy">
+    <h2>What the simulations are saying</h2>
+    ${saying(sport, inputs, result, F)}
+  </section>
+
+  ${pickPanel(sport, inputs)}
+
+  <section class="lsim-copy">
+    <h2>How the ${esc(season)} ${sportName} playoffs work</h2>
+    ${nba ? formatNba : formatNhl}
+    <h2>How the bracket odds are produced</h2>
+    ${oddsHow}
+    <h2>Simulations are useful. Verified records matter more.</h2>
+    <p>A simulator can tell you what might happen. It cannot tell you who has actually been right. That is what TrustMyRecord is built for: every pick is locked before the game, graded automatically and counted on a public record, with no deleted losers and no edited history. Use the bracket to do your homework, then put your read on the record with the <a href="/${sport}-pick-tracker/">${sportName} pick tracker</a>, and see who has earned it on the <a href="/leaderboards/">leaderboard</a> and among the <a href="/handicappers/">verified handicappers</a>.</p>
+
+    <h2 id="faq">${esc(h1)} FAQ</h2>
+    ${faq.html}
+  </section>
+
+  <section class="panel">
+    <h2>More ${sportName} simulators</h2>
+    <div class="linkgrid">
+    <a href="${L.hub}">${sportName} Simulator<small>Simulate any game with a full box score</small></a>
+    <a href="${sib}">${sportName} Season Simulator<small>Projected standings and ${L.unit}</small></a>
+    <a href="${L.archive}">${sportName} Simulation Results<small>Archived simulations</small></a>
+    <a href="/${L.other}-playoff-simulator/">${LEAGUE[L.other].label} Playoff Simulator<small>The same bracket tool for the ${LEAGUE[L.other].label}</small></a>
+    <a href="/nfl-playoff-simulator/">NFL Playoff Simulator<small>Football</small></a>
+    <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>Baseball</small></a>
+    <a href="/sports-simulators/">All Sports Simulators<small>MLB, NFL, NBA and NHL</small></a>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Simulate a single ${sportName} team</h2>
+    <div class="linkgrid">
+    ${teamLinks(sport)}
+    </div>
+  </section>
+</main>
+<div class="foot wrap">TrustMyRecord ${esc(h1)} &middot; a model projection, not betting advice &middot; <a href="${url}#faq">FAQ</a></div>
+<script defer src="/static/js/league-season-engine.js"></script>
+<script defer src="/static/js/league-season-sim.js"></script>
+<script defer src="/static/js/playoff-bracket.js?v=${PB_JS_V}"></script>
+<script defer src="/static/js/sim-run-gate.js" data-sport="${sport}_playoff"></script>
+${shell.tail}
+</body>
+</html>
+`;
+}
+
+/* Content hashes for the two bracket assets, the same 12 characters CI pins. */
+function assetV(rel) {
+  try {
+    const bytes = require('child_process').execFileSync('git', ['show', `HEAD:${rel}`], { cwd: ROOT, maxBuffer: 1 << 26, stdio: ['ignore', 'pipe', 'ignore'] });
+    return require('crypto').createHash('sha256').update(bytes).digest('hex').slice(0, 12);
+  } catch (e) {
+    return require('crypto').createHash('sha256').update(fs.readFileSync(path.join(ROOT, rel))).digest('hex').slice(0, 12);
+  }
+}
+const PB_JS_V = assetV('static/js/playoff-bracket.js');
+const PB_CSS_V = assetV('static/css/tmr-playoff-bracket.css');
 
 /* PICK THE NEXT GAMES, the NFL Playoff Simulator's interaction for NBA and NHL.
    The next three game days that are not final, each game with the model's win

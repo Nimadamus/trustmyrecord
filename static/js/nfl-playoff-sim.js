@@ -510,6 +510,21 @@
       'Every round after the wild card reseeds, so the lowest surviving seed always visits the highest. '
       + 'The bracket advances the better seed in every round: it shows the path your picks create, '
       + 'not a forecast of who wins in January.'));
+
+    // PLAYOFF_BRACKET_20260929: hand these seeds to the bracket picker below.
+    var picker = document.querySelector('[data-playoff-bracket]');
+    if (picker && s.AFC.seeds.length === 7 && s.NFC.seeds.length === 7) {
+      var go = el('button', 'btn', 'Pick these playoffs yourself');
+      go.type = 'button';
+      go.addEventListener('click', function () {
+        picker.dispatchEvent(new CustomEvent('tmr:bracket-seeds', { detail: {
+          seeds: { AFC: s.AFC.seeds.slice(), NFC: s.NFC.seeds.slice() },
+          message: 'Seeds taken from your regular season picks. Now pick every playoff game.' } }));
+        var dest = document.getElementById('build-bracket');
+        if (dest) dest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      sec.appendChild(go);
+    }
     return sec;
   }
 

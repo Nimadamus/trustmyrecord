@@ -14,10 +14,13 @@ node scripts\build_league_sim_pages.js                     >> "%LOG%" 2>&1 || go
 node scripts\build_nfl_season_page.js                      >> "%LOG%" 2>&1 || goto :fail
 node scripts\build_nfl_team_pages.js                       >> "%LOG%" 2>&1 || goto :fail
 node scripts\build_mlb_odds_page.js                        >> "%LOG%" 2>&1 || goto :fail
+REM PLAYOFF_BRACKET_20260929: never fails the bake; on bad inputs it leaves the last bake live.
+node scripts\build_nfl_playoff_page.js                     >> "%LOG%" 2>&1
+node tests\playoff-bracket-test.js                         >> "%LOG%" 2>&1 || goto :fail
 node tests\league-season-engine-test.js                    >> "%LOG%" 2>&1 || goto :fail
 node tests\seo-indexability-regression-test.js             >> "%LOG%" 2>&1 || goto :fail
 
-git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator >> "%LOG%" 2>&1
+git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator >> "%LOG%" 2>&1
 git diff --cached --quiet && (echo no change >> "%LOG%" & goto :done)
 git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]" >> "%LOG%" 2>&1 || goto :fail
 git fetch origin -q                                        || goto :fail
