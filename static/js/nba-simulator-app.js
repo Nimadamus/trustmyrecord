@@ -277,7 +277,16 @@
       }
       block.appendChild(S.table(
         [
-          { h: 'In the rotation', fmt: function (r) { return r.name; } },
+          { h: 'In the rotation', fmt: function (r) {
+            // A first year player has no NBA line; his numbers are the prior for
+            // his draft range, and a player back from a lost season is rated on
+            // the one before. Say so beside the name.
+            if (r.source === 'rookie prior') {
+              return r.name + (r.draft && r.draft.overall ? ' (rookie, pick ' + r.draft.overall + ')' : ' (rookie)');
+            }
+            if (r.source === 'previous season') return r.name + ' (last full season)';
+            return r.name;
+          } },
           { h: 'Pos', k: 'pos' },
           { h: 'MIN', fmt: function (r) { return r.minutes.toFixed(1); } },
           { h: 'PPG', fmt: function (r) { return r.season.ppg.toFixed(1); } },
@@ -469,8 +478,170 @@
     if (d.meta.data_source) tail += '. Source: ' + d.meta.data_source;
     if (d.meta.season) tail += '. Season ' + d.meta.season;
     else if (d.meta.stats_season) tail += '. Stats ' + d.meta.stats_season;
+    // THE SEASON BEING PROJECTED, when it is not the one the statistics are from.
+    // Team strength has been moved toward the rosters as they stand now; say by
+    // how much, so a summer trade visibly counts.
+    var pr = d.meta.preseason_prior;
+    if (pr && pr.season && pr.season !== d.meta.season) {
+      tail += '. Projecting ' + pr.season + ' with a roster prior';
+      if (typeof pr.margin_shift === 'number' && Math.abs(pr.margin_shift) >= 0.1) {
+        var favoured = pr.margin_shift > 0 ? d.matchup.home.abbr : d.matchup.away.abbr;
+        tail += ' that moves the margin ' + Math.abs(pr.margin_shift).toFixed(1) + ' points toward ' + favoured;
+      }
+    }
     box.appendChild(el('span', '', tail + '.'));
     return box;
+  }
+
+  /* ---------- the market --------------------------------------------------- */
+
+  /**
+   * MODEL AGAINST MARKET.
+   *
+   * For a game that is on the board, the consensus spread and total are the
+   * medians across the sportsbooks TrustMyRecord already carries
+   * (/api/games/board/basketball_nba), and the panel says how far the model is
+   * from them. The panel stays hidden until there is a posted line for this
+   * exact pairing; with none it is simply not shown. One board request per page
+   * load, shared by every run.
+   */
+  var boardPromise = null;
+  function nbaBoard() {
+    if (!boardPromise) {
+      boardPromise = fetch(S.API_HOST + '/api/games/board/basketball_nba', { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : { games: [] }; })
+        .catch(function () { boardPromise = null; return { games: [] }; });
+    }
+    return boardPromise;
+  }
+
+  function median(xs) {
+    if (!xs.length) return null;
+    var s = xs.slice().sort(function (a, b) { return a - b; });
+    var m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+
+  function consensus(game, homeName) {
+    var spreads = [];
+    var totals = [];
+    (game.bookmakers || []).forEach(function (b) {
+      (b.markets || []).forEach(function (m) {
+        (m.outcomes || []).forEach(function (o) {
+          if (typeof o.point !== 'number') return;
+          if (m.key === 'spreads' && o.name === homeName) spreads.push(o.point);
+          if (m.key === 'totals' && o.name === 'Over') totals.push(o.point);
+        });
+      });
+    });
+    return { spread: median(spreads), total: median(totals), books: (game.bookmakers || []).length };
+  }
+
+  function sameDay(a, b) {
+    if (!a || !b) return true;
+    return Math.abs(new Date(a).getTime() - new Date(b).getTime()) < 36 * 3600 * 1000;
+  }
+
+  function spreadText(abbr, line) {
+    if (Math.abs(line) < 0.25) return "Pick 'em";
+    return abbr + ' ' + S.signed(line);
+  }
+
+  function marketPanel(app, d, show) {
+    var host = el('div', 'market-compare');
+    var p = d.projection;
+    if (!p || !p.spread || !p.total) return host;
+    var home = d.matchup.home;
+    var away = d.matchup.away;
+    // The next game between the two on the board, whatever day it is on.
+    var startsAt = null;
+    nbaBoard().then(function (board) {
+      var game = (board.games || []).filter(function (g) {
+        return g.home_team === home.name && g.away_team === away.name && sameDay(g.commence_time, startsAt);
+      })[0];
+      if (!game) return;
+      var c = consensus(game, home.name);
+      if (c.spread === null && c.total === null) return;
+      // The model's margin is from the home side (positive = home favoured);
+      // a posted home spread of -4.5 means the market has home by 4.5.
+      var modelHomeLine = -p.spread.home;
+      var rows = [];
+      if (c.spread !== null) {
+        var edge = modelHomeLine - c.spread;
+        rows.push({
+          name: 'Spread',
+          market: spreadText(home.abbr, c.spread),
+          model: spreadText(home.abbr, Math.round(modelHomeLine * 2) / 2),
+          diff: Math.abs(edge) < 0.5 ? 'In line with the market'
+            : 'Model ' + Math.abs(edge).toFixed(1) + ' points stronger on ' + (edge < 0 ? home.abbr : away.abbr),
+        });
+      }
+      if (c.total !== null) {
+        var td = p.total.mean - c.total;
+        rows.push({
+          name: 'Total',
+          market: c.total.toFixed(1),
+          model: n1(p.total.mean),
+          diff: Math.abs(td) < 0.5 ? 'In line with the market'
+            : 'Model ' + Math.abs(td).toFixed(1) + ' points ' + (td > 0 ? 'over' : 'under'),
+        });
+      }
+      host.appendChild(S.table(
+        [{ h: 'Market', fmt: function (r) { return r.name; } },
+          { h: 'Consensus', k: 'market' }, { h: 'Model', k: 'model' }, { h: 'Difference', k: 'diff' }],
+        rows,
+      ));
+      host.appendChild(el('div', 'disc',
+        'Consensus is the median line across ' + c.books + ' sportsbook' + (c.books === 1 ? '' : 's')
+        + ' on the TrustMyRecord board.'));
+      if (show) show();
+    });
+    return host;
+  }
+
+  /* ---------- measured accuracy in the page copy -------------------------- */
+
+  /**
+   * THE ACCURACY FIGURES IN THE ARTICLE COME FROM THE SAME FILE AS THE TOOL.
+   *
+   * The paragraph under "How accurate is it?" was typed by hand and drifted from
+   * the measurement the accuracy endpoint serves (it said 66.7% and 11.3 points
+   * where the measurement is 67.1% and 11.1). The static text stays as the
+   * fallback; once the measurement loads, the numbers in that list are set from
+   * it. Nothing else in the article is touched.
+   */
+  function syncAccuracyCopy(app) {
+    var h = document.getElementById('accuracy');
+    var list = h && h.nextElementSibling && h.nextElementSibling.nextElementSibling;
+    var lead = h && h.nextElementSibling;
+    if (!list || list.tagName !== 'UL') return;
+    app.api('/accuracy').then(function (a) {
+      var c = a && a.combined;
+      if (!c) return;
+      var items = list.querySelectorAll('li');
+      var setB = function (li, i, text) {
+        var b = li && li.querySelectorAll('b')[i];
+        if (b && text) b.textContent = text;
+      };
+      var p1 = function (v) { return (v * 100).toFixed(1) + '%'; };
+      if (typeof c.accuracy === 'number') setB(items[0], 0, p1(c.accuracy));
+      if (typeof c.baselineAccuracy === 'number') setB(items[0], 1, p1(c.baselineAccuracy));
+      if (typeof c.marginMae === 'number') setB(items[1], 0, c.marginMae.toFixed(1) + ' points');
+      if (typeof c.calibrationError === 'number') setB(items[2], 0, p1(c.calibrationError));
+      if (items[1] && typeof c.baselineMarginMae === 'number') {
+        items[1].childNodes.forEach(function (node) {
+          if (node.nodeType === 3 && /against \d+(\.\d+)? for/.test(node.nodeValue)) {
+            node.nodeValue = node.nodeValue.replace(/against \d+(\.\d+)? for/, 'against ' + c.baselineMarginMae.toFixed(1) + ' for');
+          }
+        });
+      }
+      if (lead && typeof c.games === 'number') {
+        var lb = lead.querySelector('b');
+        if (lb && /NBA games/.test(lb.textContent)) {
+          lb.textContent = lb.textContent.replace(/^[\d,]+/, c.games.toLocaleString('en-US'));
+        }
+      }
+    }).catch(function () { /* the static figures stay */ });
   }
 
   /**
@@ -884,6 +1055,13 @@
         s: 'Share of runs decided by a possession' },
     ]));
 
+    // Model against the sportsbook consensus, for a game that is on the board.
+    if (p.sample_supports_projection !== false) {
+      var marketBox = S.panel('Model vs market', null);
+      marketBox.hidden = true;
+      marketBox.appendChild(marketPanel(app, d, function () { marketBox.hidden = false; }));
+      box.appendChild(marketBox);
+    }
 
     var tabsBox = el('div', 'panel');
     var panes = [
@@ -1003,5 +1181,6 @@
     });
     app.mount();
     window.TMRNbaSim = app;
+    syncAccuracyCopy(app);
   });
 }());
