@@ -1021,6 +1021,14 @@
     }
     var loggedIn = function () { return !!(window.api && window.api.isLoggedIn()); };
 
+    /* FUNNEL_20260929: betlegend_* events with the page and component that sent the buyer here */
+    function blpEv(name, p) {
+        p = p || {};
+        try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && Date.now() - fs.at < 7 * 864e5) { p.funnel_source = fs.src; p.funnel_page = fs.page; } } catch (e) { }
+        try { window.dataLayer = window.dataLayer || []; if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); }; window.gtag('event', name, p); } catch (e) { }
+    }
+    blpEv('betlegend_pro_impression', { component: 'blp_landing' });
+
     function banner(kind, html) {
         $('purchaseBanner').innerHTML =
             '<div class="blp-note blp-note--' + kind + '" style="margin-bottom:22px">' + html + '</div>';
@@ -1127,6 +1135,7 @@
         btn.addEventListener('click', async function () {
             var plan = btn.dataset.buy;
             var err = $('buyError');
+            blpEv('betlegend_checkout_click', { plan: plan });
             err.hidden = true;
 
             if (!loggedIn()) {
@@ -1181,6 +1190,7 @@
             return;
         }
         if (purchase !== 'success') return;
+        blpEv('betlegend_purchase', {});
 
         banner('ok', '<span><span class="blp-spin" style="display:inline-block;vertical-align:-2px;margin-right:8px"></span>Payment received. Activating your access…</span>');
         var deadline = Date.now() + 30000;

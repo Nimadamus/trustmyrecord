@@ -934,6 +934,12 @@
      data/featured-matchups.json and points each door link at its article. */
   loadChain(['/static/js/tmr-featured.js?v=6d1832cc9f86']);
 
+  /* TMR PRO FUNNEL (2026-09-29, Nima: show the paid products where the traffic already
+     is). Live Handicapper Watchdog counts on the Picks Board, homepage, Around the Web
+     and leaderboards, the one-a-day free reveal, GA4 on pages that lacked it, and funnel
+     source tracking. Adds page elements after load only; no URL or metadata change. */
+  loadChain(['/static/js/tmr-pro-funnel.js?v=20260929a']);
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

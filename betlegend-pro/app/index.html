@@ -556,6 +556,7 @@
 
                     <div id="mLoading" hidden></div>
                     <div class="note is-err" id="mError" hidden></div>
+                    <div id="mPaywall" hidden></div>
                 </section>
 
                 <!-- ===================================== ASK BETLEGEND -->
@@ -846,7 +847,7 @@
     var ACCESS = { entitled: false, plan: null };
     var COST = { cost: 5, freeAvailable: false, resetsAt: null, balance: 0 };
     var submitButtons = [];
-    var SUBMIT_BLOCKED = false;
+    var SUBMIT_BLOCKED = false, ALLOWANCE_SPENT = false;
     // BLOCK_REASON_20260817: refreshStatus works out WHICH of three states is
     // blocking (frozen wallet / ineligible account / today's allowance spent)
     // and used to put that reason on the button title only. syncSetup then
@@ -973,6 +974,9 @@
 
             var allowanceSpent = !ACCESS.entitled && !COST.freeAvailable && s.balance < COST.cost;
             var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible || allowanceSpent);
+            // FUNNEL_20260929: a spent allowance keeps Run clickable; the click shows what this search holds and the plans
+            ALLOWANCE_SPENT = allowanceSpent && !s.isFrozen && !!s.eligible;
+            if (ALLOWANCE_SPENT) blocked = false;
             SUBMIT_BLOCKED = blocked;
             SUBMIT_BLOCKED_REASON = !blocked ? '' : (s.isFrozen
                 ? 'Your TMR Coin wallet is frozen, so a paid report cannot run.'
@@ -3081,6 +3085,7 @@
     $('matchupForm').addEventListener('submit', async function (ev) {
         ev.preventDefault();
         if (!syncSetup()) return;
+        if (ALLOWANCE_SPENT && !ACCESS.entitled) { hide($('mError')); renderValuePaywall($('mPaywall')); return; }   // never calls the billed endpoint
 
         var payload = currentPayload();
         var sig = JSON.stringify(payload);
@@ -3109,6 +3114,8 @@
             mLastSig = null; mLastKey = null;
             $('mResult').innerHTML = renderReport(res);
             showResults(label, sub);
+            if (res && res.was_free_inquiry) blpTrack('betlegend_free_query', { component: 'blp_matchup' });
+            blpCrossSell(res, mAway.value, mHome.value);
             await refreshStatus();
             loadLibrary();
         } catch (err) {
@@ -3120,8 +3127,65 @@
         }
     });
 
+    /* FUNNEL_20260929 helpers: events go through tmr-pro-funnel.js when it is loaded (it adds the source page),
+       straight to gtag otherwise. */
+    function renderValuePaywall(target) {
+            blpTrack('betlegend_paywall_view', { component: 'blp_matchup_paywall' });
+        var pv = lastPreview, steps = (pv && pv.games_after_each_filter) || [];
+        var insight = steps.filter(function (st) { return st.removed > 0; }).slice(0, 2).map(function (st) {
+            return '<li>' + esc(st.filter) + ' narrows it to <b>' + fmtInt(st.games_after) + '</b> games</li>'; }).join('');
+        var locked = '';
+        for (var li = 0; li < 4; li++) locked += '<div style="display:flex;gap:10px;padding:9px 12px;border-top:1px solid var(--line, #e3e8ef)">&#128274;<span style="flex:1;height:9px;border-radius:5px;background:rgba(127,127,127,.2)"></span><span style="width:20%;height:9px;border-radius:5px;background:rgba(127,127,127,.15)"></span></div>';
+        target.innerHTML = '<div class="rcard" style="border:2px solid #F5C542"><div class="rcard-head"><h2>Your free analysis for today is complete</h2></div>'
+            + (pv ? '<p>This search matches <b>' + fmtInt(pv.qualifying_games) + '</b> of ' + fmtInt(pv.total_meetings) + ' ' + esc(pv.team_1) + ' and ' + esc(pv.team_2) + ' meetings'
+                + (pv.first_game && pv.last_game ? ', ' + esc(pv.first_game) + ' through ' + esc(pv.last_game) : '') + '.</p>' : '<p>Your search is ready to run.</p>')
+            + (insight ? '<ul style="margin:6px 0 10px 18px">' + insight + '</ul>' : '')
+            + '<div style="border:1px solid rgba(127,127,127,.25);border-radius:10px;overflow:hidden;margin:10px 0"><div style="padding:8px 12px;font-size:12px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.05em">Records, ATS, over/under and the full game list</div>' + locked + '</div>'
+            + '<p style="margin:8px 0"><b>Unlimited Bet Legend Pro research</b> includes unlimited searches, the full historical game list with dates, scores and closing lines, head to head history, and every situational filter: rest, streaks, previous result, home and away, day or night, price and more.'
+            + ' It is included with TMR Pro, or sold on its own.</p>'
+            + '<p><a class="btn is-primary" href="/betlegend-pro/#pricing" onclick="try{localStorage.setItem(\'tmr_funnel_src\',JSON.stringify({src:\'blp_matchup_paywall\',page:location.pathname,at:Date.now()}))}catch(e){}">Unlock unlimited Bet Legend Pro research</a>'
+            + (COST.balance >= COST.cost ? '' : ' <span class="note-s">or earn TMR Coin for one more report</span>') + '</p></div>';
+        target.hidden = false;
+        watchdogNote(target, mAway.value, mHome.value);
+    }
+
+    function blpTrack(name, params) {
+        try { if (window.TMRFunnel) return window.TMRFunnel.track(name, params || {}); window.dataLayer = window.dataLayer || [];
+              if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); }; window.gtag('event', name, params || {}); } catch (e) { }
+    }
+    function blpCrossSell(res, away, home) {
+        var box = document.createElement('div');
+        var parts = [];
+        if (res && res.was_free_inquiry && !ACCESS.entitled) {
+            parts.push('<div class="note is-ok" style="margin-top:14px"><span><strong>Your free analysis is complete.</strong> Tomorrow brings another free report. Want to keep researching today? Unlimited searches, every filter and the full game lists come with TMR Pro or Bet Legend Pro.</span>'
+                + '<a class="btn is-primary" href="/betlegend-pro/#pricing" onclick="try{localStorage.setItem(\'tmr_funnel_src\',JSON.stringify({src:\'blp_after_free_report\',page:location.pathname,at:Date.now()}))}catch(e){}">Unlock unlimited research</a></div>');
+            blpTrack('betlegend_pro_impression', { component: 'blp_after_free_report' });
+        }
+        if (parts.length) { box.innerHTML = parts.join(''); $('mResult').appendChild(box); }
+        watchdogNote($('mResult'), away, home);
+    }
+    function watchdogNote(container, away, home) {
+        if (!window.TMRFunnel || !away || !home || !container) return;
+        window.TMRFunnel.games().then(function (games) {
+            var g = window.TMRFunnel.findGame(games, away, home);
+            if (!g) return;
+            var d = document.createElement('div');
+            d.className = 'note is-warn';
+            d.style.marginTop = '14px';
+            d.innerHTML = '<span><strong>Want to know which tracked handicappers are betting this matchup?</strong> ' + g.handicappers + ' handicapper' + (g.handicappers === 1 ? ' has a' : 's have') + ' a pending pick on ' + esc(g.away) + ' at ' + esc(g.home) + ' right now.</span><button type="button" class="btn is-primary">Open Handicapper Watchdog</button>';
+            d.querySelector('button').addEventListener('click', function () { window.TMRFunnel.preview({ game: g, component: 'blp_crosssell' }); });
+            container.appendChild(d);
+            blpTrack('tmr_pro_impression', { component: 'blp_crosssell' });
+        }).catch(function () { });
+    }
+
     async function handleInquiryError(err, target, balanceBefore, what) {
         var data = err && err.data;
+        if (err && err.status === 402 && what === 'matchup report' && !ACCESS.entitled) {
+            hide(target); renderValuePaywall($('mPaywall'));
+            await refreshStatus();
+            return;
+        }
         if (err && err.status === 402) {
             showNote(target, '<span><strong>Not enough TMR Coin.</strong> This costs ' + esc(data && data.cost)
                 + ' and you have ' + esc(data && data.balance) + '. Get unlimited access and skip coin entirely, '
@@ -3837,5 +3901,31 @@
 </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.cab545f767a8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+<script>
+/* FUNNEL_20260929: a "Research this matchup" link from the Watchdog opens the matchup already filled in. */
+(function () {
+    var q = new URLSearchParams(location.search), sport = q.get("sport"), away = q.get("away"), home = q.get("home");
+    function ev(name, p) { try { if (window.TMRFunnel) return window.TMRFunnel.track(name, p); window.dataLayer = window.dataLayer || []; if (typeof window.gtag !== "function") window.gtag = function () { window.dataLayer.push(arguments); }; window.gtag("event", name, p); } catch (e) { } }
+    var n0 = 0, t0 = setInterval(function () { if (window.TMRFunnel || ++n0 > 20) { clearInterval(t0); ev("betlegend_pro_impression", { component: "blp_app" + (sport ? "_from_watchdog" : "") }); } }, 250);
+    if (!sport || !away || !home) return;
+    var hostEl = document.getElementById("blpConsole"), R = (hostEl && hostEl.shadowRoot) || document;   // the app lives in a shadow root
+    var s = R.getElementById("mSport"), a = R.getElementById("mAway"), h = R.getElementById("mHome");
+    if (!s || !a || !h || ![].some.call(s.options, function (o) { return o.value === sport; })) return;
+    // wait for the app to finish its own start (it restores the last sport), then switch sport and pick the teams
+    var n = 0, switched = false, t = setInterval(function () {
+        var has = function (sel, v) { return [].some.call(sel.options, function (o) { return o.value === v; }); };
+        if (!switched) {
+            if (a.disabled || a.options.length < 2) { if (++n > 80) clearInterval(t); return; }
+            switched = true;
+            if (s.value !== sport) { s.value = sport; s.dispatchEvent(new Event("change", { bubbles: true })); return; }
+        }
+        if (s.value === sport && has(a, away) && has(h, home)) {
+            clearInterval(t);
+            a.value = away; a.dispatchEvent(new Event("change", { bubbles: true }));
+            h.value = home; h.dispatchEvent(new Event("change", { bubbles: true }));
+        } else if (++n > 120) clearInterval(t);
+    }, 250);
+})();
+</script>
 </body>
 </html>

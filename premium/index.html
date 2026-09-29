@@ -1241,8 +1241,15 @@
         var welcomeEl = document.getElementById('proWelcome');
         var PRICE = { monthly: 79.99, annual: 800 };
         /* TMR_PRO_ANALYTICS_20260928: funnel events to GA4 (G-V5MCVXS2HE). */
+        /* FUNNEL_EVENTS_20260929: every event carries the page and component that sent the visitor here
+           (tmr-pro-funnel.js stores it), and the funnel names Nima asked for are sent alongside the old ones. */
+        var FUNNEL_ALIAS = { pro_page_view: 'tmr_pro_impression', pro_checkout_click: 'tmr_pro_checkout_click', purchase: 'tmr_pro_purchase' };
         function ga(name, params) {
-            try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { }
+            var p = params || {};
+            try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && Date.now() - fs.at < 7 * 864e5) { p.funnel_source = fs.src; p.funnel_page = fs.page; } } catch (e) { }
+            window.dataLayer = window.dataLayer || [];
+            if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); };
+            try { window.gtag('event', name, p); if (FUNNEL_ALIAS[name]) window.gtag('event', FUNNEL_ALIAS[name], Object.assign({ component: 'pro_page' }, p)); } catch (e) { }
         }
         ga('pro_page_view', {});
         var mode = 'closed';          // closed | signin | buy | subscribed
@@ -1378,6 +1385,7 @@
         }
         function teaser(summary) {
             if (!boardEl) return;
+            ga('watchdog_paywall_view', { component: 'pro_page_board' });
             /* 2026-09-29: the teaser used to print "0 of them with 25 or more graded
                picks" whenever nobody on the board had reached 25, which only told a
                buyer what was missing. The proven count now shows only when it is
@@ -1517,7 +1525,7 @@
                         var meta = [esc(p.bet_type || 'Pick'), p.units != null ? esc(p.units) + 'u' : '', 'Starts ' + esc(kick(p.start))].filter(Boolean).join(' &middot; ');
                         var posted = p.posted_at ? 'Posted ' + esc(day(p.posted_at)) + ' ' + esc(new Date(p.posted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT on ' + esc(h.source || 'source') : 'Posted on ' + esc(h.source || 'source');
                         return '<div class="wd-pick"><div class="wd-pick-game">' + esc(p.league || '') + ' &middot; ' + esc(p.matchup || '') + '</div><div class="wd-pick-sel">' + pickLabel(p) + '</div><div class="wd-muted">' + meta + '</div><div class="wd-muted">' + posted +
-                            (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" target="_blank" rel="nofollow noopener">Original post</a>' : '') + '</div></div>';
+                            (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" target="_blank" rel="nofollow noopener">Original post</a>' : '') + (p.home && p.away && /^(NFL|NBA|MLB|NHL)$/.test(String(p.league || '')) ? ' &middot; <a href="/betlegend-pro/app/?sport=' + esc(p.league) + '&amp;away=' + encodeURIComponent(p.away) + '&amp;home=' + encodeURIComponent(p.home) + '">Research this matchup in Bet Legend Pro</a>' : '') + '</div></div>';
                     }).join('') +
                     '<h4>Recent graded picks</h4>' + (h.recent.length ? '<div class="wd-table-wrap"><table class="wd-table wd-recent"><tbody>' + h.recent.map(function (x) {
                         return '<tr><td class="wd-muted">' + esc(day(x.date)) + '</td><td><b>' + esc(x.pick || '') + '</b> ' + (x.odds != null ? '<span class="wd-odds">' + odds(x.odds) + '</span>' : '') + '<div class="wd-sub">' + esc(x.league || '') + ' &middot; ' + esc(x.matchup || '') + '</div></td><td class="n"><span class="wd-res ' + esc(x.result) + '">' + esc(x.result) + '</span></td><td class="n ' + unitsCls(x.units) + '">' + signed(x.units) + '</td></tr>';
