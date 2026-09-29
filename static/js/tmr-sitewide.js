@@ -29,10 +29,10 @@
         // its full name because that lane is a weekly deep dive and the name is
         // the product.
         ["@sub", "Featured Matchups", [
-            /*FMENU nfl-gotw*/ ["/handicapping/nfl/under-10-5-matchup-eagles-vs-bears/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
+            /*FMENU nfl-gotw*/ ["/handicapping/nfl/pittsburgh-steelers-vs-cleveland-browns-290888/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/ncaaf/lions-wildcats-becht-vs-chiles/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/handicapping/mlb/red-sox-vs-yankees-849851/", "MLB", "/matchup-of-the-day/mlb/"],
-            /*FMENU tennis*/ ["/tennis/frech-marcinko-opening-round/", "Tennis", "/matchup-of-the-day/tennis/"],
+            /*FMENU tennis*/ ["/tennis/tsitsipas-etcheverry-opening-round/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/inter-miami-cf-columbus-crew-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those

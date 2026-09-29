@@ -156,7 +156,7 @@
          rotation. The href is the current article. The third field is the
          stable door, so the browser can move the row when the game changes.
          The footer link to /nfl-game-of-the-week/ stays the section. */
-      /*FMENU nfl-gotw*/ ['/handicapping/nfl/under-10-5-matchup-eagles-vs-bears/', 'NFL Game of the Week', '/nfl-game-of-the-week/'],
+      /*FMENU nfl-gotw*/ ['/handicapping/nfl/pittsburgh-steelers-vs-cleveland-browns-290888/', 'NFL Game of the Week', '/nfl-game-of-the-week/'],
       /* Added 2026-09-03, the day college football got its first Game File.
          /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
          with the newest NCAAF Game File, canonicalised to it, and out of the
@@ -170,7 +170,7 @@
       /*FMENU mlb*/ ['/handicapping/mlb/red-sox-vs-yankees-849851/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      /*FMENU tennis*/ ['/tennis/frech-marcinko-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
+      /*FMENU tennis*/ ['/tennis/tsitsipas-etcheverry-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
       /* Added 2026-09-08, the day the soccer lane published its first Game
          File. The row went in only once /matchup-of-the-day/soccer/ was baked
          and serving: a menu entry pointing at a door that does not exist yet
@@ -181,7 +181,7 @@
       /* Added 2026-09-09, the day the NFL lane published its first Game File.
          Same stable-door pattern: /matchup-of-the-day/nfl/ bakes with the newest
          NFL Game File and is canonicalised to it. */
-      /*FMENU nfl*/ ['/handicapping/nfl/under-10-5-matchup-eagles-vs-bears/', 'NFL', '/matchup-of-the-day/nfl/']
+      /*FMENU nfl*/ ['/handicapping/nfl/pittsburgh-steelers-vs-cleveland-browns-290888/', 'NFL', '/matchup-of-the-day/nfl/']
     ]],
     /* HANDICAPPING HUB, 2026-09-08. 'MLB Matchups Today' used to sit here as a
        SIBLING of 'Handicapping Hub', and that read as two separate sections
