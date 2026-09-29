@@ -1040,8 +1040,10 @@
         // customer arriving here is looking for the product, not for plans, so
         // the plan link is replaced by billing (or removed) rather than left
         // sitting next to the button as a competing call to action.
-        $('accessTitle').textContent = a.is_lifetime ? 'Lifetime access active' : planName + ' plan active';
-        $('accessSub').textContent = detail || 'Unlimited access to every tool.';
+        $('accessTitle').textContent = a.plan === 'tmr_pro' ? 'Included with your TMR Pro membership'
+            : a.is_lifetime ? 'Lifetime access active' : planName + ' plan active';
+        $('accessSub').textContent = a.plan === 'tmr_pro' ? 'Unlimited access to every tool. Manage your membership on the TMR Pro page.'
+            : (detail || 'Unlimited access to every tool.');
         var accessSecondary = $('accessSecondary');
         if (a.manageable) {
             // Swapped for a real <button>: an anchor with no href is not
