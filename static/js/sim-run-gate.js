@@ -75,6 +75,14 @@
         var self = this;
         var args = arguments;
         if (self.running) return run.apply(self, args);
+        /* VALIDATE BEFORE GATING. With no teams chosen the gate used to open
+           first and describe the run as "Choose a team at Choose a team". An
+           incomplete or same team pick goes straight to the page's own check,
+           which says "Pick two teams first" and makes no request. */
+        try {
+            var t = self.currentTeams ? self.currentTeams() : null;
+            if (!t || !t.away || !t.home || t.away.ref === t.home.ref) return run.apply(self, args);
+        } catch (e) { /* fall through to the gate as before */ }
         if (opts && opts.seed) {
             if (!G.requireAuth({ sim_mode: 'rerun' })) return;
             return run.apply(self, args);
@@ -104,7 +112,12 @@
         describeState: function () {
             var a = app();
             if (!a || !a.nodes || !a.nodes.away || !a.nodes.home) return '';
-            var name = function (sel) { var o = sel.options[sel.selectedIndex]; return o ? o.text : ''; };
+            /* An empty value is the placeholder option, not a team. */
+            var name = function (sel) {
+                if (!sel.value) return '';
+                var o = sel.options[sel.selectedIndex];
+                return o ? o.text : '';
+            };
             var away = name(a.nodes.away), home = name(a.nodes.home);
             return away && home ? '<b>' + S.esc(away) + '</b> at <b>' + S.esc(home) + '</b>' : '';
         },
