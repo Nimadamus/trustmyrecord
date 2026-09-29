@@ -659,6 +659,11 @@
         .px-includes li { position: relative; padding-left: 22px; font-weight: 600; color: var(--pro-ink); }
         .px-includes li::before { content: ""; position: absolute; left: 2px; top: .45em; width: 9px; height: 5px; border-left: 2px solid var(--pro-brand); border-bottom: 2px solid var(--pro-brand); transform: rotate(-45deg); }
         .pro-benefits b { color: var(--pro-ink); }
+        .px-explore { display: inline-flex; align-items: center; gap: 10px; margin-top: 6px; min-height: 52px; padding: 0 22px; border-radius: 12px; font-weight: 800; font-size: 16px; text-decoration: none; }
+        .px-cols .px-col-pro { padding: 18px; border-radius: 14px; border: 2px solid #F5C542; background: rgba(245, 197, 66, .08); }
+        .px-cols .px-col-public { padding: 18px; border-radius: 14px; border: 1px solid rgba(140, 196, 255, .25); }
+        .px-tag { display: inline-block; margin-right: 8px; padding: 3px 9px; border-radius: 999px; font-size: 11px; letter-spacing: .08em; }
+        .px-pro-lead { font-size: 16px; font-weight: 600; }
         @media (max-width: 900px) {
             .px-watch { grid-template-columns: minmax(0, 1fr); }
             .px-grid { grid-template-columns: minmax(0, 1fr); }
@@ -755,49 +760,51 @@
                 <article class="px-watch" id="watchdog">
                     <div class="px-watch-copy">
                         <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11l2 2 4-4"/></svg></span>Handicapper Watchdog</div>
-                        <h3>A complete handicapper tracking program</h3>
+                        <h3>Research more than 1,000 tracked handicappers from around the web</h3>
                         <p class="px-lead">
                             Stop guessing whether a handicapper on Covers, X or Reddit is really
-                            winning. TrustMyRecord monitors thousands of public handicappers, grades
-                            every pick they post on the final score, and builds each one a full
-                            statistical profile you can inspect pick by pick.
+                            winning. TrustMyRecord grades every pick these handicappers post on the
+                            final score and keeps a full profile for each one: record, units, ROI,
+                            streaks, recent form, sport by sport history and every past pick.
                         </p>
                         <p>
                             Sources tracked: Covers, X, Reddit, Sportsbook Review, TheRX, Predictem and
                             Two Plus Two. TrustMyRecord member picks are never part of the Watchdog. It
                             covers outside, publicly posted handicappers only.
                         </p>
+                        <a class="px-explore" href="/around-the-web/">Explore Handicappers Around the Web <span aria-hidden="true">&rarr;</span></a>
+                        <p class="px-small">Look through the database first and see how deep it goes. It is open to everyone.</p>
                         <div class="px-cols">
-                            <div>
-                                <h4>Every profile shows</h4>
+                            <div class="px-col-public">
+                                <h4><span class="px-tag">Public</span> Free for everyone</h4>
                                 <ul class="px-list">
-                                    <li>Complete pick history in game order, with odds, risk, result and running units</li>
-                                    <li>Win and loss record, units won or lost, ROI and win rate</li>
-                                    <li>Current, best and worst streak, plus recent form by window</li>
-                                    <li>Records by sport and by season</li>
-                                    <li>Records by market: moneyline, spread and total, favorites against underdogs, overs against unders</li>
-                                    <li>Records by price range</li>
-                                    <li>Home against away, and results backing or fading each team, by conference and division</li>
-                                    <li>Advanced splits: after a win or a loss, day of week, month, rolling 10 pick windows</li>
-                                    <li>A link to the original post behind every pick</li>
+                                    <li>Handicapper profiles</li>
+                                    <li>Win and loss records, units, ROI and win rate</li>
+                                    <li>Current, best and worst streaks and recent form</li>
+                                    <li>Complete pick histories with odds, result and running units</li>
+                                    <li>Every graded pick, linked to the original post</li>
+                                    <li>Performance breakdowns by sport, season, market, price, home and away, and team</li>
                                 </ul>
                             </div>
-                            <div>
-                                <h4>TMR Pro adds the live side</h4>
+                            <div class="px-col-pro">
+                                <h4><span class="px-tag is-pro">TMR Pro</span> The pending picks</h4>
+                                <p class="px-pro-lead">
+                                    See the pending picks these tracked handicappers post before their
+                                    games start, as they are collected each day.
+                                </p>
                                 <ul class="px-list is-pro">
-                                    <li>Every pending pick before the game starts: matchup, market, selection, odds, units and when it was posted</li>
-                                    <li>Each pick shown beside that handicapper's record, units, ROI, streak and last 10</li>
-                                    <li>Sort and filter the board by record, streak, ROI, league and source</li>
-                                    <li>Where the proven handicappers (25 or more graded picks) agree on the same side</li>
-                                    <li>A detail panel per handicapper with record, units, ROI, win rate, streak, last 25, pending picks and most recent graded picks, linked to the full profile</li>
+                                    <li>Every collected pregame pick in one board: matchup, market, selection, odds and units where posted</li>
+                                    <li>Each pick beside that handicapper's record, units, ROI, streak and last 10</li>
+                                    <li>Updated as new picks are collected, and only for games that have not started</li>
+                                    <li>A link to the original post where one is available</li>
+                                    <li>Sort and filter by record, streak, ROI, league and source, and see where the proven handicappers agree</li>
                                 </ul>
-                                <p class="px-small">Graded records are public so anyone can check a claim. The pending picks board is TMR Pro only.</p>
+                                <p class="px-small">Not every handicapper posts every day. The board shows the pending picks that have been posted and collected so far.</p>
                             </div>
                         </div>
                         <div class="px-actions">
                             <a class="pro-cta" href="#pricing">Get TMR Pro</a>
                             <a class="px-link" href="#board">See today's pending board</a>
-                            <a class="px-link" href="/around-the-web/">Browse the tracked handicappers</a>
                         </div>
                     </div>
                     <div class="px-watch-shot" aria-hidden="true">
@@ -1591,6 +1598,10 @@ body.tmr-light .px-watch-shot span, body.tmr-light .px-watch-shot em, body.tmr-l
 body.tmr-light .px-watch-shot strong, body.tmr-light .px-shot-rows span, body.tmr-light .px-shot-bar span { color: #FFFFFF !important; }
 body.tmr-light .px-shot-tabs span { color: #C3D4E6 !important; }
 body.tmr-light .px-shot-tabs b { color: #07182A !important; }
+body.tmr-light .px-watch .px-explore { background: #FFFFFF !important; color: #07182A !important; box-shadow: 0 10px 26px -12px rgba(77, 163, 255, .8); }
+body.tmr-light .px-watch .px-tag { background: rgba(140, 196, 255, .18) !important; color: #CFE4FF !important; }
+body.tmr-light .px-watch .px-tag.is-pro { background: #F5C542 !important; color: #1A1400 !important; }
+body.tmr-light .px-watch .px-pro-lead { color: #FFFFFF !important; }
 body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
 </style>
 </body>
