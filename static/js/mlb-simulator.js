@@ -1514,6 +1514,23 @@
         el.style.setProperty('--team-primary', colors[0]);
         el.style.setProperty('--team-secondary', colors[1]);
     }
+    // BOXSCORE_COLORS_20260929: one readable team accent for the white box score.
+    // A few clubs lead with a pale primary (CWS silver, MIL gold, SD/PIT gold), which
+    // disappears on white, so those fall back to their dark secondary.
+    function boxAccentColor(team) {
+        var colors = teamColors(team);
+        function lum(hex) {
+            var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+            if (!m) return 1;
+            var n = parseInt(m[1], 16);
+            return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+        }
+        return lum(colors[0]) > 0.55 && lum(colors[1]) < lum(colors[0]) ? colors[1] : colors[0];
+    }
+    function boxTeamAttrs(team) {
+        if (!team) return '';
+        return ' data-team="' + escapeAttr(team.abbreviation || '') + '" style="' + escapeAttr('--team-accent: ' + boxAccentColor(team)) + '"';
+    }
     function pitcherId(side, slug) { return side + '-pitcher-' + slug; }
     function slugify(value) { return normalizeName(value).slice(0, 40) || 'starter'; }
     function currentPitchersForTeam(team, side, context) {
@@ -7332,27 +7349,39 @@
             else if (e.type === 'SB' || e.type === 'CS') byType.RUN.push(e);
             else if (e.type === 'SF' || e.type === 'SAC') byType.SAC.push(e);
         });
-        function line(text) { return '<li>' + escapeHtml(text) + '</li>'; }
+        function teamFor(abbr) {
+            if (result.away && result.away.abbreviation === abbr) return result.away;
+            if (result.home && result.home.abbreviation === abbr) return result.home;
+            return null;
+        }
+        // Inning chip + team chip + the sentence. The chips carry the same words the
+        // plain line used to open with, so the text still reads "Top 4th BOS ...".
+        function line(e, text) {
+            return '<li class="sd-item" data-type="' + escapeAttr(e.type || '') + '"' + boxTeamAttrs(teamFor(e.team)) + '>' +
+                '<span class="sd-inning">' + escapeHtml(frame(e)) + '</span>' +
+                '<span class="sd-team">' + escapeHtml(e.team || '') + '</span>' +
+                '<span class="sd-text">' + escapeHtml(text) + '</span></li>';
+        }
         function block(title, items, emptyText) {
             var body = items.length ? '<ul class="scoring-detail-list">' + items.join('') + '</ul>' : '<p class="scoring-detail-empty">' + escapeHtml(emptyText) + '</p>';
             return '<div class="scoring-detail-block"><h5>' + escapeHtml(title) + '</h5>' + body + '</div>';
         }
         var hr = byType.HR.map(function (e) {
-            return line(frame(e) + ', ' + e.team + ': ' + homerLine(e));
+            return line(e, homerLine(e));
         });
         var xbh = byType.XBH.map(function (e) {
             var verb = e.type === '3B' ? 'tripled' : 'doubled';
             var rbi = Number(e.rbi) || 0;
-            return line(frame(e) + ', ' + e.team + ': ' + e.batter + ' ' + verb + ' off ' + e.pitcher +
+            return line(e, e.batter + ' ' + verb + ' off ' + e.pitcher +
                 (rbi ? ', driving in ' + (rbi === 1 ? 'a run' : rbi + ' runs') : ''));
         });
         var run = byType.RUN.map(function (e) {
             var act = e.type === 'SB' ? 'stole ' + (e.base || '2nd') : 'was caught stealing ' + (e.base || '2nd');
-            return line(frame(e) + ', ' + e.team + ': ' + e.runner + ' ' + act + ' (battery: ' + e.pitcher + ')');
+            return line(e, e.runner + ' ' + act + ' (battery: ' + e.pitcher + ')');
         });
         var sac = byType.SAC.map(function (e) {
-            if (e.type === 'SF') return line(frame(e) + ', ' + e.team + ': ' + e.batter + ' drove in a run with a sacrifice fly off ' + e.pitcher);
-            return line(frame(e) + ', ' + e.team + ': ' + e.batter + ' laid down a sacrifice bunt to move the runner up');
+            if (e.type === 'SF') return line(e, e.batter + ' drove in a run with a sacrifice fly off ' + e.pitcher);
+            return line(e, e.batter + ' laid down a sacrifice bunt to move the runner up');
         });
         return '<section class="scoring-detail">' +
             '<h4>Scoring Plays &amp; Detail</h4>' +
@@ -7459,20 +7488,20 @@
     function battingTableSection(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
-        var headerLabel = '<div class="team-box-header"><p class="team-box-label">' + escapeHtml(team.name) + ' (' + escapeHtml(team.abbreviation) + ') Batting</p>' + lineupStatusChip(players) + '</div>';
+        var headerLabel = '<div class="team-box-header">' + logoMarkup(team, 'bx-team-logo') + '<p class="team-box-label">' + escapeHtml(team.name) + ' (' + escapeHtml(team.abbreviation) + ') Batting</p>' + lineupStatusChip(players) + '</div>';
         if (!hasBatters) {
-            return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
+            return '<section class="player-team-box"' + boxTeamAttrs(team) + '>' + headerLabel + '<p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
         var freshness = lineupFreshnessNote(players && players.lineupStatus);
         var freshnessHtml = freshness ? '<p class="player-source-note lineup-freshness-note">' + escapeHtml(freshness) + '</p>' : '';
-        return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' + freshnessHtml +
+        return '<section class="player-team-box"' + boxTeamAttrs(team) + '>' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' + freshnessHtml +
             '<p class="bx-mode-legend">Rate columns: <strong>AVG/OBP/SLG/OPS</strong> are <strong>this simulated game only</strong>. <strong>SEA AVG/SEA OPS</strong> are real season-to-date numbers <strong>against the handedness of the opposing starter</strong>, which is why they differ from an overall season line. The two are never blended.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table bx-bat-table"><thead>' + batterTableHead(true) + '</thead><tbody>' + batterTableRows(players.batters, true) + '</tbody></table></div></section>';
     }
     function pitchingTableSection(team, players, isWinner, margin, ctx, foldStaff) {
         var hasPitchers = players && players.pitchers && players.pitchers.length;
         if (!hasPitchers) {
-            return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p><div class="sim-empty">Pitching lines unavailable.</div></section>';
+            return '<section class="player-team-box"' + boxTeamAttrs(team) + '><div class="team-box-header">' + logoMarkup(team, 'bx-team-logo') + '<p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p></div><div class="sim-empty">Pitching lines unavailable.</div></section>';
         }
         var head = '<tr><th>Pitcher</th>' +
             '<th title="Innings pitched">IP</th><th title="Hits allowed">H</th><th title="Runs allowed">R</th>' +
@@ -7483,7 +7512,7 @@
             '<th title="Swings and misses">SwStr</th><th title="Inherited runners - inherited runners scored">IR-IRS</th>' +
             '<th title="ERA, this game">ERA</th><th title="WHIP, this game">WHIP</th>' +
             '<th class="bx-season" title="Real season-to-date earned run average">SEA ERA</th></tr>';
-        return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p>' +
+        return '<section class="player-team-box"' + boxTeamAttrs(team) + '><div class="team-box-header">' + logoMarkup(team, 'bx-team-logo') + '<p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p></div>' +
             '<div class="player-table-wrap"><table class="player-box-table bx-pit-table"><thead>' + head + '</thead><tbody>' +
             pitcherTableRows(players.pitchers, isWinner, margin, ctx, foldStaff) + '</tbody></table></div></section>';
     }

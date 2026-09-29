@@ -427,3 +427,187 @@ html body .player-box-score-heading h3 {
     border-color: #9AA6B8 !important;
   }
 }
+
+/* -----------------------------------------------------------------------------
+   BOXSCORE_COLORS_20260929: MLB simulator box score polish (white card kept).
+   1. Team accent stripe + logo on every "<Team> Batting / Pitching" label.
+   2. Navy table header rows, light zebra rows, tinted Totals row.
+   3. One section band for Batting, Pitching, Scoring Plays, batting detail and
+      Pitching & Game Notes.
+   4. Scoring plays as inning chip + team chip + sentence, home runs highlighted.
+   5. Pitching team labels padded like the batting ones.
+   --team-accent is set per team box / scoring line by mlb-simulator.js.
+   -------------------------------------------------------------------------- */
+html body .player-box-score-panel .player-team-box {
+    --team-accent: #10203F;
+    border-left: 4px solid var(--team-accent);
+    margin-top: 10px;
+}
+
+html body .player-box-score-panel .team-box-header {
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 10px 12px 6px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--team-accent) 10%, #FFFFFF), #FFFFFF 70%);
+    border-bottom: 1px solid #D3DBE6;
+}
+
+html body .player-box-score-panel .team-box-header .lineup-status-chip {
+    margin-left: auto;
+}
+
+html body .player-box-score-panel .team-box-header .team-box-label {
+    color: var(--ls-ink, #0B1220) !important;
+    font: 900 14px/1.2 Inter, Arial, sans-serif;
+    letter-spacing: 0.02em;
+}
+
+html body .player-box-score-panel .team-logo-mark.bx-team-logo {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border: 1px solid #D3DBE6;
+    border-radius: 6px;
+    background: #FFFFFF;
+    box-shadow: none;
+}
+
+html body .player-box-score-panel .team-logo-mark.bx-team-logo img {
+    filter: none;
+}
+
+html body .player-box-score-panel .team-logo-mark.bx-team-logo .team-logo-fallback {
+    font-size: 9px;
+}
+
+/* 2. Tables */
+html body .player-box-score-panel .player-box-table thead th,
+html body .player-box-score-panel .player-box-table thead th.bx-rate,
+html body .player-box-score-panel .player-box-table thead th.bx-season {
+    background: #10203F !important;
+    color: #FFFFFF !important;
+    border-bottom: 2px solid var(--team-accent, #10203F) !important;
+}
+
+html body .player-box-score-panel .player-box-table tbody tr:nth-child(even):not(.totals-row) > * {
+    background: #F4F7FB !important;
+}
+
+html body .player-box-score-panel .player-box-table tbody tr:nth-child(odd):not(.totals-row) > * {
+    background: #FFFFFF !important;
+}
+
+html body .player-box-score-panel .player-box-table tbody tr:not(.totals-row):hover > * {
+    background: #E8F0FB !important;
+}
+
+html body .player-box-score-panel .player-box-table tbody tr.totals-row,
+html body .player-box-score-panel .player-box-table tbody tr.totals-row > * {
+    background: #E4EAF2 !important;
+    color: var(--ls-ink, #0B1220) !important;
+    border-top: 2px solid #10203F !important;
+    font-weight: 900;
+}
+
+/* 3. One band for every section heading */
+html body .player-box-score-panel .player-box-score-content > h4,
+html body .player-box-score-panel .scoring-detail > h4,
+html body .player-box-score-panel .pitching-game-notes > h4,
+html body .player-box-score-panel .batting-fielding-details > h5 {
+    margin: 14px 0 0;
+    padding: 9px 12px;
+    border-top: 1px solid #8FA0B6;
+    border-bottom: 2px solid #10203F;
+    background: #E4EAF2;
+    color: var(--ls-ink, #0B1220) !important;
+    font: 900 13px/1.2 Inter, Arial, sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase !important;
+}
+
+html body .player-box-score-panel .batting-fielding-details,
+html body .player-box-score-panel .scoring-detail,
+html body .player-box-score-panel .pitching-game-notes {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+html body .player-box-score-panel .batting-fielding-details p,
+html body .player-box-score-panel .pitching-game-notes p,
+html body .player-box-score-panel .scoring-detail-block {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+html body .player-box-score-panel .scoring-detail-block h5 {
+    margin: 12px 0 6px;
+    color: #26344A !important;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* 4. Scoring plays */
+html body .player-box-score-panel .scoring-detail-list {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+html body .player-box-score-panel .scoring-detail-list li.sd-item {
+    --team-accent: #10203F;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin: 0;
+    padding: 6px 10px;
+    border: 0;
+    border-left: 3px solid var(--team-accent);
+    border-radius: 4px;
+    background: #F4F7FB;
+    color: #1F2B3D !important;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+html body .player-box-score-panel .scoring-detail-list li.sd-item[data-type="HR"] {
+    background: #FFF6DB;
+    box-shadow: inset 0 0 0 1px #F0D68A;
+}
+
+html body .player-box-score-panel .sd-inning,
+html body .player-box-score-panel .sd-team {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font: 800 10px/1.3 Inter, Arial, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+html body .player-box-score-panel .sd-inning {
+    background: #10203F;
+    color: #FFFFFF !important;
+}
+
+html body .player-box-score-panel .sd-team {
+    background: var(--team-accent);
+    color: #FFFFFF !important;
+}
+
+html body .player-box-score-panel .sd-text {
+    flex: 1 1 220px;
+    min-width: 0;
+    color: #1F2B3D !important;
+}
+
+@media print {
+    html body .player-box-score-panel .player-box-table thead th {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+    }
+}
