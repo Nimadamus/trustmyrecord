@@ -985,6 +985,20 @@
         var S = null;
         var API = 'https://trustmyrecord-api.onrender.com/api';
         var LOGIN = '/login/?next=' + encodeURIComponent('/premium/#pricing');
+        /* PRO_INTENT_20260929: a signed-out visitor who picks a plan is sent to
+           log in or sign up. The plan they picked is kept here, and when they
+           land back on this page signed in, checkout for that plan opens
+           without a second click. Expires after 30 minutes. */
+        var INTENT_KEY = 'tmr_pro_intent';
+        function saveIntent(kind) { try { localStorage.setItem(INTENT_KEY, JSON.stringify({ plan: kind, at: Date.now() })); } catch (e) { } }
+        function takeIntent() {
+            try {
+                var raw = localStorage.getItem(INTENT_KEY); localStorage.removeItem(INTENT_KEY);
+                var v = raw && JSON.parse(raw);
+                if (v && (v.plan === 'monthly' || v.plan === 'annual') && Date.now() - v.at < 30 * 60 * 1000) return v.plan;
+            } catch (e) { }
+            return null;
+        }
 
         var buttons = document.querySelectorAll('[data-pro-buy]');
         var statusEl = document.getElementById('proStatus');
@@ -1075,6 +1089,7 @@
                 paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
                 paintButtons(false);
                 loadBoard(true);
+                takeIntent();
                 if (welcomeEl && purchase !== 'success') {
                     welcomeEl.hidden = false;
                     document.getElementById('proWelcomeTitle').textContent = 'Your TMR Pro';
@@ -1092,6 +1107,8 @@
             foundingFull = !!(me && me.founding && me.founding.seats_left === 0);
             paintButtons(false);
             loadBoard(false);
+            var intent = mode === 'buy' ? takeIntent() : null;
+            if (intent) { ga('pro_intent_resumed', { plan: intent }); startCheckout(intent); }
         }
 
 
@@ -1281,7 +1298,7 @@
 
         function startCheckout(kind) {
             if (busy) return;
-            if (mode === 'signin') { ga('pro_signin_click', { plan: kind }); window.location.href = LOGIN; return; }
+            if (mode === 'signin') { ga('pro_signin_click', { plan: kind }); saveIntent(kind); window.location.href = LOGIN; return; }
             if (mode !== 'buy') return;
             busy = true;
             ga('pro_checkout_click', { plan: kind, value: PRICE[kind], currency: 'USD' });
@@ -1371,9 +1388,9 @@
             S = window.TMRSession || null;
             if (S && S.api) API = S.api;
             paintButtons(false);
-            if (!S) { paintStatus('Not signed in', 'A free account is all you need for profiles, pick tracking and leaderboards.', false, false); return; }
+            if (!S) { paintStatus('Not signed in', 'Pick a plan below, then sign in or create a free account. Checkout opens right after, with the plan you picked.', false, false); return; }
             if (!S.hasTokens || !S.hasTokens()) {
-                paintStatus('Not signed in', 'A free account is all you need for profiles, pick tracking and leaderboards.', false, false);
+                paintStatus('Not signed in', 'Pick a plan below, then sign in or create a free account. Checkout opens right after, with the plan you picked.', false, false);
                 loadBoard(false);
                 fetch(API + '/premium/checkout-status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (b) {
                     if (b && b.open_to_public) { mode = 'signin'; paintButtons(false); }

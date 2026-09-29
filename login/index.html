@@ -425,7 +425,20 @@
             })();
             </script>
 
-            <div class="switch">Need an account? <a href="/register/">Create one here</a></div>
+            <div class="switch">Need an account? <a href="/register/" id="loginToRegister">Create one here</a></div>
+            <script>
+            /* 2026-09-29: carry ?next= into sign up as ?return= so a visitor sent here
+               from a page (TMR Pro checkout, a simulator) who has no account yet
+               comes back to that page after registering. Same guard as safeNextPath. */
+            (function () {
+                try {
+                    var n = new URLSearchParams(location.search).get('next');
+                    if (!n || !/^\/(?!\/)/.test(n) || n.indexOf('://') !== -1) return;
+                    n = n.split('#')[0];
+                    document.getElementById('loginToRegister').setAttribute('href', '/register/?return=' + encodeURIComponent(n));
+                } catch (e) { }
+            })();
+            </script>
         </div>
     </div>
 
