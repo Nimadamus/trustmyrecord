@@ -331,6 +331,9 @@
     ['/sports-simulators/', 'Sports Simulators'],
     ['/trendspotter/', 'TrendSpotter'],
     ['/betlegend-pro/', 'BetLegend Pro'],
+    /* TMR Pro joined this menu on 2026-09-29 (Nima: Pro must be discoverable
+       from the menus). It bundles BetLegend Pro, so it sits right after it. */
+    ['/premium/', 'TMR Pro'],
     /* Model Builder rejoined this menu on 2026-09-08. /model-builder/ has been
        live throughout, but it was only reachable from the Tools Hub grid and
        the RESOURCES rail, so it was absent from the Tools dropdown on every
@@ -353,7 +356,7 @@
       ['/sportsbook/', 'Picks Board'],
       ['/profile/', 'My Record'],
       ['/marketplace/', 'Pick Marketplace'],
-      ['/premium/', 'Premium']
+      ['/premium/', 'TMR Pro']
     ]],
     ['Explore', [
       /* TMR Game Files joined Explore on 2026-08-10. Before this the entire
@@ -520,6 +523,15 @@
       }).join('') + '</div></div>';
   }
 
+  /* TMR Pro as a direct top-level link (2026-09-29, Nima: a visitor must see
+     that Pro exists without knowing the URL). Same .ds-navitem box as every
+     other entry; only the colour differs so the paid product reads as one. */
+  function proLink() {
+    var cur = isCurrent('/premium/');
+    return '<a class="ds-navitem ds-navitem--link ds-prolink" href="/premium/"' +
+      (cur ? ' aria-current="page"' : '') + ' style="color:#F5C542">TMR Pro</a>';
+  }
+
   var BRAND =
     '<a class="ds-logo" href="/">' +
       '<span class="mk">T</span>' +
@@ -550,6 +562,7 @@
             menu('Compete', COMPETE) +
             menu('Community', COMMUNITY) +
             menu('Tools', TOOLS, TOOLS_ALSO) +
+            proLink() +
           '</div>' +
           '<div class="ds-nav-right">' + initialNavRight() + '</div>' +
         '</div>' +
@@ -798,6 +811,7 @@
         '<div class="ds-menu-panel v2nav-menu-panel" role="menu" aria-label="Account menu">' +
           '<a href="/u/' + encodeURIComponent(name) + '/" role="menuitem">My Profile</a>' +
           '<a href="/profile/?action=edit" role="menuitem">Settings</a>' +
+          '<a href="/premium/" role="menuitem">TMR Pro membership</a>' +
           '<a href="/contact/" role="menuitem">Help &amp; Support</a>' +
           '<button type="button" class="v2nav-logout" role="menuitem" data-tmr-logout>Log Out</button>' +
         '</div>' +

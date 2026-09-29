@@ -152,7 +152,7 @@
                     <strong id="balanceValue">&mdash;</strong>&nbsp;TMR Coin
                 </span>
                 <a class="btn" id="manageBtn" href="/betlegend-pro/" hidden>Manage plan</a>
-                <a class="btn is-primary" id="upgradeBtn" href="/betlegend-pro/#pricing" hidden>Get unlimited</a>
+                <a class="btn is-primary" id="upgradeBtn" href="/betlegend-pro/#pricing" hidden>See plans</a>
                 <!-- Revealed only when the browser has actually offered an
                      install, and removed the moment one happens. A dead
                      "Install" button on a platform that cannot install, or on a
@@ -889,19 +889,10 @@
             + (canCoin
                 ? 'Until then each report costs ' + esc(COST.cost) + ' TMR Coin, or go unlimited with a plan.'
                 : 'You need an active plan (or ' + esc(COST.cost) + ' TMR Coin) to run another one today.')
-            + '</span><button type="button" class="btn is-primary" id="allowanceSubscribe">Subscribe</button></div>';
-        var btn = $('allowanceSubscribe');
-        if (btn) btn.addEventListener('click', function () {
-            try {
-                var r = window.api && window.api.startBetLegendProCheckout
-                    && window.api.startBetLegendProCheckout('monthly');
-                if (r && typeof r.catch === 'function') {
-                    r.catch(function () { window.location.href = '/betlegend-pro/#pricing'; });
-                    return;
-                }
-                if (!r) window.location.href = '/betlegend-pro/#pricing';
-            } catch (err) { window.location.href = '/betlegend-pro/#pricing'; }
-        });
+            + '</span><a class="btn is-primary" id="allowanceSubscribe" href="/betlegend-pro/#pricing">See plans</a></div>';
+        /* 2026-09-29: this button used to start the $49 standalone checkout
+           directly, so a member never saw that TMR Pro includes BetLegend Pro.
+           It now opens the plans section, which shows both options. */
     }
 
     function billingPill(res) {
