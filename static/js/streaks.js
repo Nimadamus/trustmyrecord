@@ -4,15 +4,20 @@
  * so a page that falls back to computing a member streak from their pick list
  * prints the same number the server would have sent. Keep the two in step:
  *
- *   order   settlement time, clamped into [first pitch, first pitch + 6h] so a
- *           late regrade cannot teleport an old game to the top
+ *   order   when the game ENDED: settlement time (graded_at), never before
+ *           first pitch; a result graded more than 6h after first pitch is a
+ *           backfill and sits at first pitch + 3h, where its game really
+ *           ended, so an import or late regrade is placed by game time, never
+ *           by when it was entered
  *   group   one event (league, first pitch, both teams) and one wager period is
  *           ONE settlement; the same real game under two feed ids is still one
  *   dedupe  the same wager inside a settlement counts once, whatever price each
  *           copy was taken at
- *   runs    a settlement holding both a win and a loss ends the run; a push is
+ *   runs    a settlement holding both a win and a loss (a split game) points
+ *           the way most of its wagers went (an even split: its last graded
+ *           leg) and can only START a run, never extend one; a push is
  *           neutral; N counts deduplicated picks, so four winners on one game
- *           is W4
+ *           is W4. A member with any won/lost decision is never 0 (2026-09-28)
  */
 (function(root) {
     const STATUS_MAP = {
@@ -38,6 +43,9 @@
     // A result graded more than this long after first pitch is a backfill, not a
     // settlement -- same constant, same reason, as the backend.
     const GRADING_LAG_CLAMP_MS = 6 * 3600 * 1000;
+    // Where a backfill sits: first pitch plus a typical game (backend
+    // ESTIMATED_GAME_HOURS).
+    const ESTIMATED_GAME_MS = 3 * 3600 * 1000;
 
     function timeMs(value) {
         if (value == null || value === '') return null;
@@ -55,8 +63,8 @@
 
     /* The canonical order key: when the game ENDED, as closely as the data can
        say. graded_at is an excellent proxy while grading is timely, so it is
-       used, clamped into the six-hour window after first pitch so a month-late
-       backfill stays in its own slot instead of jumping to the top of a run. */
+       used; a result graded more than six hours after first pitch is a
+       backfill and is placed at first pitch + 3h, where its game ended. */
     function pickTimestamp(pick) {
         const start = firstTime([
             pick && pick.commence_time,
@@ -80,7 +88,8 @@
         ]);
         if (start == null) return settled == null ? 0 : settled;
         if (settled == null) return start;
-        return Math.max(start, Math.min(settled, start + GRADING_LAG_CLAMP_MS));
+        if (settled > start + GRADING_LAG_CLAMP_MS) return start + ESTIMATED_GAME_MS;
+        return Math.max(start, settled);
     }
 
     const PERIOD_FALLBACK = 'full_game';
@@ -206,7 +215,7 @@
             if (!group) {
                 group = {
                     key: pick.groupKey, timestamp: null, index: pick.index,
-                    rank: pick.rank, wins: [], losses: []
+                    rank: pick.rank, wins: [], losses: [], last: null
                 };
                 map.set(pick.groupKey, group);
             }
@@ -217,6 +226,11 @@
             if (bucket) {
                 if (group.timestamp == null || pick.timestamp > group.timestamp) group.timestamp = pick.timestamp;
                 if (bucket.indexOf(pick.wagerKey) === -1) bucket.push(pick.wagerKey);
+                // The last graded leg (order key, then pick id) decides an even split.
+                if (!group.last || pick.timestamp > group.last.timestamp
+                    || (pick.timestamp === group.last.timestamp && idAfter(pick.id, group.last.id))) {
+                    group.last = { timestamp: pick.timestamp, id: pick.id, status: pick.status };
+                }
             }
         }
         const groups = [];
@@ -231,8 +245,9 @@
                 rank: group.rank,
                 wins: wins,
                 losses: losses,
-                status: wins && losses ? 'mixed' : (wins ? 'won' : 'lost'),
-                count: wins && losses ? 0 : (wins || losses)
+                mixed: Boolean(wins && losses),
+                status: wins > losses ? 'won' : losses > wins ? 'lost' : (group.last ? group.last.status : 'won'),
+                count: Math.max(wins, losses)
             });
         });
         return groups.sort(function(a, b) {
@@ -242,6 +257,13 @@
         });
     }
 
+    // Pick ids are numbers from the API; compare numerically when both are.
+    function idAfter(a, b) {
+        const na = Number(a);
+        const nb = Number(b);
+        if (Number.isFinite(na) && Number.isFinite(nb)) return na > nb;
+        return String(a) > String(b);
+    }
     function compareChronological(a, b) {
         if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
         return a.index - b.index;
@@ -267,15 +289,11 @@
         let runLength = 0;
 
         groups.forEach(function(group) {
-            // A game that produced both a win and a loss settled them together.
-            // Nothing inside a settlement is after anything else inside it, so
-            // a mixed one ends whatever run was running.
-            if (group.status === 'mixed') {
-                runType = null;
-                runLength = 0;
-                return;
-            }
-            if (runType === group.status) runLength += group.count;
+            // A game that produced both a win and a loss settled them together,
+            // so it can never extend the run behind it; it starts a new run the
+            // way most of it went.
+            if (group.mixed) { runType = group.status; runLength = group.count; }
+            else if (runType === group.status) runLength += group.count;
             else { runType = group.status; runLength = group.count; }
             if (group.status === 'won') longestWinStreak = Math.max(longestWinStreak, runLength);
             else longestLossStreak = Math.max(longestLossStreak, runLength);
