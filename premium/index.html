@@ -484,6 +484,7 @@
         .wd-sports { margin-bottom: 6px; }
         .wd-sheet h4 { margin: 18px 0 8px; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-muted); }
         .wd-pick { border: 1px solid var(--pro-line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+        .wd-pick-game { font-size: .78rem; font-weight: 700; letter-spacing: .03em; color: var(--pro-muted); margin-bottom: 2px; }
         .wd-pick-sel { font-weight: 800; color: var(--pro-ink); margin-bottom: 2px; }
         .wd-res { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; text-transform: uppercase; background: var(--pro-page); color: var(--pro-muted); }
         .wd-res.won { background: #E3F4EA; color: #1D7A46; }
@@ -650,7 +651,7 @@
                 <li>Unlimited runs on every MLB, NFL, NBA and NHL simulator</li>
                 <li>Bet Legend Pro in full (sold alone for $49 a month)</li>
                 <li>TrendSpotter money figures: units, ROI and price behind every trend</li>
-                <li>Model Builder with 15 saved models</li>
+                <li>Model Builder: 15 tracked models (free accounts get 2)</li>
             </ul>
             <p class="pro-hero-price"><b>$79.99 a month</b> or <b>$800 a year</b> <span class="pro-save">Save $159.88</span></p>
             <a class="pro-cta" id="proHeroCta" href="#pricing">Get TMR Pro</a>
@@ -781,7 +782,7 @@
                             looks backwards.
                         </p>
                         <div class="pro-allowance">
-                            <span>15 active models with TMR Pro</span>
+                            <span>15 active tracked models with TMR Pro, 2 on a free account</span>
                         </div>
                     </article>
                 </div>
@@ -1193,7 +1194,7 @@
                             '<td class="hide-s">' + dots(c.last10_results) + '</td>' +
                             '<td class="n"><span class="wd-pend">' + c.shown.length + '</span></td></tr>' +
                             '<tr class="wd-picks-row"><td colspan="7">' + c.shown.map(function (p) {
-                                return '<span class="wd-chip"><b>' + pickLabel(p) + '</b> <span class="wd-muted">' + esc(p.league || '') + ' &middot; ' + esc(kick(p.start)) + '</span></span>';
+                                return '<span class="wd-chip"><b>' + pickLabel(p) + '</b> <span class="wd-muted">' + esc(p.bet_type || '') + ' &middot; ' + esc(p.league || '') + ' &middot; ' + esc(kick(p.start)) + '</span></span>';
                             }).join('') + '</td></tr>';
                     }).join('') + '</tbody></table></div>';
             }
@@ -1238,7 +1239,9 @@
                     stat('Last 25', f25 ? f25.wins + '-' + f25.losses + (f25.pushes ? '-' + f25.pushes : '') + ' (' + signed(f25.net_units) + 'u)' : '&ndash;', f25 ? unitsCls(f25.net_units) : '') + '</div>' +
                     (h.sports && h.sports.length ? '<div class="wd-muted wd-sports">' + h.sports.map(function (s) { return esc(s.label) + ' ' + s.graded_picks; }).join(' &middot; ') + ' graded</div>' : '') +
                     '<h4>Pending picks</h4>' + h.pending.map(function (p) {
-                        return '<div class="wd-pick"><div class="wd-pick-sel">' + pickLabel(p) + '</div><div class="wd-muted">' + esc(p.league || '') + ' &middot; ' + esc(p.bet_type || '') + ' &middot; ' + esc(p.matchup || '') + ' &middot; ' + esc(kick(p.start)) +
+                        var meta = [esc(p.bet_type || 'Pick'), p.units != null ? esc(p.units) + 'u' : '', 'Starts ' + esc(kick(p.start))].filter(Boolean).join(' &middot; ');
+                        var posted = p.posted_at ? 'Posted ' + esc(day(p.posted_at)) + ' ' + esc(new Date(p.posted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT on ' + esc(h.source || 'source') : 'Posted on ' + esc(h.source || 'source');
+                        return '<div class="wd-pick"><div class="wd-pick-game">' + esc(p.league || '') + ' &middot; ' + esc(p.matchup || '') + '</div><div class="wd-pick-sel">' + pickLabel(p) + '</div><div class="wd-muted">' + meta + '</div><div class="wd-muted">' + posted +
                             (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" target="_blank" rel="nofollow noopener">Original post</a>' : '') + '</div></div>';
                     }).join('') +
                     '<h4>Recent graded picks</h4>' + (h.recent.length ? '<div class="wd-table-wrap"><table class="wd-table wd-recent"><tbody>' + h.recent.map(function (x) {
