@@ -811,7 +811,7 @@
         '<div class="ds-menu-panel v2nav-menu-panel" role="menu" aria-label="Account menu">' +
           '<a href="/u/' + encodeURIComponent(name) + '/" role="menuitem">My Profile</a>' +
           '<a href="/profile/?action=edit" role="menuitem">Settings</a>' +
-          '<a href="/premium/" role="menuitem">TMR Pro membership</a>' +
+          '<a href="/premium/#dashboard" role="menuitem">TMR Pro Dashboard</a>' +
           '<a href="/contact/" role="menuitem">Help &amp; Support</a>' +
           '<button type="button" class="v2nav-logout" role="menuitem" data-tmr-logout>Log Out</button>' +
         '</div>' +

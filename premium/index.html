@@ -432,6 +432,8 @@
         .wd-bar select { width: auto !important; flex: 0 0 auto; max-width: 100%; font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
         .wd-check { display: inline-flex; gap: 6px; align-items: center; color: var(--pro-body); font-size: .92rem; white-space: nowrap; }
         .wd-check input { width: 16px !important; height: 16px !important; min-width: 0 !important; margin: 0; flex: none; }
+        body .wd-bar .wd-check input[type=checkbox] { width: 18px !important; height: 18px !important; min-height: 0 !important; max-width: 18px !important; padding: 0 !important; }
+        @media (max-width: 600px) { body .wd-net { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } body .wd-net span { display: block; font-size: 12px; } }
         .wd-count { flex-basis: 100%; font-size: .85rem; color: var(--pro-muted); }
         .wd-count b { color: var(--pro-ink); }
         .wd-cons { margin-bottom: 16px; }
@@ -664,6 +666,38 @@
         .px-cols .px-col-public { padding: 18px; border-radius: 14px; border: 1px solid rgba(140, 196, 255, .25); }
         .px-tag { display: inline-block; margin-right: 8px; padding: 3px 9px; border-radius: 999px; font-size: 11px; letter-spacing: .08em; }
         .px-pro-lead { font-size: 16px; font-weight: 600; }
+        /* PRO_DASHBOARD_20260929 */
+        .pd { text-align: left; margin-top: 18px; padding: clamp(18px, 3vw, 28px); border-radius: 18px; background: var(--pro-surface); border: 1px solid var(--pro-line); box-shadow: 0 18px 44px -28px rgba(7, 24, 42, .45); }
+        .pd-anchor { display: block; position: relative; top: -90px; }
+        .pd-kicker { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-brand); }
+        .pd-head h2 { margin: 6px 0 6px; font-family: Barlow, Inter, sans-serif; font-size: clamp(26px, 3vw, 34px); color: var(--pro-ink); }
+        .pd-head p { margin: 0 0 14px; color: var(--pro-body); }
+        .pd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .pd-card { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 14px; border: 1px solid var(--pro-line); background: var(--pro-page); text-decoration: none; color: var(--pro-ink); min-width: 0; transition: transform .12s ease, box-shadow .12s ease; }
+        .pd-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -16px rgba(11, 79, 168, .6); }
+        .pd-card strong { font-size: 18px; color: var(--pro-ink); }
+        .pd-card strong::after { content: " \2192"; }
+        .pd-card-k { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-brand); }
+        .pd-card-d { font-size: 14px; color: var(--pro-body); line-height: 1.45; }
+        .pd-card-lead { grid-column: span 2; background: linear-gradient(160deg, #07182A, #0B2A4D); border-color: #0B2A4D; }
+        .pd-onboard { margin: 0 0 16px; padding: 14px 18px 14px 36px; border-radius: 12px; background: var(--pro-tint); border: 1px solid var(--pro-line); display: grid; gap: 6px; color: var(--pro-body); }
+        .pd-onboard-x { list-style: none; margin-left: -18px; }
+        .pd-onboard-x button { margin-top: 6px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--pro-brand); background: var(--pro-brand); color: #fff; font-weight: 700; cursor: pointer; }
+        .wd-split { font-size: 15px; }
+        .wd-net { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .wd-net span { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 12px; border-radius: 10px; background: var(--pro-surface); border: 1px solid var(--pro-line); font-size: 13px; color: var(--pro-body); }
+        .wd-net b { font-size: 15px; color: var(--pro-ink); font-variant-numeric: tabular-nums; }
+        .wd-empty { padding: 22px; border-radius: 14px; background: var(--pro-surface); border: 1px solid var(--pro-line); }
+        .wd-empty h3 { margin: 0 0 8px; font-size: 19px; color: var(--pro-ink); }
+        .wd-empty p { margin: 0 0 12px; color: var(--pro-body); }
+        body.is-pro-member .pro-eyebrow, body.is-pro-member .pro-hero h1, body.is-pro-member .pro-lede,
+        body.is-pro-member .pro-benefits, body.is-pro-member .pro-hero-price, body.is-pro-member #proHeroCta,
+        body.is-pro-member #tools, body.is-pro-member #pricing, body.is-pro-member #free { display: none !important; }
+        body.is-pro-member .pro-hero { padding-top: 18px; }
+        @media (max-width: 760px) {
+            .pd-grid { grid-template-columns: minmax(0, 1fr); }
+            .pd-card-lead { grid-column: auto; }
+        }
         @media (max-width: 900px) {
             .px-watch { grid-template-columns: minmax(0, 1fr); }
             .px-grid { grid-template-columns: minmax(0, 1fr); }
@@ -724,15 +758,52 @@
                 <button type="button" class="pro-manage" id="proManage" hidden>Manage subscription</button>
             </div>
             <div class="pro-banner" id="proBanner" role="status" hidden></div>
-            <div class="pro-welcome" id="proWelcome" hidden>
-                <h2 id="proWelcomeTitle">Welcome to TMR Pro</h2>
-                <p id="proWelcomeText">Everything is unlocked on your account. Start here:</p>
-                <div class="pro-links">
-                    <a href="#board">Pending picks</a>
-                    <a href="/sports-simulators/">Simulators</a>
-                    <a href="/betlegend-pro/">Bet Legend Pro</a>
-                    <a href="/trendspotter/">TrendSpotter</a>
-                    <a href="/model-builder/">Model Builder</a>
+            <div class="pro-welcome pd" id="proWelcome" hidden>
+                <span id="dashboard" class="pd-anchor"></span>
+                <div class="pd-head">
+                    <span class="pd-kicker">TMR Pro Dashboard</span>
+                    <h2 id="proWelcomeTitle">Your TMR Pro</h2>
+                    <p id="proWelcomeText">Everything in TMR Pro is unlocked on your account. Open any tool below.</p>
+                </div>
+                <ol class="pd-onboard" id="pdOnboard" hidden>
+                    <li><b>Open the Watchdog</b> to see the pending picks outside handicappers have posted for upcoming games.</li>
+                    <li><b>Use Bet Legend Pro</b> for deep historical matchup and situation research.</li>
+                    <li><b>Run the simulators</b> as often as you like. There is no daily limit on your account.</li>
+                    <li><b>Open TrendSpotter</b> to see the units, ROI and prices behind any trend.</li>
+                    <li><b>Build models</b> in Model Builder and track up to 15 at once.</li>
+                    <li class="pd-onboard-x"><button type="button" id="pdOnboardDone">Got it</button></li>
+                </ol>
+                <div class="pd-grid">
+                    <a class="pd-card pd-card-lead" href="#board">
+                        <span class="pd-card-k">Handicapper Watchdog</span>
+                        <strong>Open Handicapper Watchdog</strong>
+                        <span class="pd-card-d">Pending picks from tracked outside handicappers, each beside that handicapper's record, units and streak.</span>
+                    </a>
+                    <a class="pd-card" href="/betlegend-pro/app/">
+                        <span class="pd-card-k">Bet Legend Pro</span>
+                        <strong>Open Bet Legend Pro</strong>
+                        <span class="pd-card-d">Search every comparable game already played, with the games behind each answer.</span>
+                    </a>
+                    <a class="pd-card" href="/sports-simulators/">
+                        <span class="pd-card-k">Unlimited simulators</span>
+                        <strong>Run simulators</strong>
+                        <span class="pd-card-d">MLB, NFL, NBA and NHL game, season and playoff simulators, no daily limit.</span>
+                    </a>
+                    <a class="pd-card" href="/trendspotter/">
+                        <span class="pd-card-k">TrendSpotter</span>
+                        <strong>Open TrendSpotter</strong>
+                        <span class="pd-card-d">Units won or lost, ROI and the average price behind every trend.</span>
+                    </a>
+                    <a class="pd-card" href="/model-builder/">
+                        <span class="pd-card-k">Model Builder</span>
+                        <strong>Open Model Builder</strong>
+                        <span class="pd-card-d">Define the bets you believe in and track up to 15 models forward.</span>
+                    </a>
+                    <a class="pd-card pd-card-dir" href="/around-the-web/">
+                        <span class="pd-card-k">Directory</span>
+                        <strong>Handicappers Around the Web</strong>
+                        <span class="pd-card-d">Browse every tracked handicapper's full record and history.</span>
+                    </a>
                 </div>
             </div>
             <p class="pro-note">
@@ -768,9 +839,12 @@
                             streaks, recent form, sport by sport history and every past pick.
                         </p>
                         <p>
-                            Sources tracked: Covers, X, Reddit, Sportsbook Review, TheRX, Predictem and
-                            Two Plus Two. TrustMyRecord member picks are never part of the Watchdog. It
-                            covers outside, publicly posted handicappers only.
+                            A living database that keeps updating. The Watchdog checks Covers, X,
+                            Reddit, Sportsbook Review, TheRX and Predictem around the clock in the
+                            cloud, discovers new handicappers as they start posting, collects their
+                            qualifying picks, grades completed picks and recalculates every record
+                            automatically. TrustMyRecord member picks are never part of it. It covers
+                            outside, publicly posted handicappers only.
                         </p>
                         <a class="px-explore" href="/around-the-web/">Explore Handicappers Around the Web <span aria-hidden="true">&rarr;</span></a>
                         <p class="px-small">Look through the database first and see how deep it goes. It is open to everyone.</p>
@@ -933,11 +1007,16 @@
                 <div class="pro-section-head">
                     <h2>Handicapper Watchdog</h2>
                     <p>
-                        Every pending pick from the outside handicappers we track on Covers, X,
-                        Reddit and more, with each handicapper's record, units, streak and recent
-                        form. Tap a handicapper for the full profile. TrustMyRecord members are
-                        never included.
+                        Handicapper Watchdog continuously monitors supported outside handicapping
+                        sources, discovers new accounts, collects qualifying pregame picks, grades
+                        completed picks and updates records automatically. It runs around the clock
+                        in the cloud, and new handicappers are added as they are discovered.
+                        TrustMyRecord members are never included.
                     </p>
+                    <p class="wd-split"><b>Public:</b> every tracked handicapper's record and history on
+                        <a href="/around-the-web/">Handicappers Around the Web</a>.
+                        <b>TMR Pro:</b> the pending picks below, before the games start.</p>
+                    <div class="wd-net" id="wdNet" hidden></div>
                 </div>
                 <div id="proBoard">
                     <div class="pro-teaser" id="proBoardTeaser">Loading today's board.</div>
@@ -1238,10 +1317,14 @@
                 paintButtons(false);
                 loadBoard(true);
                 takeIntent();
-                if (welcomeEl && purchase !== 'success') {
+                /* PRO_DASHBOARD_20260929: a member sees the dashboard, not the sales page. */
+                document.body.classList.add('is-pro-member');
+                if (welcomeEl) {
                     welcomeEl.hidden = false;
-                    document.getElementById('proWelcomeTitle').textContent = 'Your TMR Pro';
-                    document.getElementById('proWelcomeText').textContent = 'Jump straight in:';
+                    var fresh = purchase === 'success';
+                    document.getElementById('proWelcomeTitle').textContent = fresh ? 'Welcome to TMR Pro' : 'Your TMR Pro';
+                    document.getElementById('proWelcomeText').textContent = (fresh ? 'Your membership is active. ' : '') + line;
+                    showOnboarding(fresh);
                 }
                 var cta = document.getElementById('proHeroCta');
                 if (cta) { cta.textContent = 'Open the pending picks'; cta.setAttribute('href', '#board'); }
@@ -1267,7 +1350,9 @@
            excluded on the server. */
         var boardEl = document.getElementById('proBoard');
         var boardData = null;
-        var boardFilter = { proven: true, league: 'all', source: 'all', q: '' };
+        /* 2026-09-29: Proven was on by default, so a board with no handicapper at 25+ graded
+           picks looked empty to a paying member. Every pending pick shows first; Proven is a filter. */
+        var boardFilter = { proven: false, league: 'all', source: 'all', q: '' };
         var boardSort = { key: 'units', dir: -1 };
         function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
         function odds(o) { if (o == null || o === '') return ''; var n = Number(o); return isNaN(n) ? esc(o) : (n > 0 ? '+' + n : String(n)); }
@@ -1367,7 +1452,9 @@
                     return '<div class="wd-cons-card"><div class="wd-cons-n"><b>' + g.proven + '</b> proven<span>' + g.cappers + ' total</span></div><div><div class="wd-cons-sel">' + esc(g.selection) + ' <span class="wd-muted">' + esc(g.bet_type || '') + '</span></div><div class="wd-muted">' + esc(g.matchup || '') + ' &middot; ' + esc(kick(g.start)) + '</div></div></div>';
                 }).join('') + '</div></div>';
             }
-            if (!rows.length) {
+            if (!(d.handicappers || []).length) {
+                html = emptyBoard();
+            } else if (!rows.length) {
                 html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
             } else {
                 html += '<div class="wd-table-wrap"><table class="wd-table"><thead><tr>' + th('name', 'Handicapper') + th('record', 'Record') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + th('streak', 'Streak', 'n') + th('last10', 'Last 10', 'hide-s') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>' +
@@ -1445,8 +1532,60 @@
         }
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
         document.addEventListener('click', function (e) { var p = document.getElementById('wdPanel'); if (p && !p.hidden && e.target === p) closePanel(); });
+        /* First Pro visit (or right after purchase): a five step start list, dismissed once. */
+        function showOnboarding(force) {
+            var el = document.getElementById('pdOnboard');
+            if (!el) return;
+            var seen = false;
+            try { seen = localStorage.getItem('tmr_pro_onboarded') === '1'; } catch (e) { }
+            if (seen && !force) return;
+            el.hidden = false;
+            var b = document.getElementById('pdOnboardDone');
+            if (b) b.onclick = function () { el.hidden = true; try { localStorage.setItem('tmr_pro_onboarded', '1'); } catch (e) { } };
+        }
+        /* Live proof the Watchdog keeps running: counts and last run times from the public summary. */
+        var netData = null;
+        function agoText(iso) {
+            var t = iso ? Date.parse(iso) : NaN;
+            if (!isFinite(t)) return '';
+            var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+            return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago';
+        }
+        function netStats(n) {
+            if (!n) return [];
+            var out = [], d = n.directory || {}, src = n.sources || [];
+            if (d.accounts) out.push(['<b>' + Number(d.accounts).toLocaleString('en-US') + '</b> accounts monitored', '']);
+            if (d.with_record) out.push(['<b>' + Number(d.with_record).toLocaleString('en-US') + '</b> handicappers with graded records', '']);
+            if (d.graded) out.push(['<b>' + Number(d.graded).toLocaleString('en-US') + '</b> graded picks', '']);
+            if (n.picks_harvested_24h != null) out.push(['<b>' + Number(n.picks_harvested_24h).toLocaleString('en-US') + '</b> picks collected in the last 24 hours', '']);
+            var newAcc = src.reduce(function (a, x) { return a + (Number(x.new_accounts_24h) || 0); }, 0);
+            if (newAcc) out.push(['<b>' + newAcc.toLocaleString('en-US') + '</b> new accounts found in 24 hours', '']);
+            var last = src.map(function (x) { return x.last_check; }).filter(Boolean).sort().pop();
+            if (last) out.push(['Sources last checked <b>' + agoText(last) + '</b>', '']);
+            if (n.last_graded) out.push(['Last grading run <b>' + agoText(n.last_graded) + '</b>', '']);
+            return out.map(function (x) { return '<span>' + x[0] + '</span>'; });
+        }
+        function paintNet(n) {
+            netData = n || netData;
+            var el = document.getElementById('wdNet');
+            var items = netStats(netData);
+            if (!el || !items.length) return;
+            el.innerHTML = items.join('');
+            el.hidden = false;
+            if (boardData && !(boardData.handicappers || []).length) drawBoard();
+        }
+        function emptyBoard() {
+            var items = document.getElementById('wdNet') && !document.getElementById('wdNet').hidden ? [] : netStats(netData);
+            return '<div class="wd-empty"><h3>No pending picks right now</h3>'
+                + '<p>No pending picks are currently available. The Watchdog is continuing to monitor tracked sources, and this board updates as new pregame picks are collected.</p>'
+                + (items.length ? '<div class="wd-net" style="margin:0 0 14px">' + items.join('') + '</div>' : '')
+                + '<a class="px-link" href="/around-the-web/">Browse Handicappers Around the Web</a></div>';
+        }
         function loadBoard(isPro) {
             if (!boardEl) return;
+            fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
+                .then(function (sm) { paintNet(sm && sm.network); if (!isPro) teaser(sm); })
+                .catch(function () { if (!isPro) teaser(null); });
             if (isPro) {
                 S.authFetch(API + '/pro/pending-board').then(function (r) {
                     if (!r.ok) throw new Error('board ' + r.status);
@@ -1456,8 +1595,6 @@
                 });
                 return;
             }
-            fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
-                .then(teaser).catch(function () { teaser(null); });
         }
 
         function loadMe() {
@@ -1602,6 +1739,9 @@ body.tmr-light .px-watch .px-explore { background: #FFFFFF !important; color: #0
 body.tmr-light .px-watch .px-tag { background: rgba(140, 196, 255, .18) !important; color: #CFE4FF !important; }
 body.tmr-light .px-watch .px-tag.is-pro { background: #F5C542 !important; color: #1A1400 !important; }
 body.tmr-light .px-watch .px-pro-lead { color: #FFFFFF !important; }
+body.tmr-light .pd-card-lead strong { color: #FFFFFF !important; }
+body.tmr-light .pd-card-lead .pd-card-k { color: #F5C542 !important; }
+body.tmr-light .pd-card-lead .pd-card-d { color: #C9D8E8 !important; }
 body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
 </style>
 </body>
