@@ -1145,10 +1145,33 @@
         }
         function teaser(summary) {
             if (!boardEl) return;
-            var t = summary && summary.picks
-                ? '<b>' + summary.picks + ' pending picks</b> from <b>' + summary.handicappers + ' tracked handicappers</b> are on the board right now, ' + summary.proven_handicappers + ' of them with 25 or more graded picks.'
-                : 'The board fills up as the handicappers we track post their picks for the next games.';
-            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper\'s record, units and streak, and where the proven handicappers agree. <a href="#pricing">Get TMR Pro</a></div>';
+            /* 2026-09-29: the teaser used to print "0 of them with 25 or more graded
+               picks" whenever nobody on the board had reached 25, which only told a
+               buyer what was missing. The proven count now shows only when it is
+               above zero, the leagues are named, and a locked preview shows one row
+               per real handicapper on the board (never invented data). */
+            var n = summary && summary.picks, t;
+            if (n) {
+                var lg = (summary.leagues || []).filter(Boolean);
+                t = '<b>' + n + ' pending pick' + (n === 1 ? '' : 's') + '</b> from <b>' + summary.handicappers + ' tracked handicapper' + (summary.handicappers === 1 ? '' : 's') + '</b> '
+                    + (summary.handicappers === 1 ? 'is' : 'are') + ' on the board right now' + (lg.length ? ' (' + esc(lg.join(', ')) + ')' : '') + '.'
+                    + (summary.proven_handicappers > 0 ? ' ' + summary.proven_handicappers + ' of them ' + (summary.proven_handicappers === 1 ? 'has' : 'have') + ' 25 or more graded picks.' : '');
+            } else {
+                t = 'The board fills up as the handicappers we track post their picks for the next games.';
+            }
+            var rows = '';
+            var k = Math.min(Number(summary && summary.handicappers) || 0, 5);
+            for (var r = 0; r < k; r++) {
+                rows += '<div style="display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid rgba(127,127,127,.18)">'
+                    + '<span aria-hidden="true">&#128274;</span>'
+                    + '<span style="flex:1;height:10px;border-radius:5px;background:rgba(127,127,127,.22)"></span>'
+                    + '<span style="width:22%;height:10px;border-radius:5px;background:rgba(127,127,127,.16)"></span>'
+                    + '<span style="width:14%;height:10px;border-radius:5px;background:rgba(127,127,127,.12)"></span></div>';
+            }
+            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper&#39;s record, units and streak, and where the proven handicappers agree.'
+                + (rows ? '<div aria-label="Locked preview" style="margin-top:14px;border:1px solid rgba(127,127,127,.22);border-radius:10px;overflow:hidden">'
+                    + '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Handicapper, pending pick, record</div>' + rows + '</div>' : '')
+                + '<p style="margin:14px 0 0"><a href="#pricing" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Unlock the board with TMR Pro</a></p></div>';
         }
         function sortVal(c, k) {
             if (k === 'name') return String(c.name || '').toLowerCase();
